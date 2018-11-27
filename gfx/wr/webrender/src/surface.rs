@@ -243,6 +243,7 @@ impl SurfaceDescriptor {
                 PrimitiveInstanceKind::LineDecoration { .. } |
                 PrimitiveInstanceKind::TextRun { .. } |
                 PrimitiveInstanceKind::NormalBorder { .. } |
+                PrimitiveInstanceKind::Rectangle { .. } |
                 PrimitiveInstanceKind::ImageBorder { .. } |
                 PrimitiveInstanceKind::Clear => {}
             }

@@ -85,7 +85,6 @@ pub struct FrameBuildingState<'a> {
     pub transforms: &'a mut TransformPalette,
     pub segment_builder: SegmentBuilder,
     pub surfaces: &'a mut Vec<SurfaceInfo>,
-    pub scratch: &'a mut PrimitiveScratchBuffer,
 }
 
 /// Immutable context of a picture when processing children.
@@ -255,7 +254,6 @@ impl FrameBuilder {
             transforms: transform_palette,
             segment_builder: SegmentBuilder::new(),
             surfaces: pic_update_state.surfaces,
-            scratch,
         };
 
         let (pic_context, mut pic_state, mut prim_list) = self
@@ -279,6 +277,7 @@ impl FrameBuilder {
             &frame_context,
             &mut frame_state,
             resources,
+            scratch,
         );
 
         let pic = &mut self.prim_store.pictures[self.root_pic_index.0];

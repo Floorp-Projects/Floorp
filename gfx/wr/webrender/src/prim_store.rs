@@ -12,7 +12,7 @@ use api::{PicturePixel, RasterPixel, ColorDepth, LineStyle, LineOrientation, Lay
 use app_units::Au;
 use border::{get_max_scale_for_border, build_border_instances, create_border_segments};
 use border::{create_nine_patch_segments, BorderSegmentCacheKey, NormalBorderAu};
-use clip::ClipStore;
+use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem, ClipNodeCollector};
 use euclid::{SideOffsets2D, TypedTransform3D, TypedRect, TypedScale};
@@ -33,6 +33,7 @@ use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHand
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
 use scene::SceneProperties;
+use segment::SegmentBuilder;
 use std::{cmp, fmt, mem, ops, u32, usize};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -98,6 +99,12 @@ impl PrimitiveOpacity {
     pub fn from_alpha(alpha: f32) -> PrimitiveOpacity {
         PrimitiveOpacity {
             is_opaque: alpha >= 1.0,
+        }
+    }
+
+    pub fn combine(&self, other: PrimitiveOpacity) -> PrimitiveOpacity {
+        PrimitiveOpacity{
+            is_opaque: self.is_opaque && other.is_opaque
         }
     }
 }
@@ -377,6 +384,9 @@ pub enum PrimitiveKeyKind {
         repeat_vertical: RepeatMode,
         outset: SideOffsets2D<Au>,
     },
+    Rectangle {
+        color: ColorU,
+    }
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -439,6 +449,12 @@ impl PrimitiveKey {
                 PrimitiveInstanceKind::ImageBorder {
                 }
             }
+            PrimitiveKeyKind::Rectangle { .. } => {
+                PrimitiveInstanceKind::Rectangle {
+                    opacity_binding_index: OpacityBindingIndex::INVALID,
+                    segment_instance_index: SegmentInstanceIndex::INVALID,
+                }
+            }
             PrimitiveKeyKind::Unused => {
                 // Should never be hit as this method should not be
                 // called for old style primitives.
@@ -478,6 +494,9 @@ pub enum PrimitiveTemplateKind {
         request: ImageRequest,
         brush_segments: Vec<BrushSegment>,
     },
+    Rectangle {
+        color: ColorF,
+    },
     Clear,
     Unused,
 }
@@ -486,7 +505,10 @@ pub enum PrimitiveTemplateKind {
 /// is invoked when a primitive key is created and the interner
 /// doesn't currently contain a primitive with this key.
 impl PrimitiveKeyKind {
-    fn into_template(self, rect: &LayoutRect) -> PrimitiveTemplateKind {
+    fn into_template(
+        self,
+        rect: &LayoutRect,
+    ) -> PrimitiveTemplateKind {
         match self {
             PrimitiveKeyKind::Unused => PrimitiveTemplateKind::Unused,
             PrimitiveKeyKind::TextRun { glyphs, font, offset, .. } => {
@@ -562,6 +584,11 @@ impl PrimitiveKeyKind {
                     brush_segments,
                 }
             }
+            PrimitiveKeyKind::Rectangle { color, .. } => {
+                PrimitiveTemplateKind::Rectangle {
+                    color: color.into(),
+                }
+            }
             PrimitiveKeyKind::LineDecoration { cache_key, color } => {
                 PrimitiveTemplateKind::LineDecoration {
                     cache_key,
@@ -626,6 +653,13 @@ impl PrimitiveTemplate {
                 }
 
                 PrimitiveOpacity::translucent()
+            }
+            PrimitiveTemplateKind::Rectangle { ref color, .. } => {
+                if let Some(mut request) = frame_state.gpu_cache.request(&mut self.gpu_cache_handle) {
+                    request.push(color.premultiplied());
+                }
+
+                PrimitiveOpacity::from_alpha(color.a)
             }
             PrimitiveTemplateKind::NormalBorder { ref template, .. } => {
                 if let Some(mut request) = frame_state.gpu_cache.request(&mut self.gpu_cache_handle) {
@@ -856,10 +890,6 @@ pub struct BorderSegmentInfo {
 }
 
 pub enum BrushKind {
-    Solid {
-        color: ColorF,
-        opacity_binding_index: OpacityBindingIndex,
-    },
     Image {
         request: ImageRequest,
         alpha_type: AlphaType,
@@ -915,18 +945,9 @@ impl BrushKind {
                     .is_none()
             }
 
-            BrushKind::Solid { .. } |
             BrushKind::YuvImage { .. } |
             BrushKind::RadialGradient { .. } |
             BrushKind::LinearGradient { .. } => true,
-        }
-    }
-
-    // Construct a brush that is a solid color rectangle.
-    pub fn new_solid(color: ColorF) -> BrushKind {
-        BrushKind::Solid {
-            color,
-            opacity_binding_index: OpacityBindingIndex::INVALID,
         }
     }
 
@@ -1116,10 +1137,6 @@ impl BrushPrimitive {
                         0.0,
                         0.0,
                     ]);
-                }
-                // Solid rects also support opacity collapsing.
-                BrushKind::Solid { ref color, .. } => {
-                    request.push(color.premultiplied());
                 }
                 BrushKind::LinearGradient { stretch_size, start_point, end_point, extend_mode, .. } => {
                     request.push([
@@ -1725,6 +1742,9 @@ pub enum PrimitiveContainer {
         repeat_vertical: RepeatMode,
         outset: SideOffsets2D<f32>,
     },
+    Rectangle {
+        color: ColorF,
+    },
 }
 
 impl PrimitiveContainer {
@@ -1742,9 +1762,6 @@ impl PrimitiveContainer {
             }
             PrimitiveContainer::Brush(ref brush) => {
                 match brush.kind {
-                    BrushKind::Solid { ref color, .. } => {
-                        color.a > 0.0
-                    }
                     BrushKind::Image { .. } |
                     BrushKind::YuvImage { .. } |
                     BrushKind::RadialGradient { .. } |
@@ -1758,6 +1775,7 @@ impl PrimitiveContainer {
             PrimitiveContainer::Clear => {
                 true
             }
+            PrimitiveContainer::Rectangle { ref color, .. } |
             PrimitiveContainer::LineDecoration { ref color, .. } => {
                 color.a > 0.0
             }
@@ -1783,6 +1801,13 @@ impl PrimitiveContainer {
             }
             PrimitiveContainer::Clear => {
                 (PrimitiveKeyKind::Clear, None)
+            }
+            PrimitiveContainer::Rectangle { color, .. } => {
+                let key = PrimitiveKeyKind::Rectangle {
+                    color: color.into(),
+                };
+
+                (key, None)
             }
             PrimitiveContainer::ImageBorder {
                 request,
@@ -1920,6 +1945,11 @@ impl PrimitiveContainer {
                     wavy_line_thickness,
                 }
             }
+            PrimitiveContainer::Rectangle { .. } => {
+                PrimitiveContainer::Rectangle {
+                    color: shadow.color,
+                }
+            }
             PrimitiveContainer::NormalBorder { border, widths, .. } => {
                 let border = border.with_color(shadow.color);
                 PrimitiveContainer::NormalBorder {
@@ -1929,12 +1959,6 @@ impl PrimitiveContainer {
             }
             PrimitiveContainer::Brush(ref brush) => {
                 match brush.kind {
-                    BrushKind::Solid { .. } => {
-                        PrimitiveContainer::Brush(BrushPrimitive::new(
-                            BrushKind::new_solid(shadow.color),
-                            None,
-                        ))
-                    }
                     BrushKind::Image { request, stretch_size, .. } => {
                         PrimitiveContainer::Brush(BrushPrimitive::new(
                             BrushKind::new_image(request.clone(),
@@ -2007,6 +2031,10 @@ pub enum PrimitiveInstanceKind {
         cache_handles: storage::Range<RenderTaskCacheEntryHandle>,
     },
     ImageBorder {
+    },
+    Rectangle {
+        opacity_binding_index: OpacityBindingIndex,
+        segment_instance_index: SegmentInstanceIndex,
     },
     /// Clear out a rect, used for special effects.
     Clear,
@@ -2091,12 +2119,22 @@ impl PrimitiveInstance {
     }
 }
 
+#[derive(Debug)]
+pub struct SegmentedInstance {
+    pub gpu_cache_handle: GpuCacheHandle,
+    pub segments_range: SegmentsRange,
+}
+
 pub type GlyphKeyStorage = storage::Storage<GlyphKey>;
 pub type TextRunIndex = storage::Index<TextRunPrimitive>;
 pub type TextRunStorage = storage::Storage<TextRunPrimitive>;
 pub type OpacityBindingIndex = storage::Index<OpacityBinding>;
 pub type OpacityBindingStorage = storage::Storage<OpacityBinding>;
 pub type BorderHandleStorage = storage::Storage<RenderTaskCacheEntryHandle>;
+pub type SegmentStorage = storage::Storage<BrushSegment>;
+pub type SegmentsRange = storage::Range<BrushSegment>;
+pub type SegmentInstanceStorage = storage::Storage<SegmentedInstance>;
+pub type SegmentInstanceIndex = storage::Index<SegmentedInstance>;
 
 /// Contains various vecs of data that is used only during frame building,
 /// where we want to recycle the memory each new display list, to avoid constantly
@@ -2114,6 +2152,14 @@ pub struct PrimitiveScratchBuffer {
     /// List of render task handles for border segment instances
     /// that have been added this frame.
     pub border_cache_handles: BorderHandleStorage,
+
+    /// A list of brush segments that have been built for this scene.
+    pub segments: SegmentStorage,
+
+    /// A list of segment ranges and GPU cache handles for prim instances
+    /// that have opted into segment building. In future, this should be
+    /// removed in favor of segment building during primitive interning.
+    pub segment_instances: SegmentInstanceStorage,
 }
 
 impl PrimitiveScratchBuffer {
@@ -2122,6 +2168,8 @@ impl PrimitiveScratchBuffer {
             clip_mask_instances: Vec::new(),
             glyph_keys: GlyphKeyStorage::new(0),
             border_cache_handles: BorderHandleStorage::new(0),
+            segments: SegmentStorage::new(0),
+            segment_instances: SegmentInstanceStorage::new(0),
         }
     }
 
@@ -2129,6 +2177,8 @@ impl PrimitiveScratchBuffer {
         recycle_vec(&mut self.clip_mask_instances);
         self.glyph_keys.recycle();
         self.border_cache_handles.recycle();
+        self.segments.recycle();
+        self.segment_instances.recycle();
     }
 
     pub fn begin_frame(&mut self) {
@@ -2282,7 +2332,7 @@ impl PrimitiveStore {
     fn get_opacity_collapse_prim(
         &self,
         pic_index: PictureIndex,
-    ) -> Option<PrimitiveIndex> {
+    ) -> Option<PictureIndex> {
         let pic = &self.pictures[pic_index.0];
 
         // We can only collapse opacity if there is a single primitive, otherwise
@@ -2298,6 +2348,9 @@ impl PrimitiveStore {
         // handled by this optimization. In the future, we can easily extend
         // this to other primitives, such as text runs and gradients.
         match prim_instance.kind {
+            PrimitiveInstanceKind::Rectangle { .. } => {
+                return Some(pic_index);
+            }
             PrimitiveInstanceKind::Clear |
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
@@ -2324,9 +2377,8 @@ impl PrimitiveStore {
                         match brush.kind {
                             // If we find a single rect or image, we can use that
                             // as the primitive to collapse the opacity into.
-                            BrushKind::Solid { .. } |
                             BrushKind::Image { .. } => {
-                                return Some(prim_index)
+                                return Some(pic_index)
                             }
                             BrushKind::YuvImage { .. } |
                             BrushKind::LinearGradient { .. } |
@@ -2361,27 +2413,42 @@ impl PrimitiveStore {
         // See if this picture contains a single primitive that supports
         // opacity collapse.
         match self.get_opacity_collapse_prim(pic_index) {
-            Some(prim_index) => {
-                let prim = &mut self.primitives[prim_index.0];
-                match prim.details {
-                    PrimitiveDetails::Brush(ref mut brush) => {
-                        // By this point, we know we should only have found a primitive
-                        // that supports opacity collapse.
-                        match brush.kind {
-                            BrushKind::Solid { ref mut opacity_binding_index, .. } |
-                            BrushKind::Image { ref mut opacity_binding_index, .. } => {
-                                if *opacity_binding_index == OpacityBindingIndex::INVALID {
-                                    *opacity_binding_index = self.opacity_bindings.push(OpacityBinding::new());
+            Some(pic_index) => {
+                let pic = &mut self.pictures[pic_index.0];
+                let prim_instance = &mut pic.prim_list.prim_instances[0];
+                match prim_instance.kind {
+                    PrimitiveInstanceKind::Rectangle { ref mut opacity_binding_index, .. } => {
+                        if *opacity_binding_index == OpacityBindingIndex::INVALID {
+                            *opacity_binding_index = self.opacity_bindings.push(OpacityBinding::new());
+                        }
+                        let opacity_binding = &mut self.opacity_bindings[*opacity_binding_index];
+                        opacity_binding.push(binding);
+                    }
+                    PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
+                        let prim = &mut self.primitives[prim_index.0];
+                        match prim.details {
+                            PrimitiveDetails::Brush(ref mut brush) => {
+                                // By this point, we know we should only have found a primitive
+                                // that supports opacity collapse.
+                                match brush.kind {
+                                    BrushKind::Image { ref mut opacity_binding_index, .. } => {
+                                        if *opacity_binding_index == OpacityBindingIndex::INVALID {
+                                            *opacity_binding_index = self.opacity_bindings.push(OpacityBinding::new());
+                                        }
+                                        let opacity_binding = &mut self.opacity_bindings[*opacity_binding_index];
+                                        opacity_binding.push(binding);
+                                    }
+                                    BrushKind::YuvImage { .. } |
+                                    BrushKind::LinearGradient { .. } |
+                                    BrushKind::RadialGradient { .. } => {
+                                        unreachable!("bug: invalid prim type for opacity collapse");
+                                    }
                                 }
-                                let opacity_binding = &mut self.opacity_bindings[*opacity_binding_index];
-                                opacity_binding.push(binding);
-                            }
-                            BrushKind::YuvImage { .. } |
-                            BrushKind::LinearGradient { .. } |
-                            BrushKind::RadialGradient { .. } => {
-                                unreachable!("bug: invalid prim type for opacity collapse");
                             }
                         }
+                    }
+                    _ => {
+                        unreachable!();
                     }
                 }
             }
@@ -2413,6 +2480,7 @@ impl PrimitiveStore {
         display_list: &BuiltDisplayList,
         plane_split_anchor: usize,
         resources: &mut FrameResources,
+        scratch: &mut PrimitiveScratchBuffer,
     ) -> bool {
         // If we have dependencies, we need to prepare them first, in order
         // to know the actual rect of this primitive.
@@ -2444,6 +2512,7 @@ impl PrimitiveStore {
                     }
                 }
                 PrimitiveInstanceKind::TextRun { .. } |
+                PrimitiveInstanceKind::Rectangle { .. } |
                 PrimitiveInstanceKind::LineDecoration { .. } |
                 PrimitiveInstanceKind::LegacyPrimitive { .. } |
                 PrimitiveInstanceKind::NormalBorder { .. } |
@@ -2466,6 +2535,7 @@ impl PrimitiveStore {
                     frame_context,
                     frame_state,
                     resources,
+                    scratch,
                 );
 
                 if !pic_state_for_children.is_cacheable {
@@ -2498,6 +2568,7 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::Clear |
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::ImageBorder { .. } |
+            PrimitiveInstanceKind::Rectangle { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 let prim_data = &resources
                     .prim_data_store[prim_instance.prim_data_handle];
@@ -2633,6 +2704,7 @@ impl PrimitiveStore {
                 &clip_node_collector,
                 &mut self.primitives,
                 resources,
+                scratch,
             );
 
             if prim_instance.is_chased() {
@@ -2688,6 +2760,7 @@ impl PrimitiveStore {
             }
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::Clear |
+            PrimitiveInstanceKind::Rectangle { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::ImageBorder { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
@@ -2698,6 +2771,7 @@ impl PrimitiveStore {
                     frame_context,
                     frame_state,
                     resources,
+                    scratch,
                 );
             }
             PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
@@ -2728,6 +2802,7 @@ impl PrimitiveStore {
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
         resources: &mut FrameResources,
+        scratch: &mut PrimitiveScratchBuffer,
     ) {
         let display_list = &frame_context
             .pipelines
@@ -2808,6 +2883,7 @@ impl PrimitiveStore {
                 display_list,
                 plane_split_anchor,
                 resources,
+                scratch,
             ) {
                 frame_state.profile_counters.visible_primitives.inc();
             }
@@ -2825,6 +2901,7 @@ impl PrimitiveStore {
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
         resources: &mut FrameResources,
+        scratch: &mut PrimitiveScratchBuffer,
     ) {
         let prim_data = &mut resources
             .prim_data_store[prim_instance.prim_data_handle];
@@ -2907,7 +2984,7 @@ impl PrimitiveStore {
                     frame_state.gpu_cache,
                     frame_state.render_tasks,
                     frame_state.special_render_passes,
-                    frame_state.scratch,
+                    scratch,
                 );
             }
             (
@@ -2969,8 +3046,7 @@ impl PrimitiveStore {
                     ));
                 }
 
-                *cache_handles = frame_state
-                    .scratch
+                *cache_handles = scratch
                     .border_cache_handles
                     .extend(handles);
             }
@@ -2978,6 +3054,33 @@ impl PrimitiveStore {
                 PrimitiveInstanceKind::ImageBorder { .. },
                 PrimitiveTemplateKind::ImageBorder { .. }
             ) => {
+            }
+            (
+                PrimitiveInstanceKind::Rectangle { segment_instance_index, opacity_binding_index, .. },
+                PrimitiveTemplateKind::Rectangle { ref color, .. }
+            ) => {
+                if *segment_instance_index != SegmentInstanceIndex::UNUSED {
+                    let segment_instance = &mut scratch.segment_instances[*segment_instance_index];
+
+                    if let Some(mut request) = frame_state.gpu_cache.request(&mut segment_instance.gpu_cache_handle) {
+                        let segments = &scratch.segments[segment_instance.segments_range];
+
+                        request.push(color.premultiplied());
+
+                        for segment in segments {
+                            request.write_segment(
+                                segment.local_rect,
+                                [0.0; 4],
+                            );
+                        }
+                    }
+                }
+
+                update_opacity_binding(
+                    &mut self.opacity_bindings,
+                    *opacity_binding_index,
+                    frame_context.scene_properties,
+                );
             }
             _ => {
                 unreachable!();
@@ -3103,29 +3206,14 @@ impl<'a> GpuDataRequest<'a> {
     }
 }
 
-impl BrushPrimitive {
     fn write_brush_segment_description(
-        &mut self,
         prim_local_rect: LayoutRect,
         prim_local_clip_rect: LayoutRect,
         clip_chain: &ClipChainInstance,
-        frame_state: &mut FrameBuildingState,
+        segment_builder: &mut SegmentBuilder,
+        clip_store: &ClipStore,
         resources: &FrameResources,
-    ) {
-        match self.segment_desc {
-            Some(..) => {
-                // If we already have a segment descriptor, skip segment build.
-                return;
-            }
-            None => {
-                // If no segment descriptor built yet, see if it is a brush
-                // type that wants to be segmented.
-                if !self.kind.supports_segments(frame_state.resource_cache) {
-                    return;
-                }
-            }
-        }
-
+    ) -> bool {
         // If the brush is small, we generally want to skip building segments
         // and just draw it as a single primitive with clip mask. However,
         // if the clips are purely rectangles that have no per-fragment
@@ -3138,7 +3226,6 @@ impl BrushPrimitive {
         //           the clip sources here.
         let mut rect_clips_only = true;
 
-        let segment_builder = &mut frame_state.segment_builder;
         segment_builder.initialize(
             prim_local_rect,
             None,
@@ -3148,8 +3235,7 @@ impl BrushPrimitive {
         // Segment the primitive on all the local-space clip sources that we can.
         let mut local_clip_count = 0;
         for i in 0 .. clip_chain.clips_range.count {
-            let clip_instance = frame_state
-                .clip_store
+            let clip_instance = clip_store
                 .get_instance_from_range(&clip_chain.clips_range, i);
             let clip_node = &resources.clip_data_store[clip_instance.handle];
 
@@ -3241,35 +3327,11 @@ impl BrushPrimitive {
                 }
             }
 
-            match self.segment_desc {
-                Some(..) => panic!("bug: should not already have descriptor"),
-                None => {
-                    // TODO(gw): We can probably make the allocation
-                    //           patterns of this and the segment
-                    //           builder significantly better, by
-                    //           retaining it across primitives.
-                    let mut segments = BrushSegmentVec::new();
-
-                    segment_builder.build(|segment| {
-                        segments.push(
-                            BrushSegment::new(
-                                segment.rect,
-                                segment.has_mask,
-                                segment.edge_flags,
-                                [0.0; 4],
-                                BrushFlags::empty(),
-                            ),
-                        );
-                    });
-
-                    self.segment_desc = Some(BrushSegmentDescriptor {
-                        segments,
-                    });
-                }
-            }
+            return true
         }
+
+        false
     }
-}
 
 impl PrimitiveInstance {
     fn build_segments_if_needed(
@@ -3280,20 +3342,100 @@ impl PrimitiveInstance {
         frame_state: &mut FrameBuildingState,
         primitives: &mut [Primitive],
         resources: &FrameResources,
+        scratch: &mut PrimitiveScratchBuffer,
     ) {
-        if let PrimitiveInstanceKind::LegacyPrimitive { prim_index } = self.kind {
-            let prim = &mut primitives[prim_index.0];
-            match prim.details {
-                PrimitiveDetails::Brush(ref mut brush) => {
-                    brush.write_brush_segment_description(
+        match self.kind {
+            PrimitiveInstanceKind::Rectangle { ref mut segment_instance_index, .. } => {
+                if *segment_instance_index == SegmentInstanceIndex::INVALID {
+                    let mut segments: SmallVec<[BrushSegment; 8]> = SmallVec::new();
+
+                    if write_brush_segment_description(
                         prim_local_rect,
                         prim_local_clip_rect,
                         prim_clip_chain,
-                        frame_state,
+                        &mut frame_state.segment_builder,
+                        frame_state.clip_store,
                         resources,
-                    );
+                    ) {
+                        frame_state.segment_builder.build(|segment| {
+                            segments.push(
+                                BrushSegment::new(
+                                    segment.rect,
+                                    segment.has_mask,
+                                    segment.edge_flags,
+                                    [0.0; 4],
+                                    BrushFlags::empty(),
+                                ),
+                            );
+                        });
+                    }
+
+                    if segments.is_empty() {
+                        *segment_instance_index = SegmentInstanceIndex::UNUSED;
+                    } else {
+                        let segments_range = scratch
+                            .segments
+                            .extend(segments);
+
+                        let instance = SegmentedInstance {
+                            segments_range,
+                            gpu_cache_handle: GpuCacheHandle::new(),
+                        };
+
+                        *segment_instance_index = scratch
+                            .segment_instances
+                            .push(instance);
+                    };
                 }
             }
+            PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
+                let prim = &mut primitives[prim_index.0];
+                match prim.details {
+                    PrimitiveDetails::Brush(ref mut brush) => {
+                        match brush.segment_desc {
+                            Some(..) => {
+                                // If we already have a segment descriptor, skip segment build.
+                                return;
+                            }
+                            None => {
+                                // If no segment descriptor built yet, see if it is a brush
+                                // type that wants to be segmented.
+                                if brush.kind.supports_segments(frame_state.resource_cache) {
+                                    let mut segments = BrushSegmentVec::new();
+
+                                    if write_brush_segment_description(
+                                        prim_local_rect,
+                                        prim_local_clip_rect,
+                                        prim_clip_chain,
+                                        &mut frame_state.segment_builder,
+                                        frame_state.clip_store,
+                                        resources,
+                                    ) {
+                                        frame_state.segment_builder.build(|segment| {
+                                            segments.push(
+                                                BrushSegment::new(
+                                                    segment.rect,
+                                                    segment.has_mask,
+                                                    segment.edge_flags,
+                                                    [0.0; 4],
+                                                    BrushFlags::empty(),
+                                                ),
+                                            );
+                                        });
+                                    }
+
+                                    if !segments.is_empty() {
+                                        brush.segment_desc = Some(BrushSegmentDescriptor {
+                                            segments,
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
     }
 
@@ -3311,6 +3453,7 @@ impl PrimitiveInstance {
         clip_node_collector: &Option<ClipNodeCollector>,
         primitives: &[Primitive],
         resources: &mut FrameResources,
+        scratch: &mut PrimitiveScratchBuffer,
     ) -> bool {
         let segments = match self.kind {
             PrimitiveInstanceKind::Picture { .. } |
@@ -3319,6 +3462,17 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 return false;
             }
+            PrimitiveInstanceKind::Rectangle { segment_instance_index, .. } => {
+                debug_assert!(segment_instance_index != SegmentInstanceIndex::INVALID);
+
+                if segment_instance_index == SegmentInstanceIndex::UNUSED {
+                    return false;
+                }
+
+                let segment_instance = &scratch.segment_instances[segment_instance_index];
+
+                &mut scratch.segments[segment_instance.segments_range]
+            }
             PrimitiveInstanceKind::ImageBorder { .. } => {
                 let prim_data = &resources.prim_data_store[self.prim_data_handle];
 
@@ -3326,7 +3480,7 @@ impl PrimitiveInstance {
                 //       can change this to be a tuple match on (instance, template)
                 match prim_data.kind {
                     PrimitiveTemplateKind::ImageBorder { ref brush_segments, .. } => {
-                        brush_segments
+                        brush_segments.as_slice()
                     }
                     _ => {
                         unreachable!();
@@ -3373,7 +3527,7 @@ impl PrimitiveInstance {
         // Set where in the clip mask instances array the clip mask info
         // can be found for this primitive. Each segment will push the
         // clip mask information for itself in update_clip_task below.
-        self.clip_task_index = ClipTaskIndex(frame_state.scratch.clip_mask_instances.len() as _);
+        self.clip_task_index = ClipTaskIndex(scratch.clip_mask_instances.len() as _);
 
         // If we only built 1 segment, there is no point in re-running
         // the clip chain builder. Instead, just use the clip chain
@@ -3390,7 +3544,7 @@ impl PrimitiveInstance {
                 frame_state,
                 &mut resources.clip_data_store,
             );
-            frame_state.scratch.clip_mask_instances.push(clip_mask_kind);
+            scratch.clip_mask_instances.push(clip_mask_kind);
         } else {
             for segment in segments {
                 // Build a clip chain for the smaller segment rect. This will
@@ -3424,7 +3578,7 @@ impl PrimitiveInstance {
                     frame_state,
                     &mut resources.clip_data_store,
                 );
-                frame_state.scratch.clip_mask_instances.push(clip_mask_kind);
+                scratch.clip_mask_instances.push(clip_mask_kind);
             }
         }
 
@@ -3802,14 +3956,6 @@ impl PrimitiveInstance {
                             PrimitiveOpacity::translucent()
                         }
                     }
-                    BrushKind::Solid { ref color, opacity_binding_index, .. } => {
-                        let current_opacity = update_opacity_binding(
-                            opacity_bindings,
-                            opacity_binding_index,
-                            frame_context.scene_properties,
-                        );
-                        PrimitiveOpacity::from_alpha(current_opacity * color.a)
-                    }
                 };
             }
         }
@@ -3845,6 +3991,7 @@ impl PrimitiveInstance {
         clip_node_collector: &Option<ClipNodeCollector>,
         primitives: &mut [Primitive],
         resources: &mut FrameResources,
+        scratch: &mut PrimitiveScratchBuffer,
     ) {
         if self.is_chased() {
             println!("\tupdating clip task with pic rect {:?}", clip_chain.pic_clip_rect);
@@ -3860,6 +4007,7 @@ impl PrimitiveInstance {
             frame_state,
             primitives,
             resources,
+            scratch,
         );
 
         // First try to  render this primitive's mask using optimized brush rendering.
@@ -3876,6 +4024,7 @@ impl PrimitiveInstance {
             clip_node_collector,
             primitives,
             resources,
+            scratch,
         ) {
             if self.is_chased() {
                 println!("\tsegment tasks have been created for clipping");
@@ -3908,8 +4057,8 @@ impl PrimitiveInstance {
                         clip_task_id, device_rect);
                 }
                 // Set the global clip mask instance for this primitive.
-                let clip_task_index = ClipTaskIndex(frame_state.scratch.clip_mask_instances.len() as _);
-                frame_state.scratch.clip_mask_instances.push(ClipMaskKind::Mask(clip_task_id));
+                let clip_task_index = ClipTaskIndex(scratch.clip_mask_instances.len() as _);
+                scratch.clip_mask_instances.push(ClipMaskKind::Mask(clip_task_id));
                 self.clip_task_index = clip_task_index;
                 frame_state.surfaces[pic_context.surface_index.0].tasks.push(clip_task_id);
             }
