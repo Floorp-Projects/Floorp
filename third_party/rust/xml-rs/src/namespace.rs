@@ -41,9 +41,11 @@ pub const NS_XML_URI: &'static str      = "http://www.w3.org/XML/1998/namespace"
 /// This constant should be used to define or query default namespace which should be used
 /// for element or attribute names without prefix. For example, if a namespace mapping
 /// at a particular point in the document contains correspondence like
+///
 /// ```none
 ///   NS_NO_PREFIX  -->  urn:some:namespace
 /// ```
+///
 /// then all names declared without an explicit prefix `urn:some:namespace` is assumed as
 /// a namespace URI.
 ///
@@ -363,7 +365,7 @@ pub struct NamespaceStackMappings<'a> {
 }
 
 impl<'a> NamespaceStackMappings<'a> {
-    fn to_next_namespace(&mut self) -> bool {
+    fn go_to_next_namespace(&mut self) -> bool {
         self.current_namespace = self.namespaces.next().map(|ns| ns.into_iter());
         self.current_namespace.is_some()
     }
@@ -374,7 +376,7 @@ impl<'a> Iterator for NamespaceStackMappings<'a> {
 
     fn next(&mut self) -> Option<UriMapping<'a>> {
         // If there is no current namespace and no next namespace, we're finished
-        if self.current_namespace.is_none() && !self.to_next_namespace() {
+        if self.current_namespace.is_none() && !self.go_to_next_namespace() {
             return None;
         }
         let next_item = self.current_namespace.as_mut().unwrap().next();
@@ -391,7 +393,7 @@ impl<'a> Iterator for NamespaceStackMappings<'a> {
                 Some((k, v))
             },
             // Current namespace is exhausted
-            None => if self.to_next_namespace() {
+            None => if self.go_to_next_namespace() {
                 // If there is next namespace, continue from it
                 self.next()
             } else {

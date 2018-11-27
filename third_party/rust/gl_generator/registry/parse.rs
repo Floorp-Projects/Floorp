@@ -19,11 +19,11 @@ use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet};
 use std::io;
 use xml::attribute::OwnedAttribute;
-use xml::EventReader as XmlEventReader;
 use xml::reader::XmlEvent;
+use xml::EventReader as XmlEventReader;
 
-use {Fallbacks, Api, Profile};
 use registry::{Binding, Cmd, Enum, GlxOpcode, Registry};
+use {Api, Fallbacks, Profile};
 
 pub fn from_xml<R: io::Read>(src: R, filter: Filter) -> Registry {
     XmlEventReader::new(src)
@@ -41,8 +41,9 @@ struct Attribute {
 
 impl Attribute {
     fn new<Key, Value>(key: Key, value: Value) -> Attribute
-        where Key: ToString,
-              Value: ToString
+    where
+        Key: ToString,
+        Value: ToString,
     {
         Attribute {
             key: key.to_string(),
@@ -69,10 +70,12 @@ impl ParseEvent {
         match event {
             XmlEvent::StartDocument { .. } => None,
             XmlEvent::EndDocument => None,
-            XmlEvent::StartElement { name, attributes, .. } => {
+            XmlEvent::StartElement {
+                name, attributes, ..
+            } => {
                 let attributes = attributes.into_iter().map(Attribute::from).collect();
                 Some(ParseEvent::Start(name.local_name, attributes))
-            }
+            },
             XmlEvent::EndElement { name } => Some(ParseEvent::End(name.local_name)),
             XmlEvent::Characters(chars) => Some(ParseEvent::Text(chars)),
             XmlEvent::ProcessingInstruction { .. } => None,
@@ -83,16 +86,17 @@ impl ParseEvent {
     }
 }
 
-fn api_from_str(src: &str) -> Result<Api, ()> {
+fn api_from_str(src: &str) -> Result<Option<Api>, ()> {
     match src {
-        "gl" => Ok(Api::Gl),
-        "glx" => Ok(Api::Glx),
-        "wgl" => Ok(Api::Wgl),
-        "egl" => Ok(Api::Egl),
-        "glcore" => Ok(Api::GlCore),
-        "gles1" => Ok(Api::Gles1),
-        "gles2" => Ok(Api::Gles2),
-        "glsc2" => Ok(Api::Glsc2),
+        "gl" => Ok(Some(Api::Gl)),
+        "glx" => Ok(Some(Api::Glx)),
+        "wgl" => Ok(Some(Api::Wgl)),
+        "egl" => Ok(Some(Api::Egl)),
+        "glcore" => Ok(Some(Api::GlCore)),
+        "gles1" => Ok(Some(Api::Gles1)),
+        "gles2" => Ok(Some(Api::Gles2)),
+        "glsc2" => Ok(Some(Api::Glsc2)),
+        "disabled" => Ok(None),
         _ => Err(()),
     }
 }
@@ -193,7 +197,7 @@ fn make_egl_enum(ident: String, ty: Option<String>, value: String, alias: Option
             }
         } else {
             match value.chars().next() {
-                Some('-') | Some('0' ... '9') => (),
+                Some('-') | Some('0'...'9') => (),
                 _ => panic!("Unexpected value format: {}", value),
             }
 
@@ -217,7 +221,6 @@ fn make_egl_enum(ident: String, ty: Option<String>, value: String, alias: Option
     }
 }
 
-
 fn trim_cmd_prefix(ident: &str, api: Api) -> &str {
     match api {
         Api::Gl | Api::GlCore | Api::Gles1 | Api::Gles2 | Api::Glsc2 => trim_str(ident, "gl"),
@@ -232,10 +235,10 @@ fn merge_map(a: &mut BTreeMap<String, Vec<String>>, b: BTreeMap<String, Vec<Stri
         match a.entry(k) {
             Entry::Occupied(mut ent) => {
                 ent.get_mut().extend(v);
-            }
+            },
             Entry::Vacant(ent) => {
                 ent.insert(v);
-            }
+            },
         }
     }
 }
@@ -304,31 +307,29 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                 // add enum namespace
                 ParseEvent::Start(ref name, _) if name == "enums" => {
                     enums.extend(self.consume_enums(filter.api));
-                }
+                },
 
                 // add command namespace
                 ParseEvent::Start(ref name, _) if name == "commands" => {
                     let (new_cmds, new_aliases) = self.consume_cmds(filter.api);
                     cmds.extend(new_cmds);
                     merge_map(&mut aliases, new_aliases);
-                }
+                },
 
                 ParseEvent::Start(ref name, ref attributes) if name == "feature" => {
                     debug!("Parsing feature: {:?}", attributes);
                     features.push(Feature::convert(&mut self, &attributes));
-                }
+                },
 
-                ParseEvent::Start(ref name, _) if name == "extensions" => {
-                    loop {
-                        match self.next().unwrap() {
-                            ParseEvent::Start(ref name, ref attributes) if name == "extension" => {
-                                extensions.push(Extension::convert(&mut self, &attributes));
-                            }
-                            ParseEvent::End(ref name) if name == "extensions" => break,
-                            event => panic!("Unexpected message {:?}", event),
-                        }
+                ParseEvent::Start(ref name, _) if name == "extensions" => loop {
+                    match self.next().unwrap() {
+                        ParseEvent::Start(ref name, ref attributes) if name == "extension" => {
+                            extensions.push(Extension::convert(&mut self, &attributes));
+                        },
+                        ParseEvent::End(ref name) if name == "extensions" => break,
+                        event => panic!("Unexpected message {:?}", event),
                     }
-                }
+                },
 
                 // finished building the registry
                 ParseEvent::End(ref name) if name == "registry" => break,
@@ -376,9 +377,10 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         for extension in &extensions {
             if filter.extensions.contains(&extension.name) {
                 if !extension.supported.contains(&filter.api) {
-                    panic!("Requested {}, which doesn't support the {} API",
-                           extension.name,
-                           filter.api);
+                    panic!(
+                        "Requested {}, which doesn't support the {} API",
+                        extension.name, filter.api
+                    );
                 }
                 for require in &extension.requires {
                     desired_enums.extend(require.enums.iter().map(|x| x.clone()));
@@ -388,17 +390,17 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         }
 
         let is_desired_enum = |e: &Enum| {
-            desired_enums.contains(&("GL_".to_string() + &e.ident)) ||
-            desired_enums.contains(&("WGL_".to_string() + &e.ident)) ||
-            desired_enums.contains(&("GLX_".to_string() + &e.ident)) ||
-            desired_enums.contains(&("EGL_".to_string() + &e.ident))
+            desired_enums.contains(&("GL_".to_string() + &e.ident))
+                || desired_enums.contains(&("WGL_".to_string() + &e.ident))
+                || desired_enums.contains(&("GLX_".to_string() + &e.ident))
+                || desired_enums.contains(&("EGL_".to_string() + &e.ident))
         };
 
         let is_desired_cmd = |c: &Cmd| {
-            desired_cmds.contains(&("gl".to_string() + &c.proto.ident)) ||
-            desired_cmds.contains(&("wgl".to_string() + &c.proto.ident)) ||
-            desired_cmds.contains(&("glX".to_string() + &c.proto.ident)) ||
-            desired_cmds.contains(&("egl".to_string() + &c.proto.ident))
+            desired_cmds.contains(&("gl".to_string() + &c.proto.ident))
+                || desired_cmds.contains(&("wgl".to_string() + &c.proto.ident))
+                || desired_cmds.contains(&("glX".to_string() + &c.proto.ident))
+                || desired_cmds.contains(&("egl".to_string() + &c.proto.ident))
         };
 
         Registry {
@@ -428,7 +430,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                 } else {
                     panic!("Expected <{}>, found: <{}>", expected_name, name)
                 }
-            }
+            },
             event => panic!("Expected <{}>, found: {:?}", expected_name, event),
         }
     }
@@ -444,16 +446,17 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         loop {
             match self.next().unwrap() {
                 ParseEvent::End(ref name) if expected_name == name => break,
-                _ => {}
+                _ => {},
             }
         }
     }
 
-    fn consume_two<'a, T: FromXml, U: FromXml>(&mut self,
-                                               one: &'a str,
-                                               two: &'a str,
-                                               end: &'a str)
-                                               -> (Vec<T>, Vec<U>) {
+    fn consume_two<'a, T: FromXml, U: FromXml>(
+        &mut self,
+        one: &'a str,
+        two: &'a str,
+        end: &'a str,
+    ) -> (Vec<T>, Vec<U>) {
         debug!("consume_two: looking for {} and {} until {}", one, two, end);
 
         let mut ones = Vec::new();
@@ -480,7 +483,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                     } else {
                         panic!("Unexpected element: <{:?} {:?}>", n, &attributes);
                     }
-                }
+                },
                 ParseEvent::End(ref name) => {
                     debug!("Found end element </{:?}>", name);
 
@@ -497,7 +500,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                     } else {
                         panic!("Unexpected end element {:?}", name);
                     }
-                }
+                },
                 event => panic!("Unexpected message {:?}", event),
             }
         }
@@ -508,13 +511,13 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         loop {
             match self.next().unwrap() {
                 // ignores
-                ParseEvent::Text(_) => {}
+                ParseEvent::Text(_) => {},
                 ParseEvent::Start(ref name, _) if name == "unused" => self.skip_to_end("unused"),
 
                 // add enum definition
                 ParseEvent::Start(ref name, ref attributes) if name == "enum" => {
                     enums.push(self.consume_enum(api, attributes));
-                }
+                },
 
                 // finished building the namespace
                 ParseEvent::End(ref name) if name == "enums" => break,
@@ -534,7 +537,7 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
 
         match api {
             Api::Egl => make_egl_enum(ident, ty, value, alias),
-            _ => make_enum(ident, ty, value, alias)
+            _ => make_enum(ident, ty, value, alias),
         }
     }
 
@@ -550,14 +553,14 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
                         match aliases.entry(v.clone()) {
                             Entry::Occupied(mut ent) => {
                                 ent.get_mut().push(new.proto.ident.clone());
-                            }
+                            },
                             Entry::Vacant(ent) => {
                                 ent.insert(vec![new.proto.ident.clone()]);
-                            }
+                            },
                         }
                     }
                     cmds.push(new);
-                }
+                },
                 // finished building the namespace
                 ParseEvent::End(ref name) if name == "commands" => break,
                 // error handling
@@ -581,23 +584,23 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
             match self.next().unwrap() {
                 ParseEvent::Start(ref name, _) if name == "param" => {
                     params.push(self.consume_binding("param"));
-                }
+                },
                 ParseEvent::Start(ref name, ref attributes) if name == "alias" => {
                     alias = get_attribute(&attributes, "name");
                     alias = alias.map(|t| trim_cmd_prefix(&t, api).to_string());
                     self.consume_end_element("alias");
-                }
+                },
                 ParseEvent::Start(ref name, ref attributes) if name == "vecequiv" => {
                     vecequiv = get_attribute(&attributes, "vecequiv");
                     self.consume_end_element("vecequiv");
-                }
+                },
                 ParseEvent::Start(ref name, ref attributes) if name == "glx" => {
                     glx = Some(GlxOpcode {
-                                   opcode: get_attribute(&attributes, "opcode").unwrap(),
-                                   name: get_attribute(&attributes, "name"),
-                               });
+                        opcode: get_attribute(&attributes, "opcode").unwrap(),
+                        name: get_attribute(&attributes, "name"),
+                    });
                     self.consume_end_element("glx");
-                }
+                },
                 ParseEvent::End(ref name) if name == "command" => break,
                 event => panic!("Expected </command>, found: {:?}", event),
             }
@@ -688,7 +691,7 @@ impl FromXml for Feature {
     fn convert<P: Parse>(parser: &mut P, a: &[Attribute]) -> Feature {
         debug!("Doing a FromXml on Feature");
         let api = get_attribute(a, "api").unwrap();
-        let api = api_from_str(&api).unwrap();
+        let api = api_from_str(&api).unwrap().unwrap();
         let name = get_attribute(a, "name").unwrap();
         let number = get_attribute(a, "number").unwrap();
 
@@ -713,15 +716,16 @@ impl FromXml for Extension {
         let supported = get_attribute(a, "supported")
             .unwrap()
             .split('|')
-            .map(api_from_str)
-            .map(Result::unwrap)
+            .filter_map(|api| {
+                api_from_str(api).unwrap_or_else(|()| panic!("unsupported API `{}`", api))
+            })
             .collect::<Vec<_>>();
         let mut require = Vec::new();
         loop {
             match parser.next().unwrap() {
                 ParseEvent::Start(ref name, ref attributes) if name == "require" => {
                     require.push(FromXml::convert(parser, &attributes));
-                }
+                },
                 ParseEvent::End(ref name) if name == "extension" => break,
                 event => panic!("Unexpected message {:?}", event),
             }
@@ -813,6 +817,7 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         "const GLfloat *" => "*const types::GLfloat",
         "const GLhalfNV *" => "*const types::GLhalfNV",
         "const GLint *" => "*const types::GLint",
+        "const GLint*" => "*const types::GLint",
         "const GLint64 *" => "*const types::GLint64",
         "const GLint64EXT *" => "*const types::GLint64EXT",
         "const GLintptr *" => "*const types::GLintptr",
@@ -988,7 +993,9 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         "EGLDisplay" => "types::EGLDisplay",
         "EGLSurface" => "types::EGLSurface",
         "EGLClientBuffer" => "types::EGLClientBuffer",
-        "__eglMustCastToProperFunctionPointerType" => "types::__eglMustCastToProperFunctionPointerType",
+        "__eglMustCastToProperFunctionPointerType" => {
+            "types::__eglMustCastToProperFunctionPointerType"
+        },
         "EGLImageKHR" => "types::EGLImageKHR",
         "EGLImage" => "types::EGLImage",
         "EGLOutputLayerEXT" => "types::EGLOutputLayerEXT",
@@ -1019,15 +1026,16 @@ pub fn to_rust_ty<T: AsRef<str>>(ty: T) -> Cow<'static, str> {
         "EGLTimeKHR *" => "*mut types::EGLTimeKHR",
         "EGLOutputPortEXT *" => "*mut types::EGLOutputPortEXT",
         "EGLuint64KHR *" => "*mut types::EGLuint64KHR",
+        "const struct AHardwareBuffer *" => "*const __gl_imports::raw::c_void", // humm
 
         "GLeglClientBufferEXT" => "types::GLeglClientBufferEXT",
-        "GLVULKANPROCNV" => "type::GLVULKANPROCNV",
-        "EGLDEBUGPROCKHR" => "type::EGLDEBUGPROCKHR",
-        "EGLObjectKHR" => "type::EGLObjectKHR",
-        "EGLLabelKHR" => "type::EGLLabelKHR",
-        "EGLnsecsANDROID" => "type::EGLnsecsANDROID",
-        "EGLnsecsANDROID *" => "*mut type::EGLnsecsANDROID",
-        "EGLBoolean *" => "*mut type::EGLBoolean",
+        "GLVULKANPROCNV" => "types::GLVULKANPROCNV",
+        "EGLDEBUGPROCKHR" => "types::EGLDEBUGPROCKHR",
+        "EGLObjectKHR" => "types::EGLObjectKHR",
+        "EGLLabelKHR" => "types::EGLLabelKHR",
+        "EGLnsecsANDROID" => "types::EGLnsecsANDROID",
+        "EGLnsecsANDROID *" => "*mut types::EGLnsecsANDROID",
+        "EGLBoolean *" => "*mut types::EGLBoolean",
 
         // failure
         _ => panic!("Type conversion not implemented for `{}`", ty.as_ref()),
@@ -1076,10 +1084,12 @@ mod tests {
 
         #[test]
         fn test_cast_0() {
-            let e = parse::make_enum("FOO".to_string(),
-                                     None,
-                                     "((EGLint)-1)".to_string(),
-                                     Some("BAR".to_string()));
+            let e = parse::make_enum(
+                "FOO".to_string(),
+                None,
+                "((EGLint)-1)".to_string(),
+                Some("BAR".to_string()),
+            );
             assert_eq!(e.ident, "FOO");
             assert_eq!((&*e.ty, &*e.value), ("EGLint", "-1"));
             assert_eq!(e.alias, Some("BAR".to_string()));
@@ -1087,10 +1097,12 @@ mod tests {
 
         #[test]
         fn test_cast_1() {
-            let e = parse::make_enum("FOO".to_string(),
-                                     None,
-                                     "((EGLint)(-1))".to_string(),
-                                     Some("BAR".to_string()));
+            let e = parse::make_enum(
+                "FOO".to_string(),
+                None,
+                "((EGLint)(-1))".to_string(),
+                Some("BAR".to_string()),
+            );
             assert_eq!(e.ident, "FOO");
             assert_eq!((&*e.ty, &*e.value), ("EGLint", "(-1)"));
             assert_eq!(e.alias, Some("BAR".to_string()));
@@ -1098,10 +1110,12 @@ mod tests {
 
         #[test]
         fn test_no_type() {
-            let e = parse::make_enum("FOO".to_string(),
-                                     None,
-                                     "value".to_string(),
-                                     Some("BAR".to_string()));
+            let e = parse::make_enum(
+                "FOO".to_string(),
+                None,
+                "value".to_string(),
+                Some("BAR".to_string()),
+            );
             assert_eq!(e.ident, "FOO");
             assert_eq!(e.value, "value");
             assert_eq!(e.alias, Some("BAR".to_string()));
@@ -1111,29 +1125,35 @@ mod tests {
 
         #[test]
         fn test_u() {
-            let e = parse::make_enum("FOO".to_string(),
-                                     Some("u".to_string()),
-                                     String::new(),
-                                     None);
+            let e = parse::make_enum(
+                "FOO".to_string(),
+                Some("u".to_string()),
+                String::new(),
+                None,
+            );
             assert_eq!(e.ty, "GLuint");
         }
 
         #[test]
         fn test_ull() {
-            let e = parse::make_enum("FOO".to_string(),
-                                     Some("ull".to_string()),
-                                     String::new(),
-                                     None);
+            let e = parse::make_enum(
+                "FOO".to_string(),
+                Some("ull".to_string()),
+                String::new(),
+                None,
+            );
             assert_eq!(e.ty, "GLuint64");
         }
 
         #[test]
         #[should_panic]
         fn test_unknown_type() {
-            parse::make_enum("FOO".to_string(),
-                             Some("blargh".to_string()),
-                             String::new(),
-                             None);
+            parse::make_enum(
+                "FOO".to_string(),
+                Some("blargh".to_string()),
+                String::new(),
+                None,
+            );
         }
 
         #[test]
@@ -1160,10 +1180,12 @@ mod tests {
 
         #[test]
         fn test_cast_egl() {
-            let e = parse::make_egl_enum("FOO".to_string(),
-                                     None,
-                                     "EGL_CAST(EGLint,-1)".to_string(),
-                                     Some("BAR".to_string()));
+            let e = parse::make_egl_enum(
+                "FOO".to_string(),
+                None,
+                "EGL_CAST(EGLint,-1)".to_string(),
+                Some("BAR".to_string()),
+            );
             assert_eq!(e.ident, "FOO");
             assert_eq!((&*e.ty, &*e.value), ("EGLint", "-1"));
             assert_eq!(e.alias, Some("BAR".to_string()));
@@ -1183,47 +1205,42 @@ mod tests {
 
         #[test]
         fn test_ull() {
-            let e = parse::make_egl_enum("FOO".to_string(),
-                                     Some("ull".to_string()),
-                                     "1234".to_string(),
-                                     None);
+            let e = parse::make_egl_enum(
+                "FOO".to_string(),
+                Some("ull".to_string()),
+                "1234".to_string(),
+                None,
+            );
             assert_eq!(e.ty, "EGLuint64KHR");
         }
 
         #[test]
         fn test_negative_value() {
-            let e = parse::make_egl_enum("FOO".to_string(),
-                                     None,
-                                     "-1".to_string(),
-                                     None);
+            let e = parse::make_egl_enum("FOO".to_string(), None, "-1".to_string(), None);
             assert_eq!(e.ty, "EGLint");
         }
 
         #[test]
         #[should_panic]
         fn test_unknown_type() {
-            parse::make_egl_enum("FOO".to_string(),
-                             Some("blargh".to_string()),
-                             String::new(),
-                             None);
+            parse::make_egl_enum(
+                "FOO".to_string(),
+                Some("blargh".to_string()),
+                String::new(),
+                None,
+            );
         }
 
         #[test]
         #[should_panic]
         fn test_unknown_value() {
-            parse::make_egl_enum("FOO".to_string(),
-                             None,
-                             "a".to_string(),
-                             None);
+            parse::make_egl_enum("FOO".to_string(), None, "a".to_string(), None);
         }
 
         #[test]
         #[should_panic]
         fn test_empty_value() {
-            parse::make_egl_enum("FOO".to_string(),
-                             None,
-                             String::new(),
-                             None);
+            parse::make_egl_enum("FOO".to_string(), None, String::new(), None);
         }
     }
 
@@ -1241,19 +1258,27 @@ mod tests {
             fn test_start_event() {
                 let given = XmlEvent::StartElement {
                     name: OwnedName::local("element"),
-                    attributes: vec![OwnedAttribute::new(OwnedName::local("attr1"), "val1"),
-                                     OwnedAttribute::new(OwnedName::local("attr2"), "val2")],
+                    attributes: vec![
+                        OwnedAttribute::new(OwnedName::local("attr1"), "val1"),
+                        OwnedAttribute::new(OwnedName::local("attr2"), "val2"),
+                    ],
                     namespace: Namespace::empty(),
                 };
-                let expected = ParseEvent::Start("element".to_string(),
-                                                 vec![Attribute::new("attr1", "val1"),
-                                                      Attribute::new("attr2", "val2")]);
+                let expected = ParseEvent::Start(
+                    "element".to_string(),
+                    vec![
+                        Attribute::new("attr1", "val1"),
+                        Attribute::new("attr2", "val2"),
+                    ],
+                );
                 assert_eq!(ParseEvent::from_xml(given), Some(expected));
             }
 
             #[test]
             fn test_end_element() {
-                let given = XmlEvent::EndElement { name: OwnedName::local("element") };
+                let given = XmlEvent::EndElement {
+                    name: OwnedName::local("element"),
+                };
                 let expected = ParseEvent::End("element".to_string());
                 assert_eq!(ParseEvent::from_xml(given), Some(expected));
             }

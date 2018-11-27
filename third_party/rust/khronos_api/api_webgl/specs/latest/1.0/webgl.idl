@@ -2,9 +2,27 @@
 //
 // WebGL IDL definitions scraped from the Khronos specification:
 // https://www.khronos.org/registry/webgl/specs/latest/
+
+// Copyright (c) 2018 The Khronos Group Inc.
 //
-// This IDL depends on the typed array specification defined at:
-// https://www.khronos.org/registry/typedarray/specs/latest/typedarrays.idl
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and/or associated documentation files (the
+// "Materials"), to deal in the Materials without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Materials, and to
+// permit persons to whom the Materials are furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Materials.
+//
+// THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 
 typedef unsigned long  GLenum;
 typedef boolean        GLboolean;
@@ -38,36 +56,46 @@ dictionary WebGLContextAttributes {
     GLboolean failIfMajorPerformanceCaveat = false;
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLBuffer : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLFramebuffer : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLProgram : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLRenderbuffer : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLShader : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLTexture : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLUniformLocation {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLActiveInfo {
     readonly attribute GLint size;
     readonly attribute GLenum type;
     readonly attribute DOMString name;
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLShaderPrecisionFormat {
     readonly attribute GLint rangeMin;
     readonly attribute GLint rangeMax;
@@ -504,7 +532,7 @@ interface mixin WebGLRenderingContextBase
     const GLenum UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
     const GLenum BROWSER_DEFAULT_WEBGL          = 0x9244;
 
-    readonly attribute HTMLCanvasElement canvas;
+    [Exposed=Window] readonly attribute HTMLCanvasElement canvas;
     readonly attribute GLsizei drawingBufferWidth;
     readonly attribute GLsizei drawingBufferHeight;
 
@@ -712,13 +740,16 @@ interface mixin WebGLRenderingContextBase
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLRenderingContext
 {
 };
 WebGLRenderingContext includes WebGLRenderingContextBase;
 
 
-[Constructor(DOMString type, optional WebGLContextEventInit eventInit)]
+[Exposed=(Window,Worker),
+ Constructor(DOMString type,
+ optional WebGLContextEventInit eventInit)]
 interface WebGLContextEvent : Event {
     readonly attribute DOMString statusMessage;
 };

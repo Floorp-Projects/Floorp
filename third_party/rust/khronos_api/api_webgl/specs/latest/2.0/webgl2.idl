@@ -2,26 +2,49 @@
 //
 // WebGL IDL definitions scraped from the Khronos specification:
 // https://www.khronos.org/registry/webgl/specs/latest/
+
+// Copyright (c) 2018 The Khronos Group Inc.
 //
-// This IDL depends on the typed array specification defined at:
-// https://www.khronos.org/registry/typedarray/specs/latest/typedarrays.idl
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and/or associated documentation files (the
+// "Materials"), to deal in the Materials without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Materials, and to
+// permit persons to whom the Materials are furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Materials.
+//
+// THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 
 typedef long long GLint64;
 typedef unsigned long long GLuint64;
 
 
+[Exposed=(Window,Worker)]
 interface WebGLQuery : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLSampler : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLSync : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLTransformFeedback : WebGLObject {
 };
 
+[Exposed=(Window,Worker)]
 interface WebGLVertexArrayObject : WebGLObject {
 };
 
@@ -571,6 +594,7 @@ interface mixin WebGL2RenderingContextBase
   void bindVertexArray(WebGLVertexArrayObject? array);
 };
 
+[Exposed=(Window,Worker)]
 interface WebGL2RenderingContext
 {
 };
