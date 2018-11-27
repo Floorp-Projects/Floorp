@@ -238,7 +238,7 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_UseGestureDetector_TouchActionZoom)
 TEST_F(APZCPinchGestureDetectorTester, Pinch_UseGestureDetector_TouchActionNotAllowZoom) {
   SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
   nsTArray<uint32_t> behaviors;
-  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
+  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::NONE);
   behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
   DoPinchTest(false, &behaviors);
 }
