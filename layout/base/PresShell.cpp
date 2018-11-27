@@ -96,7 +96,6 @@
 #ifdef MOZ_REFLOW_PERF
 #include "nsFontMetrics.h"
 #endif
-#include "OverflowChangedTracker.h"
 #include "PositionedEventTargeting.h"
 
 #include "nsIReflowCallback.h"
@@ -589,81 +588,6 @@ private:
   AutoWeakFrame mWeakFrame;
   nsIContent** mTargetContent;
 };
-
-void
-nsIPresShell::DirtyRootsList::Add(nsIFrame* aFrame)
-{
-  // Is this root already scheduled for reflow?
-  // FIXME: This could possibly be changed to a uniqueness assertion, with some
-  // work in ResizeReflowIgnoreOverride (and maybe others?)
-  if (mList.Contains(aFrame)) {
-    // We don't expect frame to change depths.
-    MOZ_ASSERT(aFrame->GetDepthInFrameTree() ==
-               mList[mList.IndexOf(aFrame)].mDepth);
-    return;
-  }
-
-  mList.InsertElementSorted(
-    FrameAndDepth{ aFrame, aFrame->GetDepthInFrameTree() },
-    FrameAndDepth::CompareByReverseDepth{});
-}
-
-void
-nsIPresShell::DirtyRootsList::Remove(nsIFrame* aFrame)
-{
-  mList.RemoveElement(aFrame);
-}
-
-nsIFrame*
-nsIPresShell::DirtyRootsList::PopShallowestRoot()
-{
-  // List is sorted in order of decreasing depth, so there are no deeper
-  // frames than the last one.
-  const FrameAndDepth& lastFAD = mList.LastElement();
-  nsIFrame* frame = lastFAD.mFrame;
-  // We don't expect frame to change depths.
-  MOZ_ASSERT(frame->GetDepthInFrameTree() == lastFAD.mDepth);
-  mList.RemoveLastElement();
-  return frame;
-}
-
-void
-nsIPresShell::DirtyRootsList::Clear()
-{
-  mList.Clear();
-}
-
-bool
-nsIPresShell::DirtyRootsList::Contains(nsIFrame* aFrame) const
-{
-  return mList.Contains(aFrame);
-}
-
-bool
-nsIPresShell::DirtyRootsList::IsEmpty() const
-{
-  return mList.IsEmpty();
-}
-
-bool
-nsIPresShell::DirtyRootsList::FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const
-{
-  MOZ_ASSERT(aFrame);
-
-  // Look for a path from any dirty roots to aFrame, following GetParent().
-  // This check mirrors what FrameNeedsReflow() would have done if the reflow
-  // root didn't get in the way.
-  for (nsIFrame* dirtyFrame : mList) {
-    do {
-      if (dirtyFrame == aFrame) {
-        return true;
-      }
-      dirtyFrame = dirtyFrame->GetParent();
-    } while (dirtyFrame);
-  }
-
-  return false;
-}
 
 bool PresShell::sDisableNonTestMouseEvents = false;
 
@@ -2096,8 +2020,8 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
         AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
         nsViewManager::AutoDisableRefresh refreshBlocker(viewManager);
 
-        mDirtyRoots.Remove(rootFrame);
-        DoReflow(rootFrame, true, nullptr);
+        mDirtyRoots.RemoveElement(rootFrame);
+        DoReflow(rootFrame, true);
 
         if (shrinkToFit) {
           const bool reflowAgain = wm.IsVertical() ?
@@ -2106,7 +2030,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
 
           if (reflowAgain) {
             mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
-            DoReflow(rootFrame, true, nullptr);
+            DoReflow(rootFrame, true);
           }
         }
       }
@@ -2232,7 +2156,12 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 
     mFrameConstructor->NotifyDestroyingFrame(aFrame);
 
-    mDirtyRoots.Remove(aFrame);
+    for (int32_t idx = mDirtyRoots.Length(); idx; ) {
+      --idx;
+      if (mDirtyRoots[idx] == aFrame) {
+        mDirtyRoots.RemoveElementAt(idx);
+      }
+    }
 
     // Remove frame properties
     aFrame->DeleteAllProperties();
@@ -2737,8 +2666,7 @@ PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame)
   // Make sure that there is a reflow root ancestor of |aFrame| that's
   // in mDirtyRoots already.
   while (aFrame && (aFrame->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN)) {
-    if ((aFrame->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |
-                                 NS_FRAME_DYNAMIC_REFLOW_ROOT) ||
+    if (((aFrame->GetStateBits() & NS_FRAME_REFLOW_ROOT) ||
          !aFrame->GetParent()) &&
         mDirtyRoots.Contains(aFrame)) {
       return;
@@ -2822,9 +2750,8 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
         break;
     }
 
-#define FRAME_IS_REFLOW_ROOT(_f)                                              \
-  (_f->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |                                 \
-                       NS_FRAME_DYNAMIC_REFLOW_ROOT) &&                       \
+#define FRAME_IS_REFLOW_ROOT(_f)                   \
+  ((_f->GetStateBits() & NS_FRAME_REFLOW_ROOT) &&  \
    (_f != subtreeRoot || !targetNeedsReflowFromParent))
 
 
@@ -2892,7 +2819,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
       if (FRAME_IS_REFLOW_ROOT(f) || !f->GetParent()) {
         // we've hit a reflow root or the root frame
         if (!wasDirty) {
-          mDirtyRoots.Add(f);
+          mDirtyRoots.AppendElement(f);
           SetNeedLayoutFlush();
         }
 #ifdef DEBUG
@@ -4700,7 +4627,22 @@ PresShell::NotifyCounterStylesAreDirty()
 bool
 nsIPresShell::FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const
 {
-  return mDirtyRoots.FrameIsAncestorOfDirtyRoot(aFrame);
+  MOZ_ASSERT(aFrame);
+
+  // Look for a path from any dirty roots to aFrame, following GetParent().
+  // This check mirrors what FrameNeedsReflow() would have done if the reflow
+  // root didn't get in the way.
+  for (nsIFrame* dirtyFrame : mDirtyRoots) {
+    while (dirtyFrame) {
+      if (dirtyFrame == aFrame) {
+        return true;
+      }
+
+      dirtyFrame = dirtyFrame->GetParent();
+    }
+  }
+
+  return false;
 }
 
 void
@@ -8956,8 +8898,7 @@ PresShell::ScheduleReflowOffTimer()
 }
 
 bool
-PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
-                    OverflowChangedTracker* aOverflowTracker)
+PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 {
 #ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
@@ -9003,11 +8944,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     mReflowContinueTimer = nullptr;
   }
 
-  const bool isRoot = target == mFrameConstructor->GetRootFrame();
-
-  MOZ_ASSERT(isRoot || aOverflowTracker,
-             "caller must provide overflow tracker when reflowing "
-             "non-root frames");
+  nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
 
   // CreateReferenceRenderingContext can return nullptr
   RefPtr<gfxContext> rcx(CreateReferenceRenderingContext());
@@ -9021,15 +8958,10 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   // then use the target frame's size as the available space.
   WritingMode wm = target->GetWritingMode();
   LogicalSize size(wm);
-  if (isRoot) {
+  if (target == rootFrame) {
     size = LogicalSize(wm, mPresContext->GetVisibleArea().Size());
   } else {
     size = target->GetLogicalSize();
-  }
-
-  nsOverflowAreas oldOverflow; // initialized and used only when !isRoot
-  if (!isRoot) {
-    oldOverflow = target->GetOverflowAreas();
   }
 
   NS_ASSERTION(!target->GetNextInFlow() && !target->GetPrevInFlow(),
@@ -9042,7 +8974,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
                                 ReflowInput::CALLER_WILL_INIT);
   reflowInput.mOrthogonalLimit = size.BSize(wm);
 
-  if (isRoot) {
+  if (rootFrame == target) {
     reflowInput.Init(mPresContext);
 
     // When the root frame is being reflowed with unconstrained block-size
@@ -9094,12 +9026,18 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   // initiated at the root, then the size better not change unless its
   // height was unconstrained to start with.
   nsRect boundsRelativeToTarget = nsRect(0, 0, desiredSize.Width(), desiredSize.Height());
-  NS_ASSERTION((isRoot &&
+  NS_ASSERTION((target == rootFrame &&
                 size.BSize(wm) == NS_UNCONSTRAINEDSIZE) ||
                (desiredSize.ISize(wm) == size.ISize(wm) &&
                 desiredSize.BSize(wm) == size.BSize(wm)),
                "non-root frame's desired size changed during an "
                "incremental reflow");
+  NS_ASSERTION(target == rootFrame ||
+               desiredSize.VisualOverflow().IsEqualInterior(boundsRelativeToTarget),
+               "non-root reflow roots must not have visible overflow");
+  NS_ASSERTION(target == rootFrame ||
+               desiredSize.ScrollableOverflow().IsEqualEdges(boundsRelativeToTarget),
+               "non-root reflow roots must not have scrollable overflow");
   NS_ASSERTION(status.IsEmpty(),
                "reflow roots should never split");
 
@@ -9117,19 +9055,13 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
                                          nsContainerFrame::SET_ASYNC);
 
   target->DidReflow(mPresContext, nullptr);
-  if (isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
+  if (target == rootFrame && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
     mPresContext->SetVisibleArea(boundsRelativeToTarget);
   }
 
 #ifdef DEBUG
   mCurrentReflowRoot = nullptr;
 #endif
-
-  if (!isRoot && oldOverflow != target->GetOverflowAreas()) {
-    // The overflow area changed.  Propagate this change to ancestors.
-    aOverflowTracker->AddFrame(target->GetParent(),
-                               OverflowChangedTracker::CHILDREN_CHANGED);
-  }
 
   NS_ASSERTION(mPresContext->HasPendingInterrupt() ||
                mFramesToDirty.Count() == 0,
@@ -9154,7 +9086,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     }
 
     NS_ASSERTION(NS_SUBTREE_DIRTY(target), "Why is the target not dirty?");
-    mDirtyRoots.Add(target);
+    mDirtyRoots.AppendElement(target);
     SetNeedLayoutFlush();
 
     // Clear mFramesToDirty after we've done the NS_SUBTREE_DIRTY(target)
@@ -9247,11 +9179,11 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
       AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
       nsViewManager::AutoDisableRefresh refreshBlocker(mViewManager);
 
-      OverflowChangedTracker overflowTracker;
-
       do {
         // Send an incremental reflow notification to the target frame.
-        nsIFrame *target = mDirtyRoots.PopShallowestRoot();
+        int32_t idx = mDirtyRoots.Length() - 1;
+        nsIFrame *target = mDirtyRoots[idx];
+        mDirtyRoots.RemoveElementAt(idx);
 
         if (!NS_SUBTREE_DIRTY(target)) {
           // It's not dirty anymore, which probably means the notification
@@ -9260,7 +9192,7 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
           continue;
         }
 
-        interrupted = !DoReflow(target, aInterruptible, &overflowTracker);
+        interrupted = !DoReflow(target, aInterruptible);
 
         // Keep going until we're out of reflow commands, or we've run
         // past our deadline, or we're interrupted.
@@ -9268,8 +9200,6 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
                (!aInterruptible || PR_IntervalNow() < deadline));
 
       interrupted = !mDirtyRoots.IsEmpty();
-
-      overflowTracker.Flush();
     }
 
     // Exiting the scriptblocker might have killed us

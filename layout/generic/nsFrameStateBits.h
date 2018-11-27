@@ -235,9 +235,8 @@ FRAME_STATE_BIT(Generic, 43, NS_FRAME_SVG_LAYOUT)
 // ancestor.
 FRAME_STATE_BIT(Generic, 44, NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)
 
-// If this bit is set, then reflow may be dispatched from the current
-// frame instead of the root frame.
-FRAME_STATE_BIT(Generic, 45, NS_FRAME_DYNAMIC_REFLOW_ROOT)
+// Bits 45 is currently unused, but be kind and check with bug 1465474
+// first please :-)
 
 // This bit indicates that we're tracking visibility for this frame, and that
 // the frame has a VisibilityStateProperty property.
@@ -297,9 +296,7 @@ FRAME_STATE_BIT(Generic, 59, NS_FRAME_IS_IN_SINGLE_CHAR_MI)
 // NOTE: Bits 20-31 and 60-63 of the frame state are reserved for specific
 // frame classes.
 
-// NOTE: No more unused bits. If needed, investigate removing obsolete bits by
-// adjusting logic, or moving infrequently-used bits elsewhere. If more space
-// for frame state is still needed, look for bit field gaps in nsIFrame.
+// NOTE: Currently unused and available bit(s): 45.
 
 
 // == Frame state bits that apply to box frames ===============================
