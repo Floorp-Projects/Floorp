@@ -11,7 +11,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/PNeckoParent.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/HoldDropJSObjects.h"

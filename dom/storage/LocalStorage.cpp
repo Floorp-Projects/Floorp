@@ -15,8 +15,6 @@
 #include "nsIPrincipal.h"
 #include "nsICookiePermission.h"
 
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/StorageBinding.h"
 #include "mozilla/dom/StorageEvent.h"

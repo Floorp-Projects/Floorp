@@ -48,7 +48,6 @@
 #include "mozilla/dom/ContentBlockingLog.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/SegmentedVector.h"
@@ -1001,15 +1000,6 @@ public:
   }
 
   /**
-   * Get slow tracking content blocked flag for this document.
-   */
-  bool GetHasSlowTrackingContentBlocked()
-  {
-    return mContentBlockingLog.HasBlockedAnyOfType(
-        nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
-  }
-
-  /**
    * Get all cookies blocked flag for this document.
    */
   bool GetHasAllCookiesBlocked()
@@ -1054,17 +1044,6 @@ public:
     RecordContentBlockingLog(aOriginBlocked,
                              nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT,
                              aHasTrackingContentBlocked);
-  }
-
-  /**
-   * Set the slow tracking content blocked flag for this document.
-   */
-  void SetHasSlowTrackingContentBlocked(bool aHasSlowTrackingContentBlocked,
-                                        const nsAString& aOriginBlocked)
-  {
-    RecordContentBlockingLog(aOriginBlocked,
-                             nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT,
-                             aHasSlowTrackingContentBlocked);
   }
 
   /**
@@ -3773,39 +3752,6 @@ public:
     --mIgnoreOpensDuringUnloadCounter;
   }
 
-  void IncrementTrackerCount()
-  {
-    MOZ_ASSERT(!GetSameTypeParentDocument());
-    ++mNumTrackersFound;
-  }
-
-  void IncrementTrackerBlockedCount()
-  {
-    MOZ_ASSERT(!GetSameTypeParentDocument());
-    ++mNumTrackersBlocked;
-  }
-
-  void NoteTrackerBlockedReason(
-    mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED aLabel)
-  {
-    MOZ_ASSERT(!GetSameTypeParentDocument());
-    mTrackerBlockedReasons += aLabel;
-  }
-
-  uint32_t NumTrackersFound()
-  {
-    MOZ_ASSERT(!GetSameTypeParentDocument() || mNumTrackersFound == 0);
-
-    return mNumTrackersFound;
-  }
-
-  uint32_t NumTrackersBlocked()
-  {
-    MOZ_ASSERT(!GetSameTypeParentDocument() || mNumTrackersBlocked == 0);
-
-    return mNumTrackersBlocked;
-  }
-
   bool AllowPaymentRequest() const
   {
     return mAllowPaymentRequest;
@@ -4769,15 +4715,6 @@ protected:
 
   RefPtr<mozilla::dom::XULBroadcastManager> mXULBroadcastManager;
   RefPtr<mozilla::dom::XULPersist> mXULPersist;
-
-  // At the moment, trackers might be blocked by Tracking Protection or FastBlock.
-  // In order to know the numbers of trackers detected and blocked, we add
-  // these two values here and those are shared by TP and FB.
-  uint32_t mNumTrackersFound;
-  uint32_t mNumTrackersBlocked;
-
-  mozilla::EnumSet<mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED>
-    mTrackerBlockedReasons;
 
   // document lightweight theme for use with :-moz-lwtheme, :-moz-lwtheme-brighttext
   // and :-moz-lwtheme-darktext

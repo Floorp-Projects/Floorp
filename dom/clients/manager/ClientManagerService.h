@@ -15,6 +15,7 @@ namespace dom {
 
 class ClientManagerParent;
 class ClientSourceParent;
+class ContentParent;
 
 // Define a singleton service to manage client activity throughout the
 // browser.  This service runs on the PBackground thread.  To interact

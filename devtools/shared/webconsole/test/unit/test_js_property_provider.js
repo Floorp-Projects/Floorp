@@ -348,6 +348,14 @@ function runChecks(dbgObject, environment, sandbox) {
 
   results = propertyProvider("(1)['toFixed");
   test_has_exact_results(results, ["'toFixed'"]);
+
+  info("Test access on dot-notation invalid property name");
+  results = propertyProvider("testHyphenated.prop");
+  Assert.ok(!results.matches.has("prop-A"),
+    "Does not return invalid property name on dot access");
+
+  results = propertyProvider("testHyphenated['prop");
+  test_has_result(results, `'prop-A'`);
 }
 
 /**

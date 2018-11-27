@@ -30,8 +30,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileBlobImpl.h"

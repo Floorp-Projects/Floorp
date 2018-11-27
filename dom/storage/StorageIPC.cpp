@@ -8,8 +8,6 @@
 
 #include "LocalStorageManager.h"
 
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"

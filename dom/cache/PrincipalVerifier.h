@@ -18,6 +18,9 @@ namespace ipc {
 } // namespace ipc
 
 namespace dom {
+
+class ContentParent;
+
 namespace cache {
 
 class ManagerId;

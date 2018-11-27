@@ -13,7 +13,6 @@
 
 #include "harfbuzz/hb.h"
 #include "mozilla/FontPropertyTypes.h"
-#include "mozilla/dom/ContentParent.h"
 #include "cairo-win32.h"
 
 using namespace mozilla;

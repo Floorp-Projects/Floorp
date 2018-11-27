@@ -9,6 +9,7 @@ path:mobile/locales/l10n-onchange-changesets.json
 path:browser/locales/shipped-locales
 path:browser/config/version_display.txt
 path:browser/config/version.txt
+path:browser/config/whats_new_page.yml
 
 # Lots of random files in here are read. Just pull in the whole thing.
 path:build/

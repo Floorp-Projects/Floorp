@@ -70,7 +70,7 @@ GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow
                                     nsIURI** aTrackingURI,
                                     nsIPrincipal** aTrackingPrincipal)
 {
-  if (!nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow)) {
+  if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(a3rdPartyTrackingWindow)) {
     return false;
   }
 
@@ -84,7 +84,8 @@ GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow
   // Now we need the principal and the origin of the parent window.
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal =
     a3rdPartyTrackingWindow->GetTopLevelStorageAreaPrincipal();
-  if (NS_WARN_IF(!topLevelStoragePrincipal)) {
+  if (!topLevelStoragePrincipal) {
+    LOG(("No top-level storage area principal at hand"));
     return false;
   }
 
@@ -233,8 +234,7 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
-             aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
 
   nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
   if (NS_WARN_IF(!docShell)) {
@@ -262,10 +262,6 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
 
     case nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN:
       message = "CookieBlockedForeign";
-      break;
-
-    case nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT:
-      message = "CookieBlockedSlowTrackingContent";
       break;
 
     default:
@@ -815,8 +811,8 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
 
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
-  if (!nsContentUtils::IsTrackingResourceWindow(aWindow)) {
-    LOG(("Our window isn't a tracking window"));
+  if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow)) {
+    LOG(("Our window isn't a third-party tracking window"));
     return true;
   }
 
@@ -1052,8 +1048,8 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
   // Not a tracker.
-  if (!aChannel->GetIsTrackingResource()) {
-    LOG(("Our channel isn't a tracking channel"));
+  if (!aChannel->GetIsThirdPartyTrackingResource()) {
+    LOG(("Our channel isn't a third-party tracking channel"));
     return true;
   }
 
@@ -1320,19 +1316,12 @@ AntiTrackingCommon::NotifyBlockingDecision(nsIChannel* aChannel,
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
-             aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
   MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
              aDecision == BlockingDecision::eAllow);
 
   if (!aChannel) {
     return;
-  }
-
-  // When we allow loads, collapse all cookie related reason codes into STATE_COOKIES_LOADED.
-  bool sendCookieLoadedNotification = false;
-  if (aRejectedReason != nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT) {
-    sendCookieLoadedNotification = true;
   }
 
   // Can be called in EITHER the parent or child process.
@@ -1343,8 +1332,7 @@ AntiTrackingCommon::NotifyBlockingDecision(nsIChannel* aChannel,
     // Tell the child process channel to do this instead.
     if (aDecision == BlockingDecision::eBlock) {
       parentChannel->NotifyTrackingCookieBlocked(aRejectedReason);
-    } else if (sendCookieLoadedNotification) {
-      // Ignore the code related to fastblock
+    } else {
       parentChannel->NotifyCookieAllowed();
     }
     return;
@@ -1374,10 +1362,8 @@ AntiTrackingCommon::NotifyBlockingDecision(nsIChannel* aChannel,
     ReportBlockingToConsole(pwin, uri, aRejectedReason);
   }
 
-  if (sendCookieLoadedNotification) {
-    pwin->NotifyContentBlockingState(nsIWebProgressListener::STATE_COOKIES_LOADED,
-                                     aChannel, false, uri);
-  }
+  pwin->NotifyContentBlockingState(nsIWebProgressListener::STATE_COOKIES_LOADED,
+                                   aChannel, false, uri);
 }
 
 /* static */ void
@@ -1390,16 +1376,9 @@ AntiTrackingCommon::NotifyBlockingDecision(nsPIDOMWindowInner* aWindow,
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
-             aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
   MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
              aDecision == BlockingDecision::eAllow);
-
-  // When we allow loads, collapse all cookie related reason codes into STATE_COOKIES_LOADED.
-  bool sendCookieLoadedNotification = false;
-  if (aRejectedReason != nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT) {
-    sendCookieLoadedNotification = true;
-  }
 
   nsCOMPtr<nsPIDOMWindowOuter> pwin = GetTopWindow(aWindow);
   if (!pwin) {
@@ -1431,10 +1410,8 @@ AntiTrackingCommon::NotifyBlockingDecision(nsPIDOMWindowInner* aWindow,
     ReportBlockingToConsole(pwin, uri, aRejectedReason);
   }
 
-  if (sendCookieLoadedNotification) {
-    pwin->NotifyContentBlockingState(nsIWebProgressListener::STATE_COOKIES_LOADED,
-                                     channel, false, uri);
-  }
+  pwin->NotifyContentBlockingState(nsIWebProgressListener::STATE_COOKIES_LOADED,
+                                   channel, false, uri);
 }
 
 /* static */ void

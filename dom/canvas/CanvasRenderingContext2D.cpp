@@ -73,7 +73,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/PBrowserParent.h"

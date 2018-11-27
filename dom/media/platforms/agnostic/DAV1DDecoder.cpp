@@ -1,0 +1,252 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "DAV1DDecoder.h"
+
+#undef LOG
+#define LOG(arg, ...)                                                  \
+  DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, "::%s: " arg, __func__, \
+            ##__VA_ARGS__)
+
+namespace mozilla {
+
+DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
+    : mInfo(aParams.VideoConfig()),
+      mTaskQueue(aParams.mTaskQueue),
+      mImageContainer(aParams.mImageContainer) {}
+
+DAV1DDecoder::~DAV1DDecoder() {}
+
+RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
+  Dav1dSettings settings;
+  dav1d_default_settings(&settings);
+  int decoder_threads = 2;
+  if (mInfo.mDisplay.width >= 2048) {
+    decoder_threads = 8;
+  } else if (mInfo.mDisplay.width >= 1024) {
+    decoder_threads = 4;
+  }
+  settings.n_frame_threads =
+      std::min(decoder_threads, PR_GetNumberOfProcessors());
+
+  int res = dav1d_open(&mContext, &settings);
+  if (res < 0) {
+    return DAV1DDecoder::InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    RESULT_DETAIL("Couldn't get dAV1d decoder interface.")),
+        __func__);
+  }
+  return DAV1DDecoder::InitPromise::CreateAndResolve(TrackInfo::kVideoTrack,
+                                                     __func__);
+}
+
+RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::Decode(
+    MediaRawData* aSample) {
+  return InvokeAsync<MediaRawData*>(mTaskQueue, this, __func__,
+                                    &DAV1DDecoder::InvokeDecode, aSample);
+}
+
+void ReleaseDataBuffer_s(const uint8_t* buf, void* user_data) {
+  MOZ_ASSERT(user_data);
+  MOZ_ASSERT(buf);
+  DAV1DDecoder* d = static_cast<DAV1DDecoder*>(user_data);
+  d->ReleaseDataBuffer(buf);
+}
+
+void DAV1DDecoder::ReleaseDataBuffer(const uint8_t* buf) {
+  // The release callback may be called on a
+  // different thread defined by third party
+  // dav1d execution. Post a task into TaskQueue
+  // to ensure mDecodingBuffers is only ever
+  // accessed on the TaskQueue
+  RefPtr<DAV1DDecoder> self = this;
+  nsresult rv = mTaskQueue->Dispatch(
+      NS_NewRunnableFunction("DAV1DDecoder::ReleaseDataBuffer", [self, buf]() {
+        DebugOnly<bool> found = self->mDecodingBuffers.Remove(buf);
+        MOZ_ASSERT(found);
+      }));
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
+}
+
+RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::InvokeDecode(
+    MediaRawData* aSample) {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(aSample);
+
+  // Save the last timing values to use in drain.
+  mLastTimecode = aSample->mTimecode;
+  mLastDuration = aSample->mDuration;
+  mLastOffset = aSample->mOffset;
+  // Add the buffer to the hashtable in order to increase
+  // the ref counter and keep it alive. When dav1d does not
+  // need it any more will call it's release callback. Remove
+  // the buffer, in there, to reduce the ref counter and eventually
+  // free it. We need a hashtable and not an array because the
+  // release callback are not coming in the same order that the
+  // buffers have been added in the decoder (threading ordering
+  // inside decoder)
+  mDecodingBuffers.Put(aSample->Data(), aSample);
+  Dav1dData data;
+  int res = dav1d_data_wrap(&data, aSample->Data(), aSample->Size(),
+                            ReleaseDataBuffer_s, this);
+  if (res < 0) {
+    LOG("Create decoder data error.");
+    return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
+  }
+  DecodedData results;
+  do {
+    res = dav1d_send_data(mContext, &data);
+    if (res < 0 && res != -EAGAIN) {
+      LOG("Decode error: %d", res);
+      return DecodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__), __func__);
+    }
+    // Alway consume the whole buffer on success.
+    // At this point only -EAGAIN error is expected.
+    MOZ_ASSERT((res == 0 && !data.sz) ||
+               (res == -EAGAIN && data.sz == aSample->Size()));
+
+    MediaResult rs(NS_OK);
+    res = GetPicture(aSample, results, rs);
+    if (res < 0) {
+      if (res == -EAGAIN) {
+        // No frames ready to return. This is not an
+        // error, in some circumstances, we need to
+        // feed it with a certain amount of frames
+        // before we get a picture.
+        continue;
+      }
+      return DecodePromise::CreateAndReject(rs, __func__);
+    }
+  } while (data.sz > 0);
+
+  return DecodePromise::CreateAndResolve(std::move(results), __func__);
+}
+
+int DAV1DDecoder::GetPicture(const MediaRawData* aSample, DecodedData& aData,
+                             MediaResult& aResult) {
+  class Dav1dPictureWrapper {
+   public:
+    Dav1dPicture* operator&() { return &p; }
+    const Dav1dPicture& operator*() const { return p; }
+    ~Dav1dPictureWrapper() { dav1d_picture_unref(&p); }
+
+   private:
+    Dav1dPicture p = Dav1dPicture();
+  };
+  Dav1dPictureWrapper picture;
+
+  int res = dav1d_get_picture(mContext, &picture);
+  if (res < 0) {
+    LOG("Decode error: %d", res);
+    aResult = MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
+    return res;
+  }
+
+  if ((*picture).p.layout == DAV1D_PIXEL_LAYOUT_I400) {
+    return 0;
+  }
+
+  RefPtr<VideoData> v = ConstructImage(aSample, *picture);
+  if (!v) {
+    LOG("Image allocation error: %ux%u"
+        " display %ux%u picture %ux%u",
+        (*picture).p.w, (*picture).p.h, mInfo.mDisplay.width,
+        mInfo.mDisplay.height, mInfo.mImage.width, mInfo.mImage.height);
+    aResult = MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
+    return -1;
+  }
+  aData.AppendElement(std::move(v));
+  return 0;
+}
+
+already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
+    const MediaRawData* aSample, const Dav1dPicture& picture) {
+  VideoData::YCbCrBuffer b;
+  if (picture.p.bpc == 10) {
+    b.mColorDepth = ColorDepth::COLOR_10;
+  } else if (picture.p.bpc == 12) {
+    b.mColorDepth = ColorDepth::COLOR_12;
+  }
+  b.mPlanes[0].mData = static_cast<uint8_t*>(picture.data[0]);
+  b.mPlanes[0].mStride = picture.stride[0];
+  b.mPlanes[0].mHeight = picture.p.h;
+  b.mPlanes[0].mWidth = picture.p.w;
+  b.mPlanes[0].mOffset = 0;
+  b.mPlanes[0].mSkip = 0;
+
+  b.mPlanes[1].mData = static_cast<uint8_t*>(picture.data[1]);
+  b.mPlanes[1].mStride = picture.stride[1];
+  b.mPlanes[1].mOffset = 0;
+  b.mPlanes[1].mSkip = 0;
+
+  b.mPlanes[2].mData = static_cast<uint8_t*>(picture.data[2]);
+  b.mPlanes[2].mStride = picture.stride[1];
+  b.mPlanes[2].mOffset = 0;
+  b.mPlanes[2].mSkip = 0;
+
+  // https://code.videolan.org/videolan/dav1d/blob/master/tools/output/yuv.c#L67
+  const int ss_ver = picture.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+  const int ss_hor = picture.p.layout != DAV1D_PIXEL_LAYOUT_I444;
+
+  b.mPlanes[1].mHeight = (picture.p.h + ss_ver) >> ss_ver;
+  b.mPlanes[1].mWidth = (picture.p.w + ss_hor) >> ss_hor;
+
+  b.mPlanes[2].mHeight = (picture.p.h + ss_ver) >> ss_ver;
+  b.mPlanes[2].mWidth = (picture.p.w + ss_hor) >> ss_hor;
+
+  // Timestamp, duration and offset used here are wrong.
+  // We need to take those values from the decoder. Latest
+  // dav1d version allows for that.
+  return VideoData::CreateAndCopyData(
+      mInfo, mImageContainer, aSample->mOffset, aSample->mTime,
+      aSample->mDuration, b, aSample->mKeyframe, aSample->mTimecode,
+      mInfo.ScaledImageRect(picture.p.w, picture.p.h));
+}
+
+RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::Drain() {
+  RefPtr<DAV1DDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this] {
+    int res = 0;
+    DecodedData results;
+    do {
+      RefPtr<MediaRawData> empty(new MediaRawData());
+      // Update last timecode in case we loop over.
+      empty->mTimecode = empty->mTime = mLastTimecode =
+          mLastTimecode + mLastDuration;
+      empty->mDuration = mLastDuration;
+      empty->mOffset = mLastOffset;
+
+      MediaResult rs(NS_OK);
+      res = GetPicture(empty, results, rs);
+      if (res < 0 && res != -EAGAIN) {
+        return DecodePromise::CreateAndReject(rs, __func__);
+      }
+    } while (res != -EAGAIN);
+    return DecodePromise::CreateAndResolve(results, __func__);
+  });
+}
+
+RefPtr<MediaDataDecoder::FlushPromise> DAV1DDecoder::Flush() {
+  RefPtr<DAV1DDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    dav1d_flush(self->mContext);
+    return FlushPromise::CreateAndResolve(true, __func__);
+  });
+}
+
+RefPtr<ShutdownPromise> DAV1DDecoder::Shutdown() {
+  RefPtr<DAV1DDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    dav1d_close(&self->mContext);
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  });
+}
+
+}  // namespace mozilla
+#undef LOG

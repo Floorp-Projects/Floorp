@@ -2906,6 +2906,19 @@ class Vendor(MachCommandBase):
         from mozbuild.vendor_aom import VendorAOM
         vendor_command = self._spawn(VendorAOM)
         vendor_command.vendor(**kwargs)
+    @SubCommand('vendor', 'dav1d',
+                description='Vendor dav1d implementation of AV1 into the source repository.')
+    @CommandArgument('-r', '--revision',
+        help='Repository tag or commit to update to.')
+    @CommandArgument('--repo',
+        help='Repository url to pull a snapshot from. Supports gitlab.')
+    @CommandArgument('--ignore-modified', action='store_true',
+        help='Ignore modified files in current checkout',
+        default=False)
+    def vendor_dav1d(self, **kwargs):
+        from mozbuild.vendor_dav1d import VendorDav1d
+        vendor_command = self._spawn(VendorDav1d)
+        vendor_command.vendor(**kwargs)
 
     @SubCommand('vendor', 'python',
                 description='Vendor Python packages from pypi.org into third_party/python')

@@ -58,8 +58,30 @@ enum MaybeTailCall : bool {
     NonTailCall
 };
 
-// Contains information about a virtual machine function that can be called
-// from JIT code. Functions described in this manner must conform to a simple
+// [SMDOC] JIT-to-C++ Function Calls. (callVM)
+//
+// Sometimes it is easier to reuse C++ code by calling VM's functions. Calling a
+// function from the VM can be achieved with the use of callWithABI but this is
+// discouraged when the called functions might trigger exceptions and/or
+// garbage collections which are expecting to walk the stack. VMFunctions and
+// callVM are interfaces provided to handle the exception handling and register
+// the stack end (JITActivation) such that walking the stack is made possible.
+//
+// A VMFunction is a structure which contains the necessary information needed
+// for generating a trampoline function to make a call (with generateVMWrapper)
+// and to root the arguments of the function (in TraceJitExitFrame). VMFunctions
+// are created with the FunctionInfo template, which infers the fields of the
+// VMFunction from the function signature. The rooting and trampoline code is
+// therefore determined by the arguments of a function and their locations in
+// the signature of a function.
+//
+// VMFunction all expect a JSContext* as first argument. This argument is
+// implicitly provided by the trampoline code (in generateVMWrapper) and used
+// for creating new objects or reporting errors. If your function does not make
+// use of a JSContext* argument, then you might probably use a callWithABI
+// call.
+//
+// Functions described using the VMFunction system must conform to a simple
 // protocol: the return type must have a special "failure" value (for example,
 // false for bool, or nullptr for Objects). If the function is designed to
 // return a value that does not meet this requirement - such as
@@ -67,8 +89,45 @@ enum MaybeTailCall : bool {
 // specified. In this case, the return type must be boolean to indicate
 // failure.
 //
-// All functions described by VMFunction take a JSContext * as a first
-// argument, and are treated as re-entrant into the VM and therefore fallible.
+// JIT Code usage:
+//
+// Different JIT compilers in SpiderMonkey have their own implementations of
+// callVM to consume VMFunctions. However, the general shape of them is that
+// arguments that don't include the JIT Context or trailing out-param are pushed
+// on to the stack from right to left (rightmost argument is pushed first).
+//
+// Regardless of return value protocol being used (final outParam, or return
+// value) the generated trampolines ensure the return value ends up in
+// JSReturnReg, ReturnReg or ReturnDoubleReg.
+//
+// Example:
+//
+// The details will differ slightly between the different compilers in
+// SpiderMonkey, but the general shape of our usage looks like this:
+//
+// Suppose we have a function Foo:
+//
+//      bool Foo(JSContext* cx, HandleObject x, HandleId y,
+//               MutableHandleValue z);
+//
+// This function returns true on success, and z is the outparam return value.
+//
+// A VMFunction for this can be created using FunctionInfo. The typical pattern
+// used is:
+//
+//      typedef bool (*FooFn)(JSContext*, HandleObject, HandleId,
+//                            MutableHandleValue);
+//      const VMFunction FooInfo = FunctionInfo<FooFn>(Foo, "Foo");
+//
+// In the compiler code the call would then be issued like this:
+//
+//      masm.Push(id);
+//      masm.Push(obj);
+//      if (!callVM(FooInfo)) {
+//          return false;
+//      }
+//
+// After this, the result value is in the return value register.
 struct VMFunction
 {
     // Global linked list of all VMFunctions.

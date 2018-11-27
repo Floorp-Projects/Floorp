@@ -1397,6 +1397,11 @@ VARCACHE_PREF(
    MediaAv1Enabled,
   RelaxedAtomicBool, false
 )
+VARCACHE_PREF(
+  "media.av1.use-dav1d",
+   MediaAv1UseDav1d,
+  RelaxedAtomicBool, false
+)
 
 VARCACHE_PREF(
   "media.flac.enabled",
@@ -1709,13 +1714,6 @@ VARCACHE_PREF(
   "browser.contentblocking.originlog.length",
    browser_contentblocking_originlog_length,
   uint32_t, 32
-)
-
-// Whether FastBlock has been enabled.
-VARCACHE_PREF(
-  "browser.fastblock.enabled",
-  browser_fastblock_enabled,
-  bool, false
 )
 
 // Anti-tracking permission expiration

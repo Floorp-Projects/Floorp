@@ -11,7 +11,6 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/DataTransferItem.h"
-#include "mozilla/dom/ContentChild.h"
 #include "nsIClipboard.h"
 #include "nsISupportsPrimitives.h"
 #include "nsComponentManagerUtils.h"

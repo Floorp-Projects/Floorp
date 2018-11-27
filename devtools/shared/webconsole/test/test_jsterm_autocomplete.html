@@ -111,11 +111,13 @@
     if (!isWorker) {
       // `Cu` is not defined in workers, then we can't test `Cu.Sandbox`
       tests.push(doAutocompleteSandbox);
-      // Array literal, string and commands completion aren't handled in Workers yet.
+      // Some cases are handled in worker context because we can't use Parser.jsm.
+      // See Bug 1507181.
       tests.push(
         doAutocompleteArray,
         doAutocompleteString,
         doAutocompleteCommands,
+        doAutocompleteBracketSurroundedBySpaces,
       );
     }
 
@@ -299,11 +301,31 @@
       (await client.autocomplete("window.foobarObject.  foo ; window.foo")).matches;
     is(matches.length, 1);
     checkObject(matches, ["foobarObject"]);
+  }
 
-    matches =
-      (await client.autocomplete("window.emojiObject  .  ")).matches;
+  async function doAutocompleteBracketSurroundedBySpaces(client) {
+    const wrap = (arr, quote = `"`) => arr.map(x => `${quote}${x}${quote}`);
+    let matches = await getAutocompleteMatches(client, "window.foobarObject\n  [")
+    is(matches.length, 7);
+    checkObject(matches,
+      wrap(["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]));
+
+    matches = await getAutocompleteMatches(client, "window.foobarObject\n  ['o")
+    is(matches.length, 3);
+    checkObject(matches, wrap(["omg", "omgfoo", "omgstr"], "'"));
+
+    matches = await getAutocompleteMatches(client, "window.foobarObject\n  [\n  s");
     is(matches.length, 1);
-    checkObject(matches, ["😎"]);
+    checkObject(matches, [`"strfoo"`]);
+
+    matches = await getAutocompleteMatches(client, "window.foobarObject\n  [  ");
+    is(matches.length, 7);
+    checkObject(matches,
+      wrap(["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]));
+
+    matches = await getAutocompleteMatches(client, "window.emojiObject  [   '");
+    is(matches.length, 1);
+    checkObject(matches, [`'😎'`]);
   }
 
   async function doAutocompleteAfterOr(client) {
@@ -541,6 +563,12 @@ async function doKeywordsAutocomplete(client) {
   matches = (await client.autocomplete("window[func")).matches;
   ok(!matches.includes("function"),
     "'function' is not returned when doing an element access");
+  }
+
+  async function getAutocompleteMatches(client, input) {
+    info(`test autocomplete for "${input}"`);
+    const res = (await client.autocomplete(input));
+    return res.matches;
   }
 </script>
 </body>

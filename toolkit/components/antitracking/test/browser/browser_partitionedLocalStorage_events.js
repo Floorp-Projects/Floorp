@@ -10,7 +10,6 @@ add_task(async _ => {
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
     ["privacy.trackingprotection.annotate_channels", true],
-    ["browser.fastblock.enabled", false], // prevent intermittent failures
     ["privacy.restrict3rdpartystorage.partitionedHosts", "tracking.example.org,tracking.example.com"],
   ]});
 
@@ -102,7 +101,6 @@ add_task(async _ => {
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
     ["privacy.trackingprotection.annotate_channels", true],
-    ["browser.fastblock.enabled", false], // prevent intermittent failures
     ["privacy.restrict3rdpartystorage.partitionedHosts", "tracking.example.org,tracking.example.com"],
   ]});
 
@@ -185,7 +183,6 @@ add_task(async _ => {
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
     ["privacy.trackingprotection.annotate_channels", true],
-    ["browser.fastblock.enabled", false], // prevent intermittent failures
     ["privacy.restrict3rdpartystorage.partitionedHosts", "tracking.example.org,tracking.example.com"],
   ]});
 
@@ -267,7 +264,6 @@ add_task(async _ => {
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
     ["privacy.trackingprotection.annotate_channels", true],
-    ["browser.fastblock.enabled", false], // prevent intermittent failures
     ["privacy.restrict3rdpartystorage.partitionedHosts", "tracking.example.org,tracking.example.com"],
   ]});
 
@@ -334,7 +330,6 @@ add_task(async _ => {
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
     ["privacy.trackingprotection.annotate_channels", true],
-    ["browser.fastblock.enabled", false], // prevent intermittent failures
     ["privacy.restrict3rdpartystorage.partitionedHosts", "tracking.example.org,tracking.example.com"],
   ]});
 
@@ -403,7 +398,6 @@ add_task(async _ => {
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
     ["privacy.trackingprotection.annotate_channels", true],
-    ["browser.fastblock.enabled", false], // prevent intermittent failures
     ["privacy.restrict3rdpartystorage.partitionedHosts", "tracking.example.org,tracking.example.com"],
   ]});
 
@@ -470,7 +464,6 @@ add_task(async _ => {
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
     ["privacy.trackingprotection.annotate_channels", true],
-    ["browser.fastblock.enabled", false], // prevent intermittent failures
     ["privacy.restrict3rdpartystorage.partitionedHosts", "tracking.example.org,tracking.example.com"],
   ]});
 
