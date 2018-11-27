@@ -70,6 +70,10 @@ add_task(async function() {
   pressKey(dbg, "Escape");
   is(getItems(dbg).length, 9, "9 items in the list after escape pressed");
 
+  // Ensure no action is taken when Enter key is pressed
+  pressKey(dbg, "Enter");
+  is(getItems(dbg).length, 9, "9 items in the list after enter pressed");
+
   // check that the term 'todo' includes items with todo
   type(dbg, "todo");
   is(getItems(dbg).length, 2, "2 items in the list after 'todo' filter");

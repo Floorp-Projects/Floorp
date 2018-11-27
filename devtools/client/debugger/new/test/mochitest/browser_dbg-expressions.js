@@ -88,7 +88,7 @@ add_task(async function() {
   await resume(dbg);
   await addExpression(dbg, "location");
 
-  is(findAllElements(dbg, "expressionNodes").length, 17);
+  is(findAllElements(dbg, "expressionNodes").length, 34);
 
   await toggleExpressionNode(dbg, 1);
   is(findAllElements(dbg, "expressionNodes").length, 1);
