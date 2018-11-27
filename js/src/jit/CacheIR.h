@@ -340,6 +340,7 @@ extern const char* const CacheKindNames[];
     _(CallStringSplitResult)              \
     _(CallStringConcatResult)             \
     _(CallStringObjectConcatResult)       \
+    _(CallIsSuspendedGeneratorResult)     \
                                           \
     _(CompareStringResult)                \
     _(CompareObjectResult)                \
@@ -1300,6 +1301,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallNativeGetElementResult, obj);
         writeOperandId(index);
     }
+    void callIsSuspendedGeneratorResult(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::CallIsSuspendedGeneratorResult, val);
+    }
     void loadEnvironmentFixedSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadEnvironmentFixedSlotResult, obj);
         addStubField(offset, StubField::Type::RawWord);
@@ -1927,6 +1931,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator
     bool tryAttachStringSplit();
     bool tryAttachArrayPush();
     bool tryAttachArrayJoin();
+    bool tryAttachIsSuspendedGenerator();
 
     void trackAttached(const char* name);
 
