@@ -33,7 +33,7 @@ add_task(async function() {
 
   info("Add an extension to the remote client");
   const addon = { name: "Test extension name", debuggable: true };
-  usbClient.listAddons = () => ({ addons: [addon] });
+  usbClient.listAddons = () => [addon];
   usbClient._eventEmitter.emit("addonListChanged");
 
   info("Wait until the extension appears");
@@ -47,7 +47,7 @@ add_task(async function() {
   // previous implementation was updating the USB runtime extensions list when the _local_
   // AddonManager was updated.
   info("Remove the extension from the remote client WITHOUT sending an event");
-  usbClient.listAddons = () => ({ addons: [] });
+  usbClient.listAddons = () => [];
 
   info("Simulate an addon update on the ThisFirefox client");
   usbMocks.thisFirefoxClient._eventEmitter.emit("addonListChanged");
