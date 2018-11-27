@@ -627,7 +627,7 @@ PaymentOptions::Create(const IPCPaymentOptions& aIPCOptions,
                        aIPCOptions.requestPayerEmail(),
                        aIPCOptions.requestPayerPhone(),
                        aIPCOptions.requestShipping(),
-                       false, //aIPCOptions.requestBillingAddress(),
+                       aIPCOptions.requestBillingAddress(),
                        aIPCOptions.shippingType());
   options.forget(aOptions);
   return NS_OK;
