@@ -240,6 +240,7 @@ impl SurfaceDescriptor {
                 PrimitiveInstanceKind::LegacyPrimitive { .. } => {
                     return None;
                 }
+                PrimitiveInstanceKind::YuvImage { .. } |
                 PrimitiveInstanceKind::LineDecoration { .. } |
                 PrimitiveInstanceKind::TextRun { .. } |
                 PrimitiveInstanceKind::NormalBorder { .. } |
