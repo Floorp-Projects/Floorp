@@ -8,6 +8,8 @@ const { ADB } = require("devtools/shared/adb/adb");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 const { ClientWrapper } = require("./client-wrapper");
+const { remoteClientManager } =
+  require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 const { RUNTIMES } = require("../constants");
 
@@ -33,10 +35,13 @@ async function createUSBClient(socketPath) {
 }
 
 async function createClientForRuntime(runtime) {
-  const { extra, type } = runtime;
+  const { extra, id, type } = runtime;
 
   if (type === RUNTIMES.THIS_FIREFOX) {
     return createLocalClient();
+  } else if (remoteClientManager.hasClient(id, type)) {
+    const { client, transportDetails } = remoteClientManager.getClient(id, type);
+    return { clientWrapper: new ClientWrapper(client), transportDetails };
   } else if (type === RUNTIMES.NETWORK) {
     const { host, port } = extra.connectionParameters;
     return createNetworkClient(host, port);
