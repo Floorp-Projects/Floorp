@@ -24,7 +24,8 @@ add_task(async function() {
   });
   usbMocks.emitUpdate();
 
-  await connectToRuntime(RUNTIME_DEVICE_NAME, RUNTIME_APP_NAME, document);
+  await connectToRuntime(RUNTIME_DEVICE_NAME, document);
+  await selectRuntime(RUNTIME_DEVICE_NAME, RUNTIME_APP_NAME, document);
 
   const extensionPane = getDebugTargetPane("Extensions", document);
   info("Check an empty target pane message is displayed");
