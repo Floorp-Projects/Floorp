@@ -419,6 +419,13 @@ protected:
     ~IToplevelProtocol();
 
 public:
+    enum ProcessIdState {
+        eUnstarted,
+        ePending,
+        eReady,
+        eError
+    };
+
     class ToplevelState final : public ProtocolState
     {
 #ifdef FUZZING
@@ -480,7 +487,8 @@ public:
     ProtocolId GetProtocolId() const { return mProtocolId; }
 
     base::ProcessId OtherPid() const final;
-    void SetOtherProcessId(base::ProcessId aOtherPid);
+    void SetOtherProcessId(base::ProcessId aOtherPid,
+                           ProcessIdState aState = ProcessIdState::eReady);
 
     bool TakeMinidump(nsIFile** aDump, uint32_t* aSequence);
 
@@ -620,12 +628,16 @@ protected:
     virtual already_AddRefed<nsIEventTarget>
     GetSpecificMessageEventTarget(const Message& aMsg) { return nullptr; }
 
+    // This monitor protects mOtherPid and mOtherPidState. All other fields
+    // should only be accessed on the worker thread.
+    mutable mozilla::Monitor mMonitor;
   private:
     base::ProcessId OtherPidMaybeInvalid() const;
 
     ProtocolId mProtocolId;
     UniquePtr<Transport> mTrans;
     base::ProcessId mOtherPid;
+    ProcessIdState mOtherPidState;
     bool mIsMainThreadProtocol;
 };
 

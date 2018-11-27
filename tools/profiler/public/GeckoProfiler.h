@@ -929,13 +929,22 @@ protected:
   const mozilla::Maybe<uint32_t> mDocShellHistoryId;
 };
 
-// Get the MOZ_PROFILER_STARTUP* environment variables that should be
-// supplied to a child process that is about to be launched, in order
-// to make that child process start with the same profiler settings as
-// in the current process.  The given function is invoked once for
-// each variable to be set.
-void GetProfilerEnvVarsForChildProcess(
-  std::function<void(const char* key, const char* value)>&& aSetEnv);
+// Set MOZ_PROFILER_STARTUP* environment variables that will be inherited into
+// a child process that is about to be launched, in order to make that child
+// process start with the same profiler settings as in the current process.
+class MOZ_RAII AutoSetProfilerEnvVarsForChildProcess
+{
+public:
+  explicit AutoSetProfilerEnvVarsForChildProcess(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  ~AutoSetProfilerEnvVarsForChildProcess();
+
+private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  char mSetCapacity[64];
+  char mSetInterval[64];
+  char mSetFeaturesBitfield[64];
+  char mSetFilters[1024];
+};
 
 } // namespace mozilla
 
