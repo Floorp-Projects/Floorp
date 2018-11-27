@@ -55,6 +55,9 @@ CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const
   }
 
   switch (animatedValue->mType) {
+    case AnimatedValue::COLOR:
+      omtaValue = animatedValue->mColor;
+      break;
     case AnimatedValue::OPACITY:
       omtaValue = animatedValue->mOpacity;
       break;
@@ -116,6 +119,18 @@ CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                    std::move(aTransformInDevSpace),
                    gfx::Matrix4x4(),
                    dontCare);
+}
+
+void
+CompositorAnimationStorage::SetAnimatedValue(uint64_t aId, nscolor aColor)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  auto count = mAnimatedValues.Count();
+  AnimatedValue* value = mAnimatedValues.LookupOrAdd(aId, aColor);
+  if (count == mAnimatedValues.Count()) {
+    MOZ_ASSERT(value->mType == AnimatedValue::COLOR);
+    value->mColor = aColor;
+  }
 }
 
 void
