@@ -529,7 +529,7 @@ Target.prototype = {
       // The call to attachTarget is to be removed once all Target are having a front
       // passed as contructor's argument.
       if (!this.activeTab) {
-        const [, targetFront] = await this._client.attachTarget(this.form.actor);
+        const [, targetFront] = await this._client.attachTarget(this.form);
         this.activeTab = targetFront;
       } else {
         await this.activeTab.attach();
