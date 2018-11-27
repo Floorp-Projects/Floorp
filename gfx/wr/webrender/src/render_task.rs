@@ -7,7 +7,7 @@ use api::{DevicePixelScale, ImageDescriptor, ImageFormat};
 use api::{LineStyle, LineOrientation, LayoutSize, ColorF, DirtyRect};
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
-use border::{BorderCornerCacheKey, BorderEdgeCacheKey};
+use border::BorderSegmentCacheKey;
 use box_shadow::{BoxShadowCacheKey};
 use clip::{ClipDataStore, ClipItem, ClipStore, ClipNodeRange};
 use clip_scroll_tree::SpatialNodeIndex;
@@ -1118,8 +1118,7 @@ pub enum RenderTaskCacheKeyKind {
     #[allow(dead_code)]
     Glyph(GpuGlyphCacheKey),
     Picture(SurfaceCacheKey),
-    BorderEdge(BorderEdgeCacheKey),
-    BorderCorner(BorderCornerCacheKey),
+    BorderSegment(BorderSegmentCacheKey),
     LineDecoration(LineDecorationCacheKey),
 }
 
