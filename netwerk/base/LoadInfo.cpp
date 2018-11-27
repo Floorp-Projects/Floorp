@@ -85,7 +85,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsThirdPartyContext(false)
   , mIsDocshellReload(false)
   , mSendCSPViolationEvents(true)
-  , mTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::all)
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
@@ -358,7 +357,6 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mIsThirdPartyContext(false) // NB: TYPE_DOCUMENT implies not third-party.
   , mIsDocshellReload(false)
   , mSendCSPViolationEvents(true)
-  , mTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::all)
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
@@ -460,7 +458,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mAncestorPrincipals(rhs.mAncestorPrincipals)
   , mAncestorOuterWindowIDs(rhs.mAncestorOuterWindowIDs)
   , mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders)
-  , mTrackerBlockedReason(rhs.mTrackerBlockedReason)
   , mForcePreflight(rhs.mForcePreflight)
   , mIsPreflight(rhs.mIsPreflight)
   , mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal)
@@ -556,7 +553,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mAncestorPrincipals(std::move(aAncestorPrincipals))
   , mAncestorOuterWindowIDs(aAncestorOuterWindowIDs)
   , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
-  , mTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::all)
   , mForcePreflight(aForcePreflight)
   , mIsPreflight(aIsPreflight)
   , mLoadTriggeredFromExternal(aLoadTriggeredFromExternal)
@@ -1398,21 +1394,6 @@ NS_IMETHODIMP
 LoadInfo::SetIsTrackerBlocked(bool aIsTrackerBlocked)
 {
   mIsTrackerBlocked = aIsTrackerBlocked;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED *aLabel)
-{
-  MOZ_ASSERT(aLabel);
-  *aLabel = mTrackerBlockedReason;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED aLabel)
-{
-  mTrackerBlockedReason = aLabel;
   return NS_OK;
 }
 

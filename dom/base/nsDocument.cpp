@@ -1667,19 +1667,6 @@ nsDocument::~nsDocument()
         }
       }
     }
-
-    // Report the fastblock telemetry probes when the document is dying if
-    // fastblock is enabled and we're not a private document.  We always report
-    // the all probe, and for the rest, report each category's probe depending
-    // on whether the respective bit has been set in our enum set.
-    if (StaticPrefs::browser_fastblock_enabled() &&
-        !nsContentUtils::IsInPrivateBrowsing(this)) {
-      for (auto label : mTrackerBlockedReasons) {
-        AccumulateCategorical(label);
-      }
-      // Always accumulate the "all" probe since we will use it as a baseline counter.
-      AccumulateCategorical(Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::all);
-    }
   }
 
   ReportUseCounters();
