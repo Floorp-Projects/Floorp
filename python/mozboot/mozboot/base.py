@@ -253,6 +253,14 @@ class BaseBootstrapper(object):
             '%s does not yet implement suggest_mobile_android_artifact_mode_mozconfig()'
             % __name__)
 
+    def ensure_clang_static_analysis_package(self, checkout_root):
+        '''
+        Install the clang static analysis package
+        '''
+        raise NotImplementedError(
+            '%s does not yet implement ensure_clang_static_analysis_package()'
+            % __name__)
+
     def ensure_stylo_packages(self, state_dir, checkout_root):
         '''
         Install any necessary packages needed for Stylo development.
@@ -267,6 +275,24 @@ class BaseBootstrapper(object):
         raise NotImplementedError(
             '%s does not yet implement ensure_node_packages()'
             % __name__)
+
+    def install_toolchain_static_analysis(self, checkout_root):
+        mach_binary = os.path.join(checkout_root, 'mach')
+        mach_binary = os.path.abspath(mach_binary)
+        if not os.path.exists(mach_binary):
+            raise ValueError("mach not found at %s" % mach_binary)
+
+        if not sys.executable:
+            raise ValueError("cannot determine path to Python executable")
+
+        cmd = [sys.executable, mach_binary, 'static-analysis', 'install',
+               '--force', '--minimal-install']
+
+        from subprocess import CalledProcessError
+        try:
+            subprocess.check_call(cmd)
+        except CalledProcessError as e:
+            print(e.output)
 
     def install_toolchain_artifact(self, state_dir, checkout_root, toolchain_job):
         mach_binary = os.path.join(checkout_root, 'mach')
