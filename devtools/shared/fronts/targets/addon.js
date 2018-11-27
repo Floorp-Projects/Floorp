@@ -33,6 +33,19 @@ const AddonTargetFront = protocol.FrontClassWithSpec(addonTargetSpec, {
     }
   },
 
+  isLegacyTemporaryExtension() {
+    if (!this.type) {
+      // If about:debugging is connected to an older then 59 remote Firefox, and type is
+      // not available on the addon/webextension actors, return false to avoid showing
+      // irrelevant warning messages.
+      return false;
+    }
+    return this.type == "extension" &&
+           this.temporarilyInstalled &&
+           !this.isWebExtension &&
+           !this.isAPIExtension;
+  },
+
   attach: custom(async function() {
     const response = await this._attach();
 
