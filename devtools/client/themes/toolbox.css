@@ -461,11 +461,11 @@
   box-sizing: border-box;
   min-height: 29px;
 
-  --progress-recording-background: #ffebeb;
-  --progress-playing-background: #ebf6ff;
+  --progress-recording-background: hsl(0, 100%, 97%);
+  --progress-playing-background: hsl(207, 100%, 97%);
 
-  --recording-marker-background: hsl(14.9, 100%, 47.3%);
-  --recording-marker-background-hover: hsl(14.9, 100%, 37.3%);
+  --recording-marker-background: hsl(14.9, 100%, 67%);
+  --recording-marker-background-hover: hsl(14.9, 100%, 47%);
   --command-button-size: 14px;
   --command-button-primary-size: 20px;
 }
@@ -490,6 +490,17 @@
   background: var(--progress-playing-background);
 }
 
+.webreplay-player #overlay:not(.recording) .progress::after {
+  background: var(--purple-50);
+  width: 1px;
+  height: 100%;
+  right: 0;
+  opacity: 0.4;
+  display: block;
+  content: "";
+  position: absolute;
+}
+
 .webreplay-player .recording .progress {
   background: var(--progress-recording-background);
 }
@@ -501,7 +512,7 @@
   height: 7px;
   border-radius: 4.5px;
   top: calc(50% - 3.5px);
-  background: var(--blue-50);
+  background: var(--blue-40);
 }
 
 .webreplay-player .message.overlayed {
@@ -511,6 +522,15 @@
 
 .webreplay-player .message.overlayed.future {
   border-color: #fff;
+}
+
+.webreplay-player .message.highlighted {
+  background-color: var(--blue-60);
+  transform: scale(1.25);
+}
+
+.webreplay-player .recording .message.highlighted {
+  background-color: var(--recording-marker-background-hover);
 }
 
 .webreplay-player .recording .message.overlayed {
@@ -588,7 +608,7 @@
 .webreplay-player .progress-line {
   width: 0%;
   height: 1px;
-  background: #0074e8;
+  background: var(--blue-40);
   position: absolute;
   left: 0;
   right: 10px;
