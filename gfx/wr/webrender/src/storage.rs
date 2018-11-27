@@ -78,6 +78,10 @@ impl<T> Storage<T> {
         self.data.len()
     }
 
+    pub fn clear(&mut self) {
+        self.data.clear();
+    }
+
     pub fn push(&mut self, t: T) -> Index<T> {
         let index = self.data.len();
         self.data.push(t);

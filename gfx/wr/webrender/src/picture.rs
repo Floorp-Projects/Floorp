@@ -436,8 +436,7 @@ impl TileCache {
                                 image_keys.extend_from_slice(yuv_key);
                             }
                             BrushKind::RadialGradient { .. } |
-                            BrushKind::LinearGradient { .. } |
-                            BrushKind::Border { .. } => {
+                            BrushKind::LinearGradient { .. } => {
                             }
                         }
                     }
@@ -445,7 +444,9 @@ impl TileCache {
             }
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } |
-            PrimitiveInstanceKind::Clear => {
+            PrimitiveInstanceKind::Clear |
+            PrimitiveInstanceKind::NormalBorder { .. } |
+            PrimitiveInstanceKind::ImageBorder { .. } => {
                 // These don't contribute dependencies
             }
         }
