@@ -221,15 +221,16 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
  * This class provides a stub implementation of nsIWebBrowserChrome2, as needed
  * by nsAppShellService::CreateWindowlessBrowser
  */
-class WebBrowserChrome2Stub : public nsIWebBrowserChrome2,
-                              public nsIEmbeddingSiteWindow,
-                              public nsIInterfaceRequestor,
-                              public nsSupportsWeakReference {
+class WebBrowserChrome2Stub final : public nsIWebBrowserChrome2,
+                                    public nsIEmbeddingSiteWindow,
+                                    public nsIInterfaceRequestor,
+                                    public nsSupportsWeakReference {
 protected:
     nsCOMPtr<nsIWebBrowser> mBrowser;
     virtual ~WebBrowserChrome2Stub() {}
 public:
-    explicit WebBrowserChrome2Stub(nsIWebBrowser *aBrowser) : mBrowser(aBrowser) {}
+    void SetBrowser(nsIWebBrowser* aBrowser) { mBrowser = aBrowser; }
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIWEBBROWSERCHROME2
@@ -478,27 +479,12 @@ WindowlessBrowser::GetDocShell(nsIDocShell** aDocShell)
 NS_IMETHODIMP
 nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWindowlessBrowser **aResult)
 {
-  /* First, we create an instance of nsWebBrowser. Instances of this class have
-   * an associated doc shell, which is what we're interested in.
-   */
-  nsCOMPtr<nsIWebBrowser> browser =
-    new nsWebBrowser(aIsChrome ? nsIDocShellTreeItem::typeChromeWrapper
-                               : nsIDocShellTreeItem::typeContentWrapper);
-
-  if (!browser) {
-    NS_ERROR("Couldn't create instance of nsWebBrowser!");
-    return NS_ERROR_FAILURE;
-  }
-
-  /* Next, we set the container window for our instance of nsWebBrowser. Since
+  /* First, we set the container window for our instance of nsWebBrowser. Since
    * we don't actually have a window, we instead set the container window to be
    * an instance of WebBrowserChrome2Stub, which provides a stub implementation
    * of nsIWebBrowserChrome2.
    */
-  RefPtr<WebBrowserChrome2Stub> stub = new WebBrowserChrome2Stub(browser);
-  browser->SetContainerWindow(stub);
-
-  nsCOMPtr<nsIWebNavigation> navigation = do_QueryInterface(browser);
+  RefPtr<WebBrowserChrome2Stub> stub = new WebBrowserChrome2Stub();
 
   /* A windowless web browser doesn't have an associated OS level window. To
    * accomplish this, we initialize the window associated with our instance of
@@ -515,12 +501,29 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWindowlessBrowser 
     NS_ERROR("Couldn't create instance of stub widget");
     return NS_ERROR_FAILURE;
   }
+
   nsresult rv =
     widget->Create(nullptr, 0, LayoutDeviceIntRect(0, 0, 0, 0), nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(navigation);
-  window->InitWindow(0, widget, 0, 0, 0, 0);
-  window->Create();
+
+  /* Next, we create an instance of nsWebBrowser. Instances of this class have
+   * an associated doc shell, which is what we're interested in.
+   */
+  nsCOMPtr<nsIWebBrowser> browser =
+    nsWebBrowser::Create(stub,
+                         widget,
+                         OriginAttributes(),
+                         nullptr,
+                         aIsChrome ? nsIDocShellTreeItem::typeChromeWrapper
+                         : nsIDocShellTreeItem::typeContentWrapper);
+
+  if (NS_WARN_IF(!browser)) {
+    NS_ERROR("Couldn't create instance of nsWebBrowser!");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Make sure the container window owns the the nsWebBrowser instance.
+  stub->SetBrowser(browser);
 
   nsISupports *isstub = NS_ISUPPORTS_CAST(nsIWebBrowserChrome2*, stub);
   RefPtr<nsIWindowlessBrowser> result = new WindowlessBrowser(browser, isstub);

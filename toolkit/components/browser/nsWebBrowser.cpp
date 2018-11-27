@@ -57,8 +57,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 nsWebBrowser::nsWebBrowser(int aItemType)
-  : mInitInfo(new nsWebBrowserInitInfo())
-  , mContentType(aItemType)
+  : mContentType(aItemType)
   , mActivating(false)
   , mShouldEnableHistory(true)
   , mIsActive(true)
@@ -80,6 +79,124 @@ nsWebBrowser::~nsWebBrowser()
   InternalDestroy();
 }
 
+nsIWidget*
+nsWebBrowser::EnsureWidget()
+{
+  if (mParentWidget) {
+    return mParentWidget;
+  }
+
+  mInternalWidget = nsIWidget::CreateChildWindow();
+  if (NS_WARN_IF(!mInternalWidget)) {
+    return nullptr;
+  }
+
+  nsWidgetInitData widgetInit;
+  widgetInit.clipChildren = true;
+  widgetInit.mWindowType = eWindowType_child;
+  LayoutDeviceIntRect bounds(0, 0, 0, 0);
+
+  mInternalWidget->SetWidgetListener(&mWidgetListenerDelegate);
+  NS_ENSURE_SUCCESS(mInternalWidget->Create(nullptr, mParentNativeWindow,
+                                            bounds, &widgetInit),
+                    nullptr);
+
+  return mInternalWidget;
+}
+
+/* static */ already_AddRefed<nsWebBrowser>
+nsWebBrowser::Create(nsIWebBrowserChrome* aContainerWindow,
+                     nsIWidget* aParentWidget,
+                     const OriginAttributes& aOriginAttributes,
+                     mozIDOMWindowProxy* aOpener,
+                     int aItemType)
+{
+  RefPtr<nsWebBrowser> browser = new nsWebBrowser(aItemType);
+
+  // nsWebBrowser::SetContainer also calls nsWebBrowser::EnsureDocShellTreeOwner
+  NS_ENSURE_SUCCESS(browser->SetContainerWindow(aContainerWindow), nullptr);
+  NS_ENSURE_SUCCESS(browser->SetParentWidget(aParentWidget), nullptr);
+
+  nsCOMPtr<nsIWidget> docShellParentWidget = browser->EnsureWidget();
+  if (NS_WARN_IF(!docShellParentWidget)) {
+    return nullptr;
+  }
+
+  // XXX(nika): Consider supporting creating nsWebBrowser for an existing
+  // BrowsingContext (e.g. during a X-process load).
+  using BrowsingContext = mozilla::dom::BrowsingContext;
+  RefPtr<BrowsingContext> openerContext =
+      aOpener ? nsPIDOMWindowOuter::From(aOpener)->GetBrowsingContext()
+              : nullptr;
+
+  RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
+      /* aParent */ nullptr, openerContext, EmptyString(),
+      aItemType != typeChromeWrapper ? BrowsingContext::Type::Content
+                                     : BrowsingContext::Type::Chrome);
+
+  RefPtr<nsDocShell> docShell = nsDocShell::Create(browsingContext);
+  if (NS_WARN_IF(!docShell)) {
+    return nullptr;
+  }
+  docShell->SetOriginAttributes(aOriginAttributes);
+  browser->SetDocShell(docShell);
+
+  // get the system default window background colour
+  LookAndFeel::GetColor(LookAndFeel::eColorID_WindowBackground,
+                        &browser->mBackgroundColor);
+
+  // HACK ALERT - this registration registers the nsDocShellTreeOwner as a
+  // nsIWebBrowserListener so it can setup its MouseListener in one of the
+  // progress callbacks. If we can register the MouseListener another way, this
+  // registration can go away, and nsDocShellTreeOwner can stop implementing
+  // nsIWebProgressListener.
+  RefPtr<nsDocShellTreeOwner> docShellTreeOwner = browser->mDocShellTreeOwner;
+  nsCOMPtr<nsISupports> supports = nullptr;
+  Unused << docShellTreeOwner->QueryInterface(
+    NS_GET_IID(nsIWebProgressListener),
+    static_cast<void**>(getter_AddRefs(supports)));
+  Unused << browser->BindListener(supports, NS_GET_IID(nsIWebProgressListener));
+
+  nsCOMPtr<nsIBaseWindow> docShellAsWin = browser->mDocShellAsWin;
+  NS_ENSURE_SUCCESS(
+      docShellAsWin->InitWindow(nullptr, docShellParentWidget, 0, 0, 0, 0),
+      nullptr);
+
+  docShell->SetTreeOwner(docShellTreeOwner);
+
+  // If the webbrowser is a content docshell item then we won't hear any
+  // events from subframes. To solve that we install our own chrome event
+  // handler that always gets called (even for subframes) for any bubbling
+  // event.
+
+  docShell->InitSessionHistory();
+
+  if (XRE_IsParentProcess()) {
+    // Hook up global history. Do not fail if we can't - just warn.
+    DebugOnly<nsresult> rv = browser->EnableGlobalHistory(browser->mShouldEnableHistory);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
+  }
+
+  NS_ENSURE_SUCCESS(docShellAsWin->Create(), nullptr);
+
+  // Hook into the OnSecurityChange() notification for lock/unlock icon
+  // updates
+  // this works because the implementation of nsISecureBrowserUI
+  // (nsSecureBrowserUIImpl) calls docShell->SetSecurityUI(this);
+  nsCOMPtr<nsISecureBrowserUI> securityUI =
+    do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID);
+  if (NS_WARN_IF(!securityUI)) {
+    return nullptr;
+  }
+  securityUI->Init(docShell);
+
+  docShellTreeOwner->AddToWatcher(); // evil twin of Remove in SetDocShell(0)
+  docShellTreeOwner->AddChromeListeners();
+
+  return browser.forget();
+}
+
+
 NS_IMETHODIMP
 nsWebBrowser::InternalDestroy()
 {
@@ -95,8 +212,6 @@ nsWebBrowser::InternalDestroy()
     mDocShellTreeOwner->WebBrowser(nullptr);
     mDocShellTreeOwner = nullptr;
   }
-
-  mInitInfo = nullptr;
 
   return NS_OK;
 }
@@ -253,8 +368,6 @@ nsWebBrowser::GetName(nsAString& aName)
 {
   if (mDocShell) {
     mDocShell->GetName(aName);
-  } else {
-    aName = mInitInfo->name;
   }
 
   return NS_OK;
@@ -265,8 +378,6 @@ nsWebBrowser::SetName(const nsAString& aName)
 {
   if (mDocShell) {
     return mDocShell->SetName(aName);
-  } else {
-    mInitInfo->name = aName;
   }
 
   return NS_OK;
@@ -278,8 +389,6 @@ nsWebBrowser::NameEquals(const nsAString& aName, bool* aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   if (mDocShell) {
     return mDocShell->NameEquals(aName, aResult);
-  } else {
-    *aResult = mInitInfo->name.Equals(aName);
   }
 
   return NS_OK;
@@ -920,133 +1029,25 @@ nsWebBrowser::InitWindow(nativeWindow aParentNativeWindow,
                          int32_t aX, int32_t aY,
                          int32_t aCX, int32_t aCY)
 {
-  NS_ENSURE_ARG(aParentNativeWindow || aParentWidget);
-  NS_ENSURE_STATE(!mDocShell || mInitInfo);
-
-  if (aParentWidget) {
-    NS_ENSURE_SUCCESS(SetParentWidget(aParentWidget), NS_ERROR_FAILURE);
-  } else
-    NS_ENSURE_SUCCESS(SetParentNativeWindow(aParentNativeWindow),
-                      NS_ERROR_FAILURE);
-
-  NS_ENSURE_SUCCESS(SetPositionAndSize(aX, aY, aCX, aCY, 0),
-                    NS_ERROR_FAILURE);
-
-  return NS_OK;
+  // nsIBaseWindow::InitWindow and nsIBaseWindow::Create
+  // implementations have been merged into nsWebBrowser::Create
+  MOZ_DIAGNOSTIC_ASSERT(false);
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
 nsWebBrowser::Create()
 {
-  NS_ENSURE_STATE(!mDocShell && (mParentNativeWindow || mParentWidget));
-
-  nsresult rv = EnsureDocShellTreeOwner();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIWidget> docShellParentWidget(mParentWidget);
-  if (!mParentWidget) {
-    // Create the widget
-    mInternalWidget = nsIWidget::CreateChildWindow();
-    NS_ENSURE_TRUE(mInternalWidget, NS_ERROR_FAILURE);
-
-    docShellParentWidget = mInternalWidget;
-    nsWidgetInitData widgetInit;
-
-    widgetInit.clipChildren = true;
-
-    widgetInit.mWindowType = eWindowType_child;
-    LayoutDeviceIntRect bounds(mInitInfo->x, mInitInfo->y,
-                               mInitInfo->cx, mInitInfo->cy);
-
-    mInternalWidget->SetWidgetListener(&mWidgetListenerDelegate);
-    rv = mInternalWidget->Create(nullptr, mParentNativeWindow, bounds,
-                                 &widgetInit);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // XXX(nika): Consider supporting creating nsWebBrowser for an existing
-  // BrowsingContext (e.g. during a X-process load).
-  // XXX(nika): Get window opener information into nsWebBrowser::Create.
-  using BrowsingContext = mozilla::dom::BrowsingContext;
-  RefPtr<mozilla::dom::BrowsingContext> browsingContext =
-    BrowsingContext::Create(nullptr,
-                            mInitInfo->name,
-                            mContentType != typeChromeWrapper
-                              ? BrowsingContext::Type::Content
-                              : BrowsingContext::Type::Chrome);
-
-  RefPtr<nsDocShell> docShell = nsDocShell::Create(browsingContext);
-  if (NS_WARN_IF(!docShell)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  docShell->SetOriginAttributes(mOriginAttributes);
-  rv = SetDocShell(docShell);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // get the system default window background colour
-  LookAndFeel::GetColor(LookAndFeel::eColorID_WindowBackground,
-                        &mBackgroundColor);
-
-  // HACK ALERT - this registration registers the nsDocShellTreeOwner as a
-  // nsIWebBrowserListener so it can setup its MouseListener in one of the
-  // progress callbacks. If we can register the MouseListener another way, this
-  // registration can go away, and nsDocShellTreeOwner can stop implementing
-  // nsIWebProgressListener.
-  nsCOMPtr<nsISupports> supports = nullptr;
-  (void)mDocShellTreeOwner->QueryInterface(
-    NS_GET_IID(nsIWebProgressListener),
-    static_cast<void**>(getter_AddRefs(supports)));
-  (void)BindListener(supports, NS_GET_IID(nsIWebProgressListener));
-
-  NS_ENSURE_SUCCESS(mDocShellAsWin->InitWindow(nullptr, docShellParentWidget,
-                                               mInitInfo->x, mInitInfo->y,
-                                               mInitInfo->cx, mInitInfo->cy),
-                    NS_ERROR_FAILURE);
-
-  mDocShell->SetTreeOwner(mDocShellTreeOwner);
-
-  // If the webbrowser is a content docshell item then we won't hear any
-  // events from subframes. To solve that we install our own chrome event
-  // handler that always gets called (even for subframes) for any bubbling
-  // event.
-
-  mDocShell->InitSessionHistory();
-
-  if (XRE_IsParentProcess()) {
-    // Hook up global history. Do not fail if we can't - just warn.
-    rv = EnableGlobalHistory(mShouldEnableHistory);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
-  }
-
-  NS_ENSURE_SUCCESS(mDocShellAsWin->Create(), NS_ERROR_FAILURE);
-
-  // Hook into the OnSecurityChange() notification for lock/unlock icon
-  // updates
-  // this works because the implementation of nsISecureBrowserUI
-  // (nsSecureBrowserUIImpl) calls docShell->SetSecurityUI(this);
-  nsCOMPtr<nsISecureBrowserUI> securityUI =
-    do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  securityUI->Init(mDocShell);
-
-  mDocShellTreeOwner->AddToWatcher(); // evil twin of Remove in SetDocShell(0)
-  mDocShellTreeOwner->AddChromeListeners();
-
-  mInitInfo = nullptr;
-
-  return NS_OK;
+  // nsIBaseWindow::InitWindow and nsIBaseWindow::Create
+  // implementations have been merged into nsWebBrowser::Create
+  MOZ_DIAGNOSTIC_ASSERT(false);
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
 nsWebBrowser::Destroy()
 {
   InternalDestroy();
-
-  if (!mInitInfo) {
-    mInitInfo = new nsWebBrowserInitInfo();
-  }
 
   return NS_OK;
 }
@@ -1120,28 +1121,21 @@ NS_IMETHODIMP
 nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY,
                                  int32_t aCX, int32_t aCY, uint32_t aFlags)
 {
-  if (!mDocShell) {
-    mInitInfo->x = aX;
-    mInitInfo->y = aY;
-    mInitInfo->cx = aCX;
-    mInitInfo->cy = aCY;
-  } else {
-    int32_t doc_x = aX;
-    int32_t doc_y = aY;
+  int32_t doc_x = aX;
+  int32_t doc_y = aY;
 
-    // If there is an internal widget we need to make the docShell coordinates
-    // relative to the internal widget rather than the calling app's parent.
-    // We also need to resize our widget then.
-    if (mInternalWidget) {
-      doc_x = doc_y = 0;
-      mInternalWidget->Resize(aX, aY, aCX, aCY,
-                              !!(aFlags & nsIBaseWindow::eRepaint));
-    }
-    // Now reposition/ resize the doc
-    NS_ENSURE_SUCCESS(
-      mDocShellAsWin->SetPositionAndSize(doc_x, doc_y, aCX, aCY, aFlags),
-      NS_ERROR_FAILURE);
+  // If there is an internal widget we need to make the docShell coordinates
+  // relative to the internal widget rather than the calling app's parent.
+  // We also need to resize our widget then.
+  if (mInternalWidget) {
+    doc_x = doc_y = 0;
+    mInternalWidget->Resize(aX, aY, aCX, aCY,
+                            !!(aFlags & nsIBaseWindow::eRepaint));
   }
+  // Now reposition/ resize the doc
+  NS_ENSURE_SUCCESS(
+    mDocShellAsWin->SetPositionAndSize(doc_x, doc_y, aCX, aCY, aFlags),
+    NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -1150,20 +1144,7 @@ NS_IMETHODIMP
 nsWebBrowser::GetPositionAndSize(int32_t* aX, int32_t* aY,
                                  int32_t* aCX, int32_t* aCY)
 {
-  if (!mDocShell) {
-    if (aX) {
-      *aX = mInitInfo->x;
-    }
-    if (aY) {
-      *aY = mInitInfo->y;
-    }
-    if (aCX) {
-      *aCX = mInitInfo->cx;
-    }
-    if (aCY) {
-      *aCY = mInitInfo->cy;
-    }
-  } else if (mInternalWidget) {
+  if (mInternalWidget) {
     LayoutDeviceIntRect bounds = mInternalWidget->GetBounds();
 
     if (aX) {
@@ -1255,9 +1236,7 @@ nsWebBrowser::GetVisibility(bool* aVisibility)
 {
   NS_ENSURE_ARG_POINTER(aVisibility);
 
-  if (!mDocShell) {
-    *aVisibility = mInitInfo->visible;
-  } else {
+  if (mDocShell) {
     NS_ENSURE_SUCCESS(mDocShellAsWin->GetVisibility(aVisibility),
                       NS_ERROR_FAILURE);
   }
@@ -1268,9 +1247,7 @@ nsWebBrowser::GetVisibility(bool* aVisibility)
 NS_IMETHODIMP
 nsWebBrowser::SetVisibility(bool aVisibility)
 {
-  if (!mDocShell) {
-    mInitInfo->visible = aVisibility;
-  } else {
+  if (mDocShell) {
     NS_ENSURE_SUCCESS(mDocShellAsWin->SetVisibility(aVisibility),
                       NS_ERROR_FAILURE);
     if (mInternalWidget) {

@@ -95,7 +95,7 @@ nsIContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
 
   auto tabChild = static_cast<TabChild*>(static_cast<TabChild*>(aActor));
 
-  if (NS_WARN_IF(NS_FAILED(tabChild->Init()))) {
+  if (NS_WARN_IF(NS_FAILED(tabChild->Init(/* aOpener */ nullptr)))) {
     return IPC_FAIL(tabChild, "TabChild::Init failed");
   }
 
