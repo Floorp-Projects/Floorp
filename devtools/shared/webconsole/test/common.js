@@ -70,9 +70,8 @@ var _attachConsole = async function(
       await front.attach();
       consoleActor = front.targetForm.consoleActor;
     } else {
-      const response = await client.listTabs();
-      const tab = response.tabs[response.selected];
-      const [, targetFront] = await client.attachTarget(tab.actor);
+      const form = await client.getTab();
+      const [, targetFront] = await client.attachTarget(form.tab);
       if (attachToWorker) {
         const workerName = "console-test-worker.js#" + new Date().getTime();
         worker = new Worker(workerName);
@@ -88,7 +87,7 @@ var _attachConsole = async function(
         await workerTargetFront.attachThread({});
         consoleActor = workerTargetFront.targetForm.consoleActor;
       } else {
-        consoleActor = tab.consoleActor;
+        consoleActor = targetFront.targetForm.consoleActor;
       }
     }
 
@@ -108,7 +107,8 @@ var _attachConsole = async function(
       response,
     };
   } catch (error) {
-    console.error(`attachConsole failed: ${error.error} ${error.message}`);
+    console.error(`attachConsole failed: ${error.error} ${error.message} - ` +
+                  error.stack);
   }
   return null;
 };
