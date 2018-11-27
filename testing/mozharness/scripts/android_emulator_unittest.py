@@ -25,6 +25,9 @@ from mozharness.mozilla.testing.codecoverage import (
     code_coverage_config_options
 )
 
+SUITE_DEFAULT_E10S = ['geckoview-junit', 'mochitest', 'reftest']
+SUITE_NO_E10S = ['cppunittest', 'geckoview-junit', 'xpcshell']
+
 
 class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMixin,
                           AndroidMixin):
@@ -75,6 +78,13 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
          "default": "info",
          "help": "Set log level (debug|info|warning|error|critical|fatal)",
          }
+    ], [
+        ['--e10s', ],
+        {"action": "store_true",
+         "dest": "e10s",
+         "default": False,
+         "help": "Run tests with multiple processes.",
+         }
     ]] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
@@ -121,6 +131,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         self.device_serial = 'emulator-5554'
         self.log_raw_level = c.get('log_raw_level')
         self.log_tbpl_level = c.get('log_tbpl_level')
+        self.e10s = c.get('e10s')
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -229,6 +240,18 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 option = option % str_format_values
                 if option:
                     cmd.extend([option])
+
+        if 'mochitest' in self.test_suite:
+            category = 'mochitest'
+        elif 'reftest' in self.test_suite or 'crashtest' in self.test_suite:
+            category = 'reftest'
+        else:
+            category = self.test_suite
+        if category not in SUITE_NO_E10S:
+            if category in SUITE_DEFAULT_E10S and not self.e10s:
+                cmd.extend(['--disable-e10s'])
+            elif category not in SUITE_DEFAULT_E10S and self.e10s:
+                cmd.extend(['--e10s'])
 
         if not (self.verify_enabled or self.per_test_coverage):
             if user_paths:
