@@ -123,7 +123,8 @@ class nsCSPParser {
  * are stored in mTokens, for example:
  *   mTokens = [ [ script-src, http://www.example.com, 'self' ], ... ]
  *
- * When parsing starts, mCurdir always holds the currently processed array of strings.
+ * When parsing starts, mCurdir always holds the currently processed array of
+ * strings.
  * In our example:
  *   mCurDir = [ script-src, http://www.example.com, 'self' ]
  *
@@ -133,20 +134,22 @@ class nsCSPParser {
  *   mCurToken = script-src
  * which allows to do simple string comparisons to see if mCurToken is a valid directive.
  *
- * Continuing parsing, the parser consumes the next string of that array, resetting:
+ * Continuing parsing, the parser consumes the next string of that array,
+ * resetting:
  *   mCurToken = "http://www.example.com"
  *                ^                     ^
  *                mCurChar              mEndChar (points *after* the 'm')
  *   mCurValue = ""
  *
- * After calling advance() the first time, helpers would hold the following values:
+ * After calling advance() the first time, helpers would hold the following
+ * values:
  *   mCurToken = "http://www.example.com"
  *                 ^                    ^
  *                 mCurChar             mEndChar (points *after* the 'm')
  *  mCurValue = "h"
  *
- * We continue parsing till all strings of one directive are consumed, then we reset
- * mCurDir to hold the next array of strings and start the process all over.
+ * We continue parsing till all strings of one directive are consumed, then we
+ * reset mCurDir to hold the next array of strings and start the process all over.
  */
 
     const char16_t*    mCurChar;
