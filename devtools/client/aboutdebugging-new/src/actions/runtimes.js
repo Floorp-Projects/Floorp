@@ -71,7 +71,7 @@ function connectRuntime(id) {
     dispatch({ type: CONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
-      const { clientWrapper, transportDetails } = await createClientForRuntime(runtime);
+      const clientWrapper = await createClientForRuntime(runtime);
       const info = await getRuntimeInfo(runtime, clientWrapper);
 
       const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
@@ -80,7 +80,6 @@ function connectRuntime(id) {
         clientWrapper,
         connectionPromptEnabled,
         info,
-        transportDetails,
       };
 
       if (runtime.type === RUNTIMES.USB) {
