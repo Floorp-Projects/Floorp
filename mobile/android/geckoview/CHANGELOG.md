@@ -21,5 +21,8 @@
   classifier.
 - Added a `protected` empty constructor to all field-only classes so that apps
   can mock these classes in tests.
+- Added `ContentDelegate.ContextElement` to extend the information passed to
+  `ContentDelegate#onContextMenu`. Extended information includes the element's
+  title and alt attributes.
 
-[api-version]: 723adca536354bfa81afb83da5045ea6de8aa602
+[api-version]: 8cfd04a09e7a242b3da22ccdd55c88a2aca2ba6d
