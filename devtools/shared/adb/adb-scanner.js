@@ -11,7 +11,7 @@ const { RuntimeTypes } =
 const { ADB } = require("devtools/shared/adb/adb");
 const { adbDevicesRegistry } = require("devtools/shared/adb/adb-devices-registry");
 
-loader.lazyRequireGetter(this, "Device", "devtools/shared/adb/adb-device");
+loader.lazyRequireGetter(this, "AdbDevice", "devtools/shared/adb/adb-device");
 
 class ADBScanner extends EventEmitter {
   constructor() {
@@ -49,7 +49,7 @@ class ADBScanner extends EventEmitter {
   }
 
   _onDeviceConnected(deviceId) {
-    const device = new Device(deviceId);
+    const device = new AdbDevice(deviceId);
     adbDevicesRegistry.register(deviceId, device);
   }
 
@@ -93,8 +93,8 @@ class ADBScanner extends EventEmitter {
   }
 }
 
-function Runtime(device, model, socketPath) {
-  this.device = device;
+function Runtime(adbDevice, model, socketPath) {
+  this._adbDevice = adbDevice;
   this._model = model;
   this._socketPath = socketPath;
 }
@@ -109,22 +109,22 @@ Runtime.prototype = {
     });
   },
   get id() {
-    return this.device.id + "|" + this._socketPath;
+    return this._adbDevice.id + "|" + this._socketPath;
   },
 };
 
-function FirefoxOnAndroidRuntime(device, model, socketPath) {
-  Runtime.call(this, device, model, socketPath);
+function FirefoxOnAndroidRuntime(adbDevice, model, socketPath) {
+  Runtime.call(this, adbDevice, model, socketPath);
 }
 
 // This requires Unix socket support from Firefox for Android (35+)
-FirefoxOnAndroidRuntime.detect = async function(device, model) {
+FirefoxOnAndroidRuntime.detect = async function(adbDevice, model) {
   const runtimes = [];
   // A matching entry looks like:
   // 00000000: 00000002 00000000 00010000 0001 01 6551588
   //  /data/data/org.mozilla.fennec/firefox-debugger-socket
   const query = "cat /proc/net/unix";
-  const rawSocketInfo = await device.shell(query);
+  const rawSocketInfo = await adbDevice.shell(query);
   let socketInfos = rawSocketInfo.split(/\r?\n/);
   // Filter to lines with "firefox-debugger-socket"
   socketInfos = socketInfos.filter(l => l.includes("firefox-debugger-socket"));
@@ -135,7 +135,7 @@ FirefoxOnAndroidRuntime.detect = async function(device, model) {
     socketPaths.add(socketPath);
   }
   for (const socketPath of socketPaths) {
-    const runtime = new FirefoxOnAndroidRuntime(device, model, socketPath);
+    const runtime = new FirefoxOnAndroidRuntime(adbDevice, model, socketPath);
     dumpn("Found " + runtime.name);
     runtimes.push(runtime);
   }
@@ -181,7 +181,7 @@ Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "shortName", {
 
 Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "deviceName", {
   get() {
-    return this._model || this.device.id;
+    return this._model || this._adbDevice.id;
   },
 });
 

@@ -31,7 +31,7 @@ class AdbDevicesRegistry extends EventEmitter {
    *
    * @param {String} name
    *        Name of the device.
-   * @param {Device} device
+   * @param {AdbDevice} device
    *        The device to register.
    */
   register(name, device) {
