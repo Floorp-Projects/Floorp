@@ -95,7 +95,10 @@ reftest:
         by-test-platform:
             android-em.*: xlarge
             default: default
-    virtualization: virtual-with-gpu
+    virtualization:
+        by-test-platform:
+            windows10.*: hardware
+            default: virtual-with-gpu
     chunks:
         by-test-platform:
             android-em-4.3-arm7-api-16/debug: 56
