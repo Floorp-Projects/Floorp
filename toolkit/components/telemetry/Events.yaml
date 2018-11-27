@@ -155,11 +155,11 @@ navigation:
       This is recorded on each search navigation.
       The value field records the action used to trigger the search:
         "enter", "oneoff", "suggestion", "alias", null (for contextmenu and webextension)
-    bug_numbers: [1316281]
+    bug_numbers: [1316281, 1496764]
     notification_emails:
-      - "past@mozilla.com"
-      - "dzeber@mozilla.com"
-    expiry_version: "65"
+      - "mdeboer@mozilla.com"
+      - "rharter@mozilla.com"
+    expiry_version: never
     extra_keys:
       engine: The id of the search engine used.
 
