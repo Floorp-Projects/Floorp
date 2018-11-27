@@ -2624,6 +2624,11 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
     return;
   }
 
+  if (!CanAccess(*tStartContainer)) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
   if (&aNode == tStartContainer) {
     aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
     return;
