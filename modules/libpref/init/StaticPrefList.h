@@ -179,6 +179,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Whehter Mozilla specific "text" event should be dispatched only in the
+// system group or not in content.
+VARCACHE_PREF(
+  "dom.compositionevent.text.dispatch_only_system_group_in_content",
+   dom_compositionevent_text_dispatch_only_system_group_in_content,
+   bool, true
+)
+
 // How long a content process can take before closing its IPC channel
 // after shutdown is initiated.  If the process exceeds the timeout,
 // we fear the worst and kill it.

@@ -401,7 +401,8 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
     asyncRenderer = aRenderer.ref<AsyncCanvasRenderer*>();
     gl = asyncRenderer->mGLContext;
   }
-  gl->MakeCurrent();
+  if (!gl->MakeCurrent())
+    return;
 
   RefPtr<TextureClient> newFront;
 
@@ -433,7 +434,7 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
     NS_WARNING("SharedSurface buffer not available, skip update");
     return;
   }
-  
+
   // Readback if needed.
   mReadbackClient = nullptr;
 

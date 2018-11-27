@@ -11,7 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { PAGES, RUNTIMES } = require("../../constants");
+const { PAGE_TYPES, RUNTIMES } = require("../../constants");
 const Types = require("../../types/index");
 loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
 
@@ -33,6 +33,7 @@ class Sidebar extends PureComponent {
       isScanningUsb: PropTypes.bool.isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
+      selectedRuntime: PropTypes.string,
       usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
     };
   }
@@ -57,7 +58,6 @@ class Sidebar extends PureComponent {
     return SidebarItem(
       {
         isSelected: false,
-        selectable: false,
       },
       Localized(
         {
@@ -88,20 +88,21 @@ class Sidebar extends PureComponent {
   }
 
   renderSidebarItems(icon, runtimes) {
-    const { dispatch, selectedPage } = this.props;
+    const { dispatch, selectedPage, selectedRuntime } = this.props;
 
     return runtimes.map(runtime => {
-      const pageId = runtime.type + "-" + runtime.id;
+      const keyId = `${runtime.type}-${runtime.id}`;
       const runtimeHasDetails = !!runtime.runtimeDetails;
+      const isSelected = selectedPage === PAGE_TYPES.RUNTIME &&
+        runtime.id === selectedRuntime;
 
       return SidebarRuntimeItem({
-        id: pageId,
         deviceName: runtime.extra.deviceName,
         dispatch,
         icon,
+        key: keyId,
         isConnected: runtimeHasDetails,
-        isSelected: selectedPage === pageId,
-        key: pageId,
+        isSelected,
         name: runtime.name,
         runtimeId: runtime.id,
       });
@@ -109,7 +110,7 @@ class Sidebar extends PureComponent {
   }
 
   render() {
-    const { dispatch, selectedPage, isScanningUsb } = this.props;
+    const { dispatch, selectedPage, selectedRuntime, isScanningUsb } = this.props;
 
     return dom.aside(
       {
@@ -120,28 +121,29 @@ class Sidebar extends PureComponent {
         Localized(
           { id: "about-debugging-sidebar-this-firefox", attrs: { name: true } },
           SidebarFixedItem({
-            id: PAGES.THIS_FIREFOX,
-            dispatch,
             icon: FIREFOX_ICON,
-            isSelected: PAGES.THIS_FIREFOX === selectedPage,
+            isSelected: PAGE_TYPES.RUNTIME === selectedPage &&
+              selectedRuntime === RUNTIMES.THIS_FIREFOX,
+            key: RUNTIMES.THIS_FIREFOX,
             name: "This Firefox",
-            runtimeId: RUNTIMES.THIS_FIREFOX,
+            to: `/runtime/${RUNTIMES.THIS_FIREFOX}`,
           })
         ),
         Localized(
           { id: "about-debugging-sidebar-connect", attrs: { name: true } },
           SidebarFixedItem({
-            id: PAGES.CONNECT,
             dispatch,
             icon: CONNECT_ICON,
-            isSelected: PAGES.CONNECT === selectedPage,
+            isSelected: PAGE_TYPES.CONNECT === selectedPage,
+            key: PAGE_TYPES.CONNECT,
             name: "Connect",
+            to: "/connect",
           })
         ),
         SidebarItem(
           {
             isSelected: false,
-            selectable: false,
+            key: "separator-0",
           },
           dom.hr({ className: "separator" }),
           this.renderAdbAddonStatus(),
@@ -151,7 +153,7 @@ class Sidebar extends PureComponent {
           {
             className: "sidebar-item--breathe sidebar__refresh-usb",
             isSelected: false,
-            selectable: false,
+            key: "refresh-devices",
           },
           RefreshDevicesButton({
             dispatch,

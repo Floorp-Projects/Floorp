@@ -954,7 +954,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
   RefPtr<TabChild> newChild = new TabChild(this, tabId, tabGroup,
                                            newTabContext, aChromeFlags);
-  if (NS_FAILED(newChild->Init())) {
+  if (NS_FAILED(newChild->Init(aParent))) {
     return NS_ERROR_ABORT;
   }
 

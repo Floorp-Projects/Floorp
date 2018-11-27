@@ -327,7 +327,6 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mDisableExtensions = gfxPrefs::WebGLDisableExtensions();
     mLoseContextOnMemoryPressure = gfxPrefs::WebGLLoseContextOnMemoryPressure();
     mCanLoseContextInForeground = gfxPrefs::WebGLCanLoseContextInForeground();
-    mRestoreWhenVisible = gfxPrefs::WebGLRestoreWhenVisible();
 
     // These are the default values, see 6.2 State tables in the
     // OpenGL ES 2.0.25 spec.
@@ -383,9 +382,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mDefaultFB_DrawBuffer0 = LOCAL_GL_BACK;
     mDefaultFB_ReadBuffer = LOCAL_GL_BACK;
 
-    mEmitContextLostErrorOnce = true;
     mWebGLError = LOCAL_GL_NO_ERROR;
-    mUnderlyingGLError = LOCAL_GL_NO_ERROR;
 
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();

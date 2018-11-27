@@ -261,6 +261,12 @@ JS::ObjectOpResult::failCantDeleteWindowNamedProperty()
 }
 
 JS_PUBLIC_API bool
+JS::ObjectOpResult::failCantDefineWindowNonConfigurable()
+{
+    return fail(JSMSG_CANT_DEFINE_WINDOW_NC);
+}
+
+JS_PUBLIC_API bool
 JS::ObjectOpResult::failCantPreventExtensions()
 {
     return fail(JSMSG_CANT_PREVENT_EXTENSIONS);

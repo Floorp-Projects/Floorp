@@ -178,7 +178,7 @@ class TryNoteIterIon : public TryNoteIter<IonFrameStackDepthOp>
 
 static void
 HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromException* rfe,
-                   bool* overrecursed)
+                   bool* hitBailoutException)
 {
     if (cx->realm()->isDebuggee()) {
         // We need to bail when there is a catchable exception, and we are the
@@ -192,7 +192,7 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
             shouldBail = rematFrame && rematFrame->isDebuggee();
         }
 
-        if (shouldBail) {
+        if (shouldBail && !*hitBailoutException) {
             // If we have an exception from within Ion and the debugger is active,
             // we do the following:
             //
@@ -207,13 +207,13 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
             // to the stack depth at the snapshot, as we could've thrown in the
             // middle of a call.
             ExceptionBailoutInfo propagateInfo;
-            uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, propagateInfo, overrecursed);
-            if (retval == BAILOUT_RETURN_OK) {
+            if (ExceptionHandlerBailout(cx, frame, rfe, propagateInfo)) {
                 return;
             }
+            // Note: the bailout code deleted rematFrame. Don't use after this
+            // point!
+            *hitBailoutException = true;
         }
-
-        MOZ_ASSERT_IF(rematFrame, !Debugger::inFrameMaps(rematFrame));
     }
 
     RootedScript script(cx, frame.script());
@@ -262,11 +262,14 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
                 // catch many exceptions we won't Ion-compile the script.
                 script->resetWarmUpCounter();
 
+                if (*hitBailoutException) {
+                    break;
+                }
+
                 // Bailout at the start of the catch block.
                 jsbytecode* catchPC = script->offsetToPC(tn->start + tn->length);
                 ExceptionBailoutInfo excInfo(frame.frameNo(), catchPC, tn->stackDepth);
-                uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, excInfo, overrecursed);
-                if (retval == BAILOUT_RETURN_OK) {
+                if (ExceptionHandlerBailout(cx, frame, rfe, excInfo)) {
                     // Record exception locations to allow scope unwinding in
                     // |FinishBailoutToBaseline|
                     MOZ_ASSERT(cx->isExceptionPending());
@@ -275,8 +278,8 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
                     return;
                 }
 
-                // Error on bailout clears pending exception.
-                MOZ_ASSERT(!cx->isExceptionPending());
+                *hitBailoutException = true;                
+                MOZ_ASSERT(cx->isExceptionPending());
             }
             break;
 
@@ -692,7 +695,6 @@ HandleException(ResumeFromException* rfe)
 
         const JSJitFrameIter& frame = iter.asJSJit();
 
-        bool overrecursed = false;
         if (frame.isIonJS()) {
             // Search each inlined frame for live iterator objects, and close
             // them.
@@ -711,8 +713,12 @@ HandleException(ResumeFromException* rfe)
             }
 #endif
 
+            // If we hit OOM or overrecursion while bailing out, we don't
+            // attempt to bail out a second time for this Ion frame. Just unwind
+            // and continue at the next frame.
+            bool hitBailoutException = false;
             for (;;) {
-                HandleExceptionIon(cx, frames, rfe, &overrecursed);
+                HandleExceptionIon(cx, frames, rfe, &hitBailoutException);
 
                 if (rfe->kind == ResumeFromException::RESUME_BAILOUT) {
                     if (invalidated) {
@@ -795,11 +801,6 @@ HandleException(ResumeFromException* rfe)
         }
 
         ++iter;
-
-        if (overrecursed) {
-            // We hit an overrecursion error during bailout. Report it now.
-            ReportOverRecursed(cx);
-        }
     }
 
     // Wasm sets its own value of SP in HandleExceptionWasm.

@@ -48,12 +48,16 @@ namespace dom {
  * object            | TYPE_INTERNAL_OBJECT, TYPE_OBJECT
  * "paintworklet"    | TODO
  * report"           | TODO
- * script            | TYPE_INTERNAL_SCRIPT, TYPE_INTERNAL_SCRIPT_PRELOAD, TYPE_SCRIPT
- *                   | TYPE_INTERNAL_SERVICE_WORKER, TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS
+ * script            | TYPE_INTERNAL_SCRIPT, TYPE_INTERNAL_SCRIPT_PRELOAD,
+ *                   | TYPE_SCRIPT,
+ *                   | TYPE_INTERNAL_SERVICE_WORKER,
+ *                   | TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS
  * sharedworker      | TYPE_INTERNAL_SHARED_WORKER
- * serviceworker     | The spec lists this as a valid value for the enum,however it
- *                   | is impossible to observe a request with this destination value.
- * style             | TYPE_INTERNAL_STYLESHEET, TYPE_INTERNAL_STYLESHEET_PRELOAD,
+ * serviceworker     | The spec lists this as a valid value for the enum,
+ *                   | however it is impossible to observe a request with this
+ *                   | destination value.
+ * style             | TYPE_INTERNAL_STYLESHEET,
+ *                   | TYPE_INTERNAL_STYLESHEET_PRELOAD,
  *                   | TYPE_STYLESHEET
  * track             | TYPE_INTERNAL_TRACK
  * video             | TYPE_INTERNAL_VIDEO

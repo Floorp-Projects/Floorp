@@ -1740,8 +1740,8 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
     nsAutoString remaining;
     str.Right(remaining, totLen - bol);
     foo = ToNewCString(remaining);
-    //    printf("Next line: bol = %d, newlinepos = %d, totLen = %d, string = '%s'\n",
-    //           bol, nextpos, totLen, foo);
+    // printf("Next line: bol = %d, newlinepos = %d, totLen = %d, "
+    //        "string = '%s'\n", bol, nextpos, totLen, foo);
     free(foo);
 #endif
 

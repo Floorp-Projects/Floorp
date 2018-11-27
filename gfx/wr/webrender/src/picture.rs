@@ -20,7 +20,7 @@ use internal_types::FastHashSet;
 use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
 use prim_store::{get_raster_rects, PrimitiveDataInterner, PrimitiveDataStore, CoordinateSpaceMapping};
-use prim_store::{PrimitiveDetails, BrushKind, Primitive, OpacityBindingStorage};
+use prim_store::{OpacityBindingStorage, PrimitiveTemplateKind, ImageInstanceStorage};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle, TileBlit};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use resource_cache::ResourceCache;
@@ -345,11 +345,11 @@ impl TileCache {
         clip_scroll_tree: &ClipScrollTree,
         prim_data_store: &PrimitiveDataStore,
         clip_chain_nodes: &[ClipChainNode],
-        primitives: &[Primitive],
         pictures: &[PicturePrimitive],
         resource_cache: &ResourceCache,
         scene_properties: &SceneProperties,
         opacity_binding_store: &OpacityBindingStorage,
+        image_instances: &ImageInstanceStorage,
     ) {
         self.space_mapper.set_target_spatial_node(
             prim_instance.spatial_node_index,
@@ -382,11 +382,16 @@ impl TileCache {
         self.reconfigure_tiles_if_required(x0, y0, x1, y1);
 
         // Build the list of resources that this primitive has dependencies on.
-        let mut is_cacheable = true;
         let mut opacity_bindings: SmallVec<[(PropertyBindingId, f32); 4]> = SmallVec::new();
         let mut clip_chain_spatial_nodes: SmallVec<[SpatialNodeIndex; 8]> = SmallVec::new();
         let mut image_keys: SmallVec<[ImageKey; 8]> = SmallVec::new();
         let mut current_clip_chain_id = prim_instance.clip_chain_id;
+
+        // Some primitives can not be cached (e.g. external video images)
+        let is_cacheable = prim_instance.is_cacheable(
+            prim_data_store,
+            resource_cache,
+        );
 
         match prim_instance.kind {
             PrimitiveInstanceKind::Picture { pic_index } => {
@@ -398,42 +403,6 @@ impl TileCache {
                     }
                 }
             }
-            PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
-                let prim = &primitives[prim_index.0];
-
-                // Some primitives can not be cached (e.g. external video images)
-                is_cacheable = prim_instance.is_cacheable(
-                    &prim.details,
-                    resource_cache,
-                );
-
-                match prim.details {
-                    PrimitiveDetails::Brush(ref brush) => {
-                        match brush.kind {
-                            // Rectangles and images may depend on opacity bindings.
-                            // TODO(gw): In future, we might be able to completely remove
-                            //           opacity collapsing support. It's of limited use
-                            //           once we have full picture caching.
-                            BrushKind::Image { opacity_binding_index, ref request, .. } => {
-                                let opacity_binding = &opacity_binding_store[opacity_binding_index];
-                                for binding in &opacity_binding.bindings {
-                                    if let PropertyBinding::Binding(key, default) = binding {
-                                        opacity_bindings.push((key.id, *default));
-                                    }
-                                }
-
-                                image_keys.push(request.key);
-                            }
-                            BrushKind::YuvImage { ref yuv_key, .. } => {
-                                image_keys.extend_from_slice(yuv_key);
-                            }
-                            BrushKind::RadialGradient { .. } |
-                            BrushKind::LinearGradient { .. } => {
-                            }
-                        }
-                    }
-                }
-            }
             PrimitiveInstanceKind::Rectangle { opacity_binding_index, .. } => {
                 let opacity_binding = &opacity_binding_store[opacity_binding_index];
                 for binding in &opacity_binding.bindings {
@@ -442,10 +411,42 @@ impl TileCache {
                     }
                 }
             }
+            PrimitiveInstanceKind::Image { image_instance_index, .. } => {
+                let image_instance = &image_instances[image_instance_index];
+                let opacity_binding_index = image_instance.opacity_binding_index;
+
+                let opacity_binding = &opacity_binding_store[opacity_binding_index];
+                for binding in &opacity_binding.bindings {
+                    if let PropertyBinding::Binding(key, default) = binding {
+                        opacity_bindings.push((key.id, *default));
+                    }
+                }
+
+                match prim_data.kind {
+                    PrimitiveTemplateKind::Image { key, .. } => {
+                        image_keys.push(key);
+                    }
+                    _ => {
+                        unreachable!();
+                    }
+                }
+            }
+            PrimitiveInstanceKind::YuvImage { .. } => {
+                match prim_data.kind {
+                    PrimitiveTemplateKind::YuvImage { ref yuv_key, .. } => {
+                        image_keys.extend_from_slice(yuv_key);
+                    }
+                    _ => {
+                        unreachable!();
+                    }
+                }
+            }
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::Clear |
             PrimitiveInstanceKind::NormalBorder { .. } |
+            PrimitiveInstanceKind::LinearGradient { .. } |
+            PrimitiveInstanceKind::RadialGradient { .. } |
             PrimitiveInstanceKind::ImageBorder { .. } => {
                 // These don't contribute dependencies
             }
@@ -1576,10 +1577,10 @@ impl PicturePrimitive {
         frame_context: &FrameBuildingContext,
         resource_cache: &mut ResourceCache,
         prim_data_store: &PrimitiveDataStore,
-        primitives: &[Primitive],
         pictures: &[PicturePrimitive],
         clip_store: &ClipStore,
         opacity_binding_store: &OpacityBindingStorage,
+        image_instances: &ImageInstanceStorage,
     ) {
         if state.tile_cache_update_count == 0 {
             return;
@@ -1593,11 +1594,11 @@ impl PicturePrimitive {
                     &frame_context.clip_scroll_tree,
                     prim_data_store,
                     &clip_store.clip_chain_nodes,
-                    primitives,
                     pictures,
                     resource_cache,
                     frame_context.scene_properties,
                     opacity_binding_store,
+                    image_instances,
                 );
             }
         }

@@ -1893,6 +1893,7 @@ nsFrameLoader::IsRemoteFrame()
 
 static already_AddRefed<BrowsingContext>
 CreateBrowsingContext(BrowsingContext* aParentContext,
+                      BrowsingContext* aOpenerContext,
                       const nsAString& aName,
                       bool aIsContent)
 {
@@ -1905,7 +1906,7 @@ CreateBrowsingContext(BrowsingContext* aParentContext,
   BrowsingContext::Type type =
     aIsContent ? BrowsingContext::Type::Content : BrowsingContext::Type::Chrome;
 
-  return BrowsingContext::Create(aParentContext, aName, type);
+  return BrowsingContext::Create(aParentContext, aOpenerContext, aName, type);
 }
 
 nsresult
@@ -1977,7 +1978,9 @@ nsFrameLoader::MaybeCreateDocShell()
     mozbrowser->GetMozbrowser(&isContent);
   }
 
-  RefPtr<BrowsingContext> browsingContext = CreateBrowsingContext(parentBC, frameName, isContent);
+  RefPtr<BrowsingContext> openerBC = mOpener ? mOpener->GetBrowsingContext() : nullptr;
+  RefPtr<BrowsingContext> browsingContext =
+    CreateBrowsingContext(parentBC, openerBC, frameName, isContent);
 
   mDocShell = nsDocShell::Create(browsingContext);
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
@@ -2032,8 +2035,10 @@ nsFrameLoader::MaybeCreateDocShell()
 
   newWindow->SetFrameElementInternal(mOwnerContent);
 
-  // Set the opener window if we have one provided here
-  // XXX(nika): We should tell our BrowsingContext this as we create it.
+  // Set the opener window if we have one provided here XXX(nika): We
+  // should tell our BrowsingContext this as we create it.
+  // TODO(farre): Remove this when nsGlobalWindowOuter::GetOpenerWindowOuter
+  // starts using BrowsingContext::GetOpener.
   if (mOpener) {
     newWindow->SetOpenerWindow(mOpener, true);
     mOpener = nullptr;

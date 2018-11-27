@@ -281,7 +281,10 @@ function ObjectOrReflectDefineProperty(obj, propertyKey, attributes, strict) {
 // 19.1.2.4 Object.defineProperty ( O, P, Attributes )
 function ObjectDefineProperty(obj, propertyKey, attributes) {
     // Steps 1-4.
-    ObjectOrReflectDefineProperty(obj, propertyKey, attributes, true);
+    if (!ObjectOrReflectDefineProperty(obj, propertyKey, attributes, true)) {
+        // Not standardized yet: https://github.com/tc39/ecma262/pull/688
+        return false;
+    }
 
     // Step 5.
     return obj;

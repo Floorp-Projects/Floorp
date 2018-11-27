@@ -28,6 +28,12 @@ class UsbMocks {
       return this._runtimes;
     };
 
+    // refreshUSBRuntimes normally starts scan, which should ultimately fire the
+    // "runtime-list-updated" event.
+    this.usbRuntimesMock.refreshUSBRuntimes = () => {
+      this.emitUpdate();
+    };
+
     // Prepare a fake observer to be able to emit events from this mock.
     this._observerMock = addObserverMock(this.usbRuntimesMock);
 
@@ -35,7 +41,7 @@ class UsbMocks {
     this.runtimeClientFactoryMock = createRuntimeClientFactoryMock();
     this._clients = {};
     this.runtimeClientFactoryMock.createClientForRuntime = runtime => {
-      return { clientWrapper: this._clients[runtime.id] };
+      return this._clients[runtime.id];
     };
 
     // Add a client for THIS_FIREFOX, since about:debugging will start on the This Firefox

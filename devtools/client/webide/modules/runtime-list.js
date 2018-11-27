@@ -8,7 +8,8 @@ const Services = require("Services");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {RuntimeScanners, WiFiScanner} = require("devtools/client/webide/modules/runtimes");
-const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
+const { adbAddon, ADB_ADDON_STATES } = require("devtools/shared/adb/adb-addon");
+
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 var RuntimeList;
@@ -141,7 +142,7 @@ RuntimeList.prototype = {
     noADBExtensionNode.textContent =
       Strings.formatStringFromName("runtimePanel_noadbextension", ["ADB Extension"], 1);
 
-    if (Devices.adbExtensionInstalled) {
+    if (adbAddon.status === ADB_ADDON_STATES.INSTALLED) {
       noADBExtensionNode.setAttribute("hidden", "true");
     } else {
       noADBExtensionNode.removeAttribute("hidden");
@@ -153,7 +154,7 @@ RuntimeList.prototype = {
       return;
     }
 
-    if (runtimeList.usb.length === 0 && Devices.adbExtensionInstalled) {
+    if (runtimeList.usb.length === 0 && adbAddon.status === ADB_ADDON_STATES.INSTALLED) {
       noUSBNode.removeAttribute("hidden");
     } else {
       noUSBNode.setAttribute("hidden", "true");

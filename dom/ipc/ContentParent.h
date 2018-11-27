@@ -688,6 +688,7 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvAttachBrowsingContext(
     const BrowsingContextId& aParentContextId,
+    const BrowsingContextId& aOpenerId,
     const BrowsingContextId& aContextId,
     const nsString& aName) override;
 

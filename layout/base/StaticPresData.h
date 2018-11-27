@@ -7,7 +7,7 @@
 #ifndef mozilla_StaticPresData_h
 #define mozilla_StaticPresData_h
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCoord.h"
 #include "nsCOMPtr.h"
 #include "nsFont.h"
@@ -46,7 +46,7 @@ struct LangGroupFontPrefs {
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     size_t n = 0;
-    LangGroupFontPrefs* curr = mNext;
+    LangGroupFontPrefs* curr = mNext.get();
     while (curr) {
       n += aMallocSizeOf(curr);
 
@@ -55,7 +55,7 @@ struct LangGroupFontPrefs {
       // - mLangGroup
       // - mDefault*Font
 
-      curr = curr->mNext;
+      curr = curr->mNext.get();
     }
     return n;
   }
@@ -72,7 +72,7 @@ struct LangGroupFontPrefs {
   nsFont mDefaultMonospaceFont;
   nsFont mDefaultCursiveFont;
   nsFont mDefaultFantasyFont;
-  nsAutoPtr<LangGroupFontPrefs> mNext;
+  mozilla::UniquePtr<LangGroupFontPrefs> mNext;
 };
 
 /**

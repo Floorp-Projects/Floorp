@@ -9,3 +9,7 @@
 .debug-target-pane__icon--collapsed {
   transform: rotate(-90deg);
 }
+
+.debug-target-pane__title {
+  cursor: pointer;
+}

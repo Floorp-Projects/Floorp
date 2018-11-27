@@ -263,7 +263,7 @@ GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
 
     const auto tex = OpenSharedTexture(d3d, handle);
     if (!tex) {
-        MOZ_ASSERT(false, "Get a nullptr from OpenSharedResource.");
+        MOZ_GL_ASSERT(mGL, false); // Get a nullptr from OpenSharedResource.
         return false;
     }
     const RefPtr<ID3D11Texture2D> texList[2] = { tex, tex };
@@ -281,7 +281,7 @@ GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
 
     const BindAnglePlanes bindPlanes(this, 2, texList, postAttribsList);
     if (!bindPlanes.Success()) {
-        MOZ_ASSERT(false, "BindAnglePlanes failed.");
+        MOZ_GL_ASSERT(mGL, false); // BindAnglePlanes failed.
         return false;
     }
 
@@ -306,7 +306,6 @@ GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
     };
 
     const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, kFragBody_NV12});
-    MOZ_RELEASE_ASSERT(prog);
     prog->Draw(baseArgs, &yuvArgs);
     return true;
 }
@@ -348,7 +347,6 @@ GLBlitHelper::BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
     };
 
     const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, kFragBody_PlanarYUV});
-    MOZ_RELEASE_ASSERT(prog);
     prog->Draw(baseArgs, &yuvArgs);
     return true;
 }

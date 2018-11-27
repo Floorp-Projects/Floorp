@@ -85,6 +85,7 @@ class BufferPointer
  */
 struct BaselineStackBuilder
 {
+    JSContext* cx_;
     const JSJitFrameIter& iter_;
     JitFrameLayout* frame_;
 
@@ -99,8 +100,9 @@ struct BaselineStackBuilder
 
     size_t framePushed_;
 
-    BaselineStackBuilder(const JSJitFrameIter& iter, size_t initialSize)
-      : iter_(iter),
+    BaselineStackBuilder(JSContext* cx, const JSJitFrameIter& iter, size_t initialSize)
+      : cx_(cx),
+        iter_(iter),
         frame_(static_cast<JitFrameLayout*>(iter.current())),
         bufferTotal_(initialSize),
         bufferAvail_(0),
@@ -120,7 +122,7 @@ struct BaselineStackBuilder
     MOZ_MUST_USE bool init() {
         MOZ_ASSERT(!buffer_);
         MOZ_ASSERT(bufferUsed_ == 0);
-        buffer_ = js_pod_calloc<uint8_t>(bufferTotal_);
+        buffer_ = cx_->pod_calloc<uint8_t>(bufferTotal_);
         if (!buffer_) {
             return false;
         }
@@ -149,10 +151,11 @@ struct BaselineStackBuilder
     MOZ_MUST_USE bool enlarge() {
         MOZ_ASSERT(buffer_ != nullptr);
         if (bufferTotal_ & mozilla::tl::MulOverflowMask<2>::value) {
+            ReportOutOfMemory(cx_);
             return false;
         }
         size_t newSize = bufferTotal_ * 2;
-        uint8_t* newBuffer = js_pod_calloc<uint8_t>(newSize);
+        uint8_t* newBuffer = cx_->pod_calloc<uint8_t>(newSize);
         if (!newBuffer) {
             return false;
         }
@@ -1584,7 +1587,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
     return true;
 }
 
-uint32_t
+bool
 jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
                           const JSJitFrameIter& iter, bool invalidate,
                           BaselineBailoutInfo** bailoutInfo,
@@ -1680,10 +1683,9 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     iter.script()->updateJitCodeRaw(cx->runtime());
 
     // Allocate buffer to hold stack replacement data.
-    BaselineStackBuilder builder(iter, 1024);
+    BaselineStackBuilder builder(cx, iter, 1024);
     if (!builder.init()) {
-        ReportOutOfMemory(cx);
-        return BAILOUT_RETURN_FATAL_ERROR;
+        return false;
     }
     JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p", builder.startFrame());
 
@@ -1698,7 +1700,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     SnapshotIterator snapIter(iter, activation->bailoutData()->machineState());
     if (!snapIter.initInstructionResults(recoverBailout)) {
         ReportOutOfMemory(cx);
-        return BAILOUT_RETURN_FATAL_ERROR;
+        return false;
     }
 
 #ifdef TRACK_SNAPSHOTS
@@ -1757,7 +1759,8 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
                              snapIter, invalidate, builder, &startFrameFormals,
                              &nextCallee, passExcInfo ? excInfo : nullptr))
         {
-            return BAILOUT_RETURN_FATAL_ERROR;
+            MOZ_ASSERT(cx->isExceptionPending());
+            return false;
         }
 
         if (!snapIter.moreFrames()) {
@@ -1802,7 +1805,8 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 #endif
     if (overRecursed) {
         JitSpew(JitSpew_BaselineBailouts, "  Overrecursion check failed!");
-        return BAILOUT_RETURN_OVERRECURSED;
+        ReportOverRecursed(cx);
+        return false;
     }
 
     // Take the reconstructed baseline stack so it doesn't get freed when builder destructs.
@@ -1811,7 +1815,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     info->bailoutKind = bailoutKind;
     *bailoutInfo = info;
     guardRemoveRematerializedFramesFromDebugger.release();
-    return BAILOUT_RETURN_OK;
+    return true;
 }
 
 static void
@@ -1945,7 +1949,7 @@ CopyFromRematerializedFrame(JSContext* cx, JitActivation* act, uint8_t* fp, size
     return true;
 }
 
-uint32_t
+bool
 jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
 {
     // The caller pushes R0 and R1 on the stack without rooting them.

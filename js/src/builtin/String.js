@@ -513,10 +513,14 @@ function String_repeat(count) {
     if (!(n * S.length <= MAX_STRING_LENGTH))
         ThrowRangeError(JSMSG_RESULTING_STRING_TOO_LARGE);
 
-    // Communicate |n|'s possible range to the compiler.
-    assert((MAX_STRING_LENGTH & (MAX_STRING_LENGTH + 1)) === 0,
-           "MAX_STRING_LENGTH can be used as a bitmask");
-    n = n & MAX_STRING_LENGTH;
+    // Communicate |n|'s possible range to the compiler. We actually use
+    // MAX_STRING_LENGTH + 1 as range because that's a valid bit mask. That's
+    // fine because it's only used as optimization hint.
+    assert(TO_INT32(MAX_STRING_LENGTH + 1) == MAX_STRING_LENGTH + 1,
+           "MAX_STRING_LENGTH + 1 must fit in int32");
+    assert(((MAX_STRING_LENGTH + 1) & (MAX_STRING_LENGTH + 2)) === 0,
+           "MAX_STRING_LENGTH + 1 can be used as a bitmask");
+    n = n & (MAX_STRING_LENGTH + 1);
 
     // Steps 8-9.
     var T = "";

@@ -549,14 +549,14 @@ Selection::GetTableCellLocationFromRange(nsRange* aRange,
   if (NS_FAILED(result)) return result;
 
   // Don't fail if range does not point to a single table cell,
-  //  let aSelectionType tell user if we don't have a cell
+  // let aSelectionType tell user if we don't have a cell
   if (*aSelectionType  != TableSelection::Cell) {
     return NS_OK;
   }
 
   // Get the child content (the cell) pointed to by starting node of range
   // We do minimal checking since GetTableSelectionType assures
-  //   us that this really is a table cell
+  // us that this really is a table cell
   nsCOMPtr<nsIContent> child = aRange->GetChildAtStartOffset();
   if (!child)
     return NS_ERROR_FAILURE;
@@ -614,7 +614,7 @@ Selection::AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
   }
 
   // Set frame selection mode only if not already set to a table mode
-  //  so we don't lose the select row and column flags (not detected by getTableCellLocation)
+  // so we don't lose the select row and column flags (not detected by getTableCellLocation)
   if (mFrameSelection->mSelectingTableCellMode == TableSelection::None)
     mFrameSelection->mSelectingTableCellMode = tableMode;
 
@@ -3806,11 +3806,11 @@ Selection::SelectionLanguageChange(bool aLangRTL)
   int32_t focusOffset = static_cast<int32_t>(FocusOffset());
   if ((focusOffset != frameStart) && (focusOffset != frameEnd))
     // the cursor is not at a frame boundary, so the level of both the characters (logically) before and after the cursor
-    //  is equal to the frame level
+    // is equal to the frame level
     levelBefore = levelAfter = level;
   else {
     // the cursor is at a frame boundary, so use GetPrevNextBidiLevels to find the level of the characters
-    //  before and after the cursor
+    // before and after the cursor
     nsCOMPtr<nsIContent> focusContent = do_QueryInterface(GetFocusNode());
     nsPrevNextBidiLevels levels = frameSelection->
       GetPrevNextBidiLevels(focusContent, focusOffset, false);
@@ -3821,9 +3821,9 @@ Selection::SelectionLanguageChange(bool aLangRTL)
 
   if (IS_SAME_DIRECTION(levelBefore, levelAfter)) {
     // if cursor is between two characters with the same orientation, changing the keyboard language
-    //  must toggle the cursor level between the level of the character with the lowest level
-    //  (if the new language corresponds to the orientation of that character) and this level plus 1
-    //  (if the new language corresponds to the opposite orientation)
+    // must toggle the cursor level between the level of the character with the lowest level
+    // (if the new language corresponds to the orientation of that character) and this level plus 1
+    // (if the new language corresponds to the opposite orientation)
     if ((level != levelBefore) && (level != levelAfter))
       level = std::min(levelBefore, levelAfter);
     if (IS_SAME_DIRECTION(level, kbdBidiLevel))
@@ -3833,7 +3833,7 @@ Selection::SelectionLanguageChange(bool aLangRTL)
   }
   else {
     // if cursor is between characters with opposite orientations, changing the keyboard language must change
-    //  the cursor level to that of the adjacent character with the orientation corresponding to the new language.
+    // the cursor level to that of the adjacent character with the orientation corresponding to the new language.
     if (IS_SAME_DIRECTION(levelBefore, kbdBidiLevel))
       frameSelection->SetCaretBidiLevel(levelBefore);
     else

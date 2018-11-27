@@ -264,7 +264,7 @@ export class ASRouterAdmin extends React.PureComponent {
 
         let label = "local";
         if (provider.type === "remote") {
-          label = (<span>endpoint (<a className="providerUrl" target="_blank" href={info.url}>{info.url}</a>)</span>);
+          label = (<span>endpoint (<a className="providerUrl" target="_blank" href={info.url} rel="noopener noreferrer">{info.url}</a>)</span>);
         } else if (provider.type === "remote-settings") {
           label = `remote settings (${provider.bucket})`;
         }
@@ -355,6 +355,13 @@ export class ASRouterAdmin extends React.PureComponent {
   render() {
     return (<div className="asrouter-admin outer-wrapper">
       <h1>AS Router Admin</h1>
+      <p className="helpLink">
+        <span className="icon icon-small-spacer icon-info" />
+        {" "}
+        <span>
+          Need help using these tools? Check out our <a target="blank" href="https://github.com/mozilla/activity-stream/blob/master/content-src/asrouter/docs/debugging-docs.md">documentation</a>
+        </span>
+      </p>
       <h2>Targeting Utilities</h2>
       <button className="button" onClick={this.expireCache}>Expire Cache</button> (This expires the cache in ASR Targeting for bookmarks and top sites)
       <h2>Message Providers <button title="Restore all provider settings that ship with Firefox" className="button" onClick={this.resetPref}>Restore default prefs</button></h2>

@@ -190,25 +190,39 @@ public class MediaElement {
             audioTrackCount = bundle.getInt("audioTrackCount", 0);
             videoTrackCount = bundle.getInt("videoTrackCount", 0);
         }
+
+        /**
+         * Empty constructor for tests.
+         */
+        protected Metadata() {
+            currentSource = "";
+            duration = 0;
+            width = 0;
+            height = 0;
+            isSeekable = false;
+            audioTrackCount = 0;
+            videoTrackCount = 0;
+        }
     }
 
     /**
      * Data class that indicates infomation about a media load progress event.
      **/
     public static class LoadProgressInfo {
-        /*
+        /**
          * Class used to represent a set of time ranges.
          */
         public class TimeRange {
-            /* package */ TimeRange(double start, double end) {
+            protected TimeRange(double start, double end) {
                 this.start = start;
                 this.end = end;
             }
-            /*
+
+            /**
              * The start time of the range in seconds.
              */
             public final double start;
-            /*
+            /**
              * The end time of the range in seconds.
              */
             public final double end;
@@ -250,6 +264,15 @@ public class MediaElement {
             for (int i = 0; i < starts.length; ++i) {
                 buffered[i] = new TimeRange(starts[i], ends[i]);
             }
+        }
+
+        /**
+         * Empty constructor for tests.
+         */
+        protected LoadProgressInfo() {
+            loadedBytes = 0;
+            totalBytes = 0;
+            buffered = null;
         }
     }
 

@@ -182,8 +182,15 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   mWindow->SetBackgroundColor(NS_RGB(255,255,255));
 
   // Create web shell
+  RefPtr<BrowsingContext> openerContext =
+    aOpenerWindow
+      ? nsPIDOMWindowOuter::From(aOpenerWindow)->GetBrowsingContext()
+      : nullptr;
   RefPtr<BrowsingContext> browsingContext =
-    BrowsingContext::Create(nullptr, EmptyString(), BrowsingContext::Type::Chrome);
+    BrowsingContext::Create(/* aParent */ nullptr,
+                            openerContext,
+                            EmptyString(),
+                            BrowsingContext::Type::Chrome);
   mDocShell = nsDocShell::Create(browsingContext);
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 

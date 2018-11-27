@@ -6040,6 +6040,7 @@ ContentParent::RecvStoreUserInteractionAsPermission(const Principal& aPrincipal)
 mozilla::ipc::IPCResult
 ContentParent::RecvAttachBrowsingContext(
   const BrowsingContextId& aParentId,
+  const BrowsingContextId& aOpenerId,
   const BrowsingContextId& aChildId,
   const nsString& aName)
 {
@@ -6103,7 +6104,8 @@ ContentParent::RecvAttachBrowsingContext(
   }
 
   if (!child) {
-    child = BrowsingContext::CreateFromIPC(parent, aName, (uint64_t)aChildId, this);
+    RefPtr<BrowsingContext> opener = BrowsingContext::Get(aOpenerId);
+    child = BrowsingContext::CreateFromIPC(parent, opener, aName, (uint64_t)aChildId, this);
   }
 
   return IPC_OK();

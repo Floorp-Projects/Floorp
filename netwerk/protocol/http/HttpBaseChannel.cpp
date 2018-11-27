@@ -1869,9 +1869,27 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
       NS_EFFECTIVETLDSERVICE_CONTRACTID);
     if (eTLDService) {
       rv = eTLDService->GetBaseDomain(mURI, extraDomains, currentDomain);
-      if (NS_FAILED(rv)) return rv;
+      if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
+          rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+        // mURI is either an IP address, an alias such as 'localhost', an eTLD
+        // such as 'co.uk', or the empty string. Uses the normalized host in
+        // such cases.
+        rv = mURI->GetAsciiHost(currentDomain);
+      }
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
       rv = eTLDService->GetBaseDomain(clone, extraDomains, referrerDomain);
-      if (NS_FAILED(rv)) return rv;
+      if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
+          rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+        // clone is either an IP address, an alias such as 'localhost', an eTLD
+        // such as 'co.uk', or the empty string. Uses the normalized host in
+        // such cases.
+        rv = clone->GetAsciiHost(referrerDomain);
+      }
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
 
     // check policy for sending only when effective top level domain matches.

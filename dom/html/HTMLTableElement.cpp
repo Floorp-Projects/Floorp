@@ -19,7 +19,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Table)
 namespace mozilla {
 namespace dom {
 
-/* ------------------------------ TableRowsCollection -------------------------------- */
+/* ------------------------- TableRowsCollection --------------------------- */
 /**
  * This class provides a late-bound collection of rows in a table.
  * mParent is NOT ref-counted to avoid circular references

@@ -17,6 +17,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/Unused.h"
@@ -165,6 +166,11 @@ TextComposition::DispatchEvent(WidgetCompositionEvent* aDispatchEvent,
   nsPluginInstanceOwner::GeneratePluginEvent(aOriginalEvent,
                                              aDispatchEvent);
 
+  if (aDispatchEvent->mMessage == eCompositionChange &&
+      StaticPrefs::
+        dom_compositionevent_text_dispatch_only_system_group_in_content()) {
+    aDispatchEvent->mFlags.mOnlySystemGroupDispatchInContent = true;
+  }
   EventDispatcher::Dispatch(mNode, mPresContext,
                             aDispatchEvent, nullptr, aStatus, aCallBack);
 
