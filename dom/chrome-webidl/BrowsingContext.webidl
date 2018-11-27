@@ -21,4 +21,6 @@ interface BrowsingContext {
 [Exposed=Window, ChromeOnly]
 interface ChromeBrowsingContext : BrowsingContext {
   sequence<WindowGlobalParent> getWindowGlobals();
+
+  readonly attribute WindowGlobalParent? currentWindowGlobal;
 };
