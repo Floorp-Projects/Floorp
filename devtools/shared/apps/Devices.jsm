@@ -12,23 +12,8 @@ const { adbAddon, ADB_ADDON_STATES } = require("devtools/shared/adb/adb-addon");
 
 const EXPORTED_SYMBOLS = ["Devices"];
 
-var addonInstalled = adbAddon.status === ADB_ADDON_STATES.INSTALLED;
-
 const Devices = {
   _devices: {},
-
-  get adbExtensionInstalled() {
-    return addonInstalled;
-  },
-  set adbExtensionInstalled(v) {
-    addonInstalled = v;
-    if (!addonInstalled) {
-      for (const name in this._devices) {
-        this.unregister(name);
-      }
-    }
-    this.emit("addon-status-updated", v);
-  },
 
   register: function(name, device) {
     this._devices[name] = device;
@@ -49,7 +34,12 @@ const Devices = {
   },
 
   updateAdbAddonStatus: function() {
-    this.adbExtensionInstalled = adbAddon.status === ADB_ADDON_STATES.INSTALLED;
+    const installed = adbAddon.status === ADB_ADDON_STATES.INSTALLED;
+    if (!installed) {
+      for (const name in this._devices) {
+        this.unregister(name);
+      }
+    }
   },
 };
 
