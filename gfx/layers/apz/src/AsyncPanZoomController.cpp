@@ -955,28 +955,47 @@ AsyncPanZoomController::GetSecondTapTolerance() const
 }
 
 bool
-AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, uint32_t aTouchPoints) {
-  if (aTouchPoints == 0) {
+AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, const MultiTouchInput& aInput) {
+  uint32_t touchPoints = aInput.mTouches.Length();
+  if (touchPoints == 0) {
     // Cant' do anything with zero touch points
     return false;
   }
 
-  // This logic is simplified, erring on the side of returning true
-  // if we're not sure. It's safer to pretend that we can consume the
-  // event and then not be able to than vice-versa.
+  // This logic is simplified, erring on the side of returning true if we're
+  // not sure. It's safer to pretend that we can consume the event and then
+  // not be able to than vice-versa. But at the same time, we should try hard
+  // to return an accurate result, because returning true can trigger a
+  // pointercancel event to web content, which can break certain features
+  // that are using touch-action and handling the pointermove events.
+  //
   // We could probably enhance this logic to determine things like "we're
   // not pannable, so we can only zoom in, and the zoom is already maxed
   // out, so we're not zoomable either" but no need for that at this point.
 
-  bool pannable = aBlock->GetOverscrollHandoffChain()->CanBePanned(this);
-  bool zoomable = mZoomConstraints.mAllowZoom;
+  bool pannableX = aBlock->TouchActionAllowsPanningX() &&
+      aBlock->GetOverscrollHandoffChain()->CanScrollInDirection(this, ScrollDirection::eHorizontal);
+  bool pannableY = aBlock->TouchActionAllowsPanningY() &&
+      aBlock->GetOverscrollHandoffChain()->CanScrollInDirection(this, ScrollDirection::eVertical);
 
-  pannable &= (aBlock->TouchActionAllowsPanningX() || aBlock->TouchActionAllowsPanningY());
+  bool pannable;
+
+  Maybe<ScrollDirection> panDirection = aBlock->GetBestGuessPanDirection(aInput);
+  if (panDirection == Some(ScrollDirection::eVertical)) {
+    pannable = pannableY;
+  } else if (panDirection == Some(ScrollDirection::eHorizontal)) {
+    pannable = pannableX;
+  } else {
+    // If we don't have a guessed pan direction, err on the side of returning true.
+    pannable = pannableX || pannableY;
+  }
+
+  bool zoomable = mZoomConstraints.mAllowZoom;
   zoomable &= (aBlock->TouchActionAllowsPinchZoom());
 
   // XXX once we fix bug 1031443, consumable should be assigned
-  // pannable || zoomable if aTouchPoints > 1.
-  bool consumable = (aTouchPoints == 1 ? pannable : zoomable);
+  // pannable || zoomable if touchPoints > 1.
+  bool consumable = (touchPoints == 1 ? pannable : zoomable);
   if (!consumable) {
     return false;
   }
