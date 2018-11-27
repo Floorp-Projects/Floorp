@@ -499,7 +499,85 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   public:
     // ===============================================================
-    // ABI function calls.
+    // [SMDOC] JIT-to-C++ Function Calls (callWithABI)
+    //
+    // callWithABI is used to make a call using the standard C/C++ system ABI.
+    //
+    // callWithABI is a low level interface for making calls, as such every call
+    // made with callWithABI should be organized with 6 steps: spilling live
+    // registers, aligning the stack, listing arguments of the called function,
+    // calling a function pointer, extracting the returned value and restoring
+    // live registers.
+    //
+    // A more detailed example of the six stages:
+    //
+    // 1) Saving of registers that are live. This will vary depending on which
+    //    SpiderMonkey compiler you are working on. Registers that shouldn't be
+    //    restored can be excluded.
+    //
+    //      LiveRegisterSet volatileRegs(...);
+    //      volatileRegs.take(scratch);
+    //      masm.PushRegsInMask(volatileRegs);
+    //
+    // 2) Align the stack to perform the call with the correct stack alignment.
+    //
+    //    When the stack pointer alignment is unknown and cannot be corrected
+    //    when generating the code, setupUnalignedABICall must be used to
+    //    dynamically align the stack pointer to the expectation of the ABI.
+    //    When the stack pointer is known at JIT compilation time, the stack can
+    //    be fixed manually and setupAlignedABICall and setupWasmABICall can be
+    //    used.
+    //
+    //    setupWasmABICall is a special case of setupAlignedABICall as
+    //    SpiderMonkey's WebAssembly implementation mostly follow the system
+    //    ABI, except for float/double arguments, which always use floating
+    //    point registers, even if this is not supported by the system ABI.
+    //
+    //      masm.setupUnalignedABICall(scratch);
+    //
+    // 3) Passing arguments. Arguments are passed left-to-right.
+    //
+    //      masm.passABIArg(scratch);
+    //      masm.passABIArg(FloatOp0, MoveOp::Double);
+    //
+    //    Note how float register arguments are annotated with MoveOp::Double.
+    //
+    //    Concerning stack-relative address, see the note on passABIArg.
+    //
+    // 4) Make the call:
+    //
+    //      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, Callee));
+    //
+    //    In the case where the call returns a double, that needs to be
+    //    indicated to the callWithABI like this:
+    //
+    //      masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ...), MoveOp::DOUBLE);
+    //
+    //    There are overloads to allow calls to registers and addresses.
+    //
+    // 5) Take care of the ReturnReg or ReturnDoubleReg
+    //
+    //      masm.mov(ReturnReg, scratch1);
+    //
+    // 6) Restore the potentially clobbered volatile registers
+    //
+    //      masm.PopRegsInMask(volatileRegs);
+    //
+    //    If expecting a returned value, this call should use
+    //    PopRegsInMaskIgnore to filter out the registers which are containing
+    //    the returned value.
+    //
+    // Unless an exit frame is pushed prior to the setupABICall, the callee
+    // should not GC. To ensure this is the case callWithABI is instrumented to
+    // make sure that in the default case callees are annotated with an
+    // AutoUnsafeCallWithABI on the stack.
+    //
+    // A callWithABI can opt out of checking, if for example it is known there
+    // is an exit frame, or the callee is known not to GC.
+    //
+    // If your callee needs to be able to GC, consider using a VMFunction, or
+    // create a fake exit frame, and instrument the TraceJitExitFrame
+    // accordingly.
 
     // Setup a call to C/C++ code, given the assumption that the framePushed
     // accruately define the state of the stack, and that the top of the stack
