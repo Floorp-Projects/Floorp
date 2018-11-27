@@ -147,9 +147,6 @@ struct ParentLoadInfoForwarderArgs
   // by the service worker.
   bool serviceWorkerTaintingSynthesized;
 
-  // Tracker information, currently used by FastBlock
-  bool isTracker;
-  bool isTrackerBlocked;
   bool documentHasUserInteracted;
   bool documentHasLoaded;
 

@@ -6063,10 +6063,6 @@ nsHttpChannel::CancelInternal(nsresult status)
       !!mTrackingProtectionCancellationPending;
     if (status == NS_ERROR_TRACKING_URI) {
       mTrackingProtectionCancellationPending = 0;
-      if (mLoadInfo) {
-        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTracker(true));
-        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
-      }
     }
 
     mCanceled = true;
