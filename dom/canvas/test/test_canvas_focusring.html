@@ -9,26 +9,6 @@ SimpleTest.waitForExplicitFinish();
 const Cc = SpecialPowers.Cc;
 const Cr = SpecialPowers.Cr;
 SpecialPowers.setBoolPref("canvas.focusring.enabled", true);
-SpecialPowers.setBoolPref("canvas.customfocusring.enabled", true);
-</script>
-
-<p>Canvas test: drawCustomFocusRing</p>
-<canvas id="c688" class="output" width="100" height="50">+
-    <input id="button1" type="range" min="1" max="12"></input>
-    <input id="button2" type="range" min="1" max="12"></input>
-</canvas>
-<script type="text/javascript">
-function test_drawCustomFocusRing_canvas() {
-   var c = document.getElementById("c688");
-   var ctx = c.getContext("2d");
-   ctx.beginPath();
-   var b1 = document.getElementById('button1');
-   var b2 = document.getElementById('button2');
-   ok(!ctx.drawCustomFocusRing(b1), "button 1 is focused");
-   ok(!ctx.drawCustomFocusRing(b2), "button 2 is focused");
-   b1.focus();
-   ok(ctx.drawCustomFocusRing(b1), "button 1 should not be focused");
-}
 </script>
 
 <p>Canvas test: drawFocusIfNeeded</p>
@@ -78,12 +58,6 @@ function test_drawFocusIfNeeded_canvas() {
 
 function runTests() {
  try {
-  test_drawCustomFocusRing_canvas();
- } catch(e) {
-  throw e;
-  ok(false, "unexpected exception thrown in: test_drawCustomFocusRing_canvas");
- }
-  try {
   test_drawFocusIfNeeded_canvas();
  } catch(e) {
   throw e;
@@ -91,7 +65,6 @@ function runTests() {
  }
 
  SpecialPowers.setBoolPref("canvas.focusring.enabled", false);
- SpecialPowers.setBoolPref("canvas.customfocusring.enabled", false);
  SimpleTest.finish();
 }
 
