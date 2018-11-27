@@ -15,6 +15,8 @@ using mozilla::dom::PaymentCanMakeActionResponse;
 using mozilla::dom::PaymentAbortActionResponse;
 using mozilla::dom::PaymentShowActionResponse;
 using mozilla::dom::PaymentCompleteActionResponse;
+using mozilla::dom::GeneralMethodChangeDetails;
+using mozilla::dom::BasicCardMethodChangeDetails;
 using mozilla::dom::payments::PaymentAddress;
 using mozilla::dom::PaymentRequestService;
 
@@ -24,6 +26,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(PaymentCanMakeActionResponse)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PaymentAbortActionResponse)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PaymentShowActionResponse)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PaymentCompleteActionResponse)
+NS_GENERIC_FACTORY_CONSTRUCTOR(GeneralMethodChangeDetails)
+NS_GENERIC_FACTORY_CONSTRUCTOR(BasicCardMethodChangeDetails)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PaymentAddress)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(PaymentRequestService,
                                          PaymentRequestService::GetSingleton)
@@ -34,6 +38,8 @@ NS_DEFINE_NAMED_CID(NS_PAYMENT_CANMAKE_ACTION_RESPONSE_CID);
 NS_DEFINE_NAMED_CID(NS_PAYMENT_ABORT_ACTION_RESPONSE_CID);
 NS_DEFINE_NAMED_CID(NS_PAYMENT_SHOW_ACTION_RESPONSE_CID);
 NS_DEFINE_NAMED_CID(NS_PAYMENT_COMPLETE_ACTION_RESPONSE_CID);
+NS_DEFINE_NAMED_CID(NS_GENERAL_CHANGE_DETAILS_CID);
+NS_DEFINE_NAMED_CID(NS_BASICCARD_CHANGE_DETAILS_CID);
 NS_DEFINE_NAMED_CID(NS_PAYMENT_ADDRESS_CID);
 NS_DEFINE_NAMED_CID(NS_PAYMENT_REQUEST_SERVICE_CID);
 
@@ -44,6 +50,8 @@ static const mozilla::Module::CIDEntry kPaymentRequestCIDs[] = {
   { &kNS_PAYMENT_ABORT_ACTION_RESPONSE_CID, false, nullptr, PaymentAbortActionResponseConstructor},
   { &kNS_PAYMENT_SHOW_ACTION_RESPONSE_CID, false, nullptr, PaymentShowActionResponseConstructor},
   { &kNS_PAYMENT_COMPLETE_ACTION_RESPONSE_CID, false, nullptr, PaymentCompleteActionResponseConstructor},
+  { &kNS_GENERAL_CHANGE_DETAILS_CID, false, nullptr, GeneralMethodChangeDetailsConstructor},
+  { &kNS_BASICCARD_CHANGE_DETAILS_CID, false, nullptr, BasicCardMethodChangeDetailsConstructor},
   { &kNS_PAYMENT_ADDRESS_CID, false, nullptr, PaymentAddressConstructor},
   { &kNS_PAYMENT_REQUEST_SERVICE_CID, true, nullptr, PaymentRequestServiceConstructor },
   { nullptr }
@@ -56,6 +64,8 @@ static const mozilla::Module::ContractIDEntry kPaymentRequestContracts[] = {
   { NS_PAYMENT_ABORT_ACTION_RESPONSE_CONTRACT_ID, &kNS_PAYMENT_ABORT_ACTION_RESPONSE_CID },
   { NS_PAYMENT_SHOW_ACTION_RESPONSE_CONTRACT_ID, &kNS_PAYMENT_SHOW_ACTION_RESPONSE_CID },
   { NS_PAYMENT_COMPLETE_ACTION_RESPONSE_CONTRACT_ID, &kNS_PAYMENT_COMPLETE_ACTION_RESPONSE_CID },
+  { NS_GENERAL_CHANGE_DETAILS_CONTRACT_ID, &kNS_GENERAL_CHANGE_DETAILS_CID },
+  { NS_BASICCARD_CHANGE_DETAILS_CONTRACT_ID, &kNS_BASICCARD_CHANGE_DETAILS_CID },
   { NS_PAYMENT_ADDRESS_CONTRACT_ID, &kNS_PAYMENT_ADDRESS_CID },
   { NS_PAYMENT_REQUEST_SERVICE_CONTRACT_ID, &kNS_PAYMENT_REQUEST_SERVICE_CID },
   { nullptr }
@@ -68,6 +78,8 @@ static const mozilla::Module::CategoryEntry kPaymentRequestCategories[] = {
   { "payment-request", "PaymentAbortActionResponse", NS_PAYMENT_ABORT_ACTION_RESPONSE_CONTRACT_ID },
   { "payment-request", "PaymentShowActionResponse", NS_PAYMENT_SHOW_ACTION_RESPONSE_CONTRACT_ID },
   { "payment-request", "PaymentCompleteActionResponse", NS_PAYMENT_COMPLETE_ACTION_RESPONSE_CONTRACT_ID },
+  { "payment-request", "GeneralMethodChangeDetails", NS_GENERAL_CHANGE_DETAILS_CONTRACT_ID },
+  { "payment-request", "BasicCardMethodChangeDetails", NS_BASICCARD_CHANGE_DETAILS_CONTRACT_ID },
   { "payment-request", "PaymentAddress", NS_PAYMENT_ADDRESS_CONTRACT_ID },
   { "payment-request", "PaymentRequestService", NS_PAYMENT_REQUEST_SERVICE_CONTRACT_ID },
   { nullptr }
