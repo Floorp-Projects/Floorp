@@ -9,7 +9,7 @@ const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { RuntimeTypes } =
   require("devtools/client/webide/modules/runtime-types");
 const { ADB } = require("devtools/shared/adb/adb");
-const { Devices } = require("devtools/shared/adb/Devices.jsm");
+const { adbDevicesRegistry } = require("devtools/shared/adb/adb-devices-registry");
 
 loader.lazyRequireGetter(this, "Device", "devtools/shared/adb/adb-device");
 
@@ -27,8 +27,8 @@ class ADBScanner extends EventEmitter {
     EventEmitter.on(ADB, "device-connected", this._onDeviceConnected);
     EventEmitter.on(ADB, "device-disconnected", this._onDeviceDisconnected);
 
-    Devices.on("register", this._updateRuntimes);
-    Devices.on("unregister", this._updateRuntimes);
+    adbDevicesRegistry.on("register", this._updateRuntimes);
+    adbDevicesRegistry.on("unregister", this._updateRuntimes);
 
     ADB.start().then(() => {
       ADB.trackDevices();
@@ -39,8 +39,8 @@ class ADBScanner extends EventEmitter {
   disable() {
     EventEmitter.off(ADB, "device-connected", this._onDeviceConnected);
     EventEmitter.off(ADB, "device-disconnected", this._onDeviceDisconnected);
-    Devices.off("register", this._updateRuntimes);
-    Devices.off("unregister", this._updateRuntimes);
+    adbDevicesRegistry.off("register", this._updateRuntimes);
+    adbDevicesRegistry.off("unregister", this._updateRuntimes);
     this._updateRuntimes();
   }
 
@@ -50,11 +50,11 @@ class ADBScanner extends EventEmitter {
 
   _onDeviceConnected(deviceId) {
     const device = new Device(deviceId);
-    Devices.register(deviceId, device);
+    adbDevicesRegistry.register(deviceId, device);
   }
 
   _onDeviceDisconnected(deviceId) {
-    Devices.unregister(deviceId);
+    adbDevicesRegistry.unregister(deviceId);
   }
 
   _updateRuntimes() {
@@ -63,8 +63,8 @@ class ADBScanner extends EventEmitter {
     }
     this._runtimes = [];
     const promises = [];
-    for (const id of Devices.available()) {
-      const device = Devices.getByName(id);
+    for (const id of adbDevicesRegistry.available()) {
+      const device = adbDevicesRegistry.getByName(id);
       promises.push(this._detectRuntimes(device));
     }
     this._updatingPromise = Promise.all(promises);

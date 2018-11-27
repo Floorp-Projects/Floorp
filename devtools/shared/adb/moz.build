@@ -7,12 +7,12 @@ DevToolsModules(
     'adb-binary.js',
     'adb-client.js',
     'adb-device.js',
+    'adb-devices-registry.js',
     'adb-running-checker.js',
     'adb-scanner.js',
     'adb-socket.js',
     'adb.js',
     'addon-aware-adb-scanner.js',
-    'Devices.jsm',
 )
 
 with Files('**'):
