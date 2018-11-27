@@ -184,15 +184,14 @@ UnpremultiplyVector_NEON(const uint16x8_t& aSrc)
   // lo1 lo1 lo2 lo2 lo3 lo3 lo4 lo4 and hi1 hi1 hi2 hi2 hi3 hi3 hi4 hi4
   uint16x8x2_t q1234lohi = vtrnq_u16(q1234, q1234);
 
-  // VQDMULH is a signed multiply that doubles (*2) the result, then takes the
-  // high word.  To work around the signedness and the doubling, the low
-  // portion of the reciprocal only stores the lower 15 bits, which fits in a
-  // signed 16 bit integer. The high 9 bit portion is effectively also doubled
-  // by 2 as a side-effect of being shifted for storage. Thus the output scale
-  // of doing a normal multiply by the high portion and the VQDMULH by the low
-  // portion are both doubled and can be safely added together. The resulting
-  // sum just needs to be halved (via VHADD) to thus cancel out the doubling.
-  // All this combines to produce a reciprocal multiply of the form:
+  // VQDMULH is a signed multiply that doubles (*2) the result, then takes the high word.
+  // To work around the signedness and the doubling, the low portion of the reciprocal only
+  // stores the lower 15 bits, which fits in a signed 16 bit integer. The high 9 bit portion
+  // is effectively also doubled by 2 as a side-effect of being shifted for storage. Thus the
+  // output scale of doing a normal multiply by the high portion and the VQDMULH by the low
+  // portion are both doubled and can be safely added together. The resulting sum just needs
+  // to be halved (via VHADD) to thus cancel out the doubling. All this combines to produce
+  // a reciprocal multiply of the form:
   // rb = ((rb * hi) + ((rb * lo * 2) >> 16)) / 2
   rb =
     vhaddq_u16(

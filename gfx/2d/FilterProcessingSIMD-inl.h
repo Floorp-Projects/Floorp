@@ -247,14 +247,12 @@ template<typename i16x8_t, typename i32x4_t>
 inline i32x4_t
 BlendAlphaOfFourPixels(i16x8_t s_rrrraaaa1234, i16x8_t d_rrrraaaa1234)
 {
-  // clang-format off
   // We're using MulAdd16x8x2To32x4, so we need to interleave our factors
   // appropriately. The calculation is rewritten as follows:
   // resultAlpha[0] * 255 = 255 * 255 - (255 - sourceAlpha[0]) * (255 - destAlpha[0])
   //                      = 255 * 255 + (255 - sourceAlpha[0]) * (destAlpha[0] - 255)
   //                      = (255 - 0) * (510 - 255) + (255 - sourceAlpha[0]) * (destAlpha[0] - 255)
   //                      = MulAdd(255 - IntLv(0, sourceAlpha), IntLv(510, destAlpha) - 255)[0]
-  // clang-format on
   i16x8_t zeroInterleavedWithSourceAlpha = simd::InterleaveHi16(simd::FromI16<i16x8_t>(0), s_rrrraaaa1234);
   i16x8_t fiveTenInterleavedWithDestAlpha = simd::InterleaveHi16(simd::FromI16<i16x8_t>(510), d_rrrraaaa1234);
   i16x8_t f1 = simd::Sub16(simd::FromI16<i16x8_t>(255), zeroInterleavedWithSourceAlpha);
@@ -519,15 +517,13 @@ ColorMatrixMultiply(i16x8_t p, i16x8_t rows_bg, i16x8_t rows_ra, const i32x4_t& 
 
   // int16_t bg[8] = { b, g, b, g, b, g, b, g };
   i16x8_t bg = simd::ShuffleHi16<1,0,1,0>(simd::ShuffleLo16<1,0,1,0>(p));
-  // int32_t prodsum_bg[4] =
-  //   { b * bB + g * gB, b * bG + g * gG, b * bR + g * gR, b * bA + g * gA }
+  // int32_t prodsum_bg[4] = { b * bB + g * gB, b * bG + g * gG, b * bR + g * gR, b * bA + g * gA }
   i32x4_t prodsum_bg = simd::MulAdd16x8x2To32x4(bg, rows_bg);
   sum = simd::Add32(sum, prodsum_bg);
 
   // uint16_t ra[8] = { r, a, r, a, r, a, r, a };
   i16x8_t ra = simd::ShuffleHi16<3,2,3,2>(simd::ShuffleLo16<3,2,3,2>(p));
-  // int32_t prodsum_ra[4] =
-  //   { r * rB + a * aB, r * rG + a * aG, r * rR + a * aR, r * rA + a * aA }
+  // int32_t prodsum_ra[4] = { r * rB + a * aB, r * rG + a * aG, r * rR + a * aR, r * rA + a * aA }
   i32x4_t prodsum_ra = simd::MulAdd16x8x2To32x4(ra, rows_ra);
   sum = simd::Add32(sum, prodsum_ra);
 

@@ -340,17 +340,14 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
  * curve is degenerate in such a way that it is best approximated by a straight
  * line.
  *
- * The below algorithm was written by Jeff Muizelaar <jmuizelaar@mozilla.com>,
- * explanation follows:
+ * The below algorithm was written by Jeff Muizelaar <jmuizelaar@mozilla.com>, explanation follows:
  *
  * The lower inflection point is returned in aT1, the higher one in aT2. In the
  * case of a single inflection point this will be in aT1.
  *
- * The method is inspired by the algorithm in "analysis of in?ection points for
- * planar cubic bezier curve"
+ * The method is inspired by the algorithm in "analysis of in?ection points for planar cubic bezier curve"
  *
- * Here are some differences between this algorithm and versions discussed
- * elsewhere in the literature:
+ * Here are some differences between this algorithm and versions discussed elsewhere in the literature:
  *
  * zhang et. al compute a0, d0 and e0 incrementally using the follow formula:
  *
@@ -363,11 +360,9 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
  
  * Point e0 = d1 - d0
  *
- * this avoids any multiplications and may or may not be faster than the
- * approach take below.
+ * this avoids any multiplications and may or may not be faster than the approach take below.
  *
- * "fast, precise flattening of cubic bezier path and ofset curves" by hain et.
- * al
+ * "fast, precise flattening of cubic bezier path and ofset curves" by hain et. al
  * Point a = CP1 + 3 * CP2 - 3 * CP3 + CP4
  * Point b = 3 * CP1 - 6 * CP2 + 3 * CP3
  * Point c = -3 * CP1 + 3 * CP2
