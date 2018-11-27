@@ -40,7 +40,7 @@ public abstract class WebMessage {
      */
     public final @Nullable ByteBuffer body;
 
-    /* package */ WebMessage(Builder builder) {
+    protected WebMessage(final @NonNull Builder builder) {
         uri = builder.mUri;
         headers = Collections.unmodifiableMap(builder.mHeaders);
 

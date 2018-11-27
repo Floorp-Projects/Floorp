@@ -1599,6 +1599,20 @@ public class GeckoSession implements Parcelable {
                                        (float) rectBundle.getDouble("bottom"));
             }
         }
+
+        /**
+         * Empty constructor for tests
+         */
+        protected FinderResult() {
+            found = false;
+            wrapped = false;
+            current = 0;
+            total = 0;
+            flags = 0;
+            searchString = "";
+            linkUri = "";
+            clientRect = null;
+        }
     }
 
     /**
@@ -2435,6 +2449,24 @@ public class GeckoSession implements Parcelable {
                 issuerCommonName = identityData.getString("issuerCommonName");
                 issuerOrganization = identityData.getString("issuerOrganization");
             }
+
+            /**
+             * Empty constructor for tests
+             */
+            protected SecurityInformation() {
+                mixedModePassive = 0;
+                mixedModeActive = 0;
+                trackingMode = 0;
+                securityMode = 0;
+                isSecure = false;
+                isException = false;
+                origin = "";
+                host = "";
+                organization = "";
+                subjectName = "";
+                issuerCommonName = "";
+                issuerOrganization = "";
+            }
         }
 
         /**
@@ -2511,6 +2543,16 @@ public class GeckoSession implements Parcelable {
             contentType = message.getString("contentType");
             contentLength = message.getLong("contentLength");
             filename = message.getString("filename");
+        }
+
+        /**
+         * Empty constructor for tests.
+         */
+        protected WebResponseInfo() {
+            uri = "";
+            contentType = "";
+            contentLength = 0;
+            filename = "";
         }
     }
 
@@ -2716,6 +2758,15 @@ public class GeckoSession implements Parcelable {
                                            (float) rectBundle.getDouble("bottom"));
                 }
             }
+
+            /**
+             * Empty constructor for tests.
+             */
+            protected Selection() {
+                flags = 0;
+                text = "";
+                clientRect = null;
+            }
         }
 
         /**
@@ -2830,6 +2881,16 @@ public class GeckoSession implements Parcelable {
                 this.triggerUri = triggerUri;
                 this.target = convertGeckoTarget(geckoTarget);
                 this.isRedirect = (flags & LOAD_REQUEST_IS_REDIRECT) != 0;
+            }
+
+            /**
+             * Empty constructor for tests.
+             */
+            protected LoadRequest() {
+                uri = "";
+                triggerUri = null;
+                target = 0;
+                isRedirect = false;
             }
 
             // This needs to match nsIBrowserDOMWindow.idl
@@ -3125,6 +3186,17 @@ public class GeckoSession implements Parcelable {
                 username = options.getString("username");
                 password = options.getString("password");
             }
+
+            /**
+             * Empty constructor for tests
+             */
+            protected AuthOptions() {
+                flags = 0;
+                uri = "";
+                level = 0;
+                username = "";
+                password = "";
+            }
         }
 
         /**
@@ -3214,6 +3286,19 @@ public class GeckoSession implements Parcelable {
                         items[i] = new Choice(choices[i]);
                     }
                 }
+            }
+
+            /**
+             * Empty constructor for tests.
+             */
+            protected Choice() {
+                disabled = false;
+                icon = "";
+                id = "";
+                label = "";
+                selected = false;
+                separator = false;
+                items = null;
             }
         }
 
@@ -3819,6 +3904,17 @@ public class GeckoSession implements Parcelable {
                 name = media.getString("name");
                 source = getSourceFromString(media.getString("mediaSource"));
                 type = getTypeFromString(media.getString("type"));
+            }
+
+            /**
+             * Empty constructor for tests.
+             */
+            protected MediaSource() {
+                id = null;
+                rawId = null;
+                name = null;
+                source = 0;
+                type = 0;
             }
         }
 
