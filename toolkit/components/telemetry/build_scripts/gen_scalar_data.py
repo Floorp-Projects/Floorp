@@ -147,6 +147,7 @@ def generate_JSON_definitions(output, *filenames):
             # We don't expire dynamic-builtin scalars: they're only meant for
             # use in local developer builds anyway. They will expire when rebuilding.
             'expired': False,
+            'stores': scalar.record_into_store,
         })
 
     json.dump(scalar_definitions, output)
