@@ -9,6 +9,7 @@
 
 #include <type_traits>
 
+// clang-format off
 /******************************************************************************
 The following accessible states aren't translated, just ignored:
   STATE_READONLY:        Supported indirectly via EXT_STATE_EDITABLE
@@ -36,6 +37,7 @@ The following ATK states are not supported:
   ATK_STATE_TRUNCATED:   No clear use case. Indicates that an object's onscreen content is truncated,
                          e.g. a text value in a spreadsheet cell. No IA2 state.
 ******************************************************************************/
+// clang-format on
 
 enum EStateMapEntryType {
   kMapDirectly,

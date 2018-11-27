@@ -1,4 +1,4 @@
-/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -71,7 +71,7 @@ GetCurrentThreadDebuggerMallocSizeOf()
   return mallocSizeOf;
 }
 
-/*** Cycle Collection Boilerplate *****************************************************************/
+/*** Cycle Collection Boilerplate *********************************************/
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HeapSnapshot, mParent)
 
@@ -89,7 +89,7 @@ HeapSnapshot::WrapObject(JSContext* aCx, HandleObject aGivenProto)
   return HeapSnapshot_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/*** Reading Heap Snapshots ***********************************************************************/
+/*** Reading Heap Snapshots ***************************************************/
 
 /* static */ already_AddRefed<HeapSnapshot>
 HeapSnapshot::Create(JSContext* cx,
@@ -466,7 +466,7 @@ HeapSnapshot::init(JSContext* cx, const uint8_t* buffer, uint32_t size)
 }
 
 
-/*** Heap Snapshot Analyses ***********************************************************************/
+/*** Heap Snapshot Analyses ***************************************************/
 
 void
 HeapSnapshot::TakeCensus(JSContext* cx, JS::HandleObject options,
@@ -697,7 +697,7 @@ HeapSnapshot::ComputeShortestPaths(JSContext*cx, uint64_t start,
   results.set(resultsMap);
 }
 
-/*** Saving Heap Snapshots ************************************************************************/
+/*** Saving Heap Snapshots ****************************************************/
 
 // If we are only taking a snapshot of the heap affected by the given set of
 // globals, find the set of compartments the globals are allocated

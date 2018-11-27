@@ -9170,8 +9170,8 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
   // AFTER:
   // localStorage, caches: allowed in 3rd-party iframes by default. Preference
   //   can be set to disable in 3rd-party, which will not disallow in about: URIs.
-  // IndexedDB: allowed in 3rd-party iframes by default. Preference can be set to
-  //   disable in 3rd-party, which will disallow in about: URIs, unless they are
+  // IndexedDB: allowed in 3rd-party iframes by default. Preference can be set
+  //   to disable in 3rd-party, which will disallow in about: URIs, unless they are
   //   within a specific whitelist.
   //
   // This means that behavior for storage with internal about: URIs should not be

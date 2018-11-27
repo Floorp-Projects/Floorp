@@ -405,8 +405,8 @@ KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType)
   //   2. This event is from Numpad.
   //   3. This event is in the system group.
   //   4. The caller type is system.
-  //   5. The pref privcy.resistFingerprinting' is false, we fast return here since
-  //      we don't need to do any QI of following codes.
+  //   5. The pref privcy.resistFingerprinting' is false, we fast return here
+  //      since we don't need to do any QI of following codes.
   if (mInitializedByJS ||
       aCallerType == CallerType::System ||
       mEvent->mFlags.mInSystemGroup ||

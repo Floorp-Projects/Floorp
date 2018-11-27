@@ -1705,8 +1705,8 @@ WebGLContext::ReadPixelsImpl(GLint x, GLint y, GLsizei rawWidth, GLsizei rawHeig
     // Read request contains out-of-bounds pixels. Unfortunately:
     // GLES 3.0.4 p194 "Obtaining Pixels from the Framebuffer":
     // "If any of these pixels lies outside of the window allocated to the current GL
-    //  context, or outside of the image attached to the currently bound framebuffer
-    //  object, then the values obtained for those pixels are undefined."
+    // context, or outside of the image attached to the currently bound framebuffer
+    // object, then the values obtained for those pixels are undefined."
 
     // This is a slow-path, so warn people away!
     GenerateWarning("Out-of-bounds reads with readPixels are deprecated, and"

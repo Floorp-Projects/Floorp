@@ -2729,11 +2729,13 @@ public:
    *
    * @param aRequestedIdleTimeInMS    The idle observer's requested idle time.
    * @param aUserIsIdle               boolean indicating if the user
-   *                                  is currently idle or not.   *
-   * @return NS_OK                    NS_OK returned if the requested idle service and
-   *                                  the current idle time were successfully obtained.
-   *                                  NS_ERROR_FAILURE returned if the the requested
-   *                                  idle service or the current idle were not obtained.
+   *                                  is currently idle or not.
+   * @return NS_OK                    NS_OK returned if the requested idle
+   *                                  service and the current idle time were
+   *                                  successfully obtained.
+   *                                  NS_ERROR_FAILURE returned if the the
+   *                                  requested idle service or the current
+   *                                  idle were not obtained.
    */
   static nsresult IsUserIdle(uint32_t aRequestedIdleTimeInMS, bool* aUserIsIdle);
 
