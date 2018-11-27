@@ -16,7 +16,7 @@ namespace mozilla { namespace ct {
 
 // Decodes an Inclusion Proof (InclusionProofDataV2 as defined in RFC
 // 6962-bis). This consumes the entirety of the input.
-pkix::Result DecodeInclusionProof(pkix::Reader& input,
+pkix::Result DecodeInclusionProof(pkix::Input input,
   InclusionProofDataV2& output);
 // Given a decoded Inclusion Proof (InclusionProofDataV2 as per RFC 6962-bis),
 // the corresponding leaf data entry, and the expected root hash, returns
