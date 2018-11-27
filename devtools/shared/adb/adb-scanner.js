@@ -28,7 +28,6 @@ class ADBScanner extends EventEmitter {
 
     Devices.on("register", this._updateRuntimes);
     Devices.on("unregister", this._updateRuntimes);
-    Devices.on("addon-status-updated", this._updateRuntimes);
 
     ADB.start().then(() => {
       ADB.trackDevices();
@@ -41,7 +40,7 @@ class ADBScanner extends EventEmitter {
     EventEmitter.off(ADB, "device-disconnected", this._onDeviceDisconnected);
     Devices.off("register", this._updateRuntimes);
     Devices.off("unregister", this._updateRuntimes);
-    Devices.off("addon-status-updated", this._updateRuntimes);
+    this._updateRuntimes();
   }
 
   _emitUpdated() {
