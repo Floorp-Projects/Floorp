@@ -159,8 +159,17 @@ Stream::RecordOrReplayThreadEvent(ThreadEvent aEvent)
   } else {
     ThreadEvent oldEvent = (ThreadEvent) ReadScalar();
     if (oldEvent != aEvent) {
-      child::ReportFatalError(Nothing(), "Event Mismatch: Recorded %s Replayed %s",
-                              ThreadEventName(oldEvent), ThreadEventName(aEvent));
+      const char* extra = "";
+      if (oldEvent == ThreadEvent::Assert) {
+        // Include the asserted string in the error. This must match up with
+        // the writes in RecordReplayAssert.
+        if (mNameIndex == MainThreadId) {
+          (void) ReadScalar(); // For the ExecutionProgressCounter write below.
+        }
+        extra = ReadInputString();
+      }
+      child::ReportFatalError(Nothing(), "Event Mismatch: Recorded %s %s Replayed %s",
+                              ThreadEventName(oldEvent), extra, ThreadEventName(aEvent));
     }
     mLastEvent = aEvent;
   }
@@ -185,6 +194,16 @@ Stream::CheckInput(size_t aValue)
   }
 }
 
+const char*
+Stream::ReadInputString()
+{
+  size_t len = ReadScalar();
+  EnsureInputBallast(len + 1);
+  ReadBytes(mInputBallast.get(), len);
+  mInputBallast[len] = 0;
+  return mInputBallast.get();
+}
+
 void
 Stream::CheckInput(const char* aValue)
 {
@@ -193,14 +212,10 @@ Stream::CheckInput(const char* aValue)
     WriteScalar(len);
     WriteBytes(aValue, len);
   } else {
-    size_t oldLen = ReadScalar();
-    EnsureInputBallast(oldLen + 1);
-    ReadBytes(mInputBallast.get(), oldLen);
-    mInputBallast[oldLen] = 0;
-
-    if (len != oldLen || memcmp(aValue, mInputBallast.get(), len) != 0) {
+    const char* oldInput = ReadInputString();
+    if (strcmp(oldInput, aValue) != 0) {
       child::ReportFatalError(Nothing(), "Input Mismatch: %s Recorded %s Replayed %s",
-                              ThreadEventName(mLastEvent), mInputBallast.get(), aValue);
+                              ThreadEventName(mLastEvent), oldInput, aValue);
     }
   }
 }
