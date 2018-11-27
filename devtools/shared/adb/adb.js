@@ -89,7 +89,6 @@ const ADB = {
 
       const isAdbRunning = await check();
       if (isAdbRunning) {
-        this.didRunInitially = false;
         dumpn("Found ADB process running, not restarting");
         onSuccessfulStart();
         return;
