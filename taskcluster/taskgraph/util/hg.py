@@ -8,6 +8,7 @@ from __future__ import absolute_import
 
 import requests
 import subprocess
+from redo import retry
 
 PUSHLOG_TMPL = '{}/json-pushes?version=2&changeset={}&tipsonly=1&full=1'
 
@@ -16,8 +17,15 @@ def find_hg_revision_push_info(repository, revision):
     """Given the parameters for this action and a revision, find the
     pushlog_id of the revision."""
     pushlog_url = PUSHLOG_TMPL.format(repository, revision)
-    r = requests.get(pushlog_url)
-    r.raise_for_status()
+
+    def query_pushlog(url):
+        r = requests.get(pushlog_url, timeout=60)
+        r.raise_for_status()
+        return r
+    r = retry(
+        query_pushlog, args=(pushlog_url,),
+        attempts=5, sleeptime=10,
+    )
     pushes = r.json()['pushes']
     if len(pushes) != 1:
         raise RuntimeError(
