@@ -124,6 +124,19 @@ WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI)
   return IPC_OK();
 }
 
+IPCResult
+WindowGlobalParent::RecvBecomeCurrentWindowGlobal()
+{
+  mBrowsingContext->SetCurrentWindowGlobal(this);
+  return IPC_OK();
+}
+
+bool
+WindowGlobalParent::IsCurrentGlobal()
+{
+  return !mIPCClosed && mBrowsingContext->GetCurrentWindowGlobal() == this;
+}
+
 void
 WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy)
 {

@@ -71,6 +71,8 @@ public:
   uint64_t OuterWindowId() { return mOuterWindowId; }
   uint64_t InnerWindowId() { return mInnerWindowId; }
 
+  bool IsCurrentGlobal();
+
   // Create a WindowGlobalParent from over IPC. This method should not be called
   // from outside of the IPC constructors.
   WindowGlobalParent(const WindowGlobalInit& aInit, bool aInProcess);
@@ -86,6 +88,7 @@ public:
 protected:
   // IPC messages
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI) override;
+  mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

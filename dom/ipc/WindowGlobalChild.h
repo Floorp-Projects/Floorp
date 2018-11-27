@@ -53,6 +53,8 @@ public:
   uint64_t InnerWindowId() { return mInnerWindowId; }
   uint64_t OuterWindowId() { return mOuterWindowId; }
 
+  bool IsCurrentGlobal();
+
   // Get the other side of this actor if it is an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is not in-process.
   already_AddRefed<WindowGlobalParent> GetParentActor();

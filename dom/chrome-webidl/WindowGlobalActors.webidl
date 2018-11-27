@@ -13,6 +13,8 @@ interface WindowGlobalParent {
   readonly attribute boolean isInProcess;
   readonly attribute ChromeBrowsingContext browsingContext;
 
+  readonly attribute boolean isCurrentGlobal;
+
   readonly attribute unsigned long long innerWindowId;
   readonly attribute unsigned long long outerWindowId;
 
@@ -32,6 +34,8 @@ interface WindowGlobalChild {
   readonly attribute boolean isClosed;
   readonly attribute boolean isInProcess;
   readonly attribute BrowsingContext browsingContext;
+
+  readonly attribute boolean isCurrentGlobal;
 
   readonly attribute unsigned long long innerWindowId;
   readonly attribute unsigned long long outerWindowId;
