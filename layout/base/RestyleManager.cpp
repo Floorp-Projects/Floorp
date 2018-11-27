@@ -14,6 +14,7 @@
 #include "mozilla/GeckoBindings.h"
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/layers/AnimationInfo.h"
+#include "mozilla/layout/ScrollAnchorContainer.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/Unused.h"
@@ -1498,6 +1499,16 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
     }
 
     if (hint & nsChangeHint_ReconstructFrame) {
+      // Record whether this frame was absolutely positioned before and after
+      // frame construction, to detect changes for scroll anchor adjustment
+      // suppression.
+      bool wasAbsPosStyle = false;
+      ScrollAnchorContainer* previousAnchorContainer = nullptr;
+      if (frame) {
+        wasAbsPosStyle = frame->StyleDisplay()->IsAbsolutelyPositionedStyle();
+        previousAnchorContainer = ScrollAnchorContainer::FindFor(frame);
+      }
+
       // If we ever start passing true here, be careful of restyles
       // that involve a reframe and animations.  In particular, if the
       // restyle we're processing here is an animation restyle, but
@@ -1509,6 +1520,34 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
       // the reconstruction happening synchronously.
       frameConstructor->RecreateFramesForContent(
           content, nsCSSFrameConstructor::InsertionKind::Sync);
+      frame = content->GetPrimaryFrame();
+
+      // See the check above for absolutely positioned style.
+      bool isAbsPosStyle = false;
+      ScrollAnchorContainer* newAnchorContainer = nullptr;
+      if (frame) {
+        isAbsPosStyle = frame->StyleDisplay()->IsAbsolutelyPositionedStyle();
+        newAnchorContainer = ScrollAnchorContainer::FindFor(frame);
+      }
+
+      // If this frame construction was due to a change in absolute
+      // positioning, then suppress scroll anchor adjustments in the scroll
+      // anchor container the frame was in, and the one it moved into.
+      //
+      // This isn't entirely accurate to the specification, which requires us
+      // to do this for all frames that change being absolutely positioned. It's
+      // possible for multiple style changes to cause frame reconstruction and
+      // coalesce, which could cause a suppression trigger to be missed. It's
+      // unclear whether this will be an issue as suppression triggers are just
+      // heuristics.
+      if (wasAbsPosStyle != isAbsPosStyle) {
+        if (previousAnchorContainer) {
+          previousAnchorContainer->SuppressAdjustments();
+        }
+        if (newAnchorContainer) {
+          newAnchorContainer->SuppressAdjustments();
+        }
+      }
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");
 
