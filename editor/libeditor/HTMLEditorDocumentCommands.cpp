@@ -567,7 +567,8 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
  *  2. Implement an nsIObserve object, e.g:
  *
  *    void Observe(
- *        in nsISupports aSubject, // The nsICommandManager calling this Observer
+ *        in nsISupports aSubject, // The nsICommandManager calling this
+ *                                 // Observer
  *        in string      aTopic,   // command name, e.g.:"obs_documentCreated"
  *                                 //    or "obs_documentWillBeDestroyed"
           in wstring     aData );  // ignored (set to "command_status_changed")
@@ -578,7 +579,8 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
  *     trigger the notification of this observer by something like:
  *
  *  nsCOMPtr<nsICommandManager> commandManager = mDocShell->GetCommandManager();
- *  nsCOMPtr<nsPICommandUpdater> commandUpdater = do_QueryInterface(commandManager);
+ *  nsCOMPtr<nsPICommandUpdater> commandUpdater =
+ *    do_QueryInterface(commandManager);
  *  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
  *    commandUpdater->CommandStatusChanged(obs_documentCreated);
  *

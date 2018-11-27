@@ -63,6 +63,7 @@
 #define NP_VERSION_MINOR 29
 
 
+/* clang-format off */
 /* The OS/2 version of Netscape uses RC_DATA to define the
    mime types, file extensions, etc that are required.
    Use a vertical bar to separate types, end types with \0.
@@ -88,6 +89,7 @@ RCDATA NP_INFO_LegalCopyright    { "Copyright Netscape Communications \251 1996\
 RCDATA NP_INFO_OriginalFilename  { "NVAPI32.DLL" }
 RCDATA NP_INFO_ProductName       { "NPAVI32 Dynamic Link Library\0" }
 */
+/* clang-format on */
 /* RC_DATA types for version info - required */
 #define NP_INFO_ProductVersion      1
 #define NP_INFO_MIMEType            2
