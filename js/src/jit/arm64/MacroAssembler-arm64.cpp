@@ -199,12 +199,12 @@ MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler, Label* profile
     syncStackPtr();
     vixl::MacroAssembler::Ret(vixl::lr);
 
-    // If we are bailing out to baseline to handle an exception,
-    // jump to the bailout tail stub.
+    // If we are bailing out to baseline to handle an exception, jump to the
+    // bailout tail stub. Load 1 (true) in x0 (ReturnReg) to indicate success.
     bind(&bailout);
     Ldr(x2, MemOperand(GetStackPointer64(), offsetof(ResumeFromException, bailoutInfo)));
     Ldr(x1, MemOperand(GetStackPointer64(), offsetof(ResumeFromException, target)));
-    Mov(x0, BAILOUT_RETURN_OK);
+    Mov(x0, 1);
     Br(x1);
 
     // If we are throwing and the innermost frame was a wasm frame, reset SP and

@@ -753,7 +753,7 @@ struct BaselineBailoutInfo
     BailoutKind bailoutKind;
 };
 
-uint32_t
+MOZ_MUST_USE bool
 BailoutIonToBaseline(JSContext* cx, JitActivation* activation, const JSJitFrameIter& iter,
                      bool invalidate, BaselineBailoutInfo** bailoutInfo,
                      const ExceptionBailoutInfo* exceptionInfo);
