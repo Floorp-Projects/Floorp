@@ -45,6 +45,7 @@ internal class PingMaker(
         pingInfo.put("ping_type", pingName)
         pingInfo.put("telemetry_sdk_build", BuildConfig.LIBRARY_VERSION)
 
+        // Experiments belong in ping_info, because they must appear in every ping
         pingInfo.put("experiments", ExperimentsStorageEngine.getSnapshotAsJSON("", false))
 
         // TODO this section is still missing real app_build, seq and experiments.
