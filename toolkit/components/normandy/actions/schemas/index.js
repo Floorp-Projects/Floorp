@@ -95,6 +95,87 @@ const ActionSchemas = {
       },
     },
   },
+
+  "show-heartbeat": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Show a Heartbeat survey.",
+    "description": "This action shows a single survey.",
+
+    "type": "object",
+    "required": [
+      "surveyId",
+      "message",
+      "thanksMessage",
+      "postAnswerUrl",
+      "learnMoreMessage",
+      "learnMoreUrl",
+    ],
+    "properties": {
+      "repeatOption": {
+        "type": "string",
+        "enum": ["once", "xdays", "nag"],
+        "description": "Determines how often a prompt is shown executes.",
+        "default": "once",
+      },
+      "repeatEvery": {
+        "description": "For repeatOption=xdays, how often (in days) the prompt is displayed.",
+        "default": null,
+        "anyOf": [
+          { "type": "number", "minimum": 1 },
+          { "type": "null" },
+        ],
+      },
+      "includeTelemetryUUID": {
+        "type": "boolean",
+        "description": "Include unique user ID in post-answer-url and Telemetry",
+        "default": false,
+      },
+      "surveyId": {
+        "type": "string",
+        "description": "Slug uniquely identifying this survey in telemetry",
+      },
+      "message": {
+        "description": "Message to show to the user",
+        "type": "string",
+      },
+      "engagementButtonLabel": {
+        "description": "Text for the engagement button. If specified, this button will be shown instead of rating stars.",
+        "default": null,
+        "anyOf": [
+          { "type": "string" },
+          { "type": "null" },
+        ],
+      },
+      "thanksMessage": {
+        "description": "Thanks message to show to the user after they've rated Firefox",
+        "type": "string",
+      },
+      "postAnswerUrl": {
+        "description": "URL to redirect the user to after rating Firefox or clicking the engagement button",
+        "default": null,
+        "anyOf": [
+          { "type": "string" },
+          { "type": "null" },
+        ],
+      },
+      "learnMoreMessage": {
+        "description": "Message to show to the user to learn more",
+        "default": null,
+        "anyOf": [
+          { "type": "string" },
+          { "type": "null" },
+        ],
+      },
+      "learnMoreUrl": {
+        "description": "URL to show to the user when they click Learn More",
+        "default": null,
+        "anyOf": [
+          { "type": "string" },
+          { "type": "null" },
+        ],
+      },
+    },
+  },
 };
 
 // Legacy name used on Normandy server
