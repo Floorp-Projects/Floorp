@@ -713,6 +713,26 @@ GeneratePrototypeGuardsForReceiver(CacheIRWriter& writer, JSObject* obj, ObjOper
 #endif // DEBUG
 }
 
+static bool
+ProtoChainSupportsTeleporting(JSObject* obj, JSObject* holder)
+{
+    // Any non-delegate should already have been handled since its checks are
+    // always required.
+    MOZ_ASSERT(obj->isDelegate());
+
+    // Prototype chain must have cacheable prototypes to ensure the cached
+    // holder is the current holder.
+    for (JSObject* tmp = obj; tmp != holder; tmp = tmp->staticPrototype()) {
+        if (tmp->hasUncacheableProto()) {
+            return false;
+        }
+    }
+
+    // The holder itself only gets reshaped by teleportation if it is not
+    // marked UNCACHEABLE_PROTO. See: ReshapeForProtoMutation.
+    return !holder->hasUncacheableProto();
+}
+
 static void
 GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, ObjOperandId objId)
 {
@@ -753,18 +773,11 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
     // link we are mutating is itself a prototype, we regenerate shapes down
     // the chain. This means the same two shape checks as above are sufficient.
     //
-    // Unfortunately we don't stop there and add further caveats. We may set
-    // the UNCACHEABLE_PROTO flag on the shape of an object to indicate that it
-    // will not generate a new shape if its prototype link is modified. If the
-    // object is itself a prototype we follow the shape chain and regenerate
-    // shapes (if they aren't themselves uncacheable).
-    //
-    // Let's consider the effect of the UNCACHEABLE_PROTO flag on our example:
-    // - D is uncacheable: Add check that D still links to C
-    // - C is uncacheable: Modifying C.__proto__ will still reshape B (if B is
-    //                     not uncacheable)
-    // - B is uncacheable: Add shape check C since B will not reshape OR check
-    //                     proto of D and C
+    // An additional wrinkle is the UNCACHEABLE_PROTO shape flag. This
+    // indicates that the shape no longer implies any specific prototype. As
+    // well, the shape will not be updated by the teleporting optimization.
+    // If any shape from receiver to holder (inclusive) is UNCACHEABLE_PROTO,
+    // we don't apply the optimization.
     //
     // See:
     //  - ReshapeForProtoMutation
@@ -785,9 +798,8 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
     }
     MOZ_ASSERT(pobj->isDelegate());
 
-    // In the common case, holder has a cacheable prototype and will regenerate
-    // its shape if any (delegate) objects in the proto chain are updated.
-    if (!holder->hasUncacheableProto()) {
+    // If teleporting is supported for this prototype chain, we are done.
+    if (ProtoChainSupportsTeleporting(pobj, holder)) {
         return;
     }
 
