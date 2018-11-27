@@ -884,25 +884,6 @@
     </handlers>
   </binding>
 
-  <binding id="treecols">
-    <content orient="horizontal">
-      <xul:hbox class="tree-scrollable-columns" flex="1">
-        <children includes="treecol|splitter"/>
-      </xul:hbox>
-      <xul:treecolpicker class="treecol-image" fixed="true" xbl:inherits="tooltiptext=pickertooltiptext"/>
-    </content>
-    <implementation>
-      <constructor><![CDATA[
-        // Set resizeafter="farthest" on the splitters if nothing else has been
-        // specified.
-        Array.forEach(this.getElementsByTagName("splitter"), function(splitter) {
-          if (!splitter.hasAttribute("resizeafter"))
-            splitter.setAttribute("resizeafter", "farthest");
-        });
-      ]]></constructor>
-    </implementation>
-  </binding>
-
   <binding id="treerows" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content>
       <xul:hbox flex="1" class="tree-bodybox">
@@ -1008,6 +989,7 @@
             var menuitem = document.getAnonymousElementByAttribute(this, "anonid", "menuitem");
             if (event.originalTarget == menuitem) {
               tree.columns.restoreNaturalOrder();
+              this.removeAttribute("ordinal");
               tree._ensureColumnOrder();
             } else {
               var colindex = event.originalTarget.getAttribute("colindex");
