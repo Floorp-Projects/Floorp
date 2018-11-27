@@ -758,8 +758,7 @@ typedef Log<LOG_CRITICAL, CriticalLogger> CriticalLog;
 
 // This is a shortcut for errors we want logged in crash reports/about support
 // but we do not want asserting.  These are available in all builds, so it is
-// not worth trying to do magic to avoid matching the syntax of
-// gfxCriticalError.
+// not worth trying to do magic to avoid matching the syntax of gfxCriticalError.
 // So, this one is used as
 // gfxCriticalNote << "Something to report and not assert";
 // while the critical error is

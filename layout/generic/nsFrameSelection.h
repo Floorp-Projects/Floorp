@@ -230,31 +230,24 @@ public:
 
   /** Init will initialize the frame selector with the necessary pres shell to
    *  be used by most of the methods
-   *  @param aShell is the parameter to be used for most of the other calls for
-   *         callbacks etc
+   *  @param aShell is the parameter to be used for most of the other calls for callbacks etc
    *  @param aLimiter limits the selection to nodes with aLimiter parents
-   *  @param aAccessibleCaretEnabled true if we should enable the accessible
-   *         caret.
+   *  @param aAccessibleCaretEnabled true if we should enable the accessible caret.
    */
   void Init(nsIPresShell *aShell, nsIContent *aLimiter,
             bool aAccessibleCaretEnabled);
 
   /** HandleClick will take the focus to the new frame at the new offset and
-   *  will either extend the selection from the old anchor, or replace the old
-   *  anchor.
+   *  will either extend the selection from the old anchor, or replace the old anchor.
    *  the old anchor and focus position may also be used to deselect things
    *  @param aNewfocus is the content that wants the focus
    *  @param aContentOffset is the content offset of the parent aNewFocus
-   *  @param aContentOffsetEnd is the content offset of the parent aNewFocus
-   *                           and is specified different when you need to
-   *                           select to and include both start and end points
-   *  @param aContinueSelection is the flag that tells the selection to keep
-   *                            the old anchor point or not.
-   *  @param aMultipleSelection will tell the frame selector to replace /or not
-   *                            the old selection.
-   *                            cannot coexist with aContinueSelection
-   *  @param aHint will tell the selection which direction geometrically to
-   *               actually show the caret on.
+   *  @param aContentOffsetEnd is the content offset of the parent aNewFocus and is specified different
+   *                           when you need to select to and include both start and end points
+   *  @param aContinueSelection is the flag that tells the selection to keep the old anchor point or not.
+   *  @param aMultipleSelection will tell the frame selector to replace /or not the old selection.
+   *         cannot coexist with aContinueSelection
+   *  @param aHint will tell the selection which direction geometrically to actually show the caret on.
    *         1 = end of this line 0 = beginning of this line
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -266,10 +259,8 @@ public:
                        CaretAssociateHint aHint);
 
   /** HandleDrag extends the selection to contain the frame closest to aPoint.
-   *  @param aPresContext is the context to use when figuring out what frame
-   *                      contains the point.
-   *  @param aFrame is the parent of all frames to use when searching for the
-   *                closest frame to the point.
+   *  @param aPresContext is the context to use when figuring out what frame contains the point.
+   *  @param aFrame is the parent of all frames to use when searching for the closest frame to the point.
    *  @param aPoint is relative to aFrame
    */
   /*unsafe*/
@@ -277,22 +268,15 @@ public:
 
   /** HandleTableSelection will set selection to a table, cell, etc
    *   depending on information contained in aFlags
-   *  @param aParentContent is the parent of either a table or cell that
-   *                        user clicked or dragged the mouse in
+   *  @param aParentContent is the paretent of either a table or cell that user clicked or dragged the mouse in
    *  @param aContentOffset is the offset of the table or cell
    *  @param aTarget indicates what to select
-   *    TableSelection::Cell     We should select a cell
-   *                             (content points to the cell)
-   *    TableSelection::Row      We should select a row
-   *                             (content points to any cell in row)
-   *    TableSelection::Column   We should select a row
-   *                             (content points to any cell in column)
-   *    TableSelection::Table    We should select a table
-   *                             (content points to the table)
-   *    TableSelection::AllCells We should select all cells
-   *                             (content points to any cell in table)
-   *  @param aMouseEvent         passed in so we can get where event occurred
-   *                             and what keys are pressed
+   *    TableSelection::Cell     We should select a cell (content points to the cell)
+   *    TableSelection::Row      We should select a row (content points to any cell in row)
+   *    TableSelection::Column   We should select a row (content points to any cell in column)
+   *    TableSelection::Table    We should select a table (content points to the table)
+   *    TableSelection::AllCells We should select all cells (content points to any cell in table)
+   *  @param aMouseEvent         passed in so we can get where event occurred and what keys are pressed
    */
   /*unsafe*/
   nsresult HandleTableSelection(nsINode* aParentContent,
@@ -372,8 +356,7 @@ public:
   void StopAutoScrollTimer();
 
   /** Lookup Selection
-   *  returns in frame coordinates the selection beginning and ending with the
-   *  type of selection given
+   *  returns in frame coordinates the selection beginning and ending with the type of selection given
    * @param aContent is the content asking
    * @param aContentOffset is the starting content boundary
    * @param aContentLength is the length of the content piece asking
@@ -536,16 +519,14 @@ public:
   /*unsafe*/
   nsresult WordMove(bool aForward, bool aExtend);
 
-  /** WordExtendForDelete extends the selection backward or forward
-   *  (logically) to the next word boundary, so that the selected word
-   *  can be deleted.
+  /** WordExtendForDelete extends the selection backward or forward (logically) to the
+   *  next word boundary, so that the selected word can be deleted.
    * @param aForward select forward in document.
    */
   /*unsafe*/
   nsresult WordExtendForDelete(bool aForward);
 
-  /** LineMove will generally be called from the nsiselectioncontroller
-   *  implementations.
+  /** LineMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move one line up or down.
    * @param aForward move forward in document.
    * @param aExtend continue selection
@@ -553,8 +534,7 @@ public:
   /*unsafe*/
   nsresult LineMove(bool aForward, bool aExtend);
 
-  /** IntraLineMove will generally be called from the nsiselectioncontroller
-   *  implementations.
+  /** IntraLineMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move to beginning or end of line
    * @param aForward move forward in document.
    * @param aExtend continue selection

@@ -234,8 +234,7 @@ public:
 
   /** Find the orginating cell frame on a row that is the nearest to the
     * inline-dir coordinate of aPos.
-    * @param aLineNumber          - the index of the row relative to the row
-    *                               group
+    * @param aLineNumber          - the index of the row relative to the row group
     * @param aPos                 - coordinate in twips relative to the
     *                               origin of the row group
     * @param aFrameFound          - pointer to the cellframe
@@ -301,10 +300,10 @@ public:
   void ClearRowCursor();
 
   /**
-   * Get the first row that might contain y-coord 'aY', or nullptr if you must
-   * search all rows.
-   * The actual row returned might not contain 'aY', but if not, it is
-   * guaranteed to be before any row which does contain 'aY'.
+   * Get the first row that might contain y-coord 'aY', or nullptr if you must search
+   * all rows.
+   * The actual row returned might not contain 'aY', but if not, it is guaranteed
+   * to be before any row which does contain 'aY'.
    * aOverflowAbove is the maximum over all rows of -row.GetOverflowRect().y.
    * To find all rows that intersect the vertical interval aY/aYMost, call
    * GetFirstRowContaining(aY, &overflowAbove), and then iterate through all

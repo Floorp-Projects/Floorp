@@ -8613,12 +8613,12 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
 
       // mSawBeforeType means "we already saw characters of the type
       // before the boundary we're looking for". Examples:
-      // 1. If we're moving forward, looking for a word beginning (i.e. a
-      //    boundary between whitespace and non-whitespace), then
-      //    eatingWS==true means "we already saw some whitespace".
-      // 2. If we're moving backward, looking for a word beginning (i.e. a
-      //    boundary between non-whitespace and whitespace), then
-      //     eatingWS==true means "we already saw some non-whitespace".
+      // 1. If we're moving forward, looking for a word beginning (i.e. a boundary
+      //    between whitespace and non-whitespace), then eatingWS==true means
+      //    "we already saw some whitespace".
+      // 2. If we're moving backward, looking for a word beginning (i.e. a boundary
+      //    between non-whitespace and whitespace), then eatingWS==true means
+      //    "we already saw some non-whitespace".
       PeekWordState state;
       int32_t offsetAdjustment = 0;
       bool done = false;

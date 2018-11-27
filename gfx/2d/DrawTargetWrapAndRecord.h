@@ -320,8 +320,7 @@ private:
    * We have to call CreateSimilarDrawTarget on mFinalDT up front and pass it in
    * as it can fail.
    *
-   * @param aDT DrawTargetWrapAndRecord on which CreateSimilarDrawTarget was
-   *            called
+   * @param aDT DrawTargetWrapAndRecord on which CreateSimilarDrawTarget was called
    * @param aSimilarDT Similar DrawTarget created from aDT.mFinalDT.
    */
   DrawTargetWrapAndRecord(const DrawTargetWrapAndRecord *aDT,

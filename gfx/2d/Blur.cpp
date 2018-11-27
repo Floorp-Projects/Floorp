@@ -214,11 +214,9 @@ BoxBlurRow(const uint8_t* aInput,
  * Box blur involves looking at one pixel, and setting its value to the average
  * of its neighbouring pixels. This is meant to provide a 3-pass approximation of a
  * Gaussian blur.
- * @param aTranspose Whether to transpose the buffer when reading and writing
- *                   to it.
+ * @param aTranspose Whether to transpose the buffer when reading and writing to it.
  * @param aData The buffer to be blurred.
- * @param aLobes The number of pixels to blend on the left and right for each of
- *               3 passes.
+ * @param aLobes The number of pixels to blend on the left and right for each of 3 passes.
  * @param aWidth The number of columns in the buffers.
  * @param aRows The number of rows in the buffers.
  * @param aStride The stride of the buffer.

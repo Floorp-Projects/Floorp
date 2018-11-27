@@ -1144,8 +1144,7 @@ PresentationControllingInfo::NotifyData(const nsACString& aData, bool aIsBinary)
  * During presentation session establishment, the receiver expects the following
  * after trying to launch the app by notifying "presentation-launch-receiver":
  * (The order between step 2 and 3 is not guaranteed.)
- * 1. |Observe| of |nsIObserver| is called with
- *    "presentation-receiver-launched".
+ * 1. |Observe| of |nsIObserver| is called with "presentation-receiver-launched".
  *    Then start listen to document |STATE_TRANSFERRING| event.
  * 2. |NotifyResponderReady| is called to indicate the receiver page is ready
  *    for presentation use.

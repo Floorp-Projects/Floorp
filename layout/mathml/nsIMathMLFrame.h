@@ -127,20 +127,17 @@ public:
    *    - set properties that depend on the state that you expect your ancestors
    *      to have already reached in their own InheritAutomaticData().
    *    - set properties that your descendants assume that you would have set in
-   *      your InheritAutomaticData() -- this way, they can safely query them
-   *      and the process will feed upon itself.
-   *
-   * 2. Use TransmitAutomaticData() to set properties related to your
-   *    descendants:
-   *    - set properties that depend on the state that you expect your
-   *      descendants to have reached upon processing their own
-   *      TransmitAutomaticData().
-   *    - transmit properties that your descendants expect that you will
-   *      transmit to them in your TransmitAutomaticData() -- this way, they
-   *      remain up-to-date.
-   *    - set properties that your ancestors expect that you would set in your
-   *      TransmitAutomaticData() -- this way, they can safely query them and
+   *      your InheritAutomaticData() -- this way, they can safely query them and
    *      the process will feed upon itself.
+   *
+   * 2. Use TransmitAutomaticData() to set properties related to your descendants:
+   *    - set properties that depend on the state that you expect your descendants
+   *      to have reached upon processing their own TransmitAutomaticData().
+   *    - transmit properties that your descendants expect that you will transmit to
+   *      them in your TransmitAutomaticData() -- this way, they remain up-to-date.
+   *    - set properties that your ancestors expect that you would set in your
+   *      TransmitAutomaticData() -- this way, they can safely query them and the
+   *      process will feed upon itself.
    */
 
   NS_IMETHOD

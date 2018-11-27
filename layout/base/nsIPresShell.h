@@ -720,9 +720,8 @@ public:
   /**
    * @param aWhere: Either a percentage or a special value.
    *                nsIPresShell defines:
-   *                * (Default) SCROLL_MINIMUM = -1: The visible area is
-   *                scrolled the minimum amount to show as much as possible
-   *                of the frame.
+   *                * (Default) SCROLL_MINIMUM = -1: The visible area is scrolled
+   *                the minimum amount to show as much as possible of the frame.
    *                This won't hide any initially visible part of the frame.
    *                * SCROLL_TOP = 0: The frame's upper edge is aligned with the
    *                top edge of the visible area.
@@ -749,9 +748,9 @@ public:
    *                * SCROLL_ALWAYS: Move the frame regardless of its current
    *                visibility.
    * @param aOnlyIfPerceivedScrollableDirection:
-   *                If the direction is not a perceived scrollable direction
-   *                (i.e. no scrollbar showing and less than one device pixel
-   *                of scrollable distance), don't scroll. Defaults to false.
+   *                If the direction is not a perceived scrollable direction (i.e.
+   *                no scrollbar showing and less than one device pixel of
+   *                scrollable distance), don't scroll. Defaults to false.
    */
     explicit ScrollAxis(int16_t aWhere = SCROLL_MINIMUM,
                         WhenToScroll aWhen = SCROLL_IF_NOT_FULLY_VISIBLE,

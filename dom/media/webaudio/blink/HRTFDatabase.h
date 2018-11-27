@@ -42,12 +42,10 @@ class HRTFDatabase {
 public:
     static nsReturnRef<HRTFDatabase> create(float sampleRate);
 
-    // clang-format off
     // getKernelsFromAzimuthElevation() returns a left and right ear kernel, and an interpolated left and right frame delay for the given azimuth and elevation.
     // azimuthBlend must be in the range 0 -> 1.
     // Valid values for azimuthIndex are 0 -> HRTFElevation::NumberOfTotalAzimuths - 1 (corresponding to angles of 0 -> 360).
     // Valid values for elevationAngle are MinElevation -> MaxElevation.
-    // clang-format on
     void getKernelsFromAzimuthElevation(double azimuthBlend, unsigned azimuthIndex, double elevationAngle, HRTFKernel* &kernelL, HRTFKernel* &kernelR, double& frameDelayL, double& frameDelayR);
 
     // Returns the number of different azimuth angles.

@@ -317,7 +317,7 @@ public:
   // Not const because we modify its entries when various
   // "layout.css.*.enabled" prefs changes:
   static KTableEntry kDisplayKTable[];
-  // -- tables for parsing the {align,justify}-{content,items,self} properties
+  // -- tables for parsing the {align,justify}-{content,items,self} properties --
   static const KTableEntry kAlignAllKeywords[];
   static const KTableEntry kAlignOverflowPosition[]; // <overflow-position>
   static const KTableEntry kAlignSelfPosition[];     // <self-position>
@@ -328,8 +328,7 @@ public:
   static const KTableEntry kAlignNormalBaseline[]; // 'normal/baseline'
   static const KTableEntry kAlignContentDistribution[]; // <content-distribution>
   static const KTableEntry kAlignContentPosition[]; // <content-position>
-  // -- tables for auto-completion of the {align,justify}-{content,items,self}
-  // properties
+  // -- tables for auto-completion of the {align,justify}-{content,items,self} properties --
   static const KTableEntry kAutoCompletionAlignJustifySelf[];
   static const KTableEntry kAutoCompletionAlignItems[];
   static const KTableEntry kAutoCompletionAlignJustifyContent[];

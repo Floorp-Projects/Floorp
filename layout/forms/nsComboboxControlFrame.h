@@ -125,8 +125,7 @@ public:
    * If it lost focus, the dropdown menu will be rolled up if needed,
    * and FireOnChange() will be called.
    * @param aOn true if got focus, false if lost focus.
-   * @param aRepaint if true then force repaint (NOTE: we always force repaint
-   *        currently)
+   * @param aRepaint if true then force repaint (NOTE: we always force repaint currently)
    * @note This method might destroy |this|.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
