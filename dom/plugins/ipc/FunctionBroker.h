@@ -54,7 +54,8 @@
  * Use a subclass instead of a typedef if you need to maintain data or state.
  *
  * Step 2: Add an instance of that object to the FunctionHookList in
- * AddFunctionHook(FunctionHookList&) or AddBrokeredFunctionHook(FunctionHookList&).
+ * AddFunctionHook(FunctionHookList&) or
+ * AddBrokeredFunctionHook(FunctionHookList&).
  * This typically just means calling the constructor with the correct info.
  * At a minimum, this means supplying the names of the DLL and method to
  * broker, and a pointer to the original version of the method.
@@ -81,7 +82,9 @@
  * parameters are sent/returned.  This example tells InternetWriteFileFB to
  * return its third parameter:
  *   template<> template<>
- *   struct InternetWriteFileFB::Response::Info::ShouldMarshal<3> { static const bool value = true; };
+ *   struct InternetWriteFileFB::Response::Info::ShouldMarshal<3> {
+ *     static const bool value = true;
+ *   };
  * By default, all parameters have ShouldMarshal set in the request phase
  * and only the return value (parameter -1) has it set in the response phase.
  *
@@ -113,13 +116,16 @@
  * length.  Something like:
  *
  * typedef RequestHandler<ID_HookedFunc,
- *                        int HOOK_CALL (nsDependentCSubstring)> HookedFuncDelegateReq;
+ *                        int HOOK_CALL (nsDependentCSubstring)>
+ *   HookedFuncDelegateReq;
  *
  * template<>
- * void HookedFuncFB::Request::Marshal(IpdlTuple& aTuple, const void*& aBuf, const int& aBufLen)
+ * void HookedFuncFB::Request::Marshal(IpdlTuple& aTuple, const void*& aBuf,
+ *                                     const int& aBufLen)
  * {
  *   MOZ_ASSERT(nWritten);
- *   HookedFuncDelegateReq::Marshal(aTuple, nsDependentCSubstring(aBuf, aBufLen));
+ *   HookedFuncDelegateReq::Marshal(aTuple,
+ *                                  nsDependentCSubstring(aBuf, aBufLen));
  * }
  *
  * template<>
