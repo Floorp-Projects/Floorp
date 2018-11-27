@@ -10,11 +10,11 @@ const { ADB } = require("devtools/shared/adb/adb");
  * A Device instance is created and registered with the Devices module whenever
  * ADB notices a new device is connected.
  */
-function Device(id) {
+function AdbDevice(id) {
   this.id = id;
 }
 
-Device.prototype = {
+AdbDevice.prototype = {
   type: "adb",
 
   shell: ADB.shell.bind(ADB),
@@ -30,4 +30,4 @@ Device.prototype = {
   // push, pull were removed in Bug 1481691.
 };
 
-module.exports = Device;
+module.exports = AdbDevice;
