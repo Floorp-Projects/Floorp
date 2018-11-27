@@ -7,6 +7,9 @@
 #ifndef mozilla_layout_ScrollAnchorContainer_h_
 #define mozilla_layout_ScrollAnchorContainer_h_
 
+#include "nsPoint.h"
+
+class nsIFrame;
 namespace mozilla {
 class ScrollFrameHelper;
 }  // namespace mozilla
@@ -33,6 +36,12 @@ class ScrollAnchorContainer final {
   static ScrollAnchorContainer* FindFor(nsIFrame* aFrame);
 
   /**
+   * Returns the frame that is the selected anchor node or null if no anchor
+   * is selected.
+   */
+  nsIFrame* AnchorNode() const { return mAnchorNode; }
+
+  /**
    * Returns the frame that owns this scroll anchor container. This is always
    * non-null.
    */
@@ -44,9 +53,80 @@ class ScrollAnchorContainer final {
    */
   nsIScrollableFrame* ScrollableFrame() const;
 
+  /**
+   * Find a suitable anchor node among the descendants of the scrollable frame.
+   * This should only be called after the scroll anchor has been invalidated.
+   */
+  void SelectAnchor();
+
+  /**
+   * Notify the scroll anchor container that its scroll frame has been
+   * scrolled by a user and should invalidate itself.
+   */
+  void UserScrolled();
+
+  /**
+   * Notify this scroll anchor container that its anchor node should be
+   * invalidated and recomputed at the next available opportunity.
+   */
+  void InvalidateAnchor();
+
+  /**
+   * Notify this scroll anchor container that it will be destroyed along with
+   * its parent frame.
+   */
+  void Destroy();
+
  private:
+  // Represents an assessment of a frame's suitability as a scroll anchor,
+  // from the scroll-anchoring spec's "candidate examination algorithm":
+  // https://drafts.csswg.org/css-scroll-anchoring-1/#candidate-examination
+  enum class ExamineResult {
+    // The frame is an excluded subtree or fully clipped and should be ignored.
+    // This corresponds with step 1 in the algorithm.
+    Exclude,
+    // This frame is an anonymous or inline box and its descendants should be
+    // searched to find an anchor node. If none are found, then continue
+    // searching. This is implied by the prologue of the algorithm, and
+    // should be made explicit in the spec [1].
+    //
+    // [1] https://github.com/w3c/csswg-drafts/issues/3489
+    PassThrough,
+    // The frame is partially visible and its descendants should be searched to
+    // find an anchor node. If none are found then this frame should be
+    // selected. This corresponds with step 3 in the algorithm.
+    Traverse,
+    // The frame is fully visible and should be selected as an anchor node. This
+    // corresponds with step 2 in the algorithm.
+    Accept,
+  };
+
+  ExamineResult ExamineAnchorCandidate(nsIFrame* aPrimaryFrame) const;
+
+  // Search a frame's children to find an anchor node. Returns the frame for a
+  // valid anchor node, if one was found in the frames descendants, or null
+  // otherwise.
+  nsIFrame* FindAnchorIn(nsIFrame* aFrame) const;
+
+  // Search a child list to find an anchor node. Returns the frame for a valid
+  // anchor node, if one was found in this child list, or null otherwise.
+  nsIFrame* FindAnchorInList(const nsFrameList& aFrameList) const;
+
   // The owner of this scroll anchor container
   ScrollFrameHelper* mScrollFrame;
+
+  // The anchor node that we will scroll to keep in the same relative position
+  // after reflows. This may be null if we were not able to select a valid
+  // scroll anchor
+  nsIFrame* mAnchorNode;
+
+  // The last position of the scroll anchor node relative to the scrollable
+  // frame. This is used for calculating the distance to scroll to keep the
+  // anchor node in the same relative position
+  nsPoint mLastAnchorPos;
+
+  // True if we should recalculate our anchor node at the next chance
+  bool mAnchorNodeIsDirty : 1;
 };
 
 }  // namespace layout
