@@ -34,7 +34,8 @@ public:
 //    // Call this from the thread itself because of Mac.
 //#ifdef XP_MACOSX
 //    pthread_setname_np(aName);
-//#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+//#elif defined(__DragonFly__) || defined(__FreeBSD__) || \
+//      defined(__OpenBSD__)
 //    pthread_set_name_np(mThread, aName);
 //#elif defined(__NetBSD__)
 //    pthread_setname_np(mThread, "%s", (void*)aName);
