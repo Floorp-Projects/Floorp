@@ -126,6 +126,16 @@ interface nsIPermissionManager : nsISupports
   nsISimpleEnumerator getAllForPrincipal(in nsIPrincipal principal);
 
   /**
+   * Get all custom permissions of a specific type, specified with a prefix
+   * string.  This will return an array of all permissions which are not set to
+   * default.  Also the passed type argument is either equal to or a prefix of
+   * the type of the returned permissions.
+   *
+   * @param prefix  the type prefix string
+   */
+  Array<nsIPermission> getAllWithTypePrefix(in ACString prefix);
+
+  /**
    * Add permission information for a given principal.
    * It is internally calling the other add() method using the nsIURI from the
    * principal.
