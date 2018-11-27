@@ -116,15 +116,20 @@ class thashtable_printer(object):
 
         key_field_name = self.key_field_name
 
+        # The entry store is laid out with hashes for all possible entries
+        # first, followed by all the entries.
+        pHashes = store.cast(hashType.pointer())
+        pEntries = pHashes + capacity
+        pEntries = pEntries.cast(self.entry_type.pointer())
         seenCount = 0
-        pEntry = store.cast(self.entry_type.pointer())
         for i in range(0, int(capacity)):
-            entry = (pEntry + i).dereference()
-            # An mKeyHash of 0 means empty, 1 means deleted sentinel, so skip
+            entryHash = (pHashes + i).dereference()
+            # An entry hash of 0 means empty, 1 means deleted sentinel, so skip
             # if that's the case.
-            if entry['mKeyHash'] <= 1:
+            if entryHash <= 1:
                 continue
 
+            entry = (pEntries + i).dereference()
             yield ('%d' % i, entry[key_field_name])
             if self.is_table:
                 yield ('%d' % i, entry['mData'])
