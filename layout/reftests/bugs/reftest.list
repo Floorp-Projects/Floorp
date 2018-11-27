@@ -2077,7 +2077,7 @@ test-pref(font.size.systemFontScale,200) == 1412743.html 1412743-ref.html
 == 1424680.html 1424680-ref.html
 == 1424798-1.html 1424798-ref.html
 fuzzy-if(!webrender,0-74,0-2234) == 1425243-1.html 1425243-1-ref.html
-fuzzy-if(Android,0-66,0-574) fuzzy-if(d2d,0-89,0-777) fuzzy-if(!Android&&!d2d,0-1,0-31341) == 1425243-2.html 1425243-2-ref.html
+fuzzy-if(Android,0-66,0-574) fuzzy-if(d2d,0-89,0-777) fuzzy-if(!Android&&!d2d,0-1,0-31341) fuzzy-if(webrender&&winWidget,1-1,31284-31284) == 1425243-2.html 1425243-2-ref.html
 == 1430869.html 1430869-ref.html
 == 1432541.html 1432541-ref.html
 pref(layout.css.moz-document.url-prefix-hack.enabled,true) == 1446470.html 1035091-ref.html
