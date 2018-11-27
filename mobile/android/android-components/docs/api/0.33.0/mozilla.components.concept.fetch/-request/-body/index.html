@@ -1,0 +1,78 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Request.Body - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.fetch</a>&nbsp;/&nbsp;<a href="../index.html">Request</a>&nbsp;/&nbsp;<a href="./index.html">Body</a><br/>
+<br/>
+<h1>Body</h1>
+<code><span class="keyword">class </span><span class="identifier">Body</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Closeable.html"><span class="identifier">Closeable</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L45">(source)</a>
+<p>A <a href="./index.html">Body</a> to be send with the <a href="../index.html">Request</a>.</p>
+<h3>Parameters</h3>
+<p><a name="stream"></a>
+<code>stream</code> - A stream that will be read and send to the resource.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Body</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Request.Body$<init>(java.io.InputStream)/stream">stream</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/InputStream.html"><span class="identifier">InputStream</span></a><span class="symbol">)</span></code>
+<p>A <a href="./index.html">Body</a> to be send with the <a href="../index.html">Request</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="close.html">close</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">close</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Closes this body and releases any system resources associated with it.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="use-stream.html">useStream</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">R</span><span class="symbol">&gt;</span> <span class="identifier">useStream</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Request.Body$useStream(kotlin.Function1((java.io.InputStream, mozilla.components.concept.fetch.Request.Body.useStream.R)))/block">block</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://developer.android.com/reference/java/io/InputStream.html"><span class="identifier">InputStream</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="use-stream.html#R"><span class="identifier">R</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="use-stream.html#R"><span class="identifier">R</span></a></code>
+<p>Executes the given <a href="use-stream.html#mozilla.components.concept.fetch.Request.Body$useStream(kotlin.Function1((java.io.InputStream, mozilla.components.concept.fetch.Request.Body.useStream.R)))/block">block</a> function on the body's stream and then closes it down correctly whether an
+exception is thrown or not.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="from-file.html">fromFile</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">fromFile</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Request.Body.Companion$fromFile(java.io.File)/file">file</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/File.html"><span class="identifier">File</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Body</span></a></code>
+<p>Create a <a href="./index.html">Body</a> from the provided <a href="https://developer.android.com/reference/java/io/File.html">File</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="from-string.html">fromString</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">fromString</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Request.Body.Companion$fromString(kotlin.String)/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Body</span></a></code>
+<p>Create a <a href="./index.html">Body</a> from the provided <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
