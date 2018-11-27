@@ -20,7 +20,7 @@ const INSTALLED_ADDON =
 
 add_task(async function testShowSystemAddonsFalse() {
   const thisFirefoxClient = setupThisFirefoxMock();
-  thisFirefoxClient.listAddons = () => ({ addons: [SYSTEM_ADDON, INSTALLED_ADDON] });
+  thisFirefoxClient.listAddons = () => ([SYSTEM_ADDON, INSTALLED_ADDON]);
 
   info("Hide system addons in aboutdebugging via preference");
   await pushPref("devtools.aboutdebugging.showSystemAddons", false);
@@ -37,7 +37,7 @@ add_task(async function testShowSystemAddonsFalse() {
 
 add_task(async function testShowSystemAddonsTrue() {
   const thisFirefoxClient = setupThisFirefoxMock();
-  thisFirefoxClient.listAddons = () => ({ addons: [SYSTEM_ADDON, INSTALLED_ADDON] });
+  thisFirefoxClient.listAddons = () => ([SYSTEM_ADDON, INSTALLED_ADDON]);
 
   info("Show system addons in aboutdebugging via preference");
   await pushPref("devtools.aboutdebugging.showSystemAddons", true);
