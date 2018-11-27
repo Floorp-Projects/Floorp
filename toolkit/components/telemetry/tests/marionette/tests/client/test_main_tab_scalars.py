@@ -26,7 +26,7 @@ class TestMainTabScalars(TelemetryTestCase):
 
             self.browser.tabbar.switch_to(tab1)
 
-        [ping] = self.wait_for_pings(self.restart_browser, MAIN_SHUTDOWN_PING, 1)
+        ping = self.wait_for_ping(self.restart_browser, MAIN_SHUTDOWN_PING)
 
         assert ping["type"] == "main"
         assert ping["clientId"] == self.client_id
