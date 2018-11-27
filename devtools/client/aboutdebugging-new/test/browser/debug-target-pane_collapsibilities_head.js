@@ -33,8 +33,14 @@ const TARGET_PANES = [
 
 // eslint-disable-next-line no-unused-vars
 function getDebugTargetPane(title, document) {
+  // removes the suffix "(<NUMBER>)" in debug target pane's title, if needed
+  const sanitizeTitle = (x) => {
+    return x.replace(/\s+\(\d+\)$/, "");
+  };
+
+  const targetTitle = sanitizeTitle(title);
   for (const titleEl of document.querySelectorAll(".js-debug-target-pane-title")) {
-    if (titleEl.textContent !== title) {
+    if (sanitizeTitle(titleEl.textContent) !== targetTitle) {
       continue;
     }
 

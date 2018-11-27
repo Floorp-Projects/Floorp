@@ -24,7 +24,9 @@ const TemporaryExtensionInstaller =
   createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
-const { DEBUG_TARGET_PANE } = require("../constants");
+const Actions = require("../actions/index");
+const { DEBUG_TARGET_PANE, PAGE_TYPES } = require("../constants");
+
 const {
   getCurrentConnectionPromptSetting,
   getCurrentRuntimeInfo,
@@ -39,12 +41,20 @@ class RuntimePage extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       installedExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
       otherWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
+      runtimeId: PropTypes.string.isRequired,
       runtimeInfo: PropTypes.object,
       serviceWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       sharedWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
       temporaryExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
+  }
+
+  // TODO: avoid the use of this method
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1508688
+  componentWillMount() {
+    const { dispatch, runtimeId } = this.props;
+    dispatch(Actions.selectPage(PAGE_TYPES.RUNTIME, runtimeId));
   }
 
   renderConnectionPromptSetting() {
