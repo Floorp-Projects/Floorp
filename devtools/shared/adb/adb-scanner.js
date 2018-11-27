@@ -124,7 +124,7 @@ FirefoxOnAndroidRuntime.detect = async function(adbDevice, model) {
   // 00000000: 00000002 00000000 00010000 0001 01 6551588
   //  /data/data/org.mozilla.fennec/firefox-debugger-socket
   const query = "cat /proc/net/unix";
-  const rawSocketInfo = await adbDevice.shell(query);
+  const rawSocketInfo = await ADB.shell(query);
   let socketInfos = rawSocketInfo.split(/\r?\n/);
   // Filter to lines with "firefox-debugger-socket"
   socketInfos = socketInfos.filter(l => l.includes("firefox-debugger-socket"));
