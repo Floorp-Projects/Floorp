@@ -9038,6 +9038,26 @@ nsContentUtils::IsTrackingResourceWindow(nsPIDOMWindowInner* aWindow)
   return httpChannel->GetIsTrackingResource();
 }
 
+// static public
+bool
+nsContentUtils::IsThirdPartyTrackingResourceWindow(nsPIDOMWindowInner* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+
+  nsIDocument* document = aWindow->GetExtantDoc();
+  if (!document) {
+    return false;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel =
+    do_QueryInterface(document->GetChannel());
+  if (!httpChannel) {
+    return false;
+  }
+
+  return httpChannel->GetIsThirdPartyTrackingResource();
+}
+
 static bool
 StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
                                       nsIChannel* aChannel,

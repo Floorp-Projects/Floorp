@@ -70,7 +70,7 @@ GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow
                                     nsIURI** aTrackingURI,
                                     nsIPrincipal** aTrackingPrincipal)
 {
-  if (!nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow)) {
+  if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(a3rdPartyTrackingWindow)) {
     return false;
   }
 
@@ -816,8 +816,8 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
 
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
-  if (!nsContentUtils::IsTrackingResourceWindow(aWindow)) {
-    LOG(("Our window isn't a tracking window"));
+  if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow)) {
+    LOG(("Our window isn't a third-party tracking window"));
     return true;
   }
 
@@ -1053,8 +1053,8 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
   // Not a tracker.
-  if (!aChannel->GetIsTrackingResource()) {
-    LOG(("Our channel isn't a tracking channel"));
+  if (!aChannel->GetIsThirdPartyTrackingResource()) {
+    LOG(("Our channel isn't a third-party tracking channel"));
     return true;
   }
 
