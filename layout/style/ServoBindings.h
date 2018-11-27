@@ -676,11 +676,6 @@ void Servo_AnimationValue_Serialize(
   nsCSSPropertyID property,
   nsAString* buffer);
 
-nscolor Servo_AnimationValue_GetColor(RawServoAnimationValueBorrowed value,
-                                      nscolor foregroundColor);
-RawServoAnimationValueStrong Servo_AnimationValue_Color(nsCSSPropertyID,
-                                                        nscolor);
-
 float Servo_AnimationValue_GetOpacity(RawServoAnimationValueBorrowed value);
 RawServoAnimationValueStrong Servo_AnimationValue_Opacity(float);
 

@@ -50,9 +50,7 @@ div {
 /** Test for bug 1045994 - Add a chrome-only property to inspect if an
     animation is running on the compositor or not **/
 
-const omtaEnabled = isOMTAEnabled();
-const isWebRender =
-  SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
+var omtaEnabled = isOMTAEnabled();
 
 function assert_animation_is_running_on_compositor(animation, desc) {
   assert_equals(animation.isRunningOnCompositor, omtaEnabled,
@@ -989,42 +987,6 @@ promise_test(async t => {
   assert_animation_is_running_on_compositor(animation,
     'Transform animation on table element should be running on the compositor');
 }, 'Transform animation on table element runs on the compositor');
-
-promise_test(async t => {
-  const div = addDiv(t);
-  const animation = div.animate({ backgroundColor: ['blue', 'green'] },
-                                100 * MS_PER_SEC);
-
-  await waitForAnimationReadyToRestyle(animation);
-  await waitForPaints();
-
-  if (!isWebRender) {
-    assert_animation_is_running_on_compositor(animation,
-      'background-color animation should be running on the compositor');
-  } else {
-    assert_animation_is_not_running_on_compositor(animation,
-      'background-color animation is not yet able to run on the compositor ' +
-      'on WebRender');
-  }
-}, 'backgound-color animation runs on the compositor');
-
-promise_test(async t => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["gfx.omta.background-color", false]]
-  });
-
-  const div = addDiv(t);
-  const animation = div.animate({ backgroundColor: ['blue', 'green'] },
-                                100 * MS_PER_SEC);
-
-  await waitForAnimationReadyToRestyle(animation);
-  await waitForPaints();
-
-  assert_animation_is_not_running_on_compositor(animation,
-    'background-color animation should NOT be running on the compositor ' +
-    'if the pref is disabled');
-}, 'backgound-color animation does not run on the compositor if the pref ' +
-   'is disabled');
 
 </script>
 </body>
