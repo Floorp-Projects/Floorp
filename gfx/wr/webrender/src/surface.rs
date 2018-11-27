@@ -236,14 +236,14 @@ impl SurfaceDescriptor {
             // a legacy primitive or picture, then fail to create a cache
             // descriptor.
             match prim_instance.kind {
-                PrimitiveInstanceKind::Picture { .. } |
-                PrimitiveInstanceKind::LegacyPrimitive { .. } => {
+                PrimitiveInstanceKind::Picture { .. } => {
                     return None;
                 }
                 PrimitiveInstanceKind::Image { .. } |
                 PrimitiveInstanceKind::YuvImage { .. } |
                 PrimitiveInstanceKind::LineDecoration { .. } |
                 PrimitiveInstanceKind::LinearGradient { .. } |
+                PrimitiveInstanceKind::RadialGradient { .. } |
                 PrimitiveInstanceKind::TextRun { .. } |
                 PrimitiveInstanceKind::NormalBorder { .. } |
                 PrimitiveInstanceKind::Rectangle { .. } |
