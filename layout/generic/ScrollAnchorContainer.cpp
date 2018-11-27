@@ -21,7 +21,8 @@ ScrollAnchorContainer::ScrollAnchorContainer(ScrollFrameHelper* aScrollFrame)
       mAnchorNode(nullptr),
       mLastAnchorPos(0, 0),
       mAnchorNodeIsDirty(true),
-      mApplyingAnchorAdjustment(false) {}
+      mApplyingAnchorAdjustment(false),
+      mSuppressAnchorAdjustment(false) {}
 
 ScrollAnchorContainer::~ScrollAnchorContainer() {}
 

@@ -1881,6 +1881,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   nsChangeHint CalcDifference(const nsStyleDisplay& aNewData) const;
 
+  bool TransformChanged(const nsStyleDisplay& aNewData) const;
+
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   RefPtr<mozilla::css::URLValue> mBinding;
