@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <registry>
     <comment>
-Copyright (c) 2013-2017 The Khronos Group Inc.
+Copyright (c) 2013-2018 The Khronos Group Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -1411,7 +1411,7 @@ typedef unsigned __int64 uint64_t;
             <param><ptype>int64_t</ptype> <name>remainder</name></param>
         </command>
         <command>
-            <proto>void <name>glXSwapIntervalMESA</name></proto>
+            <proto>int <name>glXSwapIntervalMESA</name></proto>
             <param>unsigned int <name>interval</name></param>
         </command>
         <command>
@@ -1773,6 +1773,8 @@ typedef unsigned __int64 uint64_t;
                 <enum name="GLX_VENDOR_NAMES_EXT"/>
             </require>
         </extension>
+        <extension name="GLX_EXT_no_config_context" supported="glx">
+        </extension>
         <extension name="GLX_EXT_stereo_tree" supported="glx">
             <require>
                 <type name="GLXStereoNotifyEventEXT"/>
@@ -1913,6 +1915,12 @@ typedef unsigned __int64 uint64_t;
                 <enum name="GLX_3DFX_WINDOW_MODE_MESA"/>
                 <enum name="GLX_3DFX_FULLSCREEN_MODE_MESA"/>
                 <command name="glXSet3DfxModeMESA"/>
+            </require>
+        </extension>
+        <extension name="GLX_MESA_swap_control" supported="glx">
+            <require>
+                <command name="glXGetSwapIntervalMESA"/>
+                <command name="glXSwapIntervalMESA"/>
             </require>
         </extension>
         <extension name="GLX_NV_copy_buffer" supported="glx">
@@ -2175,12 +2183,6 @@ typedef unsigned __int64 uint64_t;
         <extension name="GLX_SUN_get_transparent_index" supported="glx">
             <require>
                 <command name="glXGetTransparentIndexSUN"/>
-            </require>
-        </extension>
-        <extension name="GLX_MESA_swap_control" supported="glx">
-            <require>
-                <command name="glXGetSwapIntervalMESA"/>
-                <command name="glXSwapIntervalMESA"/>
             </require>
         </extension>
     </extensions>

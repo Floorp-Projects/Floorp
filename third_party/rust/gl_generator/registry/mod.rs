@@ -115,20 +115,18 @@ pub struct Registry {
 }
 
 impl Registry {
-    pub fn new<'a, Exts>(api: Api,
-                         version: (u8, u8),
-                         profile: Profile,
-                         fallbacks: Fallbacks,
-                         extensions: Exts)
-                         -> Registry
-        where Exts: AsRef<[&'a str]>
+    pub fn new<'a, Exts>(
+        api: Api,
+        version: (u8, u8),
+        profile: Profile,
+        fallbacks: Fallbacks,
+        extensions: Exts,
+    ) -> Registry
+    where
+        Exts: AsRef<[&'a str]>,
     {
         let (major, minor) = version;
-        let extensions = extensions
-            .as_ref()
-            .iter()
-            .map(<&str>::to_string)
-            .collect();
+        let extensions = extensions.as_ref().iter().map(<&str>::to_string).collect();
 
         let filter = parse::Filter {
             api: api,
@@ -149,8 +147,9 @@ impl Registry {
     }
 
     pub fn write_bindings<W, G>(&self, generator: G, output: &mut W) -> io::Result<()>
-        where G: Generator,
-              W: io::Write
+    where
+        G: Generator,
+        W: io::Write,
     {
         generator.write(&self, output)
     }

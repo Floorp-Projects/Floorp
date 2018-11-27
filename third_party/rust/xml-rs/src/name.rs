@@ -76,11 +76,11 @@ impl<'a> From<(&'a str, &'a str)> for Name<'a> {
 impl<'a> fmt::Display for Name<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(namespace) = self.namespace {
-            try! { write!(f, "{{{}}}", namespace) }
+            write!(f, "{{{}}}", namespace)?;
         }
 
         if let Some(prefix) = self.prefix {
-            try! { write!(f, "{}:", prefix) }
+            write!(f, "{}:", prefix)?;
         }
 
         write!(f, "{}", self.local_name)
@@ -101,7 +101,7 @@ impl<'a> Name<'a> {
     #[inline]
     pub fn local(local_name: &str) -> Name {
         Name {
-            local_name: local_name,
+            local_name,
             prefix: None,
             namespace: None
         }
@@ -111,7 +111,7 @@ impl<'a> Name<'a> {
     #[inline]
     pub fn prefixed(local_name: &'a str, prefix: &'a str) -> Name<'a> {
         Name {
-            local_name: local_name,
+            local_name,
             namespace: None,
             prefix: Some(prefix)
         }
@@ -122,9 +122,9 @@ impl<'a> Name<'a> {
     #[inline]
     pub fn qualified(local_name: &'a str, namespace: &'a str, prefix: Option<&'a str>) -> Name<'a> {
         Name {
-            local_name: local_name,
+            local_name,
             namespace: Some(namespace),
-            prefix: prefix,
+            prefix,
         }
     }
 
@@ -267,9 +267,9 @@ impl FromStr for OwnedName {
             (_, _, _) => None
         };
         r.map(|(local_name, prefix)| OwnedName {
-            local_name: local_name,
+            local_name,
             namespace: None,
-            prefix: prefix
+            prefix
         }).ok_or(())
     }
 }
