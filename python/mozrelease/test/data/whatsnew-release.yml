@@ -1,0 +1,65 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+---
+- type: product-details
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version}/releasenotes/"
+# %LOCALE% is automatically replaced by Balrog.
+- type: show-url
+  # yamllint disable-line rule:line-length
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version}/whatsnew/?oldversion=%OLD_VERSION%"
+  conditions:
+      release-types: [release]
+      products: [firefox]
+      update-channel: release
+      # e.g.: ["<61.0"]. {version.major_number} reflects the current version.
+      # This is done by taskgraph.
+      versions: ["<{version.major_number}.0"]
+      locales:
+          - cak
+          - cy
+          - da
+          - de
+          - dsb
+          - en-CA
+          - en-US
+          - es-AR
+          - es-CL
+          - es-ES
+          - es-MX
+          - et
+          - fa
+          - fi
+          - fr
+          - fy-NL
+          - gn
+          - gu-IN
+          - hsb
+          - hu
+          - ia
+          - id
+          - it
+          - ja
+          - ja-JP-mac
+          - ka
+          - kab
+          - ko
+          - lij
+          - lt
+          - ms
+          - nb-NO
+          - nl
+          - nn-NO
+          - pl
+          - pt-BR
+          - pt-PT
+          - sk
+          - sl
+          - sq
+          - sr
+          - sv-SE
+          - tr
+          - uk
+          - vi
+          - zh-CN
+          - zh-TW
