@@ -75,6 +75,7 @@ interface nsIPaymentOptions : nsISupports
   readonly attribute boolean requestPayerEmail;
   readonly attribute boolean requestPayerPhone;
   readonly attribute boolean requestShipping;
+  readonly attribute boolean requestBillingAddress;
   readonly attribute AString shippingType;
 };
 
