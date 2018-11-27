@@ -82,6 +82,12 @@ WindowGlobalChild::GetByInnerWindowId(uint64_t aInnerWindowId)
   return gWindowGlobalChildById->Get(aInnerWindowId);
 }
 
+bool
+WindowGlobalChild::IsCurrentGlobal()
+{
+  return !mIPCClosed && mWindowGlobal->IsCurrentInnerWindow();
+}
+
 already_AddRefed<WindowGlobalParent>
 WindowGlobalChild::GetParentActor()
 {

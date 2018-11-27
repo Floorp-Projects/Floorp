@@ -28,6 +28,9 @@ parent:
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);
 
+  /// Notify the parent that this PWindowGlobal is now the current global.
+  async BecomeCurrentWindowGlobal();
+
   async __delete__();
 };
 
