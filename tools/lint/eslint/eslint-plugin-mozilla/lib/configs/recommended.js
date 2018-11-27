@@ -36,6 +36,10 @@ module.exports = {
     "SharedArrayBuffer": false,
     "StopIteration": false,
     "dump": true,
+    // Override the "browser" env definition of "location" to allow writing as it
+    // is a writeable property.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1509270#c1 for more information.
+    "location": true,
     "openDialog": false,
     "saveStack": false,
     "sizeToContent": false,
