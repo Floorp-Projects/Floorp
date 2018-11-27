@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <string name="app_name">Firefox Sync History Demo</string>
+    <string name="sign_in">FxA sign in</string>
+    <string name="signed_in">Signed in: %1$s</string>
+    <string name="syncing">Syncing&#8230;</string>
+    <string name="sync_error">Sync error: %1$s</string>
+    <plurals name="visited_url_count">
+        <item quantity="zero">There are no visited URLs</item>
+        <item quantity="one">There is %d visited URL</item>
+        <item quantity="other">There are %d visited URLs</item>
+    </plurals>
+    <string name="log_out">FxA Log Out</string>
+    <string name="logged_out">Logged out!</string>
+    <string name="sync_history">Sync history</string>
+</resources>
