@@ -15,6 +15,7 @@
 #include "jit/IonIC.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
+#include "vm/GeneratorObject.h"
 
 #include "builtin/Boolean-inl.h"
 
@@ -4267,4 +4268,40 @@ js::jit::LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Reg
       default:
         MOZ_CRASH();
     }
+}
+
+bool
+CacheIRCompiler::emitCallIsSuspendedGeneratorResult()
+{
+    AutoOutputRegister output(*this);
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+    AutoScratchRegister scratch2(allocator, masm);
+    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+
+    // Test if it's an object.
+    Label returnFalse, done;
+    masm.branchTestObject(Assembler::NotEqual, input, &returnFalse);
+
+    // Test if it's a GeneratorObject.
+    masm.unboxObject(input, scratch);
+    masm.branchTestObjClass(Assembler::NotEqual, scratch, &GeneratorObject::class_,
+                            scratch2, scratch, &returnFalse);
+
+    // If the resumeIndex slot holds an int32 value < RESUME_INDEX_CLOSING,
+    // the generator is suspended.
+    Address addr(scratch, GeneratorObject::offsetOfResumeIndexSlot());
+    masm.branchTestInt32(Assembler::NotEqual, addr, &returnFalse);
+    masm.unboxInt32(addr, scratch);
+    masm.branch32(Assembler::AboveOrEqual, scratch,
+                  Imm32(GeneratorObject::RESUME_INDEX_CLOSING),
+                  &returnFalse);
+
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&returnFalse);
+    masm.moveValue(BooleanValue(false), output.valueReg());
+
+    masm.bind(&done);
+    return true;
 }

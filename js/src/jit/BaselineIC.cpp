@@ -3449,23 +3449,6 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
             return true;
         }
 
-        if (fun->native() == intrinsic_IsSuspendedGenerator) {
-            // This intrinsic only appears in self-hosted code.
-            MOZ_ASSERT(op != JSOP_NEW);
-            MOZ_ASSERT(argc == 1);
-            JitSpew(JitSpew_BaselineIC, "  Generating Call_IsSuspendedGenerator stub");
-
-            ICCall_IsSuspendedGenerator::Compiler compiler(cx);
-            ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
-            if (!newStub) {
-                return false;
-            }
-
-            stub->addNewStub(newStub);
-            *handled = true;
-            return true;
-        }
-
         bool isCrossRealm = cx->realm() != fun->realm();
 
         RootedObject templateObject(cx);
@@ -4594,49 +4577,6 @@ ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
     masm.bind(&failureRestoreArgc);
     masm.move32(Imm32(2), R0.scratchReg());
     EmitStubGuardFailure(masm);
-    return true;
-}
-
-bool
-ICCall_IsSuspendedGenerator::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    // The IsSuspendedGenerator intrinsic is only called in self-hosted code,
-    // so it's safe to assume we have a single argument and the callee is our
-    // intrinsic.
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
-
-    // Load the argument.
-    Address argAddr(masm.getStackPointer(), ICStackValueOffset);
-    ValueOperand argVal = regs.takeAnyValue();
-    masm.loadValue(argAddr, argVal);
-
-    // Check if it's an object.
-    Label returnFalse;
-    Register genObj = regs.takeAny();
-    masm.branchTestObject(Assembler::NotEqual, argVal, &returnFalse);
-    masm.unboxObject(argVal, genObj);
-
-    // Check if it's a GeneratorObject.
-    Register scratch = regs.takeAny();
-    masm.branchTestObjClass(Assembler::NotEqual, genObj, &GeneratorObject::class_, scratch,
-                            genObj, &returnFalse);
-
-    // If the resumeIndex slot holds an int32 value < RESUME_INDEX_CLOSING,
-    // the generator is suspended.
-    masm.loadValue(Address(genObj, GeneratorObject::offsetOfResumeIndexSlot()), argVal);
-    masm.branchTestInt32(Assembler::NotEqual, argVal, &returnFalse);
-    masm.unboxInt32(argVal, scratch);
-    masm.branch32(Assembler::AboveOrEqual, scratch,
-                  Imm32(GeneratorObject::RESUME_INDEX_CLOSING),
-                  &returnFalse);
-
-    masm.moveValue(BooleanValue(true), R0);
-    EmitReturnFromIC(masm);
-
-    masm.bind(&returnFalse);
-    masm.moveValue(BooleanValue(false), R0);
-    EmitReturnFromIC(masm);
     return true;
 }
 

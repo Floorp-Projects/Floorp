@@ -5212,6 +5212,37 @@ CallIRGenerator::tryAttachArrayJoin()
 }
 
 bool
+CallIRGenerator::tryAttachIsSuspendedGenerator()
+{
+    // The IsSuspendedGenerator intrinsic is only called in
+    // self-hosted code, so it's safe to assume we have a single
+    // argument and the callee is our intrinsic.
+
+    MOZ_ASSERT(argc_ == 1);
+
+    // Stack layout here is (bottom to top):
+    //  2: Callee
+    //  1: ThisValue
+    //  0: Arg <-- Top of stack.
+    // We only care about the argument.
+    ValOperandId valId = writer.loadStackValue(0);
+
+    // Check whether the argument is a suspended generator.
+    // We don't need guards, because IsSuspendedGenerator returns
+    // false for values that are not generator objects.
+    writer.callIsSuspendedGeneratorResult(valId);
+    writer.returnFromIC();
+
+    // This stub does not need to be monitored, because it always
+    // returns Boolean. The stack typeset will be updated when we
+    // attach the stub.
+    cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+    trackAttached("IsSuspendedGenerator");
+    return true;
+}
+
+bool
 CallIRGenerator::tryAttachStub()
 {
     AutoAssertNoPendingException aanpe(cx_);
@@ -5249,6 +5280,11 @@ CallIRGenerator::tryAttachStub()
 
         if (calleeFunc->native() == js::array_join) {
             if (tryAttachArrayJoin()) {
+                return true;
+            }
+        }
+        if (calleeFunc->native() == intrinsic_IsSuspendedGenerator) {
+            if (tryAttachIsSuspendedGenerator()) {
                 return true;
             }
         }
