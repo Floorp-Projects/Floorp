@@ -238,21 +238,6 @@ CTLogVerifier::Verify(const LogEntry& entry,
   return VerifySignature(serializedData, sct.signature.signatureData);
 }
 
-Result
-CTLogVerifier::VerifySignedTreeHead(const SignedTreeHead& sth)
-{
-  if (!SignatureParametersMatch(sth.signature)) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-
-  Buffer serializedData;
-  Result rv = EncodeTreeHeadSignature(sth, serializedData);
-  if (rv != Success) {
-    return rv;
-  }
-  return VerifySignature(serializedData, sth.signature.signatureData);
-}
-
 bool
 CTLogVerifier::SignatureParametersMatch(const DigitallySigned& signature)
 {

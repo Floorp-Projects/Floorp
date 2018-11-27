@@ -13,7 +13,6 @@
 #include "mozpkix/Time.h"
 #include "seccomon.h"
 #include "SignedCertificateTimestamp.h"
-#include "SignedTreeHead.h"
 
 namespace mozilla { namespace ct {
 
@@ -74,9 +73,6 @@ void GetPrecertSCT(SignedCertificateTimestamp& sct);
 
 // Issuer key hash.
 Buffer GetDefaultIssuerKeyHash();
-
-// A sample, valid STH.
-void GetSampleSignedTreeHead(SignedTreeHead& sth);
 
 // The SHA256 root hash for the sample STH.
 Buffer GetSampleSTHSHA256RootHash();
