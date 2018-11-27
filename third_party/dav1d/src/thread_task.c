@@ -71,6 +71,7 @@ void *dav1d_tile_task(void *const data) {
             pthread_cond_wait(&fttd->cond, &fttd->lock);
         }
         if (t->tile_thread.die) {
+            pthread_cond_signal(&fttd->icond);
             pthread_mutex_unlock(&fttd->lock);
             break;
         }
@@ -85,18 +86,21 @@ void *dav1d_tile_task(void *const data) {
             for (t->by = ts->tiling.row_start; t->by < ts->tiling.row_end;
                  t->by += f->sb_step)
             {
-                dav1d_decode_tile_sbrow(t);
+                int error = dav1d_decode_tile_sbrow(t);
+                int progress = error ? TILE_ERROR : 1 + (t->by >> f->sb_shift);
 
                 // signal progress
                 pthread_mutex_lock(&ts->tile_thread.lock);
-                atomic_store(&ts->progress, 1 + (t->by >> f->sb_shift));
+                atomic_store(&ts->progress, progress);
                 pthread_cond_signal(&ts->tile_thread.cond);
                 pthread_mutex_unlock(&ts->tile_thread.lock);
+                if (error) break;
             }
         } else {
             const int sby = f->tile_thread.task_idx_to_sby_and_tile_idx[task_idx][0];
             const int tile_idx = f->tile_thread.task_idx_to_sby_and_tile_idx[task_idx][1];
             Dav1dTileState *const ts = &f->ts[tile_idx];
+            int progress;
 
             // the interleaved decoding can sometimes cause dependency issues
             // if one part of the frame decodes signifcantly faster than others.
@@ -104,24 +108,26 @@ void *dav1d_tile_task(void *const data) {
             // and resume them later as dependencies are met. This also would
             // solve the broadcast() below and allow us to use signal(). However,
             // for now, we use linear dependency tracking because it's simpler.
-            if (atomic_load(&ts->progress) < sby) {
+            if ((progress = atomic_load(&ts->progress)) < sby) {
                 pthread_mutex_lock(&ts->tile_thread.lock);
-                while (atomic_load(&ts->progress) < sby)
+                while ((progress = atomic_load(&ts->progress)) < sby)
                     pthread_cond_wait(&ts->tile_thread.cond,
                                       &ts->tile_thread.lock);
                 pthread_mutex_unlock(&ts->tile_thread.lock);
             }
+            if (progress == TILE_ERROR) continue;
 
             // we need to interleave sbrow decoding for all tile cols in a
             // tile row, since otherwise subsequent threads will be blocked
             // waiting for the post-filter to complete
             t->ts = ts;
             t->by = sby << f->sb_shift;
-            dav1d_decode_tile_sbrow(t);
+            int error = dav1d_decode_tile_sbrow(t);
+            progress = error ? TILE_ERROR : 1 + sby;
 
             // signal progress
             pthread_mutex_lock(&ts->tile_thread.lock);
-            atomic_store(&ts->progress, 1 + sby);
+            atomic_store(&ts->progress, progress);
             pthread_cond_broadcast(&ts->tile_thread.cond);
             pthread_mutex_unlock(&ts->tile_thread.lock);
         }

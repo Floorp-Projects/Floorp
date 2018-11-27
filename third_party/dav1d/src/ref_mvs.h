@@ -178,18 +178,4 @@ static inline void fix_mv_precision(const Av1FrameHeader *const hdr,
     }
 }
 
-static inline mv av1_clamp_mv(const mv mv,
-                              const int bx4, const int by4,
-                              const int bw4, const int bh4,
-                              const int iw4, const int ih4)
-{
-    const int left = -(bx4 + bw4 + 4) * 4 * 8;
-    const int right = (iw4 - bx4 + 0 * bw4 + 4) * 4 * 8;
-    const int top = -(by4 + bh4 + 4) * 4 * 8;
-    const int bottom = (ih4 - by4 + 0 * bh4 + 4) * 4 * 8;
-
-    return (struct mv) { .x = iclip(mv.x, left, right),
-                         .y = iclip(mv.y, top, bottom) };
-}
-
 #endif /* __DAV1D_SRC_REF_MVS_H__ */

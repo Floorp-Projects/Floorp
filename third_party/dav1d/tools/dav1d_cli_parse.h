@@ -35,6 +35,7 @@ typedef struct {
     const char *inputfile;
     const char *demuxer;
     const char *muxer;
+    const char *verify;
     unsigned limit, skip;
     int quiet;
 } CLISettings;

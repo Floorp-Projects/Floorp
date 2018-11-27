@@ -39,6 +39,14 @@ typedef struct Muxer {
                         const Dav1dPictureParameters *p, const unsigned fps[2]);
     int (*write_picture)(MuxerPriv *ctx, Dav1dPicture *p);
     void (*write_trailer)(MuxerPriv *ctx);
+    /**
+     * Verifies the muxed data (for example in the md5 muxer). Replaces write_trailer.
+     *
+     * @param  hash_string Muxer specific reference value.
+     *
+     * @return 0 on success.
+     */
+    int (*verify)(MuxerPriv *ctx, const char *hash_string);
 } Muxer;
 
 #endif /* __DAV1D_OUTPUT_MUXER_H__ */

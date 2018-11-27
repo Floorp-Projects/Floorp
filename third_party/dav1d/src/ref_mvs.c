@@ -1954,10 +1954,9 @@ void av1_find_ref_mvs(CANDIDATE_MV *mvstack, int *cnt, int_mv (*mvlist)[2],
     MV_REFERENCE_FRAME rf[2] = { refidx_dav1d[0] + 1, refidx_dav1d[1] + 1 };
     const int refidx = av1_ref_frame_type(rf);
     int16_t single_context[MODE_CTX_REF_FRAMES];
-    uint8_t mv_cnt[MODE_CTX_REF_FRAMES] = { 0 };
+    uint8_t mv_cnt[MODE_CTX_REF_FRAMES];
     CANDIDATE_MV mv_stack[MODE_CTX_REF_FRAMES][MAX_REF_MV_STACK_SIZE];
-    memset(mv_stack, 0, sizeof(mv_stack));
-    int_mv mv_list[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES] = { { { 0 } } };
+    int_mv mv_list[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES];
     int_mv gmvs[MODE_CTX_REF_FRAMES];
     av1_find_mv_refs(cm, &xd, xd.mi, refidx, mv_cnt,
                      mv_stack, mv_list, gmvs, by4, bx4,
@@ -1978,71 +1977,6 @@ void av1_find_ref_mvs(CANDIDATE_MV *mvstack, int *cnt, int_mv (*mvlist)[2],
             *ctx = single_context[refidx_dav1d[0] + 1];
         else
             *ctx = av1_mode_context_analyzer(single_context, rf);
-    }
-
-    if (0 && bx4 == 38 && by4 == 15 && cm->frame_offset == 3 &&
-        refidx_dav1d[1] == -1 && refidx_dav1d[0] == 4 &&
-        bw4 == 1 && bh4 == 1 && bp == 3)
-    {
-        MV_REF *l = bx4 ? &cm->cur_frame.mvs[by4*stride+bx4-1] : NULL;
-        MV_REF *a = by4 ? &cm->cur_frame.mvs[by4*stride+bx4-stride] : NULL;
-        printf("Input: left=[0]y:%d,x:%d,r:%d,[1]y:%d,x:%d,r:%d,mode=%d, "
-               "above=[0]y:%d,x:%d,r:%d,[1]y:%d,x:%d,r:%d,mode=%d, "
-               "temp=y:%d,x:%d,r:%d [use_ref=%d]\n",
-               l ? l->mv[0].as_mv.row : -1,
-               l ? l->mv[0].as_mv.col : -1,
-               l ? l->ref_frame[0]: -1,
-               l ? l->mv[1].as_mv.row : -1,
-               l ? l->mv[1].as_mv.col : -1,
-               l ? l->ref_frame[1]: -1,
-               l ? l->mode : -1,
-               a ? a->mv[0].as_mv.row: -1,
-               a ? a->mv[0].as_mv.col : -1,
-               a ? a->ref_frame[0] : -1,
-               a ? a->mv[1].as_mv.row: -1,
-               a ? a->mv[1].as_mv.col : -1,
-               a ? a->ref_frame[1] : -1,
-               a ? a->mode : -1,
-               cm->tpl_mvs[(by4 >> 1) * (cm->mi_stride >> 1) + (bx4 >> 1)].mfmv0.as_mv.row,
-               cm->tpl_mvs[(by4 >> 1) * (cm->mi_stride >> 1) + (bx4 >> 1)].mfmv0.as_mv.col,
-               cm->tpl_mvs[(by4 >> 1) * (cm->mi_stride >> 1) +
-                           (bx4 >> 1)].ref_frame_offset,
-               cm->allow_ref_frame_mvs);
-        printf("Edges: l=%d,t=%d,r=%d,b=%d,w=%d,h=%d,border=%d\n",
-               xd.mb_to_left_edge,
-               xd.mb_to_top_edge,
-               xd.mb_to_right_edge,
-               xd.mb_to_bottom_edge,
-               xd.n8_w << MI_SIZE_LOG2,
-               xd.n8_h << MI_SIZE_LOG2,
-               MV_BORDER);
-        printf("bp=%d, x=%d, y=%d, refs=%d/%d, n_mvs: %d, "
-               "first mv: y=%d,x=%d | y=%d,x=%d, "
-               "first comp mv: y=%d,x=%d | y=%d,x=%d, "
-               "second mv: y=%d, x=%d | y=%d, x=%d, "
-               "second comp mv: y=%d, x=%d | y=%d, x=%d, "
-               "third mv: y=%d, x=%d, "
-               "ctx=%d\n",
-               bp, bx4, by4, refidx_dav1d[0], refidx_dav1d[1], mv_cnt[refidx],
-               mv_stack[refidx][0].this_mv.as_mv.row,
-               mv_stack[refidx][0].this_mv.as_mv.col,
-               mv_list[refidx_dav1d[0] + 1][0].as_mv.row,
-               mv_list[refidx_dav1d[0] + 1][0].as_mv.col,
-               mv_stack[refidx][0].comp_mv.as_mv.row,
-               mv_stack[refidx][0].comp_mv.as_mv.col,
-               mv_list[refidx_dav1d[1] + 1][0].as_mv.row,
-               mv_list[refidx_dav1d[1] + 1][0].as_mv.col,
-               mv_stack[refidx][1].this_mv.as_mv.row,
-               mv_stack[refidx][1].this_mv.as_mv.col,
-               mv_list[refidx_dav1d[0] + 1][1].as_mv.row,
-               mv_list[refidx_dav1d[0] + 1][1].as_mv.col,
-               mv_stack[refidx][1].comp_mv.as_mv.row,
-               mv_stack[refidx][1].comp_mv.as_mv.col,
-               mv_list[refidx_dav1d[1] + 1][1].as_mv.row,
-               mv_list[refidx_dav1d[1] + 1][1].as_mv.col,
-               mv_stack[refidx][2].this_mv.as_mv.row,
-               mv_stack[refidx][2].this_mv.as_mv.col,
-               *ctx);
     }
 }
 
@@ -2120,7 +2054,9 @@ int av1_init_ref_mv_common(AV1_COMMON *cm,
         const int ref_poc = cm->buffer_pool.frame_bufs[i].cur_frame_offset;
         cm->ref_frame_sign_bias[1 + i] = get_relative_dist(cm, ref_poc, cur_poc) > 0;
     }
-    av1_setup_motion_field(cm);
+    if (allow_ref_frame_mvs) {
+        av1_setup_motion_field(cm);
+    }
 
     return 0;
 }

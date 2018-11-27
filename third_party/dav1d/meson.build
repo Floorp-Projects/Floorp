@@ -61,11 +61,14 @@ endforeach
 
 # ASM option
 is_asm_enabled = (get_option('build_asm') == true and
-    (host_machine.cpu_family().startswith('x86')) or
-     host_machine.cpu_family() == 'aarch64'       or
-     host_machine.cpu_family().startswith('arm'))
+    (host_machine.cpu_family().startswith('x86') or
+     host_machine.cpu_family() == 'aarch64'      or
+     host_machine.cpu_family().startswith('arm')))
 cdata.set10('HAVE_ASM', is_asm_enabled)
 
+if is_asm_enabled and get_option('b_sanitize') == 'memory'
+    error('asm causes false positive with memory sanitizer. Use \'-Dbuild_asm=false\'.')
+endif
 
 
 #
@@ -103,7 +106,12 @@ if not cc.check_header('stdatomic.h')
     if cc.get_id() == 'msvc'
         # we have a custom replacement for MSVC
         stdatomic_dependency = declare_dependency(
-            include_directories : include_directories('include/compat'),
+            include_directories : include_directories('include/compat/msvc'),
+        )
+    elif cc.compiles('''int main() { int v = 0; return __atomic_fetch_add(&v, 1, __ATOMIC_SEQ_CST); }''',
+                     name : 'GCC-style atomics', args : test_args)
+        stdatomic_dependency = declare_dependency(
+            include_directories : include_directories('include/compat/gcc'),
         )
     else
         error('Atomics not supported')
@@ -130,8 +138,16 @@ if cc.has_function('posix_memalign', prefix : '#include <stdlib.h>', args : test
     cdata.set('HAVE_POSIX_MEMALIGN', 1)
 elif cc.has_function('_aligned_malloc', prefix : '#include <malloc.h>', args : test_args)
     cdata.set('HAVE_ALIGNED_MALLOC', 1)
+elif cc.has_function('memalign', prefix : '#include <malloc.h>', args : test_args)
+    cdata.set('HAVE_MEMALIGN', 1)
 endif
 
+if (host_machine.cpu_family() == 'aarch64' or
+    host_machine.cpu_family().startswith('arm'))
+    if cc.has_function('getauxval', prefix : '#include <sys/auxv.h>', args : test_args)
+        cdata.set('HAVE_GETAUXVAL', 1)
+    endif
+endif
 
 # Compiler flag tests
 

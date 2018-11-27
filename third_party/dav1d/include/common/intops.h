@@ -52,20 +52,16 @@ static inline int apply_sign(const int v, const int s) {
     return s < 0 ? -v : v;
 }
 
+static inline int apply_sign64(const int v, const int64_t s) {
+    return s < 0 ? -v : v;
+}
+
 static inline int ulog2(const unsigned v) {
     return 31 - clz(v);
 }
 
 static inline int u64log2(const uint64_t v) {
     return 63 - clzll(v);
-}
-
-static inline unsigned rl16(const uint8_t *const ptr) {
-    return (ptr[1] << 8) | ptr[0];
-}
-
-static inline unsigned rl32(const uint8_t *const ptr) {
-    return (rl16(&ptr[2]) << 16) | rl16(ptr);
 }
 
 static inline unsigned inv_recenter(const unsigned r, const unsigned v) {

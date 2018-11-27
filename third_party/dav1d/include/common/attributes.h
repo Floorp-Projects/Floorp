@@ -32,6 +32,12 @@
 
 #include <stddef.h>
 
+#ifdef __GNUC__
+#define ATTR_ALIAS __attribute__((may_alias))
+#else
+#define ATTR_ALIAS
+#endif
+
 #if ARCH_X86
 #define ALIGN_32_VAL 32
 #define ALIGN_16_VAL 16

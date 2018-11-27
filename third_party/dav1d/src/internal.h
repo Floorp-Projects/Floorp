@@ -40,6 +40,7 @@ typedef struct Dav1dTileContext Dav1dTileContext;
 
 #include "src/cdef.h"
 #include "src/cdf.h"
+#include "src/data.h"
 #include "src/env.h"
 #include "src/intra_edge.h"
 #include "src/ipred.h"
@@ -80,6 +81,7 @@ struct Dav1dContext {
     Av1FrameHeader frame_hdr; // FIXME make ref?
 
     // decoded output picture queue
+    Dav1dData in;
     Dav1dPicture out;
     struct {
         Dav1dThreadPicture *out_delayed;
@@ -132,6 +134,12 @@ struct Dav1dFrameContext {
     } tile[256];
     int n_tile_data;
 
+    // for scalable references
+    struct ScalableMotionParams {
+        int scale; // if no scaling, this is 0
+        int step;
+    } svc[7][2 /* x, y */];
+
     const Dav1dContext *c;
     Dav1dTileContext *tc;
     int n_tc;
@@ -149,7 +157,7 @@ struct Dav1dFrameContext {
     int ipred_edge_sz;
     pixel *ipred_edge[3];
     ptrdiff_t b4_stride;
-    int bw, bh, sb128w, sb128h, sbh, sb_shift, sb_step;
+    int w4, h4, bw, bh, sb128w, sb128h, sbh, sb_shift, sb_step;
     uint16_t dq[NUM_SEGMENTS][3 /* plane */][2 /* dc/ac */];
     const uint8_t *qm[2 /* is_1d */][N_RECT_TX_SIZES][3 /* plane */];
     BlockContext *a;
@@ -217,7 +225,7 @@ struct Dav1dTileState {
     CdfContext cdf;
     MsacContext msac;
 
-    atomic_int progress; // in sby units
+    atomic_int progress; // in sby units, TILE_ERROR after a decoding error
     struct {
         pthread_mutex_t lock;
         pthread_cond_t cond;
@@ -244,7 +252,7 @@ struct Dav1dTileContext {
     int bx, by;
     BlockContext l, *a;
     coef *cf;
-    pixel *emu_edge; // stride=160
+    pixel *emu_edge; // stride=192 for non-SVC, or 320 for SVC
     // FIXME types can be changed to pixel (and dynamically allocated)
     // which would make copy/assign operations slightly faster?
     uint16_t al_pal[2 /* a/l */][32 /* bx/y4 */][3 /* plane */][8 /* palette_idx */];

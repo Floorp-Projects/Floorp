@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#ifdef HAVE_ALIGNED_MALLOC
+#if defined(HAVE_ALIGNED_MALLOC) || defined(HAVE_MEMALIGN)
 #include <malloc.h>
 #endif
 
@@ -47,6 +47,8 @@ static inline void *dav1d_alloc_aligned(size_t sz, size_t align) {
     return ptr;
 #elif defined(HAVE_ALIGNED_MALLOC)
     return _aligned_malloc(sz, align);
+#elif defined(HAVE_MEMALIGN)
+    return memalign(align, sz);
 #else
 #error Missing aligned alloc implementation
 #endif
@@ -57,6 +59,8 @@ static inline void dav1d_free_aligned(void* ptr) {
     free(ptr);
 #elif defined(HAVE_ALIGNED_MALLOC)
     _aligned_free(ptr);
+#elif defined(HAVE_MEMALIGN)
+    free(ptr);
 #endif
 }
 

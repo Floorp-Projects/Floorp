@@ -190,7 +190,7 @@ static int md5_write(MD5Context *const md5, Dav1dPicture *const p) {
     return 0;
 }
 
-static void md5_close(MD5Context *const md5) {
+static void md5_finish(MD5Context *const md5) {
     static const uint8_t bit[2] = { 0x80, 0x00 };
     uint64_t len = md5->len << 3;
 
@@ -198,6 +198,10 @@ static void md5_close(MD5Context *const md5) {
     while ((md5->len & 63) != 56)
         md5_update(md5, &bit[1], 1);
     md5_update(md5, (uint8_t *) &len, 8);
+}
+
+static void md5_close(MD5Context *const md5) {
+    md5_finish(md5);
     for (int i = 0; i < 4; i++)
         fprintf(md5->f, "%2.2x%2.2x%2.2x%2.2x",
                 md5->abcd[i] & 0xff,
@@ -210,6 +214,29 @@ static void md5_close(MD5Context *const md5) {
         fclose(md5->f);
 }
 
+static int md5_verify(MD5Context *const md5, const char *const md5_str) {
+    md5_finish(md5);
+
+    if (strlen(md5_str) < 32)
+        return 0;
+
+    const char *p = md5_str;
+    unsigned abcd[4] = { 0 };
+    char t[3] = { 0 };
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            unsigned val;
+            char *ignore;
+            memcpy(t, p, 2);
+            p += 2;
+            val = strtoul(t, &ignore, 16);
+            abcd[i] |= val << (8 * j);
+        }
+    }
+
+    return !!memcmp(abcd, md5->abcd, sizeof(abcd));
+}
+
 const Muxer md5_muxer = {
     .priv_data_size = sizeof(MD5Context),
     .name = "md5",
@@ -217,4 +244,5 @@ const Muxer md5_muxer = {
     .write_header = md5_open,
     .write_picture = md5_write,
     .write_trailer = md5_close,
+    .verify = md5_verify,
 };

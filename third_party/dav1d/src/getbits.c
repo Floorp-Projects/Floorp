@@ -95,7 +95,7 @@ unsigned dav1d_get_vlc(GetBits *const c) {
     while (!dav1d_get_bits(c, 1))
         if (++n_bits == 32)
             return 0xFFFFFFFFU;
-    return n_bits ? ((1 << n_bits) - 1) + dav1d_get_bits(c, n_bits) : 0;
+    return n_bits ? ((1U << n_bits) - 1) + dav1d_get_bits(c, n_bits) : 0;
 }
 
 static unsigned get_bits_subexp_u(GetBits *const c, const unsigned ref,
@@ -126,8 +126,16 @@ int dav1d_get_bits_subexp(GetBits *const c, const int ref, const unsigned n) {
     return (int) get_bits_subexp_u(c, ref + (1 << n), 2 << n) - (1 << n);
 }
 
-const uint8_t *dav1d_flush_get_bits(GetBits *c) {
+void dav1d_bytealign_get_bits(GetBits *c) {
+    // bits_left is never more than 7, because it is only incremented
+    // by refill(), called by dav1d_get_bits and that never reads more
+    // than 7 bits more than it needs.
+    //
+    // If this wasn't true, we would need to work out how many bits to
+    // discard (bits_left % 8), subtract that from bits_left and then
+    // shift state right by that amount.
+    assert(c->bits_left <= 7);
+
     c->bits_left = 0;
     c->state = 0;
-    return c->ptr;
 }

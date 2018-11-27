@@ -34,13 +34,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "common/intops.h"
-
 #include "input/demuxer.h"
 
 typedef struct DemuxerPriv {
     FILE *f;
 } IvfInputContext;
+
+static unsigned rl32(const uint8_t *const p) {
+    return ((uint32_t)p[3] << 24U) | (p[2] << 16U) | (p[1] << 8U) | p[0];
+}
 
 static int ivf_open(IvfInputContext *const c, const char *const file,
                     unsigned fps[2], unsigned *const num_frames)
@@ -86,14 +88,16 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
 
 static int ivf_read(IvfInputContext *const c, Dav1dData *const buf) {
     uint8_t data[4];
+    uint8_t *ptr;
     int res;
 
     if ((res = fread(data, 4, 1, c->f)) != 1)
         return -1; // EOF
     fseek(c->f, 8, SEEK_CUR); // skip timestamp
     const ptrdiff_t sz = rl32(data);
-    dav1d_data_create(buf, sz);
-    if ((res = fread(buf->data, sz, 1, c->f)) != 1) {
+    ptr = dav1d_data_create(buf, sz);
+    if (!ptr) return -1;
+    if ((res = fread(ptr, sz, 1, c->f)) != 1) {
         fprintf(stderr, "Failed to read frame data: %s\n", strerror(errno));
         dav1d_data_unref(buf);
         return -1;

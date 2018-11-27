@@ -83,14 +83,14 @@ if is_asm_enabled
             'arm/cpu.c',
         )
         libdav1d_tmpl_sources += files(
-            'arm/mc_init.c',
+            'arm/mc_init_tmpl.c',
         )
         if host_machine.cpu_family() == 'aarch64'
-            libdav1d_tmpl_sources += files(
+            libdav1d_sources += files(
                 'arm/64/mc.S',
             )
         elif host_machine.cpu_family().startswith('arm')
-            libdav1d_tmpl_sources += files(
+            libdav1d_sources += files(
                 'arm/32/mc.S',
             )
         endif
@@ -101,15 +101,17 @@ if is_asm_enabled
         )
 
         libdav1d_tmpl_sources += files(
-            'x86/ipred_init.c',
-            'x86/itx_init.c',
-            'x86/loopfilter_init.c',
-            'x86/looprestoration_init.c',
-            'x86/mc_init.c',
+            'x86/cdef_init_tmpl.c',
+            'x86/ipred_init_tmpl.c',
+            'x86/itx_init_tmpl.c',
+            'x86/loopfilter_init_tmpl.c',
+            'x86/looprestoration_init_tmpl.c',
+            'x86/mc_init_tmpl.c',
         )
 
         # NASM source files
         libdav1d_sources_asm = files(
+            'x86/cdef.asm',
             'x86/cpuid.asm',
             'x86/ipred.asm',
             'x86/itx.asm',
@@ -129,7 +131,7 @@ endif
 # Windows .rc file
 #
 
-if host_machine.system() == 'windows'
+if host_machine.system() == 'windows' and get_option('default_library') != 'static'
     winmod = import('windows')
     rc_data = configuration_data()
     rc_data.set('VERSION_MAJOR', dav1d_version_major)

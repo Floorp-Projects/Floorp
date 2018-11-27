@@ -272,16 +272,18 @@ void dav1d_init_wedge_masks(void) {
 #undef fill
 }
 
-static uint8_t ii_dc_mask[32 * 32];
-static uint8_t ii_nondc_mask_32x32[N_INTER_INTRA_PRED_MODES - 1][32 * 32];
-static uint8_t ii_nondc_mask_16x32[N_INTER_INTRA_PRED_MODES - 1][16 * 32];
-static uint8_t ii_nondc_mask_16x16[N_INTER_INTRA_PRED_MODES - 1][16 * 16];
-static uint8_t ii_nondc_mask_8x32[N_INTER_INTRA_PRED_MODES - 1][8 * 32];
-static uint8_t ii_nondc_mask_8x16[N_INTER_INTRA_PRED_MODES - 1][8 * 16];
-static uint8_t ii_nondc_mask_8x8[N_INTER_INTRA_PRED_MODES - 1][8 * 8];
-static uint8_t ii_nondc_mask_4x16[N_INTER_INTRA_PRED_MODES - 1][4 * 16];
-static uint8_t ii_nondc_mask_4x8[N_INTER_INTRA_PRED_MODES - 1][4 * 8];
-static uint8_t ii_nondc_mask_4x4[N_INTER_INTRA_PRED_MODES - 1][4 * 4];
+#define N_II_PRED_MODES (N_INTER_INTRA_PRED_MODES - 1)
+static uint8_t ALIGN(ii_dc_mask[32 * 32], 32);
+static uint8_t ALIGN(ii_nondc_mask_32x32[N_II_PRED_MODES][32 * 32], 32);
+static uint8_t ALIGN(ii_nondc_mask_16x32[N_II_PRED_MODES][16 * 32], 32);
+static uint8_t ALIGN(ii_nondc_mask_16x16[N_II_PRED_MODES][16 * 16], 32);
+static uint8_t ALIGN(ii_nondc_mask_8x32 [N_II_PRED_MODES][ 8 * 32], 32);
+static uint8_t ALIGN(ii_nondc_mask_8x16 [N_II_PRED_MODES][ 8 * 16], 32);
+static uint8_t ALIGN(ii_nondc_mask_8x8  [N_II_PRED_MODES][ 8 *  8], 32);
+static uint8_t ALIGN(ii_nondc_mask_4x16 [N_II_PRED_MODES][ 4 * 16], 32);
+static uint8_t ALIGN(ii_nondc_mask_4x8  [N_II_PRED_MODES][ 4 *  8], 32);
+static uint8_t ALIGN(ii_nondc_mask_4x4  [N_II_PRED_MODES][ 4 *  4], 32);
+#undef N_II_PRED_MODES
 
 #define set1(sz) \
     [II_DC_PRED] = ii_dc_mask, \

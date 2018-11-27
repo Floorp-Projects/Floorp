@@ -38,23 +38,23 @@
 #include "src/tables.h"
 
 typedef struct BlockContext {
-    uint8_t mode[32];
-    uint8_t lcoef[32];
-    uint8_t ccoef[2][32];
-    uint8_t seg_pred[32];
-    uint8_t skip[32];
-    uint8_t skip_mode[32];
-    uint8_t intra[32];
-    uint8_t comp_type[32];
-    int8_t ref[2][32]; // -1 means intra
-    uint8_t filter[2][32]; // 3 means unset
-    int8_t tx_intra[32];
-    int8_t tx[32];
-    uint8_t tx_lpf_y[32];
-    uint8_t tx_lpf_uv[32];
-    uint8_t partition[16];
-    uint8_t uvmode[32];
-    uint8_t pal_sz[32];
+    uint8_t ALIGN(mode[32], 8);
+    uint8_t ALIGN(lcoef[32], 8);
+    uint8_t ALIGN(ccoef[2][32], 8);
+    uint8_t ALIGN(seg_pred[32], 8);
+    uint8_t ALIGN(skip[32], 8);
+    uint8_t ALIGN(skip_mode[32], 8);
+    uint8_t ALIGN(intra[32], 8);
+    uint8_t ALIGN(comp_type[32], 8);
+    int8_t ALIGN(ref[2][32], 8); // -1 means intra
+    uint8_t ALIGN(filter[2][32], 8); // 3 means unset
+    int8_t ALIGN(tx_intra[32], 8);
+    int8_t ALIGN(tx[32], 8);
+    uint8_t ALIGN(tx_lpf_y[32], 8);
+    uint8_t ALIGN(tx_lpf_uv[32], 8);
+    uint8_t ALIGN(partition[16], 8);
+    uint8_t ALIGN(uvmode[32], 8);
+    uint8_t ALIGN(pal_sz[32], 8);
 } BlockContext;
 
 static inline int get_intra_ctx(const BlockContext *const a,

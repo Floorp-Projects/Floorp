@@ -35,16 +35,17 @@
 
 struct Dav1dRef {
     void *data;
+    const void *const_data;
     atomic_int ref_cnt;
-    void (*free_callback)(uint8_t *data, void *user_data);
+    void (*free_callback)(const uint8_t *data, void *user_data);
     void *user_data;
 };
 
 Dav1dRef *dav1d_ref_create(size_t size);
-Dav1dRef *dav1d_ref_wrap(uint8_t *ptr,
-                         void (*free_callback)(uint8_t *data, void *user_data),
+Dav1dRef *dav1d_ref_wrap(const uint8_t *ptr,
+                         void (*free_callback)(const uint8_t *data, void *user_data),
                          void *user_data);
 void dav1d_ref_inc(Dav1dRef *ref);
-void dav1d_ref_dec(Dav1dRef *ref);
+void dav1d_ref_dec(Dav1dRef **ref);
 
 #endif /* __DAV1D_SRC_REF_H__ */
