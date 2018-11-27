@@ -54,8 +54,6 @@ public:
 
 protected:
   ~PaymentRequestUpdateEvent();
-
-private:
   // Indicating whether an updateWith()-initiated update is currently in progress.
   bool mWaitForUpdate;
   RefPtr<PaymentRequest> mRequest;

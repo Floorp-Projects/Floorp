@@ -85,7 +85,7 @@ public:
     mBasicCardData = aBasicCardData;
     return *this;
   }
-  virtual ~ResponseData() = default;
+  ~ResponseData() = default;
 
   const Type& type() const { return mType; }
   const GeneralData& generalData() const { return mGeneralData; }
