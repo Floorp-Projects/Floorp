@@ -11,6 +11,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 if (!isWorker) {
   loader.lazyImporter(this, "Parser", "resource://devtools/shared/Parser.jsm");
 }
+loader.lazyRequireGetter(this, "Reflect", "resource://gre/modules/reflect.jsm", true);
 
 // Provide an easy way to bail out of even attempting an autocompletion
 // if an object has way too many properties. Protects against large objects
@@ -117,12 +118,13 @@ function analyzeInputString(str) {
             return buildReturnObject();
           }
 
-          // If the previous char in't a dot, and the next one isn't a dot either,
-          // and the current computed statement is not a variable/function/class
-          // declaration, update the start position.
+          // If the previous char isn't a dot or opening bracket, and the next one isn't
+          // one either, and the current computed statement is not a
+          // variable/function/class declaration, update the start position.
           if (
-            previousNonSpaceChar !== "." && nextNonSpaceChar !== "."
-            && !NO_AUTOCOMPLETE_PREFIXES.includes(currentLastStatement)
+            previousNonSpaceChar !== "." && nextNonSpaceChar !== "." &&
+            previousNonSpaceChar !== "[" && nextNonSpaceChar !== "[" &&
+            !NO_AUTOCOMPLETE_PREFIXES.includes(currentLastStatement)
           ) {
             start = i + nextNonSpaceCharIndex;
           }
@@ -479,7 +481,24 @@ function JSPropertyProvider({
       // If it's an element access, we need to wrap properties in quotes (either the one
       // the user already typed, or `"`).
       matches = wrapMatchesInQuotes(matches, elementAccessQuote);
+    } else if (!isWorker) {
+      // If we're not performing an element access, we need to check that the property
+      // are suited for a dot access. (Reflect.jsm is not available in worker context yet,
+      // see Bug 1507181).
+      matches = new Set([...matches].filter(propertyName => {
+        let valid = true;
+        try {
+          // In order to know if the property is suited for dot notation, we use Reflect
+          // to parse an expression where we try to access the property with a dot. If it
+          // throws, this means that we need to do an element access instead.
+          Reflect.parse(`({${propertyName}: true})`);
+        } catch (e) {
+          valid = false;
+        }
+        return valid;
+      }));
     }
+
     return {isElementAccess, matchProp, matches};
   };
 
