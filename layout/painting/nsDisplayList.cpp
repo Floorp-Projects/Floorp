@@ -438,6 +438,23 @@ SetAnimatable(nsCSSPropertyID aProperty,
   }
 
   switch (aProperty) {
+    case eCSSProperty_background_color: {
+      // We don't support color animation on the compositor yet so that we can
+      // resolve currentColor at this moment.
+      nscolor foreground;
+      if (aFrame->Style()->RelevantLinkVisited()) {
+        if (ComputedStyle* styleIfVisited =
+              aFrame->Style()->GetStyleIfVisited()) {
+          foreground = styleIfVisited->StyleColor()->mColor;
+        } else {
+          foreground = aFrame->Style()->StyleColor()->mColor;
+        }
+      } else {
+        foreground = aFrame->Style()->StyleColor()->mColor;
+      }
+      aAnimatable = aAnimationValue.GetColor(foreground);
+      break;
+    }
     case eCSSProperty_opacity:
       aAnimatable = aAnimationValue.GetOpacity();
       break;
@@ -673,7 +690,7 @@ AddAnimationsForProperty(nsIFrame* aFrame,
                          scaleX,
                          scaleY,
                          hasPerspectiveParent);
-  } else if (aProperty == eCSSProperty_opacity) {
+  } else {
     data = null_t();
   }
 
@@ -3529,6 +3546,7 @@ nsDisplaySolidColor::GetLayerState(nsDisplayListBuilder* aBuilder,
   if (ForceActiveLayers()) {
     return LAYER_ACTIVE;
   }
+
   return LAYER_NONE;
 }
 
@@ -5022,6 +5040,12 @@ nsDisplayBackgroundColor::GetLayerState(
   if (ForceActiveLayers() && clip != StyleGeometryBox::Text) {
     return LAYER_ACTIVE;
   }
+
+  if (EffectCompositor::HasAnimationsForCompositor(
+        mFrame, eCSSProperty_background_color)) {
+    return LAYER_ACTIVE_FORCE;
+  }
+
   return LAYER_NONE;
 }
 
@@ -5048,6 +5072,11 @@ nsDisplayBackgroundColor::BuildLayer(
   layer->SetBounds(mBackgroundRect.ToNearestPixels(appUnitsPerDevPixel));
   layer->SetBaseTransform(gfx::Matrix4x4::Translation(
     aContainerParameters.mOffset.x, aContainerParameters.mOffset.y, 0));
+
+  nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
+    layer, aBuilder,
+    this, mFrame,
+    eCSSProperty_background_color);
 
   return layer.forget();
 }
@@ -8569,6 +8598,14 @@ bool
 nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 {
   return mAllowAsyncAnimation;
+}
+
+bool
+nsDisplayBackgroundColor::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
+{
+  LayerManager* layerManager = aBuilder->GetWidgetLayerManager();
+  return layerManager &&
+         layerManager->GetBackendType() != layers::LayersBackend::LAYERS_WR;
 }
 
 /* static */ auto
