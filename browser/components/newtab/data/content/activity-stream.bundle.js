@@ -2565,7 +2565,7 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureCom
               "endpoint (",
               react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
                 "a",
-                { className: "providerUrl", target: "_blank", href: info.url },
+                { className: "providerUrl", target: "_blank", href: info.url, rel: "noopener noreferrer" },
                 info.url
               ),
               ")"
@@ -2766,6 +2766,22 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureCom
         "h1",
         null,
         "AS Router Admin"
+      ),
+      react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
+        "p",
+        { className: "helpLink" },
+        react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("span", { className: "icon icon-small-spacer icon-info" }),
+        " ",
+        react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
+          "span",
+          null,
+          "Need help using these tools? Check out our ",
+          react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
+            "a",
+            { target: "blank", href: "https://github.com/mozilla/activity-stream/blob/master/content-src/asrouter/docs/debugging-docs.md" },
+            "documentation"
+          )
+        )
       ),
       react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
         "h2",

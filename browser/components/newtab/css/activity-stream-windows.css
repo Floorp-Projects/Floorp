@@ -1595,6 +1595,13 @@ main {
     font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace; }
   .asrouter-admin .errorState {
     border: 1px solid #D70022; }
+  .asrouter-admin .helpLink {
+    padding: 10px;
+    display: flex;
+    background: #FFE900;
+    border-radius: 3px; }
+    .asrouter-admin .helpLink a {
+      text-decoration: underline; }
 
 .pocket-logged-in-cta {
   font-size: 13px;
