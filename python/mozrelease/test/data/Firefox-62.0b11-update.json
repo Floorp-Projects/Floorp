@@ -1,0 +1,74 @@
+[
+    {
+        "fields": {
+            "detailsURL": "https://www.mozilla.org/%LOCALE%/firefox/62.0.3/releasenotes/",
+            "type": "minor"
+        },
+        "for": {}
+    },
+    {
+        "fields": {
+            "actions": "showURL",
+            "openURL": "https://www.mozilla.org/%LOCALE%/firefox/62.0.3/whatsnew/?oldversion=%OLD_VERSION%"
+        },
+        "for": {
+            "channels": [
+                "release",
+                "release-localtest",
+                "release-cdntest"
+            ],
+            "locales": [
+                "cak",
+                "cy",
+                "da",
+                "de",
+                "dsb",
+                "en-CA",
+                "en-US",
+                "es-AR",
+                "es-CL",
+                "es-ES",
+                "es-MX",
+                "et",
+                "fa",
+                "fi",
+                "fr",
+                "fy-NL",
+                "gn",
+                "gu-IN",
+                "hsb",
+                "hu",
+                "ia",
+                "id",
+                "it",
+                "ja",
+                "ja-JP-mac",
+                "ka",
+                "kab",
+                "ko",
+                "lij",
+                "lt",
+                "ms",
+                "nb-NO",
+                "nl",
+                "nn-NO",
+                "pl",
+                "pt-BR",
+                "pt-PT",
+                "sk",
+                "sl",
+                "sq",
+                "sr",
+                "sv-SE",
+                "tr",
+                "uk",
+                "vi",
+                "zh-CN",
+                "zh-TW"
+            ],
+            "versions": [
+                "<62.0"
+            ]
+        }
+    }
+]
