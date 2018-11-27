@@ -10,24 +10,19 @@ const { ADB } = require("devtools/shared/adb/adb");
  * A Device instance is created and registered with the Devices module whenever
  * ADB notices a new device is connected.
  */
-function AdbDevice(id) {
-  this.id = id;
-}
+class AdbDevice {
+  constructor(id) {
+    this.id = id;
+  }
 
-AdbDevice.prototype = {
-  type: "adb",
-
-  shell: ADB.shell.bind(ADB),
-
-  getModel() {
-    if (this._modelPromise) {
-      return this._modelPromise;
+  async getModel() {
+    if (this._model) {
+      return this._model;
     }
-    this._modelPromise = this.shell("getprop ro.product.model")
-                             .then(model => model.trim());
-    return this._modelPromise;
-  },
-  // push, pull were removed in Bug 1481691.
-};
+    const model = await ADB.shell("getprop ro.product.model");
+    this._model = model.trim();
+    return this._model;
+  }
+}
 
 module.exports = AdbDevice;
