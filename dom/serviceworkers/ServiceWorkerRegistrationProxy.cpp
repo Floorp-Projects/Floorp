@@ -9,6 +9,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerRegistrationParent.h"
+#include "ServiceWorkerUnregisterCallback.h"
 
 namespace mozilla {
 namespace dom {
@@ -169,42 +170,6 @@ ServiceWorkerRegistrationProxy::RevokeActor(ServiceWorkerRegistrationParent* aAc
                       &ServiceWorkerRegistrationProxy::StopListeningOnMainThread);
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
-
-namespace {
-
-class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback
-{
-  RefPtr<GenericPromise::Private> mPromise;
-
-  ~UnregisterCallback() = default;
-
-public:
-  explicit UnregisterCallback(GenericPromise::Private* aPromise)
-    : mPromise(aPromise)
-  {
-    MOZ_DIAGNOSTIC_ASSERT(mPromise);
-  }
-
-  NS_IMETHOD
-  UnregisterSucceeded(bool aState) override
-  {
-    mPromise->Resolve(aState, __func__);
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  UnregisterFailed() override
-  {
-    mPromise->Reject(NS_ERROR_DOM_SECURITY_ERR, __func__);
-    return NS_OK;
-  }
-
-  NS_DECL_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
-
-} // anonymous namespace
 
 RefPtr<GenericPromise>
 ServiceWorkerRegistrationProxy::Unregister()
