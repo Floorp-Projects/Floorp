@@ -9,8 +9,8 @@ import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.any
-import org.junit.Assert.assertEquals
 import mozilla.components.support.test.mock
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -109,5 +109,53 @@ class TabsUseCasesTest {
         useCases.addPrivateTab.invoke("https://www.mozilla.org", startLoading = false)
 
         verify(engineSession, never()).loadUrl("https://www.mozilla.org")
+    }
+
+    @Test
+    fun `RemoveAllTabsUseCase will remove all sessions`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val engineSession: EngineSession = mock()
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any())
+
+        val useCases = TabsUseCases(sessionManager)
+
+        useCases.addPrivateTab.invoke("https://www.mozilla.org")
+        useCases.addTab.invoke("https://www.mozilla.org")
+
+        assertEquals(2, sessionManager.size)
+
+        useCases.removeAllTabs.invoke()
+
+        assertEquals(0, sessionManager.size)
+
+        verify(sessionManager).removeAll()
+    }
+
+    @Test
+    fun `RemoveAllTabsOfTypeUseCase will remove sessions for particular type of tabs private or normal`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val engineSession: EngineSession = mock()
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any())
+
+        val useCases = TabsUseCases(sessionManager)
+
+        useCases.addPrivateTab.invoke("https://www.mozilla.org")
+        useCases.addTab.invoke("https://www.mozilla.org")
+
+        assertEquals(2, sessionManager.size)
+
+        useCases.removeAllTabsOfTypeUseCase.invoke(private = false)
+
+        assertEquals(1, sessionManager.all.size)
+
+        useCases.addPrivateTab.invoke("https://www.mozilla.org")
+        useCases.addTab.invoke("https://www.mozilla.org")
+        useCases.addTab.invoke("https://www.mozilla.org")
+
+        assertEquals(4, sessionManager.size)
+
+        useCases.removeAllTabsOfTypeUseCase.invoke(private = true)
+
+        assertEquals(2, sessionManager.size)
     }
 }
