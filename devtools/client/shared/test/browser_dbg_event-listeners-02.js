@@ -16,27 +16,14 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
   this);
 
-var { DebuggerServer } = require("devtools/server/main");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
-
 const TAB_URL = TEST_URI_ROOT + "doc_event-listeners-03.html";
 
 add_task(async function() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-
-  const transport = DebuggerServer.connectPipe();
-  const client = new DebuggerClient(transport);
-  const [type] = await client.connect();
-
-  Assert.equal(type, "browser",
-    "Root actor should identify itself as a browser.");
-
   const tab = await addTab(TAB_URL);
-  const threadClient = await attachThreadActorForUrl(client, TAB_URL);
+  const { client, threadClient } = await attachThreadActorForTab(tab);
+
   await pauseDebuggee(tab, client, threadClient);
   await testEventListeners(client, threadClient);
-  await client.close();
 });
 
 function pauseDebuggee(tab, client, threadClient) {
