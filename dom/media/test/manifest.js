@@ -54,6 +54,7 @@ var gFrameCountTests = [
   { name:"seek-short.webm", type:"video/webm", totalFrameCount:8},
   { name:"seek.webm", type:"video/webm", totalFrameCount:120},
   { name:"320x240.ogv", type:"video/ogg", totalFrameCount:8},
+  { name:"av1.mp4", type:"video/mp4", totalFrameCount:24},
 ];
 
 if (SpecialPowers.Services.appinfo.name != "B2G") {
