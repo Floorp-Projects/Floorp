@@ -840,7 +840,9 @@ impl<'a> DisplayListFlattener<'a> {
         // style PrimitiveDetails structure from the
         // source primitive container.
         let mut info = info.clone();
-        let (prim_key_kind, prim_details) = container.build(&mut info);
+        let (prim_key_kind, prim_details) = container.build(
+            &mut info,
+        );
 
         let prim_key = PrimitiveKey::new(
             info.is_backface_visible,
@@ -1679,16 +1681,13 @@ impl<'a> DisplayListFlattener<'a> {
             return;
         }
 
-        let prim = BrushPrimitive::new(
-            BrushKind::new_solid(color),
-            None,
-        );
-
         self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Brush(prim),
+            PrimitiveContainer::Rectangle {
+                color,
+            },
         );
     }
 
