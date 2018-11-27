@@ -337,7 +337,7 @@ const kTests = [
       synthesizeComposition({ type: "compositioncommit", data: "\u306D", key: { key: "," } });
     },
     canRun: function () {
-      return true;
+      return !SpecialPowers.getBoolPref("dom.compositionevent.text.dispatch_only_system_group_in_content");
     },
     todoMismatch: [ ],
   },
