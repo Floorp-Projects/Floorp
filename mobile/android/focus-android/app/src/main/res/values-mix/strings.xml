@@ -128,6 +128,7 @@
   <string name="accessibility_announcement_loading">Saa ki tsai</string>
   <string name="accessibility_announcement_loading_finished">Kunchatu saa ku ki\'tsai</string>
   <string name="content_description_menu">Kunchee nu ndasamu kue ñaa</string>
+  <string name="indicator_content_description_menu">Botón kuá’á</string>
   <string name="content_description_forward">Nduku chinuu</string>
   <string name="content_description_reload">Ntu tsaa pagina web</string>
   <string name="content_description_back">Nduku sata</string>
@@ -239,11 +240,14 @@
   <string name="new_tab_opened_snackbar">Ndutsa xikua nuna</string>
   <string name="open_new_tab_snackbar">Sama</string>
   <string name="preference_category_safe_browsing">Kitsaà Ntukú</string>
+  <string name="preference_exceptions">Excepciones</string>
   <string name="preference_exceptions_menu_remove">Xitaá</string>
   <string name="preference_exceptions_remove_all_button_label">Atoo ntii pagina web</string>
   <string name="tab_crash_report_title">Vaa Xikua</string>
+  <string name="tab_crash_report_description">Ña Ntukú sèè, kue nchikavai ña ntsinu tsi xikua ntsinu sata.</string>
   <string name="tab_crash_report_close_tab_button_label">Kasi xikua</string>
   <string name="fatal_crash_report_title">Kunchatu. %1$s ye ña vaá.</string>
+  <string name="fatal_crash_report_description">Ña Ntukú sèè, kue chikavai ña ntsinu sata.</string>
   <string name="fatal_crash_report_close_button_label">Kasi</string>
   <string name="fatal_crash_report_restart_firefox_label">Ndakitsa%1$s</string>
   <string name="crash_report_send_crash_label">Tachu\'un tu\'un ña vai nu Mozilla</string>

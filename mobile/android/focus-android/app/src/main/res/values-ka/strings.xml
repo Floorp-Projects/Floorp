@@ -170,7 +170,7 @@
   <string name="error_generic_message">ამ გვერდის ჩატვირთვა, რატომღაც ვერ მოხერხდა.</string>
   <string name="contextmenu_open_in_app">პროგრამით გახსნა</string>
   <string name="contextmenu_link_share">ბმულის გაზიარება</string>
-  <string name="contextmenu_link_copy">მისამართის დაკოპირება</string>
+  <string name="contextmenu_link_copy">მისამართის ასლი</string>
   <string name="contextmenu_image_share">სურათის გაზიარება</string>
   <string name="contextmenu_image_copy">სურათის მისამართის ასლი</string>
   <string name="contextmenu_image_save">სურათის შენახვა</string>
@@ -219,7 +219,7 @@
   <string name="http_auth_dialog_username">მომხმარებლის სახელი</string>
   <string name="http_auth_dialog_password">პაროლი</string>
   <string name="preference_performance_request_desktop_site">სრული საიტის მოთხოვნა</string>
-  <string name="custom_tab_copy_url_action">URL დაკოპირდა</string>
+  <string name="custom_tab_copy_url_action">URL-ს ასლი მზადაა</string>
   <string name="preference_advanced_summary">შემმუშავებლის ხელსაწყოები</string>
   <string name="preference_category_advanced">დამატებითი</string>
   <string name="preference_remote_debugging">დისტანციური გამართვა USB/Wi-Fi-ით</string>

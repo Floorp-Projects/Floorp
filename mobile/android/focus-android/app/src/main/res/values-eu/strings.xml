@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Bilatu edo idatzi helbidea</string>
   <string name="teaser">Nabigatze pribatu automatikoa.\nNabigatu. Ezabatu. Errepikatu.</string>
   <string name="feedback_erase">Zure nabigatze-historia ezabatu egin da.</string>
+  <string name="feedback_erase_custom_tab">Fitxaren nabigatze-historia ezabatu egin da.</string>
   <string name="search_hint">Bilatu %1$s</string>
   <string name="menu_share">Partekatu…</string>
   <string name="menu_report_site_issue">Eman gunearen arazoaren berri</string>
@@ -18,6 +19,7 @@
   <string name="menu_help">Laguntza</string>
   <string name="menu_rights">Zure eskubideak</string>
   <string name="menu_trackers_blocked_title">Blokeatutako elementuak</string>
+  <string name="menu_content_blocking">Edukia blokeatzea</string>
   <string name="menu_custom_tab_branding">%1$s nabigatzaileak hornitua</string>
   <string name="share_dialog_title">Partekatu</string>
   <string name="notification_erase_text">Ezabatu nabigatze-historia</string>
@@ -25,6 +27,8 @@
   <string name="notification_action_erase_and_open">Ezabatu eta ireki</string>
   <string name="shortcut_erase_short_label">Ezabatu</string>
   <string name="shortcut_erase_long_label">Ezabatu nabigatze-historia</string>
+  <string name="shortcut_erase_and_open_short_label">Ezabatu eta ireki</string>
+  <string name="shortcut_erase_and_open_long_label">Ezabatu eta ireki %1$s</string>
   <string name="text_selection_search_action">Bilatu modu pribatuan</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s(e)k agintea ematen dizu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Erabili nabigatzaile pribatu gisa:\n  "<ul>"\n    "<li>Bilatu eta nabigatu aplikaziotik zuzenean</li>"\n    "<li>Blokeatu jarraipena (edo eguneratu ezarpenak jarraipena onartzeko)</li>"\n    "<li>Ezabatu cookieak eta bilaketa- eta nabigatze-historia</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mozillak egina da %1$s. Internet osasuntsu eta irekia sustatzea da gure misioa.<br/>\n<a href="%2$s">Argibide gehiago</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Pribatutasuna eta segurtasuna</string>
@@ -40,9 +44,12 @@
   <string name="preference_show_search_suggestions">Eskuratu bilaketa-iradokizunak</string>
   <string name="preference_show_search_suggestions_summary">Helbide-barran idazten duzuna bilaketa-motorrera bidaliko du %1$s(e)k</string>
   <string name="preference_search_engine_default">Lehenetsia</string>
+  <string name="preference_search_engine_label">Bilaketa-motorra</string>
   <string name="preference_state_on">Aktibatuta</string>
   <string name="preference_state_off">Desaktibatuta</string>
   <string name="preference_subitem_autocomplete">URLen osatze automatikoa</string>
+  <string name="preference_category_autocomplete_manage_sites">Kudeatu guneak</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Kudeatu guneak</string>
   <string name="preference_autocomplete_action_add">+ Gehitu URL perstonalizatua</string>
   <string name="preference_autocomplete_title_add">Gehitu URL perstonalizatua</string>
   <string name="custom_autocomplete_quick_add">Gehitu URL pertsonalizatua</string>
@@ -224,4 +231,11 @@
   <string name="tip_autocomplete_url">Osatu automatikoki gehien bisitatzen dituzun guneetako URLak\n Mantendu sakatuta helbide-barran edozein URL</string>
   <string name="tip_open_in_new_tab">Ireki lotura fitxa berri batean\n Mantendu sakatuta orri bateko edozein lotura</string>
   <string name="tip_request_desktop">Nahiago duzu mahaigaineko gune osoa ikusi?%1$s Menua &gt; Mahaigaineko gunea</string>
+  <string name="preference_exceptions_menu_remove">Kendu</string>
+  <string name="preference_exceptions_remove_all_button_label">Kendu webgune guztiak</string>
+  <string name="tab_crash_report_title">Fitxak huts egin du</string>
+  <string name="tab_crash_report_close_tab_button_label">Itxi fitxa</string>
+  <string name="fatal_crash_report_close_button_label">Itxi</string>
+  <string name="fatal_crash_report_restart_firefox_label">Berrabiarazi %1$s</string>
+  <string name="crash_report_send_crash_label">Bidali hutsegite-txostena Mozillara</string>
 </resources>

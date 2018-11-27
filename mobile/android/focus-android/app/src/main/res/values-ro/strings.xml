@@ -18,7 +18,7 @@
   <string name="menu_about">Despre</string>
   <string name="menu_help">Ajutor</string>
   <string name="menu_rights">Drepturile tale</string>
-  <string name="menu_trackers_blocked_title">Urmăritori blocați</string>
+  <string name="menu_trackers_blocked_title">Elemente de urmărire blocate</string>
   <string name="menu_trackers_blocked_subtitle">Dezactivarea poate remedia unele probleme legate de site</string>
   <string name="menu_content_blocking">Blocare de conținut</string>
   <string name="menu_content_blocking_subtitle">Dezactivează pentru a repara unele site-uri</string>
@@ -32,10 +32,10 @@
   <string name="shortcut_erase_and_open_short_label">Șterge și deschide</string>
   <string name="shortcut_erase_and_open_long_label">Șterge și deschide %1$s</string>
   <string name="text_selection_search_action">Caută într-un mod privat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#238;&#539;i ofer&#259; controlul.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; direct din aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; urm&#259;ritorii (sau actualizeaz&#259; set&#259;rile pentru a permite urm&#259;ritorii)</li>"\n    "<li>&#536;terge pentru a elimina cookie-urile, precum &#537;i istoricul de c&#259;utare &#537;i navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet s&#259;n&#259;tos &#537;i deschis.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#238;&#539;i ofer&#259; controlul.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; direct din aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; urm&#259;ritorii (sau actualizeaz&#259; set&#259;rile pentru a permite elementele de urm&#259;rire)</li>"\n    "<li>&#536;terge pentru a elimina cookie-urile, precum &#537;i istoricul de c&#259;utare &#537;i navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet s&#259;n&#259;tos &#537;i deschis.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Confidențialitate și securitate</string>
   <string name="preference_privacy_and_security_summary">Urmărire, cookie-uri, împărtășire de date</string>
-  <string name="preference_search_summary">Setează motorul implicit, completare automată</string>
+  <string name="preference_search_summary">Setează motorul implicit, completarea automată</string>
   <string name="preference_mozilla_summary">Despre %1$s, ajutor</string>
   <string name="preference_category_tracking_protection">Protecție împotriva urmăririi</string>
   <string name="preference_category_web_content">Conținut web</string>
@@ -45,16 +45,16 @@
   <string name="preference_category_data_collection_use">Colectare de date și utilizare</string>
   <string name="preference_category_search">Căutare</string>
   <string name="preference_show_search_suggestions">Obține sugestii de căutare</string>
-  <string name="preference_show_search_suggestions_summary">%1$s va trimite ce tastezi în bara de adrese la motorul de căutare</string>
+  <string name="preference_show_search_suggestions_summary">%1$s va trimite ce tastezi în bara de adresă la motorul de căutare</string>
   <string name="preference_search_engine_default">Implicit</string>
   <string name="preference_search_engine_label">Motor de căutare</string>
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Dezactivat</string>
   <string name="preference_subitem_autocomplete">Completare automată de URL-uri</string>
   <string name="preference_switch_autocomplete_topsites">Pentru site-uri de top</string>
-  <string name="preference_autocomplete_topsite_summary">Activează pentru a completa automat peste 450 de URL-uri populare în bara de adrese.</string>
+  <string name="preference_autocomplete_topsite_summary">Activează pentru a completa automat peste 450 de URL-uri populare în bara de adresă.</string>
   <string name="preference_switch_autocomplete_user_list">Pentru site-uri pe care le adaugi</string>
-  <string name="preference_autocomplete_user_list_summary">Activează pentru a completa automat peste 450 de URL-uri populare în bara de adrese.</string>
+  <string name="preference_autocomplete_user_list_summary">Activează pentru a completa automat peste 450 de URL-uri populare în bara de adresă.</string>
   <string name="preference_category_autocomplete_manage_sites">Gestionează site-urile</string>
   <string name="preference_autocomplete_subitem_manage_sites">Gestionează site-urile</string>
   <string name="preference_autocomplete_action_add">+ Adaugă URL personalizat</string>
@@ -70,20 +70,20 @@
   <string name="preference_autocomplete_add_hint">Lipește sau introdu un URL</string>
   <string name="preference_autocomplete_add_example2">Exemplu: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Exemplu: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">URL personalizat nou adăugat.</string>
+  <string name="preference_autocomplete_add_confirmation">Nou URL personalizat adăugat.</string>
   <string name="preference_autocomplete_menu_remove">Elimină</string>
   <string name="preference_autocomplete_action_remove_content_description">Elimină</string>
   <string name="preference_autocomplete_add_error">Verifică URL-ul introdus.</string>
   <string name="preference_language">Limbă</string>
   <string name="preference_language_systemdefault">Setarea implicită a sistemului</string>
   <string name="preference_category_privacy">Confidențialitate</string>
-  <string name="preference_privacy_block_ads">Blochează urmăritorii publicitari</string>
+  <string name="preference_privacy_block_ads">Blochează elementele de urmărire publicitare</string>
   <string name="preference_privacy_block_ads_summary">Anumite reclame urmăresc vizitele pe site, chiar dacă nu dai clic pe reclame</string>
-  <string name="preference_privacy_block_analytics">Blochează urmăritorii analitici</string>
-  <string name="preference_privacy_block_analytics_summary">Folosit pentru a colecta, analiza și măsura activități precum atingerea și derularea</string>
-  <string name="preference_privacy_block_social">Blochează urmăritorii rețelelor sociale</string>
-  <string name="preference_privacy_block_social_summary">Încorporat în site-uri pentru a-ți urmări vizitele și a afișa funcții precum butoanele de distribuire</string>
-  <string name="preference_privacy_block_content">Blochează alți urmăritori de conținut</string>
+  <string name="preference_privacy_block_analytics">Blochează elementele de urmărire analitice</string>
+  <string name="preference_privacy_block_analytics_summary">Folosite pentru a colecta, a analiza și a măsura activități precum atingerea și derularea</string>
+  <string name="preference_privacy_block_social">Blochează elementele de urmărire ale rețelelor sociale</string>
+  <string name="preference_privacy_block_social_summary">Încorporate în site-uri pentru a-ți urmări vizitele și a afișa funcții precum butoanele de distribuire</string>
+  <string name="preference_privacy_block_content">Blochează alte elemente de urmărire de conținut</string>
   <string name="preference_privacy_block_content_summary2">Activarea poate cauza un comportament neașteptat al unor pagini</string>
   <string name="preference_privacy_category_cookies">Blochează cookie-urile</string>
   <string name="preference_privacy_should_block_cookies_no_option">Nu</string>
@@ -137,8 +137,8 @@
   <string name="content_description_back">Navighează înapoi</string>
   <string name="content_description_stop">Oprește încărcarea site-ului web</string>
   <string name="content_description_customtab_exit">Întoarce-te la aplicația anterioară</string>
-  <string name="content_description_trackers_blocked">Numărul de urmăritori blocați</string>
-  <string name="content_description_blocking_switch">Blochează urmăritorii</string>
+  <string name="content_description_trackers_blocked">Numărul de elemente de urmărire blocate</string>
+  <string name="content_description_blocking_switch">Blochează elementele de urmărire</string>
   <string name="your_rights">Drepturile tale</string>
   <string name="external_app_prompt_title">Deschide linkul în altă aplicație</string>
   <string name="external_app_prompt">Poți părăsi %1$s pentru a deschide acest link în %2$s.</string>
@@ -199,7 +199,7 @@
   <string name="your_rights_content2"><![CDATA["%1$s este disponibil sub termenii "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;ei Publice Mozilla</a>" și alte licențe cu sursă deschisă."]]></string>
   <string name="your_rights_content3"><![CDATA["Nu vi se acordă niciun drept sau licență asupra mărcilor comerciale ale Mozilla Foundation sau ale oricărei părți, inclusiv numele sau logourile Mozilla, Firefox sau %1$s. Informații suplimentare pot fi găsite "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aici</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Codul sursă suplimentar pentru %1$s este disponibil sub diferite alte "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licen&#539;e</a>" gratuite și cu sursă deschisă."]]></string>
-  <string name="your_rights_content5"><![CDATA["De asemenea, %1$s folosește lista de blocări furnizată de Disconnect Inc. ca activitate separată și independentă sub "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;a Public&#259; General&#259; GNU v3</a>". și disponibilă "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aici</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["De asemenea, %1$s folosește lista de blocări furnizată de Disconnect Inc., ca activitate separată și independentă sub "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;a Public&#259; General&#259; GNU v3</a>", și care este disponibilă "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aici</a>.]]></string>
   <string name="gv_prompt_username_hint">Utilizator</string>
   <string name="gv_prompt_password_hint">Parolă</string>
   <string name="gv_prompt_clear">Curăță</string>
@@ -230,7 +230,7 @@
   <string name="biometric_auth_not_recognized_error">Amprentă nerecunoscută. Încearcă din nou.</string>
   <string name="biometric_auth_moved_too_quickly">Deget mutat prea repede. Încearcă din nou.</string>
   <string name="enable_search_suggestion_title">Dorești să activezi sugestiile de căutare?</string>
-  <string name="enable_search_suggestion_subtitle">Pentru a obține sugestii de căutare, %1$s trebuie să trimită ce tastezi în bara de adrese la motorul de căutare ales. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle">Pentru a obține sugestii de căutare, %1$s trebuie să trimită ce tastezi în bara de adresă la motorul de căutare ales. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Află mai multe</string>
   <string name="enable_search_suggestions_no">Nu</string>
   <string name="enable_search_suggestions_yes">Da</string>
@@ -239,7 +239,7 @@
   <string name="tip_disable_tracking_protection">Site-ul are un comportament neașteptat?\n Încearcă să dezactivezi protecția împotriva urmăririi</string>
   <string name="tip_add_to_homescreen">Obține acces cu o singură atingere la site-urile pe care intri des%1$s Meniu &gt; Adaugă la ecranul principal</string>
   <string name="tip_set_default_browser">Deschide fiecare link în %1$s\n Setează %1$s ca browser implicit</string>
-  <string name="tip_autocomplete_url">Completează automat URL-urile site-urilor pe care intri des\n Apasă lung pe orice URL din bara de adrese</string>
+  <string name="tip_autocomplete_url">Completează automat URL-urile site-urilor pe care intri des\n Apasă lung pe orice URL din bara de adresă</string>
   <string name="tip_open_in_new_tab">Deschide un link într-o filă nouă\n Apasă lung pe orice link dintr-o pagină</string>
   <string name="tip_request_desktop">Preferi să vezi versiunea de desktop completă?%1$s Meniu &gt; Cere versiune de desktop</string>
   <string name="tip_disable_tips2">Dezactivează ponturile din ecranul de start</string>
