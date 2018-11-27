@@ -98,15 +98,16 @@ async function attachAddon(addonId) {
 
   await client.connect();
 
-  const addonTargetFront = await client.mainRoot.getAddon({ id: addonId });
+  const {addons} = await client.mainRoot.listAddons();
+  const addonTargetActor = addons.filter(actor => actor.id === addonId).pop();
 
-  if (!addonTargetFront) {
+  if (!addonTargetActor) {
     client.close();
     throw new Error(`No WebExtension Actor found for ${addonId}`);
   }
 
   const addonTarget = await TargetFactory.forRemoteTab({
-    activeTab: addonTargetFront,
+    form: addonTargetActor,
     client,
     chrome: true,
   });
@@ -115,14 +116,18 @@ async function attachAddon(addonId) {
 }
 
 async function reloadAddon({client}, addonId) {
-  const addonTargetFront = await client.mainRoot.getAddon({ id: addonId });
+  const {addons} = await client.mainRoot.listAddons();
+  const addonTargetActor = addons.filter(actor => actor.id === addonId).pop();
 
-  if (!addonTargetFront) {
+  if (!addonTargetActor) {
     client.close();
     throw new Error(`No WebExtension Actor found for ${addonId}`);
   }
 
-  await addonTargetFront.reload();
+  await client.request({
+    to: addonTargetActor.actor,
+    type: "reload",
+  });
 }
 
 // Test helpers related to the AddonManager.

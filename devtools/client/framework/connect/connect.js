@@ -80,7 +80,10 @@ var onConnectionReady = async function([aType, aTraits]) {
 
   let addons = [];
   try {
-    addons = await gClient.mainRoot.listAddons();
+    const response = await gClient.listAddons();
+    if (!response.error && response.addons.length > 0) {
+      addons = response.addons;
+    }
   } catch (e) {
     // listAddons throws if the runtime doesn't support addons
   }
@@ -160,7 +163,7 @@ var onConnectionReady = async function([aType, aTraits]) {
 function buildAddonLink(addon, parent) {
   const a = document.createElement("a");
   a.onclick = async function() {
-    openToolbox(null, true, "webconsole", addon);
+    openToolbox(addon, true, "webconsole");
   };
 
   a.textContent = addon.name;
