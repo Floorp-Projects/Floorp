@@ -338,7 +338,7 @@ impl FrameBuilder {
         let mut profile_counters = FrameProfileCounters::new();
         profile_counters
             .total_primitives
-            .set(self.prim_store.prim_count());
+            .set(self.prim_store.prim_count);
 
         resource_cache.begin_frame(stamp);
         gpu_cache.begin_frame(stamp.frame_id());

@@ -15,10 +15,10 @@ use gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureSurface};
-use prim_store::{BrushKind, BrushPrimitive, DeferredResolve, PrimitiveTemplateKind, PrimitiveDataStore};
+use prim_store::{DeferredResolve, PrimitiveTemplateKind, PrimitiveDataStore};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveInstanceKind};
 use prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
-use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, PrimitiveDetails};
+use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use renderer::BLOCKS_PER_UV_RECT;
@@ -902,13 +902,13 @@ impl AlphaBatchBuilder {
                                 PrimitiveInstanceKind::Picture { pic_index } => pic_index,
                                 PrimitiveInstanceKind::LineDecoration { .. } |
                                 PrimitiveInstanceKind::TextRun { .. } |
-                                PrimitiveInstanceKind::LegacyPrimitive { .. } |
                                 PrimitiveInstanceKind::NormalBorder { .. } |
                                 PrimitiveInstanceKind::ImageBorder { .. } |
                                 PrimitiveInstanceKind::Rectangle { .. } |
                                 PrimitiveInstanceKind::YuvImage { .. } |
                                 PrimitiveInstanceKind::Image { .. } |
                                 PrimitiveInstanceKind::LinearGradient { .. } |
+                                PrimitiveInstanceKind::RadialGradient { .. } |
                                 PrimitiveInstanceKind::Clear => {
                                     unreachable!();
                                 }
@@ -1401,104 +1401,6 @@ impl AlphaBatchBuilder {
                 }
             }
             (
-                PrimitiveInstanceKind::LegacyPrimitive { prim_index },
-                PrimitiveTemplateKind::Unused,
-            ) => {
-                let prim = &ctx.prim_store.primitives[prim_index.0];
-
-                // If the primitive is internally decomposed into multiple sub-primitives we may not
-                // use some of the per-primitive data and get it from each sub-primitive instead.
-                let is_multiple_primitives = match prim.details {
-                    PrimitiveDetails::Brush(ref brush) => {
-                        match brush.kind {
-                            BrushKind::RadialGradient { visible_tiles_range, .. } => !visible_tiles_range.is_empty(),
-                        }
-                    }
-                };
-
-                let specified_blend_mode = BlendMode::PremultipliedAlpha;
-
-                match prim.details {
-                    PrimitiveDetails::Brush(ref brush) => {
-                        let non_segmented_blend_mode = if !brush.opacity.is_opaque ||
-                            prim_instance.clip_task_index != ClipTaskIndex::INVALID ||
-                            transform_kind == TransformedRectKind::Complex
-                        {
-                            specified_blend_mode
-                        } else {
-                            BlendMode::None
-                        };
-
-                        let prim_cache_address = if is_multiple_primitives {
-                            GpuCacheAddress::invalid()
-                        } else {
-                            gpu_cache.get_address(&brush.gpu_location)
-                        };
-
-                        let prim_header = PrimitiveHeader {
-                            local_rect: prim.local_rect,
-                            local_clip_rect: prim_instance.combined_local_clip_rect,
-                            task_address,
-                            specific_prim_address: prim_cache_address,
-                            clip_task_address,
-                            transform_id,
-                        };
-
-                        if prim_instance.is_chased() {
-                            println!("\ttask target {:?}", self.target_rect);
-                            println!("\t{:?}", prim_header);
-                        }
-
-                        match brush.kind {
-                            BrushKind::RadialGradient { ref stops_handle, visible_tiles_range, .. } if !visible_tiles_range.is_empty() => {
-                                let visible_tiles = &ctx.scratch.gradient_tiles[visible_tiles_range];
-
-                                add_gradient_tiles(
-                                    visible_tiles,
-                                    stops_handle,
-                                    BrushBatchKind::RadialGradient,
-                                    specified_blend_mode,
-                                    bounding_rect,
-                                    clip_task_address,
-                                    gpu_cache,
-                                    &mut self.batch_list,
-                                    &prim_header,
-                                    prim_headers,
-                                    z_id,
-                                );
-                            }
-                            _ => {
-                                if let Some(params) = brush.get_batch_params(
-                                    gpu_cache,
-                                ) {
-                                    let prim_header_index = prim_headers.push(&prim_header, z_id, params.prim_user_data);
-                                    if prim_instance.is_chased() {
-                                        println!("\t{:?} {:?}, task relative bounds {:?}",
-                                            params.batch_kind, prim_header_index, bounding_rect);
-                                    }
-
-                                    self.add_segmented_prim_to_batch(
-                                        brush.segment_desc.as_ref().map(|desc| desc.segments.as_slice()),
-                                        brush.opacity,
-                                        &params,
-                                        specified_blend_mode,
-                                        non_segmented_blend_mode,
-                                        prim_header_index,
-                                        clip_task_address,
-                                        bounding_rect,
-                                        transform_kind,
-                                        render_tasks,
-                                        z_id,
-                                        prim_instance.clip_task_index,
-                                        ctx,
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            (
                 PrimitiveInstanceKind::ImageBorder { .. },
                 PrimitiveTemplateKind::ImageBorder { request, brush_segments, .. }
             ) => {
@@ -1964,6 +1866,89 @@ impl AlphaBatchBuilder {
                     );
                 }
             }
+            (
+                PrimitiveInstanceKind::RadialGradient { visible_tiles_range, .. },
+                PrimitiveTemplateKind::RadialGradient { stops_handle, ref brush_segments, .. }
+            ) => {
+                let specified_blend_mode = BlendMode::PremultipliedAlpha;
+
+                let mut prim_header = PrimitiveHeader {
+                    local_rect: prim_data.prim_rect,
+                    local_clip_rect: prim_instance.combined_local_clip_rect,
+                    task_address,
+                    specific_prim_address: GpuCacheAddress::invalid(),
+                    clip_task_address,
+                    transform_id,
+                };
+
+                if visible_tiles_range.is_empty() {
+                    let non_segmented_blend_mode = if !prim_data.opacity.is_opaque ||
+                        prim_instance.clip_task_index != ClipTaskIndex::INVALID ||
+                        transform_kind == TransformedRectKind::Complex
+                    {
+                        specified_blend_mode
+                    } else {
+                        BlendMode::None
+                    };
+
+                    let batch_params = BrushBatchParameters::shared(
+                        BrushBatchKind::RadialGradient,
+                        BatchTextures::no_texture(),
+                        [
+                            stops_handle.as_int(gpu_cache),
+                            0,
+                            0,
+                        ],
+                        0,
+                    );
+
+                    prim_header.specific_prim_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
+
+                    let prim_header_index = prim_headers.push(
+                        &prim_header,
+                        z_id,
+                        batch_params.prim_user_data,
+                    );
+
+                    let segments = if brush_segments.is_empty() {
+                        None
+                    } else {
+                        Some(brush_segments.as_slice())
+                    };
+
+                    self.add_segmented_prim_to_batch(
+                        segments,
+                        prim_data.opacity,
+                        &batch_params,
+                        specified_blend_mode,
+                        non_segmented_blend_mode,
+                        prim_header_index,
+                        clip_task_address,
+                        bounding_rect,
+                        transform_kind,
+                        render_tasks,
+                        z_id,
+                        prim_instance.clip_task_index,
+                        ctx,
+                    );
+                } else {
+                    let visible_tiles = &ctx.scratch.gradient_tiles[*visible_tiles_range];
+
+                    add_gradient_tiles(
+                        visible_tiles,
+                        stops_handle,
+                        BrushBatchKind::RadialGradient,
+                        specified_blend_mode,
+                        bounding_rect,
+                        clip_task_address,
+                        gpu_cache,
+                        &mut self.batch_list,
+                        &prim_header,
+                        prim_headers,
+                        z_id,
+                    );
+                }
+            }
             _ => {
                 unreachable!();
             }
@@ -2295,28 +2280,6 @@ impl BrushBatchParameters {
     }
 }
 
-impl BrushPrimitive {
-    fn get_batch_params(
-        &self,
-        gpu_cache: &mut GpuCache,
-    ) -> Option<BrushBatchParameters> {
-        match self.kind {
-            BrushKind::RadialGradient { ref stops_handle, .. } => {
-                Some(BrushBatchParameters::shared(
-                    BrushBatchKind::RadialGradient,
-                    BatchTextures::no_texture(),
-                    [
-                        stops_handle.as_int(gpu_cache),
-                        0,
-                        0,
-                    ],
-                    0,
-                ))
-            }
-        }
-    }
-}
-
 impl PrimitiveInstance {
     pub fn is_cacheable(
         &self,
@@ -2337,7 +2300,6 @@ impl PrimitiveInstance {
                     _ => unreachable!(),
                 }
             }
-            PrimitiveInstanceKind::LegacyPrimitive { .. } |
             PrimitiveInstanceKind::Picture { .. } |
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } |
@@ -2345,6 +2307,7 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::ImageBorder { .. } |
             PrimitiveInstanceKind::Rectangle { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
+            PrimitiveInstanceKind::RadialGradient { .. } |
             PrimitiveInstanceKind::Clear => {
                 return true;
             }

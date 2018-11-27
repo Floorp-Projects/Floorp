@@ -49,7 +49,6 @@ use serde_json;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::mem::replace;
-use std::os::raw::c_void;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::time::{UNIX_EPOCH, SystemTime};
 use std::u32;
@@ -1369,18 +1368,12 @@ impl RenderBackend {
         serde_json::to_string(&debug_root).unwrap()
     }
 
-    fn size_of<T>(&self, ptr: *const T) -> usize {
-        let op = self.size_of_op.as_ref().unwrap();
-        unsafe { op(ptr as *const c_void) }
-    }
-
     fn report_memory(&self) -> MemoryReport {
         let mut report = MemoryReport::default();
         let op = self.size_of_op.unwrap();
         report.gpu_cache_metadata = self.gpu_cache.malloc_size_of(op);
         for (_id, doc) in &self.documents {
             if let Some(ref fb) = doc.frame_builder {
-                report.primitive_stores += self.size_of(fb.prim_store.primitives.as_ptr());
                 report.clip_stores += fb.clip_store.malloc_size_of(op);
             }
             report.hit_testers +=
