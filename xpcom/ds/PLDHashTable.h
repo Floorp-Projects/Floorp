@@ -13,6 +13,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h" // for MOZ_ALWAYS_INLINE
 #include "mozilla/fallible.h"
+#include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -36,11 +37,10 @@ struct PLDHashTableOps;
 // structure, for single static initialization per hash table sub-type.
 //
 // Each hash table sub-type should make its entry type a subclass of
-// PLDHashEntryHdr. The mKeyHash member contains the result of suitably
-// scrambling the hash code returned from the hashKey callback (see below),
-// then constraining the result to avoid the magic 0 and 1 values. The stored
-// mKeyHash value is table size invariant, and it is maintained automatically
-// -- users need never access it.
+// PLDHashEntryHdr. PLDHashEntryHdr is merely a common superclass to present a
+// uniform interface to PLDHashTable clients. The zero-sized base class
+// optimization, employed by all of our supported C++ compilers, will ensure
+// that this abstraction does not make objects needlessly larger.
 struct PLDHashEntryHdr
 {
   PLDHashEntryHdr() = default;
@@ -51,8 +51,6 @@ struct PLDHashEntryHdr
 
 private:
   friend class PLDHashTable;
-
-  PLDHashNumber mKeyHash;
 };
 
 #ifdef DEBUG
@@ -222,8 +220,98 @@ private:
 class PLDHashTable
 {
 private:
+  // A slot represents a cached hash value and its associated entry stored in
+  // the hash table. The hash value and the entry are not stored contiguously.
+  struct Slot
+  {
+    Slot(PLDHashEntryHdr* aEntry, PLDHashNumber* aKeyHash)
+      : mEntry(aEntry)
+      , mKeyHash(aKeyHash)
+    {}
+
+    Slot(const Slot&) = default;
+    Slot(Slot&& aOther) = default;
+
+    Slot& operator=(Slot&& aOther) {
+      this->~Slot();
+      new (this) Slot(std::move(aOther));
+      return *this;
+    }
+
+    bool operator==(const Slot& aOther) { return mEntry == aOther.mEntry; }
+
+    PLDHashNumber KeyHash() const { return *HashPtr(); }
+    void SetKeyHash(PLDHashNumber aHash) { *HashPtr() = aHash; }
+
+    PLDHashEntryHdr* ToEntry() const { return mEntry; }
+
+    bool IsFree() const { return KeyHash() == 0; }
+    bool IsRemoved() const { return KeyHash() == 1; }
+    bool IsLive() const { return IsLiveHash(KeyHash()); }
+    static bool IsLiveHash(uint32_t aHash) { return aHash >= 2; }
+
+    void MarkFree() { *HashPtr() = 0; }
+    void MarkRemoved() { *HashPtr() = 1; }
+    void MarkColliding() { *HashPtr() |= kCollisionFlag; }
+
+    void Next(uint32_t aEntrySize) {
+      char* p = reinterpret_cast<char*>(mEntry);
+      p += aEntrySize;
+      mEntry = reinterpret_cast<PLDHashEntryHdr*>(p);
+      mKeyHash++;
+    }
+    PLDHashNumber* HashPtr() const { return mKeyHash; }
+
+  private:
+    PLDHashEntryHdr* mEntry;
+    PLDHashNumber* mKeyHash;
+  };
+
   // This class maintains the invariant that every time the entry store is
   // changed, the generation is updated.
+  //
+  // The data layout separates the cached hashes of entries and the entries
+  // themselves to save space. We could store the entries thusly:
+  //
+  // +--------+--------+---------+
+  // | entry0 | entry1 | ...     |
+  // +--------+--------+---------+
+  //
+  // where the entries themselves contain the cached hash stored as their
+  // first member. PLDHashTable did this for a long time, with entries looking
+  // like:
+  //
+  // class PLDHashEntryHdr
+  // {
+  //   PLDHashNumber mKeyHash;
+  // };
+  //
+  // class MyEntry : public PLDHashEntryHdr
+  // {
+  //   ...
+  // };
+  //
+  // The problem with this setup is that, depending on the layout of
+  // `MyEntry`, there may be platform ABI-mandated padding between `mKeyHash`
+  // and the first member of `MyEntry`. This ABI-mandated padding is wasted
+  // space, and was surprisingly common, e.g. when MyEntry contained a single
+  // pointer on 64-bit platforms.
+  //
+  // As previously alluded to, the current setup stores things thusly:
+  //
+  // +-------+-------+-------+-------+--------+--------+---------+
+  // | hash0 | hash1 | ..... | hashN | entry0 | entry1 | ...     |
+  // +-------+-------+-------+-------+--------+--------+---------+
+  //
+  // which contains no wasted space between the hashes themselves, and no
+  // wasted space between the entries themselves. malloc is guaranteed to
+  // return blocks of memory with at least word alignment on all of our major
+  // platforms. PLDHashTable mandates that the size of the hash table is
+  // always a power of two, so the alignment of the memory containing the
+  // first entry is always at least the alignment of the entire entry store.
+  // That means the alignment of `entry0` should be its natural alignment.
+  // Entries may have problems if they contain over-aligned members such as
+  // SIMD vector types, but this has not been a problem in practice.
   //
   // Note: It would be natural to store the generation within this class, but
   // we can't do that without bloating sizeof(PLDHashTable) on 64-bit machines.
@@ -234,6 +322,16 @@ private:
   private:
     char* mEntryStore;
 
+    static char* Entries(char* aStore, uint32_t aCapacity)
+    {
+      return aStore + aCapacity * sizeof(PLDHashNumber);
+    }
+
+    char* Entries(uint32_t aCapacity) const
+    {
+      return Entries(Get(), aCapacity);
+    }
+
   public:
     EntryStore() : mEntryStore(nullptr) {}
 
@@ -243,8 +341,43 @@ private:
       mEntryStore = nullptr;
     }
 
-    char* Get() { return mEntryStore; }
-    const char* Get() const { return mEntryStore; }
+    char* Get() const { return mEntryStore; }
+
+    Slot SlotForIndex(uint32_t aIndex, uint32_t aEntrySize,
+                      uint32_t aCapacity) const
+    {
+      char* entries = Entries(aCapacity);
+      auto entry = reinterpret_cast<PLDHashEntryHdr*>(entries + aIndex * aEntrySize);
+      auto hashes = reinterpret_cast<PLDHashNumber*>(Get());
+      return Slot(entry, &hashes[aIndex]);
+    }
+
+    Slot SlotForPLDHashEntry(PLDHashEntryHdr* aEntry,
+                             uint32_t aCapacity, uint32_t aEntrySize)
+    {
+      char* entries = Entries(aCapacity);
+      char* entry = reinterpret_cast<char*>(aEntry);
+      uint32_t entryOffset = entry - entries;
+      uint32_t slotIndex = entryOffset / aEntrySize;
+      return SlotForIndex(slotIndex, aEntrySize, aCapacity);
+    }
+
+    template<typename F>
+    void ForEachSlot(uint32_t aCapacity, uint32_t aEntrySize, F&& aFunc) {
+      ForEachSlot(Get(), aCapacity, aEntrySize, std::move(aFunc));
+    }
+
+    template<typename F>
+    static void ForEachSlot(char* aStore, uint32_t aCapacity, uint32_t aEntrySize,
+                            F&& aFunc) {
+      char* entries = Entries(aStore, aCapacity);
+      Slot slot(reinterpret_cast<PLDHashEntryHdr*>(entries),
+                reinterpret_cast<PLDHashNumber*>(aStore));
+      for (size_t i = 0; i < aCapacity; ++i) {
+        aFunc(slot);
+        slot.Next(aEntrySize);
+      }
+    }
 
     void Set(char* aEntryStore, uint16_t* aGeneration)
     {
@@ -348,11 +481,9 @@ public:
   // If |entry| is null upon return, then the table is severely overloaded and
   // memory can't be allocated for entry storage.
   //
-  // Otherwise, |aEntry->mKeyHash| has been set so that
-  // PLDHashTable::EntryIsFree(entry) is false, and it is up to the caller to
-  // initialize the key and value parts of the entry sub-type, if they have not
-  // been set already (i.e. if entry was not already in the table, and if the
-  // optional initEntry hook was not used).
+  // Otherwise, if the initEntry hook was provided, |entry| will be
+  // initialized.  If the initEntry hook was not provided, the caller
+  // should initialize |entry| as appropriate.
   PLDHashEntryHdr* Add(const void* aKey, const mozilla::fallible_t&);
 
   // This is like the other Add() function, but infallible, and so never
@@ -468,10 +599,8 @@ public:
     PLDHashEntryHdr* Get() const
     {
       MOZ_ASSERT(!Done());
-
-      PLDHashEntryHdr* entry = reinterpret_cast<PLDHashEntryHdr*>(mCurrent);
-      MOZ_ASSERT(EntryIsLive(entry));
-      return entry;
+      MOZ_ASSERT(mCurrent.IsLive());
+      return mCurrent.ToEntry();
     }
 
     // Advance to the next entry.
@@ -485,15 +614,16 @@ public:
     PLDHashTable* mTable;             // Main table pointer.
 
   private:
-    char* mLimit;                     // One past the last entry.
-    char* mCurrent;                   // Pointer to the current entry.
+    Slot mCurrent;                    // Pointer to the current entry.
     uint32_t mNexts;                  // Number of Next() calls.
     uint32_t mNextsLimit;             // Next() call limit.
 
     bool mHaveRemoved;                // Have any elements been removed?
+    uint8_t mEntrySize;               // Size of entries.
 
     bool IsOnNonLiveEntry() const;
-    void MoveToNextEntry();
+
+    void MoveToNextLiveEntry();
 
     Iterator() = delete;
     Iterator(const Iterator&) = delete;
@@ -515,35 +645,12 @@ private:
 
   static const PLDHashNumber kCollisionFlag = 1;
 
-  static bool EntryIsFree(const PLDHashEntryHdr* aEntry)
-  {
-    return aEntry->mKeyHash == 0;
-  }
-  static bool EntryIsRemoved(const PLDHashEntryHdr* aEntry)
-  {
-    return aEntry->mKeyHash == 1;
-  }
-  static bool EntryIsLive(const PLDHashEntryHdr* aEntry)
-  {
-    return aEntry->mKeyHash >= 2;
-  }
-
-  static void MarkEntryFree(PLDHashEntryHdr* aEntry)
-  {
-    aEntry->mKeyHash = 0;
-  }
-  static void MarkEntryRemoved(PLDHashEntryHdr* aEntry)
-  {
-    aEntry->mKeyHash = 1;
-  }
-
   PLDHashNumber Hash1(PLDHashNumber aHash0) const;
   void Hash2(PLDHashNumber aHash,
              uint32_t& aHash2Out, uint32_t& aSizeMaskOut) const;
 
-  static bool MatchEntryKeyhash(const PLDHashEntryHdr* aEntry,
-                                const PLDHashNumber aHash);
-  PLDHashEntryHdr* AddressEntry(uint32_t aIndex) const;
+  static bool MatchSlotKeyhash(Slot& aSlot, const PLDHashNumber aHash);
+  Slot SlotForIndex(uint32_t aIndex) const;
 
   // We store mHashShift rather than sizeLog2 to optimize the collision-free
   // case in SearchTable.
@@ -556,14 +663,18 @@ private:
 
   enum SearchReason { ForSearchOrRemove, ForAdd };
 
-  template <SearchReason Reason>
-  PLDHashEntryHdr* NS_FASTCALL
-    SearchTable(const void* aKey, PLDHashNumber aKeyHash) const;
+  // Avoid using bare `Success` and `Failure`, as those names are commonly
+  // defined as macros.
+  template <SearchReason Reason, typename PLDSuccess, typename PLDFailure>
+  auto
+  SearchTable(const void* aKey, PLDHashNumber aKeyHash,
+              PLDSuccess&& aSucess, PLDFailure&& aFailure) const;
 
-  PLDHashEntryHdr* FindFreeEntry(PLDHashNumber aKeyHash) const;
+  Slot FindFreeSlot(PLDHashNumber aKeyHash) const;
 
   bool ChangeTable(int aDeltaLog2);
 
+  void RawRemove(Slot& aSlot);
   void ShrinkIfAppropriate();
 
   PLDHashTable(const PLDHashTable& aOther) = delete;
@@ -592,10 +703,8 @@ typedef void (*PLDHashMoveEntry)(PLDHashTable* aTable,
 typedef void (*PLDHashClearEntry)(PLDHashTable* aTable,
                                   PLDHashEntryHdr* aEntry);
 
-// Initialize a new entry, apart from mKeyHash. This function is called when
-// Add() finds no existing entry for the given key, and must add a new one. At
-// that point, |aEntry->mKeyHash| is not set yet, to avoid claiming the last
-// free entry in a severely overloaded table.
+// Initialize a new entry. This function is called when
+// Add() finds no existing entry for the given key, and must add a new one.
 typedef void (*PLDHashInitEntry)(PLDHashEntryHdr* aEntry, const void* aKey);
 
 // Finally, the "vtable" structure for PLDHashTable. The first four hooks
@@ -609,13 +718,12 @@ typedef void (*PLDHashInitEntry)(PLDHashEntryHdr* aEntry, const void* aKey);
 //  clearEntry          Run dtor on entry.
 //
 // Note the reason why initEntry is optional: the default hooks (stubs) clear
-// entry storage:  On successful Add(tbl, key), the returned entry pointer
-// addresses an entry struct whose mKeyHash member has been set non-zero, but
-// all other entry members are still clear (null). Add() callers can test such
-// members to see whether the entry was newly created by the Add() call that
-// just succeeded. If placement new or similar initialization is required,
-// define an |initEntry| hook. Of course, the |clearEntry| hook must zero or
-// null appropriately.
+// entry storage. On a successful Add(tbl, key), the returned entry pointer
+// addresses an entry struct whose entry members are still clear (null). Add()
+// callers can test such members to see whether the entry was newly created by
+// the Add() call that just succeeded. If placement new or similar
+// initialization is required, define an |initEntry| hook. Of course, the
+// |clearEntry| hook must zero or null appropriately.
 //
 // XXX assumes 0 is null for pointer types.
 struct PLDHashTableOps

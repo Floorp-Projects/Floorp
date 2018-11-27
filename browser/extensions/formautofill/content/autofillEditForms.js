@@ -380,6 +380,8 @@ class EditCreditCard extends EditAutofillForm {
     if (!preserveFieldValues) {
       // Re-populating the networks will reset the selected option.
       this.populateNetworks();
+      // Re-generating the months will reset the selected option.
+      this.generateMonths();
       // Re-generating the years will reset the selected option.
       this.generateYears();
       super.loadRecord(record);
@@ -388,6 +390,28 @@ class EditCreditCard extends EditAutofillForm {
       // state so reset it here. Since the cc-number field is disabled upon editing
       // we don't need to recaclulate its validity here.
       this._elements.ccNumber.setCustomValidity("");
+    }
+  }
+
+  generateMonths() {
+    const count = 12;
+
+    // Clear the list
+    this._elements.month.textContent = "";
+
+    // Empty month option
+    this._elements.month.appendChild(new Option());
+
+    // Populate month list. Format: "month number - month name"
+    let dateFormat = new Intl.DateTimeFormat(navigator.language, {month: "long"}).format;
+    for (let i = 0; i < count; i++) {
+      let monthNumber = (i + 1).toString();
+      let monthName = dateFormat(new Date(Date.UTC(1970, i, 1)));
+      let option = new Option();
+      option.value = monthNumber;
+      // XXX: Bug 1446164 - Localize this string.
+      option.textContent = `${monthNumber.padStart(2, "0")} - ${monthName}`;
+      this._elements.month.appendChild(option);
     }
   }
 
