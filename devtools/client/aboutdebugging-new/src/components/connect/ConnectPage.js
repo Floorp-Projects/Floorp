@@ -24,7 +24,7 @@ const ConnectSteps = createFactory(require("./ConnectSteps"));
 const NetworkLocationsForm = createFactory(require("./NetworkLocationsForm"));
 const NetworkLocationsList = createFactory(require("./NetworkLocationsList"));
 
-const { PREFERENCES } = require("../../constants");
+const { PREFERENCES, PAGE_TYPES } = require("../../constants");
 
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
@@ -43,6 +43,12 @@ class ConnectPage extends PureComponent {
     };
   }
 
+  // TODO: avoid the use of this method
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1508688
+  componentWillMount() {
+    this.props.dispatch(Actions.selectPage(PAGE_TYPES.CONNECT));
+  }
+
   renderWifi() {
     const { getString, wifiEnabled } = this.props;
 
@@ -56,27 +62,28 @@ class ConnectPage extends PureComponent {
           icon: WIFI_ICON_SRC,
           title: "Via WiFi",
         },
-        wifiEnabled ?
-        ConnectSteps({
-          steps: [
-            getString("about-debugging-connect-wifi-step-same-network"),
-            getString("about-debugging-connect-wifi-step-open-firefox"),
-            getString("about-debugging-connect-wifi-step-open-options"),
-            getString("about-debugging-connect-wifi-step-enable-debug"),
-          ],
-        }) :
-        Localized(
-          {
-            id: "about-debugging-connect-wifi-disabled",
-            $pref: PREFERENCES.WIFI_ENABLED,
-          },
-          dom.div(
+        wifiEnabled
+          ? ConnectSteps(
             {
-              className: "connect-page__disabled-section",
+              steps: [
+                getString("about-debugging-connect-wifi-step-same-network"),
+                getString("about-debugging-connect-wifi-step-open-firefox"),
+                getString("about-debugging-connect-wifi-step-open-options"),
+                getString("about-debugging-connect-wifi-step-enable-debug"),
+              ],
+            })
+          : Localized(
+            {
+              id: "about-debugging-connect-wifi-disabled",
+              $pref: PREFERENCES.WIFI_ENABLED,
             },
-            "about-debugging-connect-wifi-disabled"
+            dom.div(
+              {
+                className: "connect-page__disabled-section",
+              },
+              "about-debugging-connect-wifi-disabled"
+            )
           )
-        )
       )
     );
   }
@@ -121,8 +128,9 @@ class ConnectPage extends PureComponent {
       },
       dom.button(
         {
-          className: "default-button connect-page__usb__toggle-button " +
-                     "js-connect-usb-toggle-button",
+          className:
+            "default-button connect-page__usb__toggle-button " +
+            "js-connect-usb-toggle-button",
           disabled,
           onClick: () => this.onToggleUSBClick(),
         },
@@ -144,15 +152,17 @@ class ConnectPage extends PureComponent {
           icon: USB_ICON_SRC,
           title: "Via USB",
         },
-        (isAddonInstalled ?
-          ConnectSteps({
-            steps: [
-              getString("about-debugging-connect-usb-step-enable-dev-menu"),
-              getString("about-debugging-connect-usb-step-enable-debug"),
-              getString("about-debugging-connect-usb-step-plug-device"),
-            ],
-          }) :
-          Localized(
+        isAddonInstalled
+          ? ConnectSteps(
+            {
+              steps: [
+                getString("about-debugging-connect-usb-step-enable-dev-menu"),
+                getString("about-debugging-connect-usb-step-enable-debug"),
+                getString("about-debugging-connect-usb-step-plug-device"),
+              ],
+            }
+          )
+          : Localized(
             {
               id: "about-debugging-connect-usb-disabled",
             },
@@ -161,10 +171,9 @@ class ConnectPage extends PureComponent {
                 className: "js-connect-usb-disabled-message",
               },
               "Enabling this will download and add the required Android USB debugging " +
-              "components to Firefox."
+                "components to Firefox."
             )
-          )
-        ),
+          ),
         this.renderUsbToggleButton()
       )
     );
@@ -184,30 +193,29 @@ class ConnectPage extends PureComponent {
           icon: GLOBE_ICON_SRC,
           title: "Via Network Location",
         },
-        ...(
-          networkEnabled ?
-          [
-            NetworkLocationsList({ dispatch, networkLocations }),
-            dom.hr({ className: "separator separator--breathe" }),
-            NetworkLocationsForm({ dispatch }),
-          ] : [
-            // We are using an array for this single element because of the spread
-            // operator (...). The spread operator avoids React warnings about missing
-            // keys.
-            Localized(
-              {
-                id: "about-debugging-connect-network-disabled",
-                $pref: PREFERENCES.NETWORK_ENABLED,
-              },
-              dom.div(
-                {
-                  className: "connect-page__disabled-section",
-                },
-                "about-debugging-connect-network-disabled"
-              )
-            ),
+        ...(networkEnabled
+          ? [
+              NetworkLocationsList({ dispatch, networkLocations }),
+              dom.hr({ className: "separator separator--breathe" }),
+              NetworkLocationsForm({ dispatch }),
           ]
-        )
+          : [
+              // We are using an array for this single element because of the spread
+              // operator (...). The spread operator avoids React warnings about missing
+              // keys.
+              Localized(
+                {
+                  id: "about-debugging-connect-network-disabled",
+                  $pref: PREFERENCES.NETWORK_ENABLED,
+                },
+                dom.div(
+                  {
+                    className: "connect-page__disabled-section",
+                  },
+                  "about-debugging-connect-network-disabled"
+                )
+              ),
+          ])
       )
     );
   }
@@ -230,7 +238,7 @@ class ConnectPage extends PureComponent {
       ),
       this.renderWifi(),
       this.renderUsb(),
-      this.renderNetwork(),
+      this.renderNetwork()
     );
   }
 }

@@ -7,8 +7,7 @@
 const Services = require("Services");
 
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
-const { createFactory } =
-  require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
 const { render, unmountComponentAtNode } =
   require("devtools/client/shared/vendor/react-dom");
 const Provider =
@@ -37,9 +36,8 @@ const {
 
 loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
 
+const Router = createFactory(require("devtools/client/shared/vendor/react-router-dom").HashRouter);
 const App = createFactory(require("./src/components/App"));
-
-const { PAGES, RUNTIMES } = require("./src/constants");
 
 const AboutDebugging = {
   async init() {
@@ -59,11 +57,22 @@ const AboutDebugging = {
     await l10n.init();
 
     render(
-      Provider({ store: this.store }, App({ fluentBundles: l10n.getBundles() })),
+      Provider(
+        {
+          store: this.store,
+        },
+        Router(
+          {},
+          App(
+            {
+              fluentBundles: l10n.getBundles(),
+            }
+          )
+        )
+      ),
       this.mount
     );
 
-    this.actions.selectPage(PAGES.THIS_FIREFOX, RUNTIMES.THIS_FIREFOX);
     this.actions.updateNetworkLocations(getNetworkLocations());
 
     addNetworkLocationsObserver(this.onNetworkLocationsUpdated);
