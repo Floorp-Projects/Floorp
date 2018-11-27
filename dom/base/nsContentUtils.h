@@ -634,7 +634,7 @@ public:
                                   const nsINode* unTrustedNode);
 
   // Check if the (JS) caller can access aNode.
-  static bool CanCallerAccess(const nsINode* aNode);
+  static bool CanCallerAccess(nsINode* aNode);
 
   // Check if the (JS) caller can access aWindow.
   // aWindow can be either outer or inner window.
