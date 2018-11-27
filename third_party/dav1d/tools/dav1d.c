@@ -108,7 +108,15 @@ int main(const int argc, char *const *const argv) {
 
     do {
         memset(&p, 0, sizeof(p));
-        if ((res = dav1d_decode(c, &data, &p)) < 0) {
+        if ((res = dav1d_send_data(c, &data)) < 0) {
+            if (res != -EAGAIN) {
+                fprintf(stderr, "Error decoding frame: %s\n",
+                        strerror(-res));
+                break;
+            }
+        }
+
+        if ((res = dav1d_get_picture(c, &p)) < 0) {
             if (res != -EAGAIN) {
                 fprintf(stderr, "Error decoding frame: %s\n",
                         strerror(-res));
@@ -139,13 +147,14 @@ int main(const int argc, char *const *const argv) {
 
     // flush
     if (res == 0) while (!cli_settings.limit || n_out < cli_settings.limit) {
-        if ((res = dav1d_decode(c, NULL, &p)) < 0) {
+        if ((res = dav1d_get_picture(c, &p)) < 0) {
             if (res != -EAGAIN) {
                 fprintf(stderr, "Error decoding frame: %s\n",
                         strerror(-res));
-            } else
+            } else {
                 res = 0;
-            break;
+                break;
+            }
         } else {
             if (!n_out) {
                 if ((res = output_open(&out, cli_settings.muxer,
@@ -167,7 +176,10 @@ int main(const int argc, char *const *const argv) {
     if (out) {
         if (!cli_settings.quiet && istty)
             fprintf(stderr, "\n");
-        output_close(out);
+        if (cli_settings.verify)
+            res |= output_verify(out, cli_settings.verify);
+        else
+            output_close(out);
     } else {
         fprintf(stderr, "No data decoded\n");
         res = 1;

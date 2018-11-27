@@ -33,7 +33,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <tests/libfuzzer/dav1d_fuzzer.h>
+#include "dav1d_fuzzer.h"
 
 // expects ivf input
 

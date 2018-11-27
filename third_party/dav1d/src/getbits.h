@@ -46,6 +46,13 @@ int dav1d_get_sbits(GetBits *c, unsigned n);
 unsigned dav1d_get_uniform(GetBits *c, unsigned max);
 unsigned dav1d_get_vlc(GetBits *c);
 int dav1d_get_bits_subexp(GetBits *c, int ref, unsigned n);
-const uint8_t *dav1d_flush_get_bits(GetBits *c);
+
+// Discard bits from the buffer until we're next byte-aligned.
+void dav1d_bytealign_get_bits(GetBits *c);
+
+// Return the current bit position relative to the start of the buffer.
+static inline unsigned dav1d_get_bits_pos(const GetBits *c) {
+    return (c->ptr - c->ptr_start) * 8 - c->bits_left;
+}
 
 #endif /* __DAV1D_SRC_GETBITS_H__ */

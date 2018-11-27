@@ -37,5 +37,13 @@ int output_open(MuxerContext **c, const char *name, const char *filename,
                 const Dav1dPictureParameters *p, const unsigned fps[2]);
 int output_write(MuxerContext *ctx, Dav1dPicture *pic);
 void output_close(MuxerContext *ctx);
+/**
+ * Verifies the muxed data (for example in the md5 muxer). Replaces output_close.
+ *
+ * @param  hash_string Muxer specific reference value.
+ *
+ * @return 0 on success.
+ */
+int output_verify(MuxerContext *ctx, const char *hash_string);
 
 #endif /* __DAV1D_OUTPUT_OUTPUT_H__ */

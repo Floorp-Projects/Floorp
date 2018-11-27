@@ -218,10 +218,6 @@ static void lr_sbrow(const Dav1dFrameContext *const f, pixel *p, const int y,
     // Merge last restoration unit if its height is < half_unit_size
     if (ruy > 0) ruy -= (ruy << unit_size_log2) + half_unit_size > h;
 
-    // The first stripe of the frame is shorter by 8 luma pixel rows.
-    const int filter_h =
-        imin(((1 << (6 + f->seq_hdr.sb128)) - 8 * !y) >> ss_ver, h - y);
-
     pixel pre_lr_border[2][128 + 8 /* maximum sbrow height is 128 + 8 rows offset */][4];
 
     int unit_w = unit_size, bit = 0;
@@ -248,7 +244,7 @@ static void lr_sbrow(const Dav1dFrameContext *const f, pixel *p, const int y,
         // FIXME Don't backup if the next restoration unit is RESTORE_NONE
         // This also requires not restoring in the same conditions.
         if (edges & LR_HAVE_RIGHT) {
-            backup4xU(pre_lr_border[bit], p + unit_w - 4, p_stride, filter_h);
+            backup4xU(pre_lr_border[bit], p + unit_w - 4, p_stride, row_h - y);
         }
         if (lr->type != RESTORATION_NONE) {
             lr_stripe(f, p, pre_lr_border[!bit], x, y, plane, unit_w, row_h, lr, edges);

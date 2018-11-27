@@ -107,14 +107,15 @@ static const unsigned interintra_allowed_mask =
 extern const WarpedMotionParams dav1d_default_wm_params;
 
 extern const int16_t dav1d_sgr_params[16][4];
-extern const int16_t dav1d_sgr_x_by_xplus1[256];
-extern const int16_t dav1d_sgr_one_by_x[25];
+extern const int dav1d_sgr_x_by_xplus1[256];
 
 extern const int8_t dav1d_mc_subpel_filters[5][15][8];
-extern const int8_t dav1d_mc_warp_filter[][8];
+extern const int8_t dav1d_mc_warp_filter[193][8];
 
 extern const uint8_t dav1d_sm_weights[128];
 extern const int16_t dav1d_dr_intra_derivative[90];
 extern const int8_t dav1d_filter_intra_taps[5][64];
+
+extern const uint8_t dav1d_obmc_masks[64];
 
 #endif /* __DAV1D_SRC_TABLES_H__ */

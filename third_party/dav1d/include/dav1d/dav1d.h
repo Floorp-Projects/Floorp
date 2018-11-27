@@ -28,6 +28,12 @@
 #ifndef __DAV1D_H__
 #define __DAV1D_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <errno.h>
+
 #include "common.h"
 #include "picture.h"
 #include "data.h"
@@ -56,8 +62,8 @@ DAV1D_API void dav1d_default_settings(Dav1dSettings *s);
 /**
  * Allocate and open a decoder instance.
  *
- * @param c_out The decoder instance to open. To be used in iterative calls to
- *              dav1d_decode(). *c_out will be set to the allocated context.
+ * @param c_out The decoder instance to open. *c_out will be set to the
+ *              allocated context.
  * @param     s Input settings context.
  *
  * @note The context must be freed using dav1d_close() when decoding is
@@ -68,25 +74,40 @@ DAV1D_API void dav1d_default_settings(Dav1dSettings *s);
 DAV1D_API int dav1d_open(Dav1dContext **c_out, const Dav1dSettings *s);
 
 /**
- * Decode one frame.
+ * Feed bitstream data to the decoder.
  *
  * @param   c Input decoder instance.
- * @param  in Input bitstream data. On success, the caller retains ownership of
- *            the input reference if the data was not fully consumed.
+ * @param  in Input bitstream data. On success, ownership of the reference is
+ *            passed to the library.
+ *
+ * @return
+ *         0: Success, and the data was consumed.
+ *   -EAGAIN: The data can't be consumed. dav1d_get_picture() should be called
+ *            to get one or more frames before the function can consume new
+ *            data.
+ *   other negative errno codes: Error during decoding or because of invalid
+ *                               passed-in arguments.
+ */
+DAV1D_API int dav1d_send_data(Dav1dContext *c, Dav1dData *in);
+
+/**
+ * Return a decoded picture.
+ *
+ * @param   c Input decoder instance.
  * @param out Output frame. The caller assumes ownership of the returned
  *            reference.
  *
  * @return
  *         0: Success, and a frame is returned.
- *   -EAGAIN: Not enough data to output a frame. The fuction should be called
- *            again with new input.
+ *   -EAGAIN: Not enough data to output a frame. dav1d_send_data() should be
+ *            called with new input.
  *   other negative errno codes: Error during decoding or because of invalid
  *                               passed-in arguments.
  *
- * @note To flush the decoder (i.e. all input is finished), feed it NULL input
- *       data until it returns -EAGAIN.
+ * @note To drain buffered frames from the decoder (i.e. on end of stream),
+ *       call this function until it returns -EAGAIN.
  */
-DAV1D_API int dav1d_decode(Dav1dContext *c, Dav1dData *in, Dav1dPicture *out);
+DAV1D_API int dav1d_get_picture(Dav1dContext *c, Dav1dPicture *out);
 
 /**
  * Close a decoder instance and free all associated memory.
@@ -101,5 +122,9 @@ DAV1D_API void dav1d_close(Dav1dContext **c_out);
  * @param c Input decoder instance.
  */
 DAV1D_API void dav1d_flush(Dav1dContext *c);
+
+# ifdef __cplusplus
+}
+# endif
 
 #endif /* __DAV1D_H__ */

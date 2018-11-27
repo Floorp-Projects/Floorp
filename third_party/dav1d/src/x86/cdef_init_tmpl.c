@@ -24,31 +24,23 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "config.h"
-
-#include <stdint.h>
 
 #include "src/cpu.h"
+#include "src/cdef.h"
 
-static unsigned flags_mask = -1;
+decl_cdef_fn(dav1d_cdef_filter_8x8_avx2);
+decl_cdef_fn(dav1d_cdef_filter_4x4_avx2);
 
-unsigned dav1d_get_cpu_flags(void) {
-    static unsigned flags;
-    static uint8_t checked = 0;
+decl_cdef_dir_fn(dav1d_cdef_dir_avx2);
 
-    if (!checked) {
-#if (ARCH_AARCH64 || ARCH_ARM) && HAVE_ASM
-        flags = dav1d_get_cpu_flags_arm();
-#elif ARCH_X86 && HAVE_ASM
-        flags = dav1d_get_cpu_flags_x86();
-#else
-        flags = 0;
+void bitfn(dav1d_cdef_dsp_init_x86)(Dav1dCdefDSPContext *const c) {
+    const unsigned flags = dav1d_get_cpu_flags();
+
+    if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
+
+#if BITDEPTH == 8 && ARCH_X86_64
+    c->dir = dav1d_cdef_dir_avx2;
+    c->fb[0] = dav1d_cdef_filter_8x8_avx2;
+    c->fb[2] = dav1d_cdef_filter_4x4_avx2;
 #endif
-        checked = 1;
-    }
-    return flags & flags_mask;
-}
-
-void dav1d_set_cpu_flags_mask(const unsigned mask) {
-    flags_mask = mask;
 }

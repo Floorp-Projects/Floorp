@@ -31,6 +31,7 @@
 
 #include "src/levels.h"
 #include "src/looprestoration.h"
+#include "src/tables.h"
 
 static void init_tmp(pixel *buf, const ptrdiff_t stride,
                      const int w, const int h)
@@ -99,7 +100,7 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c) {
                 const int w = edges & LR_HAVE_RIGHT ? 256 : base_w;
                 const int h = edges & LR_HAVE_BOTTOM ? 64 : base_h;
 
-                memcpy(a_dst, c_dst, sizeof(c_dst));
+                memcpy(a_dst, c_dst, 448 * 64 * sizeof(pixel));
 
                 call_ref(c_dst + 32, 448 * sizeof(pixel), left,
                          h_edge + 32, 448 * sizeof(pixel),
@@ -118,10 +119,62 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c) {
     report("wiener");
 }
 
+static void check_sgr(Dav1dLoopRestorationDSPContext *const c) {
+    ALIGN_STK_32(pixel, c_dst, 448 * 64,);
+    ALIGN_STK_32(pixel, a_dst, 448 * 64,);
+    ALIGN_STK_32(pixel, h_edge, 448 * 8,);
+    pixel left[64][4];
+
+    declare_func(void, pixel *dst, ptrdiff_t dst_stride,
+                 const pixel (*const left)[4],
+                 const pixel *lpf, ptrdiff_t lpf_stride,
+                 int w, int h, int sgr_idx,
+                 const int16_t sgr_wt[7], enum LrEdgeFlags edges);
+
+    init_tmp(c_dst, 448 * sizeof(pixel), 448, 64);
+    init_tmp(h_edge, 448 * sizeof(pixel), 448, 8);
+    init_tmp((pixel *) left, 4 * sizeof(pixel), 4, 64);
+
+    for (int sgr_idx = 14; sgr_idx >= 6; sgr_idx -= 4) {
+        if (check_func(c->selfguided, "selfguided_%s_%dbpc",
+                       sgr_idx == 6 ? "mix" : sgr_idx == 10 ? "3x3" : "5x5", BITDEPTH))
+        {
+            int16_t sgr_wt[2];
+
+            sgr_wt[0] = dav1d_sgr_params[sgr_idx][0] ? (rand() & 127) - 96 : 0;
+            sgr_wt[1] = dav1d_sgr_params[sgr_idx][1] ? (rand() & 127) - 32 :
+                            iclip(128 - sgr_wt[0], -32, 95);
+
+            const int base_w = 1 + (rand() % 384);
+            const int base_h = 1 + (rand() & 63);
+            for (enum LrEdgeFlags edges = 0; edges <= 0xf; edges++) {
+                const int w = edges & LR_HAVE_RIGHT ? 256 : base_w;
+                const int h = edges & LR_HAVE_BOTTOM ? 64 : base_h;
+
+                memcpy(a_dst, c_dst, 448 * 64 * sizeof(pixel));
+
+                call_ref(c_dst + 32, 448 * sizeof(pixel), left,
+                         h_edge + 32, 448 * sizeof(pixel),
+                         w, h, sgr_idx, sgr_wt, edges);
+                call_new(a_dst + 32, 448 * sizeof(pixel), left,
+                         h_edge + 32, 448 * sizeof(pixel),
+                         w, h, sgr_idx, sgr_wt, edges);
+                const int res = cmp2d(c_dst + 32, a_dst + 32, 448 * sizeof(pixel), w, h);
+                if (res != -1) fail();
+            }
+            bench_new(a_dst + 32, 448 * sizeof(pixel), left,
+                      h_edge + 32, 448 * sizeof(pixel),
+                      256, 64, sgr_idx, sgr_wt, 0xf);
+        }
+    }
+    report("sgr");
+}
+
 void bitfn(checkasm_check_looprestoration)(void) {
     Dav1dLoopRestorationDSPContext c;
 
     bitfn(dav1d_loop_restoration_dsp_init)(&c);
 
     check_wiener(&c);
+    check_sgr(&c);
 }

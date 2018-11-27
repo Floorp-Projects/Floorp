@@ -40,13 +40,14 @@
 
 #include "dav1d_cli_parse.h"
 
-static const char short_opts[] = "i:o:vql:";
+static const char short_opts[] = "i:o:vql:s:";
 
 enum {
     ARG_DEMUXER,
     ARG_MUXER,
     ARG_FRAME_THREADS,
     ARG_TILE_THREADS,
+    ARG_VERIFY,
 };
 
 static const struct option long_opts[] = {
@@ -60,6 +61,7 @@ static const struct option long_opts[] = {
     { "skip",           1, NULL, 's' },
     { "framethreads",   1, NULL, ARG_FRAME_THREADS },
     { "tilethreads",    1, NULL, ARG_TILE_THREADS },
+    { "verify",         1, NULL, ARG_VERIFY },
     { NULL,             0, NULL, 0 },
 };
 
@@ -77,13 +79,14 @@ static void usage(const char *const app, const char *const reason, ...) {
             " --input/-i  $file:   input file\n"
             " --output/-o $file:   output file\n"
             " --demuxer $name:     force demuxer type (must be 'ivf'; default: detect from extension)\n"
-            " --muxer $name:       force muxer type ('md5', 'yuv' or 'yuv4mpeg'; default: detect from extension)\n"
+            " --muxer $name:       force muxer type ('md5', 'yuv', 'yuv4mpeg2' or 'null'; default: detect from extension)\n"
             " --quiet/-q:          disable status messages\n"
             " --limit/-l $num:     stop decoding after $num frames\n"
             " --skip/-s $num:      skip decoding of the first $num frames\n"
             " --version/-v:        print version and exit\n"
             " --framethreads $num: number of frame threads (default: 1)\n"
-            " --tilethreads $num:  number of tile threads (default: 1)\n");
+            " --tilethreads $num:  number of tile threads (default: 1)\n"
+            " --verify $md5:       verify decoded md5. implies --muxer md5, no output\n");
     exit(1);
 }
 
@@ -153,6 +156,9 @@ void parse(const int argc, char *const *const argv,
             lib_settings->n_tile_threads =
                 parse_unsigned(optarg, ARG_TILE_THREADS, argv[0]);
             break;
+        case ARG_VERIFY:
+            cli_settings->verify = optarg;
+            break;
         case 'v':
             fprintf(stderr, "%s\n", dav1d_version());
             exit(0);
@@ -161,8 +167,22 @@ void parse(const int argc, char *const *const argv,
         }
     }
 
+    if (cli_settings->verify) {
+        if (cli_settings->outputfile)
+            usage(argv[0], "Verification (--verify) requires output file (-o/--output) to not set");
+        if (cli_settings->muxer && !strcmp(cli_settings->muxer, "md5"))
+            usage(argv[0], "Verification (--verify) requires the md5 muxer (--muxer md5)");
+
+        cli_settings->outputfile = "-";
+        if (!cli_settings->muxer)
+            cli_settings->muxer = "md5";
+    }
+
     if (!cli_settings->inputfile)
         usage(argv[0], "Input file (-i/--input) is required");
-    if (!cli_settings->outputfile)
+    if ((!cli_settings->muxer || strcmp(cli_settings->muxer, "null")) &&
+        !cli_settings->outputfile)
+    {
         usage(argv[0], "Output file (-o/--output) is required");
+    }
 }

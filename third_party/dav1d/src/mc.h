@@ -41,6 +41,12 @@ void (name)(pixel *dst, ptrdiff_t dst_stride, \
             int w, int h, int mx, int my)
 typedef decl_mc_fn(*mc_fn);
 
+#define decl_mc_scaled_fn(name) \
+void (name)(pixel *dst, ptrdiff_t dst_stride, \
+            const pixel *src, ptrdiff_t src_stride, \
+            int w, int h, int mx, int my, int dx, int dy)
+typedef decl_mc_scaled_fn(*mc_scaled_fn);
+
 #define decl_warp8x8_fn(name) \
 void (name)(pixel *dst, ptrdiff_t dst_stride, \
             const pixel *src, ptrdiff_t src_stride, \
@@ -51,6 +57,11 @@ typedef decl_warp8x8_fn(*warp8x8_fn);
 void (name)(coef *tmp, const pixel *src, ptrdiff_t src_stride, \
             int w, int h, int mx, int my)
 typedef decl_mct_fn(*mct_fn);
+
+#define decl_mct_scaled_fn(name) \
+void (name)(coef *tmp, const pixel *src, ptrdiff_t src_stride, \
+            int w, int h, int mx, int my, int dx, int dy)
+typedef decl_mct_scaled_fn(*mct_scaled_fn);
 
 #define decl_warp8x8t_fn(name) \
 void (name)(coef *tmp, const ptrdiff_t tmp_stride, \
@@ -81,21 +92,34 @@ void (name)(pixel *dst, ptrdiff_t dst_stride, \
 typedef decl_w_mask_fn(*w_mask_fn);
 
 #define decl_blend_fn(name) \
-void (name)(pixel *dst, ptrdiff_t dst_stride, \
-            const pixel *tmp, ptrdiff_t tmp_stride, int w, int h, \
-            const uint8_t *mask, ptrdiff_t mstride)
+void (name)(pixel *dst, ptrdiff_t dst_stride, const pixel *tmp, \
+            int w, int h, const uint8_t *mask)
 typedef decl_blend_fn(*blend_fn);
+
+#define decl_blend_dir_fn(name) \
+void (name)(pixel *dst, ptrdiff_t dst_stride, const pixel *tmp, int w, int h)
+typedef decl_blend_dir_fn(*blend_dir_fn);
+
+#define decl_emu_edge_fn(name) \
+void (name)(intptr_t bw, intptr_t bh, intptr_t iw, intptr_t ih, intptr_t x, intptr_t y, \
+            pixel *dst, ptrdiff_t dst_stride, const pixel *src, ptrdiff_t src_stride)
+typedef decl_emu_edge_fn(*emu_edge_fn);
 
 typedef struct Dav1dMCDSPContext {
     mc_fn mc[N_2D_FILTERS];
+    mc_scaled_fn mc_scaled[N_2D_FILTERS];
     mct_fn mct[N_2D_FILTERS];
+    mct_scaled_fn mct_scaled[N_2D_FILTERS];
     avg_fn avg;
     w_avg_fn w_avg;
     mask_fn mask;
     w_mask_fn w_mask[3 /* 444, 422, 420 */];
     blend_fn blend;
+    blend_dir_fn blend_v;
+    blend_dir_fn blend_h;
     warp8x8_fn warp8x8;
     warp8x8t_fn warp8x8t;
+    emu_edge_fn emu_edge;
 } Dav1dMCDSPContext;
 
 void dav1d_mc_dsp_init_8bpc(Dav1dMCDSPContext *c);

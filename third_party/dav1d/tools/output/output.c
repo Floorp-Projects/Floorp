@@ -41,9 +41,9 @@ struct MuxerContext {
     const Muxer *impl;
 };
 
-#define MAX_NUM_MUXERS 3
+#define MAX_NUM_MUXERS 4
 static const Muxer *muxers[MAX_NUM_MUXERS];
-static int num_muxers = 0;
+static unsigned num_muxers = 0;
 
 #define register_muxer(impl) { \
     extern const Muxer impl; \
@@ -52,6 +52,7 @@ static int num_muxers = 0;
 }
 
 void init_muxers(void) {
+    register_muxer(null_muxer);
     register_muxer(md5_muxer);
     register_muxer(yuv_muxer);
     register_muxer(y4m2_muxer);
@@ -80,7 +81,8 @@ int output_open(MuxerContext **const c_out,
 {
     const Muxer *impl;
     MuxerContext *c;
-    int res, i;
+    unsigned i;
+    int res;
 
     if (name) {
         for (i = 0; i < num_muxers; i++) {
@@ -117,7 +119,7 @@ int output_open(MuxerContext **const c_out,
     }
     c->impl = impl;
     c->data = (MuxerPriv *) &c[1];
-    if ((res = impl->write_header(c->data, filename, p, fps)) < 0) {
+    if (impl->write_header && (res = impl->write_header(c->data, filename, p, fps)) < 0) {
         free(c);
         return res;
     }
@@ -136,6 +138,15 @@ int output_write(MuxerContext *const ctx, Dav1dPicture *const p) {
 }
 
 void output_close(MuxerContext *const ctx) {
-    ctx->impl->write_trailer(ctx->data);
+    if (ctx->impl->write_trailer)
+        ctx->impl->write_trailer(ctx->data);
     free(ctx);
+}
+
+int output_verify(MuxerContext *const ctx, const char *const md5_Str) {
+    int res = 0;
+    if (ctx->impl->verify)
+        res = ctx->impl->verify(ctx->data, md5_Str);
+    free(ctx);
+    return res;
 }

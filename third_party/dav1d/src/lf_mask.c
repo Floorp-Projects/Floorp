@@ -32,6 +32,7 @@
 
 #include "common/intops.h"
 
+#include "src/ctx.h"
 #include "src/levels.h"
 #include "src/lf_mask.h"
 #include "src/tables.h"
@@ -64,12 +65,18 @@ static void decomp_tx(uint8_t (*const txa)[2 /* txsz, step */][32 /* y */][32 /*
     } else {
         const int lw = imin(2, t_dim->lw), lh = imin(2, t_dim->lh);
 
-        for (int y = 0; y < t_dim->h; y++) {
-            memset(txa[0][0][y], lw, t_dim->w);
-            memset(txa[1][0][y], lh, t_dim->w);
-            txa[0][1][y][0] = t_dim->w;
+#define set_ctx(type, dir, diridx, off, mul, rep_macro) \
+        for (int y = 0; y < t_dim->h; y++) { \
+            rep_macro(type, txa[0][0][y], off, mul * lw); \
+            rep_macro(type, txa[1][0][y], off, mul * lh); \
+            txa[0][1][y][0] = t_dim->w; \
         }
-        memset(txa[1][1][0], t_dim->h, t_dim->w);
+        case_set_upto16(t_dim->w,,, 0);
+#undef set_ctx
+#define set_ctx(type, dir, diridx, off, mul, rep_macro) \
+        rep_macro(type, txa[1][1][0], off, mul * t_dim->h)
+        case_set_upto16(t_dim->w,,, 0);
+#undef set_ctx
     }
 }
 
@@ -190,8 +197,20 @@ static inline void mask_edges_intra(uint16_t (*const masks)[32][3][2],
         if (inner2) masks[1][by4 + y][thl4c][1] |= inner2;
     }
 
-    memset(a, thl4c, w4);
-    memset(l, twl4c, h4);
+#define set_ctx(type, dir, diridx, off, mul, rep_macro) \
+    rep_macro(type, a, off, mul * thl4c)
+#define default_memset(dir, diridx, off, var) \
+    memset(a, thl4c, var)
+    case_set_upto32_with_default(w4,,, 0);
+#undef default_memset
+#undef set_ctx
+#define set_ctx(type, dir, diridx, off, mul, rep_macro) \
+    rep_macro(type, l, off, mul * twl4c)
+#define default_memset(dir, diridx, off, var) \
+    memset(l, twl4c, var)
+    case_set_upto32_with_default(h4,,, 0);
+#undef default_memset
+#undef set_ctx
 }
 
 static inline void mask_edges_chroma(uint16_t (*const masks)[32][2][2],
@@ -249,8 +268,20 @@ static inline void mask_edges_chroma(uint16_t (*const masks)[32][2][2],
         }
     }
 
-    memset(a, thl4c, cw4);
-    memset(l, twl4c, ch4);
+#define set_ctx(type, dir, diridx, off, mul, rep_macro) \
+    rep_macro(type, a, off, mul * thl4c)
+#define default_memset(dir, diridx, off, var) \
+    memset(a, thl4c, var)
+    case_set_upto32_with_default(cw4,,, 0);
+#undef default_memset
+#undef set_ctx
+#define set_ctx(type, dir, diridx, off, mul, rep_macro) \
+    rep_macro(type, l, off, mul * twl4c)
+#define default_memset(dir, diridx, off, var) \
+    memset(l, twl4c, var)
+    case_set_upto32_with_default(ch4,,, 0);
+#undef default_memset
+#undef set_ctx
 }
 
 void dav1d_create_lf_mask_intra(Av1Filter *const lflvl,

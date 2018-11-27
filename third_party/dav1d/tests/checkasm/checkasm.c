@@ -62,6 +62,7 @@ static const struct {
     void (*func)(void);
 } tests[] = {
 #if CONFIG_8BPC
+    { "cdef_8bpc", checkasm_check_cdef_8bpc },
     { "ipred_8bpc", checkasm_check_ipred_8bpc },
     { "itx_8bpc", checkasm_check_itx_8bpc },
     { "loopfilter_8bpc", checkasm_check_loopfilter_8bpc },
@@ -69,6 +70,7 @@ static const struct {
     { "mc_8bpc", checkasm_check_mc_8bpc },
 #endif
 #if CONFIG_10BPC
+    { "cdef_10bpc", checkasm_check_cdef_10bpc },
     { "ipred_10bpc", checkasm_check_ipred_10bpc },
     { "itx_10bpc", checkasm_check_itx_10bpc },
     { "loopfilter_10bpc", checkasm_check_loopfilter_10bpc },

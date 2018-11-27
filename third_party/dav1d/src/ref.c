@@ -31,8 +31,9 @@
 
 #include "src/ref.h"
 
-static void default_free_callback(uint8_t *const data, void *const user_data) {
-    dav1d_free_aligned(data);
+static void default_free_callback(const uint8_t *const data, void *const user_data) {
+    assert(data == user_data);
+    dav1d_free_aligned(user_data);
 }
 
 Dav1dRef *dav1d_ref_create(const size_t size) {
@@ -42,7 +43,7 @@ Dav1dRef *dav1d_ref_create(const size_t size) {
         return NULL;
     }
 
-    res = dav1d_ref_wrap(data, default_free_callback, NULL);
+    res = dav1d_ref_wrap(data, default_free_callback, data);
     if (!res) {
         free(data);
     }
@@ -50,14 +51,16 @@ Dav1dRef *dav1d_ref_create(const size_t size) {
     return res;
 }
 
-Dav1dRef *dav1d_ref_wrap(uint8_t *const ptr,
-                         void (*free_callback)(uint8_t *data, void *user_data),
+Dav1dRef *dav1d_ref_wrap(const uint8_t *const ptr,
+                         void (*free_callback)(const uint8_t *data, void *user_data),
                          void *user_data)
 {
     Dav1dRef *res = malloc(sizeof(Dav1dRef));
     if (!res) return NULL;
 
-    res->data = ptr;
+    if (ptr == user_data)
+        res->data = user_data;
+    res->const_data = ptr;
     atomic_init(&res->ref_cnt, 1);
     res->free_callback = free_callback;
     res->user_data = user_data;
@@ -69,9 +72,15 @@ void dav1d_ref_inc(Dav1dRef *const ref) {
     atomic_fetch_add(&ref->ref_cnt, 1);
 }
 
-void dav1d_ref_dec(Dav1dRef *const ref) {
+void dav1d_ref_dec(Dav1dRef **const pref) {
+    assert(pref != NULL);
+
+    Dav1dRef *const ref = *pref;
+    if (!ref) return;
+
     if (atomic_fetch_sub(&ref->ref_cnt, 1) == 1) {
-        ref->free_callback(ref->data, ref->user_data);
+        ref->free_callback(ref->const_data, ref->user_data);
         free(ref);
     }
+    *pref = NULL;
 }

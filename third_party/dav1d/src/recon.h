@@ -42,7 +42,7 @@ void (name)(Dav1dTileContext *t, enum BlockSize bs, \
 typedef decl_recon_b_intra_fn(*recon_b_intra_fn);
 
 #define decl_recon_b_inter_fn(name) \
-void (name)(Dav1dTileContext *t, enum BlockSize bs, const Av1Block *b)
+int (name)(Dav1dTileContext *t, enum BlockSize bs, const Av1Block *b)
 typedef decl_recon_b_inter_fn(*recon_b_inter_fn);
 
 #define decl_filter_sbrow_fn(name) \

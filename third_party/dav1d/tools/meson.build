@@ -38,6 +38,7 @@ dav1d_sources = files(
     'input/input.c',
     'input/ivf.c',
     'output/md5.c',
+    'output/null.c',
     'output/output.c',
     'output/y4m2.c',
     'output/yuv.c',
