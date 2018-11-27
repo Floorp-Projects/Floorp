@@ -137,7 +137,7 @@ class SuggestionsFetch {
     this._engine = engine;
     this._suggestions = [];
     this._success = false;
-    this._promise = this._controller.fetch(searchString, inPrivateContext, engine, userContextId).then(results => {
+    this._promise = this._controller.fetch(searchString, engine, userContextId).then(results => {
       this._success = true;
       if (results) {
         this._suggestions.push(

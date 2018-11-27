@@ -46,6 +46,8 @@ function SearchSuggestionController(callback = null) {
 }
 
 this.SearchSuggestionController.prototype = {
+  FIRST_PARTY_DOMAIN: "search.suggestions.8c845959-a33d-4787-953c-5d55a0afd56e.mozilla",
+
   /**
    * The maximum number of local form history results to return. This limit is
    * only enforced if remote results are also returned.
@@ -99,13 +101,15 @@ this.SearchSuggestionController.prototype = {
    * results from them will not be provided.
    *
    * @param {string} searchTerm - the term to provide suggestions for
-   * @param {bool} privateMode - whether the request is being made in the context of private browsing
    * @param {nsISearchEngine} engine - search engine for the suggestions.
    * @param {int} userContextId - the userContextId of the selected tab.
+   * @param {bool} privateMode - whether the request should be made private.
+   *        Note that usually we want a private context, even in a non-private
+   *        window, because we don't want to store cookies and offline data.
    *
    * @return {Promise} resolving to an object containing results or null.
    */
-  fetch(searchTerm, privateMode, engine, userContextId) {
+  fetch(searchTerm, engine, userContextId = 0, privateMode = true) {
     // There is no smart filtering from previous results here (as there is when looking through
     // history/form data) because the result set returned by the server is different for every typed
     // value - e.g. "ocean breathes" does not return a subset of the results returned for "ocean".
@@ -114,9 +118,6 @@ this.SearchSuggestionController.prototype = {
 
     if (!Services.search.isInitialized) {
       throw new Error("Search not initialized yet (how did you get here?)");
-    }
-    if (typeof privateMode === "undefined") {
-      throw new Error("The privateMode argument is required to avoid unintentional privacy leaks");
     }
     if (!(engine instanceof Ci.nsISearchEngine)) {
       throw new Error("Invalid search engine");
@@ -231,8 +232,12 @@ this.SearchSuggestionController.prototype = {
     let method = (submission.postData ? "POST" : "GET");
     this._request.open(method, submission.uri.spec, true);
 
-    this._request.setOriginAttributes({userContextId,
-                                       privateBrowsingId: privateMode ? 1 : 0});
+    this._request.setOriginAttributes({
+      userContextId,
+      privateBrowsingId: privateMode ? 1 : 0,
+      // Use a unique first-party domain to isolate the suggestions cookies.
+      firstPartyDomain: this.FIRST_PARTY_DOMAIN,
+    });
 
     this._request.mozBackgroundRequest = true; // suppress dialogs and fail silently
 

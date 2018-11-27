@@ -119,19 +119,10 @@ SuggestAutoComplete.prototype = {
 
     var formHistorySearchParam = searchParam.split("|")[0];
 
-    // Receive the information about the privacy mode of the window to which
-    // this search box belongs.  The front-end's search.xml bindings passes this
-    // information in the searchParam parameter.  The alternative would have
-    // been to modify nsIAutoCompleteSearch to add an argument to startSearch
-    // and patch all of autocomplete to be aware of this, but the searchParam
-    // argument is already an opaque argument, so this solution is hopefully
-    // less hackish (although still gross.)
-    var privacyMode = (searchParam.split("|")[1] == "private");
-
     // Start search immediately if possible, otherwise once the search
     // service is initialized
     if (Services.search.isInitialized) {
-      this._triggerSearch(searchString, formHistorySearchParam, listener, privacyMode);
+      this._triggerSearch(searchString, formHistorySearchParam, listener);
       return;
     }
 
@@ -140,17 +131,16 @@ SuggestAutoComplete.prototype = {
         Cu.reportError("Could not initialize search service, bailing out: " + aResult);
         return;
       }
-      this._triggerSearch(searchString, formHistorySearchParam, listener, privacyMode);
+      this._triggerSearch(searchString, formHistorySearchParam, listener);
     });
   },
 
   /**
    * Actual implementation of search.
    */
-  _triggerSearch(searchString, searchParam, listener, privacyMode) {
+  _triggerSearch(searchString, searchParam, listener) {
     this._listener = listener;
     this._suggestionController.fetch(searchString,
-                                     privacyMode,
                                      Services.search.currentEngine);
   },
 
