@@ -20,11 +20,11 @@ WebGLExtensionCompressedTextureES3::WebGLExtensionCompressedTextureES3(WebGLCont
     // GLES 3.0.4 p161:
     // "[A] texture is complete unless any of the following conditions hold true:
     //  [...]
-    //  * The effective internal format specified for the texture arrays is a sized
-    //    internal color format that is not texture-filterable (see table 3.13) and [the
-    //    mag filter requires filtering]."
-    // Compressed formats are not sized internal color formats, and indeed they are not
-    // listed in table 3.13.
+    //  * The effective internal format specified for the texture arrays is a
+    //    sized internal color format that is not texture-filterable (see table
+    //    3.13) and [the mag filter requires filtering]."
+    // Compressed formats are not sized internal color formats, and indeed they
+    // are not listed in table 3.13.
 
     RefPtr<WebGLContext> webgl_ = webgl; // Bug 1201275
     const auto fnAdd = [&webgl_](GLenum sizedFormat, webgl::EffectiveFormat effFormat) {

@@ -232,7 +232,7 @@ public:
            const TabContext& aContext,
            uint32_t aChromeFlags);
 
-  nsresult Init();
+  nsresult Init(mozIDOMWindowProxy* aParent);
 
   /** Return a TabChild with the given attributes. */
   static already_AddRefed<TabChild>

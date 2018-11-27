@@ -29,4 +29,9 @@ function oomTest(f) {
 var g = newGlobal();
 oomTest(function() { new revocable(); });
 `);
-lfGlobal.runOffThreadScript();
+try {
+    lfGlobal.runOffThreadScript();
+} catch(e) {
+    // This can happen if we OOM while bailing out in Ion.
+    assertEq(e, "out of memory");
+}

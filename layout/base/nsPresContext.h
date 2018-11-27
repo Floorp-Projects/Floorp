@@ -36,7 +36,6 @@
 #include "gfxTypes.h"
 #include "gfxRect.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/AppUnits.h"
@@ -951,7 +950,7 @@ public:
     return kBorderWidths[aBorderWidthKeyword];
   }
 
-  gfxTextPerfMetrics *GetTextPerfMetrics() { return mTextPerf; }
+  gfxTextPerfMetrics* GetTextPerfMetrics() { return mTextPerf.get(); }
 
   bool IsDynamic() { return (mType == eContext_PageLayout || mType == eContext_Galley); }
   bool IsScreen() { return (mMedium == nsGkAtoms::screen ||
@@ -994,7 +993,8 @@ public:
   // user font set is changed and fonts become unavailable).
   void UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont = nullptr);
 
-  gfxMissingFontRecorder *MissingFontRecorder() { return mMissingFonts; }
+  gfxMissingFontRecorder* MissingFontRecorder() { return mMissingFonts.get(); }
+
   void NotifyMissingFonts();
 
   void FlushCounterStyles();
@@ -1337,9 +1337,9 @@ protected:
   AutoTArray<TransactionInvalidations, 4> mTransactions;
 
   // text performance metrics
-  nsAutoPtr<gfxTextPerfMetrics>   mTextPerf;
+  mozilla::UniquePtr<gfxTextPerfMetrics> mTextPerf;
 
-  nsAutoPtr<gfxMissingFontRecorder> mMissingFonts;
+  mozilla::UniquePtr<gfxMissingFontRecorder> mMissingFonts;
 
   nsRect                mVisibleArea;
   nsRect                mLastResizeEventVisibleArea;

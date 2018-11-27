@@ -16,6 +16,9 @@ const { isSupportedDebugTarget } = require("../modules/debug-target-support");
 
 const { createClientForRuntime } = require("../modules/runtime-client-factory");
 
+const { remoteClientManager } =
+  require("devtools/client/shared/remote-debugging/remote-client-manager");
+
 const {
   CONNECT_RUNTIME_FAILURE,
   CONNECT_RUNTIME_START,
@@ -68,7 +71,7 @@ function connectRuntime(id) {
     dispatch({ type: CONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
-      const { clientWrapper, transportDetails } = await createClientForRuntime(runtime);
+      const clientWrapper = await createClientForRuntime(runtime);
       const info = await getRuntimeInfo(runtime, clientWrapper);
 
       const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
@@ -77,7 +80,6 @@ function connectRuntime(id) {
         clientWrapper,
         connectionPromptEnabled,
         info,
-        transportDetails,
       };
 
       if (runtime.type === RUNTIMES.USB) {
@@ -215,6 +217,7 @@ function updateUSBRuntimes(runtimes) {
       // Current runtime can not be retrieved after USB_RUNTIMES_UPDATED action, since
       // that updates runtime state. So, before that we fire selectPage action so that to
       // transact unwatchRuntime correctly.
+
       await dispatch(Actions.selectPage(RUNTIMES.THIS_FIREFOX, RUNTIMES.THIS_FIREFOX));
     }
 
@@ -228,12 +231,38 @@ function updateUSBRuntimes(runtimes) {
     }
 
     dispatch({ type: USB_RUNTIMES_UPDATED, runtimes });
+
+    for (const runtime of getState().runtimes.usbRuntimes) {
+      const isConnected = !!runtime.runtimeDetails;
+      const hasConnectedClient = remoteClientManager.hasClient(runtime.id, runtime.type);
+      if (!isConnected && hasConnectedClient) {
+        await dispatch(connectRuntime(runtime.id));
+      }
+    }
+  };
+}
+
+/**
+ * Remove all the listeners added on client objects. Since those objects are persisted
+ * regardless of the about:debugging lifecycle, all the added events should be removed
+ * before leaving about:debugging.
+ */
+function removeRuntimeListeners() {
+  return (dispatch, getState) => {
+    const { usbRuntimes } = getState().runtimes;
+    for (const runtime of usbRuntimes) {
+      if (runtime.runtimeDetails) {
+        const { clientWrapper } = runtime.runtimeDetails;
+        clientWrapper.removeListener("closed", onUSBDebuggerClientClosed);
+      }
+    }
   };
 }
 
 module.exports = {
   connectRuntime,
   disconnectRuntime,
+  removeRuntimeListeners,
   unwatchRuntime,
   updateConnectionPromptSetting,
   updateUSBRuntimes,

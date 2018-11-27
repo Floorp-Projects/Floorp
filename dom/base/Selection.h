@@ -425,7 +425,8 @@ public:
    * in the given node. When the selection is collapsed, and the content
    * is focused and editable, the caret will blink there.
    * @param aContainer The given node where the selection will be set
-   * @param offset      Where in given dom node to place the selection (the offset into the given node)
+   * @param offset      Where in given dom node to place the selection (the
+   *                    offset into the given node)
    */
   void Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
   {
@@ -456,7 +457,8 @@ public:
    * of direction.
    *
    * @param aContainer The node where the selection will be extended to
-   * @param aOffset    Where in aContainer to place the offset of the new selection end.
+   * @param aOffset    Where in aContainer to place the offset of the new
+   *                   selection end.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);

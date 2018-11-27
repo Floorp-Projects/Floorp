@@ -715,8 +715,16 @@ intrinsic_DefineProperty(JSContext* cx, unsigned argc, Value* vp)
     }
 
     bool strict = args[5].toBoolean();
-    if (strict && !result.checkStrict(cx, obj, id)) {
-        return false;
+    if (strict && !result.ok()) {
+        // We need to tell our caller Object.defineProperty,
+        // that this operation failed, without actually throwing
+        // for web-compatibility reasons.
+        if (result.failureCode() == JSMSG_CANT_DEFINE_WINDOW_NC) {
+            args.rval().setBoolean(false);
+            return true;
+        }
+
+        return result.reportError(cx, obj, id);
     }
 
     args.rval().setBoolean(result.reallyOk());

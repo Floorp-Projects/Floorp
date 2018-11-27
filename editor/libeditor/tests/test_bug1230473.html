@@ -79,14 +79,16 @@ SimpleTest.waitForFocus(() => {
     clear();
 
     // Committing at first text (eCompositionChange)
-    aEditor.focus();
-    aEditor.addEventListener("text", committer, true);
-    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
-                                  caret: { start: 1, length: 0 }, key: { key: "a" }});
-    aEditor.removeEventListener("text", committer, true);
-    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by text event handler");
-    is(value(), "", "composition in " + aEditor.id + " should have inserted any text since it's committed at first text");
-    clear();
+    if (!SpecialPowers.getBoolPref("dom.compositionevent.text.dispatch_only_system_group_in_content")) {
+      aEditor.focus();
+      aEditor.addEventListener("text", committer, true);
+      synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                    caret: { start: 1, length: 0 }, key: { key: "a" }});
+      aEditor.removeEventListener("text", committer, true);
+      ok(!isComposing(), "composition in " + aEditor.id + " should be committed by text event handler");
+      is(value(), "", "composition in " + aEditor.id + " should have inserted any text since it's committed at first text");
+      clear();
+    }
 
     // Committing at second compositionupdate
     aEditor.focus();
@@ -104,19 +106,21 @@ SimpleTest.waitForFocus(() => {
     clear();
 
     // Committing at second text (eCompositionChange)
-    aEditor.focus();
-    // FYI: "compositionstart" will be dispatched automatically.
-    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
-                                  caret: { start: 1, length: 0 }, key: { key: "a" }});
-    ok(isComposing(), "composition should be in " + aEditor.id + " before dispatching second text");
-    is(value(), "a", "composition in " + aEditor.id + " should be 'a' before dispatching second text");
-    aEditor.addEventListener("text", committer, true);
-    synthesizeCompositionChange({ composition: { string: "ab", clauses: [{length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
-                                  caret: { start: 2, length: 0 }, key: { key: "b" }});
-    aEditor.removeEventListener("text", committer, true);
-    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by text event handler");
-    is(value(), "ab", "composition in " + aEditor.id + " should have \"ab\" since IME committed with it");
-    clear();
+    if (!SpecialPowers.getBoolPref("dom.compositionevent.text.dispatch_only_system_group_in_content")) {
+      aEditor.focus();
+      // FYI: "compositionstart" will be dispatched automatically.
+      synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                    caret: { start: 1, length: 0 }, key: { key: "a" }});
+      ok(isComposing(), "composition should be in " + aEditor.id + " before dispatching second text");
+      is(value(), "a", "composition in " + aEditor.id + " should be 'a' before dispatching second text");
+      aEditor.addEventListener("text", committer, true);
+      synthesizeCompositionChange({ composition: { string: "ab", clauses: [{length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                    caret: { start: 2, length: 0 }, key: { key: "b" }});
+      aEditor.removeEventListener("text", committer, true);
+      ok(!isComposing(), "composition in " + aEditor.id + " should be committed by text event handler");
+      is(value(), "ab", "composition in " + aEditor.id + " should have \"ab\" since IME committed with it");
+      clear();
+    }
   }
   runTest(document.getElementById("input"));
   runTest(document.getElementById("textarea"));

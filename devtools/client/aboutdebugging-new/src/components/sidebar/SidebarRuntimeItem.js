@@ -20,7 +20,6 @@ const Actions = require("../../actions/index");
 class SidebarRuntimeItem extends PureComponent {
   static get propTypes() {
     return {
-      id: PropTypes.string.isRequired,
       deviceName: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
       // Provided by wrapping the component with FluentReact.withLocalization.
@@ -76,10 +75,8 @@ class SidebarRuntimeItem extends PureComponent {
   render() {
     const {
       deviceName,
-      dispatch,
       getString,
       icon,
-      id,
       isConnected,
       isSelected,
       name,
@@ -93,10 +90,7 @@ class SidebarRuntimeItem extends PureComponent {
     return SidebarItem(
       {
         isSelected,
-        selectable: isConnected,
-        onSelect: () => {
-          dispatch(Actions.selectPage(id, runtimeId));
-        },
+        to: isConnected ? `/runtime/${encodeURIComponent(runtimeId)}` : null,
       },
       dom.div(
         {

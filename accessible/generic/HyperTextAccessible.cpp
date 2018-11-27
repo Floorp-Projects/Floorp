@@ -1518,7 +1518,9 @@ HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
 
   LayoutDeviceIntRect caretRect = LayoutDeviceIntRect::FromUnknownRect(
     rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel()));
+  // clang-format off
   // ((content screen origin) - (content offset in the widget)) = widget origin on the screen
+  // clang-format on
   caretRect.MoveBy((*aWidget)->WidgetToScreenOffset() - (*aWidget)->GetClientOffset());
 
   // Correct for character size, so that caret always matches the size of

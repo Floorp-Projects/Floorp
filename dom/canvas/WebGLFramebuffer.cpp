@@ -265,14 +265,14 @@ WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
         // Divergent between GLES 3 and 2.
 
         // GLES 2.0.25 p127:
-        // "If the value of FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is NONE, then querying any
-        //  other pname will generate INVALID_ENUM."
+        //   "If the value of FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is NONE, then querying any
+        //   other pname will generate INVALID_ENUM."
 
         // GLES 3.0.4 p240:
-        // "If the value of FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is NONE, no framebuffer is
-        //  bound to target. In this case querying pname
-        //  FRAMEBUFFER_ATTACHMENT_OBJECT_NAME will return zero, and all other queries
-        //  will generate an INVALID_OPERATION error."
+        //   "If the value of FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is NONE, no framebuffer is
+        //   bound to target. In this case querying pname
+        //   FRAMEBUFFER_ATTACHMENT_OBJECT_NAME will return zero, and all other queries
+        //   will generate an INVALID_OPERATION error."
         switch (pname) {
         case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
             return JS::Int32Value(LOCAL_GL_NONE);
@@ -1093,13 +1093,13 @@ WebGLFramebuffer::DrawBuffers(const dom::Sequence<GLenum>& buffers)
 
     for (size_t i = 0; i < buffers.Length(); i++) {
         // "If the GL is bound to a draw framebuffer object, the `i`th buffer listed in
-        //  bufs must be COLOR_ATTACHMENTi or NONE. Specifying a buffer out of order,
-        //  BACK, or COLOR_ATTACHMENTm where `m` is greater than or equal to the value of
+        // bufs must be COLOR_ATTACHMENTi or NONE. Specifying a buffer out of order,
+        // BACK, or COLOR_ATTACHMENTm where `m` is greater than or equal to the value of
         // MAX_COLOR_ATTACHMENTS, will generate the error INVALID_OPERATION.
 
         // WEBGL_draw_buffers:
         // "The value of the MAX_COLOR_ATTACHMENTS_WEBGL parameter must be greater than or
-        //  equal to that of the MAX_DRAW_BUFFERS_WEBGL parameter."
+        // equal to that of the MAX_DRAW_BUFFERS_WEBGL parameter."
         // This means that if buffers.Length() isn't larger than MaxDrawBuffers, it won't
         // be larger than MaxColorAttachments.
         const auto& cur = buffers[i];

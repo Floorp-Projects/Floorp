@@ -96,12 +96,6 @@ static const BailoutId INVALID_BAILOUT_ID = BailoutId(-1);
 // Keep this arbitrarily small for now, for testing.
 static const uint32_t BAILOUT_TABLE_SIZE = 16;
 
-// Bailout return codes.
-// N.B. the relative order of these values is hard-coded into ::GenerateBailoutThunk.
-static const uint32_t BAILOUT_RETURN_OK = 0;
-static const uint32_t BAILOUT_RETURN_FATAL_ERROR = 1;
-static const uint32_t BAILOUT_RETURN_OVERRECURSED = 2;
-
 // This address is a magic number made to cause crashes while indicating that we
 // are making an attempt to mark the stack during a bailout.
 static const uint32_t FAKE_EXITFP_FOR_BAILOUT_ADDR = 0xba2;
@@ -162,12 +156,14 @@ MOZ_MUST_USE bool EnsureHasEnvironmentObjects(JSContext* cx, AbstractFramePtr fp
 
 struct BaselineBailoutInfo;
 
-// Called from a bailout thunk. Returns a BAILOUT_* error code.
-uint32_t Bailout(BailoutStack* sp, BaselineBailoutInfo** info);
+// Called from a bailout thunk.
+MOZ_MUST_USE bool
+Bailout(BailoutStack* sp, BaselineBailoutInfo** info);
 
-// Called from the invalidation thunk. Returns a BAILOUT_* error code.
-uint32_t InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
-                             BaselineBailoutInfo** info);
+// Called from the invalidation thunk.
+MOZ_MUST_USE bool
+InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
+                    BaselineBailoutInfo** info);
 
 class ExceptionBailoutInfo
 {
@@ -210,13 +206,13 @@ class ExceptionBailoutInfo
 };
 
 // Called from the exception handler to enter a catch or finally block.
-// Returns a BAILOUT_* error code.
-uint32_t ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
-                                 ResumeFromException* rfe,
-                                 const ExceptionBailoutInfo& excInfo,
-                                 bool* overrecursed);
+MOZ_MUST_USE bool
+ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
+                        ResumeFromException* rfe,
+                        const ExceptionBailoutInfo& excInfo);
 
-uint32_t FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo);
+MOZ_MUST_USE bool
+FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo);
 
 void CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutKind);
 

@@ -5,7 +5,7 @@
 
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, ClipAndScrollInfo};
 use api::{ClipId, ColorF, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{DisplayItemRef, ExtendMode, ExternalScrollId};
+use api::{DisplayItemRef, ExtendMode, ExternalScrollId, AuHelpers};
 use api::{FilterOp, FontInstanceKey, GlyphInstance, GlyphOptions, RasterSpace, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayoutPoint, ColorDepth};
 use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
@@ -13,25 +13,23 @@ use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
 use api::{PropertyBinding, ReferenceFrame, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
 use api::{ClipMode, TransformStyle, YuvColorSpace, YuvData};
-use border::create_nine_patch_segments;
+use app_units::Au;
 use clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemSceneData};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
 use frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
 use glyph_rasterizer::FontInstance;
-use gpu_cache::GpuCacheHandle;
 use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList};
-use prim_store::{BrushKind, BrushPrimitive, PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind};
-use prim_store::{ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
-use prim_store::{PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore, PrimitiveStoreStats, BrushSegmentDescriptor};
-use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id, OpacityBindingIndex};
+use prim_store::{PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind, RadialGradientParams};
+use prim_store::{PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind, GradientStopKey, NinePatchDescriptor};
+use prim_store::{PrimitiveDataHandle, PrimitiveStore, PrimitiveStoreStats, LineDecorationCacheKey};
+use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id, get_line_decoration_sizes};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
 use scene_builder::DocumentResources;
-use smallvec::SmallVec;
 use spatial_node::{StickyFrameInfo};
 use std::{f32, mem};
 use std::collections::vec_deque::VecDeque;
@@ -576,12 +574,12 @@ impl<'a> DisplayListFlattener<'a> {
                     &prim_info,
                     info.wavy_line_thickness,
                     info.orientation,
-                    &info.color,
+                    info.color,
                     info.style,
                 );
             }
             SpecificDisplayItem::Gradient(ref info) => {
-                if let Some(brush_kind) = self.create_brush_kind_for_gradient(
+                if let Some(prim_key_kind) = self.create_linear_gradient_prim(
                     &prim_info,
                     info.gradient.start_point,
                     info.gradient.end_point,
@@ -590,13 +588,18 @@ impl<'a> DisplayListFlattener<'a> {
                     info.tile_size,
                     info.tile_spacing,
                     pipeline_id,
+                    None,
                 ) {
-                    let prim = PrimitiveContainer::Brush(BrushPrimitive::new(brush_kind, None));
-                    self.add_primitive(clip_and_scroll, &prim_info, Vec::new(), prim);
+                    self.add_primitive(
+                        clip_and_scroll,
+                        &prim_info,
+                        Vec::new(),
+                        prim_key_kind,
+                    );
                 }
             }
             SpecificDisplayItem::RadialGradient(ref info) => {
-                let brush_kind = self.create_brush_kind_for_radial_gradient(
+                let prim_key_kind = self.create_radial_gradient_prim(
                     &prim_info,
                     info.gradient.center,
                     info.gradient.start_offset * info.gradient.radius.width,
@@ -606,9 +609,15 @@ impl<'a> DisplayListFlattener<'a> {
                     info.gradient.extend_mode,
                     info.tile_size,
                     info.tile_spacing,
+                    pipeline_id,
+                    None,
                 );
-                let prim = PrimitiveContainer::Brush(BrushPrimitive::new(brush_kind, None));
-                self.add_primitive(clip_and_scroll, &prim_info, Vec::new(), prim);
+                self.add_primitive(
+                    clip_and_scroll,
+                    &prim_info,
+                    Vec::new(),
+                    prim_key_kind,
+                );
             }
             SpecificDisplayItem::BoxShadow(ref box_shadow_info) => {
                 let bounds = box_shadow_info
@@ -620,7 +629,7 @@ impl<'a> DisplayListFlattener<'a> {
                     clip_and_scroll,
                     &prim_info,
                     &box_shadow_info.offset,
-                    &box_shadow_info.color,
+                    box_shadow_info.color,
                     box_shadow_info.blur_radius,
                     box_shadow_info.spread_radius,
                     box_shadow_info.border_radius,
@@ -834,16 +843,9 @@ impl<'a> DisplayListFlattener<'a> {
         info: &LayoutPrimitiveInfo,
         clip_chain_id: ClipChainId,
         spatial_node_index: SpatialNodeIndex,
-        container: PrimitiveContainer,
+        prim_key_kind: PrimitiveKeyKind,
     ) -> PrimitiveInstance {
-        // Build a primitive key, and optionally an old
-        // style PrimitiveDetails structure from the
-        // source primitive container.
-        let mut info = info.clone();
-        let (prim_key_kind, prim_details) = container.build(
-            &mut info,
-        );
-
+        // Build a primitive key.
         let prim_key = PrimitiveKey::new(
             info.is_backface_visible,
             info.rect,
@@ -867,24 +869,7 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             });
 
-        // If we are building an old style primitive, add it to
-        // the prim store, and create a primitive index for it.
-        // For an interned primitive, use the primitive key to
-        // create a matching primitive instance kind.
-        let instance_kind = match prim_details {
-            Some(prim_details) => {
-                let prim_index = self.prim_store.add_primitive(
-                    &info.rect,
-                    &info.clip_rect,
-                    prim_details,
-                );
-
-                PrimitiveInstanceKind::LegacyPrimitive { prim_index }
-            }
-            None => {
-                prim_key.to_instance_kind(&mut self.prim_store)
-            }
-        };
+        let instance_kind = prim_key.to_instance_kind(&mut self.prim_store);
 
         PrimitiveInstance::new(
             instance_kind,
@@ -937,12 +922,12 @@ impl<'a> DisplayListFlattener<'a> {
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
         clip_items: Vec<ClipItemKey>,
-        container: PrimitiveContainer,
+        key_kind: PrimitiveKeyKind,
     ) {
         // If a shadow context is not active, then add the primitive
         // directly to the parent picture.
         if self.pending_shadow_items.is_empty() {
-            if container.is_visible() {
+            if key_kind.is_visible() {
                 let clip_chain_id = self.build_clip_chain(
                     clip_items,
                     clip_and_scroll.spatial_node_index,
@@ -952,7 +937,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info,
                     clip_chain_id,
                     clip_and_scroll.spatial_node_index,
-                    container,
+                    key_kind,
                 );
                 self.register_chase_primitive_by_rect(
                     &info.rect,
@@ -969,7 +954,7 @@ impl<'a> DisplayListFlattener<'a> {
             self.pending_shadow_items.push_back(ShadowItem::Primitive(PendingPrimitive {
                 clip_and_scroll,
                 info: *info,
-                container,
+                key_kind,
             }));
         }
     }
@@ -1555,7 +1540,7 @@ impl<'a> DisplayListFlattener<'a> {
                                 &info,
                                 pending_primitive.clip_and_scroll.clip_chain_id,
                                 pending_primitive.clip_and_scroll.spatial_node_index,
-                                pending_primitive.container.create_shadow(
+                                pending_primitive.key_kind.create_shadow(
                                     &pending_shadow.shadow,
                                 ),
                             );
@@ -1626,12 +1611,12 @@ impl<'a> DisplayListFlattener<'a> {
                 ShadowItem::Primitive(pending_primitive) => {
                     // For a normal primitive, if it has alpha > 0, then we add this
                     // as a normal primitive to the parent picture.
-                    if pending_primitive.container.is_visible() {
+                    if pending_primitive.key_kind.is_visible() {
                         let prim_instance = self.create_primitive(
                             &pending_primitive.info,
                             pending_primitive.clip_and_scroll.clip_chain_id,
                             pending_primitive.clip_and_scroll.spatial_node_index,
-                            pending_primitive.container,
+                            pending_primitive.key_kind,
                         );
                         self.register_chase_primitive_by_rect(
                             &pending_primitive.info.rect,
@@ -1685,8 +1670,8 @@ impl<'a> DisplayListFlattener<'a> {
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Rectangle {
-                color,
+            PrimitiveKeyKind::Rectangle {
+                color: color.into(),
             },
         );
     }
@@ -1700,7 +1685,7 @@ impl<'a> DisplayListFlattener<'a> {
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Clear,
+            PrimitiveKeyKind::Clear,
         );
     }
 
@@ -1710,21 +1695,69 @@ impl<'a> DisplayListFlattener<'a> {
         info: &LayoutPrimitiveInfo,
         wavy_line_thickness: f32,
         orientation: LineOrientation,
-        color: &ColorF,
+        color: ColorF,
         style: LineStyle,
     ) {
-        let container = PrimitiveContainer::LineDecoration {
-            color: *color,
-            style,
+        // For line decorations, we can construct the render task cache key
+        // here during scene building, since it doesn't depend on device
+        // pixel ratio or transform.
+        let mut info = info.clone();
+
+        let size = get_line_decoration_sizes(
+            &info.rect.size,
             orientation,
+            style,
             wavy_line_thickness,
-        };
+        );
+
+        let cache_key = size.map(|(inline_size, block_size)| {
+            let size = match orientation {
+                LineOrientation::Horizontal => LayoutSize::new(inline_size, block_size),
+                LineOrientation::Vertical => LayoutSize::new(block_size, inline_size),
+            };
+
+            // If dotted, adjust the clip rect to ensure we don't draw a final
+            // partial dot.
+            if style == LineStyle::Dotted {
+                let clip_size = match orientation {
+                    LineOrientation::Horizontal => {
+                        LayoutSize::new(
+                            inline_size * (info.rect.size.width / inline_size).floor(),
+                            info.rect.size.height,
+                        )
+                    }
+                    LineOrientation::Vertical => {
+                        LayoutSize::new(
+                            info.rect.size.width,
+                            inline_size * (info.rect.size.height / inline_size).floor(),
+                        )
+                    }
+                };
+                let clip_rect = LayoutRect::new(
+                    info.rect.origin,
+                    clip_size,
+                );
+                info.clip_rect = clip_rect
+                    .intersection(&info.clip_rect)
+                    .unwrap_or(LayoutRect::zero());
+            }
+
+            LineDecorationCacheKey {
+                style,
+                orientation,
+                wavy_line_thickness: Au::from_f32_px(wavy_line_thickness),
+                size: size.to_au(),
+            }
+        });
 
         self.add_primitive(
             clip_and_scroll,
-            info,
+            &info,
             Vec::new(),
-            container,
+            PrimitiveKeyKind::LineDecoration {
+                cache_key,
+                color: color.into(),
+            },
         );
     }
 
@@ -1738,26 +1771,30 @@ impl<'a> DisplayListFlattener<'a> {
     ) {
         match border_item.details {
             BorderDetails::NinePatch(ref border) => {
+                let nine_patch = NinePatchDescriptor {
+                    width: border.width,
+                    height: border.height,
+                    slice: border.slice,
+                    fill: border.fill,
+                    repeat_horizontal: border.repeat_horizontal,
+                    repeat_vertical: border.repeat_vertical,
+                    outset: border.outset.into(),
+                    widths: border_item.widths.into(),
+                };
+
                 let prim = match border.source {
                     NinePatchBorderSource::Image(image_key) => {
-                        PrimitiveContainer::ImageBorder {
+                        PrimitiveKeyKind::ImageBorder {
                             request: ImageRequest {
                                 key: image_key,
                                 rendering: ImageRendering::Auto,
                                 tile: None,
                             },
-                            widths: border_item.widths,
-                            width: border.width,
-                            height: border.height,
-                            slice: border.slice,
-                            fill: border.fill,
-                            repeat_horizontal: border.repeat_horizontal,
-                            repeat_vertical: border.repeat_vertical,
-                            outset: border.outset,
+                            nine_patch,
                         }
                     }
                     NinePatchBorderSource::Gradient(gradient) => {
-                        match self.create_brush_kind_for_gradient(
+                        match self.create_linear_gradient_prim(
                             &info,
                             gradient.start_point,
                             gradient.end_point,
@@ -1766,33 +1803,14 @@ impl<'a> DisplayListFlattener<'a> {
                             LayoutSize::new(border.height as f32, border.width as f32),
                             LayoutSize::zero(),
                             pipeline_id,
+                            Some(Box::new(nine_patch)),
                         ) {
-                            Some(brush_kind) => {
-                                let segments = create_nine_patch_segments(
-                                    &info.rect,
-                                    &border_item.widths,
-                                    border.width,
-                                    border.height,
-                                    border.slice,
-                                    border.fill,
-                                    border.repeat_horizontal,
-                                    border.repeat_vertical,
-                                    border.outset,
-                                );
-
-                                let descriptor = BrushSegmentDescriptor {
-                                    segments: SmallVec::from_vec(segments),
-                                };
-
-                                PrimitiveContainer::Brush(
-                                    BrushPrimitive::new(brush_kind, Some(descriptor))
-                                )
-                            }
+                            Some(prim) => prim,
                             None => return,
                         }
                     }
                     NinePatchBorderSource::RadialGradient(gradient) => {
-                        let brush_kind = self.create_brush_kind_for_radial_gradient(
+                        self.create_radial_gradient_prim(
                             &info,
                             gradient.center,
                             gradient.start_offset * gradient.radius.width,
@@ -1802,26 +1820,8 @@ impl<'a> DisplayListFlattener<'a> {
                             gradient.extend_mode,
                             LayoutSize::new(border.height as f32, border.width as f32),
                             LayoutSize::zero(),
-                        );
-
-                        let segments = create_nine_patch_segments(
-                            &info.rect,
-                            &border_item.widths,
-                            border.width,
-                            border.height,
-                            border.slice,
-                            border.fill,
-                            border.repeat_horizontal,
-                            border.repeat_vertical,
-                            border.outset,
-                        );
-
-                        let descriptor = BrushSegmentDescriptor {
-                            segments: SmallVec::from_vec(segments),
-                        };
-
-                        PrimitiveContainer::Brush(
-                            BrushPrimitive::new(brush_kind, Some(descriptor))
+                            pipeline_id,
+                            Some(Box::new(nine_patch)),
                         )
                     }
                 };
@@ -1844,7 +1844,7 @@ impl<'a> DisplayListFlattener<'a> {
         }
     }
 
-    pub fn create_brush_kind_for_gradient(
+    pub fn create_linear_gradient_prim(
         &mut self,
         info: &LayoutPrimitiveInfo,
         start_point: LayoutPoint,
@@ -1854,7 +1854,8 @@ impl<'a> DisplayListFlattener<'a> {
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
         pipeline_id: PipelineId,
-    ) -> Option<BrushKind> {
+        nine_patch: Option<Box<NinePatchDescriptor>>,
+    ) -> Option<PrimitiveKeyKind> {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
 
@@ -1862,24 +1863,21 @@ impl<'a> DisplayListFlattener<'a> {
         //           flatten_root() and pass to all children here to avoid
         //           some hash lookups?
         let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
-
         let mut max_alpha: f32 = 0.0;
-        let mut min_alpha: f32 = 1.0;
-        for stop in display_list.get(stops) {
+
+        let stops = display_list.get(stops).map(|stop| {
             max_alpha = max_alpha.max(stop.color.a);
-            min_alpha = min_alpha.min(stop.color.a);
-        }
+            GradientStopKey {
+                offset: stop.offset,
+                color: stop.color.into(),
+            }
+        }).collect();
 
         // If all the stops have no alpha, then this
         // gradient can't contribute to the scene.
         if max_alpha <= 0.0 {
             return None;
         }
-
-        // Save opacity of the stops for use in
-        // selecting which pass this gradient
-        // should be drawn in.
-        let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
 
         // Try to ensure that if the gradient is specified in reverse, then so long as the stops
         // are also supplied in reverse that the rendered result will be equivalent. To do this,
@@ -1899,21 +1897,19 @@ impl<'a> DisplayListFlattener<'a> {
             (start_point, end_point)
         };
 
-        Some(BrushKind::LinearGradient {
-            stops_range: stops,
+        Some(PrimitiveKeyKind::LinearGradient {
             extend_mode,
+            start_point: sp.into(),
+            end_point: ep.into(),
+            stretch_size: stretch_size.into(),
+            tile_spacing: tile_spacing.into(),
+            stops,
             reverse_stops,
-            start_point: sp,
-            end_point: ep,
-            stops_handle: GpuCacheHandle::new(),
-            stretch_size,
-            tile_spacing,
-            visible_tiles: Vec::new(),
-            stops_opacity,
+            nine_patch,
         })
     }
 
-    pub fn create_brush_kind_for_radial_gradient(
+    pub fn create_radial_gradient_prim(
         &mut self,
         info: &LayoutPrimitiveInfo,
         center: LayoutPoint,
@@ -1924,21 +1920,38 @@ impl<'a> DisplayListFlattener<'a> {
         extend_mode: ExtendMode,
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
-    ) -> BrushKind {
+        pipeline_id: PipelineId,
+        nine_patch: Option<Box<NinePatchDescriptor>>,
+    ) -> PrimitiveKeyKind {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
 
-        BrushKind::RadialGradient {
-            stops_range: stops,
-            extend_mode,
-            center,
+        // TODO(gw): It seems like we should be able to look this up once in
+        //           flatten_root() and pass to all children here to avoid
+        //           some hash lookups?
+        let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
+
+        let params = RadialGradientParams {
             start_radius,
             end_radius,
             ratio_xy,
-            stops_handle: GpuCacheHandle::new(),
-            stretch_size,
-            tile_spacing,
-            visible_tiles: Vec::new(),
+        };
+
+        let stops = display_list.get(stops).map(|stop| {
+            GradientStopKey {
+                offset: stop.offset,
+                color: stop.color.into(),
+            }
+        }).collect();
+
+        PrimitiveKeyKind::RadialGradient {
+            extend_mode,
+            center: center.into(),
+            params,
+            stretch_size: stretch_size.into(),
+            tile_spacing: tile_spacing.into(),
+            nine_patch,
+            stops,
         }
     }
 
@@ -2002,10 +2015,10 @@ impl<'a> DisplayListFlattener<'a> {
             //           primitive template.
             let glyphs = display_list.get(glyph_range).collect();
 
-            PrimitiveContainer::TextRun {
+            PrimitiveKeyKind::TextRun {
                 glyphs,
                 font,
-                offset,
+                offset: offset.to_au(),
                 shadow: false,
             }
         };
@@ -2050,30 +2063,19 @@ impl<'a> DisplayListFlattener<'a> {
             )
         });
 
-        let prim = BrushPrimitive::new(
-            BrushKind::Image {
-                request: ImageRequest {
-                    key: image_key,
-                    rendering: image_rendering,
-                    tile: None,
-                },
-                alpha_type,
-                stretch_size,
-                tile_spacing,
-                color,
-                source: ImageSource::Default,
-                sub_rect,
-                visible_tiles: Vec::new(),
-                opacity_binding_index: OpacityBindingIndex::INVALID,
-            },
-            None,
-        );
-
         self.add_primitive(
             clip_and_scroll,
             &info,
             Vec::new(),
-            PrimitiveContainer::Brush(prim),
+            PrimitiveKeyKind::Image {
+                key: image_key,
+                tile_spacing: tile_spacing.into(),
+                stretch_size: stretch_size.into(),
+                color: color.into(),
+                sub_rect,
+                image_rendering,
+                alpha_type,
+            },
         );
     }
 
@@ -2093,22 +2095,17 @@ impl<'a> DisplayListFlattener<'a> {
             YuvData::InterleavedYCbCr(plane_0) => [plane_0, ImageKey::DUMMY, ImageKey::DUMMY],
         };
 
-        let prim = BrushPrimitive::new(
-            BrushKind::YuvImage {
-                yuv_key,
-                format,
-                color_depth,
-                color_space,
-                image_rendering,
-            },
-            None,
-        );
-
         self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Brush(prim),
+            PrimitiveKeyKind::YuvImage {
+                color_depth,
+                yuv_key,
+                format,
+                color_space,
+                image_rendering,
+            },
         );
     }
 
@@ -2241,7 +2238,7 @@ impl FlattenedStackingContext {
 struct PendingPrimitive {
     clip_and_scroll: ScrollNodeAndClipChain,
     info: LayoutPrimitiveInfo,
-    container: PrimitiveContainer,
+    key_kind: PrimitiveKeyKind,
 }
 
 /// As shadows are pushed, they are stored as pending

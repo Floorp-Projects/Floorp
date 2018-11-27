@@ -28,6 +28,8 @@ class gfxASurface;
 namespace mozilla {
 namespace gl {
 
+class GLContextGLX;
+
 class GLXLibrary
 {
 public:

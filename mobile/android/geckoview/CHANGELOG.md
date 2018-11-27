@@ -19,5 +19,7 @@
 - Changed `LoadRequest.isUserTriggered` to `isRedirect`.
 - Added `GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER` to bypass the URI
   classifier.
+- Added a `protected` empty constructor to all field-only classes so that apps
+  can mock these classes in tests.
 
-[api-version]: 15d9fe901464f8b00016237cd8c0d954686bd07d
+[api-version]: 723adca536354bfa81afb83da5045ea6de8aa602

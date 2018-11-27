@@ -339,6 +339,7 @@ package org.mozilla.geckoview {
   }
 
   public static final class GeckoSession.FinderResult {
+    ctor protected FinderResult();
     field public final android.graphics.RectF clientRect;
     field public final int current;
     field public final int flags;
@@ -382,6 +383,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.NavigationDelegate.LoadRequest {
+    ctor protected LoadRequest();
     field public final boolean isRedirect;
     field public final int target;
     field public final java.lang.String triggerUri;
@@ -412,6 +414,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PermissionDelegate.MediaSource {
+    ctor protected MediaSource();
     field public static final int SOURCE_APPLICATION = 2;
     field public static final int SOURCE_AUDIOCAPTURE = 6;
     field public static final int SOURCE_BROWSER = 4;
@@ -440,6 +443,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.ProgressDelegate.SecurityInformation {
+    ctor protected SecurityInformation();
     field public static final int CONTENT_BLOCKED = 1;
     field public static final int CONTENT_LOADED = 2;
     field public static final int CONTENT_UNKNOWN = 0;
@@ -496,6 +500,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.AuthOptions {
+    ctor protected AuthOptions();
     field public static final int AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE = 32;
     field public static final int AUTH_FLAG_HOST = 1;
     field public static final int AUTH_FLAG_ONLY_PASSWORD = 8;
@@ -516,6 +521,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.Choice {
+    ctor protected Choice();
     field public static final int CHOICE_TYPE_MENU = 1;
     field public static final int CHOICE_TYPE_MULTIPLE = 3;
     field public static final int CHOICE_TYPE_SINGLE = 2;
@@ -585,6 +591,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.SelectionActionDelegate.Selection {
+    ctor protected Selection();
     field public final android.graphics.RectF clientRect;
     field public final int flags;
     field public final java.lang.String text;
@@ -641,6 +648,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.WebResponseInfo {
+    ctor protected WebResponseInfo();
     field public final long contentLength;
     field public final java.lang.String contentType;
     field public final java.lang.String filename;
@@ -786,17 +794,20 @@ package org.mozilla.geckoview {
   }
 
   public static class MediaElement.LoadProgressInfo {
+    ctor protected LoadProgressInfo();
     field public final org.mozilla.geckoview.MediaElement.LoadProgressInfo.TimeRange[] buffered;
     field public final long loadedBytes;
     field public final long totalBytes;
   }
 
   public class MediaElement.LoadProgressInfo.TimeRange {
+    ctor protected TimeRange(double, double);
     field public final double end;
     field public final double start;
   }
 
   public static class MediaElement.Metadata {
+    ctor protected Metadata();
     field public final int audioTrackCount;
     field public final java.lang.String currentSource;
     field public final double duration;
@@ -859,6 +870,7 @@ package org.mozilla.geckoview {
   }
 
   public abstract class WebMessage {
+    ctor protected WebMessage(org.mozilla.geckoview.WebMessage.Builder);
     field public final java.nio.ByteBuffer body;
     field public final java.util.Map<java.lang.String, java.lang.String> headers;
     field public final java.lang.String uri;
@@ -947,6 +959,7 @@ package org.mozilla.geckoview {
   }
 
   public class WebResponse extends org.mozilla.geckoview.WebMessage {
+    ctor protected WebResponse(org.mozilla.geckoview.WebResponse.Builder);
     field public final boolean redirected;
     field public final int statusCode;
   }
