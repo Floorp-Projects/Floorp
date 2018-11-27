@@ -896,6 +896,12 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+VARCACHE_PREF(
+  "layout.css.scroll-anchoring.highlight",
+   layout_css_scroll_anchoring_highlight,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------
