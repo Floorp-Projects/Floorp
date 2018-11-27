@@ -57,7 +57,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   }
 
   function checkIfInputIsEvent(aEvent, aDescription) {
-    ok(event instanceof Event && !(event instanceof UIEvent),
+    ok(aEvent instanceof Event && !(aEvent instanceof UIEvent),
        `"input" event should be dispatched with InputEvent interface ${aDescription}`);
     is(aEvent.cancelable, false,
        `"input" event should be never cancelable ${aDescription}`);

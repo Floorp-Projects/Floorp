@@ -58,6 +58,10 @@ except Exception:
     DEFAULT_CERT_PATH = os.path.join(os.getenv('HOMEDRIVE'), os.getenv('HOMEPATH'),
                                      '.mitmproxy', 'mitmproxy-ca-cert.cer')
 
+# On Windows, deal with mozilla-build having forward slashes in $HOME:
+if os.name == 'nt' and '/' in DEFAULT_CERT_PATH:
+    DEFAULT_CERT_PATH = DEFAULT_CERT_PATH.replace('/', '\\')
+
 # to install mitmproxy certificate into Firefox and turn on/off proxy
 POLICIES_CONTENT_ON = '''{
   "policies": {

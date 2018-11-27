@@ -278,77 +278,6 @@ CachedPrefs::~CachedPrefs()
 }
 } // anonymous namespace
 
-static nsresult
-IsThirdParty(nsIChannel* aChannel, bool* aResult)
-{
-  NS_ENSURE_ARG(aResult);
-  *aResult = false;
-
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
-  if (NS_WARN_IF(!thirdPartyUtil)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
-  if (NS_FAILED(rv) || !chan) {
-    LOG(("nsChannelClassifier: Not an HTTP channel"));
-    return NS_OK;
-  }
-  nsCOMPtr<nsIURI> chanURI;
-  rv = aChannel->GetURI(getter_AddRefs(chanURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> topWinURI;
-  rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!topWinURI) {
-    LOG(("nsChannelClassifier: No window URI\n"));
-  }
-
-  // Third party checks don't work for chrome:// URIs in mochitests, so just
-  // default to isThirdParty = true. We check isThirdPartyWindow to expand
-  // the list of domains that are considered first party (e.g., if
-  // facebook.com includes an iframe from fatratgames.com, all subsources
-  // included in that iframe are considered third-party with
-  // isThirdPartyChannel, even if they are not third-party w.r.t.
-  // facebook.com), and isThirdPartyChannel to prevent top-level navigations
-  // from being detected as third-party.
-  bool isThirdPartyChannel = true;
-  bool isThirdPartyWindow = true;
-  if (topWinURI) { // IsThirdPartyURI() will fail if passed a null URI.
-    rv = thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      if (LOG_ENABLED()) {
-        nsAutoCString spec;
-        chanURI->GetAsciiSpec(spec);
-        spec.Truncate(std::min(spec.Length(), sMaxSpecLength));
-        LOG(("IsThirdPartyURI failed (%s)",
-             spec.get()));
-      }
-      return rv;
-    }
-  }
-  rv = thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (LOG_ENABLED()) {
-      nsCOMPtr<nsIURI> uri;
-      aChannel->GetURI(getter_AddRefs(uri));
-      nsAutoCString spec;
-      chanURI->GetAsciiSpec(spec);
-      spec.Truncate(std::min(spec.Length(), sMaxSpecLength));
-      LOG(("IsThirdPartyChannel failed (%s)",
-           spec.get()));
-    }
-    return rv;
-  }
-
-  *aResult = isThirdPartyWindow && isThirdPartyChannel;
-  return NS_OK;
-}
-
 static void
 SetIsTrackingResourceHelper(nsIChannel* aChannel, bool aIsThirdParty)
 {
@@ -520,12 +449,9 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
 
     // Only perform third-party checks for tracking protection
     if (!aAnnotationsOnly) {
-      bool isThirdParty = false;
-      rv = IsThirdParty(aChannel, &isThirdParty);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        LOG(("nsChannelClassifier[%p]: IsThirdParty() failed", this));
-        return NS_OK;
-      }
+      bool isThirdParty =
+        nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel,
+                                                    chanURI);
       if (!isThirdParty) {
         *result = false;
         if (LOG_ENABLED()) {
@@ -1310,13 +1236,16 @@ TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
     MOZ_ASSERT(aErrorCode == NS_ERROR_TRACKING_ANNOTATION_URI);
     MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation());
 
-    bool isThirdPartyWithTopLevelWinURI = false;
-    nsresult rv = IsThirdParty(channel, &isThirdPartyWithTopLevelWinURI);
+    nsCOMPtr<nsIURI> chanURI;
+    nsresult rv = channel->GetURI(getter_AddRefs(chanURI));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(("TrackingURICallback[%p]::OnTrackerFound IsThirdParty() failed",
-           mChannelClassifier.get()));
+      LOG(("TrackingURICallback[%p]::OnTrackerFound nsIChannel::GetURI(%p) failed",
+           mChannelClassifier.get(), (void*) channel.get()));
       return; // we'll assume the channel is NOT third-party
     }
+    bool isThirdPartyWithTopLevelWinURI =
+      nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, channel,
+                                                  chanURI);
 
     LOG(("TrackingURICallback[%p]::OnTrackerFound, annotating channel[%p]",
          mChannelClassifier.get(), channel.get()));

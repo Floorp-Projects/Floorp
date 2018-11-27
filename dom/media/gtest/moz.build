@@ -30,6 +30,7 @@ UNIFIED_SOURCES += [
     'TestGMPUtils.cpp',
     'TestIntervalSet.cpp',
     'TestMediaDataDecoder.cpp',
+    'TestMediaDataEncoder.cpp',
     'TestMediaEventSource.cpp',
     'TestMediaMIMETypes.cpp',
     'TestMP3Demuxer.cpp',

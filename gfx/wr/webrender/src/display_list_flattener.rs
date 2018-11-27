@@ -25,12 +25,13 @@ use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList};
 use prim_store::{BrushKind, BrushPrimitive, PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind};
 use prim_store::{ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
-use prim_store::{BorderSource, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore, PrimitiveStoreStats};
+use prim_store::{PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore, PrimitiveStoreStats, BrushSegmentDescriptor};
 use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id, OpacityBindingIndex};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
 use scene_builder::DocumentResources;
+use smallvec::SmallVec;
 use spatial_node::{StickyFrameInfo};
 use std::{f32, mem};
 use std::collections::vec_deque::VecDeque;
@@ -152,9 +153,6 @@ pub struct DisplayListFlattener<'a> {
     /// shared (interned) data between display lists.
     resources: &'a mut DocumentResources,
 
-    /// The estimated count of primtives we expect to encounter during flattening.
-    prim_count_estimate: usize,
-
     /// The root picture index for this flattener. This is the picture
     /// to start the culling phase from.
     pub root_pic_index: PictureIndex,
@@ -194,7 +192,6 @@ impl<'a> DisplayListFlattener<'a> {
             prim_store: PrimitiveStore::new(&prim_store_stats),
             clip_store: ClipStore::new(),
             resources,
-            prim_count_estimate: 0,
             root_pic_index: PictureIndex(0),
         };
 
@@ -285,9 +282,6 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             }
         }
-
-        self.prim_count_estimate += pipeline.display_list.prim_count_estimate();
-        self.prim_store.primitives.reserve(self.prim_count_estimate);
 
         self.flatten_items(&mut pipeline.display_list.iter(), pipeline_id, LayoutVector2D::zero());
 
@@ -846,7 +840,9 @@ impl<'a> DisplayListFlattener<'a> {
         // style PrimitiveDetails structure from the
         // source primitive container.
         let mut info = info.clone();
-        let (prim_key_kind, prim_details) = container.build(&mut info);
+        let (prim_key_kind, prim_details) = container.build(
+            &mut info,
+        );
 
         let prim_key = PrimitiveKey::new(
             info.is_backface_visible,
@@ -1561,7 +1557,6 @@ impl<'a> DisplayListFlattener<'a> {
                                 pending_primitive.clip_and_scroll.spatial_node_index,
                                 pending_primitive.container.create_shadow(
                                     &pending_shadow.shadow,
-                                    &info.rect,
                                 ),
                             );
 
@@ -1686,16 +1681,13 @@ impl<'a> DisplayListFlattener<'a> {
             return;
         }
 
-        let prim = BrushPrimitive::new(
-            BrushKind::new_solid(color),
-            None,
-        );
-
         self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Brush(prim),
+            PrimitiveContainer::Rectangle {
+                color,
+            },
         );
     }
 
@@ -1746,20 +1738,22 @@ impl<'a> DisplayListFlattener<'a> {
     ) {
         match border_item.details {
             BorderDetails::NinePatch(ref border) => {
-                let descriptor = create_nine_patch_segments(
-                    &info.rect,
-                    &border_item.widths,
-                    border,
-                );
-
-                let brush_kind = match border.source {
+                let prim = match border.source {
                     NinePatchBorderSource::Image(image_key) => {
-                        BrushKind::Border {
-                            source: BorderSource::Image(ImageRequest {
+                        PrimitiveContainer::ImageBorder {
+                            request: ImageRequest {
                                 key: image_key,
                                 rendering: ImageRendering::Auto,
                                 tile: None,
-                            })
+                            },
+                            widths: border_item.widths,
+                            width: border.width,
+                            height: border.height,
+                            slice: border.slice,
+                            fill: border.fill,
+                            repeat_horizontal: border.repeat_horizontal,
+                            repeat_vertical: border.repeat_vertical,
+                            outset: border.outset,
                         }
                     }
                     NinePatchBorderSource::Gradient(gradient) => {
@@ -1773,12 +1767,32 @@ impl<'a> DisplayListFlattener<'a> {
                             LayoutSize::zero(),
                             pipeline_id,
                         ) {
-                            Some(brush_kind) => brush_kind,
+                            Some(brush_kind) => {
+                                let segments = create_nine_patch_segments(
+                                    &info.rect,
+                                    &border_item.widths,
+                                    border.width,
+                                    border.height,
+                                    border.slice,
+                                    border.fill,
+                                    border.repeat_horizontal,
+                                    border.repeat_vertical,
+                                    border.outset,
+                                );
+
+                                let descriptor = BrushSegmentDescriptor {
+                                    segments: SmallVec::from_vec(segments),
+                                };
+
+                                PrimitiveContainer::Brush(
+                                    BrushPrimitive::new(brush_kind, Some(descriptor))
+                                )
+                            }
                             None => return,
                         }
                     }
                     NinePatchBorderSource::RadialGradient(gradient) => {
-                        self.create_brush_kind_for_radial_gradient(
+                        let brush_kind = self.create_brush_kind_for_radial_gradient(
                             &info,
                             gradient.center,
                             gradient.start_offset * gradient.radius.width,
@@ -1788,14 +1802,36 @@ impl<'a> DisplayListFlattener<'a> {
                             gradient.extend_mode,
                             LayoutSize::new(border.height as f32, border.width as f32),
                             LayoutSize::zero(),
+                        );
+
+                        let segments = create_nine_patch_segments(
+                            &info.rect,
+                            &border_item.widths,
+                            border.width,
+                            border.height,
+                            border.slice,
+                            border.fill,
+                            border.repeat_horizontal,
+                            border.repeat_vertical,
+                            border.outset,
+                        );
+
+                        let descriptor = BrushSegmentDescriptor {
+                            segments: SmallVec::from_vec(segments),
+                        };
+
+                        PrimitiveContainer::Brush(
+                            BrushPrimitive::new(brush_kind, Some(descriptor))
                         )
                     }
                 };
 
-                let prim = PrimitiveContainer::Brush(
-                    BrushPrimitive::new(brush_kind, Some(descriptor))
+                self.add_primitive(
+                    clip_and_scroll,
+                    info,
+                    Vec::new(),
+                    prim,
                 );
-                self.add_primitive(clip_and_scroll, info, Vec::new(), prim);
             }
             BorderDetails::Normal(ref border) => {
                 self.add_normal_border(

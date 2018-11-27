@@ -313,6 +313,8 @@ impl From<SplitCompositeInstance> for PrimitiveInstanceData {
 bitflags! {
     /// Flags that define how the common brush shader
     /// code should process this instance.
+    #[cfg_attr(feature = "capture", derive(Serialize))]
+    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct BrushFlags: u8 {
         /// Apply perspective interpolation to UVs
         const PERSPECTIVE_INTERPOLATION = 0x1;

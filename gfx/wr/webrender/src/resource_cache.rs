@@ -794,11 +794,10 @@ impl ResourceCache {
                 entry.dirty_rect = entry.dirty_rect.union(dirty_rect);
             }
             Some(&mut ImageResult::Multi(ref mut entries)) => {
-                let tile_size = tiling.unwrap();
                 for (key, entry) in entries.iter_mut() {
                     // We want the dirty rect relative to the tile and not the whole image.
-                    let local_dirty_rect = match key.tile {
-                        Some(tile) => {
+                    let local_dirty_rect = match (tiling, key.tile) {
+                        (Some(tile_size), Some(tile)) => {
                             dirty_rect.map(|mut rect|{
                                 let tile_offset = DeviceIntPoint::new(
                                     tile.x as i32,
@@ -809,7 +808,8 @@ impl ResourceCache {
                                 rect
                             })
                         }
-                        None => *dirty_rect,
+                        (None, Some(..)) => DirtyRect::All,
+                        _ => *dirty_rect,
                     };
                     entry.dirty_rect = entry.dirty_rect.union(&local_dirty_rect);
                 }

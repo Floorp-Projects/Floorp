@@ -9,8 +9,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.os.RemoteException;
-import android.util.Log;
 
 public final class SurfaceAllocatorService extends Service {
 
@@ -39,6 +37,20 @@ public final class SurfaceAllocatorService extends Service {
             final GeckoSurfaceTexture gst = GeckoSurfaceTexture.lookup(handle);
             if (gst != null) {
                 gst.decrementUse();
+            }
+        }
+
+        public void configureSync(SyncConfig config) {
+            final GeckoSurfaceTexture gst = GeckoSurfaceTexture.lookup(config.sourceTextureHandle);
+            if (gst != null) {
+                gst.configureSnapshot(config.targetSurface, config.width, config.height);
+            }
+        }
+
+        public void sync(int handle) {
+            final GeckoSurfaceTexture gst = GeckoSurfaceTexture.lookup(handle);
+            if (gst != null) {
+                gst.takeSnapshot();
             }
         }
     };

@@ -30,6 +30,7 @@ template <class units, class F> struct RectTyped;
 enum class ImageFormat;
 
 namespace layers {
+struct ZoomConstraints;
 
 void
 AppendToString(std::stringstream& aStream, const void* p,

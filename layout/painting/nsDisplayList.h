@@ -3919,6 +3919,26 @@ public:
     return *mHitTestInfo;
   }
 
+  void SetActiveScrolledRoot(
+    const ActiveScrolledRoot* aActiveScrolledRoot) override
+  {
+    nsDisplayItem::SetActiveScrolledRoot(aActiveScrolledRoot);
+    UpdateHitTestInfoActiveScrolledRoot(aActiveScrolledRoot);
+  }
+
+  /**
+   * Updates mASR and mClip fields using the given |aActiveScrolledRoot|.
+   */
+  void UpdateHitTestInfoActiveScrolledRoot(
+    const ActiveScrolledRoot* aActiveScrolledRoot)
+  {
+    if (HasHitTestInfo()) {
+      mHitTestInfo->mASR = aActiveScrolledRoot;
+      mHitTestInfo->mClip = mozilla::DisplayItemClipChain::ClipForASR(
+        mHitTestInfo->mClipChain, mHitTestInfo->mASR);
+    }
+  }
+
   void SetHitTestInfo(mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo)
   {
     MOZ_ASSERT(aHitTestInfo);
@@ -5567,6 +5587,15 @@ public:
     SetBuildingRect(buildingRect);
   }
 
+  void SetActiveScrolledRoot(
+    const ActiveScrolledRoot* aActiveScrolledRoot) override
+  {
+    // Skip unnecessary call to
+    // |nsDisplayHitTestInfoItem::UpdateHitTestInfoActiveScrolledRoot()|, since
+    // callers will manually call that with different ASR.
+    nsDisplayItem::SetActiveScrolledRoot(aActiveScrolledRoot);
+  }
+
   void HitTest(nsDisplayListBuilder* aBuilder,
                const nsRect& aRect,
                HitTestState* aState,
@@ -7171,7 +7200,7 @@ public:
   void SetActiveScrolledRoot(
     const ActiveScrolledRoot* aActiveScrolledRoot) override
   {
-    nsDisplayItem::SetActiveScrolledRoot(aActiveScrolledRoot);
+    nsDisplayHitTestInfoItem::SetActiveScrolledRoot(aActiveScrolledRoot);
     mStoredList.SetActiveScrolledRoot(aActiveScrolledRoot);
   }
 
@@ -7647,7 +7676,7 @@ public:
   void SetActiveScrolledRoot(
     const ActiveScrolledRoot* aActiveScrolledRoot) override
   {
-    nsDisplayItem::SetActiveScrolledRoot(aActiveScrolledRoot);
+    nsDisplayHitTestInfoItem::SetActiveScrolledRoot(aActiveScrolledRoot);
     mList.SetActiveScrolledRoot(aActiveScrolledRoot);
   }
 
