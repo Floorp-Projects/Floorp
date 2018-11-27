@@ -19,7 +19,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
   function testFailHandler(message) {
     ok(false, message);
   }
+  function testPassHandler(message) {
+    ok(true, message);
+  }
   gScript.addMessageListener("test-fail", testFailHandler);
+  gScript.addMessageListener("test-pass", testPassHandler);
+
+  async function requestChromeAction(action, params) {
+    await new Promise(resolve => {
+      gScript.addMessageListener(`${action}-complete`, function completeListener() {
+        gScript.removeMessageListener(`${action}-complete`, completeListener);
+        resolve();
+      });
+      gScript.sendAsyncMessage(action, params);
+    });
+  }
 
   const errorNetworksMethods = [{
     supportedMethods: "basic-card",
@@ -81,6 +95,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
     ],
   };
 
+  const updateDetails = {
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    },
+    shippingOptions: [
+      {
+        id: "NormalShipping",
+        label: "NormalShipping",
+        amount: {
+          currency: "USD",
+          value: "10.00"
+        },
+        selected: true,
+      },
+      {
+        id: "FastShipping",
+        label: "FastShipping",
+        amount: {
+          currency: "USD",
+          value: "30.00"
+        },
+        selected: false,
+      },
+    ],
+    error: "",
+  };
+
   const defaultOptions = {
     requestPayerName: true,
     requestPayerEmail: false,
@@ -89,168 +134,228 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
     shippingType: "shipping"
   };
 
-  function testBasicCardRequestWithErrorNetworks() {
-    return new Promise((resolve, reject) => {
+  async function testBasicCardRequestWithErrorNetworks() {
+    const testName = "testBasicCardRequestWithErrorNetworks";
+    return new Promise(async (resolve) => {
       try {
-        const payRequest = new PaymentRequest(errorNetworksMethods, defaultDetails, defaultOptions);
-        ok(false, "Expected 'TypeError', but got success construction.");
-        resolve();
+        const request = new PaymentRequest(errorNetworksMethods, defaultDetails, defaultOptions);
+        ok(false, `${testName}: Expected 'TypeError', but got success construction.`);
       } catch (e) {
-        is(e.name, "TypeError", "Expected TypeError, but got " + e.name);
-        resolve();
+        is(e.name, "TypeError", `${testName}: Expected TypeError, but got ${e.name}`);
       }
+      resolve();
     });
   }
 
-  function testBasicCardRequestWithUnconvertableData() {
-    return new Promise((resolve, reject) => {
+  async function testBasicCardRequestWithUnconvertableData() {
+    const testName = "testBasicCardRequestWithUnconvertableData";
+    return new Promise(async (resolve) => {
       try {
-        const payRequest = new PaymentRequest(unconvertableDataMethods, defaultDetails, defaultOptions);
-        ok(false, "Expected 'TypeError', but got success construction.");
-        resolve();
+        const request = new PaymentRequest(unconvertableDataMethods, defaultDetails, defaultOptions);
+        ok(false, `${testName}: Expected 'TypeError', but got success construction.`);
       } catch (e) {
-        is(e.name, "TypeError", "Expected TypeError, but got " + e.name);
-        resolve();
+        is(e.name, "TypeError", `${testName}: Expected TypeError, but got ${e.name}`);
       }
+      resolve();
     });
   }
 
-  function testBasicCardRequestWithNullData() {
-    return new Promise((resolve, reject) => {
+  async function testBasicCardRequestWithNullData() {
+    const testName = "testBasicCardRequestWithNullData";
+    return new Promise(async (resolve) => {
       try {
-        const payRequest = new PaymentRequest(nullDataMethods, defaultDetails, defaultOptions);
-        ok(payRequest, "PaymentRequest should be constructed with null data BasicCardRequest.");
-        resolve();
+        const request = new PaymentRequest(nullDataMethods, defaultDetails, defaultOptions);
+        ok(request, `${testName}: PaymentRequest should be constructed with null data BasicCardRequest.`);
       } catch (e) {
-        ok(false, "Unexpected error: " + e.name);
-        resolve();
+        ok(false, `${testName}: Unexpected error: ${e.name}`);
       }
+      resolve();
     });
   }
 
-  function testBasicCardRequestWithEmptyData() {
-    return new Promise((resolve, reject) => {
+  async function testBasicCardRequestWithEmptyData() {
+    const testName = "testBasicCardRequestWithEmptyData";
+    return new Promise(async (resolve) => {
       try {
-        const payRequest = new PaymentRequest(emptyDataMethods, defaultDetails, defaultOptions);
-        ok(payRequest, "PaymentRequest should be constructed with empty data BasicCardRequest.");
-        resolve();
+        const request = new PaymentRequest(emptyDataMethods, defaultDetails, defaultOptions);
+        ok(request, `${testName}: PaymentRequest should be constructed with empty data BasicCardRequest.`);
       } catch (e) {
-        ok(false, "Unexpected error: " + e.name);
-        resolve();
+        ok(false, `${testName}: Unexpected error: ${e.name}`);
       }
+      resolve();
     });
   }
 
-  function testCanMakePaymentWithBasicCardRequest() {
-    return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      payRequest.canMakePayment().then( result => {
-        ok(result, "Should be resolved with true, but got false.");
-        resolve();
-      }).catch (e => {
-        ok(false, "Unexpected error: " + e.name);
-        resolve();
-      });
+  async function testCanMakePaymentWithBasicCardRequest() {
+    const testName = "testCanMakePaymentWithBasicCardRequest";
+    return new Promise(async (resolve) => {
+      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      try {
+        const result = await request.canMakePayment();
+        ok(result, `${testName}: canMakePayment() should be resolved with true.`);
+      } catch (e) {
+        ok(false, `${testName}: Unexpected error: ${e.name}`);
+      }
+      resolve();
     });
   }
 
-  function testBasicCardSimpleResponse() {
-    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-
-    gScript.sendAsyncMessage("set-simple-ui-service");
-    return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      payRequest.show().then(response => {
-        ok(response.details, "basiccard response should exists.");
-        ok(!response.details.cardholderName, "response.details.cardholderName should not exist.");
-        is(response.details.cardNumber, "4916855166538720", "response.details.cardNumber should be '4916855166538720'.");
-        ok(!response.details.expiryMonth, "response.details.expiryMonth should not exist.");
-        ok(!response.details.expiryYear, "response.details.expiryYear should be '2024'.");
-        ok(!response.details.cardSecurityCode, "response.details.cardSecurityCode should not exist.");
-        ok(!response.details.billingAddress, "response.details.billingAddress should not exist.");
-        response.complete("success").then(() =>{
-          resolve();
-        }).catch(e => {
-          ok(false, "Unexpected error: " + e.name);
-          resolve();
-        });
-      }).catch( e => {
-        ok(false, "Unexpected error: " + e.name);
-        resolve();
-      }).finally(handler.destruct);
+  async function testBasicCardSimpleResponse() {
+    const testName = "testBasicCardSimpleResponse";
+    await requestChromeAction("set-simple-ui-service", testName);
+    return new Promise(async (resolve) => {
+      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      try {
+        const response = await request.show();
+        ok(response.details, `${testName}: basiccard response should exists.`);
+        ok(!response.details.cardholderName, `${testName}: response.details.cardholderName should not exist.`);
+        is(response.details.cardNumber, "4916855166538720",
+           `${testName}: response.details.cardNumber should be '4916855166538720'.`);
+        ok(!response.details.expiryMonth, `${testName}: response.details.expiryMonth should not exist.`);
+        ok(!response.details.expiryYear, `${testName}: response.details.expiryYear should be '2024'.`);
+        ok(!response.details.cardSecurityCode, `${testName}: response.details.cardSecurityCode should not exist.`);
+        ok(!response.details.billingAddress, `${testName}: response.details.billingAddress should not exist.`);
+        await response.complete("success");
+      } catch (e) {
+        ok(false, `${testName}: Unexpected error: ${e.name}`);
+      }
+      await handler.destruct();
+      resolve();
     });
   }
 
-  function testBasicCardDetailedResponse() {
-    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-
-    gScript.sendAsyncMessage("set-detailed-ui-service");
-    return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      payRequest.show().then(response => {
-        ok(response.details, "basiccard response should exists.");
-        is(response.details.cardholderName, "Bill A. Pacheco", "response.details.cardholderName should be 'Bill A. Pacheco'.");
-        is(response.details.cardNumber, "4916855166538720", "response.details.cardNumber should be '4916855166538720'.");
-        is(response.details.expiryMonth, "01", "response.details.expiryMonth should be '01'.");
-        is(response.details.expiryYear, "2024", "response.details.expiryYear should be '2024'.");
-        is(response.details.cardSecurityCode, "180", "response.details.cardSecurityCode should be '180'.");
+  async function testBasicCardDetailedResponse() {
+    const testName = "testBasicCardDetailedResponse";
+    await requestChromeAction("set-detailed-ui-service", testName);
+    return new Promise(async (resolve) => {
+      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      try {
+        const response = await request.show();
+        ok(response.details, `${testName}: basiccard response should exists.`);
+        ok(response.details.cardholderName, `${testName}: response.details.cardholderName should not exist.`);
+        is(response.details.cardNumber, "4916855166538720",
+           `${testName}: response.details.cardNumber should be '4916855166538720'.`);
+        ok(response.details.expiryMonth, `${testName}: response.details.expiryMonth should not exist.`);
+        ok(response.details.expiryYear, `${testName}: response.details.expiryYear should be '2024'.`);
+        ok(response.details.cardSecurityCode, `${testName}: response.details.cardSecurityCode should not exist.`);
+        ok(response.details.billingAddress, `${testName}: response.details.billingAddress should not exist.`);
         const billingAddress = response.details.billingAddress;
-        is(billingAddress.country, "USA", "country should be 'USA'.");
-        is(billingAddress.addressLine.length, 1, "addressLine.length should be 1.");
-        is(billingAddress.addressLine[0], "Easton Ave", "addressLine[0] should be 'Easton Ave'.");
-        is(billingAddress.region, "CA", "region should be 'CA'.");
-        is(billingAddress.regionCode, "CA", "regionCode should be 'CA'.");
-        is(billingAddress.city, "San Bruno", "city should be 'San Bruno'.");
-        is(billingAddress.dependentLocality, "", "dependentLocality should be empty.");
-        is(billingAddress.postalCode, "94066", "postalCode should be '94066'.");
-        is(billingAddress.sortingCode, "123456", "sortingCode should be '123456'.");
-        is(billingAddress.organization, "", "organization should be empty." );
-        is(billingAddress.recipient, "Bill A. Pacheco", "recipient should be 'Bill A. Pacheco'.");
-        is(billingAddress.phone, "+14344413879", "phone should be '+14344413879'.");
-        response.complete("success").then(() =>{
-          resolve();
-        }).catch(e => {
-          ok(false, "Unexpected error: " + e.name);
-          resolve();
-        });
-      }).catch( e => {
-        ok(false, "Unexpected error: " + e.name);
-        resolve();
-      }).finally(handler.destruct);
+        is(billingAddress.country, "USA", `${testName}: country should be 'USA'.`);
+        is(billingAddress.addressLine.length, 1, `${testName}: addressLine.length should be 1.`);
+        is(billingAddress.addressLine[0], "Easton Ave", `${testName}: addressLine[0] should be 'Easton Ave'.`);
+        is(billingAddress.region, "CA", `${testName}: region should be 'CA'.`);
+        is(billingAddress.regionCode, "CA", `${testName}: regionCode should be 'CA'.`);
+        is(billingAddress.city, "San Bruno", `${testName}: city should be 'San Bruno'.`);
+        is(billingAddress.dependentLocality, "", `${testName}: dependentLocality should be empty.`);
+        is(billingAddress.postalCode, "94066", `${testName}: postalCode should be '94066'.`);
+        is(billingAddress.sortingCode, "123456", `${testName}: sortingCode should be '123456'.`);
+        is(billingAddress.organization, "", `${testName}: organization should be empty.`);
+        is(billingAddress.recipient, "Bill A. Pacheco", `${testName}: recipient should be 'Bill A. Pacheco'.`);
+        is(billingAddress.phone, "+14344413879", `${testName}: phone should be '+14344413879'.`);
+        await response.complete("success");
+      } catch (e) {
+        ok(false, `${testName}: Unexpected error: ${e.name}`);
+      }
+      await handler.destruct();
+      resolve();
     });
   }
 
-  function testSpecialAddressResponse() {
-    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-    gScript.sendAsyncMessage("set-special-address-ui-service");
-    return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      payRequest.show().then(response => {
-        ok(response.details, "BasiccardResponse should exist.");
+  async function testSpecialAddressResponse() {
+    const testName = "testSpecialAddressResponse";
+    await requestChromeAction("set-special-address-ui-service", testName);
+    return new Promise(async (resolve) => {
+      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      try {
+        const response = await request.show();
+        ok(response.details, `${testName}: BasiccardResponse should exist.`);
         ok(response.details.billingAddress,
-           "BasiccardResponse.billingAddress should exist.");
+           `${testName}: BasiccardResponse.billingAddress should exist.`);
         is(response.details.billingAddress.addressLine[0], ":$%@&*",
-           "AddressLine should be ':$%@&*'");
-        response.complete("success").then(()=>{
-          resolve();
-        });
-      }).finally(handler.destruct);
+           `${testName}: AddressLine should be ':$%@&*'`);
+        await response.complete("success");
+      } catch (e) {
+        ok(false, `${testName}: Unexpected error: ${e.name}`);
+      }
+      await handler.destruct();
+      resolve();
     });
   }
 
-  function testBasicCardErrorResponse() {
-    return new Promise((resolve, reject) => {
-      gScript.addMessageListener("error-response-complete",
-                                 function errorResponseCompleteHandler() {
-        gScript.removeMessageListener("error-response-complete",
-                                      errorResponseCompleteHandler);
-        resolve();
+  async function testMethodChangeWithoutRequestBillingAddress() {
+    const testName = "testMethodChangeWithoutRequestBillingAddress";
+    await requestChromeAction("method-change-to-basic-card", testName);
+    return new Promise(async (resolve) => {
+      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      request.addEventListener("paymentmethodchange", async (event) => {
+        is(event.methodName, "basic-card", `${testName}: PaymentMethodChangeEvent.methodName should be 'basic-card'.`)
+        ok(event.methodDetails, `PaymentMethodChangeEvent.methodDetails should exist.`);
+        ok(!event.methodDetails.billingAddress, `PaymentMethodChangeEvent.methodDetails.billingAddres should not exist.`);
+        event.updateWith(updateDetails);
       });
-      gScript.sendAsyncMessage("error-response-test");
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      try {
+        const response = await request.show();
+        await response.complete("success");
+      } catch (error) {
+        ok(false, `${testName}: Unexpected error: ${error.name}`);
+      }
+      await handler.destruct();
+      resolve();
     });
   }
 
-  function teardown() {
+  async function testMethodChangeWithRequestBillingAddress() {
+    const testName = "testMethodChangeWithRequestBillingAddress";
+    await requestChromeAction("method-change-to-basic-card", testName);
+    return new Promise(async (resolve) => {
+      const options = {
+        requestPayerName: true,
+        requestBillingAddress: true,
+        requestShipping: true,
+        shippingType: "shipping",
+      };
+      const request = new PaymentRequest(defaultMethods, defaultDetails, options);
+      request.addEventListener("paymentmethodchange", async (event) => {
+        is(event.methodName, "basic-card", `${testName}: PaymentMethodChangeEvent.methodName should be 'basic-card'.`)
+        ok(event.methodDetails, `PaymentMethodChangeEvent.methodDetails should exist.`);
+        const billingAddress = event.methodDetails.billingAddress;
+        is(billingAddress.country, "USA", `${testName}: country should be 'USA'.`);
+        is(billingAddress.addressLine.length, 1, `${testName}: addressLine.length should be 1.`);
+        is(billingAddress.addressLine[0], "Easton Ave", `${testName}: addressLine[0] should be 'Easton Ave'.`);
+        is(billingAddress.region, "CA", `${testName}: region should be 'CA'.`);
+        is(billingAddress.regionCode, "CA", `${testName}: regionCode should be 'CA'.`);
+        is(billingAddress.city, "San Bruno", `${testName}: city should be 'San Bruno'.`);
+        is(billingAddress.dependentLocality, "", `${testName}: dependentLocality should be empty.`);
+        is(billingAddress.postalCode, "94066", `${testName}: postalCode should be '94066'.`);
+        is(billingAddress.sortingCode, "123456", `${testName}: sortingCode should be '123456'.`);
+        is(billingAddress.organization, "", `${testName}: organization should be empty.`);
+        is(billingAddress.recipient, "Bill A. Pacheco", `${testName}: recipient should be 'Bill A. Pacheco'.`);
+        is(billingAddress.phone, "+14344413879", `${testName}: phone should be '+14344413879'.`);
+        event.updateWith(updateDetails);
+      });
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      try {
+        const response = await request.show();
+        await response.complete("success");
+      } catch (error) {
+        ok(false, `${testName}: Unexpected error: ${error.name}`);
+      }
+      await handler.destruct();
+      resolve();
+    });
+  }
+
+
+  async function testBasicCardErrorResponse() {
+    const testName = "testBasicCardErrorResponse";
+    return requestChromeAction("error-response-test", testName);
+  }
+
+  async function teardown() {
     gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
       gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
       gScript.removeMessageListener("test-fail", testFailHandler)
@@ -260,21 +365,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
     gScript.sendAsyncMessage("teardown");
   }
 
-  function runTests() {
-    testBasicCardRequestWithErrorNetworks()
-    .then(testBasicCardRequestWithUnconvertableData)
-    .then(testBasicCardRequestWithNullData)
-    .then(testBasicCardRequestWithEmptyData)
-    .then(testCanMakePaymentWithBasicCardRequest)
-    .then(testBasicCardSimpleResponse)
-    .then(testBasicCardDetailedResponse)
-    .then(testSpecialAddressResponse)
-    .then(testBasicCardErrorResponse)
-    .then(teardown)
-    .catch( e => {
-      ok(false, "Unexpected error: " + e.name);
+  async function runTests() {
+    try {
+      await testBasicCardRequestWithErrorNetworks();
+      await testBasicCardRequestWithUnconvertableData();
+      await testBasicCardRequestWithNullData();
+      await testBasicCardRequestWithEmptyData();
+      await testCanMakePaymentWithBasicCardRequest();
+      await testBasicCardSimpleResponse();
+      await testBasicCardDetailedResponse();
+      await testSpecialAddressResponse();
+      await testBasicCardErrorResponse();
+      await testMethodChangeWithoutRequestBillingAddress();
+      await testMethodChangeWithRequestBillingAddress()
+      await teardown();
+    } catch (e) {
+      ok(false, `test_basiccard.html: Unexpected error: ${e.name}`);
       SimpleTest.finish();
-    });
+    };
   }
 
   window.addEventListener('load', function() {
