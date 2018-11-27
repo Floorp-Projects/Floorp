@@ -292,7 +292,6 @@ GLuint
 GLScreenBuffer::GetDrawFB() const
 {
 #ifdef DEBUG
-    MOZ_ASSERT(mGL->IsCurrent());
     MOZ_ASSERT(!mInInternalMode_DrawFB);
 
     // Don't need a branch here, because:
@@ -303,7 +302,7 @@ GLScreenBuffer::GetDrawFB() const
     mGL->raw_fGetIntegerv(LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT, (GLint*)&actual);
 
     GLuint predicted = mInternalDrawFB;
-    if (predicted != actual) {
+    if (predicted != actual && !mGL->CheckContextLost()) {
         printf_stderr("Misprediction: Bound draw FB predicted: %d. Was: %d.\n",
                       predicted, actual);
         MOZ_ASSERT(false, "Draw FB binding misprediction!");
@@ -317,7 +316,6 @@ GLuint
 GLScreenBuffer::GetReadFB() const
 {
 #ifdef DEBUG
-    MOZ_ASSERT(mGL->IsCurrent());
     MOZ_ASSERT(!mInInternalMode_ReadFB);
 
     // We use raw_ here because this is debug code and we need to see what
@@ -329,7 +327,7 @@ GLScreenBuffer::GetReadFB() const
         mGL->raw_fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&actual);
 
     GLuint predicted = mInternalReadFB;
-    if (predicted != actual) {
+    if (predicted != actual && !mGL->CheckContextLost()) {
         printf_stderr("Misprediction: Bound read FB predicted: %d. Was: %d.\n",
                       predicted, actual);
         MOZ_ASSERT(false, "Read FB binding misprediction!");
@@ -1000,7 +998,7 @@ ReadBuffer::Attach(SharedSurface* surf)
 
         mGL->AttachBuffersToFB(colorTex, colorRB, 0, 0, mFB, target);
         mGL->mFBOMapping[mFB] = surf;
-        MOZ_ASSERT(mGL->IsFramebufferComplete(mFB));
+        MOZ_GL_ASSERT(mGL, mGL->IsFramebufferComplete(mFB));
     }
 
     mSurf = surf;

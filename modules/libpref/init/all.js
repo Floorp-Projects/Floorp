@@ -4862,7 +4862,6 @@ pref("webgl.force-layers-readback", false);
 pref("webgl.force-index-validation", 0);
 pref("webgl.lose-context-on-memory-pressure", false);
 pref("webgl.can-lose-context-in-foreground", true);
-pref("webgl.restore-context-when-visible", true);
 #ifdef ANDROID
 pref("webgl.max-contexts", 16);
 pref("webgl.max-contexts-per-principal", 8);

@@ -273,7 +273,8 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
     mIsOffscreen(isOffscreen),
     mDebugFlags(ChooseDebugFlags(flags)),
     mSharedContext(sharedContext),
-    mCaps(caps)
+    mCaps(caps),
+    mWorkAroundDriverBugs(gfxPrefs::WorkAroundDriverBugs())
 {
     mOwningThreadId = PlatformThread::CurrentId();
     MOZ_ALWAYS_TRUE( sCurrentContext.init() );
@@ -379,7 +380,8 @@ GLContext::LoadFeatureSymbols(const char* prefix, bool trygl, const SymLoadStruc
 bool
 GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 {
-    mWorkAroundDriverBugs = gfxPrefs::WorkAroundDriverBugs();
+    if (!MakeCurrent(true))
+        return false;
 
     const SymLoadStruct coreSymbols[] = {
         { (PRFuncPtr*) &mSymbols.fActiveTexture, { "ActiveTexture", "ActiveTextureARB", nullptr } },
@@ -513,11 +515,34 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
     if (!LoadGLSymbols(this, prefix, trygl, coreSymbols, "GL"))
         return false;
 
-    ////////////////
+    {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatus",
+                                                                "GetGraphicsResetStatusARB",
+                                                                "GetGraphicsResetStatusKHR",
+                                                                "GetGraphicsResetStatusEXT",
+                                                                nullptr } },
+            END_SYMBOLS
+        };
+        (void)LoadGLSymbols(this, prefix, trygl, symbols, nullptr);
 
-    if (!MakeCurrent()) {
-        return false;
+        auto err = fGetError();
+        if (err == LOCAL_GL_CONTEXT_LOST) {
+            MOZ_ASSERT(mSymbols.fGetGraphicsResetStatus);
+            const auto status = fGetGraphicsResetStatus();
+            if (status) {
+                printf_stderr("Unflushed glGetGraphicsResetStatus: 0x%04x\n", status);
+            }
+            err = fGetError();
+            MOZ_ASSERT(!err);
+        }
+        if (err) {
+            MOZ_ASSERT(false);
+            return false;
+        }
     }
+
+    ////////////////
 
     const std::string versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
     if (versionStr.find("OpenGL ES") == 0) {
@@ -850,8 +875,8 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 
     ////////////////
 
-    const auto err = mSymbols.fGetError();
-    MOZ_RELEASE_ASSERT(!err);
+    const auto err = fGetError();
+    MOZ_RELEASE_ASSERT(!IsBadCallError(err));
     if (err)
         return false;
 
@@ -959,7 +984,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         mCaps.alpha = false;
     }
 
-    MOZ_ASSERT(IsCurrent());
+    MOZ_GL_ASSERT(this, IsCurrent());
 
     if (ShouldSpew() && IsExtensionSupported(KHR_debug)) {
         fEnable(LOCAL_GL_DEBUG_OUTPUT);
@@ -1010,23 +1035,6 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
                               resetStrategy);
             }
             MarkUnsupported(GLFeature::robustness);
-        }
-    }
-    if (IsSupported(GLFeature::robustness)) {
-        const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatus",
-                                                                "GetGraphicsResetStatusARB",
-                                                                "GetGraphicsResetStatusKHR",
-                                                                "GetGraphicsResetStatusEXT",
-                                                                nullptr } },
-            END_SYMBOLS
-        };
-        if (fnLoadForFeature(symbols, GLFeature::robustness)) {
-            const auto status = mSymbols.fGetGraphicsResetStatus();
-            MOZ_ALWAYS_TRUE(!status);
-
-            const auto err = mSymbols.fGetError();
-            MOZ_ALWAYS_TRUE(!err);
         }
     }
 
@@ -1624,7 +1632,7 @@ GLContext::DebugCallback(GLenum source,
 void
 GLContext::InitExtensions()
 {
-    MOZ_ASSERT(IsCurrent());
+    MOZ_GL_ASSERT(this, IsCurrent());
 
     std::vector<nsCString> driverExtensionList;
 
@@ -1652,7 +1660,7 @@ GLContext::InitExtensions()
         }
     }();
     const auto err = fGetError();
-    MOZ_ALWAYS_TRUE(!err);
+    MOZ_ALWAYS_TRUE(!IsBadCallError(err));
 
     const bool shouldDumpExts = ShouldDumpExts();
     if (shouldDumpExts) {
@@ -1884,7 +1892,7 @@ GLContext::IsFramebufferComplete(GLuint fb, GLenum* pStatus)
     MOZ_ASSERT(fb);
 
     ScopedBindFramebuffer autoFB(this, fb);
-    MOZ_ASSERT(fIsFramebuffer(fb));
+    MOZ_GL_ASSERT(this, fIsFramebuffer(fb));
 
     GLenum status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (pStatus)
@@ -1902,10 +1910,10 @@ GLContext::AttachBuffersToFB(GLuint colorTex, GLuint colorRB,
     MOZ_ASSERT( !(colorTex && colorRB) );
 
     ScopedBindFramebuffer autoFB(this, fb);
-    MOZ_ASSERT(fIsFramebuffer(fb)); // It only counts after being bound.
+    MOZ_GL_ASSERT(this, fIsFramebuffer(fb)); // It only counts after being bound.
 
     if (colorTex) {
-        MOZ_ASSERT(fIsTexture(colorTex));
+        MOZ_GL_ASSERT(this, fIsTexture(colorTex));
         MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D ||
                    target == LOCAL_GL_TEXTURE_RECTANGLE_ARB);
         fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
@@ -1915,7 +1923,9 @@ GLContext::AttachBuffersToFB(GLuint colorTex, GLuint colorRB,
                               0);
     } else if (colorRB) {
         // On the Android 4.3 emulator, IsRenderbuffer may return false incorrectly.
-        MOZ_ASSERT_IF(Renderer() != GLRenderer::AndroidEmulator, fIsRenderbuffer(colorRB));
+        MOZ_GL_ASSERT(this,
+                      fIsRenderbuffer(colorRB) ||
+                      Renderer() == GLRenderer::AndroidEmulator);
         fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                  LOCAL_GL_COLOR_ATTACHMENT0,
                                  LOCAL_GL_RENDERBUFFER,
@@ -1923,7 +1933,9 @@ GLContext::AttachBuffersToFB(GLuint colorTex, GLuint colorRB,
     }
 
     if (depthRB) {
-        MOZ_ASSERT_IF(Renderer() != GLRenderer::AndroidEmulator, fIsRenderbuffer(depthRB));
+        MOZ_GL_ASSERT(this,
+                      fIsRenderbuffer(depthRB) ||
+                      Renderer() == GLRenderer::AndroidEmulator);
         fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                  LOCAL_GL_DEPTH_ATTACHMENT,
                                  LOCAL_GL_RENDERBUFFER,
@@ -1931,7 +1943,9 @@ GLContext::AttachBuffersToFB(GLuint colorTex, GLuint colorRB,
     }
 
     if (stencilRB) {
-        MOZ_ASSERT_IF(Renderer() != GLRenderer::AndroidEmulator, fIsRenderbuffer(stencilRB));
+        MOZ_GL_ASSERT(this,
+                      fIsRenderbuffer(stencilRB) ||
+                      Renderer() == GLRenderer::AndroidEmulator);
         fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                  LOCAL_GL_STENCIL_ATTACHMENT,
                                  LOCAL_GL_RENDERBUFFER,
@@ -2052,33 +2066,8 @@ GLContext::MarkDestroyed()
     mBlitHelper = nullptr;
     mReadTexImageHelper = nullptr;
 
-    if (!MakeCurrent()) {
-        NS_WARNING("MakeCurrent() failed during MarkDestroyed! Skipping GL object teardown.");
-    }
-
+    mContextLost = true;
     mSymbols = {};
-}
-
-// -
-
-GLenum
-GLContext::RawGetErrorAndClear() const
-{
-    const GLenum ret = mSymbols.fGetError();
-
-    auto flushedErr = ret;
-    uint32_t i = 1;
-    while (flushedErr && flushedErr != LOCAL_GL_CONTEXT_LOST) {
-        if (i == 100) {
-            gfxCriticalError() << "Flushing glGetError still " << gfx::hexa(flushedErr)
-                               << " after " << i << " calls.";
-            break;
-        }
-        flushedErr = mSymbols.fGetError();
-        i += 1;
-    }
-
-    return ret;
 }
 
 // -
@@ -2506,7 +2495,7 @@ GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
             }
 
             DebugOnly<GLenum> status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-            MOZ_ASSERT(status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
+            MOZ_GL_ASSERT(this, status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
         }
 
         if (src->NeedsIndirectReads()) {
@@ -2968,7 +2957,7 @@ GetBytesPerTexel(GLenum format, GLenum type)
 bool
 GLContext::MakeCurrent(bool aForce) const
 {
-    if (MOZ_UNLIKELY( IsDestroyed() ))
+    if (MOZ_UNLIKELY( IsContextLost() ))
         return false;
 
     if (MOZ_LIKELY( !aForce )) {
@@ -2979,7 +2968,7 @@ GLContext::MakeCurrent(bool aForce) const
             isCurrent = IsCurrentImpl();
         }
         if (MOZ_LIKELY( isCurrent )) {
-            MOZ_ASSERT(IsCurrentImpl());
+            MOZ_ASSERT(IsCurrentImpl() || !MakeCurrentImpl()); // Might have lost context.
             return true;
         }
     }
@@ -3002,6 +2991,129 @@ GLContext::ResetSyncCallCount(const char* resetReason) const
     mSyncGLCallCount = 0;
 }
 
+// -
+
+bool
+CheckContextLost(const GLContext* const gl)
+{
+    return gl->CheckContextLost();
+}
+
+// -
+
+GLenum
+GLContext::GetError() const
+{
+    if (mContextLost)
+        return LOCAL_GL_CONTEXT_LOST;
+
+    if (mImplicitMakeCurrent) {
+        (void)MakeCurrent();
+    }
+
+    const auto fnGetError = [&]() {
+        const auto ret = mSymbols.fGetError();
+        if (ret == LOCAL_GL_CONTEXT_LOST) {
+            OnContextLostError();
+            mTopError = ret; // Promote to top!
+        }
+        return ret;
+    };
+
+    auto ret = fnGetError();
+
+    {
+        auto flushedErr = ret;
+        uint32_t i = 1;
+        while (flushedErr && !mContextLost) {
+            if (i == 100) {
+                gfxCriticalError() << "Flushing glGetError still "
+                                   << gfx::hexa(flushedErr) << " after " << i
+                                   << " calls.";
+                break;
+            }
+            flushedErr = fnGetError();
+            i += 1;
+        }
+    }
+
+    if (mTopError) {
+        ret = mTopError;
+        mTopError = 0;
+    }
+
+    if (mDebugFlags & DebugFlagTrace) {
+        const auto errStr = GLErrorToString(ret);
+        printf_stderr("[gl:%p] GetError() -> %s\n", this, errStr.c_str());
+    }
+    return ret;
+}
+
+GLenum
+GLContext::fGetGraphicsResetStatus() const
+{
+    OnSyncCall();
+
+    GLenum ret = 0;
+    if (mSymbols.fGetGraphicsResetStatus) {
+        if (mImplicitMakeCurrent) {
+            (void)MakeCurrent();
+        }
+        ret = mSymbols.fGetGraphicsResetStatus();
+    } else {
+        if (!MakeCurrent(true)) {
+            ret = LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB;
+        }
+    }
+
+    if (mDebugFlags & DebugFlagTrace) {
+        printf_stderr("[gl:%p] GetGraphicsResetStatus() -> 0x%04x\n", this, ret);
+    }
+
+    return ret;
+}
+
+void
+GLContext::OnContextLostError() const
+{
+    if (mDebugFlags & DebugFlagTrace) {
+        printf_stderr("[gl:%p] CONTEXT_LOST\n", this);
+    }
+    mContextLost = true;
+}
+
+// --
+
+/*static*/ std::string
+GLContext::GLErrorToString(const GLenum err)
+{
+    switch (err) {
+    case LOCAL_GL_NO_ERROR:
+        return "GL_NO_ERROR";
+    case LOCAL_GL_INVALID_ENUM:
+        return "GL_INVALID_ENUM";
+    case LOCAL_GL_INVALID_VALUE:
+        return "GL_INVALID_VALUE";
+    case LOCAL_GL_INVALID_OPERATION:
+        return "GL_INVALID_OPERATION";
+    case LOCAL_GL_STACK_OVERFLOW:
+        return "GL_STACK_OVERFLOW";
+    case LOCAL_GL_STACK_UNDERFLOW:
+        return "GL_STACK_UNDERFLOW";
+    case LOCAL_GL_OUT_OF_MEMORY:
+        return "GL_OUT_OF_MEMORY";
+    case LOCAL_GL_TABLE_TOO_LARGE:
+        return "GL_TABLE_TOO_LARGE";
+    case LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION:
+        return "GL_INVALID_FRAMEBUFFER_OPERATION";
+    case LOCAL_GL_CONTEXT_LOST:
+        return "GL_CONTEXT_LOST";
+    }
+
+    const nsPrintfCString hex("<enum 0x%04x>", err);
+    return hex.BeginReading();
+}
+
 // --
 
 void
@@ -3009,11 +3121,12 @@ GLContext::BeforeGLCall_Debug(const char* const funcName) const
 {
     MOZ_ASSERT(mDebugFlags);
 
-    FlushErrors();
-
     if (mDebugFlags & DebugFlagTrace) {
         printf_stderr("[gl:%p] > %s\n", this, funcName);
     }
+
+    MOZ_ASSERT(!mDebugErrorScope);
+    mDebugErrorScope.reset(new LocalErrorScope(*this));
 }
 
 void
@@ -3025,19 +3138,21 @@ GLContext::AfterGLCall_Debug(const char* const funcName) const
     // the stack trace will actually point to it. Otherwise, OpenGL being an asynchronous API, stack traces
     // tend to be meaningless
     mSymbols.fFinish();
-    GLenum err = FlushErrors();
 
-    if (mDebugFlags & DebugFlagTrace) {
-        printf_stderr("[gl:%p] < %s [%s (0x%04x)]\n", this, funcName,
-                      GLErrorToString(err), err);
+    const auto err = mDebugErrorScope->GetError();
+    mDebugErrorScope = nullptr;
+    if (!mTopError) {
+        mTopError = err;
     }
 
-    if (err != LOCAL_GL_NO_ERROR &&
-        !mLocalErrorScopeStack.size())
-    {
-        printf_stderr("[gl:%p] %s: Generated unexpected %s error."
-                      " (0x%04x)\n", this, funcName,
-                      GLErrorToString(err), err);
+    if (mDebugFlags & DebugFlagTrace) {
+        printf_stderr("[gl:%p] < %s [%s]\n", this, funcName,
+                      GLErrorToString(err).c_str());
+    }
+
+    if (err && !mLocalErrorScopeStack.size()) {
+        printf_stderr("[gl:%p] %s: Generated unexpected %s error.\n", this, funcName,
+                      GLErrorToString(err).c_str());
 
         if (mDebugFlags & DebugFlagAbortOnError) {
             MOZ_CRASH("Unexpected error with MOZ_GL_DEBUG_ABORT_ON_ERROR. (Run"
