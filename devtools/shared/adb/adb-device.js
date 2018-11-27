@@ -23,6 +23,31 @@ class AdbDevice {
     this._model = model.trim();
     return this._model;
   }
+
+  // This method is not using any information from the instance, but in theory getting
+  // runtime socket paths (as well as model) should be device specific. So we should use
+  // information available on the instance when implementing multi device support.
+  // See Bug 1507126.
+  async getRuntimeSocketPaths() {
+    // A matching entry looks like:
+    // 00000000: 00000002 00000000 00010000 0001 01 6551588
+    //  /data/data/org.mozilla.fennec/firefox-debugger-socket
+    const query = "cat /proc/net/unix";
+    const rawSocketInfo = await ADB.shell(query);
+
+    // Filter to lines with "firefox-debugger-socket"
+    let socketInfos = rawSocketInfo.split(/\r?\n/);
+    socketInfos = socketInfos.filter(l => l.includes("firefox-debugger-socket"));
+
+    // It's possible to have multiple lines with the same path, so de-dupe them
+    const socketPaths = new Set();
+    for (const socketInfo of socketInfos) {
+      const socketPath = socketInfo.split(" ").pop();
+      socketPaths.add(socketPath);
+    }
+
+    return socketPaths;
+  }
 }
 
 module.exports = AdbDevice;
