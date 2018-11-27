@@ -116,6 +116,13 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
 
         return filtered_pings[:count]
 
+    def wait_for_ping(self, action_func, ping_filter):
+        """Call wait_for_pings() with the given action_func and ping_filter and
+        return the first result.
+        """
+        [ping] = self.wait_for_pings(action_func, ping_filter, 1)
+        return ping
+
     def restart_browser(self):
         """Restarts browser while maintaining the same profile and session."""
         self.restart(clean=False, in_app=True)
