@@ -1474,7 +1474,10 @@ nsFtpState::R_pasv() {
         if (newDataConn) {
             mDataTransport->Close(NS_ERROR_ABORT);
             mDataTransport = nullptr;
-            mDataStream = nullptr;
+            if (mDataStream) {
+                mDataStream->CloseWithStatus(NS_ERROR_ABORT);
+                mDataStream = nullptr;
+            }
         }
     }
 
@@ -2126,7 +2129,10 @@ nsFtpState::CloseWithStatus(nsresult status)
         mDataTransport = nullptr;
     }
 
-    mDataStream = nullptr;
+    if (mDataStream) {
+        mDataStream->CloseWithStatus(NS_ERROR_ABORT);
+        mDataStream = nullptr;
+    }
 
     return nsBaseContentStream::CloseWithStatus(status);
 }
