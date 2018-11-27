@@ -2093,18 +2093,9 @@ nsContentUtils::CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
 
 // static
 bool
-nsContentUtils::CanCallerAccess(const nsINode* aNode)
+nsContentUtils::CanCallerAccess(nsINode* aNode)
 {
-  nsIPrincipal* subject = SubjectPrincipal();
-  if (IsSystemPrincipal(subject)) {
-    return true;
-  }
-
-  if (aNode->ChromeOnlyAccess()) {
-    return false;
-  }
-
-  return CanCallerAccess(subject, aNode->NodePrincipal());
+  return CanCallerAccess(SubjectPrincipal(), aNode->NodePrincipal());
 }
 
 // static
