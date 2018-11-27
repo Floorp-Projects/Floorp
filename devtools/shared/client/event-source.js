@@ -27,8 +27,12 @@ function eventSource(proto) {
    *        Called when the event is fired. If the same listener
    *        is added more than once, it will be called once per
    *        addListener call.
+   * @param key function (optional)
+   *        Key to use for removeListener, defaults to the listener. Used by helper method
+   *        addOneTimeListener, which creates a custom listener. Use the original listener
+   *        as key to allow to remove oneTimeListeners.
    */
-  proto.addListener = function(name, listener) {
+  proto.addListener = function(name, listener, key = listener) {
     if (typeof listener != "function") {
       throw TypeError("Listeners must be functions.");
     }
@@ -37,7 +41,7 @@ function eventSource(proto) {
       this._listeners = {};
     }
 
-    this._getListeners(name).push(listener);
+    this._getListeners(name).push({ key, callback: listener });
   };
 
   /**
@@ -53,14 +57,14 @@ function eventSource(proto) {
    */
   proto.addOneTimeListener = function(name, listener) {
     return new Promise(resolve => {
-      const l = (eventName, ...rest) => {
-        this.removeListener(name, l);
+      const oneTimeListener = (eventName, ...rest) => {
+        this.removeListener(name, listener);
         if (listener) {
           listener(eventName, ...rest);
         }
         resolve(rest[0]);
       };
-      this.addListener(name, l);
+      this.addListener(name, oneTimeListener, listener);
     });
   };
 
@@ -83,7 +87,7 @@ function eventSource(proto) {
       this._listeners[name] = [];
     } else {
       this._listeners[name] =
-        this._listeners[name].filter(l => l != listener);
+        this._listeners[name].filter(l => l.key != listener);
     }
   };
 
@@ -121,7 +125,7 @@ function eventSource(proto) {
 
     for (const listener of listeners) {
       try {
-        listener.apply(null, arguments);
+        listener.callback.apply(null, arguments);
       } catch (e) {
         // Prevent a bad listener from interfering with the others.
         DevToolsUtils.reportException("notify event '" + name + "'", e);
