@@ -3147,6 +3147,12 @@ void nsStyleDisplay::FinishStyle(nsPresContext* aPresContext,
   GenerateCombinedIndividualTransform();
 }
 
+static inline bool TransformListChanged(
+    const RefPtr<nsCSSValueSharedList>& aList,
+    const RefPtr<nsCSSValueSharedList>& aNewList) {
+  return !aList != !aNewList || (aList && *aList != *aNewList);
+}
+
 static inline nsChangeHint CompareTransformValues(
     const RefPtr<nsCSSValueSharedList>& aList,
     const RefPtr<nsCSSValueSharedList>& aNewList) {
@@ -3423,6 +3429,11 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   }
 
   return hint;
+}
+
+bool nsStyleDisplay::TransformChanged(const nsStyleDisplay& aNewData) const {
+  return TransformListChanged(mSpecifiedTransform,
+                              aNewData.mSpecifiedTransform);
 }
 
 void nsStyleDisplay::GenerateCombinedIndividualTransform() {
