@@ -175,7 +175,7 @@ nsMappedAttributes::SetAndSwapAttr(nsAtom* aAttrName, nsAttrValue& aValue,
 }
 
 const nsAttrValue*
-nsMappedAttributes::GetAttr(nsAtom* aAttrName) const
+nsMappedAttributes::GetAttr(const nsAtom* aAttrName) const
 {
   MOZ_ASSERT(aAttrName, "null name");
 
@@ -278,7 +278,7 @@ nsMappedAttributes::GetExistingAttrNameFromQName(const nsAString& aName) const
 }
 
 int32_t
-nsMappedAttributes::IndexOfAttr(nsAtom* aLocalName) const
+nsMappedAttributes::IndexOfAttr(const nsAtom* aLocalName) const
 {
   uint32_t i;
   for (i = 0; i < mAttrCount; ++i) {

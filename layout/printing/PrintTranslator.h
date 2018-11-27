@@ -9,6 +9,7 @@
 
 #include <istream>
 
+#include "DrawEventRecorder.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/gfx/RecordedEvent.h"

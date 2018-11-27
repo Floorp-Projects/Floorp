@@ -23,7 +23,7 @@
 
 use cranelift_codegen::binemit::CodeOffset;
 use cranelift_codegen::entity::EntityRef;
-use cranelift_codegen::ir;
+use cranelift_codegen::ir::SourceLoc;
 use cranelift_wasm::FuncIndex;
 
 use compile::CompiledFunc;
@@ -51,7 +51,7 @@ impl CraneliftCompiledFunc {
 }
 
 impl CraneliftMetadataEntry {
-    pub fn direct_call(offset: CodeOffset, func_index: FuncIndex, srcloc: ir::SourceLoc) -> Self {
+    pub fn direct_call(offset: CodeOffset, func_index: FuncIndex, srcloc: SourceLoc) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_DirectCall,
             offset,
@@ -60,7 +60,7 @@ impl CraneliftMetadataEntry {
         }
     }
 
-    pub fn indirect_call(offset: CodeOffset, srcloc: ir::SourceLoc) -> Self {
+    pub fn indirect_call(offset: CodeOffset, srcloc: SourceLoc) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_IndirectCall,
             offset,
@@ -69,7 +69,7 @@ impl CraneliftMetadataEntry {
         }
     }
 
-    pub fn trap(offset: CodeOffset, srcloc: ir::SourceLoc, which: Trap) -> Self {
+    pub fn trap(offset: CodeOffset, srcloc: SourceLoc, which: Trap) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_Trap,
             offset,
@@ -78,7 +78,7 @@ impl CraneliftMetadataEntry {
         }
     }
 
-    pub fn memory_access(offset: CodeOffset, srcloc: ir::SourceLoc) -> Self {
+    pub fn memory_access(offset: CodeOffset, srcloc: SourceLoc) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_MemoryAccess,
             offset,

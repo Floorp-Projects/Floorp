@@ -9,6 +9,7 @@
 
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/RefCountedShmem.h"
+#include "mozilla/layers/TextureClient.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
