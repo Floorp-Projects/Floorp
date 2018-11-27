@@ -48,6 +48,9 @@ CleanupManager.addCleanupHandler(() => {
  *
  * @param chromeWindow
  *        The chrome window that the heartbeat notification is displayed in.
+ * @param sandboxManager
+ *        The manager for the sandbox this was called from. Heartbeat will
+ *        increment the hold counter on the manager.
  * @param {Object} options Options object.
  * @param {String} options.message
  *        The message, or question, to display on the notification.
@@ -57,7 +60,7 @@ CleanupManager.addCleanupHandler(() => {
  *        An identifier for this rating flow. Please note that this is only used to
  *        identify the notification box.
  * @param {String} [options.engagementButtonLabel=null]
- *        The text of the engagement button to use instead of stars. If this is null
+ *        The text of the engagement button to use instad of stars. If this is null
  *        or invalid, rating stars are used.
  * @param {String} [options.learnMoreMessage=null]
  *        The label of the learn more link. No link will be shown if this is null.
@@ -74,7 +77,7 @@ CleanupManager.addCleanupHandler(() => {
  *        The url to visit after the user answers the question.
  */
 var Heartbeat = class {
-  constructor(chromeWindow, options) {
+  constructor(chromeWindow, sandboxManager, options) {
     if (typeof options.flowId !== "string") {
       throw new Error("flowId must be a string");
     }
@@ -89,6 +92,10 @@ var Heartbeat = class {
 
     if (!options.message) {
       throw new Error("message must not be an empty string");
+    }
+
+    if (!sandboxManager) {
+      throw new Error("sandboxManager must be provided");
     }
 
     if (options.postAnswerUrl) {
@@ -106,7 +113,8 @@ var Heartbeat = class {
     }
 
     this.chromeWindow = chromeWindow;
-    this.eventEmitter = new EventEmitter();
+    this.eventEmitter = new EventEmitter(sandboxManager);
+    this.sandboxManager = sandboxManager;
     this.options = options;
     this.surveyResults = {};
     this.buttons = null;
@@ -229,12 +237,13 @@ var Heartbeat = class {
       this.close();
     }, surveyDuration);
 
+    this.sandboxManager.addHold("heartbeat");
     CleanupManager.addCleanupHandler(this.close);
   }
 
   maybeNotifyHeartbeat(name, data = {}) {
     if (this.pingSent) {
-      log.warn("Heartbeat event received after Telemetry ping sent. name:", name, "data:", data);
+      log.warn("Heartbeat event recieved after Telemetry ping sent. name:", name, "data:", data);
       return;
     }
 
@@ -365,6 +374,8 @@ var Heartbeat = class {
     // Kill the timers which might call things after we've cleaned up:
     this.endTimerIfPresent("surveyEndTimer");
     this.endTimerIfPresent("engagementCloseTimer");
+
+    this.sandboxManager.removeHold("heartbeat");
     // remove listeners
     this.chromeWindow.removeEventListener("SSWindowClosing", this.handleWindowClosed);
     // remove references for garbage collection
@@ -375,6 +386,7 @@ var Heartbeat = class {
     this.rightSpacer = null;
     this.learnMore = null;
     this.eventEmitter = null;
+    this.sandboxManager = null;
     // Ensure we don't re-enter and release the CleanupManager's reference to us:
     CleanupManager.removeCleanupHandler(this.close);
   }
