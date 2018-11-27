@@ -20,6 +20,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
 #include "nsIRunnable.h"
+#include "nsITimedChannel.h"
 #include "nsSyncLoadService.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"

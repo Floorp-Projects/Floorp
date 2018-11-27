@@ -154,23 +154,23 @@ public:
 
   bool NameAndNamespaceEquals(NodeInfo* aNodeInfo) const;
 
-  bool Equals(nsAtom* aNameAtom) const
+  bool Equals(const nsAtom* aNameAtom) const
   {
     return mInner.mName == aNameAtom;
   }
 
-  bool Equals(nsAtom* aNameAtom, nsAtom* aPrefixAtom) const
+  bool Equals(const nsAtom* aNameAtom, const nsAtom* aPrefixAtom) const
   {
     return (mInner.mName == aNameAtom) && (mInner.mPrefix == aPrefixAtom);
   }
 
-  bool Equals(nsAtom* aNameAtom, int32_t aNamespaceID) const
+  bool Equals(const nsAtom* aNameAtom, int32_t aNamespaceID) const
   {
     return ((mInner.mName == aNameAtom) &&
             (mInner.mNamespaceID == aNamespaceID));
   }
 
-  bool Equals(nsAtom* aNameAtom, nsAtom* aPrefixAtom, int32_t aNamespaceID) const
+  bool Equals(const nsAtom* aNameAtom, const nsAtom* aPrefixAtom, int32_t aNamespaceID) const
   {
     return ((mInner.mName == aNameAtom) &&
             (mInner.mPrefix == aPrefixAtom) &&
@@ -192,7 +192,7 @@ public:
 
   bool NamespaceEquals(const nsAString& aNamespaceURI) const;
 
-  inline bool QualifiedNameEquals(nsAtom* aNameAtom) const;
+  inline bool QualifiedNameEquals(const nsAtom* aNameAtom) const;
 
   bool QualifiedNameEquals(const nsAString& aQualifiedName) const
   {

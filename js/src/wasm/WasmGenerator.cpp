@@ -672,7 +672,7 @@ ExecuteCompileTask(CompileTask* task, UniqueChars* error)
 #ifdef ENABLE_WASM_CRANELIFT
         if (task->env.optimizedBackend() == OptimizedBackend::Cranelift) {
             if (!CraneliftCompileFunctions(task->env, task->lifo, task->inputs, &task->output,
-                                           error))
+                                           task->dvs, error))
             {
                 return false;
             }

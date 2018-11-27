@@ -2744,6 +2744,18 @@ BuildFlatRopeReplacement(JSContext* cx, HandleString textstr, HandleLinearString
     }
 
     RopeBuilder builder(cx);
+
+    /*
+     * Special case when the pattern string is '', which matches to the
+     * head of the string and doesn't overlap with any component of the rope.
+     */
+    if (patternLength == 0) {
+        MOZ_ASSERT(match == 0);
+        if (!builder.append(repstr)) {
+            return nullptr;
+        }
+    }
+
     size_t pos = 0;
     while (!r.empty()) {
         RootedString str(cx, r.front());

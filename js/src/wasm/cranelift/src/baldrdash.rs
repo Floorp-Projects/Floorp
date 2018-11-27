@@ -17,13 +17,10 @@
 // baldrapi but none of the functions.
 
 use baldrapi::CraneliftModuleEnvironment;
-use cranelift_codegen::binemit::CodeOffset;
-use cranelift_codegen::cursor::{Cursor, FuncCursor};
+use cranelift_codegen::cursor::FuncCursor;
 use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
-use cranelift_codegen::ir::stackslot::StackSize;
 use cranelift_codegen::ir::{self, InstBuilder};
-use cranelift_codegen::{CodegenError, CodegenResult};
 use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex};
 use std::mem;
 use std::slice;
@@ -39,13 +36,6 @@ pub use baldrapi::CraneliftStaticEnvironment as StaticEnvironment;
 pub use baldrapi::FuncTypeIdDescKind;
 pub use baldrapi::Trap;
 pub use baldrapi::TypeCode;
-
-pub enum ConstantValue {
-    I32(i32),
-    I64(i64),
-    F32(f32),
-    F64(f64),
-}
 
 /// Convert a `TypeCode` into the equivalent Cranelift type.
 ///
@@ -111,7 +101,7 @@ impl GlobalDesc {
             let v = baldrapi::global_constantValue(self.0);
             // Note that the floating point constants below
             match v.t {
-                TypeCode::I32 => pos.ins().iconst(ir::types::I32, v.u.i32 as i64),
+                TypeCode::I32 => pos.ins().iconst(ir::types::I32, i64::from(v.u.i32)),
                 TypeCode::I64 => pos.ins().iconst(ir::types::I64, v.u.i64),
                 TypeCode::F32 => pos.ins().f32const(Ieee32::with_bits(v.u.i32 as u32)),
                 TypeCode::F64 => pos.ins().f64const(Ieee64::with_bits(v.u.i64 as u64)),
@@ -201,6 +191,6 @@ impl<'a> ModuleEnvironment<'a> {
         GlobalDesc(unsafe { baldrapi::env_global(self.env, global_index.index()) })
     }
     pub fn min_memory_length(&self) -> i64 {
-        self.env.min_memory_length as i64
+        i64::from(self.env.min_memory_length)
     }
 }

@@ -13,9 +13,6 @@
  * limitations under the License.
  */
 
-#![allow(unused)]
-#![warn(unused_must_use)]
-
 extern crate cranelift_codegen;
 extern crate cranelift_wasm;
 #[macro_use]
@@ -53,12 +50,12 @@ pub extern "C" fn cranelift_initialize() {
 ///
 /// This is declared in `clifapi.h`.
 #[no_mangle]
-pub extern "C" fn cranelift_compiler_create<'a, 'b>(
+pub unsafe extern "C" fn cranelift_compiler_create<'a, 'b>(
     static_env: *const StaticEnvironment,
     env: *const baldrapi::CraneliftModuleEnvironment,
 ) -> *mut BatchCompiler<'a, 'b> {
-    let env = unsafe { env.as_ref().unwrap() };
-    let static_env = unsafe { static_env.as_ref().unwrap() };
+    let env = env.as_ref().unwrap();
+    let static_env = static_env.as_ref().unwrap();
     match BatchCompiler::new(static_env, ModuleEnvironment::new(env)) {
         Ok(compiler) => Box::into_raw(Box::new(compiler)),
         Err(err) => {
@@ -72,26 +69,26 @@ pub extern "C" fn cranelift_compiler_create<'a, 'b>(
 ///
 /// This is declared in `clifapi.h`.
 #[no_mangle]
-pub extern "C" fn cranelift_compiler_destroy(compiler: *mut BatchCompiler) {
+pub unsafe extern "C" fn cranelift_compiler_destroy(compiler: *mut BatchCompiler) {
     assert!(
         !compiler.is_null(),
         "NULL pointer passed to cranelift_compiler_destroy"
     );
     // Convert the pointer back into the box it came from. Then drop it.
-    let _box = unsafe { Box::from_raw(compiler) };
+    let _box = Box::from_raw(compiler);
 }
 
 /// Compile a single function.
 ///
 /// This is declared in `clifapi.h`.
 #[no_mangle]
-pub extern "C" fn cranelift_compile_function(
+pub unsafe extern "C" fn cranelift_compile_function(
     compiler: *mut BatchCompiler,
     data: *const FuncCompileInput,
     result: *mut CompiledFunc,
 ) -> bool {
-    let compiler = unsafe { compiler.as_mut().unwrap() };
-    let data = unsafe { data.as_ref().unwrap() };
+    let compiler = compiler.as_mut().unwrap();
+    let data = data.as_ref().unwrap();
 
     if let Err(e) = compiler.translate_wasm(data) {
         error!("Wasm translation error: {}\n{}", e, compiler);
@@ -105,7 +102,7 @@ pub extern "C" fn cranelift_compile_function(
 
     // TODO(bbouvier) if destroy is called while one of these objects is alive, you're going to
     // have a bad time. Would be nice to be able to enforce lifetimes accross languages, somehow.
-    let result = unsafe { result.as_mut().unwrap() };
+    let result = result.as_mut().unwrap();
     result.reset(&compiler.current_func);
 
     true

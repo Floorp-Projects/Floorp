@@ -883,17 +883,18 @@ FragmentOrElement::GetChildren(uint32_t aFilter)
   return list.forget();
 }
 
-static nsIContent*
-FindChromeAccessOnlySubtreeOwner(nsIContent* aContent)
+static nsINode*
+FindChromeAccessOnlySubtreeOwner(nsINode* aNode)
 {
-  if (aContent->ChromeOnlyAccess()) {
-    bool chromeAccessOnly = false;
-    while (aContent && !chromeAccessOnly) {
-      chromeAccessOnly = aContent->IsRootOfChromeAccessOnlySubtree();
-      aContent = aContent->GetParent();
-    }
+  if (!aNode->ChromeOnlyAccess()) {
+    return aNode;
   }
-  return aContent;
+
+  while (aNode && !aNode->IsRootOfChromeAccessOnlySubtree()) {
+    aNode = aNode->GetParentNode();
+  }
+
+  return aNode ? aNode->GetParentOrHostNode() : nullptr;
 }
 
 already_AddRefed<nsINode>
@@ -904,11 +905,7 @@ FindChromeAccessOnlySubtreeOwner(EventTarget* aTarget)
     return node.forget();
   }
 
-  if (!node->IsContent()) {
-    return nullptr;
-  }
-
-  node = FindChromeAccessOnlySubtreeOwner(node->AsContent());
+  node = FindChromeAccessOnlySubtreeOwner(node);
   return node.forget();
 }
 
@@ -951,9 +948,9 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
           (aVisitor.mEvent->mOriginalTarget == this &&
            (aVisitor.mRelatedTargetIsInAnon =
             relatedTarget->ChromeOnlyAccess()))) {
-        nsIContent* anonOwner = FindChromeAccessOnlySubtreeOwner(this);
+        nsINode* anonOwner = FindChromeAccessOnlySubtreeOwner(this);
         if (anonOwner) {
-          nsIContent* anonOwnerRelated =
+          nsINode* anonOwnerRelated =
             FindChromeAccessOnlySubtreeOwner(relatedTarget);
           if (anonOwnerRelated) {
             // Note, anonOwnerRelated may still be inside some other

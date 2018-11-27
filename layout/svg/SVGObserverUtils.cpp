@@ -13,6 +13,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsISupportsImpl.h"
 #include "nsSVGClipPathFrame.h"
+#include "nsSVGMarkerFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGMaskFrame.h"
@@ -24,6 +25,7 @@
 #include "ImageLoader.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 static already_AddRefed<URLAndReferrerInfo>

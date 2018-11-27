@@ -8,6 +8,8 @@
 #include "nsSVGGenericContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 
+using namespace mozilla;
+
 //----------------------------------------------------------------------
 // nsSVGGenericContainerFrame Implementation
 

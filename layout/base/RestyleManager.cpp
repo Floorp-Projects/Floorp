@@ -13,6 +13,7 @@
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/GeckoBindings.h"
 #include "mozilla/LayerAnimationInfo.h"
+#include "mozilla/layers/AnimationInfo.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/Unused.h"
@@ -52,6 +53,8 @@
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
+
+using mozilla::layers::AnimationInfo;
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;

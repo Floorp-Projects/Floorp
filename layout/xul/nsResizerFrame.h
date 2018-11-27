@@ -15,6 +15,9 @@ class nsIBaseWindow;
 class nsResizerFrame final : public nsTitleBarFrame
 {
 protected:
+  typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
+  typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
+
   struct Direction {
     int8_t mHorizontal;
     int8_t mVertical;
