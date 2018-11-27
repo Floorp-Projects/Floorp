@@ -289,6 +289,7 @@ var sumHistogram = function(name, options = {}) {
 };
 
 var getLoginTelemetryScalar = function() {
-  let snapshot = Services.telemetry.getSnapshotForKeyedScalars("main", true);
+  let dataset = Services.telemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+  let snapshot = Services.telemetry.snapshotKeyedScalars(dataset, true);
   return snapshot.parent ? snapshot.parent["services.sync.sync_login_state_transitions"] : {};
 };

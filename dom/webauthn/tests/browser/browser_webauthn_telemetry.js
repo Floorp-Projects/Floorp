@@ -7,15 +7,15 @@
 const TEST_URL = "https://example.com/";
 
 // Return the scalars from the parent-process.
-function getParentProcessScalars(aKeyed = false, aClear = false) {
+function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
   const scalars = aKeyed ?
-    Services.telemetry.getSnapshotForKeyedScalars("main", aClear)["parent"] :
-    Services.telemetry.getSnapshotForScalars("main", aClear)["parent"];
+    Services.telemetry.snapshotKeyedScalars(aChannel, aClear)["parent"] :
+    Services.telemetry.snapshotScalars(aChannel, aClear)["parent"];
   return scalars || {};
 }
 
 function getTelemetryForScalar(aName) {
-  let scalars = getParentProcessScalars(true);
+  let scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT, true);
   return scalars[aName] || 0;
 }
 

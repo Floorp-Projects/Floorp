@@ -43,7 +43,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "scalar_add",
     });
 
-    const scalars = Services.telemetry.getSnapshotForScalars("main", false);
+    const scalars = Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     equal(scalars.parent["telemetry.test.unsigned_int_kind"], 1);
 
     Services.telemetry.clearScalars();
@@ -104,7 +104,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "scalar_set",
     });
 
-    const scalars = Services.telemetry.getSnapshotForScalars("main", false);
+    const scalars = Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     equal(scalars.parent["telemetry.test.boolean_kind"], true);
 
     Services.telemetry.clearScalars();
@@ -136,7 +136,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "scalar_set_maximum",
     });
 
-    const scalars = Services.telemetry.getSnapshotForScalars("main", false);
+    const scalars = Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     equal(scalars.parent["telemetry.test.unsigned_int_kind"], 123);
 
     Services.telemetry.clearScalars();
@@ -208,7 +208,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "register_scalars_string",
     });
 
-    const scalars = Services.telemetry.getSnapshotForScalars("main", false);
+    const scalars = Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     equal(scalars.dynamic["telemetry.test.dynamic.webext_string"], "hello");
 
     Services.telemetry.clearScalars();
@@ -238,7 +238,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "register_scalars_multiple",
     });
 
-    const scalars = Services.telemetry.getSnapshotForScalars("main", false);
+    const scalars = Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     equal(scalars.dynamic["telemetry.test.dynamic.webext_string"], "hello");
     equal(scalars.dynamic["telemetry.test.dynamic.webext_string_too"], "world");
 
@@ -263,7 +263,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "register_scalars_boolean",
     });
 
-    const scalars = Services.telemetry.getSnapshotForScalars("main", false);
+    const scalars = Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     equal(scalars.dynamic["telemetry.test.dynamic.webext_boolean"], true);
 
     Services.telemetry.clearScalars();
@@ -287,7 +287,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "register_scalars_count",
     });
 
-    const scalars = Services.telemetry.getSnapshotForScalars("main", false);
+    const scalars = Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     equal(scalars.dynamic["telemetry.test.dynamic.webext_count"], 123);
 
     Services.telemetry.clearScalars();
