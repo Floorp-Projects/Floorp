@@ -29,7 +29,6 @@ class RemoteClientManager {
   setClient(id, type, { client, transportDetails }) {
     const key = this._getKey(id, type);
     this._clients.set(key, { client, transportDetails });
-
     client.addOneTimeListener("closed", this._onClientClosed);
   }
 
@@ -49,10 +48,24 @@ class RemoteClientManager {
     this._removeClientByKey(key);
   }
 
+  removeAllClients() {
+    const keys = [...this._clients.keys()];
+    for (const key of keys) {
+      this._removeClientByKey(key);
+    }
+  }
+
+  /**
+   * Retrieve a unique, url-safe key based on a runtime id and type.
+   */
   getRemoteId(id, type) {
     return encodeURIComponent(this._getKey(id, type));
   }
 
+  /**
+   * Retrieve a managed client for a remote id. The remote id should have been generated
+   * using getRemoteId.
+   */
   getClientByRemoteId(remoteId) {
     const key = decodeURIComponent(remoteId);
     return this._clients.get(key);
@@ -63,8 +76,9 @@ class RemoteClientManager {
   }
 
   _removeClientByKey(key) {
-    if (this.hasClient(key)) {
-      this.getClient(key).client.removeListener("closed", this._onClientClosed);
+    const client = this._clients.get(key).client;
+    if (client) {
+      client.removeListener("closed", this._onClientClosed);
       this._clients.delete(key);
     }
   }
