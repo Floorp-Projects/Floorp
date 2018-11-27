@@ -349,8 +349,7 @@ public:
   Matrix mMatrix;                 //!< Transforms the pattern into user space
 
   IntRect mSamplingRect;          /**< Rect that must not be sampled outside of,
-                                       or an empty rect if none has been
-                                       specified. */
+                                       or an empty rect if none has been specified. */
 };
 
 class StoredPattern;
@@ -957,8 +956,7 @@ public:
    * Creates a UnscaledFont using the font corresponding to the index.
    *
    * @param aIndex index for the font within the resource.
-   * @param aInstanceData pointer to read-only buffer of any available instance
-   *                      data.
+   * @param aInstanceData pointer to read-only buffer of any available instance data.
    * @param aInstanceDataLength the size of the instance data.
    * @return an already_addrefed UnscaledFont, containing nullptr if failed.
    */
@@ -1042,10 +1040,8 @@ public:
    * applying scaling. No sampling happens outside the source.
    *
    * @param aSurface Source surface to draw
-   * @param aDest Destination rectangle that this drawing operation should draw
-   *              to
-   * @param aSource Source rectangle in aSurface coordinates, this area of
-   *                aSurface
+   * @param aDest Destination rectangle that this drawing operation should draw to
+   * @param aSource Source rectangle in aSurface coordinates, this area of aSurface
    *                will be stretched to the size of aDest.
    * @param aOptions General draw options that are applied to the operation
    * @param aSurfOptions DrawSurface options that are applied
@@ -1470,8 +1466,7 @@ public:
    * filters.
    *
    * aScaledFont The scaled font used when drawing.
-   * aGlyphIndices An array of indices for the glyphs whose the metrics are
-   *               wanted
+   * aGlyphIndices An array of indices for the glyphs whose the metrics are wanted
    * aNumGlyphs The amount of elements in aGlyphIndices
    * aGlyphMetrics The glyph metrics
    */
@@ -1729,11 +1724,9 @@ public:
    *
    * @param aData Pointer to the data
    * @param aSize Size of the TrueType data
-   * @param aBackendType Type of the reference DrawTarget the font should be
-   *                     created for.
+   * @param aBackendType Type of the reference DrawTarget the font should be created for.
    * @param aFontType Type of NativeFontResource that should be created.
-   * @param aFontContext Optional native font context to be used to create the
-   *                              NativeFontResource.
+   * @param aFontContext Optional native font context to be used to create the NativeFontResource.
    * @return a NativeFontResource of nullptr if failed.
    */
   static already_AddRefed<NativeFontResource>
