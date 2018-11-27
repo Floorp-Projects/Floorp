@@ -1,6 +1,8 @@
 module.exports = {
   // When adding items to this file please check for effects on sub-directories.
+  "parser": "babel-eslint",
   "parserOptions": {
+    "ecmaVersion": 2018,
     "ecmaFeatures": {
       "jsx": true
     },
@@ -15,6 +17,11 @@ module.exports = {
     "promise", // require("eslint-plugin-promise")
     "react" // require("eslint-plugin-react")
   ],
+  "settings": {
+    "react": {
+      "version": "16.2.0"
+    }
+  },
   "extends": [
     "eslint:recommended",
     "plugin:mozilla/recommended" // require("eslint-plugin-mozilla")

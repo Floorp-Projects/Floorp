@@ -151,8 +151,8 @@ GLReadTexImageHelper::DidGLErrorOccur(const char* str)
 {
     GLenum error = mGL->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {
-        printf_stderr("GL ERROR: %s (0x%04x) %s\n",
-                      GLContext::GLErrorToString(error), error, str);
+        printf_stderr("GL ERROR: %s %s\n",
+                      GLContext::GLErrorToString(error).c_str(), str);
         return true;
     }
 

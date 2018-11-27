@@ -4,7 +4,7 @@
 
 // https://html.spec.whatwg.org/#dom-window-customelements
 interface CustomElementRegistry {
-  [CEReactions, Throws]
+  [CEReactions, Throws, UseCounter]
   void define(DOMString name, Function functionConstructor,
               optional ElementDefinitionOptions options);
   [ChromeOnly, Throws]

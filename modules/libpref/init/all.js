@@ -240,7 +240,7 @@ pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_i
 // same as "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So,
 // check its explanation for the detail.
 pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode",
-     "docs.google.com,www.rememberthemilk.com");
+     "www.rememberthemilk.com");
 #endif
 
 // Whether the WebMIDI API is enabled
@@ -4862,7 +4862,6 @@ pref("webgl.force-layers-readback", false);
 pref("webgl.force-index-validation", 0);
 pref("webgl.lose-context-on-memory-pressure", false);
 pref("webgl.can-lose-context-in-foreground", true);
-pref("webgl.restore-context-when-visible", true);
 #ifdef ANDROID
 pref("webgl.max-contexts", 16);
 pref("webgl.max-contexts-per-principal", 8);

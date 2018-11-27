@@ -378,12 +378,12 @@ DrawBlitProg::DrawBlitProg(const GLBlitHelper* const parent, const GLuint prog)
     , mLoc_uTexMatrix1(mParent.mGL->fGetUniformLocation(mProg, "uTexMatrix1"))
     , mLoc_uColorMatrix(mParent.mGL->fGetUniformLocation(mProg, "uColorMatrix"))
 {
-    MOZ_ASSERT(mLoc_uDestMatrix != -1);
-    MOZ_ASSERT(mLoc_uTexMatrix0 != -1);
+    const auto& gl = mParent.mGL;
+    MOZ_GL_ASSERT(gl, mLoc_uDestMatrix != -1);
+    MOZ_GL_ASSERT(gl, mLoc_uTexMatrix0 != -1);
     if (mLoc_uColorMatrix != -1) {
-        MOZ_ASSERT(mLoc_uTexMatrix1 != -1);
+        MOZ_GL_ASSERT(gl, mLoc_uTexMatrix1 != -1);
 
-        const auto& gl = mParent.mGL;
         int32_t numActiveUniforms = 0;
         gl->fGetProgramiv(mProg, LOCAL_GL_ACTIVE_UNIFORMS, &numActiveUniforms);
 
@@ -398,7 +398,7 @@ DrawBlitProg::DrawBlitProg(const GLBlitHelper* const parent, const GLuint prog)
                 break;
             }
         }
-        MOZ_ASSERT(mType_uColorMatrix);
+        MOZ_GL_ASSERT(gl, mType_uColorMatrix);
     }
 }
 
@@ -670,7 +670,7 @@ GLBlitHelper::CreateDrawBlitProg(const DrawBlitProg::Key& key) const
 
     GLenum status = 0;
     mGL->fGetProgramiv(prog, LOCAL_GL_LINK_STATUS, (GLint*)&status);
-    if (status == LOCAL_GL_TRUE) {
+    if (status == LOCAL_GL_TRUE || !mGL->CheckContextLost()) {
         const SaveRestoreCurrentProgram oldProg(mGL);
         mGL->fUseProgram(prog);
         const char* samplerNames[] = {
@@ -711,7 +711,7 @@ GLBlitHelper::CreateDrawBlitProg(const DrawBlitProg::Key& key) const
                        << "progLog: " << progLog.get() << "\n"
                        << "vsLog: " << vsLog.get() << "\n"
                        << "fsLog: " << fsLog.get() << "\n";
-    return nullptr;
+    MOZ_CRASH();
 }
 
 // -----------------------------------------------------------------------------
@@ -808,7 +808,6 @@ GLBlitHelper::BlitImage(layers::SurfaceTextureImage* srcImage, const gfx::IntSiz
     const bool yFlip = (srcOrigin == destOrigin);
 
     const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, kFragBody_RGBA});
-    MOZ_RELEASE_ASSERT(prog);
 
     // There is no padding on these images, so we can use the GetTransformMatrix directly.
     const DrawBlitProg::BaseArgs baseArgs = { transform3, yFlip, destSize, Nothing() };
@@ -844,7 +843,6 @@ GLBlitHelper::BlitImage(layers::PlanarYCbCrImage* const yuvImage,
                         const gfx::IntSize& destSize, const OriginPos destOrigin)
 {
     const auto& prog = GetDrawBlitProg({kFragHeader_Tex2D, kFragBody_PlanarYUV});
-    MOZ_RELEASE_ASSERT(prog);
 
     if (!mYuvUploads[0]) {
         mGL->fGenTextures(3, mYuvUploads);
@@ -1108,9 +1106,6 @@ GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
     }
 
     const auto& prog = GetDrawBlitProg({fragHeader, fragBody});
-    if (!prog)
-        return false;
-
     prog->Draw(baseArgs, pYuvArgs);
     return true;
 }
@@ -1140,7 +1135,6 @@ GLBlitHelper::DrawBlitTextureToFramebuffer(const GLuint srcTex,
         return;
     }
     const auto& prog = GetDrawBlitProg({ fragHeader, kFragBody_RGBA});
-    MOZ_ASSERT(prog);
 
     const ScopedSaveMultiTex saveTex(mGL, 1, srcTarget);
     mGL->fBindTexture(srcTarget, srcTex);
@@ -1175,8 +1169,8 @@ GLBlitHelper::BlitFramebufferToFramebuffer(const GLuint srcFB, const GLuint dest
                                            GLuint filter) const
 {
     MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
-    MOZ_ASSERT(!srcFB || mGL->fIsFramebuffer(srcFB));
-    MOZ_ASSERT(!destFB || mGL->fIsFramebuffer(destFB));
+    MOZ_GL_ASSERT(mGL, !srcFB || mGL->fIsFramebuffer(srcFB));
+    MOZ_GL_ASSERT(mGL, !destFB || mGL->fIsFramebuffer(destFB));
 
     const ScopedBindFramebuffer boundFB(mGL);
     mGL->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, srcFB);
@@ -1190,7 +1184,7 @@ GLBlitHelper::BlitTextureToFramebuffer(GLuint srcTex, const gfx::IntSize& srcSiz
                                        const gfx::IntSize& destSize,
                                        GLenum srcTarget) const
 {
-    MOZ_ASSERT(mGL->fIsTexture(srcTex));
+    MOZ_GL_ASSERT(mGL, mGL->fIsTexture(srcTex));
 
     if (mGL->IsSupported(GLFeature::framebuffer_blit)) {
         const ScopedFramebufferForTexture srcWrapper(mGL, srcTex, srcTarget);
@@ -1209,7 +1203,7 @@ GLBlitHelper::BlitFramebufferToTexture(GLuint destTex,
                                        const gfx::IntSize& destSize,
                                        GLenum destTarget) const
 {
-    MOZ_ASSERT(mGL->fIsTexture(destTex));
+    MOZ_GL_ASSERT(mGL, mGL->fIsTexture(destTex));
 
     if (mGL->IsSupported(GLFeature::framebuffer_blit)) {
         const ScopedFramebufferForTexture destWrapper(mGL, destTex, destTarget);
@@ -1233,8 +1227,8 @@ GLBlitHelper::BlitTextureToTexture(GLuint srcTex, GLuint destTex,
                                    const gfx::IntSize& destSize,
                                    GLenum srcTarget, GLenum destTarget) const
 {
-    MOZ_ASSERT(mGL->fIsTexture(srcTex));
-    MOZ_ASSERT(mGL->fIsTexture(destTex));
+    MOZ_GL_ASSERT(mGL, mGL->fIsTexture(srcTex));
+    MOZ_GL_ASSERT(mGL, mGL->fIsTexture(destTex));
 
     // Start down the CopyTexSubImage path, not the DrawBlit path.
     const ScopedFramebufferForTexture srcWrapper(mGL, srcTex, srcTarget);

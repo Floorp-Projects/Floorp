@@ -89,8 +89,10 @@ private:
   /**
    * Returns the optimum state of the element.
    * NS_EVENT_STATE_OPTIMUM if the actual value is in the optimum region.
-   * NS_EVENT_STATE_SUB_OPTIMUM if the actual value is in the sub-optimal region.
-   * NS_EVENT_STATE_SUB_SUB_OPTIMUM if the actual value is in the sub-sub-optimal region.
+   * NS_EVENT_STATE_SUB_OPTIMUM if the actual value is in the sub-optimal
+   *                            region.
+   * NS_EVENT_STATE_SUB_SUB_OPTIMUM if the actual value is in the
+   *                                sub-sub-optimal region.
    *
    * @return the optimum state of the element.
    */

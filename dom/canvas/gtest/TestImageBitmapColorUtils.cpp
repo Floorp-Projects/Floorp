@@ -608,9 +608,10 @@ TEST(ImageBitmapColorUtils, RGB24ToBGRA32)
 //                              rgbaPixel, 4,
 //                              1, 1);
 //
-//  printf_stderr("\nlibyuv: (%hhu, %hhu, %hhu) --> (%hhu, %hhu, %hhu, %hhu) \n",
-//                yuvPixel[0], yuvPixel[1], yuvPixel[2],
-//                rgbaPixel[0], rgbaPixel[1], rgbaPixel[2], rgbaPixel[3]);
+//  printf_stderr(
+//    "\nlibyuv: (%hhu, %hhu, %hhu) --> (%hhu, %hhu, %hhu, %hhu) \n",
+//    yuvPixel[0], yuvPixel[1], yuvPixel[2],
+//    gbaPixel[0], rgbaPixel[1], rgbaPixel[2], rgbaPixel[3]);
 //}
 
 TEST(ImageBitmapColorUtils, RGB24ToYUV444P)

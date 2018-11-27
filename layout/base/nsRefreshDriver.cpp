@@ -38,7 +38,6 @@
 #include "nsPresContext.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/Logging.h"
-#include "nsAutoPtr.h"
 #include "nsIDocument.h"
 #include "nsIXULRuntime.h"
 #include "jsapi.h"

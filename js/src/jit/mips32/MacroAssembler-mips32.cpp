@@ -2044,10 +2044,10 @@ MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(void* handler, Label* pro
     ret();
 
     // If we are bailing out to baseline to handle an exception, jump to
-    // the bailout tail stub.
+    // the bailout tail stub. Load 1 (true) in ReturnReg to indicate success.
     bind(&bailout);
     loadPtr(Address(sp, offsetof(ResumeFromException, bailoutInfo)), a2);
-    ma_li(ReturnReg, Imm32(BAILOUT_RETURN_OK));
+    ma_li(ReturnReg, Imm32(1));
     loadPtr(Address(sp, offsetof(ResumeFromException, target)), a1);
     jump(a1);
 

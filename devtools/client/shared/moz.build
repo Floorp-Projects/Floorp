@@ -13,6 +13,7 @@ TEST_HARNESS_FILES.xpcshell.devtools.client.shared.test += [
 DIRS += [
     'components',
     'redux',
+    'remote-debugging',
     'source-map',
     'vendor',
     'webpack',

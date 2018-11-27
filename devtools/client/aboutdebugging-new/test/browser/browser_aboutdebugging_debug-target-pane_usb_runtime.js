@@ -26,7 +26,8 @@ add_task(async function() {
   });
   usbMocks.emitUpdate();
 
-  await connectToRuntime(RUNTIME_DEVICE_NAME, RUNTIME_APP_NAME, document);
+  await connectToRuntime(RUNTIME_DEVICE_NAME, document);
+  await selectRuntime(RUNTIME_DEVICE_NAME, RUNTIME_APP_NAME, document);
 
   const SUPPORTED_TARGET_PANES = [
     "Extensions",

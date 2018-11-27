@@ -4,9 +4,10 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const Link = createFactory(require("devtools/client/shared/vendor/react-router-dom").Link);
 
 /**
  * This component is used as a wrapper by items in the sidebar.
@@ -17,34 +18,18 @@ class SidebarItem extends PureComponent {
       children: PropTypes.node.isRequired,
       className: PropTypes.string,
       isSelected: PropTypes.bool.isRequired,
-      selectable: PropTypes.bool.isRequired,
-      // only require `onSelect` function when `selectable` is true
-      onSelect: (props, propName, componentName) => {
-        const isFn = props[propName] && typeof props[propName] === "function";
-        if (props.selectable && !isFn) {
-          return new Error(`Missing ${propName} function supplied to ${componentName}. ` +
-            "(you must set this prop when selectable is true)");
-        }
-        return null; // for eslint (consistent-return rule)
-      },
+      to: PropTypes.string,
     };
   }
 
-  // temporary handler until a router is in place
-  onItemClick(evt) {
-    evt.preventDefault();
-    this.props.onSelect();
-  }
-
   renderContent() {
-    const { children, selectable } = this.props;
+    const { children, to } = this.props;
 
-    if (selectable) {
-      return dom.a(
+    if (to) {
+      return Link(
         {
           className: "sidebar-item__link js-sidebar-link",
-          href: "#", // to be changed with a path when a router is in place
-          onClick: (evt) => this.onItemClick(evt),
+          to,
         },
         children
       );
@@ -54,7 +39,7 @@ class SidebarItem extends PureComponent {
   }
 
   render() {
-    const {className, isSelected, selectable } = this.props;
+    const {className, isSelected, to } = this.props;
 
     return dom.li(
       {
@@ -64,7 +49,7 @@ class SidebarItem extends PureComponent {
                       " sidebar-item--selected js-sidebar-item-selected" :
                       ""
                    ) +
-                   (selectable ? " sidebar-item--selectable" : ""),
+                   (to ? " sidebar-item--selectable" : ""),
       },
       this.renderContent()
     );

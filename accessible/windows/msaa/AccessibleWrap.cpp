@@ -651,12 +651,14 @@ AccessibleWrap::get_accFocus(
 
   VariantInit(pvarChild);
 
+  // clang-format off
   // VT_EMPTY:    None. This object does not have the keyboard focus itself
   //              and does not contain a child that has the keyboard focus.
   // VT_I4:       lVal is CHILDID_SELF. The object itself has the keyboard focus.
   // VT_I4:       lVal contains the child ID of the child element with the keyboard focus.
   // VT_DISPATCH: pdispVal member is the address of the IDispatch interface
   //              for the child object with the keyboard focus.
+  // clang-format on
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 

@@ -1866,42 +1866,15 @@ MacroAssembler::guardGroupHasUnanalyzedNewScript(Register group, Register scratc
     bind(&noNewScript);
 }
 
-static void
-BailoutReportOverRecursed(JSContext* cx)
-{
-    ReportOverRecursed(cx);
-}
-
 void
 MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 {
     loadJSContext(scratch);
     enterFakeExitFrame(scratch, scratch, ExitFrameType::Bare);
 
-    Label baseline;
+    branchIfFalseBool(ReturnReg, exceptionLabel());
 
-    // The return value from Bailout is tagged as:
-    // - 0x0: done (enter baseline)
-    // - 0x1: error (handle exception)
-    // - 0x2: overrecursed
-    JS_STATIC_ASSERT(BAILOUT_RETURN_OK == 0);
-    JS_STATIC_ASSERT(BAILOUT_RETURN_FATAL_ERROR == 1);
-    JS_STATIC_ASSERT(BAILOUT_RETURN_OVERRECURSED == 2);
-
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OK), &baseline);
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), exceptionLabel());
-
-    // Fall-through: overrecursed.
-    {
-        loadJSContext(ReturnReg);
-        setupUnalignedABICall(scratch);
-        passABIArg(ReturnReg);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void*, BailoutReportOverRecursed), MoveOp::GENERAL,
-                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
-        jump(exceptionLabel());
-    }
-
-    bind(&baseline);
+    // Finish bailing out to Baseline.
     {
         // Prepare a register set for use in this case.
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
@@ -1964,7 +1937,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             passABIArg(bailoutInfo);
             callWithABI(JS_FUNC_TO_DATA_PTR(void*, FinishBailoutToBaseline),
                         MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
-            branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
+            branchIfFalseBool(ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
             AllocatableGeneralRegisterSet enterMonRegs(GeneralRegisterSet::All());
@@ -2003,7 +1976,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             passABIArg(bailoutInfo);
             callWithABI(JS_FUNC_TO_DATA_PTR(void*, FinishBailoutToBaseline),
                         MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
-            branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
+            branchIfFalseBool(ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
             AllocatableGeneralRegisterSet enterRegs(GeneralRegisterSet::All());

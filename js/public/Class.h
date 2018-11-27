@@ -207,6 +207,9 @@ class ObjectOpResult
     JS_PUBLIC_API bool failNoIndexedSetter();
     JS_PUBLIC_API bool failNotDataDescriptor();
 
+    // Careful: This case has special handling in Object.defineProperty.
+    JS_PUBLIC_API bool failCantDefineWindowNonConfigurable();
+
     uint32_t failureCode() const {
         MOZ_ASSERT(!ok());
         return uint32_t(code_);

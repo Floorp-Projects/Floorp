@@ -22,14 +22,6 @@ const runtimeInfo = {
   version: PropTypes.string.isRequired,
 };
 
-const runtimeTransportDetails = {
-  // host name of tcp connection to debugger server
-  host: PropTypes.string.isRequired,
-
-  // port number of tcp connection to debugger server
-  port: PropTypes.number.isRequired,
-};
-
 const runtimeDetails = {
   // ClientWrapper built using a DebuggerClient for the runtime
   clientWrapper: PropTypes.instanceOf(ClientWrapper).isRequired,
@@ -39,10 +31,6 @@ const runtimeDetails = {
 
   // runtime information
   info: PropTypes.shape(runtimeInfo).isRequired,
-
-  // tcp connection information,
-  // unavailable on this-firefox runtime
-  transportDetails: PropTypes.shape(runtimeTransportDetails),
 };
 
 const networkRuntimeConnectionParameter = {

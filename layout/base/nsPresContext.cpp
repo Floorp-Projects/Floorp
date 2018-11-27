@@ -273,11 +273,11 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
 
   // if text perf logging enabled, init stats struct
   if (MOZ_LOG_TEST(gfxPlatform::GetLog(eGfxLog_textperf), LogLevel::Warning)) {
-    mTextPerf = new gfxTextPerfMetrics();
+    mTextPerf = MakeUnique<gfxTextPerfMetrics>();
   }
 
   if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
-    mMissingFonts = new gfxMissingFontRecorder();
+    mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
   }
 }
 
@@ -674,7 +674,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
   if (prefName.EqualsLiteral(GFX_MISSING_FONTS_NOTIFY_PREF)) {
     if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
       if (!mMissingFonts) {
-        mMissingFonts = new gfxMissingFontRecorder();
+        mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
         // trigger reflow to detect missing fonts on the current page
         mPrefChangePendingNeedsReflow = true;
       }

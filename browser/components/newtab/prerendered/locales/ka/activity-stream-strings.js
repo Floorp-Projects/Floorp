@@ -29,7 +29,7 @@ window.gActivityStreamStrings = {
   "menu_action_show_file_linux": "შემცველი საქაღალდის გახსნა",
   "menu_action_show_file_default": "ფაილის ჩვენება",
   "menu_action_open_file": "ფაილის გახსნა",
-  "menu_action_copy_download_link": "ჩამოტვირთვის ბმულის დაკოპირება",
+  "menu_action_copy_download_link": "ჩამოტვირთვის ბმულის ასლი",
   "menu_action_go_to_download_page": "გადასვლა ჩამოტვირთვის გვერდზე",
   "menu_action_remove_download": "ისტორიიდან ამოშლა",
   "search_button": "ძიება",

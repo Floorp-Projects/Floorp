@@ -658,11 +658,11 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
     }
 
     // Delimiter and escaping is according to the following table
-    //    bIncludesDouble     bIncludesSingle     Delimiter       Escape Double Quote
-    //    FALSE               FALSE               "               FALSE
-    //    FALSE               TRUE                "               FALSE
-    //    TRUE                FALSE               '               FALSE
-    //    TRUE                TRUE                "               TRUE
+    //    bIncludesDouble   bIncludesSingle   Delimiter    Escape Double Quote
+    //    FALSE             FALSE             "            FALSE
+    //    FALSE             TRUE              "            FALSE
+    //    TRUE              FALSE             '            FALSE
+    //    TRUE              TRUE              "            TRUE
     char16_t cDelimiter =
         (bIncludesDouble && !bIncludesSingle) ? char16_t('\'') : char16_t('"');
     NS_ENSURE_TRUE(attrString.Append(char16_t('='), mozilla::fallible), false);

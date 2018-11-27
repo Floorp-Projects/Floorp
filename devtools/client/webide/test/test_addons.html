@@ -21,15 +21,18 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        const {Devices} = ChromeUtils.import("resource://devtools/shared/apps/Devices.jsm", {});
+        const { adbAddon, ADB_ADDON_STATES } = require("devtools/shared/adb/adb-addon");
+        function isAdbAddonInstalled() {
+          return adbAddon.status === ADB_ADDON_STATES.INSTALLED;
+        }
 
         function uninstallADBFromUI(doc) {
           return new Promise((resolve, reject) => {
-            Devices.on("addon-status-updated", function onUpdate() {
+            adbAddon.on("update", function onUpdate() {
               nextTick().then(() => {
                 const li = doc.querySelector('[status="uninstalled"][addon="adb"]');
                 if (li) {
-                  Devices.off("addon-status-updated", onUpdate);
+                  adbAddon.off("update", onUpdate);
                   resolve();
                 } else {
                   reject("Can't find item");
@@ -42,16 +45,16 @@
         }
 
         (async function() {
-          ok(!Devices.adbExtensionInstalled, "ADB extension not installed");
+          ok(!isAdbAddonInstalled(), "ADB extension not installed");
 
           const win = await openWebIDE(true);
 
           // ADB is installed asynchronously after starting WebIDE.
-          while (!Devices.adbExtensionInstalled) {
-            await Devices.once("addon-status-updated");
+          while (!isAdbAddonInstalled()) {
+            await adbAddon.once("update");
           }
 
-          ok(Devices.adbExtensionInstalled, "ADB extension has been auto-installed");
+          ok(isAdbAddonInstalled(), "ADB extension has been auto-installed");
 
           await nextTick();
 

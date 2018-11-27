@@ -59,8 +59,8 @@ const DEBUG_TARGET_PANE = {
   TEMPORARY_EXTENSION: "temporaryExtension",
 };
 
-const PAGES = {
-  THIS_FIREFOX: "this-firefox",
+const PAGE_TYPES = {
+  RUNTIME: "runtime",
   CONNECT: "connect",
 };
 
@@ -104,7 +104,7 @@ const USB_STATES = {
 module.exports = Object.assign({}, {
   DEBUG_TARGETS,
   DEBUG_TARGET_PANE,
-  PAGES,
+  PAGE_TYPES,
   PREFERENCES,
   RUNTIME_PREFERENCE,
   RUNTIMES,

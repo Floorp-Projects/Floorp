@@ -140,12 +140,8 @@ WebGLContext::WebGLContext()
     mOptionsFrozen = false;
     mDisableExtensions = false;
     mIsMesa = false;
-    mEmitContextLostErrorOnce = false;
     mWebGLError = 0;
-    mUnderlyingGLError = 0;
     mVRReady = false;
-
-    mContextLostErrorSet = false;
 
     mViewportX = 0;
     mViewportY = 0;
@@ -166,7 +162,6 @@ WebGLContext::WebGLContext()
     mLastLossWasSimulated = false;
     mLoseContextOnMemoryPressure = false;
     mCanLoseContextInForeground = true;
-    mRestoreWhenVisible = false;
 
     mAlreadyGeneratedWarnings = 0;
     mAlreadyWarnedAboutFakeVertexAttrib0 = false;
@@ -316,19 +311,6 @@ WebGLContext::Invalidate()
 
     mInvalidated = true;
     mCanvasElement->InvalidateCanvasContent(nullptr);
-}
-
-void
-WebGLContext::OnVisibilityChange()
-{
-    if (gl) // Context not lost.
-        return;
-
-    if (!mRestoreWhenVisible || mLastLossWasSimulated) {
-        return;
-    }
-
-    ForceRestoreContext();
 }
 
 void
@@ -1540,23 +1522,8 @@ static bool
 CheckContextLost(GLContext* gl, bool* const out_isGuilty)
 {
     MOZ_ASSERT(gl);
-    MOZ_ASSERT(out_isGuilty);
 
-    bool isEGL = gl->GetContextType() == gl::GLContextType::EGL;
-
-    GLenum resetStatus = LOCAL_GL_NO_ERROR;
-    if (gl->IsSupported(GLFeature::robustness)) {
-        gl->MakeCurrent();
-        resetStatus = gl->fGetGraphicsResetStatus();
-    } else if (isEGL) {
-        // Simulate a ARB_robustness guilty context loss for when we
-        // get an EGL_CONTEXT_LOST error. It may not actually be guilty,
-        // but we can't make any distinction.
-        if (!gl->MakeCurrent(true) && gl->IsContextLost()) {
-            resetStatus = LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB;
-        }
-    }
-
+    const auto resetStatus = gl->fGetGraphicsResetStatus();
     if (resetStatus == LOCAL_GL_NO_ERROR) {
         *out_isGuilty = false;
         return false;
@@ -1566,6 +1533,7 @@ CheckContextLost(GLContext* gl, bool* const out_isGuilty)
     bool isGuilty = true;
     switch (resetStatus) {
     case LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB:
+    case LOCAL_GL_PURGED_CONTEXT_RESET_NV:
         // Either nothing wrong, or not our fault.
         isGuilty = false;
         break;
@@ -1576,11 +1544,13 @@ CheckContextLost(GLContext* gl, bool* const out_isGuilty)
     case LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB:
         NS_WARNING("WebGL content on the page might have caused the graphics"
                    " card to reset");
-        // If we can't tell, assume guilty.
+        // If we can't tell, assume not-guilty.
+        // Todo: Implement max number of "unknown" resets per document or time.
+        isGuilty = false;
         break;
     default:
-        MOZ_ASSERT(false, "Unreachable.");
-        // If we do get here, let's pretend to be guilty as an escape plan.
+        gfxCriticalError() << "Unexpected glGetGraphicsResetStatus: "
+                           << gfx::hexa(resetStatus);
         break;
     }
 
@@ -1590,15 +1560,6 @@ CheckContextLost(GLContext* gl, bool* const out_isGuilty)
     }
 
     *out_isGuilty = isGuilty;
-    return true;
-}
-
-bool
-WebGLContext::TryToRestoreContext()
-{
-    if (NS_FAILED(SetDimensions(mRequestedSize.width, mRequestedSize.height)))
-        return false;
-
     return true;
 }
 
@@ -1639,18 +1600,19 @@ WebGLContext::EnqueueUpdateContextLossStatus()
     NS_DispatchToCurrentThread(task);
 }
 
-// We use this timer for many things. Here are the things that it is activated for:
+// We use this timer for many things. Here are the things that it is activated
+// for:
 // 1) If a script is using the MOZ_WEBGL_lose_context extension.
 // 2) If we are using EGL and _NOT ANGLE_, we query periodically to see if the
 //    CONTEXT_LOST_WEBGL error has been triggered.
 // 3) If we are using ANGLE, or anything that supports ARB_robustness, query the
 //    GPU periodically to see if the reset status bit has been set.
 // In all of these situations, we use this timer to send the script context lost
-// and restored events asynchronously. For example, if it triggers a context loss,
-// the webglcontextlost event will be sent to it the next time the robustness timer
-// fires.
-// Note that this timer mechanism is not used unless one of these 3 criteria
-// are met.
+// and restored events asynchronously. For example, if it triggers a context
+// loss, the webglcontextlost event will be sent to it the next time the
+// robustness timer fires.
+// Note that this timer mechanism is not used unless one of these 3 criteria are
+// met.
 // At a bare minimum, from context lost to context restores, it would take 3
 // full timer iterations: detection, webglcontextlost, webglcontextrestored.
 void
@@ -1730,10 +1692,6 @@ WebGLContext::UpdateContextLossStatus()
         if (mLastLossWasSimulated)
             return;
 
-        // Restore when the app is visible
-        if (mRestoreWhenVisible)
-            return;
-
         ForceRestoreContext();
         return;
     }
@@ -1741,16 +1699,18 @@ WebGLContext::UpdateContextLossStatus()
     if (mContextStatus == ContextStatus::LostAwaitingRestore) {
         // Context is lost, but we should try to restore it.
 
+        if (mAllowContextRestore) {
+            if (NS_FAILED(SetDimensions(mRequestedSize.width,
+                                        mRequestedSize.height)))
+            {
+                // Assume broken forever.
+                mAllowContextRestore = false;
+            }
+        }
         if (!mAllowContextRestore) {
             // We might decide this after thinking we'd be OK restoring
             // the context, so downgrade.
             mContextStatus = ContextStatus::Lost;
-            return;
-        }
-
-        if (!TryToRestoreContext()) {
-            // Failed to restore. Try again later.
-            mContextLossHandler.RunTimer();
             return;
         }
 
@@ -1773,7 +1733,6 @@ WebGLContext::UpdateContextLossStatus()
             mOffscreenCanvas->DispatchEvent(*event);
         }
 
-        mEmitContextLostErrorOnce = true;
         return;
     }
 }
@@ -1784,7 +1743,7 @@ WebGLContext::ForceLoseContext(bool simulateLosing)
     printf_stderr("WebGL(%p)::ForceLoseContext\n", this);
     MOZ_ASSERT(gl);
     mContextStatus = ContextStatus::LostAwaitingEvent;
-    mContextLostErrorSet = false;
+    mWebGLError = LOCAL_GL_CONTEXT_LOST_WEBGL;
 
     // Burn it all!
     DestroyResourcesAndContext();

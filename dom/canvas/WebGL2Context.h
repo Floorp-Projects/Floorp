@@ -306,8 +306,10 @@ public:
 
     /* Implemented in WebGLContext
     void VertexAttribDivisor(GLuint index, GLuint divisor);
-    void DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount);
-    void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, GLintptr offset, GLsizei instanceCount);
+    void DrawArraysInstanced(GLenum mode, GLint first, GLsizei count,
+                             GLsizei instanceCount);
+    void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
+                               GLintptr offset, GLsizei instanceCount);
     */
 
     void DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
@@ -411,7 +413,8 @@ public:
     // TODO(djg): Implemented in WebGLContext
 /*
     void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer);
-    void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, GLintptr offset, GLsizeiptr size);
+    void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
+                         GLintptr offset, GLsizeiptr size);
 */
     virtual JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv) override;
     // Make the inline version from the superclass visible here.
