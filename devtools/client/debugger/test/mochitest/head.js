@@ -1066,29 +1066,3 @@ function waitForDispatch(panel, type, eventRepeat = 1) {
     }
   });
 }
-
-async function initWorkerDebugger(TAB_URL, WORKER_URL) {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  await connect(client);
-
-  let tab = await addTab(TAB_URL);
-  let { tabs } = await listTabs(client);
-  let [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
-
-  await createWorkerInTab(tab, WORKER_URL);
-
-  let { workers } = await listWorkers(targetFront);
-  let workerTargetFront = findWorker(workers, WORKER_URL);
-
-  let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
-                                            "jsdebugger",
-                                            Toolbox.HostType.WINDOW);
-
-  let debuggerPanel = toolbox.getCurrentPanel();
-  let gDebugger = debuggerPanel.panelWin;
-
-  return {client, tab, targetFront, workerTargetFront, toolbox, gDebugger};
-}
