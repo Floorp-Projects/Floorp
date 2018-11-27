@@ -11,9 +11,6 @@ types.addDictType("root.getTab", {
 types.addDictType("root.getWindow", {
   window: "json",
 });
-types.addDictType("root.listAddons", {
-  addons: "array:json",
-});
 types.addDictType("root.listWorkers", {
   workers: "array:workerTarget",
 });
@@ -57,7 +54,9 @@ const rootSpecPrototype = {
 
     listAddons: {
       request: {},
-      response: RetVal("root.listAddons"),
+      response: {
+        addons: RetVal("array:addonTarget"),
+      },
     },
 
     listWorkers: {
