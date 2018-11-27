@@ -667,6 +667,41 @@ impl Gl for GlFns {
         }
     }
 
+    unsafe fn copy_image_sub_data(&self,
+                                  src_name: GLuint,
+                                  src_target: GLenum,
+                                  src_level: GLint,
+                                  src_x: GLint,
+                                  src_y: GLint,
+                                  src_z: GLint,
+                                  dst_name: GLuint,
+                                  dst_target: GLenum,
+                                  dst_level: GLint,
+                                  dst_x: GLint,
+                                  dst_y: GLint,
+                                  dst_z: GLint,
+                                  src_width: GLsizei,
+                                  src_height: GLsizei,
+                                  src_depth: GLsizei) {
+        self.ffi_gl_.CopyImageSubData(
+            src_name,
+            src_target,
+            src_level,
+            src_x,
+            src_y,
+            src_z,
+            dst_name,
+            dst_target,
+            dst_level,
+            dst_x,
+            dst_y,
+            dst_z,
+            src_width,
+            src_height,
+            src_depth,
+        );
+    }
+
     fn invalidate_framebuffer(&self,
                               target: GLenum,
                               attachments: &[GLenum]) {

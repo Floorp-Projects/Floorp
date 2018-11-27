@@ -20,7 +20,8 @@ pub struct StaticGenerator;
 
 impl super::Generator for StaticGenerator {
     fn write<W>(&self, registry: &Registry, dest: &mut W) -> io::Result<()>
-        where W: io::Write
+    where
+        W: io::Write,
     {
         try!(write_header(dest));
         try!(write_type_aliases(registry, dest));
@@ -33,40 +34,49 @@ impl super::Generator for StaticGenerator {
 /// Creates a `__gl_imports` module which contains all the external symbols that we need for the
 ///  bindings.
 fn write_header<W>(dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
-    writeln!(dest,
-             r#"
+    writeln!(
+        dest,
+        r#"
         mod __gl_imports {{
             pub use std::mem;
             pub use std::os::raw;
         }}
-    "#)
+    "#
+    )
 }
 
 /// Creates a `types` module which contains all the type aliases.
 ///
 /// See also `generators::gen_types`.
 fn write_type_aliases<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
-    try!(writeln!(dest,
-                  r#"
+    try!(writeln!(
+        dest,
+        r#"
         pub mod types {{
             #![allow(non_camel_case_types, non_snake_case, dead_code, missing_copy_implementations)]
-    "#));
+    "#
+    ));
 
     try!(super::gen_types(registry.api, dest));
 
-    writeln!(dest,
-             "
+    writeln!(
+        dest,
+        "
         }}
-    ")
+    "
+    )
 }
 
 /// Creates all the `<enum>` elements at the root of the bindings.
 fn write_enums<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
     for enm in &registry.enums {
         try!(super::gen_enum_item(enm, "types::", dest));
@@ -79,15 +89,19 @@ fn write_enums<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
 ///
 /// These are foreign functions, they don't have any content.
 fn write_fns<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
-    try!(writeln!(dest,
-                  "
+    try!(writeln!(
+        dest,
+        "
         #[allow(non_snake_case, unused_variables, dead_code)]
-        extern \"system\" {{"));
+        extern \"system\" {{"
+    ));
 
     for cmd in &registry.cmds {
-        try!(writeln!(dest,
+        try!(writeln!(
+            dest,
             "#[link_name=\"{symbol}\"]
             pub fn {name}({params}) -> {return_suffix};",
             symbol = super::gen_symbol_name(registry.api, &cmd.proto.ident),
