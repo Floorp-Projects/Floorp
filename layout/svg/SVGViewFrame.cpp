@@ -11,6 +11,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGViewElement.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 /**

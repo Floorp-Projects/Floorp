@@ -9,6 +9,7 @@
 
 #include "inLayoutUtils.h"
 
+#include "gfxTextRun.h"
 #include "nsArray.h"
 #include "nsAutoPtr.h"
 #include "nsIServiceManager.h"

@@ -219,7 +219,7 @@ public:
   bool Equals(const nsAttrValue& aOther) const;
   // aCaseSensitive == eIgnoreCase means ASCII case-insenstive matching
   bool Equals(const nsAString& aValue, nsCaseTreatment aCaseSensitive) const;
-  bool Equals(nsAtom* aValue, nsCaseTreatment aCaseSensitive) const;
+  bool Equals(const nsAtom* aValue, nsCaseTreatment aCaseSensitive) const;
 
   /**
    * Compares this object with aOther according to their string representation.

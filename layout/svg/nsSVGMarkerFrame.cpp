@@ -14,6 +14,7 @@
 #include "SVGGeometryElement.h"
 #include "SVGGeometryFrame.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;

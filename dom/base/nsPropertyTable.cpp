@@ -41,7 +41,7 @@ public:
   // Destroy all remaining properties (without removing them)
   void Destroy();
 
-  bool Equals(nsAtom *aPropertyName)
+  bool Equals(const nsAtom *aPropertyName)
   {
     return mName == aPropertyName;
   }
@@ -136,7 +136,7 @@ nsPropertyTable::EnumerateAll(NSPropertyFunc aCallBack, void* aData)
 
 void*
 nsPropertyTable::GetPropertyInternal(nsPropertyOwner aObject,
-                                     nsAtom* aPropertyName,
+                                     const nsAtom* aPropertyName,
                                      bool aRemove,
                                      nsresult* aResult)
 {
@@ -216,7 +216,7 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner aObject,
 
 nsresult
 nsPropertyTable::DeleteProperty(nsPropertyOwner aObject,
-                                nsAtom* aPropertyName)
+                                const nsAtom* aPropertyName)
 {
   MOZ_ASSERT(aPropertyName && aObject, "unexpected null param");
 
@@ -230,7 +230,7 @@ nsPropertyTable::DeleteProperty(nsPropertyOwner aObject,
 }
 
 nsPropertyTable::PropertyList*
-nsPropertyTable::GetPropertyListFor(nsAtom* aPropertyName) const
+nsPropertyTable::GetPropertyListFor(const nsAtom* aPropertyName) const
 {
   PropertyList* result;
 

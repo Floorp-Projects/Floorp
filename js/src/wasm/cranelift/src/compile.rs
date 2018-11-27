@@ -20,18 +20,14 @@
 
 use baldrdash as bd;
 use cpu::make_isa;
-use cranelift_codegen::binemit::{Addend, CodeOffset, NullTrapSink, Reloc, RelocSink, TrapSink};
-use cranelift_codegen::cursor::{Cursor, FuncCursor};
+use cranelift_codegen::binemit::{Addend, CodeOffset, NullTrapSink, Reloc, RelocSink};
 use cranelift_codegen::entity::EntityRef;
+use cranelift_codegen::ir;
 use cranelift_codegen::ir::stackslot::StackSize;
-use cranelift_codegen::ir::{InstBuilder, SourceLoc, TrapCode};
 use cranelift_codegen::isa::TargetIsa;
-use cranelift_codegen::settings::Flags;
-use cranelift_codegen::{self, ir};
-use cranelift_codegen::{CodegenError, CodegenResult};
-use cranelift_wasm::{
-    self, FuncIndex, GlobalIndex, MemoryIndex, SignatureIndex, TableIndex, WasmResult,
-};
+use cranelift_codegen::CodegenResult;
+use cranelift_codegen::Context;
+use cranelift_wasm::{FuncIndex, FuncTranslator, WasmResult};
 use std::fmt;
 use std::mem;
 use utils::DashResult;
@@ -70,8 +66,8 @@ pub struct BatchCompiler<'a, 'b> {
     static_environ: &'a bd::StaticEnvironment,
     environ: bd::ModuleEnvironment<'b>,
     isa: Box<TargetIsa>,
-    context: cranelift_codegen::Context,
-    trans: cranelift_wasm::FuncTranslator,
+    context: Context,
+    trans: FuncTranslator,
     pub current_func: CompiledFunc,
 }
 
@@ -85,8 +81,8 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             static_environ,
             environ,
             isa: make_isa(static_environ)?,
-            context: cranelift_codegen::Context::new(),
-            trans: cranelift_wasm::FuncTranslator::new(),
+            context: Context::new(),
+            trans: FuncTranslator::new(),
             current_func: CompiledFunc::new(),
         })
     }
@@ -146,11 +142,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         }
 
         {
-            let eenv = &mut EmitEnv::new(
-                &self.context.func,
-                &self.environ,
-                &mut self.current_func.metadata,
-            );
+            let eenv = &mut EmitEnv::new(&mut self.current_func.metadata);
             let mut trap_sink = NullTrapSink {};
             unsafe {
                 let code_buffer = &mut self.current_func.code_buffer;
@@ -173,7 +165,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         // Cranelift computes the total stack frame size including the pushed return address,
         // standard SM prologue pushes, and its own stack slots.
         let total = self.context.func.stack_slots.frame_size.expect("No frame");
-        let sm_pushed = self.isa.flags().baldrdash_prologue_words() as StackSize
+        let sm_pushed = StackSize::from(self.isa.flags().baldrdash_prologue_words())
             * mem::size_of::<usize>() as StackSize;
         total
             .checked_sub(sm_pushed)
@@ -277,8 +269,8 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             _ => panic!("Bad format for call"),
         };
 
-        let func_index = match callee {
-            &ir::ExternalName::User {
+        let func_index = match *callee {
+            ir::ExternalName::User {
                 namespace: 0,
                 index,
             } => FuncIndex::new(index as usize),
@@ -427,27 +419,17 @@ pub fn symbolic_function_name(sym: bd::SymbolicAddress) -> ir::ExternalName {
 }
 
 /// References joined so we can implement `RelocSink`.
-struct EmitEnv<'a, 'b, 'c> {
-    func: &'a ir::Function,
-    env: &'b bd::ModuleEnvironment<'b>,
-    metadata: &'c mut Vec<bd::MetadataEntry>,
+struct EmitEnv<'a> {
+    metadata: &'a mut Vec<bd::MetadataEntry>,
 }
 
-impl<'a, 'b, 'c> EmitEnv<'a, 'b, 'c> {
-    pub fn new(
-        func: &'a ir::Function,
-        env: &'b bd::ModuleEnvironment,
-        metadata: &'c mut Vec<bd::MetadataEntry>,
-    ) -> EmitEnv<'a, 'b, 'c> {
-        EmitEnv {
-            func,
-            env,
-            metadata,
-        }
+impl<'a> EmitEnv<'a> {
+    pub fn new(metadata: &'a mut Vec<bd::MetadataEntry>) -> EmitEnv<'a> {
+        EmitEnv { metadata }
     }
 }
 
-impl<'a, 'b, 'c> RelocSink for EmitEnv<'a, 'b, 'c> {
+impl<'a> RelocSink for EmitEnv<'a> {
     fn reloc_ebb(&mut self, _offset: CodeOffset, _reloc: Reloc, _ebb_offset: CodeOffset) {
         unimplemented!();
     }
@@ -460,14 +442,11 @@ impl<'a, 'b, 'c> RelocSink for EmitEnv<'a, 'b, 'c> {
         _addend: Addend,
     ) {
         // Decode the function name.
-        match name {
-            &ir::ExternalName::User {
-                namespace: 0,
-                index,
-            } => {
+        match *name {
+            ir::ExternalName::User { namespace: 0, .. } => {
                 // This is a direct function call handled by `emit_metadata` above.
             }
-            &ir::ExternalName::User {
+            ir::ExternalName::User {
                 namespace: 1,
                 index,
             } => {
@@ -478,7 +457,7 @@ impl<'a, 'b, 'c> RelocSink for EmitEnv<'a, 'b, 'c> {
                 self.metadata
                     .push(bd::MetadataEntry::symbolic_access(offset, sym));
             }
-            &ir::ExternalName::LibCall(call) => {
+            ir::ExternalName::LibCall(call) => {
                 let sym = match call {
                     ir::LibCall::CeilF32 => bd::SymbolicAddress::CeilF32,
                     ir::LibCall::CeilF64 => bd::SymbolicAddress::CeilF64,

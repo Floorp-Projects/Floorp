@@ -23,6 +23,7 @@
 
 //#define DEBUG_REFLOW
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 class nsDocElementBoxFrame final : public nsBoxFrame

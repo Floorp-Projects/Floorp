@@ -7,6 +7,8 @@
 // Main header first:
 #include "nsSVGSymbolFrame.h"
 
+using namespace mozilla;
+
 nsIFrame*
 NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {

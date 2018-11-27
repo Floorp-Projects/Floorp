@@ -16,6 +16,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/dom/Event.h"
 
+using namespace mozilla;
 using mozilla::dom::Event;
 
 //

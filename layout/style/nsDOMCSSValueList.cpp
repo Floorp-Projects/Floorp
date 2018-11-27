@@ -8,6 +8,7 @@
 
 #include "nsDOMCSSValueList.h"
 #include "nsString.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Move.h"
 
 using namespace mozilla;

@@ -10,10 +10,14 @@
  */
 
 #include "FixedTableLayoutStrategy.h"
+#include "nsStyleConsts.h"
 #include "nsTableFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
+#include "WritingModes.h"
 #include <algorithm>
+
+using namespace mozilla;
 
 FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aTableFrame)
   : nsITableLayoutStrategy(nsITableLayoutStrategy::Fixed)

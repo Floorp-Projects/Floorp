@@ -35,7 +35,7 @@ public:
 
   void SetAndSwapAttr(nsAtom* aAttrName, nsAttrValue& aValue,
                       bool* aValueWasSet);
-  const nsAttrValue* GetAttr(nsAtom* aAttrName) const;
+  const nsAttrValue* GetAttr(const nsAtom* aAttrName) const;
   const nsAttrValue* GetAttr(const nsAString& aAttrName) const;
 
   uint32_t Count() const
@@ -75,7 +75,7 @@ public:
   // aValue; any value that was already in aValue is destroyed.
   void RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue);
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
-  int32_t IndexOfAttr(nsAtom* aLocalName) const;
+  int32_t IndexOfAttr(const nsAtom* aLocalName) const;
 
   // Apply the contained mapper to the contained set of servo rules,
   // unless the servo rules have already been initialized.

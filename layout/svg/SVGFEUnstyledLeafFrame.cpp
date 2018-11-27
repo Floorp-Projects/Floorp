@@ -11,6 +11,8 @@
 #include "SVGObserverUtils.h"
 #include "nsSVGFilters.h"
 
+using namespace mozilla;
+
 class SVGFEUnstyledLeafFrame final : public nsFrame
 {
   friend nsIFrame*

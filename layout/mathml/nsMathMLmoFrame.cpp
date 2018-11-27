@@ -12,6 +12,8 @@
 #include "nsMathMLElement.h"
 #include <algorithm>
 
+using namespace mozilla;
+
 //
 // <mo> -- operator, fence, or separator - implementation
 //
