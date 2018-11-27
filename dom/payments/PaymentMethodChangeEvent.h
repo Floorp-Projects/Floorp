@@ -32,7 +32,9 @@ public:
   static already_AddRefed<PaymentMethodChangeEvent> Constructor(
     EventTarget* aOwner,
     const nsAString& aType,
-    const PaymentMethodChangeEventInit& aEventInitDict);
+    const PaymentRequestUpdateEventInit& aEventInitDict,
+    const nsAString& aMethodName,
+    const ChangeDetails& aMethodDetails);
 
   // Called by WebIDL constructor
   static already_AddRefed<PaymentMethodChangeEvent> Constructor(
@@ -42,8 +44,10 @@ public:
     ErrorResult& aRv);
 
   void GetMethodName(nsAString& aMethodName);
+  void SetMethodName(const nsAString& aMethodName);
 
   void GetMethodDetails(JSContext* cx, JS::MutableHandle<JSObject*> retval);
+  void SetMethodDetails(const ChangeDetails& aMethodDetails);
 
 protected:
   void init(const PaymentMethodChangeEventInit& aEventInitDict);
@@ -51,6 +55,7 @@ protected:
 
 private:
   JS::Heap<JSObject*> mMethodDetails;
+  ChangeDetails mInternalDetails;
   nsString mMethodName;
 };
 
