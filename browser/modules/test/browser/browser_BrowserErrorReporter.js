@@ -113,7 +113,8 @@ add_task(async function testScalars() {
     await reporter.handleMessage(message);
   }
 
-  const scalars = Services.telemetry.getSnapshotForScalars("main", false).parent;
+  const optin = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
+  const scalars = Services.telemetry.snapshotScalars(optin, false).parent;
   is(
     scalars[TELEMETRY_ERROR_COLLECTED],
     7,
@@ -125,7 +126,7 @@ add_task(async function testScalars() {
     `${TELEMETRY_ERROR_REPORTED_FAIL} is incremented when an error with a stack trace is collected.`,
   );
 
-  const keyedScalars = Services.telemetry.getSnapshotForKeyedScalars("main", false).parent;
+  const keyedScalars = Services.telemetry.snapshotKeyedScalars(optin, false).parent;
   Assert.deepEqual(
     keyedScalars[TELEMETRY_ERROR_COLLECTED_FILENAME],
     {
@@ -180,7 +181,7 @@ add_task(async function testCollectedFilenameScalar() {
     }));
 
     const keyedScalars = (
-      Services.telemetry.getSnapshotForKeyedScalars("main", false).parent
+      Services.telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent
     );
 
     let matched = null;

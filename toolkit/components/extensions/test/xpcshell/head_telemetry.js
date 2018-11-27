@@ -14,16 +14,20 @@ function valueSum(arr) {
 }
 
 function clearHistograms() {
-  Services.telemetry.getSnapshotForHistograms("main", true /* clear */);
-  Services.telemetry.getSnapshotForKeyedHistograms("main", true /* clear */);
+  Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                        true /* clear */);
+  Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                             true /* clear */);
 }
 
 function getSnapshots(process) {
-  return Services.telemetry.getSnapshotForHistograms("main", false /* clear */)[process];
+  return Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                               false /* clear */)[process];
 }
 
 function getKeyedSnapshots(process) {
-  return Services.telemetry.getSnapshotForKeyedHistograms("main", false /* clear */)[process];
+  return Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                    false /* clear */)[process];
 }
 
 // TODO Bug 1357509: There is no good way to make sure that the parent received
@@ -31,8 +35,8 @@ function getKeyedSnapshots(process) {
 // to the ugly, spinning the event loop until we have a good approach.
 function promiseTelemetryRecorded(id, process, expectedCount) {
   let condition = () => {
-    let snapshot = Services.telemetry.getSnapshotForHistograms("main",
-                                                               false /* clear */)[process][id];
+    let snapshot = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                         false /* clear */)[process][id];
     return snapshot && valueSum(snapshot.values) >= expectedCount;
   };
   return ContentTaskUtils.waitForCondition(condition);
@@ -40,8 +44,8 @@ function promiseTelemetryRecorded(id, process, expectedCount) {
 
 function promiseKeyedTelemetryRecorded(id, process, expectedKey, expectedCount) {
   let condition = () => {
-    let snapshot = Services.telemetry.getSnapshotForKeyedHistograms("main",
-                                                                    false /* clear */)[process][id];
+    let snapshot = Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                              false /* clear */)[process][id];
     return snapshot && snapshot[expectedKey] && valueSum(snapshot[expectedKey].values) >= expectedCount;
   };
   return ContentTaskUtils.waitForCondition(condition);

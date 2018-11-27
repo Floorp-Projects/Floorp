@@ -139,13 +139,9 @@ function checkKeyedHistogram(h, key, expectedValue) {
  * Return the scalars from the parent-process.
  */
 function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
-  const extended = aChannel == Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
-  const currentExtended = Services.telemetry.canRecordExtended;
-  Services.telemetry.canRecordExtended = extended;
   const scalars = aKeyed ?
-    Services.telemetry.getSnapshotForKeyedScalars("main", aClear).parent :
-    Services.telemetry.getSnapshotForScalars("main", aClear).parent;
-  Services.telemetry.canRecordExtended = currentExtended;
+    Services.telemetry.snapshotKeyedScalars(aChannel, aClear).parent :
+    Services.telemetry.snapshotScalars(aChannel, aClear).parent;
   return scalars || {};
 }
 
