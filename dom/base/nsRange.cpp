@@ -1977,6 +1977,10 @@ nsRange::CutContents(DocumentFragment** aFragment)
     *aFragment = nullptr;
   }
 
+  if (!CanAccess(*mStart.Container()) || !CanAccess(*mEnd.Container())) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsCOMPtr<nsIDocument> doc = mStart.Container()->OwnerDoc();
 
   ErrorResult res;
