@@ -138,7 +138,7 @@ async function clientFromURL(url) {
   // If a remote id was provided we should already have a connected client available.
   const remoteId = params.get("remoteId");
   if (remoteId) {
-    return remoteClientManager.getClientByRemoteId(remoteId).client;
+    return remoteClientManager.getClientByRemoteId(remoteId);
   }
 
   const host = params.get("host");
