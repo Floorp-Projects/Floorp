@@ -4871,10 +4871,13 @@ CanvasRenderingContext2D::CachedSurfaceFromElement(Element* aElement)
 
 // drawImage(in HTMLImageElement image, in float dx, in float dy);
 //   -- render image from 0,0 at dx,dy top-left coords
-// drawImage(in HTMLImageElement image, in float dx, in float dy, in float dw, in float dh);
+// drawImage(in HTMLImageElement image, in float dx, in float dy, in float dw,
+//           in float dh);
 //   -- render image from 0,0 at dx,dy top-left coords clipping it to dw,dh
-// drawImage(in HTMLImageElement image, in float sx, in float sy, in float sw, in float sh, in float dx, in float dy, in float dw, in float dh);
-//   -- render the region defined by (sx,sy,sw,wh) in image-local space into the region (dx,dy,dw,dh) on the canvas
+// drawImage(in HTMLImageElement image, in float sx, in float sy, in float sw,
+//           in float sh, in float dx, in float dy, in float dw, in float dh);
+//   -- render the region defined by (sx,sy,sw,wh) in image-local space into the
+//      region (dx,dy,dw,dh) on the canvas
 
 // If only dx and dy are passed in then optional_argc should be 0. If only
 // dx, dy, dw and dh are passed in then optional_argc should be 2. The only

@@ -122,7 +122,7 @@ ShaderOutput(gl::GLContext* gl)
         default:
             if (version >= 450) {
                 // "OpenGL 4.6 is also guaranteed to support all previous versions of the
-                //  OpenGL Shading Language back to version 1.10."
+                // OpenGL Shading Language back to version 1.10."
                 return SH_GLSL_450_CORE_OUTPUT;
             }
             gfxCriticalNote << "Unexpected GLSL version: " << version;

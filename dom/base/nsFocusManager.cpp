@@ -3653,9 +3653,11 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
       // elements that are normally focusable. Tabindex defaults to -1
       // for elements that are not normally focusable.
       // The returned computed tabindex from IsFocusable() is as follows:
+      // clang-format off
       //          < 0 not tabbable at all
       //          == 0 in normal tab order (last after positive tabindexed items)
       //          > 0 can be tabbed to in the order specified by this value
+      // clang-format on
       int32_t tabIndex;
       frame->IsFocusable(&tabIndex, 0);
 

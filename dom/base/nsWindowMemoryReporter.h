@@ -61,7 +61,8 @@
  *
  * We use the following memory reporter path for active and cached windows:
  *
- *   explicit/window-objects/top(<top-outer-uri>, id=<top-outer-id>)/<category>/window(<window-uri>)/...
+ *   explicit/window-objects/top(<top-outer-uri>, id=<top-outer-id>)/
+ *       <category>/window(<window-uri>)/...
  *
  * For detached and ghost windows, we use
  *

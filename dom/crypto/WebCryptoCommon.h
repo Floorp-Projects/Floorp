@@ -110,7 +110,9 @@ const SECItem SEC_OID_DATA_EC_DH = { siBuffer, (unsigned char*)id_ecDH,
                                      static_cast<unsigned int>(
                                        mozilla::ArrayLength(id_ecDH)) };
 
+// clang-format off
 // python security/pkix/tools/DottedOIDToCode.py dhKeyAgreement 1.2.840.113549.1.3.1
+// clang-format on
 static const uint8_t dhKeyAgreement[] = {
   0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x03, 0x01
 };
