@@ -39,6 +39,9 @@ struct ScrollMetadata;
 class Layer;
 class LayerManager;
 }  // namespace layers
+namespace layout {
+class ScrollAnchorContainer;
+}  // namespace layout
 }  // namespace mozilla
 
 /**
@@ -51,6 +54,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
+  typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
 
   NS_DECL_QUERYFRAME_TARGET(nsIScrollableFrame)
 
@@ -548,6 +552,12 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * all (ie XUL documents) even though they may contain other scroll frames.
    */
   virtual bool IsRootScrollFrameOfDocument() const = 0;
+
+  /**
+   * Returns the scroll anchor associated with this scrollable frame.
+   */
+  virtual const ScrollAnchorContainer* GetAnchor() const = 0;
+  virtual ScrollAnchorContainer* GetAnchor() = 0;
 };
 
 #endif
