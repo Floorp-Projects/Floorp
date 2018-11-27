@@ -2,6 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+# ALL CHANGES TO THIS FILE MUST HAVE REVIEW FROM A MARIONETTE PEER!
+#
+# The Marionette Python client is used out-of-tree with various builds of
+# Firefox. Removing a preference from this file will cause regressions,
+# so please be careful and get review from a Testing :: Marionette peer
+# before you make any changes to this file.
+
 from __future__ import absolute_import
 
 import os
@@ -19,14 +26,6 @@ from mozrunner import Runner, FennecEmulatorRunner
 from six import reraise
 
 from . import errors
-
-
-# ALL CHANGES TO THIS FILE MUST HAVE REVIEW FROM A MARIONETTE PEER!
-#
-# The Marionette Python client is used out-of-tree with release
-# channel builds of Firefox.  Removing a preference from this file
-# will cause regressions, so please be careful and get review from
-# a Testing :: Marionette peer before you make any changes to this file.
 
 
 class GeckoInstance(object):

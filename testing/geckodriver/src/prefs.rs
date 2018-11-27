@@ -2,11 +2,16 @@ use mozprofile::preferences::Pref;
 
 // ALL CHANGES TO THIS FILE MUST HAVE REVIEW FROM A GECKODRIVER PEER!
 //
-// geckodriver is used out-of-tree with release channel builds of Firefox.
+// All preferences in this file are not immediately effective, and
+// require a restart of Firefox, or have to be set in the profile before
+// Firefox gets started the first time. If a preference has to be added,
+// which is immediately effective, it needs to be done in Marionette
+// (marionette.js).
+//
+// Note: geckodriver is used out-of-tree with various builds of Firefox.
 // Removing a preference from this file will cause regressions,
 // so please be careful and get review from a Testing :: geckodriver peer
 // before you make any changes to this file.
-
 lazy_static! {
     pub static ref DEFAULT: Vec<(&'static str, Pref)> = vec![
         // Make sure Shield doesn't hit the network.
