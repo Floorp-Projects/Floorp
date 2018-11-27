@@ -85,7 +85,6 @@
                 "//system_wrappers:metrics_default",
                 "//system_wrappers:system_wrappers_default",
                 "//video:video",
-                "//video_engine:video_engine",
                 "//voice_engine:voice_engine"
             ],
             "include_dirs": [
@@ -10984,70 +10983,6 @@
                 "//video/video_stream_decoder.h",
                 "//video/video_stream_encoder.cc",
                 "//video/video_stream_encoder.h"
-            ],
-            "type": "static_library"
-        },
-        "//video_engine:video_engine": {
-            "cflags": [
-                "-fno-strict-aliasing",
-                "--param=ssp-buffer-size=4",
-                "-fstack-protector",
-                "-Wno-builtin-macro-redefined",
-                "-D__DATE__=",
-                "-D__TIME__=",
-                "-D__TIMESTAMP__=",
-                "-funwind-tables",
-                "-march=armv7-a",
-                "-mfloat-abi=hard",
-                "-mtune=generic-armv7-a",
-                "-mfpu=neon",
-                "-mthumb",
-                "-Wall",
-                "-Werror",
-                "-Wno-psabi",
-                "-Wno-unused-local-typedefs",
-                "-Wno-maybe-uninitialized",
-                "-Wno-missing-field-initializers",
-                "-Wno-unused-parameter",
-                "-O0",
-                "-fno-omit-frame-pointer",
-                "-g2",
-                "-fvisibility=hidden",
-                "-Wextra",
-                "-Wno-unused-parameter",
-                "-Wno-missing-field-initializers",
-                "-Wno-strict-overflow"
-            ],
-            "defines": [
-                "V8_DEPRECATION_WARNINGS",
-                "USE_X11=1",
-                "CHROMIUM_BUILD",
-                "_FILE_OFFSET_BITS=64",
-                "DYNAMIC_ANNOTATIONS_ENABLED=1",
-                "WTF_USE_DYNAMIC_ANNOTATIONS=1",
-                "WEBRTC_ENABLE_PROTOBUF=0",
-                "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_ARCH_ARM",
-                "WEBRTC_ARCH_ARM_V7",
-                "WEBRTC_HAS_NEON",
-                "WEBRTC_MOZILLA_BUILD",
-                "WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS=0",
-                "WEBRTC_POSIX",
-                "WEBRTC_BSD"
-            ],
-            "deps": [
-                "//:webrtc_common"
-            ],
-            "include_dirs": [
-                "/media/libyuv/libyuv/include/",
-                "//",
-                "/tmp/objdir/media/webrtc/trunk/webrtc/gn-output/gen/"
-            ],
-            "libs": [],
-            "sources": [
-                "//video_engine/browser_capture_impl.h",
-                "//video_engine/desktop_capture_impl.cc",
-                "//video_engine/desktop_capture_impl.h"
             ],
             "type": "static_library"
         },
