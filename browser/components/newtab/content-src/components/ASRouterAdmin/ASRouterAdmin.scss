@@ -108,4 +108,15 @@
   .errorState {
     border: 1px solid $red-60;
   }
+
+  .helpLink {
+    padding: 10px;
+    display: flex;
+    background: $yellow-50;
+    border-radius: 3px;
+
+    a {
+      text-decoration: underline;
+    }
+  }
 }
