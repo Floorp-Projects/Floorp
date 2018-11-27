@@ -357,13 +357,14 @@ DebuggerClient.prototype = {
    *    Instantiates a new ThreadActor that can be later attached to in order to
    *    debug JS sources in the document.
    *
-   * @param string targetActor
-   *        The target actor ID for the tab to attach.
+   * @param string targetActorForm
+   *        The target actor form for the tab to attach.
    */
-  attachTarget: async function(targetActor) {
-    let front = this._frontPool.actor(targetActor);
+  attachTarget: async function(targetActorForm) {
+    const actorID = targetActorForm.actor;
+    let front = this._frontPool.actor(actorID);
     if (!front) {
-      front = new BrowsingContextTargetFront(this, { actor: targetActor });
+      front = new BrowsingContextTargetFront(this, targetActorForm);
       this._frontPool.manage(front);
     }
 

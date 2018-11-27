@@ -908,7 +908,7 @@ function findTab(tabs, url) {
 
 function attachTarget(client, tab) {
   info("Attaching to tab with url '" + tab.url + "'.");
-  return client.attachTarget(tab.actor);
+  return client.attachTarget(tab);
 }
 
 function listWorkers(targetFront) {

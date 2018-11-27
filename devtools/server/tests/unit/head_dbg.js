@@ -149,7 +149,7 @@ function findTab(tabs, title) {
 
 function attachTarget(client, tab) {
   dump("Attaching to tab with title '" + tab.title + "'.\n");
-  return client.attachTarget(tab.actor);
+  return client.attachTarget(tab);
 }
 
 function waitForNewSource(threadClient, url) {
@@ -327,7 +327,7 @@ function getTestTab(client, title, callback) {
 // response packet and a TargetFront instance referring to that tab.
 function attachTestTab(client, title, callback) {
   getTestTab(client, title, function(tab) {
-    client.attachTarget(tab.actor).then(([response, targetFront]) => {
+    client.attachTarget(tab).then(([response, targetFront]) => {
       callback(response, targetFront);
     });
   });
