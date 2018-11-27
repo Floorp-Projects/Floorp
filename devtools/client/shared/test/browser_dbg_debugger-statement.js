@@ -15,82 +15,53 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
   this);
 
-var { DebuggerServer } = require("devtools/server/main");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
-
 const TAB_URL = TEST_URI_ROOT + "doc_inline-debugger-statement.html";
 
-var gClient;
-var gTab;
+add_task(async () => {
+  const tab = await addTab(TAB_URL);
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
+  const { client } = target;
+  const targetFront = target.activeTab;
 
-function test() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  const threadClient = await testEarlyDebuggerStatement(client, tab, targetFront);
+  await testDebuggerStatement(client, tab, threadClient);
 
-  const transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
-  gClient.connect().then(([aType, aTraits]) => {
-    is(aType, "browser",
-      "Root actor should identify itself as a browser.");
+  await target.destroy();
+});
 
-    addTab(TAB_URL)
-      .then(tab => {
-        gTab = tab;
-        return attachTargetActorForUrl(gClient, TAB_URL);
-      })
-      .then(testEarlyDebuggerStatement)
-      .then(testDebuggerStatement)
-      .then(() => gClient.close())
-      .then(finish)
-      .catch(error => {
-        ok(false, "Got an error: " + error.message + "\n" + error.stack);
-      });
-  });
-}
-
-function testEarlyDebuggerStatement([aGrip, aResponse]) {
-  const deferred = getDeferredPromise().defer();
-
+async function testEarlyDebuggerStatement(client, tab, targetFront) {
   const onPaused = function(event, packet) {
     ok(false, "Pause shouldn't be called before we've attached!");
-    deferred.reject();
   };
 
-  gClient.addListener("paused", onPaused);
+  client.addListener("paused", onPaused);
 
   // This should continue without nesting an event loop and calling
   // the onPaused hook, because we haven't attached yet.
-  callInTab(gTab, "runDebuggerStatement");
+  callInTab(tab, "runDebuggerStatement");
 
-  gClient.removeListener("paused", onPaused);
+  client.removeListener("paused", onPaused);
 
   // Now attach and resume...
-  gClient.request({ to: aResponse.threadActor, type: "attach" }, () => {
-    gClient.request({ to: aResponse.threadActor, type: "resume" }, () => {
-      ok(true, "Pause wasn't called before we've attached.");
-      deferred.resolve([aGrip, aResponse]);
-    });
-  });
+  const [, threadClient] = await targetFront.attachThread();
+  await threadClient.resume();
+  ok(true, "Pause wasn't called before we've attached.");
 
-  return deferred.promise;
+  return threadClient;
 }
 
-function testDebuggerStatement([aGrip, aResponse]) {
-  const deferred = getDeferredPromise().defer();
-
-  gClient.addListener("paused", (event, packet) => {
-    gClient.request({ to: aResponse.threadActor, type: "resume" }, () => {
+async function testDebuggerStatement(client, tab, threadClient) {
+  const onPaused = new Promise(resolve => {
+    client.addListener("paused", async (event, packet) => {
+      await threadClient.resume();
       ok(true, "The pause handler was triggered on a debugger statement.");
-      deferred.resolve();
+      resolve();
     });
   });
 
   // Reach around the debugging protocol and execute the debugger statement.
-  callInTab(gTab, "runDebuggerStatement");
+  callInTab(tab, "runDebuggerStatement");
 
-  return deferred.promise;
+  return onPaused;
 }
-
-registerCleanupFunction(function() {
-  gClient = null;
-});

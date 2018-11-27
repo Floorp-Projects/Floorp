@@ -137,21 +137,6 @@ function waitUntilClientConnected(client) {
 }
 
 /**
- * Connect a debugger client.
- *
- * @param {DebuggerClient}
- * @return {Promise} Resolves to the targetActor form for the selected tab when the client
- *         is connected.
- */
-function connectDebuggerClient(client) {
-  return client.connect()
-    .then(() => client.listTabs())
-    .then(tabs => {
-      return tabs.tabs[tabs.selected];
-    });
-}
-
-/**
  * Wait for eventName on target.
  * @param {Object} target An observable object that either supports on/off or
  * addEventListener/removeEventListener
