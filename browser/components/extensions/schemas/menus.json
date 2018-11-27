@@ -113,6 +113,12 @@
             "optional": true,
             "description": "The URL of the page where the menu item was clicked. This property is not set if the click occured in a context where there is no current page, such as in a launcher context menu."
           },
+          "frameId": {
+           "type": "integer",
+           "optional": true,
+           "minimum": 0,
+           "description": "The id of the frame of the element where the context menu was clicked."
+          },
           "frameUrl": {
             "type": "string",
             "optional": true,
