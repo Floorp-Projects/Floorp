@@ -111,6 +111,7 @@
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/layers/WebRenderUserData.h"
+#include "mozilla/layout/ScrollAnchorContainer.h"
 #include "nsPrintfCString.h"
 #include "ActiveLayerTracker.h"
 
@@ -725,6 +726,11 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
   if (IsPrimaryFrame()) {
     // This needs to happen before we clear our Properties() table.
     ActiveLayerTracker::TransferActivityToContent(this, mContent);
+  }
+
+  ScrollAnchorContainer* anchor = nullptr;
+  if (IsScrollAnchor(&anchor)) {
+    anchor->InvalidateAnchor();
   }
 
   if (HasCSSAnimations() || HasCSSTransitions() ||
@@ -9141,6 +9147,28 @@ void nsIFrame::ComputePreserve3DChildrenOverflow(
       }
     }
   }
+}
+
+bool nsIFrame::IsScrollAnchor(ScrollAnchorContainer** aOutContainer) {
+  if (!mInScrollAnchorChain) {
+    return false;
+  }
+
+  ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(this);
+  if (container->AnchorNode() != this) {
+    return false;
+  }
+
+  if (aOutContainer) {
+    *aOutContainer = container;
+  }
+  return true;
+}
+
+bool nsIFrame::IsInScrollAnchorChain() const { return mInScrollAnchorChain; }
+
+void nsIFrame::SetInScrollAnchorChain(bool aInChain) {
+  mInScrollAnchorChain = aInChain;
 }
 
 uint32_t nsIFrame::GetDepthInFrameTree() const {
