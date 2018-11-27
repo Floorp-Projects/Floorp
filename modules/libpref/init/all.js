@@ -657,6 +657,8 @@ pref("media.cubeb.sandbox", false);
 
 #ifdef MOZ_AV1
 pref("media.av1.enabled", false);
+// Use libdav1d instead of libaom
+pref("media.av1.use-dav1d", false);
 #endif
 
 pref("media.webaudio.audiocontextoptions-samplerate.enabled", true);

@@ -1397,6 +1397,11 @@ VARCACHE_PREF(
    MediaAv1Enabled,
   RelaxedAtomicBool, false
 )
+VARCACHE_PREF(
+  "media.av1.use-dav1d",
+   MediaAv1UseDav1d,
+  RelaxedAtomicBool, false
+)
 
 VARCACHE_PREF(
   "media.flac.enabled",
