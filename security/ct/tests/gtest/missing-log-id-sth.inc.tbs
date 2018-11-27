@@ -1,0 +1,8 @@
+signingKey:secp256r1
+spki:secp256r1
+// missing logid
+00000166d6142b50 // 1541189938000 milliseconds since the epoch
+0000000000000007 // 7 total nodes
+20 // 32 byte hash
+  d1a0d3947db4ae8305f2ac32985957e02659b2ea3c10da52a48d2526e9af3bbc
+0000 // no extensions

@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <iomanip>
 
-#include "BTInclusionProof.h"
+#include "BTTypes.h"
 #include "CTSerialization.h"
 #include "gtest/gtest.h"
 #include "mozpkix/Input.h"
