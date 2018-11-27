@@ -8971,9 +8971,14 @@ nsContentUtils::IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
   bool thirdParty = false;
 
   if (aWindow) {
-    Unused << thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
-                                                 aURI,
-                                                 &thirdParty);
+    nsresult rv = thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
+                                                     aURI,
+                                                     &thirdParty);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Ideally we would do something similar to the channel code path here,
+      // but existing code depends on this behaviour.
+      return false;
+    }
   }
 
   if (aChannel) {
@@ -8981,9 +8986,13 @@ nsContentUtils::IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
     // use nsILoadInfo.isThirdPartyContext.  That nsILoadInfo property only
     // indicates if the parent loading window is third party or not.  We
     // want to check the channel URI against the loading principal as well.
-    Unused << thirdPartyUtil->IsThirdPartyChannel(aChannel,
-                                                  nullptr,
-                                                  &thirdParty);
+    nsresult rv = thirdPartyUtil->IsThirdPartyChannel(aChannel,
+                                                      nullptr,
+                                                      &thirdParty);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Assume third-party in case of failure
+      thirdParty = true;
+    }
   }
 
   return thirdParty;
