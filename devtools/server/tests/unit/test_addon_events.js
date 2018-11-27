@@ -18,7 +18,7 @@ add_task(async function testReloadExitedAddon() {
   // Retrieve the current list of addons to be notified of the next list update.
   // We will also call listAddons every time we receive the event "addonListChanged" for
   // the same reason.
-  await client.mainRoot.listAddons();
+  await client.listAddons();
 
   info("Install the addon");
   const addonFile = do_get_file("addons/web-extension", false);
@@ -56,5 +56,5 @@ async function expectAddonListChanged(client, predicate) {
   const onAddonListChanged = client.mainRoot.once("addonListChanged");
   await predicate();
   await onAddonListChanged;
-  await client.mainRoot.listAddons();
+  await client.listAddons();
 }

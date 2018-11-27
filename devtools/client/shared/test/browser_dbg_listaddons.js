@@ -21,7 +21,7 @@ const ADDON1_PATH = "addon1.xpi";
 const ADDON2_ID = "jid1-qjtzNGV8xw5h2A@jetpack";
 const ADDON2_PATH = "addon2.xpi";
 
-var gAddon1, gAddon1Front, gAddon2, gClient;
+var gAddon1, gAddon1Actor, gAddon2, gClient;
 
 function test() {
   DebuggerServer.init();
@@ -55,10 +55,10 @@ function testFirstAddon() {
   return addTemporaryAddon(ADDON1_PATH).then(addon => {
     gAddon1 = addon;
 
-    return gClient.mainRoot.getAddon({ id: ADDON1_ID }).then(front => {
+    return getAddonActorForId(gClient, ADDON1_ID).then(grip => {
       ok(!addonListChanged, "Should not yet be notified that list of addons changed.");
-      ok(front, "Should find an addon actor for addon1.");
-      gAddon1Front = front;
+      ok(grip, "Should find an addon actor for addon1.");
+      gAddon1Actor = grip.actor;
     });
   });
 }
@@ -72,11 +72,11 @@ function testSecondAddon() {
   return addTemporaryAddon(ADDON2_PATH).then(addon => {
     gAddon2 = addon;
 
-    return gClient.mainRoot.getAddon({ id: ADDON1_ID }).then(front1 => {
-      return gClient.mainRoot.getAddon({ id: ADDON2_ID }).then(front2 => {
+    return getAddonActorForId(gClient, ADDON1_ID).then(fistGrip => {
+      return getAddonActorForId(gClient, ADDON2_ID).then(secondGrip => {
         ok(addonListChanged, "Should be notified that list of addons changed.");
-        is(front1, gAddon1Front, "First addon's actor shouldn't have changed.");
-        ok(front2, "Should find a addon actor for the second addon.");
+        is(fistGrip.actor, gAddon1Actor, "First addon's actor shouldn't have changed.");
+        ok(secondGrip, "Should find a addon actor for the second addon.");
       });
     });
   });
@@ -89,9 +89,9 @@ function testRemoveFirstAddon() {
   });
 
   return removeAddon(gAddon1).then(() => {
-    return gClient.mainRoot.getAddon({ id: ADDON1_ID }).then(front => {
+    return getAddonActorForId(gClient, ADDON1_ID).then(grip => {
       ok(addonListChanged, "Should be notified that list of addons changed.");
-      ok(!front, "Shouldn't find a addon actor for the first addon anymore.");
+      ok(!grip, "Shouldn't find a addon actor for the first addon anymore.");
     });
   });
 }
@@ -103,16 +103,16 @@ function testRemoveSecondAddon() {
   });
 
   return removeAddon(gAddon2).then(() => {
-    return gClient.mainRoot.getAddon({ id: ADDON2_ID }).then(front => {
+    return getAddonActorForId(gClient, ADDON2_ID).then(grip => {
       ok(addonListChanged, "Should be notified that list of addons changed.");
-      ok(!front, "Shouldn't find a addon actor for the second addon anymore.");
+      ok(!grip, "Shouldn't find a addon actor for the second addon anymore.");
     });
   });
 }
 
 registerCleanupFunction(function() {
   gAddon1 = null;
-  gAddon1Front = null;
+  gAddon1Actor = null;
   gAddon2 = null;
   gClient = null;
 });

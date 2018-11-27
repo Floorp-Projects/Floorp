@@ -163,6 +163,19 @@ function getTargetActorForUrl(aClient, aUrl) {
   return deferred.promise;
 }
 
+function getAddonActorForId(aClient, aAddonId) {
+  info("Get addon actor for ID: " + aAddonId);
+  let deferred = promise.defer();
+
+  aClient.listAddons().then(aResponse => {
+    let addonTargetActor = aResponse.addons.filter(aGrip => aGrip.id == aAddonId).pop();
+    info("got addon actor for ID: " + aAddonId);
+    deferred.resolve(addonTargetActor);
+  });
+
+  return deferred.promise;
+}
+
 async function attachTargetActorForUrl(aClient, aUrl) {
   let grip = await getTargetActorForUrl(aClient, aUrl);
   let [ response, front ] = await aClient.attachTarget(grip.actor);
@@ -762,6 +775,18 @@ function hideVarPopupByScrollingEditor(aPanel) {
 
 function reopenVarPopup(...aArgs) {
   return hideVarPopup.apply(this, aArgs).then(() => openVarPopup.apply(this, aArgs));
+}
+
+function attachAddonActorForId(aClient, aAddonId) {
+  let deferred = promise.defer();
+
+  getAddonActorForId(aClient, aAddonId).then(aGrip => {
+    aClient.attachAddon(aGrip).then(([aResponse]) => {
+      deferred.resolve([aGrip, aResponse]);
+    });
+  });
+
+  return deferred.promise;
 }
 
 function doResume(aPanel) {

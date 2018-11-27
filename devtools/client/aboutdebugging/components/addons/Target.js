@@ -13,6 +13,7 @@ const {
   debugLocalAddon,
   debugRemoteAddon,
   getExtensionUuid,
+  isLegacyTemporaryExtension,
   isTemporaryID,
   parseFileUri,
   uninstallAddon,
@@ -123,7 +124,7 @@ function infoMessages(target) {
 function warningMessages(target) {
   let messages = [];
 
-  if (target.addonTargetFront.isLegacyTemporaryExtension()) {
+  if (isLegacyTemporaryExtension(target.form)) {
     messages.push(dom.li(
       {
         className: "addon-target-warning-message addon-target-message",
@@ -156,8 +157,9 @@ class AddonTarget extends Component {
       connect: PropTypes.object,
       debugDisabled: PropTypes.bool,
       target: PropTypes.shape({
-        addonTargetFront: PropTypes.object.isRequired,
+        addonTargetActor: PropTypes.string.isRequired,
         addonID: PropTypes.string.isRequired,
+        form: PropTypes.object.isRequired,
         icon: PropTypes.string,
         name: PropTypes.string.isRequired,
         temporarilyInstalled: PropTypes.bool,
@@ -190,10 +192,13 @@ class AddonTarget extends Component {
   }
 
   async reload() {
-    const { target } = this.props;
+    const { client, target } = this.props;
     const { AboutDebugging } = window;
     try {
-      await target.addonTargetFront.reload();
+      await client.request({
+        to: target.addonTargetActor,
+        type: "reload",
+      });
       AboutDebugging.emit("addon-reload");
     } catch (e) {
       throw new Error("Error reloading addon " + target.addonID + ": " + e.message);
