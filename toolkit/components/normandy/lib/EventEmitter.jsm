@@ -9,10 +9,18 @@ var EXPORTED_SYMBOLS = ["EventEmitter"];
 
 const log = LogManager.getLogger("event-emitter");
 
-var EventEmitter = function() {
+var EventEmitter = function(sandboxManager) {
   const listeners = {};
 
   return {
+    createSandboxedEmitter() {
+      return sandboxManager.cloneInto({
+        on: this.on.bind(this),
+        off: this.off.bind(this),
+        once: this.once.bind(this),
+      }, {cloneFunctions: true});
+    },
+
     emit(eventName, event) {
       // Fire events async
       Promise.resolve()
@@ -24,7 +32,7 @@ var EventEmitter = function() {
           // Clone callbacks array to avoid problems with mutation while iterating
           const callbacks = Array.from(listeners[eventName]);
           for (const cb of callbacks) {
-            cb(event);
+            cb(sandboxManager.cloneInto(event));
           }
         });
     },
