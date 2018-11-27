@@ -62,14 +62,16 @@ public:
     */
   void SetZeroRowSpan(bool aIsZero);
 
-  /** get the distance from the current entry to the corresponding origin of the rowspan
-    * @return    containing the distance in the column to the originating cell
-    */
+  /** get the distance from the current entry to the corresponding origin of the
+   * rowspan
+   * @return    containing the distance in the column to the originating cell
+   */
   uint32_t GetRowSpanOffset() const;
 
-  /** set the distance from the current entry to the corresponding origin of the rowspan
-    * @param    the distance in the column to the originating cell
-    */
+  /** set the distance from the current entry to the corresponding origin of
+   * the rowspan
+   * @param    the distance in the column to the originating cell
+   */
   void SetRowSpanOffset(uint32_t aSpan);
 
   /** is the entry spanned by colspan
@@ -77,9 +79,10 @@ public:
     */
   bool IsColSpan() const;
 
-  /** get the distance from the current entry to the corresponding origin of the colspan
-    * @return    containing the distance in the row to the originating cell
-    */
+  /** get the distance from the current entry to the corresponding origin of
+   *  the colspan
+   * @return    containing the distance in the row to the originating cell
+   */
   uint32_t GetColSpanOffset() const;
 
   /** set the distance from the current entry to the corresponding origin of the colspan
@@ -93,7 +96,8 @@ public:
   bool IsOverlap() const;
 
   /** mark the current entry as spanned by a row- and a colspan
-    * @param aOverlap    if true mark the entry as covered by a row- and a colspan
+    * @param aOverlap    if true mark the entry as covered by a row- and
+    *                    a colspan
     */
   void SetOverlap(bool aOverlap);
 

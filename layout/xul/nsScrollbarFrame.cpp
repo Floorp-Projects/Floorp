@@ -310,6 +310,7 @@ nsScrollbarFrame::MoveToNewPosition()
 nsresult
 nsScrollbarFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
+  // clang-format off
   // <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" xbl:inherits="curpos,maxpos,disabled"/>
   // <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" xbl:inherits="curpos,maxpos,disabled"/>
   // <xul:slider flex="1" xbl:inherits="disabled,curpos,maxpos,pageincrement,increment,orient">
@@ -318,7 +319,7 @@ nsScrollbarFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // </xul:slider>
   // <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" xbl:inherits="curpos,maxpos,disabled"/>
   // <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" xbl:inherits="curpos,maxpos,disabled"/>
-
+  // clang-format on
   nsNodeInfoManager* nodeInfoManager = mContent->NodeInfo()->NodeInfoManager();
 
   Element* el(GetContent()->AsElement());

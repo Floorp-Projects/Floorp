@@ -534,7 +534,8 @@ struct TextRenderedRun
    * Thus we need to account for this in our transform.
    *
    *
-   * Assume that we have <text x="100" y="100" rotate="0 0 1 0 0 1">abcdef</text>.
+   * Assume that we have
+   * <text x="100" y="100" rotate="0 0 1 0 0 1">abcdef</text>.
    * This would result in four text rendered runs:
    *
    *   - one for "ab"

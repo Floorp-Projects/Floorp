@@ -2293,9 +2293,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // XXXrbs -- relax this restriction because it causes text frames
       //           to jam together when 'font-size-adjust' is enabled
       //           and layout is using dynamic font heights (bug 20394)
-      //        -- Note #1: With this code enabled and with the fact that we are not
-      //           using Em[Ascent|Descent] as nsDimensions for text metrics in
-      //           GFX mean that the discussion in bug 13072 cannot hold.
+      //        -- Note #1: With this code enabled and with the fact that we are
+      //           not using Em[Ascent|Descent] as nsDimensions for text
+      //           metrics in GFX mean that the discussion in bug 13072 cannot hold.
       //        -- Note #2: We still don't want empty-text frames to interfere.
       //           For example in quirks mode, avoiding empty text frames prevents
       //           "tall" lines around elements like <hr> since the rules of <hr>
