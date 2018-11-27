@@ -15,7 +15,10 @@ import {
 import { mapFrames, fetchExtra } from "./pause";
 import { updateTab } from "./tabs";
 
+import { PROMISE } from "./utils/middleware/promise";
+
 import { setInScopeLines } from "./ast/setInScopeLines";
+import { updateSymbolLocations } from "./utils/symbols";
 import {
   getSymbols,
   findOutOfScopeLocations,
@@ -24,7 +27,6 @@ import {
   type AstPosition
 } from "../workers/parser";
 
-import { PROMISE } from "./utils/middleware/promise";
 import { features } from "../utils/prefs";
 import { isLoaded, isGenerated } from "../utils/source";
 
@@ -56,7 +58,7 @@ export function setSourceMetaData(sourceId: SourceId) {
 }
 
 export function setSymbols(sourceId: SourceId) {
-  return async ({ dispatch, getState }: ThunkArgs) => {
+  return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceFromId(getState(), sourceId);
 
     if (source.isWasm || hasSymbols(getState(), source) || !isLoaded(source)) {
@@ -66,7 +68,15 @@ export function setSymbols(sourceId: SourceId) {
     await dispatch({
       type: "SET_SYMBOLS",
       sourceId,
-      [PROMISE]: getSymbols(sourceId)
+      [PROMISE]: (async function() {
+        const symbols = await getSymbols(sourceId);
+        const mappedSymbols = updateSymbolLocations(
+          symbols,
+          source,
+          sourceMaps
+        );
+        return mappedSymbols;
+      })()
     });
 
     if (isPaused(getState())) {
