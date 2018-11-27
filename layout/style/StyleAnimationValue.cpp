@@ -120,6 +120,13 @@ AnimationValue::GetOpacity() const
   return Servo_AnimationValue_GetOpacity(mServo);
 }
 
+nscolor
+AnimationValue::GetColor(nscolor aForegroundColor) const
+{
+  MOZ_ASSERT(mServo);
+  return Servo_AnimationValue_GetColor(mServo, aForegroundColor);
+}
+
 already_AddRefed<const nsCSSValueSharedList>
 AnimationValue::GetTransformList() const
 {
