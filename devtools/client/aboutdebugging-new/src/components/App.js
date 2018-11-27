@@ -12,8 +12,13 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
-const { PAGES } = require("../constants");
+const Route = createFactory(require("devtools/client/shared/vendor/react-router-dom").Route);
+const Switch = createFactory(require("devtools/client/shared/vendor/react-router-dom").Switch);
+const Redirect = createFactory(require("devtools/client/shared/vendor/react-router-dom").Redirect);
+const { withRouter } = require("devtools/client/shared/vendor/react-router-dom");
+
 const Types = require("../types/index");
+const { RUNTIMES } = require("../constants");
 
 const ConnectPage = createFactory(require("./connect/ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
@@ -33,39 +38,94 @@ class App extends PureComponent {
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
+      selectedRuntime: PropTypes.string,
       usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       wifiEnabled: PropTypes.bool.isRequired,
     };
   }
 
-  getSelectedPageComponent() {
+  renderConnect() {
     const {
       adbAddonStatus,
       dispatch,
       networkEnabled,
       networkLocations,
-      selectedPage,
       wifiEnabled,
     } = this.props;
 
-    if (!selectedPage) {
-      // No page selected.
-      return null;
+    return ConnectPage({
+      adbAddonStatus,
+      dispatch,
+      networkEnabled,
+      networkLocations,
+      wifiEnabled,
+    });
+  }
+
+  // The `match` object here is passed automatically by the Route object.
+  // We are using it to read the route path.
+  // See react-router docs:
+  // https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/api/match.md
+  renderRuntime({ match }) {
+    // Redirect to This Firefox in these cases:
+    // - If the runtimepage for a device is the first page shown (since we can't
+    //   keep connections open between page reloads).
+    // - If no runtimeId is given.
+    // - If runtime is not found in the runtimes list (this is handled later)
+    const isDeviceFirstPage =
+      !this.props.selectedPage &&
+      match.params.runtimeId !== RUNTIMES.THIS_FIREFOX;
+    if (!match.params.runtimeId || isDeviceFirstPage) {
+      return Redirect({ to: `/runtime/${RUNTIMES.THIS_FIREFOX}` });
     }
 
-    switch (selectedPage) {
-      case PAGES.CONNECT:
-        return ConnectPage({
-          adbAddonStatus,
-          dispatch,
-          networkEnabled,
-          networkLocations,
-          wifiEnabled,
-        });
-      default:
-        // All pages except for the CONNECT page are RUNTIME pages.
-        return RuntimePage({ dispatch });
+    const isRuntimeAvailable = id => {
+      const runtimes = this.props.usbRuntimes;
+      return !!runtimes.find(x => x.id === id);
+    };
+
+    const { dispatch } = this.props;
+
+    let runtimeId = match.params.runtimeId || RUNTIMES.THIS_FIREFOX;
+    if (match.params.runtimeId !== RUNTIMES.THIS_FIREFOX) {
+      const rawId = decodeURIComponent(match.params.runtimeId);
+      if (isRuntimeAvailable(rawId)) {
+        runtimeId = rawId;
+      } else {
+        // Also redirect to "This Firefox" if runtime is not found
+        return Redirect({ to: `/runtime/${RUNTIMES.THIS_FIREFOX}` });
+      }
     }
+
+    // we need to pass a key so the component updates when we want to showcase
+    // a different runtime
+    return RuntimePage({ dispatch, key: runtimeId, runtimeId });
+  }
+
+  renderRoutes() {
+    return Switch(
+      {},
+      Route({
+        path: "/connect",
+        render: () => this.renderConnect(),
+      }),
+      Route({
+        path: "/runtime/:runtimeId",
+        render: routeProps => this.renderRuntime(routeProps),
+      }),
+      Route({
+        path: "/",
+        exact: true,
+        // will redirect to This Firefox
+        render: routeProps => this.renderRuntime(routeProps),
+      }),
+      // default route when there's no match
+      // TODO: maybe we'd like to do something else than a redirect. See:
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1509897
+      Route({
+        render: () => Redirect({ to: "/"}),
+      })
+    );
   }
 
   render() {
@@ -76,6 +136,7 @@ class App extends PureComponent {
       isScanningUsb,
       networkRuntimes,
       selectedPage,
+      selectedRuntime,
       usbRuntimes,
     } = this.props;
 
@@ -83,21 +144,17 @@ class App extends PureComponent {
       { messages: fluentBundles },
       dom.div(
         { className: "app" },
-        Sidebar(
-          {
-            adbAddonStatus,
-            className: "app__sidebar",
-            dispatch,
-            isScanningUsb,
-            networkRuntimes,
-            selectedPage,
-            usbRuntimes,
-          }
-        ),
-        dom.main(
-          { className: "app__content" },
-          this.getSelectedPageComponent()
-        )
+        Sidebar({
+          adbAddonStatus,
+          className: "app__sidebar",
+          dispatch,
+          isScanningUsb,
+          networkRuntimes,
+          selectedPage,
+          selectedRuntime,
+          usbRuntimes,
+        }),
+        dom.main({ className: "app__content" }, this.renderRoutes())
       )
     );
   }
@@ -111,6 +168,7 @@ const mapStateToProps = state => {
     networkLocations: state.ui.networkLocations,
     networkRuntimes: state.runtimes.networkRuntimes,
     selectedPage: state.ui.selectedPage,
+    selectedRuntime: state.ui.selectedRuntime,
     usbRuntimes: state.runtimes.usbRuntimes,
     wifiEnabled: state.ui.wifiEnabled,
   };
@@ -120,4 +178,4 @@ const mapDispatchToProps = dispatch => ({
   dispatch,
 });
 
-module.exports = connect(mapStateToProps, mapDispatchToProps)(App);
+module.exports = withRouter(connect(mapStateToProps, mapDispatchToProps)(App));

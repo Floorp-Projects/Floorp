@@ -217,6 +217,7 @@ function updateUSBRuntimes(runtimes) {
       // Current runtime can not be retrieved after USB_RUNTIMES_UPDATED action, since
       // that updates runtime state. So, before that we fire selectPage action so that to
       // transact unwatchRuntime correctly.
+
       await dispatch(Actions.selectPage(RUNTIMES.THIS_FIREFOX, RUNTIMES.THIS_FIREFOX));
     }
 

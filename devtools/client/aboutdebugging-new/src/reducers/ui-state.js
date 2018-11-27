@@ -22,6 +22,7 @@ function UiState(locations = [], debugTargetCollapsibilities = {},
     networkEnabled,
     networkLocations: locations,
     selectedPage: null,
+    selectedRuntime: null,
     showSystemAddons,
     wifiEnabled,
   };
@@ -47,8 +48,9 @@ function uiReducer(state = UiState(), action) {
     }
 
     case PAGE_SELECTED: {
-      const { page } = action;
-      return Object.assign({}, state, { selectedPage: page });
+      const { page, runtimeId } = action;
+      return Object.assign({}, state,
+        { selectedPage: page, selectedRuntime: runtimeId });
     }
 
     case USB_RUNTIMES_SCAN_START: {
