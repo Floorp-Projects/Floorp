@@ -162,26 +162,6 @@ static uint32_t sRCWNMaxWaitMs = 500;
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
-using mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED;
-
-static const struct {
-  LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED mTelemetryLabel;
-  const char* mHostName;
-} gFastBlockAnalyticsProviders[] = {
-  // clang-format off
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::googleanalytics, "google-analytics.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::scorecardresearch, "scorecardresearch.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::hotjar, "hotjar.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::newrelic, "newrelic.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::nrdata, "nr-data.net" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::crwdcntrl, "crwdcntrl.net" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::eyeota, "eyeota.net" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::yahooanalytics, "analytics.yahoo.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::statcounter, "statcounter.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::v12group, "v12group.com" }
-  // clang-format on
-};
-
 void
 AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss)
 {
@@ -770,58 +750,28 @@ nsHttpChannel::CheckFastBlocked()
         engageFastBlock = hasFastBlockStarted && !hasFastBlockStopped;
     }
 
-    // Remember the data needed for fastblock telemetry in case fastblock is
-    // enabled, we have decided to block the channel, and the channel isn't
-    // marked as private.
-    if (engageFastBlock && !NS_UsePrivateBrowsing(this)) {
-        nsCOMPtr<nsIURI> uri;
-        nsresult rv = GetURI(getter_AddRefs(uri));
-        NS_ENSURE_SUCCESS(rv, false);
-
-        nsAutoCString host;
-        rv = uri->GetHost(host);
-        NS_ENSURE_SUCCESS(rv, false);
-
-        nsCOMPtr<nsIEffectiveTLDService> tldService =
-            do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-        NS_ENSURE_TRUE(tldService, false);
-
-        LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED label =
-            LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::other;
-        for (const auto& entry : gFastBlockAnalyticsProviders) {
-          // For each entry in the list of our analytics providers, use the
-          // effective TLD service to look up subdomains to make sure we find a
-          // potential match if one is available.
-          while (true) {
-            if (host == entry.mHostName) {
-              label = entry.mTelemetryLabel;
-              break;
-            }
-
-            nsAutoCString newHost;
-            rv = tldService->GetNextSubDomain(host, newHost);
-            if (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-              // we're done searching this entry.
-              break;
-            }
-            NS_ENSURE_SUCCESS(rv, false);
-
-            host = newHost;
-          }
-
-          if (label != LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::other) {
-            // We have found a label in the previous loop, bail out now!
-            break;
-          }
-        }
-
-        if (mLoadInfo) {
-          MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
-          MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetTrackerBlockedReason(label));
-        }
+    if (!engageFastBlock) {
+        return false;
     }
 
-    return engageFastBlock;
+    TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
+    bool hasFastBlockStarted = duration.ToMilliseconds() >= sFastBlockTimeout;
+    bool hasFastBlockStopped = false;
+    if ((sFastBlockLimit != 0) && (sFastBlockLimit > sFastBlockTimeout)) {
+        hasFastBlockStopped = duration.ToMilliseconds() > sFastBlockLimit;
+    }
+    const bool isFastBlocking = hasFastBlockStarted && !hasFastBlockStopped;
+
+    if (isFastBlocking && mLoadInfo) {
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
+    }
+
+    LOG(("FastBlock started=%d stopped=%d (%lf) [this=%p]\n",
+         static_cast<int>(hasFastBlockStarted),
+         static_cast<int>(hasFastBlockStopped),
+         duration.ToMilliseconds(),
+         this));
+    return isFastBlocking;
 }
 
 nsresult

@@ -765,11 +765,6 @@ HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
       doc->IncrementTrackerCount();
       if (isTrackerBlocked) {
         doc->IncrementTrackerBlockedCount();
-
-        Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED label =
-          Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::other;
-        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetTrackerBlockedReason(&label));
-        doc->NoteTrackerBlockedReason(label);
       }
     }
   }
