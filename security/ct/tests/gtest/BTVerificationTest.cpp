@@ -242,10 +242,8 @@ TEST_P(BTVerificationTest, BTVerificationSimpleTest)
 
   Buffer encodedProofBuffer(HexToBytes(params.mInclusionProofHex));
   Input encodedProof = InputForBuffer(encodedProofBuffer);
-  Reader encodedProofReader(encodedProof);
-
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(Success, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(Success, DecodeInclusionProof(encodedProof, ipr));
 
   Buffer leafEntryBuffer(HexToBytes(params.mInputHex));
   Input leafEntry = InputForBuffer(leafEntryBuffer);

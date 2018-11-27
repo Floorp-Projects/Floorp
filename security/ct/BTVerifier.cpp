@@ -28,9 +28,10 @@ static const size_t kInclusionPathLengthBytes = 2;
 static const size_t kNodeHashPrefixLengthBytes = 1;
 
 Result
-DecodeInclusionProof(pkix::Reader& reader, InclusionProofDataV2& output)
+DecodeInclusionProof(Input input, InclusionProofDataV2& output)
 {
   InclusionProofDataV2 result;
+  Reader reader(input);
 
   Input logId;
   Result rv = ReadVariableBytes<kLogIdPrefixLengthBytes>(reader, logId);
@@ -82,7 +83,7 @@ DecodeInclusionProof(pkix::Reader& reader, InclusionProofDataV2& output)
     inclusionPath.push_back(std::move(hashBuffer));
   }
 
-  if (!reader.AtEnd()){
+  if (!reader.AtEnd()) {
     return pkix::Result::ERROR_BAD_DER;
   }
 
