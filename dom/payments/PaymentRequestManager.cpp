@@ -255,6 +255,7 @@ ConvertOptions(const PaymentOptions& aOptions,
                                  aOptions.mRequestPayerEmail,
                                  aOptions.mRequestPayerPhone,
                                  aOptions.mRequestShipping,
+                                 aOptions.mRequestBillingAddress,
                                  shippingType);
 }
 
@@ -297,6 +298,43 @@ ConvertResponseData(const IPCPaymentResponseData& aIPCData,
       break;
     }
   }
+}
+
+void
+ConvertMethodChangeDetails(const IPCMethodChangeDetails& aIPCDetails,
+                           ChangeDetails& aDetails)
+{
+  switch (aIPCDetails.type()) {
+    case IPCMethodChangeDetails::TIPCGeneralChangeDetails : {
+      const IPCGeneralChangeDetails& details = aIPCDetails;
+      GeneralDetails gDetails;
+      gDetails.details = details.details();
+      aDetails = gDetails;
+      break;
+    }
+    case IPCMethodChangeDetails::TIPCBasicCardChangeDetails: {
+      const IPCBasicCardChangeDetails& details = aIPCDetails;
+      BasicCardDetails bDetails;
+      bDetails.billingAddress.country = details.billingAddress().country();
+      bDetails.billingAddress.addressLine = details.billingAddress().addressLine();
+      bDetails.billingAddress.region = details.billingAddress().region();
+      bDetails.billingAddress.regionCode = details.billingAddress().regionCode();
+      bDetails.billingAddress.city = details.billingAddress().city();
+      bDetails.billingAddress.dependentLocality =
+        details.billingAddress().dependentLocality();
+      bDetails.billingAddress.postalCode = details.billingAddress().postalCode();
+      bDetails.billingAddress.sortingCode = details.billingAddress().sortingCode();
+      bDetails.billingAddress.organization = details.billingAddress().organization();
+      bDetails.billingAddress.recipient = details.billingAddress().recipient();
+      bDetails.billingAddress.phone = details.billingAddress().phone();
+      aDetails = bDetails;
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+
 }
 } // end of namespace
 
@@ -764,6 +802,17 @@ PaymentRequestManager::ChangePayerDetail(PaymentRequest* aRequest,
     return NS_OK;
   }
   return response->UpdatePayerDetail(aPayerName, aPayerEmail, aPayerPhone);
+}
+
+nsresult
+PaymentRequestManager::ChangePaymentMethod(PaymentRequest* aRequest,
+                                           const nsAString& aMethodName,
+                                           const IPCMethodChangeDetails& aMethodDetails)
+{
+  NS_ENSURE_ARG_POINTER(aRequest);
+  ChangeDetails methodDetails;
+  ConvertMethodChangeDetails(aMethodDetails, methodDetails);
+  return aRequest->UpdatePaymentMethod(aMethodName, methodDetails);
 }
 
 } // end of namespace dom
