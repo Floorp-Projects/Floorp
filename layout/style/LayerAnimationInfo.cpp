@@ -14,7 +14,6 @@ namespace mozilla {
 /* static */ const Array<DisplayItemType,
                          nsCSSPropertyIDSet::CompositorAnimatableCount()>
   LayerAnimationInfo::sDisplayItemTypes = {
-    DisplayItemType::TYPE_BACKGROUND_COLOR,
     DisplayItemType::TYPE_OPACITY,
     DisplayItemType::TYPE_TRANSFORM,
   };
@@ -23,8 +22,6 @@ namespace mozilla {
 LayerAnimationInfo::GetDisplayItemTypeForProperty(nsCSSPropertyID aProperty)
 {
   switch (aProperty) {
-    case eCSSProperty_background_color:
-      return DisplayItemType::TYPE_BACKGROUND_COLOR;
     case eCSSProperty_opacity:
       return DisplayItemType::TYPE_OPACITY;
     case eCSSProperty_transform:

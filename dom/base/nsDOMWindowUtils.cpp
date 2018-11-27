@@ -3720,14 +3720,6 @@ nsDOMWindowUtils::GetOMTAStyle(Element* aElement,
       if (value.type() == OMTAValue::TMatrix4x4) {
         cssValue = nsComputedDOMStyle::MatrixToCSSValue(value.get_Matrix4x4());
       }
-    } else if (aProperty.EqualsLiteral("background-color")) {
-      OMTAValue value = GetOMTAValue(frame,
-                                     DisplayItemType::TYPE_BACKGROUND_COLOR,
-                                     GetWebRenderBridge());
-      if (value.type() == OMTAValue::Tnscolor) {
-        cssValue = new nsROCSSPrimitiveValue;
-        nsComputedDOMStyle::SetToRGBAColor(cssValue, value.get_nscolor());
-      }
     }
   }
 

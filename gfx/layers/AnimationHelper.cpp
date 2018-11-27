@@ -55,9 +55,6 @@ CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const
   }
 
   switch (animatedValue->mType) {
-    case AnimatedValue::COLOR:
-      omtaValue = animatedValue->mColor;
-      break;
     case AnimatedValue::OPACITY:
       omtaValue = animatedValue->mOpacity;
       break;
@@ -119,18 +116,6 @@ CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                    std::move(aTransformInDevSpace),
                    gfx::Matrix4x4(),
                    dontCare);
-}
-
-void
-CompositorAnimationStorage::SetAnimatedValue(uint64_t aId, nscolor aColor)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  auto count = mAnimatedValues.Count();
-  AnimatedValue* value = mAnimatedValues.LookupOrAdd(aId, aColor);
-  if (count == mAnimatedValues.Count()) {
-    MOZ_ASSERT(value->mType == AnimatedValue::COLOR);
-    value->mColor = aColor;
-  }
 }
 
 void
@@ -534,7 +519,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
 }
 
 static already_AddRefed<RawServoAnimationValue>
-ToAnimationValue(nsCSSPropertyID aProperty, const Animatable& aAnimatable)
+ToAnimationValue(const Animatable& aAnimatable)
 {
   RefPtr<RawServoAnimationValue> result;
 
@@ -554,10 +539,6 @@ ToAnimationValue(nsCSSPropertyID aProperty, const Animatable& aAnimatable)
     }
     case Animatable::Tfloat:
       result = Servo_AnimationValue_Opacity(aAnimatable.get_float()).Consume();
-      break;
-    case Animatable::Tnscolor:
-      result = Servo_AnimationValue_Color(aProperty,
-                                          aAnimatable.get_nscolor()).Consume();
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported type");
@@ -599,8 +580,7 @@ AnimationHelper::SetAnimations(
     }
 
     if (animation.baseStyle().type() != Animatable::Tnull_t) {
-      aBaseAnimationStyle = ToAnimationValue(animation.property(),
-                                             animation.baseStyle());
+      aBaseAnimationStyle = ToAnimationValue(animation.baseStyle());
     }
 
     AnimData* data = aAnimData.AppendElement();
@@ -625,10 +605,8 @@ AnimationHelper::SetAnimations(
 
     const InfallibleTArray<AnimationSegment>& segments = animation.segments();
     for (const AnimationSegment& segment : segments) {
-      startValues.AppendElement(ToAnimationValue(animation.property(),
-                                                 segment.startState()));
-      endValues.AppendElement(ToAnimationValue(animation.property(),
-                                               segment.endState()));
+      startValues.AppendElement(ToAnimationValue(segment.startState()));
+      endValues.AppendElement(ToAnimationValue(segment.endState()));
 
       TimingFunction tf = segment.sampleFn();
       Maybe<ComputedTimingFunction> ctf =

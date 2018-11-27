@@ -798,27 +798,6 @@ pub extern "C" fn Servo_AnimationValue_Serialize(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_GetColor(
-    value: RawServoAnimationValueBorrowed,
-    foreground_color: structs::nscolor,
-) -> structs::nscolor {
-    use style::gecko::values::convert_nscolor_to_rgba;
-    use style::gecko::values::convert_rgba_to_nscolor;
-    use style::values::animated::ToAnimatedValue;
-    use style::values::computed::color::Color as ComputedColor;
-
-    let value = AnimationValue::as_arc(&value);
-    match **value {
-        AnimationValue::BackgroundColor(color) => {
-            let computed: ComputedColor = ToAnimatedValue::from_animated_value(color);
-            let foreground_color = convert_nscolor_to_rgba(foreground_color);
-            convert_rgba_to_nscolor(&computed.to_rgba(foreground_color))
-        }
-        _ => panic!("Other color properties are not supported yet"),
-    }
-}
-
-#[no_mangle]
 pub extern "C" fn Servo_AnimationValue_GetOpacity(value: RawServoAnimationValueBorrowed) -> f32 {
     let value = AnimationValue::as_arc(&value);
     if let AnimationValue::Opacity(opacity) = **value {
@@ -831,30 +810,6 @@ pub extern "C" fn Servo_AnimationValue_GetOpacity(value: RawServoAnimationValueB
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValue_Opacity(opacity: f32) -> RawServoAnimationValueStrong {
     Arc::new(AnimationValue::Opacity(opacity)).into_strong()
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_AnimationValue_Color(
-    color_property: nsCSSPropertyID,
-    color: structs::nscolor
-) -> RawServoAnimationValueStrong {
-    use style::gecko::values::convert_nscolor_to_rgba;
-    use style::values::animated::color::RGBA as AnimatedRGBA;
-
-    let property = LonghandId::from_nscsspropertyid(color_property)
-        .expect("We don't have shorthand property animation value");
-
-    let rgba = convert_nscolor_to_rgba(color);
-
-    let animatedRGBA = AnimatedRGBA::new(rgba.red_f32(),
-                                         rgba.green_f32(),
-                                         rgba.blue_f32(),
-                                         rgba.alpha_f32());
-    match property {
-        LonghandId::BackgroundColor =>
-            Arc::new(AnimationValue::BackgroundColor(animatedRGBA.into())).into_strong(),
-        _ => panic!("Should be background-color property"),
-    }
 }
 
 #[no_mangle]
