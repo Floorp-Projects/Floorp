@@ -76,6 +76,7 @@ var StartupPerformance = {
   // Record the start timestamp, setup the timer and `this._promiseFinished`.
   // Behavior is unspecified if there was already an ongoing measure.
   _onRestorationStarts(isAutoRestore) {
+    Services.profiler.AddMarker("_onRestorationStarts");
     this._latestRestoredTimeStamp = this._startTimeStamp = Date.now();
     this._totalNumberOfEagerTabs = 0;
     this._totalNumberOfTabs = 0;
@@ -198,6 +199,7 @@ var StartupPerformance = {
             // to the user switching to a lazily restored tab, or for tabs
             // that are restoring eagerly.
             if (!event.detail.isRemotenessUpdate) {
+              Services.profiler.AddMarker("SSTabRestored");
               this._latestRestoredTimeStamp = Date.now();
               this._totalNumberOfEagerTabs += 1;
             }

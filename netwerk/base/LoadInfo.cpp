@@ -85,13 +85,10 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsThirdPartyContext(false)
   , mIsDocshellReload(false)
   , mSendCSPViolationEvents(true)
-  , mTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::all)
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
   , mServiceWorkerTaintingSynthesized(false)
-  , mIsTracker(false)
-  , mIsTrackerBlocked(false)
   , mDocumentHasUserInteracted(false)
   , mDocumentHasLoaded(false)
   , mIsFromProcessingFrameAttributes(false)
@@ -358,13 +355,10 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mIsThirdPartyContext(false) // NB: TYPE_DOCUMENT implies not third-party.
   , mIsDocshellReload(false)
   , mSendCSPViolationEvents(true)
-  , mTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::all)
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
   , mServiceWorkerTaintingSynthesized(false)
-  , mIsTracker(false)
-  , mIsTrackerBlocked(false)
   , mDocumentHasUserInteracted(false)
   , mDocumentHasLoaded(false)
   , mIsFromProcessingFrameAttributes(false)
@@ -460,14 +454,11 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mAncestorPrincipals(rhs.mAncestorPrincipals)
   , mAncestorOuterWindowIDs(rhs.mAncestorOuterWindowIDs)
   , mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders)
-  , mTrackerBlockedReason(rhs.mTrackerBlockedReason)
   , mForcePreflight(rhs.mForcePreflight)
   , mIsPreflight(rhs.mIsPreflight)
   , mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal)
   // mServiceWorkerTaintingSynthesized must be handled specially during redirect
   , mServiceWorkerTaintingSynthesized(false)
-  , mIsTracker(rhs.mIsTracker)
-  , mIsTrackerBlocked(rhs.mIsTrackerBlocked)
   , mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted)
   , mDocumentHasLoaded(rhs.mDocumentHasLoaded)
   , mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes)
@@ -556,13 +547,10 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mAncestorPrincipals(std::move(aAncestorPrincipals))
   , mAncestorOuterWindowIDs(aAncestorOuterWindowIDs)
   , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
-  , mTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::all)
   , mForcePreflight(aForcePreflight)
   , mIsPreflight(aIsPreflight)
   , mLoadTriggeredFromExternal(aLoadTriggeredFromExternal)
   , mServiceWorkerTaintingSynthesized(aServiceWorkerTaintingSynthesized)
-  , mIsTracker(false)
-  , mIsTrackerBlocked(false)
   , mDocumentHasUserInteracted(aDocumentHasUserInteracted)
   , mDocumentHasLoaded(aDocumentHasLoaded)
   , mIsFromProcessingFrameAttributes(false)
@@ -1369,51 +1357,6 @@ LoadInfo::SynthesizeServiceWorkerTainting(LoadTainting aTainting)
 
   // Flag to prevent the tainting from being increased.
   mServiceWorkerTaintingSynthesized = true;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsTracker(bool *aIsTracker)
-{
-  MOZ_ASSERT(aIsTracker);
-  *aIsTracker = mIsTracker;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsTracker(bool aIsTracker)
-{
-  mIsTracker = aIsTracker;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsTrackerBlocked(bool *aIsTrackerBlocked)
-{
-  MOZ_ASSERT(aIsTrackerBlocked);
-  *aIsTrackerBlocked = mIsTrackerBlocked;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsTrackerBlocked(bool aIsTrackerBlocked)
-{
-  mIsTrackerBlocked = aIsTrackerBlocked;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED *aLabel)
-{
-  MOZ_ASSERT(aLabel);
-  *aLabel = mTrackerBlockedReason;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTrackerBlockedReason(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED aLabel)
-{
-  mTrackerBlockedReason = aLabel;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -29,10 +29,10 @@ add_task(async function testSuccessfulInstall() {
   // The returned object is currently not a proper actor.
   equal(installedAddon.actor, false);
 
-  const addonList = await client.listAddons();
-  ok(addonList && addonList.addons && addonList.addons.map(a => a.name),
+  const addonList = await client.mainRoot.listAddons();
+  ok(addonList && addonList.map(a => a.name),
      "Received list of add-ons");
-  const addon = addonList.addons.filter(a => a.id === installedAddon.id)[0];
+  const addon = addonList.find(a => a.id === installedAddon.id);
   ok(addon, "Test add-on appeared in root install list");
 
   await close(client);

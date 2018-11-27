@@ -44,7 +44,6 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/ContentChild.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "WidgetUtils.h"

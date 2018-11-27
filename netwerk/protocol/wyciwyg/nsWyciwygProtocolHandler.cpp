@@ -15,6 +15,7 @@
 #include "nsIURI.h"
 #include "nsIURIMutator.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/NeckoChild.h"
 
 using namespace mozilla::net;

@@ -63,14 +63,8 @@ pref("devtools.inspector.changes.enabled", false);
 #endif
 
 // Flexbox preferences
-// Enable the Flexbox highlighter and inspector panel in Nightly and DevEdition
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
 pref("devtools.inspector.flexboxHighlighter.enabled", true);
 pref("devtools.flexboxinspector.enabled", true);
-#else
-pref("devtools.inspector.flexboxHighlighter.enabled", false);
-pref("devtools.flexboxinspector.enabled", false);
-#endif
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);

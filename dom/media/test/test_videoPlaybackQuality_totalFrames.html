@@ -32,7 +32,8 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
   {
     "set": [
-      ["media.decoder.skip-to-next-key-frame.enabled", false]
+      ["media.decoder.skip-to-next-key-frame.enabled", false],
+      ["media.av1.use-dav1d", true]
     ]
   },
   function() {

@@ -766,8 +766,6 @@ class MediaDecoderStateMachine::LoopingDecodingState
   }
 
   void Exit() override {
-    mAudioDataRequest.DisconnectIfExists();
-    mAudioSeekRequest.DisconnectIfExists();
     if (ShouldDiscardLoopedAudioData()) {
       mMaster->mAudioDataRequest.DisconnectIfExists();
       DiscardLoopedAudioData();

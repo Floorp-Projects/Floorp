@@ -7,8 +7,6 @@
 
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/BackgroundHangMonitor.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 #if defined(MOZ_SANDBOX)
 #include "mozilla/sandboxTarget.h"
 #endif

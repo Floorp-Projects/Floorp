@@ -128,7 +128,7 @@ mozlint:
 
 mozrelease:
     description: python/mozrelease unit tests
-    python-version: [2]
+    python-version: [2, 3]
     treeherder:
         symbol: release
     run:

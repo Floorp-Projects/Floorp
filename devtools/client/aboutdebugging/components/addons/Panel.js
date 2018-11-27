@@ -100,14 +100,12 @@ class AddonsPanel extends Component {
   }
 
   updateAddonsList() {
-    this.props.client.listAddons()
-      .then(({addons}) => {
+    this.props.client.mainRoot.listAddons()
+      .then(addons => {
         const extensions = addons.filter(addon => addon.debuggable).map(addon => {
           return {
-            addonTargetActor: addon.actor,
+            addonTargetFront: addon,
             addonID: addon.id,
-            // Forward the whole addon actor form for potential remote debugging.
-            form: addon,
             icon: addon.iconURL || ExtensionIcon,
             isSystem: addon.isSystem,
             manifestURL: addon.manifestURL,
