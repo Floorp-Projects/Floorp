@@ -20,7 +20,7 @@ use internal_types::FastHashSet;
 use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
 use prim_store::{get_raster_rects, PrimitiveDataInterner, PrimitiveDataStore, CoordinateSpaceMapping};
-use prim_store::{PrimitiveDetails, BrushKind, Primitive, OpacityBindingStorage, PrimitiveTemplateKind};
+use prim_store::{OpacityBindingStorage, PrimitiveTemplateKind, ImageInstanceStorage};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle, TileBlit};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use resource_cache::ResourceCache;
@@ -345,11 +345,11 @@ impl TileCache {
         clip_scroll_tree: &ClipScrollTree,
         prim_data_store: &PrimitiveDataStore,
         clip_chain_nodes: &[ClipChainNode],
-        primitives: &[Primitive],
         pictures: &[PicturePrimitive],
         resource_cache: &ResourceCache,
         scene_properties: &SceneProperties,
         opacity_binding_store: &OpacityBindingStorage,
+        image_instances: &ImageInstanceStorage,
     ) {
         self.space_mapper.set_target_spatial_node(
             prim_instance.spatial_node_index,
@@ -389,7 +389,6 @@ impl TileCache {
 
         // Some primitives can not be cached (e.g. external video images)
         let is_cacheable = prim_instance.is_cacheable(
-            primitives,
             prim_data_store,
             resource_cache,
         );
@@ -404,38 +403,31 @@ impl TileCache {
                     }
                 }
             }
-            PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
-                let prim = &primitives[prim_index.0];
-
-                match prim.details {
-                    PrimitiveDetails::Brush(ref brush) => {
-                        match brush.kind {
-                            // Rectangles and images may depend on opacity bindings.
-                            // TODO(gw): In future, we might be able to completely remove
-                            //           opacity collapsing support. It's of limited use
-                            //           once we have full picture caching.
-                            BrushKind::Image { opacity_binding_index, ref request, .. } => {
-                                let opacity_binding = &opacity_binding_store[opacity_binding_index];
-                                for binding in &opacity_binding.bindings {
-                                    if let PropertyBinding::Binding(key, default) = binding {
-                                        opacity_bindings.push((key.id, *default));
-                                    }
-                                }
-
-                                image_keys.push(request.key);
-                            }
-                            BrushKind::RadialGradient { .. } |
-                            BrushKind::LinearGradient { .. } => {
-                            }
-                        }
-                    }
-                }
-            }
             PrimitiveInstanceKind::Rectangle { opacity_binding_index, .. } => {
                 let opacity_binding = &opacity_binding_store[opacity_binding_index];
                 for binding in &opacity_binding.bindings {
                     if let PropertyBinding::Binding(key, default) = binding {
                         opacity_bindings.push((key.id, *default));
+                    }
+                }
+            }
+            PrimitiveInstanceKind::Image { image_instance_index, .. } => {
+                let image_instance = &image_instances[image_instance_index];
+                let opacity_binding_index = image_instance.opacity_binding_index;
+
+                let opacity_binding = &opacity_binding_store[opacity_binding_index];
+                for binding in &opacity_binding.bindings {
+                    if let PropertyBinding::Binding(key, default) = binding {
+                        opacity_bindings.push((key.id, *default));
+                    }
+                }
+
+                match prim_data.kind {
+                    PrimitiveTemplateKind::Image { key, .. } => {
+                        image_keys.push(key);
+                    }
+                    _ => {
+                        unreachable!();
                     }
                 }
             }
@@ -449,6 +441,7 @@ impl TileCache {
                     }
                 }
             }
+            PrimitiveInstanceKind::LegacyPrimitive { .. } |
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::Clear |
@@ -1583,10 +1576,10 @@ impl PicturePrimitive {
         frame_context: &FrameBuildingContext,
         resource_cache: &mut ResourceCache,
         prim_data_store: &PrimitiveDataStore,
-        primitives: &[Primitive],
         pictures: &[PicturePrimitive],
         clip_store: &ClipStore,
         opacity_binding_store: &OpacityBindingStorage,
+        image_instances: &ImageInstanceStorage,
     ) {
         if state.tile_cache_update_count == 0 {
             return;
@@ -1600,11 +1593,11 @@ impl PicturePrimitive {
                     &frame_context.clip_scroll_tree,
                     prim_data_store,
                     &clip_store.clip_chain_nodes,
-                    primitives,
                     pictures,
                     resource_cache,
                     frame_context.scene_properties,
                     opacity_binding_store,
+                    image_instances,
                 );
             }
         }

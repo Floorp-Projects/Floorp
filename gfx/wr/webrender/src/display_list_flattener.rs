@@ -24,9 +24,9 @@ use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList};
 use prim_store::{BrushKind, BrushPrimitive, PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind};
-use prim_store::{ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
+use prim_store::{PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
 use prim_store::{PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore, PrimitiveStoreStats, BrushSegmentDescriptor};
-use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id, OpacityBindingIndex};
+use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
@@ -2050,30 +2050,19 @@ impl<'a> DisplayListFlattener<'a> {
             )
         });
 
-        let prim = BrushPrimitive::new(
-            BrushKind::Image {
-                request: ImageRequest {
-                    key: image_key,
-                    rendering: image_rendering,
-                    tile: None,
-                },
-                alpha_type,
-                stretch_size,
-                tile_spacing,
-                color,
-                source: ImageSource::Default,
-                sub_rect,
-                visible_tiles: Vec::new(),
-                opacity_binding_index: OpacityBindingIndex::INVALID,
-            },
-            None,
-        );
-
         self.add_primitive(
             clip_and_scroll,
             &info,
             Vec::new(),
-            PrimitiveContainer::Brush(prim),
+            PrimitiveContainer::Image {
+                key: image_key,
+                tile_spacing,
+                stretch_size,
+                color,
+                sub_rect,
+                image_rendering,
+                alpha_type,
+            },
         );
     }
 
