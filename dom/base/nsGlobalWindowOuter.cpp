@@ -536,11 +536,18 @@ nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx,
   }
   // else fall through to js::Wrapper
 
+  bool ok = js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
+  if (!ok) {
+    return false;
+  }
 
-  // When we change this to always claim the property is configurable (bug
-  // 1178639), update the comments in nsOuterWindowProxy::defineProperty
-  // accordingly.
-  return js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
+#ifndef RELEASE_OR_BETA // To be turned on in bug 1496510.
+  if (!IsNonConfigurableReadonlyPrimitiveGlobalProp(cx, id)) {
+    desc.setConfigurable(true);
+  }
+#endif
+
+  return true;
 }
 
 bool
