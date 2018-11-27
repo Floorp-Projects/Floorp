@@ -31,6 +31,7 @@ impl<T> Index<T> {
     }
 
     pub const INVALID: Index<T> = Index(u32::MAX, PhantomData);
+    pub const UNUSED: Index<T> = Index(u32::MAX-1, PhantomData);
 }
 
 #[derive(Debug)]
