@@ -368,7 +368,7 @@ class Bootstrapper(object):
                                                checkout_root):
         # Install the clang packages needed for building the style system, as
         # well as the version of NodeJS that we currently support.
-
+        # Also install the clang static-analysis package by default
         # The best place to install our packages is in the state directory
         # we have.  We should have created one above in non-interactive mode.
         if not state_dir_available:
@@ -380,6 +380,7 @@ class Bootstrapper(object):
             sys.exit(1)
 
         self.instance.state_dir = state_dir
+        self.instance.ensure_clang_static_analysis_package(checkout_root)
         self.instance.ensure_stylo_packages(state_dir, checkout_root)
         self.instance.ensure_node_packages(state_dir, checkout_root)
 

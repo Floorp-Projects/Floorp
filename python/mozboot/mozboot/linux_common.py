@@ -26,3 +26,11 @@ class NodeInstall(object):
     def ensure_node_packages(self, state_dir, checkout_root):
         from mozboot import node
         self.install_toolchain_artifact(state_dir, checkout_root, node.LINUX)
+
+
+class ClangStaticAnalysisInstall(object):
+    def __init__(self, **kwargs):
+        pass
+
+    def ensure_clang_static_analysis_package(self, checkout_root):
+        self.install_toolchain_static_analysis(checkout_root)

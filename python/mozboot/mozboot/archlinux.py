@@ -11,10 +11,11 @@ import subprocess
 import glob
 
 from mozboot.base import BaseBootstrapper
-from mozboot.linux_common import NodeInstall, StyloInstall
+from mozboot.linux_common import NodeInstall, StyloInstall, ClangStaticAnalysisInstall
 
 
-class ArchlinuxBootstrapper(NodeInstall, StyloInstall, BaseBootstrapper):
+class ArchlinuxBootstrapper(NodeInstall, StyloInstall,
+                            ClangStaticAnalysisInstall, BaseBootstrapper):
     '''Archlinux experimental bootstrapper.'''
 
     SYSTEM_PACKAGES = [

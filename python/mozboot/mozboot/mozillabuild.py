@@ -45,6 +45,9 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
     def install_mobile_android_artifact_mode_packages(self):
         pass
 
+    def ensure_clang_static_analysis_package(self, checkout_root):
+        self.install_toolchain_static_analysis(checkout_root)
+
     def ensure_stylo_packages(self, state_dir, checkout_root):
         from mozboot import stylo
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS_CLANG)
