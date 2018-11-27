@@ -330,7 +330,7 @@ private:
   // the same bullet types.
   LayoutDeviceRect mPathRect;
 
-  // mColor indicate the color of list-style. Both text and path type would use this member.
+  // mColor indicate the color of list-style. Both text and path type would use this memeber.
   nscolor mColor;
 
   // mPath record the path of the list-style for later drawing.

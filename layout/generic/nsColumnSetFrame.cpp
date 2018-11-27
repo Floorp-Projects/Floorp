@@ -624,9 +624,8 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     // We need a way to do an incremental reflow and be sure availableHeight
     // changes are taken account of! Right now I think block frames with absolute
     // children might exit early.
-    // NS_ASSERTION(aKidReason != eReflowReason_Incremental,
-    //             "incremental reflow should not have changed the
-    //             balance height");
+    //NS_ASSERTION(aKidReason != eReflowReason_Incremental,
+    //             "incremental reflow should not have changed the balance height");
   }
 
   // get our border and padding

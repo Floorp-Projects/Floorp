@@ -117,8 +117,7 @@ void IIRFilter::getFrequencyResponse(int nFrequencies, const float* frequency, f
     //
     // H(z) = sum(b[k]*z^(-k), k, 0, M) / sum(a[k]*z^(-k), k, 0, N);
     //
-    // The desired frequency response is H(exp(j*omega)), where omega is in
-    // [0, 1).
+    // The desired frequency response is H(exp(j*omega)), where omega is in [0, 1).
     //
     // Let P(x) = sum(c[k]*x^k, k, 0, P) be a polynomial of order P.  Then each of the sums in H(z)
     // is equivalent to evaluating a polynomial at the point 1/z.

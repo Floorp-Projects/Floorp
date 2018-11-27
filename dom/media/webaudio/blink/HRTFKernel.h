@@ -43,8 +43,7 @@ using mozilla::FFTBlock;
 // HRTFKernel is a frequency-domain representation of an impulse-response used as part of the spatialized panning system.
 // For a given azimuth / elevation angle there will be one HRTFKernel for the left ear transfer function, and one for the right ear.
 // The leading delay (average group delay) for each impulse response is extracted:
-//      m_fftFrame is the frequency-domain representation of the impulse
-//                 response with the delay removed
+//      m_fftFrame is the frequency-domain representation of the impulse response with the delay removed
 //      m_frameDelay is the leading delay of the original impulse response.
 class HRTFKernel {
 public:

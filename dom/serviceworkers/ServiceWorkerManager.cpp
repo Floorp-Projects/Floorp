@@ -2757,12 +2757,12 @@ ServiceWorkerManager::RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistr
 {
   // Note, we do not need to call mActor->SendUnregister() here.  There are a few
   // ways we can get here:
-  // 1) Through a normal unregister which calls SendUnregister() in the
-  //    unregister job Start() method.
+  // 1) Through a normal unregister which calls SendUnregister() in the unregister
+  //    job Start() method.
   // 2) Through origin storage being purged.  These result in ForceUnregister()
   //    starting unregister jobs which in turn call SendUnregister().
-  // 3) Through the failure to install a new service worker.  Since we don't
-  //    store the registration until install succeeds, we do not need to call
+  // 3) Through the failure to install a new service worker.  Since we don't store
+  //    the registration until install succeeds, we do not need to call
   //    SendUnregister here.
   // Assert these conditions by testing for pending uninstall (cases 1 and 2) or
   // null workers (case 3).
