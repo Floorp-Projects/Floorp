@@ -117,15 +117,6 @@ async function initInspectorFront(url) {
 }
 
 /**
- * Gets the RootActor form from a DebuggerClient.
- * @param {DebuggerClient} client
- * @return {RootActor} Resolves when connected.
- */
-function getRootForm(client) {
-  return client.listTabs();
-}
-
-/**
  * Wait until a DebuggerClient is connected.
  * @param {DebuggerClient} client
  * @return {Promise} Resolves when connected.
