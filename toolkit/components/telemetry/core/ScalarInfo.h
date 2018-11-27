@@ -41,15 +41,9 @@ struct BaseScalarInfo {
   virtual const char *name() const = 0;
   virtual const char *expiration() const = 0;
 
-  virtual uint16_t storeOffset() const
-  {
-    return UINT16_MAX;
-  };
+  virtual uint32_t storeOffset() const = 0;
 
-  virtual uint32_t storeCount() const
-  {
-    return 1;
-  };
+  virtual uint32_t storeCount() const = 0;
 };
 
 /**
@@ -83,7 +77,7 @@ struct ScalarInfo : BaseScalarInfo {
   const char *name() const override;
   const char *expiration() const override;
 
-  uint16_t storeOffset() const override
+  uint32_t storeOffset() const override
   {
     return store_offset;
   };
