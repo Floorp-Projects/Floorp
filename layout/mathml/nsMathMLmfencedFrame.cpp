@@ -11,6 +11,8 @@
 
 using namespace mozilla;
 
+using mozilla::gfx::DrawTarget;
+
 //
 // <mfenced> -- surround content with a pair of fences
 //

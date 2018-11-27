@@ -11,6 +11,8 @@
 #include "mozilla/ComputedStyle.h"
 #include "SVGObserverUtils.h"
 
+using namespace mozilla;
+
 // This is a very simple frame whose only purpose is to capture style change
 // events and propagate them to the parent.  Most of the heavy lifting is done
 // within the nsSVGGradientFrame, which is the parent for this frame

@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsTableFrame.h"
+
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Helpers.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/IntegerRange.h"
@@ -11,7 +15,6 @@
 
 #include "gfxContext.h"
 #include "nsCOMPtr.h"
-#include "nsTableFrame.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
@@ -53,6 +56,11 @@
 using namespace mozilla;
 using namespace mozilla::image;
 using namespace mozilla::layout;
+
+using mozilla::gfx::AutoRestoreTransform;
+using mozilla::gfx::DrawTarget;
+using mozilla::gfx::Float;
+using mozilla::gfx::ToDeviceColor;
 
 /********************************************************************************
  ** TableReflowInput                                                         **

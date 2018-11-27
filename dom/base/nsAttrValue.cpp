@@ -1099,7 +1099,7 @@ nsAttrValue::Equals(const nsAString& aValue,
 }
 
 bool
-nsAttrValue::Equals(nsAtom* aValue, nsCaseTreatment aCaseSensitive) const
+nsAttrValue::Equals(const nsAtom* aValue, nsCaseTreatment aCaseSensitive) const
 {
   if (aCaseSensitive != eCaseMatters) {
     // Need a better way to handle this!

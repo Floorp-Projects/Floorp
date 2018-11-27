@@ -11,7 +11,7 @@
 #include "gfxContext.h"
 #include "gfxMathTable.h"
 
-using mozilla::WritingMode;
+using namespace mozilla;
 
 //
 // <mmultiscripts> -- attach prescripts and tensor indices to a base - implementation
