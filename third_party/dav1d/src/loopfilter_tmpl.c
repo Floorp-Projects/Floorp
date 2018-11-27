@@ -163,7 +163,7 @@ static void loop_filter_h_sb128y_c(pixel *dst, const ptrdiff_t stride,
                                    const uint8_t (*l)[4], ptrdiff_t b4_stride,
                                    const Av1FilterLUT *lut, const int h)
 {
-    const unsigned vm = (vmask[0] | vmask[1] | vmask[2]) & ((1ULL << h) - 1);
+    const unsigned vm = vmask[0] | vmask[1] | vmask[2];
     for (unsigned y = 1; vm & ~(y - 1);
          y <<= 1, dst += 4 * PXSTRIDE(stride), l += b4_stride)
     {
@@ -201,7 +201,7 @@ static void loop_filter_h_sb128uv_c(pixel *dst, const ptrdiff_t stride,
                                     const uint8_t (*l)[4], ptrdiff_t b4_stride,
                                     const Av1FilterLUT *lut, const int h)
 {
-    const unsigned vm = (vmask[0] | vmask[1]) & ((1ULL << h) - 1);
+    const unsigned vm = vmask[0] | vmask[1];
     for (unsigned y = 1; vm & ~(y - 1);
          y <<= 1, dst += 4 * PXSTRIDE(stride), l += b4_stride)
     {

@@ -117,7 +117,7 @@ int dav1d_open(Dav1dContext **const c_out,
             if (!t->scratch.mem) goto error;
             memset(t->cf, 0, 32 * 32 * sizeof(int32_t));
             t->emu_edge =
-                dav1d_alloc_aligned(160 * (128 + 7) * sizeof(uint16_t), 32);
+                dav1d_alloc_aligned(320 * (256 + 7) * sizeof(uint16_t), 32);
             if (!t->emu_edge) goto error;
             if (f->n_tc > 1) {
                 pthread_mutex_init(&t->tile_thread.td.lock, NULL);
@@ -157,15 +157,28 @@ error:
     return -ENOMEM;
 }
 
-int dav1d_decode(Dav1dContext *const c,
-                 Dav1dData *const in, Dav1dPicture *const out)
+int dav1d_send_data(Dav1dContext *const c, Dav1dData *const in)
+{
+    validate_input_or_ret(c != NULL, -EINVAL);
+    validate_input_or_ret(in != NULL, -EINVAL);
+    validate_input_or_ret(in->data == NULL || in->sz, -EINVAL);
+
+    if (c->in.data)
+        return -EAGAIN;
+    dav1d_data_move_ref(&c->in, in);
+
+    return 0;
+}
+
+int dav1d_get_picture(Dav1dContext *const c, Dav1dPicture *const out)
 {
     int res;
 
     validate_input_or_ret(c != NULL, -EINVAL);
     validate_input_or_ret(out != NULL, -EINVAL);
 
-    if (!in) {
+    Dav1dData *const in = &c->in;
+    if (!in->data) {
         if (c->n_fc == 1) return -EAGAIN;
 
         // flush
@@ -198,23 +211,23 @@ int dav1d_decode(Dav1dContext *const c,
     }
 
     while (in->sz > 0) {
-        if ((res = dav1d_parse_obus(c, in)) < 0)
+        if ((res = dav1d_parse_obus(c, in)) < 0) {
+            dav1d_data_unref(in);
             return res;
+        }
 
         assert((size_t)res <= in->sz);
         in->sz -= res;
         in->data += res;
         if (!in->sz) dav1d_data_unref(in);
         if (c->out.data[0]) {
-            dav1d_picture_ref(out, &c->out);
-            dav1d_picture_unref(&c->out);
+            dav1d_picture_move_ref(out, &c->out);
             return 0;
         }
     }
 
     if (c->out.data[0]) {
-        dav1d_picture_ref(out, &c->out);
-        dav1d_picture_unref(&c->out);
+        dav1d_picture_move_ref(out, &c->out);
         return 0;
     }
 
@@ -222,6 +235,8 @@ int dav1d_decode(Dav1dContext *const c,
 }
 
 void dav1d_flush(Dav1dContext *const c) {
+    dav1d_data_unref(&c->in);
+
     if (c->n_fc == 1) return;
 
     for (unsigned n = 0; n < c->n_fc; n++)
@@ -244,6 +259,22 @@ void dav1d_close(Dav1dContext **const c_out) {
             pthread_cond_signal(&f->frame_thread.td.cond);
             pthread_mutex_unlock(&f->frame_thread.td.lock);
             pthread_join(f->frame_thread.td.thread, NULL);
+            // free references from dav1d_submit_frame() usually freed by
+            // dav1d_decode_frame
+            for (int i = 0; i < 7; i++) {
+                if (f->refp[i].p.data[0])
+                    dav1d_thread_picture_unref(&f->refp[i]);
+                dav1d_ref_dec(&f->ref_mvs_ref[i]);
+            }
+            dav1d_thread_picture_unref(&f->cur);
+            dav1d_cdf_thread_unref(&f->in_cdf);
+            if (f->frame_hdr.refresh_context)
+                dav1d_cdf_thread_unref(&f->out_cdf);
+            dav1d_ref_dec(&f->cur_segmap_ref);
+            dav1d_ref_dec(&f->prev_segmap_ref);
+            dav1d_ref_dec(&f->mvs_ref);
+            for (int i = 0; i < f->n_tile_data; i++)
+                dav1d_data_unref(&f->tile[i].data);
             freep(&f->frame_thread.b);
             dav1d_freep_aligned(&f->frame_thread.pal_idx);
             dav1d_freep_aligned(&f->frame_thread.cf);
@@ -260,7 +291,7 @@ void dav1d_close(Dav1dContext **const c_out) {
                 t->tile_thread.die = 1;
             }
             pthread_cond_broadcast(&f->tile_thread.cond);
-            while (f->tile_thread.available != (1U << f->n_tc) - 1)
+            while (f->tile_thread.available != ~0ULL >> (64 - f->n_tc))
                 pthread_cond_wait(&f->tile_thread.icond,
                                   &f->tile_thread.lock);
             pthread_mutex_unlock(&f->tile_thread.lock);
@@ -300,6 +331,7 @@ void dav1d_close(Dav1dContext **const c_out) {
         dav1d_free_aligned(f->lf.lr_lpf_line);
     }
     dav1d_free_aligned(c->fc);
+    dav1d_data_unref(&c->in);
     if (c->n_fc > 1) {
         for (unsigned n = 0; n < c->n_fc; n++)
             if (c->frame_thread.out_delayed[n].p.data[0])
@@ -313,10 +345,8 @@ void dav1d_close(Dav1dContext **const c_out) {
             dav1d_cdf_thread_unref(&c->cdf[n]);
         if (c->refs[n].p.p.data[0])
             dav1d_thread_picture_unref(&c->refs[n].p);
-        if (c->refs[n].refmvs)
-            dav1d_ref_dec(c->refs[n].refmvs);
-        if (c->refs[n].segmap)
-            dav1d_ref_dec(c->refs[n].segmap);
+        dav1d_ref_dec(&c->refs[n].refmvs);
+        dav1d_ref_dec(&c->refs[n].segmap);
     }
     dav1d_freep_aligned(c_out);
 }

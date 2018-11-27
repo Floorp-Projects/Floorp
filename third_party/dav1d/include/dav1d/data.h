@@ -34,7 +34,7 @@
 #include "common.h"
 
 typedef struct Dav1dData {
-    uint8_t *data; ///< data pointer
+    const uint8_t *data; ///< data pointer
     size_t sz; ///< data size
     struct Dav1dRef *ref; ///< allocation origin
 } Dav1dData;
@@ -45,9 +45,9 @@ typedef struct Dav1dData {
  * @param data Input context.
  * @param   sz Size of the data that should be allocated.
  *
- * @return 0 on success. A negative errno value on error.
+ * @return Pointer to the allocated bufferon success. NULL on error.
  */
-DAV1D_API int dav1d_data_create(Dav1dData *data, size_t sz);
+DAV1D_API uint8_t * dav1d_data_create(Dav1dData *data, size_t sz);
 
 /**
  * Wrap an existing data array.
@@ -63,8 +63,8 @@ DAV1D_API int dav1d_data_create(Dav1dData *data, size_t sz);
  *
  * @return 0 on success. A negative errno value on error.
  */
-DAV1D_API int dav1d_data_wrap(Dav1dData *data, uint8_t *buf, size_t sz,
-                              void (*free_callback)(uint8_t *buf, void *user_data),
+DAV1D_API int dav1d_data_wrap(Dav1dData *data, const uint8_t *buf, size_t sz,
+                              void (*free_callback)(const uint8_t *buf, void *user_data),
                               void *user_data);
 
 /**

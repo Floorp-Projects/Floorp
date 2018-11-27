@@ -36,6 +36,9 @@
 #include "include/common/attributes.h"
 #include "include/common/intops.h"
 
+void checkasm_check_cdef_8bpc(void);
+void checkasm_check_cdef_10bpc(void);
+
 void checkasm_check_ipred_8bpc(void);
 void checkasm_check_ipred_10bpc(void);
 
@@ -70,7 +73,7 @@ int float_near_abs_eps_array_ulp(const float *a, const float *b, float eps,
 
 static void *func_ref, *func_new;
 
-#define BENCH_RUNS (1 << 16) /* Trade-off between accuracy and speed */
+#define BENCH_RUNS (1 << 12) /* Trade-off between accuracy and speed */
 
 /* Decide whether or not the specified function needs to be tested */
 #define check_func(func, ...)\

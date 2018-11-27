@@ -67,10 +67,6 @@ static inline int iclip_wmp(const int v) {
     return apply_sign((abs(cv) + 32) >> 6, cv) * (1 << 6);
 }
 
-static inline int apply_sign64(const int v, const int64_t s) {
-    return s < 0 ? -v : v;
-}
-
 static inline int resolve_divisor_32(const unsigned d, int *const shift) {
     *shift = ulog2(d);
     const int e = d - (1 << *shift);

@@ -28,8 +28,6 @@
 
 #include "src/arm/asm.S"
 
-#if BITDEPTH == 8
-
 .macro avg dst0, dst1, t0, t1, t2, t3
         vld1.16         {\t0,\t1},   [r2, :128]!
         vld1.16         {\t2,\t3},   [r3, :128]!
@@ -74,6 +72,7 @@ function \type\()_8bpc_neon, export=1
         push            {r4-r6,lr}
         ldr             r4, [sp, #16]
         ldr             r5, [sp, #20]
+        clz             r4,  r4
 .ifnc \type, avg
         ldr             lr, [sp, #24]
 .endif
@@ -85,22 +84,20 @@ function \type\()_8bpc_neon, export=1
 .ifc \type, mask
         vmov.i8         q15, #256-2
 .endif
-        rbit            r4,  r4
         adr             r12, L(\type\()_tbl)
-        clz             r4,  r4
+        sub             r4,  r4,  #24
         ldr             r4,  [r12, r4, lsl #2]
         \type           d16, d17, q0,  q1,  q2,  q3
         add             r12, r12, r4
         bx              r12
         .align 2
 L(\type\()_tbl):
-        .word 0, 0
-        .word 4f    - L(\type\()_tbl) + CONFIG_THUMB
-        .word 80f   - L(\type\()_tbl) + CONFIG_THUMB
-        .word 160f  - L(\type\()_tbl) + CONFIG_THUMB
-        .word 320f  - L(\type\()_tbl) + CONFIG_THUMB
-        .word 640f  - L(\type\()_tbl) + CONFIG_THUMB
         .word 1280f - L(\type\()_tbl) + CONFIG_THUMB
+        .word 640f  - L(\type\()_tbl) + CONFIG_THUMB
+        .word 320f  - L(\type\()_tbl) + CONFIG_THUMB
+        .word 160f  - L(\type\()_tbl) + CONFIG_THUMB
+        .word 80f   - L(\type\()_tbl) + CONFIG_THUMB
+        .word 4f    - L(\type\()_tbl) + CONFIG_THUMB
 4:
         add             r6,  r0,  r1
         lsl             r1,  r1,  #1
@@ -215,5 +212,3 @@ endfunc
 bidir_fn avg
 bidir_fn w_avg
 bidir_fn mask
-
-#endif /* BITDEPTH == 8 */

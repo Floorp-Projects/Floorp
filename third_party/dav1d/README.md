@@ -65,6 +65,22 @@ The [VideoLAN Code of Conduct](https://wiki.videolan.org/CoC) applies to this pr
 2. Run `meson build --buildtype release`
 3. Build with `ninja -C build`
 
+# Run tests
+
+1. During initial build dir setup or `meson configure` specify `-Dbuild_tests=true`
+2. In the build directory run `meson test` optionally with `-v` for more verbose output, especially useful
+   for checkasm
+
+# Run testdata based tests
+
+1. Checkout the test data repository
+   
+   ```
+   git clone https://code.videolan.org/videolan/dav1d-test-data.git tests/dav1d-test-data
+   ```
+2. During initial build dir setup or `meson configure` specify `-Dbuild_tests=true` and `-Dtestdata_tests=true`
+3. In the build directory run `meson test` optionally with `-v` for more verbose output
+
 # Support
 
 This project is partially funded by the *Alliance for Open Media*/**AOM** and is supported by TwoOrioles and VideoLabs.

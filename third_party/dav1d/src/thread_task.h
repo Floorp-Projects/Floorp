@@ -28,7 +28,12 @@
 #ifndef __DAV1D_SRC_THREAD_TASK_H__
 #define __DAV1D_SRC_THREAD_TASK_H__
 
+#include <limits.h>
+
 #include "src/internal.h"
+
+#define FRAME_ERROR (UINT_MAX - 1)
+#define TILE_ERROR (INT_MAX - 1)
 
 int dav1d_decode_frame(Dav1dFrameContext *f);
 void *dav1d_frame_task(void *data);

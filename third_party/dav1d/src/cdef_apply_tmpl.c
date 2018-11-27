@@ -72,22 +72,6 @@ static void backup2x8(pixel dst[3][8][2],
     }
 }
 
-static void restore2x8(pixel *const dst[3],
-                       const ptrdiff_t dst_stride[2],
-                       const pixel src[3][8][2], const enum Dav1dPixelLayout layout)
-{
-    for (int y = 0, y_off = 0; y < 8; y++, y_off += PXSTRIDE(dst_stride[0]))
-        pixel_copy(&dst[0][y_off - 2], src[0][y], 2);
-
-    if (layout == DAV1D_PIXEL_LAYOUT_I400) return;
-    const int ss_ver = layout == DAV1D_PIXEL_LAYOUT_I420;
-
-    for (int y = 0, y_off = 0; y < (8 >> ss_ver); y++, y_off += PXSTRIDE(dst_stride[1])) {
-        pixel_copy(&dst[1][y_off - 2], src[1][y], 2);
-        pixel_copy(&dst[2][y_off - 2], src[2][y], 2);
-    }
-}
-
 static int adjust_strength(const int strength, const unsigned var) {
     if (!var) return 0;
     const int i = var >> 6 ? imin(ulog2(var >> 6), 12) : 0;
@@ -116,7 +100,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
     // the backup of pre-filter data is empty, and the restore is therefore
     // unnecessary as well.
 
-    for (int by = by_start; by < by_end; by += 2, edges |= HAVE_TOP) {
+    for (int bit = 0, by = by_start; by < by_end; by += 2, edges |= HAVE_TOP) {
         const int tf = f->lf.top_pre_cdef_toggle;
         if (by + 2 >= f->bh) edges &= ~HAVE_BOTTOM;
 
@@ -161,16 +145,14 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                     goto next_b;
                 }
 
-                if (!last_skip) {
-                    // backup post-filter data (will be restored at the end)
-                    backup2x8(lr_bak[1], bptrs, f->cur.p.stride, 0, layout);
-
-                    // restore pre-filter data from last iteration
-                    restore2x8(bptrs, f->cur.p.stride, lr_bak[0], layout);
+                if (last_skip && edges & HAVE_LEFT) {
+                    // we didn't backup the prefilter data because it wasn't
+                    // there, so do it here instead
+                    backup2x8(lr_bak[bit], bptrs, f->cur.p.stride, 0, layout);
                 }
                 if (edges & HAVE_RIGHT) {
                     // backup pre-filter data for next iteration
-                    backup2x8(lr_bak[0], bptrs, f->cur.p.stride, 8, layout);
+                    backup2x8(lr_bak[!bit], bptrs, f->cur.p.stride, 8, layout);
                 }
 
                 // the actual filter
@@ -186,7 +168,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                 const int dir = dsp->cdef.dir(bptrs[0], f->cur.p.stride[0],
                                               &variance);
                 if (y_lvl) {
-                    dsp->cdef.fb[0](bptrs[0], f->cur.p.stride[0],
+                    dsp->cdef.fb[0](bptrs[0], f->cur.p.stride[0], lr_bak[bit][0],
                                     (pixel *const [2]) {
                                         &f->lf.cdef_line_ptr[tf][0][0][bx * 4],
                                         &f->lf.cdef_line_ptr[tf][0][1][bx * 4],
@@ -201,6 +183,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                         ((uint8_t[]) { 7, 0, 2, 4, 5, 6, 6, 6 })[dir];
                     for (int pl = 1; pl <= 2; pl++) {
                         dsp->cdef.fb[uv_idx](bptrs[pl], f->cur.p.stride[1],
+                                             lr_bak[bit][pl],
                                              (pixel *const [2]) {
                                                  &f->lf.cdef_line_ptr[tf][pl][0][bx * 4 >> ss_hor],
                                                  &f->lf.cdef_line_ptr[tf][pl][1][bx * 4 >> ss_hor],
@@ -211,10 +194,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                     }
                 }
 
-                if (!last_skip) {
-                    // restore post-filter data from the beginning of this loop
-                    restore2x8(bptrs, f->cur.p.stride, lr_bak[1], layout);
-                }
+                bit ^= 1;
                 last_skip = 0;
 
             next_b:

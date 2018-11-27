@@ -125,6 +125,8 @@ typedef struct Dav1dPictureParameters {
 } Dav1dPictureParameters;
 
 typedef struct Dav1dPicture {
+    int poc; ///< frame number
+
     /**
      * Pointers to planar image data (Y is [0], U is [1], V is [2]). The data
      * should be bytes (for 8 bpc) or words (for 10 bpc). In case of words
@@ -141,8 +143,6 @@ typedef struct Dav1dPicture {
     ptrdiff_t stride[2];
 
     Dav1dPictureParameters p;
-
-    int poc; ///< frame number
 
     void *allocator_data; ///< pointer managed by the allocator
 } Dav1dPicture;

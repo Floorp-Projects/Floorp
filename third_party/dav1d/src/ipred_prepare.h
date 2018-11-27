@@ -83,9 +83,14 @@ enum IntraPredMode
                                       enum IntraPredMode mode, int *angle,
                                       int tw, int th, pixel *topleft_out);
 
-// is or'ed with the angle argument into intra predictors to signal that edges
-// are smooth and should use reduced filter strength
-#define ANGLE_SMOOTH_EDGE_FLAG 512
+// These flags are OR'd with the angle argument into intra predictors.
+// ANGLE_USE_EDGE_FILTER_FLAG signals that edges should be convolved
+// with a filter before using them to predict values in a block.
+// ANGLE_SMOOTH_EDGE_FLAG means that edges are smooth and should use
+// reduced filter strength.
+#define ANGLE_USE_EDGE_FILTER_FLAG 1024
+#define ANGLE_SMOOTH_EDGE_FLAG      512
+
 static inline int sm_flag(const BlockContext *const b, const int idx) {
     if (!b->intra[idx]) return 0;
     const enum IntraPredMode m = b->mode[idx];

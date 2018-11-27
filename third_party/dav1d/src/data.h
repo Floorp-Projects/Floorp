@@ -24,31 +24,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "config.h"
 
-#include <stdint.h>
+#ifndef __DAV1D_SRC_DATA_H__
+#define __DAV1D_SRC_DATA_H__
 
-#include "src/cpu.h"
+#include "dav1d/data.h"
 
-static unsigned flags_mask = -1;
+/**
+ * Move a data reference.
+ */
+void dav1d_data_move_ref(Dav1dData *dst, Dav1dData *src);
 
-unsigned dav1d_get_cpu_flags(void) {
-    static unsigned flags;
-    static uint8_t checked = 0;
-
-    if (!checked) {
-#if (ARCH_AARCH64 || ARCH_ARM) && HAVE_ASM
-        flags = dav1d_get_cpu_flags_arm();
-#elif ARCH_X86 && HAVE_ASM
-        flags = dav1d_get_cpu_flags_x86();
-#else
-        flags = 0;
-#endif
-        checked = 1;
-    }
-    return flags & flags_mask;
-}
-
-void dav1d_set_cpu_flags_mask(const unsigned mask) {
-    flags_mask = mask;
-}
+#endif /* __DAV1D_SRC_DATA_H__ */

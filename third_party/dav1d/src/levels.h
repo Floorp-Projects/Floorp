@@ -41,6 +41,10 @@ enum ObuType {
     OBU_PADDING   = 15,
 };
 
+// Constants from Section 3. "Symbols and abbreviated terms"
+#define MAX_TILE_COLS 64
+#define MAX_TILE_ROWS 64
+
 enum TxfmSize {
     TX_4X4,
     TX_8X8,
@@ -443,9 +447,9 @@ typedef struct Av1FrameHeader {
         int uniform;
         unsigned n_bytes;
         int min_log2_cols, max_log2_cols, log2_cols, cols;
-        int col_start_sb[1025];
         int min_log2_rows, max_log2_rows, log2_rows, rows;
-        int row_start_sb[1025];
+        uint16_t col_start_sb[MAX_TILE_COLS + 1];
+        uint16_t row_start_sb[MAX_TILE_ROWS + 1];
         int update;
     } tiling;
     struct {

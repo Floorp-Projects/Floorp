@@ -324,7 +324,7 @@ static void boxsum3sqr(int32_t *dst, const pixel *src, const int w, const int h)
 
     // We skip the first and last columns, as they are never used
     for (int x = 1; x < w - 1; x++) {
-        int *ds = dst + x;
+        int32_t *ds = dst + x;
         const pixel *s = src + x;
         int a = s[0] * s[0];
         int b = s[REST_UNIT_STRIDE] * s[REST_UNIT_STRIDE];
@@ -367,7 +367,7 @@ static void boxsum5sqr(int32_t *dst, const pixel *const src, const int w,
     dst += REST_UNIT_STRIDE;
 
     for (int x = 0; x < w; x++) {
-        int *ds = dst + x;
+        int32_t *ds = dst + x;
         const pixel *s = src + 3 * REST_UNIT_STRIDE + x;
         int a = s[-3 * REST_UNIT_STRIDE] * s[-3 * REST_UNIT_STRIDE];
         int b = s[-2 * REST_UNIT_STRIDE] * s[-2 * REST_UNIT_STRIDE];
@@ -408,10 +408,12 @@ static void boxsum5sqr(int32_t *dst, const pixel *const src, const int w,
     }
 }
 
-static void selfguided_filter(int32_t *dst, const pixel *src,
+static void selfguided_filter(int16_t *dst, const pixel *src,
                               const ptrdiff_t src_stride, const int w,
                               const int h, const int n, const int s)
 {
+    const int sgr_one_by_x = n == 25 ? 164 : 455;
+
     // Selfguided filter is applied to a maximum stripe height of 64 + 3 pixels
     // of padding above and below
     int32_t A_[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
@@ -439,12 +441,12 @@ static void selfguided_filter(int32_t *dst, const pixel *src,
             const int b =
                 (BB[i] + (1 << (BITDEPTH - 8) >> 1)) >> (BITDEPTH - 8);
 
-            const uint32_t p = (a * n >= b * b) * (a * n - b * b);
-            const uint32_t z = (p * s + (1 << 19)) >> 20;
+            const unsigned p = imax(a * n - b * b, 0);
+            const unsigned z = (p * s + (1 << 19)) >> 20;
 
             const int x = dav1d_sgr_x_by_xplus1[imin(z, 255)];
             // This is where we invert A and B, so that B is of size coef.
-            AA[i] = (((1 << 8) - x) * BB[i] * dav1d_sgr_one_by_x[n - 1] + (1 << 11)) >> 12;
+            AA[i] = (((1 << 8) - x) * BB[i] * sgr_one_by_x + (1 << 11)) >> 12;
             BB[i] = x;
         }
         AA += step * REST_UNIT_STRIDE;
@@ -460,8 +462,8 @@ static void selfguided_filter(int32_t *dst, const pixel *src,
       P[i + 1 - REST_UNIT_STRIDE] + P[i + 1 + REST_UNIT_STRIDE]) * 5)
         for (; j < h - 1; j+=2) {
             for (int i = 0; i < w; i++) {
-                const int32_t a = SIX_NEIGHBORS(B, i);
-                const int32_t b = SIX_NEIGHBORS(A, i);
+                const int a = SIX_NEIGHBORS(B, i);
+                const int b = SIX_NEIGHBORS(A, i);
                 dst[i] = (a * src[i] + b + (1 << 8)) >> 9;
             }
             dst += 384 /* Maximum restoration width is 384 (256 * 1.5) */;
@@ -469,8 +471,8 @@ static void selfguided_filter(int32_t *dst, const pixel *src,
             B += REST_UNIT_STRIDE;
             A += REST_UNIT_STRIDE;
             for (int i = 0; i < w; i++) {
-                const int32_t a = B[i] * 6 + (B[i - 1] + B[i + 1]) * 5;
-                const int32_t b = A[i] * 6 + (A[i - 1] + A[i + 1]) * 5;
+                const int a = B[i] * 6 + (B[i - 1] + B[i + 1]) * 5;
+                const int b = A[i] * 6 + (A[i - 1] + A[i + 1]) * 5;
                 dst[i] = (a * src[i] + b + (1 << 7)) >> 8;
             }
             dst += 384 /* Maximum restoration width is 384 (256 * 1.5) */;
@@ -480,8 +482,8 @@ static void selfguided_filter(int32_t *dst, const pixel *src,
         }
         if (j + 1 == h) { // Last row, when number of rows is odd
             for (int i = 0; i < w; i++) {
-                const int32_t a = SIX_NEIGHBORS(B, i);
-                const int32_t b = SIX_NEIGHBORS(A, i);
+                const int a = SIX_NEIGHBORS(B, i);
+                const int b = SIX_NEIGHBORS(A, i);
                 dst[i] = (a * src[i] + b + (1 << 8)) >> 9;
             }
         }
@@ -493,8 +495,8 @@ static void selfguided_filter(int32_t *dst, const pixel *src,
       P[i + 1 - REST_UNIT_STRIDE] + P[i + 1 + REST_UNIT_STRIDE]) * 3)
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
-                const int32_t a = EIGHT_NEIGHBORS(B, i);
-                const int32_t b = EIGHT_NEIGHBORS(A, i);
+                const int a = EIGHT_NEIGHBORS(B, i);
+                const int b = EIGHT_NEIGHBORS(A, i);
                 dst[i] = (a * src[i] + b + (1 << 8)) >> 9;
             }
             dst += 384;
@@ -520,7 +522,7 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
 
     // Selfguided filter outputs to a maximum stripe height of 64 and a
     // maximum restoration width of 384 (256 * 1.5)
-    int32_t dst[64 * 384];
+    int16_t dst[64 * 384];
 
     // both r1 and r0 can't be zero
     if (!dav1d_sgr_params[sgr_idx][0]) {
@@ -529,8 +531,8 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
         const int w1 = (1 << 7) - sgr_w[1];
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
-                const int32_t u = (p[i] << 4);
-                const int32_t v = (u << 7) + w1 * (dst[j * 384 + i] - u);
+                const int u = (p[i] << 4);
+                const int v = (u << 7) + w1 * (dst[j * 384 + i] - u);
                 p[i] = iclip_pixel((v + (1 << 10)) >> 11);
             }
             p += PXSTRIDE(p_stride);
@@ -541,14 +543,14 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
         const int w0 = sgr_w[0];
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
-                const int32_t u = (p[i] << 4);
-                const int32_t v = (u << 7) + w0 * (dst[j * 384 + i] - u);
+                const int u = (p[i] << 4);
+                const int v = (u << 7) + w0 * (dst[j * 384 + i] - u);
                 p[i] = iclip_pixel((v + (1 << 10)) >> 11);
             }
             p += PXSTRIDE(p_stride);
         }
     } else {
-        int32_t dst1[64 * 384];
+        int16_t dst1[64 * 384];
         const int s0 = dav1d_sgr_params[sgr_idx][2];
         const int s1 = dav1d_sgr_params[sgr_idx][3];
         const int w0 = sgr_w[0];
@@ -557,9 +559,9 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
         selfguided_filter(dst1, tmp, REST_UNIT_STRIDE, w, h, 9, s1);
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
-                const int32_t u = (p[i] << 4);
-                const int32_t v = (u << 7) + w0 * (dst[j * 384 + i] - u) +
-                                  w1 * (dst1[j * 384 + i] - u);
+                const int u = (p[i] << 4);
+                const int v = (u << 7) + w0 * (dst[j * 384 + i] - u) +
+                              w1 * (dst1[j * 384 + i] - u);
                 p[i] = iclip_pixel((v + (1 << 10)) >> 11);
             }
             p += PXSTRIDE(p_stride);

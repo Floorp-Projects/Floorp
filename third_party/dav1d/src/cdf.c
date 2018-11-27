@@ -4232,7 +4232,7 @@ void dav1d_cdf_thread_ref(CdfThreadContext *const dst,
 }
 
 void dav1d_cdf_thread_unref(CdfThreadContext *const cdf) {
-    dav1d_ref_dec(cdf->ref);
+    dav1d_ref_dec(&cdf->ref);
     memset(cdf, 0, sizeof(*cdf));
 }
 

@@ -29,9 +29,10 @@
 
 #if defined(_WIN32)
 
-#include <windows.h>
-#include <process.h>
 #include <errno.h>
+#include <process.h>
+#include <stdlib.h>
+#include <windows.h>
 
 #include "config.h"
 #include "src/thread.h"

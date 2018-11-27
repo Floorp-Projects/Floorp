@@ -20,6 +20,11 @@ option('build_tests',
     value: true,
     description: 'Build dav1d tests')
 
+option('testdata_tests',
+    type: 'boolean',
+    value: false,
+    description: 'Run tests requiring the test data repository')
+
 option('fuzzing_engine',
     type: 'combo',
     choices : ['none', 'libfuzzer', 'oss-fuzz'],

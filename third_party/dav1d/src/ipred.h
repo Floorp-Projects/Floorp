@@ -41,7 +41,7 @@
  */
 #define decl_angular_ipred_fn(name) \
 void (name)(pixel *dst, ptrdiff_t stride, const pixel *topleft, \
-            int width, int height, int angle)
+            int width, int height, int angle, int max_width, int max_height)
 typedef decl_angular_ipred_fn(*angular_ipred_fn);
 
 /*
@@ -52,7 +52,7 @@ typedef decl_angular_ipred_fn(*angular_ipred_fn);
  */
 #define decl_cfl_ac_fn(name) \
 void (name)(int16_t *ac, const pixel *y, ptrdiff_t stride, \
-            int w_pad, int h_pad)
+            int w_pad, int h_pad, int cw, int ch)
 typedef decl_cfl_ac_fn(*cfl_ac_fn);
 
 /*
@@ -77,7 +77,7 @@ typedef struct Dav1dIntraPredDSPContext {
     angular_ipred_fn intra_pred[N_IMPL_INTRA_PRED_MODES];
 
     // chroma-from-luma
-    cfl_ac_fn cfl_ac[3 /* 420, 422, 444 */][N_RECT_TX_SIZES /* chroma tx size */];
+    cfl_ac_fn cfl_ac[3 /* 420, 422, 444 */];
     cfl_pred_fn cfl_pred[DC_128_PRED + 1];
 
     // palette

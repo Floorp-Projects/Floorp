@@ -25,8 +25,63 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "config.h"
+
 #include "src/arm/cpu.h"
 
+#if defined(HAVE_GETAUXVAL) && ARCH_ARM
+#include <sys/auxv.h>
+
+#ifndef HWCAP_ARM_NEON
+#define HWCAP_ARM_NEON (1 << 12)
+#endif
+#define NEON_HWCAP HWCAP_ARM_NEON
+
+#elif defined(__ANDROID__)
+#include <stdio.h>
+#include <string.h>
+
+static unsigned parse_proc_cpuinfo(const char *flag) {
+    FILE *file = fopen("/proc/cpuinfo", "r");
+    if (!file)
+        return 0;
+
+    char line_buffer[120];
+    const char *line;
+
+    while ((line = fgets(line_buffer, sizeof(line_buffer), file))) {
+        if (strstr(line, flag)) {
+            fclose(file);
+            return 1;
+        }
+        // if line is incomplete seek back to avoid splitting the search
+        // string into two buffers
+        if (!strchr(line, '\n') && strlen(line) > strlen(flag)) {
+            if (fseek(file, -strlen(flag), SEEK_CUR))
+                break;
+        }
+    }
+
+    fclose(file);
+
+    return 0;
+}
+#endif
+
 unsigned dav1d_get_cpu_flags_arm(void) {
-    return DAV1D_ARM_CPU_FLAG_NEON;
+    unsigned flags = 0;
+#if ARCH_AARCH64
+    flags |= DAV1D_ARM_CPU_FLAG_NEON;
+#elif defined(HAVE_GETAUXVAL) && ARCH_ARM
+    unsigned long hw_cap = getauxval(AT_HWCAP);
+    flags |= (hw_cap & NEON_HWCAP) ? DAV1D_ARM_CPU_FLAG_NEON : 0;
+#elif defined(__ANDROID__)
+    flags |= parse_proc_cpuinfo("neon") ? DAV1D_ARM_CPU_FLAG_NEON : 0;
+#elif defined(__APPLE__)
+    flags |= DAV1D_ARM_CPU_FLAG_NEON;
+#elif defined(_WIN32)
+    flags |= DAV1D_ARM_CPU_FLAG_NEON;
+#endif
+
+    return flags;
 }

@@ -68,7 +68,7 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
     pixel *const topleft = topleft_buf + 128;
 
     declare_func(void, pixel *dst, ptrdiff_t stride, const pixel *topleft,
-                 int width, int height, int angle);
+                 int width, int height, int angle, int max_width, int max_height);
 
     for (int mode = 0; mode < N_IMPL_INTRA_PRED_MODES; mode++)
         for (int w = 4; w <= (mode == FILTER_PRED ? 32 : 64); w <<= 1)
@@ -89,12 +89,13 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
                     for (int i = -h * 2; i <= w * 2; i++)
                         topleft[i] = rand() & ((1 << BITDEPTH) - 1);
 
-                    call_ref(c_dst, stride, topleft, w, h, a);
-                    call_new(a_dst, stride, topleft, w, h, a);
+                    const int maxw = 1 + (rand() % 128), maxh = 1 + (rand() % 128);
+                    call_ref(c_dst, stride, topleft, w, h, a, maxw, maxh);
+                    call_new(a_dst, stride, topleft, w, h, a, maxw, maxh);
                     if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
                         fail();
 
-                    bench_new(a_dst, stride, topleft, w, h, a);
+                    bench_new(a_dst, stride, topleft, w, h, a, 128, 128);
                 }
             }
     report("intra_pred");
