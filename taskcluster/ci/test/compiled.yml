@@ -62,6 +62,7 @@ jittest:
     run-on-projects:
         by-test-platform:
             android-hw.*: ['try']
+            linux.*: []  # redundant with SM(...)
             default: built-projects
     chunks:
         by-test-platform:
