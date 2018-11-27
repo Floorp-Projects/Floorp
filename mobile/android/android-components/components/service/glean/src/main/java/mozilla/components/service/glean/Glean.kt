@@ -82,8 +82,6 @@ object Glean {
 
         initializeCoreMetrics(applicationContext)
 
-        Baseline.os.set("Android")
-
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
     }
 
@@ -184,6 +182,9 @@ object Glean {
         if (firstRunDetector.isFirstRun()) {
             GleanInternalMetrics.clientId.generateAndSet()
         }
+
+        // Set the OS type
+        Baseline.os.set("Android")
     }
 
     /**

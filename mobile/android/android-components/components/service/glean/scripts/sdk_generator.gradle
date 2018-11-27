@@ -125,6 +125,6 @@ ext.gleanGenerateMetricsAPI = {
 
 if (android.hasProperty('applicationVariants')) {
     android.applicationVariants.all(ext.gleanGenerateMetricsAPI('GleanMetrics'))
-} else {
+} else if (project.name == 'service-glean') {
     android.libraryVariants.all(ext.gleanGenerateMetricsAPI('mozilla.components.service.glean.metrics'))
 }

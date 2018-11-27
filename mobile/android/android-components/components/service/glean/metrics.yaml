@@ -5,6 +5,9 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
 baseline:
+  ## TODO: Some metrics are commented out below until we implement them as part
+  ## of 1497894 and its dependent bugs
+
   # sessions:
   #   type: counter 
   #   description: |
@@ -33,35 +36,35 @@ baseline:
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
-  os_version:
-    type: string
-    lifetime: application
-    description: |
-      The version of the operating system.
-    bugs:
-      - 1497894
-    notification_emails:
-      - telemetry-client-dev@mozilla.com
+  # os_version:
+  #   type: string
+  #   lifetime: application
+  #   description: |
+  #     The version of the operating system.
+  #   bugs:
+  #     - 1497894
+  #   notification_emails:
+  #     - telemetry-client-dev@mozilla.com
 
-  device:
-    type: string
-    lifetime: application
-    description: |
-      The manufacturer and model of the device.
-    bugs:
-      - 1497894
-    notification_emails:
-      - telemetry-client-dev@mozilla.com
+  # device:
+  #   type: string
+  #   lifetime: application
+  #   description: |
+  #     The manufacturer and model of the device.
+  #   bugs:
+  #     - 1497894
+  #   notification_emails:
+  #     - telemetry-client-dev@mozilla.com
 
-  architecture:
-    type: string
-    lifetime: application
-    description: |
-      The architecture of the device, (e.g. "arm", "x86").
-    bugs:
-      - 1497894
-    notification_emails:
-      - telemetry-client-dev@mozilla.com
+  # architecture:
+  #   type: string
+  #   lifetime: application
+  #   description: |
+  #     The architecture of the device, (e.g. "arm", "x86").
+  #   bugs:
+  #     - 1497894
+  #   notification_emails:
+  #     - telemetry-client-dev@mozilla.com
 
   # timezone:
   #   type: number
