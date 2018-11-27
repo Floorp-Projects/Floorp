@@ -1,0 +1,24 @@
+This directory contains build files for dav1d. The actual library
+source is in $TOPSRCDIR/third_party/dav1d/
+
+Any patches or additional configuration to be applied to the
+upstream source should be kept here in the media/libaom
+directory.
+
+To update the library source and build config files, execute
+
+  ./mach vendor dav1d
+
+To update to a specific upstream git tag or commit, use
+
+  ./mach vendor dav1d -r <commit>
+
+The upstream git repository is https://aomedia.googlesource.com/aom
+
+To update to a fork, use
+
+  ./mach vendor dav1d --repo <repository url> [-r <commit>]
+
+The last update was pulled from https://code.videolan.org/videolan/dav1d
+
+The git commit ID used was 46e2a2d0cc451e1d6bb929f80088f8a7b8940dd0 (2018-10-25T16:51:31.000Z).

@@ -3125,6 +3125,12 @@ public:
   static bool IsTrackingResourceWindow(nsPIDOMWindowInner* aWindow);
 
   /*
+   * Returns true if this window's channel has been marked as a third-party
+   * tracking resource.
+   */
+  static bool IsThirdPartyTrackingResourceWindow(nsPIDOMWindowInner* aWindow);
+
+  /*
    * Serializes a HTML nsINode into its markup representation.
    */
   static bool SerializeNodeToMarkup(nsINode* aRoot,

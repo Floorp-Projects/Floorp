@@ -624,12 +624,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean hasTrackingContentLoaded;
 
    /**
-   * This attribute determines whether a document has Slow Tracking Content
-   * that has been blocked from loading.
-   */
-   [infallible] readonly attribute boolean hasSlowTrackingContentBlocked;
-
-   /**
    * This attribute determines whether a document seen cookies or storage
    * blocked due to a site permission being denied.
    */

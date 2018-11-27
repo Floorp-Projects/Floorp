@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { getFormatStr, getStr } = require("./l10n");
+
 /**
 * Generate a hash that uniquely identifies a stylesheet or element style attribute.
 *
@@ -11,19 +13,19 @@
 *        Information about a stylesheet or element style attribute:
 *        {
 *          type:  {String}
-*                 One of "stylesheet" or "element".
+*                 One of "stylesheet", "inline" or "element".
 *          index: {Number|String}
 *                 Position of the styleshet in the list of stylesheets in the document.
 *                 If `type` is "element", `index` is the generated selector which
 *                 uniquely identifies the element in the document.
-*          href:  {String|null}
-*                 URL of the stylesheet or of the document when `type` is "element".
-*                 If the stylesheet is inline, `href` is null.
+*          href:  {String}
+*                 URL of the stylesheet or of the document when `type` is "element" or
+*                 "inline".
 *        }
 * @return {String}
 */
 function getSourceHash(source) {
-  const { type, index, href = "inline" } = source;
+  const { type, index, href } = source;
 
   return `${type}${index}${href}`;
 }
@@ -54,5 +56,38 @@ function getRuleHash(ruleData) {
   return `${atRules}${selector}${ruleIndex}`;
 }
 
+/**
+ * Get a human-friendly style source path to display in the Changes panel.
+ * For element inline styles, return a string indicating that.
+ * For inline stylesheets, return a string indicating that plus the stylesheet's index.
+ * For URLs, return just the stylesheet filename.
+ *
+ * @param {Object} source
+ *        Information about the style source. Contains:
+ *        - type: {String} One of "element" or "stylesheet"
+ *        - href: {String|null} Stylesheet URL or document URL for elmeent inline styles
+ *        - index: {Number} Position of the stylesheet in its document's stylesheet list.
+ * @return {String}
+ */
+function getSourceForDisplay(source) {
+  let href;
+
+  switch (source.type) {
+    case "element":
+      href = getStr("changes.elementStyleLabel");
+      break;
+    case "inline":
+      href = getFormatStr("changes.inlineStyleSheetLabel", `#${source.index}`);
+      break;
+    case "stylesheet":
+      const url = new URL(source.href);
+      href = url.pathname.substring(url.pathname.lastIndexOf("/") + 1);
+      break;
+  }
+
+  return href;
+}
+
+module.exports.getSourceForDisplay = getSourceForDisplay;
 module.exports.getSourceHash = getSourceHash;
 module.exports.getRuleHash = getRuleHash;

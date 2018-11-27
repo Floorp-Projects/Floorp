@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "JavaScriptChild.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "nsContentUtils.h"

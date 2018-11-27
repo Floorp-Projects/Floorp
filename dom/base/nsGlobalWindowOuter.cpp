@@ -5446,11 +5446,6 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     if (!aBlocked) {
       unblocked = !doc->GetHasTrackingContentLoaded();
     }
-  } else if (aState == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT) {
-    doc->SetHasSlowTrackingContentBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasSlowTrackingContentBlocked();
-    }
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) {
     doc->SetHasCookiesBlockedByPermission(aBlocked, origin);
     if (!aBlocked) {

@@ -10,6 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const CSSDeclaration = createFactory(require("./CSSDeclaration"));
+const { getSourceForDisplay } = require("../utils/changes-utils");
 const { getStr } = require("../utils/l10n");
 
 class ChangesApp extends PureComponent {
@@ -62,7 +63,7 @@ class ChangesApp extends PureComponent {
     return [removals, additions];
   }
 
-  renderRule(ruleId, rule, rules) {
+  renderRule(ruleId, rule, rules, level = 0) {
     const selector = rule.selector;
 
     if (this.renderedRules.includes(ruleId)) {
@@ -82,7 +83,10 @@ class ChangesApp extends PureComponent {
     return dom.div(
       {
         key: ruleId,
-        className: "rule",
+        className: "rule devtools-monospace",
+        style: {
+          "--diff-level": level,
+        },
       },
       dom.div(
         {
@@ -92,9 +96,9 @@ class ChangesApp extends PureComponent {
         selector,
         dom.span({ className: "bracket-open" }, "{")
       ),
-      // Render any nested child rules if they are present.
-      rule.children.length > 0 && rule.children.map(childRuleId => {
-        return this.renderRule(childRuleId, rules[childRuleId], rules);
+      // Render any nested child rules if they exist.
+      rule.children.map(childRuleId => {
+        return this.renderRule(childRuleId, rules[childRuleId], rules, level + 1);
       }),
       // Render any changed CSS declarations.
       this.renderDeclarations(rule.remove, rule.add),
@@ -105,27 +109,38 @@ class ChangesApp extends PureComponent {
   renderDiff(changes = {}) {
     // Render groups of style sources: stylesheets and element style attributes.
     return Object.entries(changes).map(([sourceId, source]) => {
-      const href = source.href || `inline stylesheet #${source.index}`;
-      const rules = source.rules;
+      const path = getSourceForDisplay(source);
+      const { href, rules, isFramed } = source;
 
-      return dom.details(
+      return dom.div(
         {
           key: sourceId,
-          className: "source devtools-monospace",
-          open: true,
+          className: "source",
         },
-        dom.summary(
+        dom.div(
           {
             className: "href",
             title: href,
           },
-          href),
+          dom.span({}, path),
+          isFramed && this.renderFrameBadge(href)
+        ),
         // Render changed rules within this source.
         Object.entries(rules).map(([ruleId, rule]) => {
           return this.renderRule(ruleId, rule, rules);
         })
       );
     });
+  }
+
+  renderFrameBadge(href = "") {
+    return dom.span(
+      {
+        className: "inspector-badge",
+        title: href,
+      },
+      getStr("changes.iframeLabel")
+    );
   }
 
   renderEmptyState() {

@@ -13,13 +13,12 @@ const TEST_URI = `data:text/html;charset=utf-8,
     /* Create a prototype-less object so popup does not contain native
      * Object prototype properties.
      */
-    window.foo = Object.create(null);
-    Object.assign(window.foo, {
-      item0: "value0",
+    window.foo = Object.create(null, Object.getOwnPropertyDescriptors({
+      item00: "value0",
       item1: "value1",
       item2: "value2",
       item3: "value3",
-    });
+    }));
   </script>
 </head>
 <body>bug 585991 - autocomplete popup navigation and tab key usage test</body>`;
@@ -52,7 +51,7 @@ async function performTests() {
 
   const popupItems = popup.getItems().map(e => e.label);
   const expectedPopupItems = [
-    "item0",
+    "item00",
     "item1",
     "item2",
     "item3",
@@ -65,7 +64,7 @@ async function performTests() {
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 
-  const prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
   is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
   checkJsTermCompletionValue(jsterm, prefix + "item3", "completeNode.value holds item3");
@@ -108,4 +107,18 @@ async function performTests() {
   is(jsterm.getInputValue(), "window.foo.item3",
      "completion was successful after KEY_Tab");
   ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
+
+  info("Check that hitting Home hides the completion text when the popup is hidden");
+  await setInputValueForAutocompletion(jsterm, "window.foo.item0");
+  prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  checkJsTermCompletionValue(jsterm, prefix + "0", "completeNode has expected value");
+  EventUtils.synthesizeKey("KEY_Home");
+  checkJsTermCompletionValue(jsterm, "", "completeNode was cleared after hitting Home");
+
+  info("Check that hitting End hides the completion text when the popup is hidden");
+  await setInputValueForAutocompletion(jsterm, "window.foo.item0");
+  prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  checkJsTermCompletionValue(jsterm, prefix + "0", "completeNode has expected value");
+  EventUtils.synthesizeKey("KEY_End");
+  checkJsTermCompletionValue(jsterm, "", "completeNode was cleared after hitting End");
 }

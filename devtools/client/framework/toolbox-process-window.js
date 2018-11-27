@@ -89,9 +89,8 @@ var connect = async function() {
 
   appendStatusMessage("Get root form for toolbox");
   if (addonID) {
-    const { addons } = await gClient.listAddons();
-    const addonTargetActor = addons.filter(addon => addon.id === addonID).pop();
-    await openToolbox({form: addonTargetActor, chrome: true});
+    const addonTargetFront = await gClient.mainRoot.getAddon({ id: addonID });
+    await openToolbox({activeTab: addonTargetFront, chrome: true});
   } else {
     const front = await gClient.mainRoot.getMainProcess();
     await openToolbox({activeTab: front, chrome: true});

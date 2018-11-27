@@ -19,7 +19,6 @@
 #include "nsNetUtil.h"
 #include <cctype>
 #include "mozilla/Encoding.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/FakePluginTagInitBinding.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)

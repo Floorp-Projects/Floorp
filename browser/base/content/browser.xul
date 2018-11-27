@@ -730,11 +730,12 @@ xmlns="http://www.w3.org/1999/xhtml"
                autohide="true"
 #endif
                context="toolbar-context-menu">
-        <toolbaritem id="menubar-items" align="start" flex="1">
+        <toolbaritem id="menubar-items" align="center">
 # The entire main menubar is placed into browser-menubar.inc, so that it can be
 # shared with other top level windows in macWindow.inc.xul.
 #include browser-menubar.inc
         </toolbaritem>
+        <spacer flex="1" />
 #include titlebar-items.inc.xul
       </toolbar>
 

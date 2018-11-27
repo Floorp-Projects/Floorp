@@ -1251,11 +1251,19 @@ nsRange::SetStartJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr)
   SetStart(aNode, aOffset, aErr);
 }
 
+bool
+nsRange::CanAccess(const nsINode& aNode) const
+{
+  if (nsContentUtils::LegacyIsCallerNativeCode()) {
+    return true;
+  }
+  return nsContentUtils::CanCallerAccess(&aNode);
+}
+
 void
 nsRange::SetStart(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
 {
- if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-     !nsContentUtils::CanCallerAccess(&aNode)) {
+ if (!CanAccess(aNode)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -1300,8 +1308,7 @@ nsRange::SetStartBeforeJS(nsINode& aNode, ErrorResult& aErr)
 void
 nsRange::SetStartBefore(nsINode& aNode, ErrorResult& aRv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(&aNode)) {
+  if (!CanAccess(aNode)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -1326,8 +1333,7 @@ nsRange::SetStartAfterJS(nsINode& aNode, ErrorResult& aErr)
 void
 nsRange::SetStartAfter(nsINode& aNode, ErrorResult& aRv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(&aNode)) {
+  if (!CanAccess(aNode)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -1352,8 +1358,7 @@ nsRange::SetEndJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr)
 void
 nsRange::SetEnd(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
 {
- if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-     !nsContentUtils::CanCallerAccess(&aNode)) {
+ if (!CanAccess(aNode)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -1476,8 +1481,7 @@ nsRange::SetEndBeforeJS(nsINode& aNode, ErrorResult& aErr)
 void
 nsRange::SetEndBefore(nsINode& aNode, ErrorResult& aRv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(&aNode)) {
+  if (!CanAccess(aNode)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -1502,8 +1506,7 @@ nsRange::SetEndAfterJS(nsINode& aNode, ErrorResult& aErr)
 void
 nsRange::SetEndAfter(nsINode& aNode, ErrorResult& aRv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(&aNode)) {
+  if (!CanAccess(aNode)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -1550,8 +1553,7 @@ nsRange::SelectNodeJS(nsINode& aNode, ErrorResult& aErr)
 void
 nsRange::SelectNode(nsINode& aNode, ErrorResult& aRv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(&aNode)) {
+  if (!CanAccess(aNode)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -1591,8 +1593,7 @@ nsRange::SelectNodeContentsJS(nsINode& aNode, ErrorResult& aErr)
 void
 nsRange::SelectNodeContents(nsINode& aNode, ErrorResult& aRv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(&aNode)) {
+  if (!CanAccess(aNode)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -1974,6 +1975,10 @@ nsRange::CutContents(DocumentFragment** aFragment)
 {
   if (aFragment) {
     *aFragment = nullptr;
+  }
+
+  if (!CanAccess(*mStart.Container()) || !CanAccess(*mEnd.Container())) {
+    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   nsCOMPtr<nsIDocument> doc = mStart.Container()->OwnerDoc();
@@ -2611,8 +2616,7 @@ nsRange::CloneRange() const
 void
 nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(&aNode)) {
+  if (!CanAccess(aNode)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -2621,6 +2625,11 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
 
   nsCOMPtr<nsINode> tStartContainer = GetStartContainer(aRv);
   if (aRv.Failed()) {
+    return;
+  }
+
+  if (!CanAccess(*tStartContainer)) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
 
@@ -2633,8 +2642,7 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
   nsCOMPtr<nsINode> referenceNode;
   nsCOMPtr<nsINode> referenceParentNode = tStartContainer;
 
-  RefPtr<Text> startTextNode =
-    tStartContainer ? tStartContainer->GetAsText() : nullptr;
+  RefPtr<Text> startTextNode = tStartContainer->GetAsText();
   nsCOMPtr<nsINodeList> tChildList;
   if (startTextNode) {
     referenceParentNode = tStartContainer->GetParentNode();
@@ -2704,8 +2712,7 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
 void
 nsRange::SurroundContents(nsINode& aNewParent, ErrorResult& aRv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(&aNewParent)) {
+  if (!CanAccess(aNewParent)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }

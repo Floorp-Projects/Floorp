@@ -392,6 +392,11 @@ private:
                                       nsINode** aClosestAncestor,
                                       nsINode** aFarthestAncestor);
 
+  /**
+   * Returns whether a node is safe to be accessed by the current caller.
+   */
+  bool CanAccess(const nsINode&) const;
+
 public:
   /**
    * Compute the root node of aNode for initializing range classes.

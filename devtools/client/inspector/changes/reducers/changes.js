@@ -129,22 +129,23 @@ function removeRule(ruleId, rules) {
  *
  * Structure:
  *    <sourceId>: {
- *      type: // "stylesheet" or "element"
- *      href: // Stylesheet or document URL
+ *      type: // {String} One of: "stylesheet", "inline" or "element"
+ *      href: // {String|null} Stylesheet or document URL; null for inline stylesheets
  *      rules: {
  *        <ruleId>: {
- *          selector: "" // String CSS selector or CSS at-rule text
- *          changeType:  // Optional string: "rule-add" or "rule-remove"
- *          children: [] // Array of <ruleId> for child rules of this rule.
- *          parent:      // <ruleId> of the parent rule
- *          add: {
- *            <property>: <value> // CSS declaration
- *            ...
- *          },
- *          remove: {
- *            <property>: <value> // CSS declaration
- *           ...
- *          }
+ *          selector:    // {String} CSS selector or CSS at-rule text
+ *          changeType:  // {String} Optional; one of: "rule-add" or "rule-remove"
+ *          children: [] // {Array} of <ruleId> for child rules of this rule
+ *          parent:      // {String} <ruleId> of the parent rule
+ *          add: [       // {Array} of objects with CSS declarations
+ *            {
+ *              property:    // {String} CSS property name
+ *              value:       // {String} CSS property value
+ *              index:       // {Number} Position of the declaration within its CSS rule
+ *            }
+ *            ... // more declarations
+ *          ],
+ *          remove: []   // {Array} of objects with CSS declarations
  *        }
  *        ... // more rules
  *      }
@@ -192,13 +193,13 @@ const reducers = {
     change = { ...defaults, ...change };
     state = cloneState(state);
 
-    const { type, href, index } = change.source;
+    const { type, href, index, isFramed } = change.source;
     const { selector, ancestors, ruleIndex, type: changeType } = change;
     const sourceId = getSourceHash(change.source);
     const ruleId = getRuleHash({ selector, ancestors, ruleIndex });
 
     // Copy or create object identifying the source (styelsheet/element) for this change.
-    const source = Object.assign({}, state[sourceId], { type, href, index });
+    const source = Object.assign({}, state[sourceId], { type, href, index, isFramed });
     // Copy or create collection of all rules ever changed in this source.
     const rules = Object.assign({}, source.rules);
     // Refrence or create object identifying the rule for this change.

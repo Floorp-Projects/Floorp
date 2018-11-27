@@ -72,9 +72,11 @@ if CONFIG['MOZ_FFMPEG']:
 if CONFIG['MOZ_AV1']:
     EXPORTS += [
         'agnostic/AOMDecoder.h',
+        'agnostic/DAV1DDecoder.h',
     ]
     UNIFIED_SOURCES += [
         'agnostic/AOMDecoder.cpp',
+        'agnostic/DAV1DDecoder.cpp',
     ]
 
 if CONFIG['MOZ_OMX']:

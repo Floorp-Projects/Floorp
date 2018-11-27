@@ -10,6 +10,7 @@
 #include "nsIUDPSocket.h"
 #include "nsINetAddr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/NeckoCommon.h"

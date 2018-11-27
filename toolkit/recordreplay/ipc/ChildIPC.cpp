@@ -15,7 +15,6 @@
 #include "chrome/common/mach_ipc_mac.h"
 #include "ipc/Channel.h"
 #include "mac/handler/exception_handler.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/VsyncDispatcher.h"

@@ -9,7 +9,6 @@
 
 #include "MediaChild.h"
 
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/media/PMediaParent.h"
 
 namespace mozilla {

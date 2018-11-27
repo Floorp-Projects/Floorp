@@ -172,6 +172,13 @@ class JSTerm extends Component {
           return null;
         };
 
+        const onArrowLeft = () => {
+          if (this.autocompletePopup.isOpen || this.getAutoCompletionText()) {
+            this.clearCompletion();
+          }
+          return "CodeMirror.Pass";
+        };
+
         this.editor = new Editor({
           autofocus: true,
           enableCodeFolding: false,
@@ -230,12 +237,9 @@ class JSTerm extends Component {
             "Down": onArrowDown,
             "Cmd-Down": onArrowDown,
 
-            "Left": () => {
-              if (this.autocompletePopup.isOpen || this.getAutoCompletionText()) {
-                this.clearCompletion();
-              }
-              return "CodeMirror.Pass";
-            },
+            "Left": onArrowLeft,
+            "Ctrl-Left": onArrowLeft,
+            "Cmd-Left": onArrowLeft,
 
             "Right": () => {
               // We only want to complete on Right arrow if the completion text is
@@ -318,6 +322,10 @@ class JSTerm extends Component {
                 return null;
               }
 
+              if (this.getAutoCompletionText()) {
+                this.clearCompletion();
+              }
+
               return "CodeMirror.Pass";
             },
 
@@ -331,6 +339,10 @@ class JSTerm extends Component {
               if (!this.getInputValue()) {
                 this.hud.outputScroller.scrollTop = this.hud.outputScroller.scrollHeight;
                 return null;
+              }
+
+              if (this.getAutoCompletionText()) {
+                this.clearCompletion();
               }
 
               return "CodeMirror.Pass";
@@ -865,6 +877,12 @@ class JSTerm extends Component {
         event.preventDefault();
       }
 
+      if (event.keyCode === KeyCodes.DOM_VK_LEFT &&
+        (this.autocompletePopup.isOpen || this.getAutoCompletionText())
+      ) {
+        this.clearCompletion();
+      }
+
       return;
     } else if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
       if (!this.autocompletePopup.isOpen && (
@@ -947,6 +965,8 @@ class JSTerm extends Component {
         if (this.autocompletePopup.isOpen) {
           this.autocompletePopup.selectItemAtIndex(0);
           event.preventDefault();
+        } else if (this.getAutoCompletionText()) {
+          this.clearCompletion();
         } else if (inputValue.length <= 0) {
           this.hud.outputScroller.scrollTop = 0;
           event.preventDefault();
@@ -957,6 +977,8 @@ class JSTerm extends Component {
         if (this.autocompletePopup.isOpen) {
           this.autocompletePopup.selectItemAtIndex(this.autocompletePopup.itemCount - 1);
           event.preventDefault();
+        } else if (this.getAutoCompletionText()) {
+          this.clearCompletion();
         } else if (inputValue.length <= 0) {
           this.hud.outputScroller.scrollTop = this.hud.outputScroller.scrollHeight;
           event.preventDefault();

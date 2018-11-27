@@ -162,26 +162,6 @@ static uint32_t sRCWNMaxWaitMs = 500;
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
-using mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED;
-
-static const struct {
-  LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED mTelemetryLabel;
-  const char* mHostName;
-} gFastBlockAnalyticsProviders[] = {
-  // clang-format off
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::googleanalytics, "google-analytics.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::scorecardresearch, "scorecardresearch.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::hotjar, "hotjar.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::newrelic, "newrelic.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::nrdata, "nr-data.net" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::crwdcntrl, "crwdcntrl.net" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::eyeota, "eyeota.net" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::yahooanalytics, "analytics.yahoo.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::statcounter, "statcounter.com" },
-  { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::v12group, "v12group.com" }
-  // clang-format on
-};
-
 void
 AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss)
 {
@@ -688,163 +668,12 @@ nsHttpChannel::Connect()
     return ConnectOnTailUnblock();
 }
 
-static bool
-IsContentPolicyTypeWhitelistedForFastBlock(nsILoadInfo* aLoadInfo)
-{
-  nsContentPolicyType type = aLoadInfo ?
-                             aLoadInfo->GetExternalContentPolicyType() :
-                             nsIContentPolicy::TYPE_OTHER;
-  switch (type) {
-  // images
-  case nsIContentPolicy::TYPE_IMAGE:
-  case nsIContentPolicy::TYPE_IMAGESET:
-  case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
-  case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
-  case nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
-  // fonts
-  case nsIContentPolicy::TYPE_FONT:
-  // stylesheets
-  case nsIContentPolicy::TYPE_STYLESHEET:
-  case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
-  case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
-    return true;
-  default:
-    return false;
-  }
-}
-
-bool
-nsHttpChannel::CheckFastBlocked()
-{
-    LOG(("nsHttpChannel::CheckFastBlocked [this=%p, url=%s]",
-         this, mSpec.get()));
-    MOZ_ASSERT(mIsThirdPartyTrackingResource);
-
-    static bool sFastBlockInited = false;
-    static uint32_t sFastBlockTimeout = 0;
-    static uint32_t sFastBlockLimit = 0;
-
-    if (!sFastBlockInited) {
-        sFastBlockInited = true;
-        Preferences::AddUintVarCache(&sFastBlockTimeout, "browser.fastblock.timeout");
-        Preferences::AddUintVarCache(&sFastBlockLimit, "browser.fastblock.limit");
-    }
-
-    if (!StaticPrefs::browser_fastblock_enabled()) {
-        LOG(("FastBlock disabled by pref [this=%p]\n", this));
-
-        return false;
-    }
-
-    TimeStamp timestamp;
-    if (NS_FAILED(GetNavigationStartTimeStamp(&timestamp)) || !timestamp) {
-        LOG(("FastBlock passed (no timestamp) [this=%p]\n", this));
-
-        return false;
-    }
-
-    bool engageFastBlock = false;
-
-    TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
-    if (IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo)) {
-        LOG(("FastBlock passed (whitelisted content type %u) (%lf) [this=%p]\n",
-             mLoadInfo ? mLoadInfo->GetExternalContentPolicyType() : nsIContentPolicy::TYPE_OTHER,
-             duration.ToMilliseconds(), this));
-    } else if (mLoadInfo && mLoadInfo->GetDocumentHasUserInteracted()) {
-        LOG(("FastBlock passed (user interaction) (%lf) [this=%p]\n",
-             duration.ToMilliseconds(), this));
-    } else if (mLoadInfo && mLoadInfo->GetDocumentHasLoaded()) {
-        LOG(("FastBlock passed (document loaded) (%lf) [this=%p]\n",
-             duration.ToMilliseconds(), this));
-    } else {
-            bool hasFastBlockStarted = duration.ToMilliseconds() >= sFastBlockTimeout;
-        bool hasFastBlockStopped = false;
-        if ((sFastBlockLimit != 0) && (sFastBlockLimit > sFastBlockTimeout)) {
-            hasFastBlockStopped = duration.ToMilliseconds() > sFastBlockLimit;
-        }
-        LOG(("FastBlock started=%d stopped=%d (%lf) [this=%p]\n",
-             static_cast<int>(hasFastBlockStarted),
-             static_cast<int>(hasFastBlockStopped),
-             duration.ToMilliseconds(),
-             this));
-        engageFastBlock = hasFastBlockStarted && !hasFastBlockStopped;
-    }
-
-    // Remember the data needed for fastblock telemetry in case fastblock is
-    // enabled, we have decided to block the channel, and the channel isn't
-    // marked as private.
-    if (engageFastBlock && !NS_UsePrivateBrowsing(this)) {
-        nsCOMPtr<nsIURI> uri;
-        nsresult rv = GetURI(getter_AddRefs(uri));
-        NS_ENSURE_SUCCESS(rv, false);
-
-        nsAutoCString host;
-        rv = uri->GetHost(host);
-        NS_ENSURE_SUCCESS(rv, false);
-
-        nsCOMPtr<nsIEffectiveTLDService> tldService =
-            do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-        NS_ENSURE_TRUE(tldService, false);
-
-        LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED label =
-            LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::other;
-        for (const auto& entry : gFastBlockAnalyticsProviders) {
-          // For each entry in the list of our analytics providers, use the
-          // effective TLD service to look up subdomains to make sure we find a
-          // potential match if one is available.
-          while (true) {
-            if (host == entry.mHostName) {
-              label = entry.mTelemetryLabel;
-              break;
-            }
-
-            nsAutoCString newHost;
-            rv = tldService->GetNextSubDomain(host, newHost);
-            if (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-              // we're done searching this entry.
-              break;
-            }
-            NS_ENSURE_SUCCESS(rv, false);
-
-            host = newHost;
-          }
-
-          if (label != LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::other) {
-            // We have found a label in the previous loop, bail out now!
-            break;
-          }
-        }
-
-        if (mLoadInfo) {
-          MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
-          MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetTrackerBlockedReason(label));
-        }
-    }
-
-    return engageFastBlock;
-}
-
 nsresult
 nsHttpChannel::ConnectOnTailUnblock()
 {
     nsresult rv;
 
     LOG(("nsHttpChannel::ConnectOnTailUnblock [this=%p]\n", this));
-
-    bool isTrackingResource = mIsThirdPartyTrackingResource; // is atomic
-    if (isTrackingResource) {
-        bool engageFastBlock = CheckFastBlocked();
-        AntiTrackingCommon::NotifyBlockingDecision(this,
-                                                   engageFastBlock ?
-                                                     AntiTrackingCommon::BlockingDecision::eBlock :
-                                                     AntiTrackingCommon::BlockingDecision::eAllow,
-                                                   nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
-        if (engageFastBlock) {
-          Unused << AsyncAbort(NS_ERROR_TRACKING_ANNOTATION_URI);
-          CloseCacheEntry(false);
-          return NS_OK;
-        }
-    }
 
     // Consider opening a TCP connection right away.
     SpeculativeConnect();
@@ -6234,10 +6063,6 @@ nsHttpChannel::CancelInternal(nsresult status)
       !!mTrackingProtectionCancellationPending;
     if (status == NS_ERROR_TRACKING_URI) {
       mTrackingProtectionCancellationPending = 0;
-      if (mLoadInfo) {
-        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTracker(true));
-        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
-      }
     }
 
     mCanceled = true;
