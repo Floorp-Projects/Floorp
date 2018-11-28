@@ -13,10 +13,7 @@ const {
   VIEW_NODE_SHAPE_POINT_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 
-loader.lazyRequireGetter(this, "parseURL", "devtools/client/shared/source-utils", true);
-loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
-
-const DEFAULT_HIGHLIGHTER_COLOR = "#9400FF";
+const DEFAULT_GRID_COLOR = "#4B0082";
 
 /**
  * Highlighters overlay is a singleton managing all highlighters in the Inspector.
@@ -247,17 +244,13 @@ class HighlightersOverlay {
   }
 
   /**
-   * Returns the flexbox highlighter color for the given node.
+   * Create a flexbox highlighter settings object from the Redux store containing any
+   * highlighter options that should be passed into the highlighter.
    */
-  async getFlexboxHighlighterColor() {
-    const customHostColors = await asyncStorage.getItem("flexboxInspectorHostColors") ||
-      {};
-    // Get the hostname, if there is no hostname, fall back on protocol
-    // ex: `data:` uri, and `about:` pages
-    const hostName = parseURL(this.inspector.target.url).hostname ||
-      parseURL(this.inspector.target.url).protocol;
-    return customHostColors[hostName] ?
-      customHostColors[hostName] : DEFAULT_HIGHLIGHTER_COLOR;
+  getFlexboxHighlighterSettings() {
+    const { flexbox } = this.store.getState();
+    const color = flexbox.color;
+    return { color };
   }
 
   /**
@@ -291,10 +284,7 @@ class HighlightersOverlay {
       return;
     }
 
-    options = {
-      ...options,
-      color: await this.getFlexboxHighlighterColor(node),
-    };
+    options = Object.assign({}, options, this.getFlexboxHighlighterSettings(node));
 
     const isShown = await highlighter.show(node, options);
     if (!isShown) {
@@ -408,7 +398,7 @@ class HighlightersOverlay {
   getGridHighlighterSettings(nodeFront) {
     const { grids, highlighterSettings } = this.store.getState();
     const grid = grids.find(g => g.nodeFront === nodeFront);
-    const color = grid ? grid.color : DEFAULT_HIGHLIGHTER_COLOR;
+    const color = grid ? grid.color : DEFAULT_GRID_COLOR;
     return Object.assign({}, highlighterSettings, { color });
   }
 
