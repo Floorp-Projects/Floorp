@@ -7,9 +7,6 @@
 #include "nsDeque.h"
 #include "nsISupportsImpl.h"
 #include <string.h>
-#ifdef DEBUG_rickg
-#include <stdio.h>
-#endif
 
 #include "mozilla/CheckedInt.h"
 
@@ -35,28 +32,6 @@ nsDeque::nsDeque(nsDequeFunctor* aDeallocator)
 nsDeque::~nsDeque()
 {
   MOZ_COUNT_DTOR(nsDeque);
-
-#ifdef DEBUG_rickg
-  char buffer[30];
-  printf("Capacity: %i\n", mCapacity);
-
-  static int mCaps[15] = {0};
-  switch (mCapacity) {
-    case 4:     mCaps[0]++; break;
-    case 8:     mCaps[1]++; break;
-    case 16:    mCaps[2]++; break;
-    case 32:    mCaps[3]++; break;
-    case 64:    mCaps[4]++; break;
-    case 128:   mCaps[5]++; break;
-    case 256:   mCaps[6]++; break;
-    case 512:   mCaps[7]++; break;
-    case 1024:  mCaps[8]++; break;
-    case 2048:  mCaps[9]++; break;
-    case 4096:  mCaps[10]++; break;
-    default:
-      break;
-  }
-#endif
 
   Erase();
   if (mData && mData != mBuffer) {
