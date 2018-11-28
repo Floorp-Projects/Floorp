@@ -567,6 +567,7 @@ union MaybeTransform {
 
 union OMTAValue {
   null_t;
+  nscolor;
   float;
   Matrix4x4;
 };
