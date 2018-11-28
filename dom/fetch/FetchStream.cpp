@@ -11,8 +11,6 @@
 #include "nsProxyRelease.h"
 #include "nsStreamUtils.h"
 
-#define FETCH_STREAM_FLAG 0
-
 static NS_DEFINE_CID(kStreamTransportServiceCID,
                      NS_STREAMTRANSPORTSERVICE_CID);
 
@@ -110,7 +108,7 @@ FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
 
   aRv.MightThrowJSException();
   JS::Rooted<JSObject*> body(aCx,
-    JS::NewReadableExternalSourceStreamObject(aCx, stream, FETCH_STREAM_FLAG));
+    JS::NewReadableExternalSourceStreamObject(aCx, stream));
   if (!body) {
     aRv.StealExceptionFromJSContext(aCx);
     return;
@@ -128,11 +126,9 @@ FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
 FetchStream::RequestDataCallback(JSContext* aCx,
                                  JS::HandleObject aStream,
                                  void* aUnderlyingSource,
-                                 uint8_t aFlags,
                                  size_t aDesiredSize)
 {
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
-  MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
 #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool disturbed;
   if (!JS::ReadableStreamIsDisturbed(aCx, aStream, &disturbed)) {
@@ -208,11 +204,10 @@ FetchStream::RequestDataCallback(JSContext* aCx,
 FetchStream::WriteIntoReadRequestCallback(JSContext* aCx,
                                           JS::HandleObject aStream,
                                           void* aUnderlyingSource,
-                                          uint8_t aFlags, void* aBuffer,
-                                          size_t aLength, size_t* aByteWritten)
+                                          void* aBuffer, size_t aLength,
+                                          size_t* aByteWritten)
 {
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
-  MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
   MOZ_DIAGNOSTIC_ASSERT(aBuffer);
   MOZ_DIAGNOSTIC_ASSERT(aByteWritten);
 
@@ -252,11 +247,9 @@ FetchStream::WriteIntoReadRequestCallback(JSContext* aCx,
 
 /* static */ JS::Value
 FetchStream::CancelCallback(JSContext* aCx, JS::HandleObject aStream,
-                            void* aUnderlyingSource, uint8_t aFlags,
-                            JS::HandleValue aReason)
+                            void* aUnderlyingSource, JS::HandleValue aReason)
 {
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
-  MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
 
   // This is safe because we created an extra reference in FetchStream::Create()
   // that won't be released until FetchStream::FinalizeCallback() is called.
@@ -287,19 +280,16 @@ FetchStream::CancelCallback(JSContext* aCx, JS::HandleObject aStream,
 
 /* static */ void
 FetchStream::ClosedCallback(JSContext* aCx, JS::HandleObject aStream,
-                            void* aUnderlyingSource, uint8_t aFlags)
+                            void* aUnderlyingSource)
 {
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
-  MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
 }
 
 /* static */ void
 FetchStream::ErroredCallback(JSContext* aCx, JS::HandleObject aStream,
-                             void* aUnderlyingSource, uint8_t aFlags,
-                             JS::HandleValue aReason)
+                             void* aUnderlyingSource, JS::HandleValue aReason)
 {
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
-  MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
 
   // This is safe because we created an extra reference in FetchStream::Create()
   // that won't be released until FetchStream::FinalizeCallback() is called.
@@ -321,10 +311,9 @@ FetchStream::ErroredCallback(JSContext* aCx, JS::HandleObject aStream,
 }
 
 void
-FetchStream::FinalizeCallback(void* aUnderlyingSource, uint8_t aFlags)
+FetchStream::FinalizeCallback(void* aUnderlyingSource)
 {
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
-  MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
 
   // This can be called in any thread.
 
