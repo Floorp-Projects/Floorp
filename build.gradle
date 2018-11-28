@@ -58,7 +58,24 @@ buildscript {
         classpath 'org.mozilla.apilint:apilint:0.1.4'
         classpath 'com.android.tools.build:gradle:3.1.4'
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.2'
+        classpath 'org.apache.commons:commons-exec:1.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+// A stream that processes bytes line by line, prepending a tag before sending
+// each line to Gradle's logging.
+class TaggedLogOutputStream extends org.apache.commons.exec.LogOutputStream {
+    String tag
+    Logger logger
+
+    TaggedLogOutputStream(tag, logger) {
+        this.tag = tag
+        this.logger = logger
+    }
+
+    void processLine(String line, int level) {
+        logger.lifecycle("${this.tag} ${line}")
     }
 }
 
@@ -66,33 +83,32 @@ if ('multi' == System.env.AB_CD) {
     // Multi-l10n builds set `AB_CD=multi`, which isn't a valid locale.  This
     // causes the
     //
-    // |mach build| > |mach gradle| > |make gradle-targets| > AndroidManifest.xml > strings.xml > multi/brand.dtd
+    // |mach build| > |mach gradle| > AndroidManifest.xml > strings.xml > multi/brand.dtd
     //
     // dependency chain to fail, since multi isn't a real locale.  To avoid
     // this, if Gradle is invoked with AB_CD=multi, we don't invoke Make at all.
-    task generateCodeAndResources()
+    task machBuildFaster()
 } else if (System.env.IS_LANGUAGE_REPACK == '1') {
     // Single-locale l10n repacks set `IS_LANGUAGE_REPACK=1` and handle resource
     // and code generation themselves.
-    task generateCodeAndResources()
+    task machBuildFaster()
 } else {
-    task generateCodeAndResources(type:Exec) {
-        workingDir "${topobjdir}"
+    task machBuildFaster(type: Exec) {
+        workingDir "${topsrcdir}"
 
-        commandLine mozconfig.substs.GMAKE
-        args '-C'
-        args "${topobjdir}/mobile/android/base"
-        args 'gradle-targets'
+        commandLine mozconfig.substs.PYTHON
+        args "${topsrcdir}/mach"
+        args 'build'
+        args 'faster'
 
-        // Only show the output if something went wrong.
-        ignoreExitValue = true
-        standardOutput = new ByteArrayOutputStream()
-        errorOutput = standardOutput
-        doLast {
-            if (execResult.exitValue != 0) {
-                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
-            }
+        // Add `-v` if we're running under `--info` (or `--debug`).
+        if (project.logger.isEnabled(LogLevel.INFO)) {
+            args '-v'
         }
+
+        // `path` is like `:machBuildFaster`.
+        standardOutput = new TaggedLogOutputStream("${path}>", logger)
+        errorOutput = standardOutput
     }
 }
 
@@ -131,10 +147,10 @@ afterEvaluate {
             return
         }
         android.applicationVariants.all {
-            preBuild.dependsOn rootProject.generateCodeAndResources
+            preBuild.dependsOn rootProject.machBuildFaster
         }
         android.libraryVariants.all {
-            preBuild.dependsOn rootProject.generateCodeAndResources
+            preBuild.dependsOn rootProject.machBuildFaster
         }
     }
 }
