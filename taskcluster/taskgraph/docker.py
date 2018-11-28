@@ -11,28 +11,35 @@ import os
 import tarfile
 from io import BytesIO
 
+from taskgraph.parameters import Parameters
+from taskgraph.optimize import IndexSearch
 from taskgraph.util import docker
 from taskgraph.util.taskcluster import (
-    find_task_id,
     get_artifact_url,
     get_session,
 )
-from taskgraph.util.cached_tasks import cached_index_path
+from taskgraph.generator import load_tasks_for_kind
 from . import GECKO
 
 
 def load_image_by_name(image_name, tag=None):
-    context_path = os.path.join(GECKO, 'taskcluster', 'docker', image_name)
-    context_hash = docker.generate_context_hash(GECKO, context_path, image_name)
-
-    index_path = cached_index_path(
-        trust_domain='gecko',
-        level=3,
-        cache_type='docker-images.v1',
-        cache_name=image_name,
-        digest=context_hash,
+    params = Parameters(
+        level=os.environ.get('MOZ_SCM_LEVEL', '3'),
+        strict=False,
     )
-    task_id = find_task_id(index_path)
+    tasks = load_tasks_for_kind(params, 'docker-image')
+    task = tasks['build-docker-image-{}'.format(image_name)]
+    task_id = IndexSearch().should_replace_task(
+        task, {}, task.optimization.get('index-search', []))
+
+    if task_id in (True, False):
+        print(
+            'Could not find artifacts for a docker image '
+            'named `{image_name}`. Local commits and other changes '
+            'in your checkout may cause this error. Try '
+            'updating to a fresh checkout of mozilla-central '
+            'to download image.'.format(image_name=image_name))
+        return False
 
     return load_image_by_task_id(task_id, tag)
 
