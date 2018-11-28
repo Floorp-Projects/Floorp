@@ -32,6 +32,7 @@ mach_schema = Schema({
 
 @run_job_using("docker-worker", "mach", schema=mach_schema, defaults={'comm-checkout': False})
 @run_job_using("native-engine", "mach", schema=mach_schema, defaults={'comm-checkout': False})
+@run_job_using("generic-worker", "mach", schema=mach_schema, defaults={'comm-checkout': False})
 def docker_worker_mach(config, job, taskdesc):
     run = job['run']
 

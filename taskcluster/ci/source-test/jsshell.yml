@@ -20,11 +20,9 @@ job-defaults:
         kind: test
         tier: 2
     run:
-        using: run-task
+        using: mach
         workdir: /home/cltbld
-        command: >
-            cd $GECKO_PATH &&
-            ./mach jsshell-bench --perfherder={shell} --binary=$JSSHELL {test}
+        mach: jsshell-bench --perfherder={shell} --binary=$JSSHELL {test}
     run-on-projects:
         by-shell:
             sm: ['mozilla-central', 'try', 'integration']

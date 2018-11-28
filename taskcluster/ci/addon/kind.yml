@@ -29,10 +29,8 @@ jobs:
                   name: public/tps.xpi
                   path: /builds/worker/checkouts/gecko/tps-out/tps.xpi
         run:
-            using: run-task
-            command: >
-                cd /builds/worker/checkouts/gecko &&
-                ./mach tps-build --dest tps-out
+            using: mach
+            mach: tps-build --dest tps-out
             sparse-profile: tps
         when:
             files-changed:
