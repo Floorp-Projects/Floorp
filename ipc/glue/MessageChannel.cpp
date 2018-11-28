@@ -1730,8 +1730,9 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
         // plugin.
         {
             NeuteredWindowRegion neuteredRgn(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION);
-            /* We should pump messages at this point to ensure that the IPC peer
-               does not become deadlocked on a pending inter-thread SendMessage() */
+            /* We should pump messages at this point to ensure that the IPC
+               peer does not become deadlocked on a pending inter-thread
+               SendMessage() */
             neuteredRgn.PumpOnce();
         }
 #endif
@@ -1928,8 +1929,8 @@ MessageChannel::ShouldRunMessage(const Message& aMsg)
     // 1. child sends a NOT_NESTED sync message S
     // 2. parent sends a NESTED_INSIDE_SYNC sync message H at the same time
     // 3. parent times out H
-    // 4. child starts processing H and sends a NESTED_INSIDE_SYNC message H' nested
-    //    within the same transaction
+    // 4. child starts processing H and sends a NESTED_INSIDE_SYNC message H'
+    //    nested within the same transaction
     // 5. parent dispatches S and sends reply
     // 6. child asserts because it instead expected a reply to H'.
     //

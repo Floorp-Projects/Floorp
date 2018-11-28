@@ -25,7 +25,7 @@
 }
 
 #tabbrowser-tabs:-moz-lwtheme {
-  --tab-line-color: var(--lwt-accent-color);
+  --tab-line-color: currentColor;
 }
 
 #tabbrowser-tabpanels {

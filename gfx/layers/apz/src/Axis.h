@@ -255,8 +255,9 @@ public:
    * relative.
    *
    * Note: Unlike most other functions in Axis, this functions operates in
-   *       CSS coordinates so there is no confusion as to whether the ParentLayer
-   *       coordinates it operates in are before or after the scale is applied.
+   *       CSS coordinates so there is no confusion as to whether the
+   *       ParentLayer coordinates it operates in are before or after the scale
+   *       is applied.
    */
   CSSCoord ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) const;
 

@@ -58,8 +58,7 @@ function checkModuleTelemetry(additionalExpectedModule = undefined) {
     expectedModules.push(additionalExpectedModule);
   }
   expectedModules.sort();
-  let telemetry = Services.telemetry.snapshotKeyedScalars(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT).parent;
+  let telemetry = Services.telemetry.getSnapshotForKeyedScalars("main", false).parent;
   let moduleTelemetry = telemetry["security.pkcs11_modules_loaded"];
   let actualModules = [];
   Object.keys(moduleTelemetry).forEach((key) => {

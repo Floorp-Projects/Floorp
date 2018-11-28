@@ -28,11 +28,13 @@ struct RepaintRequest {
   friend struct IPC::ParamTraits<mozilla::layers::RepaintRequest>;
 public:
 
+  // clang-format off
   MOZ_DEFINE_ENUM_WITH_BASE_AT_CLASS_SCOPE(
     ScrollOffsetUpdateType, uint8_t, (
       eNone,             // The default; the scroll offset was not updated.
       eUserAction        // The scroll offset was updated by APZ.
   ));
+  // clang-format on
 
   RepaintRequest()
     : mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID)

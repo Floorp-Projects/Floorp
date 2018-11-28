@@ -142,9 +142,12 @@ public:
  * For N-bit signed integer types, this is equivalent to adding the two numbers
  * wrapped to unsigned, then wrapping the sum mod 2**N to the signed range:
  *
- *   WrappingAdd(int16_t(32767), int16_t(3)) is -32766 ((32770 mod 2**16) - 2**16);
- *   WrappingAdd(int8_t(-128), int8_t(-128)) is 0 (256 mod 2**8);
- *   WrappingAdd(int32_t(-42), int32_t(-17)) is -59 ((8589934533 mod 2**32) - 2**32).
+ *   WrappingAdd(int16_t(32767), int16_t(3)) is
+ *     -32766 ((32770 mod 2**16) - 2**16);
+ *   WrappingAdd(int8_t(-128), int8_t(-128)) is
+ *     0 (256 mod 2**8);
+ *   WrappingAdd(int32_t(-42), int32_t(-17)) is
+ *     -59 ((8589934533 mod 2**32) - 2**32).
  *
  * There's no equivalent to this operation in C++, as C++ signed addition that
  * overflows has undefined behavior.  But it's how such addition *tends* to
@@ -253,7 +256,8 @@ public:
  * numbers wrapped to unsigned, then wrapping the product mod 2**N to the signed
  * range:
  *
- *   WrappingMultiply(int16_t(-456), int16_t(123)) is 9448 ((-56088 mod 2**16) + 2**16);
+ *   WrappingMultiply(int16_t(-456), int16_t(123)) is
+ *     9448 ((-56088 mod 2**16) + 2**16);
  *   WrappingMultiply(int32_t(-7), int32_t(-9)) is 63 (63 mod 2**32);
  *   WrappingMultiply(int8_t(16), int8_t(24)) is -128 ((384 mod 2**8) - 2**8);
  *   WrappingMultiply(int8_t(16), int8_t(255)) is -16 ((4080 mod 2**8) - 2**8).
