@@ -24,8 +24,11 @@ public:
 
   mozilla::ipc::IPCResult QueryReputation(nsIURI* aURI);
 
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+
 private:
   ~LoginReputationParent() = default;
+  bool mIPCOpen = true;
 };
 
 } // namespace dom

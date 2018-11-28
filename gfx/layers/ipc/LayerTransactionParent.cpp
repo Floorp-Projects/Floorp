@@ -58,6 +58,7 @@ LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
   , mVsyncRate(aVsyncRate)
   , mPendingTransaction{0}
   , mDestroyed(false)
+  , mIPCOpen(false)
   , mUpdateHitTestingTree(false)
 {
   MOZ_ASSERT(mId.IsValid());
@@ -883,7 +884,7 @@ LayerTransactionParent::AllocShmem(size_t aSize,
                                    ipc::SharedMemory::SharedMemoryType aType,
                                    ipc::Shmem* aShmem)
 {
-  if (!IPCOpen() || mDestroyed) {
+  if (!mIPCOpen || mDestroyed) {
     return false;
   }
   return PLayerTransactionParent::AllocShmem(aSize, aType, aShmem);
@@ -894,7 +895,7 @@ LayerTransactionParent::AllocUnsafeShmem(size_t aSize,
                                          ipc::SharedMemory::SharedMemoryType aType,
                                          ipc::Shmem* aShmem)
 {
-  if (!IPCOpen() || mDestroyed) {
+  if (!mIPCOpen || mDestroyed) {
     return false;
   }
 
@@ -904,7 +905,7 @@ LayerTransactionParent::AllocUnsafeShmem(size_t aSize,
 void
 LayerTransactionParent::DeallocShmem(ipc::Shmem& aShmem)
 {
-  if (!IPCOpen() || mDestroyed) {
+  if (!mIPCOpen || mDestroyed) {
     return;
   }
   PLayerTransactionParent::DeallocShmem(aShmem);

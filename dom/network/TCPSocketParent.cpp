@@ -62,6 +62,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPSocketParentBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketParentBase)
 
 TCPSocketParentBase::TCPSocketParentBase()
+: mIPCOpen(false)
 {
 }
 
@@ -72,19 +73,23 @@ TCPSocketParentBase::~TCPSocketParentBase()
 void
 TCPSocketParentBase::ReleaseIPDLReference()
 {
+  MOZ_ASSERT(mIPCOpen);
+  mIPCOpen = false;
   this->Release();
 }
 
 void
 TCPSocketParentBase::AddIPDLReference()
 {
+  MOZ_ASSERT(!mIPCOpen);
+  mIPCOpen = true;
   this->AddRef();
 }
 
 NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketParent::Release(void)
 {
   nsrefcnt refcnt = TCPSocketParentBase::Release();
-  if (refcnt == 1 && IPCOpen()) {
+  if (refcnt == 1 && mIPCOpen) {
     mozilla::Unused << PTCPSocketParent::SendRequestDelete();
     return 1;
   }
@@ -325,7 +330,7 @@ TCPSocketParent::FireStringDataEvent(const nsACString& aData, TCPReadyState aRea
 void
 TCPSocketParent::SendEvent(const nsAString& aType, CallbackData aData, TCPReadyState aReadyState)
 {
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     mozilla::Unused << PTCPSocketParent::SendCallback(nsString(aType),
                                                       aData,
                                                       static_cast<uint32_t>(aReadyState));

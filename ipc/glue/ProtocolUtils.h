@@ -322,15 +322,6 @@ public:
 
     virtual int32_t GetProtocolTypeId() = 0;
 
-    // Returns |true| if the IPC channel is currently open, and |false|
-    // otherwise.
-    bool IPCOpen() const { return mIPCOpen; }
-
-    // This virtual method is called on actors as they are being destroyed from
-    // IPC's point of view. After ActorDestroy is called, IPC will free its
-    // reference to the actor.
-    virtual void ActorDestroy(ActorDestroyReason aWhy) {}
-
     int32_t Id() const { return mId; }
     IProtocol* Manager() const { return mManager; }
 
@@ -359,7 +350,6 @@ protected:
     IProtocol(Side aSide, UniquePtr<ProtocolState> aState)
         : mId(0)
         , mSide(aSide)
-        , mIPCOpen(false)
         , mManager(nullptr)
         , mState(std::move(aState))
     {}
@@ -378,28 +368,12 @@ protected:
     void SetManagerAndRegister(IProtocol* aManager);
     void SetManagerAndRegister(IProtocol* aManager, int32_t aId);
 
-    // This method marks the channel as closed. Actors have this called when
-    // |DestroySubtree| is called due to the underlying channel being closed, or
-    // the actor's __delete__ method being called.
-    void ActorDestroyInternal(ActorDestroyReason aWhy) {
-        mIPCOpen = false;
-        ActorDestroy(aWhy);
-    }
-
-    // This method marks the channel as opened. Managed actors have this set
-    // when they are registered with their manager, and toplevel actors set this
-    // when opening the underlying MessageChannel.
-    void ActorOpenedInternal() {
-        mIPCOpen = true;
-    }
-
     static const int32_t kNullActorId = 0;
     static const int32_t kFreedActorId = 1;
 
 private:
     int32_t mId;
     Side mSide;
-    bool mIPCOpen;
     IProtocol* mManager;
     UniquePtr<ProtocolState> mState;
 };
@@ -538,15 +512,6 @@ public:
 
     bool OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
                           MessageLoop* aThread = nullptr,
-                          mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
-
-    // Open a toplevel actor such that both ends of the actor's channel are on
-    // the same thread. This method should be called on the thread to perform
-    // the link.
-    //
-    // WARNING: Attempting to send a sync or intr message on the same thread
-    // will crash.
-    bool OpenOnSameThread(MessageChannel* aChannel,
                           mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
     void Close();

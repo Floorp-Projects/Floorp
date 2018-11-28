@@ -34,6 +34,7 @@ protected:
   virtual ~TCPServerSocketChildBase();
 
   RefPtr<TCPServerSocket> mServerSocket;
+  bool mIPCOpen;
 };
 
 class TCPServerSocketChild : public mozilla::net::PTCPServerSocketChild

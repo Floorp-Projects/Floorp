@@ -29,6 +29,7 @@ protected:
   UDPSocketChildBase();
   virtual ~UDPSocketChildBase();
   nsCOMPtr<nsIUDPSocketInternal> mSocket;
+  bool mIPCOpen;
 };
 
 class UDPSocketChild : public mozilla::net::PUDPSocketChild

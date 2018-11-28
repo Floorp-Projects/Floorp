@@ -17,6 +17,7 @@ NS_IMPL_ISUPPORTS_INHERITED(FileChannelChild, nsFileChannel, nsIChildChannel)
 
 FileChannelChild::FileChannelChild(nsIURI *uri)
   : nsFileChannel(uri)
+  , mIPCOpen(false)
 {
 }
 
@@ -54,7 +55,7 @@ FileChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
     return rv;
   }
 
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     Unused << Send__delete__(this);
   }
 
@@ -65,11 +66,14 @@ void
 FileChannelChild::AddIPDLReference()
 {
   AddRef();
+  mIPCOpen = true;
 }
 
 void
 FileChannelChild::ActorDestroy(ActorDestroyReason why)
 {
+  MOZ_ASSERT(mIPCOpen);
+  mIPCOpen = false;
   Release();
 }
 

@@ -63,19 +63,6 @@ if CONFIG['WRAP_STL_INCLUDES']:
         stl.flags = [output_dir, stl_compiler, template_file]
         stl.flags.extend(stl_headers)
 
-    # Wrap <windows.h> to make it easier to use correctly
-    # NOTE: If we aren't wrapping STL includes, we're building part of the browser
-    # which won't need this wrapper, such as L10N. Just don't try to generate the
-    # wrapper in that case.
-    if CONFIG['OS_ARCH'] == 'WINNT':
-        GENERATED_FILES += ['../dist/stl_wrappers/windows.h']
-        windows_h = GENERATED_FILES['../dist/stl_wrappers/windows.h']
-        windows_h.script = 'make-windows-h-wrapper.py:generate'
-        windows_h.inputs = ['windows-h-constant.decls.h',
-                            'windows-h-unicode.decls.h',
-                            'windows-h-wrapper.template.h']
-        windows_h.flags = [stl_compiler]
-
 if CONFIG['WRAP_SYSTEM_INCLUDES']:
     include('system-headers.mozbuild')
     output_dir = '../dist/system_wrappers'

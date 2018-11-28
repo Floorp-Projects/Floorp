@@ -34,6 +34,7 @@ private:
   // Sends data to the parent process in 256k chunks.
   bool WriteDataInChunks(const nsDependentCSubstring& data);
 
+  bool mIPCOpen;
   // If there was an error opening the output stream or writing to it on the
   // parent side, this will be set to the error code. We check it before we
   // write so we can report an error to the consumer.
