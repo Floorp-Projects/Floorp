@@ -314,11 +314,9 @@ const JSPropertySpec WeakMapObject::properties[] = {
 };
 
 const JSFunctionSpec WeakMapObject::methods[] = {
-    // clang-format off
     JS_FN("has", has, 1, 0),
     JS_FN("get", get, 1, 0),
     JS_FN("delete", delete_, 1, 0),
     JS_FN("set", set, 2, 0),
     JS_FS_END
-    // clang-format on
 };

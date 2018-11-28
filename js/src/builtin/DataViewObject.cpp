@@ -928,7 +928,6 @@ const Class DataViewObject::protoClass_ = {
 };
 
 const JSFunctionSpec DataViewObject::methods[] = {
-    // clang-format off
     JS_FN("getInt8",    DataViewObject::fun_getInt8,      1,0),
     JS_FN("getUint8",   DataViewObject::fun_getUint8,     1,0),
     JS_FN("getInt16",   DataViewObject::fun_getInt16,     1,0),
@@ -946,7 +945,6 @@ const JSFunctionSpec DataViewObject::methods[] = {
     JS_FN("setFloat32", DataViewObject::fun_setFloat32,   2,0),
     JS_FN("setFloat64", DataViewObject::fun_setFloat64,   2,0),
     JS_FS_END
-    // clang-format on
 };
 
 const JSPropertySpec DataViewObject::properties[] = {
