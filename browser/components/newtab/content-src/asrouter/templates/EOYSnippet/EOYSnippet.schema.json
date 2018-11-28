@@ -25,11 +25,13 @@
     },
     "currency_code": {
       "type": "string",
-      "description": "The code for the currency. Examle gbp, cad, usd."
+      "description": "The code for the currency. Examle gbp, cad, usd.",
+      "default": "usd"
     },
     "locale": {
       "type": "string",
-      "description": "String for the locale code."
+      "description": "String for the locale code.",
+      "default": "en-US"
     },
     "text": {
       "allOf": [
@@ -67,7 +69,8 @@
     },
     "selected_button": {
       "type": "string",
-      "description": "Default donation_amount_second. Donation amount button that's selected by default."
+      "description": "Default donation_amount_second. Donation amount button that's selected by default.",
+      "default": "donation_amount_second"
     },
     "icon": {
       "type": "string",
@@ -97,7 +100,8 @@
     },
     "monthly_checkbox_label_text": {
       "type": "string",
-      "description": "Label text for monthly checkbox."
+      "description": "Label text for monthly checkbox.",
+      "default": "Make my donation monthly"
     },
     "test": {
       "type": "string",

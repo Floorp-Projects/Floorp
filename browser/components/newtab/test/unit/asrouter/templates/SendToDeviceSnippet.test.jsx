@@ -41,7 +41,6 @@ describe("SendToDeviceSnippet", () => {
       onDismiss: sandbox.stub(),
       sendUserActionTelemetry: sandbox.stub(),
       onAction: sandbox.stub(),
-      form_method: "POST",
     };
     const comp = mount(<SendToDeviceSnippet {...props} />);
     // Check schema with the final props the component receives (including defaults)
@@ -73,10 +72,10 @@ describe("SendToDeviceSnippet", () => {
     // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
     const {props} = wrapper.children().get(0);
 
-    assert.propertyVal(props.content, "scene1_button_label", "Learn More");
+    assert.propertyVal(props.content, "scene1_button_label", "Learn more");
     assert.propertyVal(props.content, "scene2_dismiss_button_text", "Dismiss");
     assert.propertyVal(props.content, "scene2_button_label", "Send");
-    assert.propertyVal(props.content, "scene2_input_placeholder", "YOUR EMAIL HERE");
+    assert.propertyVal(props.content, "scene2_input_placeholder", "Your email here");
     assert.propertyVal(props.content, "locale", "en-US");
     assert.propertyVal(props.content, "country", "us");
     assert.propertyVal(props.content, "include_sms", false);

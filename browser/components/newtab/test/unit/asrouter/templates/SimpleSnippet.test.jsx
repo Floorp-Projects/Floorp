@@ -48,7 +48,7 @@ describe("SimpleSnippet", () => {
   });
   it("should render .title", () => {
     const wrapper = mountAndCheckProps({title: "Foo"});
-    assert.equal(wrapper.find(".title").text(), "Foo");
+    assert.equal(wrapper.find(".title").text().trim(), "Foo");
   });
   it("should render .icon", () => {
     const wrapper = mountAndCheckProps({icon: "data:image/gif;base64,R0lGODl"});
@@ -65,7 +65,7 @@ describe("SimpleSnippet", () => {
     button.simulate("click");
 
     assert.equal(button.text(), "Click here");
-    assert.equal(button.prop("className"), "ASRouterButton");
+    assert.equal(button.prop("className"), "ASRouterButton secondary");
     assert.calledOnce(wrapper.props().onAction);
     assert.calledWithExactly(wrapper.props().onAction, {type: "OPEN_APPLICATIONS_MENU", data: {args: "appMenu"}});
   });

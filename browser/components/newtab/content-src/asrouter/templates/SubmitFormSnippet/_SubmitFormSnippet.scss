@@ -6,6 +6,7 @@
   .disclaimerText {
     margin: 20px 0 0;
     font-size: 12px;
+    color: var(--newtab-text-secondary-color);
   }
 
   p {
@@ -19,15 +20,16 @@
       font-size: 16px;
       margin-bottom: 20px;
     }
+
+    .scene2Title {
+      font-size: 24px;
+      display: block;
+    }
   }
 
   .ASRouterButton {
     &.primary {
       flex: 1 1 0;
-
-      &[type='submit'] {
-        font-weight: normal;
-      }
     }
   }
 
@@ -43,7 +45,7 @@
 
   .scene2Title {
     font-size: inherit;
-    margin: 0;
+    margin: 0 0 10px;
     font-weight: bold;
     display: inline;
   }
@@ -66,10 +68,6 @@
     color: var(--newtab-text-secondary-color);
     margin-top: 10px;
     flex: 0 0 100%;
-
-    span {
-      vertical-align: top;
-    }
   }
 
   .innerWrapper {
@@ -92,6 +90,10 @@
       max-width: 768px;
       width: 100%;
       text-align: right;
+
+      [dir='rtl'] & {
+        text-align: left;
+      }
     }
   }
 
@@ -104,6 +106,13 @@
       height: 100%;
       font-size: 14px;
       width: 50%;
+
+      &.clean {
+        &:invalid,
+        &:required {
+          box-shadow: none;
+        }
+      }
 
       &:focus {
         border: $input-border-active;

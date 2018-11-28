@@ -1,4 +1,5 @@
 import React from "react";
+import schema from "./EOYSnippet.schema.json";
 import {SimpleSnippet} from "../SimpleSnippet/SimpleSnippet";
 
 class EOYSnippetBase extends React.PureComponent {
@@ -63,7 +64,7 @@ class EOYSnippetBase extends React.PureComponent {
       <input type="hidden" name="frequency" value="single" />
       <input type="hidden" name="currency" value={this.props.content.currency_code} />
       <input type="hidden" name="presets" value={fieldNames.map(field => this.props.content[`donation_amount_${field}`])} />
-      <button style={btnStyle} type="submit" className="ASRouterButton donation-form-url">{this.props.content.button_label}</button>
+      <button style={btnStyle} type="submit" className="ASRouterButton primary donation-form-url">{this.props.content.button_label}</button>
     </form>);
   }
 
@@ -83,10 +84,10 @@ class EOYSnippetBase extends React.PureComponent {
 
 export const EOYSnippet = props => {
   const extendedContent = {
-    monthly_checkbox_label_text: "Make my donation monthly",
-    locale: "en-US",
-    currency_code: "usd",
-    selected_button: "donation_amount_second",
+    monthly_checkbox_label_text: schema.properties.monthly_checkbox_label_text.default,
+    locale: schema.properties.locale.default,
+    currency_code: schema.properties.currency_code.default,
+    selected_button: schema.properties.selected_button.default,
     ...props.content,
   };
 
