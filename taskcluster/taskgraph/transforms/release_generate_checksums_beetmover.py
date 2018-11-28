@@ -9,9 +9,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
+from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
+                                         generate_beetmover_upstream_artifacts,
+                                         get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
                                          get_worker_type_for_scope,
+                                         should_use_artifact_map,
                                          )
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -65,6 +68,7 @@ def make_task_description(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
         attributes = copy_attributes_from_dependent_job(dep_job)
+        attributes.update(job.get('attributes', {}))
 
         treeherder = job.get('treeherder', {})
         treeherder.setdefault('symbol', 'BM-SGenChcks')
@@ -121,7 +125,7 @@ def generate_upstream_artifacts(job, signing_task_ref, build_task_ref):
         "paths": ["{}/{}".format(artifact_prefix, p)
                   for p in build_mapping],
         "locale": "en-US",
-        }, {
+    }, {
         "taskId": {"task-reference": signing_task_ref},
         "taskType": "signing",
         "paths": ["{}/{}".format(artifact_prefix, p)
@@ -154,10 +158,25 @@ def make_task_worker(config, jobs):
         worker = {
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
-            'upstream-artifacts': generate_upstream_artifacts(
+        }
+
+        platform = job["attributes"]["build_platform"]
+        # Works with Firefox/Devedition. Commented for migration.
+        if should_use_artifact_map(platform, config.params['project']):
+            upstream_artifacts = generate_beetmover_upstream_artifacts(
+                job, platform=None, locale=None
+            )
+        else:
+            upstream_artifacts = generate_upstream_artifacts(
                 job, signing_task_ref, build_task_ref
             )
-        }
+
+        worker['upstream-artifacts'] = upstream_artifacts
+
+        # Works with Firefox/Devedition. Commented for migration.
+        if should_use_artifact_map(platform, config.params['project']):
+            worker['artifact-map'] = generate_beetmover_artifact_map(
+                config, job, platform=platform)
 
         job["worker"] = worker
 

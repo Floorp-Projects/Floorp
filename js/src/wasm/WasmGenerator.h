@@ -196,6 +196,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool linkCallSites();
     void noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRange);
     bool linkCompiledCode(const CompiledCode& code);
+    bool locallyCompileCurrentTask();
     bool finishTask(CompileTask* task);
     bool launchBatchCompile();
     bool finishOutstandingTask();

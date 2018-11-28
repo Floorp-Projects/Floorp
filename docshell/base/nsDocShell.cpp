@@ -13282,18 +13282,43 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
     nsAutoString referrer;
     aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, referrer);
     nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(referrer);
+
+    bool targetBlank = aTargetSpec.LowerCaseEqualsLiteral("_blank");
+    bool explicitOpenerSet = false;
+
+    // The opener behaviour follows a hierarchy, such that if a higher priority
+    // behaviour is specified, it always takes priority. That priority is
+    // currently: norefrerer > noopener > opener > default
+
     while (tok.hasMoreTokens()) {
       const nsAString& token = tok.nextToken();
       if (token.LowerCaseEqualsLiteral("noreferrer")) {
         flags |= INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER |
                  INTERNAL_LOAD_FLAGS_NO_OPENER;
-        // We now have all the flags we could possibly have, so just stop.
+        // noreferrer cannot be overwritten by a 'rel=opener'.
+        explicitOpenerSet = true;
         break;
       }
+
       if (token.LowerCaseEqualsLiteral("noopener")) {
         flags |= INTERNAL_LOAD_FLAGS_NO_OPENER;
+        explicitOpenerSet = true;
+      }
+
+      if (targetBlank &&
+          StaticPrefs::dom_targetBlankNoOpener_enabled() &&
+          token.LowerCaseEqualsLiteral("opener") &&
+          !explicitOpenerSet) {
+        explicitOpenerSet = true;
       }
     }
+
+    if (targetBlank &&
+        StaticPrefs::dom_targetBlankNoOpener_enabled() &&
+        !explicitOpenerSet) {
+      flags |= INTERNAL_LOAD_FLAGS_NO_OPENER;
+    }
+
     if (aNoOpenerImplied) {
       flags |= INTERNAL_LOAD_FLAGS_NO_OPENER;
     }

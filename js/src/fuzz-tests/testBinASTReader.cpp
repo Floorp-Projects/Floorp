@@ -10,7 +10,7 @@
 
 #include "jsapi.h"
 
-#include "frontend/BinSource.h"
+#include "frontend/BinASTParser.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
 #include "frontend/Parser.h"

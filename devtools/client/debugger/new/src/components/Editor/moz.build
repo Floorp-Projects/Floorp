@@ -20,7 +20,6 @@ DebuggerModules(
     'GutterMenu.js',
     'HighlightLine.js',
     'HighlightLines.js',
-    'HitMarker.js',
     'index.js',
     'SearchBar.js',
     'Tab.js',

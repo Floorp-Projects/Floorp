@@ -15,7 +15,7 @@ parser:
         append: |
             result->appendWithoutOrderAssumption(item);
 
-# Rules for generating BinSource-auto.cpp
+# Rules for generating BinASTParser.cpp
 cpp:
     header: |
         /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -27,6 +27,8 @@ cpp:
         // To generate this file, see the documentation in
         // js/src/frontend/binsource/README.md.
 
+        #include "frontend/BinASTParser.h"
+
         #include "mozilla/ArrayUtils.h"
         #include "mozilla/Casting.h"
         #include "mozilla/Maybe.h"
@@ -35,7 +37,6 @@ cpp:
         #include "mozilla/Vector.h"
 
         #include "frontend/BinSource-macros.h"
-        #include "frontend/BinSource.h"
         #include "frontend/BinTokenReaderTester.h"
         #include "frontend/FullParseHandler.h"
         #include "frontend/ParseNode.h"
@@ -70,7 +71,7 @@ cpp:
 
 
 hpp:
-    # Rules for generating BinSource-class.h
+    # Rules for generating BinASTParser.h
     class:
         header: |
             /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -82,8 +83,150 @@ hpp:
             // To generate this file, see the documentation in
             // js/src/frontend/binsource/README.md.
 
-            // This file is meant to be included from the declaration
-            // of class `BinASTParser`. The include may be public or private.
+            #ifndef frontend_BinASTParser_h
+            #define frontend_BinASTParser_h
+
+            #include "mozilla/Maybe.h"
+
+            #include "frontend/BCEParserHandle.h"
+            #include "frontend/BinASTParserPerTokenizer.h"
+            #include "frontend/BinToken.h"
+            #include "frontend/BinTokenReaderMultipart.h"
+            #include "frontend/BinTokenReaderTester.h"
+            #include "frontend/FullParseHandler.h"
+            #include "frontend/ParseContext.h"
+            #include "frontend/ParseNode.h"
+            #include "frontend/SharedContext.h"
+
+            #include "js/CompileOptions.h"
+            #include "js/GCHashTable.h"
+            #include "js/GCVector.h"
+            #include "js/Result.h"
+
+            namespace js {
+            namespace frontend {
+
+            template<typename Tok>
+            class BinASTParser : public BinASTParserPerTokenizer<Tok>
+            {
+              public:
+                using Base = BinASTParserPerTokenizer<Tok>;
+
+                using Tokenizer = Tok;
+
+                using BinFields = typename Tokenizer::BinFields;
+                using AutoList = typename Tokenizer::AutoList;
+                using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
+                using AutoTuple = typename Tokenizer::AutoTuple;
+                using Chars = typename Tokenizer::Chars;
+
+              public:
+                // Auto-generated types.
+                using AssertedDeclaredKind = binast::AssertedDeclaredKind;
+                using BinaryOperator = binast::BinaryOperator;
+                using CompoundAssignmentOperator = binast::CompoundAssignmentOperator;
+                using UnaryOperator = binast::UnaryOperator;
+                using UpdateOperator = binast::UpdateOperator;
+                using VariableDeclarationKind = binast::VariableDeclarationKind;
+
+              public:
+                // BinASTParserPerTokenizer types.
+                using AssertedScopeKind = typename Base::AssertedScopeKind;
+
+              public:
+                BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
+                             const JS::ReadOnlyCompileOptions& options,
+                             HandleScriptSourceObject sourceObject,
+                             Handle<LazyScript*> lazyScript = nullptr)
+                    : BinASTParserPerTokenizer<Tok>(cx, alloc, usedNames, options, sourceObject, lazyScript)
+                {}
+                ~BinASTParser()
+                {}
+
+              protected:
+                // BinASTParserBase fields.
+                using Base::cx_;
+
+                using Base::alloc_;
+                using Base::usedNames_;
+
+                using Base::sourceObject_;
+                using Base::parseContext_;
+                using Base::factory_;
+
+              protected:
+                // BinASTParserPerTokenizer types.
+                using AutoVariableDeclarationKind = typename Base::AutoVariableDeclarationKind;
+              protected:
+                // BinASTParserPerTokenizer fields.
+                using Base::tokenizer_;
+                using Base::variableDeclarationKind_;
+
+              protected:
+                // BinASTParserPerTokenizer methods.
+                using Base::raiseInvalidClosedVar;
+                using Base::raiseMissingVariableInAssertedScope;
+                using Base::raiseMissingDirectEvalInAssertedScope;
+                using Base::raiseInvalidKind;
+                using Base::raiseInvalidVariant;
+                using Base::raiseMissingField;
+                using Base::raiseEmpty;
+                using Base::raiseOOM;
+                using Base::raiseError;
+
+                using Base::makeEmptyFunctionNode;
+                using Base::buildFunction;
+                using Base::buildFunctionBox;
+                using Base::addScopeName;
+                using Base::captureFunctionName;
+
+                using Base::getDeclaredScope;
+                using Base::getBoundScope;
+                using Base::checkBinding;
+                using Base::checkPositionalParameterIndices;
+
+                using Base::checkFunctionLength;
+                using Base::checkClosedVars;
+
+                using Base::prependDirectivesToBody;
+
+                using Base::forceStrictIfNecessary;
+
+              public:
+        footer: |
+            };
+
+            extern template class BinASTParser<BinTokenReaderMultipart>;
+            extern template class BinASTParser<BinTokenReaderTester>;
+
+            } // namespace frontend
+            } // namespace js
+
+            #endif // frontend_BinASTParser_h
+
+    enums:
+        header: |
+            /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+            * vim: set ts=8 sts=4 et sw=4 tw=99:
+            * This Source Code Form is subject to the terms of the Mozilla Public
+            * License, v. 2.0. If a copy of the MPL was not distributed with this
+            * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+            // To generate this file, see the documentation in
+            // js/src/frontend/binsource/README.md.
+
+            #ifndef frontend_BinASTEnum_h
+            #define frontend_BinASTEnum_h
+
+            namespace js {
+            namespace frontend {
+            namespace binast {
+        footer: |
+            } // namespace binast
+            } // namespace frontend
+            } // namespace js
+
+            #endif // frontend_BinASTEnum_h
 
     # Rules for generating BinToken.h
     tokens:
@@ -120,14 +263,14 @@ hpp:
                  *
                  * (sorted by alphabetical order)
                  */
-        field:
+        variants:
             doc: |
                 /**
                  * The different variants of Binary AST string enums, as per
                  * the specifications of Binary AST, as a single macro and
                  * `enum class`.
                  *
-                 * Separate enum classes are also defined in BinSource-auto.h.
+                 * Separate enum classes are also defined in BinASTParser.h.
                  *
                  * Usage:
                  *
@@ -700,14 +843,14 @@ GetterContents:
     fields:
         body:
             before: |
-                BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
+                BINJS_TRY_DECL(params, this->template new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
 
 SetterContents:
     inherits: FunctionExpressionContents
     fields:
         param:
             after: |
-              BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
+              BINJS_TRY_DECL(params, this->template new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
               factory_.addList(params, param);
               MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
 
@@ -999,7 +1142,7 @@ ListOfParameter:
     type-ok:
         ListNode*
     init: |
-        BINJS_TRY_DECL(result, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, this->template new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
     append:
         factory_.addList(/* list = */ result, /* kid = */ item);
 
@@ -1016,7 +1159,7 @@ ListOfStatement:
 #    type-ok:
 #        ListNode*
 #    init:
-#        BINJS_TRY_DECL(result, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos()));
+#        BINJS_TRY_DECL(result, this->template new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos()));
 #    append:
 #        result->appendWithoutOrderAssumption(item);
 
