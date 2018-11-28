@@ -26,7 +26,7 @@
   After my initial load, "allow-same-origin" is removed and then I open file_iframe_sandbox_k_if9.html
   in 3 different ways, which attemps to call a function in my parent.
   This should succeed since the new sandbox flags shouldn't have taken affect on me until I'm reloaded.
-  <a href="file_iframe_sandbox_k_if9.html" target="_blank" id="target_blank_if9">open window</a>
+  <a href="file_iframe_sandbox_k_if9.html" target="_blank" id="target_blank_if9" rel="opener">open window</a>
   <a href="file_iframe_sandbox_k_if9.html" target="BC766282_if9" id="target_BC766282_if9">open window</a>
 
   Now navigate to file_iframe_sandbox_k_if1.html to do tests for a sandbox opening a window
