@@ -1087,9 +1087,10 @@ public abstract class GeckoApp extends GeckoActivity
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
 
-        final GeckoSession session = new GeckoSession();
-        session.getSettings().setString(GeckoSessionSettings.CHROME_URI,
-                                        "chrome://browser/content/browser.xul");
+        final GeckoSession session = new GeckoSession(
+                new GeckoSessionSettings.Builder()
+                        .chromeUri("chrome://browser/content/browser.xul")
+                        .build());
         session.setContentDelegate(this);
 
         // If the view already has a session, we need to ensure it is closed.
