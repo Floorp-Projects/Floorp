@@ -495,12 +495,17 @@ class DesktopInstance(GeckoInstance):
     desktop_prefs = {
         # Disable Firefox old build background check
         "app.update.checkInstallTime": False,
-        # Disable application updates
-        "app.update.disabledForTesting": True,
-        "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer": True,
-        # app.update.enabled is being removed. Once Firefox 62 becomes stable,
-        # the line below can be removed as well.
-        "app.update.enabled": False,
+
+        # Disable automatically upgrading Firefox
+        # Bug 1508726: "disabledForTesting" has no effect in Marionette yet.
+        # As such automatically downloading updates, and installing those
+        # needs to be prevented. Sadly "app.update.auto" will not be enough
+        # anymore, because Windows has changed in how it handles updates. But
+        # at least we can workaround the problem on other platforms.
+        #
+        # DISCLAIMER: Don't remove or change this line until bug 1508726 has
+        # been fixed.
+        "app.update.auto": False,
 
         # Don't show the content blocking introduction panel
         # We use a larger number than the default 22 to have some buffer

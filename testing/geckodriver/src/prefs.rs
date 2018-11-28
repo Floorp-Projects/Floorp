@@ -21,7 +21,15 @@ lazy_static! {
         ("app.update.checkInstallTime", Pref::new(false)),
 
         // Disable automatically upgrading Firefox
-        ("app.update.disabledForTesting", Pref::new(true)),
+        // Bug 1508726: "disabledForTesting" has no effect in Marionette yet.
+        // As such automatically downloading updates, and installing those
+        // needs to be prevented. Sadly "app.update.auto" will not be enough
+        // anymore, because Windows has changed in how it handles updates. But
+        // at least we can workaround the problem on other platforms.
+        //
+        // DISCLAIMER: Don't remove or change this line until bug 1508726 has
+        // been fixed.
+        ("app.update.auto", Pref::new(false)),
 
         // Enable the dump function, which sends messages to the system
         // console
