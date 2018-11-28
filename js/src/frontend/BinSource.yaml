@@ -15,7 +15,7 @@ parser:
         append: |
             result->appendWithoutOrderAssumption(item);
 
-# Rules for generating BinSource-auto.cpp
+# Rules for generating BinASTParser.cpp
 cpp:
     header: |
         /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -34,8 +34,8 @@ cpp:
         #include "mozilla/PodOperations.h"
         #include "mozilla/Vector.h"
 
+        #include "frontend/BinASTParserPerTokenizer.h"
         #include "frontend/BinSource-macros.h"
-        #include "frontend/BinSource.h"
         #include "frontend/BinTokenReaderTester.h"
         #include "frontend/FullParseHandler.h"
         #include "frontend/ParseNode.h"
@@ -151,7 +151,7 @@ hpp:
                  * the specifications of Binary AST, as a single macro and
                  * `enum class`.
                  *
-                 * Separate enum classes are also defined in BinSource-auto.h.
+                 * Separate enum classes are also defined in BinASTParser.h.
                  *
                  * Usage:
                  *

@@ -16,8 +16,8 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Vector.h"
 
+#include "frontend/BinASTParserPerTokenizer.h"
 #include "frontend/BinSource-macros.h"
-#include "frontend/BinSource.h"
 #include "frontend/BinTokenReaderTester.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseNode.h"
