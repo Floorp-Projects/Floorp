@@ -29,7 +29,8 @@ class WorkerPrivate;
 //   1. Create a Promise on the worker thread and return it to the content
 //      script:
 //
-//        RefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+//        RefPtr<Promise> promise =
+//          Promise::Create(workerPrivate->GlobalScope(), aRv);
 //        if (aRv.Failed()) {
 //          return nullptr;
 //        }
@@ -79,7 +80,8 @@ class WorkerPrivate;
 //      worker.
 //
 //        RefPtr<FinishTaskWorkerRunnable> runnable =
-//          new FinishTaskWorkerRunnable(proxy->GetWorkerPrivate(), proxy, result);
+//          new FinishTaskWorkerRunnable(proxy->GetWorkerPrivate(), proxy,
+//                                       result);
 //        if (!r->Dispatch()) {
 //          // Worker is alive but not Running any more, so the Promise can't
 //          // be resolved, give up. The proxy will get Release()d at some

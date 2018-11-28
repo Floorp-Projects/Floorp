@@ -32,7 +32,7 @@
 /**
  * This is the most braindead implementation of a personal dictionary possible.
  * There is not much complexity needed, though.  It could be made much faster,
- *  and probably should, but I don't see much need for more in terms of interface.
+ * and probably should, but I don't see much need for more in terms of interface.
  *
  * Allowing personal words to be associated with only certain dictionaries maybe.
  *
