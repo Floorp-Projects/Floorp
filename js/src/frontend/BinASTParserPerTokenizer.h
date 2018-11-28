@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_BinSource_h
-#define frontend_BinSource_h
+#ifndef frontend_BinASTParserPerTokenizer_h
+#define frontend_BinASTParserPerTokenizer_h
 
 /**
  * A Binary AST parser.
@@ -129,7 +129,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     };
 
     // Auto-generated methods
-#include "frontend/BinSource-auto.h"
+#include "frontend/BinASTParser.h"
 
     // --- Auxiliary parsing functions
 
@@ -316,4 +316,4 @@ extern template class BinASTParser<BinTokenReaderTester>;
 } // namespace frontend
 } // namespace js
 
-#endif // frontend_BinSource_h
+#endif // frontend_BinASTParserPerTokenizer_h
