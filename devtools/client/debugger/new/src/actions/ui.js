@@ -14,7 +14,7 @@ import {
 } from "../selectors";
 import { selectSource } from "../actions/sources/select";
 import type { ThunkArgs, panelPositionType } from "./types";
-import { getEditor } from "../utils/editor";
+import { getEditor, getLocationsInViewport } from "../utils/editor";
 import { searchContents } from "./file-search";
 
 import type {
@@ -198,6 +198,13 @@ export function setProjectDirectoryRoot(newRoot: string) {
       type: "SET_PROJECT_DIRECTORY_ROOT",
       url: newRoot
     });
+  };
+}
+
+export function updateViewport() {
+  return {
+    type: "SET_VIEWPORT",
+    viewport: getLocationsInViewport(getEditor())
   };
 }
 

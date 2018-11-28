@@ -16,5 +16,7 @@ DebuggerModules(
     'index.js',
     'isSelectedFrameVisible.js',
     'visibleBreakpoints.js',
+    'visibleColumnBreakpoints.js',
+    'visiblePausePoints.js',
     'visibleSelectedFrame.js',
 )
