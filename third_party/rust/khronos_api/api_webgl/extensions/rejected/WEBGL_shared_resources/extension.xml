@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<draft href="WEBGL_shared_resources/">
+<rejected href="rejected/WEBGL_shared_resources/">
   <name>WEBGL_shared_resources</name>
   <contact>
     <a href="https://www.khronos.org/webgl/public-mailing-list/">WebGL working group</a> (public_webgl 'at' khronos.org)
@@ -330,7 +330,7 @@ interface WEBGL_shared_resources {
      long acquireSharedResource(
          WebGLSharedObject resource,
          GLenum mode,
-         AcquireResourcesCallback callback);
+         AcquireSharedResourcesCallback callback);
      void releaseSharedResource(
          WebGLSharedObject resource);
      void cancelAcquireSharedResource(long id);
@@ -340,25 +340,25 @@ callback AcquireSharedResourcesCallback = void ();
 
 [NoInterfaceObject]
 interface WebGLShareGroup {
-}
+};
 
 interface WebGLSharedObject : WebGLObject {
-}
+};
 
 interface WebGLBuffer : WebGLSharedObject {
-}
+};
 
 interface WebGLProgram : WebGLSharedObject {
-}
+};
 
 interface WebGLRenderbuffer : WebGLSharedObject {
-}
+};
 
 interface WebGLShader : WebGLSharedObject {
-}
+};
 
 interface WebGLTexture : WebGLSharedObject {
-}
+};
   </idl>
   <history>
     <revision date="2012/02/06">
@@ -370,5 +370,12 @@ interface WebGLTexture : WebGLSharedObject {
     <revision date="2014/07/15">
       <change>Added NoInterfaceObject extended attribute to extension interface and WebGLShareGroup.</change>
     </revision>
+    <revision date="2018/05/02">
+      <change>Rejected after discussion on public_webgl and no strong objections. At this point in
+      the WebGL API's development it is not profitable to invest the time to implement this
+      extension. Alternatives: CanvasRenderingContext2D.drawImage taking a WebGL-rendered canvas as
+      argument, or using OffscreenCanvas.transferToImageBitmap with a WebGL-rendered canvas,
+      combined with ImageBitmapRenderingContext.transferFromImageBitmap.</change>
+    </revision>
   </history>
-</draft>
+</rejected>

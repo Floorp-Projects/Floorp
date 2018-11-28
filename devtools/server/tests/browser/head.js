@@ -117,15 +117,6 @@ async function initInspectorFront(url) {
 }
 
 /**
- * Gets the RootActor form from a DebuggerClient.
- * @param {DebuggerClient} client
- * @return {RootActor} Resolves when connected.
- */
-function getRootForm(client) {
-  return client.listTabs();
-}
-
-/**
  * Wait until a DebuggerClient is connected.
  * @param {DebuggerClient} client
  * @return {Promise} Resolves when connected.
@@ -134,21 +125,6 @@ function waitUntilClientConnected(client) {
   return new Promise(resolve => {
     client.addOneTimeListener("connected", resolve);
   });
-}
-
-/**
- * Connect a debugger client.
- *
- * @param {DebuggerClient}
- * @return {Promise} Resolves to the targetActor form for the selected tab when the client
- *         is connected.
- */
-function connectDebuggerClient(client) {
-  return client.connect()
-    .then(() => client.listTabs())
-    .then(tabs => {
-      return tabs.tabs[tabs.selected];
-    });
 }
 
 /**

@@ -20,7 +20,8 @@ pub struct GlobalGenerator;
 
 impl super::Generator for GlobalGenerator {
     fn write<W>(&self, registry: &Registry, dest: &mut W) -> io::Result<()>
-        where W: io::Write
+    where
+        W: io::Write,
     {
         try!(write_header(dest));
         try!(write_metaloadfn(dest));
@@ -39,23 +40,28 @@ impl super::Generator for GlobalGenerator {
 /// Creates a `__gl_imports` module which contains all the external symbols that we need for the
 ///  bindings.
 fn write_header<W>(dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
-    writeln!(dest,
-             r#"
+    writeln!(
+        dest,
+        r#"
         mod __gl_imports {{
             pub use std::mem;
             pub use std::os::raw;
         }}
-    "#)
+    "#
+    )
 }
 
 /// Creates the metaloadfn function for fallbacks
 fn write_metaloadfn<W>(dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
-    writeln!(dest,
-             r#"
+    writeln!(
+        dest,
+        r#"
         #[inline(never)]
         fn metaloadfn(loadfn: &mut FnMut(&'static str) -> *const __gl_imports::raw::c_void,
                       symbol: &'static str,
@@ -69,32 +75,39 @@ fn write_metaloadfn<W>(dest: &mut W) -> io::Result<()>
             }}
             ptr
         }}
-    "#)
+    "#
+    )
 }
 
 /// Creates a `types` module which contains all the type aliases.
 ///
 /// See also `generators::gen_types`.
 fn write_type_aliases<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
-    try!(writeln!(dest,
-                  r#"
+    try!(writeln!(
+        dest,
+        r#"
         pub mod types {{
             #![allow(non_camel_case_types, non_snake_case, dead_code, missing_copy_implementations)]
-    "#));
+    "#
+    ));
 
     try!(super::gen_types(registry.api, dest));
 
-    writeln!(dest,
-             "
+    writeln!(
+        dest,
+        "
         }}
-    ")
+    "
+    )
 }
 
 /// Creates all the `<enum>` elements at the root of the bindings.
 fn write_enums<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
     for enm in &registry.enums {
         try!(super::gen_enum_item(enm, "types::", dest));
@@ -108,7 +121,8 @@ fn write_enums<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
 /// The function calls the corresponding function pointer stored in the `storage` module created
 ///  by `write_ptrs`.
 fn write_fns<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
     for cmd in &registry.cmds {
         if let Some(v) = registry.aliases.get(&cmd.proto.ident) {
@@ -134,7 +148,8 @@ fn write_fns<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
 
 /// Creates a `FnPtr` structure which contains the store for a single binding.
 fn write_fnptr_struct_def<W>(dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
     writeln!(dest,
              "
@@ -161,23 +176,27 @@ fn write_fnptr_struct_def<W>(dest: &mut W) -> io::Result<()>
 
 /// Creates a `storage` module which contains a static `FnPtr` per GL command in the registry.
 fn write_ptrs<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
-
-    try!(writeln!(dest,
-                  "mod storage {{
+    try!(writeln!(
+        dest,
+        "mod storage {{
             #![allow(non_snake_case)]
             #![allow(non_upper_case_globals)]
             use super::__gl_imports::raw;
-            use super::FnPtr;"));
+            use super::FnPtr;"
+    ));
 
     for c in &registry.cmds {
-        try!(writeln!(dest,
-                      "pub static mut {name}: FnPtr = FnPtr {{
+        try!(writeln!(
+            dest,
+            "pub static mut {name}: FnPtr = FnPtr {{
                 f: super::missing_fn_panic as *const raw::c_void,
                 is_loaded: false
             }};",
-                      name = c.proto.ident));
+            name = c.proto.ident
+        ));
     }
 
     writeln!(dest, "}}")
@@ -188,16 +207,18 @@ fn write_ptrs<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
 /// Each module contains `is_loaded` and `load_with` which interact with the `storage` module
 ///  created by `write_ptrs`.
 fn write_fn_mods<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
     for c in &registry.cmds {
         let fallbacks = match registry.aliases.get(&c.proto.ident) {
             Some(v) => {
-                let names = v.iter()
+                let names = v
+                    .iter()
                     .map(|name| format!("\"{}\"", super::gen_symbol_name(registry.api, &name[..])))
                     .collect::<Vec<_>>();
                 format!("&[{}]", names.join(", "))
-            }
+            },
             None => "&[]".to_string(),
         };
         let fnname = &c.proto.ident[..];
@@ -234,22 +255,26 @@ fn write_fn_mods<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
 ///
 /// This function is the mock that is called if the real function could not be called.
 fn write_panicking_fns<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
-    writeln!(dest,
-             "#[inline(never)]
+    writeln!(
+        dest,
+        "#[inline(never)]
         fn missing_fn_panic() -> ! {{
             panic!(\"{api} function was not loaded\")
         }}
         ",
-             api = registry.api)
+        api = registry.api
+    )
 }
 
 /// Creates the `load_with` function.
 ///
 /// The function calls `load_with` in each module created by `write_fn_mods`.
 fn write_load_fn<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
-    where W: io::Write
+where
+    W: io::Write,
 {
     try!(writeln!(dest,
                   "
@@ -263,13 +288,17 @@ fn write_load_fn<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
     "));
 
     for c in &registry.cmds {
-        try!(writeln!(dest,
-                      "{cmd_name}::load_with(&mut loadfn);",
-                      cmd_name = &c.proto.ident[..]));
+        try!(writeln!(
+            dest,
+            "{cmd_name}::load_with(&mut loadfn);",
+            cmd_name = &c.proto.ident[..]
+        ));
     }
 
-    writeln!(dest,
-             "
+    writeln!(
+        dest,
+        "
         }}
-    ")
+    "
+    )
 }

@@ -152,7 +152,8 @@ class Pledge;
  *
  * DOMStream A
  *           Input        Owned          Playback
- *            t1 ---------> t1                      <- MediaStreamTrack X (removed)
+ *            t1 ---------> t1                      <- MediaStreamTrack X
+ *                                                     (removed)
  *                                                     (pointing to t1 in A)
  *            t2 ---------> t2 ------------> t2     <- MediaStreamTrack Y
  *             \                                       (pointing to t2 in A)
@@ -160,7 +161,8 @@ class Pledge;
  *               \                  /                  (pointing to t1 in B)
  * DOMStream B    \                /
  *           Input \      Owned   /      Playback
- *            t1 ---^-----> t1 ---                  <- MediaStreamTrack Z (removed)
+ *            t1 ---^-----> t1 ---                  <- MediaStreamTrack Z
+ *                                                     (removed)
  *              \    \                                 (pointing to t1 in B)
  *               \    \
  * DOMStream A'   \    \

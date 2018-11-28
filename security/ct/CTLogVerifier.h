@@ -12,7 +12,6 @@
 #include "CTLog.h"
 #include "CTUtils.h"
 #include "SignedCertificateTimestamp.h"
-#include "SignedTreeHead.h"
 #include "mozpkix/Input.h"
 #include "mozpkix/Result.h"
 #include "mozpkix/pkix.h"
@@ -57,10 +56,6 @@ public:
   // |sct| must be signed by the verifier's log.
   pkix::Result Verify(const LogEntry& entry,
                       const SignedCertificateTimestamp& sct);
-
-  // Verifies the signature in |sth|.
-  // |sth| must be signed by the verifier's log.
-  pkix::Result VerifySignedTreeHead(const SignedTreeHead& sth);
 
   // Returns true if the signature and hash algorithms in |signature|
   // match those of the log.

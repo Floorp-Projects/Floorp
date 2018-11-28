@@ -29,7 +29,7 @@ add_task(async function test() {
   const tabGrip = tabs.filter(a => a.url == TAB1_URL).pop();
   ok(tabGrip, "Should have an actor for the tab");
 
-  let [response, targetFront] = await client.attachTarget(tabGrip.actor);
+  let [response, targetFront] = await client.attachTarget(tabGrip);
   is(response.type, "tabAttached", "Should have attached");
 
   response = await client.listTabs();
@@ -41,7 +41,7 @@ add_task(async function test() {
   const newGrip = tabs.filter(a => a.url == TAB1_URL).pop();
   is(newGrip.actor, tabGrip.actor, "Should have the same actor for the same tab");
 
-  [response, targetFront] = await client.attachTarget(tabGrip.actor);
+  [response, targetFront] = await client.attachTarget(tabGrip);
   is(response.type, "tabAttached", "Should have attached");
   response = await targetFront.detach();
   is(response.type, "detached", "Should have detached");

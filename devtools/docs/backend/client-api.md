@@ -78,7 +78,7 @@ function attachToTab() {
     let tab = response.tabs[response.selected];
 
     // Attach to the tab.
-    client.attachTarget(tab.actor).then(([response, targetFront]) => {
+    client.attachTarget(tab).then(([response, targetFront]) => {
       if (!targetFront) {
         return;
       }
@@ -186,7 +186,7 @@ function debugTab() {
     // Find the active tab.
     let tab = response.tabs[response.selected];
     // Attach to the tab.
-    client.attachTarget(tab.actor).then(([response, targetFront]) => {
+    client.attachTarget(tab).then(([response, targetFront]) => {
       if (!targetFront) {
         return;
       }

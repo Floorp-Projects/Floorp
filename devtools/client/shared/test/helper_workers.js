@@ -116,7 +116,7 @@ function findTab(tabs, url) {
 
 function attachTarget(client, tab) {
   info("Attaching to tab with url '" + tab.url + "'.");
-  return client.attachTarget(tab.actor);
+  return client.attachTarget(tab);
 }
 
 function listWorkers(targetFront) {
@@ -172,15 +172,11 @@ function getSplitConsole(toolbox, win) {
 }
 
 async function initWorkerDebugger(TAB_URL, WORKER_URL) {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  await connect(client);
-
   const tab = await addTab(TAB_URL);
-  const { tabs } = await listTabs(client);
-  const [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
+  const { client } = target;
+  const targetFront = target.activeTab;
 
   await createWorkerInTab(tab, WORKER_URL);
 
@@ -242,28 +238,13 @@ this.removeTab = function removeTab(tab, win) {
   return deferred.promise;
 };
 
-async function attachTargetActorForUrl(client, url) {
-  const grip = await getTargetActorForUrl(client, url);
-  const [ response, front ] = await client.attachTarget(grip.actor);
-  return [grip, response, front];
-}
-
-async function attachThreadActorForUrl(client, url) {
-  const [, response] = await attachTargetActorForUrl(client, url);
-  const [, threadClient] = await client.attachThread(response.threadActor);
+async function attachThreadActorForTab(tab) {
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
+  const targetFront = target.activeTab;
+  const [, threadClient] = await targetFront.attachThread();
   await threadClient.resume();
-  return threadClient;
-}
-
-function getTargetActorForUrl(client, url) {
-  const deferred = getDeferredPromise().defer();
-
-  client.listTabs().then(response => {
-    const targetActor = response.tabs.filter(grip => grip.url == url).pop();
-    deferred.resolve(targetActor);
-  });
-
-  return deferred.promise;
+  return { client: target.client, threadClient };
 }
 
 function pushPrefs(...aPrefs) {

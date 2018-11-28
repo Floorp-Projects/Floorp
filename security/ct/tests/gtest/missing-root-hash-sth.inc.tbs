@@ -1,0 +1,7 @@
+signingKey:secp256r1
+spki:secp256r1
+prefix:020000
+00000166d6142b50 // 1541189938000 milliseconds since the epoch
+0000000000000007 // 7 total nodes
+// missing root_hash
+0000 // no extensions

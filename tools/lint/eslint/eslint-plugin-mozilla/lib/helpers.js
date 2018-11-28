@@ -732,13 +732,15 @@ module.exports = {
     return pathName.replace(/^"/, "").replace(/"$/, "");
   },
 
-  get globalScriptsPath() {
-    return path.join(this.rootDir, "browser",
-                     "base", "content", "global-scripts.inc");
+  get globalScriptPaths() {
+    return [
+      path.join(this.rootDir, "browser", "base", "content", "browser.xul"),
+      path.join(this.rootDir, "browser", "base", "content", "global-scripts.inc"),
+    ];
   },
 
   isMozillaCentralBased() {
-    return fs.existsSync(this.globalScriptsPath);
+    return fs.existsSync(this.globalScriptPaths[0]);
   },
 
   getSavedEnvironmentItems(environment) {

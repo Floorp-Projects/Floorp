@@ -95,20 +95,15 @@ function onMessage({ data }) {
   assertEvent(data.event, data.data);
 }
 
-async function connectAndAttachTab() {
-  // Ensure having a minimal server
-  initDebuggerServer();
-
-  // Connect to this tab
-  const transport = DebuggerServer.connectPipe();
-  const client = new DebuggerClient(transport);
-  const form = await connectDebuggerClient(client);
-  const actorID = form.actor;
-  const [, targetFront ] = await client.attachTarget(actorID);
+async function connectAndAttachTab(tab) {
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
+  const targetFront = target.activeTab;
+  const actorID = targetFront.targetForm.actor;
   targetFront.on("tabNavigated", function(packet) {
     assertEvent("tabNavigated", packet);
   });
-  return { client, actorID };
+  return { target, actorID };
 }
 
 add_task(async function() {
@@ -125,7 +120,8 @@ add_task(async function() {
   // Listen for messages sent by the content task
   browser.messageManager.addMessageListener("devtools-test:event", onMessage);
 
-  const { client, actorID } = await connectAndAttachTab();
+  const tab = gBrowser.getTabForBrowser(browser);
+  const { target, actorID } = await connectAndAttachTab(tab);
   await ContentTask.spawn(browser, [actorID], async function(actorId) {
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const { DebuggerServer } = require("devtools/server/main");
@@ -170,7 +166,7 @@ add_task(async function() {
 
   // Cleanup
   browser.messageManager.removeMessageListener("devtools-test:event", onMessage);
-  await client.close();
+  await target.destroy();
   Services.obs.addObserver(httpObserver, "http-on-modify-request");
   DebuggerServer.destroy();
 });

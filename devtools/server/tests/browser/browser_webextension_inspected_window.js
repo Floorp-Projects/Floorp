@@ -26,7 +26,7 @@ async function setup(pageUrl) {
 
   const { client, form } = target;
 
-  const [, targetFront] = await client.attachTarget(form.actor);
+  const [, targetFront] = await client.attachTarget(form);
 
   const [, consoleClient] = await client.attachConsole(form.consoleActor, []);
 

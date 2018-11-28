@@ -1,0 +1,10 @@
+signingKey:secp521r1
+spki:secp521r1
+hash:sha512
+prefix:020000
+000001670e7ca6e1 // 1542136309473 milliseconds since the epoch
+000000002b982da5 // 731393445 total nodes
+40 // 64 byte hash
+  374d794a95cdcfd8b35993185fef9ba368f160d8daf432d08ba9f1ed1e5abe6c
+  c69291e0fa2fe0006a52570ef18c19def4e617c33ce52ef0a6e5fbe318cb0387
+0000 // no extensions

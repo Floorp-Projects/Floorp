@@ -322,20 +322,22 @@ package org.mozilla.geckoview {
 
   public static interface GeckoSession.ContentDelegate {
     method public void onCloseRequest(org.mozilla.geckoview.GeckoSession);
-    method public void onContextMenu(org.mozilla.geckoview.GeckoSession, int, int, java.lang.String, int, java.lang.String);
+    method public void onContextMenu(org.mozilla.geckoview.GeckoSession, int, int, org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement);
     method public void onCrash(org.mozilla.geckoview.GeckoSession);
     method public void onExternalResponse(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.GeckoSession.WebResponseInfo);
     method public void onFirstComposite(org.mozilla.geckoview.GeckoSession);
     method public void onFocusRequest(org.mozilla.geckoview.GeckoSession);
     method public void onFullScreen(org.mozilla.geckoview.GeckoSession, boolean);
     method public void onTitleChange(org.mozilla.geckoview.GeckoSession, java.lang.String);
-    field public static final int ELEMENT_TYPE_AUDIO = 3;
-    field public static final int ELEMENT_TYPE_IMAGE = 1;
-    field public static final int ELEMENT_TYPE_NONE = 0;
-    field public static final int ELEMENT_TYPE_VIDEO = 2;
   }
 
-  public static interface GeckoSession.ContentDelegate.ElementType implements java.lang.annotation.Annotation {
+  public static final class GeckoSession.ContentDelegate.ContextElement {
+    ctor protected ContextElement(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String);
+    field public final java.lang.String altText;
+    field public final java.lang.String linkUri;
+    field public final java.lang.String srcUri;
+    field public final java.lang.String title;
+    field public final int type;
   }
 
   public static final class GeckoSession.FinderResult {

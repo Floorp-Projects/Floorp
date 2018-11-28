@@ -7,10 +7,11 @@ from __future__ import absolute_import
 import platform
 
 from mozboot.base import BaseBootstrapper
-from mozboot.linux_common import NodeInstall, StyloInstall
+from mozboot.linux_common import NodeInstall, StyloInstall, ClangStaticAnalysisInstall
 
 
-class CentOSFedoraBootstrapper(NodeInstall, StyloInstall, BaseBootstrapper):
+class CentOSFedoraBootstrapper(NodeInstall, StyloInstall,
+                               ClangStaticAnalysisInstall, BaseBootstrapper):
     def __init__(self, distro, version, dist_id, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
