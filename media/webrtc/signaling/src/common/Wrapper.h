@@ -11,28 +11,38 @@
  * (The handle could be a pointer to some low-level type, a conventional C handle, an int ID, a GUID, etc.)
  *
  * Usage:
- *   To obtain a FooPtr from a foo_handle_t, call FooPtr Foo::wrap(foo_handle_t);
+ *   To obtain a FooPtr from a foo_handle_t, call
+ *     FooPtr Foo::wrap(foo_handle_t);
  *
- * To implement Foo using Wrapper, Foo needs to include this macro in its class definition:
+ * To implement Foo using Wrapper, Foo needs to include this macro in its class
+ * definition:
  *   CSF_DECLARE_WRAP(Foo, foo_handle_t);
- * It also needs to include this in the cpp file, to provide the wrap() implementation and define the static Wrapper.
+ * It also needs to include this in the cpp file, to provide the wrap()
+ * implementation and define the static Wrapper.
  *   CSF_IMPLEMENT_WRAP(Foo, foo_handle_t);
- * These are all declared in common/Wrapper.h - Foo.h needs to include this too.
- * The client needs to declare Foo(foo_handle_t) as private, and provide a suitable implementation, as well as
- *   implementing wrappers for any other functions to be exposed.
+ * These are all declared in common/Wrapper.h - Foo.h needs to include this
+ * too.
+ * The client needs to declare Foo(foo_handle_t) as private, and provide a
+ * suitable implementation, as well as implementing wrappers for any other
+ * functions to be exposed.
  * The client needs to implement ~Foo() to perform any cleanup as usual.
  *
- * wrap() will always return the same FooPtr for a given foo_handle_t, it will not construct additional objects
- *        if a suitable one already exists.
- * changeHandle() is used in rare cases where the underlying handle is changed, but the wrapper object is intended
- *                to remain.  This is the case for the "fake" CC_DPCall generated on CC_DPLine::CreateCall(), where
- *                the correct IDPCall* is provided later.
- * reset() is a cleanup step to wipe the handle map and allow memory to be reclaimed.
+ * wrap() will always return the same FooPtr for a given foo_handle_t, it will
+ * not construct additional objects if a suitable one already exists.
+ * changeHandle() is used in rare cases where the underlying handle is changed,
+ *                but the wrapper object is intended to remain.  This is the
+ *                case for the "fake" CC_DPCall generated on
+ *                CC_DPLine::CreateCall(), where the correct IDPCall* is
+ *                provided later.
+ * reset() is a cleanup step to wipe the handle map and allow memory to be
+ * reclaimed.
  *
  * Future enhancements:
- * - For now, objects remain in the map forever.  Better would be to add a releaseHandle() function which would
- *   allow the map to be emptied as underlying handles expired.  While we can't force the client to give up its
- *   shared_ptr<Foo> objects, we can remove our own copy, for instance on a call ended event.
+ * - For now, objects remain in the map forever.  Better would be to add a
+ *   releaseHandle() function which would allow the map to be emptied as
+ *   underlying handles expired.  While we can't force the client to give up
+ *   its shared_ptr<Foo> objects, we can remove our own copy, for instance on a
+ *   call ended event.
  */
 
 #include <map>

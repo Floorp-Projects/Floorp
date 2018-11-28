@@ -1215,7 +1215,8 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
 //    return;
 //  }
 //  RefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
-//  RefPtr<PeerConnectionObserver> pco = static_cast<PeerConnectionObserver*>(&*tmp2);
+//  RefPtr<PeerConnectionObserver> pco =
+//    static_cast<PeerConnectionObserver*>(&*tmp2);
 
 static already_AddRefed<PeerConnectionObserver>
 do_QueryObjectReferent(nsIWeakReference* aRawPtr) {

@@ -24,16 +24,18 @@
  */
 
 /**
- * Returns the most appropriate string to represent the given nsICertTreeItem.
+ * Returns the element to represent the given nsICertTreeItem.
  * @param {nsICertTreeItem} certTreeItem
  *        The item to represent.
- * @returns {String}
- *          A representative string.
+ * @returns {Element}
+ *          A element of each cert tree item.
  */
-function certTreeItemToString(certTreeItem) {
+function getLabelForCertTreeItem(certTreeItem) {
+  let element = document.createXULElement("label");
   let cert = certTreeItem.cert;
   if (!cert) {
-    return certTreeItem.hostPort;
+    element.setAttribute("value", certTreeItem.hostPort);
+    return element;
   }
 
   const attributes = [
@@ -44,12 +46,13 @@ function certTreeItemToString(certTreeItem) {
   ];
   for (let attribute of attributes) {
     if (attribute) {
-      return attribute;
+      element.setAttribute("value", attribute);
+      return element;
     }
   }
 
-  let bundle = document.getElementById("pippki_bundle");
-  return bundle.getFormattedString("certWithSerial", [cert.serialNumber]);
+  document.l10n.setAttributes(element, "cert-with-serial", { serialNumber: cert.serialNumber});
+  return element;
 }
 
 /**
@@ -57,51 +60,38 @@ function certTreeItemToString(certTreeItem) {
  */
 function onLoad() {
   let typeFlag = window.arguments[0];
-  let bundle = document.getElementById("pippki_bundle");
-  let title;
-  let confirm;
-  let impact;
-
+  let confirm = document.getElementById("confirm");
+  let impact = document.getElementById("impact");
+  let prefixForType;
   switch (typeFlag) {
     case "mine_tab":
-      title = bundle.getString("deleteUserCertTitle");
-      confirm = bundle.getString("deleteUserCertConfirm");
-      impact = bundle.getString("deleteUserCertImpact");
+      prefixForType = "delete-user-cert-";
       break;
     case "websites_tab":
-      title = bundle.getString("deleteSslCertTitle3");
-      confirm = bundle.getString("deleteSslCertConfirm3");
-      impact = bundle.getString("deleteSslCertImpact3");
+      prefixForType = "delete-ssl-cert-";
       break;
     case "ca_tab":
-      title = bundle.getString("deleteCaCertTitle2");
-      confirm = bundle.getString("deleteCaCertConfirm2");
-      impact = bundle.getString("deleteCaCertImpactX2");
+      prefixForType = "delete-ca-cert-";
       break;
     case "others_tab":
-      title = bundle.getString("deleteEmailCertTitle");
-      confirm = bundle.getString("deleteEmailCertConfirm");
-      impact = bundle.getString("deleteEmailCertImpactDesc");
+      prefixForType = "delete-email-cert-";
       break;
     default:
       return;
   }
 
-  document.title = title;
-
-  setText("confirm", confirm);
+  document.l10n.setAttributes(document.documentElement, prefixForType + "title");
+  document.l10n.setAttributes(confirm, prefixForType + "confirm");
+  document.l10n.setAttributes(impact, prefixForType + "impact");
 
   let box = document.getElementById("certlist");
   let certTreeItems = window.arguments[1];
   for (let certTreeItem of certTreeItems) {
     let listItem = document.createXULElement("richlistitem");
-    let label = document.createXULElement("label");
-    label.setAttribute("value", certTreeItemToString(certTreeItem));
+    let label = getLabelForCertTreeItem(certTreeItem);
     listItem.appendChild(label);
     box.appendChild(listItem);
   }
-
-  setText("impact", impact);
 }
 
 /**

@@ -64,6 +64,7 @@ of values.
 */
 
 const nsUGenCategory sDetailedToGeneralCategory[] = {
+  // clang-format off
   /*
    * The order here corresponds to the HB_UNICODE_GENERAL_CATEGORY_* constants
    * of the hb_unicode_general_category_t enum in gfx/harfbuzz/src/hb-unicode.h.
@@ -98,9 +99,11 @@ const nsUGenCategory sDetailedToGeneralCategory[] = {
   /* LINE_SEPARATOR */      nsUGenCategory::kSeparator,
   /* PARAGRAPH_SEPARATOR */ nsUGenCategory::kSeparator,
   /* SPACE_SEPARATOR */     nsUGenCategory::kSeparator
+  // clang-format on
 };
 
 const hb_unicode_general_category_t sICUtoHBcategory[U_CHAR_CATEGORY_COUNT] = {
+  // clang-format off
   HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED, // U_GENERAL_OTHER_TYPES = 0,
   HB_UNICODE_GENERAL_CATEGORY_UPPERCASE_LETTER, // U_UPPERCASE_LETTER = 1,
   HB_UNICODE_GENERAL_CATEGORY_LOWERCASE_LETTER, // U_LOWERCASE_LETTER = 2,
@@ -131,6 +134,7 @@ const hb_unicode_general_category_t sICUtoHBcategory[U_CHAR_CATEGORY_COUNT] = {
   HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL, // U_OTHER_SYMBOL = 27,
   HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION, // U_INITIAL_PUNCTUATION = 28,
   HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION, // U_FINAL_PUNCTUATION = 29,
+  // clang-format on
 };
 
 #define DEFINE_BMP_1PLANE_MAPPING_GET_FUNC(prefix_) \

@@ -137,7 +137,8 @@ namespace mozilla {
  * template like so[0]:
  *
  *   template <typename XArg, typename YArg>
- *   C::C(XArg&& x, YArg&& y) : x(std::forward<XArg>(x)), y(std::forward<YArg>(y)) { }
+ *   C::C(XArg&& x, YArg&& y) : x(std::forward<XArg>(x)),
+ *                              y(std::forward<YArg>(y)) { }
  *
  * ("'Don't Repeat Yourself'? What's that?")
  *

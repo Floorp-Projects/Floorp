@@ -23,8 +23,6 @@ const nsIASN1PrintableItem = Ci.nsIASN1PrintableItem;
 const nsIASN1Tree = Ci.nsIASN1Tree;
 const nsASN1Tree = "@mozilla.org/security/nsASN1Tree;1";
 
-var bundle;
-
 /**
  * Fills out the "Certificate Hierarchy" tree of the cert viewer "Details" tab.
  *
@@ -54,13 +52,14 @@ function AddCertChain(node, chain) {
 /**
  * Adds a "verified usage" of a cert to the "General" tab of the cert viewer.
  *
- * @param {String} usage
- *        Verified usage to add.
+ * @param {String} l10nId
+ *        l10nId of verified usage to add.
  */
-function AddUsage(usage) {
+function AddUsage(l10nId) {
   let verifyInfoBox = document.getElementById("verify_info_box");
   let text = document.createXULElement("textbox");
-  text.setAttribute("value", usage);
+  document.l10n.setAttributes(text, l10nId);
+  text.setAttribute("data-l10n-attrs", "value");
   text.setAttribute("style", "margin: 2px 5px");
   text.setAttribute("readonly", "true");
   text.setAttribute("class", "scrollfield");
@@ -68,11 +67,8 @@ function AddUsage(usage) {
 }
 
 function setWindowName() {
-  bundle = document.getElementById("pippki_bundle");
-
   let cert = window.arguments[0].QueryInterface(Ci.nsIX509Cert);
-  document.title = bundle.getFormattedString("certViewerTitle",
-                                             [cert.displayName]);
+  window.document.l10n.setAttributes(window.document.documentElement, "cert-viewer-title", {certName: cert.displayName});
 
   //
   //  Set the cert attributes for viewing
@@ -90,11 +86,11 @@ function setWindowName() {
 
 // Map of certificate usage name to localization identifier.
 const certificateUsageToStringBundleName = {
-  certificateUsageSSLClient: "VerifySSLClient",
-  certificateUsageSSLServer: "VerifySSLServer",
-  certificateUsageSSLCA: "VerifySSLCA",
-  certificateUsageEmailSigner: "VerifyEmailSigner",
-  certificateUsageEmailRecipient: "VerifyEmailRecip",
+  certificateUsageSSLClient: "verify-ssl-client",
+  certificateUsageSSLServer: "verify-ssl-server",
+  certificateUsageSSLCA: "verify-ssl-ca",
+  certificateUsageEmailSigner: "verify-email-signer",
+  certificateUsageEmailRecipient: "verify-email-recip",
 };
 
 const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
@@ -125,50 +121,46 @@ function displayUsages(results) {
     result.errorCode == PRErrorCodeSuccess
   );
   if (someSuccess) {
-    let verifystr = bundle.getString("certVerified");
-    verified.textContent = verifystr;
-    let pipnssBundle = Services.strings.createBundle(
-      "chrome://pipnss/locale/pipnss.properties");
+    document.l10n.setAttributes(verified, "cert-verified");
     results.forEach(result => {
       if (result.errorCode != PRErrorCodeSuccess) {
         return;
       }
-      let bundleName = certificateUsageToStringBundleName[result.usageString];
-      let usage = pipnssBundle.GetStringFromName(bundleName);
-      AddUsage(usage);
+      let usageL10nId = certificateUsageToStringBundleName[result.usageString];
+      AddUsage(usageL10nId);
     });
     AddCertChain("treesetDump", getBestChain(results));
   } else {
     const errorRankings = [
       { error: SEC_ERROR_REVOKED_CERTIFICATE,
-        bundleString: "certNotVerified_CertRevoked" },
+        bundleString: "cert-not-verified-cert-revoked" },
       { error: SEC_ERROR_UNTRUSTED_CERT,
-        bundleString: "certNotVerified_CertNotTrusted" },
+        bundleString: "cert-not-verified-cert-not-trusted" },
       { error: SEC_ERROR_UNTRUSTED_ISSUER,
-        bundleString: "certNotVerified_IssuerNotTrusted" },
+        bundleString: "cert-not-verified-issuer-not-trusted" },
       { error: SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED,
-        bundleString: "certNotVerified_AlgorithmDisabled" },
+        bundleString: "cert-not-verified_algorithm-disabled" },
       { error: SEC_ERROR_EXPIRED_CERTIFICATE,
-        bundleString: "certNotVerified_CertExpired" },
+        bundleString: "cert-not-verified-cert-expired" },
       { error: SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE,
-        bundleString: "certNotVerified_CAInvalid" },
+        bundleString: "cert-not-verified-ca-invalid" },
       { error: SEC_ERROR_UNKNOWN_ISSUER,
-        bundleString: "certNotVerified_IssuerUnknown" },
+        bundleString: "cert-not-verified-issuer-unknown" },
     ];
-    let verifystr;
+    let errorPresentFlag = false;
     for (let errorRanking of errorRankings) {
       let errorPresent = results.some(result =>
         result.errorCode == errorRanking.error
       );
       if (errorPresent) {
-        verifystr = bundle.getString(errorRanking.bundleString);
+        document.l10n.setAttributes(verified, errorRanking.bundleString);
+        errorPresentFlag = true;
         break;
       }
     }
-    if (!verifystr) {
-      verifystr = bundle.getString("certNotVerified_Unknown");
+    if (!errorPresentFlag) {
+      document.l10n.setAttributes(verified, "cert-not-verified-unknown");
     }
-    verified.textContent = verifystr;
   }
   // Notify that we are done determining the certificate's valid usages (this
   // should be treated as an implementation detail that enables tests to run
@@ -225,7 +217,8 @@ function BuildPrettyPrint(cert) {
 function addAttributeFromCert(nodeName, value) {
   var node = document.getElementById(nodeName);
   if (!value) {
-    value = bundle.getString("notPresent");
+    document.l10n.setAttributes(node, "not-present");
+    return;
   }
   node.setAttribute("value", value);
 }

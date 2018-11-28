@@ -113,7 +113,8 @@ gfxASurface::Release(void)
 void
 gfxASurface::SurfaceDestroyFunc(void *data) {
     gfxASurface *surf = (gfxASurface*) data;
-    // fprintf (stderr, "Deleting wrapper for %p (wrapper: %p)\n", surf->mSurface, data);
+    // fprintf (stderr, "Deleting wrapper for %p (wrapper: %p)\n", surf->mSurface,
+    //          data);
     delete surf;
 }
 

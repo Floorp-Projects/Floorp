@@ -1469,17 +1469,19 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
  * To determine availability of the data upon StopFrameTimeRecording:
  * - mRecording.mNextIndex increases on each RecordFrame, and never resets.
  * - Cyclic buffer position is realized as mNextIndex % bufferSize.
- * - StartFrameTimeRecording returns mNextIndex. When StopFrameTimeRecording is called,
- *   the required start index is passed as an arg, and we're able to calculate the required
- *   length. If this length is bigger than bufferSize, it means data was overwritten.
- *   otherwise, we can return the entire sequence.
- * - To determine if we need to pause, mLatestStartIndex is updated to mNextIndex
- *   on each call to StartFrameTimeRecording. If this index gets overwritten,
- *   it means that all earlier start indices obtained via StartFrameTimeRecording
- *   were also overwritten, hence, no point in recording, so pause.
- * - mCurrentRunStartIndex indicates the oldest index of the recording after which
- *   the recording was not paused. If StopFrameTimeRecording is invoked with a start index
- *   older than this, it means that some frames were not recorded, so data is invalid.
+ * - StartFrameTimeRecording returns mNextIndex. When StopFrameTimeRecording is
+ *   called, the required start index is passed as an arg, and we're able to
+ *   calculate the required length. If this length is bigger than bufferSize, it
+ *   means data was overwritten.  otherwise, we can return the entire sequence.
+ * - To determine if we need to pause, mLatestStartIndex is updated to
+ *   mNextIndex on each call to StartFrameTimeRecording. If this index gets
+ *   overwritten, it means that all earlier start indices obtained via
+ *   StartFrameTimeRecording were also overwritten, hence, no point in
+ *   recording, so pause.
+ * - mCurrentRunStartIndex indicates the oldest index of the recording after
+ *   which the recording was not paused. If StopFrameTimeRecording is invoked
+ *   with a start index older than this, it means that some frames were not
+ *   recorded, so data is invalid.
  */
 uint32_t
 FrameRecorder::StartFrameTimeRecording(int32_t aBufferSize)
