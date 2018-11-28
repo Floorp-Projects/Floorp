@@ -921,6 +921,7 @@ def build_binary_transparency_payload(config, task, task_def):
         # locale is used to map upload path and allow for duplicate simple names
         Required('locale'): basestring,
     }],
+    Optional('artifact-map'): object,
 })
 def build_beetmover_payload(config, task, task_def):
     worker = task['worker']
@@ -942,6 +943,8 @@ def build_beetmover_payload(config, task, task_def):
     }
     if worker.get('locale'):
         task_def['payload']['locale'] = worker['locale']
+    if worker.get('artifact-map'):
+        task_def['payload']['artifactMap'] = worker['artifact-map']
     if worker.get('partner-public'):
         task_def['payload']['is_partner_repack_public'] = worker['partner-public']
     if release_config:
@@ -983,11 +986,14 @@ def build_beetmover_push_to_release_payload(config, task, task_def):
         Required('paths'): [basestring],
         Required('zipExtract', default=False): bool,
     }],
+    Optional('artifact-map'): object,
 })
 def build_beetmover_maven_payload(config, task, task_def):
     build_beetmover_payload(config, task, task_def)
 
     task_def['payload']['artifact_id'] = task['worker']['release-properties']['artifact-id']
+    if task['worker'].get('artifact-map'):
+        task_def['payload']['artifactMap'] = task['worker']['artifact-map']
 
     del task_def['payload']['releaseProperties']['hashType']
     del task_def['payload']['releaseProperties']['platform']

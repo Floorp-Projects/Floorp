@@ -66,7 +66,7 @@
 
   <hbox flex="1" style="overflow: auto;">
     <body xmlns="http://www.w3.org/1999/xhtml">
-      <a target="_blank"
+      <a target="_blank" rel="opener"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=672092"
          title="Reorganize access key and keyboard shortcut handling code">
         Mozilla Bug 672092

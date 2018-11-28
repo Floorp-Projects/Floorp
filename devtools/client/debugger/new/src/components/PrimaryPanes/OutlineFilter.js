@@ -35,6 +35,10 @@ export default class OutlineFilter extends Component<Props, State> {
       // also bound to the ESC key
       e.preventDefault();
       this.props.updateFilter("");
+    } else if (e.key === "Enter") {
+      // We must prevent the form submission from taking any action
+      // https://github.com/devtools-html/debugger.html/pull/7308
+      e.preventDefault();
     }
   };
 
