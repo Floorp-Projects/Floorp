@@ -1,0 +1,60 @@
+---
+metadata:
+  description: Source file archives
+  name: Beetmover source archive manifest
+  owner: release@mozilla.com
+s3_bucket_paths:
+  by-platform:
+    fennec-source:
+      - pub/mobile/candidates
+    devedition-source:
+      - pub/devedition/candidates
+    firefox-source:
+      - pub/firefox/candidates
+default_locales:  # if given an empty locale, use these locales
+  - en-US
+tasktype_map:  # Map task reference to task type.
+  release-source-signing: signing
+platform_names:
+  path_platform: ''
+  filename_platform: ''
+
+# A default entry, which the mappings below extend and override.
+# Final 'destinations' will be the product of:
+# s3_bucket_paths + destinations + locale_prefix + pretty_name
+default: &default
+  from:
+    - release-source-signing
+  all_locales: false
+  description: "TODO"
+  locale_prefix: ''
+  source_path_modifier: ''
+  destinations:  # locale_prefix is appended
+    - ${version}-candidates/build${build_number}/source
+
+# Configuration for individual files. Extends 'default', above.
+mapping:
+  source.tar.xz:
+    <<: *default
+    pretty_name:
+      by-platform:
+        firefox-source: firefox-${version}.source.tar.xz
+        devedition-source: firefox-${version}.source.tar.xz
+        fennec-source: fennec-${version}.source.tar.xz
+    checksums_path:
+      by-platform:
+        firefox-source: firefox-${version}.source.tar.xz
+        devedition-source: firefox-${version}.source.tar.xz
+        fennec-source: fennec-${version}.source.tar.xz
+  source.tar.xz.asc:
+    <<: *default
+    pretty_name:
+      by-platform:
+        firefox-source: firefox-${version}.source.tar.xz.asc
+        devedition-source: firefox-${version}.source.tar.xz.asc
+        fennec-source: fennec-${version}.source.tar.xz.asc
+    checksums_path:
+      by-platform:
+        firefox-source: firefox-${version}.source.tar.xz.asc
+        devedition-source: firefox-${version}.source.tar.xz.asc
+        fennec-source: fennec-${version}.source.tar.xz.asc
