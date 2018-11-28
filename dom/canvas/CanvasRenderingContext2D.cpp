@@ -1407,15 +1407,6 @@ bool CanvasRenderingContext2D::TrySharedTarget(
     return false;
   }
 
-#ifdef XP_WIN
-  // Bug 1285271 - Disable shared buffer provider on Windows with D2D due to
-  // instability
-  if (gfxPlatform::GetPlatform()->GetPreferredCanvasBackend() ==
-      BackendType::DIRECT2D1_1) {
-    return false;
-  }
-#endif
-
   RefPtr<LayerManager> layerManager =
       LayerManagerFromCanvasElement(mCanvasElement);
 

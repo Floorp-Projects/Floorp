@@ -155,6 +155,16 @@ enum class LayersBackend : int8_t {
   LAYERS_LAST
 };
 
+enum class TextureType : int8_t {
+  Unknown = 0,
+  D3D11,
+  DIB,
+  X11,
+  MacIOSurface,
+  AndroidNativeWindow,
+  Last
+};
+
 enum class BufferMode : int8_t { BUFFER_NONE, BUFFERED };
 
 enum class DrawRegionClip : int8_t { DRAW, NONE };
