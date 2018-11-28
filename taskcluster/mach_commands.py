@@ -52,8 +52,11 @@ class ShowTaskGraphSubCommand(SubCommand):
             CommandArgument('--tasks-regex', '--tasks', default=None,
                             help="only return tasks with labels matching this regular "
                             "expression."),
+            CommandArgument('--target-kind', default=None,
+                            help="only return tasks that are of the given kind, "
+                                 "or their dependencies."),
             CommandArgument('-F', '--fast', dest='fast', default=False, action='store_true',
-                            help="enable fast task generation for local debugging.")
+                            help="enable fast task generation for local debugging."),
 
         ]
         for arg in args:
@@ -331,7 +334,6 @@ class MachCommands(MachCommandBase):
 
     def show_taskgraph(self, graph_attr, options):
         import taskgraph.parameters
-        import taskgraph.target_tasks
         import taskgraph.generator
         import taskgraph
         if options['fast']:
@@ -344,7 +346,9 @@ class MachCommands(MachCommandBase):
 
             tgg = taskgraph.generator.TaskGraphGenerator(
                 root_dir=options.get('root'),
-                parameters=parameters)
+                parameters=parameters,
+                target_kind=options.get('target_kind'),
+            )
 
             tg = getattr(tgg, graph_attr)
 
@@ -390,7 +394,6 @@ class MachCommands(MachCommandBase):
 
     def show_actions(self, options):
         import taskgraph.parameters
-        import taskgraph.target_tasks
         import taskgraph.generator
         import taskgraph
         import taskgraph.actions
