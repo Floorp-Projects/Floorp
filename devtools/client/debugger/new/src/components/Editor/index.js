@@ -18,6 +18,8 @@ import {
   getActiveSearch,
   getSelectedLocation,
   getSelectedSource,
+  getHitCountForSource,
+  getCoverageEnabled,
   getConditionalPanelLine,
   getSymbols
 } from "../../selectors";
@@ -30,6 +32,7 @@ import SearchBar from "./SearchBar";
 import HighlightLines from "./HighlightLines";
 import Preview from "./Preview";
 import Breakpoints from "./Breakpoints";
+import HitMarker from "./HitMarker";
 import CallSites from "./CallSites";
 import DebugLine from "./DebugLine";
 import HighlightLine from "./HighlightLine";
@@ -73,9 +76,11 @@ const cssVars = {
 };
 
 export type Props = {
+  hitCount: Object,
   selectedLocation: ?Location,
   selectedSource: ?Source,
   searchOn: boolean,
+  coverageOn: boolean,
   horizontal: boolean,
   startPanelSize: number,
   endPanelSize: number,
@@ -528,6 +533,29 @@ class Editor extends PureComponent<Props, State> {
     };
   }
 
+  renderHitCounts() {
+    const { hitCount, selectedSource } = this.props;
+
+    if (
+      !selectedSource ||
+      !isLoaded(selectedSource) ||
+      !hitCount ||
+      !this.state.editor
+    ) {
+      return;
+    }
+
+    return hitCount
+      .filter(marker => marker.get("count") > 0)
+      .map(marker => (
+        <HitMarker
+          key={marker.get("line")}
+          hitData={marker.toJS()}
+          editor={this.state.editor.codeMirror}
+        />
+      ));
+  }
+
   renderItems() {
     const { horizontal, selectedSource } = this.props;
     const { editor } = this.state;
@@ -549,6 +577,7 @@ class Editor extends PureComponent<Props, State> {
         <GutterMenu editor={editor} />
         <ConditionalPanel editor={editor} />
         {features.columnBreakpoints ? <CallSites editor={editor} /> : null}
+        {this.renderHitCounts()}
       </div>
     );
   }
@@ -564,9 +593,13 @@ class Editor extends PureComponent<Props, State> {
   }
 
   render() {
+    const { coverageOn } = this.props;
+
     return (
       <div
-        className={classnames("editor-wrapper")}
+        className={classnames("editor-wrapper", {
+          "coverage-on": coverageOn
+        })}
         ref={c => (this.$editorWrapper = c)}
       >
         <div
@@ -586,11 +619,14 @@ Editor.contextTypes = {
 
 const mapStateToProps = state => {
   const selectedSource = getSelectedSource(state);
+  const sourceId = selectedSource ? selectedSource.id : "";
 
   return {
     selectedLocation: getSelectedLocation(state),
     selectedSource,
     searchOn: getActiveSearch(state) === "file",
+    hitCount: getHitCountForSource(state, sourceId),
+    coverageOn: getCoverageEnabled(state),
     conditionalPanelLine: getConditionalPanelLine(state),
     symbols: getSymbols(state, selectedSource)
   };

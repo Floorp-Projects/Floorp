@@ -109,7 +109,7 @@ var OSKeyStore = {
     let unlockPromise;
 
     // Decides who should handle reauth
-    if (typeof reauth == "boolean" && !reauth) {
+    if (!this._reauthEnabledByUser || (typeof reauth == "boolean" && !reauth)) {
       unlockPromise = Promise.resolve();
     } else if (!AppConstants.MOZILLA_OFFICIAL && this._testReauth) {
       unlockPromise = this._reauthInTests();
@@ -252,3 +252,5 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(OSKeyStore, "_testReauth", TEST_ONLY_REAUTH, "");
+XPCOMUtils.defineLazyPreferenceGetter(OSKeyStore, "_reauthEnabledByUser",
+                                      "extensions.formautofill.reauth.enabled", false);

@@ -102,7 +102,7 @@ LogDocShellState(nsIDocument* aDocumentNode)
 
   nsAutoCString docShellBusy;
   nsCOMPtr<nsIDocShell> docShell = aDocumentNode->GetDocShell();
-  uint32_t busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+  nsIDocShell::BusyFlags busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
   docShell->GetBusyFlags(&busyFlags);
   if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE) {
     printf("'none'");

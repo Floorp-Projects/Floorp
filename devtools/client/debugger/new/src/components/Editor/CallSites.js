@@ -5,7 +5,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 
-import { range, keyBy, isEqualWith, uniqBy, groupBy, flatten } from "lodash";
+import { range, keyBy, isEqualWith } from "lodash";
 
 import CallSite from "./CallSite";
 
@@ -121,43 +121,23 @@ class CallSites extends Component {
   filterCallSitesByLineNumber() {
     const { callSites, breakpoints } = this.props;
 
-    // Get unique lines from breakpoints so we can filter out unwated call sites
-    const uniqueBreakpointLines = new Set(
-      breakpoints.map(bp => bp.location.line)
-    );
+    const breakpointLines = new Set(breakpoints.map(bp => bp.location.line));
 
-    // Get call sites based on activated breakpoint lines
-    const callSitesInRange = callSites.filter(({ location }) =>
-      uniqueBreakpointLines.has(location.start.line)
-    );
-
-    // Group call sites by line
-    const callSitesByLineObj = groupBy(callSitesInRange, "location.start.line");
-
-    // Per group, ensure all call sites are unique
-    return flatten(
-      Object.values(callSitesByLineObj).map(arr => {
-        const uniques = uniqBy(
-          arr,
-          site =>
-            `${site.generatedLocation.line}:${site.generatedLocation.column}`
-        );
-        // Only return call sites for a line when more than 1 is found
-        return uniques.length > 1 ? uniques : [];
-      })
+    return callSites.filter(({ location }) =>
+      breakpointLines.has(location.start.line)
     );
   }
 
   render() {
-    const { editor, callSites, selectedSource, breakpoints } = this.props;
+    const { editor, callSites, selectedSource } = this.props;
 
-    if (!callSites || breakpoints.length === 0) {
+    let sites;
+    if (!callSites || (selectedSource && selectedSource.isPrettyPrinted)) {
       return null;
     }
 
     const callSitesFiltered = this.filterCallSitesByLineNumber();
 
-    let sites;
     editor.codeMirror.operation(() => {
       const childCallSites = callSitesFiltered.map((callSite, index) => {
         const props = {

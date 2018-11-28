@@ -5074,6 +5074,8 @@ public:
 
   void WriteDebugInfo(std::stringstream& aStream) override;
 
+  bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override;
+
 protected:
   const nsRect mBackgroundRect;
   RefPtr<mozilla::ComputedStyle> mBackgroundStyle;
