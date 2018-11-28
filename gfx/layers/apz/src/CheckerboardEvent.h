@@ -27,6 +27,7 @@ namespace layers {
  */
 class CheckerboardEvent {
 public:
+  // clang-format off
   MOZ_DEFINE_ENUM_AT_CLASS_SCOPE(
     RendertraceProperty, (
       Page,
@@ -35,6 +36,7 @@ public:
       RequestedDisplayPort,
       UserVisible
   ));
+  // clang-format on
 
   static const char* sDescriptions[sRendertracePropertyCount];
   static const char* sColors[sRendertracePropertyCount];
