@@ -591,15 +591,14 @@ class ConsoleCallDataWorkletRunnable final : public ConsoleWorkletRunnable
 {
 public:
   static already_AddRefed<ConsoleCallDataWorkletRunnable>
-  Create(Console* aConsole, ConsoleCallData* aConsoleData)
+  Create(JSContext* aCx, Console* aConsole, ConsoleCallData* aConsoleData)
   {
     WorkletThread::AssertIsOnWorkletThread();
 
     RefPtr<ConsoleCallDataWorkletRunnable> runnable =
       new ConsoleCallDataWorkletRunnable(aConsole, aConsoleData);
 
-    if (!runnable->StoreConsoleData(WorkletThread::Get()->GetJSContext(),
-                                    aConsoleData)) {
+    if (!runnable->StoreConsoleData(aCx, aConsoleData)) {
       return nullptr;
     }
 
@@ -883,7 +882,8 @@ class ConsoleProfileWorkletRunnable final : public ConsoleWorkletRunnable
 {
 public:
   static already_AddRefed<ConsoleProfileWorkletRunnable>
-  Create(Console* aConsole, Console::MethodName aName, const nsAString& aAction,
+  Create(JSContext* aCx, Console* aConsole,
+         Console::MethodName aName, const nsAString& aAction,
          const Sequence<JS::Value>& aArguments)
   {
     WorkletThread::AssertIsOnWorkletThread();
@@ -891,8 +891,7 @@ public:
     RefPtr<ConsoleProfileWorkletRunnable> runnable =
       new ConsoleProfileWorkletRunnable(aConsole, aName, aAction);
 
-    if (!runnable->StoreProfileData(WorkletThread::Get()->GetJSContext(),
-                                    aArguments)) {
+    if (!runnable->StoreProfileData(aCx, aArguments)) {
       return nullptr;
     }
 
@@ -1380,7 +1379,8 @@ Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
 
   if (WorkletThread::IsOnWorkletThread()) {
     RefPtr<ConsoleProfileWorkletRunnable> runnable =
-      ConsoleProfileWorkletRunnable::Create(this, aMethodName, aAction, aData);
+      ConsoleProfileWorkletRunnable::Create(aCx, this,
+                                            aMethodName, aAction, aData);
     if (!runnable) {
       return;
     }
@@ -1697,7 +1697,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   if (WorkletThread::IsOnWorkletThread()) {
     RefPtr<ConsoleCallDataWorkletRunnable> runnable =
-      ConsoleCallDataWorkletRunnable::Create(this, callData);
+      ConsoleCallDataWorkletRunnable::Create(aCx, this, callData);
     if (!runnable) {
       return;
     }
