@@ -560,7 +560,7 @@ protected:
     if (NS_IsMainThread()) {
       RunOnMainThread();
       RefPtr<ConsoleWorkletRunnable> runnable(this);
-      return mWorkletImpl->DispatchRunnable(runnable.forget());
+      return mWorkletImpl->SendControlMessage(runnable.forget());
     }
 
     WorkletThread::AssertIsOnWorkletThread();
