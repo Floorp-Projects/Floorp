@@ -17,6 +17,7 @@
 #include "mozilla/Maybe.h"
 
 #include "frontend/BCEParserHandle.h"
+#include "frontend/BinASTEnum.h"
 #include "frontend/BinASTParserBase.h"
 #include "frontend/BinToken.h"
 #include "frontend/BinTokenReaderMultipart.h"
@@ -51,6 +52,15 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     using AutoTuple = typename Tokenizer::AutoTuple;
     using BinFields = typename Tokenizer::BinFields;
     using Chars = typename Tokenizer::Chars;
+
+  public:
+    // Auto-generated types.
+    using AssertedDeclaredKind = binast::AssertedDeclaredKind;
+    using BinaryOperator = binast::BinaryOperator;
+    using CompoundAssignmentOperator = binast::CompoundAssignmentOperator;
+    using UnaryOperator = binast::UnaryOperator;
+    using UpdateOperator = binast::UpdateOperator;
+    using VariableDeclarationKind = binast::VariableDeclarationKind;
 
   public:
     BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames, const JS::ReadOnlyCompileOptions& options,
