@@ -16,12 +16,7 @@
 <?xml-stylesheet href="chrome://browser/skin/preferences/in-content/containers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/in-content/privacy.css"?>
 
-<!DOCTYPE page [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-<!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
-%brandDTD;
-%certManagerDTD;
-]>
+<!DOCTYPE page>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:html="http://www.w3.org/1999/xhtml"
@@ -49,6 +44,7 @@
     <link rel="localization" href="browser/sanitize.ftl"/>
     <link rel="localization" href="toolkit/updates/history.ftl"/>
     <link rel="localization" href="security/certificates/deviceManager.ftl"/>
+    <link rel="localization" href="security/certificates/certManager.ftl"/>
   </linkset>
 
   <html:link rel="shortcut icon"
