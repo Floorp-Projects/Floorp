@@ -15,10 +15,8 @@ generate:
               name: public/docs.tar.gz
               path: /builds/worker/checkouts/gecko/docs-out/main.tar.gz
     run:
-        using: run-task
-        command: >
-            cd /builds/worker/checkouts/gecko &&
-            ./mach doc --outdir docs-out --no-open --no-serve --archive
+        using: mach
+        mach: doc --outdir docs-out --no-open --no-serve --archive
         sparse-profile: sphinx-docs
     optimization:
         skip-unless-schedules: [docs]
@@ -37,8 +35,8 @@ upload:
         max-run-time: 1800
         taskcluster-proxy: true
     run:
-        using: run-task
-        command: cd /builds/worker/checkouts/gecko && ./mach doc --upload --no-open --no-serve
+        using: mach
+        mach: doc --upload --no-open --no-serve
         sparse-profile: sphinx-docs
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/gecko-docs-upload
