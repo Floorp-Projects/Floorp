@@ -94,13 +94,12 @@ class ReadableStream : public NativeObject
     void setStoredError(HandleValue value) { setFixedSlot(Slot_StoredError, value); }
 
     JS::ReadableStreamMode mode() const;
-    uint8_t embeddingFlags() const;
 
     bool locked() const;
 
     static MOZ_MUST_USE ReadableStream* create(JSContext* cx, HandleObject proto = nullptr);
     static ReadableStream* createExternalSourceStream(JSContext* cx, void* underlyingSource,
-                                                      uint8_t flags, HandleObject proto = nullptr);
+                                                      HandleObject proto = nullptr);
 
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
     static const ClassSpec classSpec_;
@@ -261,9 +260,6 @@ class ReadableStreamController : public StreamController
         Flag_SourceLocked   = 1 << 8,
     };
 
-    // Offset at which embedding flags are stored.
-    static constexpr uint8_t EmbeddingFlagsOffset = 24;
-
     ReadableStream* stream() const {
         return &getFixedSlot(Slot_Stream).toObject().as<ReadableStream>();
     }
@@ -297,7 +293,6 @@ class ReadableStreamController : public StreamController
     bool sourceLocked() const { return flags() & Flag_SourceLocked; }
     void setSourceLocked() { addFlags(Flag_SourceLocked); }
     void clearSourceLocked() { removeFlags(Flag_SourceLocked); }
-    void setEmbeddingFlags(uint8_t flags) { addFlags(uint32_t(flags) << EmbeddingFlagsOffset); }
 
     static const Class class_;
 };

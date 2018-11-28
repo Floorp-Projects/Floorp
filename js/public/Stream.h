@@ -20,13 +20,11 @@
  * it).
  *
  * When creating an "external readable stream" using
- * JS::NewReadableExternalSourceStreamObject, an underlying source and a set of
- * flags can be passed to be stored on the stream. The underlying source is
- * treated as an opaque void* pointer by the JS engine: it's purely meant as a
- * reference to be used by the embedding to identify whatever actual source it
- * uses to supply data for the stream. Similarly, the flags aren't interpreted
- * by the JS engine, but are passed to some of the callbacks below and can be
- * retrieved using JS::ReadableStreamGetEmbeddingFlags.
+ * JS::NewReadableExternalSourceStreamObject, an underlying source can be
+ * passed to be stored on the stream. The underlying source is treated as an
+ * opaque void* pointer by the JS engine: it's purely meant as a reference to
+ * be used by the embedding to identify whatever actual source it uses to
+ * supply data for the stream.
  *
  * External readable streams are optimized to allow the embedding to interact
  * with them with a minimum of overhead: chunks aren't enqueued as individual
@@ -79,7 +77,7 @@ namespace JS {
  */
 typedef void
 (* RequestReadableStreamDataCallback)(JSContext* cx, HandleObject stream,
-                                      void* underlyingSource, uint8_t flags, size_t desiredSize);
+                                      void* underlyingSource, size_t desiredSize);
 
 /**
  * Invoked to cause the embedding to fill the given |buffer| with data from
@@ -98,8 +96,8 @@ typedef void
  */
 typedef void
 (* WriteIntoReadRequestBufferCallback)(JSContext* cx, HandleObject stream,
-                                       void* underlyingSource, uint8_t flags, void* buffer,
-                                       size_t length, size_t* bytesWritten);
+                                       void* underlyingSource, void* buffer, size_t length,
+                                       size_t* bytesWritten);
 
 /**
  * Invoked in reaction to the ReadableStream being canceled to allow the
@@ -116,15 +114,14 @@ typedef void
  */
 typedef Value
 (* CancelReadableStreamCallback)(JSContext* cx, HandleObject stream,
-                                 void* underlyingSource, uint8_t flags, HandleValue reason);
+                                 void* underlyingSource, HandleValue reason);
 
 /**
  * Invoked in reaction to a ReadableStream with an embedding-provided
  * underlying source being closed.
  */
 typedef void
-(* ReadableStreamClosedCallback)(JSContext* cx, HandleObject stream, void* underlyingSource,
-                                 uint8_t flags);
+(* ReadableStreamClosedCallback)(JSContext* cx, HandleObject stream, void* underlyingSource);
 
 /**
  * Invoked in reaction to a ReadableStream with an embedding-provided
@@ -133,7 +130,7 @@ typedef void
  */
 typedef void
 (* ReadableStreamErroredCallback)(JSContext* cx, HandleObject stream, void* underlyingSource,
-                                  uint8_t flags, HandleValue reason);
+                                  HandleValue reason);
 
 /**
  * Invoked in reaction to a ReadableStream with an embedding-provided
@@ -147,7 +144,7 @@ typedef void
  * embedding must be able to handle.
  */
 typedef void
-(* ReadableStreamFinalizeCallback)(void* underlyingSource, uint8_t flags);
+(* ReadableStreamFinalizeCallback)(void* underlyingSource);
 
 /**
  * Sets runtime-wide callbacks to use for interacting with embedding-provided
@@ -188,10 +185,6 @@ NewReadableDefaultStreamObject(JSContext* cx, HandleObject underlyingSource = nu
  * embedding-provided underlying source, using the callbacks set via
  * |JS::SetReadableStreamCallbacks|.
  *
- * The given |flags| will be passed to all applicable callbacks and can be
- * used to disambiguate between different types of stream sources the
- * embedding might support.
- *
  * Note: the embedding is responsible for ensuring that the pointer to the
  * underlying source stays valid as long as the stream can be read from.
  * The underlying source can be freed if the tree is canceled or errored.
@@ -202,19 +195,7 @@ NewReadableDefaultStreamObject(JSContext* cx, HandleObject underlyingSource = nu
  */
 extern JS_PUBLIC_API JSObject*
 NewReadableExternalSourceStreamObject(JSContext* cx, void* underlyingSource,
-                                      uint8_t flags = 0, HandleObject proto = nullptr);
-
-/**
- * Returns the flags that were passed to NewReadableExternalSourceStreamObject
- * when creating the given stream.
- *
- * Asserts that |stream| is a ReadableStream object or an unwrappable wrapper
- * for one.
- *
- * Asserts that the given stream has an embedding-provided underlying source.
- */
-extern JS_PUBLIC_API bool
-ReadableStreamGetEmbeddingFlags(JSContext* cx, HandleObject stream, uint8_t* flags);
+                                      HandleObject proto = nullptr);
 
 /**
  * Returns the embedding-provided underlying source of the given |stream|.
