@@ -816,28 +816,6 @@ struct GradientStop {
   }
 };
 
-struct Shadow {
-  LayoutVector2D offset;
-  ColorF color;
-  float blur_radius;
-
-  bool operator==(const Shadow& aOther) const {
-    return offset == aOther.offset &&
-           color == aOther.color &&
-           blur_radius == aOther.blur_radius;
-  }
-};
-
-struct WrAnimationProperty {
-  WrAnimationType effect_type;
-  uint64_t id;
-
-  bool operator==(const WrAnimationProperty& aOther) const {
-    return effect_type == aOther.effect_type &&
-           id == aOther.id;
-  }
-};
-
 // A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
 //
 // Transforms can be parametrized over the source and destination units, to describe a
@@ -889,6 +867,28 @@ struct TypedTransform3D {
 };
 
 using LayoutTransform = TypedTransform3D<float, LayoutPixel, LayoutPixel>;
+
+struct Shadow {
+  LayoutVector2D offset;
+  ColorF color;
+  float blur_radius;
+
+  bool operator==(const Shadow& aOther) const {
+    return offset == aOther.offset &&
+           color == aOther.color &&
+           blur_radius == aOther.blur_radius;
+  }
+};
+
+struct WrAnimationProperty {
+  WrAnimationType effect_type;
+  uint64_t id;
+
+  bool operator==(const WrAnimationProperty& aOther) const {
+    return effect_type == aOther.effect_type &&
+           id == aOther.id;
+  }
+};
 
 struct WrFilterOp {
   WrFilterOpType filter_type;
@@ -1360,6 +1360,10 @@ void wr_dp_pop_clip_and_scroll_info(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_pop_reference_frame(WrState *aState)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_pop_scroll_layer(WrState *aState)
 WR_FUNC;
 
@@ -1529,6 +1533,11 @@ void wr_dp_push_rect(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
+WrClipId wr_dp_push_reference_frame(WrState *aState,
+                                    const LayoutTransform *aTransform)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_push_scroll_layer(WrState *aState,
                              WrClipId aScrollId)
 WR_FUNC;
@@ -1543,7 +1552,6 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_stacking_context(WrState *aState,
-                                 LayoutRect aBounds,
                                  const WrClipId *aClipNodeId,
                                  const WrAnimationProperty *aAnimation,
                                  const float *aOpacity,
