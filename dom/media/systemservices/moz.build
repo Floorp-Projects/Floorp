@@ -20,10 +20,16 @@ if CONFIG['MOZ_WEBRTC']:
         'VideoFrameUtils.cpp'
     ]
     LOCAL_INCLUDES += [
+        '/media/libyuv/libyuv/include',
         '/media/webrtc/signaling',
         '/media/webrtc/trunk',
         '/media/webrtc/trunk/webrtc',
     ]
+
+    if CONFIG['OS_TARGET'] != 'Android':
+        UNIFIED_SOURCES += [
+            'video_engine/desktop_capture_impl.cc',
+        ]
 
 if CONFIG['OS_TARGET'] == 'Android':
     DEFINES['WEBRTC_ANDROID'] = True
