@@ -22,6 +22,7 @@ class FlexItem extends PureComponent {
       index: PropTypes.number.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      scrollToTop: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
   }
@@ -32,6 +33,7 @@ class FlexItem extends PureComponent {
       index,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      scrollToTop,
       setSelectedNode,
     } = this.props;
     const { nodeFront } = flexItem;
@@ -42,6 +44,7 @@ class FlexItem extends PureComponent {
           className: "devtools-button devtools-monospace",
           onClick: e => {
             e.stopPropagation();
+            scrollToTop();
             setSelectedNode(nodeFront);
             onHideBoxModelHighlighter();
           },
