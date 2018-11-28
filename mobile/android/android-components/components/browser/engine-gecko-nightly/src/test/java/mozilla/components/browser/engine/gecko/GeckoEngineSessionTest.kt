@@ -22,6 +22,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.expectException
 import mozilla.components.support.test.mock
 import mozilla.components.support.utils.ThreadUtils
+import mozilla.components.test.ReflectionUtils
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -42,7 +43,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
-import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -53,12 +53,12 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_NO
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
+import org.mozilla.geckoview.MockWebResponseInfo
 import org.mozilla.geckoview.SessionFinder
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
 import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
-import org.mozilla.geckoview.createMockedWebResponseInfo
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -199,7 +199,7 @@ class GeckoEngineSessionTest {
         val observer: EngineSession.Observer = mock()
         engineSession.register(observer)
 
-        val info: GeckoSession.WebResponseInfo = createMockedWebResponseInfo(
+        val info: GeckoSession.WebResponseInfo = MockWebResponseInfo(
             uri = "https://download.mozilla.org",
             contentLength = 42,
             contentType = "image/png",
@@ -391,6 +391,12 @@ class GeckoEngineSessionTest {
         verify(geckoSession).restoreState(any())
     }
 
+    class MockSecurityInformation(origin: String) : SecurityInformation() {
+        init {
+            ReflectionUtils.setField(this, "origin", origin)
+        }
+    }
+
     @Test
     fun progressDelegateIgnoresInitialLoadOfAboutBlank() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
@@ -403,21 +409,14 @@ class GeckoEngineSessionTest {
             }
         })
 
-        // We need to make the constructor accessible in order to test this behaviour
-        val constructor = SecurityInformation::class.java.getDeclaredConstructor(GeckoBundle::class.java)
-        constructor.isAccessible = true
-
         captureDelegates()
 
-        val bundle = mock(GeckoBundle::class.java)
-        `when`(bundle.getBundle(any())).thenReturn(mock(GeckoBundle::class.java))
-        `when`(bundle.getString("origin")).thenReturn("moz-nullprincipal:{uuid}")
-        progressDelegate.value.onSecurityChange(null, constructor.newInstance(bundle))
+        progressDelegate.value.onSecurityChange(null,
+                MockSecurityInformation("moz-nullprincipal:{uuid}"))
         assertFalse(observedSecurityChange)
 
-        `when`(bundle.getBundle(any())).thenReturn(mock(GeckoBundle::class.java))
-        `when`(bundle.getString("origin")).thenReturn("https://www.mozilla.org")
-        progressDelegate.value.onSecurityChange(null, constructor.newInstance(bundle))
+        progressDelegate.value.onSecurityChange(null,
+                MockSecurityInformation("https://www.mozilla.org"))
         assertTrue(observedSecurityChange)
     }
 
@@ -1318,7 +1317,7 @@ class GeckoEngineSessionTest {
         }
         engineSession.register(observer)
 
-        val info: GeckoSession.WebResponseInfo = createMockedWebResponseInfo(
+        val info: GeckoSession.WebResponseInfo = MockWebResponseInfo(
             uri = "http://ipv4.download.thinkbroadband.com/1MB.zip",
             contentLength = 0,
             contentType = "",
