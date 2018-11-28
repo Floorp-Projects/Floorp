@@ -766,7 +766,7 @@ MarkActiveBaselineScripts(Zone* zone);
 MethodStatus
 BaselineCompile(JSContext* cx, JSScript* script, bool forceDebugInstrumentation = false);
 
-#ifdef JS_STRUCTURED_SPEW
+#ifdef JS_JITSPEW
 void
 JitSpewBaselineICStats(JSScript* script, const char* dumpReason);
 #endif

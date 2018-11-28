@@ -120,14 +120,6 @@ JSONPrinter::formatProperty(const char* name, const char* format, ...)
 }
 
 void
-JSONPrinter::formatProperty(const char* name, const char* format, va_list ap)
-{
-    beginStringProperty(name);
-    out_.vprintf(format, ap);
-    endStringProperty();
-}
-
-void
 JSONPrinter::value(const char* format, ...)
 {
     va_list ap;
