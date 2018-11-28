@@ -23,6 +23,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
+#include "js/MemoryFunctions.h"
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"

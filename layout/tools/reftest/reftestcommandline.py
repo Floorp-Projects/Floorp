@@ -485,7 +485,4 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
         if not options.httpdPath:
             options.httpdPath = os.path.join(options.utilityPath, "components")
 
-        # Disable e10s by default on Android because we don't run Android
-        # e10s jobs anywhere yet.
-        options.e10s = False
         return options

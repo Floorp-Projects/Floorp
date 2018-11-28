@@ -19,6 +19,7 @@
 #include "js/GCHashTable.h"
 #include "js/HeapAPI.h"
 #include "js/RootingAPI.h"
+#include "js/Symbol.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "vm/Printer.h"

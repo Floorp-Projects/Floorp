@@ -63,9 +63,9 @@ interface nsIPaymentDetails : nsISupports
   [implicit_jscontext]
   readonly attribute jsval shippingAddressErrors;
   [implicit_jscontext]
-  readonly attribute jsval payer;
+  readonly attribute jsval payerErrors;
   [implicit_jscontext]
-  readonly attribute jsval paymentMethod;
+  readonly attribute jsval paymentMethodErrors;
 };
 
 [scriptable, builtinclass, uuid(d53f9f20-138e-47cc-9fd5-db16a3f6d301)]

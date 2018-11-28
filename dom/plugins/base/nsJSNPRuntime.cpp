@@ -25,6 +25,7 @@
 #include "nsPluginInstanceOwner.h"
 #include "nsWrapperCacheInlines.h"
 #include "js/GCHashTable.h"
+#include "js/Symbol.h"
 #include "js/TracingAPI.h"
 #include "js/Wrapper.h"
 #include "mozilla/HashFunctions.h"
