@@ -425,8 +425,10 @@ struct nsGridContainerFrame::LineRange {
     MOZ_ASSERT(IsAuto(), "Why call me?");
     mStart = aStart;
     mEnd += aStart;
-    // Clamping to where kMaxLine is in the explicit grid, per
-    // http://dev.w3.org/csswg/css-grid/#overlarge-grids :
+    // Clamp to aClampMaxLine, which is where kMaxLine is in the explicit
+    // grid in a non-subgrid axis; this implements clamping per
+    // http://dev.w3.org/csswg/css-grid/#overlarge-grids
+    // In a subgrid axis it's the end of the grid in that axis.
     if (MOZ_UNLIKELY(mStart >= aClampMaxLine)) {
       mEnd = aClampMaxLine;
       mStart = mEnd - 1;
@@ -767,10 +769,15 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
    * @param aNumRepeatTracks the number of actual tracks associated with
    *   a repeat(auto-fill/fit) track (zero or more), or zero if there is no
    *   specified repeat(auto-fill/fit) track
+   * @param aClampMinLine/aClampMaxLine in a non-subgrid axis it's kMin/MaxLine;
+   *   in a subgrid axis it's its explicit grid bounds (all 1-based)
    */
   LineNameMap(const nsStyleGridTemplate& aGridTemplate,
-              uint32_t aNumRepeatTracks)
-      : mLineNameLists(aGridTemplate.mLineNameLists),
+              uint32_t aNumRepeatTracks, int32_t aClampMinLine,
+              int32_t aClampMaxLine)
+      : mClampMinLine(aClampMinLine),
+        mClampMaxLine(aClampMaxLine),
+        mLineNameLists(aGridTemplate.mLineNameLists),
         mRepeatAutoLineNameListBefore(
             aGridTemplate.mRepeatAutoLineNameListBefore),
         mRepeatAutoLineNameListAfter(
@@ -814,6 +821,10 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
     *aNth = -nth;
     return line;
   }
+
+  // The min/max line number (1-based) for clamping.
+  const int32_t mClampMinLine;
+  const int32_t mClampMaxLine;
 
  private:
   /**
@@ -2167,7 +2178,8 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid {
                   resolving a grid-row-start line, pass eLogicalSideBStart)
    * @param aExplicitGridEnd the last line in the explicit grid
    * @param aStyle the StylePosition() for the grid container
-   * @return a definite line (1-based), clamped to the kMinLine..kMaxLine range
+   * @return a definite line (1-based), clamped to
+   *   the mClampMinLine..mClampMaxLine range
    */
   int32_t ResolveLine(const nsStyleGridLine& aLine, int32_t aNth,
                       uint32_t aFromIndex, const LineNameMap& aNameMap,
@@ -2713,7 +2725,7 @@ int32_t nsGridContainerFrame::Grid::ResolveLine(
       line = edgeLine + aNth;
     }
   }
-  return clamped(line, nsStyleGridLine::kMinLine, nsStyleGridLine::kMaxLine);
+  return clamped(line, aNameMap.mClampMinLine, aNameMap.mClampMaxLine);
 }
 
 nsGridContainerFrame::Grid::LinePair
@@ -2745,7 +2757,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
     if (end <= 1) {
       // The end is at or before the first explicit line, thus all lines before
       // it match <custom-ident> since they're implicit.
-      int32_t start = std::max(end - span, nsStyleGridLine::kMinLine);
+      int32_t start = std::max(end - span, aNameMap.mClampMinLine);
       return LinePair(start, end);
     }
     auto start = ResolveLine(aStart, -span, end, aNameMap,
@@ -2795,8 +2807,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
       if (start >= int32_t(aExplicitGridEnd)) {
         // The start is at or after the last explicit line, thus all lines
         // after it match <custom-ident> since they're implicit.
-        return LinePair(start,
-                        std::min(start + nth, nsStyleGridLine::kMaxLine));
+        return LinePair(start, std::min(start + nth, aNameMap.mClampMaxLine));
       }
       from = start;
     }
@@ -2808,7 +2819,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
                          aExplicitGridEnd, aStyle);
   if (start == int32_t(kAutoLine)) {
     // auto / definite line
-    start = std::max(nsStyleGridLine::kMinLine, end - 1);
+    start = std::max(aNameMap.mClampMinLine, end - 1);
   }
   return LinePair(start, end);
 }
@@ -2822,17 +2833,17 @@ nsGridContainerFrame::LineRange nsGridContainerFrame::Grid::ResolveLineRange(
   MOZ_ASSERT(r.second != int32_t(kAutoLine));
 
   if (r.first == int32_t(kAutoLine)) {
-    // r.second is a span, clamp it to kMaxLine - 1 so that the returned
-    // range has a HypotheticalEnd <= kMaxLine.
+    // r.second is a span, clamp it to aNameMap.mClampMaxLine - 1 so that
+    // the returned range has a HypotheticalEnd <= aNameMap.mClampMaxLine.
     // http://dev.w3.org/csswg/css-grid/#overlarge-grids
-    r.second = std::min(r.second, nsStyleGridLine::kMaxLine - 1);
+    r.second = std::min(r.second, aNameMap.mClampMaxLine - 1);
   } else {
     // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
     if (r.first > r.second) {
       Swap(r.first, r.second);
     } else if (r.first == r.second) {
-      if (MOZ_UNLIKELY(r.first == nsStyleGridLine::kMaxLine)) {
-        r.first = nsStyleGridLine::kMaxLine - 1;
+      if (MOZ_UNLIKELY(r.first == aNameMap.mClampMaxLine)) {
+        r.first = aNameMap.mClampMaxLine - 1;
       }
       r.second = r.first + 1;  // XXX subgrid explicit size instead of 1?
     }
@@ -3136,6 +3147,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   // Note that this is for a grid with a 1,1 origin.  We'll change that
   // to a 0,0 based grid after placing definite lines.
   auto areas = gridStyle->mGridTemplateAreas.get();
+  int32_t clampMinColLine = nsStyleGridLine::kMinLine;
   int32_t clampMaxColLine = nsStyleGridLine::kMaxLine;
   uint32_t numRepeatCols;
   if (!aState.mFrame->IsColSubgrid()) {
@@ -3148,6 +3160,8 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     const auto* subgrid = aState.mFrame->GetProperty(Subgrid::Prop());
     uint32_t extent = subgrid->SubgridCols().Extent();
     mExplicitGridColEnd = extent + 1;  // the grid is 1-based at this point
+    clampMinColLine = 1;
+    clampMaxColLine = mExplicitGridColEnd;
     const auto& cols = gridStyle->GridTemplateColumns();
     numRepeatCols =
         cols.HasRepeatAuto()
@@ -3155,7 +3169,10 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
             : 0;
   }
   mGridColEnd = mExplicitGridColEnd;
-  LineNameMap colLineNameMap(gridStyle->GridTemplateColumns(), numRepeatCols);
+  LineNameMap colLineNameMap(gridStyle->GridTemplateColumns(), numRepeatCols,
+                             clampMinColLine, clampMaxColLine);
+
+  int32_t clampMinRowLine = nsStyleGridLine::kMinLine;
 
   int32_t clampMaxRowLine = nsStyleGridLine::kMaxLine;
   uint32_t numRepeatRows;
@@ -3169,6 +3186,8 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     const auto* subgrid = aState.mFrame->GetProperty(Subgrid::Prop());
     uint32_t extent = subgrid->SubgridRows().Extent();
     mExplicitGridRowEnd = extent + 1;  // the grid is 1-based at this point
+    clampMinRowLine = 1;
+    clampMaxRowLine = mExplicitGridRowEnd;
     const auto& rows = gridStyle->GridTemplateRows();
     numRepeatRows =
         rows.HasRepeatAuto()
@@ -3176,7 +3195,8 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
             : 0;
   }
   mGridRowEnd = mExplicitGridRowEnd;
-  LineNameMap rowLineNameMap(gridStyle->GridTemplateRows(), numRepeatRows);
+  LineNameMap rowLineNameMap(gridStyle->GridTemplateRows(), numRepeatRows,
+                             clampMinRowLine, clampMaxRowLine);
 
   // http://dev.w3.org/csswg/css-grid/#line-placement
   // Resolve definite positions per spec chap 9.2.
