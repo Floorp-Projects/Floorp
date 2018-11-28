@@ -487,6 +487,7 @@ class TestMetadata(object):
                         "support-files": "",
                         "subsuite": test_type,
                         "dir_relpath": os.path.dirname(src_path),
+                        "srcdir_relpath": src_path,
                         })
 
         self._wpt_loaded = True

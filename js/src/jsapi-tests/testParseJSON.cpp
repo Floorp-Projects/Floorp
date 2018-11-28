@@ -11,6 +11,7 @@
 #include "builtin/String.h"
 
 #include "js/JSON.h"
+#include "js/MemoryFunctions.h"
 #include "js/Printf.h"
 #include "jsapi-tests/tests.h"
 

@@ -5,6 +5,8 @@
 #ifndef GLCONSTS_H_
 #define GLCONSTS_H_
 
+// clang-format off
+
 /**
  * GENERATED FILE, DO NOT MODIFY DIRECTLY.
  * This is a file generated directly from the official OpenGL registry
@@ -6999,6 +7001,6 @@
 #define LOCAL_WGL_VIDEO_OUT_STACKED_FIELDS_1_2               0x20CB
 #define LOCAL_WGL_VIDEO_OUT_STACKED_FIELDS_2_1               0x20CC
 
-
+// clang-format on
 
 #endif // GLCONSTS_H_

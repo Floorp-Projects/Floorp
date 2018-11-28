@@ -112,7 +112,7 @@ function checkPayerErrors(testName, errors) {
 
 function checkPaymentMethodErrors(testName, errors) {
   if (!errors) {
-    emitTestFail(`${testName} :Expect non-null payerMethodErrors, but got null.`);
+    emitTestFail(`${testName} :Expect non-null paymentMethodErrors, but got null.`);
     return;
   }
   for (const [key, msg] of Object.entries(errors)) {
@@ -148,8 +148,8 @@ const DummyUIService = {
                    payment.paymentDetails.error + "'");
     }
     checkAddressErrors(this.testName, payment.paymentDetails.shippingAddressErrors)
-    checkPayerErrors(this.testName, payment.paymentDetails.payer);
-    checkPaymentMethodErrors(this.testName, payment.paymentDetails.paymentMethod);
+    checkPayerErrors(this.testName, payment.paymentDetails.payerErrors);
+    checkPaymentMethodErrors(this.testName, payment.paymentDetails.paymentMethodErrors);
     if (this.rejectRetry) {
       rejectPayment(requestId);
     } else {

@@ -14,7 +14,7 @@
  */
 
 use super::{
-    BinaryReader, BinaryReaderError, OperatorsReader, Result, SectionIteratorLimited,
+    BinaryReader, BinaryReaderError, OperatorsReader, Range, Result, SectionIteratorLimited,
     SectionReader, SectionWithLimitedItems, Type,
 };
 
@@ -63,6 +63,13 @@ impl<'a> FunctionBody<'a> {
         let pos = reader.position;
         Ok(OperatorsReader::new(&self.data[pos..], self.offset + pos))
     }
+
+    pub(crate) fn get_range(&self) -> Range {
+        Range {
+            start: self.offset,
+            end: self.offset + self.data.len(),
+        }
+    }
 }
 
 pub struct LocalsReader<'a> {
@@ -73,6 +80,10 @@ pub struct LocalsReader<'a> {
 impl<'a> LocalsReader<'a> {
     pub fn get_count(&self) -> u32 {
         self.count
+    }
+
+    pub fn original_position(&self) -> usize {
+        self.reader.original_position()
     }
 
     pub fn read(&mut self) -> Result<(u32, Type)> {

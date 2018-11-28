@@ -5,6 +5,7 @@
 
 #include "ctypes.h"
 #include "jsapi.h"
+#include "js/MemoryFunctions.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsMemory.h"
 #include "nsString.h"

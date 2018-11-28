@@ -132,7 +132,7 @@ class Summary(object):
 
             if OPTIONS.write_failures:
                 try:
-                    with open(OPTIONS.write_failures) as out:
+                    with open(OPTIONS.write_failures, "w") as out:
                         for test in self.failures:
                             test.show(out)
                 except IOError as err:

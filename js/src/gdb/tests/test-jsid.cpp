@@ -1,6 +1,8 @@
 #include "gdb-tests.h"
 #include "jsapi.h"
 
+#include "js/Symbol.h"
+
 FRAGMENT(jsid, simple) {
   JS::Rooted<JSString*> string(cx, JS_NewStringCopyZ(cx, "moon"));
   JS::Rooted<JSString*> interned(cx, JS_AtomizeAndPinJSString(cx, string));

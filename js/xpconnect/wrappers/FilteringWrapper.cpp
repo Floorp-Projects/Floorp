@@ -12,6 +12,7 @@
 #include "mozilla/ErrorResult.h"
 
 #include "jsapi.h"
+#include "js/Symbol.h"
 
 using namespace JS;
 using namespace js;

@@ -328,9 +328,15 @@ class AndroidMixin(object):
                        EXIT_STATUS_DICT[TBPL_RETRY])
 
     def is_boot_completed(self):
-        out = self.device.get_prop('sys.boot_completed', timeout=30)
-        if out.strip() == '1':
-            return True
+        import mozdevice
+        try:
+            out = self.device.get_prop('sys.boot_completed', timeout=30)
+            if out.strip() == '1':
+                return True
+        except ValueError:
+            pass
+        except mozdevice.ADBError:
+            pass
         return False
 
     def shell_output(self, cmd):
