@@ -1579,8 +1579,9 @@ BrowserGlue.prototype = {
    * to the other ones scheduled together.
    */
   _scheduleStartupIdleTasks() {
-    Services.tm.idleDispatchToMainThread(() => {
-      ContextualIdentityService.load();
+    Services.tm.idleDispatchToMainThread(async () => {
+      await ContextualIdentityService.load();
+      Discovery.update();
     });
 
     Services.tm.idleDispatchToMainThread(() => {
@@ -1672,10 +1673,6 @@ BrowserGlue.prototype = {
         LiveBookmarkMigrator.migrate().catch(Cu.reportError);
       });
     }
-
-    Services.tm.idleDispatchToMainThread(() => {
-      Discovery.update();
-    });
   },
 
   /**
