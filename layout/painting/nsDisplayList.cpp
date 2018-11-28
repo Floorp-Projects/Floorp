@@ -90,6 +90,7 @@
 #include "nsSVGMaskFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsTableColFrame.h"
+#include "nsTextFrame.h"
 #include "nsSliderFrame.h"
 #include "ClientLayerManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -9602,6 +9603,18 @@ nsCharClipDisplayItem::ComputeInvalidationRegion(
       !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
     aInvalidRegion->Or(oldRect, newRect);
   }
+}
+
+bool
+nsCharClipDisplayItem::IsSelected() const
+{
+  if (mIsFrameSelected.isNothing()) {
+    MOZ_ASSERT((nsTextFrame*)do_QueryFrame(mFrame));
+    auto* f = static_cast<nsTextFrame*>(mFrame);
+    mIsFrameSelected.emplace(f->IsSelected());
+  }
+
+  return mIsFrameSelected.value();
 }
 
 nsDisplayEffectsBase::nsDisplayEffectsBase(

@@ -704,7 +704,7 @@ protected:
    * Return true if the frame is part of a Selection.
    * Helper method to implement the public IsSelected() API.
    */
-  bool IsFrameSelected() const override;
+  bool IsFrameSelected() const final;
 
   mozilla::UniquePtr<SelectionDetails> GetSelectionDetails();
 
