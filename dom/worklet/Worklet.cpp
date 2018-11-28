@@ -368,11 +368,6 @@ ExecutionRunnable::RunOnWorkletThread()
 {
   WorkletThread::AssertIsOnWorkletThread();
 
-  WorkletThread* workletThread = WorkletThread::Get();
-  MOZ_ASSERT(workletThread);
-
-  JSContext* cx = workletThread->GetJSContext();
-
   AutoJSAPI jsapi;
   jsapi.Init();
 
@@ -381,7 +376,7 @@ ExecutionRunnable::RunOnWorkletThread()
   MOZ_ASSERT(globalScope);
 
   AutoEntryScript aes(globalScope, "Worklet");
-  cx = aes.cx();
+  JSContext* cx = aes.cx();
 
   JS::Rooted<JSObject*> globalObj(cx, globalScope->GetGlobalJSObject());
 
