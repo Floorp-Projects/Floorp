@@ -1937,7 +1937,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </field>
 
       <field name="oneOffSearchButtons" readonly="true">
-        new window.SearchOneOffs(
+        new SearchOneOffs(
           document.getAnonymousElementByAttribute(this, "anonid",
                                                   "one-off-search-buttons"));
       </field>

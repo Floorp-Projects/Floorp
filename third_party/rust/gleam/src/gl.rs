@@ -302,6 +302,22 @@ declare_gl_apis! {
                                 format: GLenum,
                                 ty: GLenum,
                                 output: &mut [u8]);
+    unsafe fn copy_image_sub_data(&self,
+                                  src_name: GLuint,
+                                  src_target: GLenum,
+                                  src_level: GLint,
+                                  src_x: GLint,
+                                  src_y: GLint,
+                                  src_z: GLint,
+                                  dst_name: GLuint,
+                                  dst_target: GLenum,
+                                  dst_level: GLint,
+                                  dst_x: GLint,
+                                  dst_y: GLint,
+                                  dst_z: GLint,
+                                  src_width: GLsizei,
+                                  src_height: GLsizei,
+                                  src_depth: GLsizei);
 
     fn invalidate_framebuffer(&self,
                               target: GLenum,

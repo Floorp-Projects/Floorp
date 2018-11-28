@@ -23,16 +23,14 @@ const rootDir = helpers.rootDir;
 // When updating EXTRA_SCRIPTS or MAPPINGS, be sure to also update the
 // 'support-files' config in `tools/lint/eslint.yml`.
 
-// These are scripts not included in global-scripts.inc, but which are loaded
-// via overlays.
+// These are scripts not loaded from browser.xul or global-scripts.inc
+// but via other includes.
 const EXTRA_SCRIPTS = [
   "browser/base/content/nsContextMenu.js",
-  "toolkit/content/contentAreaUtils.js",
-  "toolkit/content/customElements.js",
   "browser/components/places/content/editBookmark.js",
   "browser/components/downloads/content/downloads.js",
   "browser/components/downloads/content/indicator.js",
-  // Via editMenuCommands.inc.xul
+  "toolkit/content/customElements.js",
   "toolkit/content/editMenuOverlay.js",
 ];
 
@@ -53,12 +51,12 @@ const MAPPINGS = {
 };
 
 const globalScriptsRegExp =
-  /<script type=\"application\/javascript\" src=\"(.*)\"\/>|^\s*"(.*?\.js)",$/;
+  /^\s*(?:Services.scriptloader.loadSubScript\(\"(.*?)\", this\);|"(.*?\.js)",)$/;
 
-function getGlobalScriptsIncludes() {
+function getGlobalScriptIncludes(scriptPath) {
   let fileData;
   try {
-    fileData = fs.readFileSync(helpers.globalScriptsPath, {encoding: "utf8"});
+    fileData = fs.readFileSync(scriptPath, {encoding: "utf8"});
   } catch (ex) {
     // The file isn't present, so this isn't an m-c repository.
     return null;
@@ -89,9 +87,17 @@ function getGlobalScriptsIncludes() {
   return result;
 }
 
+function getGlobalScripts() {
+  let results = [];
+  for (let scriptPath of helpers.globalScriptPaths) {
+    results = results.concat(getGlobalScriptIncludes(scriptPath));
+  }
+  return results;
+}
+
 function getScriptGlobals() {
   let fileGlobals = [];
-  let scripts = getGlobalScriptsIncludes();
+  let scripts = getGlobalScripts();
   if (!scripts) {
     return [];
   }
@@ -122,7 +128,7 @@ function mapGlobals(fileGlobals) {
 function getMozillaCentralItems() {
   return {
     globals: mapGlobals(getScriptGlobals()),
-    browserjsScripts: getGlobalScriptsIncludes().concat(EXTRA_SCRIPTS),
+    browserjsScripts: getGlobalScripts().concat(EXTRA_SCRIPTS),
   };
 }
 

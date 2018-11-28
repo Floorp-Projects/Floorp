@@ -12,7 +12,6 @@
 #include "mozpkix/Input.h"
 #include "mozpkix/Result.h"
 #include "SignedCertificateTimestamp.h"
-#include "SignedTreeHead.h"
 
 // Utility functions for encoding/decoding structures used by Certificate
 // Transparency to/from the TLS wire format encoding.
@@ -41,12 +40,6 @@ pkix::Result EncodeV1SCTSignedData(uint64_t timestamp,
                                    pkix::Input serializedLogEntry,
                                    pkix::Input extensions,
                                    Buffer& output);
-
-// Encodes the data signed by a Signed Tree Head (STH) |signedTreeHead| into
-// |output|. The signature included in the |signedTreeHead| can then be
-// verified over these bytes.
-pkix::Result EncodeTreeHeadSignature(const SignedTreeHead& signedTreeHead,
-                                     Buffer& output);
 
 // Decodes a list of Signed Certificate Timestamps
 // (SignedCertificateTimestampList as defined in RFC6962). This list

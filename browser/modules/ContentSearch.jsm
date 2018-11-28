@@ -273,11 +273,10 @@ var ContentSearch = {
     let ok = SearchSuggestionController.engineOffersSuggestions(engine);
     controller.maxLocalResults = ok ? MAX_LOCAL_SUGGESTIONS : MAX_SUGGESTIONS;
     controller.maxRemoteResults = ok ? MAX_SUGGESTIONS : 0;
-    let priv = PrivateBrowsingUtils.isBrowserPrivate(browser);
     // fetch() rejects its promise if there's a pending request, but since we
     // process our event queue serially, there's never a pending request.
     this._currentSuggestion = { controller, target: browser };
-    let suggestions = await controller.fetch(searchString, priv, engine);
+    let suggestions = await controller.fetch(searchString, engine);
     this._currentSuggestion = null;
 
     // suggestions will be null if the request was cancelled

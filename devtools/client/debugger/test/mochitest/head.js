@@ -152,30 +152,6 @@ function removeAddon(aAddon) {
   return deferred.promise;
 }
 
-function getTargetActorForUrl(aClient, aUrl) {
-  let deferred = promise.defer();
-
-  aClient.listTabs().then(aResponse => {
-    let targetActor = aResponse.tabs.filter(aGrip => aGrip.url == aUrl).pop();
-    deferred.resolve(targetActor);
-  });
-
-  return deferred.promise;
-}
-
-async function attachTargetActorForUrl(aClient, aUrl) {
-  let grip = await getTargetActorForUrl(aClient, aUrl);
-  let [ response, front ] = await aClient.attachTarget(grip.actor);
-  return [grip, response, front];
-}
-
-async function attachThreadActorForUrl(aClient, aUrl) {
-  let [grip, response] = await attachTargetActorForUrl(aClient, aUrl);
-  let [response2, threadClient] = await aClient.attachThread(response.threadActor);
-  await threadClient.resume();
-  return threadClient;
-}
-
 // Override once from shared-head, as some tests depend on trying native DOM listeners
 // before EventEmitter.  Since this directory is deprecated, there's little value in
 // resolving the descrepency here.
@@ -908,7 +884,7 @@ function findTab(tabs, url) {
 
 function attachTarget(client, tab) {
   info("Attaching to tab with url '" + tab.url + "'.");
-  return client.attachTarget(tab.actor);
+  return client.attachTarget(tab);
 }
 
 function listWorkers(targetFront) {
@@ -1089,30 +1065,4 @@ function waitForDispatch(panel, type, eventRepeat = 1) {
       info(type + " dispatched " + count + " time(s)");
     }
   });
-}
-
-async function initWorkerDebugger(TAB_URL, WORKER_URL) {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  await connect(client);
-
-  let tab = await addTab(TAB_URL);
-  let { tabs } = await listTabs(client);
-  let [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
-
-  await createWorkerInTab(tab, WORKER_URL);
-
-  let { workers } = await listWorkers(targetFront);
-  let workerTargetFront = findWorker(workers, WORKER_URL);
-
-  let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
-                                            "jsdebugger",
-                                            Toolbox.HostType.WINDOW);
-
-  let debuggerPanel = toolbox.getCurrentPanel();
-  let gDebugger = debuggerPanel.panelWin;
-
-  return {client, tab, targetFront, workerTargetFront, toolbox, gDebugger};
 }

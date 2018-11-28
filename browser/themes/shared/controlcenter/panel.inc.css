@@ -144,6 +144,10 @@
   margin-bottom: 2px !important;
 }
 
+.identity-popup-preferences-button:-moz-locale-dir(rtl) {
+  background-position: center left;
+}
+
 .identity-popup-preferences-button > .toolbarbutton-text {
   display: none;
 }

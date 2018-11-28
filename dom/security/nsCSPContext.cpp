@@ -549,10 +549,12 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
  *
  * @param violationType: the VIOLATION_TYPE_* constant (partial symbol)
  *                 such as INLINE_SCRIPT
- * @param contentPolicyType: a constant from nsIContentPolicy such as TYPE_STYLESHEET
+ * @param contentPolicyType: a constant from nsIContentPolicy such as
+ *                           TYPE_STYLESHEET
  * @param nonceOrHash: for NONCE and HASH violations, it's the nonce or content
  *               string. For other violations, it is an empty string.
- * @param keyword: the keyword corresponding to violation (UNSAFE_INLINE for most)
+ * @param keyword: the keyword corresponding to violation (UNSAFE_INLINE for
+ *                 most)
  * @param observerTopic: the observer topic string to send with the CSP
  *                 observer notifications.
  *

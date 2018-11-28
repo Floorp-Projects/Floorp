@@ -164,7 +164,7 @@ interface WEBGL_multiview {
       <ul>
         <li>if <code>numViews</code> is less than one</li>
         <li>if <code>numViews</code> is more than <code>MAX_VIEWS_OVR</code></li>
-        <li>with the parameters set so that <code>baseViewIndex</code> + <code>numViews</code> is larger than the value of <code>MAX_ARRAY_TEXTURE_LAYERS</code> minus one</li>
+        <li>with the parameters set so that <code>baseViewIndex</code> + <code>numViews</code> is larger than the value of <code>MAX_ARRAY_TEXTURE_LAYERS</code></li>
         <li>if <code>baseViewIndex</code> is negative</li>
       </ul>
     </error>
@@ -276,6 +276,10 @@ interface WEBGL_multiview {
 
     <revision date="2018/01/03">
       <change>Moved to draft status.</change>
+    </revision>
+
+    <revision date="2018/07/26">
+      <change>Fixed off-by-one issue in validating baseViewIndex + numViews.</change>
     </revision>
   </history>
 </draft>

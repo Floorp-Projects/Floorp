@@ -13,7 +13,7 @@ const ACTOR_URL = "chrome://mochitests/content/browser/devtools/server/tests/bro
 const { InContentFront, InParentFront } = require(ACTOR_URL);
 
 add_task(async function() {
-  await addTab("data:text/html;charset=utf-8,foo");
+  const browser = await addTab("data:text/html;charset=utf-8,foo");
 
   info("Register target-scoped actor in the content process");
   await registerActorInContentProcess(ACTOR_URL, {
@@ -22,9 +22,13 @@ add_task(async function() {
     type: { target: true },
   });
 
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
+  const tab = gBrowser.getTabForBrowser(browser);
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
+  const targetFront = target.activeTab;
+  const { client } = target;
+  const form = targetFront.targetForm;
+
   const inContentFront = InContentFront(client, form);
   const isInContent = await inContentFront.isInContent();
   ok(isInContent, "ContentActor really runs in the content process");
@@ -43,6 +47,6 @@ add_task(async function() {
   ok(conn, "`conn`, first contructor argument is a DebuggerServerConnection instance");
   is(mm, "ChromeMessageSender", "`mm`, last constructor argument is a message manager");
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

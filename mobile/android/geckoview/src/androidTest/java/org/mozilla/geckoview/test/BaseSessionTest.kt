@@ -41,6 +41,10 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val SAVE_STATE_PATH = "/assets/www/saveState.html"
         const val TITLE_CHANGE_HTML_PATH = "/assets/www/titleChange.html"
         const val TRACKERS_PATH = "/assets/www/trackers.html"
+        const val VIDEO_OGG_PATH = "/assets/www/ogg.html"
+        const val VIDEO_MP4_PATH = "/assets/www/mp4.html"
+        const val VIDEO_WEBM_PATH = "/assets/www/webm.html"
+        const val VIDEO_BAD_PATH = "/assets/www/badVideoPath.html"
         const val UNKNOWN_HOST_URI = "http://www.test.invalid/"
         const val FULLSCREEN_PATH = "/assets/www/fullscreen.html"
     }

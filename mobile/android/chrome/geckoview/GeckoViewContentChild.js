@@ -257,31 +257,37 @@ class GeckoViewContentChild extends GeckoViewChildModule {
 
     switch (aEvent.type) {
       case "contextmenu":
-        function nearestParentHref(node) {
-          while (node && !node.href) {
-            node = node.parentNode;
+        function nearestParentAttribute(aNode, aAttribute) {
+          while (aNode && aNode.hasAttribute &&
+                 !aNode.hasAttribute(aAttribute)) {
+            aNode = aNode.parentNode;
           }
-          return node && node.href;
+          return aNode && aNode.getAttribute && aNode.getAttribute(aAttribute);
         }
 
         const node = aEvent.composedTarget;
-        const hrefNode = nearestParentHref(node);
+        const uri = nearestParentAttribute(node, "href");
+        const title = nearestParentAttribute(node, "title");
+        const alt = nearestParentAttribute(node, "alt");
         const elementType = ChromeUtils.getClassName(node);
         const isImage = elementType === "HTMLImageElement";
         const isMedia = elementType === "HTMLVideoElement" ||
                         elementType === "HTMLAudioElement";
+        const elementSrc = (isImage || isMedia) && (node.currentSrc || node.src);
 
-        if (hrefNode || isImage || isMedia) {
-          this.eventDispatcher.sendRequest({
+        if (uri || isImage || isMedia) {
+          const msg = {
             type: "GeckoView:ContextMenu",
             screenX: aEvent.screenX,
             screenY: aEvent.screenY,
-            uri: hrefNode,
+            uri,
+            title,
+            alt,
             elementType,
-            elementSrc: (isImage || isMedia)
-                        ? node.currentSrc || node.src
-                        : null,
-          });
+            elementSrc: elementSrc || null,
+          };
+
+          this.eventDispatcher.sendRequest(msg);
           aEvent.preventDefault();
         }
         break;

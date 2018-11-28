@@ -471,7 +471,7 @@
       </property>
 
       <field name="oneOffButtons" readonly="true">
-        new window.SearchOneOffs(
+        new SearchOneOffs(
           document.getAnonymousElementByAttribute(this, "anonid",
                                                   "search-one-off-buttons"));
       </field>

@@ -504,6 +504,9 @@ class OSXBootstrapper(BaseBootstrapper):
 
         return active_name.lower()
 
+    def ensure_clang_static_analysis_package(self, checkout_root):
+        self.install_toolchain_static_analysis(checkout_root)
+
     def ensure_stylo_packages(self, state_dir, checkout_root):
         from mozboot import stylo
         # We installed clang via homebrew earlier.

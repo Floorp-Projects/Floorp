@@ -128,7 +128,8 @@ public: // WebIDL interface:
   // webIDL: readonly attribute DOMString protocol;
   void GetProtocol(nsAString& aResult);
 
-  // webIDL: void close(optional unsigned short code, optional DOMString reason):
+  // webIDL: void close(optional unsigned short code,
+  //                    optional DOMString reason):
   void Close(const Optional<uint16_t>& aCode,
              const Optional<nsAString>& aReason,
              ErrorResult& aRv);

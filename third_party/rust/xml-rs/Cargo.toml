@@ -12,7 +12,7 @@
 
 [package]
 name = "xml-rs"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Vladimir Matveev <vladimir.matweev@gmail.com>"]
 description = "An XML library in pure Rust"
 documentation = "http://netvl.github.io/xml-rs/"
@@ -28,5 +28,3 @@ path = "src/lib.rs"
 [[bin]]
 name = "xml-analyze"
 path = "src/analyze.rs"
-[dependencies.bitflags]
-version = "1.0"

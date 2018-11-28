@@ -4,7 +4,6 @@
 
 "use strict";
 
-/* eslint-env mozilla/browser-window */
 /* globals XULCommandEvent */
 
 // This is loaded into chrome windows with the subscript loader. Wrap in
