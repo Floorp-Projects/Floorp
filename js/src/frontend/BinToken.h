@@ -275,17 +275,14 @@ const size_t BINKIND_LIMIT = 200;
 
 
 /**
- * The different variants of Binary AST string enums, as per
- * the specifications of Binary AST, as a single macro and
- * `enum class`.
- *
- * Separate enum classes are also defined in BinSource-auto.h.
+ * The different fields of Binary AST nodes, as per the specifications of
+ * Binary AST.
  *
  * Usage:
  *
  * ```c++
- * #define WITH_VARIANT(CPP_NAME, SPEC_NAME) ...
- * FOR_EACH_BIN_VARIANT(WITH_VARIANT)
+ * #define WITH_FIELD(CPP_NAME, SPEC_NAME) ...
+ * FOR_EACH_BIN_FIELD(WITH_FIELD)
  * ```
  *
  * (sorted by alphabetical order)
@@ -371,7 +368,22 @@ enum class BinField {
 const size_t BINFIELD_LIMIT = 69;
 
 
-
+/**
+ * The different variants of Binary AST string enums, as per
+ * the specifications of Binary AST, as a single macro and
+ * `enum class`.
+ *
+ * Separate enum classes are also defined in BinASTParser.h.
+ *
+ * Usage:
+ *
+ * ```c++
+ * #define WITH_VARIANT(CPP_NAME, SPEC_NAME) ...
+ * FOR_EACH_BIN_VARIANT(WITH_VARIANT)
+ * ```
+ *
+ * (sorted by alphabetical order)
+ */
 #define FOR_EACH_BIN_VARIANT(F) \
     F(AssertedDeclaredKindConstLexical, "const lexical") \
     F(AssertedDeclaredKindNonConstLexical, "non-const lexical") \

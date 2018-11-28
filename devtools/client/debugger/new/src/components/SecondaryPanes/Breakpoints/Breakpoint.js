@@ -49,6 +49,7 @@ type Props = {
   removeBreakpoints: typeof actions.removeBreakpoints,
   removeAllBreakpoints: typeof actions.removeAllBreakpoints,
   disableBreakpoint: typeof actions.disableBreakpoint,
+  setBreakpointCondition: typeof actions.setBreakpointCondition,
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
   toggleBreakpoints: typeof actions.toggleBreakpoints,
   openConditionalPanel: typeof actions.openConditionalPanel,
@@ -201,6 +202,7 @@ export default connect(
     disableBreakpoint: actions.disableBreakpoint,
     selectSpecificLocation: actions.selectSpecificLocation,
     selectLocation: actions.selectLocation,
+    setBreakpointCondition: actions.setBreakpointCondition,
     toggleAllBreakpoints: actions.toggleAllBreakpoints,
     toggleBreakpoints: actions.toggleBreakpoints,
     openConditionalPanel: actions.openConditionalPanel

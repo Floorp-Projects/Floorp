@@ -9,6 +9,8 @@
 // To generate this file, see the documentation in
 // js/src/frontend/binsource/README.md.
 
+#include "frontend/BinASTParser.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
@@ -17,7 +19,6 @@
 #include "mozilla/Vector.h"
 
 #include "frontend/BinSource-macros.h"
-#include "frontend/BinSource.h"
 #include "frontend/BinTokenReaderTester.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseNode.h"
@@ -2954,7 +2955,7 @@ BinASTParser<Tok>::parseInterfaceGetterContents(const size_t start, const BinKin
     (void) isThisCaptured;
     MOZ_TRY(parseAssertedVarScope());
 
-    BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
+    BINJS_TRY_DECL(params, this->template new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
     BINJS_MOZ_TRY_DECL(body, parseFunctionBody());
 
     *paramsOut = params;
@@ -3494,7 +3495,7 @@ BinASTParser<Tok>::parseInterfaceSetterContents(const size_t start, const BinKin
         &positionalParams));
 
     BINJS_MOZ_TRY_DECL(param, parseParameter());
-    BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
+    BINJS_TRY_DECL(params, this->template new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
     factory_.addList(params, param);
     MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
     MOZ_TRY(parseAssertedVarScope());
@@ -4516,7 +4517,7 @@ BinASTParser<Tok>::parseListOfParameter()
 
     const auto start = tokenizer_->offset();
     MOZ_TRY(tokenizer_->enterList(length, guard));
-    BINJS_TRY_DECL(result, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
+    BINJS_TRY_DECL(result, this->template new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
 
     for (uint32_t i = 0; i < length; ++i) {
         BINJS_MOZ_TRY_DECL(item, parseParameter());
