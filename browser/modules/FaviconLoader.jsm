@@ -46,6 +46,7 @@ const LOCAL_FAVICON_SCHEMES = [
 ];
 
 const MAX_FAVICON_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
+const MAX_ICON_SIZE = 2048;
 
 const TYPE_ICO = "image/x-icon";
 const TYPE_SVG = "image/svg+xml";
@@ -67,6 +68,21 @@ function promiseBlobAsOctets(blob) {
     });
     reader.addEventListener("error", reject);
     reader.readAsBinaryString(blob);
+  });
+}
+
+function promiseImage(stream, type) {
+  return new Promise((resolve, reject) => {
+    let imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
+
+    imgTools.decodeImageAsync(stream, type, (image, result) => {
+      if (!Components.isSuccessCode(result)) {
+        reject();
+        return;
+      }
+
+      resolve(image);
+    }, Services.tm.currentThread);
   });
 }
 
@@ -205,6 +221,17 @@ class FaviconLoad {
         }
 
         blob = blob.slice(0, blob.size, type);
+
+        let image;
+        try {
+          image = await promiseImage(this.dataBuffer.newInputStream(0), type);
+        } catch (e) {
+          throw Components.Exception(`Favicon at "${this.icon.iconUri.spec}" could not be decoded.`, Cr.NS_ERROR_FAILURE);
+        }
+
+        if (image.width > MAX_ICON_SIZE || image.height > MAX_ICON_SIZE) {
+          throw Components.Exception(`Favicon at "${this.icon.iconUri.spec}" is too large.`, Cr.NS_ERROR_FAILURE);
+        }
       }
 
       let dataURL = await promiseBlobAsDataURL(blob);
