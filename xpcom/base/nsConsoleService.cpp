@@ -247,9 +247,10 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
   if (NS_IsMainThread() && mDeliveringMessage) {
     nsCString msg;
     aMessage->ToString(msg);
-    NS_WARNING(nsPrintfCString("Reentrancy error: some client attempted "
-      "to display a message to the console while in a console listener. "
-      "The following message was discarded: \"%s\"", msg.get()).get());
+    NS_WARNING(nsPrintfCString(
+      "Reentrancy error: some client attempted to display a message to "
+      "the console while in a console listener. The following message "
+      "was discarded: \"%s\"", msg.get()).get());
     return NS_ERROR_FAILURE;
   }
 
