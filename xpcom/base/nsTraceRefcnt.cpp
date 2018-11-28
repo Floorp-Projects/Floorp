@@ -675,13 +675,15 @@ InitTraceLog()
     InitLog(ENVVAR("XPCOM_MEM_COMPTR_LOG"), "nsCOMPtr", &gCOMPtrLog);
   } else {
     if (getenv("XPCOM_MEM_COMPTR_LOG")) {
-      fprintf(stdout, "### XPCOM_MEM_COMPTR_LOG defined -- but XPCOM_MEM_LOG_CLASSES is not defined\n");
+      fprintf(stdout, "### XPCOM_MEM_COMPTR_LOG defined -- "
+              "but XPCOM_MEM_LOG_CLASSES is not defined\n");
     }
   }
 #else
   const char* comptr_log = getenv("XPCOM_MEM_COMPTR_LOG");
   if (comptr_log) {
-    fprintf(stdout, "### XPCOM_MEM_COMPTR_LOG defined -- but it will not work without dynamic_cast\n");
+    fprintf(stdout, "### XPCOM_MEM_COMPTR_LOG defined -- "
+            "but it will not work without dynamic_cast\n");
   }
 #endif // HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 
@@ -692,7 +694,8 @@ InitTraceLog()
     // as a list of class names to track
     gTypesToLog = new CharPtrSet(256);
 
-    fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- only logging these classes: ");
+    fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- "
+            "only logging these classes: ");
     const char* cp = classes;
     for (;;) {
       char* cm = (char*)strchr(cp, ',');
@@ -717,9 +720,11 @@ InitTraceLog()
     gObjectsToLog = new IntPtrSet(256);
 
     if (!(gRefcntsLog || gAllocLog || gCOMPtrLog)) {
-      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- but none of XPCOM_MEM_(REFCNT|ALLOC|COMPTR)_LOG is defined\n");
+      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- "
+              "but none of XPCOM_MEM_(REFCNT|ALLOC|COMPTR)_LOG is defined\n");
     } else {
-      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- only logging these objects: ");
+      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- "
+              "only logging these objects: ");
       const char* cp = objects;
       for (;;) {
         char* cm = (char*)strchr(cp, ',');
