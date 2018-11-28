@@ -8,6 +8,7 @@
    --diff-add-text-color: #54983f;
    --diff-remove-background-color: #fbf2f5;
    --diff-remove-text-color: #bf7173;
+   --diff-source-background: var(--theme-toolbar-background);
    --diff-level: 0;
    --diff-level-offset: 10px;
    /*
@@ -17,19 +18,28 @@
    --diff-level-min-offset: 5px;
  }
 
+:root.theme-dark {
+  --diff-add-background-color: rgba(18, 188, 0, 0.15);
+  --diff-add-text-color: #12BC00;
+  --diff-remove-background-color: rgba(255, 0, 57, 0.15);
+  --diff-remove-text-color: #FF0039;
+  --diff-source-background: #222225;
+}
+
 #sidebar-panel-changes {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
   overflow: auto;
+  background: var(--theme-sidebar-background);
 }
 
 #sidebar-panel-changes .href {
   display: flex;
   align-items: center;
   color: var(--theme-toolbar-color);
-  background: var(--theme-toolbar-background);
+  background: var(--diff-source-background);
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
   padding: 4px;
