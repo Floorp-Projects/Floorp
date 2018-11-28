@@ -16,8 +16,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=458091
 
 </div>
 <pre id="test">
-<a id="testlink1" target="_blank" href="javascript:window.opener.finish(sessionStorage['testItem']);window.close();">Javascript Link</a>
-<a id="testlink2" target="_blank" href="bug458091_child.html">HTTP Link</a>
+<a id="testlink1" target="_blank" rel="opener" href="javascript:window.opener.finish(sessionStorage['testItem']);window.close();">Javascript Link</a>
+<a id="testlink2" target="_blank" rel="opener" href="bug458091_child.html">HTTP Link</a>
 <a id="testlink3" target="alreadyOpened" href="bug458091_child.html">Target Link</a>
 <script type="application/javascript">
 

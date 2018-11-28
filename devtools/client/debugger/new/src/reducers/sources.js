@@ -431,13 +431,19 @@ function getSourcesByUrlInSources(
   return urls[url].map(id => sources[id]);
 }
 
-export function getSourcesUrlsInSources(state: OuterState, url: string) {
+export function getSourcesUrlsInSources(
+  state: OuterState,
+  url: string
+): string[] {
   const urls = getUrls(state);
   if (!url || !urls[url]) {
     return [];
   }
+  const plainUrl = url.split("?")[0];
 
-  return [...new Set(Object.keys(urls).filter(Boolean))];
+  return Object.keys(urls)
+    .filter(Boolean)
+    .filter(sourceUrl => sourceUrl.split("?")[0] === plainUrl);
 }
 
 export function getHasSiblingOfSameName(state: OuterState, source: ?Source) {

@@ -26,7 +26,7 @@ namespace frontend {
 enum class SourceKind {
     // We are parsing from a text source (Parser.h)
     Text,
-    // We are parsing from a binary source (BinSource.h)
+    // We are parsing from a binary source (BinASTParser.h)
     Binary,
 };
 
@@ -108,7 +108,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
 #undef DECLARE_AS
 
     // The FullParseHandler may be used to create nodes for text sources
-    // (from Parser.h) or for binary sources (from BinSource.h). In the latter
+    // (from Parser.h) or for binary sources (from BinASTParser.h). In the latter
     // case, some common assumptions on offsets are incorrect, e.g. in `a + b`,
     // `a`, `b` and `+` may be stored in any order. We use `sourceKind()`
     // to determine whether we need to check these assumptions.
