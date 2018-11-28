@@ -263,7 +263,6 @@ WorkletThread::WorkletThread()
   : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
                MakeUnique<mozilla::EventQueue>()),
              nsThread::NOT_MAIN_THREAD, kWorkletStackSize)
-  , mCreationTimeStamp(TimeStamp::Now())
   , mJSContext(nullptr)
   , mIsTerminating(false)
 {
