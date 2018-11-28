@@ -383,6 +383,8 @@ class BuildOptionParser(object):
         'x86-fuzzing-debug': 'builds/releng_sub_%s_configs/%s_x86_fuzzing_debug.py',
         'x86_64': 'builds/releng_sub_%s_configs/%s_x86_64.py',
         'x86_64-artifact': 'builds/releng_sub_%s_configs/%s_x86_64_artifact.py',
+        'x86_64-debug': 'builds/releng_sub_%s_configs/%s_x86_64_debug.py',
+        'x86_64-debug-artifact': 'builds/releng_sub_%s_configs/%s_x86_64_debug_artifact.py',
         'api-16-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_16_partner_sample1.py',
         'aarch64': 'builds/releng_sub_%s_configs/%s_aarch64.py',
         'aarch64-artifact': 'builds/releng_sub_%s_configs/%s_aarch64_artifact.py',
