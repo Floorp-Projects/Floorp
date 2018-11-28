@@ -44,11 +44,11 @@ struct ParamTraits<mozilla::dom::RTCStatsIceCandidatePairState>
           mozilla::dom::RTCStatsIceCandidatePairState::EndGuard_> {};
 
 template <>
-struct ParamTraits<mozilla::dom::RTCStatsIceCandidateType>
+struct ParamTraits<mozilla::dom::RTCIceCandidateType>
     : public ContiguousEnumSerializer<
-          mozilla::dom::RTCStatsIceCandidateType,
-          mozilla::dom::RTCStatsIceCandidateType::Host,
-          mozilla::dom::RTCStatsIceCandidateType::EndGuard_> {};
+          mozilla::dom::RTCIceCandidateType,
+          mozilla::dom::RTCIceCandidateType::Host,
+          mozilla::dom::RTCIceCandidateType::EndGuard_> {};
 
 template <>
 struct ParamTraits<mozilla::dom::RTCStatsReportInternal> {
@@ -208,27 +208,25 @@ struct ParamTraits<mozilla::dom::RTCIceCandidateStats> {
   typedef mozilla::dom::RTCIceCandidateStats paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mCandidateId);
     WriteParam(aMsg, aParam.mCandidateType);
-    WriteParam(aMsg, aParam.mComponentId);
+    WriteParam(aMsg, aParam.mPriority);
+    WriteParam(aMsg, aParam.mTransportId);
     WriteParam(aMsg, aParam.mAddress);
-    WriteParam(aMsg, aParam.mMozLocalTransport);
     WriteParam(aMsg, aParam.mRelayProtocol);
-    WriteParam(aMsg, aParam.mPortNumber);
-    WriteParam(aMsg, aParam.mTransport);
+    WriteParam(aMsg, aParam.mPort);
+    WriteParam(aMsg, aParam.mProtocol);
     WriteRTCStats(aMsg, aParam);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &(aResult->mCandidateId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mCandidateType)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mComponentId)) ||
+    if (!ReadParam(aMsg, aIter, &(aResult->mCandidateType)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mPriority)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mTransportId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mAddress)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mMozLocalTransport)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRelayProtocol)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mPortNumber)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mTransport)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mPort)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mProtocol)) ||
         !ReadRTCStats(aMsg, aIter, aResult)) {
       return false;
     }

@@ -309,9 +309,11 @@ class RTCStatsReport {
       const underlying = this._report[key];
       // Add legacy names for renamed stats
       if (underlying.type == "local-candidate" || underlying.type == "remote-candidate") {
-            // Copy stat.address to the legacy field name
-            underlying.ipAddress = underlying.address;
+            // RTCIceCandidateStats transportId is ChromeOnly, don't copy it
+            delete underlying.transportId;
             if (isLegacy) {
+              // Copy stat.address to the legacy field name
+              underlying.ipAddress = underlying.address;
               // Callback stats are frozen to have legacy names
               delete underlying.address;
             }

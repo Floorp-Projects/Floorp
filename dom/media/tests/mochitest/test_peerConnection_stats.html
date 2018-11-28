@@ -57,21 +57,20 @@ var statsExpectedByType = {
     deprecated: [],
   },
   "local-candidate": {
-    expected: ["id", "timestamp", "type", "componentId", "address",
-               "ipAddress", "transport", "mozLocalTransport", "portNumber",
-               "candidateType"],
-    optional: [],
-    unimplemented: ["port", "networkType", "protocol", "relayProtocol",
-                    "priority", "url"],
-    deprecated: ["candidateId"],
+    expected: ["id", "timestamp", "type", "address",
+               "protocol", "port", "candidateType", "priority"],
+    optional: ["relayProtocol"],
+    unimplemented: ["networkType", "url", "transportId"],
+    deprecated: ["candidateId", "portNumber", "ipAddress", "componentId", "mozLocalTransport",
+      "transport"],
   },
   "remote-candidate": {
-    expected: ["id", "timestamp", "type", "componentId", "address",
-               "ipAddress", "transport", "portNumber", "candidateType"],
-    optional: [],
-    unimplemented: ["port", "networkType", "protocol", "relayProtocol",
-                    "priority", "url"],
-    deprecated: ["candidateId"],
+    expected: ["id", "timestamp", "type", "address",
+               "protocol", "port", "candidateType", "priority"],
+    optional: ["relayProtocol"],
+    unimplemented: ["networkType", "url", "transportId"],
+    deprecated: ["candidateId", "portNumber", "ipAddress", "componentId", "mozLocalTransport",
+                 "transport"],
   },
   "certificate": { skip: true },
 };
@@ -501,27 +500,33 @@ var pedanticChecks = report => {
     } else if (stat.type == "local-candidate" || stat.type == "remote-candidate") {
       info(`candidate is ${JSON.stringify(stat)}`);
 
-      // componentId
-      ok(stat.componentId, `${stat.type} has componentId. value=${stat.componentId}`);
+      // address
+      ok(stat.address, `${stat.type} has address. value=${stat.address}`);
 
-      // ipAddress
-      ok(stat.ipAddress, `${stat.type} has ipAddress. value=${stat.ipAddress}`);
+      // protocol
+      ok(stat.protocol, `${stat.type} has protocol. value=${stat.protocol}`);
 
-      // transport
-      ok(stat.transport, `${stat.type} has transport. value=${stat.transport}`);
-
-      if (stat.type == "local-candidate") {
-        // mozLocalTransport
-        ok(stat.mozLocalTransport, `${stat.type} has mozLocalTransport. value=${stat.mozLocalTransport}`);
-      }
-
-      // portNumber
-      ok(stat.portNumber >= 0, `${stat.type} has portNumber >= 0. value=${stat.portNumber}`);
-      ok(stat.portNumber <= 65535, `${stat.type} has portNumber <= 65535. value=${stat.portNumber}`);
+      // port
+      ok(stat.port >= 0, `${stat.type} has port >= 0. value=${stat.port}`);
+      ok(stat.port <= 65535, `${stat.type} has port <= 65535. value=${stat.port}`);
 
       // candidateType
       ok(stat.candidateType, `${stat.type} has candidateType. value=${stat.candidateType}`);
 
+      // priority
+      ok(stat.priority > 0 && stat.priority < (2**32 - 1),
+         `${stat.type} has priority between 1 and 2^32 - 1 inc. ` +
+         `value=${stat.priority}`);
+
+      // relayProtocol
+      if (stat.type == "local-candidate" && stat.candidateType == "relay") {
+        ok(stat.relayProtocol,
+          `relay ${stat.type} has relayProtocol. value=${stat.relayProtocol}`);
+      } else {
+        is(stat.relayProtocol, undefined,
+          `relayProtocol is undefined for candidates that are not relay and ` +
+          `local. value=${stat.relayProtocol}`);
+      }
     }
 
     //
