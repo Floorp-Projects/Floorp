@@ -129,6 +129,51 @@ task machBuildFaster(type: Exec) {
     errorOutput = standardOutput
 }
 
+def createMachStagePackageTask(name) {
+    return task(name, type: Exec) {
+        onlyIf rootProject.ext.geckoBinariesOnlyIf
+
+        dependsOn rootProject.machBuildFaster
+
+        // We'd prefer to take these from the :omnijar project directly, but
+        // it's awkward to reach across projects at evaluation time, so we
+        // duplicate the list here.
+        inputs.dir "${topsrcdir}/mobile/android/chrome"
+        inputs.dir "${topsrcdir}/mobile/android/components"
+        inputs.dir "${topsrcdir}/mobile/android/locales"
+        inputs.dir "${topsrcdir}/mobile/android/modules"
+        inputs.dir "${topsrcdir}/mobile/android/themes"
+        inputs.dir "${topsrcdir}/toolkit"
+
+        workingDir "${topobjdir}"
+
+        // We'd prefer this to be a `mach` invocation, but `mach build
+        // mobile/android/installer/stage-package` doesn't work as expected.
+        commandLine mozconfig.substs.GMAKE
+        args '-C'
+        args "${topobjdir}/mobile/android/installer"
+        args 'stage-package'
+
+        outputs.file "${topobjdir}/dist/fennec/assets/${mozconfig.substs.ANDROID_CPU_ARCH}/libxul.so"
+        outputs.file "${topobjdir}/dist/fennec/lib/${mozconfig.substs.ANDROID_CPU_ARCH}/libmozglue.so"
+
+        // `path` is like `:machStagePackage`.
+        standardOutput = new TaggedLogOutputStream("${path}>", logger)
+        errorOutput = standardOutput
+    }
+}
+
+createMachStagePackageTask("machStagePackageForFennec").with {
+    outputs.file "${topobjdir}/dist/fennec/assets/omni.ja"
+}
+
+createMachStagePackageTask("machStagePackageForGeckoview").with {
+    args 'MOZ_GECKOVIEW_JAR=1'
+    outputs.file "${topobjdir}/dist/geckoview/assets/omni.ja"
+    // Avoid races between stage-package invocations.
+    mustRunAfter tasks["machStagePackageForFennec"]
+}
+
 afterEvaluate {
     subprojects { project ->
         if (project.name != 'thirdparty') {

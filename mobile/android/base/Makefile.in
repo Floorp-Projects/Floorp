@@ -17,28 +17,4 @@ chrome-%::
 
 include $(topsrcdir)/config/rules.mk
 
-# This target is only used by IDE integrations. It rebuilds resources
-# that end up in omni.ja using the equivalent of |mach build faster|,
-# does most of the packaging step, and then updates omni.ja in
-# place. If you're not using an IDE, you should be using |mach build
-# mobile/android && mach package|.
-$(ABS_DIST)/fennec/$(OMNIJAR_NAME): FORCE
-	$(REPORT_BUILD)
-	$(MAKE) -C ../../../faster
-	$(MAKE) -C ../installer stage-package
-	$(MKDIR) -p $(@D)
-	rsync --update $(DIST)/fennec/$(notdir $(OMNIJAR_NAME)) $@
-	$(RM) $(DIST)/fennec/$(notdir $(OMNIJAR_NAME))
-
-ifndef MOZILLA_OFFICIAL
-# Local developers update omni.ja during their builds.  There's a
-# chicken-and-egg problem here.
-gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
-else
-# In automation, omni.ja is built only during packaging.
-gradle-omnijar:
-endif
-
-.PHONY: gradle-omnijar
-
 export:: android_apks
