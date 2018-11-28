@@ -64,8 +64,7 @@ def add_command(config, tasks):
         )
 
         command = [
-            "cd", "/builds/worker/checkouts/gecko", "&&"
-            "./mach", "python",
+            "python",
             "testing/mozharness/scripts/release/update-verify-config-creator.py",
             "--product", task["extra"]["product"],
             "--stage-product", task["shipping-product"],
@@ -114,6 +113,9 @@ def add_command(config, tasks):
             command.append("--{}".format(arg))
             command.append(task["extra"][arg])
 
-        task["run"]["command"] = " ".join(command)
+        task['run'].update({
+            'using': 'mach',
+            'mach': " ".join(command),
+        })
 
         yield task
