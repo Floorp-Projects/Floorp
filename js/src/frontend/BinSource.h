@@ -17,6 +17,7 @@
 #include "mozilla/Maybe.h"
 
 #include "frontend/BCEParserHandle.h"
+#include "frontend/BinASTParserBase.h"
 #include "frontend/BinToken.h"
 #include "frontend/BinTokenReaderMultipart.h"
 #include "frontend/BinTokenReaderTester.h"
@@ -32,65 +33,6 @@
 
 namespace js {
 namespace frontend {
-
-class BinASTParserBase: private JS::AutoGCRooter
-{
-  public:
-    BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
-                     HandleScriptSourceObject sourceObject, Handle<LazyScript*> lazyScript);
-    ~BinASTParserBase();
-
-  public:
-    // Names
-
-
-    bool hasUsedName(HandlePropertyName name);
-
-    // --- GC.
-
-    virtual void doTrace(JSTracer* trc) {}
-
-    void trace(JSTracer* trc) {
-        TraceListNode::TraceList(trc, traceListHead_);
-        doTrace(trc);
-    }
-
-
-  public:
-    ParseNode* allocParseNode(size_t size) {
-        MOZ_ASSERT(size == sizeof(ParseNode));
-        return static_cast<ParseNode*>(nodeAlloc_.allocNode());
-    }
-
-    JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
-
-    // Needs access to AutoGCRooter.
-    friend void TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser);
-
-  protected:
-    JSContext* cx_;
-
-    // ---- Memory-related stuff
-  protected:
-    LifoAlloc& alloc_;
-    TraceListNode* traceListHead_;
-    UsedNameTracker& usedNames_;
-  private:
-    LifoAlloc::Mark tempPoolMark_;
-    ParseNodeAllocator nodeAlloc_;
-
-    // ---- Parsing-related stuff
-  protected:
-    // Root atoms and objects allocated for the parse tree.
-    AutoKeepAtoms keepAtoms_;
-
-    RootedScriptSourceObject sourceObject_;
-    Rooted<LazyScript*> lazyScript_;
-    ParseContext* parseContext_;
-    FullParseHandler factory_;
-
-    friend class BinParseContext;
-};
 
 /**
  * The parser for a Binary AST.
