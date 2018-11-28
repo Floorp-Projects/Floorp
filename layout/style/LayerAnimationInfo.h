@@ -34,9 +34,13 @@ struct LayerAnimationInfo {
       nsCSSPropertyIDSet{ eCSSProperty_transform };
     static const nsCSSPropertyIDSet opacityProperties =
       nsCSSPropertyIDSet{ eCSSProperty_opacity };
+    static const nsCSSPropertyIDSet backgroundColorProperties =
+      nsCSSPropertyIDSet{ eCSSProperty_background_color };
     static const nsCSSPropertyIDSet empty = nsCSSPropertyIDSet();
 
     switch (aDisplayItemType) {
+      case DisplayItemType::TYPE_BACKGROUND_COLOR:
+        return backgroundColorProperties;
       case DisplayItemType::TYPE_OPACITY:
         return opacityProperties;
       case DisplayItemType::TYPE_TRANSFORM:
@@ -58,6 +62,8 @@ struct LayerAnimationInfo {
   GetChangeHintFor(DisplayItemType aDisplayItemType)
   {
     switch (aDisplayItemType) {
+      case DisplayItemType::TYPE_BACKGROUND_COLOR:
+        return nsChangeHint_RepaintFrame;
       case DisplayItemType::TYPE_OPACITY:
         return nsChangeHint_UpdateOpacityLayer;
       case DisplayItemType::TYPE_TRANSFORM:
