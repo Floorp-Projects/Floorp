@@ -2354,13 +2354,6 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   // Set a reply timeout for CPOWs.
   SetReplyTimeoutMs(Preferences::GetInt("dom.ipc.cpow.timeout", 0));
 
-  // TODO: In ASYNC_CONTENTPROC_LAUNCH, if OtherPid() is not called between
-  // mSubprocess->Launch() and this, then we're not really measuring how long it
-  // took to spawn the process.
-  Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_TIME_MS,
-                        static_cast<uint32_t>((TimeStamp::Now() - mLaunchTS)
-                                              .ToMilliseconds()));
-
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     nsAutoString cpId;
@@ -2369,6 +2362,8 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   }
 
   Init();
+
+  // Launch time telemetry will return in a later patch (bug 1474991).
 
   return true;
 }
@@ -2469,10 +2464,6 @@ ContentParent::~ContentParent()
 void
 ContentParent::InitInternal(ProcessPriority aInitialPriority)
 {
-  Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_TIME_MS,
-                        static_cast<uint32_t>((TimeStamp::Now() - mLaunchTS)
-                                              .ToMilliseconds()));
-
   XPCOMInitData xpcomInit;
 
   nsCOMPtr<nsIIOService> io(do_GetIOService());
