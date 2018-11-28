@@ -19,6 +19,7 @@
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Variant.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsDataHashtable.h"
@@ -131,10 +132,13 @@ public:
 
   virtual bool IsContentParent() const override { return true; }
 
+  using LaunchError = GeckoChildProcessHost::LaunchError;
+  using LaunchPromise = GeckoChildProcessHost::LaunchPromise<RefPtr<ContentParent>>;
+
   /**
    * Create a subprocess suitable for use later as a content process.
    */
-  static already_AddRefed<ContentParent> PreallocateProcess();
+  static RefPtr<LaunchPromise> PreallocateProcess();
 
   /**
    * Start up the content-process machinery.  This might include
@@ -798,7 +802,20 @@ private:
 
   // Launch the subprocess and associated initialization.
   // Returns false if the process fails to start.
-  bool LaunchSubprocess(hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND);
+  // Deprecated in favor of LaunchSubprocessAsync.
+  bool LaunchSubprocessSync(hal::ProcessPriority aInitialPriority);
+
+  // Launch the subprocess and associated initialization;
+  // returns a promise and signals failure by rejecting.
+  // OS-level launching work is dispatched to another thread, but some
+  // initialization (creating IPDL actors, etc.; see Init()) is run on
+  // the main thread.
+  RefPtr<LaunchPromise> LaunchSubprocessAsync(hal::ProcessPriority aInitialPriority);
+
+  // Common implementation of LaunchSubprocess{Sync,Async}.
+  void LaunchSubprocessInternal(
+    hal::ProcessPriority aInitialPriority,
+    mozilla::Variant<bool*, RefPtr<LaunchPromise>*>&& aRetval);
 
   // Common initialization after sub process launch.
   void InitInternal(ProcessPriority aPriority);
