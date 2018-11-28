@@ -8,19 +8,21 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.test.core.app.ApplicationProvider
+import mozilla.components.browser.awesomebar.layout.FlowLayout
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.support.ktx.android.content.res.pxToDp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class SuggestionViewHolderTest {
     private val context: Context
-        get() = RuntimeEnvironment.application
+        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `DefaultViewHolder sets title and description`() {
@@ -123,5 +125,20 @@ class SuggestionViewHolderTest {
 
         container.getChildAt(2).performClick()
         assertEquals("Example", chipClicked)
+    }
+
+    @Test
+    fun `FlowLayout for chips has spacing applied`() {
+        val view = LayoutInflater.from(context).inflate(
+            R.layout.mozac_browser_awesomebar_item_chips, null, false)
+
+        val flowLayout = view.findViewById<FlowLayout>(R.id.mozac_browser_awesomebar_chips)
+
+        assertEquals(0, flowLayout.spacing)
+
+        val awesomeBar = BrowserAwesomeBar(context)
+        SuggestionViewHolder.ChipsSuggestionViewHolder(awesomeBar, view)
+
+        assertEquals(context.resources.pxToDp(2), flowLayout.spacing)
     }
 }

@@ -8,5 +8,6 @@
         <attr name="awesomeBarDescriptionTextColor" format="reference|color" />
         <attr name="awesomeBarChipTextColor" format="reference|color" />
         <attr name="awesomeBarChipBackgroundColor" format="reference|color" />
+        <attr name="awesomeBarChipSpacing" format="dimension" />
     </declare-styleable>
 </resources>

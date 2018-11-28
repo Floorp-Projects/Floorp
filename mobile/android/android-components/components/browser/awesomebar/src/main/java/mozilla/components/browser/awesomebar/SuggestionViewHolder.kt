@@ -9,8 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
+import mozilla.components.browser.awesomebar.layout.FlowLayout
 import mozilla.components.concept.awesomebar.AwesomeBar
 
 /**
@@ -63,7 +63,9 @@ internal sealed class SuggestionViewHolder(
         itemView: View
     ) : SuggestionViewHolder(itemView) {
         private val iconView = itemView.findViewById<ImageView>(R.id.mozac_browser_awesomebar_icon)
-        private val chipsView = itemView.findViewById<LinearLayout>(R.id.mozac_browser_awesomebar_chips)
+        private val chipsView = itemView.findViewById<FlowLayout>(R.id.mozac_browser_awesomebar_chips).apply {
+            spacing = awesomeBar.styling.chipSpacing
+        }
 
         override fun bind(suggestion: AwesomeBar.Suggestion) {
             chipsView.removeAllViews()

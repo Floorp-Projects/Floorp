@@ -6,6 +6,7 @@ package mozilla.components.browser.awesomebar
 
 import android.content.Context
 import android.widget.LinearLayout
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -18,13 +19,12 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.lang.IllegalArgumentException
 
 @RunWith(RobolectricTestRunner::class)
 class SuggestionsAdapterTest {
     private val context: Context
-        get() = RuntimeEnvironment.application
+        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `addSuggestions() should add suggestions of provider`() {
