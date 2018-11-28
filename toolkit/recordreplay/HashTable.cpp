@@ -14,8 +14,6 @@
 #include "ProcessRedirect.h"
 #include "ValueIndex.h"
 
-#include "PLDHashTable.h"
-
 #include <unordered_set>
 
 namespace mozilla {
@@ -75,11 +73,17 @@ class StableHashTableInfo {
 
   // Buffer with executable memory for use in binding functions.
   uint8_t* mCallbackStorage;
+  uint32_t mCallbackStorageSize;
   static const size_t CallbackStorageCapacity = 4096;
 
   // Whether this table has been marked as destroyed and is unusable. This is
   // temporary state to detect UAF bugs related to this class.
   bool mDestroyed;
+
+  // Associated table and hash of its callback storage, for more integrity
+  // checking.
+  void* mTable;
+  uint32_t mCallbackHash;
 
   // Get an existing key in the table.
   KeyInfo* FindKeyInfo(HashNumber aOriginalHash, const void* aKey,
@@ -105,7 +109,10 @@ class StableHashTableInfo {
         mLastNewHash(0),
         mHashGenerator(0),
         mCallbackStorage(nullptr),
-        mDestroyed(false) {
+        mDestroyed(false),
+        mTable(nullptr),
+        mCallbackHash(0)
+  {
     // Use AllocateMemory, as the result will have RWX permissions.
     mCallbackStorage =
         (uint8_t*)AllocateMemory(CallbackStorageCapacity, MemoryKind::Tracked);
@@ -126,6 +133,17 @@ class StableHashTableInfo {
   void MarkDestroyed() {
     MOZ_RELEASE_ASSERT(!IsDestroyed());
     mDestroyed = true;
+  }
+
+  void CheckIntegrity(void* aTable) {
+    MOZ_RELEASE_ASSERT(aTable);
+    if (!mTable) {
+      mTable = aTable;
+      mCallbackHash = HashBytes(mCallbackStorage, mCallbackStorageSize);
+    } else {
+      MOZ_RELEASE_ASSERT(mTable == aTable);
+      MOZ_RELEASE_ASSERT(mCallbackHash == HashBytes(mCallbackStorage, mCallbackStorageSize));
+    }
   }
 
   void AddKey(HashNumber aOriginalHash, const void* aKey, HashNumber aNewHash) {
@@ -189,9 +207,17 @@ class StableHashTableInfo {
 
   class Assembler : public recordreplay::Assembler {
    public:
+    StableHashTableInfo& mInfo;
+
     explicit Assembler(StableHashTableInfo& aInfo)
         : recordreplay::Assembler(aInfo.mCallbackStorage,
-                                  CallbackStorageCapacity) {}
+                                  CallbackStorageCapacity),
+          mInfo(aInfo)
+    {}
+
+    ~Assembler() {
+      mInfo.mCallbackStorageSize = Current() - mInfo.mCallbackStorage;
+    }
   };
 
   // Use the callback storage buffer to create a new function T which has one
@@ -294,9 +320,18 @@ struct PLHashTableInfo : public StableHashTableInfo {
         mAllocOps(aAllocOps),
         mAllocPrivate(aAllocPrivate) {}
 
-  static PLHashTableInfo* FromPrivate(void* aAllocPrivate) {
+  static PLHashTableInfo* MaybeFromPrivate(void* aAllocPrivate) {
     PLHashTableInfo* info = reinterpret_cast<PLHashTableInfo*>(aAllocPrivate);
-    MOZ_RELEASE_ASSERT(!info->IsDestroyed());
+    if (info->IsValid()) {
+      MOZ_RELEASE_ASSERT(!info->IsDestroyed());
+      return info;
+    }
+    return nullptr;
+  }
+
+  static PLHashTableInfo* FromPrivate(void* aAllocPrivate) {
+    PLHashTableInfo* info = MaybeFromPrivate(aAllocPrivate);
+    MOZ_RELEASE_ASSERT(info);
     return info;
   }
 };
@@ -386,9 +421,18 @@ void GeneratePLHashTableCallbacks(PLHashFunction* aKeyHash,
 }
 
 void DestroyPLHashTableCallbacks(void* aAllocPrivate) {
-  PLHashTableInfo* info = PLHashTableInfo::FromPrivate(aAllocPrivate);
-  info->MarkDestroyed();
-  // delete info;
+  PLHashTableInfo* info = PLHashTableInfo::MaybeFromPrivate(aAllocPrivate);
+  if (info) {
+    info->MarkDestroyed();
+    //delete info;
+  }
+}
+
+void CheckPLHashTable(PLHashTable* aTable) {
+  PLHashTableInfo* info = PLHashTableInfo::MaybeFromPrivate(aTable->allocPriv);
+  if (info) {
+    info->CheckIntegrity(aTable);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -422,6 +466,13 @@ struct PLDHashTableInfo : public StableHashTableInfo {
     PLDHashTableInfo* res = MaybeFromOps(aOps);
     MOZ_RELEASE_ASSERT(res);
     return res;
+  }
+
+  static void CheckIntegrity(PLDHashTable* aTable) {
+    PLDHashTableInfo* info = MaybeFromOps(aTable->RecordReplayWrappedOps());
+    if (info) {
+      info->StableHashTableInfo::CheckIntegrity(aTable);
+    }
   }
 };
 
@@ -530,6 +581,10 @@ MOZ_EXPORT void RecordReplayInterface_InternalMovePLDHashTableContents(
 }
 
 }  // extern "C"
+
+void CheckPLDHashTable(PLDHashTable* aTable) {
+  PLDHashTableInfo::CheckIntegrity(aTable);
+}
 
 }  // namespace recordreplay
 }  // namespace mozilla

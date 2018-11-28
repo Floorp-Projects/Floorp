@@ -8,6 +8,7 @@
 #define mozilla_recordreplay_HashTable_h
 
 #include "plhash.h"
+#include "PLDHashTable.h"
 
 namespace mozilla {
 namespace recordreplay {
@@ -20,6 +21,9 @@ void GeneratePLHashTableCallbacks(PLHashFunction* aKeyHash,
                                   const PLHashAllocOps** aAllocOps,
                                   void** aAllocPrivate);
 void DestroyPLHashTableCallbacks(void* aAllocPrivate);
+
+void CheckPLHashTable(PLHashTable* aTable);
+void CheckPLDHashTable(PLDHashTable* aTable);
 
 }  // namespace recordreplay
 }  // namespace mozilla
