@@ -1,9 +1,19 @@
-# Simple wasm parser in Rust
+# The WebAssembly binary file decoder in Rust
 
 [![Build Status](https://travis-ci.org/yurydelendik/wasmparser.rs.svg?branch=master)](https://travis-ci.org/yurydelendik/wasmparser.rs)
 [![crates.io link](https://img.shields.io/crates/v/wasmparser.svg)](https://crates.io/crates/wasmparser)
 
+The decoder library provides lightwight and fast decoding/parsing of WebAssembly binary files.
+
+The other goal is minimal memory footprint. For this reason, there is no AST or IR of WebAssembly data.
+
 See also its sibling at https://github.com/wasdk/wasmparser
+
+
+## Documentation
+
+The documentation and examples can be found at the https://docs.rs/wasmparser/
+
 
 ## Example
 
@@ -37,6 +47,7 @@ fn main() {
   }
 }
 ```
+
 
 ## Fuzzing
 

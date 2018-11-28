@@ -13958,6 +13958,13 @@ class CGBindingRoot(CGThing):
         bindingDeclareHeaders["jspubtd.h"] = not bindingDeclareHeaders["jsapi.h"]
         bindingDeclareHeaders["js/RootingAPI.h"] = not bindingDeclareHeaders["jsapi.h"]
 
+        def descriptorHasIteratorAlias(desc):
+            def hasIteratorAlias(m):
+                return m.isMethod() and "@@iterator" in m.aliases
+            return any(hasIteratorAlias(m) for m in desc.interface.members)
+
+        bindingHeaders["js/Symbol.h"] = any(descriptorHasIteratorAlias(d) for d in descriptors)
+
         def descriptorRequiresPreferences(desc):
             iface = desc.interface
             return any(m.getExtendedAttribute("Pref") for m in iface.members + [iface])

@@ -11,6 +11,7 @@ import os
 import re
 import shutil
 import sys
+from collections import defaultdict
 
 from mozboot.util import get_state_dir
 from mozbuild.base import MozbuildObject
@@ -120,3 +121,18 @@ def filter_tasks_by_paths(tasks, paths):
         return any(re.search(pattern, task) for pattern in task_regexes)
 
     return filter(match_task, tasks)
+
+
+def resolve_tests_by_suite(paths):
+    resolver = TestResolver.from_environment(cwd=here)
+    _, run_tests = resolver.resolve_metadata(paths)
+
+    suite_to_tests = defaultdict(list)
+    for test in run_tests:
+        key = test['flavor']
+        subsuite = test.get('subsuite')
+        if subsuite:
+            key += '-' + subsuite
+        suite_to_tests[key].append(test['srcdir_relpath'])
+
+    return suite_to_tests

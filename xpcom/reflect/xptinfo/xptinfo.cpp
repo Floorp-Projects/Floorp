@@ -10,6 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "jsfriendapi.h"
+#include "js/Symbol.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

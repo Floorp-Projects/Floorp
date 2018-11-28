@@ -35,7 +35,7 @@ const TestingUIService = {
   updatePayment(requestId) {
     // Let's echo what was sent in by the error...
     const request = paymentSrv.getPaymentRequestById(requestId);
-    const { name, email, phone } = request.paymentDetails.payer;
+    const { name, email, phone } = request.paymentDetails.payerErrors;
     const { error } = request.paymentDetails;
     // Let's use the .error as the switch
     switch (error) {

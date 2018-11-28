@@ -99,7 +99,7 @@ const TestingUIService = {
   updatePayment(requestId) {
     // Let's echo what was sent in by the error...
     const request = paymentSrv.getPaymentRequestById(requestId);
-    this.showPayment(requestId, request.paymentDetails.paymentMethod);
+    this.showPayment(requestId, request.paymentDetails.paymentMethodErrors);
   },
   // Handles response.complete()
   completePayment(requestId) {

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/CompilationAndEvaluation.h"
+#include "js/MemoryFunctions.h"
 #include "jsapi-tests/tests.h"
 #include "vm/JSScript.h"
 

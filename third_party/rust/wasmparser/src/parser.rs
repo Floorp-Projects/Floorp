@@ -23,11 +23,19 @@ use limits::{
 
 use primitives::{
     BinaryReaderError, CustomSectionKind, ExternalKind, FuncType, GlobalType,
-    ImportSectionEntryType, LinkingType, MemoryType, NameType, Naming, Operator, RelocType, Result,
+    ImportSectionEntryType, LinkingType, MemoryType, Naming, Operator, RelocType, Result,
     SectionCode, TableType, Type,
 };
 
-use binary_reader::{BinaryReader, SectionHeader};
+use readers::{
+    CodeSectionReader, Data, DataSectionReader, Element, ElementItems, ElementSectionReader,
+    Export, ExportSectionReader, FunctionBody, FunctionSectionReader, Global, GlobalSectionReader,
+    Import, ImportSectionReader, LinkingSectionReader, MemorySectionReader, ModuleReader, Name,
+    NameSectionReader, NamingReader, OperatorsReader, Reloc, RelocSectionReader, Section,
+    SectionReader, TableSectionReader, TypeSectionReader,
+};
+
+use binary_reader::{BinaryReader, Range};
 
 const MAX_DATA_CHUNK_SIZE: usize = MAX_WASM_STRING_SIZE;
 
@@ -56,24 +64,6 @@ enum InitExpressionContinuation {
     GlobalSection,
     ElementSection,
     DataSection,
-}
-
-/// Bytecode range in the WebAssembly module.
-#[derive(Debug, Copy, Clone)]
-pub struct Range {
-    pub start: usize,
-    pub end: usize,
-}
-
-impl Range {
-    pub fn new(start: usize, end: usize) -> Range {
-        assert!(start <= end);
-        Range { start, end }
-    }
-
-    pub fn slice<'a>(&self, data: &'a [u8]) -> &'a [u8] {
-        &data[self.start..self.end]
-    }
 }
 
 #[derive(Debug)]
@@ -164,15 +154,59 @@ pub trait WasmDecoder<'a> {
     fn last_state(&self) -> &ParserState<'a>;
 }
 
+enum ParserSectionReader<'a> {
+    None,
+    CodeSectionReader(CodeSectionReader<'a>),
+    DataSectionReader(DataSectionReader<'a>),
+    ElementSectionReader(ElementSectionReader<'a>),
+    ExportSectionReader(ExportSectionReader<'a>),
+    FunctionSectionReader(FunctionSectionReader<'a>),
+    GlobalSectionReader(GlobalSectionReader<'a>),
+    ImportSectionReader(ImportSectionReader<'a>),
+    MemorySectionReader(MemorySectionReader<'a>),
+    TableSectionReader(TableSectionReader<'a>),
+    TypeSectionReader(TypeSectionReader<'a>),
+    NameSectionReader(NameSectionReader<'a>),
+    LinkingSectionReader(LinkingSectionReader<'a>),
+    RelocSectionReader(RelocSectionReader<'a>),
+}
+
+macro_rules! section_reader {
+    ($self:ident, $ty_and_name:ident) => {
+        if let ParserSectionReader::$ty_and_name(ref mut reader) = $self.section_reader {
+            reader
+        } else {
+            panic!("expected {} reader", stringify!($ty_and_name));
+        }
+    };
+}
+
+macro_rules! start_section_reader {
+    ($self:ident, $ty_and_name:ident, $factory:ident) => {{
+        let reader = $self
+            .current_section
+            .as_ref()
+            .expect("section")
+            .$factory()?;
+        $self.section_entries_left = reader.get_count();
+        $self.section_reader = ParserSectionReader::$ty_and_name(reader);
+    }};
+}
+
 /// The `Parser` type. A simple event-driven parser of WebAssembly binary
 /// format. The `read(&mut self)` is used to iterate through WebAssembly records.
 pub struct Parser<'a> {
-    reader: BinaryReader<'a>,
+    data: &'a [u8],
     state: ParserState<'a>,
-    section_range: Option<Range>,
-    function_range: Option<Range>,
+    module_reader: Option<ModuleReader<'a>>,
+    current_section: Option<Section<'a>>,
+    section_reader: ParserSectionReader<'a>,
+    element_items: Option<ElementItems<'a>>,
+    current_function_body: Option<FunctionBody<'a>>,
     init_expr_continuation: Option<InitExpressionContinuation>,
-    read_data_bytes: Option<u32>,
+    current_data_segment: Option<&'a [u8]>,
+    binary_reader: Option<BinaryReader<'a>>,
+    operators_reader: Option<OperatorsReader<'a>>,
     section_entries_left: u32,
 }
 
@@ -188,90 +222,122 @@ impl<'a> Parser<'a> {
     /// ```
     pub fn new(data: &[u8]) -> Parser {
         Parser {
-            reader: BinaryReader::new(data),
+            data,
             state: ParserState::Initial,
-            section_range: None,
-            function_range: None,
+            module_reader: None,
+            current_section: None,
+            section_reader: ParserSectionReader::None,
+            element_items: None,
+            current_function_body: None,
             init_expr_continuation: None,
-            read_data_bytes: None,
+            current_data_segment: None,
+            binary_reader: None,
+            operators_reader: None,
             section_entries_left: 0,
         }
     }
 
     pub fn eof(&self) -> bool {
-        self.reader.eof()
+        match self.state {
+            ParserState::EndWasm => true,
+            ParserState::BeginWasm { .. } | ParserState::EndSection => {
+                self.module_reader.as_ref().expect("module reader").eof()
+            }
+            _ => false, // in-process of reading
+        }
     }
 
     pub fn current_position(&self) -> usize {
-        self.reader.current_position()
+        if let ParserState::Initial = self.state {
+            return 0;
+        }
+        if self.binary_reader.is_some() {
+            return self
+                .binary_reader
+                .as_ref()
+                .expect("binary reader")
+                .original_position();
+        }
+        if self.operators_reader.is_some() {
+            return self
+                .operators_reader
+                .as_ref()
+                .expect("operators reader")
+                .original_position();
+        }
+        match self.section_reader {
+            ParserSectionReader::CodeSectionReader(ref reader) => return reader.original_position(),
+            ParserSectionReader::DataSectionReader(ref reader) => return reader.original_position(),
+            ParserSectionReader::ElementSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::ExportSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::FunctionSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::GlobalSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::ImportSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::MemorySectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::TableSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::TypeSectionReader(ref reader) => return reader.original_position(),
+            ParserSectionReader::NameSectionReader(ref reader) => return reader.original_position(),
+            ParserSectionReader::LinkingSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::RelocSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            _ => (),
+        };
+        // TODO might not cover all cases
+        self.module_reader
+            .as_ref()
+            .expect("module reader")
+            .current_position()
     }
 
-    fn read_header(&mut self) -> Result<()> {
-        let version = self.reader.read_file_header()?;
+    fn read_module(&mut self) -> Result<()> {
+        let module_reader = ModuleReader::new(self.data)?;
+        let version = module_reader.get_version();
+        self.module_reader = Some(module_reader);
         self.state = ParserState::BeginWasm { version };
         Ok(())
     }
 
     fn read_section_header(&mut self) -> Result<()> {
-        let SectionHeader {
-            code,
-            payload_start,
-            payload_len,
-        } = self.reader.read_section_header()?;
-        let payload_end = payload_start + payload_len;
-        if self.reader.buffer.len() < payload_end {
-            return Err(BinaryReaderError {
-                message: "Section body extends past end of file",
-                offset: self.reader.buffer.len(),
-            });
-        }
-        if self.reader.position > payload_end {
-            return Err(BinaryReaderError {
-                message: "Section header is too big to fit into section body",
-                offset: payload_end,
-            });
-        }
-        let range = Range {
-            start: self.reader.position,
-            end: payload_end,
-        };
+        let section = self.module_reader.as_mut().expect("module reader").read()?;
+        let code = section.code;
+        let range = section.get_range();
+        self.current_section = Some(section);
         self.state = ParserState::BeginSection { code, range };
-        self.section_range = Some(range);
         Ok(())
     }
 
     fn read_type_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        self.state = ParserState::TypeSectionEntry(self.reader.read_func_type()?);
+        let type_entry = section_reader!(self, TypeSectionReader).read()?;
+        self.state = ParserState::TypeSectionEntry(type_entry);
         self.section_entries_left -= 1;
         Ok(())
     }
 
     fn read_import_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        let module = self.reader.read_string()?;
-        let field = self.reader.read_string()?;
-        let kind = self.reader.read_external_kind()?;
-        let ty: ImportSectionEntryType;
-        match kind {
-            ExternalKind::Function => {
-                ty = ImportSectionEntryType::Function(self.reader.read_var_u32()?)
-            }
-            ExternalKind::Table => {
-                ty = ImportSectionEntryType::Table(self.reader.read_table_type()?)
-            }
-            ExternalKind::Memory => {
-                ty = ImportSectionEntryType::Memory(self.reader.read_memory_type()?)
-            }
-            ExternalKind::Global => {
-                ty = ImportSectionEntryType::Global(self.reader.read_global_type()?)
-            }
-        }
-
+        let Import { module, field, ty } = section_reader!(self, ImportSectionReader).read()?;
         self.state = ParserState::ImportSectionEntry { module, field, ty };
         self.section_entries_left -= 1;
         Ok(())
@@ -279,27 +345,31 @@ impl<'a> Parser<'a> {
 
     fn read_function_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        self.state = ParserState::FunctionSectionEntry(self.reader.read_var_u32()?);
+        let func_type = section_reader!(self, FunctionSectionReader).read()?;
+        self.state = ParserState::FunctionSectionEntry(func_type);
         self.section_entries_left -= 1;
         Ok(())
     }
 
     fn read_memory_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        self.state = ParserState::MemorySectionEntry(self.reader.read_memory_type()?);
+        let memory_type = section_reader!(self, MemorySectionReader).read()?;
+        self.state = ParserState::MemorySectionEntry(memory_type);
         self.section_entries_left -= 1;
         Ok(())
     }
 
     fn read_global_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        self.state = ParserState::BeginGlobalSectionEntry(self.reader.read_global_type()?);
+        let Global { ty, init_expr } = section_reader!(self, GlobalSectionReader).read()?;
+        self.state = ParserState::BeginGlobalSectionEntry(ty);
+        self.operators_reader = Some(init_expr.get_operators_reader());
         self.section_entries_left -= 1;
         Ok(())
     }
@@ -310,8 +380,13 @@ impl<'a> Parser<'a> {
     }
 
     fn read_init_expression_operator(&mut self) -> Result<()> {
-        let op = self.reader.read_operator()?;
+        let op = self
+            .operators_reader
+            .as_mut()
+            .expect("operator reader")
+            .read()?;
         if let Operator::End = op {
+            self.operators_reader = None;
             self.state = ParserState::EndInitExpressionBody;
             return Ok(());
         }
@@ -321,11 +396,9 @@ impl<'a> Parser<'a> {
 
     fn read_export_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        let field = self.reader.read_string()?;
-        let kind = self.reader.read_external_kind()?;
-        let index = self.reader.read_var_u32()?;
+        let Export { field, kind, index } = section_reader!(self, ExportSectionReader).read()?;
         self.state = ParserState::ExportSectionEntry { field, kind, index };
         self.section_entries_left -= 1;
         Ok(())
@@ -333,24 +406,36 @@ impl<'a> Parser<'a> {
 
     fn read_element_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        self.state = ParserState::BeginElementSectionEntry(self.reader.read_var_u32()?);
+        let Element {
+            table_index,
+            init_expr,
+            items,
+        } = section_reader!(self, ElementSectionReader).read()?;
+        self.state = ParserState::BeginElementSectionEntry(table_index);
+        self.operators_reader = Some(init_expr.get_operators_reader());
+        self.element_items = Some(items);
         self.section_entries_left -= 1;
         Ok(())
     }
 
     fn read_element_entry_body(&mut self) -> Result<()> {
-        let num_elements = self.reader.read_var_u32()? as usize;
+        let mut reader = self
+            .element_items
+            .take()
+            .expect("element items")
+            .get_items_reader()?;
+        let num_elements = reader.get_count() as usize;
         if num_elements > MAX_WASM_TABLE_ENTRIES {
             return Err(BinaryReaderError {
                 message: "num_elements is out of bounds",
-                offset: self.reader.position - 1,
+                offset: 0, // reader.position - 1, // TODO offset
             });
         }
         let mut elements: Vec<u32> = Vec::with_capacity(num_elements);
         for _ in 0..num_elements {
-            elements.push(self.reader.read_var_u32()?);
+            elements.push(reader.read()?);
         }
         self.state = ParserState::ElementSectionEntryBody(elements.into_boxed_slice());
         Ok(())
@@ -358,28 +443,47 @@ impl<'a> Parser<'a> {
 
     fn read_function_body(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            self.current_function_body = None;
+            return self.check_section_end();
         }
-        let size = self.reader.read_var_u32()? as usize;
-        let body_end = self.reader.position + size;
-        let range = Range {
-            start: self.reader.position,
-            end: body_end,
-        };
+        let function_body = section_reader!(self, CodeSectionReader).read()?;
+        let range = function_body.get_range();
         self.state = ParserState::BeginFunctionBody { range };
-        self.function_range = Some(range);
+        self.current_function_body = Some(function_body);
         self.section_entries_left -= 1;
         Ok(())
     }
 
     fn read_function_body_locals(&mut self) -> Result<()> {
-        let local_count = self.reader.read_local_count()?;
+        let function_body = self.current_function_body.as_mut().expect("function body");
+        let mut reader = function_body.get_locals_reader()?;
+        let local_count = reader.get_count() as usize;
+        if local_count > MAX_WASM_FUNCTION_LOCALS {
+            return Err(BinaryReaderError {
+                message: "local_count is out of bounds",
+                offset: reader.original_position() - 1,
+            });
+        }
         let mut locals: Vec<(u32, Type)> = Vec::with_capacity(local_count);
-        let mut locals_total = 0;
+        let mut locals_total: usize = 0;
         for _ in 0..local_count {
-            let (count, ty) = self.reader.read_local_decl(&mut locals_total)?;
+            let (count, ty) = reader.read()?;
+            locals_total =
+                locals_total
+                    .checked_add(count as usize)
+                    .ok_or_else(|| BinaryReaderError {
+                        message: "locals_total is out of bounds",
+                        offset: reader.original_position() - 1,
+                    })?;
+            if locals_total > MAX_WASM_FUNCTION_LOCALS {
+                return Err(BinaryReaderError {
+                    message: "locals_total is out of bounds",
+                    offset: reader.original_position() - 1,
+                });
+            }
             locals.push((count, ty));
         }
+        self.operators_reader = Some(function_body.get_operators_reader()?);
         self.state = ParserState::FunctionBodyLocals {
             locals: locals.into_boxed_slice(),
         };
@@ -387,72 +491,107 @@ impl<'a> Parser<'a> {
     }
 
     fn read_code_operator(&mut self) -> Result<()> {
-        if self.reader.position >= self.function_range.unwrap().end {
+        if self
+            .operators_reader
+            .as_ref()
+            .expect("operator reader")
+            .eof()
+        {
             if let ParserState::CodeOperator(Operator::End) = self.state {
                 self.state = ParserState::EndFunctionBody;
-                self.function_range = None;
+                self.operators_reader = None;
+                self.current_function_body = None;
                 return Ok(());
             }
+            let reader = self.operators_reader.as_ref().expect("operator reader");
             return Err(BinaryReaderError {
                 message: "Expected end of function marker",
-                offset: self.function_range.unwrap().end,
+                offset: reader.original_position(),
             });
         }
-        let op = self.reader.read_operator()?;
+        let reader = self.operators_reader.as_mut().expect("operator reader");
+        let op = reader.read()?;
         self.state = ParserState::CodeOperator(op);
         Ok(())
     }
 
     fn read_table_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        self.state = ParserState::TableSectionEntry(self.reader.read_table_type()?);
+        let table_entry = section_reader!(self, TableSectionReader).read()?;
+        self.state = ParserState::TableSectionEntry(table_entry);
         self.section_entries_left -= 1;
         Ok(())
     }
 
     fn read_data_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        let index = self.reader.read_var_u32()?;
-        self.state = ParserState::BeginDataSectionEntry(index);
+        let Data {
+            memory_index,
+            init_expr,
+            data,
+        } = section_reader!(self, DataSectionReader).read()?;
+        self.state = ParserState::BeginDataSectionEntry(memory_index);
+        self.operators_reader = Some(init_expr.get_operators_reader());
+        self.current_data_segment = Some(data);
         self.section_entries_left -= 1;
         Ok(())
     }
 
     fn read_data_entry_body(&mut self) -> Result<()> {
-        let size = self.reader.read_var_u32()?;
-        self.state = ParserState::BeginDataSectionEntryBody(size);
-        self.read_data_bytes = Some(size);
+        let size = self.current_data_segment.expect("data entry").len();
+        self.state = ParserState::BeginDataSectionEntryBody(size as u32);
         Ok(())
     }
 
+    fn read_naming<'b>(
+        mut naming_reader: NamingReader<'a>,
+        limit: usize,
+    ) -> Result<Box<[Naming<'b>]>>
+    where
+        'a: 'b,
+    {
+        let count = naming_reader.get_count() as usize;
+        if count > limit {
+            return Err(BinaryReaderError {
+                message: "name map size is out of bound",
+                offset: naming_reader.original_position() - 1,
+            });
+        }
+        let mut result = Vec::with_capacity(count);
+        for _ in 0..count {
+            result.push(naming_reader.read()?);
+        }
+        Ok(result.into_boxed_slice())
+    }
+
     fn read_name_entry(&mut self) -> Result<()> {
-        if self.reader.position >= self.section_range.unwrap().end {
+        if section_reader!(self, NameSectionReader).eof() {
             return self.position_to_section_end();
         }
-        let ty = self.reader.read_name_type()?;
-        self.reader.read_var_u32()?; // payload_len
-        let entry = match ty {
-            NameType::Module => NameEntry::Module(self.reader.read_string()?),
-            NameType::Function => {
-                NameEntry::Function(self.reader.read_name_map(MAX_WASM_FUNCTIONS)?)
+        let entry = match section_reader!(self, NameSectionReader).read()? {
+            Name::Module(name) => NameEntry::Module(name.get_name()?),
+            Name::Function(func) => {
+                NameEntry::Function(Self::read_naming(func.get_map()?, MAX_WASM_FUNCTIONS)?)
             }
-            NameType::Local => {
-                let funcs_len = self.reader.read_var_u32()? as usize;
+            Name::Local(locals) => {
+                let mut reader = locals.get_function_local_reader()?;
+                let funcs_len = reader.get_count() as usize;
                 if funcs_len > MAX_WASM_FUNCTIONS {
                     return Err(BinaryReaderError {
                         message: "function count is out of bounds",
-                        offset: self.reader.position - 1,
+                        offset: reader.original_position() - 1,
                     });
                 }
                 let mut funcs: Vec<LocalName<'a>> = Vec::with_capacity(funcs_len);
                 for _ in 0..funcs_len {
+                    let func = reader.read()?;
                     funcs.push(LocalName {
-                        index: self.reader.read_var_u32()?,
-                        locals: self.reader.read_name_map(MAX_WASM_FUNCTION_LOCALS)?,
+                        index: func.func_index,
+                        locals: Self::read_naming(func.get_map()?, MAX_WASM_FUNCTION_LOCALS)?,
                     });
                 }
                 NameEntry::Local(funcs.into_boxed_slice())
@@ -463,38 +602,32 @@ impl<'a> Parser<'a> {
     }
 
     fn read_source_mapping(&mut self) -> Result<()> {
-        self.state = ParserState::SourceMappingURL(self.reader.read_string()?);
+        let url = self
+            .current_section
+            .as_ref()
+            .expect("section")
+            .get_sourcemappingurl_section_content()?;
+        self.state = ParserState::SourceMappingURL(url);
         Ok(())
     }
 
     // See https://github.com/WebAssembly/tool-conventions/blob/master/Linking.md
     fn read_reloc_header(&mut self) -> Result<()> {
-        let section_id_position = self.reader.position;
-        let section_id = self.reader.read_var_u7()?;
-        let section_code = self
-            .reader
-            .read_section_code(section_id, section_id_position)?;
+        let section_code = section_reader!(self, RelocSectionReader).get_section_code();
         self.state = ParserState::RelocSectionHeader(section_code);
         Ok(())
     }
 
     fn read_reloc_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        let ty = self.reader.read_reloc_type()?;
-        let offset = self.reader.read_var_u32()?;
-        let index = self.reader.read_var_u32()?;
-        let addend = match ty {
-            RelocType::FunctionIndexLEB
-            | RelocType::TableIndexSLEB
-            | RelocType::TableIndexI32
-            | RelocType::TypeIndexLEB
-            | RelocType::GlobalIndexLEB => None,
-            RelocType::GlobalAddrLEB | RelocType::GlobalAddrSLEB | RelocType::GlobalAddrI32 => {
-                Some(self.reader.read_var_u32()?)
-            }
-        };
+        let Reloc {
+            ty,
+            offset,
+            index,
+            addend,
+        } = section_reader!(self, RelocSectionReader).read()?;
         self.state = ParserState::RelocSectionEntry(RelocEntry {
             ty,
             offset,
@@ -507,9 +640,9 @@ impl<'a> Parser<'a> {
 
     fn read_linking_entry(&mut self) -> Result<()> {
         if self.section_entries_left == 0 {
-            return self.position_to_section_end();
+            return self.check_section_end();
         }
-        let entry = self.reader.read_linking_type()?;
+        let entry = section_reader!(self, LinkingSectionReader).read()?;
         self.state = ParserState::LinkingSectionEntry(entry);
         self.section_entries_left -= 1;
         Ok(())
@@ -521,82 +654,88 @@ impl<'a> Parser<'a> {
                 code: SectionCode::Type,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, TypeSectionReader, get_type_section_reader);
                 self.read_type_entry()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Import,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, ImportSectionReader, get_import_section_reader);
                 self.read_import_entry()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Function,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, FunctionSectionReader, get_function_section_reader);
                 self.read_function_entry()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Memory,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, MemorySectionReader, get_memory_section_reader);
                 self.read_memory_entry()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Global,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, GlobalSectionReader, get_global_section_reader);
                 self.read_global_entry()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Export,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, ExportSectionReader, get_export_section_reader);
                 self.read_export_entry()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Element,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, ElementSectionReader, get_element_section_reader);
                 self.read_element_entry()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Code,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, CodeSectionReader, get_code_section_reader);
                 self.read_function_body()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Table,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, TableSectionReader, get_table_section_reader);
                 self.read_table_entry()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Data,
                 ..
             } => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, DataSectionReader, get_data_section_reader);
                 self.read_data_entry()?;
             }
             ParserState::BeginSection {
                 code: SectionCode::Start,
                 ..
             } => {
-                self.state = ParserState::StartSectionEntry(self.reader.read_var_u32()?);
+                let func_index = self
+                    .current_section
+                    .as_ref()
+                    .expect("section")
+                    .get_start_section_content()?;
+                self.state = ParserState::StartSectionEntry(func_index);
             }
             ParserState::BeginSection {
                 code: SectionCode::Custom { .. },
                 ..
             } => {
+                self.create_custom_section_binary_reader();
                 self.read_section_body_bytes()?;
             }
             _ => unreachable!(),
@@ -604,22 +743,39 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
+    fn create_custom_section_binary_reader(&mut self) {
+        let reader = self
+            .current_section
+            .as_ref()
+            .expect("section")
+            .get_binary_reader();
+        self.binary_reader = Some(reader);
+    }
+
     fn read_custom_section_body(&mut self) -> Result<()> {
         match self.state {
             ParserState::ReadingCustomSection(CustomSectionKind::Name) => {
+                let reader = self
+                    .current_section
+                    .as_ref()
+                    .expect("section")
+                    .get_name_section_reader()?;
+                self.section_reader = ParserSectionReader::NameSectionReader(reader);
                 self.read_name_entry()?;
             }
             ParserState::ReadingCustomSection(CustomSectionKind::SourceMappingURL) => {
                 self.read_source_mapping()?;
             }
             ParserState::ReadingCustomSection(CustomSectionKind::Reloc) => {
+                start_section_reader!(self, RelocSectionReader, get_reloc_section_reader);
                 self.read_reloc_header()?;
             }
             ParserState::ReadingCustomSection(CustomSectionKind::Linking) => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                start_section_reader!(self, LinkingSectionReader, get_linking_section_reader);
                 self.read_linking_entry()?;
             }
             ParserState::ReadingCustomSection(CustomSectionKind::Unknown) => {
+                self.create_custom_section_binary_reader();
                 self.read_section_body_bytes()?;
             }
             _ => unreachable!(),
@@ -627,61 +783,70 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
-    fn ensure_reader_position_in_section_range(&self) -> Result<()> {
-        if self.section_range.unwrap().end < self.reader.position {
-            return Err(BinaryReaderError {
-                message: "Position past the section end",
-                offset: self.section_range.unwrap().end,
-            });
-        }
-        Ok(())
-    }
-
     fn position_to_section_end(&mut self) -> Result<()> {
-        self.ensure_reader_position_in_section_range()?;
-        self.reader.skip_to(self.section_range.unwrap().end);
-        self.section_range = None;
+        self.current_section = None;
+        self.binary_reader = None;
         self.state = ParserState::EndSection;
         Ok(())
     }
 
+    fn check_section_end(&mut self) -> Result<()> {
+        match self.section_reader {
+            ParserSectionReader::CodeSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::DataSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::ElementSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::ExportSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::FunctionSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::GlobalSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::ImportSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::MemorySectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::TableSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::TypeSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::LinkingSectionReader(ref reader) => reader.ensure_end()?,
+            ParserSectionReader::RelocSectionReader(ref reader) => reader.ensure_end()?,
+            _ => unreachable!(),
+        }
+        self.position_to_section_end()
+    }
+
     fn read_section_body_bytes(&mut self) -> Result<()> {
-        self.ensure_reader_position_in_section_range()?;
-        if self.section_range.unwrap().end == self.reader.position {
+        if self.binary_reader.as_ref().expect("binary reader").eof() {
             self.state = ParserState::EndSection;
-            self.section_range = None;
+            self.binary_reader = None;
             return Ok(());
         }
-        let to_read =
-            if self.section_range.unwrap().end - self.reader.position < MAX_DATA_CHUNK_SIZE {
-                self.section_range.unwrap().end - self.reader.position
-            } else {
-                MAX_DATA_CHUNK_SIZE
-            };
-        let bytes = self.reader.read_bytes(to_read)?;
+        let binary_reader = self.binary_reader.as_mut().expect("binary reader");
+        let to_read = if binary_reader.buffer.len() - binary_reader.position < MAX_DATA_CHUNK_SIZE {
+            binary_reader.buffer.len() - binary_reader.position
+        } else {
+            MAX_DATA_CHUNK_SIZE
+        };
+        let bytes = binary_reader.read_bytes(to_read)?;
         self.state = ParserState::SectionRawData(bytes);
         Ok(())
     }
 
     fn read_data_chunk(&mut self) -> Result<()> {
-        if self.read_data_bytes.unwrap() == 0 {
+        let data = self.current_data_segment.expect("data");
+        if data.len() == 0 {
             self.state = ParserState::EndDataSectionEntryBody;
-            self.read_data_bytes = None;
+            self.current_data_segment = None;
             return Ok(());
         }
-        let to_read = if self.read_data_bytes.unwrap() as usize > MAX_DATA_CHUNK_SIZE {
+        let to_read = if data.len() > MAX_DATA_CHUNK_SIZE {
             MAX_DATA_CHUNK_SIZE
         } else {
-            self.read_data_bytes.unwrap() as usize
+            data.len()
         };
-        let chunk = self.reader.read_bytes(to_read)?;
-        *self.read_data_bytes.as_mut().unwrap() -= to_read as u32;
-        self.state = ParserState::DataSectionEntryBodyChunk(chunk);
+        let (head, tail) = data.split_at(to_read);
+        self.current_data_segment = Some(tail);
+        self.state = ParserState::DataSectionEntryBodyChunk(head);
         Ok(())
     }
 
     fn read_next_section(&mut self) -> Result<()> {
-        if self.reader.eof() {
+        if self.module_reader.as_ref().expect("module_reader").eof() {
+            self.current_section = None;
             self.state = ParserState::EndWasm;
         } else {
             self.read_section_header()?;
@@ -693,7 +858,7 @@ impl<'a> Parser<'a> {
         match self.state {
             ParserState::EndWasm => panic!("Parser in end state"),
             ParserState::Error(_) => panic!("Parser in error state"),
-            ParserState::Initial => self.read_header()?,
+            ParserState::Initial => self.read_module()?,
             ParserState::BeginWasm { .. } | ParserState::EndSection => self.read_next_section()?,
             ParserState::BeginSection { .. } => self.read_section_body()?,
             ParserState::SkippingSection => {
@@ -738,9 +903,7 @@ impl<'a> Parser<'a> {
             }
             ParserState::EndFunctionBody => self.read_function_body()?,
             ParserState::SkippingFunctionBody => {
-                assert!(self.reader.position <= self.function_range.unwrap().end);
-                self.reader.skip_to(self.function_range.unwrap().end);
-                self.function_range = None;
+                self.current_function_body = None;
                 self.read_function_body()?;
             }
             ParserState::EndDataSectionEntry => self.read_data_entry()?,
@@ -757,7 +920,13 @@ impl<'a> Parser<'a> {
             ParserState::NameSectionEntry(_) => self.read_name_entry()?,
             ParserState::SourceMappingURL(_) => self.position_to_section_end()?,
             ParserState::RelocSectionHeader(_) => {
-                self.section_entries_left = self.reader.read_var_u32()?;
+                let mut reader = self
+                    .current_section
+                    .as_ref()
+                    .expect("section")
+                    .get_binary_reader();
+                self.section_entries_left = reader.read_var_u32()?;
+                self.binary_reader = Some(reader);
                 self.read_reloc_entry()?;
             }
             ParserState::RelocSectionEntry(_) => self.read_reloc_entry()?,
@@ -804,7 +973,15 @@ impl<'a> Parser<'a> {
 
     fn read_raw_section_data(&mut self) {
         match self.state {
-            ParserState::BeginSection { .. } => self.state = ParserState::ReadingSectionRawData,
+            ParserState::BeginSection { .. } => {
+                self.binary_reader = Some(
+                    self.current_section
+                        .as_ref()
+                        .expect("section")
+                        .get_binary_reader(),
+                );
+                self.state = ParserState::ReadingSectionRawData;
+            }
             _ => panic!("Invalid reader state during reading raw section data"),
         }
     }
@@ -884,19 +1061,19 @@ impl<'a> WasmDecoder<'a> for Parser<'a> {
     where
         'a: 'b,
     {
-        let range;
         match self.state {
-            ParserState::BeginSection { .. } => {
-                range = self.section_range.unwrap();
-                self.skip_section();
-            }
-            ParserState::BeginFunctionBody { .. } | ParserState::FunctionBodyLocals { .. } => {
-                range = self.function_range.unwrap();
-                self.skip_function_body();
-            }
+            ParserState::BeginSection { .. } => self
+                .current_section
+                .as_ref()
+                .expect("section")
+                .get_binary_reader(),
+            ParserState::BeginFunctionBody { .. } | ParserState::FunctionBodyLocals { .. } => self
+                .current_function_body
+                .as_ref()
+                .expect("function body")
+                .get_binary_reader(),
             _ => panic!("Invalid reader state during get binary reader operation"),
-        };
-        BinaryReader::new(range.slice(self.reader.buffer))
+        }
     }
 
     /// Reads next record from the WebAssembly binary data. It also allows to

@@ -173,15 +173,20 @@ enum OperatorAction {
 }
 
 impl OperatorAction {
-    fn remove_frame_stack_types(func_state: &mut FuncState, remove_count: usize) {
+    fn remove_frame_stack_types(
+        func_state: &mut FuncState,
+        remove_count: usize,
+    ) -> OperatorValidatorResult<()> {
         if remove_count == 0 {
-            return;
+            return Ok(());
         }
         let last_block = func_state.blocks.last_mut().unwrap();
         if last_block.is_stack_polymorphic() {
             let len = func_state.stack_types.len();
-            let non_polymorphic_len = len - last_block.stack_starts_at;
-            let remove_non_polymorphic = min(non_polymorphic_len, remove_count);
+            let remove_non_polymorphic = len
+                .checked_sub(last_block.stack_starts_at)
+                .ok_or("invalid block signature")?
+                .min(remove_count);
             func_state
                 .stack_types
                 .truncate(len - remove_non_polymorphic);
@@ -193,8 +198,9 @@ impl OperatorAction {
             let keep = func_state.stack_types.len() - remove_count;
             func_state.stack_types.truncate(keep);
         }
+        Ok(())
     }
-    fn update(&self, func_state: &mut FuncState) {
+    fn update(&self, func_state: &mut FuncState) -> OperatorValidatorResult<()> {
         match *self {
             OperatorAction::None => (),
             OperatorAction::PushBlock(ty, block_type) => {
@@ -244,16 +250,16 @@ impl OperatorAction {
                 last_block.polymorphic_values = None;
             }
             OperatorAction::ChangeFrame(remove_count) => {
-                OperatorAction::remove_frame_stack_types(func_state, remove_count);
+                OperatorAction::remove_frame_stack_types(func_state, remove_count)?
             }
             OperatorAction::ChangeFrameWithType(remove_count, ty) => {
-                OperatorAction::remove_frame_stack_types(func_state, remove_count);
+                OperatorAction::remove_frame_stack_types(func_state, remove_count)?;
                 func_state.stack_types.push(ty);
             }
             OperatorAction::ChangeFrameWithTypes(remove_count, ref new_items) => {
-                OperatorAction::remove_frame_stack_types(func_state, remove_count);
+                OperatorAction::remove_frame_stack_types(func_state, remove_count)?;
                 if new_items.is_empty() {
-                    return;
+                    return Ok(());
                 }
                 func_state.stack_types.extend_from_slice(new_items);
             }
@@ -265,15 +271,15 @@ impl OperatorAction {
                 last_block.polymorphic_values = None;
             }
             OperatorAction::ChangeFrameAfterSelect(ty) => {
-                OperatorAction::remove_frame_stack_types(func_state, 3);
+                OperatorAction::remove_frame_stack_types(func_state, 3)?;
                 if ty.is_none() {
                     let last_block = func_state.blocks.last_mut().unwrap();
                     assert!(last_block.is_stack_polymorphic());
                     last_block.polymorphic_values =
                         Some(last_block.polymorphic_values.unwrap() + 1);
-                    return;
+                    return Ok(());
                 }
-                func_state.stack_types.push(ty.unwrap())
+                func_state.stack_types.push(ty.unwrap());
             }
             OperatorAction::DeadCode => {
                 let last_block = func_state.blocks.last_mut().unwrap();
@@ -286,6 +292,7 @@ impl OperatorAction {
                 func_state.end_function = true;
             }
         }
+        Ok(())
     }
 }
 
@@ -562,7 +569,12 @@ impl OperatorValidator {
         self.check_frame_size(func_state, 3)?;
         let last_block = func_state.last_block();
         Ok(if last_block.is_stack_polymorphic() {
-            match func_state.stack_types.len() - last_block.stack_starts_at {
+            match func_state
+                .stack_types
+                .len()
+                .checked_sub(last_block.stack_starts_at)
+                .ok_or("invalid block signature")?
+            {
                 0 => None,
                 1 => {
                     self.check_operands_1(func_state, Type::I32)?;
@@ -1697,11 +1709,17 @@ impl<'a> ValidatingParser<'a> {
                     .as_ref()
                     .unwrap()
                     .process_operator(operator, self);
-                if check.is_err() {
-                    self.validation_error = self.create_validation_error(check.err().unwrap());
-                } else {
-                    let action = check.ok().unwrap();
-                    action.update(&mut self.current_operator_validator.as_mut().unwrap().func_state)
+                match check {
+                    Ok(action) => {
+                        if let Err(err) = action.update(
+                            &mut self.current_operator_validator.as_mut().unwrap().func_state,
+                        ) {
+                            self.create_validation_error(err);
+                        }
+                    }
+                    Err(err) => {
+                        self.validation_error = self.create_validation_error(err);
+                    }
                 }
             }
             ParserState::EndFunctionBody => {

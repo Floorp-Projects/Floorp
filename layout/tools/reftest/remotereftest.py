@@ -176,9 +176,12 @@ class RemoteReftest(RefTest):
         # RemoteAutomation.py's 'messageLogger' is also used by mochitest. Mimic a mochitest
         # MessageLogger object to re-use this code path.
         self.outputHandler.write = self.outputHandler.__call__
-        self.automation = RemoteAutomation(self.device, options.app, self.remoteProfile,
-                                           options.remoteLogFile, processArgs=None)
-        self.automation._processArgs['messageLogger'] = self.outputHandler
+        args = {'messageLogger': self.outputHandler}
+        self.automation = RemoteAutomation(self.device,
+                                           appName=options.app,
+                                           remoteProfile=self.remoteProfile,
+                                           remoteLog=options.remoteLogFile,
+                                           processArgs=args)
 
         self.environment = self.automation.environment
         if self.automation.IS_DEBUG_BUILD:
@@ -375,7 +378,8 @@ class RemoteReftest(RefTest):
                                                            xrePath=options.xrePath,
                                                            debuggerInfo=debuggerInfo,
                                                            symbolsPath=symbolsPath,
-                                                           timeout=timeout)
+                                                           timeout=timeout,
+                                                           e10s=options.e10s)
 
         self.cleanup(profile.profile)
         return status

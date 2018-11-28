@@ -992,7 +992,6 @@ pref("ui.scrollToClick", 0);
 
 // provide ability to turn on support for canvas focus rings
 pref("canvas.focusring.enabled", true);
-pref("canvas.customfocusring.enabled", false);
 pref("canvas.hitregions.enabled", false);
 pref("canvas.filters.enabled", true);
 // Add support for canvas path objects
