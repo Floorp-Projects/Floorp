@@ -1385,7 +1385,7 @@ Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
       return;
     }
 
-    WorkletThread::Get()->DispatchRunnable(runnable.forget());
+    NS_DispatchToMainThread(runnable.forget());
     return;
   }
 
