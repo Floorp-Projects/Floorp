@@ -23,7 +23,7 @@ async function changeAndVerifyPref(tab, newConfigValue) {
   // serializes reads and writes to the app update config file, so this will not
   // resolve until the file write is complete.
 
-  let configValueRead = await gAUS.getAutoUpdateIsEnabled();
+  let configValueRead = await UpdateUtils.getAppUpdateAutoEnabled();
   is(configValueRead, newConfigValue,
      "Value returned should have matched the expected value");
 
