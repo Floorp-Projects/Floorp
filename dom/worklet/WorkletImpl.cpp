@@ -42,7 +42,8 @@ WorkletLoadInfo::~WorkletLoadInfo()
 
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow,
                          nsIPrincipal* aPrincipal)
-  : mWorkletLoadInfo(aWindow, aPrincipal)
+  : mWorkletLoadInfo(aWindow, aPrincipal),
+    mTerminated(false)
 {
 }
 
@@ -78,24 +79,12 @@ WorkletImpl::CreateGlobalScope(JSContext* aCx)
   return scope.forget();
 }
 
-dom::WorkletThread*
-WorkletImpl::GetOrCreateThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mWorkletThread) {
-    // Thread creation. FIXME: this will change.
-    mWorkletThread = dom::WorkletThread::Create();
-  }
-
-  return mWorkletThread;
-}
-
 void
 WorkletImpl::NotifyWorkletFinished()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  mTerminated = true;
   if (mWorkletThread) {
     mWorkletThread->Terminate();
     mWorkletThread = nullptr;
@@ -104,10 +93,23 @@ WorkletImpl::NotifyWorkletFinished()
 }
 
 nsresult
-WorkletImpl::DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable)
+WorkletImpl::SendControlMessage(already_AddRefed<nsIRunnable> aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // TODO: bug 1492011 re ConsoleWorkletRunnable.
-  MOZ_ASSERT(mWorkletThread);
+  if (mTerminated) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
+  if (!mWorkletThread) {
+    // Thread creation. FIXME: this will change.
+    mWorkletThread = dom::WorkletThread::Create();
+    if (!mWorkletThread) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
   return mWorkletThread->DispatchRunnable(std::move(aRunnable));
 }
 
