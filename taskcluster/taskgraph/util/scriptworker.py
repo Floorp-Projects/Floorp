@@ -644,7 +644,7 @@ def should_use_artifact_map(platform, project):
     migration.
     """
     platforms = ['android', 'fennec']
-    #FIXME: once we're ready to switch fully to declarative artifacts on other
+    # FIXME: once we're ready to switch fully to declarative artifacts on other
     # branches, we can expand this
     projects = ['mozilla-central']
 
