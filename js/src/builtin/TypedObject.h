@@ -186,8 +186,10 @@ class TypeDescr : public NativeObject {
   // reference. Otherwise its value is undefined.
   //
   // The list is three consecutive arrays of int32_t offsets, with each array
-  // terminated by -1. The arrays store offsets of string, object, and value
-  // references in the descriptor, in that order.
+  // terminated by -1. The arrays store offsets of string, object/anyref, and
+  // value references in the descriptor, in that order.
+  // TODO/AnyRef-boxing: once anyref has a more complicated structure, we must
+  // revisit this.
   MOZ_MUST_USE bool hasTraceList() const {
     return !getFixedSlot(JS_DESCR_SLOT_TRACE_LIST).isUndefined();
   }
@@ -284,6 +286,7 @@ class ScalarTypeDescr : public SimpleTypeDescr {
 enum class ReferenceType {
   TYPE_ANY = JS_REFERENCETYPEREPR_ANY,
   TYPE_OBJECT = JS_REFERENCETYPEREPR_OBJECT,
+  TYPE_WASM_ANYREF = JS_REFERENCETYPEREPR_WASM_ANYREF,
   TYPE_STRING = JS_REFERENCETYPEREPR_STRING
 };
 
@@ -313,9 +316,12 @@ class ReferenceTypeDescr : public SimpleTypeDescr {
   static MOZ_MUST_USE bool call(JSContext* cx, unsigned argc, Value* vp);
 };
 
-#define JS_FOR_EACH_REFERENCE_TYPE_REPR(MACRO_)           \
-  MACRO_(ReferenceType::TYPE_ANY, GCPtrValue, Any)        \
-  MACRO_(ReferenceType::TYPE_OBJECT, GCPtrObject, Object) \
+// TODO/AnyRef-boxing: With boxed immediates and strings, GCPtrObject may not be
+// appropriate.
+#define JS_FOR_EACH_REFERENCE_TYPE_REPR(MACRO_)                    \
+  MACRO_(ReferenceType::TYPE_ANY, GCPtrValue, Any)                 \
+  MACRO_(ReferenceType::TYPE_WASM_ANYREF, GCPtrObject, WasmAnyRef) \
+  MACRO_(ReferenceType::TYPE_OBJECT, GCPtrObject, Object)          \
   MACRO_(ReferenceType::TYPE_STRING, GCPtrString, string)
 
 // Type descriptors whose instances are objects and hence which have
@@ -509,6 +515,7 @@ class TypedObjectModuleObject : public NativeObject {
     Float32Desc,
     Float64Desc,
     ObjectDesc,
+    WasmAnyRefDesc,
     SlotCount
   };
 
@@ -867,6 +874,39 @@ MOZ_MUST_USE bool ClampToUint8(JSContext* cx, unsigned argc, Value* vp);
  * system.
  */
 MOZ_MUST_USE bool GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp);
+
+/*
+ * Usage: IsBoxedWasmAnyRef(Object) -> bool
+ *
+ * Return true iff object is an instance of the Wasm-internal type WasmValueBox.
+ */
+MOZ_MUST_USE bool IsBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
+
+/*
+ * Usage: IsBoxableWasmAnyRef(Value) -> bool
+ *
+ * Return true iff the value must be boxed into a WasmValueBox in order to be
+ * stored into an anyref field.  Values for which false is returned may be
+ * passed as they are to Store_WasmAnyRef and may therefore appear as results
+ * from Load_WasmAnyRef.
+ */
+MOZ_MUST_USE bool IsBoxableWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
+
+/*
+ * Usage: BoxWasmAnyRef(Value) -> Object
+ *
+ * Return a new WasmValueBox that holds `value`.  The value can be any value at
+ * all.
+ */
+MOZ_MUST_USE bool BoxWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
+
+/*
+ * Usage: UnboxBoxedWasmAnyRef(Object) -> Value
+ *
+ * The object must be a value for which IsBoxedWasmAnyRef returns true.
+ * Return the value stored in the box.
+ */
+MOZ_MUST_USE bool UnboxBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Usage: Store_int8(targetDatum, targetOffset, value)

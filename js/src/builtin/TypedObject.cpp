@@ -292,6 +292,9 @@ bool ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
     case ReferenceType::TYPE_OBJECT:
       slot = TypedObjectModuleObject::ObjectDesc;
       break;
+    case ReferenceType::TYPE_WASM_ANYREF:
+      slot = TypedObjectModuleObject::WasmAnyRefDesc;
+      break;
     default:
       MOZ_CRASH("NYI");
   }
@@ -373,6 +376,11 @@ bool js::ReferenceTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
 
   switch (descr->type()) {
     case ReferenceType::TYPE_ANY:
+      args.rval().set(args[0]);
+      return true;
+
+    case ReferenceType::TYPE_WASM_ANYREF:
+      // As a cast in JS, anyref is an identity operation.
       args.rval().set(args[0]);
       return true;
 
@@ -1365,6 +1373,11 @@ static JSObject* DefineMetaTypeDescr(JSContext* cx, const char* name,
     return false;
   }
   module->initReservedSlot(TypedObjectModuleObject::ObjectDesc, typeDescr);
+
+  if (!JS_GetProperty(cx, module, "WasmAnyRef", &typeDescr)) {
+    return false;
+  }
+  module->initReservedSlot(TypedObjectModuleObject::WasmAnyRefDesc, typeDescr);
 
   // ArrayType.
 
@@ -2680,6 +2693,24 @@ bool StoreReferenceObject::store(JSContext* cx, GCPtrObject* heap,
   return true;
 }
 
+bool StoreReferenceWasmAnyRef::store(JSContext* cx, GCPtrObject* heap,
+                                     const Value& v, TypedObject* obj,
+                                     jsid id) {
+  // At the moment, we allow:
+  // - null
+  // - a WasmValueBox object (a NativeObject subtype)
+  // - any other JSObject* that JS can talk about
+  //
+  // TODO/AnyRef-boxing: With boxed immediates and strings this will change.
+
+  MOZ_ASSERT(v.isObjectOrNull());
+
+  // We do not add any type information for anyref at this time.
+
+  *heap = v.toObjectOrNull();
+  return true;
+}
+
 bool StoreReferencestring::store(JSContext* cx, GCPtrString* heap,
                                  const Value& v, TypedObject* obj, jsid id) {
   MOZ_ASSERT(v.isString());  // or else Store_string is being misused
@@ -2696,6 +2727,16 @@ void LoadReferenceAny::load(GCPtrValue* heap, MutableHandleValue v) {
 }
 
 void LoadReferenceObject::load(GCPtrObject* heap, MutableHandleValue v) {
+  if (*heap) {
+    v.setObject(**heap);
+  } else {
+    v.setNull();
+  }
+}
+
+void LoadReferenceWasmAnyRef::load(GCPtrObject* heap, MutableHandleValue v) {
+  // TODO/AnyRef-boxing: With boxed immediates and strings this will change.
+
   if (*heap) {
     v.setObject(**heap);
   } else {
@@ -2780,6 +2821,7 @@ void MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr,
       return;
     }
 
+    case ReferenceType::TYPE_WASM_ANYREF:
     case ReferenceType::TYPE_OBJECT: {
       js::GCPtrObject* objectPtr = reinterpret_cast<js::GCPtrObject*>(mem);
       objectPtr->init(nullptr);
@@ -2841,6 +2883,9 @@ void MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr,
       return;
     }
 
+    case ReferenceType::TYPE_WASM_ANYREF:
+      // TODO/AnyRef-boxing: With boxed immediates and strings the tracing code
+      // will be more complicated.  For now, tracing as an object is fine.
     case ReferenceType::TYPE_OBJECT: {
       GCPtrObject* objectPtr = reinterpret_cast<js::GCPtrObject*>(mem);
       TraceNullableEdge(trace_, objectPtr, "reference-obj");
@@ -2881,11 +2926,16 @@ struct TraceListVisitor {
 
 void TraceListVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem) {
   VectorType* offsets;
+  // TODO/AnyRef-boxing: Once a WasmAnyRef is no longer just a JSObject*
+  // we must revisit this structure.
   switch (descr.type()) {
     case ReferenceType::TYPE_ANY:
       offsets = &valueOffsets;
       break;
     case ReferenceType::TYPE_OBJECT:
+      offsets = &objectOffsets;
+      break;
+    case ReferenceType::TYPE_WASM_ANYREF:
       offsets = &objectOffsets;
       break;
     case ReferenceType::TYPE_STRING:

@@ -165,6 +165,38 @@ Value wasm::UnboxAnyRef(AnyRef val) {
   return result;
 }
 
+bool js::IsBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  args.rval().setBoolean(args[0].isObject() &&
+                         args[0].toObject().is<WasmValueBox>());
+  return true;
+}
+
+bool js::IsBoxableWasmAnyRef(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  args.rval().setBoolean(!(args[0].isObject() || args[0].isNull()));
+  return true;
+}
+
+bool js::BoxWasmAnyRef(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  WasmValueBox* box = WasmValueBox::create(cx, args[0]);
+  if (!box) return false;
+  args.rval().setObject(*box);
+  return true;
+}
+
+bool js::UnboxBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  WasmValueBox* box = &args[0].toObject().as<WasmValueBox>();
+  args.rval().set(box->value());
+  return true;
+}
+
 bool wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode) {
   switch (callee) {
     case SymbolicAddress::FloorD:

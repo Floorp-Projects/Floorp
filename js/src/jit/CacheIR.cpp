@@ -3645,6 +3645,15 @@ bool SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj,
     return false;
   }
 
+  if (fieldDescr->is<ReferenceTypeDescr>() &&
+      fieldDescr->as<ReferenceTypeDescr>().type() ==
+          ReferenceType::TYPE_WASM_ANYREF) {
+    // TODO/AnyRef-boxing: we can probably do better, in particular, code
+    // that stores object pointers and null in an anyref slot should be able
+    // to get a fast path.
+    return false;
+  }
+
   uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
   TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
@@ -3677,6 +3686,8 @@ bool SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj,
     case ReferenceType::TYPE_STRING:
       writer.guardType(rhsId, JSVAL_TYPE_STRING);
       break;
+    case ReferenceType::TYPE_WASM_ANYREF:
+      MOZ_CRASH();
   }
 
   writer.storeTypedObjectReferenceProperty(objId, fieldOffset, layout, type,
