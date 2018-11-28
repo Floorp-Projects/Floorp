@@ -161,7 +161,7 @@ if (AppConstants.MOZ_CRASHREPORTER) {
 }
 
 XPCOMUtils.defineLazyGetter(this, "RTL_UI", () => {
-  return document.documentElement.matches(":-moz-locale-dir(rtl)");
+  return Services.locale.isAppLocaleRTL;
 });
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
