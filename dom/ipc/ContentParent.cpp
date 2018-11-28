@@ -2203,6 +2203,9 @@ ContentParent::LaunchSubprocessInternal(
   AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess", OTHER);
   const bool isSync = aRetval.is<bool*>();
 
+  Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_IS_SYNC,
+                        static_cast<uint32_t>(isSync));
+
   auto earlyReject = [aRetval, isSync]() {
     if (isSync) {
       *aRetval.as<bool*>() = false;
@@ -2349,6 +2352,7 @@ ContentParent::LaunchSubprocessInternal(
                   prefMapHandle = std::move(prefMapHandle)
                  ](base::ProcessHandle handle) {
     AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess::resolve", OTHER);
+    const auto launchResumeTS = TimeStamp::Now();
 
     base::ProcessId procId = base::GetProcId(handle);
     Open(mSubprocess->GetChannel(), procId);
@@ -2376,8 +2380,19 @@ ContentParent::LaunchSubprocessInternal(
 
     Init();
 
-    // Launch time telemetry will return in a later patch (bug 1474991).
-    Unused << isSync;
+    if (isSync) {
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CONTENT_PROCESS_SYNC_LAUNCH_MS, mLaunchTS);
+    } else {
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CONTENT_PROCESS_LAUNCH_TOTAL_MS, mLaunchTS);
+
+      Telemetry::Accumulate(
+        Telemetry::CONTENT_PROCESS_LAUNCH_MAINTHREAD_MS,
+        static_cast<uint32_t>(((mLaunchYieldTS - mLaunchTS) +
+                               (TimeStamp::Now() - launchResumeTS))
+                              .ToMilliseconds()));
+    }
 
     return LaunchPromise::CreateAndResolve(self, __func__);
   };
@@ -2395,6 +2410,7 @@ ContentParent::LaunchSubprocessInternal(
     if (mSubprocess->AsyncLaunch(std::move(extraArgs))) {
       RefPtr<GeckoChildProcessHost::HandlePromise> ready =
         mSubprocess->WhenProcessHandleReady();
+      mLaunchYieldTS = TimeStamp::Now();
       *retptr = ready->Then(GetCurrentThreadSerialEventTarget(), __func__,
                             std::move(resolve), std::move(reject));
     } else {
@@ -2428,7 +2444,8 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mSelfRef(nullptr)
   , mSubprocess(nullptr)
   , mLaunchTS(TimeStamp::Now())
-  , mActivateTS(TimeStamp::Now())
+  , mLaunchYieldTS(mLaunchTS)
+  , mActivateTS(mLaunchTS)
   , mOpener(aOpener)
   , mRemoteType(aRemoteType)
   , mChildID(gContentChildID++)
