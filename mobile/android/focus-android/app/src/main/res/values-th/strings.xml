@@ -52,9 +52,9 @@
   <string name="preference_state_off">ปิด</string>
   <string name="preference_subitem_autocomplete">การเติม URL อัตโนมัติ</string>
   <string name="preference_switch_autocomplete_topsites">สำหรับไซต์เด่น</string>
-  <string name="preference_autocomplete_topsite_summary">เปิดใช้งานเพื่อเติมโดยอัตโนมัติมากกว่า 450 URL ยอดนิยมในแถบที่อยู่</string>
+  <string name="preference_autocomplete_topsite_summary">เปิดใช้งานเพื่อเติมมากกว่า 450 URL ยอดนิยมโดยอัตโนมัติในแถบที่อยู่</string>
   <string name="preference_switch_autocomplete_user_list">สำหรับไซต์ที่คุณเพิ่ม</string>
-  <string name="preference_autocomplete_user_list_summary">เปิดใช้งานเพื่อเติมโดยอัตโนมัติมากกว่า 450 URL ยอดนิยมในแถบที่อยู่</string>
+  <string name="preference_autocomplete_user_list_summary">เปิดใช้งานเพื่อเติมมากกว่า 450 URL ยอดนิยมโดยอัตโนมัติในแถบที่อยู่</string>
   <string name="preference_category_autocomplete_manage_sites">จัดการไซต์</string>
   <string name="preference_autocomplete_subitem_manage_sites">จัดการไซต์</string>
   <string name="preference_autocomplete_action_add">+ เพิ่ม URL ที่กำหนดเอง</string>

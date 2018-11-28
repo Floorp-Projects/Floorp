@@ -29,11 +29,11 @@
   <string name="notification_action_erase_and_open">Slet og åbn</string>
   <string name="shortcut_erase_short_label">Slet</string>
   <string name="shortcut_erase_long_label">Slet browser-historik</string>
-  <string name="shortcut_erase_and_open_short_label">Slet &amp; åbn</string>
+  <string name="shortcut_erase_and_open_short_label">Slet og åbn</string>
   <string name="shortcut_erase_and_open_long_label">Slet og åbn %1$s</string>
   <string name="text_selection_search_action">Søg privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s giver dig fuld kontrol.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anvend den som privat browser:\n  "<ul>"\n    "<li>S&#248;g og surf direkte i appen</li>"\n    "<li>Bloker sporing (eller opdater indstillingerne og tillad sporing)</li>"\n    "<li>Slet fjerner cookies samt s&#248;ge- og browser-historik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er udviklet af Mozilla. Vores form&#229;l er at fremme et sundt, &#229;bent internet.<br/>\n<a href="%2$s">L&#230;s mere</a></p>]]></string>
-  <string name="preference_privacy_and_security_header">Privatliv &amp; sikkerhed</string>
+  <string name="preference_privacy_and_security_header">Privatliv og sikkerhed</string>
   <string name="preference_privacy_and_security_summary">Sporing, cookies, datadeling</string>
   <string name="preference_search_summary">Angiv standard, autofuldførelse</string>
   <string name="preference_mozilla_summary">Om %1$s, hjælp</string>
@@ -42,7 +42,7 @@
   <string name="preference_category_switching_apps">Skifte mellem apps</string>
   <string name="preference_category_general">Generelt</string>
   <string name="preference_general_summary">Standard-browser, faneblade, sprog</string>
-  <string name="preference_category_data_collection_use">Dataindsamling &amp; brug</string>
+  <string name="preference_category_data_collection_use">Dataindsamling og brug</string>
   <string name="preference_category_search">Søgning</string>
   <string name="preference_show_search_suggestions">Vis søgeforslag</string>
   <string name="preference_show_search_suggestions_summary">%1$s sender det indtastede i adresselinjen til den valgte søgetjeneste</string>

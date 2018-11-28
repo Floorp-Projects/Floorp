@@ -64,7 +64,7 @@
   <string name="preference_category_cookies">Cookies y datos del sitio</string>
   <string name="preference_category_data_choices">Opciones de datos</string>
   <string name="preference_autocomplete_title_remove">Eliminar las URL personalizadas</string>
-  <string name="preference_autocomplete_learn_more">Aprender más</string>
+  <string name="preference_autocomplete_learn_more">Saber más</string>
   <string name="preference_autocomplete_custom_summary">Agregar y gestionar el autocompletado de URL personalizadas.</string>
   <string name="preference_autocomplete_add_title">URL a agregar</string>
   <string name="preference_autocomplete_add_hint">Pegar o introducir URL</string>
