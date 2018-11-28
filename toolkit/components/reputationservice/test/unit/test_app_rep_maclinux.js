@@ -192,11 +192,11 @@ function waitForUpdates() {
   });
 }
 
-function promiseQueryReputation(query, expectedShouldBlock) {
+function promiseQueryReputation(query, expected) {
   return new Promise(resolve => {
     function onComplete(aShouldBlock, aStatus) {
       Assert.equal(Cr.NS_OK, aStatus);
-      Assert.equal(aShouldBlock, expectedShouldBlock);
+      check_telemetry(expected);
       resolve(true);
     }
     gAppRep.queryReputation(query, onComplete);
@@ -214,10 +214,15 @@ add_task(async function test_blocked_binary() {
                              true);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
+  let expected = get_telemetry_snapshot();
+  expected.shouldBlock++;
+  add_telemetry_count(expected.local, NO_LIST, 1);
+  add_telemetry_count(expected.reason, VerdictDangerous, 1);
+
   // evil.com should return a malware verdict from the remote server.
   await promiseQueryReputation({sourceURI: createURI("http://evil.com"),
                                 suggestedFileName: "noop.bat",
-                                fileSize: 12}, true);
+                                fileSize: 12}, expected);
 });
 
 add_task(async function test_non_binary() {
@@ -226,9 +231,14 @@ add_task(async function test_non_binary() {
                              true);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/throw");
+
+  let expected = get_telemetry_snapshot();
+  add_telemetry_count(expected.local, NO_LIST, 1);
+  add_telemetry_count(expected.reason, NonBinaryFile, 1);
+
   await promiseQueryReputation({sourceURI: createURI("http://evil.com"),
                                 suggestedFileName: "noop.txt",
-                                fileSize: 12}, false);
+                                fileSize: 12}, expected);
 });
 
 add_task(async function test_good_binary() {
@@ -237,10 +247,15 @@ add_task(async function test_good_binary() {
                              true);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
+
+  let expected = get_telemetry_snapshot();
+  add_telemetry_count(expected.local, NO_LIST, 1);
+  add_telemetry_count(expected.reason, VerdictSafe, 1);
+
   // mozilla.com should return a not-guilty verdict from the remote server.
   await promiseQueryReputation({sourceURI: createURI("http://mozilla.com"),
                                 suggestedFileName: "noop.bat",
-                                fileSize: 12}, false);
+                                fileSize: 12}, expected);
 });
 
 add_task(async function test_disabled() {
@@ -249,6 +264,11 @@ add_task(async function test_disabled() {
                              false);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/throw");
+
+  let expected = get_telemetry_snapshot();
+  add_telemetry_count(expected.local, NO_LIST, 1);
+  add_telemetry_count(expected.reason, RemoteLookupDisabled, 1);
+
   let query = {sourceURI: createURI("http://example.com"),
                suggestedFileName: "noop.bat",
                fileSize: 12};
@@ -258,6 +278,7 @@ add_task(async function test_disabled() {
         // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
         Assert.equal(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
         Assert.ok(!aShouldBlock);
+        check_telemetry(expected);
         resolve(true);
       }
     );
@@ -270,6 +291,11 @@ add_task(async function test_disabled_through_lists() {
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   Services.prefs.setCharPref("urlclassifier.downloadBlockTable", "");
+
+  let expected = get_telemetry_snapshot();
+  add_telemetry_count(expected.local, NO_LIST, 1);
+  add_telemetry_count(expected.reason, RemoteLookupDisabled, 1);
+
   let query = {sourceURI: createURI("http://example.com"),
                suggestedFileName: "noop.bat",
                fileSize: 12};
@@ -279,6 +305,7 @@ add_task(async function test_disabled_through_lists() {
         // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
         Assert.equal(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
         Assert.ok(!aShouldBlock);
+        check_telemetry(expected);
         resolve(true);
       }
     );
