@@ -205,7 +205,7 @@ test_description_schema = Schema({
         'test-platform', 'project',
         Any(bool, 'both')),
 
-    # Whether to run this task with e10s (desktop-test only).  If false, run
+    # Whether to run this task with e10s.  If false, run
     # without e10s; if true, run with e10s; if 'both', run one task with and
     # one task without e10s.  E10s tasks have "-e10s" appended to the test name
     # and treeherder group.
@@ -429,7 +429,7 @@ def set_defaults(config, tests):
             # all Android test tasks download internal objects from tooltool
             test['mozharness']['tooltool-downloads'] = True
             test['mozharness']['actions'] = ['get-secrets']
-            # Android doesn't do e10s
+            # Fennec is non-e10s; geckoview handled in set_target
             test['e10s'] = False
             # loopback-video is always true for Android, but false for other
             # platform phyla
@@ -551,6 +551,8 @@ def set_target(config, tests):
         if 'target' in test:
             resolve_keyed_by(test, 'target', item_name=test['test-name'])
             target = test['target']
+            if target and 'geckoview' in target:
+                test['e10s'] = True
         if not target:
             if build_platform.startswith('macosx'):
                 target = 'target.dmg'

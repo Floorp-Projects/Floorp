@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import json
 import logging
 
 import requests
@@ -140,7 +141,10 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id, tas
                     if gpu_required:
                         verify_args.append('--gpu-required')
 
-                    task.task['payload']['env']['MOZHARNESS_TEST_PATHS'] = input.get('testPath')
+                    if 'testPath' in input:
+                        task.task['payload']['env']['MOZHARNESS_TEST_PATHS'] = json.dums({
+                            task.task['extra']['suite']['flavor']: input['testPath']
+                        })
 
                     cmd_parts = task.task['payload']['command']
                     keep_args = ['--installer-url', '--download-symbols', '--test-packages-url']

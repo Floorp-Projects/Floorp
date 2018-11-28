@@ -19,6 +19,7 @@
 #include "DecoderTraits.h"
 #include "AudioContext.h"
 #include "AudioBuffer.h"
+#include "js/MemoryFunctions.h"
 #include "MediaContainerType.h"
 #include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"

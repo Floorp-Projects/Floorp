@@ -86,6 +86,7 @@
 #include "js/GCVector.h"
 #include "js/Initialization.h"
 #include "js/JSON.h"
+#include "js/MemoryFunctions.h"
 #include "js/Printf.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"

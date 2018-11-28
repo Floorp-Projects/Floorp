@@ -481,18 +481,6 @@ union alignas(8) Value
     void setObject(JSObject& obj) {
         MOZ_ASSERT(js::gc::IsCellPointerValid(&obj));
 
-        // This should not be possible and is undefined behavior, but some
-        // ObjectValue(nullptr) are sneaking in. Try to catch them here, if
-        // indeed they are going through this code. I tested gcc, and it at
-        // least will *not* elide the null check even though it would be
-        // permitted according to the spec. The temporary is necessary to
-        // prevent gcc from helpfully pointing out that this code makes no
-        // sense.
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-        JSObject* testObj = &obj;
-        MOZ_DIAGNOSTIC_ASSERT(testObj != nullptr);
-#endif
-
 #if defined(JS_PUNBOX64)
         // VisualStudio cannot contain parenthesized C++ style cast and shift
         // inside decltype in template parameter:
@@ -624,7 +612,7 @@ union alignas(8) Value
 #if defined(JS_NUNBOX32)
         return uint32_t(toTag()) <= uint32_t(JSVAL_TAG_CLEAR);
 #elif defined(JS_PUNBOX64)
-        return (asBits_ | mozilla::DoubleTypeTraits::kSignBit) <= JSVAL_SHIFTED_TAG_MAX_DOUBLE;
+        return (asBits_ | mozilla::FloatingPoint<double>::kSignBit) <= JSVAL_SHIFTED_TAG_MAX_DOUBLE;
 #endif
     }
 
@@ -1006,7 +994,7 @@ IsCanonicalized(double d)
 
   uint64_t bits;
   mozilla::BitwiseCast<uint64_t>(d, &bits);
-  return (bits & ~mozilla::DoubleTypeTraits::kSignBit) == detail::CanonicalizedNaNBits;
+  return (bits & ~mozilla::FloatingPoint<double>::kSignBit) == detail::CanonicalizedNaNBits;
 }
 
 static inline Value

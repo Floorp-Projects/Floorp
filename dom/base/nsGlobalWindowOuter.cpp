@@ -498,6 +498,27 @@ nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx,
   return js::Wrapper::getPropertyDescriptor(cx, proxy, id, desc);
 }
 
+/**
+ * IsNonConfigurableReadonlyPrimitiveGlobalProp returns true for
+ * property names that fit the following criteria:
+ *
+ * 1) The ES spec defines a property with that name on globals.
+ * 2) The property is non-configurable.
+ * 3) The property is non-writable (readonly).
+ * 4) The value of the property is a primitive (so doesn't change
+ *    observably on when navigation happens).
+ *
+ * Such properties can act as actual non-configurable properties on a
+ * WindowProxy, because they are not affected by navigation.
+ */
+static bool
+IsNonConfigurableReadonlyPrimitiveGlobalProp(JSContext* cx, JS::Handle<jsid> id)
+{
+  return id == GetJSIDByIndex(cx, XPCJSContext::IDX_NAN) ||
+         id == GetJSIDByIndex(cx, XPCJSContext::IDX_UNDEFINED) ||
+         id == GetJSIDByIndex(cx, XPCJSContext::IDX_INFINITY);
+}
+
 bool
 nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx,
                                              JS::Handle<JSObject*> proxy,
@@ -515,7 +536,18 @@ nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx,
   }
   // else fall through to js::Wrapper
 
-  return js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
+  bool ok = js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
+  if (!ok) {
+    return false;
+  }
+
+#ifndef RELEASE_OR_BETA // To be turned on in bug 1496510.
+  if (!IsNonConfigurableReadonlyPrimitiveGlobalProp(cx, id)) {
+    desc.setConfigurable(true);
+  }
+#endif
+
+  return true;
 }
 
 bool
@@ -532,7 +564,68 @@ nsOuterWindowProxy::defineProperty(JSContext* cx,
     return result.failCantDefineWindowElement();
   }
 
-  return js::Wrapper::defineProperty(cx, proxy, id, desc, result);
+  JS::ObjectOpResult ourResult;
+  bool ok = js::Wrapper::defineProperty(cx, proxy, id, desc, ourResult);
+  if (!ok) {
+    return false;
+  }
+
+  if (!ourResult.ok()) {
+    // It's possible that this failed because the page got the existing
+    // descriptor (which we force to claim to be configurable) and then tried to
+    // redefine the property with the descriptor it got but a different value.
+    // We want to allow this case to succeed, so check for it and if we're in
+    // that case try again but now with an attempt to define a non-configurable
+    // property.
+    if (!desc.hasConfigurable() || !desc.configurable()) {
+      // The incoming descriptor was not explicitly marked "configurable: true",
+      // so it failed for some other reason.  Just propagate that reason out.
+      result = ourResult;
+      return true;
+    }
+
+    JS::Rooted<JS::PropertyDescriptor> existingDesc(cx);
+    ok = js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, &existingDesc);
+    if (!ok) {
+      return false;
+    }
+    if (!existingDesc.object() || existingDesc.configurable()) {
+      // We have no existing property, or its descriptor is already configurable
+      // (on the Window itself, where things really can be non-configurable).
+      // So we failed for some other reason, which we should propagate out.
+      result = ourResult;
+      return true;
+    }
+
+    JS::Rooted<JS::PropertyDescriptor> updatedDesc(cx, desc);
+    updatedDesc.setConfigurable(false);
+
+    JS::ObjectOpResult ourNewResult;
+    ok = js::Wrapper::defineProperty(cx, proxy, id, updatedDesc, ourNewResult);
+    if (!ok) {
+      return false;
+    }
+
+    if (!ourNewResult.ok()) {
+      // Twiddling the configurable flag didn't help.  Just return this failure
+      // out to the caller.
+      result = ourNewResult;
+      return true;
+    }
+  }
+
+#ifndef RELEASE_OR_BETA // To be turned on in bug 1496510.
+  if (desc.hasConfigurable() && !desc.configurable() &&
+      !IsNonConfigurableReadonlyPrimitiveGlobalProp(cx, id)) {
+    // Give callers a way to detect that they failed to "really" define a
+    // non-configurable property.
+    result.failCantDefineWindowNonConfigurable();
+    return true;
+  }
+#endif
+
+  result.succeed();
+  return true;
 }
 
 bool

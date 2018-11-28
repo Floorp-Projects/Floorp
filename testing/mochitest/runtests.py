@@ -2077,7 +2077,8 @@ toolbar#nav-bar {
                detectShutdownLeaks=False,
                screenshotOnFail=False,
                bisectChunk=None,
-               marionette_args=None):
+               marionette_args=None,
+               e10s=True):
         """
         Run the app, log the duration it took to execute, return the status code.
         Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing
@@ -2779,6 +2780,7 @@ toolbar#nav-bar {
                     screenshotOnFail=options.screenshotOnFail,
                     bisectChunk=options.bisectChunk,
                     marionette_args=marionette_args,
+                    e10s=options.e10s
                 )
                 status = ret or status
         except KeyboardInterrupt:

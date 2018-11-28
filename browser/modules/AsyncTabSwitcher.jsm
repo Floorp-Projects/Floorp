@@ -748,6 +748,7 @@ class AsyncTabSwitcher {
         if (time != -1) {
           TelemetryStopwatch.finish("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
           this.log("DEBUG: tab switch time including compositing = " + time);
+          this._tabSwitchStopWatchRunning = false;
         }
       }
       this.addMarker("AsyncTabSwitch:Composited");

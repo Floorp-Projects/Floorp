@@ -481,7 +481,7 @@ PaymentDetails::GetShippingAddressErrors(JSContext* aCx, JS::MutableHandleValue 
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetPayer(JSContext* aCx, JS::MutableHandleValue aErrors)
+PaymentDetails::GetPayerErrors(JSContext* aCx, JS::MutableHandleValue aErrors)
 {
   PayerErrors errors;
   errors.Init(mPayerErrors);
@@ -492,7 +492,7 @@ PaymentDetails::GetPayer(JSContext* aCx, JS::MutableHandleValue aErrors)
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetPaymentMethod(JSContext* aCx, JS::MutableHandleValue aErrors)
+PaymentDetails::GetPaymentMethodErrors(JSContext* aCx, JS::MutableHandleValue aErrors)
 {
   if (mPaymentMethodErrors.IsEmpty()) {
     aErrors.set(JS::NullValue());
@@ -558,8 +558,8 @@ PaymentDetails::Update(nsIPaymentDetails* aDetails, const bool aRequestShipping)
   PaymentDetails* rowDetails = static_cast<PaymentDetails*>(aDetails);
   MOZ_ASSERT(rowDetails);
   mShippingAddressErrors = rowDetails->GetShippingAddressErrors();
-  mPayerErrors = rowDetails->GetPayer();
-  mPaymentMethodErrors = rowDetails->GetPaymentMethod();
+  mPayerErrors = rowDetails->GetPayerErrors();
+  mPaymentMethodErrors = rowDetails->GetPaymentMethodErrors();
 
   return NS_OK;
 
@@ -572,13 +572,13 @@ PaymentDetails::GetShippingAddressErrors() const
 }
 
 const nsString&
-PaymentDetails::GetPayer() const
+PaymentDetails::GetPayerErrors() const
 {
   return mPayerErrors;
 }
 
 const nsString&
-PaymentDetails::GetPaymentMethod() const
+PaymentDetails::GetPaymentMethodErrors() const
 {
   return mPaymentMethodErrors;
 }

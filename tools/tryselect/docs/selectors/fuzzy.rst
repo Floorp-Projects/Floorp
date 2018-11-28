@@ -100,7 +100,7 @@ Would produce the following ``try_task_config.json``:
     {
       "templates":{
         "env":{
-          "MOZHARNESS_TEST_PATHS":"layout/reftests/reftest-sanity"
+          "MOZHARNESS_TEST_PATHS":"{\"reftest\":\"layout/reftests/reftest-sanity\"}"
         }
       },
       "tasks":[
