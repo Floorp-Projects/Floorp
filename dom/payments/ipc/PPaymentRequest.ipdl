@@ -65,7 +65,6 @@ struct IPCPaymentOptions
   bool requestPayerEmail;
   bool requestPayerPhone;
   bool requestShipping;
-  bool requestBillingAddress;
   nsString shippingType;
 };
 
@@ -208,22 +207,6 @@ union IPCPaymentActionResponse
   IPCPaymentCompleteActionResponse;
 };
 
-struct IPCGeneralChangeDetails
-{
-  nsString details;
-};
-
-struct IPCBasicCardChangeDetails
-{
-  IPCPaymentAddress billingAddress;
-};
-
-union IPCMethodChangeDetails
-{
-  IPCGeneralChangeDetails;
-  IPCBasicCardChangeDetails;
-};
-
 sync protocol PPaymentRequest
 {
   manager PBrowser;
@@ -243,9 +226,6 @@ child:
                           nsString aPayerName,
                           nsString aPayerEmail,
                           nsString aPayerPhone);
-  async ChangePaymentMethod(nsString aRequestId,
-                            nsString aMethodName,
-                            IPCMethodChangeDetails aMethodDetails);
 };
 
 } // end of namespace dom

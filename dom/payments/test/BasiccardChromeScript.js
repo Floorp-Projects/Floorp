@@ -8,7 +8,7 @@ const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
 
 function emitTestFail(message) {
-  sendAsyncMessage("test-fail", `${DummyUIService.testName}: ${message}`);
+  sendAsyncMessage("test-fail", message);
 }
 
 const billingAddress = Cc["@mozilla.org/dom/payments/payment-address;1"].
@@ -50,9 +50,6 @@ specialAddress.init("USA",               // country
 const basiccardResponseData = Cc["@mozilla.org/dom/payments/basiccard-response-data;1"].
                                  createInstance(Ci.nsIBasicCardResponseData);
 
-const basiccardChangeDetails = Cc["@mozilla.org/dom/payments/basiccard-change-details;1"].
-                                  createInstance(Ci.nsIBasicCardChangeDetails);
-
 const showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
                         createInstance(Ci.nsIPaymentShowActionResponse);
 
@@ -70,69 +67,8 @@ function completePaymentResponse(requestId) {
   paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
 }
 
-function showRequest(requestId) {
-  if (DummyUIService.showAction === "payment-method-change") {
-    basiccardChangeDetails.initData(billingAddress);
-    try {
-      paymentSrv.changePaymentMethod(requestId, "basic-card", basiccardChangeDetails.QueryInterface(Ci.nsIMethodChangeDetails));
-    } catch (error) {
-      emitTestFail(`Unexpected error (${error.name}) when calling PaymentRequestService::changePaymentMethod`);
-    }
-    return;
-  }
-  if (DummyUIService.showAction === "detailBasicCardResponse") {
-    try {
-      basiccardResponseData.initData("Bill A. Pacheco",  // cardholderName
-                                     "4916855166538720", // cardNumber
-                                     "01",               // expiryMonth
-                                     "2024",             // expiryYear
-                                     "180",              // cardSecurityCode
-                                     billingAddress);   // billingAddress
-    } catch (e) {
-      emitTestFail("Fail to initialize basic card response data.");
-    }
-  }
-  if (DummyUIService.showAction === "simpleBasicCardResponse") {
-    try {
-      basiccardResponseData.initData("",                 // cardholderName
-                                     "4916855166538720", // cardNumber
-                                     "",                 // expiryMonth
-                                     "",                 // expiryYear
-                                     "",                 // cardSecurityCode
-                                     null);              // billingAddress
-    } catch (e) {
-      emitTestFail("Fail to initialize basic card response data.");
-    }
-  }
-  if (DummyUIService.showAction === "specialAddressResponse") {
-    try {
-      basiccardResponseData.initData("Bill A. Pacheco",  // cardholderName
-                                     "4916855166538720", // cardNumber
-                                     "01",               // expiryMonth
-                                     "2024",             // expiryYear
-                                     "180",              // cardSecurityCode
-                                     specialAddress);    // billingAddress
-    } catch (e) {
-      emitTestFail("Fail to initialize basic card response data.");
-    }
-  }
-  showResponse.init(requestId,
-                    Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
-                    "basic-card",         // payment method
-                    basiccardResponseData,// payment method data
-                    "Bill A. Pacheco",    // payer name
-                    "",                   // payer email
-                    "");                  // payer phone
-  paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
-}
-
-const DummyUIService = {
-  testName: "",
-  showAction: "",
-  showPayment: showRequest,
-  abortPayment: abortPaymentResponse,
-  completePayment: completePaymentResponse,
-  updatePayment: (requestId) => {
+const detailedResponseUI = {
+  showPayment: function(requestId) {
     try {
       basiccardResponseData.initData("Bill A. Pacheco",  // cardholderName
                                      "4916855166538720", // cardNumber
@@ -152,37 +88,88 @@ const DummyUIService = {
                       "");                  // payer phone
     paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
-  closePayment: (requestId) => {},
+  abortPayment: abortPaymentResponse,
+  completePayment: completePaymentResponse,
+  updatePayment: function(requestId) {
+  },
+  closePayment: function (requestId) {
+  },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
-paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
+const simpleResponseUI = {
+  showPayment: function(requestId) {
+    try {
+      basiccardResponseData.initData("",                 // cardholderName
+                                     "4916855166538720", // cardNumber
+                                     "",                 // expiryMonth
+                                     "",                 // expiryYear
+                                     "",                 // cardSecurityCode
+                                     null);              // billingAddress
+    } catch (e) {
+      emitTestFail("Fail to initialize basic card response data.");
+    }
+    showResponse.init(requestId,
+                      Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+                      "basic-card",         // payment method
+                      basiccardResponseData,// payment method data
+                      "Bill A. Pacheco",    // payer name
+                      "",                   // payer email
+                      "");                  // payer phone
+    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  },
+  abortPayment: abortPaymentResponse,
+  completePayment: completePaymentResponse,
+  updatePayment: function(requestId) {
+  },
+  closePayment: function(requestId) {
+  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
+};
 
-addMessageListener("set-detailed-ui-service", function(testName) {
-  DummyUIService.testName = testName;
-  DummyUIService.showAction = "detailBasicCardResponse";
-  sendAsyncMessage("set-detailed-ui-service-complete");
+const specialAddressUI = {
+  showPayment: function(requestId) {
+    try {
+      basiccardResponseData.initData("Bill A. Pacheco",  // cardholderName
+                                     "4916855166538720", // cardNumber
+                                     "01",               // expiryMonth
+                                     "2024",             // expiryYear
+                                     "180",              // cardSecurityCode
+                                     specialAddress);    // billingAddress
+    } catch (e) {
+      emitTestFail("Fail to initialize basic card response data.");
+    }
+    showResponse.init(requestId,
+                      Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+                      "basic-card",         // payment method
+                      basiccardResponseData,// payment method data
+                      "Bill A. Pacheco",    // payer name
+                      "",                   // payer email
+                      "");                  // payer phone
+    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  },
+  abortPayment: abortPaymentResponse,
+  completePayment: completePaymentResponse,
+  updatePayment: function(requestId) {
+  },
+  closePayment: function (requestId) {
+  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
+};
+
+addMessageListener("set-detailed-ui-service", function() {
+  paymentSrv.setTestingUIService(detailedResponseUI.QueryInterface(Ci.nsIPaymentUIService));
 });
 
-addMessageListener("set-simple-ui-service", function(testName) {
-  DummyUIService.testName = testName;
-  DummyUIService.showAction = "simpleBasicCardResponse";
-  sendAsyncMessage("set-simple-ui-service-complete");
+addMessageListener("set-simple-ui-service", function() {
+  paymentSrv.setTestingUIService(simpleResponseUI.QueryInterface(Ci.nsIPaymentUIService));
 });
 
-addMessageListener("set-special-address-ui-service", function(testName) {
-  DummyUIService.testName = testName;
-  DummyUIService.showAction = "specialAddressResponse";
-  sendAsyncMessage("set-special-address-ui-service-complete");
+addMessageListener("set-special-address-ui-service", function() {
+  paymentSrv.setTestingUIService(specialAddressUI.QueryInterface(Ci.nsIPaymentUIService));
 });
 
-addMessageListener("method-change-to-basic-card", function(testName) {
-  DummyUIService.testName = testName;
-  DummyUIService.showAction = "payment-method-change";
-  sendAsyncMessage("method-change-to-basic-card-complete");
-});
-
-addMessageListener("error-response-test", function(testName) {
+addMessageListener("error-response-test", function() {
   // test empty cardNumber
   try {
     basiccardResponseData.initData("", "", "", "", "", null);
@@ -262,7 +249,7 @@ addMessageListener("error-response-test", function(testName) {
       emitTestFail("ShowResponse init expected 'NS_ERROR_FAILURE', but got " + e.name + ".");
     }
   }
-  sendAsyncMessage("error-response-test-complete");
+  sendAsyncMessage("error-response-complete");
 });
 
 addMessageListener("teardown", function() {
