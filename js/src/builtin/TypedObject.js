@@ -126,6 +126,12 @@ function TypedObjectGetReference(descr, typedObj, offset) {
   case JS_REFERENCETYPEREPR_OBJECT:
     return Load_Object(typedObj, offset | 0);
 
+  case JS_REFERENCETYPEREPR_WASM_ANYREF:
+    var boxed = Load_WasmAnyRef(typedObj, offset | 0);
+    if (!IsBoxedWasmAnyRef(boxed))
+      return boxed;
+    return UnboxBoxedWasmAnyRef(boxed);
+
   case JS_REFERENCETYPEREPR_STRING:
     return Load_string(typedObj, offset | 0);
   }
@@ -259,6 +265,10 @@ function TypedObjectSetReference(descr, typedObj, offset, name, fromValue) {
   case JS_REFERENCETYPEREPR_OBJECT:
     var value = (fromValue === null ? fromValue : ToObject(fromValue));
     return Store_Object(typedObj, offset | 0, name, value);
+
+  case JS_REFERENCETYPEREPR_WASM_ANYREF:
+    var value = (IsBoxableWasmAnyRef(fromValue) ? BoxWasmAnyRef(fromValue) : fromValue);
+    return Store_WasmAnyRef(typedObj, offset | 0, name, value);
 
   case JS_REFERENCETYPEREPR_STRING:
     return Store_string(typedObj, offset | 0, name, ToString(fromValue));

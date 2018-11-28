@@ -2646,6 +2646,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicTypeDescrIsSimpleType),
     JS_INLINABLE_FN("SetTypedObjectOffset", js::SetTypedObjectOffset, 2, 0,
                     IntrinsicSetTypedObjectOffset),
+    JS_FN("IsBoxedWasmAnyRef", js::IsBoxedWasmAnyRef, 1, 0),
+    JS_FN("IsBoxableWasmAnyRef", js::IsBoxableWasmAnyRef, 1, 0),
+    JS_FN("BoxWasmAnyRef", js::BoxWasmAnyRef, 1, 0),
+    JS_FN("UnboxBoxedWasmAnyRef", js::UnboxBoxedWasmAnyRef, 1, 0),
 
 // clang-format off
 #define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)         \

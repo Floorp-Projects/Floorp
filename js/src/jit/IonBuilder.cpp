@@ -8360,6 +8360,10 @@ AbortReasonOr<Ok> IonBuilder::getElemTryReferenceElemOfTypedObject(
     return Ok();
   }
 
+  if (elemType == ReferenceType::TYPE_WASM_ANYREF) {
+    return Ok();
+  }
+
   trackOptimizationSuccess();
   *emitted = true;
 
@@ -8457,6 +8461,9 @@ AbortReasonOr<Ok> IonBuilder::pushReferenceLoadFromTypedObject(
           MLoadUnboxedString::New(alloc(), elements, scaledOffset, adjustment);
       observedTypes->addType(TypeSet::StringType(), alloc().lifoAlloc());
       break;
+    }
+    case ReferenceType::TYPE_WASM_ANYREF: {
+      MOZ_CRASH();
     }
   }
 
@@ -9335,6 +9342,10 @@ AbortReasonOr<Ok> IonBuilder::setElemTryReferenceElemOfTypedObject(
   LinearSum indexAsByteOffset(alloc());
   if (!checkTypedObjectIndexInBounds(elemSize, index, objPrediction,
                                      &indexAsByteOffset)) {
+    return Ok();
+  }
+
+  if (elemType == ReferenceType::TYPE_WASM_ANYREF) {
     return Ok();
   }
 
@@ -11039,6 +11050,10 @@ AbortReasonOr<Ok> IonBuilder::getPropTryReferencePropOfTypedObject(
     return Ok();
   }
 
+  if (fieldType == ReferenceType::TYPE_WASM_ANYREF) {
+    return Ok();
+  }
+
   trackOptimizationSuccess();
   *emitted = true;
 
@@ -12220,6 +12235,10 @@ AbortReasonOr<Ok> IonBuilder::setPropTryReferencePropOfTypedObject(
   TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
   if (globalKey->hasFlags(constraints(),
                           OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER)) {
+    return Ok();
+  }
+
+  if (fieldType == ReferenceType::TYPE_WASM_ANYREF) {
     return Ok();
   }
 
@@ -14114,6 +14133,8 @@ AbortReasonOr<Ok> IonBuilder::setPropTryReferenceTypedObjectValue(
       store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value,
                                        typedObj, adjustment);
       break;
+    case ReferenceType::TYPE_WASM_ANYREF:
+      MOZ_CRASH();
   }
 
   current->add(store);
