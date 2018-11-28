@@ -689,48 +689,16 @@ DefineConstants(JSContext* cx, JS::Handle<JSObject*> obj,
 }
 
 static inline bool
-Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSFunctionSpec* spec)
-{
-  bool ok = JS_DefineFunctions(cx, obj, spec);
-  if (ok) {
-    return true;
-  }
-
-  if (!strcmp(js::GetObjectClass(obj)->name, "DocumentPrototype")) {
-    MOZ_CRASH("Bug 1405521/1488480: JS_DefineFunctions failed for Document.prototype");
-  }
-
-  return false;
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSFunctionSpec* spec) {
+  return JS_DefineFunctions(cx, obj, spec);
 }
 static inline bool
-Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSPropertySpec* spec)
-{
-  bool ok = JS_DefineProperties(cx, obj, spec);
-  if (ok) {
-    return true;
-  }
-
-  if (!strcmp(js::GetObjectClass(obj)->name, "DocumentPrototype")) {
-    MOZ_CRASH("Bug 1405521/1488480: JS_DefineProperties failed for Document.prototype");
-  }
-
-  return false;
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSPropertySpec* spec) {
+  return JS_DefineProperties(cx, obj, spec);
 }
-
 static inline bool
-Define(JSContext* cx, JS::Handle<JSObject*> obj, const ConstantSpec* spec)
-{
-  bool ok = DefineConstants(cx, obj, spec);
-  if (ok) {
-    return true;
-  }
-
-
-  if (!strcmp(js::GetObjectClass(obj)->name, "DocumentPrototype")) {
-    MOZ_CRASH("Bug 1405521/1488480: DefineConstants failed for Document.prototype");
-  }
-
-  return false;
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const ConstantSpec* spec) {
+  return DefineConstants(cx, obj, spec);
 }
 
 template<typename T>
@@ -966,13 +934,6 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
       // properties go on the global itself.
       (!isGlobal &&
        !DefineProperties(cx, ourProto, properties, chromeOnlyProperties))) {
-    if (!strcmp(protoClass->name, "DocumentPrototype")) {
-      if (!ourProto) {
-        MOZ_CRASH("Bug 1405521/1488480: JS_NewObjectWithUniqueType failed for Document.prototype");
-      } else {
-        MOZ_CRASH("Bug 1405521/1488480: DefineProperties failed for Document.prototype");
-      }
-    }
     return nullptr;
   }
 
@@ -980,18 +941,12 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
     JS::Rooted<JSObject*> unscopableObj(cx,
       JS_NewObjectWithGivenProto(cx, nullptr, nullptr));
     if (!unscopableObj) {
-      if (!strcmp(protoClass->name, "DocumentPrototype")) {
-        MOZ_CRASH("Bug 1405521/1488480: Unscopable object creation failed for Document.prototype");
-      }
       return nullptr;
     }
 
     for (; *unscopableNames; ++unscopableNames) {
       if (!JS_DefineProperty(cx, unscopableObj, *unscopableNames,
                              JS::TrueHandleValue, JSPROP_ENUMERATE)) {
-        if (!strcmp(protoClass->name, "DocumentPrototype")) {
-          MOZ_CRASH("Bug 1405521/1488480: Defining property on unscopable object failed for Document.prototype");
-        }
         return nullptr;
       }
     }
@@ -1001,9 +956,6 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
     // Readonly and non-enumerable to match Array.prototype.
     if (!JS_DefinePropertyById(cx, ourProto, unscopableId, unscopableObj,
                                JSPROP_READONLY)) {
-      if (!strcmp(protoClass->name, "DocumentPrototype")) {
-        MOZ_CRASH("Bug 1405521/1488480: Defining @@unscopables failed for Document.prototype");
-      }
       return nullptr;
     }
   }
@@ -1012,9 +964,6 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
     JS::Rooted<JSString*> toStringTagStr(cx,
                                          JS_NewStringCopyZ(cx, toStringTag));
     if (!toStringTagStr) {
-      if (!strcmp(protoClass->name, "DocumentPrototype")) {
-        MOZ_CRASH("Bug 1405521/1488480: Copying string tag failed for Document.prototype");
-      }
       return nullptr;
     }
 
@@ -1022,9 +971,6 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
       SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::toStringTag)));
     if (!JS_DefinePropertyById(cx, ourProto, toStringTagId, toStringTagStr,
                                JSPROP_READONLY)) {
-      if (!strcmp(protoClass->name, "DocumentPrototype")) {
-        MOZ_CRASH("Bug 1405521/1488480: Defining @@toStringTag failed for Document.prototype");
-      }
       return nullptr;
     }
   }
@@ -1129,9 +1075,6 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                                      isChrome ? chromeOnlyProperties : nullptr,
                                      unscopableNames, toStringTag, isGlobal);
     if (!proto) {
-      if (name && !strcmp(name, "Document")) {
-        MOZ_CRASH("Bug 1405521/1488480: CreateInterfacePrototypeObject failed for Document.prototype");
-      }
       return;
     }
 
@@ -1150,9 +1093,6 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                                       isChrome,
                                       defineOnGlobal);
     if (!interface) {
-      if (name && !strcmp(name, "Document")) {
-        MOZ_CRASH("Bug 1405521/1488480: CreateInterfaceObject failed for Document");
-      }
       if (protoCache) {
         // If we fail we need to make sure to clear the value of protoCache we
         // set above.
@@ -4299,10 +4239,6 @@ GetPerInterfaceObjectHandle(JSContext* aCx,
   /* Make sure our global is sane.  Hopefully we can remove this sometime */
   JSObject* global = JS::CurrentGlobalOrNull(aCx);
   if (!(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL)) {
-    if (aSlotId == prototypes::id::HTMLDocument ||
-        aSlotId == prototypes::id::Document) {
-      MOZ_CRASH("Looks like bug 1488480/1405521, with a non-DOM global in GetPerInterfaceObjectHandle");
-    }
     return nullptr;
   }
 
@@ -4327,30 +4263,6 @@ GetPerInterfaceObjectHandle(JSContext* aCx,
   const JS::Heap<JSObject*>& entrySlot =
     protoAndIfaceCache.EntrySlotMustExist(aSlotId);
   MOZ_ASSERT(JS::ObjectIsNotGray(entrySlot));
-
-  if (!entrySlot) {
-    switch (aSlotId) {
-      case prototypes::id::HTMLDocument: {
-         MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create HTMLDocument.prototype");
-         break;
-      }
-      case prototypes::id::Document: {
-        MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create Document.prototype");
-        break;
-      }
-      case prototypes::id::Node: {
-        MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create Node.prototype");
-        break;
-      }
-      case prototypes::id::EventTarget: {
-        MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create EventTarget.prototype");
-        break;
-      }
-      default:
-      break;
-    }
-  }
-
   return JS::Handle<JSObject*>::fromMarkedLocation(entrySlot.address());
 }
 
