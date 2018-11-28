@@ -103,10 +103,10 @@ static int32_t sPreloadPermissionCount = 0;
 // Permissions which are in this list are considered to have a "" permission
 // key, even if their principal would not normally have that key.
 static const char* kPreloadPermissions[] = {
-  // NOTE: These permissions are the different nsContentBlocker permissions for
-  // allowing or denying certain content types from being loaded. Every
-  // permission listed in the `kTypeString` array in nsContentBlocker.cpp should
-  // appear in this list.
+  // NOTE: These permissions are the different nsContentBlocker permissions
+  // for allowing or denying certain content types from being loaded. Every
+  // permission listed in the `kTypeString` array in nsContentBlocker.cpp
+  // should appear in this list.
   "other",
   "script",
   "image",

@@ -78,7 +78,7 @@ public:
   }
 
   // This is needed to abort the caret reset in the destructor
-  //  when one method yields control to another
+  // when one method yields control to another
   void CancelSetCaret()
   {
     mHTMLEditor = nullptr;
@@ -1835,7 +1835,7 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
   }
 
   // We can only select a block if within the same table,
-  //  so do nothing if not within one table
+  // so do nothing if not within one table
   if (table != endTable) {
     return NS_OK;
   }
@@ -1851,11 +1851,11 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
   }
 
   // Suppress nsISelectionListener notification
-  //  until all selection changes are finished
+  // until all selection changes are finished
   SelectionBatcher selectionBatcher(SelectionRefPtr());
 
   // Examine all cell nodes in current selection and
-  //  remove those outside the new block cell region
+  // remove those outside the new block cell region
   int32_t minColumn =
     std::min(startCellIndexes.mColumn, endCellIndexes.mColumn);
   int32_t minRow =
@@ -1958,7 +1958,7 @@ HTMLEditor::SelectAllTableCells()
   }
 
   // Suppress nsISelectionListener notification
-  //  until all selection changes are finished
+  // until all selection changes are finished
   SelectionBatcher selectionBatcher(SelectionRefPtr());
 
   // It is now safe to clear the selection
@@ -2040,12 +2040,12 @@ HTMLEditor::SelectTableRow()
     return error.StealNSResult();
   }
 
-  //Note: At this point, we could get first and last cells in row,
-  //  then call SelectBlockOfCells, but that would take just
-  //  a little less code, so the following is more efficient
+  // Note: At this point, we could get first and last cells in row,
+  // then call SelectBlockOfCells, but that would take just
+  // a little less code, so the following is more efficient
 
   // Suppress nsISelectionListener notification
-  //  until all selection changes are finished
+  // until all selection changes are finished
   SelectionBatcher selectionBatcher(SelectionRefPtr());
 
   // It is now safe to clear the selection
@@ -2125,7 +2125,7 @@ HTMLEditor::SelectTableColumn()
   }
 
   // Suppress nsISelectionListener notification
-  //  until all selection changes are finished
+  // until all selection changes are finished
   SelectionBatcher selectionBatcher(SelectionRefPtr());
 
   // It is now safe to clear the selection
@@ -2217,7 +2217,7 @@ HTMLEditor::SplitTableCell()
   int32_t rowSpanBelow, colSpanAfter;
 
   // Split up cell row-wise first into rowspan=1 above, and the rest below,
-  //  whittling away at the cell below until no more extra span
+  // whittling away at the cell below until no more extra span
   for (rowSpanBelow = actualRowSpan-1; rowSpanBelow >= 0; rowSpanBelow--) {
     // We really split row-wise only if we had rowspan > 1
     if (rowSpanBelow > 0) {
@@ -2298,7 +2298,7 @@ HTMLEditor::SplitCellIntoColumns(Element* aTable,
   }
 
   // Insert new cell after using the remaining span
-  //  and always get the new cell so we can copy the background color;
+  // and always get the new cell so we can copy the background color;
   RefPtr<Element> newCellElement;
   rv = InsertCell(cellData.mElement,
                   cellData.mEffectiveRowSpan, aColSpanRight, true, false,
@@ -2394,8 +2394,8 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
         break;
       }
       // If cell found is AFTER desired new cell colum,
-      //  we have multiple cells with rowspan > 1 that
-      //  prevented us from finding a cell to insert after...
+      // we have multiple cells with rowspan > 1 that
+      // prevented us from finding a cell to insert after...
       if (cellDataAtInsertionPoint.mFirst.mColumn > cellData.mFirst.mColumn) {
         // ... so instead insert before the cell we found
         insertAfter = false;
@@ -2410,9 +2410,9 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
 
   if (!cellElementAtInsertionPoint && lastCellFound) {
     // Edge case where we didn't find a cell to insert after
-    //  or before because column(s) before desired column
-    //  and all columns after it are spanned from above.
-    //  We can insert after the last cell we found
+    // or before because column(s) before desired column
+    // and all columns after it are spanned from above.
+    // We can insert after the last cell we found
     cellElementAtInsertionPoint = std::move(lastCellFound);
     insertAfter = true; // Should always be true, but let's be sure
   }
@@ -2424,7 +2424,7 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
   }
 
   // Insert new cell after using the remaining span
-  //  and always get the new cell so we can copy the background color;
+  // and always get the new cell so we can copy the background color;
   RefPtr<Element> newCell;
   rv = InsertCell(cellElementAtInsertionPoint,
                   aRowSpanBelow, cellData.mEffectiveColSpan,
@@ -2522,8 +2522,8 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
   AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   // Note: We dont' use AutoSelectionSetterAfterTableEdit here so the selection
-  //  is retained after joining. This leaves the target cell selected
-  //  as well as the "non-contiguous" cells, so user can see what happened.
+  // is retained after joining. This leaves the target cell selected
+  // as well as the "non-contiguous" cells, so user can see what happened.
 
   ErrorResult error;
   CellAndIndexes firstSelectedCell(*this, *SelectionRefPtr(), error);
@@ -2544,7 +2544,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 
   if (joinSelectedCells) {
     // We have selected cells: Join just contiguous cells
-    //  and just merge contents if not contiguous
+    // and just merge contents if not contiguous
     TableSize tableSize(*this, *table, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
@@ -2561,10 +2561,10 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     }
 
     // This defines the last indexes along the "edges"
-    //  of the contiguous block of cells, telling us
-    //  that we can join adjacent cells to the block
+    // of the contiguous block of cells, telling us
+    // that we can join adjacent cells to the block
     // Start with same as the first values,
-    //  then expand as we find adjacent selected cells
+    // then expand as we find adjacent selected cells
     int32_t lastRowIndex = firstSelectedCell.mIndexes.mRow;
     int32_t lastColIndex = firstSelectedCell.mIndexes.mColumn;
 
@@ -2621,7 +2621,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           if (cellData.mCurrent.mRow > firstSelectedCell.mIndexes.mRow + 1 &&
               cellData.mCurrent.mColumn <= lastColIndex) {
             // Cell is in a column less than current right border in
-            //  the third or higher selected row, so stop block at the previous row
+            // the third or higher selected row, so stop block at the previous row
             lastRowIndex = std::max(0, cellData.mCurrent.mRow - 1);
             lastRowIsSet = true;
           }
@@ -2643,7 +2643,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           if (colIndex < lastColIndex) {
             // (don't think we ever get here?)
             // Cell is in a column less than current right boundary,
-            //  so stop block at the previous row
+            // so stop block at the previous row
             lastRowIndex = std::max(0, rowIndex - 1);
           } else {
             // Go on to examine next row
@@ -2654,7 +2654,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
         lastColIndex = std::min(lastColIndex, lastColInRow);
       } else {
         // No selected cells in this row -- stop at row above
-        //  and leave last column at its previous value
+        // and leave last column at its previous value
         lastRowIndex = std::max(0, rowIndex - 1);
       }
     }
@@ -2687,14 +2687,14 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
               cellData.mCurrent.mColumn <= lastColIndex) {
             // We are within the join region
             // Problem: It is very tricky to delete cells as we merge,
-            //  since that will upset the cellmap
-            //  Instead, build a list of cells to delete and do it later
+            // since that will upset the cellmap
+            // Instead, build a list of cells to delete and do it later
             NS_ASSERTION(!cellData.IsSpannedFromOtherRow(),
                          "JoinTableCells: StartRowIndex is in row above");
 
             if (cellData.mEffectiveColSpan > 1) {
-              //Check if cell "hangs" off the boundary because of colspan > 1
-              //  Use split methods to chop off excess
+              // Check if cell "hangs" off the boundary because of colspan > 1
+              // Use split methods to chop off excess
               int32_t extraColSpan =
                 cellData.mFirst.mColumn + cellData.mEffectiveColSpan -
                   (lastColIndex + 1);
@@ -2844,7 +2844,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
       // Merged cell is "shorter"
       // (there are cells(s) below it that are row-spanned by target cell)
       // We could try splitting those cells, but that's REAL messy,
-      //  so the safest thing to do is NOT really join the cells
+      // so the safest thing to do is NOT really join the cells
       return NS_OK;
     }
 
@@ -2884,7 +2884,7 @@ HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
   if (!IsEmptyCell(aCellToMerge)) {
     // Get index of last child in target cell
     // If we fail or don't have children,
-    //  we insert at index 0
+    // we insert at index 0
     int32_t insertIndex = 0;
 
     // Start inserting just after last child
@@ -3984,7 +3984,7 @@ HTMLEditor::SetSelectionAfterTableEdit(Element* aTable,
       // Set the caret to deepest first child
       //   but don't go into nested tables
       // TODO: Should we really be placing the caret at the END
-      //  of the cell content?
+      // of the cell content?
       CollapseSelectionToDeepestNonTableFirstChild(cell);
       return;
     }

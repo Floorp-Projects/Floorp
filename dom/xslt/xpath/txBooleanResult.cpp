@@ -11,7 +11,8 @@
 
 /**
  * Creates a new BooleanResult with the value of the given bool parameter
- * @param boolean the bool to use for initialization of this BooleanResult's value
+ * @param boolean the bool to use for initialization of this BooleanResult's
+ * value
 **/
 BooleanResult::BooleanResult(bool boolean)
     : txAExprResult(nullptr)
