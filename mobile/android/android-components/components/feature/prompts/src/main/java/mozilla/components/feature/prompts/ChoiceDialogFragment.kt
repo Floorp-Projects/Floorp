@@ -9,6 +9,7 @@ import android.app.Dialog
 import android.os.Bundle
 import android.os.Parcelable
 import android.support.annotation.VisibleForTesting
+import android.support.annotation.VisibleForTesting.PRIVATE
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -23,7 +24,7 @@ private const val KEY_DIALOG_TYPE = "KEY_DIALOG_TYPE"
  * [android.support.v4.app.DialogFragment] implementation to display choice(options,optgroup and menu)
  * web content in native dialogs.
  */
-class ChoiceDialogFragment : PromptDialogFragment() {
+internal class ChoiceDialogFragment : PromptDialogFragment() {
 
     @VisibleForTesting
     internal val choices: Array<Choice> by lazy { safeArguments.getParcelableArray(KEY_CHOICES)!!.toArrayOfChoices() }
@@ -36,8 +37,6 @@ class ChoiceDialogFragment : PromptDialogFragment() {
     internal val isMenuChoice get() = dialogType == MENU_CHOICE_DIALOG_TYPE
 
     internal val mapSelectChoice by lazy { HashMap<Choice, Choice>() }
-
-    private val safeArguments get() = requireNotNull(arguments)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return when (dialogType) {
@@ -112,15 +111,16 @@ class ChoiceDialogFragment : PromptDialogFragment() {
                 feature?.onCancel(sessionId)
             }.create()
     }
+}
 
-    @Suppress("UNCHECKED_CAST")
-    private fun Array<Parcelable>.toArrayOfChoices(): Array<Choice> {
-        return if (this.isArrayOf<Choice>()) {
-            this as Array<Choice>
-        } else {
-            Array(this.size) { index ->
-                this[index] as Choice
-            }
+@Suppress("UNCHECKED_CAST")
+@VisibleForTesting(otherwise = PRIVATE)
+internal fun Array<Parcelable>.toArrayOfChoices(): Array<Choice> {
+    return if (this.isArrayOf<Choice>()) {
+        this as Array<Choice>
+    } else {
+        Array(this.size) { index ->
+            this[index] as Choice
         }
     }
 }

@@ -29,4 +29,20 @@ sealed class PromptRequest {
      * @property onSelect A callback indicating which option was selected.
      */
     data class MenuChoice(val choices: Array<Choice>, val onSelect: (Choice) -> Unit) : PromptRequest()
+
+    /**
+     * Value type that represents a request for an alert prompt.
+     * @property title of the dialog.
+     * @property message the body of the dialog.
+     * @property hasShownManyDialogs tells if this page has shown multiple prompts within a short period of time.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
+     * @property onShouldShowNoMoreDialogs tells the web page if it should continue showing alerts or not.
+     */
+    data class Alert(
+        val title: String,
+        val message: String,
+        val hasShownManyDialogs: Boolean = false,
+        val onDismiss: () -> Unit,
+        val onShouldShowNoMoreDialogs: (Boolean) -> Unit
+    ) : PromptRequest()
 }

@@ -4,8 +4,10 @@
 
 package mozilla.components.browser.engine.gecko.prompt
 
+import android.support.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.prompt.Choice
+import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
@@ -78,6 +80,26 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
+    override fun onAlert(
+        session: GeckoSession?,
+        title: String?,
+        message: String?,
+        callback: AlertCallback
+    ) {
+
+        val hasShownManyDialogs = callback.hasCheckbox()
+        val onDismiss: () -> Unit = {
+            callback.dismiss()
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(Alert(title ?: "", message ?: "", hasShownManyDialogs, onDismiss) { showMoreDialogs ->
+                callback.checkboxValue = showMoreDialogs
+                callback.dismiss()
+            })
+        }
+    }
+
     override fun onButtonPrompt(
         session: GeckoSession?,
         title: String?,
@@ -119,13 +141,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         callback: AuthCallback?
     ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1378
 
-    override fun onAlert(
-        session: GeckoSession?,
-        title: String?,
-        msg: String?,
-        callback: AlertCallback?
-    ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1435
-
     override fun onTextPrompt(
         session: GeckoSession?,
         title: String?,
@@ -141,10 +156,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     private fun GeckoChoice.toChoice(): Choice {
         val choiceChildren = items?.map { it.toChoice() }?.toTypedArray()
         return Choice(id, !disabled, label ?: "", selected, separator, choiceChildren)
-    }
-
-    private fun Array<Choice>.toIdsArray(): Array<String> {
-        return this.map { it.id }.toTypedArray()
     }
 
     /**
@@ -168,4 +179,9 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         return Pair(arrayOfChoices, mapChoicesToGeckoChoices)
     }
+}
+
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal fun Array<Choice>.toIdsArray(): Array<String> {
+    return this.map { it.id }.toTypedArray()
 }

@@ -4,19 +4,24 @@
 
 package mozilla.components.feature.prompts
 
-import android.support.annotation.VisibleForTesting
 import android.support.v4.app.DialogFragment
 
 internal const val KEY_SESSION_ID = "KEY_SESSION_ID"
-
+internal const val KEY_TITLE = "KEY_TITLE"
+internal const val KEY_MESSAGE = "KEY_MESSAGE"
 /**
  * An abstract representation for all different types of prompt dialogs.
  * for handling [PromptFeature] dialogs.
  */
-abstract class PromptDialogFragment : DialogFragment() {
+internal abstract class PromptDialogFragment : DialogFragment() {
 
     var feature: PromptFeature? = null
 
-    @VisibleForTesting
     internal val sessionId: String by lazy { requireNotNull(arguments).getString(KEY_SESSION_ID)!! }
+
+    internal val title: String by lazy { safeArguments.getString(KEY_TITLE)!! }
+
+    internal val message: String by lazy { safeArguments.getString(KEY_MESSAGE)!! }
+
+    val safeArguments get() = requireNotNull(arguments)
 }

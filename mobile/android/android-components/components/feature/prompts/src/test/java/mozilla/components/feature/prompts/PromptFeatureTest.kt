@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentTransaction
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
@@ -203,6 +204,76 @@ class PromptFeatureTest {
         promptFeature.onMultipleChoiceSelect(session.id, arrayOf())
 
         assertTrue(session.promptRequest.isConsumed())
+    }
+
+    @Test
+    fun `onNoMoreDialogsChecked will consume promptRequest`() {
+        val session = getSelectedSession()
+
+        var onShowNoMoreAlertsWasCalled = false
+        var onDismissWasCalled = false
+
+        val promptRequest = Alert("title", "message", false, { onDismissWasCalled = true }) {
+            onShowNoMoreAlertsWasCalled = true
+        }
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onShouldMoreDialogsChecked(session.id, false)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onShowNoMoreAlertsWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel(session.id)
+        assertTrue(onDismissWasCalled)
+    }
+
+    @Test
+    fun `Calling onNoMoreDialogsChecked or onCancel with unknown sessionId will not consume promptRequest`() {
+        val session = getSelectedSession()
+
+        var onShowNoMoreAlertsWasCalled = false
+        var onDismissWasCalled = false
+
+        val promptRequest = Alert("title", "message", false, { onDismissWasCalled = true }) {
+            onShowNoMoreAlertsWasCalled = true
+        }
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onShouldMoreDialogsChecked("unknown_session_id", false)
+
+        assertFalse(session.promptRequest.isConsumed())
+        assertFalse(onShowNoMoreAlertsWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel("unknown_session_id")
+        assertFalse(onDismissWasCalled)
+    }
+
+    @Test
+    fun `Calling onCancel with an alert request will consume promptRequest and call onDismiss`() {
+        val session = getSelectedSession()
+
+        var onDismissWasCalled = false
+
+        val promptRequest = Alert("title", "message", false, { onDismissWasCalled = true }) {}
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel(session.id)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onDismissWasCalled)
     }
 
     private fun getSelectedSession(): Session {
