@@ -408,6 +408,89 @@ CompareBaseDomains(nsIURI* aTrackingURI,
                                    nsCaseInsensitiveCStringComparator());
 }
 
+class TemporaryAccessGrantObserver final : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  static void
+  Create(nsIPermissionManager* aPM,
+         nsIPrincipal* aPrincipal,
+         const nsACString& aType)
+  {
+    nsCOMPtr<nsITimer> timer;
+    RefPtr<TemporaryAccessGrantObserver> observer =
+      new TemporaryAccessGrantObserver(aPM, aPrincipal, aType);
+    nsresult rv =
+      NS_NewTimerWithObserver(getter_AddRefs(timer),
+                              observer,
+                              24 * 60 * 60 * 1000, // 24 hours
+                              nsITimer::TYPE_ONE_SHOT);
+
+    if (NS_SUCCEEDED(rv)) {
+      observer->SetTimer(timer);
+    } else {
+      timer->Cancel();
+    }
+  }
+
+  void SetTimer(nsITimer* aTimer)
+  {
+    mTimer = aTimer;
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    }
+  }
+
+private:
+  TemporaryAccessGrantObserver(nsIPermissionManager* aPM,
+                               nsIPrincipal* aPrincipal,
+                               const nsACString& aType)
+    : mPM(aPM)
+    , mPrincipal(aPrincipal)
+    , mType(aType)
+  {
+    MOZ_ASSERT(XRE_IsParentProcess(),
+               "Enforcing temporary access grant lifetimes can only be done in "
+               "the parent process");
+  }
+
+  ~TemporaryAccessGrantObserver() = default;
+
+private:
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsIPermissionManager> mPM;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCString mType;
+};
+
+NS_IMPL_ISUPPORTS(TemporaryAccessGrantObserver, nsIObserver)
+
+NS_IMETHODIMP
+TemporaryAccessGrantObserver::Observe(nsISupports* aSubject,
+                                      const char* aTopic,
+                                      const char16_t* aData)
+{
+  if (strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC) == 0) {
+    Unused << mPM->RemoveFromPrincipal(mPrincipal, mType.get());
+  } else if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    }
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nullptr;
+    }
+  }
+
+  return NS_OK;
+}
+
 } // anonymous
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
@@ -439,11 +522,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(("Disabled by network.cookie.cookieBehavior pref (%d), bailing out early",
          StaticPrefs::network_cookie_cookieBehavior()));
-    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
+    return StorageAccessGrantPromise::CreateAndResolve(eAllowOnAnySite, __func__);
   }
 
   if (CheckContentBlockingAllowList(aParentWindow)) {
-    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
+    return StorageAccessGrantPromise::CreateAndResolve(eAllowOnAnySite, __func__);
   }
 
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
@@ -534,7 +617,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
   auto storePermission = [pwin, parentWindow, origin, trackingOrigin,
                           trackingPrincipal, trackingURI, topInnerWindow,
                           topLevelStoragePrincipal, aReason]
-                         (bool aAnySite) -> RefPtr<StorageAccessGrantPromise> {
+                         (int aAllowMode) -> RefPtr<StorageAccessGrantPromise> {
     NS_ConvertUTF16toUTF8 grantedOrigin(origin);
 
     nsAutoCString permissionKey;
@@ -562,11 +645,12 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
                                                                         trackingPrincipal,
                                                                         trackingOrigin,
                                                                         grantedOrigin,
-                                                                        aAnySite)
+                                                                        aAllowMode)
         ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                [] (FirstPartyStorageAccessGrantPromise::ResolveOrRejectValue&& aValue) {
                  if (aValue.IsResolve()) {
-                   return StorageAccessGrantPromise::CreateAndResolve(NS_SUCCEEDED(aValue.ResolveValue()), __func__);
+                   return StorageAccessGrantPromise::CreateAndResolve(NS_SUCCEEDED(aValue.ResolveValue()) ?
+                                                                      eAllowOnAnySite : eAllow, __func__);
                  }
                  return StorageAccessGrantPromise::CreateAndReject(false, __func__);
                });
@@ -584,7 +668,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
                                                            IPC::Principal(trackingPrincipal),
                                                            trackingOrigin,
                                                            grantedOrigin,
-                                                           aAnySite)
+                                                           aAllowMode)
       ->Then(GetCurrentThreadSerialEventTarget(), __func__,
              [] (const ContentChild::FirstPartyStorageAccessGrantedForOriginPromise::ResolveOrRejectValue& aValue) {
                if (aValue.IsResolve()) {
@@ -612,9 +696,12 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
                                                                                nsIPrincipal* aTrackingPrincipal,
                                                                                const nsCString& aTrackingOrigin,
                                                                                const nsCString& aGrantedOrigin,
-                                                                               bool aAnySite)
+                                                                               int aAllowMode)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aAllowMode == eAllow ||
+             aAllowMode == eAllowAutoGrant ||
+             aAllowMode == eAllowOnAnySite);
 
   nsCOMPtr<nsIURI> parentPrincipalURI;
   Unused << aParentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
@@ -640,7 +727,7 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
   int64_t when = (PR_Now() / PR_USEC_PER_MSEC) + expirationTime;
 
   nsresult rv;
-  if (aAnySite) {
+  if (aAllowMode == eAllowOnAnySite) {
     uint32_t privateBrowsingId = 0;
     rv = aTrackingPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
     if (!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) {
@@ -659,9 +746,11 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
   } else {
     uint32_t privateBrowsingId = 0;
     rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
-    if (!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) {
-      // If we are coming from a private window, make sure to store a session-only
-      // permission which won't get persisted to disk.
+    if ((!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) ||
+        (aAllowMode == eAllowAutoGrant)) {
+      // If we are coming from a private window or are automatically granting a
+      // permission, make sure to store a session-only permission which won't
+      // get persisted to disk.
       expirationType = nsIPermissionManager::EXPIRE_SESSION;
       when = 0;
     }
@@ -675,6 +764,11 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
     rv = pm->AddFromPrincipal(aParentPrincipal, type.get(),
                               nsIPermissionManager::ALLOW_ACTION,
                               expirationType, when);
+
+    if (NS_SUCCEEDED(rv) && (aAllowMode == eAllowAutoGrant)) {
+      // Make sure temporary access grants do not survive more than 24 hours.
+      TemporaryAccessGrantObserver::Create(pm, aParentPrincipal, type);
+    }
   }
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
