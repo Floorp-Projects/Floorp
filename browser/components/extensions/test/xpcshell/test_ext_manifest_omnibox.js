@@ -12,7 +12,7 @@ async function testKeyword(params) {
   if (params.expectError) {
     let expectedError = (
       String.raw`omnibox.keyword: String "${params.keyword}" ` +
-      String.raw`must match /^[^?\s:]([^\s:]*[^/\s:])?$/`
+      String.raw`must match /^[^?\s:][^\s:]*$/`
     );
     ok(normalized.error.includes(expectedError),
        `The manifest error ${JSON.stringify(normalized.error)} ` +
@@ -43,6 +43,7 @@ add_task(async function test_manifest_commands() {
   await testKeyword({keyword: "fa?", expectError: false});
   await testKeyword({keyword: "f/x", expectError: false});
   await testKeyword({keyword: "/fx", expectError: false});
+  await testKeyword({keyword: "fx/", expectError: false});
 
   // rejected multi-character keywords
   await testKeyword({keyword: " a", expectError: true});
@@ -50,7 +51,6 @@ add_task(async function test_manifest_commands() {
   await testKeyword({keyword: "  ", expectError: true});
   await testKeyword({keyword: " a ", expectError: true});
   await testKeyword({keyword: "?fx", expectError: true});
-  await testKeyword({keyword: "fx/", expectError: true});
   await testKeyword({keyword: "f:x", expectError: true});
   await testKeyword({keyword: "fx:", expectError: true});
   await testKeyword({keyword: "f x", expectError: true});

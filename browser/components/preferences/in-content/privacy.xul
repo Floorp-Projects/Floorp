@@ -792,19 +792,21 @@
                 class="accessory-button"
                 data-l10n-id="certs-view"
                 preference="security.disable_button.openCertManager"
-                searchkeywords="&certmgr.tab.mine;
-                                &certmgr.tab.others2;
-                                &certmgr.tab.websites3;
-                                &certmgr.tab.ca;
-                                &certmgr.mine2;
-                                &certmgr.others2;
-                                &certmgr.websites3;
-                                &certmgr.cas2;
-                                &certmgr.certname;
-                                &certmgr.tokenname;
-                                &certmgr.view2.label;
-                                &certmgr.export.label;
-                                &certmgr.delete2.label;"/>
+                search-l10n-ids="
+                  certmgr-tab-mine.label,
+                  certmgr-tab-people.label,
+                  certmgr-tab-servers.label,
+                  certmgr-tab-ca.label,
+                  certmgr-mine,
+                  certmgr-people,
+                  certmgr-servers,
+                  certmgr-ca,
+                  certmgr-cert-name.label,
+                  certmgr-token-name.label,
+                  certmgr-view.label,
+                  certmgr-export.label,
+                  certmgr-delete.label
+                "/>
       </hbox>
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
       <hbox pack="end">

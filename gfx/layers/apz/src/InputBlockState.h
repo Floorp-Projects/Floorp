@@ -465,8 +465,9 @@ public:
    */
   bool TouchActionAllowsDoubleTapZoom() const;
   /**
-   * @return false iff touch-action is enabled and the allowed touch behaviors for
-   *         the first touch point do not allow panning in the specified direction(s).
+   * @return false iff touch-action is enabled and the allowed touch behaviors
+   *         for the first touch point do not allow panning in the specified
+   *         direction(s).
    */
   bool TouchActionAllowsPanningX() const;
   bool TouchActionAllowsPanningY() const;

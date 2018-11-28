@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40; -*- */
+/* -*- Mode: c++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -280,7 +280,7 @@ bool
 SharedSurface_SurfaceTexture::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
 {
     *out_descriptor =
-        layers::SurfaceTextureDescriptor(mSurface->GetImageHandle(),
+        layers::SurfaceTextureDescriptor(mSurface->GetHandle(),
                                          mSize,
                                          gfx::SurfaceFormat::R8G8B8A8,
                                          false /* NOT continuous */,

@@ -18,9 +18,8 @@ var gCert;
 function onLoad() {
   gCert = window.arguments[0];
 
-  let bundle = document.getElementById("pippki_bundle");
-  setText("certmsg",
-          bundle.getFormattedString("editTrustCA", [gCert.commonName]));
+  let certMsg = document.getElementById("certmsg");
+  document.l10n.setAttributes(certMsg, "edit-trust-ca", { certName: gCert.commonName});
 
   let sslCheckbox = document.getElementById("trustSSL");
   sslCheckbox.checked = gCertDB.isCertTrusted(gCert, Ci.nsIX509Cert.CA_CERT,

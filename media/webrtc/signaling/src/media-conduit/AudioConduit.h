@@ -99,20 +99,24 @@ public:
   MediaConduitErrorCode SetReceiverTransport(RefPtr<TransportInterface> aTransport) override;
 
   /**
-   * Function to deliver externally captured audio sample for encoding and transport
+   * Function to deliver externally captured audio sample for encoding and
+   * transport
    * @param audioData [in]: Pointer to array containing a frame of audio
-   * @param lengthSamples [in]: Length of audio frame in samples in multiple of 10 milliseconds
-   *                             Ex: Frame length is 160, 320, 440 for 16, 32, 44 kHz sampling rates
-                                    respectively.
-                                    audioData[] should be of lengthSamples in size
-                                    say, for 16kz sampling rate, audioData[] should contain 160
-                                    samples of 16-bits each for a 10m audio frame.
-   * @param samplingFreqHz [in]: Frequency/rate of the sampling in Hz ( 16000, 32000 ...)
-   * @param capture_delay [in]:  Approx Delay from recording until it is delivered to VoiceEngine
-                                 in milliseconds.
-   * NOTE: ConfigureSendMediaCodec() SHOULD be called before this function can be invoked
-   *       This ensures the inserted audio-samples can be transmitted by the conduit
-   *
+   * @param lengthSamples [in]: Length of audio frame in samples in multiple of
+   *                             10 milliseconds
+   *                             Ex: Frame length is 160, 320, 440 for 16, 32,
+   *                             44 kHz sampling rates respectively.
+   *                             audioData[] should be of lengthSamples in
+   *                             size say, for 16kz sampling rate,
+   *                             audioData[] should contain 160 samples of
+   *                             16-bits each for a 10m audio frame.
+   * @param samplingFreqHz [in]: Frequency/rate of the sampling in Hz
+   *                             ( 16000, 32000 ...)
+   * @param capture_delay [in]:  Approx Delay from recording until it is
+   *                             delivered to VoiceEngine in milliseconds.
+   * NOTE: ConfigureSendMediaCodec() SHOULD be called before this function can
+   * be invoked. This ensures the inserted audio-samples can be transmitted by
+   * the conduit
    */
   MediaConduitErrorCode SendAudioFrame(const int16_t speechData[],
                                        int32_t lengthSamples,
@@ -121,21 +125,26 @@ public:
                                        int32_t capture_time) override;
 
   /**
-   * Function to grab a decoded audio-sample from the media engine for rendering
-   * / playoutof length 10 milliseconds.
+   * Function to grab a decoded audio-sample from the media engine for
+   * rendering / playoutof length 10 milliseconds.
    *
-   * @param speechData [in]: Pointer to a array to which a 10ms frame of audio will be copied
-   * @param samplingFreqHz [in]: Frequency of the sampling for playback in Hertz (16000, 32000,..)
-   * @param capture_delay [in]: Estimated Time between reading of the samples to rendering/playback
+   * @param speechData [in]: Pointer to a array to which a 10ms frame of audio
+   *                         will be copied
+   * @param samplingFreqHz [in]: Frequency of the sampling for playback in
+   *                             Hertz (16000, 32000,..)
+   * @param capture_delay [in]: Estimated Time between reading of the samples
+   *                            to rendering/playback
    * @param lengthSamples [in]: Contain maximum length of speechData array.
-   * @param lengthSamples [out]: Will contain length of the audio frame in samples at return.
-                                 Ex: A value of 160 implies 160 samples each of 16-bits was copied
-                                     into speechData
+   * @param lengthSamples [out]: Will contain length of the audio frame in
+   *                             samples at return.
+   *                             Ex: A value of 160 implies 160 samples each of
+   *                             16-bits was copied into speechData
    * NOTE: This function should be invoked every 10 milliseconds for the best
-   *          peformance
-   * NOTE: ConfigureRecvMediaCodec() SHOULD be called before this function can be invoked
-   *       This ensures the decoded samples are ready for reading and playout is enabled.
-   *
+   * peformance
+   * NOTE: ConfigureRecvMediaCodec() SHOULD be called before this function can
+   * be invoked
+   * This ensures the decoded samples are ready for reading and playout is
+   * enabled.
    */
    MediaConduitErrorCode GetAudioFrame(int16_t speechData[],
                                        int32_t samplingFreqHz,

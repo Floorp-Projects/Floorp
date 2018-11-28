@@ -781,7 +781,8 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
       // "false" == crash reporting disabled
       childArgv.push_back("false");
     }
-#elif defined(MOZ_WIDGET_COCOA) // defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
+#elif defined(MOZ_WIDGET_COCOA) /* defined(OS_LINUX) || defined(OS_BSD) || \
+                                   defined(OS_SOLARIS) */
     childArgv.push_back(CrashReporter::GetChildNotificationPipe());
 #endif  // defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
   }

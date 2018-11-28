@@ -79,7 +79,8 @@ Diagnostics::GetFrameOverlayString(const GPUStats& aStats)
   // R   = ClientLayerManager::EndTransaction
   // CP  = ShadowLayerForwarder::EndTransaction (txn build)
   // TX  = LayerTransactionChild::SendUpdate (IPDL serialize+send)
-  // UP  = LayerTransactionParent::RecvUpdate (IPDL deserialize, update, APZ update)
+  // UP  = LayerTransactionParent::RecvUpdate (IPDL deserialize, update, APZ
+  //                                           update)
   // CC_BUILD = Container prepare/composite frame building
   // CC_EXEC  = Container render/composite drawing
   nsPrintfCString line1("FPS: %d (TXN: %d)", fps, txnFps);

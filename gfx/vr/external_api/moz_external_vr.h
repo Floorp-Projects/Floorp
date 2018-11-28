@@ -276,7 +276,9 @@ struct VRDisplayState
   uint32_t mMinRestartInterval;
   char mDisplayName[kVRDisplayNameMaxLen];
   // eight byte character code identifier
-  // LSB first, so "ABCDEFGH" -> ('H'<<56) + ('G'<<48) + ('F'<<40) + ('E'<<32) + ('D'<<24) + ('C'<<16) + ('B'<<8) + 'A').
+  // LSB first, so "ABCDEFGH" -> ('H'<<56) + ('G'<<48) + ('F'<<40) +
+  //                             ('E'<<32) + ('D'<<24) + ('C'<<16) +
+  //                             ('B'<<8) + 'A').
   uint64_t mEightCC;
   VRDisplayCapabilityFlags mCapabilityFlags;
   VRFieldOfView mEyeFOV[VRDisplayState::NumEyes];

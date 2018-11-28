@@ -448,8 +448,11 @@ public:
   constexpr static const index_type extent = Extent;
 
   // [Span.cons], Span constructors, copy, assignment, and destructor
-  // "Dependent" is needed to make "span_details::enable_if_t<(Dependent || Extent == 0 || Extent == mozilla::MaxValue<size_t>::value)>" SFINAE,
-  // since "span_details::enable_if_t<(Extent == 0 || Extent == mozilla::MaxValue<size_t>::value)>" is ill-formed when Extent is neither of the extreme values.
+  // "Dependent" is needed to make "span_details::enable_if_t<(Dependent ||
+  //   Extent == 0 || Extent == mozilla::MaxValue<size_t>::value)>" SFINAE,
+  // since "span_details::enable_if_t<(Extent == 0 || Extent ==
+  //   mozilla::MaxValue<size_t>::value)>" is ill-formed when Extent is neither
+  //   of the extreme values.
   /**
    * Constructor with no args.
    */
