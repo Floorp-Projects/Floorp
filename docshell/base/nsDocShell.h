@@ -132,6 +132,40 @@ class nsDocShell final
   , public mozilla::SupportsWeakPtr<nsDocShell>
 {
 public:
+  enum InternalLoad : uint32_t {
+  INTERNAL_LOAD_FLAGS_NONE                    = 0x0,
+  INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL       = 0x1,
+  INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER      = 0x2,
+  INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x4,
+
+  // This flag marks the first load in this object
+  // @see nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD
+  INTERNAL_LOAD_FLAGS_FIRST_LOAD              = 0x8,
+
+
+  // The set of flags that should not be set before calling into
+  // nsDocShell::LoadURI and other nsDocShell loading functions.
+  INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS     = 0xf,
+
+
+  INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER       = 0x10,
+  INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES     = 0x20,
+
+  // Whether the load should be treated as srcdoc load, rather than a URI one.
+  INTERNAL_LOAD_FLAGS_IS_SRCDOC               = 0x40,
+
+  // Whether this is the load of a frame's original src attribute
+  INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC      = 0x80,
+
+  INTERNAL_LOAD_FLAGS_NO_OPENER               = 0x100,
+
+  // Whether a top-level data URI navigation is allowed for that load
+  INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI    = 0x200,
+
+  // Whether the load was triggered by user interaction.
+  INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED       = 0x1000,
+    };
+
   // Event type dispatched by RestorePresentation
   class RestorePresentationEvent : public mozilla::Runnable
   {
