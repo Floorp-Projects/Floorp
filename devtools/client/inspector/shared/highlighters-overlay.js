@@ -13,7 +13,10 @@ const {
   VIEW_NODE_SHAPE_POINT_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 
-const DEFAULT_GRID_COLOR = "#4B0082";
+loader.lazyRequireGetter(this, "parseURL", "devtools/client/shared/source-utils", true);
+loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+
+const DEFAULT_HIGHLIGHTER_COLOR = "#9400FF";
 
 /**
  * Highlighters overlay is a singleton managing all highlighters in the Inspector.
@@ -244,13 +247,34 @@ class HighlightersOverlay {
   }
 
   /**
-   * Create a flexbox highlighter settings object from the Redux store containing any
-   * highlighter options that should be passed into the highlighter.
+   * Returns the flexbox highlighter color for the given node.
    */
-  getFlexboxHighlighterSettings() {
+  async getFlexboxHighlighterColor() {
+    // Attempt to get the flexbox highlighter color from the Redux store.
     const { flexbox } = this.store.getState();
     const color = flexbox.color;
-    return { color };
+
+    if (color) {
+      return color;
+    }
+
+    // If the flexbox inspector has not been initialized, attempt to get the flexbox
+    // highlighter from the async storage.
+    const customHostColors = await asyncStorage.getItem("flexboxInspectorHostColors") ||
+      {};
+
+    // Get the hostname, if there is no hostname, fall back on protocol
+    // ex: `data:` uri, and `about:` pages
+    let hostname;
+    try {
+      hostname = parseURL(this.inspector.target.url).hostname ||
+        parseURL(this.inspector.target.url).protocol;
+    } catch (e) {
+      this._handleRejection(e);
+    }
+
+    return hostname && customHostColors[hostname] ?
+      customHostColors[hostname] : DEFAULT_HIGHLIGHTER_COLOR;
   }
 
   /**
@@ -290,9 +314,19 @@ class HighlightersOverlay {
       return;
     }
 
-    options = Object.assign({}, options, this.getFlexboxHighlighterSettings(node));
+    const color = await this.getFlexboxHighlighterColor(node);
+    options = Object.assign({}, options, { color });
 
-    const isShown = await highlighter.show(node, options);
+    let isShown;
+
+    try {
+      isShown = await highlighter.show(node, options);
+    } catch (e) {
+      // This call might fail if called asynchrously after the toolbox is finished
+      // closing.
+      this._handleRejection(e);
+    }
+
     if (!isShown) {
       return;
     }
@@ -384,8 +418,6 @@ class HighlightersOverlay {
       return;
     }
 
-    options = Object.assign({}, options, this.getFlexboxHighlighterSettings());
-
     const isShown = await highlighter.show(node, options);
     if (!isShown) {
       return;
@@ -418,7 +450,7 @@ class HighlightersOverlay {
   getGridHighlighterSettings(nodeFront) {
     const { grids, highlighterSettings } = this.store.getState();
     const grid = grids.find(g => g.nodeFront === nodeFront);
-    const color = grid ? grid.color : DEFAULT_GRID_COLOR;
+    const color = grid ? grid.color : DEFAULT_HIGHLIGHTER_COLOR;
     return Object.assign({}, highlighterSettings, { color });
   }
 
