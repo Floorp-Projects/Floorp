@@ -28,9 +28,15 @@ export class SimpleSnippet extends React.PureComponent {
     }
   }
 
+  _shouldRenderButton() {
+    return this.props.content.button_action || this.props.onButtonClick || this.props.content.button_url;
+  }
+
   renderTitle() {
     const {title} = this.props.content;
-    return title ? <h3 className="title">{title}</h3> : null;
+    return title ?
+      <h3 className={`title ${this._shouldRenderButton() ? "title-inline" : ""}`}>{this.renderTitleIcon()} {title}</h3> :
+      null;
   }
 
   renderTitleIcon() {
@@ -40,7 +46,7 @@ export class SimpleSnippet extends React.PureComponent {
 
   renderButton() {
     const {props} = this;
-    if (!props.content.button_action && !props.onButtonClick && !props.content.button_url) {
+    if (!this._shouldRenderButton()) {
       return null;
     }
 
@@ -73,7 +79,7 @@ export class SimpleSnippet extends React.PureComponent {
     return (<SnippetBase {...props} className={className} textStyle={this.props.textStyle}>
       <img src={safeURI(props.content.icon) || DEFAULT_ICON_PATH} className="icon" />
       <div>
-        {this.renderTitleIcon()} {this.renderTitle()} <p className="body">{this.renderText()}</p>
+        {this.renderTitle()} <p className="body">{this.renderText()}</p>
         {this.props.extraContent}
       </div>
       {<div>{this.renderButton()}</div>}

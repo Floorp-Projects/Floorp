@@ -1,4 +1,5 @@
 import React from "react";
+import schema from "./FXASignupSnippet.schema.json";
 import {SubmitFormSnippet} from "../SubmitFormSnippet/SubmitFormSnippet.jsx";
 
 export const FXASignupSnippet = props => {
@@ -6,9 +7,9 @@ export const FXASignupSnippet = props => {
   const firefox_version = userAgent ? parseInt(userAgent[1], 10) : 0;
   const extendedContent = {
     form_action: "https://accounts.firefox.com/",
-    scene1_button_label: "Learn More",
-    scene2_button_label: "Sign Me Up",
-    scene2_email_placeholder_text: "Your Email Here",
+    scene1_button_label: schema.properties.scene1_button_label.default,
+    scene2_email_placeholder_text: schema.properties.scene2_email_placeholder_text.default,
+    scene2_button_label: schema.properties.scene2_button_label.default,
     ...props.content,
     hidden_inputs: {
       action: "email",

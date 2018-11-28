@@ -7,6 +7,8 @@ import {MessageContext} from "fluent";
  */
 const RICH_TEXT_CONFIG = {
   "text": ["text", "scene1_text"],
+  "success_text": "success_text",
+  "error_text": "error_text",
   "scene2_text": "scene2_text",
   "privacy_html": "scene2_privacy_html",
   "disclaimer_html": "scene2_disclaimer_html",

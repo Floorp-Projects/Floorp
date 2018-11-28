@@ -1,5 +1,6 @@
 import {mount} from "enzyme";
 import React from "react";
+import {RichText} from "content-src/asrouter/components/RichText/RichText.jsx";
 import schema from "content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.schema.json";
 import {SubmitFormSnippet} from "content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.jsx";
 
@@ -55,7 +56,7 @@ describe("SubmitFormSnippet", () => {
   });
   it("should render .title", () => {
     const wrapper = mountAndCheckProps({scene1_title: "Foo"});
-    assert.equal(wrapper.find(".title").text(), "Foo");
+    assert.equal(wrapper.find(".title").text().trim(), "Foo");
   });
   it("should render .icon", () => {
     const wrapper = mountAndCheckProps({scene1_icon: "data:image/gif;base64,R0lGODl"});
@@ -66,7 +67,7 @@ describe("SubmitFormSnippet", () => {
 
     const button = wrapper.find("button.ASRouterButton");
     assert.equal(button.text(), "Click here");
-    assert.equal(button.prop("className"), "ASRouterButton");
+    assert.equal(button.prop("className"), "ASRouterButton secondary");
   });
 
   describe("#SignupView", () => {
@@ -200,8 +201,18 @@ describe("SubmitFormSnippet", () => {
       wrapper.setState({signupSuccess: true, signupSubmitted: true});
 
       assert.isTrue(wrapper.find(".submissionStatus").exists());
-      assert.equal(wrapper.find(".submissionStatus").text(), "success");
+      assert.propertyVal(wrapper.find(RichText).props(), "localization_id", "success_text");
+      assert.propertyVal(wrapper.find(RichText).props(), "success_text", "success");
       assert.isFalse(wrapper.find(".ASRouterButton").exists());
+    });
+    it("should render the signup error message", () => {
+      wrapper.setProps({content: {error_text: "trouble"}});
+      wrapper.setState({signupSuccess: false, signupSubmitted: true});
+
+      assert.isTrue(wrapper.find(".submissionStatus").exists());
+      assert.propertyVal(wrapper.find(RichText).props(), "localization_id", "error_text");
+      assert.propertyVal(wrapper.find(RichText).props(), "error_text", "trouble");
+      assert.isTrue(wrapper.find(".ASRouterButton").exists());
     });
     it("should render the button to return to the signup form if there was an error", () => {
       wrapper.setState({signupSubmitted: true, signupSuccess: false});
