@@ -757,12 +757,13 @@ private:
     // |mRemoteStackDepth|, and races don't matter to the queue.)
     //
     // Final case, the other side replied to our most recent out-call |R<|.
-    // If that was the *only* out-call on our stack, |?{mInterruptStack.size() == 1}|,
-    // then other side "finished with us," and went back to its own business.
-    // That business might have included sending any number of async message
-    // |A<*| until sending a blocking message |(S< | C<)|.  If we had more than
-    // one Interrupt call on our stack, the other side *better* not have sent us
-    // another blocking message, because it's blocked on a reply from us.
+    // If that was the *only* out-call on our stack,
+    // |?{mInterruptStack.size() == 1}|, then other side "finished with us,"
+    // and went back to its own business.  That business might have included
+    // sending any number of async message |A<*| until sending a blocking
+    // message |(S< | C<)|.  If we had more than one Interrupt call on our
+    // stack, the other side *better* not have sent us another blocking
+    // message, because it's blocked on a reply from us.
     //
     MessageQueue mPending;
 

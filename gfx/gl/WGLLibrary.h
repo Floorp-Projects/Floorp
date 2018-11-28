@@ -66,9 +66,12 @@ public:
                                                 const FLOAT* pfAttribFList,
                                                 UINT nMaxFormats, int* piFormats,
                                                 UINT* nNumFormats);
-        //BOOL (GLAPIENTRY * fGetPixelFormatAttribiv) (HDC hdc, int iPixelFormat,
-        //                                             int iLayerPlane, UINT nAttributes,
-        //                                             int* piAttributes, int* piValues);
+        //BOOL (GLAPIENTRY * fGetPixelFormatAttribiv) (HDC hdc,
+        //                                             int iPixelFormat,
+        //                                             int iLayerPlane,
+        //                                             UINT nAttributes,
+        //                                             int* piAttributes,
+        //                                             int* piValues);
         const char* (GLAPIENTRY * fGetExtensionsStringARB) (HDC hdc);
         HGLRC (GLAPIENTRY * fCreateContextAttribsARB) (HDC hdc, HGLRC hShareContext,
                                                        const int* attribList);

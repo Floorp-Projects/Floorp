@@ -188,9 +188,9 @@ public:
    * @param aProgress    The progress notifications to send.
    * @param aInvalidRect An invalidation rect to send.
    * @param aFrameCount  If Some(), an updated count of the number of frames of
-   *                     animation the decoder has finished decoding so far. This
-   *                     is a lower bound for the total number of animation
-   *                     frames this image has.
+   *                     animation the decoder has finished decoding so far.
+   *                     This is a lower bound for the total number of
+   *                     animation frames this image has.
    * @param aDecoderFlags The decoder flags used by the decoder that generated
    *                      these notifications, or DefaultDecoderFlags() if the
    *                      notifications don't come from a decoder.

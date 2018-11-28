@@ -252,8 +252,10 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
 
     // character offsets get really confusing here, as we have to keep track of
     // (a) the text in the actual textRun we're constructing
-    // (c) the string that was handed to CoreText, which contains the text of the font run
-    // (d) the CTRun currently being processed, which may be a sub-run of the CoreText line
+    // (c) the string that was handed to CoreText, which contains the text of
+    // the font run
+    // (d) the CTRun currently being processed, which may be a sub-run of the
+    // CoreText line
 
     // get the source string range within the CTLine's text
     CFRange stringRange = ::CTRunGetStringRange(aCTRun);

@@ -11,7 +11,9 @@
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/layers/Compositor.h"  // for Compositor
+// clang-format off
 //#include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent
+// clang-format on
 #include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL

@@ -88,27 +88,36 @@ typedef enum nsCharType nsCharType;
                            || ( ( (val) > eCharType_ArabicNumber) && ( (val) != eCharType_RightToLeftArabic) ) )
 
   /**
-   * Inspects a Unichar, converting numbers to Arabic or Hindi forms and returning them
+   * Inspects a Unichar, converting numbers to Arabic or Hindi forms and
+   * returning them
    * @param aChar is the character
-   * @param aPrevCharArabic is true if the previous character in the string is an Arabic char
+   * @param aPrevCharArabic is true if the previous character in the string is
+   *        an Arabic char
    * @param aNumFlag specifies the conversion to perform:
    *        IBMBIDI_NUMERAL_NOMINAL:      don't do any conversion
-   *        IBMBIDI_NUMERAL_HINDI:        convert to Hindi forms (Unicode 0660-0669)
-   *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms (Unicode 0030-0039)
-   *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
+   *        IBMBIDI_NUMERAL_HINDI:        convert to Hindi forms
+   *                                        (Unicode 0660-0669)
+   *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms
+   *                                        (Unicode 0030-0039)
+   *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to
+   *                                      Hindi, otherwise to Arabic
    * @return the converted Unichar
    */
   char16_t HandleNumberInChar(char16_t aChar, bool aPrevCharArabic, uint32_t aNumFlag);
 
   /**
-   * Scan a Unichar string, converting numbers to Arabic or Hindi forms in place
+   * Scan a Unichar string, converting numbers to Arabic or Hindi forms in
+   * place
    * @param aBuffer is the string
    * @param aSize is the size of aBuffer
    * @param aNumFlag specifies the conversion to perform:
    *        IBMBIDI_NUMERAL_NOMINAL:      don't do any conversion
-   *        IBMBIDI_NUMERAL_HINDI:        convert to Hindi forms (Unicode 0660-0669)
-   *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms (Unicode 0030-0039)
-   *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
+   *        IBMBIDI_NUMERAL_HINDI:        convert to Hindi forms
+   *                                        (Unicode 0660-0669)
+   *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms
+   *                                        (Unicode 0030-0039)
+   *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to
+   *                                      Hindi, otherwise to Arabic
    */
   nsresult HandleNumbers(char16_t* aBuffer, uint32_t aSize, uint32_t  aNumFlag);
 

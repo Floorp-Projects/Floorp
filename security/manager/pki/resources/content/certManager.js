@@ -21,8 +21,6 @@ var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
 var key;
 
 var certdialogs = Cc[nsCertificateDialogs].getService(nsICertificateDialogs);
-var strbundle = Cc[nsStringBundle].getService(nsIStringBundleService)
-                  .createBundle("chrome://pipnss/locale/pipnss.properties");
 
 /**
  * List of certs currently selected in the active tab.
@@ -211,33 +209,33 @@ function nothingOrContainerSelected(certTree) {
   return false;
 }
 
-function promptError(aErrorCode) {
+async function promptError(aErrorCode) {
   if (aErrorCode != Ci.nsIX509CertDB.Success) {
-    let msgName = "PKCS12UnknownErr";
+    let msgName = "pkcs12-unknown-err";
     switch (aErrorCode) {
       case Ci.nsIX509CertDB.ERROR_PKCS12_NOSMARTCARD_EXPORT:
-        msgName = "PKCS12InfoNoSmartcardBackup";
+        msgName = "pkcs12-info-no-smartcard-backup";
         break;
       case Ci.nsIX509CertDB.ERROR_PKCS12_RESTORE_FAILED:
-        msgName = "PKCS12UnknownErrRestore";
+        msgName = "pkcs12-unknown-err-restore";
         break;
       case Ci.nsIX509CertDB.ERROR_PKCS12_BACKUP_FAILED:
-        msgName = "PKCS12UnknownErrBackup";
+        msgName = "pkcs12-unknown-err-backup";
         break;
       case Ci.nsIX509CertDB.ERROR_PKCS12_CERT_COLLISION:
       case Ci.nsIX509CertDB.ERROR_PKCS12_DUPLICATE_DATA:
-        msgName = "PKCS12DupData";
+        msgName = "pkcs12-dup-data";
         break;
       case Ci.nsIX509CertDB.ERROR_BAD_PASSWORD:
-        msgName = "PK11BadPassword";
+        msgName = "pk11-bad-password";
         break;
       case Ci.nsIX509CertDB.ERROR_DECODE_ERROR:
-        msgName = "PKCS12DecodeErr";
+        msgName = "pkcs12-decode-err";
         break;
       default:
         break;
     }
-    let message = strbundle.GetStringFromName(msgName);
+    let [message] = await document.l10n.formatValues([{id: msgName}]);
     let prompter = Services.ww.getNewPrompter(window);
     prompter.alert(null, message);
   }
@@ -296,20 +294,20 @@ function email_enableButtons() {
   enableButtonsForCertTree(emailTreeView, idList);
 }
 
-function backupCerts() {
+async function backupCerts() {
   getSelectedCerts();
   var numcerts = selected_certs.length;
   if (numcerts == 0) {
     return;
   }
 
-  var bundle = document.getElementById("pippki_bundle");
   var fp = Cc[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
-          bundle.getString("chooseP12BackupFileDialog"),
-          nsIFilePicker.modeSave);
-  fp.appendFilter(bundle.getString("file_browse_PKCS12_spec"),
-                  "*.p12");
+  let [backupFileDialog, filePkcs12Spec] = await document.l10n.formatValues([
+    {id: "choose-p12-backup-file-dialog"},
+    {id: "file-browse-pkcs12-spec"},
+  ]);
+  fp.init(window, backupFileDialog, nsIFilePicker.modeSave);
+  fp.appendFilter(filePkcs12Spec, "*.p12");
   fp.appendFilters(nsIFilePicker.filterAll);
   fp.defaultExtension = "p12";
   fp.open(rv => {
@@ -339,16 +337,16 @@ function editCerts() {
   }
 }
 
-function restoreCerts() {
-  var bundle = document.getElementById("pippki_bundle");
+async function restoreCerts() {
   var fp = Cc[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
-          bundle.getString("chooseP12RestoreFileDialog2"),
-          nsIFilePicker.modeOpen);
-  fp.appendFilter(bundle.getString("file_browse_PKCS12_spec"),
-                  "*.p12; *.pfx");
-  fp.appendFilter(bundle.getString("file_browse_Certificate_spec"),
-                  gCertFileTypes);
+  let [restoreFileDialog, filePkcs12Spec, fileCertSpec] = await document.l10n.formatValues([
+    {id: "choose-p12-restore-file-dialog"},
+    {id: "file-browse-pkcs12-spec"},
+    {id: "file-browse-certificate-spec"},
+  ]);
+  fp.init(window, restoreFileDialog, nsIFilePicker.modeOpen);
+  fp.appendFilter(filePkcs12Spec, "*.p12; *.pfx");
+  fp.appendFilter(fileCertSpec, gCertFileTypes);
   fp.appendFilters(nsIFilePicker.filterAll);
   fp.open(rv => {
     if (rv != nsIFilePicker.returnOK) {
@@ -470,14 +468,14 @@ function viewCerts() {
   }
 }
 
-function addCACerts() {
-  var bundle = document.getElementById("pippki_bundle");
+async function addCACerts() {
   var fp = Cc[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
-          bundle.getString("importCACertsPrompt"),
-          nsIFilePicker.modeOpen);
-  fp.appendFilter(bundle.getString("file_browse_Certificate_spec"),
-                  gCertFileTypes);
+  let [importCa, fileCertSpec] = await document.l10n.formatValues([
+    {id: "import-ca-certs-prompt"},
+    {id: "file-browse-certificate-spec"},
+  ]);
+  fp.init(window, importCa, nsIFilePicker.modeOpen);
+  fp.appendFilter(fileCertSpec, gCertFileTypes);
   fp.appendFilters(nsIFilePicker.filterAll);
   fp.open(rv => {
     if (rv == nsIFilePicker.returnOK) {
@@ -488,14 +486,14 @@ function addCACerts() {
   });
 }
 
-function addEmailCert() {
-  var bundle = document.getElementById("pippki_bundle");
+async function addEmailCert() {
   var fp = Cc[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
-          bundle.getString("importEmailCertPrompt"),
-          nsIFilePicker.modeOpen);
-  fp.appendFilter(bundle.getString("file_browse_Certificate_spec"),
-                  gCertFileTypes);
+  let [importEmail, fileCertSpec] = await document.l10n.formatValues([
+    {id: "import-email-cert-prompt"},
+    {id: "file-browse-certificate-spec"},
+  ]);
+  fp.init(window, importEmail, nsIFilePicker.modeOpen);
+  fp.appendFilter(fileCertSpec, gCertFileTypes);
   fp.appendFilters(nsIFilePicker.filterAll);
   fp.open(rv => {
     if (rv == nsIFilePicker.returnOK) {

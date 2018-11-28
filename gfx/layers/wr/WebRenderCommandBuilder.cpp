@@ -285,7 +285,8 @@ UpdateContainerLayerPropertiesAndDetectChange(nsDisplayItem* aItem, BlobItemData
       if (changed) {
         std::stringstream ss;
         //ss << trans << ' ' << aData->mTransform;
-        //GP("UpdateContainerLayerPropertiesAndDetectChange Matrix %d %s\n", changed, ss.str().c_str());
+        //GP("UpdateContainerLayerPropertiesAndDetectChange Matrix %d %s\n",
+        //   changed, ss.str().c_str());
       }
 
       aData->mTransform = trans;
@@ -437,9 +438,13 @@ struct DIGroup
       UniquePtr<nsDisplayItemGeometry> geometry(aItem->AllocateGeometry(aBuilder));
       /* Instead of doing this dance, let's just invalidate the old rect and the
        * new rect.
-      combined = aData->mClip.ApplyNonRoundedIntersection(aData->mGeometry->ComputeInvalidationRegion());
+      combined =
+        aData->mClip.ApplyNonRoundedIntersection(
+          aData->mGeometry->ComputeInvalidationRegion());
       combined.MoveBy(shift);
-      combined.Or(combined, clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion()));
+      combined.Or(combined,
+                  clip.ApplyNonRoundedIntersection(
+                    geometry->ComputeInvalidationRegion()));
       aData->mGeometry = std::move(geometry);
       */
       combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
@@ -678,7 +683,9 @@ struct DIGroup
 
     PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder);
 
-    // XXX: set this correctly perhaps using aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);?
+    // XXX: set this correctly perhaps using
+    // aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).
+    //   Contains(paintBounds);?
     wr::OpacityType opacity = wr::OpacityType::HasAlphaChannel;
 
     TakeExternalSurfaces(recorder, mExternalSurfaces, aWrManager, aResources);

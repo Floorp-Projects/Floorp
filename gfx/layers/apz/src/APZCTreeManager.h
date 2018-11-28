@@ -121,7 +121,8 @@ struct ScrollThumbData;
  * Note that the ClearTree function MUST be called when this class is no longer needed;
  * see the method documentation for details.
  *
- * Behaviour of APZ is controlled by a number of preferences shown \ref APZCPrefs "here".
+ * Behaviour of APZ is controlled by a number of preferences shown
+ * \ref APZCPrefs "here".
  */
 class APZCTreeManager : public IAPZCTreeManager
                       , public APZInputBridge {
@@ -185,12 +186,13 @@ public:
    * @param aRootLayerTreeId The layer tree ID of the root layer corresponding
    *                         to this APZCTreeManager
    * @param aRoot The root of the (full) layer tree
-   * @param aFirstPaintLayersId The layers id of the subtree to which aIsFirstPaint
-   *                            applies.
-   * @param aIsFirstPaint True if the layers update that this is called in response
-   *                      to included a first-paint. If this is true, the part of
-   *                      the tree that is affected by the first-paint flag is
-   *                      indicated by the aFirstPaintLayersId parameter.
+   * @param aFirstPaintLayersId The layers id of the subtree to which
+   *                            aIsFirstPaint applies.
+   * @param aIsFirstPaint True if the layers update that this is called in
+   *                      response to included a first-paint. If this is true,
+   *                      the part of the tree that is affected by the
+   *                      first-paint flag is indicated by the
+   *                      aFirstPaintLayersId parameter.
    * @param aPaintSequenceNumber The sequence number of the paint that triggered
    *                             this layer update. Note that every layer child
    *                             process' layer subtree has its own sequence
@@ -425,13 +427,20 @@ public:
    * to the tree manager object as TM.
    * Here's what happens when C receives a touch-move event:
    *   - C.TrackTouch() calls TM.DispatchScroll() with index = 0.
-   *   - TM.DispatchScroll() calls B.AttemptScroll() (since B is at index 0 in the chain).
-   *   - B.AttemptScroll() scrolls B. If there is overscroll, it calls TM.DispatchScroll() with index = 1.
-   *   - TM.DispatchScroll() calls C.AttemptScroll() (since C is at index 1 in the chain)
-   *   - C.AttemptScroll() scrolls C. If there is overscroll, it calls TM.DispatchScroll() with index = 2.
-   *   - TM.DispatchScroll() calls A.AttemptScroll() (since A is at index 2 in the chain)
-   *   - A.AttemptScroll() scrolls A. If there is overscroll, it calls TM.DispatchScroll() with index = 3.
-   *   - TM.DispatchScroll() discards the rest of the scroll as there are no more elements in the chain.
+   *   - TM.DispatchScroll() calls B.AttemptScroll() (since B is at index 0 in
+   *     the chain).
+   *   - B.AttemptScroll() scrolls B. If there is overscroll, it calls
+   *     TM.DispatchScroll() with index = 1.
+   *   - TM.DispatchScroll() calls C.AttemptScroll() (since C is at index 1 in
+   *     the chain)
+   *   - C.AttemptScroll() scrolls C. If there is overscroll, it calls
+   *     TM.DispatchScroll() with index = 2.
+   *   - TM.DispatchScroll() calls A.AttemptScroll() (since A is at index 2 in
+   *     the chain)
+   *   - A.AttemptScroll() scrolls A. If there is overscroll, it calls
+   *     TM.DispatchScroll() with index = 3.
+   *   - TM.DispatchScroll() discards the rest of the scroll as there are no
+   *     more elements in the chain.
    *
    * Note: this should be used for panning only. For handing off overscroll for
    *       a fling, use DispatchFling().

@@ -54,18 +54,21 @@ struct FrameMetrics {
 
   typedef ScrollableLayerGuid::ViewID ViewID;
 public:
+  // clang-format off
   MOZ_DEFINE_ENUM_WITH_BASE_AT_CLASS_SCOPE(
     ScrollOffsetUpdateType, uint8_t, (
       eNone,          // The default; the scroll offset was not updated
       eMainThread,    // The scroll offset was updated by the main thread.
-      ePending,       // The scroll offset was updated on the main thread, but not
-                      // painted, so the layer texture data is still at the old
-                      // offset.
-      eRestore        // The scroll offset was updated by the main thread, but as
-                      // a restore from history or after a frame reconstruction.
-                      // In this case, APZ can ignore the offset change if the
-                      // user has done an APZ scroll already.
+      ePending,       // The scroll offset was updated on the main thread, but
+                      // not painted, so the layer texture data is still at the
+                      // old offset.
+      eRestore        // The scroll offset was updated by the main thread, but
+                      // as a restore from history or after a frame
+                      // reconstruction.  In this case, APZ can ignore the
+                      // offset change if the user has done an APZ scroll
+                      // already.
   ));
+  // clang-format on
 
   FrameMetrics()
     : mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID)
@@ -838,12 +841,14 @@ struct ScrollSnapInfo {
   nsTArray<nsPoint> mScrollSnapCoordinates;
 };
 
+// clang-format off
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
   OverscrollBehavior, uint8_t, (
     Auto,
     Contain,
     None
 ));
+// clang-format on
 
 struct OverscrollBehaviorInfo {
   OverscrollBehaviorInfo()

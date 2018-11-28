@@ -2262,9 +2262,9 @@ gfxPlatform::CreateCMSOutputProfile()
         /* Determine if we're using the internal override to force sRGB as
            an output profile for reftests. See Bug 452125.
 
-           Note that we don't normally (outside of tests) set a
-           default value of this preference, which means nsIPrefBranch::GetBoolPref
-           will typically throw (and leave its out-param untouched).
+           Note that we don't normally (outside of tests) set a default value
+           of this preference, which means nsIPrefBranch::GetBoolPref will
+           typically throw (and leave its out-param untouched).
          */
         if (Preferences::GetBool(GFX_PREF_CMS_FORCE_SRGB, false)) {
             gCMSOutputProfile = GetCMSsRGBProfile();
@@ -2882,10 +2882,13 @@ gfxPlatform::InitWebRenderConfig()
 
   // On Nightly:
   //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified
-  //   WR! WR+   => means WR was enabled via gfx.webrender.{all,enabled} or envvar
+  //   WR! WR+   => means WR was enabled via gfx.webrender.{all,enabled} or
+  //                envvar
   // On Beta/Release:
-  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified on qualified hardware
-  //   WR! WR+   => means WR was enabled via envvar, possibly on unqualified hardware.
+  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified on
+  //                qualified hardware
+  //   WR! WR+   => means WR was enabled via envvar, possibly on unqualified
+  //                hardware.
   // In all cases WR- means WR was not enabled, for one of many possible reasons.
   ScopedGfxFeatureReporter reporter("WR", prefEnabled || envvarEnabled);
   if (!XRE_IsParentProcess()) {
@@ -3186,7 +3189,8 @@ gfxPlatform::ContentUsesTiling() const
 /***
  * The preference "layout.frame_rate" has 3 meanings depending on the value:
  *
- * -1 = Auto (default), use hardware vsync or software vsync @ 60 hz if hw vsync fails.
+ * -1 = Auto (default), use hardware vsync or software vsync @ 60 hz if hw
+ *      vsync fails.
  *  0 = ASAP mode - used during talos testing.
  *  X = Software vsync at a rate of X times per second.
  */

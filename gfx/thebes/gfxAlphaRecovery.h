@@ -89,17 +89,18 @@ public:
         const uint32_t GREEN_MASK = 0x0000FF00;
         const uint32_t ALPHA_MASK = 0xFF000000;
 
-        /* |diff| here is larger when the source image pixel is more transparent.
-           If both renderings are from the same source image composited with OVER,
-           then the color values on white will always be greater than those on
-           black, so |diff| would not overflow.  However, overflow may happen, for
-           example, when a plugin plays a video and the image is rapidly changing.
-           If there is overflow, then behave as if we limit to the difference to
+        /* |diff| here is larger when the source image pixel is more
+           transparent.  If both renderings are from the same source image
+           composited with OVER, then the color values on white will always be
+           greater than those on black, so |diff| would not overflow.  However,
+           overflow may happen, for example, when a plugin plays a video and
+           the image is rapidly changing.  If there is overflow, then behave as
+           if we limit to the difference to
            >= 0, which will make the rendering opaque.  (Without this overflow
            will make the rendering transparent.) */
         uint32_t diff = (white & GREEN_MASK) - (black & GREEN_MASK);
-        /* |diff| is 0xFFFFxx00 on overflow and 0x0000xx00 otherwise, so use this
-            to limit the transparency. */
+        /* |diff| is 0xFFFFxx00 on overflow and 0x0000xx00 otherwise, so use
+           this to limit the transparency. */
         uint32_t limit = diff & ALPHA_MASK;
         /* The alpha bits of the result */
         uint32_t alpha = (ALPHA_MASK - (diff << 16)) | limit;
