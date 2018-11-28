@@ -10,24 +10,25 @@ const evidence = {
   log: "",
 };
 
-function listenerA(x) {
+function listenerA(x = 1) {
   evidence.a += x;
   evidence.log += "a";
 }
 
-function listenerB(x) {
+function listenerB(x = 1) {
   evidence.b += x;
   evidence.log += "b";
 }
 
-function listenerC(x) {
+function listenerC(x = 1) {
   evidence.c += x;
   evidence.log += "c";
 }
 
 decorate_task(
-  async function() {
-    const eventEmitter = new EventEmitter();
+  withSandboxManager(Assert),
+  async function(sandboxManager) {
+    const eventEmitter = new EventEmitter(sandboxManager);
 
     // Fire an unrelated event, to make sure nothing goes wrong
     eventEmitter.on("nothing");
@@ -38,7 +39,7 @@ decorate_task(
     eventEmitter.once("event", listenerC);
 
     // one event for all listeners
-    eventEmitter.emit("event", 1);
+    eventEmitter.emit("event");
     // another event for a and b, since c should have turned off already
     eventEmitter.emit("event", 10);
 
@@ -95,5 +96,37 @@ decorate_task(
 
     is(handlerRunCount, 2, "Mutation handler was executed twice.");
     is(data.count, 0, "Event data cannot be mutated by handlers.");
+  }
+);
+
+decorate_task(
+  withSandboxManager(Assert),
+  async function sandboxedEmitter(sandboxManager) {
+    const eventEmitter = new EventEmitter(sandboxManager);
+
+    // Event handlers inside the sandbox should be run in response to
+    // events triggered outside the sandbox.
+    sandboxManager.addGlobal("emitter", eventEmitter.createSandboxedEmitter());
+    sandboxManager.evalInSandbox(`
+      this.eventCounts = {on: 0, once: 0};
+      emitter.on("event", value => {
+        this.eventCounts.on += value;
+      });
+      emitter.once("eventOnce", value => {
+        this.eventCounts.once += value;
+      });
+    `);
+
+    eventEmitter.emit("event", 5);
+    eventEmitter.emit("event", 10);
+    eventEmitter.emit("eventOnce", 5);
+    eventEmitter.emit("eventOnce", 10);
+    await Promise.resolve();
+
+    const eventCounts = sandboxManager.evalInSandbox("this.eventCounts");
+    Assert.deepEqual(eventCounts, {
+      on: 15,
+      once: 5,
+    }, "Events emitted outside a sandbox trigger handlers within a sandbox.");
   }
 );
