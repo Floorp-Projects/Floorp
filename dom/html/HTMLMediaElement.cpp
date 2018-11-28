@@ -4693,17 +4693,23 @@ HTMLMediaElement::UnbindFromTree(bool aDeep, bool aNullParent)
   mUnboundFromTree = true;
   mVisibilityState = Visibility::UNTRACKED;
 
+  if (GetShadowRoot() && IsInComposedDoc()) {
+    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+      "HTMLMediaElement::UnbindFromTree::UAWidgetUnbindFromTree",
+      [self = RefPtr<Element>(this)]() {
+        nsContentUtils::DispatchChromeEvent(
+          self->OwnerDoc(), self,
+          NS_LITERAL_STRING("UAWidgetUnbindFromTree"),
+          CanBubble::eYes, Cancelable::eNo);
+        self->UnattachShadow();
+      })
+    );
+  }
+
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 
   MOZ_ASSERT(IsHidden());
   NotifyDecoderActivityChanges();
-
-  AsyncEventDispatcher* dispatcher =
-    new AsyncEventDispatcher(this,
-                             NS_LITERAL_STRING("UAWidgetUnbindFromTree"),
-                             CanBubble::eYes,
-                             ChromeOnlyDispatch::eYes);
-  dispatcher->RunDOMEventWhenSafe();
 
   RefPtr<HTMLMediaElement> self(this);
   nsCOMPtr<nsIRunnable> task =

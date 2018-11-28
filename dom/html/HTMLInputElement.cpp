@@ -4694,6 +4694,19 @@ HTMLInputElement::UnbindFromTree(bool aDeep, bool aNullParent)
     WillRemoveFromRadioGroup();
   }
 
+  if (GetShadowRoot() && IsInComposedDoc()) {
+    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+      "HTMLInputElement::UnbindFromTree::UAWidgetUnbindFromTree",
+      [self = RefPtr<Element>(this)]() {
+        nsContentUtils::DispatchChromeEvent(
+          self->OwnerDoc(), self,
+          NS_LITERAL_STRING("UAWidgetUnbindFromTree"),
+          CanBubble::eYes, Cancelable::eNo);
+        self->UnattachShadow();
+      })
+    );
+  }
+
   nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
   nsGenericHTMLFormElementWithState::UnbindFromTree(aDeep, aNullParent);
 
@@ -4705,20 +4718,6 @@ HTMLInputElement::UnbindFromTree(bool aDeep, bool aNullParent)
 
   // And now make sure our state is up to date
   UpdateState(false);
-
-  if (GetShadowRoot() && IsInComposedDoc()) {
-    RefPtr<Element> self = this;
-    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-      "HTMLInputElement::UnbindFromTree::UAWidgetUnbindFromTree",
-      [self]() {
-        nsContentUtils::DispatchChromeEvent(
-          self->OwnerDoc(), self,
-          NS_LITERAL_STRING("UAWidgetUnbindFromTree"),
-          CanBubble::eYes, Cancelable::eNo);
-        self->UnattachShadow();
-      })
-    );
-  }
 }
 
 void
