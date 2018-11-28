@@ -18,15 +18,12 @@ xmlns="http://www.w3.org/1999/xhtml"
 >
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-for (let script of [
-  "chrome://browser/content/browser.js",
-  "chrome://browser/content/browser-places.js",
-  "chrome://global/content/globalOverlay.js",
-  "chrome://browser/content/utilityOverlay.js",
+Services.scriptloader.loadSubScript("chrome://browser/content/browser.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js", this);
+Services.scriptloader.loadSubScript("chrome://global/content/globalOverlay.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/utilityOverlay.js", this);
 #ifdef XP_MACOSX
-  "chrome://global/content/macWindowMenu.js",
+Services.scriptloader.loadSubScript("chrome://global/content/macWindowMenu.js", this);
 #endif
-]) {
-  Services.scriptloader.loadSubScript(script, this);
-}
+
 </script>
