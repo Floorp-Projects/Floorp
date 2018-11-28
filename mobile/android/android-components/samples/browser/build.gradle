@@ -106,11 +106,13 @@ configurations {
 }
 
 dependencies {
+    implementation project(':concept-awesomebar')
     implementation project(':concept-engine')
     implementation project(':concept-tabstray')
     implementation project(':concept-toolbar')
     implementation project(':concept-storage')
 
+    implementation project(':browser-awesomebar')
     implementation project(':browser-engine-system')
     implementation project(':browser-domains')
     implementation project(':browser-search')
@@ -120,6 +122,7 @@ dependencies {
     implementation project(':browser-menu')
     implementation project(':browser-storage-memory')
 
+    implementation project(':feature-awesomebar')
     implementation project(':feature-contextmenu')
     implementation project(':feature-customtabs')
     implementation project(':feature-intent')

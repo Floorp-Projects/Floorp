@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.*
+import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
@@ -73,6 +74,12 @@ class BrowserFragment : Fragment(), BackHandler {
         }
 
         tabsToolbarFeature = TabsToolbarFeature(toolbar, components.sessionManager, ::showTabs)
+
+        AwesomeBarFeature(awesomeBar, toolbar, engineView)
+            .addSessionProvider(components.sessionManager, components.tabsUseCases.selectTab)
+            .addSearchProvider(
+                components.searchEngineManager.getDefaultSearchEngine(requireContext()),
+                components.searchUseCases.defaultSearch)
 
         downloadsFeature = DownloadsFeature(
             requireContext(),

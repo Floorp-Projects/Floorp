@@ -21,7 +21,7 @@ private const val PROVIDER_QUERY_THREADS = 3
 private const val DEFAULT_TITLE_TEXT_COLOR = 0xFF272727.toInt()
 private const val DEFAULT_DESCRIPTION_TEXT_COLOR = 0xFF737373.toInt()
 private const val DEFAULT_CHIP_TEXT_COLOR = 0xFF272727.toInt()
-private const val DEFAULT_CHIP_BACKGROUND_COLOR = 0xFFFFEEEE.toInt()
+private const val DEFAULT_CHIP_BACKGROUND_COLOR = 0xFFEEEEEE.toInt()
 
 /**
  * A customizable [AwesomeBar] implementation.
