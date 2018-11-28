@@ -2869,6 +2869,7 @@ APZCTreeManager::FindRootContentOrRootApzc() const
   return resultNode ? resultNode->GetApzc() : nullptr;
 }
 
+// clang-format off
 /* The methods GetScreenToApzcTransform() and GetApzcToGeckoTransform() return
    some useful transformations that input events may need applied. This is best
    illustrated with an example. Consider a chain of layers, L, M, N, O, P, Q, R. Layer L
@@ -2959,6 +2960,7 @@ APZCTreeManager::FindRootContentOrRootApzc() const
    The APZCs also obviously have LT, LN, PT, and PN, so all of the above transformation combinations
    required can be generated.
  */
+// clang-format on
 
 /*
  * See the long comment above for a detailed explanation of this function.
