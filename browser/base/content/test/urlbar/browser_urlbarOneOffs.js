@@ -167,7 +167,7 @@ add_task(async function searchWith() {
 
   let item = gURLBar.popup.richlistbox.firstElementChild;
   Assert.equal(item._actionText.textContent,
-               "Search with " + Services.search.currentEngine.name,
+               "Search with " + Services.search.defaultEngine.name,
                "Sanity check: first result's action text");
 
   // Alt+Down to the first one-off.  Now the first result and the first one-off
@@ -176,7 +176,7 @@ add_task(async function searchWith() {
   assertState(0, 0, typedValue);
 
   let engineName = gURLBar.popup.oneOffSearchButtons.selectedButton.engine.name;
-  Assert.notEqual(engineName, Services.search.currentEngine.name,
+  Assert.notEqual(engineName, Services.search.defaultEngine.name,
                   "Sanity check: First one-off engine should not be " +
                   "the current engine");
   Assert.equal(item._actionText.textContent,
@@ -235,7 +235,7 @@ add_task(async function collapsedOneOffs() {
   // Disable all the engines but the current one, check the oneoffs are
   // collapsed and that moving up selects the last match.
   let engines = Services.search.getVisibleEngines()
-                               .filter(e => e.name != Services.search.currentEngine.name);
+                               .filter(e => e.name != Services.search.defaultEngine.name);
   await SpecialPowers.pushPrefEnv({"set": [
     [ "browser.search.hiddenOneOffs", engines.map(e => e.name).join(",") ],
   ]});
