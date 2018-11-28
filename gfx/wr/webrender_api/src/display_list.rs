@@ -23,8 +23,9 @@ use {ImageRendering, LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSideOff
 use {LayoutTransform, LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, MixBlendMode};
 use {PipelineId, PropertyBinding, PushReferenceFrameDisplayListItem};
 use {PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
-use {RectangleDisplayItem, ReferenceFrame, ScrollFrameDisplayItem, ScrollSensitivity, Shadow};
-use {SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, StickyOffsetBounds};
+use {RectangleDisplayItem, ReferenceFrame, ScrollFrameDisplayItem, ScrollSensitivity};
+use {SerializedDisplayItem, Shadow, SpecificDisplayItem};
+use {StackingContext, StickyFrameDisplayItem, StickyOffsetBounds};
 use {TextDisplayItem, TransformStyle, YuvColorSpace, YuvData, YuvImageDisplayItem, ColorDepth};
 
 // We don't want to push a long text-run. If a text-run is too long, split it into several parts.
@@ -691,16 +692,16 @@ impl<'a> Write for SizeCounter {
 /// If this assumption is incorrect, the result will be Undefined Behaviour. This
 /// assumption should hold for all derived Serialize impls, which is all we currently
 /// use.
-fn serialize_fast<T: Serialize>(vec: &mut Vec<u8>, e: &T) {
+fn serialize_fast<T: Serialize>(vec: &mut Vec<u8>, e: T) {
     // manually counting the size is faster than vec.reserve(bincode::serialized_size(&e) as usize) for some reason
     let mut size = SizeCounter(0);
-    bincode::serialize_into(&mut size, e).unwrap();
+    bincode::serialize_into(&mut size, &e).unwrap();
     vec.reserve(size.0);
 
     let old_len = vec.len();
     let ptr = unsafe { vec.as_mut_ptr().add(old_len) };
     let mut w = UnsafeVecWriter(ptr);
-    bincode::serialize_into(&mut w, e).unwrap();
+    bincode::serialize_into(&mut w, &e).unwrap();
 
     // fix up the length
     unsafe { vec.set_len(old_len + size.0); }
@@ -964,43 +965,36 @@ impl DisplayListBuilder {
     /// NOTE: It is usually preferable to use the specialized methods to push
     /// display items. Pushing unexpected or invalid items here may
     /// result in WebRender panicking or behaving in unexpected ways.
-    pub fn push_item(&mut self, item: SpecificDisplayItem, info: &LayoutPrimitiveInfo) {
+    pub fn push_item(&mut self, item: &SpecificDisplayItem, info: &LayoutPrimitiveInfo) {
         serialize_fast(
             &mut self.data,
-            &DisplayItem {
+            SerializedDisplayItem {
                 item,
-                clip_and_scroll: *self.clip_stack.last().unwrap(),
-                info: *info,
+                clip_and_scroll: self.clip_stack.last().unwrap(),
+                info,
             },
         )
     }
 
     fn push_item_with_clip_scroll_info(
         &mut self,
-        item: SpecificDisplayItem,
+        item: &SpecificDisplayItem,
         info: &LayoutPrimitiveInfo,
-        scrollinfo: ClipAndScrollInfo
+        clip_and_scroll: &ClipAndScrollInfo
     ) {
         serialize_fast(
             &mut self.data,
-            &DisplayItem {
+            SerializedDisplayItem {
                 item,
-                clip_and_scroll: scrollinfo,
-                info: *info,
+                clip_and_scroll,
+                info,
             },
         )
     }
 
-    fn push_new_empty_item(&mut self, item: SpecificDisplayItem, clip_and_scroll: &ClipAndScrollInfo) {
-        let info = LayoutPrimitiveInfo::new(LayoutRect::zero());
-        serialize_fast(
-            &mut self.data,
-            &DisplayItem {
-                item,
-                clip_and_scroll: *clip_and_scroll,
-                info,
-            }
-        )
+    fn push_new_empty_item(&mut self, item: &SpecificDisplayItem) {
+        let info = &LayoutPrimitiveInfo::new(LayoutRect::zero());
+        self.push_item(item, info)
     }
 
     fn push_iter_impl<I>(data: &mut Vec<u8>, iter_source: I)
@@ -1050,11 +1044,11 @@ impl DisplayListBuilder {
 
     pub fn push_rect(&mut self, info: &LayoutPrimitiveInfo, color: ColorF) {
         let item = SpecificDisplayItem::Rectangle(RectangleDisplayItem { color });
-        self.push_item(item, info);
+        self.push_item(&item, info);
     }
 
     pub fn push_clear_rect(&mut self, info: &LayoutPrimitiveInfo) {
-        self.push_item(SpecificDisplayItem::ClearRectangle, info);
+        self.push_item(&SpecificDisplayItem::ClearRectangle, info);
     }
 
     pub fn push_line(
@@ -1072,7 +1066,7 @@ impl DisplayListBuilder {
             style,
         });
 
-        self.push_item(item, info);
+        self.push_item(&item, info);
     }
 
     pub fn push_image(
@@ -1094,7 +1088,7 @@ impl DisplayListBuilder {
             color,
         });
 
-        self.push_item(item, info);
+        self.push_item(&item, info);
     }
 
     /// Push a yuv image. All planar data in yuv image should use the same buffer type.
@@ -1112,7 +1106,7 @@ impl DisplayListBuilder {
             color_space,
             image_rendering,
         });
-        self.push_item(item, info);
+        self.push_item(&item, info);
     }
 
     pub fn push_text(
@@ -1130,7 +1124,7 @@ impl DisplayListBuilder {
         });
 
         for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
-            self.push_item(item, info);
+            self.push_item(&item, info);
             self.push_iter(split_glyphs);
         }
     }
@@ -1173,7 +1167,7 @@ impl DisplayListBuilder {
     ) {
         let item = SpecificDisplayItem::Border(BorderDisplayItem { details, widths });
 
-        self.push_item(item, info);
+        self.push_item(&item, info);
     }
 
     pub fn push_box_shadow(
@@ -1197,7 +1191,7 @@ impl DisplayListBuilder {
             clip_mode,
         });
 
-        self.push_item(item, info);
+        self.push_item(&item, info);
     }
 
     /// Pushes a linear gradient to be displayed.
@@ -1227,7 +1221,7 @@ impl DisplayListBuilder {
             tile_spacing,
         });
 
-        self.push_item(item, info);
+        self.push_item(&item, info);
     }
 
     /// Pushes a radial gradient to be displayed.
@@ -1246,7 +1240,7 @@ impl DisplayListBuilder {
             tile_spacing,
         });
 
-        self.push_item(item, info);
+        self.push_item(&item, info);
     }
 
     pub fn push_reference_frame(
@@ -1263,13 +1257,12 @@ impl DisplayListBuilder {
                 id,
             },
         });
-        self.push_item(item, info);
+        self.push_item(&item, info);
         id
     }
 
     pub fn pop_reference_frame(&mut self) {
-        let clip_and_scroll = *self.clip_stack.last().unwrap();
-        self.push_new_empty_item(SpecificDisplayItem::PopReferenceFrame, &clip_and_scroll);
+        self.push_new_empty_item(&SpecificDisplayItem::PopReferenceFrame);
     }
 
     pub fn push_stacking_context(
@@ -1290,21 +1283,19 @@ impl DisplayListBuilder {
             },
         });
 
-        self.push_item(item, info);
+        self.push_item(&item, info);
         self.push_iter(filters);
     }
 
     pub fn pop_stacking_context(&mut self) {
-        let clip_and_scroll = *self.clip_stack.last().unwrap();
-        self.push_new_empty_item(SpecificDisplayItem::PopStackingContext, &clip_and_scroll);
+        self.push_new_empty_item(&SpecificDisplayItem::PopStackingContext);
     }
 
     pub fn push_stops(&mut self, stops: &[GradientStop]) {
         if stops.is_empty() {
             return;
         }
-        let clip_and_scroll = *self.clip_stack.last().unwrap();
-        self.push_new_empty_item(SpecificDisplayItem::SetGradientStops, &clip_and_scroll);
+        self.push_new_empty_item(&SpecificDisplayItem::SetGradientStops);
         self.push_iter(stops);
     }
 
@@ -1372,9 +1363,9 @@ impl DisplayListBuilder {
         });
 
         self.push_item_with_clip_scroll_info(
-            item,
+            &item,
             &LayoutPrimitiveInfo::with_clip_rect(content_rect, clip_rect),
-            ClipAndScrollInfo::simple(parent),
+            &ClipAndScrollInfo::simple(parent),
         );
         self.push_iter(complex_clips);
 
@@ -1391,8 +1382,7 @@ impl DisplayListBuilder {
         I::IntoIter: ExactSizeIterator + Clone,
     {
         let id = self.generate_clip_chain_id();
-        let clip_and_scroll = *self.clip_stack.last().unwrap();
-        self.push_new_empty_item(SpecificDisplayItem::ClipChain(ClipChainItem { id, parent }), &clip_and_scroll);
+        self.push_new_empty_item(&SpecificDisplayItem::ClipChain(ClipChainItem { id, parent }));
         self.push_iter(clips);
         id
     }
@@ -1454,7 +1444,7 @@ impl DisplayListBuilder {
 
         let info = LayoutPrimitiveInfo::new(clip_rect);
 
-        self.push_item_with_clip_scroll_info(item, &info, scrollinfo);
+        self.push_item_with_clip_scroll_info(&item, &info, &scrollinfo);
         self.push_iter(complex_clips);
         id
     }
@@ -1477,7 +1467,7 @@ impl DisplayListBuilder {
         });
 
         let info = LayoutPrimitiveInfo::new(frame_rect);
-        self.push_item(item, &info);
+        self.push_item(&item, &info);
         id
     }
 
@@ -1509,24 +1499,21 @@ impl DisplayListBuilder {
             pipeline_id,
             ignore_missing_pipeline,
         });
-        self.push_item(item, info);
+        self.push_item(&item, info);
     }
 
     pub fn push_shadow(&mut self, info: &LayoutPrimitiveInfo, shadow: Shadow) {
-        self.push_item(SpecificDisplayItem::PushShadow(shadow), info);
+        self.push_item(&SpecificDisplayItem::PushShadow(shadow), info);
     }
 
     pub fn pop_all_shadows(&mut self) {
-        let clip_and_scroll = *self.clip_stack.last().unwrap();
-        self.push_new_empty_item(SpecificDisplayItem::PopAllShadows, &clip_and_scroll);
+        self.push_new_empty_item(&SpecificDisplayItem::PopAllShadows);
     }
 
     pub fn finalize(self) -> (PipelineId, LayoutSize, BuiltDisplayList) {
         assert!(self.save_state.is_none(), "Finalized DisplayListBuilder with a pending save");
 
         let end_time = precise_time_ns();
-
-
         (
             self.pipeline_id,
             self.content_size,
