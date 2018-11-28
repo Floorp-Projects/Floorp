@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Gizlilik Bildirimini",
   "firstrun_continue_to_login": "Devam et",
   "firstrun_skip_login": "Bu adımı atla",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Menüyü aç",
   "pocket_learn_more": "Daha fazla bilgi al"
 };

@@ -25,8 +25,8 @@ window.gActivityStreamStrings = {
   "menu_action_delete_pocket": "Slett frå Pocket",
   "menu_action_archive_pocket": "Arkiver i Pocket",
   "menu_action_show_file_mac_os": "Vis i Finder",
-  "menu_action_show_file_windows": "Opne mappa med fila",
-  "menu_action_show_file_linux": "Opne mappa med fila",
+  "menu_action_show_file_windows": "Opne innhaldsmappe",
+  "menu_action_show_file_linux": "Opne innhaldsmappe",
   "menu_action_show_file_default": "Vis fil",
   "menu_action_open_file": "Opne fil",
   "menu_action_copy_download_link": "Kopier nedlastingslenke",
@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Personvernpraksis",
   "firstrun_continue_to_login": "Fortset",
   "firstrun_skip_login": "Hopp over dette steget",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Opne meny",
   "pocket_learn_more": "Les meir"
 };

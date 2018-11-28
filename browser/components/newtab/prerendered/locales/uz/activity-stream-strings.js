@@ -107,18 +107,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "Continue",
   "firstrun_skip_login": "Skip this step",
-  "context_menu_title": "Open menu",
-  "prefs_restore_defaults_button": "Asliga tiklash",
-  "settings_pane_header": "Yangi ichki oyna parametrlari",
-  "settings_pane_body2": "Bu sahifada nimani ko‘rishni xohlasangiz, o‘shani tanlang.",
-  "settings_pane_search_header": "Izlash",
-  "settings_pane_search_body": "Yangi ichki oynada internetdan izlash.",
-  "settings_pane_topsites_body": "Eng ko‘p kirilgan saytlarga kirish.",
-  "settings_pane_topsites_options_showmore": "Ikki qatorda ko‘rsatish",
-  "settings_pane_highlights_body2": "So‘nggi kirilgan qiziqarli saytlar yoki xatcho‘plarga qaytish yo‘lini toping.",
-  "settings_pane_highlights_options_visited": "Kirilgan saytlar",
-  "settings_pane_snippets_body": "Mozilladan internet madaniyati, tasodifiy memlar, Firefox haqidagi qisqa va oxirgi yangiliklarni o‘qib turing.",
-  "settings_pane_done_button": "Tayyor",
-  "settings_pane_topstories_options_sponsored": "Homiylik maqolalarini ko‘rsatish",
-  "pocket_description": "Endi Mozilla tarkibiga kiruvchi Pocket xizmati yordamida yuqori sifatli kontentni o‘zingiz uchun kashf qiling. Endi siz o‘qishga vaqtingiz bo‘lmagan saytlarni keyinroq ham o‘qiy olasiz."
+  "context_menu_title": "Open menu"
 };

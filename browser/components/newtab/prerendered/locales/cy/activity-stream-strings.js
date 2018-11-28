@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Hysbysiad Preifatrwydd",
   "firstrun_continue_to_login": "Parhau",
   "firstrun_skip_login": "Hepgor y cam hwn",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Agor y ddewislen",
   "pocket_learn_more": "Dysgu Rhagor"
 };
