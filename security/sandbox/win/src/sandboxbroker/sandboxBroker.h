@@ -51,9 +51,6 @@ public:
   void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel);
 
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel);
-#ifdef MOZ_ENABLE_SKIA_PDF
-  bool SetSecurityLevelForPDFiumProcess();
-#endif
   enum SandboxLevel {
     LockDown,
     Restricted

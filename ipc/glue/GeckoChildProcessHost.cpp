@@ -951,17 +951,6 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
         shouldSandboxCurrentProcess = true;
       }
       break;
-#ifdef MOZ_ENABLE_SKIA_PDF
-    case GeckoProcessType_PDFium:
-      if (!PR_GetEnv("MOZ_DISABLE_PDFIUM_SANDBOX")) {
-        bool ok = mSandboxBroker.SetSecurityLevelForPDFiumProcess();
-        if (!ok) {
-          return false;
-        }
-        shouldSandboxCurrentProcess = true;
-      }
-      break;
-#endif
     case GeckoProcessType_IPDLUnitTest:
       // XXX: We don't sandbox this process type yet
       break;
