@@ -139,29 +139,36 @@ bool STUNUDPSocketFilter::filter_incoming_packet(const mozilla::net::NetAddr *re
     return true;
   }
 
-  // Check if we had sent any stun request to this destination. If we had sent a request
-  // to this host, we check the transaction id, and we can add this address to whitelist.
+  // If it is a STUN response message and we can match its id with one of the pending
+  // requests, we can add this address into whitelist.
+  if (nr_is_stun_response_message(
+        reinterpret_cast<UCHAR*>(const_cast<uint8_t*>(data)), len)) {
+    const nr_stun_message_header *msg =
+      reinterpret_cast<const nr_stun_message_header*>(data);
+    PendingSTUNRequest pending_req(*remote_addr, msg->id);
+    std::set<PendingSTUNRequest>::iterator it = pending_requests_.find(pending_req);
+    if (it != pending_requests_.end()) {
+      pending_requests_.erase(it);
+      response_allowed_.erase(pending_req);
+      white_list_.insert(*remote_addr);
+      return true;
+    }
+  }
+  // If it's an incoming STUN request we let it pass and add it to the list of
+  // pending response for white listing once we answer.
+  if (nr_is_stun_request_message(
+      reinterpret_cast<UCHAR*>(const_cast<uint8_t*>(data)), len)) {
+    const nr_stun_message_header *msg =
+      reinterpret_cast<const nr_stun_message_header*>(data);
+    response_allowed_.insert(PendingSTUNRequest(*remote_addr, msg->id));
+    return true;
+  }
+  // Lastly if we have send a STUN request to the destination of this
+  // packet we allow it to send us anything back in case it's for example a
+  // DTLS message (but we don't white list).
   std::set<PendingSTUNRequest>::iterator it =
     pending_requests_.find(PendingSTUNRequest(*remote_addr));
   if (it != pending_requests_.end()) {
-    if (nr_is_stun_message(reinterpret_cast<UCHAR*>(const_cast<uint8_t*>(data)), len)) {
-      const nr_stun_message_header *msg = reinterpret_cast<const nr_stun_message_header*>(data);
-      // If it is a STUN response message and we can match its id with one of the pending
-      // requests, we can add this address into whitelist.
-      if (nr_is_stun_response_message(reinterpret_cast<UCHAR*>(const_cast<uint8_t*>(data)), len)) {
-        PendingSTUNRequest pending_req(*remote_addr, msg->id);
-        std::set<PendingSTUNRequest>::iterator it = pending_requests_.find(pending_req);
-        if (it != pending_requests_.end()) {
-          pending_requests_.erase(it);
-          response_allowed_.erase(pending_req);
-          white_list_.insert(*remote_addr);
-        }
-      } else {
-        // If it is a STUN message, but not a response message, we add it into response
-        // allowed list and allow outgoing filter to send a response back.
-        response_allowed_.insert(PendingSTUNRequest(*remote_addr, msg->id));
-      }
-    }
     return true;
   }
 
@@ -190,6 +197,8 @@ bool STUNUDPSocketFilter::filter_outgoing_packet(const mozilla::net::NetAddr *re
     std::set<PendingSTUNRequest>::iterator it =
       response_allowed_.find(PendingSTUNRequest(*remote_addr, msg->id));
     if (it != response_allowed_.end()) {
+      white_list_.insert(*remote_addr);
+      response_allowed_.erase(it);
       return true;
     }
   }
