@@ -33,7 +33,6 @@
 namespace js {
 namespace jit {
 
-// clang-format off
 //{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
@@ -800,7 +799,6 @@ template void MacroAssembler::storeFloat32(FloatRegister src, const Address& des
 template void MacroAssembler::storeFloat32(FloatRegister src, const BaseIndex& dest);
 
 //}}} check_macroassembler_style
-// clang-format on
 // ===============================================================
 
 #ifndef JS_CODEGEN_ARM64
