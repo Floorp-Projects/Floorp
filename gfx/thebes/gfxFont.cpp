@@ -3901,7 +3901,8 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
      * However, if this is system font, we should not do this for the rendering compatibility with
      * another application's UI on the platform.
      * XXX Should not use this hack if the font size is too small?
-     *     Such text cannot be read, this might be used for tight CSS rendering? (E.g., Acid2)
+     *     Such text cannot be read, this might be used for tight CSS
+     *     rendering? (E.g., Acid2)
      */
     if (!mStyle.systemFont && aIsBadUnderlineFont) {
         // First, we need 2 pixels between baseline and underline at least. Because many CJK characters

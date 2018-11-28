@@ -381,18 +381,24 @@ public:
      * Guarantees the following:
      * -- 0 <= result <= aMaxLength
      * -- result is the maximal value of N such that either
-     *       N < aMaxLength && line break at N && GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
-     *   OR  N < aMaxLength && hyphen break at N && GetAdvanceWidth(Range(aStart, N), aProvider) + GetHyphenWidth() <= aWidth
-     *   OR  N == aMaxLength && GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
+     *       N < aMaxLength && line break at N &&
+     *       GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
+     *   OR  N < aMaxLength && hyphen break at N &&
+     *       GetAdvanceWidth(Range(aStart, N), aProvider) +
+     *       GetHyphenWidth() <= aWidth
+     *   OR  N == aMaxLength &&
+     *       GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
      * where GetAdvanceWidth assumes the effect of
-     * SetLineBreaks(Range(aStart, N), aLineBreakBefore, N < aMaxLength, aProvider)
+     * SetLineBreaks(Range(aStart, N),
+     *               aLineBreakBefore, N < aMaxLength, aProvider)
      * -- if no such N exists, then result is the smallest N such that
      *       N < aMaxLength && line break at N
      *   OR  N < aMaxLength && hyphen break at N
      *   OR  N == aMaxLength
      *
      * The call has the effect of
-     * SetLineBreaks(Range(aStart, result), aLineBreakBefore, result < aMaxLength, aProvider)
+     * SetLineBreaks(Range(aStart, result), aLineBreakBefore,
+     *               result < aMaxLength, aProvider)
      * and the returned metrics and the invariants above reflect this.
      *
      * @param aMaxLength this can be UINT32_MAX, in which case the length used
@@ -416,11 +422,15 @@ public:
      * @param aUsedHyphenation if non-null, records if we selected a hyphenation break
      * @param aLastBreak if non-null and result is aMaxLength, we set this to
      * the maximal N such that
-     *       N < aMaxLength && line break at N && GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
-     *   OR  N < aMaxLength && hyphen break at N && GetAdvanceWidth(Range(aStart, N), aProvider) + GetHyphenWidth() <= aWidth
+     *       N < aMaxLength && line break at N &&
+     *       GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
+     *   OR  N < aMaxLength && hyphen break at N &&
+     *       GetAdvanceWidth(Range(aStart, N), aProvider) +
+     *         GetHyphenWidth() <= aWidth
      * or UINT32_MAX if no such N exists, where GetAdvanceWidth assumes
      * the effect of
-     * SetLineBreaks(Range(aStart, N), aLineBreakBefore, N < aMaxLength, aProvider)
+     * SetLineBreaks(Range(aStart, N), aLineBreakBefore,
+     *               N < aMaxLength, aProvider)
      *
      * @param aCanWordWrap true if we can break between any two grapheme
      * clusters. This is set by overflow-wrap|word-wrap: break-word

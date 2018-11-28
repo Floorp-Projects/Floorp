@@ -287,8 +287,8 @@ struct SurfaceCache
    * need to check the result of Insert() at all.
    *
    * @param aProvider    The new cache entry to insert into the cache.
-   * @return SUCCESS if the cache entry was inserted successfully. (But see above
-   *           for more information about when you should check this.)
+   * @return SUCCESS if the cache entry was inserted successfully. (But see
+   *           above for more information about when you should check this.)
    *         FAILURE if the cache entry could not be inserted, e.g. for capacity
    *           reasons. (But see above for more information about when you
    *           should check this.)

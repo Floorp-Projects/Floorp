@@ -204,7 +204,8 @@ public:
   * @param aDirection the local direction to set the RTP header extensions for
   * @param aExtensions the RTP header extensions to set
   * @return if all extensions were set it returns a success code,
-  *         if an extension fails to set it may immediately return an error code
+  *         if an extension fails to set it may immediately return an error
+  *         code
   * TODO webrtc.org 64 update: make return type void again
   */
   virtual MediaConduitErrorCode
@@ -457,10 +458,11 @@ public:
   /**
    * Function to configure send codec for the video session
    * @param sendSessionConfig: CodecConfiguration
-   * @result: On Success, the video engine is configured with passed in codec for send
-   *          On failure, video engine transmit functionality is disabled.
-   * NOTE: This API can be invoked multiple time. Invoking this API may involve restarting
-   *        transmission sub-system on the engine
+   * @result: On Success, the video engine is configured with passed in codec
+   *          for send. On failure, video engine transmit functionality is
+   *          disabled.
+   * NOTE: This API can be invoked multiple time. Invoking this API may involve
+   *       restarting transmission sub-system on the engine
    *
    */
   virtual MediaConduitErrorCode ConfigureSendMediaCodec(const VideoCodecConfig* sendSessionConfig) = 0;
@@ -468,8 +470,8 @@ public:
   /**
    * Function to configurelist of receive codecs for the video session
    * @param sendSessionConfig: CodecConfiguration
-   * NOTE: This API can be invoked multiple time. Invoking this API may involve restarting
-   *        reception sub-system on the engine
+   * NOTE: This API can be invoked multiple time. Invoking this API may involve
+   *       restarting reception sub-system on the engine
    *
    */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
@@ -530,19 +532,24 @@ public:
   SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
                         const RtpExtList& extensions) override = 0;
   /**
-   * Function to deliver externally captured audio sample for encoding and transport
+   * Function to deliver externally captured audio sample for encoding and
+   * transport
    * @param audioData [in]: Pointer to array containing a frame of audio
-   * @param lengthSamples [in]: Length of audio frame in samples in multiple of 10 milliseconds
-  *                             Ex: Frame length is 160, 320, 440 for 16, 32, 44 kHz sampling rates
-                                    respectively.
-                                    audioData[] is lengthSamples in size
-                                    say, for 16kz sampling rate, audioData[] should contain 160
-                                    samples of 16-bits each for a 10m audio frame.
-   * @param samplingFreqHz [in]: Frequency/rate of the sampling in Hz ( 16000, 32000 ...)
-   * @param capture_delay [in]:  Approx Delay from recording until it is delivered to VoiceEngine
-                                 in milliseconds.
-   * NOTE: ConfigureSendMediaCodec() SHOULD be called before this function can be invoked
-   *       This ensures the inserted audio-samples can be transmitted by the conduit
+   * @param lengthSamples [in]: Length of audio frame in samples in multiple of
+   *                            10 milliseconds
+   *                            Ex: Frame length is 160, 320, 440 for 16, 32,
+   *                                44 kHz sampling rates respectively.
+   *                                audioData[] is lengthSamples in size
+   *                                say, for 16kz sampling rate, audioData[]
+   *                                should contain 160 samples of 16-bits each
+   *                                for a 10m audio frame.
+   * @param samplingFreqHz [in]: Frequency/rate of the sampling in Hz ( 16000,
+   *                             32000 ...)
+   * @param capture_delay [in]:  Approx Delay from recording until it is
+   *                             delivered to VoiceEngine in milliseconds.
+   * NOTE: ConfigureSendMediaCodec() SHOULD be called before this function can
+   * be invoked. This ensures the inserted audio-samples can be transmitted by
+   * the conduit.
    *
    */
   virtual MediaConduitErrorCode SendAudioFrame(const int16_t audioData[],
@@ -555,16 +562,20 @@ public:
    * Function to grab a decoded audio-sample from the media engine for rendering
    * / playoutof length 10 milliseconds.
    *
-   * @param speechData [in]: Pointer to a array to which a 10ms frame of audio will be copied
-   * @param samplingFreqHz [in]: Frequency of the sampling for playback in Hertz (16000, 32000,..)
-   * @param capture_delay [in]: Estimated Time between reading of the samples to rendering/playback
-   * @param lengthSamples [out]: Will contain length of the audio frame in samples at return.
-                                 Ex: A value of 160 implies 160 samples each of 16-bits was copied
-                                     into speechData
+   * @param speechData [in]: Pointer to a array to which a 10ms frame of audio
+   *                         will be copied
+   * @param samplingFreqHz [in]: Frequency of the sampling for playback in
+   *                             Hertz (16000, 32000,..)
+   * @param capture_delay [in]: Estimated Time between reading of the samples
+   *                            to rendering/playback
+   * @param lengthSamples [out]: Will contain length of the audio frame in
+   *                             samples at return.
+   *                             Ex: A value of 160 implies 160 samples each of
+   *                                 16-bits was copied into speechData
    * NOTE: This function should be invoked every 10 milliseconds for the best
-   *          peformance
-   * NOTE: ConfigureRecvMediaCodec() SHOULD be called before this function can be invoked
-   *       This ensures the decoded samples are ready for reading.
+   * peformance
+   * NOTE: ConfigureRecvMediaCodec() SHOULD be called before this function can
+   * be invoked. This ensures the decoded samples are ready for reading.
    *
    */
   virtual MediaConduitErrorCode GetAudioFrame(int16_t speechData[],
