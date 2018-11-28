@@ -92,15 +92,14 @@ WorkletImpl::GetOrCreateThread()
 }
 
 void
-WorkletImpl::TerminateThread()
+WorkletImpl::NotifyWorkletFinished()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mWorkletThread) {
-    return;
-  }
 
-  mWorkletThread->Terminate();
-  mWorkletThread = nullptr;
+  if (mWorkletThread) {
+    mWorkletThread->Terminate();
+    mWorkletThread = nullptr;
+  }
   mWorkletLoadInfo.mPrincipal = nullptr;
 }
 
