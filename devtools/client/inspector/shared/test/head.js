@@ -133,52 +133,6 @@ var getFontFamilyDataURL = async function(font, nodeFront) {
 };
 
 /* *********************************************
- * RULE-VIEW
- * *********************************************
- * Rule-view related test utility functions
- * This object contains functions to get rules, get properties, ...
- */
-
-/**
- * Simulate a color change in a given color picker tooltip, and optionally wait
- * for a given element in the page to have its style changed as a result
- *
- * @param {RuleView} ruleView
- *        The related rule view instance
- * @param {SwatchColorPickerTooltip} colorPicker
- * @param {Array} newRgba
- *        The new color to be set [r, g, b, a]
- * @param {Object} expectedChange
- *        Optional object that needs the following props:
- *          - {DOMNode} element The element in the page that will have its
- *            style changed.
- *          - {String} name The style name that will be changed
- *          - {String} value The expected style value
- * The style will be checked like so: getComputedStyle(element)[name] === value
- */
-var simulateColorPickerChange = async function(ruleView, colorPicker,
-    newRgba, expectedChange) {
-  const onRuleViewChanged = ruleView.once("ruleview-changed");
-  info("Getting the spectrum colorpicker object");
-  const spectrum = await colorPicker.spectrum;
-  info("Setting the new color");
-  spectrum.rgb = newRgba;
-  info("Applying the change");
-  spectrum.updateUI();
-  spectrum.onChange();
-  info("Waiting for rule-view to update");
-  await onRuleViewChanged;
-
-  if (expectedChange) {
-    info("Waiting for the style to be applied on the page");
-    await waitForSuccess(() => {
-      const {element, name, value} = expectedChange;
-      return content.getComputedStyle(element)[name] === value;
-    }, "Color picker change applied on the page");
-  }
-};
-
-/* *********************************************
  * COMPUTED-VIEW
  * *********************************************
  * Computed-view related utility functions.
