@@ -8907,7 +8907,7 @@ nsDisplayTransform::CreateWebRenderCommands(
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
   Maybe<nsDisplayTransform*> deferredTransformItem;
-  if (!mFrame->HasPerspective()) {
+  if (!mFrame->ChildrenHavePerspective()) {
     // If it has perspective, we create a new scroll data via the
     // UpdateScrollData call because that scenario is more complex. Otherwise
     // we can just stash the transform on the StackingContextHelper and
@@ -8947,7 +8947,7 @@ nsDisplayTransform::UpdateScrollData(
   mozilla::layers::WebRenderScrollData* aData,
   mozilla::layers::WebRenderLayerScrollData* aLayerData)
 {
-  if (!mFrame->HasPerspective()) {
+  if (!mFrame->ChildrenHavePerspective()) {
     // This case is handled in CreateWebRenderCommands by stashing the transform
     // on the stacking context.
     return false;
