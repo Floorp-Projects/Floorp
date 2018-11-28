@@ -2,7 +2,7 @@ add_task(async function testBasicPromptNoStaging() {
   SpecialPowers.pushPrefEnv({set: [
     [PREF_APP_UPDATE_STAGING_ENABLED, false],
   ]});
-  await setAutoUpdateIsEnabled(false);
+  await UpdateUtils.setAppUpdateAutoEnabled(false);
 
   let updateParams = "promptWaitTime=0";
 
