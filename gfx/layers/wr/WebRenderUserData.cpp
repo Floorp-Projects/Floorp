@@ -306,6 +306,7 @@ WebRenderFallbackData::WebRenderFallbackData(WebRenderLayerManager* aWRManager, 
 
 WebRenderFallbackData::~WebRenderFallbackData()
 {
+  ClearImageKey();
 }
 
 nsDisplayItemGeometry*
