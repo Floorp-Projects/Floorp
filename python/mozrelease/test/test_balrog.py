@@ -27,8 +27,8 @@ DATA_PATH = Path(__file__).parent.joinpath('data')
     ({
         'release-type': 'beta',
         'product': 'firefox',
-        'version': GeckoVersion.parse('62.0b11'),
-    }, 'whatsnew-62.0.3.yml', 'Firefox-62.0b11.update.json'),
+        'version': GeckoVersion.parse('64.0'),
+    }, 'whatsnew-62.0.3.yml', 'Firefox-64.0b13.update.json'),
 ])
 def test_update_properties(context, config_file, output_file):
     with DATA_PATH.joinpath(config_file).open('r', encoding='utf-8') as f:

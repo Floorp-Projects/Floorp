@@ -1,7 +1,7 @@
 [
     {
         "fields": {
-            "detailsURL": "https://www.mozilla.org/%LOCALE%/firefox/62.0b11/releasenotes/",
+            "detailsURL": "https://www.mozilla.org/%LOCALE%/firefox/64.0/releasenotes/",
             "type": "minor"
         },
         "for": {}
