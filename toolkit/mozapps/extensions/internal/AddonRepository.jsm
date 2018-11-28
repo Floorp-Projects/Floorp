@@ -916,13 +916,11 @@ var AddonDatabase = {
     this.connectionPromise = null;
     this._loaded = false;
 
-    if (aSkipFlush || !this._saveTask) {
+    if (aSkipFlush) {
       return Promise.resolve();
     }
 
-    let promise = this._saveTask.finalize();
-    this._saveTask = null;
-    return promise;
+    return this.flush();
   },
 
   /**
