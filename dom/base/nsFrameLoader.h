@@ -48,7 +48,6 @@ namespace mozilla {
 class OriginAttributes;
 
 namespace dom {
-class BrowsingContext;
 class ChromeMessageSender;
 class ContentParent;
 class InProcessTabChildMessageManager;
@@ -121,8 +120,6 @@ public:
   already_AddRefed<nsITabParent> GetTabParent();
 
   already_AddRefed<nsILoadContext> LoadContext();
-
-  already_AddRefed<mozilla::dom::BrowsingContext> GetBrowsingContext();
 
   /**
    * Start loading the frame. This method figures out what to load
