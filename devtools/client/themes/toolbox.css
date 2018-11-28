@@ -338,7 +338,8 @@
   stroke: var(--theme-toolbar-checked-color);
 }
 
-#command-button-stop-replay::before, #command-button-replay::before {
+#command-button-stop-replay::before,
+#command-button-replay::before {
   background-image: var(--command-replay-image);
   fill: var(--theme-toolbar-photon-icon-color);
   -moz-context-properties: fill;
@@ -347,21 +348,18 @@
   background-size: contain;
 }
 
-
-#command-button-replay, #command-button-stop-replay {
+#command-button-replay,
+#command-button-stop-replay {
   background-color: transparent;
 }
 
-#command-button-replay:hover, #command-button-stop-replay:hover {
+#command-button-replay:hover,
+#command-button-stop-replay:hover {
   background: var(--toolbarbutton-background);
 }
 
 #command-button-stop-replay::before {
   fill: currentColor;
-}
-
-#command-button-stop-replay.recording::before{
-  fill: var(--red-60);
 }
 
 #command-button-scratchpad::before {
@@ -440,7 +438,9 @@
   pointer-events: none;
 }
 
-#toolbox-container.tabs-reordering .devtools-tab:not(.selected):hover .devtools-tab-line {
+#toolbox-container.tabs-reordering
+  .devtools-tab:not(.selected):hover
+  .devtools-tab-line {
   background: transparent;
   opacity: 0;
   transition: none;
@@ -451,7 +451,6 @@
   z-index: 1;
 }
 
-
 /*. webreplay */
 
 .webreplay-player {
@@ -461,8 +460,13 @@
   box-sizing: border-box;
   min-height: 29px;
 
-  --pause-image: url('data:image/svg+xml;utf8,<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><g fill-rule="evenodd"><path d="M5 12.503l.052-9a.5.5 0 0 0-1-.006l-.052 9a.5.5 0 0 0 1 .006zM12 12.497l-.05-9A.488.488 0 0 0 11.474 3a.488.488 0 0 0-.473.503l.05 9a.488.488 0 0 0 .477.497.488.488 0 0 0 .473-.503z"/></g></svg>');
-  --play-image: url('data:image/svg+xml;utf8,<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg"><g fill-rule="evenodd"><path d="M4 12.5l8-5-8-5v10zm-1 0v-10a1 1 0 0 1 1.53-.848l8 5a1 1 0 0 1 0 1.696l-8 5A1 1 0 0 1 3 12.5z" /></g></svg>');
+  --progress-recording-background: #ffebeb;
+  --progress-playing-background: #ebf6ff;
+
+  --recording-marker-background: hsl(14.9, 100%, 47.3%);
+  --recording-marker-background-hover: hsl(14.9, 100%, 37.3%);
+  --command-button-size: 14px;
+  --command-button-primary-size: 20px;
 }
 
 .webreplay-player .overlay-container {
@@ -472,28 +476,61 @@
 .webreplay-player .progressBar {
   position: relative;
   width: 100%;
-  height: 6px;
-  background: #DCDCDC;
-  margin: 11px 10px 11px 0;
+  height: 20px;
+  background: #fff;
+  margin: 4px 10px 4px 0;
+  border: 1px solid #bfc9d2;
 }
 
 .webreplay-player .progress {
   position: absolute;
-  width: 0;
+  width: 100%;
   height: 100%;
-  background: #B7B6B6;
+  background: var(--progress-playing-background);
+}
+
+.webreplay-player .recording .progress {
+  background: var(--progress-recording-background);
 }
 
 .webreplay-player .message {
   position: absolute;
   height: 100%;
-  width: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 4.5px;
+  top: calc(50% - 3.5px);
   background: var(--blue-50);
 }
 
+.webreplay-player .message.overlayed {
+  border: 1px solid var(--progress-playing-background);
+  top: 5.5px;
+}
+
+.webreplay-player .message.overlayed.future {
+  border-color: #fff;
+}
+
+.webreplay-player .recording .message.overlayed {
+  border-color: var(--progress-recording-background);
+}
+
+.webreplay-player .recording .message {
+  background: var(--recording-marker-background);
+}
+
+.webreplay-player .recording .message:hover {
+  background: var(--recording-marker-background-hover);
+}
+
 .webreplay-player .message:hover {
-  background: var(--blue-40);
+  background: var(--blue-60);
   cursor: pointer;
+}
+
+.webreplay-player .message:hover::before {
+  transform: scale(0.1);
 }
 
 .webreplay-player .commands {
@@ -502,39 +539,66 @@
 
 .webreplay-player .command-button {
   display: flex;
+  min-width: 17px;
+  opacity: 0.7;
 }
 
-.webreplay-player .command-button:hover {
-  background: #efefef;
+.webreplay-player .command-button.primary {
+  min-width: 24px;
 }
 
 .webreplay-player .btn {
-  width: 15px;
-  height: 19px;
-  background: #6A6A6A;
-  mask-size: 15px 19px;
+  width: var(--command-button-size);
+  height: var(--command-button-size);
+  mask-size: var(--command-button-size);
+  background: #6a6a6a;
   align-self: center;
+  margin: 0 auto;
+}
+
+.webreplay-player .primary .btn {
+  width: var(--command-button-primary-size);
+  height: var(--command-button-primary-size);
+  mask-size: var(--command-button-primary-size);
 }
 
 .webreplay-player .command-button.active:hover {
-  background: none;
+  background: #efefef;
+  cursor: pointer;
 }
 
-.webreplay-player .play-button {
-  mask-image: var(--play-image);
-  margin-right: 5px;
-  margin-left: 2px;
+.webreplay-player .command-button.active {
+  opacity: 1;
 }
 
-.webreplay-player .rewind-button {
-  mask-image: var(--play-image);
+.webreplay-player div.command-button .rewind {
   transform: scaleX(-1);
-  margin-left: 5px;
-  margin-right: 2px;
 }
 
-.webreplay-player .pause-button {
-  mask-image: var(--pause-image);
-  margin-left: 5px;
-  margin-right: 10px;
+.webreplay-player div.command-button .previous {
+  transform: scaleX(-1);
+  margin-left: 8px;
+}
+
+.webreplay-player div.command-button .next {
+  margin-right: 8px;
+}
+
+.webreplay-player .progress-line {
+  width: 0%;
+  height: 1px;
+  background: #0074e8;
+  position: absolute;
+  left: 0;
+  right: 10px;
+  top: 50%;
+}
+
+.webreplay-player .progress-line.end {
+  opacity: 0.3;
+}
+
+.webreplay-player .recording .progress-line {
+  background: #d0021b;
+  opacity: 0.3;
 }

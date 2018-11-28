@@ -410,4 +410,30 @@
 
   customElements.define("treecol", MozTreecol);
 
+  class MozTreecols extends MozElements.BaseControl {
+    connectedCallback() {
+      if (this.delayConnectedCallback()) {
+        return;
+      }
+
+      if (!this.querySelector("treecolpicker")) {
+        this.appendChild(MozXULElement.parseXULToFragment(`
+          <treecolpicker class="treecol-image" fixed="true"></treecolpicker>
+        `));
+      }
+
+      let treecolpicker = this.querySelector("treecolpicker");
+      this.inheritAttribute(treecolpicker, "tooltiptext=pickertooltiptext");
+
+      // Set resizeafter="farthest" on the splitters if nothing else has been
+      // specified.
+      Array.forEach(this.getElementsByTagName("splitter"), function(splitter) {
+        if (!splitter.hasAttribute("resizeafter"))
+          splitter.setAttribute("resizeafter", "farthest");
+      });
+    }
+  }
+
+  customElements.define("treecols", MozTreecols);
+
 }
