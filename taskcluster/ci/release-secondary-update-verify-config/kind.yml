@@ -24,7 +24,6 @@ job-defaults:
            path: /builds/worker/checkouts/gecko/update-verify.cfg
            type: file
    run:
-      using: run-task
       sparse-profile: mozharness
    extra:
       app-name: browser
