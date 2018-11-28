@@ -90,8 +90,10 @@ XULTooltipElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
     nsString text;
     nsString direction;
     bool shouldChange = false;
-    textProvider->GetNodeText(GetTriggerNode(), getter_Copies(text),
-                              getter_Copies(direction), &shouldChange);
+    if (textProvider) {
+      textProvider->GetNodeText(GetTriggerNode(), getter_Copies(text),
+                                getter_Copies(direction), &shouldChange);
+    }
     if (shouldChange) {
       SetAttr(kNameSpaceID_None, nsGkAtoms::label, text, true);
       SetAttr(kNameSpaceID_None, nsGkAtoms::direction, direction, true);
