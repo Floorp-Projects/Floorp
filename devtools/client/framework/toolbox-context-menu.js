@@ -9,18 +9,20 @@
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
-var stringsLoaded = false;
+// This WeakMap will be used to know if strings have already been loaded in a given
+// window, which will be used as key.
+const stringsLoaded = new WeakMap();
 
 /**
  * Lazily load strings for the edit menu.
  */
 function loadEditMenuStrings(win) {
-  if (stringsLoaded) {
+  if (stringsLoaded.has(win)) {
     return;
   }
 
   if (win.MozXULElement) {
-    stringsLoaded = true;
+    stringsLoaded.set(win, true);
     win.MozXULElement.insertFTLIfNeeded("toolkit/main-window/editmenu.ftl");
   }
 }
