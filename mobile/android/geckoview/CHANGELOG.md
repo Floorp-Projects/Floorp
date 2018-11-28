@@ -24,5 +24,6 @@
 - Added `ContentDelegate.ContextElement` to extend the information passed to
   `ContentDelegate#onContextMenu`. Extended information includes the element's
   title and alt attributes.
+ - Add methods for each setting in GeckoSessionSettings
 
-[api-version]: 8cfd04a09e7a242b3da22ccdd55c88a2aca2ba6d
+[api-version]: 7b2d6a4ff4cef4099607af2070005ecd360c5311
