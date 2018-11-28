@@ -603,6 +603,42 @@ add_task(async function test_dynamicScalars_registration() {
       "evaluation": /Invalid or missing 'kind'/,
       "description": "No scalar must be registered if the batch contains an invalid one",
     },
+    {
+      "category": "telemetry.test",
+      "data": {
+        "invalid_stores": {
+          kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+          keyed: false,
+          stores: true,
+        },
+      },
+      "evaluation": /Invalid 'stores'/,
+      "description": "Registration must fail if 'stores' is of the wrong type",
+    },
+    {
+      "category": "telemetry.test",
+      "data": {
+        "invalid_stores": {
+          kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+          keyed: false,
+          stores: {},
+        },
+      },
+      "evaluation": /Invalid 'stores'/,
+      "description": "Registration must fail if 'stores' is of the wrong type",
+    },
+    {
+      "category": "telemetry.test",
+      "data": {
+        "invalid_stores": {
+          kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+          keyed: false,
+          stores: [{}],
+        },
+      },
+      "evaluation": /'stores' array isn't a string./,
+      "description": "Registration must fail if element in 'stores' is of the wrong type",
+    },
   ];
 
   for (let testCase of TEST_CASES) {

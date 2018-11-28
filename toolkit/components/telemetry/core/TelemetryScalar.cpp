@@ -117,6 +117,11 @@ const size_t kScalarActionsArrayHighWaterMark = 10000;
 
 const char* TEST_SCALAR_PREFIX = "telemetry.test.";
 
+// The max offset supported by gScalarStoresTable for static scalars' stores.
+// Also the sentinel value (with store_count == 0) for just the sole "main"
+// store.
+const uint32_t kMaxStaticStoreOffset = UINT16_MAX;
+
 enum class ScalarResult : uint8_t {
   // Nothing went wrong.
   Ok,
@@ -147,16 +152,22 @@ struct ScalarKey {
   bool dynamic;
 };
 
+// Dynamic scalar store names.
+StaticAutoPtr<nsTArray<RefPtr<nsAtom>>> gDynamicStoreNames;
+
 /**
  * Scalar information for dynamic definitions.
  */
 struct DynamicScalarInfo : BaseScalarInfo {
   nsCString mDynamicName;
   bool mDynamicExpiration;
+  uint32_t store_count;
+  uint32_t store_offset;
 
   DynamicScalarInfo(uint32_t aKind, bool aRecordOnRelease,
                     bool aExpired, const nsACString& aName,
-                    bool aKeyed, bool aBuiltin)
+                    bool aKeyed, bool aBuiltin,
+                    const nsTArray<nsCString>& aStores)
     : BaseScalarInfo(aKind,
                      aRecordOnRelease ?
                      nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT :
@@ -167,13 +178,29 @@ struct DynamicScalarInfo : BaseScalarInfo {
                      aBuiltin)
     , mDynamicName(aName)
     , mDynamicExpiration(aExpired)
-  {}
+  {
+    store_count = aStores.Length();
+    if (store_count == 0) {
+      store_count = 1;
+      store_offset = kMaxStaticStoreOffset;
+    } else {
+      store_offset = kMaxStaticStoreOffset + 1 + gDynamicStoreNames->Length();
+      for (const auto& storeName: aStores) {
+        gDynamicStoreNames->AppendElement(NS_Atomize(storeName));
+      }
+      MOZ_ASSERT(gDynamicStoreNames->Length() < UINT32_MAX - kMaxStaticStoreOffset - 1,
+                 "Too many dynamic scalar store names. Overflow.");
+    }
+  };
 
   // The following functions will read the stored text
   // instead of looking it up in the statically generated
   // tables.
   const char *name() const override;
   const char *expiration() const override;
+
+  uint32_t storeCount() const override;
+  uint32_t storeOffset() const override;
 };
 
 const char *
@@ -189,6 +216,18 @@ DynamicScalarInfo::expiration() const
   // Return an appropriate version string to leverage the scalar expiration
   // logic.
   return mDynamicExpiration ? "1.0" : "never";
+}
+
+uint32_t
+DynamicScalarInfo::storeOffset() const
+{
+  return store_offset;
+}
+
+uint32_t
+DynamicScalarInfo::storeCount() const
+{
+  return store_count;
 }
 
 typedef nsBaseHashtableET<nsDepCharHashKey, ScalarKey> CharPtrEntryType;
@@ -372,7 +411,7 @@ private:
   ScalarResult HandleUnsupported() const;
 
   const uint32_t mStoreCount;
-  const uint16_t mStoreOffset;
+  const uint32_t mStoreOffset;
   nsTArray<bool> mStoreHasValue;
 };
 
@@ -410,7 +449,7 @@ ScalarBase::SetValueInStores()
 nsresult
 ScalarBase::StoreIndex(const nsACString& aStoreName, size_t* aStoreIndex) const
 {
-  if (mStoreCount == 1 && mStoreOffset == UINT16_MAX) {
+  if (mStoreCount == 1 && mStoreOffset == kMaxStaticStoreOffset) {
     // This Scalar is only in the "main" store.
     if (aStoreName.EqualsLiteral("main")) {
       *aStoreIndex = 0;
@@ -420,6 +459,20 @@ ScalarBase::StoreIndex(const nsACString& aStoreName, size_t* aStoreIndex) const
   }
 
   // Multiple stores. Linear scan to find one that matches aStoreName.
+  // Dynamic Scalars start at kMaxStaticStoreOffset + 1
+  if (mStoreOffset > kMaxStaticStoreOffset) {
+    auto dynamicOffset = mStoreOffset - kMaxStaticStoreOffset - 1;
+    for (uint32_t i = 0; i < mStoreCount; ++i) {
+      auto scalarStore = (*gDynamicStoreNames)[dynamicOffset + i];
+      if (nsAtomCString(scalarStore).Equals(aStoreName)) {
+        *aStoreIndex = i;
+        return NS_OK;
+      }
+    }
+    return NS_ERROR_NO_CONTENT;
+  }
+
+  // Static Scalars are similar.
   for (uint32_t i = 0; i < mStoreCount; ++i) {
     uint32_t stringIndex = gScalarStoresTable[mStoreOffset + i];
     if (aStoreName.EqualsASCII(&gScalarsStringTable[stringIndex])) {
@@ -1924,6 +1977,9 @@ internal_RegisterScalars(const StaticMutexAutoLock& lock,
   if (!gDynamicScalarInfo) {
     gDynamicScalarInfo = new nsTArray<DynamicScalarInfo>();
   }
+  if (!gDynamicStoreNames) {
+    gDynamicStoreNames = new nsTArray<RefPtr<nsAtom>>();
+  }
 
   for (auto scalarInfo : scalarInfos) {
     // Allow expiring scalars that were already registered.
@@ -2444,6 +2500,7 @@ TelemetryScalar::InitializeGlobalState(bool aCanRecordBase, bool aCanRecordExten
       nsAutoCString("telemetry.dynamic_event_counts"),
       true /* keyed */,
       false /* built-in */,
+      {} /* stores */,
     },
   });
   internal_RegisterScalars(locker, initialDynamicScalars);
@@ -2463,6 +2520,7 @@ TelemetryScalar::DeInitializeGlobalState()
   gDynamicBuiltinScalarStorageMap.Clear();
   gDynamicBuiltinKeyedScalarStorageMap.Clear();
   gDynamicScalarInfo = nullptr;
+  gDynamicStoreNames = nullptr;
   gInitDone = false;
 }
 
@@ -3418,10 +3476,60 @@ TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
       expired = static_cast<bool>(value.toBoolean());
     }
 
+    // Get the scalar's optional stores list (default to ["main"]).
+    nsTArray<nsCString> stores;
+    if (JS_HasProperty(cx, scalarDef, "stores", &hasProperty) && hasProperty) {
+      bool isArray = false;
+      if (!JS_GetProperty(cx, scalarDef, "stores", &value)
+          || !JS_IsArrayObject(cx, value, &isArray)
+          || !isArray) {
+        JS_ReportErrorASCII(cx, "Invalid 'stores' for scalar %s.",
+                            PromiseFlatCString(fullName).get());
+        return NS_ERROR_FAILURE;
+      }
+
+      JS::RootedObject arrayObj(cx, &value.toObject());
+      uint32_t storesLength = 0;
+      if (!JS_GetArrayLength(cx, arrayObj, &storesLength)) {
+        JS_ReportErrorASCII(cx, "Can't get 'stores' array length for scalar %s.",
+                            PromiseFlatCString(fullName).get());
+        return NS_ERROR_FAILURE;
+      }
+
+      for (uint32_t i = 0; i < storesLength; ++i) {
+        JS::Rooted<JS::Value> elt(cx);
+        if (!JS_GetElement(cx, arrayObj, i, &elt)) {
+          JS_ReportErrorASCII(cx,
+                              "Can't get element from scalar %s 'stores' array.",
+                              PromiseFlatCString(fullName).get());
+          return NS_ERROR_FAILURE;
+        }
+        if (!elt.isString()) {
+          JS_ReportErrorASCII(cx,
+                              "Element in scalar %s 'stores' array isn't a "
+                              "string.",
+                              PromiseFlatCString(fullName).get());
+          return NS_ERROR_FAILURE;
+        }
+
+        nsAutoJSString jsStr;
+        if (!jsStr.init(cx, elt)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        stores.AppendElement(NS_ConvertUTF16toUTF8(jsStr));
+      }
+      // In the event of the usual case (just "main"), save the storage.
+      if (stores.Length() == 1 && stores[0].EqualsLiteral("main")) {
+        stores.TruncateLength(0);
+      }
+    }
+
     // We defer the actual registration here in case any other event description is invalid.
     // In that case we don't need to roll back any partial registration.
     newScalarInfos.AppendElement(DynamicScalarInfo{
-      kind, recordOnRelease, expired, fullName, keyed, aBuiltin
+      kind, recordOnRelease, expired, fullName, keyed, aBuiltin,
+      std::move(stores)
     });
   }
 
@@ -3679,7 +3787,8 @@ TelemetryScalar::AddDynamicScalarDefinitions(
       def.expired,
       def.name,
       def.keyed,
-      false /* builtin */});
+      false /* builtin */,
+      {} /* stores */});
   }
 
   {

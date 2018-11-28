@@ -1,3 +1,13 @@
+## Version 0.8.0
+
+* Same as 0.7.1, with 0.7.1 being yanked because of the incorrect semver bump.
+
+## Version 0.7.1
+
+* Removed dependency on bitflags.
+* Added the `XmlWriter::inner_mut()` method.
+* Fixed some rustdoc warnings.
+
 ## Version 0.7.0
 
 * Same as 0.6.2, with 0.6.2 being yanked because of the incompatible bump of minimum required version of rustc.

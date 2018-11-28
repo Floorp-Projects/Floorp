@@ -102,7 +102,8 @@
           "isArticle": {"type": "boolean", "optional": true, "description": "Whether the document in the tab can be rendered in reader mode."},
           "isInReaderMode": {"type": "boolean", "optional": true, "description": "Whether the document in the tab is being rendered in reader mode."},
           "sharingState": {"$ref": "SharingState", "optional": true, "description": "Current tab sharing state for screen, microphone and camera."},
-          "attention": {"type": "boolean", "optional": true, "description": "Whether the tab is drawing attention."}
+          "attention": {"type": "boolean", "optional": true, "description": "Whether the tab is drawing attention."},
+          "successorTabId": {"type": "integer", "optional": true, "minimum": -1, "description": "The ID of this tab's successor, if any; $(ref:tabs.TAB_ID_NONE) otherwise."}
         }
       },
       {
@@ -888,6 +889,12 @@
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the load should replace the current history entry for the tab."
+              },
+              "successorTabId": {
+                "type": "integer",
+                "minimum": -1,
+                "optional": true,
+                "description": "The ID of this tab's successor. If specified, the successor tab must be in the same window as this tab."
               }
             }
           },
@@ -1396,6 +1403,48 @@
             ]
           }
         ]
+      },
+      {
+        "name": "moveInSuccession",
+        "type": "function",
+        "async": true,
+        "description": "Removes an array of tabs from their lines of succession and prepends or appends them in a chain to another tab.",
+        "parameters": [
+          {
+            "name": "tabIds",
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 },
+            "minItems": 1,
+            "description": "An array of tab IDs to move in the line of succession. For each tab in the array, the tab's current predecessors will have their successor set to the tab's current successor, and each tab will then be set to be the successor of the previous tab in the array. Any tabs not in the same window as the tab indicated by the second argument (or the first tab in the array, if no second argument) will be skipped."
+          },
+          {
+            "name": "tabId",
+            "type": "integer",
+            "optional": true,
+            "default": -1,
+            "minimum": -1,
+            "description": "The ID of a tab to set as the successor of the last tab in the array, or $(ref:tabs.TAB_ID_NONE) to leave the last tab without a successor. If options.append is true, then this tab is made the predecessor of the first tab in the array instead."
+          },
+          {
+            "name": "options",
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "append": {
+                "type": "boolean",
+                "optional": true,
+                "default": false,
+                "description": "Whether to move the tabs before (false) or after (true) tabId in the succession. Defaults to false."
+              },
+              "insert": {
+                "type": "boolean",
+                "optional": true,
+                "default": false,
+                "description": "Whether to link up the current predecessors or successor (depending on options.append) of tabId to the other side of the chain after it is prepended or appended. If true, one of the following happens: if options.append is false, the first tab in the array is set as the successor of any current predecessors of tabId; if options.append is true, the current successor of tabId is set as the successor of the last tab in the array. Defaults to false."
+              }
+            }
+          }
+        ]
       }
     ],
     "events": [
@@ -1584,6 +1633,12 @@
                 "type": "integer",
                 "minimum": 0,
                 "description": "The ID of the tab that has become active."
+              },
+              "previousTabId": {
+                "type": "integer",
+                "minimum": 0,
+                "optional": true,
+                "description": "The ID of the tab that was previously active, if that tab is still open."
               },
               "windowId": {
                 "type": "integer",

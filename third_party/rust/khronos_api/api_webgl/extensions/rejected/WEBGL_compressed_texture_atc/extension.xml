@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<extension href="WEBGL_compressed_texture_atc/">
+<rejected href="rejected/WEBGL_compressed_texture_atc/">
   <name>WEBGL_compressed_texture_atc</name>
   <contact>
     <a href="https://www.khronos.org/webgl/public-mailing-list/">WebGL working group</a> (public_webgl 'at' khronos.org)
@@ -105,5 +105,8 @@ interface WEBGL_compressed_texture_atc {
     <revision date="2014/07/15">
       <change>Added NoInterfaceObject extended attribute.</change>
     </revision>
+    <revision date="2018/04/25">
+      <change>Moved to rejected status at Khronos Montreal face-to-face meeting.</change>
+    </revision>
   </history>
-</extension>
+</rejected>

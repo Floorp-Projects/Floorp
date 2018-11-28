@@ -9,17 +9,11 @@
  * Check target-scoped actor lifetimes.
  */
 
-var { DebuggerServer } = require("devtools/server/main");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
-
 const ACTORS_URL = EXAMPLE_URL + "testactors.js";
 const TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 
 add_task(async function() {
-  await addTab(TAB_URL);
-
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  const tab = await addTab(TAB_URL);
 
   await registerActorInContentProcess(ACTORS_URL, {
     prefix: "testOne",
@@ -27,51 +21,33 @@ add_task(async function() {
     type: { target: true },
   });
 
-  const transport = DebuggerServer.connectPipe();
-  const client = new DebuggerClient(transport);
-  const [type] = await client.connect();
-  is(type, "browser",
-    "Root actor should identify itself as a browser.");
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
+  const { client } = target;
+  const targetFront = target.activeTab;
+  const form = targetFront.targetForm;
 
-  const [grip] = await attachTargetActorForUrl(client, TAB_URL);
-  await testTargetScopedActor(client, grip);
-  await closeTab(client, grip);
-  await client.close();
+  await testTargetScopedActor(client, form);
+  await closeTab(client, form);
+  await target.destroy();
 });
 
-async function testTargetScopedActor(client, grip) {
-  ok(grip.testOneActor,
+async function testTargetScopedActor(client, form) {
+  ok(form.testOneActor,
     "Found the test target-scoped actor.");
-  ok(grip.testOneActor.includes("testOne"),
+  ok(form.testOneActor.includes("testOne"),
     "testOneActor's actorPrefix should be used.");
 
-  const response = await client.request({ to: grip.testOneActor, type: "ping" });
+  const response = await client.request({ to: form.testOneActor, type: "ping" });
   is(response.pong, "pong",
      "Actor should respond to requests.");
 }
 
-async function closeTab(client, grip) {
+async function closeTab(client, form) {
   await removeTab(gBrowser.selectedTab);
   await Assert.rejects(
-    client.request({ to: grip.testOneActor, type: "ping" }),
-    err => err.message === `'ping' active request packet to '${grip.testOneActor}' ` +
+    client.request({ to: form.testOneActor, type: "ping" }),
+    err => err.message === `'ping' active request packet to '${form.testOneActor}' ` +
                            `can't be sent as the connection just closed.`,
     "testOneActor went away.");
-}
-
-async function attachTargetActorForUrl(client, url) {
-  const grip = await getTargetActorForUrl(client, url);
-  const [ response ] = await client.attachTarget(grip.actor);
-  return [grip, response];
-}
-
-function getTargetActorForUrl(client, url) {
-  const deferred = promise.defer();
-
-  client.listTabs().then(response => {
-    const targetActor = response.tabs.filter(grip => grip.url == url).pop();
-    deferred.resolve(targetActor);
-  });
-
-  return deferred.promise;
 }

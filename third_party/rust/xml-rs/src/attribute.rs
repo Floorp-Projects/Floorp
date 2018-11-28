@@ -30,17 +30,14 @@ impl<'a> Attribute<'a> {
     pub fn to_owned(&self) -> OwnedAttribute {
         OwnedAttribute {
             name: self.name.into(),
-            value: self.value.into()
+            value: self.value.into(),
         }
     }
 
     /// Creates a borrowed attribute using the provided borrowed name and a borrowed string value.
     #[inline]
     pub fn new(name: Name<'a>, value: &'a str) -> Attribute<'a> {
-        Attribute {
-            name: name,
-            value: value
-        }
+        Attribute { name, value, }
     }
 }
 
@@ -61,7 +58,7 @@ impl OwnedAttribute {
     pub fn borrow(&self) -> Attribute {
         Attribute {
             name: self.name.borrow(),
-            value: &*self.value
+            value: &*self.value,
         }
     }
 
@@ -69,8 +66,8 @@ impl OwnedAttribute {
     #[inline]
     pub fn new<S: Into<String>>(name: OwnedName, value: S) -> OwnedAttribute {
         OwnedAttribute {
-            name: name,
-            value: value.into()
+            name,
+            value: value.into(),
         }
     }
 }

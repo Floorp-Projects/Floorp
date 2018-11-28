@@ -59,8 +59,8 @@ mod gl {
 fn main() {
     let window = ...;
 
-    // Assuming `window` is GLFW: initialize, and made current
-    gl::load_with(|s| window.get_proc_address(s));
+    // Assuming `window` is GLFW: initialize, and make current
+    gl::load_with(|s| window.get_proc_address(s) as *const _);
 }
 ```
 

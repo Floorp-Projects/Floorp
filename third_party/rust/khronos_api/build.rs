@@ -17,8 +17,8 @@
 // containing the XML specifications for all of them.
 use std::env;
 use std::fs::File;
-use std::path::*;
 use std::io::Write;
+use std::path::*;
 
 fn main() {
     // Create and open a file in the output directory to contain our generated rust code

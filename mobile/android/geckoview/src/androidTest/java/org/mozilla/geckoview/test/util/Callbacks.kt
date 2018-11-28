@@ -9,6 +9,7 @@ import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.MediaElement
 import org.mozilla.geckoview.WebRequestError
@@ -38,7 +39,9 @@ class Callbacks private constructor() {
         override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
         }
 
-        override fun onContextMenu(session: GeckoSession, screenX: Int, screenY: Int, uri: String, elementType: Int, elementSrc: String) {
+        override fun onContextMenu(session: GeckoSession,
+                                   screenX: Int, screenY: Int,
+                                   element: ContextElement) {
         }
 
         override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<draft href="WEBGL_get_buffer_sub_data_async/">
+<rejected href="rejected/WEBGL_get_buffer_sub_data_async/">
   <name>WEBGL_get_buffer_sub_data_async</name>
   <contact>
     <a href="https://www.khronos.org/webgl/public-mailing-list/">WebGL working group</a> (public_webgl 'at' khronos.org)
@@ -132,5 +132,10 @@ interface WEBGL_get_buffer_sub_data_async {
     <revision date="2016/12/13">
       <change>Initial revision.</change>
     </revision>
+    <revision date="2018/05/04">
+      <change>Set status to rejected following the working group's decision to
+        allow optimizations of the existing getBufferSubData API instead of
+        exposing a new one.</change>
+    </revision>
   </history>
-</draft>
+</rejected>

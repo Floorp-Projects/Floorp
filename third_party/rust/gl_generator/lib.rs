@@ -71,11 +71,11 @@ mod generators;
 
 mod registry;
 
-pub use generators::Generator;
 pub use generators::debug_struct_gen::DebugStructGenerator;
 pub use generators::global_gen::GlobalGenerator;
 pub use generators::static_gen::StaticGenerator;
 pub use generators::static_struct_gen::StaticStructGenerator;
 pub use generators::struct_gen::StructGenerator;
+pub use generators::Generator;
 
 pub use registry::*;

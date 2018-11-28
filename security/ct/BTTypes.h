@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BTInclusionProof_h
-#define BTInclusionProof_h
+#ifndef BTTypes_h
+#define BTTypes_h
 
 #include <vector>
 
@@ -35,6 +35,30 @@ struct InclusionProofDataV2
   std::vector<Buffer> inclusionPath;
 };
 
+// Represents a Signed Tree Head as per RFC 6962-bis. All extensions are
+// ignored. The signature field covers the data in the tree_head field.
+//
+//     struct {
+//         LogID log_id;
+//         TreeHeadDataV2 tree_head;
+//         opaque signature<0..2^16-1>;
+//     } SignedTreeHeadDataV2;
+//
+//     struct {
+//         uint64 timestamp;
+//         uint64 tree_size;
+//         NodeHash root_hash;
+//         Extension sth_extensions<0..2^16-1>;
+//     } TreeHeadDataV2;
+
+struct SignedTreeHeadDataV2
+{
+  Buffer logId;
+  uint64_t timestamp;
+  uint64_t treeSize;
+  Buffer rootHash;
+};
+
 } } // namespace mozilla:ct
 
-#endif // BTInclusionProof_h
+#endif // BTTypes_h

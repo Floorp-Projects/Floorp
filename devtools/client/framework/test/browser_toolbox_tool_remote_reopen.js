@@ -6,7 +6,6 @@
 "use strict";
 
 const { DebuggerServer } = require("devtools/server/main");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 // Bug 1277805: Too slow for debug runs
 requestLongerTimeout(2);
@@ -60,36 +59,13 @@ function runTools(target) {
   })();
 }
 
-function getClient() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-
-  const transport = DebuggerServer.connectPipe();
-  const client = new DebuggerClient(transport);
-
-  return client.connect().then(() => client);
-}
-
-function getTarget(client) {
-  return new Promise(resolve => {
-    client.listTabs().then(tabList => {
-      const target = TargetFactory.forRemoteTab({
-        client: client,
-        form: tabList.tabs[tabList.selected],
-        chrome: false,
-      });
-      resolve(target);
-    });
-  });
-}
-
 function test() {
   (async function() {
     toggleAllTools(true);
-    await addTab("about:blank");
+    const tab = await addTab("about:blank");
 
-    const client = await getClient();
-    const target = await getTarget(client);
+    const target = await TargetFactory.forTab(tab);
+    const { client } = target;
     await runTools(target);
 
     const rootFronts = [...client.mainRoot.fronts.values()];

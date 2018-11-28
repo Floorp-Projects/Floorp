@@ -8,14 +8,13 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Security: PSM")
 
 EXPORTS += [
-    'BTInclusionProof.h',
+    'BTTypes.h',
     'BTVerifier.h',
     'Buffer.h',
     'CTLog.h',
     'CTPolicyEnforcer.h',
     'CTVerifyResult.h',
     'SignedCertificateTimestamp.h',
-    'SignedTreeHead.h',
 ]
 
 UNIFIED_SOURCES += [

@@ -287,6 +287,19 @@ nsDOMWindowUtils::GetWebRenderBridge()
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SyncFlushCompositor()
+{
+  if (nsIWidget* widget = GetWidget()) {
+    if (LayerManager* lm = widget->GetLayerManager()) {
+      if (KnowsCompositor* kc = lm->AsKnowsCompositor()) {
+        kc->SyncWithCompositor();
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetImageAnimationMode(uint16_t *aMode)
 {
   NS_ENSURE_ARG_POINTER(aMode);
