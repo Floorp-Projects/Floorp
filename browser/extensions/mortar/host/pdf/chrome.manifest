@@ -1,3 +1,0 @@
-resource ppapipdf.js .
-content ppapipdf.js chrome/
-resource ppapi.js ../common/

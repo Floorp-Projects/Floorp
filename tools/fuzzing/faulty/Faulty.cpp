@@ -283,7 +283,6 @@ Faulty::IsValidProcessType(void)
           || currentProcessType == GeckoProcessType_Content
           || currentProcessType == GeckoProcessType_GMPlugin
           || currentProcessType == GeckoProcessType_GPU
-          || currentProcessType == GeckoProcessType_PDFium
           || currentProcessType == GeckoProcessType_VR)) {
     // Fuzz inside any of the above child process only.
     isValidProcessType = true;
