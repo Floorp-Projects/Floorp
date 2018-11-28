@@ -45,8 +45,23 @@ void Accumulate(mozilla::Telemetry::HistogramID aID, const nsCString& aKey,
                                             uint32_t aSample);
 void Accumulate(mozilla::Telemetry::HistogramID aID, const nsCString& aKey,
                                           const nsTArray<uint32_t>& aSamples);
-bool Accumulate(const char* name, uint32_t sample);
-bool Accumulate(const char* name, const nsCString& key, uint32_t sample);
+/*
+ * Accumulate a sample into the named histogram.
+ *
+ * Returns NS_OK on success.
+ * Returns NS_ERROR_NOT_AVAILABLE if recording Telemetry is disabled.
+ * Returns NS_ERROR_FAILURE on other errors.
+ */
+nsresult Accumulate(const char* name, uint32_t sample);
+
+/*
+ * Accumulate a sample into the named keyed histogram by key.
+ *
+ * Returns NS_OK on success.
+ * Returns NS_ERROR_NOT_AVAILABLE if recording Telemetry is disabled.
+ * Returns NS_ERROR_FAILURE on other errors.
+ */
+nsresult Accumulate(const char* name, const nsCString& key, uint32_t sample);
 
 void AccumulateCategorical(mozilla::Telemetry::HistogramID aId, const nsCString& aLabel);
 void AccumulateCategorical(mozilla::Telemetry::HistogramID aId, const nsTArray<nsCString>& aLabels);
