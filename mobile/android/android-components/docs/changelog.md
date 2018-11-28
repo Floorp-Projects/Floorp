@@ -15,7 +15,7 @@ permalink: /changelog/
   * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
   * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
   * GeckoView (Nightly: 65.0.20181123100059, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
-  * Mozilla App Services (FxA: 0.10.0, Sync Logins: 0.10.0, Places: 0.10.0)
+  * Mozilla App Services (FxA: 0.11.0 🔺, Sync Logins: 0.11.0 🔺, Places: 0.11.0 🔺)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
 * **feature-prompts**
@@ -56,6 +56,23 @@ permalink: /changelog/
     )
   )
   ```
+
+* **service-firefox-accounts**:
+  * ⚠️ **This is a breaking change**
+  * We've simplified the API to provide the FxA configuration:
+
+  ```Kotlin
+  // Before
+  Config.custom(CONFIG_URL).await().use { 
+    config -> FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
+  }
+
+  // Now
+  val config = Config(CONFIG_URL, CLIENT_ID, REDIRECT_URL)
+  FirefoxAccount(config)
+  ```
+
+  A full working example can be found [here](https://github.com/mozilla-mobile/android-components/blob/master/samples/firefox-accounts/src/main/java/org/mozilla/samples/fxa/MainActivity.kt).
 
 # 0.33.0
 
