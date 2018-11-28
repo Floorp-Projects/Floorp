@@ -16,6 +16,7 @@ import android.support.v4.util.ArrayMap;
 import android.util.JsonReader;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.webview.matcher.util.FocusString;
 
 import java.io.IOException;
@@ -139,7 +140,20 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         for (final Map.Entry<String, String> entry : categoryPrefMap.entrySet()) {
-            final boolean prefValue = prefs.getBoolean(entry.getKey(), true);
+            final boolean prefValue;
+            if (entry.getKey().equals(context.getString(R.string.pref_key_performance_block_webfonts))) {
+                prefValue = Settings.getInstance(context).shouldBlockWebFonts();
+            } else if (entry.getKey().equals(context.getString(R.string.pref_key_privacy_block_social))) {
+                prefValue = Settings.getInstance(context).shouldBlockSocialTrackers();
+            } else if (entry.getKey().equals(context.getString(R.string.pref_key_privacy_block_ads))) {
+                prefValue = Settings.getInstance(context).shouldBlockAdTrackers();
+            } else if (entry.getKey().equals(context.getString(R.string.pref_key_privacy_block_analytics))) {
+                prefValue = Settings.getInstance(context).shouldBlockAnalyticTrackers();
+            } else if (entry.getKey().equals(context.getString(R.string.pref_key_privacy_block_other))) {
+                prefValue = Settings.getInstance(context).shouldBlockOtherTrackers();
+            } else {
+                prefValue = prefs.getBoolean(entry.getKey(), true);
+            }
             setCategoryEnabled(entry.getValue(), prefValue);
         }
     }
