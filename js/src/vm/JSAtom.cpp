@@ -42,16 +42,17 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::RangedPtr;
 
-template <typename CharT>
-extern void InflateUTF8CharsToBufferAndTerminate(const UTF8Chars src, CharT* dst, size_t dstLen,
+template <typename CharT, typename InputCharsT>
+extern void InflateUTF8CharsToBufferAndTerminate(const InputCharsT src, CharT* dst, size_t dstLen,
                                                  JS::SmallestEncoding encoding);
 
 template <typename CharT>
 extern bool UTF8EqualsChars(const JS::UTF8Chars utf8, const CharT* chars);
 
+template <typename InputCharsT>
 extern bool
-GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen, JS::SmallestEncoding* encoding,
-                       HashNumber* hashNum);
+GetUTF8AtomizationData(JSContext* cx, const InputCharsT utf8, size_t* outlen,
+                       JS::SmallestEncoding* encoding, HashNumber* hashNum);
 
 struct js::AtomHasher::Lookup
 {
@@ -866,16 +867,19 @@ PermanentlyAtomizeAndCopyChars(JSContext* cx,
     return atom;
 }
 
-struct AtomizeUTF8CharsWrapper
+template <typename CharsT>
+struct AtomizeUTF8OrWTF8CharsWrapper
 {
-    JS::UTF8Chars utf8;
+    CharsT utf8;
     JS::SmallestEncoding encoding;
 
-    AtomizeUTF8CharsWrapper(const JS::UTF8Chars& chars, JS::SmallestEncoding minEncode)
+    AtomizeUTF8OrWTF8CharsWrapper(const CharsT& chars, JS::SmallestEncoding minEncode)
       : utf8(chars), encoding(minEncode)
     { }
 };
 
+// MakeFlatStringForAtomization has 4 variants.
+// This is used by Latin1Char and char16_t.
 template <typename CharT>
 MOZ_ALWAYS_INLINE
 static JSFlatString*
@@ -884,10 +888,10 @@ MakeFlatStringForAtomization(JSContext* cx, const CharT* tbchars, size_t length)
     return NewStringCopyN<NoGC>(cx, tbchars, length);
 }
 
-template<typename CharT>
+template<typename CharT, typename WrapperT>
 MOZ_ALWAYS_INLINE
 static JSFlatString*
-MakeUTF8AtomHelper(JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length)
+MakeUTF8AtomHelper(JSContext* cx, const WrapperT* chars, size_t length)
 {
     if (JSInlineString::lengthFits<CharT>(length)) {
         CharT* storage;
@@ -920,10 +924,14 @@ MakeUTF8AtomHelper(JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t l
     return str;
 }
 
-template<>
+// Another 2 variants of MakeFlatStringForAtomization.
+// This is used by AtomizeUTF8OrWTF8CharsWrapper with UTF8Chars or WTF8Chars.
+template<typename InputCharsT>
 MOZ_ALWAYS_INLINE
 /* static */ JSFlatString*
-MakeFlatStringForAtomization(JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length)
+MakeFlatStringForAtomization(JSContext* cx,
+                             const AtomizeUTF8OrWTF8CharsWrapper<InputCharsT>* chars,
+                             size_t length)
 {
     if (length == 0) {
         return cx->emptyString();
@@ -1041,8 +1049,9 @@ js::AtomizeChars(JSContext* cx, const Latin1Char* chars, size_t length, PinningB
 template JSAtom*
 js::AtomizeChars(JSContext* cx, const char16_t* chars, size_t length, PinningBehavior pin);
 
+template <typename CharsT>
 JSAtom*
-js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars, size_t utf8ByteLength)
+AtomizeUTF8OrWTF8Chars(JSContext* cx, const char* utf8Chars, size_t utf8ByteLength)
 {
     // Since the static strings are all ascii, we can check them before trying anything else.
     if (JSAtom* s = cx->staticStrings().lookup(utf8Chars, utf8ByteLength)) {
@@ -1052,14 +1061,26 @@ js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars, size_t utf8ByteLength
     size_t length;
     HashNumber hash;
     JS::SmallestEncoding forCopy;
-    UTF8Chars utf8(utf8Chars, utf8ByteLength);
+    CharsT utf8(utf8Chars, utf8ByteLength);
     if (!GetUTF8AtomizationData(cx, utf8, &length, &forCopy, &hash)) {
         return nullptr;
     }
 
-    AtomizeUTF8CharsWrapper chars(utf8, forCopy);
+    AtomizeUTF8OrWTF8CharsWrapper<CharsT> chars(utf8, forCopy);
     AtomHasher::Lookup lookup(utf8Chars, utf8ByteLength, length, hash);
     return AtomizeAndCopyCharsFromLookup(cx, &chars, length, lookup, DoNotPinAtom, Nothing());
+}
+
+JSAtom*
+js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars, size_t utf8ByteLength)
+{
+    return AtomizeUTF8OrWTF8Chars<UTF8Chars>(cx, utf8Chars, utf8ByteLength);
+}
+
+JSAtom*
+js::AtomizeWTF8Chars(JSContext* cx, const char* wtf8Chars, size_t wtf8ByteLength)
+{
+    return AtomizeUTF8OrWTF8Chars<WTF8Chars>(cx, wtf8Chars, wtf8ByteLength);
 }
 
 bool

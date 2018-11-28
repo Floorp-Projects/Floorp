@@ -438,11 +438,7 @@ tree {
   -moz-binding: url("chrome://global/content/bindings/tree.xml#tree");
 }
 
-treecols {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecols");
-}
-
-treecol {
+treecolpicker {
   -moz-box-ordinal-group: 2147483646;
 }
 
@@ -479,11 +475,6 @@ treecol {
 treecol[hidden="true"] {
   visibility: collapse;
   display: -moz-box;
-}
-
-.tree-scrollable-columns {
-  /* Yes, Virginia, this makes it scrollable */
-  overflow: hidden;
 }
 
 /* ::::: lines connecting cells ::::: */
