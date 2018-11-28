@@ -9,6 +9,8 @@ import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import classnames from "classnames";
+import { debounce } from "lodash";
+
 import { isLoaded } from "../../utils/source";
 import { isFirefox } from "devtools-environment";
 import { features } from "../../utils/prefs";
@@ -30,7 +32,7 @@ import SearchBar from "./SearchBar";
 import HighlightLines from "./HighlightLines";
 import Preview from "./Preview";
 import Breakpoints from "./Breakpoints";
-import CallSites from "./CallSites";
+import ColumnBreakpoints from "./ColumnBreakpoints";
 import DebugLine from "./DebugLine";
 import HighlightLine from "./HighlightLine";
 import EmptyLines from "./EmptyLines";
@@ -91,7 +93,8 @@ export type Props = {
   toggleBreakpointsAtLine: (?number) => void,
   addOrToggleDisabledBreakpoint: (?number) => void,
   jumpToMappedLocation: any => void,
-  traverseResults: (boolean, Object) => void
+  traverseResults: (boolean, Object) => void,
+  updateViewport: void => void
 };
 
 type State = {
@@ -157,6 +160,7 @@ class Editor extends PureComponent<Props, State> {
     codeMirrorWrapper.addEventListener("keydown", e => this.onKeyDown(e));
     codeMirrorWrapper.addEventListener("click", e => this.onClick(e));
     codeMirrorWrapper.addEventListener("mouseover", onMouseOver(codeMirror));
+    codeMirror.on("scroll", this.onEditorScroll);
 
     const toggleFoldMarkerVisibility = e => {
       if (node instanceof HTMLElement) {
@@ -276,6 +280,8 @@ class Editor extends PureComponent<Props, State> {
     const line = this.getCurrentLine();
     this.toggleConditionalPanel(line);
   };
+
+  onEditorScroll = debounce(this.props.updateViewport, 200);
 
   onKeyDown(e: KeyboardEvent) {
     const { codeMirror } = this.state.editor;
@@ -548,7 +554,9 @@ class Editor extends PureComponent<Props, State> {
         <EditorMenu editor={editor} />
         <GutterMenu editor={editor} />
         <ConditionalPanel editor={editor} />
-        {features.columnBreakpoints ? <CallSites editor={editor} /> : null}
+        {features.columnBreakpoints ? (
+          <ColumnBreakpoints editor={editor} />
+        ) : null}
       </div>
     );
   }
@@ -607,6 +615,7 @@ export default connect(
     toggleBreakpointsAtLine: actions.toggleBreakpointsAtLine,
     addOrToggleDisabledBreakpoint: actions.addOrToggleDisabledBreakpoint,
     jumpToMappedLocation: actions.jumpToMappedLocation,
-    traverseResults: actions.traverseResults
+    traverseResults: actions.traverseResults,
+    updateViewport: actions.updateViewport
   }
 )(Editor);

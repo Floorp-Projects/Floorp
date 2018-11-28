@@ -10,8 +10,8 @@ DIRS += [
 DebuggerModules(
     'Breakpoint.js',
     'Breakpoints.js',
-    'CallSite.js',
-    'CallSites.js',
+    'ColumnBreakpoint.js',
+    'ColumnBreakpoints.js',
     'ConditionalPanel.js',
     'DebugLine.js',
     'EditorMenu.js',

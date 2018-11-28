@@ -33,38 +33,46 @@ add_task(async function() {
   await addBreakpoint(dbg, "simple1", 5);
   await addBreakpoint(dbg, "simple1", 6);
 
-  openFirstBreakpointContextMenu(dbg)
+  openFirstBreakpointContextMenu(dbg);
   // select "Disable Others"
+  let dispatched = waitForDispatch(dbg, "DISABLE_BREAKPOINT", 3);
   selectMenuItem(dbg, 7);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList(state)
       .every(bp => (bp.location.line !== 1) === bp.disabled)
   );
+  await dispatched;
   ok("breakpoint at 1 is the only enabled breakpoint");
 
-  openFirstBreakpointContextMenu(dbg)
+  openFirstBreakpointContextMenu(dbg);
   // select "Disable All"
+  dispatched = waitForDispatch(dbg, "DISABLE_ALL_BREAKPOINTS");
   selectMenuItem(dbg, 9);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList(state).every(bp => bp.disabled)
   );
-  ok("all breakpoints are disabled")
+  await dispatched;
+  ok("all breakpoints are disabled");
 
-  openFirstBreakpointContextMenu(dbg)
+  openFirstBreakpointContextMenu(dbg);
   // select "Enable Others"
+  dispatched = waitForDispatch(dbg, "ENABLE_BREAKPOINT", 3);
   selectMenuItem(dbg, 3);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList(state)
       .every(bp => (bp.location.line === 1) === bp.disabled)
   );
+  await dispatched;
   ok("all breakpoints except line 1 are enabled");
 
-  openFirstBreakpointContextMenu(dbg)
+  openFirstBreakpointContextMenu(dbg);
   // select "Remove Others"
+  dispatched = waitForDispatch(dbg, "REMOVE_BREAKPOINT", 3);
   selectMenuItem(dbg, 6);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList(state).length === 1 &&
     dbg.selectors.getBreakpointsList(state)[0].location.line === 1
   );
+  await dispatched;
   ok("remaining breakpoint should be on line 1");
 });

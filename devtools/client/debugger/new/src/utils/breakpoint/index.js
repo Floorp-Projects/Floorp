@@ -4,12 +4,15 @@
 
 // @flow
 
+import { sortBy } from "lodash";
+
 import { getBreakpoint } from "../../selectors";
 import assert from "../assert";
 import { features } from "../prefs";
 
 export { getASTLocation, findScopeByName } from "./astBreakpointLocation";
 
+import type { FormattedBreakpoint } from "../../selectors/breakpointSources";
 import type {
   Location,
   PendingLocation,
@@ -178,4 +181,21 @@ export function createPendingBreakpoint(bp: Breakpoint) {
     astLocation: bp.astLocation,
     generatedLocation: pendingGeneratedLocation
   };
+}
+
+export function sortBreakpoints(breakpoints: FormattedBreakpoint[]) {
+  breakpoints = breakpoints.map(bp => ({
+    ...bp,
+    selectedLocation: {
+      ...bp.selectedLocation,
+      // If a breakpoint has an undefined column, we must provide a 0 value
+      // or the breakpoint will display after all explicit column numbers
+      column: bp.selectedLocation.column || 0
+    }
+  }));
+
+  return sortBy(breakpoints, [
+    "selectedLocation.line",
+    "selectedLocation.column"
+  ]);
 }
