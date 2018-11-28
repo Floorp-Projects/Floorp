@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.os.Looper
+import android.webkit.WebBackForwardList
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -178,6 +180,25 @@ class SystemEngineSessionTest {
 
         engineSession.saveState()
         verify(webView).saveState(any(Bundle::class.java))
+    }
+
+    @Test
+    fun saveStateRunsOnMainThread() {
+        val engineSession = spy(SystemEngineSession())
+        var calledOnMainThread = false
+        var saveStateCalled = false
+        val webView = object : WebView(RuntimeEnvironment.application) {
+            override fun saveState(outState: Bundle?): WebBackForwardList? {
+                saveStateCalled = true
+                calledOnMainThread = Looper.getMainLooper().isCurrentThread
+                return null
+            }
+        }
+        `when`(engineSession.currentView()).thenReturn(webView)
+
+        engineSession.saveState()
+        assertTrue(saveStateCalled)
+        assertTrue(calledOnMainThread)
     }
 
     @Test

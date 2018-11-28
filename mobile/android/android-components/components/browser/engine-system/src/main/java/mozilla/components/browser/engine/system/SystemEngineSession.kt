@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.DefaultSettings
 import android.webkit.WebViewDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
@@ -113,11 +114,11 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     /**
      * See [EngineSession.saveState]
      */
-    override fun saveState(): Map<String, Any> {
+    override fun saveState(): Map<String, Any> = runBlocking(Dispatchers.Main) {
         val state = Bundle()
         currentView()?.saveState(state)
 
-        return mutableMapOf<String, Any>().apply {
+        mutableMapOf<String, Any>().apply {
             state.keySet().forEach { k -> put(k, state[k]) }
         }
     }
