@@ -17,6 +17,7 @@
 #include "jit/IonControlFlow.h"
 #include "jit/JitCommon.h"
 #include "jit/JitSpewer.h"
+#include "util/StructuredSpewer.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
@@ -1162,7 +1163,7 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
 #endif
 }
 
-#ifdef JS_JITSPEW
+#ifdef JS_STRUCTURED_SPEW
 static bool
 GetStubEnteredCount(ICStub* stub, uint32_t* count)
 {
@@ -1181,48 +1182,66 @@ GetStubEnteredCount(ICStub* stub, uint32_t* count)
     }
 }
 
+bool
+HasEnteredCounters(ICEntry& entry)
+{
+    ICStub* stub = entry.firstStub();
+    while (stub && !stub->isFallback()) {
+        uint32_t count;
+        if (GetStubEnteredCount(stub, &count)) {
+            return true;
+        }
+        stub = stub->next();
+    }
+    return false;
+}
+
 void
 jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason)
 {
     MOZ_ASSERT(script->hasBaselineScript());
     BaselineScript* blScript = script->baselineScript();
-
-    if (!JitSpewEnabled(JitSpew_BaselineIC_Statistics)) {
+    JSContext* cx = TlsContext.get();
+    AutoStructuredSpewer spew(cx, SpewChannel::BaselineICStats, script);
+    if (!spew) {
         return;
     }
-
-    Fprinter& out = JitSpewPrinter();
-
-    out.printf("[BaselineICStats] Dumping IC info for %s script %s:%d:%d\n",
-                dumpReason, script->filename(), script->lineno(),
-                script->column());
-
+    spew->property("reason", dumpReason);
+    spew->beginListProperty("entries");
     for (size_t i = 0; i < blScript->numICEntries(); i++) {
         ICEntry& entry = blScript->icEntry(i);
+        if (!HasEnteredCounters(entry)) {
+            continue;
+        }
 
         uint32_t pcOffset = entry.pcOffset();
         jsbytecode* pc = entry.pc(script);
 
         unsigned column;
         unsigned int line = PCToLineNumber(script, pc, &column);
-        out.printf("[BaselineICStats]     %s - pc=%u line=%u col=%u\n",
-                   CodeName[*pc], pcOffset, line, column);
 
+        spew->beginObject();
+        spew->property("op", CodeName[*pc]);
+        spew->property("pc", pcOffset);
+        spew->property("line", line);
+        spew->property("column", column);
+
+        spew->beginListProperty("counts");
         ICStub* stub = entry.firstStub();
-        out.printf("[BaselineICStats]          ");
-        while (stub) {
+        while (stub && !stub->isFallback()) {
             uint32_t count;
             if (GetStubEnteredCount(stub, &count)) {
-                out.printf("%u -> ", count);
-            } else if (stub->isFallback()) {
-                out.printf("(fb) %u", stub->toFallbackStub()->enteredCount());
+                spew->value(count);
             } else {
-                out.printf(" ?? -> ");
+                spew->value("?");
             }
             stub = stub->next();
         }
-        out.printf("\n");
+        spew->endList();
+        spew->property("fallback_count", entry.fallbackStub()->enteredCount());
+        spew->endObject();
     }
+    spew->endList();
 }
 #endif
 
