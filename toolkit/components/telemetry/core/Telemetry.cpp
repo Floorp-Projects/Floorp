@@ -38,7 +38,6 @@
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessedStack.h"
-#include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"

@@ -22,7 +22,6 @@
 #include "mozilla/a11y/PDocAccessible.h"
 #include "OuterDocAccessible.h"
 
-#include "mozilla/Services.h"
 #include "nsRect.h"
 #include "nsCocoaUtils.h"
 #include "nsCoord.h"

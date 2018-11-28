@@ -21,7 +21,6 @@
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/EnumSet.h"
 #include "nsThreadUtils.h"

@@ -20,7 +20,6 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ErrorEventBinding.h"

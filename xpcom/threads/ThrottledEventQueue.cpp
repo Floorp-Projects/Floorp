@@ -10,7 +10,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
 

@@ -31,7 +31,6 @@
 #include "mozilla/dom/WorkerLocation.h"
 #include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/cache/CacheStorage.h"
-#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsServiceManagerUtils.h"
 

@@ -17,7 +17,6 @@
 #include "nsIServiceManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Services.h"
 #include "nsIPermissionManager.h"
 #include "mozilla/dom/DeviceLightEvent.h"
 #include "mozilla/dom/DeviceOrientationEvent.h"

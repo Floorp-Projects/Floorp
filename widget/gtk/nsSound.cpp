@@ -23,7 +23,6 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "mozilla/FileUtils.h"
-#include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WidgetUtils.h"
 #include "nsIXULAppInfo.h"
