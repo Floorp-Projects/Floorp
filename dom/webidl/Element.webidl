@@ -235,7 +235,7 @@ dictionary ShadowRootInit {
 // https://dom.spec.whatwg.org/#element
 partial interface Element {
   // Shadow DOM v1
-  [Throws]
+  [Throws, UseCounter]
   ShadowRoot attachShadow(ShadowRootInit shadowRootInitDict);
   [BinaryName="shadowRootByMode"]
   readonly attribute ShadowRoot? shadowRoot;
