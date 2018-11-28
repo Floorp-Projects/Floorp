@@ -20,7 +20,6 @@
 #include "nsImageToPixbuf.h"
 #include "nsStringStream.h"
 #include "nsIObserverService.h"
-#include "mozilla/Services.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "nsDragService.h"

@@ -21,7 +21,6 @@
 
 #include "xpc_make_class.h"
 
-#include "mozilla/Services.h"
 
 namespace mozilla {
 namespace storage {
