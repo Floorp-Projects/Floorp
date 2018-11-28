@@ -12,6 +12,7 @@ async function testDoorHanger(choice) {
     ["browser.contentblocking.allowlist.annotations.enabled", true],
     ["browser.contentblocking.allowlist.storage.enabled", true],
     [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
+    ["dom.storage_access.auto_grants", false],
     ["dom.storage_access.enabled", true],
     ["dom.storage_access.prompt.testing", false],
     ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],

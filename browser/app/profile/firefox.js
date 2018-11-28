@@ -1532,6 +1532,9 @@ pref("browser.contentblocking.allowlist.storage.enabled", true);
 pref("dom.storage_access.enabled", true);
 #endif
 
+pref("dom.storage_access.auto_grants", true);
+pref("dom.storage_access.max_concurrent_auto_grants", 5);
+
 // Define a set of default features for the Content Blocking UI.
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
 pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
