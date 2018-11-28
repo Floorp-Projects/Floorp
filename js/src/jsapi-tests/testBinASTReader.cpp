@@ -23,7 +23,7 @@
 
 #include "jsapi.h"
 
-#include "frontend/BinSource.h"
+#include "frontend/BinASTParserPerTokenizer.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
 #include "frontend/Parser.h"

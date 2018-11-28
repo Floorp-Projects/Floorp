@@ -373,7 +373,7 @@ const size_t BINFIELD_LIMIT = 69;
  * the specifications of Binary AST, as a single macro and
  * `enum class`.
  *
- * Separate enum classes are also defined in BinSource-auto.h.
+ * Separate enum classes are also defined in BinASTParser.h.
  *
  * Usage:
  *

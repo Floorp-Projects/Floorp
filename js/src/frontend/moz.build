@@ -67,9 +67,9 @@ if CONFIG['JS_BUILD_BINAST']:
     SOURCES += ['BinTokenReaderTester.cpp']
     # These parts of BinAST should eventually move to release.
     SOURCES += [
+        'BinASTParser.cpp',
         'BinASTParserBase.cpp',
-        'BinSource-auto.cpp',
-        'BinSource.cpp',
+        'BinASTParserPerTokenizer.cpp',
         'BinSourceRuntimeSupport.cpp',
         'BinToken.cpp',
         'BinTokenReaderBase.cpp',
@@ -80,9 +80,9 @@ if CONFIG['JS_BUILD_BINAST']:
     if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
         include('/tools/fuzzing/libfuzzer-flags.mozbuild')
 
+        SOURCES['BinASTParser.cpp'].flags += libfuzzer_flags
         SOURCES['BinASTParserBase.cpp'].flags += libfuzzer_flags
-        SOURCES['BinSource-auto.cpp'].flags += libfuzzer_flags
-        SOURCES['BinSource.cpp'].flags += libfuzzer_flags
+        SOURCES['BinASTParserPerTokenizer.cpp'].flags += libfuzzer_flags
         SOURCES['BinToken.cpp'].flags += libfuzzer_flags
         SOURCES['BinTokenReaderBase.cpp'].flags += libfuzzer_flags
         SOURCES['BinTokenReaderMultipart.cpp'].flags += libfuzzer_flags
