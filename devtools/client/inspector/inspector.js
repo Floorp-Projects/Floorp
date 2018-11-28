@@ -198,6 +198,10 @@ Inspector.prototype = {
     return this._highlighters;
   },
 
+  get isHighlighterReady() {
+    return !!this._highlighters;
+  },
+
   get is3PaneModeEnabled() {
     if (this.target.chrome) {
       if (!this._is3PaneModeChromeEnabled) {
