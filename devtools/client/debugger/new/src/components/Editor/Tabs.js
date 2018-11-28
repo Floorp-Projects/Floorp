@@ -76,12 +76,10 @@ class Tabs extends PureComponent<Props, State> {
   componentDidMount() {
     window.requestIdleCallback(this.updateHiddenTabs);
     window.addEventListener("resize", this.onResize);
-    window.document.querySelector(".editor-pane").addEventListener("resizeend", this.onResize);
   }
 
   componentWillUnmount() {
     window.removeEventListener("resize", this.onResize);
-    window.document.querySelector(".editor-pane").removeEventListener("resizeend", this.onResize);
   }
 
   /*

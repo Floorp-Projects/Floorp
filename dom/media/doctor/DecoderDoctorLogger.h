@@ -370,7 +370,7 @@ class DecoderDoctorLogger {
 //     ...
 template <typename T>
 class DecoderDoctorLifeLogger {
- public:
+ protected:
   DecoderDoctorLifeLogger() {
     DecoderDoctorLogger::LogConstruction(NonDereferenceable<const T>(this));
   }

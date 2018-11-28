@@ -14,6 +14,7 @@ export * from "../reducers/pending-breakpoints";
 export * from "../reducers/ui";
 export * from "../reducers/file-search";
 export * from "../reducers/ast";
+export * from "../reducers/coverage";
 export * from "../reducers/project-text-search";
 export * from "../reducers/source-tree";
 

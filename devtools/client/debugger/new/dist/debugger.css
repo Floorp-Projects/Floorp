@@ -2286,6 +2286,16 @@ menuseparator {
   background: var(--theme-body-color);
 }
 
+.source-footer .commands .coverage {
+  color: var(--theme-body-color);
+}
+
+.coverage-on .source-footer .commands .coverage {
+  color: var(--theme-highlight-blue);
+  border: 1px solid var(--theme-body-color-inactive);
+  border-radius: 2px;
+}
+
 .source-footer > .commands > .blackboxed > img.blackBox {
   background: var(--theme-highlight-blue);
 }
@@ -2860,6 +2870,11 @@ html[dir="rtl"] .editor-mount {
 
 .editor-wrapper .highlight-lines {
   background: var(--theme-selection-background-hover);
+}
+
+.coverage-on .CodeMirror-code :not(.hit-marker) .CodeMirror-line,
+.coverage-on .CodeMirror-code :not(.hit-marker) .CodeMirror-gutter-wrapper {
+  opacity: 0.5;
 }
 
 .editor.new-breakpoint svg {
