@@ -5,6 +5,8 @@
 package mozilla.components.service.glean
 
 import android.os.SystemClock
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -12,11 +14,17 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 import org.junit.Before
+import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@ObsoleteCoroutinesApi
+@ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 class EventMetricTypeTest {
+
+    @get:Rule
+    val fakeDispatchers = FakeDispatchersInTest()
 
     @Before
     fun setUp() {

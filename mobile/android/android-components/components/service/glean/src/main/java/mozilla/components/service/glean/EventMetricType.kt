@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean
 
+import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -101,14 +102,16 @@ data class EventMetricType(
             eventKeys
         }
 
-        // Delegate storing the event to the storage engine.
-        EventsStorageEngine.record(
-            stores = getStorageNames(),
-            category = category,
-            name = name,
-            objectId = objectId,
-            value = truncatedValue,
-            extra = truncatedExtraKeys
-        )
+        Dispatchers.API.launch {
+            // Delegate storing the event to the storage engine.
+            EventsStorageEngine.record(
+                stores = getStorageNames(),
+                category = category,
+                name = name,
+                objectId = objectId,
+                value = truncatedValue,
+                extra = truncatedExtraKeys
+            )
+        }
     }
 }

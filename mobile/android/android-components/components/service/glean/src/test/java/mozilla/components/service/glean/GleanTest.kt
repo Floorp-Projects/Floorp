@@ -6,6 +6,8 @@ package mozilla.components.service.glean
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.glean.net.HttpPingUploader
 import mozilla.components.service.glean.storages.EventsStorageEngine
@@ -18,6 +20,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
@@ -27,8 +30,14 @@ import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.util.UUID
 
+@ObsoleteCoroutinesApi
+@ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 class GleanTest {
+
+    @get:Rule
+    val fakeDispatchers = FakeDispatchersInTest()
+
     @Before
     fun setup() {
         Glean.initialize(

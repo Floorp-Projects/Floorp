@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean
 
+import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -54,10 +55,12 @@ data class StringMetricType(
             it
         }
 
-        // Delegate storing the string to the storage engine.
-        StringsStorageEngine.record(
-            this,
-            value = truncatedValue
-        )
+        Dispatchers.API.launch {
+            // Delegate storing the string to the storage engine.
+            StringsStorageEngine.record(
+                this@StringMetricType,
+                value = truncatedValue
+            )
+        }
     }
 }

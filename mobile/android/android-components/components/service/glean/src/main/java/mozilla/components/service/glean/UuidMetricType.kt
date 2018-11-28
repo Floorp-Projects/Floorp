@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean
 
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 import mozilla.components.service.glean.storages.UuidsStorageEngine
@@ -31,8 +32,17 @@ data class UuidMetricType(
 
     /**
      * Generate a new UUID value and set it in the metric store.
+     *
+     * @return a [UUID] or [null] if we're not allowed to record.
      */
-    fun generateAndSet(): UUID {
+    fun generateAndSet(): UUID? {
+        // Even if `set` is already checking if we're allowed to record,
+        // we need to check here as well otherwise we'd return a `UUID`
+        // that won't be stored anywhere.
+        if (!shouldRecord(logger)) {
+            return null
+        }
+
         val uuid = UUID.randomUUID()
         set(uuid)
         return uuid
@@ -40,6 +50,8 @@ data class UuidMetricType(
 
     /**
      * Explicitly set an existing UUID value
+     *
+     * @param value a valid [UUID] to set the metric to
      */
     fun set(value: UUID) {
         // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
@@ -48,10 +60,12 @@ data class UuidMetricType(
             return
         }
 
-        // Delegate storing the event to the storage engine.
-        UuidsStorageEngine.record(
-                this,
+        Dispatchers.API.launch {
+            // Delegate storing the event to the storage engine.
+            UuidsStorageEngine.record(
+                this@UuidMetricType,
                 value = value
-        )
+            )
+        }
     }
 }
