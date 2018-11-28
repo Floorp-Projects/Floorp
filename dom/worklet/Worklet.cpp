@@ -228,13 +228,7 @@ public:
       new ExecutionRunnable(this, mWorklet->mImpl, std::move(scriptTextBuf),
                             scriptTextLength);
 
-    RefPtr<WorkletThread> thread = mWorklet->mImpl->GetOrCreateThread();
-    if (!thread) {
-      RejectPromises(NS_ERROR_FAILURE);
-      return NS_OK;
-    }
-
-    if (NS_FAILED(thread->DispatchRunnable(runnable.forget()))) {
+    if (NS_FAILED(mWorklet->mImpl->SendControlMessage(runnable.forget()))) {
       RejectPromises(NS_ERROR_FAILURE);
       return NS_OK;
     }
