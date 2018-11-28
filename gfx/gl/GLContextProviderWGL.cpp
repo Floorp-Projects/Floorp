@@ -176,6 +176,7 @@ WGLLibrary::EnsureInitialized()
 
     // Now we can grab all the other symbols that we couldn't without having
     // a context current.
+    // clang-format off
     const GLLibraryLoader::SymLoadStruct reqExtSymbols[] = {
         { (PRFuncPtr*)&mSymbols.fCreatePbuffer, { "wglCreatePbufferARB", "wglCreatePbufferEXT", nullptr } },
         { (PRFuncPtr*)&mSymbols.fDestroyPbuffer, { "wglDestroyPbufferARB", "wglDestroyPbufferEXT", nullptr } },
@@ -188,6 +189,7 @@ WGLLibrary::EnsureInitialized()
         SYMBOL(GetExtensionsStringARB),
         END_OF_SYMBOLS
     };
+    // clang-format on
     if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, reqExtSymbols, lookupFunc)) {
         NS_WARNING("reqExtSymbols missing");
         return false;

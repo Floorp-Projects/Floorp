@@ -642,9 +642,10 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   //       In this case we use aRequestingLocation to set requestingLocation.
   //    b) TYPE_CSP_REPORT which does not provide a context. In this case we
   //       use aRequestingLocation to set requestingLocation.
-  //    c) content scripts from addon code that do not provide aRequestingContext
-  //       or aRequestingLocation, but do provide aRequestPrincipal.
-  //       If aRequestPrincipal is an expanded principal, we allow the load.
+  //    c) content scripts from addon code that do not provide
+  //       aRequestingContext or aRequestingLocation, but do provide
+  //       aRequestPrincipal. If aRequestPrincipal is an expanded principal,
+  //       we allow the load.
   // 4) If we still end up not having a requestingLocation, we reject the load.
 
   nsCOMPtr<nsIPrincipal> principal;
