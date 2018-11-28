@@ -338,7 +338,6 @@ function addLink(file) {
   let a = document.createElement("a");
   a.setAttribute("href", file);
   a.setAttribute("target", "_blank");
-  a.setAttribute("rel", "opener");
   document.body.appendChild(a);
   return a;
 }
