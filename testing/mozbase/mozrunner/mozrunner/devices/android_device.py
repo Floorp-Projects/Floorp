@@ -262,9 +262,9 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
                         "Install geckoview_example? (Y/n) or quit to exit " % app).strip()
                     if response.lower().startswith('y') or response == '':
                         _log_info("Installing geckoview_example. This may take a while...")
-                        sub = 'geckoview:installWithGeckoBinariesDebugAndroidTest'
+                        sub = 'install-geckoview_example'
                         build_obj._mach_context.commands.dispatch('android',
-                                                                  subcommand='install-geckoview_example',
+                                                                  subcommand=sub,
                                                                   args=[],
                                                                   context=build_obj._mach_context)
                 else:
