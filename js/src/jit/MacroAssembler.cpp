@@ -2954,7 +2954,6 @@ MacroAssembler::subFromStackPtr(Register reg)
 }
 #endif // JS_CODEGEN_ARM64
 
-// clang-format off
 //{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
@@ -3807,7 +3806,6 @@ MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* 
 }
 
 //}}} check_macroassembler_style
-// clang-format on
 
 void
 MacroAssembler::memoryBarrierBefore(const Synchronization& sync) {
