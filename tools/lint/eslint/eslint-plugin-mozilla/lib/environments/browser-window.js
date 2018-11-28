@@ -51,7 +51,7 @@ const MAPPINGS = {
 };
 
 const globalScriptsRegExp =
-  /^\s*(?:Services.scriptloader.loadSubScript\(\"(.*?)\", this\);|"(.*?\.js)",)$/;
+  /^\s*Services.scriptloader.loadSubScript\(\"(.*?)\", this\);$/;
 
 function getGlobalScriptIncludes(scriptPath) {
   let fileData;
@@ -69,7 +69,7 @@ function getGlobalScriptIncludes(scriptPath) {
   for (let line of fileData) {
     let match = line.match(globalScriptsRegExp);
     if (match) {
-      let sourceFile = (match[1] || match[2])
+      let sourceFile = match[1]
                 .replace("chrome://browser/content/search/", "browser/components/search/content/")
                 .replace("chrome://browser/content/", "browser/base/content/")
                 .replace("chrome://global/content/", "toolkit/content/");
