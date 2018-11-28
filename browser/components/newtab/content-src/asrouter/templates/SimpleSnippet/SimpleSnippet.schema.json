@@ -69,7 +69,8 @@
     },
     "block_button_text": {
       "type": "string",
-      "description": "Tooltip text used for dismiss button."
+      "description": "Tooltip text used for dismiss button.",
+      "default": "Remove this"
     },
     "tall": {
       "type": "boolean",

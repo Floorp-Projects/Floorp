@@ -1,4 +1,5 @@
 import React from "react";
+import schema from "../../templates/SimpleSnippet/SimpleSnippet.schema.json";
 
 export class SnippetBase extends React.PureComponent {
   constructor(props) {
@@ -29,8 +30,9 @@ export class SnippetBase extends React.PureComponent {
       );
     }
 
+    const defaultTitle = schema.properties.block_button_text.default;
     return (
-      <button className="blockButton" title={this.props.content.block_button_text || "Remove this"} onClick={this.onBlockClicked} />
+      <button className="blockButton" title={this.props.content.block_button_text || defaultTitle} onClick={this.onBlockClicked} />
     );
   }
 

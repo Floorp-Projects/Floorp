@@ -4,6 +4,7 @@
 "use strict";
 
 const TEST_ICON = "chrome://branding/content/icon64.png";
+const TEST_ICON_16 = "chrome://branding/content/icon16.png";
 
 const MESSAGES = () => ([
   {
@@ -12,6 +13,8 @@ const MESSAGES = () => ([
     "campaign": "test_campaign_blocking",
     "content": {
       "icon": TEST_ICON,
+      "title": "Firefox Account!",
+      "title_icon": TEST_ICON_16,
       "text": "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
       "links": {"syncLink": {"url": "https://www.mozilla.org/en-US/firefox/accounts"}},
       "block_button_text": "Block",
@@ -69,7 +72,7 @@ const MESSAGES = () => ([
     "content": {
       "scene1_icon": TEST_ICON,
       "scene1_title": "Be a part of a movement.",
-      "scene1_title_icon": "",
+      "scene1_title_icon": TEST_ICON_16,
       "scene1_text": "Internet shutdowns, hackers, harassment &ndash; the health of the internet is on the line. Sign up and Mozilla will keep you updated on how you can help.",
       "scene1_button_label": "Continue",
       "scene1_button_color": "#712b00",
@@ -79,7 +82,6 @@ const MESSAGES = () => ([
       "scene2_text": "Sign up for the Mozilla newsletter and we will keep you updated on how you can help.",
       "scene2_privacy_html": "I'm okay with Mozilla handling my info as explained in this <privacyLink>Privacy Notice</privacyLink>.",
       "scene2_newsletter": "mozilla-foundation",
-      "form_action": "https://basket.mozilla.org/subscribe.json",
       "success_text": "Check your inbox for the confirmation!",
       "error_text": "Error!",
       "links": {"privacyLink": {"url": "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894"}},
@@ -104,7 +106,6 @@ const MESSAGES = () => ([
       "scene2_button_label": "Sign Me up",
       "scene2_email_placeholder_text": "Your email here",
       "scene2_newsletter": "mozilla-foundation",
-      "form_action": "https://basket.mozilla.org/subscribe.json",
       "success_text": "Check your inbox for the confirmation!",
       "error_text": "Error!",
       "links": {"privacyLink": {"url": "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894"}},
@@ -121,7 +122,7 @@ const MESSAGES = () => ([
 
       "scene1_text": "Connect to Firefox by securely syncing passwords, bookmarks, and open tabs.",
       "scene1_title": "Browser better.",
-      "scene1_title_icon": "",
+      "scene1_title_icon": TEST_ICON_16,
 
       "scene2_text": "Connect to your Firefox account to securely sync passwords, bookmarks, and open tabs.",
       "scene2_title": "Title 123",
@@ -147,7 +148,7 @@ const MESSAGES = () => ([
       scene1_icon: TEST_ICON,
       scene1_text: "Browse without compromise with Firefox Mobile.",
       scene1_title: "Full-featured. Customizable. Lightning fast",
-      scene1_title_icon: "",
+      scene1_title_icon: TEST_ICON_16,
 
       scene2_button_label: "Send",
       scene2_disclaimer_html: "The intended recipient of the email must have consented. <privacyLink>Learn more.</privacyLink>",
@@ -168,6 +169,8 @@ const MESSAGES = () => ([
     "template": "eoy_snippet",
     "content": {
       "highlight_color": "#f05",
+      "background_color": "#ddd",
+      "text_color": "yellow",
       "selected_button": "donation_amount_first",
       "icon": TEST_ICON,
       "button_label": "Donate",

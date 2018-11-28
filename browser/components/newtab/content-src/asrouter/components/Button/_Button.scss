@@ -1,9 +1,9 @@
 .ASRouterButton {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 14px;
   white-space: nowrap;
   border-radius: 2px;
-  border: 1px solid var(--newtab-border-secondary-color);
-  background-color: var(--newtab-button-secondary-color);
+  border: 0;
   font-family: inherit;
   padding: 8px 15px;
   margin-inline-start: 12px;
@@ -18,12 +18,54 @@
     border: 1px solid var(--newtab-button-primary-color);
     background-color: var(--newtab-button-primary-color);
     color: $grey-10;
+
+    &:hover {
+      background-color: $blue-70;
+    }
+
+    &:active {
+      background-color: $blue-80;
+    }
   }
 
   &.secondary {
-    background: var(--newtab-button-secondary-color);
-    border: 1px solid var(--newtab-border-primary-color);
-    font-size: 14px;
-    font-weight: 600;
+    background-color: $grey-90-10;
+
+    &:hover {
+      background-color: $grey-90-20;
+    }
+
+    &:active {
+      background-color: $grey-90-30;
+    }
+  }
+}
+
+[lwt-newtab-brighttext] {
+  .secondary {
+    background-color: $grey-10-10;
+
+    &:hover {
+      background-color: $grey-10-20;
+    }
+
+    &:active {
+      background-color: $grey-10-30;
+    }
+  }
+
+  // Snippets scene 2 footer
+  .footer {
+    .secondary {
+      background-color: $grey-10-30;
+
+      &:hover {
+        background-color: $grey-10-40;
+      }
+
+      &:active {
+        background-color: $grey-10-50;
+      }
+    }
   }
 }

@@ -1894,11 +1894,11 @@ a.firstrun-link {
   transform: scaleX(-1); }
 
 .ASRouterButton {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 14px;
   white-space: nowrap;
   border-radius: 2px;
-  border: 1px solid var(--newtab-border-secondary-color);
-  background-color: var(--newtab-button-secondary-color);
+  border: 0;
   font-family: inherit;
   padding: 8px 15px;
   margin-inline-start: 12px;
@@ -1910,11 +1910,30 @@ a.firstrun-link {
     border: 1px solid var(--newtab-button-primary-color);
     background-color: var(--newtab-button-primary-color);
     color: #F9F9FA; }
+    .ASRouterButton.primary:hover {
+      background-color: #003EAA; }
+    .ASRouterButton.primary:active {
+      background-color: #002275; }
   .ASRouterButton.secondary {
-    background: var(--newtab-button-secondary-color);
-    border: 1px solid var(--newtab-border-primary-color);
-    font-size: 14px;
-    font-weight: 600; }
+    background-color: rgba(12, 12, 13, 0.1); }
+    .ASRouterButton.secondary:hover {
+      background-color: rgba(12, 12, 13, 0.2); }
+    .ASRouterButton.secondary:active {
+      background-color: rgba(12, 12, 13, 0.3); }
+
+[lwt-newtab-brighttext] .secondary {
+  background-color: rgba(249, 249, 250, 0.1); }
+  [lwt-newtab-brighttext] .secondary:hover {
+    background-color: rgba(249, 249, 250, 0.2); }
+  [lwt-newtab-brighttext] .secondary:active {
+    background-color: rgba(249, 249, 250, 0.3); }
+
+[lwt-newtab-brighttext] .footer .secondary {
+  background-color: rgba(249, 249, 250, 0.3); }
+  [lwt-newtab-brighttext] .footer .secondary:hover {
+    background-color: rgba(249, 249, 250, 0.4); }
+  [lwt-newtab-brighttext] .footer .secondary:active {
+    background-color: rgba(249, 249, 250, 0.5); }
 
 .SnippetBaseContainer {
   position: fixed;
@@ -1931,8 +1950,9 @@ a.firstrun-link {
   align-items: center; }
   .SnippetBaseContainer a {
     cursor: pointer;
-    color: var(--newtab-link-primary-color);
-    text-decoration: underline; }
+    color: var(--newtab-link-primary-color); }
+    .SnippetBaseContainer a:hover {
+      text-decoration: underline; }
     [lwt-newtab-brighttext] .SnippetBaseContainer a {
       font-weight: bold; }
   .SnippetBaseContainer input[type='checkbox'] {
@@ -1945,13 +1965,13 @@ a.firstrun-link {
     align-items: center;
     padding: 12px 25px;
     padding-inline-end: 36px;
-    max-width: 786px; }
+    max-width: 836px; }
     @media (min-width: 866px) {
       .SnippetBaseContainer .innerWrapper {
         padding-inline-end: 25px; } }
     @media (min-width: 1122px) {
       .SnippetBaseContainer .innerWrapper {
-        max-width: 1042px; } }
+        max-width: 1092px; } }
   .SnippetBaseContainer .blockButton {
     display: none;
     background: none;
@@ -2106,13 +2126,16 @@ a.firstrun-link {
     height: 79px; }
 
 .SimpleSnippet .title {
-  display: inline;
   font-size: inherit;
   margin: 0; }
+
+.SimpleSnippet .title-inline {
+  display: inline; }
 
 .SimpleSnippet .titleIcon {
   background-repeat: no-repeat;
   background-size: 14px;
+  background-position: center;
   height: 16px;
   width: 16px;
   margin-top: 2px;
@@ -2133,16 +2156,14 @@ a.firstrun-link {
 .SimpleSnippet .icon {
   align-self: flex-start; }
 
-.SimpleSnippet .ASRouterButton {
-  cursor: pointer; }
-
 .SubmitFormSnippet {
   flex-direction: column;
   flex: 1 1 100%;
   width: 100%; }
   .SubmitFormSnippet .disclaimerText {
     margin: 20px 0 0;
-    font-size: 12px; }
+    font-size: 12px;
+    color: var(--newtab-text-secondary-color); }
   .SubmitFormSnippet p {
     margin: 0; }
   .SubmitFormSnippet.send_to_device_snippet {
@@ -2150,10 +2171,11 @@ a.firstrun-link {
     .SubmitFormSnippet.send_to_device_snippet .message {
       font-size: 16px;
       margin-bottom: 20px; }
+    .SubmitFormSnippet.send_to_device_snippet .scene2Title {
+      font-size: 24px;
+      display: block; }
   .SubmitFormSnippet .ASRouterButton.primary {
     flex: 1 1 0; }
-    .SubmitFormSnippet .ASRouterButton.primary[type='submit'] {
-      font-weight: normal; }
   .SubmitFormSnippet .scene2Icon {
     width: 100%;
     margin-bottom: 20px; }
@@ -2162,7 +2184,7 @@ a.firstrun-link {
       display: inline-block; }
   .SubmitFormSnippet .scene2Title {
     font-size: inherit;
-    margin: 0;
+    margin: 0 0 10px;
     font-weight: bold;
     display: inline; }
   .SubmitFormSnippet form {
@@ -2179,8 +2201,6 @@ a.firstrun-link {
     color: var(--newtab-text-secondary-color);
     margin-top: 10px;
     flex: 0 0 100%; }
-    .SubmitFormSnippet .privacyNotice span {
-      vertical-align: top; }
   .SubmitFormSnippet .innerWrapper {
     max-width: 670px;
     flex-wrap: wrap;
@@ -2198,6 +2218,8 @@ a.firstrun-link {
       max-width: 768px;
       width: 100%;
       text-align: right; }
+      [dir='rtl'] .SubmitFormSnippet .footer .footer-content {
+        text-align: left; }
   .SubmitFormSnippet input.mainInput {
     border-radius: 2px;
     background-color: var(--newtab-textbox-background-color);
@@ -2206,6 +2228,8 @@ a.firstrun-link {
     height: 100%;
     font-size: 14px;
     width: 50%; }
+    .SubmitFormSnippet input.mainInput.clean:invalid, .SubmitFormSnippet input.mainInput.clean:required {
+      box-shadow: none; }
     .SubmitFormSnippet input.mainInput:focus {
       border: 1px solid var(--newtab-textbox-focus-color);
       box-shadow: var(--newtab-textbox-focus-boxshadow); }
@@ -2356,6 +2380,9 @@ a.firstrun-link {
       background: #737373;
       color: #FFF;
       border: 1px solid #4A4A4F; }
+    .EOYSnippetForm input[type='radio']:checked:focus + .donation-amount,
+    .EOYSnippetForm input[type='radio']:not(:checked):focus + .donation-amount {
+      border: 1px dotted var(--newtab-link-primary-color); }
   .EOYSnippetForm .monthly-checkbox-container {
     width: 100%; }
     .EOYSnippetForm .monthly-checkbox-container input[type='checkbox'] {
@@ -2365,11 +2392,7 @@ a.firstrun-link {
       vertical-align: super; }
   .EOYSnippetForm .donation-form-url {
     margin-inline-start: 18px;
-    background-color: var(--newtab-button-primary-color);
-    border: 0;
-    color: #FFF;
     align-self: flex-end;
-    display: flex;
-    cursor: pointer; }
+    display: flex; }
 
 /*# sourceMappingURL=activity-stream-linux.css.map */

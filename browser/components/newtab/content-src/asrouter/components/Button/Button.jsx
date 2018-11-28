@@ -17,7 +17,7 @@ export const Button = props => {
   }
 
   return (<button onClick={props.onClick}
-    className={props.className || "ASRouterButton"}
+    className={props.className || "ASRouterButton secondary"}
     style={style}>
     {props.children}
   </button>);
