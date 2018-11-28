@@ -480,7 +480,7 @@ class FlexboxInspector {
           true);
       }
 
-      const highlighted = this.inspector.isHighlighterReady &&
+      const highlighted = this._highlighters &&
         flexContainer.nodeFront === this.highlighters.flexboxHighlighterShown;
       const color = await this.getOverlayColor();
 
