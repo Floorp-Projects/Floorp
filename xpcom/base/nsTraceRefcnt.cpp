@@ -351,8 +351,11 @@ public:
 
 protected:
   char* mClassName;
-  double mClassSize; // This is stored as a double because of the way we compute the avg class size for total bloat.
-  int64_t mTotalLeaked; // Used only for TOTAL entry.
+  // mClassSize is stored as a double because of the way we compute the avg
+  // class size for total bloat.
+  double mClassSize;
+  // mTotalLeaked is only used for the TOTAL entry.
+  int64_t mTotalLeaked;
   nsTraceRefcntStats mStats;
 };
 

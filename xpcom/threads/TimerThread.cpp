@@ -115,11 +115,11 @@ private:
 
 public:
   TimerEventAllocator()
-    : mPool()
-    , mFirstFree(nullptr)
+    : mPool(),
+      mFirstFree(nullptr),
       // Timer thread state may be accessed during GC, so uses of this monitor
       // are not preserved when recording/replaying.
-    , mMonitor("TimerEventAllocator", recordreplay::Behavior::DontPreserve)
+      mMonitor("TimerEventAllocator", recordreplay::Behavior::DontPreserve)
   {
   }
 
