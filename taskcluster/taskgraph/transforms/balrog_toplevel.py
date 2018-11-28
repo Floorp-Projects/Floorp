@@ -29,12 +29,15 @@ def generate_update_line(config, jobs):
         with open(config_file, "rb") as f:
             update_config = yaml.safe_load(f)
 
+        product = job['shipping-product']
+        if product == 'devedition':
+            product = 'firefox'
         job['worker']['update-line'] = {}
         for blob_type, suffix in [('wnp', ''), ('no-wnp', '-No-WNP')]:
             context = {
                 'release-type': config.params['release_type'],
-                'product': job['shipping-product'],
-                'version': GeckoVersion.parse(release_config['version']),
+                'product': product,
+                'version': GeckoVersion.parse(release_config['appVersion']),
                 'blob-type': blob_type,
             }
             job['worker']['update-line'][suffix] = generate_update_properties(
