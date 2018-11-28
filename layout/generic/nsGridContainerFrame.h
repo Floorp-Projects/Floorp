@@ -257,6 +257,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static nsGridContainerFrame* GetGridFrameWithComputedInfo(nsIFrame* aFrame);
 
+  struct Subgrid;
   struct TrackSize;
   struct GridItemInfo;
   struct GridReflowInput;
