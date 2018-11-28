@@ -5630,6 +5630,19 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
   return aBSize;
 }
 
+nsGridContainerFrame* nsGridContainerFrame::ParentGridContainerForSubgrid()
+    const {
+  MOZ_ASSERT(IsSubgrid());
+  nsIFrame* p = GetParent();
+  while (p->GetContent() == GetContent()) {
+    p = p->GetParent();
+  }
+  MOZ_ASSERT(p->IsGridContainerFrame());
+  auto* parent = static_cast<nsGridContainerFrame*>(p);
+  MOZ_ASSERT(parent->HasSubgridItems());
+  return parent;
+}
+
 nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
                                              const LogicalRect& aContentArea,
                                              ReflowOutput& aDesiredSize,
