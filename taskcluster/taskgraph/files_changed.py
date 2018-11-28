@@ -37,9 +37,12 @@ def get_changed_files(repository, revision):
                  .format(len(contents['changesets'])))
     changed_files = set()
     for c in contents['changesets']:
+        desc = ""  # Support empty desc
+        if c['desc']:
+            desc = c['desc'].splitlines()[0].encode('ascii', 'ignore')
         logger.debug(" {cset} {desc}".format(
             cset=c['node'][0:12],
-            desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
+            desc=desc))
         changed_files |= set(c['files'])
 
     return changed_files
