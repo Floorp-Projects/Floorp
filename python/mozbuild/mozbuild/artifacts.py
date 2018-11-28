@@ -545,6 +545,8 @@ JOB_DETAILS = {
                                              r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'android-x86_64-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
                                                 r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'android-x86_64-debug': (AndroidArtifactJob, (r'public/build/target\.apk',
+                                                  r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'android-aarch64-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
                                                  r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'android-aarch64-debug': (AndroidArtifactJob, (r'public/build/target\.apk',
