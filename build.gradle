@@ -79,7 +79,13 @@ class TaggedLogOutputStream extends org.apache.commons.exec.LogOutputStream {
     }
 }
 
-if ('multi' == System.env.AB_CD) {
+ext.geckoBinariesOnlyIf = { task ->
+    // Never for official builds.
+    if (mozconfig.substs.MOZILLA_OFFICIAL) {
+        rootProject.logger.lifecycle("Skipping task ${task.path} because: MOZILLA_OFFICIAL")
+        return false
+    }
+
     // Multi-l10n builds set `AB_CD=multi`, which isn't a valid locale.  This
     // causes the
     //
@@ -87,29 +93,40 @@ if ('multi' == System.env.AB_CD) {
     //
     // dependency chain to fail, since multi isn't a real locale.  To avoid
     // this, if Gradle is invoked with AB_CD=multi, we don't invoke Make at all.
-    task machBuildFaster()
-} else if (System.env.IS_LANGUAGE_REPACK == '1') {
+    if ('multi' == System.env.AB_CD) {
+        rootProject.logger.lifecycle("Skipping task ${task.path} because: AB_CD=multi")
+        return false
+    }
+
     // Single-locale l10n repacks set `IS_LANGUAGE_REPACK=1` and handle resource
     // and code generation themselves.
-    task machBuildFaster()
-} else {
-    task machBuildFaster(type: Exec) {
-        workingDir "${topsrcdir}"
-
-        commandLine mozconfig.substs.PYTHON
-        args "${topsrcdir}/mach"
-        args 'build'
-        args 'faster'
-
-        // Add `-v` if we're running under `--info` (or `--debug`).
-        if (project.logger.isEnabled(LogLevel.INFO)) {
-            args '-v'
-        }
-
-        // `path` is like `:machBuildFaster`.
-        standardOutput = new TaggedLogOutputStream("${path}>", logger)
-        errorOutput = standardOutput
+    if ('1' == System.env.IS_LANGUAGE_REPACK) {
+        rootProject.logger.lifecycle("Skipping task ${task.path} because: IS_LANGUAGE_REPACK")
+        return false
     }
+
+    rootProject.logger.lifecycle("Executing task ${task.path}")
+    return true
+}
+
+task machBuildFaster(type: Exec) {
+    onlyIf rootProject.ext.geckoBinariesOnlyIf
+
+    workingDir "${topsrcdir}"
+
+    commandLine mozconfig.substs.PYTHON
+    args "${topsrcdir}/mach"
+    args 'build'
+    args 'faster'
+
+    // Add `-v` if we're running under `--info` (or `--debug`).
+    if (project.logger.isEnabled(LogLevel.INFO)) {
+        args '-v'
+    }
+
+    // `path` is like `:machBuildFaster`.
+    standardOutput = new TaggedLogOutputStream("${path}>", logger)
+    errorOutput = standardOutput
 }
 
 afterEvaluate {
