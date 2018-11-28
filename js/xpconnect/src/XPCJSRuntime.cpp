@@ -42,6 +42,7 @@
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollector.h"
 #include "jsapi.h"
+#include "js/MemoryFunctions.h"
 #include "js/MemoryMetrics.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodeUtils.h"

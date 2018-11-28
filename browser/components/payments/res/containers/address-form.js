@@ -412,12 +412,12 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
         return paymentDetails.shippingAddressErrors;
       }
       case "selectedPayerAddress": {
-        return paymentDetails.payer;
+        return paymentDetails.payerErrors;
       }
       case "basic-card-page|billingAddressGUID": {
         // `paymentMethod` can be null.
-        return (paymentDetails.paymentMethod
-                && paymentDetails.paymentMethod.billingAddress) || {};
+        return (paymentDetails.paymentMethodErrors
+                && paymentDetails.paymentMethodErrors.billingAddress) || {};
       }
       default: {
         throw new Error("Unknown selectedStateKey");

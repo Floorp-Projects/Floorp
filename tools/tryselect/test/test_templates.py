@@ -29,9 +29,9 @@ TEMPLATE_TESTS = {
     ],
     'path': [
         ([], None),
-        (['dom/indexedDB'], {'env': {'MOZHARNESS_TEST_PATHS': 'dom/indexedDB'}}),
+        (['dom/indexedDB'], {'env': {'MOZHARNESS_TEST_PATHS': '{"xpcshell": ["dom/indexedDB"]}'}}),
         (['dom/indexedDB', 'testing'],
-         {'env': {'MOZHARNESS_TEST_PATHS': 'dom/indexedDB:testing'}}),
+         {'env': {'MOZHARNESS_TEST_PATHS': '{"xpcshell": ["dom/indexedDB", "testing"]}'}}),
         (['invalid/path'], SystemExit),
     ],
     'rebuild': [
@@ -49,7 +49,14 @@ TEMPLATE_TESTS = {
 }
 
 
-def test_templates(template, args, expected):
+@pytest.fixture
+def template_patch_resolver(patch_resolver):
+    def inner(paths):
+        patch_resolver([], [{'flavor': 'xpcshell', 'srcdir_relpath': path} for path in paths])
+    return inner
+
+
+def test_templates(template_patch_resolver, template, args, expected):
     parser = ArgumentParser()
 
     t = all_templates[template]()
@@ -58,9 +65,13 @@ def test_templates(template, args, expected):
     if inspect.isclass(expected) and issubclass(expected, BaseException):
         with pytest.raises(expected):
             args = parser.parse_args(args)
+            if template == 'path':
+                template_patch_resolver(**vars(args))
             t.context(**vars(args))
     else:
         args = parser.parse_args(args)
+        if template == 'path':
+            template_patch_resolver(**vars(args))
         assert t.context(**vars(args)) == expected
 
 

@@ -2,6 +2,7 @@
 #include "jsapi.h"
 
 #include "js/HeapAPI.h"
+#include "js/Symbol.h"
 
 FRAGMENT(GCCellPtr, simple) {
   JS::GCCellPtr nulll(nullptr);

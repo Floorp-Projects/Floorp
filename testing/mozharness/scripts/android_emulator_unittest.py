@@ -7,6 +7,7 @@
 
 import copy
 import datetime
+import json
 import os
 import re
 import sys
@@ -24,6 +25,9 @@ from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options
 )
+
+SUITE_DEFAULT_E10S = ['geckoview-junit', 'mochitest', 'reftest']
+SUITE_NO_E10S = ['cppunittest', 'geckoview-junit', 'xpcshell']
 
 
 class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMixin,
@@ -75,6 +79,13 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
          "default": "info",
          "help": "Set log level (debug|info|warning|error|critical|fatal)",
          }
+    ], [
+        ['--e10s', ],
+        {"action": "store_true",
+         "dest": "e10s",
+         "default": False,
+         "help": "Run tests with multiple processes.",
+         }
     ]] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
@@ -121,6 +132,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         self.device_serial = 'emulator-5554'
         self.log_raw_level = c.get('log_raw_level')
         self.log_tbpl_level = c.get('log_tbpl_level')
+        self.e10s = c.get('e10s')
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -214,7 +226,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             ),
         }
 
-        user_paths = os.environ.get('MOZHARNESS_TEST_PATHS')
+        user_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
+
         for option in self.config["suite_definitions"][self.test_suite]["options"]:
             opt = option.split('=')[0]
             # override configured chunk options with script args, if specified
@@ -230,9 +243,22 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 if option:
                     cmd.extend([option])
 
+        if 'mochitest' in self.test_suite:
+            category = 'mochitest'
+        elif 'reftest' in self.test_suite or 'crashtest' in self.test_suite:
+            category = 'reftest'
+        else:
+            category = self.test_suite
+        if category not in SUITE_NO_E10S:
+            if category in SUITE_DEFAULT_E10S and not self.e10s:
+                cmd.extend(['--disable-e10s'])
+            elif category not in SUITE_DEFAULT_E10S and self.e10s:
+                cmd.extend(['--e10s'])
+
         if not (self.verify_enabled or self.per_test_coverage):
             if user_paths:
-                cmd.extend(user_paths.split(':'))
+                if self.test_suite in user_paths:
+                    cmd.extend(user_paths[self.test_suite])
             elif not (self.verify_enabled or self.per_test_coverage):
                 if self.this_chunk is not None:
                     cmd.extend(['--this-chunk', self.this_chunk])

@@ -10,6 +10,7 @@
 #include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/dom/TabChild.h"
 #include "jsfriendapi.h"
+#include "js/Symbol.h"
 #include "xpcprivate.h"
 #include "WrapperFactory.h"
 #include "mozilla/Preferences.h"

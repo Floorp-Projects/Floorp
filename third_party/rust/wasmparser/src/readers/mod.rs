@@ -15,8 +15,8 @@
 
 use super::{
     BinaryReader, BinaryReaderError, CustomSectionKind, ExternalKind, FuncType, GlobalType,
-    ImportSectionEntryType, LinkingType, MemoryType, NameType, Naming, Operator, RelocType, Result,
-    SectionCode, TableType, Type,
+    ImportSectionEntryType, LinkingType, MemoryType, NameType, Naming, Operator, Range, RelocType,
+    Result, SectionCode, TableType, Type,
 };
 
 use super::SectionHeader;

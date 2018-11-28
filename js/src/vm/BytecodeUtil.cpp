@@ -35,6 +35,7 @@
 #include "gc/GCInternals.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
+#include "js/Symbol.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/CodeCoverage.h"

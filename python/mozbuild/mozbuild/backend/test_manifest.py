@@ -78,6 +78,7 @@ class TestManifestBackend(PartialBackend):
         key = path[len(topsrcdir)+1:]
         t['file_relpath'] = key
         t['dir_relpath'] = mozpath.dirname(key)
+        t['srcdir_relpath'] = key
 
         self.tests_by_path[key].append(t)
 

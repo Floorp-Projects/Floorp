@@ -26,7 +26,7 @@ load 1242093-1.html
 load 1242778-1.png
 load 1249576-1.png
 load 1253362-1.html
-load 1355898-1.html
+skip-if(Android&&browserIsRemote) load 1355898-1.html # bug 1507207
 load 1375842-1.html
 load 1413762-1.gif
 pref(image.downscale-during-decode.enabled,true) load 1443232-1.html

@@ -5,6 +5,8 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 
+import itertools
+import json
 import math
 import os
 import posixpath
@@ -238,7 +240,8 @@ class SingleTestMixin(FetchesMixin):
 
         changed_files = set()
         if os.environ.get('MOZHARNESS_TEST_PATHS', None) is not None:
-            changed_files |= set(os.environ['MOZHARNESS_TEST_PATHS'].split(':'))
+            suite_to_paths = json.loads(os.environ['MOZHARNESS_TEST_PATHS'])
+            changed_files |= itertools.chain.from_iterable(suite_to_paths.values())
             self.info("Per-test run found explicit request in MOZHARNESS_TEST_PATHS:")
             self.info(str(changed_files))
         else:
