@@ -6829,7 +6829,6 @@ nsDisplayOpacity::CreateWebRenderCommands(
                            GetActiveScrolledRoot(),
                            aBuilder,
                            filters,
-                           LayoutDeviceRect(),
                            nullptr,
                            animationsId ? &prop : nullptr,
                            opacityForSC);
@@ -6883,10 +6882,10 @@ nsDisplayBlendMode::CreateWebRenderCommands(
                            GetActiveScrolledRoot(),
                            aBuilder,
                            filters,
-                           LayoutDeviceRect(),
                            nullptr,
                            nullptr,
                            nullptr,
+                           LayoutDevicePoint(),
                            nullptr,
                            nullptr,
                            nsCSSRendering::GetGFXBlendMode(mBlendMode));
@@ -7175,7 +7174,6 @@ nsDisplayOwnLayer::CreateWebRenderCommands(
                            GetActiveScrolledRoot(),
                            aBuilder,
                            nsTArray<wr::WrFilterOp>(),
-                           LayoutDeviceRect(),
                            nullptr,
                            &prop);
 
@@ -7834,6 +7832,14 @@ nsDisplayStickyPosition::CreateWebRenderCommands(
     nsRect scrollPort =
       stickyScrollContainer->ScrollFrame()->GetScrollPortRect();
     scrollPort += offset;
+    // It would be cleaner to just modify `scrollPort` here instead of
+    // adjusting the computed margins, but the `scrollOrigin` is in a different
+    // space.
+    // Note: we aren't applying the reference frame origin if the scroll frame
+    // is already attached to it.
+    auto& scrollOrigin =
+      nsLayoutUtils::GetReferenceFrame(scrollFrame) == ReferenceFrame() ?
+      LayoutDevicePoint() : aSc.GetInheritedStickyOrigin();
 
     // The following computations make more sense upon understanding the
     // semantics of "inner" and "outer", which is explained in the comment on
@@ -7857,7 +7863,8 @@ nsDisplayStickyPosition::CreateWebRenderCommands(
       // -distance works.
       nscoord distance = DistanceToRange(inner.YMost(), outer.YMost());
       topMargin = Some(NSAppUnitsToFloatPixels(
-        itemBounds.y - scrollPort.y - distance, auPerDevPixel));
+        itemBounds.y - scrollPort.y - distance, auPerDevPixel
+        ) - scrollOrigin.y);
       // Question: What is the maximum positive ("downward") offset that WR
       // will have to apply to this item in order to prevent the item from
       // visually moving?
@@ -7883,7 +7890,8 @@ nsDisplayStickyPosition::CreateWebRenderCommands(
       // the distance from itemBounds.YMost() to scrollPort.YMost().
       nscoord distance = DistanceToRange(outer.Y(), inner.Y());
       bottomMargin = Some(NSAppUnitsToFloatPixels(
-        scrollPort.YMost() - itemBounds.YMost() + distance, auPerDevPixel));
+        scrollPort.YMost() - itemBounds.YMost() + distance, auPerDevPixel
+        ) - scrollOrigin.y);
       // And here WR will be moving the item upwards rather than downwards so
       // again things are inverted from the previous block.
       vBounds.min =
@@ -7900,7 +7908,8 @@ nsDisplayStickyPosition::CreateWebRenderCommands(
     if (outer.XMost() != inner.XMost()) {
       nscoord distance = DistanceToRange(inner.XMost(), outer.XMost());
       leftMargin = Some(NSAppUnitsToFloatPixels(
-        itemBounds.x - scrollPort.x - distance, auPerDevPixel));
+        itemBounds.x - scrollPort.x - distance, auPerDevPixel
+        ) - scrollOrigin.x);
       hBounds.max =
         NSAppUnitsToFloatPixels(outer.XMost() - inner.XMost(), auPerDevPixel);
       if (inner.XMost() < 0) {
@@ -7911,7 +7920,8 @@ nsDisplayStickyPosition::CreateWebRenderCommands(
     if (outer.X() != inner.X()) {
       nscoord distance = DistanceToRange(outer.X(), inner.X());
       rightMargin = Some(NSAppUnitsToFloatPixels(
-        scrollPort.XMost() - itemBounds.XMost() + distance, auPerDevPixel));
+        scrollPort.XMost() - itemBounds.XMost() + distance, auPerDevPixel
+        ) - scrollOrigin.x);
       hBounds.min =
         NSAppUnitsToFloatPixels(outer.X() - inner.X(), auPerDevPixel);
       if (appliedOffset.x == 0 && inner.X() > 0) {
@@ -8915,10 +8925,10 @@ nsDisplayTransform::CreateWebRenderCommands(
                            GetActiveScrolledRoot(),
                            aBuilder,
                            filters,
-                           LayoutDeviceRect(position, LayoutDeviceSize()),
                            &newTransformMatrix,
                            animationsId ? &prop : nullptr,
                            nullptr,
+                           position,
                            transformForSC,
                            nullptr,
                            gfx::CompositionOp::OP_OVER,
@@ -9565,10 +9575,10 @@ nsDisplayPerspective::CreateWebRenderCommands(
                            GetActiveScrolledRoot(),
                            aBuilder,
                            filters,
-                           LayoutDeviceRect(),
                            nullptr,
                            nullptr,
                            nullptr,
+                           LayoutDevicePoint(),
                            &transformForSC,
                            &perspectiveMatrix,
                            gfx::CompositionOp::OP_OVER,
@@ -10256,10 +10266,10 @@ nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
                   GetActiveScrolledRoot(),
                   aBuilder,
                   /*aFilters: */ nsTArray<wr::WrFilterOp>(),
-                  /*aBounds: */ bounds,
                   /*aBoundTransform: */ nullptr,
                   /*aAnimation: */ nullptr,
                   /*aOpacity: */ opacity.ptrOr(nullptr),
+                  /*aOrigin: */ LayoutDevicePoint(),
                   /*aTransform: */ nullptr,
                   /*aPerspective: */ nullptr,
                   /*aMixBlendMode: */ gfx::CompositionOp::OP_OVER,
@@ -10579,11 +10589,11 @@ nsDisplayFilters::CreateWebRenderCommands(
                            GetActiveScrolledRoot(),
                            aBuilder,
                            wrFilters,
-                           LayoutDeviceRect(),
                            nullptr,
                            nullptr,
                            opacity != 1.0f && mHandleOpacity ? &opacity
                                                              : nullptr,
+                           LayoutDevicePoint(),
                            nullptr,
                            nullptr,
                            gfx::CompositionOp::OP_OVER,

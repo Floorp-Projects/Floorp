@@ -1854,8 +1854,31 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
 }
 
 #[no_mangle]
+pub extern "C" fn wr_dp_push_reference_frame(state: &mut WrState,
+                                             transform: &LayoutTransform) -> usize {
+    debug_assert!(unsafe { !is_in_render_thread() });
+
+    let perspective = None;
+    let ref_frame_id = state.frame_builder.dl_builder.push_reference_frame(
+        &LayoutPrimitiveInfo::new(LayoutRect::zero()),
+        Some(PropertyBinding::Value(*transform)),
+        perspective,
+    );
+
+    state.frame_builder.dl_builder.push_clip_id(ref_frame_id);
+    pack_clip_id(ref_frame_id)
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_pop_reference_frame(state: &mut WrState) {
+    debug_assert!(unsafe { !is_in_render_thread() });
+
+    state.frame_builder.dl_builder.pop_clip_id();
+    state.frame_builder.dl_builder.pop_reference_frame();
+}
+
+#[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
-                                              bounds: LayoutRect,
                                               clip_node_id: *const WrClipId,
                                               animation: *const WrAnimationProperty,
                                               opacity: *const f32,
@@ -1892,56 +1915,54 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         }
     }).collect();
 
-    let clip_node_id_ref = unsafe { clip_node_id.as_ref() };
-    let clip_node_id = match clip_node_id_ref {
+    let clip_node_id = match unsafe { clip_node_id.as_ref() } {
         Some(clip_node_id) => Some(unpack_clip_id(*clip_node_id, state.pipeline_id)),
         None => None,
     };
 
-    let transform_ref = unsafe { transform.as_ref() };
-    let mut transform_binding = match transform_ref {
-        Some(transform) => Some(PropertyBinding::Value(transform.clone())),
-        None => None,
-    };
+    let transform = unsafe { transform.as_ref() }.cloned();
+    let mut transform_binding = transform.map(PropertyBinding::Value);
+    let opacity = unsafe { opacity.as_ref() }.cloned();
 
-    let opacity_ref = unsafe { opacity.as_ref() };
     let mut has_opacity_animation = false;
-    let anim = unsafe { animation.as_ref() };
-    if let Some(anim) = anim {
+    if let Some(anim) = unsafe { animation.as_ref() } {
         debug_assert!(anim.id > 0);
         match anim.effect_type {
             WrAnimationType::Opacity => {
-                filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(anim.id),
-                                                                        // We have to set the static opacity value as
-                                                                        // the value for the case where the animation is
-                                                                        // in not in-effect (e.g. in the delay phase
-                                                                        // with no corresponding fill mode).
-                                                                        opacity_ref.cloned().unwrap_or(1.0)),
-                                                                        1.0));
+                filters.push(FilterOp::Opacity(
+                    PropertyBinding::Binding(
+                        PropertyBindingKey::new(anim.id),
+                        // We have to set the static opacity value as
+                        // the value for the case where the animation is
+                        // in not in-effect (e.g. in the delay phase
+                        // with no corresponding fill mode).
+                        opacity.unwrap_or(1.0),
+                    ),
+                    1.0,
+                ));
                 has_opacity_animation = true;
             },
             WrAnimationType::Transform => {
                 transform_binding =
-                    Some(PropertyBinding::Binding(PropertyBindingKey::new(anim.id),
-                                                  // Same as above opacity case.
-                                                  transform_ref.cloned().unwrap_or(LayoutTransform::identity())));
+                    Some(PropertyBinding::Binding(
+                        PropertyBindingKey::new(anim.id),
+                        // Same as above opacity case.
+                        transform.unwrap_or(LayoutTransform::identity()),
+                ));
             },
         }
     }
 
-    if let Some(opacity) = opacity_ref {
-        if !has_opacity_animation && *opacity < 1.0 {
-            filters.push(FilterOp::Opacity(PropertyBinding::Value(*opacity), *opacity));
+    if let Some(opacity) = opacity {
+        if !has_opacity_animation && opacity < 1.0 {
+            filters.push(FilterOp::Opacity(PropertyBinding::Value(opacity), opacity));
         }
     }
 
-    let perspective_ref = unsafe { perspective.as_ref() };
-    let perspective = match perspective_ref {
-        Some(perspective) => Some(perspective.clone()),
-        None => None,
-    };
-
-    let mut prim_info = LayoutPrimitiveInfo::new(bounds);
+    let perspective = unsafe { perspective.as_ref() }.cloned();
+    // The only field of primitive info currently used by WR for stacking contexts
+    // is backface visibility. Layout rectangles don't matter.
+    let mut prim_info = LayoutPrimitiveInfo::new(LayoutRect::zero());
 
     *out_is_reference_frame = transform_binding.is_some() || perspective.is_some();
     if *out_is_reference_frame {
@@ -1950,28 +1971,27 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
             .push_reference_frame(&prim_info, transform_binding, perspective);
         *out_reference_frame_id = pack_clip_id(ref_frame_id);
 
-        prim_info.rect.origin = LayoutPoint::zero();
-        prim_info.clip_rect.origin = LayoutPoint::zero();
         state.frame_builder.dl_builder.push_clip_id(ref_frame_id);
     }
 
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
 
-    state.frame_builder
-         .dl_builder
-         .push_stacking_context(&prim_info,
-                                clip_node_id,
-                                transform_style,
-                                mix_blend_mode,
-                                &filters,
-                                glyph_raster_space);
+    state.frame_builder.dl_builder.push_stacking_context(
+        &prim_info,
+        clip_node_id,
+        transform_style,
+        mix_blend_mode,
+        &filters,
+        glyph_raster_space,
+    );
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState,
                                              is_reference_frame: bool) {
     debug_assert!(unsafe { !is_in_render_thread() });
+
     state.frame_builder.dl_builder.pop_stacking_context();
     if is_reference_frame {
         state.frame_builder.dl_builder.pop_clip_id();
@@ -1986,6 +2006,7 @@ pub extern "C" fn wr_dp_define_clipchain(state: &mut WrState,
                                          clips_count: usize)
                                          -> u64 {
     debug_assert!(unsafe { is_in_main_thread() });
+
     let parent = unsafe { parent_clipchain_id.as_ref() }.map(|id| ClipChainId(*id, state.pipeline_id));
     let pipeline_id = state.pipeline_id;
     let clips = make_slice(clips, clips_count)
