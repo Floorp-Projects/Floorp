@@ -91,6 +91,26 @@ class UTF8Chars : public mozilla::Range<unsigned char>
 };
 
 /*
+ * Similar to UTF8Chars, but contains WTF-8.
+ * https://simonsapin.github.io/wtf-8/
+ */
+class WTF8Chars : public mozilla::Range<unsigned char>
+{
+    typedef mozilla::Range<unsigned char> Base;
+
+  public:
+    using CharT = unsigned char;
+
+    WTF8Chars() : Base() {}
+    WTF8Chars(char* aBytes, size_t aLength)
+      : Base(reinterpret_cast<unsigned char*>(aBytes), aLength)
+    {}
+    WTF8Chars(const char* aBytes, size_t aLength)
+      : Base(reinterpret_cast<unsigned char*>(const_cast<char*>(aBytes)), aLength)
+    {}
+};
+
+/*
  * SpiderMonkey also deals directly with UTF-8 encoded text in some places.
  */
 class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
@@ -253,6 +273,12 @@ Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length);
  */
 extern JS_PUBLIC_API TwoByteCharsZ
 UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
+
+/*
+ * Like UTF8CharsToNewTwoByteCharsZ, but for WTF8Chars.
+ */
+extern JS_PUBLIC_API TwoByteCharsZ
+WTF8CharsToNewTwoByteCharsZ(JSContext* cx, const WTF8Chars wtf8, size_t* outlen);
 
 /*
  * Like UTF8CharsToNewTwoByteCharsZ, but for ConstUTF8CharsZ.
