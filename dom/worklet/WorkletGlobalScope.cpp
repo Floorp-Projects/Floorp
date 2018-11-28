@@ -37,6 +37,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletGlobalScope)
 NS_INTERFACE_MAP_END
 
 WorkletGlobalScope::WorkletGlobalScope()
+  : mCreationTimeStamp(TimeStamp::Now())
 {
 }
 

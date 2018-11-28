@@ -2931,8 +2931,8 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
     return true;
   }
 
-  if (WorkletThread::IsOnWorkletThread()) {
-    *aTimeStamp = WorkletThread::Get()->TimeStampToDOMHighRes(TimeStamp::Now());
+  if (nsCOMPtr<WorkletGlobalScope> workletGlobal = do_QueryInterface(mGlobal)) {
+    *aTimeStamp = workletGlobal->TimeStampToDOMHighRes(TimeStamp::Now());
     return true;
   }
 

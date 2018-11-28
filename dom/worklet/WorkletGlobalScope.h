@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
@@ -61,10 +62,19 @@ public:
   void
   Dump(const Optional<nsAString>& aString) const;
 
+  DOMHighResTimeStamp
+  TimeStampToDOMHighRes(const TimeStamp& aTimeStamp) const
+  {
+    MOZ_ASSERT(!aTimeStamp.IsNull());
+    TimeDuration duration = aTimeStamp - mCreationTimeStamp;
+    return duration.ToMilliseconds();
+  }
+
 protected:
   ~WorkletGlobalScope();;
 
 private:
+  TimeStamp mCreationTimeStamp;
   RefPtr<Console> mConsole;
 };
 
