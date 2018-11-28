@@ -436,7 +436,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Worklet)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Worklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  tmp->mImpl->TerminateThread();
+  tmp->mImpl->NotifyWorkletFinished();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -469,7 +469,7 @@ Worklet::Worklet(nsPIDOMWindowInner* aWindow, RefPtr<WorkletImpl> aImpl)
 
 Worklet::~Worklet()
 {
-  mImpl->TerminateThread();
+  mImpl->NotifyWorkletFinished();
 }
 
 JSObject*

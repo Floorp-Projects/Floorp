@@ -75,7 +75,7 @@ public:
               JS::Handle<JSObject*> aGivenProto);
 
   dom::WorkletThread* GetOrCreateThread();
-  void TerminateThread();
+  void NotifyWorkletFinished();
 
   // Execution thread only.
   already_AddRefed<dom::WorkletGlobalScope> CreateGlobalScope(JSContext* aCx);
