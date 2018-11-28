@@ -172,6 +172,10 @@ struct MiddlemanCallContext
   // divergence and associated rewind will occur.
   bool mFailed;
 
+  // This can be set in the MiddlemanInput phase to avoid performing the call
+  // in the middleman process.
+  bool mSkipCallInMiddleman;
+
   // During the ReplayInput phase, this can be used to fill in any middleman
   // calls whose output the current one depends on.
   InfallibleVector<MiddlemanCall*>* mDependentCalls;
@@ -198,7 +202,8 @@ struct MiddlemanCallContext
 
   MiddlemanCallContext(MiddlemanCall* aCall, CallArguments* aArguments, MiddlemanCallPhase aPhase)
     : mCall(aCall), mArguments(aArguments), mPhase(aPhase),
-      mFailed(false), mDependentCalls(nullptr), mReplayOutputIsOld(false)
+      mFailed(false), mSkipCallInMiddleman(false),
+      mDependentCalls(nullptr), mReplayOutputIsOld(false)
   {
     switch (mPhase) {
     case MiddlemanCallPhase::ReplayPreface:
@@ -426,6 +431,15 @@ MM_StackArgumentData(MiddlemanCallContext& aCx)
   if (aCx.AccessPreface()) {
     auto stack = aCx.mArguments->StackAddress<0>();
     aCx.ReadOrWritePrefaceBytes(stack, ByteSize);
+  }
+}
+
+// Avoid calling a function in the middleman process.
+static inline void
+MM_SkipInMiddleman(MiddlemanCallContext& aCx)
+{
+  if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
+    aCx.mSkipCallInMiddleman = true;
   }
 }
 
