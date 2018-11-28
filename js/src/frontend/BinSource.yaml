@@ -144,7 +144,7 @@ hpp:
                  *
                  * (sorted by alphabetical order)
                  */
-        field:
+        variants:
             doc: |
                 /**
                  * The different variants of Binary AST string enums, as per
