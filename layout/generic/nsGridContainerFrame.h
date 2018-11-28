@@ -268,6 +268,9 @@ class nsGridContainerFrame final : public nsContainerFrame {
     bool mIsInEdgeTrack;
   };
 
+  /** Return our parent grid container; |this| MUST be a subgrid. */
+  nsGridContainerFrame* ParentGridContainerForSubgrid() const;
+
  protected:
   static const uint32_t kAutoLine;
   // The maximum line number, in the zero-based translated grid.
