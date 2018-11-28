@@ -91,7 +91,6 @@ public:
   NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo) override;
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext) override;
   NS_IMETHOD AsyncOpen2(nsIStreamListener *aListener) override;
-  NS_IMETHOD SetLoadInfo(nsILoadInfo* aLoadInfo) override;
 
   // HttpBaseChannel::nsIHttpChannel
   NS_IMETHOD SetReferrerWithPolicy(nsIURI *referrer, uint32_t referrerPolicy) override;
@@ -207,7 +206,6 @@ protected:
   virtual mozilla::ipc::IPCResult RecvLogBlockedCORSRequest(const nsString& aMessage, const nsCString& aCategory) override;
   NS_IMETHOD LogBlockedCORSRequest(const nsAString & aMessage, const nsACString& aCategory) override;
 
-  nsresult InitIPCChannel();
 private:
   nsresult
   AsyncCallImpl(void (HttpChannelChild::*funcPtr)(),
@@ -434,22 +432,11 @@ private:
   // True if we need to tell the parent the size of unreported received data
   uint8_t mNeedToReportBytesRead : 1;
 
-  // True after SendAsyncOpen is called.
-  uint8_t mSentAsyncOpen : 1;
-
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
 
   // true after successful AsyncOpen until OnStopRequest completes.
-  // XXX valentin: technically the channel exists after SetLoadInfo, but it
-  // used to be created at AsyncOpen, and before that the parent actually
-  // doesn't have all the info for it to be safe to call any method.
-  // We should rename it in the future and allow some methods to be called
-  // before asyncOpen.
-  bool RemoteChannelExists()
-  {
-    return mIPCOpen && !mKeptAlive && mSentAsyncOpen;
-  }
+  bool RemoteChannelExists() { return mIPCOpen && !mKeptAlive; }
 
   void AssociateApplicationCache(const nsCString &groupID,
                                  const nsCString &clientID);

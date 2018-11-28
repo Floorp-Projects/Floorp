@@ -62,11 +62,13 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-HttpChannelParent::HttpChannelParent()
-  : mLoadContext(nullptr)
+HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
+                                     nsILoadContext* aLoadContext,
+                                     PBOverrideStatus aOverrideStatus)
+  : mLoadContext(aLoadContext)
   , mNestedFrameId(0)
   , mIPCClosed(false)
-  , mPBOverride(kPBOverride_Unset)
+  , mPBOverride(aOverrideStatus)
   , mStatus(NS_OK)
   , mIgnoreProgress(false)
   , mSentRedirect1BeginFailed(false)
@@ -91,6 +93,14 @@ HttpChannelParent::HttpChannelParent()
 
   MOZ_ASSERT(gHttpHandler);
   mHttpHandler = gHttpHandler;
+
+  if (iframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
+    mTabParent = static_cast<dom::TabParent*>(iframeEmbedding.get_PBrowserParent());
+  } else {
+    mNestedFrameId = iframeEmbedding.get_TabId();
+  }
+
+  mSendWindowSize = gHttpHandler->SendWindowSize();
 
   mEventQ = new ChannelEventQueue(static_cast<nsIParentRedirectingChannel*>(this));
 }
@@ -163,43 +173,6 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
     MOZ_ASSERT_UNREACHABLE("unknown open type");
     return false;
   }
-}
-
-mozilla::ipc::IPCResult
-HttpChannelParent::RecvAsyncOpen(const PBrowserOrId& aBrowser,
-                                 const SerializedLoadContext& aSerialized,
-                                 const HttpChannelCreationArgs& aOpenArgs)
-{
-  LOG(("HttpChannelParent::RecvAsyncOpen [this=%p]\n", this));
-
-  nsCOMPtr<nsIPrincipal> requestingPrincipal =
-    NeckoParent::GetRequestingPrincipal(aOpenArgs);
-
-  nsCOMPtr<nsILoadContext> loadContext;
-  const char* error =
-    NeckoParent::CreateChannelLoadContext(aBrowser,
-                                          Manager()->Manager(),
-                                          aSerialized,
-                                          requestingPrincipal,
-                                          loadContext);
-  if (error) {
-    return IPC_FAIL(this, "Error in NeckoParent::CreateChannelLoadContext");
-  }
-  mPBOverride = NeckoParent::PBOverrideStatusFromLoadContext(aSerialized);
-  mLoadContext = loadContext;
-
-  if (aBrowser.type() == PBrowserOrId::TPBrowserParent) {
-    mTabParent = static_cast<dom::TabParent*>(aBrowser.get_PBrowserParent());
-  } else {
-    mNestedFrameId = aBrowser.get_TabId();
-  }
-
-  mSendWindowSize = gHttpHandler->SendWindowSize();
-
-  if (!Init(aOpenArgs)) {
-    return IPC_FAIL(this, "Error in HttpChannelParent::Init");
-  }
-  return IPC_OK();
 }
 
 void
@@ -505,12 +478,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   nsCOMPtr<nsIURI> apiRedirectToUri = DeserializeURI(aAPIRedirectToURI);
   nsCOMPtr<nsIURI> topWindowUri = DeserializeURI(aTopWindowURI);
 
-  LOG(("HttpChannelParent DoAsyncOpen [this=%p uri=%s, gid=%" PRIu64
-       " topwinid=%" PRIx64 "]\n",
-       this,
-       uri->GetSpecOrDefault().get(),
-       aChannelId,
-       aTopLevelOuterContentWindowId));
+  LOG(("HttpChannelParent RecvAsyncOpen [this=%p uri=%s, gid=%" PRIu64 " topwinid=%" PRIx64 "]\n",
+       this, uri->GetSpecOrDefault().get(), aChannelId, aTopLevelOuterContentWindowId));
 
   nsresult rv;
 
