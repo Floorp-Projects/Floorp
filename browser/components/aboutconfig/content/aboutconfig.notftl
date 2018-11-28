@@ -7,6 +7,7 @@ about-config-title = about:config
 about-config-search =
     .placeholder = Search
 
+about-config-pref-add = Add as:
 about-config-pref-toggle = Toggle
 about-config-pref-edit = Edit
 about-config-pref-input-number =

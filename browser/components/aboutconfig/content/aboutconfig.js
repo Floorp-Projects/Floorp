@@ -39,7 +39,7 @@ function onLoad() {
   gPrefArray.sort((a, b) => a.name > b.name);
 
   document.getElementById("search").addEventListener("keypress", function(e) {
-    if (e.code == "Enter") {
+    if (e.key == "Enter") {
       filterPrefs();
     }
   });
@@ -62,6 +62,18 @@ function onLoad() {
       prefRow.classList.remove("has-user-value");
       prefRow.appendChild(getPrefRow(pref));
       prefRow.querySelector("td.cell-edit").firstChild.focus();
+    } else if (button.classList.contains("add-true")) {
+      addNewPref(prefRow.firstChild.innerHTML, true);
+    } else if (button.classList.contains("add-false")) {
+      addNewPref(prefRow.firstChild.innerHTML, false);
+    } else if (button.classList.contains("add-Number") ||
+               button.classList.contains("add-String")) {
+      addNewPref(prefRow.firstChild.innerHTML,
+                 button.classList.contains("add-Number") ? 0 : "");
+      prefRow = [...document.getElementById("prefs").getElementsByTagName("tr")]
+                .find(row => row.querySelector("td").textContent == prefName);
+      startEditingPref(prefRow, gPrefArray.find(p => p.name == prefName));
+      prefRow.querySelector("td.cell-value").firstChild.firstChild.focus();
     } else if (button.classList.contains("button-toggle")) {
       // Toggle the pref and update gPrefArray.
       Services.prefs.setBoolPref(prefName, !pref.value);
@@ -89,13 +101,16 @@ function onLoad() {
     }
   });
 
-  document.getElementById("prefs").appendChild(createPrefsFragment(gPrefArray));
+  filterPrefs();
 }
 
 function filterPrefs() {
   let substring = document.getElementById("search").value.trim();
-  let fragment = createPrefsFragment(gPrefArray.filter(pref => pref.name.includes(substring)));
   document.getElementById("prefs").textContent = "";
+  if (substring && !gPrefArray.some(pref => pref.name == substring)) {
+    document.getElementById("prefs").appendChild(createNewPrefFragment(substring));
+  }
+  let fragment = createPrefsFragment(gPrefArray.filter(pref => pref.name.includes(substring)));
   document.getElementById("prefs").appendChild(fragment);
 }
 
@@ -111,6 +126,38 @@ function createPrefsFragment(prefArray) {
     row.appendChild(getPrefRow(pref));
     fragment.appendChild(row);
   }
+  return fragment;
+}
+
+function createNewPrefFragment(name) {
+  let fragment = document.createDocumentFragment();
+  let row = document.createElement("tr");
+  row.classList.add("has-user-value");
+  row.setAttribute("aria-label", name);
+  let nameCell = document.createElement("td");
+  nameCell.append(name);
+  row.appendChild(nameCell);
+
+  let valueCell = document.createElement("td");
+  valueCell.classList.add("cell-value");
+  let guideText = document.createElement("span");
+  document.l10n.setAttributes(guideText, "about-config-pref-add");
+  valueCell.appendChild(guideText);
+  for (let item of ["true", "false", "Number", "String"]) {
+    let optionBtn = document.createElement("button");
+    optionBtn.textContent = item;
+    optionBtn.classList.add("add-" + item);
+    valueCell.appendChild(optionBtn);
+  }
+  row.appendChild(valueCell);
+
+  let editCell = document.createElement("td");
+  row.appendChild(editCell);
+
+  let buttonCell = document.createElement("td");
+  row.appendChild(buttonCell);
+
+  fragment.appendChild(row);
   return fragment;
 }
 
@@ -242,4 +289,16 @@ function prefHasDefaultValue(name) {
     }
   } catch (ex) {}
   return false;
+}
+
+function addNewPref(name, value) {
+  Preferences.set(name, value);
+  gPrefArray.push({
+    name,
+    value,
+    hasUserValue: true,
+    hasDefaultValue: false,
+  });
+  gPrefArray.sort((a, b) => a.name > b.name);
+  filterPrefs();
 }
