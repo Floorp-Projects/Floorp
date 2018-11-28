@@ -157,11 +157,6 @@ def use_fetches(config, jobs):
             yield job
             continue
 
-        # Hack added for `mach artifact toolchain` to support reading toolchain
-        # kinds in isolation.
-        if 'fetch' in fetches and config.params.get('ignore_fetches'):
-            fetches['fetch'][:] = []
-
         job_fetches = []
         name = job.get('name', job.get('label'))
         dependencies = job.setdefault('dependencies', {})
