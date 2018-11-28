@@ -31,8 +31,18 @@ using namespace js::jit;
 CacheIRSpewer CacheIRSpewer::cacheIRspewer;
 
 CacheIRSpewer::CacheIRSpewer()
-  : outputLock(mutexid::CacheIRSpewer)
-{ }
+  : outputLock(mutexid::CacheIRSpewer),
+    guardCount_(0)
+{
+
+    spewInterval_ = getenv("CACHEIR_LOG_FLUSH") ?
+                        atoi(getenv("CACHEIR_LOG_FLUSH")) :
+                        10000;
+
+    if (spewInterval_ < 1) {
+        spewInterval_ = 1;
+    }
+}
 
 CacheIRSpewer::~CacheIRSpewer()
 {
