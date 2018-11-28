@@ -663,8 +663,8 @@ var CustomizableUIInternal = {
       // If we have pending build area nodes, register all of them
       if (gPendingBuildAreas.has(aName)) {
         let pendingNodes = gPendingBuildAreas.get(aName);
-        for (let [pendingNode, existingChildren] of pendingNodes) {
-          this.registerToolbarNode(pendingNode, existingChildren);
+        for (let pendingNode of pendingNodes) {
+          this.registerToolbarNode(pendingNode);
         }
         gPendingBuildAreas.delete(aName);
       }
@@ -714,7 +714,7 @@ var CustomizableUIInternal = {
     }
   },
 
-  registerToolbarNode(aToolbar, aExistingChildren) {
+  registerToolbarNode(aToolbar) {
     let area = aToolbar.id;
     if (gBuildAreas.has(area) && gBuildAreas.get(area).has(aToolbar)) {
       return;
@@ -724,10 +724,9 @@ var CustomizableUIInternal = {
     // If this area is not registered, try to do it automatically:
     if (!areaProperties) {
       if (!gPendingBuildAreas.has(area)) {
-        gPendingBuildAreas.set(area, new Map());
+        gPendingBuildAreas.set(area, []);
       }
-      let pendingNodes = gPendingBuildAreas.get(area);
-      pendingNodes.set(aToolbar, aExistingChildren);
+      gPendingBuildAreas.get(area).push(aToolbar);
       return;
     }
 
@@ -739,10 +738,11 @@ var CustomizableUIInternal = {
         placements = gPlacements.get(area);
       }
 
-      // Check that the current children and the current placements match. If
-      // not, mark it as dirty:
-      if (aExistingChildren.length != placements.length ||
-          aExistingChildren.every((id, i) => id == placements[i])) {
+      // For toolbars that need it, mark as dirty.
+      let defaultPlacements = areaProperties.get("defaultPlacements");
+      if (!this._builtinToolbars.has(area) ||
+          placements.length != defaultPlacements.length ||
+          !placements.every((id, i) => id == defaultPlacements[i])) {
         gDirtyAreaCache.add(area);
       }
 
@@ -762,11 +762,32 @@ var CustomizableUIInternal = {
       // in the saved state.
       if (gDirtyAreaCache.has(area)) {
         this.buildArea(area, placements, aToolbar);
+      } else {
+        // We must have a builtin toolbar that's in the default state. We need
+        // to only make sure that all the special nodes are correct.
+        let specials = placements.filter(p => this.isSpecialWidget(p));
+        if (specials.length) {
+          this.updateSpecialsForBuiltinToolbar(aToolbar, specials);
+        }
       }
       this.notifyListeners("onAreaNodeRegistered", area,
                            this.getCustomizationTarget(aToolbar));
     } finally {
       this.endBatchUpdate();
+    }
+  },
+
+  updateSpecialsForBuiltinToolbar(aToolbar, aSpecialIDs) {
+    // Nodes are going to be in the correct order, so we can do this straightforwardly:
+    let {children} = this.getCustomizationTarget(aToolbar);
+    for (let kid of children) {
+      if (this.matchingSpecials(aSpecialIDs[0], kid) &&
+          kid.getAttribute("skipintoolbarset") != "true") {
+        kid.id = aSpecialIDs.shift();
+      }
+      if (!aSpecialIDs.length) {
+        return;
+      }
     }
   },
 
@@ -1160,15 +1181,11 @@ var CustomizableUIInternal = {
       this.notifyListeners("onWidgetInstanceRemoved", widget.id, document);
     }
 
-    for (let [, areaMap] of gPendingBuildAreas) {
-      let toDelete = [];
-      for (let [areaNode ] of areaMap) {
-        if (areaNode.ownerDocument == document) {
-          toDelete.push(areaNode);
+    for (let [, pendingNodes] of gPendingBuildAreas) {
+      for (let i = pendingNodes.length - 1; i >= 0; i--) {
+        if (pendingNodes[i].ownerDocument == document) {
+          pendingNodes.splice(i, 1);
         }
-      }
-      for (let areaNode of toDelete) {
-        areaMap.delete(areaNode);
       }
     }
 
@@ -3142,10 +3159,7 @@ var CustomizableUI = {
    * with it, until the area has been registered.
    */
   registerToolbarNode(aToolbar) {
-    let children = Array.from(aToolbar.children)
-                        .filter(child => child.getAttribute("skipintoolbarset") != "true" && child.id)
-                        .map(child => child.id);
-    CustomizableUIInternal.registerToolbarNode(aToolbar, children);
+    CustomizableUIInternal.registerToolbarNode(aToolbar);
   },
   /**
    * Register the menu panel node. This method should not be called by anyone
