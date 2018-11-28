@@ -277,67 +277,6 @@ PaymentRequestParent::ChangePayerDetail(const nsAString& aRequestId,
   return NS_OK;
 }
 
-nsresult
-PaymentRequestParent::ChangePaymentMethod(const nsAString& aRequestId,
-                                          const nsAString& aMethodName,
-                                          nsIMethodChangeDetails* aMethodDetails)
-{
-  nsAutoString requestId(aRequestId);
-  nsAutoString methodName(aMethodName);
-  nsCOMPtr<nsIMethodChangeDetails> methodDetails(aMethodDetails);
-  if (!NS_IsMainThread()) {
-    RefPtr<PaymentRequestParent> self = this;
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction("dom::PaymentRequestParent::ChangePaymentMethod",
-                             [self, requestId, methodName, methodDetails] ()
-    {
-      self->ChangePaymentMethod(requestId, methodName, methodDetails);
-    });
-    return NS_DispatchToMainThread(r);
-  }
-  if (!mActorAlive) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Convert nsIMethodChangeDetails to IPCMethodChangeDetails
-  // aMethodChangeDetails can be null
-  IPCMethodChangeDetails ipcChangeDetails;
-  if (aMethodDetails) {
-    uint32_t dataType;
-    NS_ENSURE_SUCCESS(aMethodDetails->GetType(&dataType), NS_ERROR_FAILURE);
-    switch(dataType) {
-      case nsIMethodChangeDetails::GENERAL_DETAILS: {
-        nsCOMPtr<nsIGeneralChangeDetails> details = do_QueryInterface(methodDetails);
-        MOZ_ASSERT(details);
-        IPCGeneralChangeDetails ipcGeneralDetails;
-        NS_ENSURE_SUCCESS(details->GetDetails(ipcGeneralDetails.details()), NS_ERROR_FAILURE);
-        ipcChangeDetails = ipcGeneralDetails;
-        break;
-      }
-      case nsIMethodChangeDetails::BASICCARD_DETAILS: {
-        nsCOMPtr<nsIBasicCardChangeDetails> details = do_QueryInterface(methodDetails);
-        MOZ_ASSERT(details);
-        IPCBasicCardChangeDetails ipcBasicCardDetails;
-        nsCOMPtr<nsIPaymentAddress> address;
-        NS_ENSURE_SUCCESS(details->GetBillingAddress(getter_AddRefs(address)),
-                          NS_ERROR_FAILURE);
-        IPCPaymentAddress ipcAddress;
-        NS_ENSURE_SUCCESS(SerializeAddress(ipcAddress, address), NS_ERROR_FAILURE);
-        ipcBasicCardDetails.billingAddress() = ipcAddress;
-        ipcChangeDetails = ipcBasicCardDetails;
-        break;
-      }
-      default: {
-        return NS_ERROR_FAILURE;
-      }
-    }
-  }
-  if (!SendChangePaymentMethod(requestId, methodName, ipcChangeDetails)) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
 mozilla::ipc::IPCResult
 PaymentRequestParent::Recv__delete__()
 {

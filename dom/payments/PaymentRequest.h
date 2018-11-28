@@ -19,82 +19,11 @@
 namespace mozilla {
 namespace dom {
 
+class EventHandlerNonNull;
 class PaymentAddress;
 class PaymentRequestChild;
 class PaymentResponse;
 class ResponseData;
-
-class GeneralDetails final
-{
-public:
-  GeneralDetails() = default;
-  ~GeneralDetails() = default;
-  nsString details;
-};
-
-class BasicCardDetails final
-{
-public:
-  struct Address {
-    nsString country;
-    nsTArray<nsString> addressLine;
-    nsString region;
-    nsString regionCode;
-    nsString city;
-    nsString dependentLocality;
-    nsString postalCode;
-    nsString sortingCode;
-    nsString organization;
-    nsString recipient;
-    nsString phone;
-  };
-  BasicCardDetails() = default;
-  ~BasicCardDetails() = default;
-
-  Address billingAddress;
-};
-
-class ChangeDetails final
-{
-public:
-  enum Type {
-    Unknown = 0,
-    GeneralMethodDetails = 1,
-    BasicCardMethodDetails
-  };
-  ChangeDetails()
-    : mType(ChangeDetails::Unknown)
-  {}
-  explicit ChangeDetails(const GeneralDetails& aGeneralDetails)
-    : mType(GeneralMethodDetails)
-    , mGeneralDetails(aGeneralDetails)
-  {}
-  explicit ChangeDetails(const BasicCardDetails& aBasicCardDetails)
-    : mType(BasicCardMethodDetails)
-    , mBasicCardDetails(aBasicCardDetails)
-  {}
-  ChangeDetails& operator = (const GeneralDetails& aGeneralDetails) {
-    mType = GeneralMethodDetails;
-    mGeneralDetails = aGeneralDetails;
-    mBasicCardDetails = BasicCardDetails();
-    return *this;
-  }
-  ChangeDetails& operator = (const BasicCardDetails& aBasicCardDetails) {
-    mType = BasicCardMethodDetails;
-    mGeneralDetails = GeneralDetails();
-    mBasicCardDetails = aBasicCardDetails;
-    return *this;
-  }
-  ~ChangeDetails() = default;
-
-  const Type& type() const { return mType; }
-  const GeneralDetails& generalDetails() const { return mGeneralDetails; }
-  const BasicCardDetails& basicCardDetails() const { return mBasicCardDetails;}
-private:
-  Type mType;
-  GeneralDetails mGeneralDetails;
-  BasicCardDetails mBasicCardDetails;
-};
 
 class PaymentRequest final
   : public DOMEventTargetHelper
@@ -168,7 +97,7 @@ public:
     const Optional<OwningNonNull<Promise>>& detailsPromise,
     ErrorResult& aRv);
   void RespondShowPayment(const nsAString& aMethodName,
-                          const ResponseData& aData,
+                          const ResponseData& aDetails,
                           const nsAString& aPayerName,
                           const nsAString& aPayerEmail,
                           const nsAString& aPayerPhone,
@@ -222,9 +151,6 @@ public:
 
   inline void ShippingWasRequested() { mRequestShipping = true; }
 
-  nsresult UpdatePaymentMethod(const nsAString& aMethodName,
-                               const ChangeDetails& aMethodDetails);
-
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
@@ -249,9 +175,6 @@ protected:
   nsresult DispatchUpdateEvent(const nsAString& aType);
 
   nsresult DispatchMerchantValidationEvent(const nsAString& aType);
-
-  nsresult DispatchPaymentMethodChangeEvent(const nsAString& aMethodName,
-                                            const ChangeDetails& aMethodDatils);
 
   PaymentRequest(nsPIDOMWindowInner* aWindow, const nsAString& aInternalId);
 
