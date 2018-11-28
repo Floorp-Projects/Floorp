@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 
 function frame_script() {
   content.document.body.innerHTML = `
-    <a href="http://example.com/" target="_blank" id="testAnchor">Open a window</a>
+    <a href="http://example.com/" target="_blank" rel="opener" id="testAnchor">Open a window</a>
   `;
 
   let element = content.document.getElementById("testAnchor");
