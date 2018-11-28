@@ -79,12 +79,9 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI* aURI, nsIURI** aReturn)
     uri = aURI;
   }
 
-  // hide user:pass unless overridden by pref
-  if (Preferences::GetBool("browser.fixup.hide_user_pass", true)) {
-    Unused << NS_MutateURI(uri)
-                .SetUserPass(EmptyCString())
-                .Finalize(uri);
-  }
+  Unused << NS_MutateURI(uri)
+              .SetUserPass(EmptyCString())
+              .Finalize(uri);
 
   uri.forget(aReturn);
   return NS_OK;
