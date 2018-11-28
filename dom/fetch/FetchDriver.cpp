@@ -726,7 +726,7 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
     }
   }
 
-  if (mIsTrackingFetch && nsContentUtils::IsTailingEnabled()) {
+  if (mIsTrackingFetch && nsContentUtils::IsTailingEnabled() && cos) {
     cos->AddClassFlags(nsIClassOfService::Throttleable |
                        nsIClassOfService::Tail);
   }
