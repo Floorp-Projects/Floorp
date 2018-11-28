@@ -64,14 +64,6 @@ const RECOMMENDED_PREFS = new Map([
   // Make sure Shield doesn't hit the network.
   ["app.normandy.api_url", ""],
 
-  // Disable automatically upgrading Firefox.
-  //
-  // This should also be set in the profile prior to starting Firefox,
-  // as it is picked up at runtime.
-  ["app.update.checkInstallTime", false],
-  ["app.update.disabledForTesting", true],
-  ["security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true],
-
   // Increase the APZ content response timeout in tests to 1 minute.
   // This is to accommodate the fact that test environments tends to be
   // slower than production environments (with the b2g emulator being
