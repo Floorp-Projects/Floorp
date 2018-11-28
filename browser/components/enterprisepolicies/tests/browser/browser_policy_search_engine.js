@@ -51,7 +51,7 @@ async function test_opensearch(shouldWork) {
 add_task(async function test_install_and_set_default() {
   // Make sure we are starting in an expected state to avoid false positive
   // test results.
-  isnot(Services.search.currentEngine.name, "MozSearch",
+  isnot(Services.search.defaultEngine.name, "MozSearch",
         "Default search engine should not be MozSearch when test starts");
   is(Services.search.getEngineByName("Foo"), null,
      "Engine \"Foo\" should not be present when test starts");
@@ -72,18 +72,18 @@ add_task(async function test_install_and_set_default() {
 
   // If this passes, it means that the new search engine was properly installed
   // *and* was properly set as the default.
-  is(Services.search.currentEngine.name, "MozSearch",
+  is(Services.search.defaultEngine.name, "MozSearch",
      "Specified search engine should be the default");
 
   // Clean up
-  Services.search.removeEngine(Services.search.currentEngine);
+  Services.search.removeEngine(Services.search.defaultEngine);
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
 // Same as the last test, but with "PreventInstalls" set to true to make sure
 // it does not prevent search engines from being installed properly
 add_task(async function test_install_and_set_default_prevent_installs() {
-  isnot(Services.search.currentEngine.name, "MozSearch",
+  isnot(Services.search.defaultEngine.name, "MozSearch",
         "Default search engine should not be MozSearch when test starts");
   is(Services.search.getEngineByName("Foo"), null,
      "Engine \"Foo\" should not be present when test starts");
@@ -103,11 +103,11 @@ add_task(async function test_install_and_set_default_prevent_installs() {
     },
   });
 
-  is(Services.search.currentEngine.name, "MozSearch",
+  is(Services.search.defaultEngine.name, "MozSearch",
      "Specified search engine should be the default");
 
   // Clean up
-  Services.search.removeEngine(Services.search.currentEngine);
+  Services.search.removeEngine(Services.search.defaultEngine);
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
