@@ -26,17 +26,11 @@ public:
 
   static already_AddRefed<WorkletThread> Create();
 
-  static WorkletThread*
-  Get();
-
   static bool
   IsOnWorkletThread();
 
   static void
   AssertIsOnWorkletThread();
-
-  JSContext*
-  GetJSContext() const;
 
   nsresult
   DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable);
