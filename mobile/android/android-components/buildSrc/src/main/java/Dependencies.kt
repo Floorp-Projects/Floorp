@@ -24,8 +24,6 @@ private object Versions {
     const val maven_gradle_plugin = "2.1"
     const val lint = "26.2.1"
 
-    const val jna = "4.5.2"
-
     const val sentry = "1.7.14"
     const val okhttp = "3.12.0"
 
@@ -77,7 +75,4 @@ object Dependencies {
 
     const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
     const val thirdparty_sentry = "io.sentry:sentry-android:${Versions.sentry}"
-
-    const val jna = "net.java.dev.jna:jna:${Versions.jna}@aar"
-    const val jnaForTest = "net.java.dev.jna:jna:${Versions.jna}@jar"
 }

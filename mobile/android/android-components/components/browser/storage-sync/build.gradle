@@ -23,13 +23,7 @@ android {
     }
 }
 
-configurations {
-    jnaForTest
-}
-
 dependencies {
-    jnaForTest Dependencies.jnaForTest
-
     api Dependencies.mozilla_places
 
     implementation project(':concept-storage')
@@ -37,9 +31,7 @@ dependencies {
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
-    implementation Dependencies.jna
 
-    testImplementation configurations.jnaForTest.dependencies
     testImplementation project(':support-test')
 
     testImplementation Dependencies.testing_junit
