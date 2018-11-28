@@ -170,7 +170,7 @@ AndroidNativeWindowTextureData::FillInfo(TextureData::Info& aInfo) const
 bool
 AndroidNativeWindowTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
-  aOutDescriptor = SurfaceTextureDescriptor(mSurface->GetImageHandle(),
+  aOutDescriptor = SurfaceTextureDescriptor(mSurface->GetHandle(),
                                             mSize,
                                             mFormat,
                                             false /* not continuous */,

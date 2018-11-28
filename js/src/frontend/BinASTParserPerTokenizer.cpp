@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "frontend/BinSource.h"
+#include "frontend/BinASTParserPerTokenizer.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
@@ -14,6 +14,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Vector.h"
 
+#include "frontend/BinASTParser.h"
 #include "frontend/BinSource-macros.h"
 #include "frontend/BinTokenReaderTester.h"
 #include "frontend/FullParseHandler.h"
@@ -77,51 +78,19 @@ namespace frontend {
 
 using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
-BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
-                                   HandleScriptSourceObject sourceObject, Handle<LazyScript*> lazyScript)
-  : AutoGCRooter(cx, AutoGCRooter::Tag::BinParser)
-  , cx_(cx)
-  , alloc_(alloc)
-  , traceListHead_(nullptr)
-  , usedNames_(usedNames)
-  , nodeAlloc_(cx, alloc)
-  , keepAtoms_(cx)
-  , sourceObject_(cx, sourceObject)
-  , lazyScript_(cx, lazyScript)
-  , parseContext_(nullptr)
-  , factory_(cx, alloc, nullptr, SourceKind::Binary)
-{
-    MOZ_ASSERT_IF(lazyScript, lazyScript->isBinAST());
-    cx->frontendCollectionPool().addActiveCompilation();
-    tempPoolMark_ = alloc.mark();
-}
-
-BinASTParserBase::~BinASTParserBase()
-{
-    alloc_.release(tempPoolMark_);
-
-    /*
-     * The parser can allocate enormous amounts of memory for large functions.
-     * Eagerly free the memory now (which otherwise won't be freed until the
-     * next GC) to avoid unnecessary OOMs.
-     */
-    alloc_.freeAllIfHugeAndUnused();
-
-    cx_->frontendCollectionPool().removeActiveCompilation();
-}
-
 // ------------- Toplevel constructions
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const Vector<uint8_t>& data,
-                         BinASTSourceMetadata** metadataPtr)
+BinASTParserPerTokenizer<Tok>::parse(GlobalSharedContext* globalsc, const Vector<uint8_t>& data,
+                                     BinASTSourceMetadata** metadataPtr)
 {
     return parse(globalsc, data.begin(), data.length(), metadataPtr);
 }
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const uint8_t* start, const size_t length,
-                         BinASTSourceMetadata** metadataPtr)
+BinASTParserPerTokenizer<Tok>::parse(GlobalSharedContext* globalsc, const uint8_t* start,
+                                     const size_t length,
+                                     BinASTSourceMetadata** metadataPtr)
 {
     auto result = parseAux(globalsc, start, length, metadataPtr);
     poison(); // Make sure that the parser is never used again accidentally.
@@ -130,9 +99,9 @@ BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const uint8_t* start, co
 
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
-                            const uint8_t* start, const size_t length,
-                            BinASTSourceMetadata** metadataPtr)
+BinASTParserPerTokenizer<Tok>::parseAux(GlobalSharedContext* globalsc,
+                                        const uint8_t* start, const size_t length,
+                                        BinASTSourceMetadata** metadataPtr)
 {
     MOZ_ASSERT(globalsc);
 
@@ -151,7 +120,7 @@ BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
     MOZ_TRY(tokenizer_->readHeader());
 
     ParseNode* result(nullptr);
-    MOZ_TRY_VAR(result, parseProgram());
+    MOZ_TRY_VAR(result, asFinalParser()->parseProgram());
 
     mozilla::Maybe<GlobalScope::Data*> bindings = NewGlobalScopeData(cx_, varScope, alloc_,
                                                                      parseContext_);
@@ -168,7 +137,8 @@ BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
 }
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parseLazyFunction(ScriptSource* scriptSource, const size_t firstOffset)
+BinASTParserPerTokenizer<Tok>::parseLazyFunction(ScriptSource* scriptSource,
+                                                 const size_t firstOffset)
 {
     MOZ_ASSERT(lazyScript_);
     MOZ_ASSERT(scriptSource->length() > firstOffset);
@@ -203,9 +173,9 @@ BinASTParser<Tok>::parseLazyFunction(ScriptSource* scriptSource, const size_t fi
     BINJS_TRY(lexicalScope.init(parseContext_));
     ListNode* params;
     ListNode* tmpBody;
-    auto parseFunc = isExpr ? &BinASTParser::parseFunctionExpressionContents
-                            : &BinASTParser::parseFunctionOrMethodContents;
-    MOZ_TRY((this->*parseFunc)(func->nargs(), &params, &tmpBody));
+    auto parseFunc = isExpr ? &FinalParser::parseFunctionExpressionContents
+                            : &FinalParser::parseFunctionOrMethodContents;
+    MOZ_TRY((asFinalParser()->*parseFunc)(func->nargs(), &params, &tmpBody));
 
     BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
     BINJS_TRY_DECL(body, factory_.newLexicalScope(*lexicalScopeData, tmpBody));
@@ -215,7 +185,7 @@ BinASTParser<Tok>::parseLazyFunction(ScriptSource* scriptSource, const size_t fi
 }
 
 template<typename Tok> void
-BinASTParser<Tok>::forceStrictIfNecessary(SharedContext* sc, ListNode* directives)
+BinASTParserPerTokenizer<Tok>::forceStrictIfNecessary(SharedContext* sc, ListNode* directives)
 {
     JSAtom* useStrict = cx_->names().useStrict;
 
@@ -228,10 +198,10 @@ BinASTParser<Tok>::forceStrictIfNecessary(SharedContext* sc, ListNode* directive
 }
 
 template<typename Tok> JS::Result<FunctionBox*>
-BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
-    FunctionAsyncKind functionAsyncKind,
-    FunctionSyntaxKind syntax,
-    ParseNode* name)
+BinASTParserPerTokenizer<Tok>::buildFunctionBox(GeneratorKind generatorKind,
+                                                FunctionAsyncKind functionAsyncKind,
+                                                FunctionSyntaxKind syntax,
+                                                ParseNode* name)
 {
     MOZ_ASSERT_IF(!parseContext_, lazyScript_);
 
@@ -288,7 +258,8 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
 }
 
 template<typename Tok> JS::Result<CodeNode*>
-BinASTParser<Tok>::makeEmptyFunctionNode(const size_t start, const BinKind kind, FunctionBox* funbox)
+BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(const size_t start, const BinKind kind,
+                                                     FunctionBox* funbox)
 {
     // LazyScript compilation requires basically none of the fields filled out.
     TokenPos pos = tokenizer_->pos(start);
@@ -305,8 +276,9 @@ BinASTParser<Tok>::makeEmptyFunctionNode(const size_t start, const BinKind kind,
 }
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNode* name,
-                                 ListNode* params, ParseNode* body, FunctionBox* funbox)
+BinASTParserPerTokenizer<Tok>::buildFunction(const size_t start, const BinKind kind,
+                                             ParseNode* name, ListNode* params, ParseNode* body,
+                                             FunctionBox* funbox)
 {
     // Set the argument count for building argument packets. Function.length is handled
     // by setting the appropriate funbox field during argument parsing.
@@ -404,9 +376,9 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::addScopeName(AssertedScopeKind scopeKind, HandleAtom name,
-                                ParseContext::Scope* scope, DeclarationKind declKind,
-                                bool isCaptured, bool allowDuplicateName)
+BinASTParserPerTokenizer<Tok>::addScopeName(AssertedScopeKind scopeKind, HandleAtom name,
+                                            ParseContext::Scope* scope, DeclarationKind declKind,
+                                            bool isCaptured, bool allowDuplicateName)
 {
     auto ptr = scope->lookupDeclaredNameForAdd(name);
     if (ptr) {
@@ -429,7 +401,7 @@ BinASTParser<Tok>::addScopeName(AssertedScopeKind scopeKind, HandleAtom name,
 }
 
 template<typename Tok> void
-BinASTParser<Tok>::captureFunctionName()
+BinASTParserPerTokenizer<Tok>::captureFunctionName()
 {
     MOZ_ASSERT(parseContext_->isFunctionBox());
     MOZ_ASSERT(parseContext_->functionBox()->function()->isNamedLambda());
@@ -443,8 +415,10 @@ BinASTParser<Tok>::captureFunctionName()
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::getDeclaredScope(AssertedScopeKind scopeKind, AssertedDeclaredKind kind,
-                                    ParseContext::Scope*& scope, DeclarationKind& declKind)
+BinASTParserPerTokenizer<Tok>::getDeclaredScope(AssertedScopeKind scopeKind,
+                                                AssertedDeclaredKind kind,
+                                                ParseContext::Scope*& scope,
+                                                DeclarationKind& declKind)
 {
     MOZ_ASSERT(scopeKind == AssertedScopeKind::Block ||
                scopeKind == AssertedScopeKind::Global ||
@@ -471,8 +445,9 @@ BinASTParser<Tok>::getDeclaredScope(AssertedScopeKind scopeKind, AssertedDeclare
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::getBoundScope(AssertedScopeKind scopeKind,
-                                 ParseContext::Scope*& scope, DeclarationKind& declKind)
+BinASTParserPerTokenizer<Tok>::getBoundScope(AssertedScopeKind scopeKind,
+                                             ParseContext::Scope*& scope,
+                                             DeclarationKind& declKind)
 {
     MOZ_ASSERT(scopeKind == AssertedScopeKind::Catch ||
                scopeKind == AssertedScopeKind::Parameter);
@@ -495,7 +470,7 @@ BinASTParser<Tok>::getBoundScope(AssertedScopeKind scopeKind,
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::checkBinding(JSAtom* name)
+BinASTParserPerTokenizer<Tok>::checkBinding(JSAtom* name)
 {
     // Check that the variable appears in the corresponding scope.
     ParseContext::Scope& scope =
@@ -514,8 +489,8 @@ BinASTParser<Tok>::checkBinding(JSAtom* name)
 // Binary AST (revision 8eab67e0c434929a66ff6abe99ff790bca087dda)
 // 3.1.5 CheckPositionalParameterIndices.
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> positionalParams,
-                                                   ListNode* params)
+BinASTParserPerTokenizer<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> positionalParams,
+                                                               ListNode* params)
 {
     // positionalParams should have the corresponding entry up to the last
     // positional parameter.
@@ -601,7 +576,7 @@ BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> pos
 // Binary AST (revision 8eab67e0c434929a66ff6abe99ff790bca087dda)
 // 3.1.13 CheckFunctionLength.
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::checkFunctionLength(uint32_t expectedLength)
+BinASTParserPerTokenizer<Tok>::checkFunctionLength(uint32_t expectedLength)
 {
     if (parseContext_->functionBox()->length != expectedLength) {
         return raiseError("Function length does't match");
@@ -610,7 +585,7 @@ BinASTParser<Tok>::checkFunctionLength(uint32_t expectedLength)
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::checkClosedVars(ParseContext::Scope& scope)
+BinASTParserPerTokenizer<Tok>::checkClosedVars(ParseContext::Scope& scope)
 {
     for (ParseContext::Scope::BindingIter bi = scope.bindings(parseContext_); bi; bi++) {
         if (UsedNamePtr p = usedNames_.lookup(bi.name())) {
@@ -626,7 +601,7 @@ BinASTParser<Tok>::checkClosedVars(ParseContext::Scope& scope)
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::checkFunctionClosedVars()
+BinASTParserPerTokenizer<Tok>::checkFunctionClosedVars()
 {
     MOZ_ASSERT(parseContext_->isFunctionBox());
 
@@ -640,7 +615,7 @@ BinASTParser<Tok>::checkFunctionClosedVars()
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::prependDirectivesToBody(ListNode* body, ListNode* directives)
+BinASTParserPerTokenizer<Tok>::prependDirectivesToBody(ListNode* body, ListNode* directives)
 {
     if (!directives) {
         return Ok();
@@ -656,7 +631,7 @@ BinASTParser<Tok>::prependDirectivesToBody(ListNode* body, ListNode* directives)
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::prependDirectivesImpl(ListNode* body, ParseNode* directive)
+BinASTParserPerTokenizer<Tok>::prependDirectivesImpl(ListNode* body, ParseNode* directive)
 {
     BINJS_TRY(CheckRecursionLimit(cx_));
 
@@ -673,13 +648,13 @@ BinASTParser<Tok>::prependDirectivesImpl(ListNode* body, ParseNode* directive)
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseInvalidClosedVar(JSAtom* name)
+BinASTParserPerTokenizer<Tok>::raiseInvalidClosedVar(JSAtom* name)
 {
     return raiseError("Captured variable was not declared as captured");
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseMissingVariableInAssertedScope(JSAtom* name)
+BinASTParserPerTokenizer<Tok>::raiseMissingVariableInAssertedScope(JSAtom* name)
 {
     // For the moment, we don't trust inputs sufficiently to put the name
     // in an error message.
@@ -687,13 +662,13 @@ BinASTParser<Tok>::raiseMissingVariableInAssertedScope(JSAtom* name)
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseMissingDirectEvalInAssertedScope()
+BinASTParserPerTokenizer<Tok>::raiseMissingDirectEvalInAssertedScope()
 {
     return raiseError("Direct call to `eval` was not declared in AssertedScope");
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseInvalidKind(const char* superKind, const BinKind kind)
+BinASTParserPerTokenizer<Tok>::raiseInvalidKind(const char* superKind, const BinKind kind)
 {
     Sprinter out(cx_);
     BINJS_TRY(out.init());
@@ -702,7 +677,7 @@ BinASTParser<Tok>::raiseInvalidKind(const char* superKind, const BinKind kind)
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseInvalidVariant(const char* kind, const BinVariant value)
+BinASTParserPerTokenizer<Tok>::raiseInvalidVariant(const char* kind, const BinVariant value)
 {
     Sprinter out(cx_);
     BINJS_TRY(out.init());
@@ -712,7 +687,7 @@ BinASTParser<Tok>::raiseInvalidVariant(const char* kind, const BinVariant value)
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseMissingField(const char* kind, const BinField field)
+BinASTParserPerTokenizer<Tok>::raiseMissingField(const char* kind, const BinField field)
 {
     Sprinter out(cx_);
     BINJS_TRY(out.init());
@@ -722,7 +697,7 @@ BinASTParser<Tok>::raiseMissingField(const char* kind, const BinField field)
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseEmpty(const char* description)
+BinASTParserPerTokenizer<Tok>::raiseEmpty(const char* description)
 {
     Sprinter out(cx_);
     BINJS_TRY(out.init());
@@ -732,13 +707,13 @@ BinASTParser<Tok>::raiseEmpty(const char* description)
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseOOM()
+BinASTParserPerTokenizer<Tok>::raiseOOM()
 {
     return tokenizer_->raiseOOM();
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseError(BinKind kind, const char* description)
+BinASTParserPerTokenizer<Tok>::raiseError(BinKind kind, const char* description)
 {
     Sprinter out(cx_);
     BINJS_TRY(out.init());
@@ -747,19 +722,19 @@ BinASTParser<Tok>::raiseError(BinKind kind, const char* description)
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseError(const char* description)
+BinASTParserPerTokenizer<Tok>::raiseError(const char* description)
 {
     return tokenizer_->raiseError(description);
 }
 
 template<typename Tok> void
-BinASTParser<Tok>::poison()
+BinASTParserPerTokenizer<Tok>::poison()
 {
     tokenizer_.reset();
 }
 
 template<typename Tok> void
-BinASTParser<Tok>::reportErrorNoOffsetVA(unsigned errorNumber, va_list args)
+BinASTParserPerTokenizer<Tok>::reportErrorNoOffsetVA(unsigned errorNumber, va_list args)
 {
     ErrorMetadata metadata;
     metadata.filename = getFilename();
@@ -770,7 +745,7 @@ BinASTParser<Tok>::reportErrorNoOffsetVA(unsigned errorNumber, va_list args)
 }
 
 template<typename Tok> void
-BinASTParser<Tok>::errorAtVA(uint32_t offset, unsigned errorNumber, va_list* args)
+BinASTParserPerTokenizer<Tok>::errorAtVA(uint32_t offset, unsigned errorNumber, va_list* args)
 {
     ErrorMetadata metadata;
     metadata.filename = getFilename();
@@ -781,7 +756,9 @@ BinASTParser<Tok>::errorAtVA(uint32_t offset, unsigned errorNumber, va_list* arg
 }
 
 template<typename Tok> bool
-BinASTParser<Tok>::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber, va_list* args)
+BinASTParserPerTokenizer<Tok>::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes,
+                                                               uint32_t offset,
+                                                               unsigned errorNumber, va_list* args)
 {
     if (!options().extraWarningsOption) {
         return true;
@@ -801,16 +778,6 @@ BinASTParser<Tok>::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes
     return ReportCompileWarning(cx_, std::move(metadata), std::move(notes), JSREPORT_STRICT | JSREPORT_WARNING, errorNumber, *args);
 }
 
-bool
-BinASTParserBase::hasUsedName(HandlePropertyName name)
-{
-    if (UsedNamePtr p = usedNames_.lookup(name)) {
-        return p->value().isUsedInScript(parseContext_->scriptId());
-    }
-
-    return false;
-}
-
 void
 TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser)
 {
@@ -819,18 +786,40 @@ TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser)
 
 template<typename Tok>
 void
-BinASTParser<Tok>::doTrace(JSTracer* trc)
+BinASTParserPerTokenizer<Tok>::doTrace(JSTracer* trc)
 {
     if (tokenizer_) {
         tokenizer_->traceMetadata(trc);
     }
 }
 
+template<typename Tok>
+inline typename BinASTParserPerTokenizer<Tok>::FinalParser*
+BinASTParserPerTokenizer<Tok>::asFinalParser()
+{
+    // Same as GeneralParser::asFinalParser, verify the inheritance to
+    // make sure the static downcast works.
+    static_assert(mozilla::IsBaseOf<BinASTParserPerTokenizer<Tok>, FinalParser>::value,
+                  "inheritance relationship required by the static_cast<> below");
+
+    return static_cast<FinalParser*>(this);
+}
+
+template<typename Tok>
+inline const typename BinASTParserPerTokenizer<Tok>::FinalParser*
+BinASTParserPerTokenizer<Tok>::asFinalParser() const
+{
+    static_assert(mozilla::IsBaseOf<BinASTParserPerTokenizer<Tok>, FinalParser>::value,
+                  "inheritance relationship required by the static_cast<> below");
+
+    return static_cast<const FinalParser*>(this);
+}
+
 // Force class instantiation.
 // This ensures that the symbols are built, without having to export all our
 // code (and its baggage of #include and macros) in the header.
-template class BinASTParser<BinTokenReaderMultipart>;
-template class BinASTParser<BinTokenReaderTester>;
+template class BinASTParserPerTokenizer<BinTokenReaderMultipart>;
+template class BinASTParserPerTokenizer<BinTokenReaderTester>;
 
 } // namespace frontend
 } // namespace js

@@ -116,6 +116,7 @@ reftest:
         by-test-platform:
             android-em.*: 7200
             windows10-64-ccov/debug: 5400
+            windows10-64-asan/opt: 5400
             macosx64-ccov/debug: 5400
             default: 3600
     mozharness:

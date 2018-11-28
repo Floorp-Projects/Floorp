@@ -131,7 +131,8 @@ TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
 #if defined(JS_BUILD_BINAST)
 
-/* Trace all GC things reachable from binjs parser. Defined in BinSource.cpp. */
+/* Trace all GC things reachable from binjs parser. Defined in
+ * BinASTParserPerTokenizer.cpp. */
 void
 TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser);
 

@@ -244,6 +244,11 @@ lot of places. To support private artifacts, we've moved this to the
 ``artifact_prefix`` attribute. It will default to ``public/build`` but will be
 overrideable per-task.
 
+artifact_map
+===============
+For beetmover jobs, this indicates which yaml file should be used to
+generate the upstream artifacts and payload instructions to the task.
+
 enable-full-crashsymbols
 ========================
 In automation, full crashsymbol package generation is normally disabled.  For
