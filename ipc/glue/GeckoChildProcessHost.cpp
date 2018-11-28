@@ -571,6 +571,8 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   AutoSetProfilerEnvVarsForChildProcess profilerEnvironment;
 #endif
 
+  const auto startTS = TimeStamp::Now();
+
   // - Note: this code is not called re-entrantly, nor are restoreOrig*LogName
   //   or mChildCounter touched by any other thread, so this is safe.
   ++mChildCounter;
@@ -1123,6 +1125,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   lock.Notify();
 
   mLaunchOptions = nullptr;
+
+  Telemetry::AccumulateTimeDelta(Telemetry::CHILD_PROCESS_LAUNCH_MS, startTS);
+
   return true;
 }
 
