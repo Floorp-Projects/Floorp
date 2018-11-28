@@ -148,6 +148,12 @@ BreakpadReserveSize:
     Size of the buffer reserved by Breakpad.
   type: string
 
+Bug_1086977:
+  description: >
+    Mac-only annotation which should be present only if Firefox crashed when
+    loading a facebook plugin.
+  type: string
+
 BuildID:
   description: >
     Application build ID, the format is YYYYMMDDHHMMSS.
