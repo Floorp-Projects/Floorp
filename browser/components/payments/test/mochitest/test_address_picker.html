@@ -256,10 +256,10 @@ add_task(async function test_merchantError() {
   info("Set billing address and payer errors which aren't relevant to this picker");
   let requestWithNonShippingAddressErrors = deepClone(request);
   Object.assign(requestWithNonShippingAddressErrors.paymentDetails, {
-    payer: {
+    payerErrors: {
       name: "Your name is too short",
     },
-    paymentMethod: {
+    paymentMethodErrors: {
       billingAddress: {
         country: "Your billing country is not supported",
       },

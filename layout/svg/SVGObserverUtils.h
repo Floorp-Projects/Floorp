@@ -145,7 +145,7 @@ public:
 
   Element* GetAndObserveReferencedElement();
 
-  virtual bool ObservesReflow() { return true; }
+  virtual bool ObservesReflow() { return false; }
 
 protected:
   void StartObserving();
@@ -403,6 +403,13 @@ public:
   static void
   RemoveTemplateObserver(nsIFrame* aFrame);
 
+  /**
+   * Gets an arbitrary element and starts observing it.  Used to implement
+   * '-moz-element'.
+   *
+   * Note that bug 1496065 has been filed to remove support for referencing
+   * arbitrary elements using '-moz-element'.
+   */
   static Element*
   GetAndObserveBackgroundImage(nsIFrame* aFrame,
                                const nsAtom* aHref);

@@ -997,11 +997,6 @@ class AndroidArguments(ArgumentContainer):
                     "The directory for the coverage output does not exist: %s" %
                     parent_dir)
 
-        # Disable e10s by default on Android because we don't run Android
-        # e10s jobs anywhere yet.
-        options.e10s = False
-        mozinfo.update({'e10s': options.e10s})
-
         # allow us to keep original application around for cleanup while
         # running robocop via 'am'
         options.remoteappname = options.app

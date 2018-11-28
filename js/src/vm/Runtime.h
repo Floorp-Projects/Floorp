@@ -37,6 +37,7 @@
 # include "js/Proxy.h" // For AutoEnterPolicy
 #endif
 #include "js/Stream.h"
+#include "js/Symbol.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"

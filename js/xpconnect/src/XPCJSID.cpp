@@ -10,6 +10,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
+#include "js/Symbol.h"
 
 using namespace mozilla::dom;
 using namespace JS;

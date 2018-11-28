@@ -13,6 +13,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/Printf.h"
+#include "js/Symbol.h"
 
 using namespace mozilla;
 using namespace JS;

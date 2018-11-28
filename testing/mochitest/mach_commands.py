@@ -177,6 +177,11 @@ class MochitestRunner(MozbuildObject):
             manifest.tests.extend(tests)
             options.manifestFile = manifest
 
+        # Firefox for Android doesn't use e10s
+        if options.app is None or 'geckoview' not in options.app:
+            options.e10s = False
+            print("using e10s=False for non-geckoview app")
+
         return runtestsremote.run_test_harness(parser, options)
 
     def run_geckoview_junit_test(self, context, **kwargs):
@@ -207,6 +212,10 @@ class MochitestRunner(MozbuildObject):
             manifest = TestManifest()
             manifest.tests.extend(tests)
             options.manifestFile = manifest
+
+        # robocop only used for Firefox for Android - non-e10s
+        options.e10s = False
+        print("using e10s=False for robocop")
 
         return runrobocop.run_test_harness(parser, options)
 

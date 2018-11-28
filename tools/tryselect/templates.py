@@ -9,6 +9,7 @@ tasks. They live under taskcluster/taskgraph/templates.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import json
 import os
 import sys
 from abc import ABCMeta, abstractmethod
@@ -16,6 +17,7 @@ from argparse import Action, SUPPRESS
 
 import mozpack.path as mozpath
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
+from .tasks import resolve_tests_by_suite
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
@@ -79,8 +81,7 @@ class Path(Template):
         paths = [mozpath.relpath(mozpath.join(os.getcwd(), p), build.topsrcdir) for p in paths]
         return {
             'env': {
-                # can't use os.pathsep as machine splitting could be a different platform
-                'MOZHARNESS_TEST_PATHS': ':'.join(paths),
+                'MOZHARNESS_TEST_PATHS': json.dumps(resolve_tests_by_suite(paths)),
             }
         }
 

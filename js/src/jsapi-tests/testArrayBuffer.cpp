@@ -3,6 +3,7 @@
  */
 
 #include "jsfriendapi.h"
+#include "js/MemoryFunctions.h"
 
 #include "jsapi-tests/tests.h"
 

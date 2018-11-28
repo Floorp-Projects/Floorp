@@ -16,7 +16,7 @@
 use std::iter::{IntoIterator, Iterator};
 
 use super::{
-    BinaryReader, BinaryReaderError, CustomSectionKind, Result, SectionCode, SectionHeader,
+    BinaryReader, BinaryReaderError, CustomSectionKind, Range, Result, SectionCode, SectionHeader,
 };
 
 use super::{
@@ -218,6 +218,13 @@ impl<'a> Section<'a> {
         'a: 'b,
     {
         BinaryReader::new_with_offset(self.data, self.offset)
+    }
+
+    pub(crate) fn get_range(&self) -> Range {
+        Range {
+            start: self.offset,
+            end: self.offset + self.data.len(),
+        }
     }
 }
 

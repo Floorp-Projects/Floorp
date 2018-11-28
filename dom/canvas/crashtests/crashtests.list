@@ -4,7 +4,7 @@ load 360293-1.html
 load 421715-1.html
 load 553938-1.html
 load 647480.html
-load 727547.html
+skip-if(Android&&browserIsRemote) load 727547.html # bug 1507207
 load 729116.html
 load 745699-1.html
 load 746813-1.html

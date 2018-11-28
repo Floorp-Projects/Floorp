@@ -806,13 +806,16 @@ st = TailRecipe(
         'st', Store, base_size=1, ins=(GPR, GPR), outs=(),
         instp=IsEqual(Store.offset, 0),
         clobbers_flags=False,
-        compute_size="size_plus_maybe_offset_for_in_reg_1",
+        compute_size="size_plus_maybe_sib_or_offset_for_in_reg_1",
         emit='''
         if !flags.notrap() {
             sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
         }
         PUT_OP(bits, rex2(in_reg1, in_reg0), sink);
-        if needs_offset(in_reg1) {
+        if needs_sib_byte(in_reg1) {
+            modrm_sib(in_reg0, sink);
+            sib_noindex(in_reg1, sink);
+        } else if needs_offset(in_reg1) {
             modrm_disp8(in_reg1, in_reg0, sink);
             sink.put1(0);
         } else {
@@ -833,6 +836,7 @@ stWithIndex = TailRecipe(
         sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
     }
     PUT_OP(bits, rex3(in_reg1, in_reg0, in_reg2), sink);
+    // The else branch always inserts an SIB byte.
     if needs_offset(in_reg1) {
         modrm_sib_disp8(in_reg0, sink);
         sib(0, in_reg2, in_reg1, sink);
@@ -850,12 +854,21 @@ st_abcd = TailRecipe(
         instp=IsEqual(Store.offset, 0),
         when_prefixed=st,
         clobbers_flags=False,
+        compute_size="size_plus_maybe_sib_or_offset_for_in_reg_1",
         emit='''
         if !flags.notrap() {
             sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
         }
         PUT_OP(bits, rex2(in_reg1, in_reg0), sink);
-        modrm_rm(in_reg1, in_reg0, sink);
+        if needs_sib_byte(in_reg1) {
+            modrm_sib(in_reg0, sink);
+            sib_noindex(in_reg1, sink);
+        } else if needs_offset(in_reg1) {
+            modrm_disp8(in_reg1, in_reg0, sink);
+            sink.put1(0);
+        } else {
+            modrm_rm(in_reg1, in_reg0, sink);
+        }
         ''')
 
 # XX /r register-indirect store with index and no offset.
@@ -872,6 +885,7 @@ stWithIndex_abcd = TailRecipe(
         sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
     }
     PUT_OP(bits, rex3(in_reg1, in_reg0, in_reg2), sink);
+    // The else branch always inserts an SIB byte.
     if needs_offset(in_reg1) {
         modrm_sib_disp8(in_reg0, sink);
         sib(0, in_reg2, in_reg1, sink);
@@ -887,13 +901,16 @@ fst = TailRecipe(
         'fst', Store, base_size=1, ins=(FPR, GPR), outs=(),
         instp=IsEqual(Store.offset, 0),
         clobbers_flags=False,
-        compute_size="size_plus_maybe_offset_for_in_reg_1",
+        compute_size="size_plus_maybe_sib_or_offset_for_in_reg_1",
         emit='''
         if !flags.notrap() {
             sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
         }
         PUT_OP(bits, rex2(in_reg1, in_reg0), sink);
-        if needs_offset(in_reg1) {
+        if needs_sib_byte(in_reg1) {
+            modrm_sib(in_reg0, sink);
+            sib_noindex(in_reg1, sink);
+        } else if needs_offset(in_reg1) {
             modrm_disp8(in_reg1, in_reg0, sink);
             sink.put1(0);
         } else {
@@ -912,6 +929,7 @@ fstWithIndex = TailRecipe(
             sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
         }
         PUT_OP(bits, rex3(in_reg1, in_reg0, in_reg2), sink);
+        // The else branch always inserts an SIB byte.
         if needs_offset(in_reg1) {
             modrm_sib_disp8(in_reg0, sink);
             sib(0, in_reg2, in_reg1, sink);
@@ -968,12 +986,18 @@ stDisp8_abcd = TailRecipe(
         instp=IsSignedInt(Store.offset, 8),
         when_prefixed=stDisp8,
         clobbers_flags=False,
+        compute_size="size_plus_maybe_sib_for_in_reg_1",
         emit='''
         if !flags.notrap() {
             sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
         }
         PUT_OP(bits, rex2(in_reg1, in_reg0), sink);
-        modrm_disp8(in_reg1, in_reg0, sink);
+        if needs_sib_byte(in_reg1) {
+            modrm_sib_disp8(in_reg0, sink);
+            sib_noindex(in_reg1, sink);
+        } else {
+            modrm_disp8(in_reg1, in_reg0, sink);
+        }
         let offset: i32 = offset.into();
         sink.put1(offset as u8);
         ''')
@@ -1080,12 +1104,18 @@ stDisp32_abcd = TailRecipe(
         'stDisp32_abcd', Store, base_size=5, ins=(ABCD, GPR), outs=(),
         when_prefixed=stDisp32,
         clobbers_flags=False,
+        compute_size="size_plus_maybe_sib_for_in_reg_1",
         emit='''
         if !flags.notrap() {
             sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
         }
         PUT_OP(bits, rex2(in_reg1, in_reg0), sink);
-        modrm_disp32(in_reg1, in_reg0, sink);
+        if needs_sib_byte(in_reg1) {
+            modrm_sib_disp32(in_reg0, sink);
+            sib_noindex(in_reg1, sink);
+        } else {
+            modrm_disp32(in_reg1, in_reg0, sink);
+        }
         let offset: i32 = offset.into();
         sink.put4(offset as u32);
         ''')
@@ -1210,13 +1240,16 @@ ld = TailRecipe(
         'ld', Load, base_size=1, ins=(GPR), outs=(GPR),
         instp=IsEqual(Load.offset, 0),
         clobbers_flags=False,
-        compute_size="size_plus_maybe_offset_for_in_reg_0",
+        compute_size="size_plus_maybe_sib_or_offset_for_in_reg_0",
         emit='''
         if !flags.notrap() {
             sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
         }
         PUT_OP(bits, rex2(in_reg0, out_reg0), sink);
-        if needs_offset(in_reg0) {
+        if needs_sib_byte(in_reg0) {
+            modrm_sib(out_reg0, sink);
+            sib_noindex(in_reg0, sink);
+        } else if needs_offset(in_reg0) {
             modrm_disp8(in_reg0, out_reg0, sink);
             sink.put1(0);
         } else {
@@ -1237,6 +1270,7 @@ ldWithIndex = TailRecipe(
         sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
     }
     PUT_OP(bits, rex3(in_reg0, out_reg0, in_reg1), sink);
+    // The else branch always inserts an SIB byte.
     if needs_offset(in_reg0) {
         modrm_sib_disp8(out_reg0, sink);
         sib(0, in_reg1, in_reg0, sink);
@@ -1252,13 +1286,16 @@ fld = TailRecipe(
         'fld', Load, base_size=1, ins=(GPR), outs=(FPR),
         instp=IsEqual(Load.offset, 0),
         clobbers_flags=False,
-        compute_size="size_plus_maybe_offset_for_in_reg_0",
+        compute_size="size_plus_maybe_sib_or_offset_for_in_reg_0",
         emit='''
         if !flags.notrap() {
             sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
         }
         PUT_OP(bits, rex2(in_reg0, out_reg0), sink);
-        if needs_offset(in_reg0) {
+        if needs_sib_byte(in_reg0) {
+            modrm_sib(out_reg0, sink);
+            sib_noindex(in_reg0, sink);
+        } else if needs_offset(in_reg0) {
             modrm_disp8(in_reg0, out_reg0, sink);
             sink.put1(0);
         } else {
@@ -1279,6 +1316,7 @@ fldWithIndex = TailRecipe(
         sink.trap(TrapCode::HeapOutOfBounds, func.srclocs[inst]);
     }
     PUT_OP(bits, rex3(in_reg0, out_reg0, in_reg1), sink);
+    // The else branch always inserts an SIB byte.
     if needs_offset(in_reg0) {
         modrm_sib_disp8(out_reg0, sink);
         sib(0, in_reg1, in_reg0, sink);
