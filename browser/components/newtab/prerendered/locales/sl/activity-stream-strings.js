@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Obvestilom o zasebnosti",
   "firstrun_continue_to_login": "Nadaljuj",
   "firstrun_skip_login": "Preskoči ta korak",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Odpri meni",
   "pocket_learn_more": "Več o tem"
 };

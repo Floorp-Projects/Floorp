@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populárne témy:",
   "pocket_read_even_more": "Zobraziť ďalšie príbehy",
   "pocket_more_reccommendations": "Ďalšie odporúčania",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Ako to funguje",
   "pocket_cta_button": "Získajte Pocket",
   "pocket_cta_text": "Ukladajte si články do služby Pocket a užívajte si skvelé čítanie.",
   "highlights_empty_state": "Začnite s prehliadaním a my vám na tomto mieste ukážeme skvelé články, videá a ostatné stránky, ktoré ste nedávno navštívili alebo pridali medzi záložky.",
@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "zásadami ochrany súkromia",
   "firstrun_continue_to_login": "Pokračovať",
   "firstrun_skip_login": "Preskočiť tento krok",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Otvorí ponuku",
   "pocket_learn_more": "Ďalšie informácie"
 };

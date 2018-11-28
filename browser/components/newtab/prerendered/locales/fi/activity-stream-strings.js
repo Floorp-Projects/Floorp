@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "tietosuojakäytännön",
   "firstrun_continue_to_login": "Jatka",
   "firstrun_skip_login": "Ohita tämä vaihe",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Avaa valikko",
   "pocket_learn_more": "Lue lisää"
 };

@@ -58,8 +58,8 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_header": "Zinslas",
   "edit_topsites_button_text": "Modifitgar",
   "edit_topsites_edit_button": "Modifitgar questa pagina",
-  "topsites_form_add_header": "Nova pagina populara",
-  "topsites_form_edit_header": "Modifitgar la pagina populara",
+  "topsites_form_add_header": "Nova pagina principala",
+  "topsites_form_edit_header": "Modifitgar la pagina principala",
   "topsites_form_title_label": "Titel",
   "topsites_form_title_placeholder": "Endatar in titel",
   "topsites_form_url_label": "URL",
@@ -90,7 +90,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_expand_section": "Expander la secziun",
   "section_menu_action_manage_section": "Administrar la secziun",
   "section_menu_action_manage_webext": "Administrar l'extensiun",
-  "section_menu_action_add_topsite": "Agiuntar ina website populara",
+  "section_menu_action_add_topsite": "Agiuntar ina pagina principala",
   "section_menu_action_add_search_engine": "Agiuntar maschina da tschertgar",
   "section_menu_action_move_up": "Spustar ensi",
   "section_menu_action_move_down": "Spustar engiu",
@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Infurmaziuns davart la protecziun da datas",
   "firstrun_continue_to_login": "Cuntinuar",
   "firstrun_skip_login": "Sursiglir quest pass",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Avrir il menu",
   "pocket_learn_more": "Ulteriuras infurmaziuns"
 };

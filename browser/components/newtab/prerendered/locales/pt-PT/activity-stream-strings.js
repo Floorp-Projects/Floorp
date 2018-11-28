@@ -13,8 +13,8 @@ window.gActivityStreamStrings = {
   "type_label_downloaded": "Transferido",
   "menu_action_bookmark": "Adicionar aos marcadores",
   "menu_action_remove_bookmark": "Remover marcador",
-  "menu_action_open_new_window": "Abrir em nova janela",
-  "menu_action_open_private_window": "Abrir em nova janela privada",
+  "menu_action_open_new_window": "Abrir numa nova janela",
+  "menu_action_open_private_window": "Abrir numa nova janela privada",
   "menu_action_dismiss": "Dispensar",
   "menu_action_delete": "Apagar do histórico",
   "menu_action_pin": "Afixar",
@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Aviso de privacidade",
   "firstrun_continue_to_login": "Continuar",
   "firstrun_skip_login": "Saltar este passo",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Abrir menu",
   "pocket_learn_more": "Saber mais"
 };

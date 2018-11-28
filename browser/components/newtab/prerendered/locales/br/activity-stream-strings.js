@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "evezhiadennoù a-fet buhez prevez",
   "firstrun_continue_to_login": "Kenderc'hel",
   "firstrun_skip_login": "Tremen ar bazenn-mañ",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Digeriñ al lañser",
   "pocket_learn_more": "Gouzout hiroc'h"
 };

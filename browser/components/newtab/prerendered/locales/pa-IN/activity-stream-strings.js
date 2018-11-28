@@ -74,9 +74,9 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "ਚਿੱਤਰ ਲੋਡ ਕਰਨ ਤੋਂ ਅਸਫ਼ਲ ਰਿਹਾ। ਕਿਸੇ ਵੱਖਰੇ URL ਨਾਲ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
   "pocket_read_more": "ਪ੍ਰਸਿੱਧ ਵਿਸ਼ੇ:",
   "pocket_read_even_more": "ਹੋਰ ਕਹਾਣੀਆਂ ਵੇਖੋ",
-  "pocket_more_reccommendations": "More Recommendations",
-  "pocket_how_it_works": "How it works",
-  "pocket_cta_button": "Get Pocket",
+  "pocket_more_reccommendations": "ਹੋਰ ਸਿਫਾਰਸ਼ਾਂ",
+  "pocket_how_it_works": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦੀ ਹੈ",
+  "pocket_cta_button": "ਪਾਕੇਟ ਲਵੋ",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
   "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
@@ -101,11 +101,12 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "ਆਪਣਾ ਈਮੇਲ ਦਿਓ",
   "firstrun_form_sub_header": "ਤਾਂ ਕਿ ਫਾਇਰਫਾਕਸ ਸਿੰਕ ਨਾਲ ਜਾਰੀ ਰੱਖਿਆ ਜਾਵੇ।",
   "firstrun_email_input_placeholder": "ਈਮੇਲ",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "ਢੁੱਕਵੀਂ ਈਮੇਲ ਚਾਹੀਦੀ ਹੈ",
   "firstrun_extra_legal_links": "ਜਾਰੀ ਰੱਖ ਕੇ ਤੁਸੀਂ {terms} ਅਤੇ {privacy} ਨਾਲ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ।",
   "firstrun_terms_of_service": "ਸੇਵਾ ਦੀਆਂ ਸ਼ਰਤਾਂ",
   "firstrun_privacy_notice": "ਪਰਦੇਦਾਰੀ ਦਾ ਨੋਟਿਸ",
   "firstrun_continue_to_login": "ਜਾਰੀ ਰੱਖੋ",
   "firstrun_skip_login": "ਇਹ ਪਗ਼ ਛੱਡੋ",
-  "context_menu_title": "Open menu"
+  "context_menu_title": "ਮੇਨੂ ਖੋਲ੍ਹੋ",
+  "pocket_learn_more": "ਹੋਰ ਸਿੱਖੋ"
 };

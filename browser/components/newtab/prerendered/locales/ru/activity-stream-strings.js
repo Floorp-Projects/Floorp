@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "политикой приватности",
   "firstrun_continue_to_login": "Продолжить",
   "firstrun_skip_login": "Пропустить этот шаг",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Открыть меню",
   "pocket_learn_more": "Подробнее"
 };
