@@ -113,13 +113,8 @@ impl SceneProperties {
         }
     }
 
-    pub fn get_float_value(
-        &self,
-        id: PropertyBindingId,
-    ) -> Option<f32> {
-        self.float_properties
-            .get(&id)
-            .cloned()
+    pub fn float_properties(&self) -> &FastHashMap<PropertyBindingId, f32> {
+        &self.float_properties
     }
 }
 
