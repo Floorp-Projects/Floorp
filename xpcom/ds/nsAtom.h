@@ -9,6 +9,7 @@
 
 #include "nsISupportsImpl.h"
 #include "nsString.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -50,9 +51,9 @@ public:
   bool IsStatic() const { return mIsStatic; }
   bool IsDynamic() const { return !IsStatic(); }
 
-  const nsStaticAtom* AsStatic() const;
-  const nsDynamicAtom* AsDynamic() const;
-  nsDynamicAtom* AsDynamic();
+  inline const nsStaticAtom* AsStatic() const;
+  inline const nsDynamicAtom* AsDynamic() const;
+  inline nsDynamicAtom* AsDynamic();
 
   char16ptr_t GetUTF16String() const;
 
@@ -82,8 +83,8 @@ public:
 
   // We can't use NS_INLINE_DECL_THREADSAFE_REFCOUNTING because the refcounting
   // of this type is special.
-  MozExternalRefCountType AddRef();
-  MozExternalRefCountType Release();
+  inline MozExternalRefCountType AddRef();
+  inline MozExternalRefCountType Release();
 
   typedef mozilla::TrueType HasThreadSafeRefCnt;
 
@@ -157,8 +158,36 @@ class nsDynamicAtom : public nsAtom
 public:
   // We can't use NS_INLINE_DECL_THREADSAFE_REFCOUNTING because the refcounting
   // of this type is special.
-  MozExternalRefCountType AddRef();
-  MozExternalRefCountType Release();
+  MozExternalRefCountType AddRef()
+  {
+    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
+    nsrefcnt count = ++mRefCnt;
+    if (count == 1) {
+      gUnusedAtomCount--;
+    }
+    return count;
+  }
+
+  MozExternalRefCountType Release()
+  {
+    #ifdef DEBUG
+    // We set a lower GC threshold for atoms in debug builds so that we exercise
+    // the GC machinery more often.
+    static const int32_t kAtomGCThreshold = 20;
+    #else
+    static const int32_t kAtomGCThreshold = 10000;
+    #endif
+
+    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
+    nsrefcnt count = --mRefCnt;
+    if (count == 0) {
+      if (++gUnusedAtomCount >= kAtomGCThreshold) {
+        GCAtomTable();
+      }
+    }
+
+    return count;
+  }
 
   const char16_t* String() const
   {
@@ -173,6 +202,12 @@ public:
 private:
   friend class nsAtomTable;
   friend class nsAtomSubTable;
+  friend int32_t NS_GetUnusedAtomCount();
+
+  static mozilla::Atomic<int32_t,
+                         mozilla::ReleaseAcquire,
+                         mozilla::recordreplay::Behavior::DontPreserve> gUnusedAtomCount;
+  static void GCAtomTable();
 
   // These shouldn't be used directly, even by friend classes. The
   // Create()/Destroy() methods use them.
@@ -186,6 +221,39 @@ private:
 
   // The atom's chars are stored at the end of the struct.
 };
+
+const nsStaticAtom*
+nsAtom::AsStatic() const
+{
+  MOZ_ASSERT(IsStatic());
+  return static_cast<const nsStaticAtom*>(this);
+}
+
+const nsDynamicAtom*
+nsAtom::AsDynamic() const
+{
+  MOZ_ASSERT(IsDynamic());
+  return static_cast<const nsDynamicAtom*>(this);
+}
+
+nsDynamicAtom*
+nsAtom::AsDynamic()
+{
+  MOZ_ASSERT(IsDynamic());
+  return static_cast<nsDynamicAtom*>(this);
+}
+
+MozExternalRefCountType
+nsAtom::AddRef()
+{
+  return IsStatic() ? 2 : AsDynamic()->AddRef();
+}
+
+MozExternalRefCountType
+nsAtom::Release()
+{
+  return IsStatic() ? 1 : AsDynamic()->Release();
+}
 
 // The four forms of NS_Atomize (for use with |RefPtr<nsAtom>|) return the
 // atom for the string given. At any given time there will always be one atom
