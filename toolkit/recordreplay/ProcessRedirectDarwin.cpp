@@ -724,7 +724,9 @@ static PreambleResult Preamble_pthread_join(CallArguments* aArguments) {
   Thread* thread = Thread::GetByNativeId(token);
   thread->Join();
 
-  *ptr = nullptr;
+  if (ptr) {
+    *ptr = nullptr;
+  }
   aArguments->Rval<ssize_t>() = 0;
   return PreambleResult::Veto;
 }
