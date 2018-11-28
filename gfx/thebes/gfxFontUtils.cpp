@@ -13,7 +13,6 @@
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"

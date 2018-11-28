@@ -7,7 +7,6 @@
 #include "nsIURI.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXPConnect.h"
-#include "mozilla/Services.h"
 #include "jsapi.h"
 
 namespace mozilla {
