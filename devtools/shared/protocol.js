@@ -1359,20 +1359,14 @@ Front.prototype = extend(Pool.prototype, {
    * Send a packet on the connection.
    */
   send: function(packet) {
-    if (!packet.to) {
-      packet.to = this.actorID;
-    }
-
-    // If packet.to and this.actorID are not available, the request will not be able to
-    // complete. The front was probably destroyed earlier.
-    if (!packet.to) {
-      throw new Error(
-        `Can not send request because front '${this.typeName}' is already destroyed.`);
-    }
-
-    // The connection might be closed during the promise resolution
-    if (this.conn._transport) {
+    if (packet.to) {
       this.conn._transport.send(packet);
+    } else {
+      packet.to = this.actorID;
+      // The connection might be closed during the promise resolution
+      if (this.conn._transport) {
+        this.conn._transport.send(packet);
+      }
     }
   },
 
