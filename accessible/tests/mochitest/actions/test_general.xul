@@ -92,12 +92,12 @@
 
   <hbox flex="1" style="overflow: auto;">
     <body xmlns="http://www.w3.org/1999/xhtml">
-      <a target="_blank"
+      <a target="_blank" rel="opener"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=410765"
          title="nsIAccessible actions testing">
         Mozilla Bug 410765
       </a>
-      <a target="_blank"
+      <a target="_blank" rel="opener"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=504252"
          title="Expose STATE_HASPOPUP on XUL elements that have an @popup attribute">
         Mozilla Bug 504252

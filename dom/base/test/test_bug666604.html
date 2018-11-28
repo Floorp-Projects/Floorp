@@ -116,6 +116,7 @@ function test6() {
 function test7() {
   testlink.href = "javascript:opener.activationListener(); window.close();";
   testlink.target = "_blank";
+  testlink.rel = "opener";
   activationListener =
     function() {
       ok(true, "Click() should activate a link");
@@ -127,6 +128,7 @@ function test7() {
 function test8() {
   testlink.href = "javascript:opener.activationListener(); window.close();";
   testlink.target = "_blank";
+  testlink.rel = "opener";
   activationListener =
     function() {
       ok(false, "Click() should not activate a link");
