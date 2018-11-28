@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
+
 const PAGE_URL = "chrome://browser/content/aboutconfig/aboutconfig.html";
 
 add_task(async function setup() {
@@ -16,6 +18,41 @@ add_task(async function setup() {
     Services.prefs.clearUserPref("accessibility.typeaheadfind.autostart");
     Services.prefs.clearUserPref("accessibility.typeaheadfind.soundURL");
     Services.prefs.clearUserPref("accessibility.typeaheadfind.casesensitive");
+  });
+});
+
+add_task(async function test_add_user_pref() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: PAGE_URL,
+  }, async browser => {
+    await ContentTask.spawn(browser, null, () => {
+      Assert.ok(!Services.prefs.getChildList("").find(pref => pref == "testPref"));
+      let search = content.document.getElementById("search");
+      search.value = "testPref";
+      search.focus();
+    });
+
+    for (let [buttonSelector, expectedValue] of [
+      [".add-true", true],
+      [".add-false", false],
+      [".add-Number", 0],
+      [".add-String", ""],
+    ]) {
+      EventUtils.sendKey("return");
+      await ContentTask.spawn(browser, [buttonSelector, expectedValue],
+                                      ([buttonSelector, expectedValue]) => {
+        ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+
+        content.document.querySelector("#prefs button" + buttonSelector).click();
+        Assert.ok(Services.prefs.getChildList("").find(pref => pref == "testPref"));
+        Assert.ok(Preferences.get("testPref") === expectedValue);
+        content.document.querySelector("#prefs button[data-l10n-id='about-config-pref-delete']").click();
+        let search = content.document.getElementById("search");
+        search.value = "testPref";
+        search.focus();
+      });
+    }
   });
 });
 
