@@ -253,9 +253,9 @@ TouchEvent::PrefEnabled(nsIDocShell* aDocShell)
   static bool sPrefCached = false;
   static int32_t sPrefCacheValue = 0;
 
-  uint32_t touchEventsOverride = nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE;
+  auto touchEventsOverride = nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE;
   if (aDocShell) {
-    aDocShell->GetTouchEventsOverride(&touchEventsOverride);
+    touchEventsOverride = aDocShell->GetTouchEventsOverride();
   }
 
   if (!sPrefCached) {

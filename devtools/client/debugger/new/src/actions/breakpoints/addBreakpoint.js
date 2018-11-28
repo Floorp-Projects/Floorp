@@ -45,7 +45,7 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
     return { breakpoint: newBreakpoint };
   }
 
-  const { id, actualLocation } = await client.setBreakpoint(
+  const { id, hitCount, actualLocation } = await client.setBreakpoint(
     generatedLocation,
     breakpoint.condition,
     isOriginalId(location.sourceId)
@@ -70,6 +70,7 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
     condition: breakpoint.condition,
     location: newLocation,
     astLocation,
+    hitCount,
     generatedLocation: newGeneratedLocation,
     text,
     originalText

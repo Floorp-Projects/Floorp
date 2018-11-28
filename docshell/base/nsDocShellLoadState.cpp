@@ -515,44 +515,44 @@ nsDocShellLoadState::CalculateDocShellInternalLoadFlags()
     MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(mPrincipalToInherit),
                "Should not inherit SystemPrincipal");
     mDocShellInternalLoadFlags |=
-      nsIDocShell::INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL;
+      nsDocShell::INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL;
   }
 
   if (!mSendReferrer) {
     mDocShellInternalLoadFlags |=
-      nsIDocShell::INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER;
+      nsDocShell::INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER;
   }
 
   if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
     mDocShellInternalLoadFlags |=
-      nsIDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+      nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
   }
 
   if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD) {
-    mDocShellInternalLoadFlags |= nsIDocShell::INTERNAL_LOAD_FLAGS_FIRST_LOAD;
+    mDocShellInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_FIRST_LOAD;
   }
 
   if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CLASSIFIER) {
     mDocShellInternalLoadFlags |=
-      nsIDocShell::INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER;
+      nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER;
   }
 
   if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_FORCE_ALLOW_COOKIES) {
     mDocShellInternalLoadFlags |=
-      nsIDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES;
+      nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES;
   }
 
   if (mIsSrcdocLoad) {
-    mDocShellInternalLoadFlags |= nsIDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+    mDocShellInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC;
   }
 
   if (mForceAllowDataURI) {
     mDocShellInternalLoadFlags |=
-      nsIDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+      nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
   }
 
   if (mOriginalFrameSrc) {
     mDocShellInternalLoadFlags |=
-      nsIDocShell::INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC;
+      nsDocShell::INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC;
   }
 }
