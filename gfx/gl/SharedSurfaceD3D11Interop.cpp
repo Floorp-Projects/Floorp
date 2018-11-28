@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40; -*- */
+/* -*- Mode: c++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -29,18 +29,20 @@ DXGI_SWAP_CHAIN_DESC scd;
 
 <set appropriate swap chain parameters in scd>
 
-hr = D3D11CreateDeviceAndSwapChain(NULL,                        // pAdapter
-                                   D3D_DRIVER_TYPE_HARDWARE,    // DriverType
-                                   NULL,                        // Software
-                                   0,                           // Flags (Do not set D3D11_CREATE_DEVICE_SINGLETHREADED)
-                                   NULL,                        // pFeatureLevels
-                                   0,                           // FeatureLevels
-                                   D3D11_SDK_VERSION,           // SDKVersion
-                                   &scd,                        // pSwapChainDesc
-                                   &swapChain,                  // ppSwapChain
-                                   &device,                     // ppDevice
-                                   NULL,                        // pFeatureLevel
-                                   &devCtx);                    // ppImmediateContext
+hr = D3D11CreateDeviceAndSwapChain(
+         NULL,                        // pAdapter
+         D3D_DRIVER_TYPE_HARDWARE,    // DriverType
+         NULL,                        // Software
+         0,                           // Flags (Do not set
+                                      // D3D11_CREATE_DEVICE_SINGLETHREADED)
+         NULL,                        // pFeatureLevels
+         0,                           // FeatureLevels
+         D3D11_SDK_VERSION,           // SDKVersion
+         &scd,                        // pSwapChainDesc
+         &swapChain,                  // ppSwapChain
+         &device,                     // ppDevice
+         NULL,                        // pFeatureLevel
+         &devCtx);                    // ppImmediateContext
 
 // Fetch the swapchain backbuffer
 ID3D11Texture2D *dxColorbuffer;

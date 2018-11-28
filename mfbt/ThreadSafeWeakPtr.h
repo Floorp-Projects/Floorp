@@ -43,7 +43,8 @@
  *     // Make a new weak reference to the object from the strong reference.
  *     weak = strong;
  *   }
- *   MOZ_ASSERT(!bool(weak), "Weak pointers are cleared after all strong references are released.");
+ *   MOZ_ASSERT(!bool(weak), "Weak pointers are cleared after all "
+ *                           "strong references are released.");
  *
  *   // Convert the weak reference to a strong reference for usage.
  *   RefPtr<C> other(weak);

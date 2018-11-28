@@ -159,8 +159,10 @@ public:
      *                            inset path in device pixels.
      * @param aBlurRadius         The standard deviation of the blur.
      * @param aShadowColor        The color of the blur.
-     * @param aInnerClipRadii     Corner radii for the inside rect if it is a rounded rect.
-     * @param aSkipRect           An area in device pixels we don't have to paint in.
+     * @param aInnerClipRadii     Corner radii for the inside rect if it is a
+     *                            rounded rect.
+     * @param aSkipRect           An area in device pixels we don't have to
+     *                            paint in.
      */
     void BlurInsetBox(gfxContext* aDestinationCtx,
                       const mozilla::gfx::Rect& aDestinationRect,

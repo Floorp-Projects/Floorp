@@ -5,17 +5,19 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
+<!DOCTYPE dialog>
 
 <dialog id="certDetails"
-  title="&certmgr.certdetail.title;"
+  data-l10n-id="certmgr-cert-detail"
+  data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttons="accept"
-  buttonlabelaccept="&certmgr.close.label;"
-  buttonaccesskeyaccept="&certmgr.close.accesskey;"
   onload="setWindowName();">
 
-<stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
+
+<linkset>
+  <link rel="localization" href="security/certificates/certManager.ftl"/>
+</linkset>
 
 <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/javascript"
@@ -23,15 +25,13 @@
 
   <tabbox flex="1">
     <tabs>
-      <tab id="general_tab" label="&certmgr.detail.general_tab.title;"
-           accesskey="&certmgr.detail.general_tab.accesskey;"/>
-      <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;"
-           accesskey="&certmgr.detail.prettyprint_tab.accesskey;"/>
+      <tab id="general_tab" data-l10n-id="certmgr-detail-general-tab-title"/>
+      <tab id="prettyprint_tab" data-l10n-id="certmgr-detail-pretty-print-tab-title"/>
     </tabs>
     <tabpanels flex="1">
       <vbox class="box-padded" id="general_info">
         <vbox id="verify_info_box">
-          <label id="verify_pending" value="&certmgr.pending.label;"/>
+          <label id="verify_pending" data-l10n-id="certmgr-pending-label"/>
           <label class="header" id="verified"/>
         </vbox>
         <separator class="groove"/>
@@ -43,24 +43,24 @@
             </columns>
             <rows>
               <row>
-                <label class="header" value="&certmgr.subjectinfo.label;"/>
+                <label class="header" data-l10n-id="certmgr-subject-info-label"/>
                 <spacer/>
                 <spacer/>
               </row>
               <row>
-                <label value="&certmgr.certdetail.cn;"/>
+                <label data-l10n-id="certmgr-cert-detail-cn"/>
                 <textbox id="commonname" class="plain" readonly="true"/>
               </row>
               <row>
-                <label value="&certmgr.certdetail.o;"/>
+                <label data-l10n-id="certmgr-cert-detail-o"/>
                 <textbox id="organization" class="plain" readonly="true"/>
               </row>
               <row>
-                <label value="&certmgr.certdetail.ou;"/>
+                <label data-l10n-id="certmgr-cert-detail-ou"/>
                 <textbox id="orgunit" class="plain" readonly="true"/>
               </row>
               <row>
-                <label value="&certmgr.certdetail.serialnumber;"/>
+                <label data-l10n-id="certmgr-cert-detail-serialnumber"/>
                 <textbox id="serialnumber" class="plain" readonly="true"/>
               </row>
               <row>
@@ -68,19 +68,19 @@
                 <spacer/>
               </row>
               <row>
-                <label class="header" value="&certmgr.issuerinfo.label;"/>
+                <label class="header" data-l10n-id="certmgr-issuer-info-label"/>
                 <spacer/>
               </row>
               <row>
-                <label value="&certmgr.certdetail.cn;"/>
+                <label data-l10n-id="certmgr-cert-detail-cn"/>
                 <textbox id="issuercommonname" class="plain" readonly="true"/>
               </row>
               <row>
-                <label value="&certmgr.certdetail.o;"/>
+                <label data-l10n-id="certmgr-cert-detail-o"/>
                 <textbox id="issuerorganization" class="plain" readonly="true"/>
               </row>
               <row>
-                <label value="&certmgr.certdetail.ou;"/>
+                <label data-l10n-id="certmgr-cert-detail-ou"/>
                 <textbox id="issuerorgunit" class="plain" readonly="true"/>
               </row>
               <row>
@@ -88,15 +88,15 @@
                 <spacer/>
               </row>
               <row>
-                <label class ="header" value="&certmgr.periodofvalidity.label;"/>
+                <label class ="header" data-l10n-id="certmgr-period-of-validity-label"/>
                 <spacer/>
               </row>
               <row>
-                <label value="&certmgr.begins;"/>
+                <label data-l10n-id="certmgr-begins-value"/>
                 <textbox id="validitystart" class="plain" readonly="true"/>
               </row>
               <row>
-                <label value="&certmgr.expires;"/>
+                <label data-l10n-id="certmgr-expires-value"/>
                 <textbox id="validityend" class="plain" readonly="true"/>
               </row>
               <row>
@@ -104,18 +104,18 @@
                 <spacer/>
               </row>
               <row>
-                <label class="header" value="&certmgr.fingerprints.label;"/>
+                <label class="header" data-l10n-id="certmgr-fingerprints-label"/>
                 <spacer/>
               </row>
               <row>
-                <label value="&certmgr.certdetail.sha256fingerprint;"/>
+                <label data-l10n-id="certmgr-cert-detail-sha256-fingerprint"/>
                 <hbox>
                   <textbox id="sha256fingerprint" class="plain" readonly="true" multiline="true"
                            style="height: 6ex; width: 48ch; font-family: monospace;"/>
                 </hbox>
               </row>
               <row>
-                <label value="&certmgr.certdetail.sha1fingerprint;"/>
+                <label data-l10n-id="certmgr-cert-detail-sha1-fingerprint"/>
                 <textbox id="sha1fingerprint" class="plain" readonly="true" style="min-width:34em;"/>
               </row>
             </rows>
@@ -123,8 +123,7 @@
         </vbox>
       </vbox>
       <vbox class="box-padded" id="certPrettyPrint" flex="1">
-        <label class="header" value="&certmgr.hierarchy.label;"
-               control="treesetDump" accesskey="&certmgr.hierarchy.accesskey2;"/>
+        <label class="header" data-l10n-id="certmgr-hierarchy" control="treesetDump"/>
         <tree id="treesetDump" onselect="updateCertDump();" flex="1"
               hidecolumnpicker="true" style="height: 8em;">
           <treecols>
@@ -132,8 +131,7 @@
           </treecols>
         </tree>
 
-        <label class="header" value="&certmgr.details.label;"
-               control="prettyDumpTree" accesskey="&certmgr.details.accesskey;"/>
+        <label class="header" data-l10n-id="certmgr-details" control="prettyDumpTree"/>
         <tree id="prettyDumpTree" style="height: 15em" treelines="true" flex="1"
                   onselect="displaySelected();" hidecolumnpicker="true">
           <treecols>
@@ -142,15 +140,13 @@
           <treechildren/>
         </tree>
 
-        <label class="header" value="&certmgr.fields.label;"
-               control="certDumpVal" accesskey="&certmgr.fields.accesskey;"/>
+        <label class="header" data-l10n-id="certmgr-fields" control="certDumpVal"/>
         <textbox id="certDumpVal" multiline="true" flex="1"
                  readonly="true" style="height: 11em; font-family: -moz-fixed;"/>
 
         <separator class="thin"/>
         <hbox>
-          <button id="export_cert" class="normal" label="&certmgr.export.label;"
-                  accesskey="&certmgr.export.accesskey;"
+          <button id="export_cert" class="normal" data-l10n-id="certmgr-export"
                   oncommand="exportToFile(window, getCurrentCert());"/>
         </hbox>
       </vbox>

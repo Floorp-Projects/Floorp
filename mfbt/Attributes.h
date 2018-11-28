@@ -572,8 +572,8 @@
  *   expected to live on the stack or in static storage, so it is a compile-time
  *   error to use it, or an array of such objects, as the type of a new
  *   expression. If a member of another class uses this class, or if another
- *   class inherits from this class, then it is considered to be a non-heap class
- *   as well, although this attribute need not be provided in such cases.
+ *   class inherits from this class, then it is considered to be a non-heap
+ *   class as well, although this attribute need not be provided in such cases.
  * MOZ_HEAP_CLASS: Applies to all classes. Any class with this annotation is
  *   expected to live on the heap, so it is a compile-time error to use it, or
  *   an array of such objects, as the type of a variable declaration, or as a
@@ -637,25 +637,27 @@
  * MOZ_NON_OWNING_REF: Applies to declarations of pointers to reference counted
  *   types.  This attribute tells the compiler that the raw pointer is a weak
  *   reference, which is ensured to be valid by a guarantee that the reference
- *   will be nulled before the pointer becomes invalid.  This can make the compiler
- *   ignore these pointers when validating the usage of pointers otherwise.
+ *   will be nulled before the pointer becomes invalid.  This can make the
+ *   compiler ignore these pointers when validating the usage of pointers
+ *   otherwise.
  *
  *   Examples include an mOwner pointer, which is nulled by the owning class's
  *   destructor, and is null-checked before dereferencing.
- * MOZ_UNSAFE_REF: Applies to declarations of pointers to reference counted types.
- *   Occasionally there are non-owning references which are valid, but do not take
- *   the form of a MOZ_NON_OWNING_REF.  Their safety may be dependent on the behaviour
- *   of API consumers.  The string argument passed to this macro documents the safety
- *   conditions.  This can make the compiler ignore these pointers when validating
- *   the usage of pointers elsewhere.
+ * MOZ_UNSAFE_REF: Applies to declarations of pointers to reference counted
+ *   types.  Occasionally there are non-owning references which are valid, but
+ *   do not take the form of a MOZ_NON_OWNING_REF.  Their safety may be
+ *   dependent on the behaviour of API consumers.  The string argument passed
+ *   to this macro documents the safety conditions.  This can make the compiler
+ *   ignore these pointers when validating the usage of pointers elsewhere.
  *
- *   Examples include an nsAtom* member which is known at compile time to point to a
- *   static atom which is valid throughout the lifetime of the program, or an API which
- *   stores a pointer, but doesn't take ownership over it, instead requiring the API
- *   consumer to correctly null the value before it becomes invalid.
+ *   Examples include an nsAtom* member which is known at compile time to point
+ *   to a static atom which is valid throughout the lifetime of the program, or
+ *   an API which stores a pointer, but doesn't take ownership over it, instead
+ *   requiring the API consumer to correctly null the value before it becomes
+ *   invalid.
  *
- *   Use of this annotation is discouraged when a strong reference or one of the above
- *   two annotations can be used instead.
+ *   Use of this annotation is discouraged when a strong reference or one of
+ *   the above two annotations can be used instead.
  * MOZ_NO_ADDREF_RELEASE_ON_RETURN: Applies to function declarations.  Makes it
  *   a compile time error to call AddRef or Release on the return value of a
  *   function.  This is intended to be used with operator->() of our smart
@@ -665,8 +667,8 @@
  *   error to not use the return value of a function which has this type.  This
  *   is intended to be used with types which it is an error to not use.
  * MOZ_NEEDS_NO_VTABLE_TYPE: Applies to template class declarations.  Makes it
- *   a compile time error to instantiate this template with a type parameter which
- *   has a VTable.
+ *   a compile time error to instantiate this template with a type parameter
+ *   which has a VTable.
  * MOZ_NON_MEMMOVABLE: Applies to class declarations for types that are not safe
  *   to be moved in memory using memmove().
  * MOZ_NEEDS_MEMMOVABLE_TYPE: Applies to template class declarations where the
@@ -691,21 +693,22 @@
  * MOZ_INIT_OUTSIDE_CTOR: Applies to class member declarations. Occasionally
  *   there are class members that are not initialized in the constructor,
  *   but logic elsewhere in the class ensures they are initialized prior to use.
- *   Using this attribute on a member disables the check that this member must be
- *   initialized in constructors via list-initialization, in the constructor body,
- *   or via functions called from the constructor body.
+ *   Using this attribute on a member disables the check that this member must
+ *   be initialized in constructors via list-initialization, in the constructor
+ *   body, or via functions called from the constructor body.
  * MOZ_IS_CLASS_INIT: Applies to class method declarations. Occasionally the
- *   constructor doesn't initialize all of the member variables and another function
- *   is used to initialize the rest. This marker is used to make the static analysis
- *   tool aware that the marked function is part of the initialization process
- *   and to include the marked function in the scan mechanism that determines which
- *   member variables still remain uninitialized.
+ *   constructor doesn't initialize all of the member variables and another
+ *   function is used to initialize the rest. This marker is used to make the
+ *   static analysis tool aware that the marked function is part of the
+ *   initialization process and to include the marked function in the scan
+ *   mechanism that determines which member variables still remain
+ *   uninitialized.
  * MOZ_NON_PARAM: Applies to types. Makes it compile time error to use the type
  *   in parameter without pointer or reference.
- * MOZ_NON_AUTOABLE: Applies to class declarations. Makes it a compile time error to
- *   use `auto` in place of this type in variable declarations.  This is intended to
- *   be used with types which are intended to be implicitly constructed into other
- *   other types before being assigned to variables.
+ * MOZ_NON_AUTOABLE: Applies to class declarations. Makes it a compile time
+ *   error to use `auto` in place of this type in variable declarations.  This
+ *   is intended to be used with types which are intended to be implicitly
+ *   constructed into other other types before being assigned to variables.
  * MOZ_REQUIRED_BASE_METHOD: Applies to virtual class method declarations.
  *   Sometimes derived classes override methods that need to be called by their
  *   overridden counterparts. This marker indicates that the marked method must

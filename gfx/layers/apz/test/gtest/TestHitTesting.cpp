@@ -180,10 +180,14 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
 
   // At this point, the following holds (all coordinates in screen pixels):
-  // layers[0] has content from (0,0)-(200,200), clipped by composition bounds (0,0)-(100,100)
-  // layers[1] has content from (10,10)-(90,90), clipped by composition bounds (10,10)-(50,50)
-  // layers[2] has content from (20,60)-(100,100). no clipping as it's not a scrollable layer
-  // layers[3] has content from (20,60)-(180,140), clipped by composition bounds (20,60)-(100,100)
+  // layers[0] has content from (0,0)-(200,200), clipped by composition bounds
+  // (0,0)-(100,100)
+  // layers[1] has content from (10,10)-(90,90), clipped by composition bounds
+  // (10,10)-(50,50)
+  // layers[2] has content from (20,60)-(100,100). no clipping as it's not a
+  // scrollable layer
+  // layers[3] has content from (20,60)-(180,140), clipped by composition
+  // bounds (20,60)-(100,100)
 
   RefPtr<TestAsyncPanZoomController> apzcroot = ApzcOf(root);
   TestAsyncPanZoomController* apzc1 = ApzcOf(layers[1]);

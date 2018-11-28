@@ -111,9 +111,9 @@ function grabHistogramsFromContent(use_counter_middlefix, page_before = null) {
   let gather = () => {
     let snapshots;
     if (Services.appinfo.browserTabsRemoteAutostart) {
-      snapshots = telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).content;
+      snapshots = telemetry.getSnapshotForHistograms("main", false).content;
     } else {
-      snapshots = telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent;
+      snapshots = telemetry.getSnapshotForHistograms("main", false).parent;
     }
     let checkGet = (probe) => {
       return snapshots[probe] ? snapshots[probe].sum : 0;
@@ -170,7 +170,7 @@ var check_use_counter_iframe = async function(file, use_counter_middlefix, check
 
     return deferred.promise;
   });
-  
+
   // Tear down the page.
   gBrowser.removeTab(newTab);
 
@@ -235,7 +235,7 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
 
     return deferred.promise;
   });
-  
+
   // Tear down the page.
   gBrowser.removeTab(newTab);
 
@@ -288,7 +288,7 @@ var check_use_counter_direct = async function(file, use_counter_middlefix, xfail
       addEventListener("load", listener, true);
     });
   });
-  
+
   // Tear down the page.
   gBrowser.removeTab(newTab);
 

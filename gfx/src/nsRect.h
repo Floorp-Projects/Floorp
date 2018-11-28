@@ -142,8 +142,10 @@ struct nsRect :
       __m128i resultRect = _mm_max_epi32(rect1, rect2); // xr, yr, zz, zz
 
 
-      // result.width = std::min<int32_t>(x - result.x + width, aRect.x - result.x + aRect.width);
-      // result.height = std::min<int32_t>(y - result.y + height, aRect.y - result.y + aRect.height);
+      // result.width = std::min<int32_t>(x - result.x + width,
+      //                                  aRect.x - result.x + aRect.width);
+      // result.height = std::min<int32_t>(y - result.y + height,
+      //                                   aRect.y - result.y + aRect.height);
       __m128i widthheight = _mm_min_epi32(_mm_add_epi32(_mm_sub_epi32(rect1, resultRect), _mm_srli_si128(rect1, 8)),
                                           _mm_add_epi32(_mm_sub_epi32(rect2, resultRect), _mm_srli_si128(rect2, 8))); // w, h, zz, zz
       widthheight = _mm_slli_si128(widthheight, 8); // 00, 00, wr, hr
@@ -178,8 +180,10 @@ struct nsRect :
       __m128i rect2 = _mm_loadu_si128((__m128i*)&aRect2); // x2, y2, w2, h2
 
       __m128i resultRect = _mm_max_epi32(rect1, rect2); // xr, yr, zz, zz
-      // result.width = std::min<int32_t>(x - result.x + width, aRect.x - result.x + aRect.width);
-      // result.height = std::min<int32_t>(y - result.y + height, aRect.y - result.y + aRect.height);
+      // result.width = std::min<int32_t>(x - result.x + width,
+      //                                  aRect.x - result.x + aRect.width);
+      // result.height = std::min<int32_t>(y - result.y + height,
+      //                                   aRect.y - result.y + aRect.height);
       __m128i widthheight = _mm_min_epi32(_mm_add_epi32(_mm_sub_epi32(rect1, resultRect), _mm_srli_si128(rect1, 8)),
                                           _mm_add_epi32(_mm_sub_epi32(rect2, resultRect), _mm_srli_si128(rect2, 8))); // w, h, zz, zz
       widthheight = _mm_slli_si128(widthheight, 8); // 00, 00, wr, hr
@@ -395,7 +399,8 @@ nsRect::ScaleToOutsidePixels(float aXScale, float aYScale,
 
   __m128 rectFloat = _mm_cvtepi32_ps(rectPacked);
 
-  // Scale i.e. ([ x y xmost ymost ] / aAppUnitsPerPixel) * [ aXScale aYScale aXScale aYScale ]
+  // Scale i.e. ([ x y xmost ymost ] / aAppUnitsPerPixel) *
+  //             [ aXScale aYScale aXScale aYScale ]
   rectFloat = _mm_mul_ps(_mm_div_ps(rectFloat, appUnitsPacked), scalesPacked);
   rectPacked = ceil_ps2epi32(rectFloat); // xx, xx, XMost(), YMost()
   __m128i tmp = floor_ps2epi32(rectFloat); // x, y, xx, xx
@@ -409,7 +414,9 @@ nsRect::ScaleToOutsidePixels(float aXScale, float aYScale,
   // Avoid negative width/height due to overflow.
   __m128i mask = _mm_or_si128(_mm_cmpgt_epi32(rectPacked, _mm_setzero_si128()),
                               _mm_set_epi32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF));
+  // clang-format off
   // Mask will now contain [ 0xFFFFFFFF 0xFFFFFFFF (width <= 0 ? 0 : 0xFFFFFFFF) (height <= 0 ? 0 : 0xFFFFFFFF) ]
+  // clang-format on
   rectPacked = _mm_and_si128(rectPacked, mask);
 
   _mm_storeu_si128((__m128i*)&rect, rectPacked);

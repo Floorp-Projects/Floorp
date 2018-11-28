@@ -763,12 +763,14 @@ JSXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
     }
 
 
-    // Object and Array instances are special. For those cases, we forward property
-    // definitions to the underlying object if the following conditions are met:
+    // Object and Array instances are special. For those cases, we forward
+    // property definitions to the underlying object if the following
+    // conditions are met:
     // * The property being defined is a value-prop.
-    // * The property being defined is either a primitive or subsumed by the target.
-    // * As seen from the Xray, any existing property that we would overwrite is an
-    //   |own| value-prop.
+    // * The property being defined is either a primitive or subsumed by the
+    //   target.
+    // * As seen from the Xray, any existing property that we would overwrite
+    //   is an |own| value-prop.
     //
     // To avoid confusion, we disallow expandos on Object and Array instances, and
     // therefore raise an exception here if the above conditions aren't met.

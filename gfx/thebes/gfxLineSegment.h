@@ -17,7 +17,9 @@ struct gfxLineSegment {
 
   bool PointsOnSameSide(const gfxPoint& aOne, const gfxPoint& aTwo)
   {
-    // Solve the equation y - mStart.y - ((mEnd.y - mStart.y)/(mEnd.x - mStart.x))(x - mStart.x) for both points 
+    // Solve the equation
+    // y - mStart.y - ((mEnd.y - mStart.y)/(mEnd.x - mStart.x))(x - mStart.x)
+    // for both points 
   
     gfxFloat deltaY = (mEnd.y - mStart.y);
     gfxFloat deltaX = (mEnd.x - mStart.x);

@@ -79,26 +79,29 @@ bool InImageBridgeChildThread();
  * - When an ImageContainer calls its method SetCurrentImage:
  *   - (A) The image is sent directly to the compositor process through the
  *   ImageBridge IPDL protocol.
- *   On the compositor side the image is stored in a global table that associates
- *   the image with an ID corresponding to the ImageContainer, and a composition is
- *   triggered.
+ *   On the compositor side the image is stored in a global table that
+ *   associates the image with an ID corresponding to the ImageContainer, and a
+ *   composition is triggered.
  *   - (B) Since it does not have an ImageBridge, the image is not sent yet.
- *   instead the will be sent to the compositor during the next layer transaction
- *   (on the main thread).
+ *   instead the will be sent to the compositor during the next layer
+ *   transaction (on the main thread).
  *
  * - During a Layer transaction:
- *   - (A) The ImageContainer uses ImageBridge. The image is already available to the
- *   compositor process because it has been sent with SetCurrentImage. Yet, the
- *   CompositableHost on the compositor side will needs the ID referring to the
- *   ImageContainer to access the Image. So during the Swap operation that happens
- *   in the transaction, we swap the container ID rather than the image data.
- *   - (B) Since the ImageContainer does not use ImageBridge, the image data is swaped.
+ *   - (A) The ImageContainer uses ImageBridge. The image is already available
+ *   to the compositor process because it has been sent with SetCurrentImage.
+ *   Yet, the CompositableHost on the compositor side will needs the ID
+ *   referring to the ImageContainer to access the Image. So during the Swap
+ *   operation that happens in the transaction, we swap the container ID rather
+ *   than the image data.
+ *   - (B) Since the ImageContainer does not use ImageBridge, the image data is
+ *   swaped.
  *
  * - During composition:
  *   - (A) The CompositableHost has an AsyncID, it looks up the ID in the
- *   global table to see if there is an image. If there is no image, nothing is rendered.
- *   - (B) The CompositableHost has image data rather than an ID (meaning it is not
- *   using ImageBridge), then it just composites the image data normally.
+ *   global table to see if there is an image. If there is no image, nothing is
+ *   rendered.
+ *   - (B) The CompositableHost has image data rather than an ID (meaning it is
+ *   not using ImageBridge), then it just composites the image data normally.
  *
  * This means that there might be a possibility for the ImageBridge to send the first
  * frame before the first layer transaction that will pass the container ID to the
