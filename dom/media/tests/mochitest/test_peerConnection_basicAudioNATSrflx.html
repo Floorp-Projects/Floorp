@@ -22,8 +22,8 @@
         ]
       }, function (options) {
         options = options || {};
-        options.expectedLocalCandidateType = "serverreflexive";
-        options.expectedRemoteCandidateType = "serverreflexive";
+        options.expectedLocalCandidateType = "srflx";
+        options.expectedRemoteCandidateType = "srflx";
         test = new PeerConnectionTest(options);
         // Make sure we don't end up choosing the wrong thing due to delays in
         // trickle. Once we are willing to accept trickle after ICE success, we

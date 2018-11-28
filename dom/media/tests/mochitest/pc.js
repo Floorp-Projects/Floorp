@@ -1956,15 +1956,15 @@ PeerConnectionWrapper.prototype = {
          JSON.stringify(lCand) + " remote=" + JSON.stringify(rCand));
     expectedLocalCandidateType = expectedLocalCandidateType || "host";
     var candidateType = lCand.candidateType;
-    if ((lCand.mozLocalTransport === "tcp") && (candidateType === "relayed")) {
-      candidateType = "relayed-tcp";
+    if ((lCand.relayProtocol === "tcp") && (candidateType === "relay")) {
+      candidateType = "relay-tcp";
     }
 
-    if ((expectedLocalCandidateType === "serverreflexive") &&
-        (candidateType === "peerreflexive")) {
+    if ((expectedLocalCandidateType === "srflx") &&
+        (candidateType === "prflx")) {
       // Be forgiving of prflx when expecting srflx, since that can happen due
       // to timing.
-      candidateType = "serverreflexive";
+      candidateType = "srflx";
     }
 
     is(candidateType,

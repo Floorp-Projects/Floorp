@@ -96,6 +96,7 @@ struct NrIceCandidate {
   std::string codeword;
   std::string label;
   bool trickled;
+  uint32_t priority;
 };
 
 struct NrIceCandidatePair {
