@@ -823,20 +823,6 @@ TraceLoggerThreadState::~TraceLoggerThreadState()
 #endif
 }
 
-static bool
-ContainsFlag(const char* str, const char* flag)
-{
-    size_t flaglen = strlen(flag);
-    const char* index = strstr(str, flag);
-    while (index) {
-        if ((index == str || index[-1] == ',') && (index[flaglen] == 0 || index[flaglen] == ',')) {
-            return true;
-        }
-        index = strstr(index + flaglen, flag);
-    }
-    return false;
-}
-
 bool
 TraceLoggerThreadState::init()
 {
