@@ -226,8 +226,8 @@ class FlexboxInspector {
     const currentUrl = this.inspector.target.url;
     // Get the hostname, if there is no hostname, fall back on protocol
     // ex: `data:` uri, and `about:` pages
-    const hostName = parseURL(currentUrl).hostname || parseURL(currentUrl).protocol;
-    this._overlayColor = customColors[hostName] ? customColors[hostName] : FLEXBOX_COLOR;
+    const hostname = parseURL(currentUrl).hostname || parseURL(currentUrl).protocol;
+    this._overlayColor = customColors[hostname] ? customColors[hostname] : FLEXBOX_COLOR;
     return this._overlayColor;
   }
 
