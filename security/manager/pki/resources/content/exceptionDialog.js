@@ -5,8 +5,6 @@
 "use strict";
 
 var gDialog;
-var gBundleBrand;
-var gPKIBundle;
 var gSecInfo;
 var gCert;
 var gChecking;
@@ -20,15 +18,10 @@ ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 function initExceptionDialog() {
   gNeedReset = false;
   gDialog = document.documentElement;
-  gBundleBrand = document.getElementById("brand_bundle");
-  gPKIBundle = document.getElementById("pippki_bundle");
   gSecHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
   gNsISecTel = Ci.nsISecurityUITelemetry;
-
-  var brandName = gBundleBrand.getString("brandShortName");
-  setText("warningText",
-          gPKIBundle.getFormattedString("addExceptionBrandedWarning2",
-                                        [brandName]));
+  let warningText = document.getElementById("warningText");
+  document.l10n.setAttributes(warningText, "add-exception-branded-warning");
   gDialog.getButton("extra1").disabled = true;
 
   var args = window.arguments;
@@ -177,12 +170,12 @@ function updateCertStatus() {
   let bucketId = gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_BASE;
   if (gCert) {
     if (gBroken) {
-      var mms = "addExceptionDomainMismatchShort";
-      var mml = "addExceptionDomainMismatchLong2";
-      var exs = "addExceptionExpiredShort";
-      var exl = "addExceptionExpiredLong2";
-      var uts = "addExceptionUnverifiedOrBadSignatureShort";
-      var utl = "addExceptionUnverifiedOrBadSignatureLong2";
+      var mms = "add-exception-domain-mismatch-short";
+      var mml = "add-exception-domain-mismatch-long";
+      var exs = "add-exception-expired-short";
+      var exl = "add-exception-expired-long";
+      var uts = "add-exception-unverified-or-bad-signature-short";
+      var utl = "add-exception-unverified-or-bad-signature-long";
       var use1 = false;
       if (gSecInfo.isDomainMismatch) {
         bucketId += gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_DOMAIN;
@@ -232,11 +225,11 @@ function updateCertStatus() {
       pe.disabled = inPrivateBrowsing;
       pe.checked = !inPrivateBrowsing;
 
-      setText("headerDescription",
-              gPKIBundle.getString("addExceptionInvalidHeader"));
+      let headerDescription = document.getElementById("headerDescription");
+      document.l10n.setAttributes(headerDescription, "add-exception-invalid-header");
     } else {
-      shortDesc = "addExceptionValidShort";
-      longDesc  = "addExceptionValidLong";
+      shortDesc = "add-exception-valid-short";
+      longDesc  = "add-exception-valid-long";
       gDialog.getButton("extra1").disabled = true;
       document.getElementById("permanent").disabled = true;
     }
@@ -248,8 +241,8 @@ function updateCertStatus() {
     // Notify observers about the availability of the certificate
     Services.obs.notifyObservers(null, "cert-exception-ui-ready");
   } else if (gChecking) {
-    shortDesc = "addExceptionCheckingShort";
-    longDesc  = "addExceptionCheckingLong2";
+    shortDesc = "add-exception-checking-short";
+    longDesc  = "add-exception-checking-long";
     // We're checking the certificate, so we disable the Get Certificate
     // button to make sure that the user can't interrupt the process and
     // trigger another certificate fetch.
@@ -258,26 +251,31 @@ function updateCertStatus() {
     gDialog.getButton("extra1").disabled = true;
     document.getElementById("permanent").disabled = true;
   } else {
-    shortDesc = "addExceptionNoCertShort";
-    longDesc  = "addExceptionNoCertLong2";
+    shortDesc = "add-exception-no-cert-short";
+    longDesc  = "add-exception-no-cert-long";
     // We're done checking the certificate, so allow the user to check it again.
     document.getElementById("checkCertButton").disabled = false;
     document.getElementById("viewCertButton").disabled = true;
     gDialog.getButton("extra1").disabled = true;
     document.getElementById("permanent").disabled = true;
   }
-
-  setText("statusDescription", gPKIBundle.getString(shortDesc));
-  setText("statusLongDescription", gPKIBundle.getString(longDesc));
+  let statusDescription = document.getElementById("statusDescription");
+  let statusLongDescription = document.getElementById("statusLongDescription");
+  document.l10n.setAttributes(statusDescription, shortDesc);
+  document.l10n.setAttributes(statusLongDescription, longDesc);
 
   if (use2) {
-    setText("status2Description", gPKIBundle.getString(shortDesc2));
-    setText("status2LongDescription", gPKIBundle.getString(longDesc2));
+    let status2Description = document.getElementById("status2Description");
+    let status2LongDescription = document.getElementById("status2LongDescription");
+    document.l10n.setAttributes(status2Description, shortDesc2);
+    document.l10n.setAttributes(status2LongDescription, longDesc2);
   }
 
   if (use3) {
-    setText("status3Description", gPKIBundle.getString(shortDesc3));
-    setText("status3LongDescription", gPKIBundle.getString(longDesc3));
+    let status3Description = document.getElementById("status3Description");
+    let status3LongDescription = document.getElementById("status3LongDescription");
+    document.l10n.setAttributes(status3Description, shortDesc3);
+    document.l10n.setAttributes(status3LongDescription, longDesc3);
   }
 
   window.sizeToContent();
