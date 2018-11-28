@@ -1427,23 +1427,13 @@ class PackageFrontend(MachCommandBase):
                 return 1
             from taskgraph.optimize import IndexSearch
             from taskgraph.parameters import Parameters
+            from taskgraph.generator import load_tasks_for_kind
             params = Parameters(
                 level=os.environ.get('MOZ_SCM_LEVEL', '3'),
                 strict=False,
-                ignore_fetches=True,
             )
 
-            # TODO: move to the taskcluster package
-            def tasks(kind_name):
-                root_path = mozpath.join(self.topsrcdir, 'taskcluster', 'ci')
-                graph_config = load_graph_config(root_path)
-                tasks = Kind.load(root_path, graph_config, kind_name).load_tasks(params, {})
-                return {
-                    task.task['metadata']['name']: task
-                    for task in tasks
-                }
-
-            toolchains = tasks('toolchain')
+            toolchains = load_tasks_for_kind(params, 'toolchain')
 
             aliases = {}
             for t in toolchains.values():
