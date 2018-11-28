@@ -543,7 +543,7 @@ struct nsGridContainerFrame::GridItemInfo {
   /**
    * Item state per axis.
    */
-  enum StateBits : uint8_t {
+  enum StateBits : uint16_t {
     // clang-format off
     eIsFlexing =              0x1, // does the item span a flex track?
     eFirstBaseline =          0x2, // participate in 'first baseline' alignment?
@@ -561,6 +561,11 @@ struct nsGridContainerFrame::GridItemInfo {
     // Clamp per https://drafts.csswg.org/css-grid/#min-size-auto
     eClampMarginBoxMinSize = 0x40,
     eIsSubgrid =             0x80,
+    // set on subgrids and items in subgrids if they are adjacent to the grid
+    // start/end edge (excluding grid-aligned abs.pos. frames)
+    eStartEdge =            0x100,
+    eEndEdge =              0x200,
+    eEdgeBits = eStartEdge | eEndEdge,
     // clang-format on
   };
 
@@ -723,6 +728,16 @@ void nsGridContainerFrame::GridItemInfo::Dump() const {
       return;
     }
     printf("%s", aMsg);
+    if (state & ItemState::eEdgeBits) {
+      printf("subgrid-adjacent-edges(");
+      if (state & ItemState::eStartEdge) {
+        printf("start ");
+      }
+      if (state & ItemState::eEndEdge) {
+        printf("end");
+      }
+      printf(") ");
+    }
     if (state & ItemState::eIsSubgrid) {
       printf("subgrid ");
     }
@@ -3414,6 +3429,27 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
                              parentLineNameMap, subgridRange,
                              subgridAxisIsSameDirection);
 
+  const bool isSubgridOrItemInSubgrid =
+      aState.mFrame->IsSubgrid() || !!mParentGrid;
+  auto SetSubgridChildEdgeBits =
+      [this, isSubgridOrItemInSubgrid](GridItemInfo& aItem) -> void {
+    if (isSubgridOrItemInSubgrid) {
+      const auto& area = aItem.mArea;
+      if (area.mCols.mStart == 0) {
+        aItem.mState[eLogicalAxisInline] |= ItemState::eStartEdge;
+      }
+      if (area.mCols.mEnd == mGridColEnd) {
+        aItem.mState[eLogicalAxisInline] |= ItemState::eEndEdge;
+      }
+      if (area.mRows.mStart == 0) {
+        aItem.mState[eLogicalAxisBlock] |= ItemState::eStartEdge;
+      }
+      if (area.mRows.mEnd == mGridRowEnd) {
+        aItem.mState[eLogicalAxisBlock] |= ItemState::eEndEdge;
+      }
+    }
+  };
+
   SetLineMaps(&colLineNameMap, &rowLineNameMap);
 
   // http://dev.w3.org/csswg/css-grid/#line-placement
@@ -3468,6 +3504,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
       }
       mCellMap.Fill(area);
       InflateGridFor(area);
+      SetSubgridChildEdgeBits(item);
     }
   }
 
@@ -3504,6 +3541,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
           grid.SubgridPlaceGridItems(aState, this, item);
         }
         mCellMap.Fill(area);
+        SetSubgridChildEdgeBits(item);
         if (isSparse) {
           cursors->Put(major.mStart, minor.mEnd);
         }
@@ -3576,6 +3614,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
       }
       mCellMap.Fill(area);
       InflateGridFor(area);
+      SetSubgridChildEdgeBits(item);
     }
   }
 
