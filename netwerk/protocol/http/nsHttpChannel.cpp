@@ -82,6 +82,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIPrompt.h"
 #include "nsInputStreamPump.h"
+#include "nsIURIFixup.h"
 #include "nsURLHelper.h"
 #include "nsISocketTransport.h"
 #include "nsIStreamConverterService.h"
@@ -1113,11 +1114,17 @@ nsHttpChannel::SetupTransaction()
         if (NS_FAILED(rv)) return rv;
         if (!buf.IsEmpty() && ((strncmp(mSpec.get(), "http:", 5) == 0) ||
                                 strncmp(mSpec.get(), "https:", 6) == 0)) {
+            nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
+            if (NS_WARN_IF(!urifixup)) {
+              return NS_ERROR_FAILURE;
+            }
+
             nsCOMPtr<nsIURI> tempURI;
-            rv = NS_MutateURI(mURI)
-                   .SetUserPass(EmptyCString())
-                   .Finalize(tempURI);
-            if (NS_FAILED(rv)) return rv;
+            nsresult rv = urifixup->CreateExposableURI(mURI, getter_AddRefs(tempURI));
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
+
             rv = tempURI->GetAsciiSpec(path);
             if (NS_FAILED(rv)) return rv;
             requestURI = &path;
