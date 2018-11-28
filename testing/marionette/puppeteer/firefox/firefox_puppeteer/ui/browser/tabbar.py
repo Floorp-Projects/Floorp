@@ -203,11 +203,11 @@ class TabBar(UIBaseLib):
         # element corresponding to the active window according to
         # marionette or a similar ability should be added to marionette.
         handle = marionette.execute_script("""
-          let win = arguments[0].linkedBrowser;
-          if (!win) {
+          let browser = arguments[0].linkedBrowser;
+          if (!browser || browser.outerWindowID == null) {
             return null;
           }
-          return win.outerWindowID.toString();
+          return browser.outerWindowID.toString();
         """, script_args=[tab_element])
 
         return handle
