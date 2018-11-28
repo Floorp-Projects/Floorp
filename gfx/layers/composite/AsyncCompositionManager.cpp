@@ -633,6 +633,19 @@ ApplyAnimatedValue(Layer* aLayer,
 
   HostLayer* layerCompositor = aLayer->AsHostLayer();
   switch (aProperty) {
+    case eCSSProperty_background_color: {
+      // We don't support 'color' animations on the compositor yet so we never
+      // meet currentColor on the compositor.
+      nscolor color = Servo_AnimationValue_GetColor(aValue, NS_RGBA(0, 0, 0, 0));
+      aLayer->AsColorLayer()->SetColor(gfx::Color::FromABGR(color));
+      aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(), color);
+
+      layerCompositor->SetShadowOpacity(aLayer->GetOpacity());
+      layerCompositor->SetShadowOpacitySetByAnimation(false);
+      layerCompositor->SetShadowBaseTransform(aLayer->GetBaseTransform());
+      layerCompositor->SetShadowTransformSetByAnimation(false);
+      break;
+    }
     case eCSSProperty_opacity: {
       float opacity = Servo_AnimationValue_GetOpacity(aValue);
       layerCompositor->SetShadowOpacity(opacity);
@@ -709,19 +722,22 @@ SampleAnimations(Layer* aLayer,
           }
           case AnimationHelper::SampleResult::Skipped:
             switch (animations[0].property()) {
+              case eCSSProperty_background_color:
               case eCSSProperty_opacity: {
-                MOZ_ASSERT(
-                  layer->AsHostLayer()->GetShadowOpacitySetByAnimation());
+                if (animations[0].property() == eCSSProperty_opacity) {
+                  MOZ_ASSERT(
+                    layer->AsHostLayer()->GetShadowOpacitySetByAnimation());
 #ifdef DEBUG
-                // Disable this assertion until the root cause is fixed in bug
-                // 1459775.
-                // MOZ_ASSERT(FuzzyEqualsMultiplicative(
-                //   Servo_AnimationValue_GetOpacity(animationValue),
-                //   *(aStorage->GetAnimationOpacity(layer->GetCompositorAnimationsId()))));
+                  // Disable this assertion until the root cause is fixed in bug
+                  // 1459775.
+                  // MOZ_ASSERT(FuzzyEqualsMultiplicative(
+                  //   Servo_AnimationValue_GetOpacity(animationValue),
+                  //   *(aStorage->GetAnimationOpacity(layer->GetCompositorAnimationsId()))));
 #endif
-                // Even if opacity animation value has unchanged, we have to set
-                // the shadow base transform value here since the value might
-                // have been changed by APZC.
+                }
+                // Even if opacity or background-color  animation value has
+                // unchanged, we have to set the shadow base transform value
+                // here since the value might have been changed by APZC.
                 HostLayer* layerCompositor = layer->AsHostLayer();
                 layerCompositor->SetShadowBaseTransform(
                   layer->GetBaseTransform());

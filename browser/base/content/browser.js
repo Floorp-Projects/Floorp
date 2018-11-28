@@ -375,20 +375,6 @@ async function gLazyFindCommand(cmd, ...args) {
   }
 }
 
-Object.defineProperty(this, "AddonManager", {
-  configurable: true,
-  enumerable: true,
-  get() {
-    let tmp = {};
-    ChromeUtils.import("resource://gre/modules/AddonManager.jsm", tmp);
-    return this.AddonManager = tmp.AddonManager;
-  },
-  set(val) {
-    delete this.AddonManager;
-    return this.AddonManager = val;
-  },
-});
-
 
 var gInitialPages = [
   "about:blank",

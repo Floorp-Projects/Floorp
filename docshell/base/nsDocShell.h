@@ -132,6 +132,40 @@ class nsDocShell final
   , public mozilla::SupportsWeakPtr<nsDocShell>
 {
 public:
+  enum InternalLoad : uint32_t {
+    INTERNAL_LOAD_FLAGS_NONE                    = 0x0,
+    INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL       = 0x1,
+    INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER      = 0x2,
+    INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x4,
+
+    // This flag marks the first load in this object
+    // @see nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD
+    INTERNAL_LOAD_FLAGS_FIRST_LOAD              = 0x8,
+
+
+    // The set of flags that should not be set before calling into
+    // nsDocShell::LoadURI and other nsDocShell loading functions.
+    INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS     = 0xf,
+
+
+    INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER       = 0x10,
+    INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES     = 0x20,
+
+    // Whether the load should be treated as srcdoc load, rather than a URI one.
+    INTERNAL_LOAD_FLAGS_IS_SRCDOC               = 0x40,
+
+    // Whether this is the load of a frame's original src attribute
+    INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC      = 0x80,
+
+    INTERNAL_LOAD_FLAGS_NO_OPENER               = 0x100,
+
+    // Whether a top-level data URI navigation is allowed for that load
+    INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI    = 0x200,
+
+    // Whether the load was triggered by user interaction.
+    INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED       = 0x1000,
+  };
+
   // Event type dispatched by RestorePresentation
   class RestorePresentationEvent : public mozilla::Runnable
   {
@@ -1055,15 +1089,15 @@ private: // data members
   int32_t mChildOffset;
 
   uint32_t mSandboxFlags;
-  uint32_t mBusyFlags;
-  uint32_t mAppType;
+  BusyFlags mBusyFlags;
+  AppType mAppType;
   uint32_t mLoadType;
   uint32_t mDefaultLoadFlags;
   uint32_t mReferrerPolicy;
   uint32_t mFailedLoadType;
 
   // Are we a regular frame, a browser frame, or an app frame?
-  uint32_t mFrameType;
+  FrameType mFrameType;
 
   // This represents the state of private browsing in the docshell.
   // Currently treated as a binary value: 1 - in private mode, 0 - not private mode
@@ -1072,17 +1106,9 @@ private: // data members
   // origin attribute set.
   uint32_t mPrivateBrowsingId;
 
-  // This represents the CSS display-mode we are currently using.
-  // It can be any of the following values from nsIDocShell.idl:
-  //
-  // DISPLAY_MODE_BROWSER = 0
-  // DISPLAY_MODE_MINIMAL_UI = 1
-  // DISPLAY_MODE_STANDALONE = 2
-  // DISPLAY_MODE_FULLSCREEN = 3
-  //
-  // This is mostly used for media queries. The integer values above
-  // match those used in nsStyleConsts.h
-  uint32_t mDisplayMode;
+  // This represents the CSS display-mode we are currently using. This is mostly
+  // used for media queries.
+  DisplayMode mDisplayMode;
 
   // A depth count of how many times NotifyRunToCompletionStart
   // has been called without a matching NotifyRunToCompletionStop.
@@ -1090,11 +1116,11 @@ private: // data members
 
   // Whether or not touch events are overridden. Possible values are defined
   // as constants in the nsIDocShell.idl file.
-  uint32_t mTouchEventsOverride;
+  TouchEventsOverride mTouchEventsOverride;
 
   // Whether or not handling of the <meta name="viewport"> tag is overridden.
   // Possible values are defined as constants in nsIDocShell.idl.
-  uint32_t mMetaViewportOverride;
+  MetaViewportOverride mMetaViewportOverride;
 
   // mFullscreenAllowed stores how we determine whether fullscreen is allowed
   // when GetFullscreenAllowed() is called. Fullscreen is allowed in a
