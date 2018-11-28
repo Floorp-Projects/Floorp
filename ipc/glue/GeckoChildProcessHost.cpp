@@ -495,17 +495,10 @@ GeckoChildProcessHost::RunPerformAsyncLaunch(std::vector<std::string> aExtraOpts
     MonitorAutoLock lock(mMonitor);
     mProcessState = PROCESS_ERROR;
     lock.Notify();
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-    OnProcessLaunchError();
-#endif
     CHROMIUM_LOG(ERROR) << "Failed to launch " <<
       XRE_ChildProcessTypeToString(mProcessType) << " subprocess";
     Telemetry::Accumulate(Telemetry::SUBPROCESS_LAUNCH_FAILURE,
       nsDependentCString(XRE_ChildProcessTypeToString(mProcessType)));
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-  } else {
-    OnProcessHandleReady(mChildProcessHandle);
-#endif
   }
   return ok;
 }
@@ -1138,14 +1131,6 @@ GeckoChildProcessHost::OpenPrivilegedHandle(base::ProcessId aPid)
 
   return base::OpenPrivilegedProcessHandle(aPid, &mChildProcessHandle);
 }
-
-void
-GeckoChildProcessHost::OnProcessHandleReady(ProcessHandle aProcessHandle)
-{}
-
-void
-GeckoChildProcessHost::OnProcessLaunchError()
-{}
 
 void
 GeckoChildProcessHost::OnChannelConnected(int32_t peer_pid)
