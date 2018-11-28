@@ -216,6 +216,7 @@ splitter.devtools-horizontal-splitter,
   background-image: url("chrome://devtools/skin/images/select-arrow.svg") !important;
   background-position: right center !important;
   background-repeat: no-repeat !important;
+  text-overflow: ellipsis;
   overflow: hidden;
   padding-inline-start: 2px !important;
   padding-inline-end: 10px !important;
