@@ -127,8 +127,9 @@ nsWebBrowserFind::FindNext(bool* aResult)
     return NS_ERROR_FAILURE;
   }
 
-  int32_t enumDirection = mFindBackwards ? nsIDocShell::ENUMERATE_BACKWARDS :
-                                           nsIDocShell::ENUMERATE_FORWARDS;
+  auto enumDirection =
+    mFindBackwards ? nsIDocShell::ENUMERATE_BACKWARDS :
+    nsIDocShell::ENUMERATE_FORWARDS;
 
   nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
   rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll,
