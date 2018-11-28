@@ -199,6 +199,7 @@ MM_ObjCInput(MiddlemanCallContext& aCx, id* aThingPtr)
     // List of the Objective C classes which messages might be sent to directly.
     static const char* gStaticClasses[] = {
       // Standard classes.
+      "NSAutoreleasePool",
       "NSBezierPath",
       "NSButtonCell",
       "NSColor",
@@ -1131,31 +1132,23 @@ RR_objc_msgSend(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
   }
 }
 
-static PreambleResult
-MiddlemanPreamble_objc_msgSend(CallArguments* aArguments)
+static void
+MM_Alloc(MiddlemanCallContext& aCx)
 {
-  auto obj = aArguments->Arg<0, id>();
-  auto message = aArguments->Arg<1, const char*>();
-
-  // Fake object value which allows null checks in the caller to pass.
-  static const size_t FakeId = 1;
-
-  // Ignore uses of NSAutoreleasePool after diverging from the recording.
-  // These are not performed in the middleman because the middleman has its
-  // own autorelease pool, and because the middleman can process calls from
-  // multiple threads which will cause these messages to behave differently.
-  // release messages are also ignored, as for CFRelease.
-  if ((!strcmp(message, "alloc") && obj == (id) objc_lookUpClass("NSAutoreleasePool")) ||
-      (!strcmp(message, "init") && obj == (id) FakeId) ||
-      !strcmp(message, "drain") ||
-      !strcmp(message, "release")) {
-    // Fake a return value in case the caller null checks it.
-    aArguments->Rval<size_t>() = 1;
-    return PreambleResult::Veto;
+  if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
+    // Refuse to allocate NSAutoreleasePools in the middleman: the order in
+    // which middleman calls happen does not guarantee the pools will be
+    // created and released in LIFO order, as the pools require. Instead,
+    // allocate an NSString instead so we have something to release later.
+    // Messages sent to NSAutoreleasePools will all be skipped in the
+    // middleman, so no one should notice this subterfuge.
+    auto& obj = aCx.mArguments->Arg<0, id>();
+    if (obj == (id) objc_lookUpClass("NSAutoreleasePool")) {
+      obj = (id) objc_lookUpClass("NSString");
+    }
   }
 
-  // Other messages will be handled by MM_objc_msgSend.
-  return PreambleResult::Redirect;
+  MM_CreateCFTypeRval(aCx);
 }
 
 static void
@@ -1255,14 +1248,18 @@ struct ObjCMessageInfo
 // arguments / return values.
 static ObjCMessageInfo gObjCMiddlemanCallMessages[] = {
   // Generic
-  { "alloc", MM_CreateCFTypeRval },
+  { "alloc", MM_Alloc },
   { "init", MM_AutoreleaseCFTypeRval },
   { "performSelector:withObject:", MM_PerformSelector },
+  { "release", MM_SkipInMiddleman },
   { "respondsToSelector:", MM_CString<2> },
 
   // NSAppearance
   { "_drawInRect:context:options:",
     MM_Compose<MM_StackArgumentData<sizeof(CGRect)>, MM_CFTypeArg<2>, MM_CFTypeArg<3>> },
+
+  // NSAutoreleasePool
+  { "drain", MM_SkipInMiddleman },
 
   // NSArray
   { "count" },
@@ -2088,7 +2085,7 @@ static SystemRedirection gSystemRedirections[] = {
   { "objc_autoreleasePoolPop" },
   { "objc_autoreleasePoolPush", RR_ScalarRval },
   { "objc_msgSend",
-    RR_objc_msgSend, Preamble_objc_msgSend, MM_objc_msgSend, MiddlemanPreamble_objc_msgSend },
+    RR_objc_msgSend, Preamble_objc_msgSend, MM_objc_msgSend },
 
   /////////////////////////////////////////////////////////////////////////////
   // Cocoa and CoreFoundation library functions
