@@ -115,6 +115,10 @@ function disconnectRuntime(id) {
 
       await clientWrapper.close();
 
+      if (runtime.type === RUNTIMES.THIS_FIREFOX) {
+        DebuggerServer.destroy();
+      }
+
       dispatch({
         type: DISCONNECT_RUNTIME_SUCCESS,
         runtime: {
