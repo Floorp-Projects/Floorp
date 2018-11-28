@@ -385,6 +385,7 @@ class BuildOptionParser(object):
         'x86_64-artifact': 'builds/releng_sub_%s_configs/%s_x86_64_artifact.py',
         'api-16-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_16_partner_sample1.py',
         'aarch64': 'builds/releng_sub_%s_configs/%s_aarch64.py',
+        'aarch64-debug': 'builds/releng_sub_%s_configs/%s_aarch64_debug.py',
         'android-test': 'builds/releng_sub_%s_configs/%s_test.py',
         'android-test-ccov': 'builds/releng_sub_%s_configs/%s_test_ccov.py',
         'android-checkstyle': 'builds/releng_sub_%s_configs/%s_checkstyle.py',
