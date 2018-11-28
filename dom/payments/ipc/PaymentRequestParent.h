@@ -29,9 +29,6 @@ public:
                              const nsAString& aPayerName,
                              const nsAString& aPayerEmail,
                              const nsAString& aPayerPhone);
-  nsresult ChangePaymentMethod(const nsAString& aRequestId,
-                               const nsAString& aMethodName,
-                               nsIMethodChangeDetails* aMethodDetails);
 
 protected:
   mozilla::ipc::IPCResult

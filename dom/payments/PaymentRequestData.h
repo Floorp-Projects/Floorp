@@ -176,7 +176,6 @@ private:
                  const bool aRequestPayerEmail,
                  const bool aRequestPayerPhone,
                  const bool aRequestShipping,
-                 const bool aRequestBillingAddress,
                  const nsAString& aShippintType);
   ~PaymentOptions() = default;
 
@@ -184,7 +183,6 @@ private:
   bool mRequestPayerEmail;
   bool mRequestPayerPhone;
   bool mRequestShipping;
-  bool mRequestBillingAddress;
   nsString mShippingType;
 };
 

@@ -149,52 +149,6 @@ private:
   uint32_t mCompleteStatus;
 };
 
-class MethodChangeDetails : public nsIMethodChangeDetails
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMETHODCHANGEDETAILS
-
-  MethodChangeDetails() = default;
-
-protected:
-  virtual ~MethodChangeDetails() = default;
-
-  uint32_t mType;
-};
-
-class GeneralMethodChangeDetails final : public MethodChangeDetails
-                                       , public nsIGeneralChangeDetails
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIMETHODCHANGEDETAILS(MethodChangeDetails::)
-  NS_DECL_NSIGENERALCHANGEDETAILS
-
-  GeneralMethodChangeDetails();
-
-private:
-  ~GeneralMethodChangeDetails() = default;
-
-  nsString mDetails;
-};
-
-class BasicCardMethodChangeDetails final : public MethodChangeDetails
-                                         , public nsIBasicCardChangeDetails
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIMETHODCHANGEDETAILS(MethodChangeDetails::)
-  NS_DECL_NSIBASICCARDCHANGEDETAILS
-
-  BasicCardMethodChangeDetails();
-
-private:
-  ~BasicCardMethodChangeDetails() = default;
-
-  nsCOMPtr<nsIPaymentAddress> mBillingAddress;
-};
-
 } // end of dom
 } // end of namespace mozilla
 

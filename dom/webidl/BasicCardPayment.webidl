@@ -20,10 +20,6 @@ dictionary BasicCardResponse {
            PaymentAddress? billingAddress;
 };
 
-dictionary BasicCardChangeDetails {
-  PaymentAddress? billingAddress;
-};
-
 dictionary BasicCardErrors {
   DOMString cardNumber;
   DOMString cardholderName;
