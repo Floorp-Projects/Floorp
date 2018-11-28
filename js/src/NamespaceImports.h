@@ -28,6 +28,7 @@ class ConstTwoByteChars;
 class TwoByteChars;
 class TwoByteCharsZ;
 class UTF8Chars;
+class WTF8Chars;
 class UTF8CharsZ;
 
 using AutoValueVector = AutoVector<Value>;
@@ -75,6 +76,7 @@ using JS::ConstTwoByteChars;
 using JS::TwoByteChars;
 using JS::TwoByteCharsZ;
 using JS::UTF8Chars;
+using JS::WTF8Chars;
 using JS::UTF8CharsZ;
 using JS::UniqueChars;
 using JS::UniqueTwoByteChars;

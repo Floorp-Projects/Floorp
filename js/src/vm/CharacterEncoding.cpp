@@ -209,13 +209,18 @@ JS::CharsToNewUTF8CharsZ(JSContext* maybeCx,
 static const uint32_t INVALID_UTF8 = UINT32_MAX;
 
 /*
- * Convert a utf8 character sequence into a UCS-4 character and return that
- * character.  It is assumed that the caller already checked that the sequence
- * is valid.
+ * Convert a UTF-8 or WTF-8 (depending on InputCharsT, which is either
+ * UTF8Chars or WTF8Chars) character sequence into a UCS-4 character and return
+ * that character.  It is assumed that the caller already checked that the
+ * sequence is valid.
  */
-uint32_t
-JS::Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length)
+template <class InputCharsT>
+static uint32_t
+Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer, int utf8Length)
 {
+    static_assert(std::is_same<InputCharsT, UTF8Chars>::value ||
+                  std::is_same<InputCharsT, WTF8Chars>::value,
+                  "must be either UTF-8 or WTF-8");
     MOZ_ASSERT(1 <= utf8Length && utf8Length <= 4);
 
     if (utf8Length == 1) {
@@ -235,11 +240,24 @@ JS::Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length)
         ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
     }
 
-    if (MOZ_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF))) {
+    if (MOZ_UNLIKELY(ucs4Char < minucs4Char)) {
+        return INVALID_UTF8;
+    }
+
+    // WTF-8 allows lone surrogate.
+    if (std::is_same<InputCharsT, UTF8Chars>::value &&
+        MOZ_UNLIKELY(ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF))
+    {
         return INVALID_UTF8;
     }
 
     return ucs4Char;
+}
+
+uint32_t
+JS::Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length)
+{
+    return Utf8ToOneUcs4CharImpl<UTF8Chars>(utf8Buffer, utf8Length);
 }
 
 static void
@@ -276,13 +294,13 @@ enum class OnUTF8Error {
     Crash,
 };
 
-// Scan UTF8 input and (internally, at least) convert it to a series of UTF-16
-// code units. But you can also do odd things like pass an empty lambda for
-// `dst`, in which case the output is discarded entirely--the only effect of
-// calling the template that way is error-checking.
-template <OnUTF8Error ErrorAction, typename OutputFn>
+// Scan UTF-8 or WTF-8 input and (internally, at least) convert it to a series
+// of UTF-16 code units. But you can also do odd things like pass an empty
+// lambda for `dst`, in which case the output is discarded entirely--the only
+// effect of calling the template that way is error-checking.
+template <OnUTF8Error ErrorAction, typename OutputFn, class InputCharsT>
 static bool
-InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src, OutputFn dst)
+InflateUTF8ToUTF16(JSContext* cx, const InputCharsT src, OutputFn dst)
 {
     size_t srclen = src.length();
     for (uint32_t i = 0; i < srclen; i++) {
@@ -339,7 +357,15 @@ InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src, OutputFn dst)
                 (v == 0xF0 && ((uint8_t)src[i + 1] & 0xF0) == 0x80) ||  // F0 90~BF
                 (v == 0xF4 && ((uint8_t)src[i + 1] & 0xF0) != 0x80))    // F4 80~8F
             {
-                INVALID(ReportInvalidCharacter, i, 1);
+                if (std::is_same<InputCharsT, UTF8Chars>::value) {
+                    INVALID(ReportInvalidCharacter, i, 1);
+                } else {
+                    // WTF-8 allows lone surrogate as ED A0~BF 80~BF.
+                    MOZ_ASSERT((std::is_same<InputCharsT, WTF8Chars>::value));
+                    if (v == 0xED && ((uint8_t)src[i + 1] & 0xE0) != 0xA0) { // ED A0~BF
+                        INVALID(ReportInvalidCharacter, i, 1);
+                    }
+                }
             }
 
             // Check the continuation bytes.
@@ -350,7 +376,7 @@ InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src, OutputFn dst)
             }
 
             // Determine the code unit's length in CharT and act accordingly.
-            v = JS::Utf8ToOneUcs4Char((uint8_t*)&src[i], n);
+            v = Utf8ToOneUcs4CharImpl<InputCharsT>((uint8_t*)&src[i], n);
             if (v < 0x10000) {
                 // The n-byte UTF8 code unit will fit in a single CharT.
                 if (dst(char16_t(v)) == LoopDisposition::Break) {
@@ -383,9 +409,10 @@ InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src, OutputFn dst)
     return true;
 }
 
-template <OnUTF8Error ErrorAction, typename CharT>
+template <OnUTF8Error ErrorAction, typename CharT, class InputCharsT>
 static void
-CopyAndInflateUTF8IntoBuffer(JSContext* cx, const UTF8Chars src, CharT *dst, size_t outlen, bool allASCII)
+CopyAndInflateUTF8IntoBuffer(JSContext* cx, const InputCharsT src, CharT* dst, size_t outlen,
+                             bool allASCII)
 {
     if (allASCII) {
         size_t srclen = src.length();
@@ -405,9 +432,9 @@ CopyAndInflateUTF8IntoBuffer(JSContext* cx, const UTF8Chars src, CharT *dst, siz
     dst[outlen] = CharT('\0');    // NUL char
 }
 
-template <OnUTF8Error ErrorAction, typename CharsT>
+template <OnUTF8Error ErrorAction, typename CharsT, class InputCharsT>
 static CharsT
-InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
+InflateUTF8StringHelper(JSContext* cx, const InputCharsT src, size_t* outlen)
 {
     using CharT = typename CharsT::CharT;
     static_assert(std::is_same<CharT, char16_t>::value ||
@@ -446,6 +473,12 @@ TwoByteCharsZ
 JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
     return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, utf8, outlen);
+}
+
+TwoByteCharsZ
+JS::WTF8CharsToNewTwoByteCharsZ(JSContext* cx, const WTF8Chars wtf8, size_t* outlen)
+{
+    return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, wtf8, outlen);
 }
 
 TwoByteCharsZ
@@ -518,8 +551,9 @@ JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t*
  * consumption.
  */
 
+template <class InputCharsT>
 bool
-GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen,
+GetUTF8AtomizationData(JSContext* cx, const InputCharsT utf8, size_t* outlen,
                        JS::SmallestEncoding* encoding, HashNumber* hashNum)
 {
     *outlen = 0;
@@ -538,6 +572,15 @@ GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen,
 
     return true;
 }
+
+template
+bool
+GetUTF8AtomizationData<JS::UTF8Chars>(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen,
+                                      JS::SmallestEncoding* encoding, HashNumber* hashNum);
+template
+bool
+GetUTF8AtomizationData<JS::WTF8Chars>(JSContext* cx, const JS::WTF8Chars utf8, size_t* outlen,
+                                      JS::SmallestEncoding* encoding, HashNumber* hashNum);
 
 template <typename CharT>
 bool
@@ -575,9 +618,9 @@ UTF8EqualsChars(const JS::UTF8Chars utfChars, const CharT* chars)
 template bool UTF8EqualsChars<char16_t>(const JS::UTF8Chars, const char16_t*);
 template bool UTF8EqualsChars<JS::Latin1Char>(const JS::UTF8Chars, const JS::Latin1Char*);
 
-template <typename CharT>
+template <typename CharT, class InputCharsT>
 void
-InflateUTF8CharsToBufferAndTerminate(const UTF8Chars src, CharT* dst, size_t dstLen,
+InflateUTF8CharsToBufferAndTerminate(const InputCharsT src, CharT* dst, size_t dstLen,
                                      JS::SmallestEncoding encoding)
 {
     CopyAndInflateUTF8IntoBuffer<OnUTF8Error::Crash>(/* cx = */ nullptr, src, dst, dstLen,
@@ -589,6 +632,12 @@ InflateUTF8CharsToBufferAndTerminate<char16_t>(const UTF8Chars src, char16_t* ds
                                                JS::SmallestEncoding encoding);
 template void
 InflateUTF8CharsToBufferAndTerminate<JS::Latin1Char>(const UTF8Chars src, JS::Latin1Char* dst,
+                                                     size_t dstLen, JS::SmallestEncoding encoding);
+template void
+InflateUTF8CharsToBufferAndTerminate<char16_t>(const WTF8Chars src, char16_t* dst, size_t dstLen,
+                                               JS::SmallestEncoding encoding);
+template void
+InflateUTF8CharsToBufferAndTerminate<JS::Latin1Char>(const WTF8Chars src, JS::Latin1Char* dst,
                                                      size_t dstLen, JS::SmallestEncoding encoding);
 
 #ifdef DEBUG
