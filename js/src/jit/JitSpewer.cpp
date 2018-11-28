@@ -22,7 +22,6 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "threading/LockGuard.h"
-#include "util/Text.h"
 #include "vm/HelperThreads.h"
 #include "vm/MutexIDs.h"
 
@@ -371,6 +370,21 @@ jit::JitSpewPrinter()
 {
     static Fprinter out;
     return out;
+}
+
+
+static bool
+ContainsFlag(const char* str, const char* flag)
+{
+    size_t flaglen = strlen(flag);
+    const char* index = strstr(str, flag);
+    while (index) {
+        if ((index == str || index[-1] == ',') && (index[flaglen] == 0 || index[flaglen] == ',')) {
+            return true;
+        }
+        index = strstr(index + flaglen, flag);
+    }
+    return false;
 }
 
 void
