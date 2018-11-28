@@ -2458,6 +2458,12 @@ ContentParent::~ContentParent()
                !sBrowserContentParents->Contains(mRemoteType) ||
                !sBrowserContentParents->Get(mRemoteType)->Contains(this));
   }
+
+  // Normally mSubprocess is destroyed in ActorDestroy, but that won't
+  // happen if the process wasn't launched or if it failed to launch.
+  if (mSubprocess) {
+    DelayedDeleteSubprocess(mSubprocess);
+  }
 }
 
 void
