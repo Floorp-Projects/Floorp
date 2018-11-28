@@ -77,39 +77,6 @@ namespace frontend {
 
 using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
-BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
-                                   HandleScriptSourceObject sourceObject, Handle<LazyScript*> lazyScript)
-  : AutoGCRooter(cx, AutoGCRooter::Tag::BinParser)
-  , cx_(cx)
-  , alloc_(alloc)
-  , traceListHead_(nullptr)
-  , usedNames_(usedNames)
-  , nodeAlloc_(cx, alloc)
-  , keepAtoms_(cx)
-  , sourceObject_(cx, sourceObject)
-  , lazyScript_(cx, lazyScript)
-  , parseContext_(nullptr)
-  , factory_(cx, alloc, nullptr, SourceKind::Binary)
-{
-    MOZ_ASSERT_IF(lazyScript, lazyScript->isBinAST());
-    cx->frontendCollectionPool().addActiveCompilation();
-    tempPoolMark_ = alloc.mark();
-}
-
-BinASTParserBase::~BinASTParserBase()
-{
-    alloc_.release(tempPoolMark_);
-
-    /*
-     * The parser can allocate enormous amounts of memory for large functions.
-     * Eagerly free the memory now (which otherwise won't be freed until the
-     * next GC) to avoid unnecessary OOMs.
-     */
-    alloc_.freeAllIfHugeAndUnused();
-
-    cx_->frontendCollectionPool().removeActiveCompilation();
-}
-
 // ------------- Toplevel constructions
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -799,16 +766,6 @@ BinASTParser<Tok>::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes
     }
 
     return ReportCompileWarning(cx_, std::move(metadata), std::move(notes), JSREPORT_STRICT | JSREPORT_WARNING, errorNumber, *args);
-}
-
-bool
-BinASTParserBase::hasUsedName(HandlePropertyName name)
-{
-    if (UsedNamePtr p = usedNames_.lookup(name)) {
-        return p->value().isUsedInScript(parseContext_->scriptId());
-    }
-
-    return false;
 }
 
 void
