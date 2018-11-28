@@ -82,38 +82,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript]void loadURI(in nsDocShellLoadStatePtr loadState);
 
-  const long INTERNAL_LOAD_FLAGS_NONE                    = 0x0;
-  const long INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL       = 0x1;
-  const long INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER      = 0x2;
-  const long INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x4;
-
-  // This flag marks the first load in this object
-  // @see nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD
-  const long INTERNAL_LOAD_FLAGS_FIRST_LOAD              = 0x8;
-
-
-  // The set of flags that should not be set before calling into
-  // nsDocShell::LoadURI and other nsDocShell loading functions.
-  const long INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS     = 0xf;
-
-
-  const long INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER       = 0x10;
-  const long INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES     = 0x20;
-
-  // Whether the load should be treated as srcdoc load, rather than a URI one.
-  const long INTERNAL_LOAD_FLAGS_IS_SRCDOC               = 0x40;
-
-  // Whether this is the load of a frame's original src attribute
-  const long INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC      = 0x80;
-
-  const long INTERNAL_LOAD_FLAGS_NO_OPENER               = 0x100;
-
-  // Whether a top-level data URI navigation is allowed for that load
-  const long INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI    = 0x200;
-
-  // Whether the load was triggered by user interaction.
-  const long INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED       = 0x1000;
-
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except
    * that its parameter list is broken out instead of being packaged inside
