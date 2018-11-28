@@ -449,27 +449,9 @@ static const char* const kEntityStrings[] = {
   /* 5 */ "&nbsp;"
 };
 
-uint32_t FindNextBasicEntity(const nsAString& aStr,
-                             const uint32_t aLen,
-                             uint32_t aIndex,
-                             const uint8_t* aEntityTable,
-                             const char** aEntity)
-{
-  for (; aIndex < aLen; ++aIndex) {
-    // for each character in this chunk, check if it
-    // needs to be replaced
-    char16_t val = aStr[aIndex];
-    if (val <= kValNBSP && aEntityTable[val]) {
-      *aEntity = kEntityStrings[aEntityTable[val]];
-      return aIndex;
-    }
-  }
-  return aIndex;
-}
-
 bool
 nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
-                                                     nsAString& aOutputStr)
+                                                    nsAString& aOutputStr)
 {
   if (mBodyOnly && !mInBody) {
     return true;
@@ -480,26 +462,25 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
   }
 
   if (mFlags & (nsIDocumentEncoder::OutputEncodeBasicEntities)) {
-    const uint8_t* entityTable = mInAttribute ? kAttrEntities : kEntities;
-    uint32_t start = 0;
-    const uint32_t len = aStr.Length();
-    for (uint32_t i = 0; i < len; ++i) {
-      const char* entity = nullptr;
-      i = FindNextBasicEntity(aStr, len, i, entityTable, &entity);
-      uint32_t normalTextLen = i - start;
-      if (normalTextLen) {
-        NS_ENSURE_TRUE(aOutputStr.Append(Substring(aStr, start, normalTextLen),
-                                         mozilla::fallible), false);
-      }
-      if (entity) {
-        NS_ENSURE_TRUE(aOutputStr.AppendASCII(entity, mozilla::fallible), false);
-        start = i + 1;
-      }
+    // Per the API documentation, encode &nbsp;, &amp;, &lt;, &gt;, and &quot;
+    if (mInAttribute) {
+      return nsXMLContentSerializer::AppendAndTranslateEntities<kValNBSP>(
+        aStr, aOutputStr, kAttrEntities, kEntityStrings);
     }
-    return true;
-  } else {
-    NS_ENSURE_TRUE(nsXMLContentSerializer::AppendAndTranslateEntities(aStr, aOutputStr), false);
+
+    return nsXMLContentSerializer::AppendAndTranslateEntities<kValNBSP>(
+      aStr, aOutputStr, kEntities, kEntityStrings);
   }
 
-  return true;
+  // We don't want to call into our superclass 2-arg version of
+  // AppendAndTranslateEntities, because it wants to encode more characters
+  // than we do.  Use our tables, but avoid encoding &nbsp; by passing in a
+  // smaller max index.  This will only encode &amp;, &lt;, &gt;, and &quot;.
+  if (mInAttribute) {
+    return nsXMLContentSerializer::AppendAndTranslateEntities<kGTVal>(
+      aStr, aOutputStr, kAttrEntities, kEntityStrings);
+  }
+
+  return nsXMLContentSerializer::AppendAndTranslateEntities<kGTVal>(
+    aStr, aOutputStr, kEntities, kEntityStrings);
 }
