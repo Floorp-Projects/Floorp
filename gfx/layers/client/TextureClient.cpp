@@ -9,6 +9,7 @@
 #include "Layers.h"  // for Layer, etc
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"  // for gfxPlatform
+#include "MainThreadUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
@@ -234,6 +235,155 @@ class TextureChild final : PTextureChild {
   friend class TextureClient;
   friend void DeallocateTextureClient(TextureDeallocParams params);
 };
+
+static inline gfx::BackendType
+BackendTypeForBackendSelector(LayersBackend aLayersBackend, BackendSelector aSelector)
+{
+  switch (aSelector) {
+    case BackendSelector::Canvas:
+      return gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
+    case BackendSelector::Content:
+      return gfxPlatform::GetPlatform()->GetContentBackendFor(aLayersBackend);
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown backend selector");
+      return gfx::BackendType::NONE;
+  }
+};
+
+static TextureType
+GetTextureType(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
+               LayersBackend aLayersBackend, gfx::BackendType aBackendType,
+               int32_t aMaxTextureSize, TextureAllocationFlags aAllocFlags)
+{
+#ifdef XP_WIN
+  if ((aLayersBackend == LayersBackend::LAYERS_D3D11 ||
+       aLayersBackend == LayersBackend::LAYERS_WR) &&
+       (aBackendType == gfx::BackendType::DIRECT2D ||
+        aBackendType == gfx::BackendType::DIRECT2D1_1 ||
+        (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
+         DeviceManagerDx::Get()->GetContentDevice())) &&
+      aSize.width <= aMaxTextureSize &&
+      aSize.height <= aMaxTextureSize &&
+      !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
+    return TextureType::D3D11;
+  }
+
+  if (aLayersBackend != LayersBackend::LAYERS_WR &&
+      aFormat == SurfaceFormat::B8G8R8X8 &&
+      aBackendType == gfx::BackendType::CAIRO &&
+      NS_IsMainThread()) {
+    return TextureType::DIB;
+  }
+#endif
+
+#ifdef MOZ_X11
+  gfxSurfaceType type =
+    gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
+
+  if (aLayersBackend == LayersBackend::LAYERS_BASIC &&
+      aBackendType == gfx::BackendType::CAIRO &&
+      type == gfxSurfaceType::Xlib) {
+    return TextureType::X11;
+  }
+  if (aLayersBackend == LayersBackend::LAYERS_OPENGL &&
+      type == gfxSurfaceType::Xlib &&
+      aFormat != SurfaceFormat::A8 &&
+      gl::sGLXLibrary.UseTextureFromPixmap()) {
+    return TextureType::X11;
+  }
+#endif
+
+#ifdef XP_MACOSX
+  if (StaticPrefs::UseIOSurfaceTextures()) {
+    return TextureType::MacIOSurface;
+  }
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+  if (StaticPrefs::UseSurfaceTextureTextures()) {
+    return TextureType::AndroidNativeWindow;
+  }
+#endif
+
+  return TextureType::Unknown;
+}
+
+static bool
+ShouldRemoteTextureType(TextureType aTextureType, BackendSelector aSelector)
+{
+  if (!XRE_IsContentProcess()) {
+    return false;
+  }
+
+  if (aSelector != BackendSelector::Canvas || !gfxVars::RemoteCanvasEnabled()) {
+    return false;
+  }
+
+  switch (aTextureType) {
+    case TextureType::D3D11:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/* static */
+TextureData*
+TextureData::Create(TextureForwarder* aAllocator, gfx::SurfaceFormat aFormat,
+                    gfx::IntSize aSize, LayersBackend aLayersBackend,
+                    int32_t aMaxTextureSize, BackendSelector aSelector,
+                    TextureFlags aTextureFlags,
+                    TextureAllocationFlags aAllocFlags)
+{
+  gfx::BackendType moz2DBackend =
+    BackendTypeForBackendSelector(aLayersBackend, aSelector);
+
+  TextureType textureType = GetTextureType(aFormat, aSize, aLayersBackend,
+                                           moz2DBackend, aMaxTextureSize,
+                                           aAllocFlags);
+
+  if (ShouldRemoteTextureType(textureType, aSelector)) {
+    // TODO: return a recording texture data here.
+  }
+
+  switch(textureType) {
+#ifdef XP_WIN
+    case TextureType::D3D11:
+      return D3D11TextureData::Create(aSize, aFormat, aAllocFlags);
+    case TextureType::DIB:
+      return DIBTextureData::Create(aSize, aFormat, aAllocator);
+#endif
+#ifdef MOZ_X11
+    case TextureType::X11:
+      return X11TextureData::Create(aSize, aFormat, aTextureFlags, aAllocator);
+#endif
+#ifdef XP_MACOSX
+    case TextureType::MacIOSurface:
+      return MacIOSurfaceTextureData::Create(aSize, aFormat, moz2DBackend);
+#endif
+#ifdef MOZ_WIDGET_ANDROID
+    case TextureType::AndroidNativeWindow:
+      return AndroidNativeWindowTextureData::Create(aSize, aFormat);
+#endif
+    default:
+      return nullptr;
+  }
+}
+
+/* static */
+bool
+TextureData::IsRemote(LayersBackend aLayersBackend, BackendSelector aSelector)
+{
+  gfx::BackendType moz2DBackend =
+    BackendTypeForBackendSelector(aLayersBackend, aSelector);
+
+  TextureType textureType =
+    GetTextureType(gfx::SurfaceFormat::UNKNOWN, gfx::IntSize(1,1),
+                   aLayersBackend, moz2DBackend, INT32_MAX,
+                   TextureAllocationFlags::ALLOC_DEFAULT);
+
+  return ShouldRemoteTextureType(textureType, aSelector);
+}
 
 static void DestroyTextureData(TextureData* aTextureData,
                                LayersIPCChannel* aAllocator, bool aDeallocate,
@@ -996,19 +1146,6 @@ bool TextureClient::InitIPDLActor(KnowsCompositor* aForwarder) {
 
 PTextureChild* TextureClient::GetIPDLActor() { return mActor; }
 
-static inline gfx::BackendType BackendTypeForBackendSelector(
-    LayersBackend aLayersBackend, BackendSelector aSelector) {
-  switch (aSelector) {
-    case BackendSelector::Canvas:
-      return gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
-    case BackendSelector::Content:
-      return gfxPlatform::GetPlatform()->GetContentBackendFor(aLayersBackend);
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown backend selector");
-      return gfx::BackendType::NONE;
-  }
-};
-
 // static
 already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
     KnowsCompositor* aAllocator, gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
@@ -1043,53 +1180,9 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
     return nullptr;
   }
 
-  TextureData* data = nullptr;
-
-#ifdef XP_WIN
-  if ((aLayersBackend == LayersBackend::LAYERS_D3D11 ||
-       aLayersBackend == LayersBackend::LAYERS_WR) &&
-      (moz2DBackend == gfx::BackendType::DIRECT2D ||
-       moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
-       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
-        DeviceManagerDx::Get()->GetContentDevice())) &&
-      aSize.width <= aMaxTextureSize && aSize.height <= aMaxTextureSize &&
-      !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
-    data = D3D11TextureData::Create(aSize, aFormat, aAllocFlags);
-  }
-
-  if (aLayersBackend != LayersBackend::LAYERS_WR && !data &&
-      aFormat == SurfaceFormat::B8G8R8X8 &&
-      moz2DBackend == gfx::BackendType::CAIRO && NS_IsMainThread()) {
-    data = DIBTextureData::Create(aSize, aFormat, aAllocator);
-  }
-#endif
-
-#ifdef MOZ_X11
-  gfxSurfaceType type =
-      gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
-
-  if (!data && aLayersBackend == LayersBackend::LAYERS_BASIC &&
-      moz2DBackend == gfx::BackendType::CAIRO && type == gfxSurfaceType::Xlib) {
-    data = X11TextureData::Create(aSize, aFormat, aTextureFlags, aAllocator);
-  }
-  if (!data && aLayersBackend == LayersBackend::LAYERS_OPENGL &&
-      type == gfxSurfaceType::Xlib && aFormat != SurfaceFormat::A8 &&
-      gl::sGLXLibrary.UseTextureFromPixmap()) {
-    data = X11TextureData::Create(aSize, aFormat, aTextureFlags, aAllocator);
-  }
-#endif
-
-#ifdef XP_MACOSX
-  if (!data && StaticPrefs::UseIOSurfaceTextures()) {
-    data = MacIOSurfaceTextureData::Create(aSize, aFormat, moz2DBackend);
-  }
-#endif
-
-#ifdef MOZ_WIDGET_ANDROID
-  if (!data && StaticPrefs::UseSurfaceTextureTextures()) {
-    data = AndroidNativeWindowTextureData::Create(aSize, aFormat);
-  }
-#endif
+  TextureData* data =
+    TextureData::Create(aAllocator, aFormat, aSize, aLayersBackend,
+                        aMaxTextureSize, aSelector, aTextureFlags, aAllocFlags);
 
   if (data) {
     return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);

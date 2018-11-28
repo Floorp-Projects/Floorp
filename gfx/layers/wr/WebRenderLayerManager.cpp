@@ -734,14 +734,13 @@ WebRenderLayerManager::CreatePersistentBufferProvider(
   // initialized with WebRender to reduce memory usage.
   gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
 
-  if (StaticPrefs::PersistentBufferProviderSharedEnabled()) {
-    RefPtr<PersistentBufferProvider> provider =
-        PersistentBufferProviderShared::Create(aSize, aFormat,
-                                               AsKnowsCompositor());
-    if (provider) {
-      return provider.forget();
-    }
+  RefPtr<PersistentBufferProvider> provider =
+      PersistentBufferProviderShared::Create(aSize, aFormat,
+                                             AsKnowsCompositor());
+  if (provider) {
+    return provider.forget();
   }
+
   return LayerManager::CreatePersistentBufferProvider(aSize, aFormat);
 }
 

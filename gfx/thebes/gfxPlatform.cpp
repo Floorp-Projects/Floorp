@@ -2423,6 +2423,9 @@ void gfxPlatform::InitAcceleration() {
         VideoDecodingFailedChangedCallback,
         "media.hardware-video-decoding.failed");
     InitGPUProcessPrefs();
+
+    gfxVars::SetRemoteCanvasEnabled(StaticPrefs::CanvasRemote() &&
+                                    gfxConfig::IsEnabled(Feature::GPU_PROCESS));
   }
 }
 
@@ -3394,6 +3397,8 @@ void gfxPlatform::NotifyGPUProcessDisabled() {
             NS_LITERAL_CSTRING("FEATURE_FAILURE_GPU_PROCESS_DISABLED"));
     gfxVars::SetUseWebRender(false);
   }
+
+  gfxVars::SetRemoteCanvasEnabled(false);
 }
 
 void gfxPlatform::FetchAndImportContentDeviceData() {

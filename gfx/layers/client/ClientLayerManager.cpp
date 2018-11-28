@@ -862,8 +862,7 @@ ClientLayerManager::CreatePersistentBufferProvider(const gfx::IntSize& aSize,
   // because the canvas will most likely be flattened into a thebes layer
   // instead of being sent to the compositor, in which case rendering into
   // shared memory is wasteful.
-  if (IsCompositingCheap() &&
-      StaticPrefs::PersistentBufferProviderSharedEnabled()) {
+  if (IsCompositingCheap()) {
     RefPtr<PersistentBufferProvider> provider =
         PersistentBufferProviderShared::Create(aSize, aFormat,
                                                AsShadowForwarder());

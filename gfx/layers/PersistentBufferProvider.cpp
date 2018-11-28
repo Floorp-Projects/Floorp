@@ -10,6 +10,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/StaticPrefs.h"
 #include "pratom.h"
 #include "gfxPlatform.h"
 
@@ -102,6 +103,21 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
       !aKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
   }
+
+  if (!StaticPrefs::PersistentBufferProviderSharedEnabled()) {
+    return nullptr;
+  }
+
+#ifdef XP_WIN
+  // Bug 1285271 - Disable shared buffer provider on Windows with D2D due to
+  // instability, unless we are remoting the canvas drawing to the GPU process.
+  if (gfxPlatform::GetPlatform()->GetPreferredCanvasBackend() ==
+          BackendType::DIRECT2D1_1 &&
+      !TextureData::IsRemote(aKnowsCompositor->GetCompositorBackendType(),
+                             BackendSelector::Canvas)) {
+    return nullptr;
+  }
+#endif
 
   RefPtr<TextureClient> texture = TextureClient::CreateForDrawing(
       aKnowsCompositor, aFormat, aSize, BackendSelector::Canvas,

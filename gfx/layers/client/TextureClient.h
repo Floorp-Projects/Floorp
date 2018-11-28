@@ -245,7 +245,16 @@ class TextureData {
           canConcurrentlyReadLock(true) {}
   };
 
-  TextureData() { MOZ_COUNT_CTOR(TextureData); }
+  static TextureData* Create(TextureForwarder* aAllocator,
+                             gfx::SurfaceFormat aFormat,
+                             gfx::IntSize aSize,
+                             LayersBackend aLayersBackend,
+                             int32_t aMaxTextureSize,
+                             BackendSelector aSelector,
+                             TextureFlags aTextureFlags,
+                             TextureAllocationFlags aAllocFlags);
+
+  static bool IsRemote(LayersBackend aLayersBackend, BackendSelector aSelector);
 
   virtual ~TextureData() { MOZ_COUNT_DTOR(TextureData); }
 
@@ -300,6 +309,9 @@ class TextureData {
   virtual BufferTextureData* AsBufferTextureData() { return nullptr; }
 
   virtual GPUVideoTextureData* AsGPUVideoTextureData() { return nullptr; }
+
+protected:
+  TextureData() { MOZ_COUNT_CTOR(TextureData); }
 };
 
 /**
