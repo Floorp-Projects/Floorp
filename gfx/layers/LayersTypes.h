@@ -195,12 +195,14 @@ enum class SurfaceMode : int8_t {
   SURFACE_COMPONENT_ALPHA
 };
 
+// clang-format off
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
   ScaleMode, int8_t, (
     SCALE_NONE,
     STRETCH
 // Unimplemented - PRESERVE_ASPECT_RATIO_CONTAIN
 ));
+// clang-format on
 
 struct EventRegions {
   // The hit region for a layer contains all areas on the layer that are
@@ -456,10 +458,12 @@ private:
   uint64_t mHandle;
 };
 
+// clang-format off
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollDirection, uint32_t, (
   eVertical,
   eHorizontal
 ));
+// clang-format on
 
 } // namespace layers
 } // namespace mozilla
