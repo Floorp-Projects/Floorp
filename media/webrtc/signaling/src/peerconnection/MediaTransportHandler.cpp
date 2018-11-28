@@ -602,7 +602,7 @@ MediaTransportHandler::ExitPrivateMode()
 static void ToRTCIceCandidateStats(
     const std::vector<NrIceCandidate>& candidates,
     dom::RTCStatsType candidateType,
-    const nsString& componentId,
+    const nsString& transportId,
     DOMHighResTimeStamp now,
     dom::RTCStatsReportInternal* report) {
 
@@ -611,24 +611,22 @@ static void ToRTCIceCandidateStats(
     dom::RTCIceCandidateStats cand;
     cand.mType.Construct(candidateType);
     NS_ConvertASCIItoUTF16 codeword(candidate.codeword.c_str());
-    cand.mComponentId.Construct(componentId);
+    cand.mTransportId.Construct(transportId);
     cand.mId.Construct(codeword);
     cand.mTimestamp.Construct(now);
     cand.mCandidateType.Construct(
-        dom::RTCStatsIceCandidateType(candidate.type));
+        dom::RTCIceCandidateType(candidate.type));
+    cand.mPriority.Construct(candidate.priority);
     cand.mAddress.Construct(
         NS_ConvertASCIItoUTF16(candidate.cand_addr.host.c_str()));
-    cand.mPortNumber.Construct(candidate.cand_addr.port);
-    cand.mTransport.Construct(
+    cand.mPort.Construct(candidate.cand_addr.port);
+    cand.mProtocol.Construct(
         NS_ConvertASCIItoUTF16(candidate.cand_addr.transport.c_str()));
-    if (candidateType == dom::RTCStatsType::Local_candidate) {
-      cand.mMozLocalTransport.Construct(
+    if (candidateType == dom::RTCStatsType::Local_candidate &&
+        dom::RTCIceCandidateType(candidate.type) ==
+            dom::RTCIceCandidateType::Relay) {
+      cand.mRelayProtocol.Construct(
           NS_ConvertASCIItoUTF16(candidate.local_addr.transport.c_str()));
-      if (dom::RTCStatsIceCandidateType(candidate.type) ==
-            dom::RTCStatsIceCandidateType::Relayed) {
-        cand.mRelayProtocol.Construct(
-            NS_ConvertASCIItoUTF16(candidate.local_addr.transport.c_str()));
-      }
     }
     report->mIceCandidateStats.Value().AppendElement(cand, fallible);
     if (candidate.trickled) {
