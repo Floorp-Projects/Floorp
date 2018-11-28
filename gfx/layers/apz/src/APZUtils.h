@@ -40,6 +40,7 @@ operator|(CancelAnimationFlags a, CancelAnimationFlags b)
 
 typedef EnumSet<ScrollDirection> ScrollDirections;
 
+// clang-format off
 enum class ScrollSource {
   // scrollTo() or something similar.
   DOM,
@@ -58,6 +59,7 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(APZWheelAction, uint8_t, (
     Scroll,
     PinchZoom
 ))
+// clang-format on
 
 // Epsilon to be used when comparing 'float' coordinate values
 // with FuzzyEqualsAdditive. The rationale is that 'float' has 7 decimal
