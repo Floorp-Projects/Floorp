@@ -100,7 +100,6 @@
 #include "ProcessPriorityManager.h"
 #include "nsString.h"
 #include "IHistory.h"
-#include "mozilla/dom/ChromeBrowsingContext.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PluginWidgetParent.h"
@@ -3721,15 +3720,6 @@ TabParent::RecvGetSystemFont(nsCString* aFontName)
   if (widget) {
     widget->GetSystemFont(*aFontName);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-TabParent::RecvRootBrowsingContext(const BrowsingContextId& aId)
-{
-  MOZ_ASSERT(!mBrowsingContext, "May only set browsing context once!");
-  mBrowsingContext = ChromeBrowsingContext::Get(aId);
-  MOZ_ASSERT(mBrowsingContext, "Invalid ID!");
   return IPC_OK();
 }
 
