@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "نکات حریم‌خصوصی",
   "firstrun_continue_to_login": "ادامه",
   "firstrun_skip_login": "پرش از این مرحله",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "باز کردن منو",
   "pocket_learn_more": "بیشتر بدانید"
 };

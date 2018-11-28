@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Nima'q taq Na'oj:",
   "pocket_read_even_more": "Ketz'et ch'aqa' chik taq B'anob'äl",
   "pocket_more_reccommendations": "Ch'aqa' chik taq Chilab'enïk",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Achike rub'eyal nisamäj",
   "pocket_cta_button": "Tik'ul Pocket",
   "pocket_cta_text": "Ke'ayaka' ri taq b'anob'äl ye'awajo' pa Pocket, chuqa' taya' ruchuq'a' ajolom kik'in jeb'ël taq sik'inïk.",
   "highlights_empty_state": "Katok pa k'amaya'l richin niqak'üt chawäch jeb'ël taq cholna'oj, taq silowachib'äl, chuqa' ch'aqa' chik taq ruxaq k'a b'a' ke'atz'ët o aya'on kan ketal wawe'.",
@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Ichinan Na'oj",
   "firstrun_continue_to_login": "Titikïr chik el",
   "firstrun_skip_login": "Tixakalüx re jun ruxak re'",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Tijaq k'utüy samaj",
   "pocket_learn_more": "Tetamäx Ch'aqa' Chik"
 };

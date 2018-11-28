@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Adatvédelmi nyilatkozatot",
   "firstrun_continue_to_login": "Folytatás",
   "firstrun_skip_login": "Lépés kihagyása",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Menü megnyitása",
   "pocket_learn_more": "További tudnivalók"
 };

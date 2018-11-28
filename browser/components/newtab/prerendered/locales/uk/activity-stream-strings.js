@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Повідомлення про приватність",
   "firstrun_continue_to_login": "Продовжити",
   "firstrun_skip_login": "Пропустити цей крок",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Відкрити меню",
   "pocket_learn_more": "Докладніше"
 };

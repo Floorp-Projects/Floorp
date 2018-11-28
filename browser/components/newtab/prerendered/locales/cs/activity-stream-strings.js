@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Zásadami ochrany soukromí",
   "firstrun_continue_to_login": "Pokračovat",
   "firstrun_skip_login": "Přeskočit tento krok",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Otevře nabídku",
   "pocket_learn_more": "Zjistit více"
 };

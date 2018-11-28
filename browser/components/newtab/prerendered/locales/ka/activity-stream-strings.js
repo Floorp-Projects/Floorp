@@ -29,7 +29,7 @@ window.gActivityStreamStrings = {
   "menu_action_show_file_linux": "შემცველი საქაღალდის გახსნა",
   "menu_action_show_file_default": "ფაილის ჩვენება",
   "menu_action_open_file": "ფაილის გახსნა",
-  "menu_action_copy_download_link": "ჩამოტვირთვის ბმულის დაკოპირება",
+  "menu_action_copy_download_link": "ჩამოტვირთვის ბმულის ასლი",
   "menu_action_go_to_download_page": "გადასვლა ჩამოტვირთვის გვერდზე",
   "menu_action_remove_download": "ისტორიიდან ამოშლა",
   "search_button": "ძიება",
@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "პირადი მონაცემების დაცვის განაცხადს",
   "firstrun_continue_to_login": "გაგრძელება",
   "firstrun_skip_login": "გამოტოვება",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "მენიუს გახსნა",
   "pocket_learn_more": "იხილეთ ვრცლად"
 };

@@ -56,8 +56,8 @@ window.gActivityStreamStrings = {
   "settings_pane_highlights_header": "Sorotan",
   "settings_pane_highlights_options_bookmarks": "Markah",
   "settings_pane_snippets_header": "Catatan Kecil",
-  "edit_topsites_button_text": "Sunting",
-  "edit_topsites_edit_button": "Sunting situs ini",
+  "edit_topsites_button_text": "Edit",
+  "edit_topsites_edit_button": "Edit situs ini",
   "topsites_form_add_header": "Situs Pilihan Baru",
   "topsites_form_edit_header": "Ubah Situs Pilihan",
   "topsites_form_title_label": "Judul",
@@ -99,7 +99,7 @@ window.gActivityStreamStrings = {
   "firstrun_content": "Dapatkan markah, riwayat, sandi, dan setelan lainnya di semua peranti Anda.",
   "firstrun_learn_more_link": "Pelajari selengkapnya tentang Firefox Accounts",
   "firstrun_form_header": "Masukkan surel Anda",
-  "firstrun_form_sub_header": "Lanjutkan ke Firefox Sync.",
+  "firstrun_form_sub_header": "Lanjutkan ke Firefox Sync",
   "firstrun_email_input_placeholder": "Surel",
   "firstrun_invalid_input": "Surel harus valid",
   "firstrun_extra_legal_links": "Dengan melanjutkan, Anda menyetujui {terms} dan {privacy}.",
@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Pernyataan Privasi",
   "firstrun_continue_to_login": "Lanjutkan",
   "firstrun_skip_login": "Lewati langkah ini",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Buka menu",
   "pocket_learn_more": "Pelajari Lebih Lanjut"
 };

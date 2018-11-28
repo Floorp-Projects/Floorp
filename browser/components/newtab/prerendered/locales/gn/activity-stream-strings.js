@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Ñemigua purureko",
   "firstrun_continue_to_login": "Eku'ejey",
   "firstrun_skip_login": "Ehejánte kóva",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Eike poravorãme",
   "pocket_learn_more": "Kuaave"
 };

@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "개인 정보 보호 정책",
   "firstrun_continue_to_login": "계속",
   "firstrun_skip_login": "단계 건너뛰기",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "메뉴 열기",
   "pocket_learn_more": "자세히 보기"
 };

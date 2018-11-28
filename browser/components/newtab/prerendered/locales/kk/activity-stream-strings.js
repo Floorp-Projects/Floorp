@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Жекелік ескертуі",
   "firstrun_continue_to_login": "Жалғастыру",
   "firstrun_skip_login": "Бұл қадамды аттап кету",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Мәзірді ашу",
   "pocket_learn_more": "Көбірек білу"
 };
