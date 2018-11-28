@@ -30,6 +30,8 @@ not-for-build-platforms:
    - win64-asan-reporter-nightly/opt
 
 job-template:
+   attributes:
+      artifact_map: taskcluster/taskgraph/manifests/fennec_geckoview.yml
    run-on-projects: ['mozilla-central', 'mozilla-release']
    run-on-hg-branches:
       by-project:

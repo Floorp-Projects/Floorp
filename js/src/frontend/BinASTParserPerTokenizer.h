@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_BinSource_h
-#define frontend_BinSource_h
+#ifndef frontend_BinASTParserPerTokenizer_h
+#define frontend_BinASTParserPerTokenizer_h
 
 /**
  * A Binary AST parser.
@@ -17,6 +17,8 @@
 #include "mozilla/Maybe.h"
 
 #include "frontend/BCEParserHandle.h"
+#include "frontend/BinASTEnum.h"
+#include "frontend/BinASTParserBase.h"
 #include "frontend/BinToken.h"
 #include "frontend/BinTokenReaderMultipart.h"
 #include "frontend/BinTokenReaderTester.h"
@@ -33,64 +35,8 @@
 namespace js {
 namespace frontend {
 
-class BinASTParserBase: private JS::AutoGCRooter
-{
-  public:
-    BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
-                     HandleScriptSourceObject sourceObject, Handle<LazyScript*> lazyScript);
-    ~BinASTParserBase();
-
-  public:
-    // Names
-
-
-    bool hasUsedName(HandlePropertyName name);
-
-    // --- GC.
-
-    virtual void doTrace(JSTracer* trc) {}
-
-    void trace(JSTracer* trc) {
-        TraceListNode::TraceList(trc, traceListHead_);
-        doTrace(trc);
-    }
-
-
-  public:
-    ParseNode* allocParseNode(size_t size) {
-        MOZ_ASSERT(size == sizeof(ParseNode));
-        return static_cast<ParseNode*>(nodeAlloc_.allocNode());
-    }
-
-    JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
-
-    // Needs access to AutoGCRooter.
-    friend void TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser);
-
-  protected:
-    JSContext* cx_;
-
-    // ---- Memory-related stuff
-  protected:
-    LifoAlloc& alloc_;
-    TraceListNode* traceListHead_;
-    UsedNameTracker& usedNames_;
-  private:
-    LifoAlloc::Mark tempPoolMark_;
-    ParseNodeAllocator nodeAlloc_;
-
-    // ---- Parsing-related stuff
-  protected:
-    // Root atoms and objects allocated for the parse tree.
-    AutoKeepAtoms keepAtoms_;
-
-    RootedScriptSourceObject sourceObject_;
-    Rooted<LazyScript*> lazyScript_;
-    ParseContext* parseContext_;
-    FullParseHandler factory_;
-
-    friend class BinParseContext;
-};
+template<typename Tok>
+class BinASTParser;
 
 /**
  * The parser for a Binary AST.
@@ -99,7 +45,7 @@ class BinASTParserBase: private JS::AutoGCRooter
  * recoverable.
  */
 template<typename Tok>
-class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEParserHandle
+class BinASTParserPerTokenizer : public BinASTParserBase, public ErrorReporter, public BCEParserHandle
 {
   public:
     using Tokenizer = Tok;
@@ -111,14 +57,21 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     using Chars = typename Tokenizer::Chars;
 
   public:
-    BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames, const JS::ReadOnlyCompileOptions& options,
-                 HandleScriptSourceObject sourceObject, Handle<LazyScript*> lazyScript = nullptr)
+    // Auto-generated types.
+    using AssertedDeclaredKind = binast::AssertedDeclaredKind;
+    using VariableDeclarationKind = binast::VariableDeclarationKind;
+
+  public:
+    BinASTParserPerTokenizer(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
+                             const JS::ReadOnlyCompileOptions& options,
+                             HandleScriptSourceObject sourceObject,
+                             Handle<LazyScript*> lazyScript = nullptr)
         : BinASTParserBase(cx, alloc, usedNames, sourceObject, lazyScript)
         , options_(options)
         , variableDeclarationKind_(VariableDeclarationKind::Var)
     {
     }
-    ~BinASTParser()
+    ~BinASTParserPerTokenizer()
     {
     }
 
@@ -126,8 +79,9 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
      * Parse a buffer, returning a node (which may be nullptr) in case of success
      * or Nothing() in case of error.
      *
-     * The instance of `ParseNode` MAY NOT survive the `BinASTParser`. Indeed,
-     * destruction of the `BinASTParser` will also destroy the `ParseNode`.
+     * The instance of `ParseNode` MAY NOT survive the
+     * `BinASTParserPerTokenizer`. Indeed, destruction of the
+     * `BinASTParserPerTokenizer` will also destroy the `ParseNode`.
      *
      * In case of error, the parser reports the JS error.
      */
@@ -139,7 +93,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
 
     JS::Result<ParseNode*> parseLazyFunction(ScriptSource* src, const size_t firstOffset);
 
-  private:
+  protected:
     MOZ_MUST_USE JS::Result<ParseNode*> parseAux(GlobalSharedContext* globalsc,
                                                  const uint8_t* start, const size_t length,
                                                  BinASTSourceMetadata** metadataPtr = nullptr);
@@ -175,9 +129,6 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
         Parameter,
         Var,
     };
-
-    // Auto-generated methods
-#include "frontend/BinSource-auto.h"
 
     // --- Auxiliary parsing functions
 
@@ -235,7 +186,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     // directive.
     void forceStrictIfNecessary(SharedContext* sc, ListNode* directives);
 
-  private: // Implement ErrorReporter
+  protected: // Implement ErrorReporter
     const JS::ReadOnlyCompileOptions& options_;
 
     const JS::ReadOnlyCompileOptions& options() const override {
@@ -319,7 +270,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
         return this->options_.filename();
     }
 
-  private: // Implement ErrorReporter
+  protected: // Implement ErrorReporter
     mozilla::Maybe<Tokenizer> tokenizer_;
     VariableDeclarationKind variableDeclarationKind_;
 
@@ -329,7 +280,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     // Helper class: Restore field `variableDeclarationKind` upon leaving a scope.
     class MOZ_RAII AutoVariableDeclarationKind {
       public:
-        explicit AutoVariableDeclarationKind(BinASTParser<Tok>* parser
+        explicit AutoVariableDeclarationKind(BinASTParserPerTokenizer<Tok>* parser
                                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
             : parser_(parser)
             , kind(parser->variableDeclarationKind_)
@@ -340,17 +291,27 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
             parser_->variableDeclarationKind_ = kind;
         }
         private:
-        BinASTParser<Tok>* parser_;
-        BinASTParser<Tok>::VariableDeclarationKind kind;
+        BinASTParserPerTokenizer<Tok>* parser_;
+        BinASTParserPerTokenizer<Tok>::VariableDeclarationKind kind;
         MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
     };
+
+  private:
+    // Some methods in this class require access to auto-generated methods in
+    // BinASTParser which derives this class.
+    // asFinalParser methods provide the access to BinASTParser class methods
+    // of this instance.
+    using FinalParser = BinASTParser<Tok>;
+
+    inline FinalParser* asFinalParser();
+    inline const FinalParser* asFinalParser() const;
 };
 
 class BinParseContext : public ParseContext
 {
   public:
     template<typename Tok>
-    BinParseContext(JSContext* cx, BinASTParser<Tok>* parser, SharedContext* sc,
+    BinParseContext(JSContext* cx, BinASTParserPerTokenizer<Tok>* parser, SharedContext* sc,
         Directives* newDirectives)
         : ParseContext(cx, parser->parseContext_, sc, *parser,
                        parser->usedNames_, newDirectives, /* isFull = */ true)
@@ -358,10 +319,10 @@ class BinParseContext : public ParseContext
 };
 
 
-extern template class BinASTParser<BinTokenReaderMultipart>;
-extern template class BinASTParser<BinTokenReaderTester>;
+extern template class BinASTParserPerTokenizer<BinTokenReaderMultipart>;
+extern template class BinASTParserPerTokenizer<BinTokenReaderTester>;
 
 } // namespace frontend
 } // namespace js
 
-#endif // frontend_BinSource_h
+#endif // frontend_BinASTParserPerTokenizer_h

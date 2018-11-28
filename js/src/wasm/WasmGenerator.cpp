@@ -721,6 +721,20 @@ wasm::ExecuteCompileTaskFromHelperThread(CompileTask* task)
 }
 
 bool
+ModuleGenerator::locallyCompileCurrentTask()
+{
+    if (!ExecuteCompileTask(currentTask_, error_)) {
+        return false;
+    }
+    if (!finishTask(currentTask_)) {
+        return false;
+    }
+    currentTask_ = nullptr;
+    batchedBytecode_ = 0;
+    return true;
+}
+
+bool
 ModuleGenerator::finishTask(CompileTask* task)
 {
     masm_.haltingAlign(CodeAlignment);
@@ -756,20 +770,14 @@ ModuleGenerator::launchBatchCompile()
         return false;
     }
 
-    if (parallel_) {
-        if (!StartOffThreadWasmCompile(currentTask_, mode())) {
-            return false;
-        }
-        outstanding_++;
-    } else {
-        if (!ExecuteCompileTask(currentTask_, error_)) {
-            return false;
-        }
-        if (!finishTask(currentTask_)) {
-            return false;
-        }
+    if (!parallel_) {
+        return locallyCompileCurrentTask();
     }
 
+    if (!StartOffThreadWasmCompile(currentTask_, mode())) {
+        return false;
+    }
+    outstanding_++;
     currentTask_ = nullptr;
     batchedBytecode_ = 0;
     return true;
@@ -843,7 +851,7 @@ ModuleGenerator::finishFuncDefs()
 {
     MOZ_ASSERT(!finishedFuncDefs_);
 
-    if (currentTask_ && !launchBatchCompile()) {
+    if (currentTask_ && !locallyCompileCurrentTask()) {
         return false;
     }
 
