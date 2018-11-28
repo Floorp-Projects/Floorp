@@ -323,10 +323,12 @@ public:
       return false;
     }
 
+// clang-format off
     fprintf(aOut,
             "\n" \
             "     |<----------------Class--------------->|<-----Bytes------>|<----Objects---->|\n" \
             "     |                                      | Per-Inst   Leaked|   Total      Rem|\n");
+// clang-format on
 
     this->DumpTotal(aOut);
 
