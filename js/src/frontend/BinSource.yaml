@@ -85,6 +85,30 @@ hpp:
             // This file is meant to be included from the declaration
             // of class `BinASTParser`. The include may be public or private.
 
+    enums:
+        header: |
+            /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+            * vim: set ts=8 sts=4 et sw=4 tw=99:
+            * This Source Code Form is subject to the terms of the Mozilla Public
+            * License, v. 2.0. If a copy of the MPL was not distributed with this
+            * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+            // To generate this file, see the documentation in
+            // js/src/frontend/binsource/README.md.
+
+            #ifndef frontend_BinASTEnum_h
+            #define frontend_BinASTEnum_h
+
+            namespace js {
+            namespace frontend {
+            namespace binast {
+        footer: |
+            } // namespace binast
+            } // namespace frontend
+            } // namespace js
+
+            #endif // frontend_BinASTEnum_h
+
     # Rules for generating BinToken.h
     tokens:
         kind:
