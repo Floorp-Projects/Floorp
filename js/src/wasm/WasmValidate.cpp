@@ -1377,14 +1377,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
         offset = layout.addReference(ReferenceType::TYPE_OBJECT);
         break;
       case ValType::AnyRef:
-        // TODO/AnyRef-boxing: TYPE_OBJECT is not an appropriate
-        // representation for anyref in a structure.  So long as we box
-        // non-Object values in Objects, it is safe; however,
-        // boxing/unboxing operations on the JS side will be incorrect.
-        // Once we use a tagged representation, using TYPE_OBJECT will be
-        // unsound.
-        ASSERT_ANYREF_IS_JSOBJECT;
-        offset = layout.addReference(ReferenceType::TYPE_OBJECT);
+        offset = layout.addReference(ReferenceType::TYPE_WASM_ANYREF);
         break;
       default:
         MOZ_CRASH("Unknown type");

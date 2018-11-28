@@ -3111,6 +3111,9 @@ void CacheIRCompiler::emitLoadTypedObjectResultShared(
         masm.loadValue(fieldAddr, output.valueReg());
         break;
 
+      case ReferenceType::TYPE_WASM_ANYREF:
+        // TODO/AnyRef-boxing: With boxed immediates and strings this may be
+        // more complicated.
       case ReferenceType::TYPE_OBJECT: {
         Label notNull, done;
         masm.loadPtr(fieldAddr, scratch);
@@ -3427,6 +3430,9 @@ void CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val,
       masm.storeValue(val, dest);
       break;
 
+    case ReferenceType::TYPE_WASM_ANYREF:
+      // TODO/AnyRef-boxing: With boxed immediates and strings this may be
+      // more complicated.
     case ReferenceType::TYPE_OBJECT: {
       EmitPreBarrier(masm, dest, MIRType::Object);
       Label isNull, done;
