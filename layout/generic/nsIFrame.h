@@ -3232,7 +3232,10 @@ public:
   /**
    * @returns true if this frame is selected.
    */
-  bool IsSelected() const;
+  bool IsSelected() const {
+    return (GetContent() && GetContent()->IsSelectionDescendant()) ?
+      IsFrameSelected() : false;
+  }
 
   /**
    *  called to discover where this frame, or a parent frame has user-select style

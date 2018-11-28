@@ -11031,13 +11031,6 @@ nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
 }
 
 bool
-nsIFrame::IsSelected() const
-{
-  return (GetContent() && GetContent()->IsSelectionDescendant()) ?
-    IsFrameSelected() : false;
-}
-
-bool
 nsIFrame::IsStackingContext(EffectSet* aEffectSet,
                             const nsStyleDisplay* aStyleDisplay,
                             const nsStylePosition* aStylePosition,
