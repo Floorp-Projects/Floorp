@@ -213,6 +213,7 @@ PSMContentStreamListener::ImportCertificate()
 
 PSMContentDownloaderParent::PSMContentDownloaderParent(uint32_t type)
   : PSMContentStreamListener(type)
+  , mIPCOpen(true)
 {
 }
 
@@ -247,7 +248,7 @@ PSMContentDownloaderParent::RecvOnStopRequest(const nsresult& code)
     ImportCertificate();
   }
 
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     mozilla::Unused << Send__delete__(this);
   }
   return IPC_OK();
@@ -258,7 +259,7 @@ PSMContentDownloaderParent::OnStopRequest(nsIRequest* request, nsISupports* cont
 {
   nsresult rv = PSMContentStreamListener::OnStopRequest(request, context, code);
 
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     mozilla::Unused << Send__delete__(this);
   }
   return rv;
@@ -272,6 +273,12 @@ PSMContentDownloaderParent::RecvDivertToParentUsing(mozilla::net::PChannelDivert
   p->DivertTo(this);
   mozilla::Unused << mozilla::net::ChannelDiverterParent::Send__delete__(p);
   return IPC_OK();
+}
+
+void
+PSMContentDownloaderParent::ActorDestroy(ActorDestroyReason why)
+{
+  mIPCOpen = false;
 }
 
 /* ------------------------

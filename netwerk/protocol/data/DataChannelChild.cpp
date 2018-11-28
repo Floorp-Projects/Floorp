@@ -17,6 +17,7 @@ NS_IMPL_ISUPPORTS_INHERITED(DataChannelChild, nsDataChannel, nsIChildChannel)
 
 DataChannelChild::DataChannelChild(nsIURI* aURI)
     : nsDataChannel(aURI)
+    , mIPCOpen(false)
 {
 }
 
@@ -54,7 +55,7 @@ DataChannelChild::CompleteRedirectSetup(nsIStreamListener *aListener,
         return rv;
     }
 
-    if (IPCOpen()) {
+    if (mIPCOpen) {
         Unused << Send__delete__(this);
     }
     return NS_OK;
@@ -64,11 +65,14 @@ void
 DataChannelChild::AddIPDLReference()
 {
     AddRef();
+    mIPCOpen = true;
 }
 
 void
 DataChannelChild::ActorDestroy(ActorDestroyReason why)
 {
+    MOZ_ASSERT(mIPCOpen);
+    mIPCOpen = false;
     Release();
 }
 

@@ -154,6 +154,9 @@ class HangMonitorChild
   JSContext* mContext;
   bool mShutdownDone;
 
+  // This field is only accessed on the hang thread.
+  bool mIPCOpen;
+
   // Allows us to ensure we NotifyActivity only once, allowing
   // either thread to do so.
   Atomic<bool> mPaintWhileInterruptingJSActive;
@@ -273,6 +276,9 @@ private:
   // This field is read-only after construction.
   bool mReportHangs;
 
+  // This field is only accessed on the hang thread.
+  bool mIPCOpen;
+
   Monitor mMonitor;
 
   // Must be accessed with mMonitor held.
@@ -305,6 +311,7 @@ HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
    mPaintWhileInterruptingJS(false),
    mPaintWhileInterruptingJSForce(false),
    mShutdownDone(false),
+   mIPCOpen(true),
    mPaintWhileInterruptingJSActive(false)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -385,6 +392,8 @@ void
 HangMonitorChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
+
+  mIPCOpen = false;
 
   // We use a task here to ensure that IPDL is finished with this
   // HangMonitorChild before it gets deleted on the main thread.
@@ -479,7 +488,7 @@ HangMonitorChild::NotifySlowScriptAsync(TabId aTabId,
                                         const nsCString& aFileName,
                                         const nsString& aAddonId)
 {
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     Unused << SendHangEvidence(SlowScriptData(aTabId, aFileName, aAddonId));
   }
 }
@@ -565,7 +574,7 @@ HangMonitorChild::NotifyPluginHangAsync(uint32_t aPluginId)
   MOZ_RELEASE_ASSERT(IsOnThread());
 
   // bounce back to parent on background thread
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     Unused << SendHangEvidence(PluginHangData(aPluginId,
                                               base::GetCurrentProcId()));
   }
@@ -597,7 +606,7 @@ HangMonitorChild::ClearHangAsync()
   MOZ_RELEASE_ASSERT(IsOnThread());
 
   // bounce back to parent on background thread
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     Unused << SendClearHang();
   }
 }
@@ -606,6 +615,7 @@ HangMonitorChild::ClearHangAsync()
 
 HangMonitorParent::HangMonitorParent(ProcessHangMonitor* aMonitor)
  : mHangMonitor(aMonitor),
+   mIPCOpen(true),
    mMonitor("HangMonitorParent lock"),
    mShutdownDone(false),
    mBrowserCrashDumpHashLock("mBrowserCrashDumpIds lock"),
@@ -660,9 +670,10 @@ HangMonitorParent::ShutdownOnThread()
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
-  // Don't take the lock until after IPCOpen() is checked, as the actor lives on
-  // this thread and ActorDestroy will also take a lock.
-  if (IPCOpen()) {
+  // mIPCOpen is only written from this thread, so need need to take the lock
+  // here. We'd be shooting ourselves in the foot, because ActorDestroy takes
+  // it.
+  if (mIPCOpen) {
     Close();
   }
 
@@ -696,7 +707,7 @@ HangMonitorParent::PaintWhileInterruptingJSOnThread(TabId aTabId,
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     Unused << SendPaintWhileInterruptingJS(aTabId, aForceRepaint, aEpoch);
   }
 }
@@ -705,6 +716,7 @@ void
 HangMonitorParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
+  mIPCOpen = false;
 }
 
 void
@@ -847,7 +859,7 @@ HangMonitorParent::TerminateScript(bool aTerminateGlobal)
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     Unused << SendTerminateScript(aTerminateGlobal);
   }
 }
@@ -857,7 +869,7 @@ HangMonitorParent::BeginStartingDebugger()
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     Unused << SendBeginStartingDebugger();
   }
 }
@@ -867,7 +879,7 @@ HangMonitorParent::EndStartingDebugger()
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     Unused << SendEndStartingDebugger();
   }
 }

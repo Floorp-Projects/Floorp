@@ -70,6 +70,7 @@ private:
 
   PBackgroundParent* mBackgroundManager;
 
+  bool mIPCOpen;
   nsCOMPtr<nsIUDPSocket> mSocket;
   nsCOMPtr<nsISocketFilter> mFilter;
   nsCOMPtr<nsIPrincipal> mPrincipal;

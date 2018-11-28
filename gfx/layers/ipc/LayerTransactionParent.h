@@ -57,8 +57,6 @@ public:
   LayersId GetId() const { return mId; }
   Layer* GetRoot() const { return mRoot; }
 
-  bool IPCOpen() const override { return mozilla::ipc::IProtocol::IPCOpen(); }
-
   LayersObserverEpoch GetChildEpoch() const { return mChildEpoch; }
   bool ShouldParentObserveEpoch();
 
@@ -156,9 +154,13 @@ protected:
   bool Attach(Layer* aLayer, CompositableHost* aCompositable, bool aIsAsyncVideo);
 
   void AddIPDLReference() {
+    MOZ_ASSERT(mIPCOpen == false);
+    mIPCOpen = true;
     AddRef();
   }
   void ReleaseIPDLReference() {
+    MOZ_ASSERT(mIPCOpen == true);
+    mIPCOpen = false;
     Release();
   }
   friend class CompositorBridgeParent;
@@ -215,6 +217,7 @@ private:
   // transactions posted by the child.
 
   bool mDestroyed;
+  bool mIPCOpen;
 
   // This is set during RecvUpdate to track whether we'll need to update
   // APZ's hit test regions.

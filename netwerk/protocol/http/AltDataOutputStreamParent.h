@@ -33,6 +33,7 @@ public:
   // Called when AltDataOutputStreamChild::Close() is
   // Closes and nulls the output stream.
   virtual mozilla::ipc::IPCResult RecvClose() override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   // Sets an error that will be reported to the content process.
   void SetError(nsresult status) { mStatus = status; }
@@ -44,6 +45,7 @@ private:
   // In case any error occurs mStatus will be != NS_OK, and this status code will
   // be sent to the content process asynchronously.
   nsresult mStatus;
+  bool     mIPCOpen;
 };
 
 } // namespace net

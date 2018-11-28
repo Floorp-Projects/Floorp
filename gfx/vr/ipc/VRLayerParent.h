@@ -29,8 +29,12 @@ public:
   uint32_t GetDisplayID() const { return mVRDisplayID; }
   uint32_t GetGroup() const { return mGroup; }
 protected:
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+
   virtual ~VRLayerParent();
   void Destroy();
+
+  bool mIPCOpen;
 
   uint32_t mVRDisplayID;
   gfx::Rect mLeftEyeRect;

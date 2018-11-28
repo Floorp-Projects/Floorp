@@ -46,8 +46,14 @@ LoginReputationParent::OnComplete(nsresult aResult,
   LR_LOG(("OnComplete() [verdict=%s]",
     LoginReputationService::VerdictTypeToString(aVerdict).get()));
 
-  if (IPCOpen()) {
+  if (mIPCOpen) {
     Unused << Send__delete__(this);
   }
   return NS_OK;
+}
+
+void
+LoginReputationParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mIPCOpen = false;
 }

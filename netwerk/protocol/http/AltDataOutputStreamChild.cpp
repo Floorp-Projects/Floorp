@@ -14,7 +14,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) AltDataOutputStreamChild::Release()
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "AltDataOutputStreamChild");
 
-  if (mRefCnt == 1 && IPCOpen()) {
+  if (mRefCnt == 1 && mIPCOpen) {
     // The only reference left is the IPDL one. After the parent replies back
     // with a DeleteSelf message, the child will call Send__delete__(this),
     // decrementing the ref count and triggering the destructor.
@@ -36,7 +36,8 @@ NS_INTERFACE_MAP_BEGIN(AltDataOutputStreamChild)
 NS_INTERFACE_MAP_END
 
 AltDataOutputStreamChild::AltDataOutputStreamChild()
-  : mError(NS_OK)
+  : mIPCOpen(false)
+  , mError(NS_OK)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 }
@@ -44,12 +45,16 @@ AltDataOutputStreamChild::AltDataOutputStreamChild()
 void
 AltDataOutputStreamChild::AddIPDLReference()
 {
+  MOZ_ASSERT(!mIPCOpen, "Attempt to retain more than one IPDL reference");
+  mIPCOpen = true;
   AddRef();
 }
 
 void
 AltDataOutputStreamChild::ReleaseIPDLReference()
 {
+  MOZ_ASSERT(mIPCOpen, "Attempt to release nonexistent IPDL reference");
+  mIPCOpen = false;
   Release();
 }
 
@@ -61,7 +66,8 @@ AltDataOutputStreamChild::WriteDataInChunks(const nsDependentCSubstring& data)
   for (uint32_t i = 0; i < data.Length();
        i = next, next = std::min(data.Length(), next + kChunkSize)) {
     nsCString chunk(Substring(data, i, kChunkSize));
-    if (IPCOpen() && !SendWriteData(chunk)) {
+    if (mIPCOpen && !SendWriteData(chunk)) {
+      mIPCOpen = false;
       return false;
     }
   }
@@ -71,7 +77,7 @@ AltDataOutputStreamChild::WriteDataInChunks(const nsDependentCSubstring& data)
 NS_IMETHODIMP
 AltDataOutputStreamChild::Close()
 {
-  if (!IPCOpen()) {
+  if (!mIPCOpen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_FAILED(mError)) {
@@ -84,7 +90,7 @@ AltDataOutputStreamChild::Close()
 NS_IMETHODIMP
 AltDataOutputStreamChild::Flush()
 {
-  if (!IPCOpen()) {
+  if (!mIPCOpen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_FAILED(mError)) {
@@ -98,7 +104,7 @@ AltDataOutputStreamChild::Flush()
 NS_IMETHODIMP
 AltDataOutputStreamChild::Write(const char * aBuf, uint32_t aCount, uint32_t *_retval)
 {
-  if (!IPCOpen()) {
+  if (!mIPCOpen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_FAILED(mError)) {

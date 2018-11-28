@@ -34,7 +34,8 @@ namespace mozilla {
 namespace net {
 
 FTPChannelChild::FTPChannelChild(nsIURI* uri)
-: mUnknownDecoderInvolved(false)
+: mIPCOpen(false)
+, mUnknownDecoderInvolved(false)
 , mCanceled(false)
 , mSuspendCount(0)
 , mIsPending(false)
@@ -64,12 +65,16 @@ FTPChannelChild::~FTPChannelChild()
 void
 FTPChannelChild::AddIPDLReference()
 {
+  MOZ_ASSERT(!mIPCOpen, "Attempt to retain more than one IPDL reference");
+  mIPCOpen = true;
   AddRef();
 }
 
 void
 FTPChannelChild::ReleaseIPDLReference()
 {
+  MOZ_ASSERT(mIPCOpen, "Attempt to release nonexistent IPDL reference");
+  mIPCOpen = false;
   Release();
 }
 
@@ -682,9 +687,8 @@ FTPChannelChild::DoFailedAsyncOpen(const nsresult& statusCode)
   mListener = nullptr;
   mListenerContext = nullptr;
 
-  if (IPCOpen()) {
+  if (mIPCOpen)
     Send__delete__(this);
-  }
 }
 
 class FTPFlushedForDiversionEvent : public NeckoTargetChannelEvent<FTPChannelChild>
@@ -759,9 +763,8 @@ FTPChannelChild::RecvDeleteSelf()
 void
 FTPChannelChild::DoDeleteSelf()
 {
-  if (IPCOpen()) {
+  if (mIPCOpen)
     Send__delete__(this);
-  }
 }
 
 NS_IMETHODIMP
@@ -773,16 +776,15 @@ FTPChannelChild::Cancel(nsresult status)
 
   mCanceled = true;
   mStatus = status;
-  if (IPCOpen()) {
+  if (mIPCOpen)
     SendCancel(status);
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 FTPChannelChild::Suspend()
 {
-  NS_ENSURE_TRUE(IPCOpen(), NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
 
   LOG(("FTPChannelChild::Suspend [this=%p]\n", this));
 
@@ -801,7 +803,7 @@ FTPChannelChild::Suspend()
 NS_IMETHODIMP
 FTPChannelChild::Resume()
 {
-  NS_ENSURE_TRUE(IPCOpen(), NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
 
   LOG(("FTPChannelChild::Resume [this=%p]\n", this));
 
@@ -903,7 +905,7 @@ FTPChannelChild::DivertToParent(ChannelDiverterChild **aChild)
 
   // We must fail DivertToParent() if there's no parent end of the channel (and
   // won't be!) due to early failure.
-  if (NS_FAILED(mStatus) && !IPCOpen()) {
+  if (NS_FAILED(mStatus) && !mIPCOpen) {
     return mStatus;
   }
 

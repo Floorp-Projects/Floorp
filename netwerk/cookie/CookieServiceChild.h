@@ -116,6 +116,8 @@ protected:
   mozilla::ipc::IPCResult RecvAddCookie(const CookieStruct &aCookie,
                                         const OriginAttributes &aAttrs) override;
 
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+
   CookiesMap mCookiesMap;
   nsCOMPtr<nsITimer> mCookieTimer;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
@@ -124,6 +126,7 @@ protected:
   bool mThirdPartySession;
   bool mThirdPartyNonsecureSession;
   bool mLeaveSecureAlone;
+  bool mIPCOpen;
 };
 
 } // namespace net

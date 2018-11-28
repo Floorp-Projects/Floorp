@@ -234,19 +234,19 @@ public:
 
   void IPDLAddRef()
   {
+    mIPCOpen = true;
     AddRef();
   }
 
   void IPDLRelease()
   {
+    mIPCOpen = false;
     Release();
   }
 
   void Destroy();
 
-  bool IPCOpen() const {
-    return mozilla::ipc::IProtocol::IPCOpen() && !mDestroyed;
-  }
+  bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
 
 private:
   virtual ~RemotePermissionRequest();
@@ -256,6 +256,7 @@ private:
 
   nsCOMPtr<nsIContentPermissionRequest> mRequest;
   nsCOMPtr<nsPIDOMWindowInner>          mWindow;
+  bool                                  mIPCOpen;
   bool                                  mDestroyed;
   RefPtr<VisibilityChangeListener>    mListener;
 };

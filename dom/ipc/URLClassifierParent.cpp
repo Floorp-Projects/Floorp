@@ -44,6 +44,12 @@ URLClassifierParent::StartClassify(nsIPrincipal* aPrincipal,
   return IPC_OK();
 }
 
+void
+URLClassifierParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mIPCOpen = false;
+}
+
 /////////////////////////////////////////////////////////////////////
 //URLClassifierLocalParent.
 
@@ -72,4 +78,10 @@ URLClassifierLocalParent::StartClassify(nsIURI* aURI, const nsACString& aTables)
     OnClassifyComplete(NS_OK, EmptyCString(), EmptyCString(), EmptyCString());
   }
   return IPC_OK();
+}
+
+void
+URLClassifierLocalParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mIPCOpen = false;
 }
