@@ -341,7 +341,8 @@ void nsRegion::VisitEdges (visit_fn visit, void *closure) const
         // a change away from 0.
         int lastX = std::min(topStrip->left, bottomStrip->left) - 1;
 
-        // Current edge being considered for top and bottom, 0 - left, 1 - right.
+        // Current edge being considered for top and bottom,
+        // 0 - left, 1 - right.
         bool topEdgeIsLeft = true;
         bool bottomEdgeIsLeft = true;
         while (topStrip != std::end(topBand.mStrips) && bottomStrip != std::end(bottomBand.mStrips)) {
@@ -728,7 +729,8 @@ nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
 //   S = array(m+1,n+1)
 //   S[0][i] = 0 for i in [0,n]
 //   S[j][0] = 0 for j in [0,m]
-//   S[j][i] = (if A[j-1][i-1] = 0 then some large negative value else A[j-1][i-1])
+//   S[j][i] = (if A[j-1][i-1] = 0 then some large negative value
+//                                 else A[j-1][i-1])
 //           + S[j-1][n] + S[j][i-1] - S[j-1][i-1]
 //
 //   // top, bottom, left, right, area

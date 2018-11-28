@@ -131,12 +131,18 @@ public:
    * Record (and return) frame-intervals and paint-times for frames which were presented
    *   between calling StartFrameTimeRecording and StopFrameTimeRecording.
    *
-   * - Uses a cyclic buffer and serves concurrent consumers, so if Stop is called too late
-   *     (elements were overwritten since Start), result is considered invalid and hence empty.
-   * - Buffer is capable of holding 10 seconds @ 60fps (or more if frames were less frequent).
-   *     Can be changed (up to 1 hour) via pref: toolkit.framesRecording.bufferSize.
-   * - Note: the first frame-interval may be longer than expected because last frame
-   *     might have been presented some time before calling StartFrameTimeRecording.
+   * - Uses a cyclic buffer and serves concurrent consumers, so if Stop is
+   *   called too late
+   *     (elements were overwritten since Start), result is considered invalid
+   *      and hence empty.)
+   * - Buffer is capable of holding 10 seconds @ 60fps (or more if frames were
+   *   less frequent).
+   *     Can be changed (up to 1 hour) via pref:
+   *     toolkit.framesRecording.bufferSize.
+   * - Note: the first frame-interval may be longer than expected because last
+   *   frame
+   *     might have been presented some time before calling
+   *     StartFrameTimeRecording.
    */
 
   /**

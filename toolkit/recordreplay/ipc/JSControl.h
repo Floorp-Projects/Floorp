@@ -37,6 +37,7 @@ namespace js {
 // the process.
 struct BreakpointPosition
 {
+  // clang-format off
   MOZ_DEFINE_ENUM_AT_CLASS_SCOPE(Kind, (
     Invalid,
 
@@ -63,6 +64,7 @@ struct BreakpointPosition
     // Break when NewTimeWarpTarget() is called.
     WarpTarget
   ));
+  // clang-format on
 
   Kind mKind;
 

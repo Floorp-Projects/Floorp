@@ -5,18 +5,20 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
+<!DOCTYPE dialog>
 
 <dialog id="certmanager"
 	windowtype="mozilla:certmanager"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&certmgr.title;"
+        data-l10n-id="certmgr-title"
         onload="LoadCerts();"
         buttons="accept"
         style="width: 63em; height: 32em;"
         persist="screenX screenY width height">
 
-  <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
+  <linkset>
+    <link rel="localization" href="security/certificates/certManager.ftl"/>
+  </linkset>
 
   <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
   <script type="application/javascript" src="chrome://pippki/content/certManager.js"/>
@@ -24,31 +26,31 @@
   <vbox flex="1">
     <tabbox id="certmanagertabs" flex="1" style="margin:5px" persist="selectedIndex">
       <tabs id="certMgrTabbox">
-        <tab id="mine_tab" label="&certmgr.tab.mine;"/>
-        <tab id="others_tab" label="&certmgr.tab.others2;"/>
-        <tab id="websites_tab" label="&certmgr.tab.websites3;"/>
-        <tab id="ca_tab" label="&certmgr.tab.ca;" selected="true"/>
+        <tab id="mine_tab" data-l10n-id="certmgr-tab-mine"/>
+        <tab id="others_tab" data-l10n-id="certmgr-tab-people"/>
+        <tab id="websites_tab" data-l10n-id="certmgr-tab-servers"/>
+        <tab id="ca_tab" data-l10n-id="certmgr-tab-ca" selected="true"/>
       </tabs>
       <tabpanels flex="1">
         <vbox id="myCerts" flex="1">
-          <description>&certmgr.mine2;</description>
+          <description data-l10n-id="certmgr-mine"></description>
           <separator class="thin"/>
           <tree id="user-tree" flex="1" enableColumnDrag="true"
                     onselect="mine_enableButtons()">
             <treecols>
-              <treecol id="certcol" label="&certmgr.certname;" primary="true"
+              <treecol id="certcol" data-l10n-id="certmgr-cert-name" primary="true"
                            persist="hidden width ordinal" flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="tokencol" label="&certmgr.tokenname;"
+              <treecol id="tokencol" data-l10n-id="certmgr-token-name"
                            persist="hidden width ordinal" flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="serialnumcol" label="&certmgr.serial;"
+              <treecol id="serialnumcol" data-l10n-id="certmgr-serial"
                            persist="hidden width ordinal" flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="issuedcol" label="&certmgr.begins;"
+              <treecol id="issuedcol" data-l10n-id="certmgr-begins-label"
                            hidden="true" persist="hidden width ordinal" flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="expiredcol" label="&certmgr.expires;"
+              <treecol id="expiredcol" data-l10n-id="certmgr-expires-label"
                            persist="hidden width ordinal" flex="1"/>
             </treecols>
             <treechildren ondblclick="viewCerts();"/>
@@ -58,40 +60,35 @@
 
           <hbox>
              <button id="mine_viewButton" class="normal"
-                     label="&certmgr.view2.label;"
-                     accesskey="&certmgr.view2.accesskey;"
+                     data-l10n-id="certmgr-view"
                      disabled="true" oncommand="viewCerts();"/>
              <button id="mine_backupButton" class="normal"
-                     label="&certmgr.backup2.label;"
-                     accesskey="&certmgr.backup2.accesskey;"
+                     data-l10n-id="certmgr-backup"
                      disabled="true" oncommand="backupCerts();"/>
              <button id="mine_backupAllButton" class="normal"
-                     label="&certmgr.backupall2.label;"
-                     accesskey="&certmgr.backupall2.accesskey;"
+                     data-l10n-id="certmgr-backup-all"
                      oncommand="backupAllCerts();"/>
              <button id="mine_restoreButton" class="normal"
-                     label="&certmgr.restore2.label;"
-                     accesskey="&certmgr.restore2.accesskey;"
+                     data-l10n-id="certmgr-restore"
                      oncommand="restoreCerts();"/>
              <button id="mine_deleteButton" class="normal"
-                     label="&certmgr.delete2.label;"
-                     accesskey="&certmgr.delete2.accesskey;"
+                     data-l10n-id="certmgr-delete"
                      disabled="true" oncommand="deleteCerts();"/>
           </hbox>
         </vbox>
         <vbox id="othersCerts" flex="1">
-          <description>&certmgr.others2;</description>
+          <description data-l10n-id="certmgr-people"></description>
           <separator class="thin"/>
           <tree id="email-tree" flex="1"
                     onselect="email_enableButtons()">
             <treecols>
-              <treecol id="certcol" label="&certmgr.certname;" primary="true"
+              <treecol id="certcol" data-l10n-id="certmgr-cert-name" primary="true"
                            flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="emailcol" label="&certmgr.email;"
+              <treecol id="emailcol" data-l10n-id="certmgr-email"
                            flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="expiredcol" label="&certmgr.expires;"
+              <treecol id="expiredcol" data-l10n-id="certmgr-expires-label"
                        flex="1"/>
             </treecols>
             <treechildren flex="1" ondblclick="viewCerts();"/>
@@ -101,39 +98,35 @@
 
           <hbox>
             <button id="email_viewButton"
-                    label="&certmgr.view2.label;"
-                    accesskey="&certmgr.view2.accesskey;"
+                    data-l10n-id="certmgr-view"
                     disabled="true" oncommand="viewCerts();"/>
             <button id="email_addButton"
-                    label="&certmgr.restore2.label;"
-                    accesskey="&certmgr.restore2.accesskey;"
+                    data-l10n-id="certmgr-restore"
                     oncommand="addEmailCert();"/>
             <button id="email_exportButton"
-                    label="&certmgr.export.label;"
-                    accesskey="&certmgr.export.accesskey;"
+                    data-l10n-id="certmgr-export"
                     disabled="true" oncommand="exportCerts();"/>
             <button id="email_deleteButton"
-                    label="&certmgr.delete2.label;"
-                    accesskey="&certmgr.delete2.accesskey;"
+                    data-l10n-id="certmgr-delete"
                     disabled="true" oncommand="deleteCerts();"/>
           </hbox>
         </vbox>
         <vbox id="webCerts" flex="1">
-          <description>&certmgr.websites3;</description>
+          <description data-l10n-id="certmgr-servers"></description>
           <separator class="thin"/>
           <tree id="server-tree" flex="1" enableColumnDrag="true"
                     onselect="websites_enableButtons()">
             <treecols>
-              <treecol id="certcol" label="&certmgr.certname;" primary="true"
+              <treecol id="certcol" data-l10n-id="certmgr-cert-name" primary="true"
                            persist="hidden width ordinal" flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="sitecol" label="&certmgr.certserver;"
+              <treecol id="sitecol" data-l10n-id="certmgr-cert-server"
                        persist="hidden width ordinal" flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="lifetimecol" label="&certmgr.override_lifetime;"
+              <treecol id="lifetimecol" data-l10n-id="certmgr-override-lifetime"
                        persist="hidden width ordinal" flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="expiredcol" label="&certmgr.expires;"
+              <treecol id="expiredcol" data-l10n-id="certmgr-expires-label"
                        persist="hidden width ordinal" flex="1"/>
             </treecols>
             <treechildren ondblclick="viewCerts();"/>
@@ -143,33 +136,29 @@
 
           <hbox>
             <button id="websites_viewButton"
-                    label="&certmgr.view2.label;"
-                    accesskey="&certmgr.view2.accesskey;"
+                    data-l10n-id="certmgr-view"
                     disabled="true" oncommand="viewCerts();"/>
             <button id="websites_exportButton"
-                    label="&certmgr.export.label;"
-                    accesskey="&certmgr.export.accesskey;"
+                    data-l10n-id="certmgr-export"
                     disabled="true" oncommand="exportCerts();"/>
             <button id="websites_deleteButton"
-                    label="&certmgr.delete2.label;"
-                    accesskey="&certmgr.delete2.accesskey;"
+                    data-l10n-id="certmgr-delete"
                     disabled="true" oncommand="deleteCerts();"/>
             <button id="websites_exceptionButton"
-                    label="&certmgr.addException.label;"
-                    accesskey="&certmgr.addException.accesskey;"
+                    data-l10n-id="certmgr-add-exception"
                     oncommand="addException();"/>
           </hbox>
         </vbox>
         <vbox id="CACerts" flex="1">
-          <description>&certmgr.cas2;</description>
+          <description data-l10n-id="certmgr-ca"></description>
           <separator class="thin"/>
           <tree id="ca-tree" flex="1" enableColumnDrag="true"
                     onselect="ca_enableButtons()">
             <treecols>
-              <treecol id="certcol" label="&certmgr.certname;" primary="true"
+              <treecol id="certcol" data-l10n-id="certmgr-cert-name" primary="true"
                            persist="hidden width ordinal" flex="1"/>
               <splitter class="tree-splitter"/>
-              <treecol id="tokencol" label="&certmgr.tokenname;"
+              <treecol id="tokencol" data-l10n-id="certmgr-token-name"
                            persist="hidden width ordinal" flex="1"/>
             </treecols>
             <treechildren ondblclick="viewCerts();"/>
@@ -179,24 +168,19 @@
 
           <hbox>
             <button id="ca_viewButton"
-                    label="&certmgr.view2.label;"
-                    accesskey="&certmgr.view2.accesskey;"
+                    data-l10n-id="certmgr-view"
                     disabled="true" oncommand="viewCerts();"/>
             <button id="ca_editButton"
-                    label="&certmgr.edit3.label;"
-                    accesskey="&certmgr.edit3.accesskey;"
+                    data-l10n-id="certmgr-edit"
                     disabled="true" oncommand="editCerts();"/>
             <button id="ca_addButton"
-                    label="&certmgr.restore2.label;"
-                    accesskey="&certmgr.restore2.accesskey;"
+                    data-l10n-id="certmgr-restore"
                     oncommand="addCACerts();"/>
             <button id="ca_exportButton"
-                    label="&certmgr.export.label;"
-                    accesskey="&certmgr.export.accesskey;"
+                    data-l10n-id="certmgr-export"
                     disabled="true" oncommand="exportCerts();"/>
             <button id="ca_deleteButton"
-                    label="&certmgr.delete_builtin.label;"
-                    accesskey="&certmgr.delete_builtin.accesskey;"
+                    data-l10n-id="certmgr-delete-builtin"
                     disabled="true" oncommand="deleteCerts();"/>
           </hbox>
         </vbox>

@@ -10,9 +10,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 
+import android.graphics.SurfaceTexture;
 import android.os.IBinder;
+import android.os.Process;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.Surface;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
@@ -46,12 +49,8 @@ import org.mozilla.gecko.GeckoAppShell;
             if (singleBufferMode && !GeckoSurfaceTexture.isSingleBufferSupported()) {
                 return null;
             }
-            ISurfaceAllocator allocator = sConnection.getAllocator();
-            GeckoSurface surface = allocator.acquireSurface(width, height, singleBufferMode);
-            if (surface != null && !surface.inProcess()) {
-                allocator.configureSync(surface.initSyncSurface(width, height));
-            }
-            return surface;
+
+            return sConnection.getAllocator().acquireSurface(width, height, singleBufferMode);
         } catch (Exception e) {
             Log.w(LOGTAG, "Failed to acquire GeckoSurface", e);
             return null;
@@ -79,22 +78,6 @@ import org.mozilla.gecko.GeckoAppShell;
             surface.release();
         } catch (Exception e) {
             Log.w(LOGTAG, "Failed to release surface", e);
-        }
-    }
-
-    public static void sync(int upstream) {
-        try {
-            ensureConnection();
-        } catch (Exception e) {
-            Log.w(LOGTAG, "Failed to sync texture, no connection");
-            return;
-        }
-
-        // Release the SurfaceTexture on the other side
-        try {
-            sConnection.getAllocator().sync(upstream);
-        } catch (RemoteException e) {
-            Log.w(LOGTAG, "Failed to sync texture", e);
         }
     }
 

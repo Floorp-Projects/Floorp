@@ -285,9 +285,11 @@ private:
     }
   };
 
-  // This is where DECL_GFX_PREF for each of the preferences should go.
-  // We will keep these in an alphabetical order to make it easier to see if
-  // a method accessing a pref already exists. Just add yours in the list.
+  // clang-format off
+
+  // This is where DECL_GFX_PREF for each of the preferences should go.  We
+  // will keep these in an alphabetical order to make it easier to see if a
+  // method accessing a pref already exists. Just add yours in the list.
 
   DECL_GFX_PREF(Live, "accessibility.browsewithcaret", AccessibilityBrowseWithCaret, bool, false);
 
@@ -814,8 +816,11 @@ private:
   DECL_GFX_PREF(Live, "widget.window-transforms.disabled",     WindowTransformsDisabled, bool, false);
 
   // WARNING:
-  // Please make sure that you've added your new preference to the list above in alphabetical order.
+  // Please make sure that you've added your new preference to the list above
+  // in alphabetical order.
   // Please do not just append it to the end of the list.
+
+  // clang-format on
 
 public:
   // Manage the singleton:

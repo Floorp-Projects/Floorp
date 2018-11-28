@@ -56,7 +56,8 @@ public:
      *   - viewport
      *   - blend state (will be enabled at end)
      *   - scissor state (will be enabled at end)
-     *   - vertex attrib 0 and 1 (pointer and enable state [enable state will be disabled at exit])
+     *   - vertex attrib 0 and 1 (pointer and enable state [enable state will
+     *     be disabled at exit])
      *   - array buffer binding (will be 0)
      *   - active texture (will be 0)
      *   - texture 0 binding

@@ -322,21 +322,22 @@ public:
   /**
    * Post-processes layers before composition. This performs the following:
    *
-   *   - Applies occlusion culling. This restricts the shadow visible region
-   *     of layers that are covered with opaque content.
-   *     |aOpaqueRegion| is the region already known to be covered with opaque
-   *     content, in the post-transform coordinate space of aLayer.
+   *   - Applies occlusion culling. This restricts the shadow visible region of
+   *     layers that are covered with opaque content.  |aOpaqueRegion| is the
+   *     region already known to be covered with opaque content, in the
+   *     post-transform coordinate space of aLayer.
    *
    *   - Recomputes visible regions to account for async transforms.
    *     Each layer accumulates into |aVisibleRegion| its post-transform
    *     (including async transforms) visible region.
    *
-   *   - aRenderTargetClip is the exact clip required for aLayer, in the coordinates
-   *     of the nearest render target (the same as GetEffectiveTransform).
+   *   - aRenderTargetClip is the exact clip required for aLayer, in the
+   *     coordinates of the nearest render target (the same as
+   *     GetEffectiveTransform).
    *
-   *   - aClipFromAncestors is the approximate combined clip from all ancestors, in
-   *     the coordinate space of our parent, but maybe be an overestimate in the
-   *     presence of complex transforms.
+   *   - aClipFromAncestors is the approximate combined clip from all
+   *     ancestors, in the coordinate space of our parent, but maybe be an
+   *     overestimate in the presence of complex transforms.
    */
   void PostProcessLayers(nsIntRegion& aOpaqueRegion);
   void PostProcessLayers(Layer* aLayer,

@@ -19,6 +19,7 @@ namespace layers {
 struct KeyboardScrollAction final
 {
 public:
+  // clang-format off
   MOZ_DEFINE_ENUM_WITH_BASE_AT_CLASS_SCOPE(
     KeyboardScrollActionType, uint8_t, (
       eScrollCharacter,
@@ -26,6 +27,7 @@ public:
       eScrollPage,
       eScrollComplete
   ));
+  // clang-format on
 
   static nsIScrollableFrame::ScrollUnit
   GetScrollUnit(KeyboardScrollActionType aDeltaType);
