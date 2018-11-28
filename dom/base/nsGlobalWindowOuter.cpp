@@ -3036,9 +3036,8 @@ nsGlobalWindowOuter::GetSanitizedOpener(nsPIDOMWindowOuter* aOpener)
     openerDocShell->GetRootTreeItem(getter_AddRefs(openerRootItem));
     nsCOMPtr<nsIDocShell> openerRootDocShell(do_QueryInterface(openerRootItem));
     if (openerRootDocShell) {
-      uint32_t appType;
-      nsresult rv = openerRootDocShell->GetAppType(&appType);
-      if (NS_SUCCEEDED(rv) && appType != nsIDocShell::APP_TYPE_MAIL) {
+      nsIDocShell::AppType appType = openerRootDocShell->GetAppType();
+      if (appType != nsIDocShell::APP_TYPE_MAIL) {
         return aOpener;
       }
     }

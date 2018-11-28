@@ -3830,9 +3830,8 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
   // Check to see if this document is still busy
   // If it is busy and we aren't already "queued" up to print then
   // Indicate there is a print pending and cache the args for later
-  uint32_t busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
-  if ((NS_FAILED(docShell->GetBusyFlags(&busyFlags)) ||
-       (busyFlags != nsIDocShell::BUSY_FLAGS_NONE && busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING)) &&
+  auto busyFlags = docShell->GetBusyFlags();
+  if (busyFlags != nsIDocShell::BUSY_FLAGS_NONE && busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING &&
       !mPrintDocIsFullyLoaded) {
     if (!mPrintIsPending) {
       mCachedPrintSettings           = aPrintSettings;

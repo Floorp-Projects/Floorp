@@ -179,11 +179,7 @@ PresentationResponderLoadingCallback::Init(nsIDocShell* aDocShell)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  uint32_t busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
-  nsresult rv = aDocShell->GetBusyFlags(&busyFlags);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  auto busyFlags = aDocShell->GetBusyFlags();
 
   if ((busyFlags == nsIDocShell::BUSY_FLAGS_NONE) ||
       (busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING)) {
