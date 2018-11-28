@@ -3771,7 +3771,7 @@ class ArrowExpander extends Component {
     if (expanded) {
       classNames.push("expanded");
     }
-    return _reactDomFactories2.default.img({
+    return _reactDomFactories2.default.button({
       className: classNames.join(" ")
     });
   }
@@ -4993,6 +4993,8 @@ module.exports = {
 "use strict";
 
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -5014,18 +5016,40 @@ Accessor.propTypes = {
 };
 
 function Accessor(props) {
-  const { object } = props;
+  const { object, evaluation, onInvokeGetterButtonClick } = props;
+
+  if (evaluation) {
+    const { Rep, Grip } = __webpack_require__(3647);
+    return span({
+      className: "objectBox objectBox-accessor objectTitle"
+    }, Rep(_extends({}, props, {
+      object: evaluation.getterValue,
+      mode: props.mode || MODE.TINY,
+      defaultRep: Grip
+    })));
+  }
+
+  if (hasGetter(object) && onInvokeGetterButtonClick) {
+    return dom.button({
+      className: "invoke-getter",
+      title: "Invoke getter",
+      onClick: event => {
+        onInvokeGetterButtonClick();
+        event.stopPropagation();
+      }
+    });
+  }
 
   const accessors = [];
   if (hasGetter(object)) {
     accessors.push("Getter");
   }
+
   if (hasSetter(object)) {
     accessors.push("Setter");
   }
-  const title = accessors.join(" & ");
 
-  return span({ className: "objectBox objectBox-accessor objectTitle" }, title);
+  return span({ className: "objectBox objectBox-accessor objectTitle" }, accessors.join(" & "));
 }
 
 function hasGetter(object) {

@@ -277,6 +277,22 @@ button.jump-definition {
 }
 
 /******************************************************************************/
+/* Invoke getter button */
+
+button.invoke-getter {
+  mask: url("resource://devtools/client/shared/components/reps/images/input.svg") no-repeat;
+  display: inline-block;
+  background-color: var(--comment-node-color);
+  height: 12px;
+  vertical-align:bottom;
+  border:none;
+}
+
+.invoke-getter:hover {
+  background-color: var(--theme-highlight-blue);
+}
+
+/******************************************************************************/
 /* "more…" ellipsis */
 .more-ellipsis {
   color: var(--comment-node-color);
@@ -337,24 +353,29 @@ button.jump-definition {
   cursor: default;
 }
 
-.tree-node img.arrow {
-  mask: url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
-  mask-size: 100%;
+.tree-node button.arrow {
+  background:url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
+  background-size:contain;
+  background-position:center center;
   width: 9px;
   height: 9px;
+  border:0;
+  padding:0;
   margin-inline-start: 1px;
   margin-inline-end: 4px;
-  background-color: var(--theme-splitter-color, #9B9B9B);
   transform: rotate(-90deg);
+  transform-origin: center center;
   transition: transform 0.125s ease;
   align-self: center;
+  -moz-context-properties: fill;
+  fill: var(--theme-splitter-color, #9B9B9B);
 }
 
-html[dir="rtl"] .tree-node img.arrow {
+html[dir="rtl"] .tree-node button.arrow {
   transform: rotate(90deg);
 }
 
-.tree-node img.arrow.expanded.expanded {
+.tree-node button.arrow.expanded.expanded {
   transform: rotate(0deg);
  }
 
@@ -363,8 +384,8 @@ html[dir="rtl"] .tree-node img.arrow {
   background-color: var(--theme-selection-background, #0a84ff);
 }
 
-.tree-node.focused img.arrow {
-  background-color: currentColor;
+.tree-node.focused button.arrow {
+  fill: currentColor;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -404,7 +425,7 @@ html[dir="rtl"] .tree-node img.arrow {
   color: var(--theme-comment);
 }
 
-.object-inspector .tree-node img.arrow {
+.object-inspector .tree-node .arrow {
   display: inline-block;
   vertical-align: middle;
 }
@@ -2665,7 +2686,7 @@ menuseparator {
 
 .call-site {
   position: relative;
-  border-bottom: 2px solid lightgrey;
+  display: inline;
   cursor: pointer;
 }
 
@@ -2680,20 +2701,8 @@ menuseparator {
   height: 12px;
 }
 
-.call-site-bp {
-  position: relative;
-  border-bottom: 2px solid #aed3ef;
-  cursor: pointer;
-}
-
-.call-site-bp::before {
-  content: "";
-  mask: url("resource://devtools/client/debugger/new/images/column-marker.svg") no-repeat 100% 100%;
-  mask-size: contain;
-  display: inline-block;
-  background-color: var(--blue-55);
-  width: 9px;
-  height: 12px;
+.call-site.active::before {
+  opacity: 1;
 }
 
 .theme-dark .call-site {
@@ -2950,7 +2959,8 @@ html[dir="rtl"] .editor-mount {
   color: var(--theme-comment);
 }
 
-.debug-expression {
+.debug-expression,
+.new-debug-line .call-site {
   background-color: var(--debug-expression-background);
 }
 
@@ -3612,7 +3622,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   margin-inline-start: 4px;
 }
 
-:root.theme-dark .annotation-logo svg path {
+:root.theme-dark .annotation-logo:not(.angular) svg path {
   fill: var(--theme-highlight-blue);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
