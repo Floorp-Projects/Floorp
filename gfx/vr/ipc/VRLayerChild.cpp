@@ -20,6 +20,7 @@ namespace gfx {
 
 VRLayerChild::VRLayerChild()
   : mCanvasElement(nullptr)
+  , mIPCOpen(false)
   , mLastSubmittedFrameId(0)
 {
   MOZ_COUNT_CTOR(VRLayerChild);
@@ -111,7 +112,7 @@ VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo)
 bool
 VRLayerChild::IsIPCOpen()
 {
-  return IPCOpen();
+  return mIPCOpen;
 }
 
 void
@@ -119,6 +120,12 @@ VRLayerChild::ClearSurfaces()
 {
   mThisFrameTexture = nullptr;
   mLastFrameTexture = nullptr;
+}
+
+void
+VRLayerChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mIPCOpen = false;
 }
 
 // static
@@ -140,10 +147,13 @@ VRLayerChild::DestroyIPDLActor(PVRLayerChild* actor)
 
 void
 VRLayerChild::AddIPDLReference() {
+  MOZ_ASSERT(mIPCOpen == false);
+  mIPCOpen = true;
   AddRef();
 }
 void
 VRLayerChild::ReleaseIPDLReference() {
+  MOZ_ASSERT(mIPCOpen == false);
   Release();
 }
 

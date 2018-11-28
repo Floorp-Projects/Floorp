@@ -8,9 +8,6 @@ FINAL_LIBRARY = 'xul'
 
 DEFINES['VR_API_PUBLIC'] = True
 
-# Windows.h wrappers conflict with internal methods in openvr
-DEFINES['MOZ_DISABLE_WINDOWS_WRAPPER'] = True
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     if CONFIG['HAVE_64BIT_BUILD']:
         DEFINES['WIN64'] = True

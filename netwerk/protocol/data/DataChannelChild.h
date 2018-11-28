@@ -33,6 +33,8 @@ private:
     ~DataChannelChild() = default;
 
     void AddIPDLReference();
+
+    bool mIPCOpen;
 };
 
 } // namespace net

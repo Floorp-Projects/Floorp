@@ -487,8 +487,8 @@ def errfnSentinel(rvalue=ExprLiteral.FALSE):
     return inner
 
 
-def _destroyInternalMethod():
-    return ExprVar('ActorDestroyInternal')
+def _destroyMethod():
+    return ExprVar('ActorDestroy')
 
 
 def errfnUnreachable(msg):
@@ -3269,6 +3269,21 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 params=[Decl(actortype, 'aActor')],
                 ret=Type.BOOL, methodspec=MethodSpec.PURE)))
 
+        # ActorDestroy() method; default is no-op
+        if self.side == 'parent':
+            methodspec = MethodSpec.PURE
+        else:
+            methodspec = MethodSpec.VIRTUAL
+
+        self.cls.addstmts([
+            Whitespace.NL,
+            MethodDefn(MethodDecl(
+                _destroyMethod().name,
+                params=[Decl(_DestroyReason.Type(), 'aWhy')],
+                ret=Type.VOID, methodspec=methodspec)),
+            Whitespace.NL
+        ])
+
         if ptype.isToplevel():
             # void ProcessingError(code); default to no-op
             processingerror = MethodDefn(
@@ -3649,7 +3664,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         destroysubtree.addstmts([Whitespace('// Finally, destroy "us".\n',
                                             indent=1),
-                                 StmtExpr(ExprCall(_destroyInternalMethod(),
+                                 StmtExpr(ExprCall(_destroyMethod(),
                                                    args=[whyvar]))
                                  ])
 
@@ -3895,35 +3910,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         msgvar, stmts = self.makeMessage(md, errfnSendCtor)
         sendok, sendstmts = self.sendAsync(md, msgvar)
-
-        warnif = StmtIf(ExprNot(sendok))
-        warnif.addifstmt(_printWarningMessage('Error sending constructor'))
-
         method.addstmts(
-            # Build our constructor message & verify it.
             stmts
             + self.genVerifyMessage(md.decl.type.verify, md.params,
                                     errfnSendCtor, ExprVar('msg__'))
-
-            # Assert that we haven't been shut down yet.
-            + [_abortIfFalse(ExprCall(ExprVar('IPCOpen')),
-                             "Cannot send constructor after ActorDestroy")]
-
-            # Notify the other side about the newly created actor.
-            #
-            # If the MessageChannel is closing, and we haven't been told yet,
-            # this send may fail. This error is ignored to treat it like a
-            # message being lost due to the other side shutting down before
-            # processing it.
-            #
-            # NOTE: We don't free the actor here, as our caller may be
-            # depending on it being alive after calling SendConstructor.
             + sendstmts
-
-            # Warn if the message failed to send, and return our newly created
-            # actor.
-            + [warnif,
-               StmtReturn(actor.var())])
+            + self.failCtorIf(md, ExprNot(sendok))
+            + [StmtReturn(actor.var())])
 
         lbl = CaseLabel(md.pqReplyId())
         case = StmtBlock()

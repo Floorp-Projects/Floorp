@@ -106,6 +106,7 @@ public:
   , mTextureData(nullptr)
   , mDestroyed(false)
   , mMainThreadOnly(false)
+  , mIPCOpen(false)
   , mOwnsTextureData(false)
   , mOwnerCalledDestroy(false)
   {}
@@ -116,11 +117,27 @@ public:
 
   void ActorDestroy(ActorDestroyReason why) override;
 
+  bool IPCOpen() const { return mIPCOpen; }
+
   void Lock() const { if (mCompositableForwarder && mCompositableForwarder->GetTextureForwarder()->UsesImageBridge()) { mLock.Enter(); } }
 
   void Unlock() const { if (mCompositableForwarder && mCompositableForwarder->GetTextureForwarder()->UsesImageBridge()) { mLock.Leave(); } }
 
 private:
+
+  // AddIPDLReference and ReleaseIPDLReference are only to be called by CreateIPDLActor
+  // and DestroyIPDLActor, respectively. We intentionally make them private to prevent misuse.
+  // The purpose of these methods is to be aware of when the IPC system around this
+  // actor goes down: mIPCOpen is then set to false.
+  void AddIPDLReference() {
+    MOZ_ASSERT(mIPCOpen == false);
+    mIPCOpen = true;
+    AddRef();
+  }
+  void ReleaseIPDLReference() {
+    MOZ_ASSERT(mIPCOpen == false);
+    Release();
+  }
 
   /// The normal way to destroy the actor.
   ///
@@ -200,6 +217,7 @@ private:
   TextureData* mTextureData;
   Atomic<bool> mDestroyed;
   bool mMainThreadOnly;
+  bool mIPCOpen;
   bool mOwnsTextureData;
   bool mOwnerCalledDestroy;
 
@@ -237,6 +255,8 @@ void
 TextureChild::ActorDestroy(ActorDestroyReason why)
 {
   AUTO_PROFILER_LABEL("TextureChild::ActorDestroy", GRAPHICS);
+  MOZ_ASSERT(mIPCOpen);
+  mIPCOpen = false;
 
   if (mTextureData) {
     DestroyTextureData(mTextureData, GetAllocator(), mOwnsTextureData, mMainThreadOnly);
@@ -724,15 +744,16 @@ TextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 PTextureChild*
 TextureClient::CreateIPDLActor()
 {
-  RefPtr<TextureChild> c = new TextureChild();
-  return c.forget().take();
+  TextureChild* c = new TextureChild();
+  c->AddIPDLReference();
+  return c;
 }
 
 // static
 bool
 TextureClient::DestroyIPDLActor(PTextureChild* actor)
 {
-  RefPtr<TextureChild> tc = dont_AddRef(static_cast<TextureChild*>(actor));
+  static_cast<TextureChild*>(actor)->ReleaseIPDLReference();
   return true;
 }
 

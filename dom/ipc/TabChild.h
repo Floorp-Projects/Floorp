@@ -588,6 +588,8 @@ public:
   LayoutDeviceIntPoint GetClientOffset() const { return mClientOffset; }
   LayoutDeviceIntPoint GetChromeOffset() const { return mChromeOffset; };
 
+  bool IPCOpen() const { return mIPCOpen; }
+
   bool ParentIsActive() const
   {
     return mParentIsActive;
@@ -702,10 +704,6 @@ public:
 
 protected:
   virtual ~TabChild();
-
-  virtual PWindowGlobalChild* AllocPWindowGlobalChild(const WindowGlobalInit& aInit) override;
-
-  virtual bool DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) override;
 
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
 
@@ -850,6 +848,7 @@ private:
 
   bool mIsTransparent;
 
+  bool mIPCOpen;
   bool mParentIsActive;
   CSSSize mUnscaledInnerSize;
   bool mDidSetRealShowInfo;

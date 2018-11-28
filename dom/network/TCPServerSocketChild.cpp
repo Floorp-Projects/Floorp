@@ -27,6 +27,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPServerSocketChildBase)
 NS_INTERFACE_MAP_END
 
 TCPServerSocketChildBase::TCPServerSocketChildBase()
+: mIPCOpen(false)
 {
 }
 
@@ -37,7 +38,7 @@ TCPServerSocketChildBase::~TCPServerSocketChildBase()
 NS_IMETHODIMP_(MozExternalRefCountType) TCPServerSocketChild::Release(void)
 {
   nsrefcnt refcnt = TCPServerSocketChildBase::Release();
-  if (refcnt == 1 && IPCOpen()) {
+  if (refcnt == 1 && mIPCOpen) {
     PTCPServerSocketChild::SendRequestDelete();
     return 1;
   }
@@ -59,12 +60,16 @@ TCPServerSocketChild::TCPServerSocketChild(TCPServerSocket* aServerSocket, uint1
 void
 TCPServerSocketChildBase::ReleaseIPDLReference()
 {
+  MOZ_ASSERT(mIPCOpen);
+  mIPCOpen = false;
   this->Release();
 }
 
 void
 TCPServerSocketChildBase::AddIPDLReference()
 {
+  MOZ_ASSERT(!mIPCOpen);
+  mIPCOpen = true;
   this->AddRef();
 }
 

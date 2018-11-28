@@ -123,7 +123,6 @@
 #include "mozilla/Telemetry.h"
 #include "nsDocShellLoadState.h"
 #include "nsWebBrowser.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PluginWidgetChild.h"
@@ -411,6 +410,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mUniqueId(aTabId)
   , mHasSiblings(false)
   , mIsTransparent(false)
+  , mIPCOpen(false)
   , mParentIsActive(false)
   , mDidSetRealShowInfo(false)
   , mDidLoadURLInit(false)
@@ -586,11 +586,6 @@ TabChild::Init(mozIDOMWindowProxy* aParent)
   loadContext->SetRemoteTabs(
       mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
 
-  // Send our browsing context to the parent process.
-  RefPtr<BrowsingContext> browsingContext =
-    nsDocShell::Cast(docShell)->GetBrowsingContext();
-  SendRootBrowsingContext(BrowsingContextId(browsingContext->Id()));
-
   // Few lines before, baseWindow->Create() will end up creating a new
   // window root in nsGlobalWindow::SetDocShell.
   // Then this chrome event handler, will be inherited to inner windows.
@@ -625,6 +620,8 @@ TabChild::Init(mozIDOMWindowProxy* aParent)
         }
       });
   mAPZEventState = new APZEventState(mPuppetWidget, std::move(callback));
+
+  mIPCOpen = true;
 
   // Recording/replaying processes use their own compositor.
   if (recordreplay::IsRecordingOrReplaying()) {
@@ -1036,6 +1033,8 @@ TabChild::DestroyWindow()
 void
 TabChild::ActorDestroy(ActorDestroyReason why)
 {
+  mIPCOpen = false;
+
   DestroyWindow();
 
   if (mTabChildMessageManager) {
@@ -3433,21 +3432,6 @@ bool
 TabChild::DeallocPPaymentRequestChild(PPaymentRequestChild* actor)
 {
   delete actor;
-  return true;
-}
-
-PWindowGlobalChild*
-TabChild::AllocPWindowGlobalChild(const WindowGlobalInit&)
-{
-  MOZ_CRASH("We should never be manually allocating PWindowGlobalChild actors");
-  return nullptr;
-}
-
-bool
-TabChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor)
-{
-  // This reference was added in WindowGlobalChild::Create.
-  static_cast<WindowGlobalChild*>(aActor)->Release();
   return true;
 }
 

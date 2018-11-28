@@ -992,6 +992,7 @@ RemotePermissionRequest::RemotePermissionRequest(
   nsPIDOMWindowInner* aWindow)
   : mRequest(aRequest)
   , mWindow(aWindow)
+  , mIPCOpen(false)
   , mDestroyed(false)
 {
   mListener = new VisibilityChangeListener(mWindow);
@@ -1000,8 +1001,7 @@ RemotePermissionRequest::RemotePermissionRequest(
 
 RemotePermissionRequest::~RemotePermissionRequest()
 {
-  MOZ_ASSERT(!mozilla::ipc::IProtocol::IPCOpen(),
-             "Protocol must not be open when RemotePermissionRequest is destroyed.");
+  MOZ_ASSERT(!mIPCOpen, "Protocol must not be open when RemotePermissionRequest is destroyed.");
 }
 
 void

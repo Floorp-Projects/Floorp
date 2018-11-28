@@ -7734,9 +7734,8 @@ nsGlobalWindowOuter::ReportLargeAllocStatus()
                                   message);
 }
 
-#if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)
-#pragma message("wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)
-#error "Never include unwrapped windows.h in this file!"
+#ifdef _WINDOWS_
+#error "Never include windows.h in this file!"
 #endif
 
 // Helper called by methods that move/resize the window,

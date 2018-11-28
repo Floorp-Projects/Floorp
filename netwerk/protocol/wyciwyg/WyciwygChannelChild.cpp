@@ -47,6 +47,7 @@ WyciwygChannelChild::WyciwygChannelChild(nsIEventTarget *aNeckoTarget)
   , mContentLength(-1)
   , mCharsetSource(kCharsetUninitialized)
   , mState(WCC_NEW)
+  , mIPCOpen(false)
   , mSentAppData(false)
 {
   LOG(("Creating WyciwygChannelChild @%p\n", this));
@@ -73,12 +74,16 @@ WyciwygChannelChild::~WyciwygChannelChild()
 void
 WyciwygChannelChild::AddIPDLReference()
 {
+  MOZ_ASSERT(!mIPCOpen, "Attempt to retain more than one IPDL reference");
+  mIPCOpen = true;
   AddRef();
 }
 
 void
 WyciwygChannelChild::ReleaseIPDLReference()
 {
+  MOZ_ASSERT(mIPCOpen, "Attempt to release nonexistent IPDL reference");
+  mIPCOpen = false;
   Release();
 }
 
@@ -323,9 +328,8 @@ WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
     mProgressSink = nullptr;
   }
 
-  if (IPCOpen()) {
+  if (mIPCOpen)
     PWyciwygChannelChild::Send__delete__(this);
-  }
 }
 
 class WyciwygCancelEvent : public NeckoTargetChannelEvent<WyciwygChannelChild>
@@ -369,9 +373,8 @@ void WyciwygChannelChild::CancelEarly(const nsresult& statusCode)
   mListener = nullptr;
   mListenerContext = nullptr;
 
-  if (IPCOpen()) {
+  if (mIPCOpen)
     PWyciwygChannelChild::Send__delete__(this);
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -406,9 +409,8 @@ WyciwygChannelChild::Cancel(nsresult aStatus)
 
   mCanceled = true;
   mStatus = aStatus;
-  if (IPCOpen()) {
+  if (mIPCOpen)
     SendCancel(aStatus);
-  }
   return NS_OK;
 }
 
@@ -751,9 +753,8 @@ WyciwygChannelChild::CloseCacheEntry(nsresult reason)
   SendCloseCacheEntry(reason);
   mState = WCC_ONCLOSED;
 
-  if (IPCOpen()) {
+  if (mIPCOpen)
     PWyciwygChannelChild::Send__delete__(this);
-  }
 
   return NS_OK;
 }

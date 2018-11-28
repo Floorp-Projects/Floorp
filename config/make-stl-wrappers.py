@@ -5,8 +5,25 @@ from __future__ import print_function
 import os
 import string
 from mozbuild.util import FileAvoidWrite
-from system_header_util import header_path
 
+
+def find_in_path(file, searchpath):
+    for dir in searchpath.split(os.pathsep):
+        f = os.path.join(dir, file)
+        if os.path.exists(f):
+            return f
+    return ''
+
+
+def header_path(header, compiler):
+    if compiler == 'gcc':
+        # we use include_next on gcc
+        return header
+    elif compiler == 'msvc':
+        return find_in_path(header, os.environ.get('INCLUDE', ''))
+    else:
+        # hope someone notices this ...
+        raise NotImplementedError(compiler)
 
 # The 'unused' arg is the output file from the file_generate action. We actually
 # generate all the files in header_list

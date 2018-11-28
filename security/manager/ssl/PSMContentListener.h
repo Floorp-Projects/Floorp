@@ -67,6 +67,9 @@ public:
 
 protected:
   virtual ~PSMContentDownloaderParent();
+
+  virtual void ActorDestroy(ActorDestroyReason why) override;
+  bool mIPCOpen;
 };
 
 // Child actor for importing a cert.
