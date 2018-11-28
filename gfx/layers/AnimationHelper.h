@@ -55,12 +55,14 @@ struct AnimatedValue {
   enum {
     TRANSFORM,
     OPACITY,
+    COLOR,
     NONE
   } mType {NONE};
 
   union {
     AnimationTransform mTransform;
     float mOpacity;
+    nscolor mColor;
   };
 
   AnimatedValue(gfx::Matrix4x4&& aTransformInDevSpace,
@@ -77,6 +79,12 @@ struct AnimatedValue {
   explicit AnimatedValue(const float& aValue)
     : mType(AnimatedValue::OPACITY)
     , mOpacity(aValue)
+  {
+  }
+
+  explicit AnimatedValue(nscolor aValue)
+    : mType(AnimatedValue::COLOR)
+    , mColor(aValue)
   {
   }
 
@@ -127,6 +135,11 @@ public:
    * Set the animation opacity based on the unique id
    */
   void SetAnimatedValue(uint64_t aId, const float& aOpacity);
+
+  /**
+   * Set the animation color based on the unique id
+   */
+  void SetAnimatedValue(uint64_t aId, nscolor aColor);
 
   /**
    * Return the animated value if a given id can map to its animated value

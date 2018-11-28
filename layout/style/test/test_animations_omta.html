@@ -2391,5 +2391,122 @@ addAsyncAnimTest(async function() {
   done_div();
 });
 
+if (SpecialPowers.DOMWindowUtils.layerManagerType != 'WebRender') {
+  // Normal background-color animation.
+  addAsyncAnimTest(async function() {
+    new_div("background-color: rgb(255, 0, 0); " +
+            "transition: background-color 10s linear");
+    await waitForPaintsFlushed();
+
+    gDiv.style.backgroundColor = "rgb(0, 255, 0)";
+    await waitForPaintsFlushed();
+
+    omta_is("background-color", "rgb(255, 0, 0)", RunningOn.Compositor,
+            "background-color transition runs on compositor thread");
+
+    advance_clock(5000);
+    omta_is("background-color", "rgb(128, 128, 0)", RunningOn.Compositor,
+            "background-color on compositor at 5s");
+
+    done_div();
+  });
+
+  // background-color animation with currentColor.
+  addAsyncAnimTest(async function() {
+    new_div("color: rgb(255, 0, 0); " +
+            "background-color: currentColor; " +
+            "transition: background-color 10s linear");
+    await waitForPaintsFlushed();
+
+    gDiv.style.backgroundColor = "rgb(0, 255, 0)";
+    await waitForPaintsFlushed();
+
+    omta_is("background-color", "rgb(255, 0, 0)", RunningOn.Compositor,
+            "background-color transition starting with current-color runs on " +
+            "compositor thread");
+
+    advance_clock(5000);
+    omta_is("background-color", "rgb(128, 128, 0)", RunningOn.Compositor,
+            "background-color on compositor at 5s");
+
+    done_div();
+  });
+
+  // Tests that a background-color animation from inherited currentColor to
+  // a normal color on the compositor is updated when the parent color is
+  // changed.
+  addAsyncAnimTest(async function() {
+    new_div("");
+    const parent = document.createElement("div");
+    gDiv.parentNode.insertBefore(parent, gDiv);
+    parent.style.color = "rgb(255, 0, 0)";
+    parent.appendChild(gDiv);
+
+    gDiv.animate({ backgroundColor: [ "currentColor", "rgb(0, 255, 0)" ] }, 1000);
+
+    await waitForPaintsFlushed();
+
+    omta_is("background-color", "rgb(255, 0, 0)", RunningOn.Compositor,
+            "background-color animation starting with current-color runs on " +
+            "compositor thread");
+
+    advance_clock(500);
+
+    omta_is("background-color", "rgb(128, 128, 0)", RunningOn.Compositor,
+            "background-color on compositor at 5s");
+
+    // Change the parent's color in the middle of the animation.
+    parent.style.color = "rgb(0, 0, 255)";
+    await waitForPaintsFlushed();
+
+    omta_is("background-color", "rgb(0, 128, 128)", RunningOn.Compositor,
+            "background-color on compositor is reflected by the parent's " +
+            "color change");
+
+    done_div();
+    parent.remove();
+  });
+
+  // Tests that a background-color animation from currentColor to a normal color
+  // on <a> element is updated when the link is visited.
+  addAsyncAnimTest(async function() {
+    [ gDiv ] = new_element("a", "display: block");
+    gDiv.setAttribute("href", "not-exist.html");
+    gDiv.classList.add("visited");
+
+    const extraStyle = document.createElement('style');
+    document.head.appendChild(extraStyle);
+    extraStyle.sheet.insertRule(".visited:visited { color: rgb(0, 0, 255); }", 0);
+    extraStyle.sheet.insertRule(".visited:link { color: rgb(255, 0, 0); }", 1);
+
+    gDiv.animate({ backgroundColor: [ "currentColor", "rgb(0, 255, 0)" ] }, 1000);
+    await waitForPaintsFlushed();
+
+    omta_is("background-color", "rgb(255, 0, 0)", RunningOn.Compositor,
+            "background-color animation starting with current-color runs on " +
+            "compositor thread");
+
+    advance_clock(500);
+
+    omta_is("background-color", "rgb(128, 128, 0)", RunningOn.Compositor,
+            "background-color on compositor at 5s");
+
+    gDiv.setAttribute("href", window.top.location.href);
+    await waitForVisitedLinkColoring(gDiv, "color", "rgb(0, 0, 255)");
+    await waitForPaintsFlushed();
+
+    // `omta_is` checks that the result on the compositor equals to the value by
+    // getComputedValue() but getComputedValue lies for visited link values so
+    // we use getOMTAStyle directly instead.
+    is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "background-color"),
+       "rgb(0, 128, 128)",
+       "background-color on <a> element after the link is visited");
+
+    extraStyle.remove();
+    done_element();
+    gDiv = null;
+  });
+}
+
 </script>
 </html>
