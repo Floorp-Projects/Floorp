@@ -7,6 +7,7 @@
 
 var EXPORTED_SYMBOLS = [
   "BrowserUsageTelemetry",
+  "URICountListener",
   "URLBAR_SELECTED_RESULT_TYPES",
   "URLBAR_SELECTED_RESULT_METHODS",
   "MINIMUM_TAB_COUNT_INTERVAL_MS",
@@ -18,7 +19,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
 });
+
+// This pref is in seconds!
+XPCOMUtils.defineLazyPreferenceGetter(this,
+  "gRecentVisitedOriginsExpiry",
+  "browser.engagement.recent_visited_origins.expiry");
 
 // The upper bound for the count of the visited unique domain names.
 const MAX_UNIQUE_VISITED_DOMAINS = 100;
@@ -128,6 +135,8 @@ function shouldRecordSearchCount(tabbrowser) {
 let URICountListener = {
   // A set containing the visited domains, see bug 1271310.
   _domainSet: new Set(),
+  // A set containing the visited origins during the last 24 hours (similar to domains, but not quite the same)
+  _origin24hrSet: new Set(),
   // A map to keep track of the URIs loaded from the restored tabs.
   _restoredURIsMap: new WeakMap(),
 
@@ -230,13 +239,26 @@ let URICountListener = {
 
     // Unique domains should be aggregated by (eTLD + 1): x.test.com and y.test.com
     // are counted once as test.com.
+    let baseDomain;
     try {
       // Even if only considering http(s) URIs, |getBaseDomain| could still throw
       // due to the URI containing invalid characters or the domain actually being
       // an ipv4 or ipv6 address.
-      this._domainSet.add(Services.eTLD.getBaseDomain(uri));
+      baseDomain = Services.eTLD.getBaseDomain(uri);
+      this._domainSet.add(baseDomain);
     } catch (e) {
-      return;
+      baseDomain = uri.host;
+    }
+
+    // Record the origin, but with the base domain (eTLD + 1).
+    let baseDomainURI = uri.mutate()
+                           .setHost(baseDomain)
+                           .finalize();
+    this._origin24hrSet.add(baseDomainURI.prePath);
+    if (gRecentVisitedOriginsExpiry) {
+      setTimeout(() => {
+        this._origin24hrSet.delete(baseDomainURI.prePath);
+      }, gRecentVisitedOriginsExpiry * 1000);
     }
 
     Services.telemetry.scalarSet(UNIQUE_DOMAINS_COUNT_SCALAR_NAME, this._domainSet.size);
@@ -247,6 +269,21 @@ let URICountListener = {
    */
   reset() {
     this._domainSet.clear();
+  },
+
+  /**
+   * Returns the number of unique origins visited in this session during the
+   * last 24 hours.
+   */
+  get uniqueOriginsVisitedInPast24Hours() {
+    return this._origin24hrSet.size;
+  },
+
+  /**
+   * Resets the number of unique origins visited in this session.
+   */
+  resetUniqueOriginsVisitedInPast24Hours() {
+    this._origin24hrSet.clear();
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
