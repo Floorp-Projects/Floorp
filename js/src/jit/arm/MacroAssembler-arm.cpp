@@ -4362,7 +4362,6 @@ MacroAssembler::subFromStackPtr(Imm32 imm32)
     }
 }
 
-// clang-format off
 //{{{ check_macroassembler_style
 // ===============================================================
 // MacroAssembler high-level usage.
@@ -6176,7 +6175,6 @@ MacroAssembler::speculationBarrier()
 }
 
 //}}} check_macroassembler_style
-// clang-format on
 
 void
 MacroAssemblerARM::wasmTruncateToInt32(FloatRegister input, Register output, MIRType fromType,

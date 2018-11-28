@@ -14,7 +14,6 @@
 namespace js {
 namespace jit {
 
-// clang-format off
 //{{{ check_macroassembler_style
 
 void
@@ -1183,7 +1182,6 @@ MacroAssembler::truncateDoubleToUInt64(Address src, Address dest, Register temp,
 }
 
 //}}} check_macroassembler_style
-// clang-format on
 // ===============================================================
 
 // Note: this function clobbers the source register.
