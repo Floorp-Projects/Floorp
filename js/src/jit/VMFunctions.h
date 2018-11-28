@@ -98,7 +98,7 @@ enum MaybeTailCall : bool {
 //
 // Regardless of return value protocol being used (final outParam, or return
 // value) the generated trampolines ensure the return value ends up in
-// JSReturnReg, ReturnReg or ReturnDoubleReg.
+// JSReturnOperand, ReturnReg or ReturnDoubleReg.
 //
 // Example:
 //
