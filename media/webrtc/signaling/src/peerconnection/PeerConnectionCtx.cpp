@@ -187,7 +187,8 @@ void PeerConnectionCtx::Destroy() {
 // Telemetry reporting every second after start of first call.
 // The threading model around the media pipelines is weird:
 // - The pipelines are containers,
-// - containers that are only safe on main thread, with members only safe on STS,
+// - containers that are only safe on main thread, with members only safe on
+//   STS,
 // - hence the there and back again approach.
 
 static auto

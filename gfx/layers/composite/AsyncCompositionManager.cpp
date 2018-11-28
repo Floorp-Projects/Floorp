@@ -936,17 +936,20 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
         ScreenMargin fixedLayerMargins;
 
         // Each layer has multiple clips:
-        //  - Its local clip, which is fixed to the layer contents, i.e. it moves
-        //    with those async transforms which the layer contents move with.
+        //  - Its local clip, which is fixed to the layer contents, i.e. it
+        //    moves with those async transforms which the layer contents move
+        //    with.
         //  - Its scrolled clip, which moves with all async transforms.
-        //  - For each ScrollMetadata on the layer, a scroll clip. This includes
-        //    the composition bounds and any other clips induced by layout. This
-        //    moves with async transforms from ScrollMetadatas above it.
-        // In this function, these clips are combined into two shadow clip parts:
+        //  - For each ScrollMetadata on the layer, a scroll clip. This
+        //    includes the composition bounds and any other clips induced by
+        //    layout. This moves with async transforms from ScrollMetadatas
+        //    above it.
+        // In this function, these clips are combined into two shadow clip
+        // parts:
         //  - The fixed clip, which consists of the local clip only, initially
         //    transformed by all async transforms.
-        //  - The scrolled clip, which consists of the other clips, transformed by
-        //    the appropriate transforms.
+        //  - The scrolled clip, which consists of the other clips, transformed
+        //    by the appropriate transforms.
         // These two parts are kept separate for now, because for fixed layers, we
         // need to adjust the fixed clip (to cancel out some async transforms).
         // The parts are kept in a cache which is cleared at the beginning of every
