@@ -138,6 +138,40 @@ static nscoord SynthesizeBaselineFromBorderBox(BaselineSharingGroup aGroup,
              : (aBorderBoxSize / 2) + (aBorderBoxSize % 2);
 }
 
+// The input sizes for calculating the number of repeat(auto-fill/fit) tracks.
+// https://drafts.csswg.org/css-grid/#auto-repeat
+struct RepeatTrackSizingInput {
+  explicit RepeatTrackSizingInput(WritingMode aWM)
+      : mMin(aWM, 0, 0),
+        mSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
+        mMax(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) {}
+  RepeatTrackSizingInput(const LogicalSize& aMin, const LogicalSize& aSize,
+                         const LogicalSize& aMax)
+      : mMin(aMin), mSize(aSize), mMax(aMax) {}
+
+  void SetDefiniteSizes(LogicalAxis aAxis, WritingMode aWM,
+                        const StyleSize& aMinCoord,
+                        const StyleSize& aSizeCoord,
+                        const StyleMaxSize& aMaxCoord) {
+    nscoord& min = mMin.Size(aAxis, aWM);
+    nscoord& size = mSize.Size(aAxis, aWM);
+    nscoord& max = mMax.Size(aAxis, aWM);
+    if (aMinCoord.ConvertsToLength()) {
+      min = aMinCoord.ToLength();
+    }
+    if (aMaxCoord.ConvertsToLength()) {
+      max = std::max(min, aMaxCoord.ToLength());
+    }
+    if (aSizeCoord.ConvertsToLength()) {
+      size = Clamp(aSizeCoord.ToLength(), min, max);
+    }
+  }
+
+  LogicalSize mMin;
+  LogicalSize mSize;
+  LogicalSize mMax;
+};
+
 enum class GridLineSide {
   BeforeGridGap,
   AfterGridGap,
@@ -559,6 +593,14 @@ struct nsGridContainerFrame::GridItemInfo {
     return IsSubgrid(eLogicalAxisInline) || IsSubgrid(eLogicalAxisBlock);
   }
 
+  // Return the (inner) grid container frame associated with this subgrid item.
+  nsGridContainerFrame* SubgridFrame() const {
+    MOZ_ASSERT(IsSubgrid());
+    nsGridContainerFrame* gridFrame = GetGridContainerFrame(mFrame);
+    MOZ_ASSERT(gridFrame && gridFrame->IsSubgrid());
+    return gridFrame;
+  }
+
   /**
    * If the item is [align|justify]-self:[last ]baseline aligned in the given
    * axis then set aBaselineOffset to the baseline offset and return aAlign.
@@ -640,6 +682,36 @@ struct nsGridContainerFrame::GridItemInfo {
 using GridItemInfo = nsGridContainerFrame::GridItemInfo;
 using ItemState = GridItemInfo::StateBits;
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ItemState)
+
+// Each subgrid stores this data about its items etc on a frame property.
+struct nsGridContainerFrame::Subgrid {
+  Subgrid(const GridArea& aArea, bool aIsOrthogonal)
+      : mArea(aArea), mIsOrthogonal(aIsOrthogonal) {}
+
+  // Return the relevant line range for the subgrid column axis.
+  const LineRange& SubgridCols() const {
+    return mIsOrthogonal ? mArea.mRows : mArea.mCols;
+  }
+  // Return the relevant line range for the subgrid row axis.
+  const LineRange& SubgridRows() const {
+    return mIsOrthogonal ? mArea.mCols : mArea.mRows;
+  }
+
+  // The subgrid's items.
+  nsTArray<GridItemInfo> mGridItems;
+  // The subgrid's abs.pos. items.
+  nsTArray<GridItemInfo> mAbsPosItems;
+  // The subgrid's area as a grid item, i.e. in its parent's grid space.
+  GridArea mArea;
+  // The (inner) grid size for the subgrid, zero-based.
+  uint32_t mGridColEnd;
+  uint32_t mGridRowEnd;
+  // Does the subgrid frame have orthogonal writing-mode to its parent?
+  bool mIsOrthogonal;
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, Subgrid)
+};
+using Subgrid = nsGridContainerFrame::Subgrid;
 
 #ifdef DEBUG
 void nsGridContainerFrame::GridItemInfo::Dump() const {
@@ -1961,17 +2033,14 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid {
    * Place all child frames into the grid and expand the (implicit) grid as
    * needed.  The allocated GridAreas are stored in the GridAreaProperty
    * frame property on the child frame.
-   * @param aComputedMinSize the container's min-size - used to determine
-   *   the number of repeat(auto-fill/fit) tracks.
-   * @param aComputedSize the container's size - used to determine
-   *   the number of repeat(auto-fill/fit) tracks.
-   * @param aComputedMaxSize the container's max-size - used to determine
+   * @param aRepeatSizing the container's [min-|max-]*size - used to determine
    *   the number of repeat(auto-fill/fit) tracks.
    */
   void PlaceGridItems(GridReflowInput& aState,
-                      const LogicalSize& aComputedMinSize,
-                      const LogicalSize& aComputedSize,
-                      const LogicalSize& aComputedMaxSize);
+                      const RepeatTrackSizingInput& aRepeatSizing);
+
+  void SubgridPlaceGridItems(GridReflowInput& aParentState, Grid* aParentGrid,
+                             const GridItemInfo& aGridItem);
 
   /**
    * As above but for an abs.pos. child.  Any 'auto' lines will be represented
@@ -2975,9 +3044,82 @@ void nsGridContainerFrame::Grid::PlaceAutoAutoInColOrder(
   MOZ_ASSERT(aArea->IsDefinite());
 }
 
+void nsGridContainerFrame::Grid::SubgridPlaceGridItems(
+    GridReflowInput& aParentState, Grid* aParentGrid,
+    const GridItemInfo& aGridItem) {
+  MOZ_ASSERT(aGridItem.mArea.IsDefinite() ||
+                 aGridItem.mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
+             "the subgrid's lines should be resolved by now");
+  if (aGridItem.IsSubgrid(eLogicalAxisInline)) {
+    aParentState.mFrame->AddStateBits(NS_STATE_GRID_HAS_COL_SUBGRID_ITEM);
+  }
+  if (aGridItem.IsSubgrid(eLogicalAxisBlock)) {
+    aParentState.mFrame->AddStateBits(NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM);
+  }
+  auto* childGrid = aGridItem.SubgridFrame();
+  const auto* pos = childGrid->StylePosition();
+  GridReflowInput state(childGrid, aParentState.mRenderingContext);
+  childGrid->InitImplicitNamedAreas(pos);
+
+  const bool isOrthogonal = aParentState.mWM.IsOrthogonalTo(state.mWM);
+  // Record the subgrid's GridArea in a frame property.
+  auto* subgrid = childGrid->GetProperty(Subgrid::Prop());
+  if (!subgrid) {
+    subgrid = new Subgrid(aGridItem.mArea, isOrthogonal);
+    childGrid->SetProperty(Subgrid::Prop(), subgrid);
+  } else {
+    subgrid->mArea = aGridItem.mArea;
+    subgrid->mIsOrthogonal = isOrthogonal;
+    subgrid->mGridItems.Clear();
+    subgrid->mAbsPosItems.Clear();
+  }
+
+  // Abs.pos. subgrids may have kAutoLine in their area.  Map those to the edge
+  // line in the parent's explicit grid (zero-based line numbers).  This is ok
+  // because it's only used for translating lines and such, not for layout.
+  if (MOZ_UNLIKELY(subgrid->mArea.mCols.mStart == kAutoLine)) {
+    subgrid->mArea.mCols.mStart = 0;
+  }
+  if (MOZ_UNLIKELY(subgrid->mArea.mCols.mEnd == kAutoLine)) {
+    subgrid->mArea.mCols.mEnd = aParentGrid->mExplicitGridOffsetCol +
+                                aParentGrid->mExplicitGridColEnd - 1;
+  }
+  if (MOZ_UNLIKELY(subgrid->mArea.mRows.mStart == kAutoLine)) {
+    subgrid->mArea.mRows.mStart = 0;
+  }
+  if (MOZ_UNLIKELY(subgrid->mArea.mRows.mEnd == kAutoLine)) {
+    subgrid->mArea.mRows.mEnd = aParentGrid->mExplicitGridOffsetRow +
+                                aParentGrid->mExplicitGridRowEnd - 1;
+  }
+
+  // The min/sz/max sizes are the input to the "repeat-to-fill" algorithm:
+  // https://drafts.csswg.org/css-grid/#auto-repeat
+  // They're only used for auto-repeat in a non-subgridded axis so we skip
+  // computing them otherwise.
+  RepeatTrackSizingInput repeatSizing(state.mWM);
+  if (!childGrid->IsColSubgrid() && state.mColFunctions.mHasRepeatAuto) {
+    repeatSizing.SetDefiniteSizes(eLogicalAxisInline, state.mWM,
+                                  state.mGridStyle->MinISize(state.mWM),
+                                  state.mGridStyle->ISize(state.mWM),
+                                  state.mGridStyle->MaxISize(state.mWM));
+  }
+  if (!childGrid->IsRowSubgrid() && state.mRowFunctions.mHasRepeatAuto) {
+    repeatSizing.SetDefiniteSizes(eLogicalAxisBlock, state.mWM,
+                                  state.mGridStyle->MinBSize(state.mWM),
+                                  state.mGridStyle->BSize(state.mWM),
+                                  state.mGridStyle->MaxBSize(state.mWM));
+  }
+
+  PlaceGridItems(state, repeatSizing);
+
+  subgrid->mGridItems = std::move(state.mGridItems);
+  subgrid->mAbsPosItems = std::move(state.mAbsPosItems);
+  subgrid->mGridColEnd = mGridColEnd;
+  subgrid->mGridRowEnd = mGridRowEnd;
+}
+
 void nsGridContainerFrame::Grid::PlaceGridItems(
-    GridReflowInput& aState, const LogicalSize& aComputedMinSize,
-    const LogicalSize& aComputedSize, const LogicalSize& aComputedMaxSize) {
+    GridReflowInput& aState, const RepeatTrackSizingInput& aSizes) {
   mAreas = aState.mFrame->GetImplicitNamedAreas();
   const nsStylePosition* const gridStyle = aState.mGridStyle;
   MOZ_ASSERT(mCellMap.mCells.IsEmpty(), "unexpected entries in cell map");
@@ -2995,21 +3137,45 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   // to a 0,0 based grid after placing definite lines.
   auto areas = gridStyle->mGridTemplateAreas.get();
   int32_t clampMaxColLine = nsStyleGridLine::kMaxLine;
-  uint32_t numRepeatCols = aState.mColFunctions.InitRepeatTracks(
-      gridStyle->mColumnGap, aComputedMinSize.ISize(aState.mWM),
-      aComputedSize.ISize(aState.mWM), aComputedMaxSize.ISize(aState.mWM));
-  mGridColEnd = mExplicitGridColEnd =
-      aState.mColFunctions.ComputeExplicitGridEnd(areas ? areas->mNColumns + 1
-                                                        : 1);
+  uint32_t numRepeatCols;
+  if (!aState.mFrame->IsColSubgrid()) {
+    numRepeatCols = aState.mColFunctions.InitRepeatTracks(
+        gridStyle->mColumnGap, aSizes.mMin.ISize(aState.mWM),
+        aSizes.mSize.ISize(aState.mWM), aSizes.mMax.ISize(aState.mWM));
+    uint32_t areaCols = areas ? areas->mNColumns + 1 : 1;
+    mExplicitGridColEnd = aState.mColFunctions.ComputeExplicitGridEnd(areaCols);
+  } else {
+    const auto* subgrid = aState.mFrame->GetProperty(Subgrid::Prop());
+    uint32_t extent = subgrid->SubgridCols().Extent();
+    mExplicitGridColEnd = extent + 1;  // the grid is 1-based at this point
+    const auto& cols = gridStyle->GridTemplateColumns();
+    numRepeatCols =
+        cols.HasRepeatAuto()
+            ? std::max<uint32_t>(extent - cols.mLineNameLists.Length(), 1)
+            : 0;
+  }
+  mGridColEnd = mExplicitGridColEnd;
   LineNameMap colLineNameMap(gridStyle->GridTemplateColumns(), numRepeatCols);
 
   int32_t clampMaxRowLine = nsStyleGridLine::kMaxLine;
-  uint32_t numRepeatRows = aState.mRowFunctions.InitRepeatTracks(
-      gridStyle->mRowGap, aComputedMinSize.BSize(aState.mWM),
-      aComputedSize.BSize(aState.mWM), aComputedMaxSize.BSize(aState.mWM));
-  mGridRowEnd = mExplicitGridRowEnd =
-      aState.mRowFunctions.ComputeExplicitGridEnd(areas ? areas->NRows() + 1
-                                                        : 1);
+  uint32_t numRepeatRows;
+  if (!aState.mFrame->IsRowSubgrid()) {
+    numRepeatRows = aState.mRowFunctions.InitRepeatTracks(
+        gridStyle->mRowGap, aSizes.mMin.BSize(aState.mWM),
+        aSizes.mSize.BSize(aState.mWM), aSizes.mMax.BSize(aState.mWM));
+    uint32_t areaRows = areas ? areas->NRows() + 1 : 1;
+    mExplicitGridRowEnd = aState.mRowFunctions.ComputeExplicitGridEnd(areaRows);
+  } else {
+    const auto* subgrid = aState.mFrame->GetProperty(Subgrid::Prop());
+    uint32_t extent = subgrid->SubgridRows().Extent();
+    mExplicitGridRowEnd = extent + 1;  // the grid is 1-based at this point
+    const auto& rows = gridStyle->GridTemplateRows();
+    numRepeatRows =
+        rows.HasRepeatAuto()
+            ? std::max<uint32_t>(extent - rows.mLineNameLists.Length(), 1)
+            : 0;
+  }
+  mGridRowEnd = mExplicitGridRowEnd;
   LineNameMap rowLineNameMap(gridStyle->GridTemplateRows(), numRepeatRows);
 
   // http://dev.w3.org/csswg/css-grid/#line-placement
@@ -3047,7 +3213,8 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   clampMaxRowLine += offsetToRowZero;
   aState.mIter.Reset();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    GridArea& area = aState.mGridItems[aState.mIter.ItemIndex()].mArea;
+    auto& item = aState.mGridItems[aState.mIter.ItemIndex()];
+    GridArea& area = item.mArea;
     if (area.mCols.IsDefinite()) {
       area.mCols.mStart = area.mCols.mUntranslatedStart + offsetToColZero;
       area.mCols.mEnd = area.mCols.mUntranslatedEnd + offsetToColZero;
@@ -3057,6 +3224,10 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
       area.mRows.mEnd = area.mRows.mUntranslatedEnd + offsetToRowZero;
     }
     if (area.IsDefinite()) {
+      if (item.IsSubgrid()) {
+        Grid grid;
+        grid.SubgridPlaceGridItems(aState, this, item);
+      }
       mCellMap.Fill(area);
       InflateGridFor(area);
     }
@@ -3079,7 +3250,8 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     uint32_t clampMaxLine = isRowOrder ? clampMaxColLine : clampMaxRowLine;
     aState.mIter.Reset();
     for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-      GridArea& area = aState.mGridItems[aState.mIter.ItemIndex()].mArea;
+      auto& item = aState.mGridItems[aState.mIter.ItemIndex()];
+      GridArea& area = item.mArea;
       LineRange& major = isRowOrder ? area.mRows : area.mCols;
       LineRange& minor = isRowOrder ? area.mCols : area.mRows;
       if (major.IsDefinite() && minor.IsAuto()) {
@@ -3089,6 +3261,10 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
           cursors->Get(major.mStart, &cursor);
         }
         (this->*placeAutoMinorFunc)(cursor, &area, clampMaxLine);
+        if (item.IsSubgrid()) {
+          Grid grid;
+          grid.SubgridPlaceGridItems(aState, this, item);
+        }
         mCellMap.Fill(area);
         if (isSparse) {
           cursors->Put(major.mStart, minor.mEnd);
@@ -3114,10 +3290,10 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   uint32_t clampMaxMajorLine = isRowOrder ? clampMaxRowLine : clampMaxColLine;
   aState.mIter.Reset();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    GridArea& area = aState.mGridItems[aState.mIter.ItemIndex()].mArea;
-    MOZ_ASSERT(
-        *aState.mIter == aState.mGridItems[aState.mIter.ItemIndex()].mFrame,
-        "iterator out of sync with aState.mGridItems");
+    auto& item = aState.mGridItems[aState.mIter.ItemIndex()];
+    GridArea& area = item.mArea;
+    MOZ_ASSERT(*aState.mIter == item.mFrame,
+               "iterator out of sync with aState.mGridItems");
     LineRange& major = isRowOrder ? area.mRows : area.mCols;
     LineRange& minor = isRowOrder ? area.mCols : area.mRows;
     if (major.IsAuto()) {
@@ -3155,6 +3331,10 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
                      "we shouldn't add implicit minor tracks for auto/auto");
 #endif
         }
+      }
+      if (item.IsSubgrid()) {
+        Grid grid;
+        grid.SubgridPlaceGridItems(aState, this, item);
       }
       mCellMap.Fill(area);
       InflateGridFor(area);
@@ -3194,6 +3374,10 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
       }
       if (area.mRows.mUntranslatedEnd != int32_t(kAutoLine)) {
         area.mRows.mEnd = area.mRows.mUntranslatedEnd + offsetToRowZero;
+      }
+      if (info->IsSubgrid()) {
+        Grid grid;
+        grid.SubgridPlaceGridItems(aState, this, *info);
       }
     }
   }
@@ -5753,11 +5937,21 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
 
   nscoord consumedBSize = 0;
   nscoord bSize = 0;
-  if (!prevInFlow) {
+  if (MOZ_LIKELY(!prevInFlow)) {
     Grid grid;
-    grid.PlaceGridItems(gridReflowInput, aReflowInput.ComputedMinSize(),
-                        computedSize, aReflowInput.ComputedMaxSize());
-
+    if (MOZ_LIKELY(!IsSubgrid())) {
+      RepeatTrackSizingInput repeatSizing(aReflowInput.ComputedMinSize(),
+                                          computedSize,
+                                          aReflowInput.ComputedMaxSize());
+      grid.PlaceGridItems(gridReflowInput, repeatSizing);
+    } else {
+      auto* subgrid = GetProperty(Subgrid::Prop());
+      MOZ_ASSERT(subgrid, "an ancestor forgot to call PlaceGridItems?");
+      gridReflowInput.mGridItems = subgrid->mGridItems;
+      gridReflowInput.mAbsPosItems = subgrid->mAbsPosItems;
+      grid.mGridColEnd = subgrid->mGridColEnd;
+      grid.mGridRowEnd = subgrid->mGridRowEnd;
+    }
     gridReflowInput.CalculateTrackSizes(grid, computedSize,
                                         SizingConstraint::NoConstraint);
     // XXX Technically incorrect: We're ignoring our row sizes, when really
@@ -6154,46 +6348,28 @@ nscoord nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
   GridReflowInput state(this, *aRenderingContext);
   InitImplicitNamedAreas(state.mGridStyle);  // XXX optimize
 
-  auto GetDefiniteSizes = [](const StyleSize& aMinCoord,
-                             const StyleSize& aSizeCoord,
-                             const StyleMaxSize& aMaxCoord, nscoord* aMin,
-                             nscoord* aSize, nscoord* aMax) {
-    if (aMinCoord.ConvertsToLength()) {
-      *aMin = aMinCoord.ToLength();
-    }
-    if (aMaxCoord.ConvertsToLength()) {
-      *aMax = std::max(*aMin, aMaxCoord.ToLength());
-    }
-    if (aSizeCoord.ConvertsToLength()) {
-      *aSize = Clamp(aSizeCoord.ToLength(), *aMin, *aMax);
-    }
-  };
   // The min/sz/max sizes are the input to the "repeat-to-fill" algorithm:
   // https://drafts.csswg.org/css-grid/#auto-repeat
   // They're only used for auto-repeat so we skip computing them otherwise.
-  LogicalSize min(state.mWM, 0, 0);
-  LogicalSize sz(state.mWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  LogicalSize max(state.mWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  RepeatTrackSizingInput repeatSizing(state.mWM);
   if (state.mColFunctions.mHasRepeatAuto) {
-    GetDefiniteSizes(state.mGridStyle->MinISize(state.mWM),
-                     state.mGridStyle->ISize(state.mWM),
-                     state.mGridStyle->MaxISize(state.mWM),
-                     &min.ISize(state.mWM), &sz.ISize(state.mWM),
-                     &max.ISize(state.mWM));
+    repeatSizing.SetDefiniteSizes(eLogicalAxisInline, state.mWM,
+                                  state.mGridStyle->MinISize(state.mWM),
+                                  state.mGridStyle->ISize(state.mWM),
+                                  state.mGridStyle->MaxISize(state.mWM));
   }
   if (state.mRowFunctions.mHasRepeatAuto &&
       !(state.mGridStyle->mGridAutoFlow & NS_STYLE_GRID_AUTO_FLOW_ROW)) {
     // Only 'grid-auto-flow:column' can create new implicit columns, so that's
     // the only case where our block-size can affect the number of columns.
-    GetDefiniteSizes(state.mGridStyle->MinBSize(state.mWM),
-                     state.mGridStyle->BSize(state.mWM),
-                     state.mGridStyle->MaxBSize(state.mWM),
-                     &min.BSize(state.mWM), &sz.BSize(state.mWM),
-                     &max.BSize(state.mWM));
+    repeatSizing.SetDefiniteSizes(eLogicalAxisBlock, state.mWM,
+                                  state.mGridStyle->MinBSize(state.mWM),
+                                  state.mGridStyle->BSize(state.mWM),
+                                  state.mGridStyle->MaxBSize(state.mWM));
   }
 
   Grid grid;
-  grid.PlaceGridItems(state, min, sz, max);  // XXX optimize
+  grid.PlaceGridItems(state, repeatSizing);  // XXX optimize
   if (grid.mGridColEnd == 0) {
     return 0;
   }
