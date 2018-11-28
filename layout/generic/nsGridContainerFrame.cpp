@@ -771,10 +771,16 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
    *   specified repeat(auto-fill/fit) track
    * @param aClampMinLine/aClampMaxLine in a non-subgrid axis it's kMin/MaxLine;
    *   in a subgrid axis it's its explicit grid bounds (all 1-based)
+   * @param aParentLineNameMap the parent grid's map parallel to this map, or
+   *                           null if this map isn't for a subgrid
+   * @param aRange the subgrid's range in the parent grid, or null
+   * @param aIsSameDirection true if our axis progresses in the same direction
+   *                              in the subgrid and parent
    */
   LineNameMap(const nsStyleGridTemplate& aGridTemplate,
               uint32_t aNumRepeatTracks, int32_t aClampMinLine,
-              int32_t aClampMaxLine)
+              int32_t aClampMaxLine, const LineNameMap* aParentLineNameMap,
+              const LineRange* aRange, bool aIsSameDirection)
       : mClampMinLine(aClampMinLine),
         mClampMaxLine(aClampMaxLine),
         mLineNameLists(aGridTemplate.mLineNameLists),
@@ -788,6 +794,9 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
         mRepeatEndDelta(
             aGridTemplate.HasRepeatAuto() ? int32_t(aNumRepeatTracks) - 1 : 0),
         mTemplateLinesEnd(mLineNameLists.Length() + mRepeatEndDelta),
+        mParentLineNameMap(aParentLineNameMap),
+        mRange(aRange),
+        mIsSameDirection(aIsSameDirection),
         mHasRepeatAuto(aGridTemplate.HasRepeatAuto()) {
     MOZ_ASSERT(mHasRepeatAuto || aNumRepeatTracks == 0);
     MOZ_ASSERT(mRepeatAutoStart <= mLineNameLists.Length());
@@ -889,8 +898,27 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
     return 0;
   }
 
-  // Return true if aName exists at aIndex.
+  // Return true if aName exists at aIndex in this map or any parent map.
   bool Contains(uint32_t aIndex, const nsString& aName) const {
+    const auto* map = this;
+    while (true) {
+      if (aIndex < map->mTemplateLinesEnd && map->HasNameAt(aIndex, aName)) {
+        return true;
+      }
+      auto* parent = map->mParentLineNameMap;
+      if (!parent) {
+        return false;
+      }
+      uint32_t line = map->TranslateToParentMap(aIndex + 1);
+      MOZ_ASSERT(line >= 1, "expected a 1-based line number");
+      aIndex = line - 1;
+      map = parent;
+    }
+    MOZ_ASSERT_UNREACHABLE("we always return from inside the loop above");
+  }
+
+  // Return true if aName exists at aIndex in this map.
+  bool HasNameAt(uint32_t aIndex, const nsString& aName) const {
     if (!mHasRepeatAuto) {
       return mLineNameLists[aIndex].Contains(aName);
     }
@@ -911,6 +939,15 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
            mLineNameLists[aIndex - mRepeatEndDelta].Contains(aName);
   }
 
+  // Translate a subgrid line (1-based) to a parent line (1-based).
+  uint32_t TranslateToParentMap(uint32_t aLine) const {
+    if (MOZ_LIKELY(mIsSameDirection)) {
+      return aLine + mRange->mStart;
+    }
+    MOZ_ASSERT(mRange->mEnd + 1 >= aLine);
+    return mRange->mEnd - (aLine - 1) + 1;
+  }
+
   // Some style data references, for easy access.
   const nsTArray<nsTArray<nsString>>& mLineNameLists;
   const nsTArray<nsString>& mRepeatAutoLineNameListBefore;
@@ -925,6 +962,14 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
   // for.  It is equal to mLineNameLists.Length() when a repeat() track
   // generates one track (making mRepeatEndDelta == 0).
   const uint32_t mTemplateLinesEnd;
+
+  // The parent line map, or null if this map isn't for a subgrid.
+  const LineNameMap* mParentLineNameMap;
+  // The subgrid's range, or null if this map isn't for a subgrid.
+  const LineRange* mRange;
+  // True if the subgrid/parent axes progresses in the same direction.
+  const bool mIsSameDirection;
+
   // True if there is a specified repeat(auto-fill/fit) track.
   const bool mHasRepeatAuto;
 };
@@ -2040,6 +2085,8 @@ using GridReflowInput = nsGridContainerFrame::GridReflowInput;
  * the size of the explicit/implicit grid, which cells are occupied etc.
  */
 struct MOZ_STACK_CLASS nsGridContainerFrame::Grid {
+  explicit Grid(const Grid* aParentGrid = nullptr) : mParentGrid(aParentGrid) {}
+
   /**
    * Place all child frames into the grid and expand the (implicit) grid as
    * needed.  The allocated GridAreas are stored in the GridAreaProperty
@@ -2274,6 +2321,22 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid {
     return IsNameWithSuffix(aString, NS_LITERAL_STRING("-start"), aIndex);
   }
 
+  // Return the relevant parent LineNameMap for the given subgrid axis aAxis.
+  const LineNameMap* ParentLineMapForAxis(bool aIsOrthogonal,
+                                          LogicalAxis aAxis) const {
+    if (!mParentGrid) {
+      return nullptr;
+    }
+    bool isRows = aIsOrthogonal == (aAxis == eLogicalAxisInline);
+    return isRows ? mParentGrid->mRowNameMap : mParentGrid->mColNameMap;
+  }
+
+  void SetLineMaps(const LineNameMap* aColNameMap,
+                   const LineNameMap* aRowNameMap) {
+    mColNameMap = aColNameMap;
+    mRowNameMap = aRowNameMap;
+  }
+
   /**
    * A CellMap holds state for each cell in the grid.
    * It's row major.  It's sparse in the sense that it only has enough rows to
@@ -2373,6 +2436,17 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid {
    */
   uint32_t mExplicitGridOffsetCol;
   uint32_t mExplicitGridOffsetRow;
+
+  /**
+   * Our parent grid if any.
+   */
+  const Grid* mParentGrid;
+
+  /**
+   * Our LineNameMaps.
+   */
+  const LineNameMap* mColNameMap;
+  const LineNameMap* mRowNameMap;
 };
 
 void nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
@@ -3150,6 +3224,9 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   int32_t clampMinColLine = nsStyleGridLine::kMinLine;
   int32_t clampMaxColLine = nsStyleGridLine::kMaxLine;
   uint32_t numRepeatCols;
+  const LineNameMap* parentLineNameMap = nullptr;
+  const LineRange* subgridRange = nullptr;
+  bool subgridAxisIsSameDirection = true;
   if (!aState.mFrame->IsColSubgrid()) {
     numRepeatCols = aState.mColFunctions.InitRepeatTracks(
         gridStyle->mColumnGap, aSizes.mMin.ISize(aState.mWM),
@@ -3158,7 +3235,8 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     mExplicitGridColEnd = aState.mColFunctions.ComputeExplicitGridEnd(areaCols);
   } else {
     const auto* subgrid = aState.mFrame->GetProperty(Subgrid::Prop());
-    uint32_t extent = subgrid->SubgridCols().Extent();
+    subgridRange = &subgrid->SubgridCols();
+    uint32_t extent = subgridRange->Extent();
     mExplicitGridColEnd = extent + 1;  // the grid is 1-based at this point
     clampMinColLine = 1;
     clampMaxColLine = mExplicitGridColEnd;
@@ -3167,10 +3245,18 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
         cols.HasRepeatAuto()
             ? std::max<uint32_t>(extent - cols.mLineNameLists.Length(), 1)
             : 0;
+    parentLineNameMap =
+        ParentLineMapForAxis(subgrid->mIsOrthogonal, eLogicalAxisInline);
+    auto parentWM =
+        aState.mFrame->ParentGridContainerForSubgrid()->GetWritingMode();
+    subgridAxisIsSameDirection =
+        aState.mWM.ParallelAxisStartsOnSameSide(eLogicalAxisInline, parentWM);
   }
   mGridColEnd = mExplicitGridColEnd;
   LineNameMap colLineNameMap(gridStyle->GridTemplateColumns(), numRepeatCols,
-                             clampMinColLine, clampMaxColLine);
+                             clampMinColLine, clampMaxColLine,
+                             parentLineNameMap, subgridRange,
+                             subgridAxisIsSameDirection);
 
   int32_t clampMinRowLine = nsStyleGridLine::kMinLine;
 
@@ -3182,9 +3268,12 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
         aSizes.mSize.BSize(aState.mWM), aSizes.mMax.BSize(aState.mWM));
     uint32_t areaRows = areas ? areas->NRows() + 1 : 1;
     mExplicitGridRowEnd = aState.mRowFunctions.ComputeExplicitGridEnd(areaRows);
+    parentLineNameMap = nullptr;
+    subgridRange = nullptr;
   } else {
     const auto* subgrid = aState.mFrame->GetProperty(Subgrid::Prop());
-    uint32_t extent = subgrid->SubgridRows().Extent();
+    subgridRange = &subgrid->SubgridRows();
+    uint32_t extent = subgridRange->Extent();
     mExplicitGridRowEnd = extent + 1;  // the grid is 1-based at this point
     clampMinRowLine = 1;
     clampMaxRowLine = mExplicitGridRowEnd;
@@ -3193,10 +3282,20 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
         rows.HasRepeatAuto()
             ? std::max<uint32_t>(extent - rows.mLineNameLists.Length(), 1)
             : 0;
+    parentLineNameMap =
+        ParentLineMapForAxis(subgrid->mIsOrthogonal, eLogicalAxisBlock);
+    auto parentWM =
+        aState.mFrame->ParentGridContainerForSubgrid()->GetWritingMode();
+    subgridAxisIsSameDirection =
+        aState.mWM.ParallelAxisStartsOnSameSide(eLogicalAxisBlock, parentWM);
   }
   mGridRowEnd = mExplicitGridRowEnd;
   LineNameMap rowLineNameMap(gridStyle->GridTemplateRows(), numRepeatRows,
-                             clampMinRowLine, clampMaxRowLine);
+                             clampMinRowLine, clampMaxRowLine,
+                             parentLineNameMap, subgridRange,
+                             subgridAxisIsSameDirection);
+
+  SetLineMaps(&colLineNameMap, &rowLineNameMap);
 
   // http://dev.w3.org/csswg/css-grid/#line-placement
   // Resolve definite positions per spec chap 9.2.
@@ -3245,7 +3344,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     }
     if (area.IsDefinite()) {
       if (item.IsSubgrid()) {
-        Grid grid;
+        Grid grid(this);
         grid.SubgridPlaceGridItems(aState, this, item);
       }
       mCellMap.Fill(area);
@@ -3282,7 +3381,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
         }
         (this->*placeAutoMinorFunc)(cursor, &area, clampMaxLine);
         if (item.IsSubgrid()) {
-          Grid grid;
+          Grid grid(this);
           grid.SubgridPlaceGridItems(aState, this, item);
         }
         mCellMap.Fill(area);
@@ -3353,7 +3452,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
         }
       }
       if (item.IsSubgrid()) {
-        Grid grid;
+        Grid grid(this);
         grid.SubgridPlaceGridItems(aState, this, item);
       }
       mCellMap.Fill(area);
@@ -3396,7 +3495,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
         area.mRows.mEnd = area.mRows.mUntranslatedEnd + offsetToRowZero;
       }
       if (info->IsSubgrid()) {
-        Grid grid;
+        Grid grid(this);
         grid.SubgridPlaceGridItems(aState, this, *info);
       }
     }
