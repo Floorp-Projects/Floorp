@@ -5052,6 +5052,10 @@ CallIRGenerator::tryAttachArrayPush()
         return false;
     }
 
+    if (thisobj->hasLazyGroup()) {
+        return false;
+    }
+
     RootedArrayObject thisarray(cx_, &thisobj->as<ArrayObject>());
 
     // And the object group for the array is not collecting preliminary objects.
