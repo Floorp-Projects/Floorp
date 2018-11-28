@@ -11,10 +11,13 @@ namespace mozilla {
 namespace layers {
 
 //
-// NOTE: These values are also defined in mobile/android/geckoview/src/main/java/org/mozilla/gecko/gfx/LayerView.java
-//       and must be kept in sync. Any new message added here must also be added there to the AnimatorMessageType enum.
+// NOTE: These values are also defined in
+// mobile/android/geckoview/src/main/java/org/mozilla/gecko/gfx/LayerView.java
+// and must be kept in sync. Any new message added here must also be added
+// there to the AnimatorMessageType enum.
 //
 
+// clang-format off
 enum UiCompositorControllerMessageTypes {
   STATIC_TOOLBAR_NEEDS_UPDATE      = 0,  // Sent from compositor when the static toolbar wants to hide.
   STATIC_TOOLBAR_READY             = 1,  // Sent from compositor when the static toolbar image has been updated and is ready to animate.
@@ -31,6 +34,7 @@ enum UiCompositorControllerMessageTypes {
   COMPOSITOR_CONTROLLER_OPEN       = 20, // Compositor controller IPC is open
   IS_COMPOSITOR_CONTROLLER_OPEN    = 21  // Special message sent from controller to query if the compositor controller is open
 };
+// clang-format on
 
 } // namespace layers
 } // namespace mozilla

@@ -89,8 +89,9 @@ WaitForTextureIdsToUnlock(pid_t pid, const Span<const uint64_t>& textureIds)
         return false;
       }
 
-      // In case the monitor gets signaled multiple times, each less than kTextureLockTimeout.
-      // This ensures that the total time we wait is < 2 * kTextureLockTimeout
+      // In case the monitor gets signaled multiple times, each less than
+      // kTextureLockTimeout.  This ensures that the total time we wait is
+      // < 2 * kTextureLockTimeout
       if ((TimeStamp::Now() - start).ToMilliseconds() > (double)kTextureLockTimeout) {
         return false;
       }

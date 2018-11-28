@@ -24,8 +24,9 @@ typedef double gfxFloat;
  *
  * eNoBreak       The line has no break opportunities
  * eWordWrapBreak The line has a break opportunity only within a word. With
- *                overflow-wrap|word-wrap: break-word we will break at this point only if
- *                there are no other break opportunities in the line.
+ *                overflow-wrap|word-wrap: break-word we will break at this
+ *                point only if there are no other break opportunities in the
+ *                line.
  * eNormalBreak   The line has a break opportunity determined by the standard
  *                line-breaking algorithm.
  *

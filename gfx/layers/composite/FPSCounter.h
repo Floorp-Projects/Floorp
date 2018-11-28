@@ -38,7 +38,8 @@ const int kMaxFrames = 2400;
  * absolute frame composite times to a file on the device.
  * The FPS counters displayed on screen are based on how many frames we
  * composited within the last ~1 second. The more accurate measurement is to
- * grab the histogram from stderr or grab the FPS timestamp dumps written to file.
+ * grab the histogram from stderr or grab the FPS timestamp dumps written to
+ * file.
  *
  * To enable dumping to file, enable
  * layers.acceleration.draw-fps.write-to-file pref.

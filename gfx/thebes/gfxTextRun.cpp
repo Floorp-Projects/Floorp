@@ -1129,8 +1129,10 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
 
     // There are three possibilities:
     // 1) all the text fit (width <= aWidth)
-    // 2) some of the text fit up to a break opportunity (width > aWidth && lastBreak >= 0)
-    // 3) none of the text fits before a break opportunity (width > aWidth && lastBreak < 0)
+    // 2) some of the text fit up to a break opportunity (width > aWidth &&
+    //    lastBreak >= 0)
+    // 3) none of the text fits before a break opportunity (width > aWidth &&
+    //    lastBreak < 0)
     uint32_t charsFit;
     bool usedHyphenation = false;
     if (width - trimmableAdvance <= aWidth) {
@@ -3094,7 +3096,8 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
     }
 
     // 3. use fallback fonts
-    // -- before searching for something else check the font used for the previous character
+    // -- before searching for something else check the font used for the
+    //    previous character
     if (aPrevMatchedFont && aPrevMatchedFont->HasCharacter(aCh)) {
         *aMatchType = gfxTextRange::MatchType::kSystemFallback;
         return aPrevMatchedFont;

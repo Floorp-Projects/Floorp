@@ -24,7 +24,8 @@ struct ParamTraits;
 //
 // Provides:
 //
-//  - CrossProcessMutex, a non-recursive mutex that can be shared across processes
+//  - CrossProcessMutex, a non-recursive mutex that can be shared across
+//    processes
 //  - CrossProcessMutexAutoLock, an RAII class for ensuring that Mutexes are
 //    properly locked and unlocked
 //

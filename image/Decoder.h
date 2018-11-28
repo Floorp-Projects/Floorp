@@ -134,7 +134,8 @@ public:
    * @return a LexerResult which may indicate:
    *   - the image has been successfully decoded (TerminalState::SUCCESS), or
    *   - the image has failed to decode (TerminalState::FAILURE), or
-   *   - the decoder is yielding until it gets more data (Yield::NEED_MORE_DATA), or
+   *   - the decoder is yielding until it gets more data
+   *     (Yield::NEED_MORE_DATA), or
    *   - the decoder is yielding to allow the caller to access intermediate
    *     output (Yield::OUTPUT_AVAILABLE).
    */

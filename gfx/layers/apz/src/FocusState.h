@@ -18,17 +18,17 @@ namespace mozilla {
 namespace layers {
 
 /**
- * This class is used for tracking chrome and content focus targets and calculating
- * global focus information from them for use by APZCTreeManager for async keyboard
- * scrolling.
+ * This class is used for tracking chrome and content focus targets and
+ * calculating global focus information from them for use by APZCTreeManager
+ * for async keyboard scrolling.
  *
  * # Calculating the element to scroll
  *
- * Chrome and content processes have independently focused elements. This makes it
- * difficult to calculate the global focused element and its scrollable frame from
- * the chrome or content side. So instead we send the local focus information from
- * each process to here and then calculate the global focus information. This
- * local information resides in a `focus target`.
+ * Chrome and content processes have independently focused elements. This makes
+ * it difficult to calculate the global focused element and its scrollable
+ * frame from the chrome or content side. So instead we send the local focus
+ * information from each process to here and then calculate the global focus
+ * information. This local information resides in a `focus target`.
  *
  * A focus target indicates that either:
  *    1. The focused element is a remote browser along with its layer tree ID
@@ -54,12 +54,13 @@ namespace layers {
  * here is that `setTimeout` and others are already non-deterministic and so it
  * might not be as breaking to web content.
  *
- * To maintain deterministic focus changes for a given stream of user inputs, we
- * invalidate our focus state whenever we receive a user input that may trigger
- * event listeners. We then attach a new sequence number to these events and
- * dispatch them to content. Content will then include the latest sequence number
- * it has processed to every focus update. Using this we can determine whether
- * any potentially focus changing events have yet to be handled by content.
+ * To maintain deterministic focus changes for a given stream of user inputs,
+ * we invalidate our focus state whenever we receive a user input that may
+ * trigger event listeners. We then attach a new sequence number to these
+ * events and dispatch them to content. Content will then include the latest
+ * sequence number it has processed to every focus update. Using this we can
+ * determine whether any potentially focus changing events have yet to be
+ * handled by content.
  *
  * Once we have received the latest focus sequence number from content, we know
  * that all event listeners triggered by user inputs, and their resulting focus
