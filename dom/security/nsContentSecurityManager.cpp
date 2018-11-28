@@ -270,7 +270,7 @@ static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo)
     return false;
   }
 
-  uint32_t appType = nsIDocShell::APP_TYPE_UNKNOWN;
+  auto appType = nsIDocShell::APP_TYPE_UNKNOWN;
   nsINode* node = aLoadInfo->LoadingNode();
   if (!node) {
     return false;
@@ -288,8 +288,8 @@ static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo)
   nsCOMPtr<nsIDocShellTreeItem> root;
   docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(root));
-  if (!docShell || NS_FAILED(docShell->GetAppType(&appType))) {
-    appType = nsIDocShell::APP_TYPE_UNKNOWN;
+  if (docShell) {
+    appType = docShell->GetAppType();
   }
 
   return appType == nsIDocShell::APP_TYPE_EDITOR;

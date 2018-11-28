@@ -3885,13 +3885,12 @@ EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     // Check whether or not to show the busy cursor
     nsCOMPtr<nsIDocShell> docShell(aPresContext->GetDocShell());
     if (!docShell) return;
-    uint32_t busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
-    docShell->GetBusyFlags(&busyFlags);
+    auto busyFlags = docShell->GetBusyFlags();
 
     // Show busy cursor everywhere before page loads
     // and just replace the arrow cursor after page starts loading
     if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY &&
-          (cursor == NS_STYLE_CURSOR_AUTO || cursor == NS_STYLE_CURSOR_DEFAULT))
+        (cursor == NS_STYLE_CURSOR_AUTO || cursor == NS_STYLE_CURSOR_DEFAULT))
     {
       cursor = NS_STYLE_CURSOR_SPINNING;
       container = nullptr;

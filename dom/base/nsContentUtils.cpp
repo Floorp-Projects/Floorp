@@ -3443,7 +3443,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
 
   nsresult rv;
 
-  uint32_t appType = nsIDocShell::APP_TYPE_UNKNOWN;
+  auto appType = nsIDocShell::APP_TYPE_UNKNOWN;
 
   {
     nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aLoadingDocument->GetDocShell();
@@ -3453,8 +3453,8 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
 
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(root));
 
-      if (!docShell || NS_FAILED(docShell->GetAppType(&appType))) {
-        appType = nsIDocShell::APP_TYPE_UNKNOWN;
+      if (docShell) {
+        appType = docShell->GetAppType();
       }
     }
   }
@@ -7669,9 +7669,8 @@ nsContentUtils::PrefetchPreloadEnabled(nsIDocShell* aDocShell)
   nsCOMPtr<nsIDocShellTreeItem> parentItem;
 
   do {
-    uint32_t appType = 0;
-    nsresult rv = docshell->GetAppType(&appType);
-    if (NS_FAILED(rv) || appType == nsIDocShell::APP_TYPE_MAIL) {
+    auto appType = docshell->GetAppType();
+    if (appType == nsIDocShell::APP_TYPE_MAIL) {
       return false; // do not prefetch, preload, preconnect from mailnews
     }
 
