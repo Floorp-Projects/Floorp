@@ -631,8 +631,6 @@ ContentParent::PreallocateProcess()
                       eNotRecordingOrReplaying,
                       /* aRecordingFile = */ EmptyString());
 
-  PreallocatedProcessManager::AddBlocker(process);
-
   if (!process->LaunchSubprocess(PROCESS_PRIORITY_PREALLOC)) {
     return nullptr;
   }
@@ -902,12 +900,12 @@ ContentParent::GetNewOrUsedBrowserProcess(Element* aFrameElement,
   // Create a new process from scratch.
   RefPtr<ContentParent> p = new ContentParent(aOpener, aRemoteType, recordReplayState, recordingFile);
 
-  // Until the new process is ready let's not allow to start up any preallocated processes.
-  PreallocatedProcessManager::AddBlocker(p);
-
   if (!p->LaunchSubprocess(aPriority)) {
     return nullptr;
   }
+
+  // Until the new process is ready let's not allow to start up any preallocated processes.
+  PreallocatedProcessManager::AddBlocker(p);
 
   if (recordReplayState == eNotRecordingOrReplaying) {
     contentParents.AppendElement(p);
