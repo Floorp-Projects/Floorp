@@ -1,7 +1,6 @@
 const {AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 
 const ID_PERMS = "update_perms@tests.mozilla.org";
-const ID_LEGACY = "legacy_update@tests.mozilla.org";
 const ID_ORIGINS = "update_origins@tests.mozilla.org";
 
 function getBadgeStatus() {
@@ -79,11 +78,6 @@ async function testNoPrompt(origUrl, id) {
 // applied without showing a notification dialog.
 add_task(() => testNoPrompt(`${BASE}/browser_webext_update_perms1.xpi`,
                             ID_PERMS));
-
-// Test that an update from a legacy extension to a webextension
-// doesn't show a prompt even when the webextension uses
-// promptable required permissions.
-add_task(() => testNoPrompt(`${BASE}/browser_legacy.xpi`, ID_LEGACY));
 
 // Test that an update that narrows origin permissions is just applied without
 // showing a notification promt

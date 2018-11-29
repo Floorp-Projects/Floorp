@@ -7,9 +7,6 @@ loader.lazyImporter(this, "AddonTestUtils",
 
 AddonTestUtils.initMochitest(this);
 
-const ADDON_ID = "test-devtools@mozilla.org";
-const ADDON_NAME = "test-devtools";
-
 function mockFilePicker(window, file) {
   // Mock the file picker to select a test addon
   const MockFilePicker = SpecialPowers.MockFilePicker;
@@ -35,6 +32,9 @@ function promiseWriteWebManifestForExtension(manifest, dir) {
 }
 
 add_task(async function testLegacyInstallSuccess() {
+  const ADDON_ID = "test-devtools@mozilla.org";
+  const ADDON_NAME = "test-devtools";
+
   const { tab, document } = await openAboutDebugging("addons");
   await waitForInitialAddonList(document);
 
