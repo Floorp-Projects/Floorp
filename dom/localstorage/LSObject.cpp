@@ -165,8 +165,20 @@ LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // localStorage is not available on some pages on purpose, for example
+  // about:home. Match the old implementation by using GenerateOriginKey
+  // for the check.
+  nsCString dummyOriginAttrSuffix;
+  nsCString dummyOriginKey;
+  nsresult rv = GenerateOriginKey(principal,
+                                  dummyOriginAttrSuffix,
+                                  dummyOriginKey);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
-  nsresult rv = PrincipalToPrincipalInfo(principal, principalInfo);
+  rv = PrincipalToPrincipalInfo(principal, principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -215,8 +227,17 @@ LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aObject);
 
+  nsCString dummyOriginAttrSuffix;
+  nsCString dummyOriginKey;
+  nsresult rv = GenerateOriginKey(aPrincipal,
+                                  dummyOriginAttrSuffix,
+                                  dummyOriginKey);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
-  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, principalInfo);
+  rv = PrincipalToPrincipalInfo(aPrincipal, principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
