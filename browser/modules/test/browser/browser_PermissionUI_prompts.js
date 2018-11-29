@@ -39,9 +39,7 @@ add_task(async function test_autoplay_permission_prompt() {
 
 // Tests that AutoplayPermissionPrompt works as expected
 add_task(async function test_storage_access_permission_prompt() {
-  Services.prefs.setBoolPref("dom.storage_access.auto_grants", false);
   await testPrompt(PermissionUI.StorageAccessPermissionPrompt);
-  Services.prefs.clearUserPref("dom.storage_access.auto_grants");
 });
 
 async function testPrompt(Prompt) {
