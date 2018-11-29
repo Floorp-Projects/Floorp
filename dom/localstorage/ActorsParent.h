@@ -12,13 +12,15 @@ namespace mozilla {
 namespace ipc {
 
 class PBackgroundParent;
+class PrincipalInfo;
 
 } // namespace ipc
 
 namespace dom {
 
 class LSRequestParams;
-class PBackgroundLSDatabaseParent;
+class PBackgroundLSObjectParent;
+class PBackgroundLSObserverParent;
 class PBackgroundLSRequestParent;
 
 namespace quota {
@@ -27,15 +29,31 @@ class Client;
 
 } // namespace quota
 
-PBackgroundLSDatabaseParent*
-AllocPBackgroundLSDatabaseParent(const uint64_t& aDatastoreId);
+PBackgroundLSObjectParent*
+AllocPBackgroundLSObjectParent(
+                              const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                              const nsString& aDocumentURI,
+                              const uint32_t& aPrivateBrowsingId);
 
 bool
-RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
-                                     const uint64_t& aDatastoreId);
+RecvPBackgroundLSObjectConstructor(
+                              PBackgroundLSObjectParent* aActor,
+                              const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                              const nsString& aDocumentURI,
+                              const uint32_t& aPrivateBrowsingId);
 
 bool
-DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor);
+DeallocPBackgroundLSObjectParent(PBackgroundLSObjectParent* aActor);
+
+PBackgroundLSObserverParent*
+AllocPBackgroundLSObserverParent(const uint64_t& aObserverId);
+
+bool
+RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
+                                     const uint64_t& aObservereId);
+
+bool
+DeallocPBackgroundLSObserverParent(PBackgroundLSObserverParent* aActor);
 
 PBackgroundLSRequestParent*
 AllocPBackgroundLSRequestParent(

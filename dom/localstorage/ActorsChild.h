@@ -8,6 +8,8 @@
 #define mozilla_dom_localstorage_ActorsChild_h
 
 #include "mozilla/dom/PBackgroundLSDatabaseChild.h"
+#include "mozilla/dom/PBackgroundLSObjectChild.h"
+#include "mozilla/dom/PBackgroundLSObserverChild.h"
 #include "mozilla/dom/PBackgroundLSRequestChild.h"
 
 namespace mozilla {
@@ -22,7 +24,47 @@ namespace dom {
 
 class LSDatabase;
 class LSObject;
+class LSObserver;
 class LSRequestChildCallback;
+
+class LSObjectChild final
+  : public PBackgroundLSObjectChild
+{
+  friend class mozilla::ipc::BackgroundChildImpl;
+  friend class LSObject;
+
+  LSObject* mObject;
+
+  NS_DECL_OWNINGTHREAD
+
+public:
+  void
+  AssertIsOnOwningThread() const
+  {
+    NS_ASSERT_OWNINGTHREAD(LSObjectChild);
+  }
+
+private:
+  // Only created by LSObject.
+  explicit LSObjectChild(LSObject* aObject);
+
+  // Only destroyed by mozilla::ipc::BackgroundChildImpl.
+  ~LSObjectChild();
+
+  void
+  SendDeleteMeInternal();
+
+  // IPDL methods are only called by IPDL.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  PBackgroundLSDatabaseChild*
+  AllocPBackgroundLSDatabaseChild(const uint64_t& aDatastoreId) override;
+
+  bool
+  DeallocPBackgroundLSDatabaseChild(PBackgroundLSDatabaseChild* aActor)
+                                    override;
+};
 
 class LSDatabaseChild final
   : public PBackgroundLSDatabaseChild
@@ -58,6 +100,47 @@ private:
 
   mozilla::ipc::IPCResult
   RecvRequestAllowToClose() override;
+};
+
+class LSObserverChild final
+  : public PBackgroundLSObserverChild
+{
+  friend class mozilla::ipc::BackgroundChildImpl;
+  friend class LSObserver;
+  friend class LSObject;
+
+  LSObserver* mObserver;
+
+  NS_DECL_OWNINGTHREAD
+
+public:
+  void
+  AssertIsOnOwningThread() const
+  {
+    NS_ASSERT_OWNINGTHREAD(LSObserverChild);
+  }
+
+private:
+  // Only created by LSObject.
+  explicit LSObserverChild(LSObserver* aObserver);
+
+  // Only destroyed by mozilla::ipc::BackgroundChildImpl.
+  ~LSObserverChild();
+
+  void
+  SendDeleteMeInternal();
+
+  // IPDL methods are only called by IPDL.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult
+  RecvObserve(const PrincipalInfo& aPrinciplaInfo,
+              const uint32_t& aPrivateBrowsingId,
+              const nsString& aDocumentURI,
+              const nsString& aKey,
+              const nsString& aOldValue,
+              const nsString& aNewValue) override;
 };
 
 class LSRequestChild final

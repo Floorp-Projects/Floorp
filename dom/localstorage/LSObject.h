@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/Storage.h"
 
+class nsGlobalWindowInner;
 class nsIPrincipal;
 class nsPIDOMWindowInner;
 
@@ -25,18 +26,31 @@ class PrincipalInfo;
 namespace dom {
 
 class LSDatabase;
+class LSObjectChild;
+class LSObserver;
 class LSRequestChild;
 class LSRequestChildCallback;
 class LSRequestParams;
+class LSRequestResponse;
 
 class LSObject final
   : public Storage
 {
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
+  friend nsGlobalWindowInner;
+
   nsAutoPtr<PrincipalInfo> mPrincipalInfo;
 
   RefPtr<LSDatabase> mDatabase;
+  RefPtr<LSObserver> mObserver;
+
+  LSObjectChild* mActor;
+
+  uint32_t mPrivateBrowsingId;
+  nsCString mOrigin;
+  nsString mDocumentURI;
+  bool mActorFailed;
 
 public:
   static nsresult
@@ -58,6 +72,14 @@ public:
   AssertIsOnOwningThread() const
   {
     NS_ASSERT_OWNINGTHREAD(LSObject);
+  }
+
+  void
+  ClearActor()
+  {
+    AssertIsOnOwningThread();
+
+    mActor = nullptr;
   }
 
   LSRequestChild*
@@ -119,10 +141,25 @@ private:
   ~LSObject();
 
   nsresult
+  DoRequestSynchronously(const LSRequestParams& aParams,
+                         LSRequestResponse& aResponse);
+
+  nsresult
   EnsureDatabase();
 
   void
   DropDatabase();
+
+  nsresult
+  EnsureObserver();
+
+  void
+  DropObserver();
+
+  void
+  OnChange(const nsAString& aKey,
+           const nsAString& aOldValue,
+           const nsAString& aNewValue);
 
   // Storage overrides.
   void

@@ -14,6 +14,8 @@
 #include "mozStorageHelper.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/PBackgroundLSDatabaseParent.h"
+#include "mozilla/dom/PBackgroundLSObjectParent.h"
+#include "mozilla/dom/PBackgroundLSObserverParent.h"
 #include "mozilla/dom/PBackgroundLSRequestParent.h"
 #include "mozilla/dom/PBackgroundLSSharedTypes.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -25,6 +27,7 @@
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "nsISimpleEnumerator.h"
+#include "nsRefPtrHashtable.h"
 #include "ReportInternalError.h"
 
 #define DISABLE_ASSERTS_FOR_FUZZING 0
@@ -915,13 +918,21 @@ public:
   GetItem(const nsString& aKey, nsString& aValue) const;
 
   void
-  SetItem(const nsString& aKey, const nsString& aValue);
+  SetItem(Database* aDatabase,
+          const nsString& aKey,
+          const nsString& aValue,
+          bool* aChanged,
+          nsString& aOldValue);
 
   void
-  RemoveItem(const nsString& aKey);
+  RemoveItem(Database* aDatabase,
+             const nsString& aKey,
+             bool* aChanged,
+             nsString& aOldValue);
 
   void
-  Clear();
+  Clear(Database* aDatabase,
+        bool* aChanged);
 
   void
   GetKeys(nsTArray<nsString>& aKeys) const;
@@ -937,6 +948,12 @@ private:
 
   void
   CleanupMetadata();
+
+  void
+  NotifyObservers(Database* aDatabase,
+                  const nsString& aKey,
+                  const nsString& aOldValue,
+                  const nsString& aNewValue);
 
   void
   EnsureTransaction();
@@ -1000,9 +1017,67 @@ public:
  * Actor class declarations
  ******************************************************************************/
 
+class Object final
+  : public PBackgroundLSObjectParent
+{
+  const PrincipalInfo mPrincipalInfo;
+  const nsString mDocumentURI;
+  uint32_t mPrivateBrowsingId;
+  bool mActorDestroyed;
+
+public:
+  // Created in AllocPBackgroundLSObjectParent.
+  Object(const PrincipalInfo& aPrincipalInfo,
+         const nsAString& aDocumentURI,
+         uint32_t aPrivateBrowsingId);
+
+  const PrincipalInfo&
+  GetPrincipalInfo() const
+  {
+    return mPrincipalInfo;
+  }
+
+  uint32_t
+  PrivateBrowsingId() const
+  {
+    return mPrivateBrowsingId;
+  }
+
+  const nsString&
+  DocumentURI() const
+  {
+    return mDocumentURI;
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Object)
+
+private:
+  // Reference counted.
+  ~Object();
+
+  // IPDL methods are only called by IPDL.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult
+  RecvDeleteMe() override;
+
+  PBackgroundLSDatabaseParent*
+  AllocPBackgroundLSDatabaseParent(const uint64_t& aDatastoreId) override;
+
+  mozilla::ipc::IPCResult
+  RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
+                                       const uint64_t& aDatastoreId) override;
+
+  bool
+  DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor)
+                                     override;
+};
+
 class Database final
   : public PBackgroundLSDatabaseParent
 {
+  RefPtr<Object> mObject;
   RefPtr<Datastore> mDatastore;
   // Strings share buffers if possible, so it's not a problem to duplicate the
   // origin here.
@@ -1016,7 +1091,16 @@ class Database final
 
 public:
   // Created in AllocPBackgroundLSDatabaseParent.
-  explicit Database(const nsACString& aOrigin);
+  Database(Object* aObject,
+           const nsACString& aOrigin);
+
+  Object*
+  GetObject() const
+  {
+    AssertIsOnBackgroundThread();
+
+    return mObject;
+  }
 
   const nsCString&
   Origin() const
@@ -1062,30 +1146,137 @@ private:
   RecvGetKeys(nsTArray<nsString>* aKeys) override;
 
   mozilla::ipc::IPCResult
-  RecvSetItem(const nsString& aKey, const nsString& aValue) override;
+  RecvSetItem(const nsString& aKey,
+              const nsString& aValue,
+              bool* aChanged,
+              nsString* aOldValue) override;
 
   mozilla::ipc::IPCResult
-  RecvRemoveItem(const nsString& aKey) override;
+  RecvRemoveItem(const nsString& aKey,
+                 bool* aChanged,
+                 nsString* aOldValue) override;
 
   mozilla::ipc::IPCResult
-  RecvClear() override;
+  RecvClear(bool* aChanged) override;
+};
+
+class Observer final
+  : public PBackgroundLSObserverParent
+{
+  nsCString mOrigin;
+  bool mActorDestroyed;
+
+public:
+  // Created in AllocPBackgroundLSObserverParent.
+  explicit Observer(const nsACString& aOrigin);
+
+  const nsCString&
+  Origin() const
+  {
+    return mOrigin;
+  }
+
+  void
+  Observe(Database* aDatabase,
+          const nsString& aKey,
+          const nsString& aOldValue,
+          const nsString& aNewValue);
+
+  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Observer)
+
+private:
+  // Reference counted.
+  ~Observer();
+
+  // IPDL methods are only called by IPDL.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult
+  RecvDeleteMe() override;
 };
 
 class LSRequestBase
   : public DatastoreOperationBase
   , public PBackgroundLSRequestParent
 {
+protected:
+  enum class State
+  {
+    // Just created on the PBackground thread. Next step is Opening.
+    Initial,
+
+    // Waiting to open/opening on the main thread. Next step is either
+    // Nesting if a subclass needs to process more nested states or
+    // SendingReadyMessage if a subclass doesn't need any nested processing.
+    Opening,
+
+    // Doing nested processing.
+    Nesting,
+
+    // Waiting to send/sending the ready message on the PBackground thread. Next
+    // step is WaitingForFinish.
+    SendingReadyMessage,
+
+    // Waiting for the finish message on the PBackground thread. Next step is
+    // SendingResults.
+    WaitingForFinish,
+
+    // Waiting to send/sending results on the PBackground thread. Next step is
+    // Completed.
+    SendingResults,
+
+    // All done.
+    Completed
+  };
+
+  nsCOMPtr<nsIEventTarget> mMainEventTarget;
+  State mState;
+
 public:
-  virtual void
-  Dispatch() = 0;
+  explicit LSRequestBase(nsIEventTarget* aMainEventTarget);
+
+  void
+  Dispatch();
 
 protected:
+  ~LSRequestBase() override;
+
+  virtual nsresult
+  Open() = 0;
+
+  virtual nsresult
+  NestedRun();
+
+  virtual void
+  GetResponse(LSRequestResponse& aResponse) = 0;
+
+  virtual void
+  Cleanup()
+  { }
+
+private:
+  void
+  SendReadyMessage();
+
+  void
+  SendResults();
+
+protected:
+  // Common nsIRunnable implementation that subclasses may not override.
+  NS_IMETHOD
+  Run() final;
+
   // IPDL methods.
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
+private:
   mozilla::ipc::IPCResult
   RecvCancel() override;
+
+  mozilla::ipc::IPCResult
+  RecvFinish() override;
 };
 
 class PrepareDatastoreOp
@@ -1094,15 +1285,11 @@ class PrepareDatastoreOp
 {
   class LoadDataOp;
 
-  enum class State
+  enum class NestedState
   {
-    // Just created on the PBackground thread. Next step is OpeningOnMainThread
-    // or OpeningOnOwningThread.
-    Initial,
-
-    // Waiting to open/opening on the main thread. Next step is
+    // The nesting has not yet taken place. Next step is
     // CheckExistingOperations.
-    Opening,
+    BeforeNesting,
 
     // Checking if a prepare datastore operation is already running for given
     // origin on the PBackground thread. Next step is CheckClosingDatastore.
@@ -1143,20 +1330,8 @@ class PrepareDatastoreOp
     // to SendingReadyMessage.
     DatabaseWorkLoadData,
 
-    // Waiting to send/sending the ready message on the PBackground thread. Next
-    // step is WaitingForFinish.
-    SendingReadyMessage,
-
-    // Waiting for the finish message on the PBackground thread. Next step is
-    // SendingResults.
-    WaitingForFinish,
-
-    // Waiting to send/sending results on the PBackground thread. Next step is
-    // Completed.
-    SendingResults,
-
-    // All done.
-    Completed
+    // The nesting has completed.
+    AfterNesting
   };
 
   nsCOMPtr<nsIEventTarget> mMainEventTarget;
@@ -1173,7 +1348,7 @@ class PrepareDatastoreOp
   nsCString mOrigin;
   nsString mDatabaseFilePath;
   uint32_t mPrivateBrowsingId;
-  State mState;
+  NestedState mNestedState;
   bool mRequestedDirectoryLock;
   bool mInvalidated;
 
@@ -1214,23 +1389,17 @@ public:
     mInvalidated = true;
   }
 
-  void
-  Dispatch() override;
-
 private:
   ~PrepareDatastoreOp() override;
 
   nsresult
-  Open();
+  Open() override;
 
   nsresult
   CheckExistingOperations();
 
   nsresult
   CheckClosingDatastore();
-
-  nsresult
-  PreparationOpen();
 
   nsresult
   BeginDatastorePreparation();
@@ -1253,14 +1422,14 @@ private:
   nsresult
   BeginLoadData();
 
-  void
-  SendReadyMessage();
+  nsresult
+  NestedRun() override;
 
   void
-  SendResults();
+  GetResponse(LSRequestResponse& aResponse) override;
 
   void
-  Cleanup();
+  Cleanup() override;
 
   void
   ConnectionClosedCallback();
@@ -1270,15 +1439,9 @@ private:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD
-  Run() override;
-
   // IPDL overrides.
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
-
-  mozilla::ipc::IPCResult
-  RecvFinish() override;
 
   // OpenDirectoryListener overrides.
   void
@@ -1313,6 +1476,24 @@ private:
 
   void
   Cleanup() override;
+};
+
+class PrepareObserverOp
+  : public LSRequestBase
+{
+  const LSRequestPrepareObserverParams mParams;
+  nsCString mOrigin;
+
+public:
+  PrepareObserverOp(nsIEventTarget* aMainEventTarget,
+                    const LSRequestParams& aParams);
+
+private:
+  nsresult
+  Open() override;
+
+  void
+  GetResponse(LSRequestResponse& aResponse) override;
 };
 
 /*******************************************************************************
@@ -1474,6 +1655,17 @@ StaticAutoPtr<LiveDatabaseArray> gLiveDatabases;
 
 StaticRefPtr<ConnectionThread> gConnectionThread;
 
+uint64_t gLastObserverId = 0;
+
+typedef nsRefPtrHashtable<nsUint64HashKey, Observer> PreparedObserverHashtable;
+
+StaticAutoPtr<PreparedObserverHashtable> gPreparedObsevers;
+
+typedef nsClassHashtable<nsCStringHashKey, nsTArray<Observer*>>
+  ObserverHashtable;
+
+StaticAutoPtr<ObserverHashtable> gObservers;
+
 bool
 IsOnConnectionThread()
 {
@@ -1494,8 +1686,10 @@ AssertIsOnConnectionThread()
  * Exported functions
  ******************************************************************************/
 
-PBackgroundLSDatabaseParent*
-AllocPBackgroundLSDatabaseParent(const uint64_t& aDatastoreId)
+PBackgroundLSObjectParent*
+AllocPBackgroundLSObjectParent(const PrincipalInfo& aPrincipalInfo,
+                               const nsString& aDocumentURI,
+                               const uint32_t& aPrivateBrowsingId)
 {
   AssertIsOnBackgroundThread();
 
@@ -1503,69 +1697,103 @@ AllocPBackgroundLSDatabaseParent(const uint64_t& aDatastoreId)
     return nullptr;
   }
 
-  if (NS_WARN_IF(!gPreparedDatastores)) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-
-  PreparedDatastore* preparedDatastore = gPreparedDatastores->Get(aDatastoreId);
-  if (NS_WARN_IF(!preparedDatastore)) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-
-  // If we ever decide to return null from this point on, we need to make sure
-  // that the datastore is closed and the prepared datastore is removed from the
-  // gPreparedDatastores hashtable.
-  // We also assume that IPDL must call RecvPBackgroundLSDatabaseConstructor
-  // once we return a valid actor in this method.
-
-  RefPtr<Database> database = new Database(preparedDatastore->Origin());
+  RefPtr<Object> object =
+    new Object(aPrincipalInfo, aDocumentURI, aPrivateBrowsingId);
 
   // Transfer ownership to IPDL.
-  return database.forget().take();
+  return object.forget().take();
 }
 
 bool
-RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
-                                     const uint64_t& aDatastoreId)
+RecvPBackgroundLSObjectConstructor(PBackgroundLSObjectParent* aActor,
+                                   const PrincipalInfo& aPrincipalInfo,
+                                   const nsString& aDocumentURI,
+                                   const uint32_t& aPrivateBrowsingId)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT(gPreparedDatastores);
-  MOZ_ASSERT(gPreparedDatastores->Get(aDatastoreId));
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
-
-  // The actor is now completely built (it has a manager, channel and it's
-  // registered as a subprotocol).
-  // ActorDestroy will be called if we fail here.
-
-  nsAutoPtr<PreparedDatastore> preparedDatastore;
-  gPreparedDatastores->Remove(aDatastoreId, &preparedDatastore);
-  MOZ_ASSERT(preparedDatastore);
-
-  auto* database = static_cast<Database*>(aActor);
-
-  database->SetActorAlive(preparedDatastore->ForgetDatastore());
-
-  // It's possible that AbortOperations was called before the database actor
-  // was created and became live. Let the child know that the database in no
-  // longer valid.
-  if (preparedDatastore->IsInvalidated()) {
-    database->RequestAllowToClose();
-  }
 
   return true;
 }
 
 bool
-DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor)
+DeallocPBackgroundLSObjectParent(PBackgroundLSObjectParent* aActor)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
-  RefPtr<Database> actor = dont_AddRef(static_cast<Database*>(aActor));
+  RefPtr<Object> actor = dont_AddRef(static_cast<Object*>(aActor));
+
+  return true;
+}
+
+PBackgroundLSObserverParent*
+AllocPBackgroundLSObserverParent(const uint64_t& aObserverId)
+{
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(!gPreparedObsevers)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  RefPtr<Observer> observer = gPreparedObsevers->Get(aObserverId);
+  if (NS_WARN_IF(!observer)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  //observer->SetObject(this);
+
+  // Transfer ownership to IPDL.
+  return observer.forget().take();
+}
+
+bool
+RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
+                                     const uint64_t& aObserverId)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+  MOZ_ASSERT(gPreparedObsevers);
+  MOZ_ASSERT(gPreparedObsevers->GetWeak(aObserverId));
+
+  RefPtr<Observer> observer;
+  gPreparedObsevers->Remove(aObserverId, observer.StartAssignment());
+  MOZ_ASSERT(observer);
+
+  if (!gPreparedObsevers->Count()) {
+    gPreparedObsevers = nullptr;
+  }
+
+  if (!gObservers) {
+    gObservers = new ObserverHashtable();
+  }
+
+  nsTArray<Observer*>* array;
+  if (!gObservers->Get(observer->Origin(), &array)) {
+    array = new nsTArray<Observer*>();
+    gObservers->Put(observer->Origin(), array);
+  }
+  array->AppendElement(observer);
+
+  return true;
+}
+
+bool
+DeallocPBackgroundLSObserverParent(PBackgroundLSObserverParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  // Transfer ownership back from IPDL.
+  RefPtr<Observer> actor = dont_AddRef(static_cast<Observer*>(aActor));
 
   return true;
 }
@@ -1600,6 +1828,15 @@ AllocPBackgroundLSRequestParent(PBackgroundParent* aBackgroundActor,
       gPrepareDatastoreOps->AppendElement(prepareDatastoreOp);
 
       actor = std::move(prepareDatastoreOp);
+
+      break;
+    }
+
+    case LSRequestParams::TLSRequestPrepareObserverParams: {
+      RefPtr<PrepareObserverOp> prepareObserverOp =
+        new PrepareObserverOp(mainEventTarget, aParams);
+
+      actor = std::move(prepareObserverOp);
 
       break;
     }
@@ -2307,57 +2544,107 @@ Datastore::GetItem(const nsString& aKey, nsString& aValue) const
 }
 
 void
-Datastore::SetItem(const nsString& aKey, const nsString& aValue)
+Datastore::SetItem(Database* aDatabase,
+                   const nsString& aKey,
+                   const nsString& aValue,
+                   bool* aChanged,
+                   nsString& aOldValue)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
+  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(!mClosed);
 
-  mValues.Put(aKey, aValue);
-
-  if (!IsPersistent()) {
-    return;
+  nsString oldValue;
+  if (!mValues.Get(aKey, &oldValue)) {
+    oldValue.SetIsVoid(true);
   }
 
-  EnsureTransaction();
+  bool changed;
+  if (oldValue == aValue && oldValue.IsVoid() == aValue.IsVoid()) {
+    changed = false;
+  } else {
+    changed = true;
 
-  RefPtr<SetItemOp> op = new SetItemOp(mConnection, aKey, aValue);
-  mConnection->Dispatch(op);
+    mValues.Put(aKey, aValue);
+
+    NotifyObservers(aDatabase, aKey, oldValue, aValue);
+
+    if (IsPersistent()) {
+      EnsureTransaction();
+
+      RefPtr<SetItemOp> op = new SetItemOp(mConnection, aKey, aValue);
+      mConnection->Dispatch(op);
+    }
+  }
+
+  *aChanged = changed;
+  aOldValue = oldValue;
 }
 
 void
-Datastore::RemoveItem(const nsString& aKey)
+Datastore::RemoveItem(Database* aDatabase,
+                      const nsString& aKey,
+                      bool* aChanged,
+                      nsString& aOldValue)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
 
-  mValues.Remove(aKey);
+  bool changed;
+  nsString oldValue;
+  if (!mValues.Get(aKey, &oldValue)) {
+    oldValue.SetIsVoid(true);
+    changed = false;
+  } else {
+    changed = true;
 
-  if (!IsPersistent()) {
-    return;
+    mValues.Remove(aKey);
+
+    NotifyObservers(aDatabase, aKey, oldValue, VoidString());
+
+    if (IsPersistent()) {
+      EnsureTransaction();
+
+      RefPtr<RemoveItemOp> op = new RemoveItemOp(mConnection, aKey);
+      mConnection->Dispatch(op);
+    }
   }
 
-  EnsureTransaction();
-
-  RefPtr<RemoveItemOp> op = new RemoveItemOp(mConnection, aKey);
-  mConnection->Dispatch(op);
+  *aChanged = changed;
+  aOldValue = oldValue;
 }
 
 void
-Datastore::Clear()
+Datastore::Clear(Database* aDatabase,
+                 bool* aChanged)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(!mClosed);
 
-  mValues.Clear();
+  bool changed;
+  if (!mValues.Count()) {
+    changed = false;
+  } else {
+    changed = true;
 
-  if (!IsPersistent()) {
-    return;
+    mValues.Clear();
+
+    if (aDatabase) {
+      NotifyObservers(aDatabase, VoidString(), VoidString(), VoidString());
+    }
+
+    if (IsPersistent()) {
+      EnsureTransaction();
+
+      RefPtr<ClearOp> op = new ClearOp(mConnection);
+      mConnection->Dispatch(op);
+    }
   }
 
-  EnsureTransaction();
-
-  RefPtr<ClearOp> op = new ClearOp(mConnection);
-  mConnection->Dispatch(op);
+  *aChanged = changed;
 }
 
 void
@@ -2407,6 +2694,35 @@ Datastore::CleanupMetadata()
 }
 
 void
+Datastore::NotifyObservers(Database* aDatabase,
+                           const nsString& aKey,
+                           const nsString& aOldValue,
+                           const nsString& aNewValue)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
+
+  if (!gObservers) {
+    return;
+  }
+
+  nsTArray<Observer*>* array;
+  if (!gObservers->Get(mOrigin, &array)) {
+    return;
+  }
+
+  MOZ_ASSERT(array);
+
+  PBackgroundParent* databaseBackgroundActor = aDatabase->Manager()->Manager();
+
+  for (Observer* observer : *array) {
+    if (observer->Manager() != databaseBackgroundActor) {
+      observer->Observe(aDatabase, aKey, aOldValue, aNewValue);
+    }
+  }
+}
+
+void
 Datastore::EnsureTransaction()
 {
   AssertIsOnBackgroundThread();
@@ -2446,11 +2762,133 @@ Datastore::AutoCommitTimerCallback(nsITimer* aTimer, void* aClosure)
 }
 
 /*******************************************************************************
+ * Object
+ ******************************************************************************/
+
+Object::Object(const PrincipalInfo& aPrincipalInfo,
+               const nsAString& aDocumentURI,
+               uint32_t aPrivateBrowsingId)
+  : mPrincipalInfo(aPrincipalInfo)
+  , mDocumentURI(aDocumentURI)
+  , mPrivateBrowsingId(aPrivateBrowsingId)
+  , mActorDestroyed(false)
+{
+  AssertIsOnBackgroundThread();
+}
+
+Object::~Object()
+{
+  MOZ_ASSERT(mActorDestroyed);
+}
+
+void
+Object::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  mActorDestroyed = true;
+}
+
+mozilla::ipc::IPCResult
+Object::RecvDeleteMe()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  IProtocol* mgr = Manager();
+  if (!PBackgroundLSObjectParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(mgr);
+  }
+  return IPC_OK();
+}
+
+PBackgroundLSDatabaseParent*
+Object::AllocPBackgroundLSDatabaseParent(const uint64_t& aDatastoreId)
+{
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(!gPreparedDatastores)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  PreparedDatastore* preparedDatastore = gPreparedDatastores->Get(aDatastoreId);
+  if (NS_WARN_IF(!preparedDatastore)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  // If we ever decide to return null from this point on, we need to make sure
+  // that the datastore is closed and the prepared datastore is removed from the
+  // gPreparedDatastores hashtable.
+  // We also assume that IPDL must call RecvPBackgroundLSDatabaseConstructor
+  // once we return a valid actor in this method.
+
+  RefPtr<Database> database = new Database(this,
+                                           preparedDatastore->Origin());
+
+  // Transfer ownership to IPDL.
+  return database.forget().take();
+}
+
+mozilla::ipc::IPCResult
+Object::RecvPBackgroundLSDatabaseConstructor(
+                                            PBackgroundLSDatabaseParent* aActor,
+                                            const uint64_t& aDatastoreId)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+  MOZ_ASSERT(gPreparedDatastores);
+  MOZ_ASSERT(gPreparedDatastores->Get(aDatastoreId));
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+
+  // The actor is now completely built (it has a manager, channel and it's
+  // registered as a subprotocol).
+  // ActorDestroy will be called if we fail here.
+
+  nsAutoPtr<PreparedDatastore> preparedDatastore;
+  gPreparedDatastores->Remove(aDatastoreId, &preparedDatastore);
+  MOZ_ASSERT(preparedDatastore);
+
+  auto* database = static_cast<Database*>(aActor);
+
+  database->SetActorAlive(preparedDatastore->ForgetDatastore());
+
+  // It's possible that AbortOperations was called before the database actor
+  // was created and became live. Let the child know that the database in no
+  // longer valid.
+  if (preparedDatastore->IsInvalidated()) {
+    database->RequestAllowToClose();
+  }
+
+  return IPC_OK();
+}
+
+bool
+Object::DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  // Transfer ownership back from IPDL.
+  RefPtr<Database> actor = dont_AddRef(static_cast<Database*>(aActor));
+
+  return true;
+}
+
+/*******************************************************************************
  * Database
  ******************************************************************************/
 
-Database::Database(const nsACString& aOrigin)
-  : mOrigin(aOrigin)
+Database::Database(Object* aObject,
+                   const nsACString& aOrigin)
+  : mObject(aObject)
+  , mOrigin(aOrigin)
   , mAllowedToClose(false)
   , mActorDestroyed(false)
   , mRequestedAllowToClose(false)
@@ -2623,9 +3061,14 @@ Database::RecvGetItem(const nsString& aKey, nsString* aValue)
 }
 
 mozilla::ipc::IPCResult
-Database::RecvSetItem(const nsString& aKey, const nsString& aValue)
+Database::RecvSetItem(const nsString& aKey,
+                      const nsString& aValue,
+                      bool* aChanged,
+                      nsString* aOldValue)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aChanged);
+  MOZ_ASSERT(aOldValue);
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mAllowedToClose)) {
@@ -2633,15 +3076,19 @@ Database::RecvSetItem(const nsString& aKey, const nsString& aValue)
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->SetItem(aKey, aValue);
+  mDatastore->SetItem(this, aKey, aValue, aChanged, *aOldValue);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-Database::RecvRemoveItem(const nsString& aKey)
+Database::RecvRemoveItem(const nsString& aKey,
+                         bool* aChanged,
+                         nsString* aOldValue)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aChanged);
+  MOZ_ASSERT(aOldValue);
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mAllowedToClose)) {
@@ -2649,15 +3096,16 @@ Database::RecvRemoveItem(const nsString& aKey)
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->RemoveItem(aKey);
+  mDatastore->RemoveItem(this, aKey, aChanged, *aOldValue);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-Database::RecvClear()
+Database::RecvClear(bool* aChanged)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mAllowedToClose)) {
@@ -2665,7 +3113,7 @@ Database::RecvClear()
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->Clear();
+  mDatastore->Clear(this, aChanged);
 
   return IPC_OK();
 }
@@ -2688,8 +3136,203 @@ Database::RecvGetKeys(nsTArray<nsString>* aKeys)
 }
 
 /*******************************************************************************
+ * Observer
+ ******************************************************************************/
+
+Observer::Observer(const nsACString& aOrigin)
+  : mOrigin(aOrigin)
+  , mActorDestroyed(false)
+{
+  AssertIsOnBackgroundThread();
+}
+
+Observer::~Observer()
+{
+  MOZ_ASSERT(mActorDestroyed);
+}
+
+void
+Observer::Observe(Database* aDatabase,
+                  const nsString& aKey,
+                  const nsString& aOldValue,
+                  const nsString& aNewValue)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
+
+  Object* object = aDatabase->GetObject();
+  MOZ_ASSERT(object);
+
+  Unused << SendObserve(object->GetPrincipalInfo(),
+                        object->PrivateBrowsingId(),
+                        object->DocumentURI(),
+                        aKey,
+                        aOldValue,
+                        aNewValue);
+}
+
+void
+Observer::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  mActorDestroyed = true;
+
+  MOZ_ASSERT(gObservers);
+
+  nsTArray<Observer*>* array;
+  gObservers->Get(mOrigin, &array);
+  MOZ_ASSERT(array);
+
+  array->RemoveElement(this);
+
+  if (array->IsEmpty()) {
+    gObservers->Remove(mOrigin);
+  }
+
+  if (!gObservers->Count()) {
+    gObservers = nullptr;
+  }
+}
+
+mozilla::ipc::IPCResult
+Observer::RecvDeleteMe()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  IProtocol* mgr = Manager();
+  if (!PBackgroundLSObserverParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(mgr);
+  }
+  return IPC_OK();
+}
+
+/*******************************************************************************
  * LSRequestBase
  ******************************************************************************/
+
+LSRequestBase::LSRequestBase(nsIEventTarget* aMainEventTarget)
+  : mMainEventTarget(aMainEventTarget)
+  , mState(State::Initial)
+{
+}
+
+LSRequestBase::~LSRequestBase()
+{
+  MOZ_ASSERT_IF(MayProceedOnNonOwningThread(),
+                mState == State::Initial || mState == State::Completed);
+}
+
+void
+LSRequestBase::Dispatch()
+{
+  AssertIsOnOwningThread();
+
+  mState = State::Opening;
+
+  if (mMainEventTarget) {
+    MOZ_ALWAYS_SUCCEEDS(mMainEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+  } else {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+  }
+}
+
+nsresult
+LSRequestBase::NestedRun()
+{
+  return NS_OK;
+}
+
+void
+LSRequestBase::SendReadyMessage()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::SendingReadyMessage);
+
+  if (!MayProceed()) {
+    MaybeSetFailureCode(NS_ERROR_FAILURE);
+
+    Cleanup();
+
+    mState = State::Completed;
+  } else {
+    Unused << SendReady();
+
+    mState = State::WaitingForFinish;
+  }
+}
+
+void
+LSRequestBase::SendResults()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::SendingResults);
+
+  if (!MayProceed()) {
+    MaybeSetFailureCode(NS_ERROR_FAILURE);
+  } else {
+    LSRequestResponse response;
+
+    if (NS_SUCCEEDED(ResultCode())) {
+      GetResponse(response);
+    } else {
+      response = ResultCode();
+    }
+
+    Unused <<
+      PBackgroundLSRequestParent::Send__delete__(this, response);
+  }
+
+  Cleanup();
+
+  mState = State::Completed;
+}
+
+NS_IMETHODIMP
+LSRequestBase::Run()
+{
+  nsresult rv;
+
+  switch (mState) {
+    case State::Opening:
+      rv = Open();
+      break;
+
+    case State::Nesting:
+      rv = NestedRun();
+      break;
+
+    case State::SendingReadyMessage:
+      SendReadyMessage();
+      return NS_OK;
+
+    case State::SendingResults:
+      SendResults();
+      return NS_OK;
+
+    default:
+      MOZ_CRASH("Bad state!");
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::SendingReadyMessage) {
+    MaybeSetFailureCode(rv);
+
+    // Must set mState before dispatching otherwise we will race with the owning
+    // thread.
+    mState = State::SendingReadyMessage;
+
+    if (IsOnOwningThread()) {
+      SendReadyMessage();
+    } else {
+      MOZ_ALWAYS_SUCCEEDS(
+        OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
+    }
+  }
+
+  return NS_OK;
+}
 
 void
 LSRequestBase::ActorDestroy(ActorDestroyReason aWhy)
@@ -2712,17 +3355,30 @@ LSRequestBase::RecvCancel()
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+LSRequestBase::RecvFinish()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::WaitingForFinish);
+
+  mState = State::SendingResults;
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
+
+  return IPC_OK();
+}
+
 /*******************************************************************************
  * PrepareDatastoreOp
  ******************************************************************************/
 
 PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
                                        const LSRequestParams& aParams)
-  : mMainEventTarget(aMainEventTarget)
+  : LSRequestBase(aMainEventTarget)
+  , mMainEventTarget(aMainEventTarget)
   , mLoadDataOp(nullptr)
   , mParams(aParams.get_LSRequestPrepareDatastoreParams())
   , mPrivateBrowsingId(0)
-  , mState(State::Initial)
+  , mNestedState(NestedState::BeforeNesting)
   , mRequestedDirectoryLock(false)
   , mInvalidated(false)
 {
@@ -2738,25 +3394,12 @@ PrepareDatastoreOp::~PrepareDatastoreOp()
   MOZ_ASSERT(!mLoadDataOp);
 }
 
-void
-PrepareDatastoreOp::Dispatch()
-{
-  AssertIsOnOwningThread();
-
-  mState = State::Opening;
-
-  if (mMainEventTarget) {
-    MOZ_ALWAYS_SUCCEEDS(mMainEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
-  } else {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
-  }
-}
-
 nsresult
 PrepareDatastoreOp::Open()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::Opening);
+  MOZ_ASSERT(mNestedState == NestedState::BeforeNesting);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
@@ -2802,7 +3445,9 @@ PrepareDatastoreOp::Open()
     return rv;
   }
 
-  mState = State::CheckExistingOperations;
+  mState = State::Nesting;
+  mNestedState = NestedState::CheckExistingOperations;
+
   MOZ_ALWAYS_SUCCEEDS(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
@@ -2812,7 +3457,8 @@ nsresult
 PrepareDatastoreOp::CheckExistingOperations()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::CheckExistingOperations);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::CheckExistingOperations);
   MOZ_ASSERT(gPrepareDatastoreOps);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
@@ -2830,7 +3476,7 @@ PrepareDatastoreOp::CheckExistingOperations()
 
   MOZ_ASSERT(!mOrigin.IsEmpty());
 
-  mState = State::CheckClosingDatastore;
+  mNestedState = NestedState::CheckClosingDatastore;
 
   // See if this PrepareDatastoreOp needs to wait.
   bool foundThis = false;
@@ -2863,14 +3509,15 @@ nsresult
 PrepareDatastoreOp::CheckClosingDatastore()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::CheckClosingDatastore);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::CheckClosingDatastore);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
     return NS_ERROR_FAILURE;
   }
 
-  mState = State::PreparationPending;
+  mNestedState = NestedState::PreparationPending;
 
   RefPtr<Datastore> datastore;
   if (gDatastores &&
@@ -2893,12 +3540,15 @@ nsresult
 PrepareDatastoreOp::BeginDatastorePreparation()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::PreparationPending);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::PreparationPending);
 
   if (gDatastores && (mDatastore = gDatastores->Get(mOrigin))) {
     MOZ_ASSERT(!mDatastore->IsClosed());
 
     mState = State::SendingReadyMessage;
+    mNestedState = NestedState::AfterNesting;
+
     Unused << this->Run();
 
     return NS_OK;
@@ -2913,7 +3563,7 @@ PrepareDatastoreOp::BeginDatastorePreparation()
     return NS_OK;
   }
 
-  mState = State::QuotaManagerPending;
+  mNestedState = NestedState::QuotaManagerPending;
   QuotaManager::GetOrCreate(this, mMainEventTarget);
 
   return NS_OK;
@@ -2923,7 +3573,8 @@ nsresult
 PrepareDatastoreOp::QuotaManagerOpen()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::QuotaManagerPending);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::QuotaManagerPending);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -2946,14 +3597,15 @@ nsresult
 PrepareDatastoreOp::OpenDirectory()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::PreparationPending ||
-             mState == State::QuotaManagerPending);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::PreparationPending ||
+             mNestedState == NestedState::QuotaManagerPending);
   MOZ_ASSERT(!mOrigin.IsEmpty());
   MOZ_ASSERT(!mDirectoryLock);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
   MOZ_ASSERT(QuotaManager::Get());
 
-  mState = State::DirectoryOpenPending;
+  mNestedState = NestedState::DirectoryOpenPending;
   QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT,
                                      mGroup,
                                      mOrigin,
@@ -2970,7 +3622,8 @@ nsresult
 PrepareDatastoreOp::SendToIOThread()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::DirectoryOpenPending);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
@@ -2988,6 +3641,8 @@ PrepareDatastoreOp::SendToIOThread()
   // (empty) datastore.
   if (mPrivateBrowsingId) {
     mState = State::SendingReadyMessage;
+    mNestedState = NestedState::AfterNesting;
+
     Unused << this->Run();
 
     return NS_OK;
@@ -2997,7 +3652,7 @@ PrepareDatastoreOp::SendToIOThread()
   MOZ_ASSERT(quotaManager);
 
   // Must set this before dispatching otherwise we will race with the IO thread.
-  mState = State::DatabaseWorkOpen;
+  mNestedState = NestedState::DatabaseWorkOpen;
 
   nsresult rv = quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3011,7 +3666,8 @@ nsresult
 PrepareDatastoreOp::DatabaseWork()
 {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mState == State::DatabaseWorkOpen);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
@@ -3090,7 +3746,7 @@ PrepareDatastoreOp::DatabaseWork()
 
   // Must set mState before dispatching otherwise we will race with the owning
   // thread.
-  mState = State::BeginLoadData;
+  mNestedState = NestedState::BeginLoadData;
 
   rv = OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3142,7 +3798,8 @@ nsresult
 PrepareDatastoreOp::BeginLoadData()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::BeginLoadData);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::BeginLoadData);
   MOZ_ASSERT(!mConnection);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
@@ -3162,7 +3819,7 @@ PrepareDatastoreOp::BeginLoadData()
 
   // Must set this before dispatching otherwise we will race with the
   // connection thread.
-  mState = State::DatabaseWorkLoadData;
+  mNestedState = NestedState::DatabaseWorkLoadData;
 
   // Can't assign to mLoadDataOp directly since that's a weak reference and
   // LoadDataOp is reference counted.
@@ -3178,83 +3835,91 @@ PrepareDatastoreOp::BeginLoadData()
   return NS_OK;
 }
 
-void
-PrepareDatastoreOp::SendReadyMessage()
+nsresult
+PrepareDatastoreOp::NestedRun()
 {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingReadyMessage);
+  nsresult rv;
 
-  if (!MayProceed()) {
-    MaybeSetFailureCode(NS_ERROR_FAILURE);
+  switch (mNestedState) {
+    case NestedState::CheckExistingOperations:
+      rv = CheckExistingOperations();
+      break;
 
-    Cleanup();
+    case NestedState::CheckClosingDatastore:
+      rv = CheckClosingDatastore();
+      break;
 
-    mState = State::Completed;
-  } else {
-    Unused << SendReady();
+    case NestedState::PreparationPending:
+      rv = BeginDatastorePreparation();
+      break;
 
-    mState = State::WaitingForFinish;
+    case NestedState::QuotaManagerPending:
+      rv = QuotaManagerOpen();
+      break;
+
+    case NestedState::DatabaseWorkOpen:
+      rv = DatabaseWork();
+      break;
+
+    case NestedState::BeginLoadData:
+      rv = BeginLoadData();
+      break;
+
+    default:
+      MOZ_CRASH("Bad state!");
   }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mNestedState = NestedState::AfterNesting;
+
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 void
-PrepareDatastoreOp::SendResults()
+PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingResults);
+  MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
 
-  if (!MayProceed()) {
-    MaybeSetFailureCode(NS_ERROR_FAILURE);
-  } else {
-    LSRequestResponse response;
+  if (!mDatastore) {
+    mDatastore = new Datastore(mOrigin,
+                               mPrivateBrowsingId,
+                               mDirectoryLock.forget(),
+                               mConnection.forget(),
+                               mValues);
 
-    if (NS_SUCCEEDED(ResultCode())) {
-      if (!mDatastore) {
-        mDatastore = new Datastore(mOrigin,
-                                   mPrivateBrowsingId,
-                                   mDirectoryLock.forget(),
-                                   mConnection.forget(),
-                                   mValues);
-
-        if (!gDatastores) {
-          gDatastores = new DatastoreHashtable();
-        }
-
-        MOZ_ASSERT(!gDatastores->Get(mOrigin));
-        gDatastores->Put(mOrigin, mDatastore);
-      }
-
-      uint64_t datastoreId = ++gLastDatastoreId;
-
-      nsAutoPtr<PreparedDatastore> preparedDatastore(
-        new PreparedDatastore(mDatastore, mOrigin));
-
-      if (!gPreparedDatastores) {
-        gPreparedDatastores = new PreparedDatastoreHashtable();
-      }
-      gPreparedDatastores->Put(datastoreId, preparedDatastore);
-
-      if (mInvalidated) {
-        preparedDatastore->Invalidate();
-      }
-
-      preparedDatastore.forget();
-
-      LSRequestPrepareDatastoreResponse prepareDatastoreResponse;
-      prepareDatastoreResponse.datastoreId() = datastoreId;
-
-      response = prepareDatastoreResponse;
-    } else {
-      response = ResultCode();
+    if (!gDatastores) {
+      gDatastores = new DatastoreHashtable();
     }
 
-    Unused <<
-      PBackgroundLSRequestParent::Send__delete__(this, response);
+    MOZ_ASSERT(!gDatastores->Get(mOrigin));
+    gDatastores->Put(mOrigin, mDatastore);
   }
 
-  Cleanup();
+  uint64_t datastoreId = ++gLastDatastoreId;
 
-  mState = State::Completed;
+  nsAutoPtr<PreparedDatastore> preparedDatastore(
+    new PreparedDatastore(mDatastore, mOrigin));
+
+  if (!gPreparedDatastores) {
+    gPreparedDatastores = new PreparedDatastoreHashtable();
+  }
+  gPreparedDatastores->Put(datastoreId, preparedDatastore);
+
+  if (mInvalidated) {
+    preparedDatastore->Invalidate();
+  }
+
+  preparedDatastore.forget();
+
+  LSRequestPrepareDatastoreResponse prepareDatastoreResponse;
+  prepareDatastoreResponse.datastoreId() = datastoreId;
+
+  aResponse = prepareDatastoreResponse;
 }
 
 void
@@ -3337,70 +4002,6 @@ PrepareDatastoreOp::CleanupMetadata()
 
 NS_IMPL_ISUPPORTS_INHERITED0(PrepareDatastoreOp, LSRequestBase)
 
-NS_IMETHODIMP
-PrepareDatastoreOp::Run()
-{
-  nsresult rv;
-
-  switch (mState) {
-    case State::Opening:
-      rv = Open();
-      break;
-
-    case State::CheckExistingOperations:
-      rv = CheckExistingOperations();
-      break;
-
-    case State::CheckClosingDatastore:
-      rv = CheckClosingDatastore();
-      break;
-
-    case State::PreparationPending:
-      rv = BeginDatastorePreparation();
-      break;
-
-    case State::QuotaManagerPending:
-      rv = QuotaManagerOpen();
-      break;
-
-    case State::DatabaseWorkOpen:
-      rv = DatabaseWork();
-      break;
-
-    case State::BeginLoadData:
-      rv = BeginLoadData();
-      break;
-
-    case State::SendingReadyMessage:
-      SendReadyMessage();
-      return NS_OK;
-
-    case State::SendingResults:
-      SendResults();
-      return NS_OK;
-
-    default:
-      MOZ_CRASH("Bad state!");
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::SendingReadyMessage) {
-    MaybeSetFailureCode(rv);
-
-    // Must set mState before dispatching otherwise we will race with the owning
-    // thread.
-    mState = State::SendingReadyMessage;
-
-    if (IsOnOwningThread()) {
-      SendReadyMessage();
-    } else {
-      MOZ_ALWAYS_SUCCEEDS(
-        OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
-    }
-  }
-
-  return NS_OK;
-}
-
 void
 PrepareDatastoreOp::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -3413,23 +4014,12 @@ PrepareDatastoreOp::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-mozilla::ipc::IPCResult
-PrepareDatastoreOp::RecvFinish()
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::WaitingForFinish);
-
-  mState = State::SendingResults;
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
-
-  return IPC_OK();
-}
-
 void
 PrepareDatastoreOp::DirectoryLockAcquired(DirectoryLock* aLock)
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::DirectoryOpenPending);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
   mDirectoryLock = aLock;
@@ -3442,6 +4032,8 @@ PrepareDatastoreOp::DirectoryLockAcquired(DirectoryLock* aLock)
     // before calling Run().
 
     mState = State::SendingReadyMessage;
+    mNestedState = NestedState::AfterNesting;
+
     MOZ_ALWAYS_SUCCEEDS(Run());
 
     return;
@@ -3452,7 +4044,8 @@ void
 PrepareDatastoreOp::DirectoryLockFailed()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::DirectoryOpenPending);
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
   MaybeSetFailureCode(NS_ERROR_FAILURE);
@@ -3461,6 +4054,8 @@ PrepareDatastoreOp::DirectoryLockFailed()
   // before calling Run().
 
   mState = State::SendingReadyMessage;
+  mNestedState = NestedState::AfterNesting;
+
   MOZ_ALWAYS_SUCCEEDS(Run());
 }
 
@@ -3471,7 +4066,9 @@ LoadDataOp::DoDatastoreWork()
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(mPrepareDatastoreOp);
-  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::DatabaseWorkLoadData);
+  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
+  MOZ_ASSERT(mPrepareDatastoreOp->mNestedState ==
+               NestedState::DatabaseWorkLoadData);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
@@ -3516,10 +4113,13 @@ LoadDataOp::OnSuccess()
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mPrepareDatastoreOp);
-  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::DatabaseWorkLoadData);
+  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
+  MOZ_ASSERT(mPrepareDatastoreOp->mNestedState ==
+               NestedState::DatabaseWorkLoadData);
   MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
 
   mPrepareDatastoreOp->mState = State::SendingReadyMessage;
+  mPrepareDatastoreOp->mNestedState = NestedState::AfterNesting;
 
   MOZ_ALWAYS_SUCCEEDS(mPrepareDatastoreOp->Run());
 }
@@ -3530,11 +4130,14 @@ LoadDataOp::OnFailure(nsresult aResultCode)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mPrepareDatastoreOp);
-  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::DatabaseWorkLoadData);
+  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::Nesting);
+  MOZ_ASSERT(mPrepareDatastoreOp->mNestedState ==
+               NestedState::DatabaseWorkLoadData);
   MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
 
   mPrepareDatastoreOp->SetFailureCode(aResultCode);
   mPrepareDatastoreOp->mState = State::SendingReadyMessage;
+  mPrepareDatastoreOp->mNestedState = NestedState::AfterNesting;
 
   MOZ_ALWAYS_SUCCEEDS(mPrepareDatastoreOp->Run());
 }
@@ -3551,6 +4154,81 @@ LoadDataOp::Cleanup()
   mPrepareDatastoreOp = nullptr;
 
   ConnectionDatastoreOperationBase::Cleanup();
+}
+
+/*******************************************************************************
+ * PrepareObserverOp
+ ******************************************************************************/
+
+PrepareObserverOp::PrepareObserverOp(nsIEventTarget* aMainEventTarget,
+                                     const LSRequestParams& aParams)
+  : LSRequestBase(aMainEventTarget)
+  , mParams(aParams.get_LSRequestPrepareObserverParams())
+{
+  MOZ_ASSERT(aParams.type() ==
+               LSRequestParams::TLSRequestPrepareObserverParams);
+}
+
+nsresult
+PrepareObserverOp::Open()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == State::Opening);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      !MayProceedOnNonOwningThread()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const PrincipalInfo& principalInfo = mParams.principalInfo();
+
+  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    QuotaManager::GetInfoForChrome(nullptr, nullptr, &mOrigin);
+  } else {
+    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> principal =
+      PrincipalInfoToPrincipal(principalInfo, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = QuotaManager::GetInfoFromPrincipal(principal,
+                                            nullptr,
+                                            nullptr,
+                                            &mOrigin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  mState = State::SendingReadyMessage;
+  MOZ_ALWAYS_SUCCEEDS(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
+
+  return NS_OK;
+}
+
+void
+PrepareObserverOp::GetResponse(LSRequestResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::SendingResults);
+  MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
+
+  uint64_t observerId = ++gLastObserverId;
+
+  RefPtr<Observer> observer = new Observer(mOrigin);
+
+  if (!gPreparedObsevers) {
+    gPreparedObsevers = new PreparedObserverHashtable();
+  }
+  gPreparedObsevers->Put(observerId, observer);
+
+  LSRequestPrepareObserverResponse prepareObserverResponse;
+  prepareObserverResponse.observerId() = observerId;
+
+  aResponse = prepareObserverResponse;
 }
 
 /*******************************************************************************
@@ -3899,6 +4577,11 @@ QuotaClient::ShutdownWorkThreads()
     }
   }
 
+  if (gPreparedObsevers) {
+    gPreparedObsevers->Clear();
+    gPreparedObsevers = nullptr;
+  }
+
   // This should release any local storage related quota objects or directory
   // locks.
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
@@ -3926,7 +4609,8 @@ ClearPrivateBrowsingRunnable::Run()
       MOZ_ASSERT(datastore);
 
       if (datastore->PrivateBrowsingId()) {
-        datastore->Clear();
+        bool dummy;
+        datastore->Clear(nullptr, &dummy);
       }
     }
   }

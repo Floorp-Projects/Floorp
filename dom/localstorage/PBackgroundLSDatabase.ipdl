@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBackground;
+include protocol PBackgroundLSObject;
 
 namespace mozilla {
 namespace dom {
 
 sync protocol PBackgroundLSDatabase
 {
-  manager PBackground;
+  manager PBackgroundLSObject;
 
 parent:
   // The DeleteMe message is used to avoid a race condition between the parent
@@ -37,11 +37,14 @@ parent:
   sync GetKeys()
     returns (nsString[] keys);
 
-  sync SetItem(nsString key, nsString value);
+  sync SetItem(nsString key, nsString value)
+    returns (bool changed, nsString oldValue);
 
-  sync RemoveItem(nsString key);
+  sync RemoveItem(nsString key)
+    returns (bool changed, nsString oldValue);
 
-  sync Clear();
+  sync Clear()
+    returns (bool changed);
 
 child:
   async __delete__();
