@@ -150,8 +150,8 @@ LSObject::~LSObject()
 
 // static
 nsresult
-LSObject::Create(nsPIDOMWindowInner* aWindow,
-                 Storage** aStorage)
+LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
+                          Storage** aStorage)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
@@ -166,6 +166,10 @@ LSObject::Create(nsPIDOMWindowInner* aWindow,
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
   if (NS_WARN_IF(!principal)) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (nsContentUtils::IsSystemPrincipal(principal)) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
@@ -203,6 +207,51 @@ LSObject::Create(nsPIDOMWindowInner* aWindow,
   object->mDocumentURI = documentURI;
 
   object.forget(aStorage);
+  return NS_OK;
+}
+
+// static
+nsresult
+LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
+                             nsIPrincipal* aPrincipal,
+                             const nsAString& aDocumentURI,
+                             bool aPrivate,
+                             LSObject** aObject)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aObject);
+
+  nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
+  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo ||
+             principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo);
+
+  nsCString origin;
+
+  if (principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo) {
+    QuotaManager::GetInfoForChrome(nullptr, nullptr, &origin);
+  } else {
+    rv = QuotaManager::GetInfoFromPrincipal(aPrincipal,
+                                            nullptr,
+                                            nullptr,
+                                            &origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  RefPtr<LSObject> object = new LSObject(aWindow, aPrincipal);
+  object->mPrincipalInfo = std::move(principalInfo);
+  object->mPrivateBrowsingId = aPrivate ? 1 : 0;
+  object->mOrigin = origin;
+  object->mDocumentURI = aDocumentURI;
+
+  object.forget(aObject);
   return NS_OK;
 }
 

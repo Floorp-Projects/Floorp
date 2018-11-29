@@ -4913,7 +4913,7 @@ nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError)
     RefPtr<Storage> storage;
 
     if (NextGenLocalStorageEnabled()) {
-      aError = LSObject::Create(this, getter_AddRefs(storage));
+      aError = LSObject::CreateForWindow(this, getter_AddRefs(storage));
     } else {
       nsresult rv;
       nsCOMPtr<nsIDOMStorageManager> storageManager =
