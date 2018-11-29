@@ -45,7 +45,7 @@ int av1_init_ref_mv_common(AV1_COMMON *cm,
                            unsigned cur_poc,
                            const unsigned ref_poc[7],
                            const unsigned ref_ref_poc[7][7],
-                           const WarpedMotionParams gmv[7],
+                           const Dav1dWarpedMotionParams gmv[7],
                            int allow_hp, int force_int_mv,
                            int allow_ref_frame_mvs, int order_hint);
 
@@ -156,7 +156,7 @@ static inline void splat_intraref(refmvs *r, const ptrdiff_t stride,
     } while (--bh4);
 }
 
-static inline void fix_mv_precision(const Av1FrameHeader *const hdr,
+static inline void fix_mv_precision(const Dav1dFrameHeader *const hdr,
                                     mv *const mv)
 {
     if (hdr->force_integer_mv) {

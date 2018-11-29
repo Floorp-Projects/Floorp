@@ -46,6 +46,8 @@ static const char *const intra_pred_mode_names[N_IMPL_INTRA_PRED_MODES] = {
     [FILTER_PRED]   = "filter"
 };
 
+static const char *const cfl_ac_names[3] = { "420", "422", "444" };
+
 static const char *const cfl_pred_mode_names[DC_128_PRED + 1] = {
     [DC_PRED]       = "cfl",
     [DC_128_PRED]   = "cfl_128",
@@ -99,6 +101,42 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
                 }
             }
     report("intra_pred");
+}
+
+static void check_cfl_ac(Dav1dIntraPredDSPContext *const c) {
+    ALIGN_STK_32(int16_t, c_dst, 32 * 32,);
+    ALIGN_STK_32(int16_t, a_dst, 32 * 32,);
+    ALIGN_STK_32(pixel, luma, 32 * 32,);
+
+    declare_func(void, int16_t *ac, const pixel *y, ptrdiff_t stride,
+                 int w_pad, int h_pad, int cw, int ch);
+
+    for (int layout = 1; layout <= DAV1D_PIXEL_LAYOUT_I444; layout++) {
+        const int ss_ver = layout == DAV1D_PIXEL_LAYOUT_I420;
+        const int ss_hor = layout != DAV1D_PIXEL_LAYOUT_I444;
+        for (int w = 4; w <= (32 >> ss_hor); w <<= 1)
+            if (check_func(c->cfl_ac[layout - 1], "cfl_ac_%s_w%d_%dbpc",
+                cfl_ac_names[layout - 1], w, BITDEPTH))
+            {
+                for (int h = imax(w / 4, 4); h <= imin(w * 4, (32 >> ss_ver)); h <<= 1) {
+                    const ptrdiff_t stride = 32 * sizeof(pixel);
+                    const int w_pad = rand() & ((w >> 2) - 1);
+                    const int h_pad = rand() & ((h >> 2) - 1);
+
+                    for (int y = 0; y < (h << ss_ver); y++)
+                        for (int x = 0; x < (w << ss_hor); x++)
+                            luma[y * 32 + x] = rand() & ((1 << BITDEPTH) - 1);
+
+                    call_ref(c_dst, luma, stride, w_pad, h_pad, w, h);
+                    call_new(a_dst, luma, stride, w_pad, h_pad, w, h);
+                    if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
+                        fail();
+
+                    bench_new(a_dst, luma, stride, 0, 0, w, h);
+                }
+            }
+    }
+    report("cfl_ac");
 }
 
 static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
@@ -179,6 +217,7 @@ void bitfn(checkasm_check_ipred)(void) {
     bitfn(dav1d_intra_pred_dsp_init)(&c);
 
     check_intra_pred(&c);
+    check_cfl_ac(&c);
     check_cfl_pred(&c);
     check_pal_pred(&c);
 }

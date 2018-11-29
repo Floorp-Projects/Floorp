@@ -301,15 +301,15 @@ static INLINE int is_global_mv_block(const MB_MODE_INFO *const mbmi,
   const BLOCK_SIZE bsize = mbmi->sb_type;
   const int block_size_allowed =
       AOMMIN(block_size_wide[bsize], block_size_high[bsize]) >= 8;
-  return (mode == GLOBALMV || mode == GLOBAL_GLOBALMV) && type > TRANSLATION &&
-         block_size_allowed;
+  return block_size_allowed && type > TRANSLATION &&
+         (mode == GLOBALMV || mode == GLOBAL_GLOBALMV);
 }
 
 typedef struct {
   TransformationType wmtype;
   int32_t wmmat[6];
   int16_t alpha, beta, gamma, delta;
-} WarpedMotionParams;
+} Dav1dWarpedMotionParams;
 
 #define REF_FRAMES_LOG2 3
 #define REF_FRAMES (1 << REF_FRAMES_LOG2)
@@ -381,7 +381,7 @@ typedef struct AV1Common {
   // External BufferPool passed from outside.
   BufferPool buffer_pool;
 
-  WarpedMotionParams global_motion[TOTAL_REFS_PER_FRAME];
+  Dav1dWarpedMotionParams global_motion[TOTAL_REFS_PER_FRAME];
   struct {
     BLOCK_SIZE sb_size;
     int enable_order_hint;
@@ -501,7 +501,7 @@ static INLINE int block_center_y(int mi_row, BLOCK_SIZE bs) {
 // allow_hp is zero, the bottom bit will always be zero. If CONFIG_AMVR and
 // is_integer is true, the bottom three bits will be zero (so the motion vector
 // represents an integer)
-static INLINE int_mv gm_get_motion_vector(const WarpedMotionParams *gm,
+static INLINE int_mv gm_get_motion_vector(const Dav1dWarpedMotionParams *gm,
                                           int allow_hp, BLOCK_SIZE bsize,
                                           int mi_col, int mi_row,
                                           int is_integer) {
@@ -836,7 +836,7 @@ static void add_ref_mv_candidate(
     const MB_MODE_INFO *const candidate, const MV_REFERENCE_FRAME rf[2],
     uint8_t *refmv_count, uint8_t *ref_match_count, uint8_t *newmv_count,
     CANDIDATE_MV *ref_mv_stack, int_mv *gm_mv_candidates,
-    const WarpedMotionParams *gm_params, int col, int weight) {
+    const Dav1dWarpedMotionParams *gm_params, int col, int weight) {
   if (!is_inter_block(candidate)) return;  // for intrabc
   int index = 0, ref;
   assert(weight % 2 == 0);
@@ -1989,7 +1989,7 @@ int av1_init_ref_mv_common(AV1_COMMON *cm,
                            const unsigned cur_poc,
                            const unsigned ref_poc[7],
                            const unsigned ref_ref_poc[7][7],
-                           const WarpedMotionParams gmv[7],
+                           const Dav1dWarpedMotionParams gmv[7],
                            const int allow_hp,
                            const int force_int_mv,
                            const int allow_ref_frame_mvs,
@@ -2003,7 +2003,7 @@ int av1_init_ref_mv_common(AV1_COMMON *cm,
                            const unsigned cur_poc,
                            const unsigned ref_poc[7],
                            const unsigned ref_ref_poc[7][7],
-                           const WarpedMotionParams gmv[7],
+                           const Dav1dWarpedMotionParams gmv[7],
                            const int allow_hp,
                            const int force_int_mv,
                            const int allow_ref_frame_mvs,

@@ -51,8 +51,11 @@ decl_mct_fn(dav1d_prep_8tap_sharp_smooth_avx2);
 decl_mct_fn(dav1d_prep_bilin_avx2);
 
 decl_avg_fn(dav1d_avg_avx2);
+decl_avg_fn(dav1d_avg_ssse3);
 decl_w_avg_fn(dav1d_w_avg_avx2);
+decl_w_avg_fn(dav1d_w_avg_ssse3);
 decl_mask_fn(dav1d_mask_avx2);
+decl_mask_fn(dav1d_mask_ssse3);
 decl_w_mask_fn(dav1d_w_mask_420_avx2);
 decl_blend_fn(dav1d_blend_avx2);
 decl_blend_dir_fn(dav1d_blend_v_avx2);
@@ -70,7 +73,18 @@ void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     c->mct[type] = dav1d_prep_##name##_##suffix
     const unsigned flags = dav1d_get_cpu_flags();
 
-    if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
+
+    if(!(flags & DAV1D_X86_CPU_FLAG_SSSE3))
+        return;
+
+#if BITDEPTH == 8 && ARCH_X86_64
+    c->avg = dav1d_avg_ssse3;
+    c->w_avg = dav1d_w_avg_ssse3;
+    c->mask = dav1d_mask_ssse3;
+#endif
+
+    if (!(flags & DAV1D_X86_CPU_FLAG_AVX2))
+        return;
 
 #if BITDEPTH == 8 && ARCH_X86_64
     init_mc_fn (FILTER_2D_8TAP_REGULAR,        8tap_regular,        avx2);

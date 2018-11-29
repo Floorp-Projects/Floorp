@@ -30,8 +30,8 @@
 
 #include "src/levels.h"
 
-int dav1d_get_shear_params(WarpedMotionParams *wm);
+int dav1d_get_shear_params(Dav1dWarpedMotionParams *wm);
 int dav1d_find_affine_int(const int (*pts)[2][2], int np, int bw4, int bh4,
-                          mv mv, WarpedMotionParams *wm, int by, int bx);
+                          mv mv, Dav1dWarpedMotionParams *wm, int by, int bx);
 
 #endif /* __DAV1D_SRC_WARPMV_H__ */

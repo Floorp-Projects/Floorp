@@ -37,6 +37,8 @@
 
 typedef struct MuxerPriv {
     FILE *f;
+    int first;
+    unsigned fps[2];
 } Y4m2OutputContext;
 
 static int y4m2_open(Y4m2OutputContext *const c, const char *const file,
@@ -49,6 +51,14 @@ static int y4m2_open(Y4m2OutputContext *const c, const char *const file,
         return -1;
     }
 
+    c->first = 1;
+    c->fps[0] = fps[0];
+    c->fps[1] = fps[1];
+
+    return 0;
+}
+
+static int write_header(Y4m2OutputContext *const c, const Dav1dPicture *const p) {
     static const char *const ss_names[][2] = {
         [DAV1D_PIXEL_LAYOUT_I400] = { "mono", "mono10" },
         [DAV1D_PIXEL_LAYOUT_I420] = { NULL, "420p10" },
@@ -59,20 +69,26 @@ static int y4m2_open(Y4m2OutputContext *const c, const char *const file,
     static const char *const chr_names_8bpc_i420[] = {
         [DAV1D_CHR_UNKNOWN] = "420jpeg",
         [DAV1D_CHR_VERTICAL] = "420mpeg2",
-        [DAV1D_CHR_COLOCATED] = "420paldv"
+        [DAV1D_CHR_COLOCATED] = "420"
     };
 
-    const char *const ss_name = p->layout == DAV1D_PIXEL_LAYOUT_I420 && p->bpc == 8 ?
-        chr_names_8bpc_i420[p->chr > 2 ? DAV1D_CHR_UNKNOWN : p->chr] :
-        ss_names[p->layout][p->bpc > 8];
+    const char *const ss_name =
+        p->p.layout == DAV1D_PIXEL_LAYOUT_I420 && p->p.bpc == 8 ?
+        chr_names_8bpc_i420[p->seq_hdr->chr > 2 ? DAV1D_CHR_UNKNOWN : p->seq_hdr->chr] :
+        ss_names[p->p.layout][p->p.bpc > 8];
 
-    fprintf(c->f, "YUV4MPEG2 W%d H%d C%s Ip F%d:%d\n",
-            p->w, p->h, ss_name, fps[0], fps[1]);
+    fprintf(c->f, "YUV4MPEG2 W%d H%d F%d:%d Ip C%s\n",
+            p->p.w, p->p.h, c->fps[0], c->fps[1], ss_name);
 
     return 0;
 }
 
 static int y4m2_write(Y4m2OutputContext *const c, Dav1dPicture *const p) {
+    if (c->first) {
+        c->first = 0;
+        const int res = write_header(c, p);
+        if (res < 0) return res;
+    }
     fprintf(c->f, "FRAME\n");
 
     uint8_t *ptr;

@@ -67,10 +67,15 @@ if is_asm_enabled
 
     m_lib = cc.find_library('m', required: false)
 
+    libdav1d_nasm_objs_if_needed = []
+    if meson.version().version_compare('< 0.48.999')
+        libdav1d_nasm_objs_if_needed = libdav1d_nasm_objs
+    endif
+
     checkasm = executable('checkasm',
         checkasm_sources,
         checkasm_nasm_objs,
-        libdav1d_nasm_objs,
+        libdav1d_nasm_objs_if_needed,
 
         objects: [
             checkasm_bitdepth_objs,

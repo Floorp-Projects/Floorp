@@ -30,6 +30,8 @@
 
 #include "config.h"
 
+#include "dav1d/common.h"
+
 #if ARCH_AARCH64 || ARCH_ARM
 #include "src/arm/cpu.h"
 #elif ARCH_X86
@@ -37,6 +39,6 @@
 #endif
 
 unsigned dav1d_get_cpu_flags(void);
-void dav1d_set_cpu_flags_mask(const unsigned mask);
+DAV1D_API void dav1d_set_cpu_flags_mask(const unsigned mask);
 
 #endif /* __DAV1D_SRC_CPU_H__ */
