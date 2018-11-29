@@ -4,8 +4,6 @@
 
 package mozilla.components.feature.storage
 
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -14,7 +12,6 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitType
-import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -25,7 +22,6 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.never
 
 class HistoryTrackingFeatureTest {
     @Test
@@ -40,30 +36,14 @@ class HistoryTrackingFeatureTest {
     }
 
     @Test
-    fun `history delegate doesn't interact with storage in private mode`() = runBlocking {
-        val storage: HistoryStorage = mock()
-        val delegate = HistoryDelegate(storage)
-
-        delegate.onVisited("http://www.mozilla.org", false, true)
-        verify(storage, never()).recordVisit(any(), any())
-
-        delegate.onTitleChanged("http://www.mozilla.org", "Mozilla", true)
-        verify(storage, never()).recordObservation(any(), any())
-
-        assertEquals(0, delegate.getVisited(true).await().size)
-        assertEquals(listOf(false), delegate.getVisited(listOf("http://www.mozilla.com"), true).await())
-        assertEquals(listOf(false, false), delegate.getVisited(listOf("http://www.mozilla.com", "http://www.firefox.com"), true).await())
-    }
-
-    @Test
     fun `history delegate passes through onVisited calls`() = runBlocking {
         val storage: HistoryStorage = mock()
         val delegate = HistoryDelegate(storage)
 
-        delegate.onVisited("http://www.mozilla.org", false, false)
+        delegate.onVisited("http://www.mozilla.org", false)
         verify(storage).recordVisit("http://www.mozilla.org", VisitType.LINK)
 
-        delegate.onVisited("http://www.firefox.com", true, false)
+        delegate.onVisited("http://www.firefox.com", true)
         verify(storage).recordVisit("http://www.firefox.com", VisitType.RELOAD)
     }
 
@@ -72,7 +52,7 @@ class HistoryTrackingFeatureTest {
         val storage: HistoryStorage = mock()
         val delegate = HistoryDelegate(storage)
 
-        delegate.onTitleChanged("http://www.mozilla.org", "Mozilla", false)
+        delegate.onTitleChanged("http://www.mozilla.org", "Mozilla")
         verify(storage).recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
     }
 
@@ -90,15 +70,15 @@ class HistoryTrackingFeatureTest {
                 fail()
             }
 
-            override fun getVisited(uris: List<String>): Deferred<List<Boolean>> {
+            override suspend fun getVisited(uris: List<String>): List<Boolean> {
                 getVisitedListCalled = true
                 assertEquals(listOf("http://www.mozilla.org", "http://www.firefox.com"), uris)
-                return CompletableDeferred(listOf())
+                return emptyList()
             }
 
-            override fun getVisited(): Deferred<List<String>> {
+            override suspend fun getVisited(): List<String> {
                 getVisitedPlainCalled = true
-                return CompletableDeferred(listOf())
+                return emptyList()
             }
 
             override fun getSuggestions(query: String, limit: Int): List<SearchResult> {
@@ -121,11 +101,11 @@ class HistoryTrackingFeatureTest {
         assertFalse(storage.getVisitedPlainCalled)
         assertFalse(storage.getVisitedListCalled)
 
-        delegate.getVisited(false).await()
+        delegate.getVisited()
         assertTrue(storage.getVisitedPlainCalled)
         assertFalse(storage.getVisitedListCalled)
 
-        delegate.getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"), false).await()
+        delegate.getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"))
         assertTrue(storage.getVisitedListCalled)
     }
 }

@@ -19,8 +19,6 @@ import android.webkit.WebView
 import android.webkit.ValueCallback
 import android.webkit.WebViewClient
 import android.webkit.WebView.HitTestResult
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
@@ -276,10 +274,10 @@ class SystemEngineViewTest {
         engineSession.settings.historyTrackingDelegate = historyDelegate
 
         engineView.currentWebView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com", false)
-        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(false), eq(false))
+        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(false))
 
         engineView.currentWebView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com", true)
-        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(true), eq(false))
+        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(true))
     }
 
     @Test
@@ -288,21 +286,21 @@ class SystemEngineViewTest {
 
         val engineView = SystemEngineView(RuntimeEnvironment.application)
         val historyDelegate = object : HistoryTrackingDelegate {
-            override suspend fun onVisited(uri: String, isReload: Boolean, privateMode: Boolean) {
+            override suspend fun onVisited(uri: String, isReload: Boolean) {
                 fail()
             }
 
-            override suspend fun onTitleChanged(uri: String, title: String, privateMode: Boolean) {
+            override suspend fun onTitleChanged(uri: String, title: String) {
                 fail()
             }
 
-            override fun getVisited(uris: List<String>, privateMode: Boolean): Deferred<List<Boolean>> {
+            override suspend fun getVisited(uris: List<String>): List<Boolean> {
                 fail()
-                return CompletableDeferred(listOf())
+                return emptyList()
             }
 
-            override fun getVisited(privateMode: Boolean): Deferred<List<String>> {
-                return CompletableDeferred(listOf("https://www.mozilla.com"))
+            override suspend fun getVisited(): List<String> {
+                return listOf("https://www.mozilla.com")
             }
         }
 
@@ -346,19 +344,19 @@ class SystemEngineViewTest {
 
         // Delegate not notified if, somehow, there's no currentUrl present in the view.
         engineView.currentWebView.webChromeClient.onReceivedTitle(webView, "New title!")
-        verify(historyDelegate, never()).onTitleChanged(eq(""), eq("New title!"), eq(false))
+        verify(historyDelegate, never()).onTitleChanged(eq(""), eq("New title!"))
 
         // This sets the currentUrl.
         engineView.currentWebView.webViewClient.onPageStarted(webView, "https://www.mozilla.org/", null)
 
         engineView.currentWebView.webChromeClient.onReceivedTitle(webView, "New title!")
-        verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.org/"), eq("New title!"), eq(false))
+        verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.org/"), eq("New title!"))
 
         reset(historyDelegate)
 
         // Empty title when none provided
         engineView.currentWebView.webChromeClient.onReceivedTitle(webView, null)
-        verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.org/"), eq(""), eq(false))
+        verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.org/"), eq(""))
     }
 
     @Test

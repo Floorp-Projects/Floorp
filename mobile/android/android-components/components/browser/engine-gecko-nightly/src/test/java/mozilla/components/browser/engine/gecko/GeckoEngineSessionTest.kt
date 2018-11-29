@@ -6,6 +6,8 @@ package mozilla.components.browser.engine.gecko
 
 import android.os.Handler
 import android.os.Message
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
@@ -31,7 +33,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
@@ -67,6 +71,9 @@ class GeckoEngineSessionTest {
     private lateinit var contentDelegate: ArgumentCaptor<GeckoSession.ContentDelegate>
     private lateinit var permissionDelegate: ArgumentCaptor<GeckoSession.PermissionDelegate>
     private lateinit var trackingProtectionDelegate: ArgumentCaptor<GeckoSession.TrackingProtectionDelegate>
+    private lateinit var historyDelegate: ArgumentCaptor<GeckoSession.HistoryDelegate>
+
+    private val testMainScope = CoroutineScope(newSingleThreadContext("Test"))
 
     @Before
     fun setup() {
@@ -90,6 +97,7 @@ class GeckoEngineSessionTest {
         permissionDelegate = ArgumentCaptor.forClass(GeckoSession.PermissionDelegate::class.java)
         trackingProtectionDelegate = ArgumentCaptor.forClass(
                 GeckoSession.TrackingProtectionDelegate::class.java)
+        historyDelegate = ArgumentCaptor.forClass(GeckoSession.HistoryDelegate::class.java)
 
         geckoSession = mockGeckoSession()
         geckoSessionProvider = { geckoSession }
@@ -101,6 +109,7 @@ class GeckoEngineSessionTest {
         verify(geckoSession).contentDelegate = contentDelegate.capture()
         verify(geckoSession).permissionDelegate = permissionDelegate.capture()
         verify(geckoSession).trackingProtectionDelegate = trackingProtectionDelegate.capture()
+        verify(geckoSession).historyDelegate = historyDelegate.capture()
     }
 
     @Test
@@ -455,47 +464,195 @@ class GeckoEngineSessionTest {
     @Test
     fun `WebView client notifies configured history delegate of title changes`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
-                geckoSessionProvider = geckoSessionProvider)
-        val historyDelegate: HistoryTrackingDelegate = mock()
+                geckoSessionProvider = geckoSessionProvider,
+                context = testMainScope.coroutineContext)
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
 
         captureDelegates()
 
         // Nothing breaks if history delegate isn't configured.
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
 
-        engineSession.settings.historyTrackingDelegate = historyDelegate
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
 
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
-        verify(historyDelegate, never()).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"), eq(false))
+        verify(historyTrackingDelegate, never()).onTitleChanged(anyString(), anyString())
 
         // This sets the currentUrl.
         progressDelegate.value.onPageStart(geckoSession, "https://www.mozilla.com")
 
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
-        verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"), eq(false))
+        verify(historyTrackingDelegate).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"))
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of title changes for private sessions`() = runBlocking {
+    fun `WebView client does not notify configured history delegate of title changes for private sessions`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
-                geckoSessionProvider = geckoSessionProvider, privateMode = true)
-        val historyDelegate: HistoryTrackingDelegate = mock()
+                geckoSessionProvider = geckoSessionProvider,
+                context = testMainScope.coroutineContext,
+                privateMode = true)
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
 
         captureDelegates()
 
         // Nothing breaks if history delegate isn't configured.
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
 
-        engineSession.settings.historyTrackingDelegate = historyDelegate
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
 
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
-        verify(historyDelegate, never()).onTitleChanged(eq(""), eq("Hello World!"), eq(true))
+        verify(historyTrackingDelegate, never()).onTitleChanged(anyString(), anyString())
+        verify(observer).onTitleChange("Hello World!")
 
         // This sets the currentUrl.
         progressDelegate.value.onPageStart(geckoSession, "https://www.mozilla.com")
 
-        contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
-        verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"), eq(true))
+        contentDelegate.value.onTitleChange(geckoSession, "Mozilla")
+        verify(historyTrackingDelegate, never()).onTitleChanged(anyString(), anyString())
+        verify(observer).onTitleChange("Mozilla")
+    }
+
+    @Test
+    fun `WebView client does not notify configured history delegate for redirects`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+                geckoSessionProvider = geckoSessionProvider,
+                context = testMainScope.coroutineContext)
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+
+        captureDelegates()
+
+        // Nothing breaks if history delegate isn't configured.
+        historyDelegate.value.onVisited(geckoSession, "https://www.mozilla.com", null, GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
+        runBlocking(testMainScope.coroutineContext) {
+            engineSession.job.children.forEach { it.join() }
+        }
+
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        historyDelegate.value.onVisited(geckoSession, "https://www.mozilla.com", null, GeckoSession.HistoryDelegate.VISIT_REDIRECT_TEMPORARY)
+        runBlocking(testMainScope.coroutineContext) {
+            engineSession.job.children.forEach { it.join() }
+            verify(historyTrackingDelegate, never()).onVisited(anyString(), anyBoolean())
+        }
+    }
+
+    @Test
+    fun `WebView client does not notify configured history delegate for top-level visits to error pages`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+                geckoSessionProvider = geckoSessionProvider,
+                context = testMainScope.coroutineContext)
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+
+        captureDelegates()
+
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        historyDelegate.value.onVisited(geckoSession, "about:neterror", null, GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL or GeckoSession.HistoryDelegate.VISIT_UNRECOVERABLE_ERROR)
+        runBlocking(testMainScope.coroutineContext) {
+            engineSession.job.children.forEach { it.join() }
+            verify(historyTrackingDelegate, never()).onVisited(anyString(), anyBoolean())
+        }
+    }
+
+    @Test
+    fun `WebView client notifies configured history delegate of visits`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+                geckoSessionProvider = geckoSessionProvider,
+                context = testMainScope.coroutineContext)
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+
+        captureDelegates()
+
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        historyDelegate.value.onVisited(geckoSession, "https://www.mozilla.com", null, GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
+        runBlocking(testMainScope.coroutineContext) {
+            engineSession.job.children.forEach { it.join() }
+            verify(historyTrackingDelegate).onVisited(eq("https://www.mozilla.com"), eq(false))
+        }
+    }
+
+    @Test
+    fun `WebView client notifies configured history delegate of reloads`() = runBlocking {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+                geckoSessionProvider = geckoSessionProvider,
+                context = testMainScope.coroutineContext)
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+
+        captureDelegates()
+
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        historyDelegate.value.onVisited(geckoSession, "https://www.mozilla.com", "https://www.mozilla.com", GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
+        runBlocking(testMainScope.coroutineContext) {
+            engineSession.job.children.forEach { it.join() }
+            verify(historyTrackingDelegate).onVisited(eq("https://www.mozilla.com"), eq(true))
+        }
+    }
+
+    @Test
+    fun `WebView client does not notify configured history delegate of visits for private sessions`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+                geckoSessionProvider = geckoSessionProvider,
+                context = testMainScope.coroutineContext,
+                privateMode = true)
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+
+        captureDelegates()
+
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        historyDelegate.value.onVisited(geckoSession, "https://www.mozilla.com", "https://www.mozilla.com", GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
+        runBlocking(testMainScope.coroutineContext) {
+            engineSession.job.children.forEach { it.join() }
+            verify(historyTrackingDelegate, never()).onVisited(anyString(), anyBoolean())
+        }
+    }
+
+    @Test
+    fun `WebView client requests visited URLs from configured history delegate`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+                geckoSessionProvider = geckoSessionProvider,
+                context = testMainScope.coroutineContext)
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+
+        captureDelegates()
+
+        // Nothing breaks if history delegate isn't configured.
+        historyDelegate.value.getVisited(geckoSession, arrayOf("https://www.mozilla.com", "https://www.mozilla.org"))
+        runBlocking(testMainScope.coroutineContext) {
+            engineSession.job.children.forEach { it.join() }
+        }
+
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        historyDelegate.value.getVisited(geckoSession, arrayOf("https://www.mozilla.com", "https://www.mozilla.org"))
+        runBlocking(testMainScope.coroutineContext) {
+            engineSession.job.children.forEach { it.join() }
+            verify(historyTrackingDelegate).getVisited(eq(listOf("https://www.mozilla.com", "https://www.mozilla.org")))
+        }
+    }
+
+    @Test
+    fun `WebView client does not request visited URLs from configured history delegate in private sessions`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+                geckoSessionProvider = geckoSessionProvider,
+                context = testMainScope.coroutineContext,
+                privateMode = true)
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+
+        captureDelegates()
+
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        historyDelegate.value.getVisited(geckoSession, arrayOf("https://www.mozilla.com", "https://www.mozilla.org"))
+        runBlocking(testMainScope.coroutineContext) {
+            engineSession.job.children.forEach { it.join() }
+            verify(historyTrackingDelegate, never()).getVisited(anyList())
+        }
     }
 
     @Test

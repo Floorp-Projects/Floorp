@@ -6,7 +6,12 @@ package mozilla.components.browser.engine.gecko
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
@@ -43,11 +48,13 @@ class GeckoEngineSession(
     private val runtime: GeckoRuntime,
     private val privateMode: Boolean = false,
     private val defaultSettings: Settings? = null,
-    private val geckoSessionProvider: () -> GeckoSession = { GeckoSession() }
-) : EngineSession() {
+    private val geckoSessionProvider: () -> GeckoSession = { GeckoSession() },
+    private val context: CoroutineContext = Dispatchers.IO
+) : CoroutineScope, EngineSession() {
 
     internal var geckoSession: GeckoSession = geckoSessionProvider()
     internal var currentUrl: String? = null
+    internal var job: Job = Job()
 
     /**
      * See [EngineSession.settings]
@@ -58,6 +65,9 @@ class GeckoEngineSession(
     }
 
     private var initialLoad = true
+
+    override val coroutineContext: CoroutineContext
+        get() = context + job
 
     init {
         initGeckoSession()
@@ -237,7 +247,7 @@ class GeckoEngineSession(
      */
     override fun close() {
         super.close()
-
+        job.cancel()
         geckoSession.close()
     }
 
@@ -348,6 +358,53 @@ class GeckoEngineSession(
     }
 
     @Suppress("ComplexMethod")
+    internal fun createHistoryDelegate() = object : GeckoSession.HistoryDelegate {
+        override fun onVisited(
+            session: GeckoSession,
+            url: String,
+            lastVisitedURL: String?,
+            flags: Int
+        ): GeckoResult<Boolean>? {
+            if (privateMode ||
+                (flags and GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL) == 0 ||
+                (flags and GeckoSession.HistoryDelegate.VISIT_UNRECOVERABLE_ERROR) != 0) {
+
+                // Don't track visits in private mode, redirects, or error
+                // pages, even if they're top-level visits.
+                return GeckoResult.fromValue(false)
+            }
+
+            val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(false)
+
+            val isReload = lastVisitedURL?.let { it == url } ?: false
+            val result = GeckoResult<Boolean>()
+            launch {
+                delegate.onVisited(url, isReload)
+                result.complete(true)
+            }
+            return result
+        }
+
+        override fun getVisited(
+            session: GeckoSession,
+            urls: Array<out String>
+        ): GeckoResult<BooleanArray>? {
+            if (privateMode) {
+                return GeckoResult.fromValue(null)
+            }
+
+            val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(null)
+
+            val result = GeckoResult<BooleanArray>()
+            launch {
+                val visits: List<Boolean>? = delegate.getVisited(urls.toList())
+                result.complete(visits?.toBooleanArray())
+            }
+            return result
+        }
+    }
+
+    @Suppress("ComplexMethod")
     internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
         override fun onContextMenu(
             session: GeckoSession,
@@ -387,10 +444,12 @@ class GeckoEngineSession(
         override fun onCloseRequest(session: GeckoSession) = Unit
 
         override fun onTitleChange(session: GeckoSession, title: String) {
-            currentUrl?.let { url ->
-                settings.historyTrackingDelegate?.let { delegate ->
-                    runBlocking {
-                        delegate.onTitleChanged(url, title, privateMode)
+            if (!privateMode) {
+                currentUrl?.let { url ->
+                    settings.historyTrackingDelegate?.let { delegate ->
+                        runBlocking {
+                            delegate.onTitleChanged(url, title)
+                        }
                     }
                 }
             }
@@ -500,6 +559,7 @@ class GeckoEngineSession(
         geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
         geckoSession.permissionDelegate = createPermissionDelegate()
         geckoSession.promptDelegate = GeckoPromptDelegate(this)
+        geckoSession.historyDelegate = createHistoryDelegate()
     }
 
     companion object {

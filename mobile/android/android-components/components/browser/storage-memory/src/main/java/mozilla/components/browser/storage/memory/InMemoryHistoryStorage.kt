@@ -5,8 +5,6 @@
 package mozilla.components.browser.storage.memory
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
@@ -42,27 +40,21 @@ class InMemoryHistoryStorage : HistoryStorage {
         }
     }
 
-    override suspend fun recordObservation(uri: String, observation: PageObservation) {
-        synchronized(pageMeta) {
-            pageMeta[uri] = observation
+    override suspend fun recordObservation(uri: String, observation: PageObservation) = synchronized(pageMeta) {
+        pageMeta[uri] = observation
+    }
+
+    override suspend fun getVisited(uris: List<String>): List<Boolean> = synchronized(pages) {
+        return uris.map {
+            if (pages[it] != null && pages[it]!!.size > 0) {
+                return@map true
+            }
+            return@map false
         }
     }
 
-    override fun getVisited(uris: List<String>): Deferred<List<Boolean>> {
-        return CompletableDeferred(synchronized(pages) {
-            uris.map {
-                if (pages[it] != null && pages[it]!!.size > 0) {
-                    return@map true
-                }
-                return@map false
-            }
-        })
-    }
-
-    override fun getVisited(): Deferred<List<String>> {
-        return CompletableDeferred(synchronized(pages) {
-            pages.keys.toList()
-        })
+    override suspend fun getVisited(): List<String> = synchronized(pages) {
+        return pages.keys.toList()
     }
 
     override fun getSuggestions(query: String, limit: Int): List<SearchResult> = synchronized(pages + pageMeta) {

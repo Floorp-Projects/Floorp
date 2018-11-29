@@ -84,10 +84,10 @@ class PlacesHistoryStorageTest {
         val storage = storage!!
         val places = places!!
 
-        storage.getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com")).await()
+        storage.getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"))
         verify(places, times(1)).getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"))
 
-        storage.getVisited(listOf()).await()
+        storage.getVisited(listOf())
         verify(places, times(1)).getVisited(listOf())
 
         Unit
@@ -98,7 +98,7 @@ class PlacesHistoryStorageTest {
         val storage = storage!!
         val places = places!!
 
-        storage.getVisited().await()
+        storage.getVisited()
         verify(places, times(1)).getVisitedUrlsInRange(eq(0), ArgumentMatchers.anyLong(), eq(true))
         Unit
     }

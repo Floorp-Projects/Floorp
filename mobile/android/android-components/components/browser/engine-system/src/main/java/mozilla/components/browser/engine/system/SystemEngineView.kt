@@ -132,7 +132,7 @@ class SystemEngineView @JvmOverloads constructor(
             // TODO private browsing not supported for SystemEngine
             // https://github.com/mozilla-mobile/android-components/issues/649
             runBlocking {
-                session?.settings?.historyTrackingDelegate?.onVisited(url, isReload, privateMode = false)
+                session?.settings?.historyTrackingDelegate?.onVisited(url, isReload)
             }
         }
 
@@ -278,7 +278,7 @@ class SystemEngineView @JvmOverloads constructor(
             // https://github.com/mozilla-mobile/android-components/issues/649
             session?.settings?.historyTrackingDelegate?.let {
                 runBlocking {
-                    callback.onReceiveValue(it.getVisited(false).await().toTypedArray())
+                    callback.onReceiveValue(it.getVisited().toTypedArray())
                 }
             }
         }
@@ -294,7 +294,7 @@ class SystemEngineView @JvmOverloads constructor(
             currentUrl.takeIf { it.isNotEmpty() }?.let { url ->
                 session?.settings?.historyTrackingDelegate?.let { delegate ->
                     runBlocking {
-                        delegate.onTitleChanged(url, titleOrEmpty, privateMode = false)
+                        delegate.onTitleChanged(url, titleOrEmpty)
                     }
                 }
             }

@@ -4,8 +4,6 @@
 
 package mozilla.components.concept.storage
 
-import kotlinx.coroutines.Deferred
-
 /**
  * An interface which defines read/write methods for history data.
  */
@@ -27,16 +25,16 @@ interface HistoryStorage {
     /**
      * Maps a list of page URIs to a list of booleans indicating if each URI was visited.
      * @param uris a list of page URIs about which "visited" information is being requested.
-     * @return A [Deferred] list of booleans indicating visited status of each
+     * @return A list of booleans indicating visited status of each
      * corresponding page URI from [uris].
      */
-    fun getVisited(uris: List<String>): Deferred<List<Boolean>>
+    suspend fun getVisited(uris: List<String>): List<Boolean>
 
     /**
      * Retrieves a list of all visited pages.
-     * @return A [Deferred] list of all visited page URIs.
+     * @return A list of all visited page URIs.
      */
-    fun getVisited(): Deferred<List<String>>
+    suspend fun getVisited(): List<String>
 
     /**
      * Retrieves suggestions matching the [query].

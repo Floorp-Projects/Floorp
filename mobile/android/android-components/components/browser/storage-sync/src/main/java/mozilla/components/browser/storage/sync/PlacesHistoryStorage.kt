@@ -9,7 +9,6 @@ import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.async
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.HistoryAutocompleteResult
@@ -63,18 +62,18 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
         }.join()
     }
 
-    override fun getVisited(uris: List<String>): Deferred<List<Boolean>> {
-        return scope.async { places.api().getVisited(uris) }
+    override suspend fun getVisited(uris: List<String>): List<Boolean> {
+        return scope.async { places.api().getVisited(uris) }.await()
     }
 
-    override fun getVisited(): Deferred<List<String>> {
+    override suspend fun getVisited(): List<String> {
         return scope.async {
             places.api().getVisitedUrlsInRange(
                 start = 0,
                 end = System.currentTimeMillis(),
                 includeRemote = true
             )
-        }
+        }.await()
     }
 
     override fun cleanup() {

@@ -5,8 +5,6 @@
 package mozilla.components.feature.storage
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.storage.HistoryStorage
@@ -25,10 +23,7 @@ class HistoryTrackingFeature(engine: Engine, historyStorage: HistoryStorage) {
 
 @VisibleForTesting
 internal class HistoryDelegate(private val historyStorage: HistoryStorage) : HistoryTrackingDelegate {
-    override suspend fun onVisited(uri: String, isReload: Boolean, privateMode: Boolean) {
-        if (privateMode) {
-            return
-        }
+    override suspend fun onVisited(uri: String, isReload: Boolean) {
         val visitType = when (isReload) {
             true -> VisitType.RELOAD
             false -> VisitType.LINK
@@ -36,25 +31,15 @@ internal class HistoryDelegate(private val historyStorage: HistoryStorage) : His
         historyStorage.recordVisit(uri, visitType)
     }
 
-    override suspend fun onTitleChanged(uri: String, title: String, privateMode: Boolean) {
-        if (privateMode) {
-            return
-        }
+    override suspend fun onTitleChanged(uri: String, title: String) {
         historyStorage.recordObservation(uri, PageObservation(title = title))
     }
 
-    override fun getVisited(uris: List<String>, privateMode: Boolean): Deferred<List<Boolean>> {
-        if (privateMode) {
-            return CompletableDeferred(List(uris.size) { false })
-        }
-
+    override suspend fun getVisited(uris: List<String>): List<Boolean> {
         return historyStorage.getVisited(uris)
     }
 
-    override fun getVisited(privateMode: Boolean): Deferred<List<String>> {
-        if (privateMode) {
-            return CompletableDeferred(listOf())
-        }
+    override suspend fun getVisited(): List<String> {
         return historyStorage.getVisited()
     }
 }

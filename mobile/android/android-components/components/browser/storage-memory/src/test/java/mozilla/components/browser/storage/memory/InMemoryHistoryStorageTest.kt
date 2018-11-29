@@ -45,19 +45,19 @@ class InMemoryHistoryStorageTest {
         val history = InMemoryHistoryStorage()
 
         // Empty.
-        assertEquals(0, history.getVisited().await().size)
+        assertEquals(0, history.getVisited().size)
 
         // Regular visits are tracked.
         history.recordVisit("https://www.mozilla.org", VisitType.LINK)
-        assertEquals(listOf("https://www.mozilla.org"), history.getVisited().await())
+        assertEquals(listOf("https://www.mozilla.org"), history.getVisited())
 
         // Multiple visits can be tracked, results ordered by "URL's first seen first".
         history.recordVisit("https://www.firefox.com", VisitType.LINK)
-        assertEquals(listOf("https://www.mozilla.org", "https://www.firefox.com"), history.getVisited().await())
+        assertEquals(listOf("https://www.mozilla.org", "https://www.firefox.com"), history.getVisited())
 
         // Visits marked as reloads can be tracked.
         history.recordVisit("https://www.firefox.com", VisitType.RELOAD)
-        assertEquals(listOf("https://www.mozilla.org", "https://www.firefox.com"), history.getVisited().await())
+        assertEquals(listOf("https://www.mozilla.org", "https://www.firefox.com"), history.getVisited())
 
         // Visited urls are certainly a set.
         history.recordVisit("https://www.firefox.com", VisitType.LINK)
@@ -65,7 +65,7 @@ class InMemoryHistoryStorageTest {
         history.recordVisit("https://www.wikipedia.org", VisitType.LINK)
         assertEquals(
             listOf("https://www.mozilla.org", "https://www.firefox.com", "https://www.wikipedia.org"),
-            history.getVisited().await()
+            history.getVisited()
         )
     }
 
@@ -73,25 +73,25 @@ class InMemoryHistoryStorageTest {
     fun `store can be used to record and retrieve history via gecko-style callbacks`() = runBlocking {
         val history = InMemoryHistoryStorage()
 
-        assertEquals(0, history.getVisited(listOf()).await().size)
+        assertEquals(0, history.getVisited(listOf()).size)
 
         // Regular visits are tracked
         history.recordVisit("https://www.mozilla.org", VisitType.LINK)
-        assertEquals(listOf(true), history.getVisited(listOf("https://www.mozilla.org")).await())
+        assertEquals(listOf(true), history.getVisited(listOf("https://www.mozilla.org")))
 
         // Duplicate requests are handled.
-        assertEquals(listOf(true, true), history.getVisited(listOf("https://www.mozilla.org", "https://www.mozilla.org")).await())
+        assertEquals(listOf(true, true), history.getVisited(listOf("https://www.mozilla.org", "https://www.mozilla.org")))
 
         // Visit map is returned in correct order.
-        assertEquals(listOf(true, false), history.getVisited(listOf("https://www.mozilla.org", "https://www.unknown.com")).await())
+        assertEquals(listOf(true, false), history.getVisited(listOf("https://www.mozilla.org", "https://www.unknown.com")))
 
-        assertEquals(listOf(false, true), history.getVisited(listOf("https://www.unknown.com", "https://www.mozilla.org")).await())
+        assertEquals(listOf(false, true), history.getVisited(listOf("https://www.unknown.com", "https://www.mozilla.org")))
 
         // Multiple visits can be tracked. Reloads can be tracked.
         history.recordVisit("https://www.firefox.com", VisitType.LINK)
         history.recordVisit("https://www.mozilla.org", VisitType.RELOAD)
         history.recordVisit("https://www.wikipedia.org", VisitType.LINK)
-        assertEquals(listOf(true, true, false, true), history.getVisited(listOf("https://www.firefox.com", "https://www.wikipedia.org", "https://www.unknown.com", "https://www.mozilla.org")).await())
+        assertEquals(listOf(true, true, false, true), history.getVisited(listOf("https://www.firefox.com", "https://www.wikipedia.org", "https://www.unknown.com", "https://www.mozilla.org")))
     }
 
     @Test

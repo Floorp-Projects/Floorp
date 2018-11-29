@@ -389,7 +389,7 @@ class GeckoEngineSession(
             currentUrl?.let { url ->
                 settings.historyTrackingDelegate?.let { delegate ->
                     runBlocking {
-                        delegate.onTitleChanged(url, title, privateMode)
+                        delegate.onTitleChanged(url, title)
                     }
                 }
             }
