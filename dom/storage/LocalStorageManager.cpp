@@ -381,6 +381,18 @@ LocalStorageManager::GetNextGenLocalStorageEnabled(bool* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+LocalStorageManager::IsPreloaded(nsIPrincipal* aPrincipal,
+                                 JSContext* aContext,
+                                 nsISupports** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(_retval);
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void
 LocalStorageManager::ClearCaches(uint32_t aUnloadFlags,
                                  const OriginAttributesPattern& aPattern,

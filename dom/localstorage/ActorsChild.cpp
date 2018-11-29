@@ -277,5 +277,42 @@ LSRequestChild::RecvReady()
   return IPC_OK();
 }
 
+/*******************************************************************************
+ * LSSimpleRequestChild
+ ******************************************************************************/
+
+LSSimpleRequestChild::LSSimpleRequestChild(
+                                        LSSimpleRequestChildCallback* aCallback)
+  : mCallback(aCallback)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aCallback);
+
+  MOZ_COUNT_CTOR(LSSimpleRequestChild);
+}
+
+LSSimpleRequestChild::~LSSimpleRequestChild()
+{
+  AssertIsOnOwningThread();
+
+  MOZ_COUNT_DTOR(LSSimpleRequestChild);
+}
+
+void
+LSSimpleRequestChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+}
+
+mozilla::ipc::IPCResult
+LSSimpleRequestChild::Recv__delete__(const LSSimpleRequestResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+
+  mCallback->OnResponse(aResponse);
+
+  return IPC_OK();
+}
+
 } // namespace dom
 } // namespace mozilla

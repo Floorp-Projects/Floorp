@@ -7,9 +7,82 @@
 #include "LocalStorageManager2.h"
 
 #include "LSObject.h"
+#include "mozilla/dom/Promise.h"
 
 namespace mozilla {
 namespace dom {
+
+namespace {
+
+class SimpleRequestResolver final
+  : public LSSimpleRequestChildCallback
+{
+  RefPtr<Promise> mPromise;
+
+public:
+  explicit SimpleRequestResolver(Promise* aPromise)
+    : mPromise(aPromise)
+  { }
+
+  NS_INLINE_DECL_REFCOUNTING(SimpleRequestResolver, override);
+
+private:
+  ~SimpleRequestResolver() = default;
+
+  void
+  HandleResponse(nsresult aResponse);
+
+  void
+  HandleResponse(bool aResponse);
+
+  // LSRequestChildCallback
+  void
+  OnResponse(const LSSimpleRequestResponse& aResponse) override;
+};
+
+nsresult
+CreatePromise(JSContext* aContext, Promise** aPromise)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aContext);
+
+  nsIGlobalObject* global =
+    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aContext));
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(global, result);
+  if (result.Failed()) {
+    return result.StealNSResult();
+  }
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
+nsresult
+CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
+                                PrincipalInfo& aPrincipalInfo)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &aPrincipalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (aPrincipalInfo.type() != PrincipalInfo::TContentPrincipalInfo &&
+      aPrincipalInfo.type() != PrincipalInfo::TSystemPrincipalInfo) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
+} // namespace
 
 LocalStorageManager2::LocalStorageManager2()
 {
@@ -107,6 +180,101 @@ LocalStorageManager2::GetNextGenLocalStorageEnabled(bool* aResult)
 
   *aResult = NextGenLocalStorageEnabled();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+LocalStorageManager2::IsPreloaded(nsIPrincipal* aPrincipal,
+                                  JSContext* aContext,
+                                  nsISupports** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(_retval);
+
+  RefPtr<Promise> promise;
+  nsresult rv = CreatePromise(aContext, getter_AddRefs(promise));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  LSSimpleRequestPreloadedParams params;
+
+  rv = CheckedPrincipalToPrincipalInfo(aPrincipal,
+                                       params.principalInfo());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = StartSimpleRequest(promise, params);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  promise.forget(_retval);
+  return NS_OK;
+}
+
+nsresult
+LocalStorageManager2::StartSimpleRequest(Promise* aPromise,
+                                         const LSSimpleRequestParams& aParams)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPromise);
+
+  PBackgroundChild* backgroundActor =
+    BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!backgroundActor)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<SimpleRequestResolver> resolver = new SimpleRequestResolver(aPromise);
+
+  auto actor = new LSSimpleRequestChild(resolver);
+
+  if (!backgroundActor->SendPBackgroundLSSimpleRequestConstructor(actor,
+                                                                  aParams)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+void
+SimpleRequestResolver::HandleResponse(nsresult aResponse)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPromise);
+
+  mPromise->MaybeReject(aResponse);
+}
+
+void
+SimpleRequestResolver::HandleResponse(bool aResponse)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPromise);
+
+  mPromise->MaybeResolve(aResponse);
+}
+
+void
+SimpleRequestResolver::OnResponse(const LSSimpleRequestResponse& aResponse)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  switch (aResponse.type()) {
+    case LSSimpleRequestResponse::Tnsresult:
+      HandleResponse(aResponse.get_nsresult());
+      break;
+
+    case LSSimpleRequestResponse::TLSSimpleRequestPreloadedResponse:
+      HandleResponse(
+        aResponse.get_LSSimpleRequestPreloadedResponse().preloaded());
+      break;
+
+   default:
+      MOZ_CRASH("Unknown response type!");
+  }
 }
 
 } // namespace dom

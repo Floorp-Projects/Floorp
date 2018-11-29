@@ -23,5 +23,15 @@ union LSRequestParams
   LSRequestPrepareObserverParams;
 };
 
+struct LSSimpleRequestPreloadedParams
+{
+  PrincipalInfo principalInfo;
+};
+
+union LSSimpleRequestParams
+{
+  LSSimpleRequestPreloadedParams;
+};
+
 } // namespace dom
 } // namespace mozilla

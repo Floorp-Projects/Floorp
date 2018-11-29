@@ -13,6 +13,9 @@
 namespace mozilla {
 namespace dom {
 
+class LSSimpleRequestParams;
+class Promise;
+
 class LocalStorageManager2 final
   : public nsIDOMStorageManager
   , public nsILocalStorageManager
@@ -26,6 +29,10 @@ public:
 
 private:
   ~LocalStorageManager2();
+
+  nsresult
+  StartSimpleRequest(Promise* aPromise,
+                     const LSSimpleRequestParams& aParams);
 };
 
 } // namespace dom

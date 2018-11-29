@@ -38,6 +38,7 @@ IPDL_SOURCES += [
     'PBackgroundLSObserver.ipdl',
     'PBackgroundLSRequest.ipdl',
     'PBackgroundLSSharedTypes.ipdlh',
+    'PBackgroundLSSimpleRequest.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
