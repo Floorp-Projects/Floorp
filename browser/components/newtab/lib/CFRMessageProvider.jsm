@@ -48,6 +48,7 @@ const CFR_MESSAGES = [
   {
     id: "AMAZON_ASSISTANT_1",
     template: "cfr_doorhanger",
+    exclude: true,
     content: {
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
@@ -100,6 +101,7 @@ const CFR_MESSAGES = [
   {
     id: "AMAZON_ASSISTANT_3",
     template: "cfr_doorhanger",
+    exclude: true,
     content: {
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
@@ -152,6 +154,7 @@ const CFR_MESSAGES = [
   {
     id: "FACEBOOK_CONTAINER_1",
     template: "cfr_doorhanger",
+    exclude: true,
     content: {
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
@@ -256,6 +259,7 @@ const CFR_MESSAGES = [
   {
     id: "GOOGLE_TRANSLATE_1",
     template: "cfr_doorhanger",
+    exclude: true,
     content: {
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
@@ -360,6 +364,7 @@ const CFR_MESSAGES = [
   {
     id: "YOUTUBE_ENHANCE_1",
     template: "cfr_doorhanger",
+    exclude: true,
     content: {
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
@@ -464,6 +469,7 @@ const CFR_MESSAGES = [
   {
     id: "WIKIPEDIA_CONTEXT_MENU_SEARCH_1",
     template: "cfr_doorhanger",
+    exclude: true,
     content: {
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
@@ -516,6 +522,7 @@ const CFR_MESSAGES = [
   {
     id: "WIKIPEDIA_CONTEXT_MENU_SEARCH_3",
     template: "cfr_doorhanger",
+    exclude: true,
     content: {
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
@@ -568,6 +575,7 @@ const CFR_MESSAGES = [
   {
     id: "REDDIT_ENHANCEMENT_1",
     template: "cfr_doorhanger",
+    exclude: true,
     content: {
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
@@ -620,6 +628,7 @@ const CFR_MESSAGES = [
   {
     id: "REDDIT_ENHANCEMENT_3",
     template: "cfr_doorhanger",
+    exclude: true,
     content: {
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
@@ -673,7 +682,7 @@ const CFR_MESSAGES = [
 
 const CFRMessageProvider = {
   getMessages() {
-    return CFR_MESSAGES;
+    return CFR_MESSAGES.filter(msg => !msg.exclude);
   },
 };
 this.CFRMessageProvider = CFRMessageProvider;
