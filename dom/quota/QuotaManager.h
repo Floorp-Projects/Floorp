@@ -311,6 +311,11 @@ public:
                         bool aCreateIfNotExists,
                         bool* aCreated);
 
+  nsresult
+  AboutToClearOrigins(const Nullable<PersistenceType>& aPersistenceType,
+                      const OriginScope& aOriginScope,
+                      const Nullable<Client::Type>& aClientType);
+
   void
   OriginClearCompleted(PersistenceType aPersistenceType,
                        const nsACString& aOrigin,

@@ -5800,6 +5800,35 @@ QuotaManager::EnsureOriginDirectory(nsIFile* aDirectory,
   return NS_OK;
 }
 
+nsresult
+QuotaManager::AboutToClearOrigins(
+                              const Nullable<PersistenceType>& aPersistenceType,
+                              const OriginScope& aOriginScope,
+                              const Nullable<Client::Type>& aClientType)
+{
+  AssertIsOnIOThread();
+
+  nsresult rv;
+
+  if (aClientType.IsNull()) {
+    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
+      rv = mClients[index]->AboutToClearOrigins(aPersistenceType,
+                                                aOriginScope);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+  } else {
+    rv = mClients[aClientType.Value()]->AboutToClearOrigins(aPersistenceType,
+                                                            aOriginScope);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
 void
 QuotaManager::OriginClearCompleted(PersistenceType aPersistenceType,
                                    const nsACString& aOrigin,
@@ -7876,10 +7905,18 @@ ResetOrClearOp::DeleteFiles(QuotaManager* aQuotaManager)
   AssertIsOnIOThread();
   MOZ_ASSERT(aQuotaManager);
 
+  nsresult rv =
+    aQuotaManager->AboutToClearOrigins(Nullable<PersistenceType>(),
+                                       OriginScope::FromNull(),
+                                       Nullable<Client::Type>());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   nsCOMPtr<nsIFile> directory;
-  nsresult rv = NS_NewLocalFile(aQuotaManager->GetStoragePath(), false,
-                                getter_AddRefs(directory));
+  rv = NS_NewLocalFile(aQuotaManager->GetStoragePath(),
+                       false,
+                       getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -7949,9 +7986,19 @@ ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
   AssertIsOnIOThread();
   MOZ_ASSERT(aQuotaManager);
 
+  nsresult rv =
+    aQuotaManager->AboutToClearOrigins(
+                                    Nullable<PersistenceType>(aPersistenceType),
+                                    mOriginScope,
+                                    mClientType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
   nsCOMPtr<nsIFile> directory;
-  nsresult rv = NS_NewLocalFile(aQuotaManager->GetStoragePath(aPersistenceType),
-                                false, getter_AddRefs(directory));
+  rv = NS_NewLocalFile(aQuotaManager->GetStoragePath(aPersistenceType),
+                       false,
+                       getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
