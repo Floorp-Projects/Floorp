@@ -15,7 +15,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+        android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+        android:name=".GleanApplication">
         <activity android:name="org.mozilla.samples.glean.MainActivity"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTask">
