@@ -23,6 +23,9 @@ public:
   UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor) = 0;
 
   virtual void
+  FireUpdateFound() = 0;
+
+  virtual void
   RegistrationRemoved() = 0;
 
   virtual void

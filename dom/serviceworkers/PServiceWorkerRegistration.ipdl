@@ -23,6 +23,7 @@ child:
   async __delete__();
 
   async UpdateState(IPCServiceWorkerRegistrationDescriptor aDescriptor);
+  async FireUpdateFound();
 };
 
 } // namespace dom
