@@ -82,13 +82,6 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
   if (window.title.empty())
     return TRUE;
 
-  // Skip windows of zero visible area, except IconicWindows
-  RECT bounds;
-  if(GetClientRect(hwnd,&bounds) && !IsIconic(hwnd)
-    && IsRectEmpty(&bounds)){
-    return TRUE;
-  }
-
   list->push_back(window);
 
   return TRUE;
