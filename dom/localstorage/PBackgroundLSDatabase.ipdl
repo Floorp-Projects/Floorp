@@ -48,7 +48,9 @@ parent:
   async AllowToClose();
 
   sync PBackgroundLSSnapshot(nsString documentURI,
-                             int64_t requestedSize)
+                             bool increasePeakUsage,
+                             int64_t requestedSize,
+                             int64_t minSize)
     returns (LSSnapshotInitInfo initInfo);
 
 child:
