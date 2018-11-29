@@ -660,6 +660,79 @@ TEST_F(ImageAnimationFrameBuffer, ResetBeforeDiscardingThreshold)
   EXPECT_EQ(firstFrame, advanceFirstFrame);
 }
 
+TEST_F(ImageAnimationFrameBuffer, DiscardingTooFewFrames)
+{
+  const size_t kThreshold = 3;
+  const size_t kBatch = 1;
+  const size_t kStartFrame = 0;
+
+  // First get us to a discarding buffer state.
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(retained, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::DISCARD_YIELD);
+
+  // Insert one more frame.
+  AnimationFrameDiscardingQueue buffer(std::move(retained));
+  VerifyAdvance(buffer, 2, true);
+  VerifyInsert(buffer, AnimationFrameBuffer::InsertStatus::YIELD);
+
+  // Mark it as complete.
+  bool restartDecoder = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  EXPECT_FALSE(restartDecoder);
+  EXPECT_FALSE(buffer.HasRedecodeError());
+
+  // Insert one fewer frame than before.
+  VerifyAdvance(buffer, 3, true);
+  VerifyInsertAndAdvance(buffer, 0, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 2, AnimationFrameBuffer::InsertStatus::YIELD);
+
+  // When we mark it as complete, it should fail due to too few frames.
+  restartDecoder = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  EXPECT_TRUE(buffer.HasRedecodeError());
+  EXPECT_EQ(size_t(0), buffer.PendingDecode());
+  EXPECT_EQ(size_t(4), buffer.Size());
+}
+
+TEST_F(ImageAnimationFrameBuffer, DiscardingTooManyFrames)
+{
+  const size_t kThreshold = 3;
+  const size_t kBatch = 1;
+  const size_t kStartFrame = 0;
+
+  // First get us to a discarding buffer state.
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(retained, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::DISCARD_YIELD);
+
+  // Insert one more frame.
+  AnimationFrameDiscardingQueue buffer(std::move(retained));
+  VerifyAdvance(buffer, 2, true);
+  VerifyInsert(buffer, AnimationFrameBuffer::InsertStatus::YIELD);
+
+  // Mark it as complete.
+  bool restartDecoder = buffer.MarkComplete(IntRect(0, 0, 1, 1));
+  EXPECT_FALSE(restartDecoder);
+  EXPECT_FALSE(buffer.HasRedecodeError());
+
+  // Advance and insert to get us back to the end on the redecode.
+  VerifyAdvance(buffer, 3, true);
+  VerifyInsertAndAdvance(buffer, 0, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 2, AnimationFrameBuffer::InsertStatus::YIELD);
+  VerifyInsertAndAdvance(buffer, 3, AnimationFrameBuffer::InsertStatus::YIELD);
+
+  // Attempt to insert a 5th frame, it should fail.
+  RefPtr<imgFrame> frame = CreateEmptyFrame();
+  AnimationFrameBuffer::InsertStatus status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+  EXPECT_TRUE(buffer.HasRedecodeError());
+  EXPECT_EQ(size_t(0), buffer.PendingDecode());
+  EXPECT_EQ(size_t(4), buffer.Size());
+}
+
 TEST_F(ImageAnimationFrameBuffer, RecyclingReset)
 {
   const size_t kThreshold = 8;
