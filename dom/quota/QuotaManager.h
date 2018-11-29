@@ -32,6 +32,12 @@ class nsIURI;
 class nsPIDOMWindowOuter;
 class nsIRunnable;
 
+namespace mozilla {
+
+class OriginAttributes;
+
+} // namespace mozilla
+
 BEGIN_QUOTA_NAMESPACE
 
 class DirectoryLockImpl;
@@ -430,6 +436,11 @@ public:
   static bool
   AreOriginsEqualOnDisk(nsACString& aOrigin1,
                         nsACString& aOrigin2);
+
+  static bool
+  ParseOrigin(const nsACString& aOrigin,
+              nsCString& aSpec,
+              OriginAttributes* aAttrs);
 
 private:
   QuotaManager();
