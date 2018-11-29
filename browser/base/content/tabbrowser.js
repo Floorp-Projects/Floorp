@@ -62,8 +62,6 @@ window._gBrowser = {
 
     XPCOMUtils.defineLazyPreferenceGetter(this, "animationsEnabled",
       "toolkit.cosmeticAnimations.enabled");
-    XPCOMUtils.defineLazyPreferenceGetter(this, "schedulePressureDefaultCount",
-      "browser.schedulePressure.defaultCount");
 
     this._setupEventListeners();
   },
@@ -4991,32 +4989,6 @@ class TabProgressListener {
           this.mTab.setAttribute("busy", "true");
           gBrowser._tabAttrModified(this.mTab, ["busy"]);
           this.mTab._notselectedsinceload = !this.mTab.selected;
-          SchedulePressure.startMonitoring(window, {
-            highPressureFn() {
-              // Only switch back to the SVG loading indicator after getting
-              // three consecutive low pressure callbacks. Used to prevent
-              // switching quickly between the SVG and APNG loading indicators.
-              gBrowser.tabContainer._schedulePressureCount = gBrowser.schedulePressureDefaultCount;
-              gBrowser.tabContainer.setAttribute("schedulepressure", "true");
-            },
-            lowPressureFn() {
-              if (!gBrowser.tabContainer._schedulePressureCount ||
-                --gBrowser.tabContainer._schedulePressureCount <= 0) {
-                gBrowser.tabContainer.removeAttribute("schedulepressure");
-              }
-
-              // If tabs are closed while they are loading we need to
-              // stop monitoring schedule pressure. We don't stop monitoring
-              // during high pressure times because we want to eventually
-              // return to the SVG tab loading animations.
-              let continueMonitoring = true;
-              if (!document.querySelector(".tabbrowser-tab[busy]")) {
-                SchedulePressure.stopMonitoring(window);
-                continueMonitoring = false;
-              }
-              return { continueMonitoring };
-            },
-          });
           gBrowser.syncThrobberAnimations(this.mTab);
         }
 
@@ -5031,10 +5003,6 @@ class TabProgressListener {
       if (this.mTab.hasAttribute("busy")) {
         this.mTab.removeAttribute("busy");
         modifiedAttrs.push("busy");
-        if (!document.querySelector(".tabbrowser-tab[busy]")) {
-          SchedulePressure.stopMonitoring(window);
-          gBrowser.tabContainer.removeAttribute("schedulepressure");
-        }
 
         // Only animate the "burst" indicating the page has loaded if
         // the top-level page is the one that finished loading.

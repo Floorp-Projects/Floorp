@@ -199,15 +199,13 @@ panelview[mainview] > .panel-header {
 }
 
 .tab-label:not([fadein]),
-.tab-throbber:not([fadein]),
-.tab-throbber-fallback:not([fadein]) {
+.tab-throbber:not([fadein]) {
   display: none;
 }
 
 %ifdef NIGHTLY_BUILD
 @supports -moz-bool-pref("browser.tabs.hideThrobber") {
-  .tab-throbber,
-  .tab-throbber-fallback {
+  .tab-throbber {
     display: none !important;
   }
 }
