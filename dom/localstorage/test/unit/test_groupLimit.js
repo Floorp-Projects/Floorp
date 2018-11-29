@@ -3,9 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator = testSteps();
-
-function* testSteps()
+async function testSteps()
 {
   const groupLimitKB = 10 * 1024;
 
@@ -34,8 +32,8 @@ function* testSteps()
 
   setGlobalLimit(globalLimitKB);
 
-  clear(continueToNextStepSync);
-  yield undefined;
+  let request = clear();
+  await requestFinished(request);
 
   setOriginLimit(originLimit);
 
@@ -73,14 +71,11 @@ function* testSteps()
 
   // Let the internal snapshot finish (usage is not descreased until all
   // snapshots finish)..
-  continueToNextStep();
-  yield undefined;
+  await returnToEventLoop();
 
   info("Verifying more data can be written");
 
   for (let i = 0; i < urls.length; i++) {
     storages[i].setItem("B", "");
   }
-
-  finishTest();
 }
