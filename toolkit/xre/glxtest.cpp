@@ -231,9 +231,11 @@ void glxtest()
   if (length >= bufsize)
     fatal_error("GL strings length too large for buffer size");
 
-  ///// Clean up. Indeed, the parent process might fail to kill us (e.g. if it doesn't need to check GL info)
-  ///// so we might be staying alive for longer than expected, so it's important to consume as little memory as
-  ///// possible. Also we want to check that we're able to do that too without generating X errors.
+  ///// Clean up. Indeed, the parent process might fail to kill us (e.g. if it
+  ///// doesn't need to check GL info) so we might be staying alive for longer
+  ///// than expected, so it's important to consume as little memory as
+  ///// possible. Also we want to check that we're able to do that too without
+  ///// generating X errors.
   glXMakeCurrent(dpy, None, nullptr); // must release the GL context before destroying it
   glXDestroyContext(dpy, context);
   XDestroyWindow(dpy, window);

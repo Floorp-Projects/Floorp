@@ -139,10 +139,11 @@ protected:
 
     uint16_t  mResolving;  // counter of outstanding resolving calls
 
-    uint8_t negative : 1;   /* True if this record is a cache of a failed lookup.
-                               Negative cache entries are valid just like any other
-                               (though never for more than 60 seconds), but a use
-                               of that negative entry forces an asynchronous refresh. */
+    uint8_t negative : 1;   /* True if this record is a cache of a failed
+                               lookup.  Negative cache entries are valid just
+                               like any other (though never for more than 60
+                               seconds), but a use of that negative entry
+                               forces an asynchronous refresh. */
     uint8_t mDoomed : 1;    // explicitly expired
 };
 
@@ -230,8 +231,10 @@ private:
                                  // or owned by one of the worker threads. */
     uint16_t    mTRRUsed : 1;    // TRR was used on this record
     uint16_t    mNativeUsed : 1;
-    uint16_t    onQueue : 1;    // true if pending and on the queue (not yet given to getaddrinfo())
-    uint16_t    usingAnyThread : 1; // true if off queue and contributing to mActiveAnyThreadCount
+    uint16_t    onQueue : 1;    // true if pending and on the queue (not yet
+                                // given to getaddrinfo())
+    uint16_t    usingAnyThread : 1; // true if off queue and contributing to
+                                    // mActiveAnyThreadCount
     uint16_t    mDidCallbacks : 1;
     uint16_t    mGetTtl : 1;
 

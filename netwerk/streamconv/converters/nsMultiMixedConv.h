@@ -97,16 +97,18 @@ protected:
 // main stream and sending them off the destination stream listener, than doing any real
 // stream parsing/converting.
 //
-// WARNING: This converter requires that it's destination stream listener be able to handle
-//   multiple OnStartRequest(), OnDataAvailable(), and OnStopRequest() call combinations.
-//   Each series represents the beginning, data production, and ending phase of each sub-
-//   part of the original stream.
+// WARNING: This converter requires that it's destination stream listener be
+//   able to handle multiple OnStartRequest(), OnDataAvailable(), and
+//   OnStopRequest() call combinations.  Each series represents the beginning,
+//   data production, and ending phase of each sub- part of the original
+//   stream.
 //
 // NOTE: this MIME-type is used by HTTP, *not* SMTP, or IMAP.
 //
-// NOTE: For reference, a general description of how this MIME type should be handled via
-//   HTTP, see http://home.netscape.com/assist/net_sites/pushpull.html . Note that
-//   real world server content deviates considerably from this overview.
+// NOTE: For reference, a general description of how this MIME type should be
+//   handled via HTTP, see
+//   http://home.netscape.com/assist/net_sites/pushpull.html . Note that real
+//   world server content deviates considerably from this overview.
 //
 // Implementation assumptions:
 //  Assumed structue:

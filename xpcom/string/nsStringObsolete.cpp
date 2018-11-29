@@ -387,8 +387,10 @@ Compare1To2(const char* aStr1,const char16_t* aStr2,uint32_t aCount,bool aIgnore
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
- * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
- * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+ * @param   aEliminateLeading tells us whether to strip chars from the start of
+ *          the buffer
+ * @param   aEliminateTrailing tells us whether to strip chars from the start
+ *          of the buffer
  * @return  the new length of the given buffer
  */
 static int32_t
@@ -432,8 +434,10 @@ CompressChars1(char* aString,uint32_t aLength,const char* aSet){
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
- * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
- * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+ * @param   aEliminateLeading tells us whether to strip chars from the start of
+ *          the buffer
+ * @param   aEliminateTrailing tells us whether to strip chars from the start
+ *          of the buffer
  * @return  the new length of the given buffer
  */
 static int32_t
@@ -475,8 +479,10 @@ CompressChars2(char16_t* aString,uint32_t aLength,const char* aSet) {
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
- * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
- * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+ * @param   aEliminateLeading tells us whether to strip chars from the start of
+ *          the buffer
+ * @param   aEliminateTrailing tells us whether to strip chars from the start
+ *          of the buffer
  * @return  the new length of the given buffer
  */
 static int32_t
@@ -509,8 +515,10 @@ StripChars1(char* aString,uint32_t aLength,const char* aSet) {
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
- * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
- * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+ * @param   aEliminateLeading tells us whether to strip chars from the start of
+ *          the buffer
+ * @param   aEliminateTrailing tells us whether to strip chars from the start
+ *          of the buffer
  * @return  the new length of the given buffer
  */
 static int32_t

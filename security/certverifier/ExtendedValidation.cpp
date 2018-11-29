@@ -87,6 +87,7 @@ static const size_t NUM_TEST_EV_ROOTS = 2;
 #endif
 
 static const struct EVInfo kEVInfos[] = {
+  // clang-format off
   // IMPORTANT! When extending this list, if you add another entry that uses
   // the same dottedOid as an existing entry, use the same oidName.
 #ifdef DEBUG
@@ -94,8 +95,8 @@ static const struct EVInfo kEVInfos[] = {
   // 1.3.6.1.4.1.13769.666.666.666.1.500.9.1.
   // (multiple entries with the same OID is ok)
   // If you add or remove debug EV certs you must also modify NUM_TEST_EV_ROOTS
-  // so that the correct number of certs are skipped as these debug EV certs are
-  // NOT part of the default trust store.
+  // so that the correct number of certs are skipped as these debug EV certs
+  // are NOT part of the default trust store.
   {
     // This is the PSM xpcshell testing EV certificate. It can be generated
     // using pycert.py and the following specification:
@@ -892,6 +893,7 @@ static const struct EVInfo kEVInfos[] = {
     "ViBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IFJTQSBSMg==",
     "VrYpzTS8ePY=",
   },
+  // clang-format on
 };
 
 static SECOidTag sEVInfoOIDTags[ArrayLength(kEVInfos)];

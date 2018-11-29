@@ -270,22 +270,23 @@ static StaticRefPtr<LRUCache> sCache;
  * a secret seed, a per-timeline (context) 'mix-in', and a clamped time.
  *
  * When comparing times across different seed values: time may go backwards.
- * For a clamped time of 300, one seed may generate a midpoint of 305 and another
- * 395. So comparing an (actual) timestamp of 325 and 351 could see the 325 clamped
- * up to 400 and the 351 clamped down to 300. The seed is per-process, so this case
- * occurs when one can compare timestamps cross-process. This is uncommon (because
- * we don't have site isolation.) The circumstances this could occur are
- * BroadcastChannel, Storage Notification, and in theory (but not yet implemented)
- * SharedWorker. This should be an exhaustive list (at time of comment writing!).
+ * For a clamped time of 300, one seed may generate a midpoint of 305 and
+ * another 395. So comparing an (actual) timestamp of 325 and 351 could see the
+ * 325 clamped up to 400 and the 351 clamped down to 300. The seed is
+ * per-process, so this case occurs when one can compare timestamps
+ * cross-process. This is uncommon (because we don't have site isolation.) The
+ * circumstances this could occur are BroadcastChannel, Storage Notification,
+ * and in theory (but not yet implemented) SharedWorker. This should be an
+ * exhaustive list (at time of comment writing!).
  *
  * Aside from cross-process communication, derived timestamps across different
- * time origins may go backwards. (Specifically, derived means adding two timestamps
- * together to get an (approximate) absolute time.)
- * Assume a page and a worker. If one calls performance.now() in the page and then
- * triggers a call to performance.now() in the worker, the following invariant should
- * hold true:
+ * time origins may go backwards. (Specifically, derived means adding two
+ * timestamps together to get an (approximate) absolute time.)
+ * Assume a page and a worker. If one calls performance.now() in the page and
+ * then triggers a call to performance.now() in the worker, the following
+ * invariant should hold true:
  *             page.performance.timeOrigin + page.performance.now() <
- *                        worker.performance.timeOrigin + worker.performance.now()
+ *                      worker.performance.timeOrigin + worker.performance.now()
  *
  * We break this invariant.
  *
@@ -304,14 +305,16 @@ static StaticRefPtr<LRUCache> sCache;
  * absolute and does not need any additional randomness.
  *
  * @param aClampedTimeUSec [in]  The clamped input time in microseconds.
- * @param aResolutionUSec  [in]  The current resolution for clamping in microseconds.
- * @param aMidpointOut     [out] The midpoint, in microseconds, between [0, aResolutionUSec].
- * @param aContextMixin    [in]  An opaque random value for relative timestamps. 0 for
- *                               absolute timestamps
- * @param aSecretSeed      [in]  TESTING ONLY. When provided, the current seed will be
- *                               replaced with this value.
- * @return                 A nsresult indicating success of failure. If the function failed,
- *                         nothing is written to aMidpointOut
+ * @param aResolutionUSec  [in]  The current resolution for clamping in
+ *                               microseconds.
+ * @param aMidpointOut     [out] The midpoint, in microseconds, between [0,
+ *                               aResolutionUSec].
+ * @param aContextMixin    [in]  An opaque random value for relative
+ *                               timestamps. 0 for absolute timestamps
+ * @param aSecretSeed      [in]  TESTING ONLY. When provided, the current seed
+ *                               will be replaced with this value.
+ * @return                 A nsresult indicating success of failure. If the
+ *                         function failed, nothing is written to aMidpointOut
  */
 
 /* static */
@@ -454,25 +457,28 @@ nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
 
 
 /**
- * Given a precision value, this function will reduce a given input time to the nearest
- * multiple of that precision.
+ * Given a precision value, this function will reduce a given input time to the
+ * nearest multiple of that precision.
  *
- * It will check if it is appropriate to clamp the input time according to the values
- * of the privacy.resistFingerprinting and privacy.reduceTimerPrecision preferences.
- * Note that while it will check these prefs, it will use whatever precision is given to
- * it, so if one desires a minimum precision for Resist Fingerprinting, it is the
- * caller's responsibility to provide the correct value. This means you should pass
- * TimerResolution(), which enforces a minimum vale on the precision based on
- * preferences.
+ * It will check if it is appropriate to clamp the input time according to the
+ * values of the privacy.resistFingerprinting and privacy.reduceTimerPrecision
+ * preferences.  Note that while it will check these prefs, it will use
+ * whatever precision is given to it, so if one desires a minimum precision for
+ * Resist Fingerprinting, it is the caller's responsibility to provide the
+ * correct value. This means you should pass TimerResolution(), which enforces
+ * a minimum vale on the precision based on preferences.
  *
- * It ensures the given precision value is greater than zero, if it is not it returns
- * the input time.
+ * It ensures the given precision value is greater than zero, if it is not it
+ * returns the input time.
  *
  * @param aTime           [in] The input time to be clamped.
- * @param aTimeScale      [in] The units the input time is in (Seconds, Milliseconds, or Microseconds).
+ * @param aTimeScale      [in] The units the input time is in (Seconds,
+ *                             Milliseconds, or Microseconds).
  * @param aResolutionUSec [in] The precision (in microseconds) to clamp to.
- * @param aContextMixin   [in] An opaque random value for relative timestamps. 0 for absolute timestamps
- * @return                 If clamping is appropriate, the clamped value of the input, otherwise the input.
+ * @param aContextMixin   [in] An opaque random value for relative timestamps.
+ *                             0 for absolute timestamps
+ * @return                 If clamping is appropriate, the clamped value of the
+ *                         input, otherwise the input.
  */
 /* static */
 double

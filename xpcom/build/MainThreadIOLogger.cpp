@@ -171,10 +171,12 @@ MainThreadIOLoggerImpl::IOThreadFunc()
             nativeFilename.AssignLiteral("(conversion failed)");
           }
         }
+        // clang-format off
         /**
          * Format:
          * Start Timestamp (Milliseconds), Operation, Duration (Milliseconds), Event Source, Filename
          */
+        // clang-format on
         if (PR_fprintf(fd, "%f,%s,%f,%s,%s\n",
                        (i->mObservation.Start() - mLogStartTime).ToMilliseconds(),
                        i->mObservation.ObservedOperationString(), durationMs,

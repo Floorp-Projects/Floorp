@@ -276,7 +276,8 @@ public:
    * @param   aItem       Item of interest
    * @param   aZip        Archive
    * @param   aBuf        Buffer used for decompression.
-   *                      This determines the maximum Read() size in the compressed case.
+   *                      This determines the maximum Read() size in the
+   *                      compressed case.
    * @param   aBufSize    Buffer size
    * @param   doCRC       When set to true Read() will check crc
    */

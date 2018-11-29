@@ -42,8 +42,9 @@ GfxInfo::GfxInfo()
 {
 }
 
-/* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
- * has occurred because they depend on it for information. (See bug 591561) */
+/* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after
+ * gfxPlatform initialization has occurred because they depend on it for
+ * information. (See bug 591561) */
 nsresult
 GfxInfo::GetD2DEnabled(bool *aEnabled)
 {
@@ -353,7 +354,8 @@ GfxInfo::Init()
 
   /* DeviceKey is "reserved" according to MSDN so we'll be careful with it */
   /* check that DeviceKey begins with DEVICE_KEY_PREFIX */
-  /* some systems have a DeviceKey starting with \REGISTRY\Machine\ so we need to compare case insenstively */
+  /* some systems have a DeviceKey starting with \REGISTRY\Machine\ so we need
+   * to compare case insenstively */
   if (_wcsnicmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, ArrayLength(DEVICE_KEY_PREFIX)-1) != 0)
     return rv;
 

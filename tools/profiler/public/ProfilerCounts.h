@@ -28,16 +28,18 @@ typedef mozilla::Atomic<uint64_t, mozilla::MemoryOrdering::Relaxed> ProfilerAtom
 
 // Counter support
 // There are two types of counters:
-// 1) a simple counter which can be added to or subtracted from.  This could track the number
-// of objects of a type, the number of calls to something (reflow, JIT, etc).
-// 2) a combined counter which has the above, plus a number-of-calls counter that is
-// incremented by 1 for each call to modify the count.  This provides an optional source for
-// a 'heatmap' of access.  This can be used (for example) to track the amount of memory
-// allocated, and provide a heatmap of memory operations (allocs/frees).
+// 1) a simple counter which can be added to or subtracted from.  This could
+// track the number of objects of a type, the number of calls to something
+// (reflow, JIT, etc).
+// 2) a combined counter which has the above, plus a number-of-calls counter
+// that is incremented by 1 for each call to modify the count.  This provides
+// an optional source for a 'heatmap' of access.  This can be used (for
+// example) to track the amount of memory allocated, and provide a heatmap of
+// memory operations (allocs/frees).
 //
-// Counters are sampled by the profiler once per sample-period.  At this time, all counters
-// are global to the process.  In the future, there might be more versions with per-thread
-// or other discriminators.
+// Counters are sampled by the profiler once per sample-period.  At this time,
+// all counters are global to the process.  In the future, there might be more
+// versions with per-thread or other discriminators.
 //
 // Typical usage:
 // There are two ways to use counters: With heap-created counter objects,
@@ -55,13 +57,18 @@ typedef mozilla::Atomic<uint64_t, mozilla::MemoryOrdering::Relaxed> ProfilerAtom
 //
 // PROFILER_DEFINE_COUNT_TOTAL(mything, "JIT", "Some JIT byte count")
 // ...
-// void foo() { ... AUTO_PROFILER_COUNT_TOTAL(mything, number_of_bytes_generated); ... }
+// void foo() {
+//   ...
+//   AUTO_PROFILER_COUNT_TOTAL(mything, number_of_bytes_generated);
+//   ...
+// }
 //
 // To use without statics/macros:
 //
 // UniquePtr<ProfilerCounter> myCounter;
 // ...
-// myCounter = MakeUnique<ProfilerCounter>("mything", "JIT", "Some JIT byte count"));
+// myCounter =
+//   MakeUnique<ProfilerCounter>("mything", "JIT", "Some JIT byte count"));
 // ...
 // void foo() { ... myCounter->Add(number_of_bytes_generated0; ... }
 

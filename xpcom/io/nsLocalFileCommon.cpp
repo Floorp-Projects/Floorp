@@ -42,7 +42,8 @@ nsLocalFile::InitWithFile(nsIFile* aFile)
 #define kMaxFilenameLength 255
 #define kMaxExtensionLength 100
 #define kMaxSequenceNumberLength 5 // "-9999"
-// requirement: kMaxExtensionLength < kMaxFilenameLength - kMaxSequenceNumberLength
+// requirement: kMaxExtensionLength <
+//                kMaxFilenameLength - kMaxSequenceNumberLength
 
 NS_IMETHODIMP
 nsLocalFile::CreateUnique(uint32_t aType, uint32_t aAttributes)
