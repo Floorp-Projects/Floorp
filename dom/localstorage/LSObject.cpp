@@ -416,16 +416,22 @@ LSObject::SetItem(const nsAString& aKey,
     return;
   }
 
-  bool changed;
-  nsString oldValue;
-  rv = mDatabase->SetItem(aKey, aValue, &changed, oldValue);
+  LSWriteOpResponse response;
+  rv = mDatabase->SetItem(aKey, aValue, response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
   }
 
-  if (changed) {
-    OnChange(aKey, oldValue, aValue);
+  LSNotifyInfo info;
+  rv = GetInfoFromResponse(response, info);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
+
+  if (info.changed()) {
+    OnChange(aKey, info.oldValue(), aValue);
   }
 }
 
@@ -447,16 +453,22 @@ LSObject::RemoveItem(const nsAString& aKey,
     return;
   }
 
-  bool changed;
-  nsString oldValue;
-  rv = mDatabase->RemoveItem(aKey, &changed, oldValue);
+  LSWriteOpResponse response;
+  rv = mDatabase->RemoveItem(aKey, response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
   }
 
-  if (changed) {
-    OnChange(aKey, oldValue, VoidString());
+  LSNotifyInfo info;
+  rv = GetInfoFromResponse(response, info);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
+
+  if (info.changed()) {
+    OnChange(aKey, info.oldValue(), VoidString());
   }
 }
 
@@ -477,14 +489,21 @@ LSObject::Clear(nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
-  bool changed;
-  rv = mDatabase->Clear(&changed);
+  LSWriteOpResponse response;
+  rv = mDatabase->Clear(response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
   }
 
-  if (changed) {
+  LSNotifyInfo info;
+  rv = GetInfoFromResponse(response, info);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
+
+  if (info.changed()) {
     OnChange(VoidString(), VoidString(), VoidString());
   }
 }
@@ -692,6 +711,28 @@ LSObject::DropObserver()
   if (mObserver) {
     mObserver = nullptr;
   }
+}
+
+nsresult
+LSObject::GetInfoFromResponse(const LSWriteOpResponse& aResponse,
+                              LSNotifyInfo& aInfo)
+{
+  AssertIsOnOwningThread();
+
+  if (aResponse.type() == LSWriteOpResponse::Tnsresult) {
+    nsresult errorCode = aResponse.get_nsresult();
+
+    if (errorCode == NS_ERROR_FILE_NO_DEVICE_SPACE) {
+      errorCode = NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
+    }
+
+    return errorCode;
+  }
+
+  MOZ_ASSERT(aResponse.type() == LSWriteOpResponse::TLSNotifyInfo);
+
+  aInfo = aResponse.get_LSNotifyInfo();
+  return NS_OK;
 }
 
 void

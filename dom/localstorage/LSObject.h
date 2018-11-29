@@ -26,12 +26,14 @@ class PrincipalInfo;
 namespace dom {
 
 class LSDatabase;
+class LSNotifyInfo;
 class LSObjectChild;
 class LSObserver;
 class LSRequestChild;
 class LSRequestChildCallback;
 class LSRequestParams;
 class LSRequestResponse;
+class LSWriteOpResponse;
 
 class LSObject final
   : public Storage
@@ -155,6 +157,10 @@ private:
 
   void
   DropObserver();
+
+  nsresult
+  GetInfoFromResponse(const LSWriteOpResponse& aResponse,
+                      LSNotifyInfo& aInfo);
 
   void
   OnChange(const nsAString& aKey,

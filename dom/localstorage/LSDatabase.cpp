@@ -122,65 +122,53 @@ LSDatabase::GetKeys(nsTArray<nsString>& aKeys)
 nsresult
 LSDatabase::SetItem(const nsAString& aKey,
                     const nsAString& aValue,
-                    bool* aChanged,
-                    nsAString& aOldValue)
+                    LSWriteOpResponse& aResponse)
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  bool changed;
-  nsString oldValue;
+  LSWriteOpResponse response;
   if (NS_WARN_IF(!mActor->SendSetItem(nsString(aKey),
                                       nsString(aValue),
-                                      &changed,
-                                      &oldValue))) {
+                                      &response))) {
     return NS_ERROR_FAILURE;
   }
 
-  *aChanged = changed;
-  aOldValue = oldValue;
+  aResponse = response;
   return NS_OK;
 }
 
 nsresult
 LSDatabase::RemoveItem(const nsAString& aKey,
-                       bool* aChanged,
-                       nsAString& aOldValue)
+                       LSWriteOpResponse& aResponse)
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  bool changed;
-  nsString oldValue;
-  if (NS_WARN_IF(!mActor->SendRemoveItem(nsString(aKey),
-                                         &changed,
-                                         &oldValue))) {
+  LSWriteOpResponse response;
+  if (NS_WARN_IF(!mActor->SendRemoveItem(nsString(aKey), &response))) {
     return NS_ERROR_FAILURE;
   }
 
-  *aChanged = changed;
-  aOldValue = oldValue;
+  aResponse = response;
   return NS_OK;
 }
 
 nsresult
-LSDatabase::Clear(bool* aChanged)
+LSDatabase::Clear(LSWriteOpResponse& aResponse)
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  bool changed;
-  if (NS_WARN_IF(!mActor->SendClear(&changed))) {
+  LSWriteOpResponse response;
+  if (NS_WARN_IF(!mActor->SendClear(&response))) {
     return NS_ERROR_FAILURE;
   }
 
-  *aChanged = changed;
+  aResponse = response;
   return NS_OK;
 }
 
