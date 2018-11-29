@@ -19,14 +19,16 @@ function onLoad() {
     let hasUserValue = Services.prefs.prefHasUserValue(name);
     let pref = {
       name,
-      value: Preferences.get(name),
       hasUserValue,
       hasDefaultValue: hasUserValue ? prefHasDefaultValue(name) : true,
+      isLocked: Services.prefs.prefIsLocked(name),
     };
-    // Try in case it's a localized string.
-    // Throws an exception if there is no equivalent value in the localized files for the pref.
+    // Try in case it's a localized string or locked user added pref
     // If an execption is thrown the pref value is set to the empty string.
     try {
+      // Throws an exception in case locked user added pref without default value
+      pref.value = Preferences.get(name);
+      // Throws an exception if there is no equivalent value in the localized files for the pref.
       if (!pref.hasUserValue && /^chrome:\/\/.+\/locale\/.+\.properties/.test(pref.value)) {
         pref.value = Services.prefs.getComplexValue(name, Ci.nsIPrefLocalizedString).data;
       }
@@ -121,6 +123,9 @@ function createPrefsFragment(prefArray) {
     if (pref.hasUserValue) {
       row.classList.add("has-user-value");
     }
+    if (pref.isLocked) {
+      row.classList.add("locked");
+    }
     row.setAttribute("aria-label", pref.name);
 
     row.appendChild(getPrefRow(pref));
@@ -135,6 +140,7 @@ function createNewPrefFragment(name) {
   row.classList.add("has-user-value");
   row.setAttribute("aria-label", name);
   let nameCell = document.createElement("td");
+  nameCell.className = "cell-name";
   nameCell.append(name);
   row.appendChild(nameCell);
 
@@ -164,6 +170,7 @@ function createNewPrefFragment(name) {
 function getPrefRow(pref) {
   let rowFragment = document.createDocumentFragment();
   let nameCell = document.createElement("td");
+  nameCell.className = "cell-name";
   // Add <wbr> behind dots to prevent line breaking in random mid-word places.
   let parts = pref.name.split(".");
   for (let i = 0; i < parts.length - 1; i++) {
@@ -187,11 +194,14 @@ function getPrefRow(pref) {
     document.l10n.setAttributes(button, "about-config-pref-edit");
     button.className = "button-edit";
   }
+  if (pref.isLocked) {
+    button.disabled = true;
+  }
   editCell.appendChild(button);
   rowFragment.appendChild(editCell);
 
   let buttonCell = document.createElement("td");
-  if (pref.hasUserValue) {
+  if (!pref.isLocked && pref.hasUserValue) {
     let resetButton = document.createElement("button");
     if (!pref.hasDefaultValue) {
       document.l10n.setAttributes(resetButton, "about-config-pref-delete");
@@ -201,6 +211,7 @@ function getPrefRow(pref) {
     }
     buttonCell.appendChild(resetButton);
   }
+
   rowFragment.appendChild(buttonCell);
   return rowFragment;
 }
