@@ -36,6 +36,15 @@ ServiceWorkerRegistrationChild::RecvUpdateState(const IPCServiceWorkerRegistrati
   return IPC_OK();
 }
 
+IPCResult
+ServiceWorkerRegistrationChild::RecvFireUpdateFound()
+{
+  if (mOwner) {
+    mOwner->FireUpdateFound();
+  }
+  return IPC_OK();
+}
+
 void
 ServiceWorkerRegistrationChild::WorkerShuttingDown()
 {

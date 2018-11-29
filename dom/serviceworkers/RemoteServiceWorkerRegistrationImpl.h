@@ -49,6 +49,9 @@ public:
   void
   UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
+  void
+  FireUpdateFound();
+
   NS_INLINE_DECL_REFCOUNTING(RemoteServiceWorkerRegistrationImpl, override)
 };
 

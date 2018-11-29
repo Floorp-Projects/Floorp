@@ -48,7 +48,6 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(nsIGlobalObject* aGlobal,
   , mInner(aInner)
   , mScheduledUpdateFoundId(kInvalidUpdateFoundId)
   , mDispatchedUpdateFoundId(kInvalidUpdateFoundId)
-  , mPendingUpdatePromises(0)
 {
   MOZ_DIAGNOSTIC_ASSERT(mInner);
 
@@ -224,11 +223,8 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
 
   RefPtr<ServiceWorkerRegistration> self = this;
 
-  mPendingUpdatePromises += 1;
-
   mInner->Update(
     [outer, self](const ServiceWorkerRegistrationDescriptor& aDesc) {
-      auto scopeExit = MakeScopeExit([&] { self->UpdatePromiseSettled(); });
       nsIGlobalObject* global = self->GetParentObject();
       MOZ_DIAGNOSTIC_ASSERT(global);
       RefPtr<ServiceWorkerRegistration> ref =
@@ -239,7 +235,6 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
       }
       outer->MaybeResolve(ref);
     }, [outer, self] (ErrorResult& aRv) {
-      auto scopeExit = MakeScopeExit([&] { self->UpdatePromiseSettled(); });
       outer->MaybeReject(aRv);
     });
 
@@ -382,6 +377,10 @@ ServiceWorkerRegistration::WhenVersionReached(uint64_t aVersion,
 void
 ServiceWorkerRegistration::MaybeScheduleUpdateFound(const Maybe<ServiceWorkerDescriptor>& aInstallingDescriptor)
 {
+  // This function sets mScheduledUpdateFoundId to note when we were told about
+  // a new installing worker. We rely on a call to
+  // MaybeDispatchUpdateFoundRunnable (called indirectly from UpdateJobCallback)
+  // to actually fire the event.
   uint64_t newId = aInstallingDescriptor.isSome()
                  ? aInstallingDescriptor.ref().Id()
                  : kInvalidUpdateFoundId;
@@ -402,8 +401,12 @@ ServiceWorkerRegistration::MaybeScheduleUpdateFound(const Maybe<ServiceWorkerDes
   }
 
   mScheduledUpdateFoundId = newId;
+}
 
-  if (mPendingUpdatePromises > 0) {
+void
+ServiceWorkerRegistration::MaybeDispatchUpdateFoundRunnable()
+{
+  if (mScheduledUpdateFoundId == kInvalidUpdateFoundId) {
     return;
   }
 
@@ -432,28 +435,6 @@ ServiceWorkerRegistration::MaybeDispatchUpdateFound()
 
   mDispatchedUpdateFoundId = scheduledId;
   DispatchTrustedEvent(NS_LITERAL_STRING("updatefound"));
-}
-
-void
-ServiceWorkerRegistration::UpdatePromiseSettled()
-{
-  MOZ_DIAGNOSTIC_ASSERT(mPendingUpdatePromises > 0);
-  mPendingUpdatePromises -= 1;
-  if (mPendingUpdatePromises > 0 ||
-      mScheduledUpdateFoundId == kInvalidUpdateFoundId) {
-    return;
-  }
-
-  nsIGlobalObject* global = GetParentObject();
-  NS_ENSURE_TRUE_VOID(global);
-
-  nsCOMPtr<nsIRunnable> r = NewCancelableRunnableMethod(
-    "ServiceWorkerRegistration::MaybeDispatchUpdateFound",
-    this,
-    &ServiceWorkerRegistration::MaybeDispatchUpdateFound);
-
-  Unused << global->EventTargetFor(TaskCategory::Other)->Dispatch(
-    r.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
