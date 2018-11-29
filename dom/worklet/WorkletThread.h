@@ -61,9 +61,7 @@ private:
   NS_IMETHOD
   DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
 
-  // Touched only on the worklet thread. This is a raw pointer because it's set
-  // and nullified by RunEventLoop().
-  JSContext* mJSContext;
+  bool mExitLoop; // worklet execution thread
 
   bool mIsTerminating; // main thread
 };
