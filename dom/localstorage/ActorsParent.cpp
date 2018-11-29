@@ -9,6 +9,7 @@
 #include "LocalStorageCommon.h"
 #include "LSObject.h"
 #include "mozIStorageConnection.h"
+#include "mozIStorageFunction.h"
 #include "mozIStorageService.h"
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
@@ -23,6 +24,7 @@
 #include "mozilla/dom/PBackgroundLSSnapshotParent.h"
 #include "mozilla/dom/StorageDBUpdater.h"
 #include "mozilla/dom/StorageUtils.h"
+#include "mozilla/dom/quota/OriginScope.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/UsageInfo.h"
@@ -33,6 +35,7 @@
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "nsISimpleEnumerator.h"
+#include "nsNetUtil.h"
 #include "nsRefPtrHashtable.h"
 #include "ReportInternalError.h"
 
@@ -57,13 +60,18 @@ using namespace mozilla::ipc;
 
 namespace {
 
-class ArchivedOriginInfo;
+struct ArchivedOriginInfo;
+class ArchivedOriginScope;
 class Connection;
 class ConnectionThread;
 class Database;
 class PrepareDatastoreOp;
 class PreparedDatastore;
+class QuotaClient;
 class Snapshot;
+
+typedef nsClassHashtable<nsCStringHashKey, ArchivedOriginInfo>
+  ArchivedOriginHashtable;
 
 /*******************************************************************************
  * Constants
@@ -153,6 +161,13 @@ MakeSchemaVersion(uint32_t aMajorSchemaVersion,
   return int32_t((aMajorSchemaVersion << 4) + aMinorSchemaVersion);
 }
 #endif
+
+nsCString
+GetArchivedOriginHashKey(const nsACString& aOriginSuffix,
+                         const nsACString& aOriginNoSuffix)
+{
+  return aOriginSuffix + NS_LITERAL_CSTRING(":") + aOriginNoSuffix;
+}
 
 nsresult
 CreateTables(mozIStorageConnection* aConnection)
@@ -823,6 +838,46 @@ CreateShadowStorageConnection(const nsAString& aBasePath,
 }
 
 nsresult
+GetShadowStorageConnection(const nsAString& aBasePath,
+                           mozIStorageConnection** aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!aBasePath.IsEmpty());
+  MOZ_ASSERT(aConnection);
+
+  nsCOMPtr<nsIFile> shadowFile;
+  nsresult rv = GetShadowFile(aBasePath, getter_AddRefs(shadowFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = shadowFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(!exists)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageConnection> connection;
+  rv = ss->OpenUnsharedDatabase(shadowFile, getter_AddRefs(connection));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  connection.forget(aConnection);
+  return NS_OK;
+}
+
+nsresult
 AttachShadowDatabase(const nsAString& aBasePath,
                      mozIStorageConnection* aConnection)
 {
@@ -1219,7 +1274,7 @@ private:
   RefPtr<ConnectionThread> mConnectionThread;
   nsCOMPtr<nsITimer> mFlushTimer;
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
-  nsAutoPtr<ArchivedOriginInfo> mArchivedOriginInfo;
+  nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;
   WriteOptimizer mWriteOptimizer;
@@ -1239,10 +1294,10 @@ public:
     NS_ASSERT_OWNINGTHREAD(Connection);
   }
 
-  ArchivedOriginInfo*
-  GetArchivedOriginInfo() const
+  ArchivedOriginScope*
+  GetArchivedOriginScope() const
   {
-    return mArchivedOriginInfo;
+    return mArchivedOriginScope;
   }
 
   // Methods which can only be called on the owning thread.
@@ -1303,7 +1358,7 @@ private:
   Connection(ConnectionThread* aConnectionThread,
              const nsACString& aOrigin,
              const nsAString& aFilePath,
-             nsAutoPtr<ArchivedOriginInfo>&& aArchivedOriginInfo);
+             nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope);
 
   ~Connection();
 
@@ -1347,6 +1402,7 @@ private:
 class Connection::FlushOp final
   : public ConnectionDatastoreOperationBase
 {
+  RefPtr<QuotaClient> mQuotaClient;
   WriteOptimizer mWriteOptimizer;
   bool mShadowWrites;
 
@@ -1404,7 +1460,7 @@ public:
   already_AddRefed<Connection>
   CreateConnection(const nsACString& aOrigin,
                    const nsAString& aFilePath,
-                   nsAutoPtr<ArchivedOriginInfo>&& aArchivedOriginInfo);
+                   nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope);
 
   void
   Shutdown();
@@ -2107,7 +2163,7 @@ class PrepareDatastoreOp
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
   RefPtr<Datastore> mDatastore;
-  nsAutoPtr<ArchivedOriginInfo> mArchivedOriginInfo;
+  nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
   LoadDataOp* mLoadDataOp;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
   nsTArray<LSItemInfo> mOrderedItems;
@@ -2372,42 +2428,218 @@ private:
  * Other class declarations
  ******************************************************************************/
 
-class ArchivedOriginInfo
+struct ArchivedOriginInfo
 {
-  nsCString mOriginSuffix;
+  OriginAttributes mOriginAttributes;
   nsCString mOriginNoSuffix;
 
-public:
-  static ArchivedOriginInfo*
-  Create(nsIPrincipal* aPrincipal);
+  ArchivedOriginInfo(const OriginAttributes& aOriginAttributes,
+                     const nsACString& aOriginNoSuffix)
+    : mOriginAttributes(aOriginAttributes)
+    , mOriginNoSuffix(aOriginNoSuffix)
+  { }
+};
 
-  const nsCString&
+class ArchivedOriginScope
+{
+  struct Origin
+  {
+    nsCString mOriginSuffix;
+    nsCString mOriginNoSuffix;
+
+    Origin(const nsACString& aOriginSuffix,
+           const nsACString& aOriginNoSuffix)
+      : mOriginSuffix(aOriginSuffix)
+      , mOriginNoSuffix(aOriginNoSuffix)
+    { }
+
+    const nsACString&
+    OriginSuffix() const
+    {
+      return mOriginSuffix;
+    }
+
+    const nsACString&
+    OriginNoSuffix() const
+    {
+      return mOriginNoSuffix;
+    }
+  };
+
+  struct Prefix
+  {
+    nsCString mOriginNoSuffix;
+
+    explicit Prefix(const nsACString& aOriginNoSuffix)
+      : mOriginNoSuffix(aOriginNoSuffix)
+    { }
+
+    const nsACString&
+    OriginNoSuffix() const
+    {
+      return mOriginNoSuffix;
+    }
+  };
+
+  struct Pattern
+  {
+    UniquePtr<OriginAttributesPattern> mPattern;
+
+    explicit Pattern(const OriginAttributesPattern& aPattern)
+      : mPattern(MakeUnique<OriginAttributesPattern>(aPattern))
+    { }
+
+    Pattern(const Pattern& aOther)
+      : mPattern(MakeUnique<OriginAttributesPattern>(*aOther.mPattern))
+    { }
+
+    Pattern(Pattern&& aOther) = default;
+
+    const OriginAttributesPattern&
+    GetPattern() const
+    {
+      MOZ_ASSERT(mPattern);
+      return *mPattern;
+    }
+  };
+
+  struct Null
+  { };
+
+  using DataType = Variant<Origin, Pattern, Prefix, Null>;
+
+  DataType mData;
+
+public:
+  static ArchivedOriginScope*
+  CreateFromOrigin(nsIPrincipal* aPrincipal);
+
+  static ArchivedOriginScope*
+  CreateFromPrefix(nsIPrincipal* aPrincipal);
+
+  static ArchivedOriginScope*
+  CreateFromPattern(const OriginAttributesPattern& aPattern);
+
+  static ArchivedOriginScope*
+  CreateFromNull();
+
+  bool
+  IsOrigin() const
+  {
+    return mData.is<Origin>();
+  }
+
+  bool
+  IsPrefix() const
+  {
+    return mData.is<Prefix>();
+  }
+
+  bool
+  IsPattern() const
+  {
+    return mData.is<Pattern>();
+  }
+
+  bool
+  IsNull() const
+  {
+    return mData.is<Null>();
+  }
+
+  const nsACString&
   OriginSuffix() const
   {
-    return mOriginSuffix;
+    MOZ_ASSERT(IsOrigin());
+
+    return mData.as<Origin>().OriginSuffix();
   }
 
-  const nsCString&
+  const nsACString&
   OriginNoSuffix() const
   {
-    return mOriginNoSuffix;
+    MOZ_ASSERT(IsOrigin() || IsPrefix());
+
+    if (IsOrigin()) {
+      return mData.as<Origin>().OriginNoSuffix();
+    }
+    return mData.as<Prefix>().OriginNoSuffix();
   }
 
-  const nsCString
-  Origin() const
+  const OriginAttributesPattern&
+  GetPattern() const
   {
-    return mOriginSuffix + NS_LITERAL_CSTRING(":") + mOriginNoSuffix;
+    MOZ_ASSERT(IsPattern());
+
+    return mData.as<Pattern>().GetPattern();
   }
+
+  void
+  GetBindingClause(nsACString& aBindingClause) const;
 
   nsresult
   BindToStatement(mozIStorageStatement* aStatement) const;
 
+  bool
+  HasMatches(ArchivedOriginHashtable* aHashtable) const;
+
+  void
+  RemoveMatches(ArchivedOriginHashtable* aHashtable) const;
+
 private:
-  ArchivedOriginInfo(const nsACString& aOriginSuffix,
-                     const nsACString& aOriginNoSuffix)
-    : mOriginSuffix(aOriginSuffix)
-    , mOriginNoSuffix(aOriginNoSuffix)
+  // Move constructors
+  explicit ArchivedOriginScope(const Origin&& aOrigin)
+    : mData(aOrigin)
   { }
+
+  explicit ArchivedOriginScope(const Pattern&& aPattern)
+    : mData(aPattern)
+  { }
+
+  explicit ArchivedOriginScope(const Prefix&& aPrefix)
+    : mData(aPrefix)
+  { }
+
+  explicit ArchivedOriginScope(const Null&& aNull)
+    : mData(aNull)
+  { }
+};
+
+class ArchivedOriginScopeHelper
+  : public Runnable
+{
+  Monitor mMonitor;
+  const OriginAttributes mAttrs;
+  const nsCString mSpec;
+  nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
+  nsresult mMainThreadResultCode;
+  bool mWaiting;
+  bool mPrefix;
+
+public:
+  ArchivedOriginScopeHelper(const nsACString& aSpec,
+                            const OriginAttributes& aAttrs,
+                            bool aPrefix)
+    : Runnable("dom::localstorage::ArchivedOriginScopeHelper")
+    , mMonitor("ArchivedOriginScopeHelper::mMonitor")
+    , mAttrs(aAttrs)
+    , mSpec(aSpec)
+    , mMainThreadResultCode(NS_OK)
+    , mWaiting(true)
+    , mPrefix(aPrefix)
+  {
+    AssertIsOnIOThread();
+  }
+
+  nsresult
+  BlockAndReturnArchivedOriginScope(
+                          nsAutoPtr<ArchivedOriginScope>& aArchivedOriginScope);
+
+private:
+  nsresult
+  RunOnMainThread();
+
+  NS_DECL_NSIRUNNABLE
 };
 
 class QuotaClient final
@@ -2415,14 +2647,24 @@ class QuotaClient final
 {
   class ClearPrivateBrowsingRunnable;
   class Observer;
+  class MatchFunction;
 
   static QuotaClient* sInstance;
   static bool sObserversRegistered;
 
+  Mutex mShadowDatabaseMutex;
   bool mShutdownRequested;
 
 public:
   QuotaClient();
+
+  static QuotaClient*
+  GetInstance()
+  {
+    AssertIsOnBackgroundThread();
+
+    return sInstance;
+  }
 
   static bool
   IsShuttingDownOnBackgroundThread()
@@ -2446,6 +2688,14 @@ public:
 
   static nsresult
   RegisterObservers(nsIEventTarget* aBackgroundEventTarget);
+
+  mozilla::Mutex&
+  ShadowDatabaseMutex()
+  {
+    MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+
+    return mShadowDatabaseMutex;
+  }
 
   bool
   IsShuttingDown() const
@@ -2474,6 +2724,10 @@ public:
                     const AtomicBool& aCanceled,
                     UsageInfo* aUsageInfo) override;
 
+  nsresult
+  AboutToClearOrigins(const Nullable<PersistenceType>& aPersistenceType,
+                      const OriginScope& aOriginScope) override;
+
   void
   OnOriginClearCompleted(PersistenceType aPersistenceType,
                          const nsACString& aOrigin)
@@ -2499,6 +2753,16 @@ public:
 
 private:
   ~QuotaClient() override;
+
+  nsresult
+  CreateArchivedOriginScope(
+                          const OriginScope& aOriginScope,
+                          nsAutoPtr<ArchivedOriginScope>& aArchivedOriginScope);
+
+  nsresult
+  PerformDelete(mozIStorageConnection* aConnection,
+                const nsACString& aSchemaName,
+                ArchivedOriginScope* aArchivedOriginScope) const;
 };
 
 class QuotaClient::ClearPrivateBrowsingRunnable final
@@ -2538,6 +2802,23 @@ private:
   }
 
   NS_DECL_NSIOBSERVER
+};
+
+class QuotaClient::MatchFunction final
+  : public mozIStorageFunction
+{
+  OriginAttributesPattern mPattern;
+
+public:
+  explicit MatchFunction(const OriginAttributesPattern& aPattern)
+    : mPattern(aPattern)
+  { }
+
+private:
+  ~MatchFunction() = default;
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
 };
 
 /*******************************************************************************
@@ -2584,8 +2865,6 @@ typedef nsDataHashtable<nsCStringHashKey, int64_t> UsageHashtable;
 
 // Can only be touched on the Quota Manager I/O thread.
 StaticAutoPtr<UsageHashtable> gUsages;
-
-typedef nsTHashtable<nsCStringHashKey> ArchivedOriginHashtable;
 
 StaticAutoPtr<ArchivedOriginHashtable> gArchivedOrigins;
 
@@ -2648,7 +2927,7 @@ LoadArchivedOrigins()
 
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT DISTINCT originAttributes || ':' || originKey "
+    "SELECT DISTINCT originAttributes, originKey "
       "FROM webappsstore2;"
   ), getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2660,13 +2939,29 @@ LoadArchivedOrigins()
 
   bool hasResult;
   while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
-    nsCString origin;
-    rv = stmt->GetUTF8String(0, origin);
+    nsCString originSuffix;
+    rv = stmt->GetUTF8String(0, originSuffix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    archivedOrigins->PutEntry(origin);
+    nsCString originNoSuffix;
+    rv = stmt->GetUTF8String(1, originNoSuffix);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCString hashKey = GetArchivedOriginHashKey(originSuffix, originNoSuffix);
+
+    OriginAttributes originAttributes;
+    if (NS_WARN_IF(!originAttributes.PopulateFromSuffix(originSuffix))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsAutoPtr<ArchivedOriginInfo> archivedOriginInfo(
+      new ArchivedOriginInfo(originAttributes, originNoSuffix));
+
+    archivedOrigins->Put(hashKey, archivedOriginInfo.forget());
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -2678,7 +2973,7 @@ LoadArchivedOrigins()
 
 nsresult
 GetUsage(mozIStorageConnection* aConnection,
-         ArchivedOriginInfo* aArchivedOriginInfo,
+         ArchivedOriginScope* aArchivedOriginScope,
          int64_t* aUsage)
 {
   AssertIsOnIOThread();
@@ -2688,7 +2983,7 @@ GetUsage(mozIStorageConnection* aConnection,
   nsresult rv;
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  if (aArchivedOriginInfo) {
+  if (aArchivedOriginScope) {
     rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT sum(length(key) + length(value)) "
       "FROM webappsstore2 "
@@ -2699,7 +2994,7 @@ GetUsage(mozIStorageConnection* aConnection,
       return rv;
     }
 
-    rv = aArchivedOriginInfo->BindToStatement(stmt);
+    rv = aArchivedOriginScope->BindToStatement(stmt);
   } else {
     rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT sum(length(key) + length(value)) "
@@ -3268,15 +3563,16 @@ AddItemInfo::Perform(Connection* aConnection, bool aShadowWrites)
     return rv;
   }
 
-  ArchivedOriginInfo* archivedOriginInfo = aConnection->GetArchivedOriginInfo();
+  ArchivedOriginScope* archivedOriginScope =
+    aConnection->GetArchivedOriginScope();
 
-  rv = archivedOriginInfo->BindToStatement(stmt);
+  rv = archivedOriginScope->BindToStatement(stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  nsCString scope = Scheme0Scope(archivedOriginInfo->OriginSuffix(),
-                                 archivedOriginInfo->OriginNoSuffix());
+  nsCString scope = Scheme0Scope(archivedOriginScope->OriginSuffix(),
+                                 archivedOriginScope->OriginNoSuffix());
 
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
                                   scope);
@@ -3342,7 +3638,7 @@ RemoveItemInfo::Perform(Connection* aConnection, bool aShadowWrites)
     return rv;
   }
 
-  rv = aConnection->GetArchivedOriginInfo()->BindToStatement(stmt);
+  rv = aConnection->GetArchivedOriginScope()->BindToStatement(stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3393,7 +3689,7 @@ ClearInfo::Perform(Connection* aConnection, bool aShadowWrites)
     return rv;
   }
 
-  rv = aConnection->GetArchivedOriginInfo()->BindToStatement(stmt);
+  rv = aConnection->GetArchivedOriginScope()->BindToStatement(stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3516,9 +3812,9 @@ ConnectionDatastoreOperationBase::Run()
 Connection::Connection(ConnectionThread* aConnectionThread,
                        const nsACString& aOrigin,
                        const nsAString& aFilePath,
-                       nsAutoPtr<ArchivedOriginInfo>&& aArchivedOriginInfo)
+                       nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope)
   : mConnectionThread(aConnectionThread)
-  , mArchivedOriginInfo(std::move(aArchivedOriginInfo))
+  , mArchivedOriginScope(std::move(aArchivedOriginScope))
   , mOrigin(aOrigin)
   , mFilePath(aFilePath)
   , mFlushScheduled(false)
@@ -3806,9 +4102,11 @@ Connection::
 FlushOp::FlushOp(Connection* aConnection,
                  WriteOptimizer&& aWriteOptimizer)
   : ConnectionDatastoreOperationBase(aConnection)
+  , mQuotaClient(QuotaClient::GetInstance())
   , mWriteOptimizer(std::move(aWriteOptimizer))
   , mShadowWrites(gShadowWrites)
 {
+  MOZ_ASSERT(mQuotaClient);
 }
 
 nsresult
@@ -3827,7 +4125,13 @@ FlushOp::DoDatastoreWork()
 
   nsresult rv;
 
+  Maybe<MutexAutoLock> shadowDatabaseLock;
+
   if (mShadowWrites) {
+    MOZ_ASSERT(mQuotaClient);
+
+    shadowDatabaseLock.emplace(mQuotaClient->ShadowDatabaseMutex());
+
     rv = AttachShadowDatabase(quotaManager->GetBasePath(), storageConnection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -3935,16 +4239,16 @@ ConnectionThread::AssertIsOnConnectionThread()
 
 already_AddRefed<Connection>
 ConnectionThread::CreateConnection(
-                            const nsACString& aOrigin,
-                            const nsAString& aFilePath,
-                            nsAutoPtr<ArchivedOriginInfo>&& aArchivedOriginInfo)
+                          const nsACString& aOrigin,
+                          const nsAString& aFilePath,
+                          nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(!mConnections.GetWeak(aOrigin));
 
   RefPtr<Connection> connection =
-    new Connection(this, aOrigin, aFilePath, std::move(aArchivedOriginInfo));
+    new Connection(this, aOrigin, aFilePath, std::move(aArchivedOriginScope));
   mConnections.Put(aOrigin, connection);
 
   return connection.forget();
@@ -5643,8 +5947,8 @@ PrepareDatastoreOp::Open()
       return rv;
     }
 
-    mArchivedOriginInfo = ArchivedOriginInfo::Create(principal);
-    if (NS_WARN_IF(!mArchivedOriginInfo)) {
+    mArchivedOriginScope = ArchivedOriginScope::CreateFromOrigin(principal);
+    if (NS_WARN_IF(!mArchivedOriginScope)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -5910,7 +6214,7 @@ nsresult
 PrepareDatastoreOp::DatabaseWork()
 {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mArchivedOriginInfo);
+  MOZ_ASSERT(mArchivedOriginScope);
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
@@ -5932,8 +6236,7 @@ PrepareDatastoreOp::DatabaseWork()
     MOZ_ASSERT(gArchivedOrigins);
   }
 
-  bool hasDataForMigration =
-    gArchivedOrigins->GetEntry(mArchivedOriginInfo->Origin());
+  bool hasDataForMigration = mArchivedOriginScope->HasMatches(gArchivedOrigins);
 
   bool createIfNotExists = mParams.createIfNotExists() || hasDataForMigration;
 
@@ -6018,7 +6321,7 @@ PrepareDatastoreOp::DatabaseWork()
     }
 
     int64_t newUsage;
-    rv = GetUsage(connection, mArchivedOriginInfo, &newUsage);
+    rv = GetUsage(connection, mArchivedOriginScope, &newUsage);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6046,7 +6349,7 @@ PrepareDatastoreOp::DatabaseWork()
       return rv;
     }
 
-    rv = mArchivedOriginInfo->BindToStatement(stmt);
+    rv = mArchivedOriginScope->BindToStatement(stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6065,7 +6368,7 @@ PrepareDatastoreOp::DatabaseWork()
       return rv;
     }
 
-    rv = mArchivedOriginInfo->BindToStatement(stmt);
+    rv = mArchivedOriginScope->BindToStatement(stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6086,8 +6389,8 @@ PrepareDatastoreOp::DatabaseWork()
     }
 
     MOZ_ASSERT(gArchivedOrigins);
-    MOZ_ASSERT(gArchivedOrigins->GetEntry(mArchivedOriginInfo->Origin()));
-    gArchivedOrigins->RemoveEntry(mArchivedOriginInfo->Origin());
+    MOZ_ASSERT(mArchivedOriginScope->HasMatches(gArchivedOrigins));
+    mArchivedOriginScope->RemoveMatches(gArchivedOrigins);
 
     mUsage = newUsage;
 
@@ -6265,7 +6568,7 @@ PrepareDatastoreOp::BeginLoadData()
   mConnection =
     gConnectionThread->CreateConnection(mOrigin,
                                         mDatabaseFilePath,
-                                        std::move(mArchivedOriginInfo));
+                                        std::move(mArchivedOriginScope));
   MOZ_ASSERT(mConnection);
 
   // Must set this before dispatching otherwise we will race with the
@@ -6917,12 +7220,12 @@ PreloadedOp::GetResponse(LSSimpleRequestResponse& aResponse)
 }
 
 /*******************************************************************************
- * ArchivedOriginInfo
+ * ArchivedOriginScope
  ******************************************************************************/
 
 // static
-ArchivedOriginInfo*
-ArchivedOriginInfo::Create(nsIPrincipal* aPrincipal)
+ArchivedOriginScope*
+ArchivedOriginScope::CreateFromOrigin(nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
@@ -6934,27 +7237,333 @@ ArchivedOriginInfo::Create(nsIPrincipal* aPrincipal)
     return nullptr;
   }
 
-  return new ArchivedOriginInfo(originAttrSuffix, originKey);
+  return new ArchivedOriginScope(std::move(Origin(originAttrSuffix,
+                                                  originKey)));
+}
+
+// static
+ArchivedOriginScope*
+ArchivedOriginScope::CreateFromPrefix(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  nsCString originAttrSuffix;
+  nsCString originKey;
+  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  return new ArchivedOriginScope(std::move(Prefix(originKey)));
+}
+
+// static
+ArchivedOriginScope*
+ArchivedOriginScope::CreateFromPattern(const OriginAttributesPattern& aPattern)
+{
+  return new ArchivedOriginScope(std::move(Pattern(aPattern)));
+}
+
+// static
+ArchivedOriginScope*
+ArchivedOriginScope::CreateFromNull()
+{
+  return new ArchivedOriginScope(std::move(Null()));
+}
+
+void
+ArchivedOriginScope::GetBindingClause(nsACString& aBindingClause) const
+{
+  struct Matcher
+  {
+    nsACString* mBindingClause;
+
+    explicit Matcher(nsACString* aBindingClause)
+      : mBindingClause(aBindingClause)
+    { }
+
+    void
+    match(const Origin& aOrigin) {
+      *mBindingClause = NS_LITERAL_CSTRING(
+        " WHERE originKey = :originKey "
+        "AND originAttributes = :originAttributes"
+      );
+    }
+
+    void
+    match(const Prefix& aPrefix) {
+      *mBindingClause = NS_LITERAL_CSTRING(
+        " WHERE originKey = :originKey"
+      );
+    }
+
+    void
+    match(const Pattern& aPattern) {
+      *mBindingClause = NS_LITERAL_CSTRING(
+        " WHERE originAttributes MATCH :originAttributesPattern"
+      );
+    }
+
+    void
+    match(const Null& aNull) {
+      *mBindingClause = EmptyCString();
+    }
+  };
+
+  mData.match(Matcher(&aBindingClause));
 }
 
 nsresult
-ArchivedOriginInfo::BindToStatement(mozIStorageStatement* aStatement) const
+ArchivedOriginScope::BindToStatement(mozIStorageStatement* aStmt) const
 {
   MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
-  MOZ_ASSERT(aStatement);
+  MOZ_ASSERT(aStmt);
 
-  nsresult rv =
-    aStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("originKey"),
-                                     mOriginNoSuffix);
+  struct Matcher
+  {
+    mozIStorageStatement* mStmt;
+
+    explicit Matcher(mozIStorageStatement* aStmt)
+      : mStmt(aStmt)
+    { }
+
+    nsresult
+    match(const Origin& aOrigin) {
+      nsresult rv = mStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("originKey"),
+                                                aOrigin.OriginNoSuffix());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = mStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("originAttributes"),
+                                       aOrigin.OriginSuffix());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      return NS_OK;
+    }
+
+    nsresult
+    match(const Prefix& aPrefix) {
+      nsresult rv = mStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("originKey"),
+                                                aPrefix.OriginNoSuffix());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      return NS_OK;
+    }
+
+    nsresult
+    match(const Pattern& aPattern) {
+      nsresult rv = mStmt->BindUTF8StringByName(
+                                  NS_LITERAL_CSTRING("originAttributesPattern"),
+                                  NS_LITERAL_CSTRING("pattern1"));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      return NS_OK;
+    }
+
+    nsresult
+    match(const Null& aNull) {
+      return NS_OK;
+    }
+  };
+
+  nsresult rv = mData.match(Matcher(aStmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("originAttributes"),
-                                        mOriginSuffix);
+  return NS_OK;
+}
+
+bool
+ArchivedOriginScope::HasMatches(ArchivedOriginHashtable* aHashtable) const
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aHashtable);
+
+  struct Matcher
+  {
+    ArchivedOriginHashtable* mHashtable;
+
+    explicit Matcher(ArchivedOriginHashtable* aHashtable)
+      : mHashtable(aHashtable)
+    { }
+
+    bool
+    match(const Origin& aOrigin) {
+      nsCString hashKey = GetArchivedOriginHashKey(aOrigin.OriginSuffix(),
+                                                   aOrigin.OriginNoSuffix());
+
+      ArchivedOriginInfo* archivedOriginInfo;
+      return mHashtable->Get(hashKey, &archivedOriginInfo);
+    }
+
+    bool
+    match(const Prefix& aPrefix) {
+      for (auto iter = mHashtable->ConstIter(); !iter.Done(); iter.Next()) {
+        ArchivedOriginInfo* archivedOriginInfo = iter.Data();
+
+        if (archivedOriginInfo->mOriginNoSuffix == aPrefix.OriginNoSuffix()) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    bool
+    match(const Pattern& aPattern) {
+      for (auto iter = mHashtable->ConstIter(); !iter.Done(); iter.Next()) {
+        ArchivedOriginInfo* archivedOriginInfo = iter.Data();
+
+        if (aPattern.GetPattern().Matches(
+                                       archivedOriginInfo->mOriginAttributes)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    bool
+    match(const Null& aNull) {
+      return mHashtable->Count();
+    }
+  };
+
+  return mData.match(Matcher(aHashtable));
+}
+
+void
+ArchivedOriginScope::RemoveMatches(ArchivedOriginHashtable* aHashtable) const
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aHashtable);
+
+  struct Matcher
+  {
+    ArchivedOriginHashtable* mHashtable;
+
+    explicit Matcher(ArchivedOriginHashtable* aHashtable)
+      : mHashtable(aHashtable)
+    { }
+
+    void
+    match(const Origin& aOrigin) {
+      nsCString hashKey = GetArchivedOriginHashKey(aOrigin.OriginSuffix(),
+                                                   aOrigin.OriginNoSuffix());
+
+      mHashtable->Remove(hashKey);
+    }
+
+    void
+    match(const Prefix& aPrefix) {
+      for (auto iter = mHashtable->Iter(); !iter.Done(); iter.Next()) {
+        ArchivedOriginInfo* archivedOriginInfo = iter.Data();
+
+        if (archivedOriginInfo->mOriginNoSuffix == aPrefix.OriginNoSuffix()) {
+          iter.Remove();
+        }
+      }
+    }
+
+    void
+    match(const Pattern& aPattern) {
+      for (auto iter = mHashtable->Iter(); !iter.Done(); iter.Next()) {
+        ArchivedOriginInfo* archivedOriginInfo = iter.Data();
+
+        if (aPattern.GetPattern().Matches(
+                                       archivedOriginInfo->mOriginAttributes)) {
+          iter.Remove();
+        }
+      }
+    }
+
+    void
+    match(const Null& aNull) {
+      mHashtable->Clear();
+    }
+  };
+
+  mData.match(Matcher(aHashtable));
+}
+
+/*******************************************************************************
+ * ArchivedOriginScopeHelper
+ ******************************************************************************/
+
+nsresult
+ArchivedOriginScopeHelper::BlockAndReturnArchivedOriginScope(
+                           nsAutoPtr<ArchivedOriginScope>& aArchivedOriginScope)
+{
+  AssertIsOnIOThread();
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+
+  mozilla::MonitorAutoLock lock(mMonitor);
+  while (mWaiting) {
+    lock.Wait();
+  }
+
+  if (NS_WARN_IF(NS_FAILED(mMainThreadResultCode))) {
+    return mMainThreadResultCode;
+  }
+
+  aArchivedOriginScope = std::move(mArchivedOriginScope);
+  return NS_OK;
+}
+
+nsresult
+ArchivedOriginScopeHelper::RunOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), mSpec);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  nsCOMPtr<nsIPrincipal> principal =
+    BasePrincipal::CreateCodebasePrincipal(uri, mAttrs);
+  if (NS_WARN_IF(!principal)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mPrefix) {
+    mArchivedOriginScope = ArchivedOriginScope::CreateFromPrefix(principal);
+  } else {
+    mArchivedOriginScope = ArchivedOriginScope::CreateFromOrigin(principal);
+  }
+  if (NS_WARN_IF(!mArchivedOriginScope)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ArchivedOriginScopeHelper::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv = RunOnMainThread();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mMainThreadResultCode = rv;
+  }
+
+  mozilla::MonitorAutoLock lock(mMonitor);
+  MOZ_ASSERT(mWaiting);
+
+  mWaiting = false;
+  lock.Notify();
 
   return NS_OK;
 }
@@ -6967,7 +7576,8 @@ QuotaClient* QuotaClient::sInstance = nullptr;
 bool QuotaClient::sObserversRegistered = false;
 
 QuotaClient::QuotaClient()
-  : mShutdownRequested(false)
+  : mShadowDatabaseMutex("LocalStorage mShadowDatabaseMutex")
+  , mShutdownRequested(false)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
@@ -7103,7 +7713,7 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     }
 
     int64_t usage;
-    rv = GetUsage(connection, /* aArchivedOriginInfo */ nullptr, &usage);
+    rv = GetUsage(connection, /* aArchivedOriginScope */ nullptr, &usage);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7194,6 +7804,177 @@ QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
   return NS_OK;
 }
 
+nsresult
+QuotaClient::AboutToClearOrigins(
+                              const Nullable<PersistenceType>& aPersistenceType,
+                              const OriginScope& aOriginScope)
+{
+  AssertIsOnIOThread();
+
+  // This method is not called when the clearing is triggered by the eviction
+  // process. It's on purpose to avoid a problem with the origin access time
+  // which can be described as follows:
+  // When there's a storage pressure condition and quota manager starts
+  // collecting origins for eviction, there can be an origin that hasn't been
+  // touched for long time. However, the old implementation of local storage
+  // could have touched the origin only recently and the new implementation
+  // hasn't had a chance to create a new per origin database for it yet (the
+  // data is still in the archive database), so the origin access time hasn't
+  // been updated either. In the end, the origin would be evicted despite the
+  // fact that there was recent local storage activity.
+  // So this method clears the archived data and shadow database entries for
+  // given origin scope, but only if it's a privacy-related origin clearing.
+
+  if (!aPersistenceType.IsNull() &&
+      aPersistenceType.Value() != PERSISTENCE_TYPE_DEFAULT) {
+    return NS_OK;
+  }
+
+  bool shadowWrites = gShadowWrites;
+
+  nsAutoPtr<ArchivedOriginScope> archivedOriginScope;
+  nsresult rv = CreateArchivedOriginScope(aOriginScope, archivedOriginScope);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!gArchivedOrigins) {
+    rv = LoadArchivedOrigins();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    MOZ_ASSERT(gArchivedOrigins);
+  }
+
+  bool hasDataForRemoval = archivedOriginScope->HasMatches(gArchivedOrigins);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  nsString basePath = quotaManager->GetBasePath();
+
+  {
+    MutexAutoLock shadowDatabaseLock(mShadowDatabaseMutex);
+
+    nsCOMPtr<mozIStorageConnection> connection;
+    if (gInitializedShadowStorage) {
+      rv = GetShadowStorageConnection(basePath, getter_AddRefs(connection));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else {
+      rv = CreateShadowStorageConnection(basePath, getter_AddRefs(connection));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      gInitializedShadowStorage = true;
+    }
+
+    if (hasDataForRemoval) {
+      rv = AttachArchiveDatabase(quotaManager->GetStoragePath(), connection);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    if (archivedOriginScope->IsPattern()) {
+      nsCOMPtr<mozIStorageFunction> function(
+        new MatchFunction(archivedOriginScope->GetPattern()));
+
+      rv = connection->CreateFunction(NS_LITERAL_CSTRING("match"), 2, function);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+      "BEGIN IMMEDIATE;"
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (shadowWrites) {
+      rv = PerformDelete(connection,
+                         NS_LITERAL_CSTRING("main"),
+                         archivedOriginScope);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    if (hasDataForRemoval) {
+      rv = PerformDelete(connection,
+                         NS_LITERAL_CSTRING("archive"),
+                         archivedOriginScope);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+      "COMMIT;"
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    stmt = nullptr;
+
+    if (archivedOriginScope->IsPattern()) {
+      rv = connection->RemoveFunction(NS_LITERAL_CSTRING("match"));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    if (hasDataForRemoval) {
+      rv = DetachArchiveDatabase(connection);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      MOZ_ASSERT(gArchivedOrigins);
+      MOZ_ASSERT(archivedOriginScope->HasMatches(gArchivedOrigins));
+      archivedOriginScope->RemoveMatches(gArchivedOrigins);
+    }
+
+    rv = connection->Close();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  if (aOriginScope.IsNull()) {
+    nsCOMPtr<nsIFile> shadowFile;
+    rv = GetShadowFile(basePath, getter_AddRefs(shadowFile));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = shadowFile->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    gInitializedShadowStorage = false;
+  }
+
+  return NS_OK;
+}
+
 void
 QuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
                                     const nsACString& aOrigin)
@@ -7215,6 +7996,9 @@ QuotaClient::ReleaseIOThreadObjects()
   AssertIsOnIOThread();
 
   gUsages = nullptr;
+
+  // Delete archived origins hashtable since QuotaManager clears the whole
+  // storage directory including ls-archive.sqlite.
 
   gArchivedOrigins = nullptr;
 }
@@ -7359,6 +8143,100 @@ QuotaClient::ShutdownWorkThreads()
   }
 }
 
+nsresult
+QuotaClient::CreateArchivedOriginScope(
+                           const OriginScope& aOriginScope,
+                           nsAutoPtr<ArchivedOriginScope>& aArchivedOriginScope)
+{
+  AssertIsOnIOThread();
+
+  nsresult rv;
+
+  nsAutoPtr<ArchivedOriginScope> archivedOriginScope;
+
+  if (aOriginScope.IsOrigin()) {
+    nsCString spec;
+    OriginAttributes attrs;
+    if (NS_WARN_IF(!QuotaManager::ParseOrigin(aOriginScope.GetOrigin(),
+                                              spec,
+                                              &attrs))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<ArchivedOriginScopeHelper> helper =
+      new ArchivedOriginScopeHelper(spec, attrs, /* aPrefix */ false);
+
+    rv = helper->BlockAndReturnArchivedOriginScope(archivedOriginScope);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else if (aOriginScope.IsPrefix()) {
+    nsCString spec;
+    OriginAttributes attrs;
+    if (NS_WARN_IF(!QuotaManager::ParseOrigin(aOriginScope.GetOriginNoSuffix(),
+                                              spec,
+                                              &attrs))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<ArchivedOriginScopeHelper> helper =
+      new ArchivedOriginScopeHelper(spec, attrs, /* aPrefix */ true);
+
+    rv = helper->BlockAndReturnArchivedOriginScope(archivedOriginScope);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else if (aOriginScope.IsPattern()) {
+    archivedOriginScope =
+      ArchivedOriginScope::CreateFromPattern(aOriginScope.GetPattern());
+  } else {
+    MOZ_ASSERT(aOriginScope.IsNull());
+
+    archivedOriginScope = ArchivedOriginScope::CreateFromNull();
+  }
+
+  MOZ_ASSERT(archivedOriginScope);
+
+  aArchivedOriginScope = std::move(archivedOriginScope);
+  return NS_OK;
+}
+
+nsresult
+QuotaClient::PerformDelete(mozIStorageConnection* aConnection,
+                           const nsACString& aSchemaName,
+                           ArchivedOriginScope* aArchivedOriginScope) const
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(aArchivedOriginScope);
+
+  nsresult rv;
+
+  nsCString bindingClause;
+  aArchivedOriginScope->GetBindingClause(bindingClause);
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM ") + aSchemaName + NS_LITERAL_CSTRING(".webappsstore2") +
+      bindingClause + NS_LITERAL_CSTRING(";"),
+    getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aArchivedOriginScope->BindToStatement(stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 QuotaClient::
 ClearPrivateBrowsingRunnable::Run()
@@ -7400,6 +8278,40 @@ Observer::Observe(nsISupports* aSubject,
   }
 
   NS_WARNING("Unknown observer topic!");
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(QuotaClient::MatchFunction, mozIStorageFunction)
+
+NS_IMETHODIMP
+QuotaClient::
+MatchFunction::OnFunctionCall(mozIStorageValueArray* aFunctionArguments,
+                              nsIVariant** aResult)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aFunctionArguments);
+  MOZ_ASSERT(aResult);
+
+  nsCString suffix;
+  nsresult rv = aFunctionArguments->GetUTF8String(1, suffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  OriginAttributes oa;
+  if (NS_WARN_IF(!oa.PopulateFromSuffix(suffix))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool result = mPattern.Matches(oa);
+
+  RefPtr<nsVariant> outVar(new nsVariant());
+  rv = outVar->SetAsBool(result);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  outVar.forget(aResult);
   return NS_OK;
 }
 
