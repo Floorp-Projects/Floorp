@@ -239,8 +239,7 @@ pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_i
 // non-zero keyCode or charCode value to the other).  The format is exactly
 // same as "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So,
 // check its explanation for the detail.
-pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode",
-     "www.rememberthemilk.com");
+pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "");
 #endif
 
 // Whether the WebMIDI API is enabled
