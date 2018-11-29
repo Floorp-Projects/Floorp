@@ -1506,7 +1506,7 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
         fnLoadForExt(symbols, NV_fence);
     }
 
-// clang-format off
+// clang-format on
 
     if (IsExtensionSupported(NV_texture_barrier)) {
         const SymLoadStruct symbols[] = {

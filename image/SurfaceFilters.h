@@ -415,9 +415,9 @@ public:
 
     // If there's no intersection, |mFrameRect| will be an empty rect positioned
     // at the maximum of |inputRect|'s and |aFrameRect|'s coordinates, which is
-    // not what we want. Force it to (0, 0) in that case.
+    // not what we want. Force it to (0, 0) sized 0 x 0 in that case.
     if (mFrameRect.IsEmpty()) {
-      mFrameRect.MoveTo(0, 0);
+      mFrameRect.SetRect(0, 0, 0, 0);
     }
 
     BlendMethod blendMethod = currentFrame->GetBlendMethod();

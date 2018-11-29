@@ -39,6 +39,7 @@ class Flexbox extends PureComponent {
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
+      scrollToTop: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
   }
@@ -47,6 +48,7 @@ class Flexbox extends PureComponent {
     const {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      scrollToTop,
       setSelectedNode,
     } = this.props;
     const { flexItems } = this.props.flexContainer;
@@ -55,6 +57,7 @@ class Flexbox extends PureComponent {
       flexItems,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      scrollToTop,
       setSelectedNode,
     });
   }

@@ -24,5 +24,7 @@
 - Added `ContentDelegate.ContextElement` to extend the information passed to
   `ContentDelegate#onContextMenu`. Extended information includes the element's
   title and alt attributes.
+- Changed `ContentDelegate.ContextElement` TYPE_ constants to public access.
+  Changed `ContentDelegate.ContextElement` to non-final class.
 
-[api-version]: 8cfd04a09e7a242b3da22ccdd55c88a2aca2ba6d
+[api-version]: 01a6677fc7645b27d9824a2ebd3a6ab54c5e192a

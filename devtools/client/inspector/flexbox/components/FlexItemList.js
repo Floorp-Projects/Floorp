@@ -19,6 +19,7 @@ class FlexItemList extends PureComponent {
       flexItems: PropTypes.arrayOf(PropTypes.shape(Types.flexItem)).isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      scrollToTop: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
   }
@@ -28,6 +29,7 @@ class FlexItemList extends PureComponent {
       flexItems,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      scrollToTop,
       setSelectedNode,
     } = this.props;
 
@@ -41,6 +43,7 @@ class FlexItemList extends PureComponent {
           index: index + 1,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
+          scrollToTop,
           setSelectedNode,
         }))
       )
