@@ -272,16 +272,16 @@ class TabsPanel extends TabsListBase {
     let image = this.doc.getAnonymousElementByAttribute(
       button, "class", "toolbarbutton-icon") ||
       this.doc.getAnonymousElementByAttribute(
-        button, "class", "toolbarbutton-icon tab-throbber-fallback");
+        button, "class", "toolbarbutton-icon tab-throbber-tabslist");
 
     if (image) {
       let busy = tab.getAttribute("busy");
       let progress = tab.getAttribute("progress");
       setAttributes(image, {busy, progress});
       if (busy) {
-        image.classList.add("tab-throbber-fallback");
+        image.classList.add("tab-throbber-tabslist");
       } else {
-        image.classList.remove("tab-throbber-fallback");
+        image.classList.remove("tab-throbber-tabslist");
       }
     }
   }
