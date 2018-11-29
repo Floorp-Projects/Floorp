@@ -64,9 +64,6 @@ class Flexbox extends PureComponent {
 
   renderFlexItemSizing() {
     const {
-      color,
-    } = this.props.flexbox;
-    const {
       flexItems,
       flexItemShown,
       properties,
@@ -79,7 +76,6 @@ class Flexbox extends PureComponent {
 
     return createElement(Fragment, null,
       FlexItemSizingOutline({
-        color,
         flexDirection: properties["flex-direction"],
         flexItem,
       }),

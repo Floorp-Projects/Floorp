@@ -7,14 +7,12 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { colorUtils } = require("devtools/shared/css/color");
 
 const Types = require("../types");
 
 class FlexItemSizingOutline extends PureComponent {
   static get propTypes() {
     return {
-      color: PropTypes.string.isRequired,
       flexDirection: PropTypes.string.isRequired,
       flexItem: PropTypes.shape(Types.flexItem).isRequired,
     };
@@ -24,9 +22,6 @@ class FlexItemSizingOutline extends PureComponent {
     return (
       dom.div({
         className: "flex-outline-basis" + (!mainBaseSize ? " zero-basis" : ""),
-        style: {
-          color: colorUtils.setAlpha(this.props.color, 0.4),
-        },
       })
     );
   }
@@ -39,18 +34,13 @@ class FlexItemSizingOutline extends PureComponent {
     return (
       dom.div({
         className: "flex-outline-delta",
-        style: {
-          backgroundColor: colorUtils.setAlpha(this.props.color, 0.1),
-        },
       })
     );
   }
 
   renderFinalOutline(mainFinalSize, mainMaxSize, mainMinSize, isClamped) {
     return (
-      dom.div({
-        className: "flex-outline-final" + (isClamped ? " clamped" : ""),
-      })
+      dom.div({ className: "flex-outline-final" + (isClamped ? " clamped" : "") })
     );
   }
 
@@ -156,7 +146,6 @@ class FlexItemSizingOutline extends PureComponent {
                        (isRow ? " row" : " column") +
                        (mainDeltaSize > 0 ? " growing" : " shrinking"),
             style: {
-              color: this.props.color,
               gridTemplateColumns,
             },
           },
