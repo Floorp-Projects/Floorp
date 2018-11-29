@@ -7,13 +7,22 @@ package mozilla.components.feature.customtabs
 import android.app.Service
 import android.net.Uri
 import android.os.Bundle
+import android.support.customtabs.CustomTabsService
 import android.support.customtabs.CustomTabsSessionToken
+import mozilla.components.concept.engine.Engine
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * [Service] providing Custom Tabs related functionality.
  */
-class CustomTabsService : android.support.customtabs.CustomTabsService() {
+abstract class AbstractCustomTabsService : CustomTabsService() {
+    private val logger = Logger("CustomTabsService")
+
+    abstract val engine: Engine
+
     override fun warmup(flags: Long): Boolean {
+        // Just accessing the engine here will make sure that it is created and initialized.
+        logger.debug("Warm up for engine: ${engine.name()}")
         return true
     }
 

@@ -54,7 +54,7 @@
         </activity>
 
         <service
-            android:name="mozilla.components.feature.customtabs.CustomTabsService"
+            android:name=".customtabs.CustomTabsService"
             android:exported="true"
             tools:ignore="ExportedService">
             <intent-filter>

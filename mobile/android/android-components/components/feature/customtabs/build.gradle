@@ -22,9 +22,12 @@ android {
 }
 
 dependencies {
+    implementation project(':concept-engine')
+    implementation project(':support-base')
+
     implementation Dependencies.kotlin_stdlib
 
-    implementation Dependencies.support_customtabs
+    api Dependencies.support_customtabs
 
     testImplementation project(':support-test')
 

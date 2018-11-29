@@ -10,7 +10,8 @@ import android.os.Bundle
 import android.os.IBinder
 import android.support.customtabs.ICustomTabsCallback
 import android.support.customtabs.ICustomTabsService
-import mozilla.components.feature.customtabs.CustomTabsService
+import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.customtabs.AbstractCustomTabsService
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -24,11 +25,15 @@ import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class CustomTabsServiceTest {
+class AbstractCustomTabsServiceTest {
 
     @Test
     fun customTabService() {
-        val customTabsService = CustomTabsService()
+        val customTabsService = object : AbstractCustomTabsService() {
+            override val engine: Engine
+                get() = mock()
+        }
+
         val customTabsServiceStub = customTabsService.onBind(mock(Intent::class.java))
         assertNotNull(customTabsServiceStub)
 
@@ -52,5 +57,24 @@ class CustomTabsServiceTest {
             mock(ICustomTabsCallback::class.java),
             mock(Uri::class.java),
             mock(Bundle::class.java), emptyList<Bundle>()))
+    }
+
+    @Test
+    fun `Warmup will access engine instance`() {
+        var engineAccessed = false
+
+        val customTabsService = object : AbstractCustomTabsService() {
+            override val engine: Engine
+                get() {
+                    engineAccessed = true
+                    return mock()
+                }
+        }
+
+        val stub = customTabsService.onBind(mock(Intent::class.java)) as ICustomTabsService.Stub
+
+        assertTrue(stub.warmup(42))
+
+        assertTrue(engineAccessed)
     }
 }

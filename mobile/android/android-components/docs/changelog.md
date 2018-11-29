@@ -18,6 +18,16 @@ permalink: /changelog/
   * Mozilla App Services (FxA: 0.11.2, Sync Logins: 0.11.2, Places: 0.11.2)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
+* **feature-customtabs**
+  * 
+  * ⚠️ **This is a breaking change** `CustomTabsService` has been renamed to `AbstractCustomTabsService` and is now an abstract class in order to allow apps to inject the `Engine` they are using. An app that wants to support custom tabs will need to create its own class and reference it in the manifest:
+
+  ```Kotlin
+  class CustomTabsService : AbstractCustomTabsService() {
+    override val engine: Engine by lazy { components.engine }
+  }
+  ```
+
 # 0.34.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.34.0...v0.34.1)
