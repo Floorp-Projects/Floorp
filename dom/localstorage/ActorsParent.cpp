@@ -14,6 +14,7 @@
 #include "mozStorageHelper.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PBackgroundLSDatabaseParent.h"
 #include "mozilla/dom/PBackgroundLSObserverParent.h"
 #include "mozilla/dom/PBackgroundLSRequestParent.h"
@@ -1592,6 +1593,7 @@ class PreparedDatastore
 {
   RefPtr<Datastore> mDatastore;
   nsCOMPtr<nsITimer> mTimer;
+  const Maybe<ContentParentId> mContentParentId;
   // Strings share buffers if possible, so it's not a problem to duplicate the
   // origin here.
   const nsCString mOrigin;
@@ -1601,11 +1603,13 @@ class PreparedDatastore
 
 public:
   PreparedDatastore(Datastore* aDatastore,
+                    const Maybe<ContentParentId>& aContentParentId,
                     const nsACString& aOrigin,
                     uint64_t aDatastoreId,
                     bool aForPreload)
     : mDatastore(aDatastore)
     , mTimer(NS_NewTimer())
+    , mContentParentId(aContentParentId)
     , mOrigin(aOrigin)
     , mDatastoreId(aDatastoreId)
     , mForPreload(aForPreload)
@@ -1642,6 +1646,12 @@ public:
     MOZ_ASSERT(mDatastore);
 
     return mDatastore;
+  }
+
+  const Maybe<ContentParentId>&
+  GetContentParentId() const
+  {
+    return mContentParentId;
   }
 
   const nsCString&
@@ -1695,6 +1705,7 @@ class Database final
   RefPtr<Datastore> mDatastore;
   Snapshot* mSnapshot;
   const PrincipalInfo mPrincipalInfo;
+  const Maybe<ContentParentId> mContentParentId;
   // Strings share buffers if possible, so it's not a problem to duplicate the
   // origin here.
   nsCString mOrigin;
@@ -1709,6 +1720,7 @@ class Database final
 public:
   // Created in AllocPBackgroundLSDatabaseParent.
   Database(const PrincipalInfo& aPrincipalInfo,
+           const Maybe<ContentParentId>& aContentParentId,
            const nsACString& aOrigin,
            uint32_t aPrivateBrowsingId);
 
@@ -1723,6 +1735,12 @@ public:
   GetPrincipalInfo() const
   {
     return mPrincipalInfo;
+  }
+
+  bool
+  IsOwnedByProcess(ContentParentId aContentParentId) const
+  {
+    return mContentParentId && mContentParentId.value() == aContentParentId;
   }
 
   uint32_t
@@ -2065,6 +2083,7 @@ class PrepareDatastoreOp
   };
 
   nsCOMPtr<nsIEventTarget> mMainEventTarget;
+  RefPtr<ContentParent> mContentParent;
   RefPtr<PrepareDatastoreOp> mDelayedOp;
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
@@ -2074,6 +2093,7 @@ class PrepareDatastoreOp
   nsDataHashtable<nsStringHashKey, nsString> mValues;
   nsTArray<LSItemInfo> mOrderedItems;
   const LSRequestPrepareDatastoreParams mParams;
+  Maybe<ContentParentId> mContentParentId;
   nsCString mSuffix;
   nsCString mGroup;
   nsCString mMainThreadOrigin;
@@ -2094,6 +2114,7 @@ class PrepareDatastoreOp
 
 public:
   PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
+                     already_AddRefed<ContentParent> aContentParent,
                      const LSRequestParams& aParams);
 
   bool
@@ -2741,9 +2762,11 @@ AllocPBackgroundLSDatabaseParent(const PrincipalInfo& aPrincipalInfo,
   // We also assume that IPDL must call RecvPBackgroundLSDatabaseConstructor
   // once we return a valid actor in this method.
 
-  RefPtr<Database> database = new Database(aPrincipalInfo,
-                                           preparedDatastore->Origin(),
-                                           aPrivateBrowsingId);
+  RefPtr<Database> database =
+    new Database(aPrincipalInfo,
+                 preparedDatastore->GetContentParentId(),
+                 preparedDatastore->Origin(),
+                 aPrivateBrowsingId);
 
   // Transfer ownership to IPDL.
   return database.forget().take();
@@ -2885,8 +2908,13 @@ AllocPBackgroundLSRequestParent(PBackgroundParent* aBackgroundActor,
 
   switch (aParams.type()) {
     case LSRequestParams::TLSRequestPrepareDatastoreParams: {
+      RefPtr<ContentParent> contentParent =
+        BackgroundParent::GetContentParent(aBackgroundActor);
+
       RefPtr<PrepareDatastoreOp> prepareDatastoreOp =
-        new PrepareDatastoreOp(mainEventTarget, aParams);
+        new PrepareDatastoreOp(mainEventTarget,
+                               contentParent.forget(),
+                               aParams);
 
       if (!gPrepareDatastoreOps) {
         gPrepareDatastoreOps = new PrepareDatastoreOpArray();
@@ -4515,10 +4543,12 @@ PreparedDatastore::TimerCallback(nsITimer* aTimer, void* aClosure)
  ******************************************************************************/
 
 Database::Database(const PrincipalInfo& aPrincipalInfo,
+                   const Maybe<ContentParentId>& aContentParentId,
                    const nsACString& aOrigin,
                    uint32_t aPrivateBrowsingId)
   : mSnapshot(nullptr)
   , mPrincipalInfo(aPrincipalInfo)
+  , mContentParentId(aContentParentId)
   , mOrigin(aOrigin)
   , mPrivateBrowsingId(aPrivateBrowsingId)
   , mAllowedToClose(false)
@@ -5317,10 +5347,13 @@ LSRequestBase::RecvFinish()
  * PrepareDatastoreOp
  ******************************************************************************/
 
-PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
-                                       const LSRequestParams& aParams)
+PrepareDatastoreOp::PrepareDatastoreOp(
+                                 nsIEventTarget* aMainEventTarget,
+                                 already_AddRefed<ContentParent> aContentParent,
+                                 const LSRequestParams& aParams)
   : LSRequestBase(aMainEventTarget)
   , mMainEventTarget(aMainEventTarget)
+  , mContentParent(std::move(aContentParent))
   , mLoadDataOp(nullptr)
   , mParams(aParams.get_LSRequestPrepareDatastoreParams())
   , mPrivateBrowsingId(0)
@@ -5337,6 +5370,10 @@ PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
 {
   MOZ_ASSERT(aParams.type() ==
                LSRequestParams::TLSRequestPrepareDatastoreParams);
+
+  if (mContentParent) {
+    mContentParentId = Some(mContentParent->ChildID());
+  }
 }
 
 PrepareDatastoreOp::~PrepareDatastoreOp()
@@ -5353,6 +5390,10 @@ PrepareDatastoreOp::Open()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::Opening);
   MOZ_ASSERT(mNestedState == NestedState::BeforeNesting);
+
+  // Swap this to the stack now to ensure that we release it on this thread.
+  RefPtr<ContentParent> contentParent;
+  mContentParent.swap(contentParent);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
@@ -6159,6 +6200,7 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
 
   nsAutoPtr<PreparedDatastore> preparedDatastore(
     new PreparedDatastore(mDatastore,
+                          mContentParentId,
                           mOrigin,
                           datastoreId,
                           /* aForPreload */ !mParams.createIfNotExists()));
@@ -7029,6 +7071,14 @@ void
 QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId)
 {
   AssertIsOnBackgroundThread();
+
+  if (gLiveDatabases) {
+    for (Database* database : *gLiveDatabases) {
+      if (database->IsOwnedByProcess(aContentParentId)) {
+        database->RequestAllowToClose();
+      }
+    }
+  }
 }
 
 void
