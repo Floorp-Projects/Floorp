@@ -106,7 +106,7 @@ linux64-fuzzing/debug:
         symbol: Bf
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: fuzzing
             FORCE_GCC: '1'
@@ -143,7 +143,7 @@ linux64/debug:
         symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
     run:
         using: mozharness
         actions: [get-secrets, build, check-test]
@@ -353,7 +353,7 @@ linux/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
-        max-run-time: 3600
+        max-run-time: 5400
     run:
         using: mozharness
         actions: [get-secrets, build, check-test]
@@ -575,7 +575,7 @@ linux64-asan/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
-        max-run-time: 3600
+        max-run-time: 5400
     run:
         using: mozharness
         actions: [get-secrets, build, check-test]
@@ -609,7 +609,7 @@ linux64-asan-fuzzing/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
-        max-run-time: 3600
+        max-run-time: 5400
     run:
         using: mozharness
         actions: [get-secrets, build, check-test]
@@ -644,7 +644,7 @@ linux64-asan-fuzzing-ccov/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-ccov
-        max-run-time: 3600
+        max-run-time: 5400
     run:
         using: mozharness
         actions: [get-secrets, build, check-test]
@@ -676,7 +676,7 @@ linux64-fuzzing-ccov/opt:
     run-on-projects: ['mozilla-central', 'try']
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: fuzzing-ccov
             FORCE_GCC: '1'
@@ -750,7 +750,7 @@ linux64-asan/debug:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
-        max-run-time: 3600
+        max-run-time: 5400
     run:
         using: mozharness
         actions: [get-secrets, build, check-test]
