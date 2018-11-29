@@ -6,6 +6,7 @@
 #ifndef nsIDeviceContextSpec_h___
 #define nsIDeviceContextSpec_h___
 
+#include "gfxPoint.h"
 #include "nsISupports.h"
 
 class nsIWidget;

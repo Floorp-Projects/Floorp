@@ -11,6 +11,7 @@
 
 #include "nsAlgorithm.h"
 #include "nsAtom.h"
+#include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsMargin.h"
@@ -188,10 +189,6 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed
   // custom scrollbar
   typedef nscolor (*AutoColorGetter)(mozilla::ComputedStyle*);
   bool IsWidgetScrollbarPart(mozilla::StyleAppearance aAppearance);
-  nscolor GetScrollbarFaceColor(mozilla::ComputedStyle* aStyle,
-                                AutoColorGetter aAutoGetter);
-  nscolor GetScrollbarTrackColor(mozilla::ComputedStyle* aStyle,
-                                 AutoColorGetter aAutoGetter);
 
  private:
   uint32_t mAnimatedContentTimeout;
