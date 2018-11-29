@@ -114,6 +114,8 @@ static_assert(kSQLiteGrowthIncrement >= 0 &&
 #define DATA_FILE_NAME "data.sqlite"
 #define JOURNAL_FILE_NAME "data.sqlite-journal"
 
+const uint32_t kFlushTimeoutMs = 5000;
+
 const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 
 const uint32_t kDefaultOriginLimitKB = 5 * 1024;
@@ -907,6 +909,7 @@ public:
   WriteOptimizer(WriteOptimizer&& aWriteOptimizer)
     : mClearInfo(std::move(aWriteOptimizer.mClearInfo))
   {
+    AssertIsOnBackgroundThread();
     MOZ_ASSERT(&aWriteOptimizer != this);
 
     mWriteInfos.SwapElements(aWriteOptimizer.mWriteInfos);
@@ -925,6 +928,14 @@ public:
 
   void
   Clear();
+
+  bool
+  HasWrites() const
+  {
+    AssertIsOnBackgroundThread();
+
+    return mClearInfo || !mWriteInfos.IsEmpty();
+  }
 
   void
   ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems);
@@ -1200,10 +1211,11 @@ public:
   class CachedStatement;
 
 private:
-  class EndUpdateBatchOp;
+  class FlushOp;
   class CloseOp;
 
   RefPtr<ConnectionThread> mConnectionThread;
+  nsCOMPtr<nsITimer> mFlushTimer;
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
   nsAutoPtr<ArchivedOriginInfo> mArchivedOriginInfo;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
@@ -1211,6 +1223,7 @@ private:
   WriteOptimizer mWriteOptimizer;
   const nsCString mOrigin;
   const nsString mFilePath;
+  bool mFlushScheduled;
 #ifdef DEBUG
   bool mInUpdateBatch;
 #endif
@@ -1291,6 +1304,15 @@ private:
              nsAutoPtr<ArchivedOriginInfo>&& aArchivedOriginInfo);
 
   ~Connection();
+
+  void
+  ScheduleFlush();
+
+  void
+  Flush();
+
+  static void
+  FlushTimerCallback(nsITimer* aTimer, void* aClosure);
 };
 
 class Connection::CachedStatement final
@@ -1320,14 +1342,14 @@ private:
   CachedStatement& operator=(const CachedStatement&) = delete;
 };
 
-class Connection::EndUpdateBatchOp final
+class Connection::FlushOp final
   : public ConnectionDatastoreOperationBase
 {
   WriteOptimizer mWriteOptimizer;
 
 public:
-  EndUpdateBatchOp(Connection* aConnection,
-                   WriteOptimizer&& aWriteOptimizer)
+  FlushOp(Connection* aConnection,
+          WriteOptimizer&& aWriteOptimizer)
     : ConnectionDatastoreOperationBase(aConnection)
     , mWriteOptimizer(std::move(aWriteOptimizer))
   { }
@@ -3114,6 +3136,8 @@ WriteOptimizer::Clear()
 void
 WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems)
 {
+  AssertIsOnBackgroundThread();
+
   if (mClearInfo) {
     aOrderedItems.Clear();
     mClearInfo = nullptr;
@@ -3474,6 +3498,7 @@ Connection::Connection(ConnectionThread* aConnectionThread,
   , mArchivedOriginInfo(std::move(aArchivedOriginInfo))
   , mOrigin(aOrigin)
   , mFilePath(aFilePath)
+  , mFlushScheduled(false)
 #ifdef DEBUG
   , mInUpdateBatch(false)
 #endif
@@ -3489,6 +3514,7 @@ Connection::~Connection()
   MOZ_ASSERT(!mStorageConnection);
   MOZ_ASSERT(!mCachedStatements.Count());
   MOZ_ASSERT(!mInUpdateBatch);
+  MOZ_ASSERT(!mFlushScheduled);
 }
 
 void
@@ -3506,6 +3532,15 @@ Connection::Close(nsIRunnable* aCallback)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCallback);
+
+  if (mFlushScheduled) {
+    MOZ_ASSERT(mFlushTimer);
+    MOZ_ALWAYS_SUCCEEDS(mFlushTimer->Cancel());
+
+    Flush();
+
+    mFlushTimer = nullptr;
+  }
 
   RefPtr<CloseOp> op = new CloseOp(this, aCallback);
 
@@ -3567,10 +3602,9 @@ Connection::EndUpdateBatch()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  RefPtr<EndUpdateBatchOp> op =
-    new EndUpdateBatchOp(this, std::move(mWriteOptimizer));
-
-  Dispatch(op);
+  if (mWriteOptimizer.HasWrites() && !mFlushScheduled)  {
+    ScheduleFlush();
+  }
 
 #ifdef DEBUG
   mInUpdateBatch = false;
@@ -3645,6 +3679,56 @@ Connection::GetCachedStatement(const nsACString& aQuery,
   return NS_OK;
 }
 
+void
+Connection::ScheduleFlush()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mWriteOptimizer.HasWrites());
+  MOZ_ASSERT(!mFlushScheduled);
+
+  if (!mFlushTimer) {
+    mFlushTimer = NS_NewTimer();
+    MOZ_ASSERT(mFlushTimer);
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(
+    mFlushTimer->InitWithNamedFuncCallback(FlushTimerCallback,
+                                           this,
+                                           kFlushTimeoutMs,
+                                           nsITimer::TYPE_ONE_SHOT,
+                                           "Connection::FlushTimerCallback"));
+
+  mFlushScheduled = true;
+}
+
+void
+Connection::Flush()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mFlushScheduled);
+
+  if (mWriteOptimizer.HasWrites()) {
+    RefPtr<FlushOp> op = new FlushOp(this, std::move(mWriteOptimizer));
+
+    Dispatch(op);
+  }
+
+  mFlushScheduled = false;
+}
+
+// static
+void
+Connection::FlushTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  MOZ_ASSERT(aClosure);
+
+  auto* self = static_cast<Connection*>(aClosure);
+  MOZ_ASSERT(self);
+  MOZ_ASSERT(self->mFlushScheduled);
+
+  self->Flush();
+}
+
 Connection::
 CachedStatement::CachedStatement()
 {
@@ -3697,7 +3781,7 @@ CachedStatement::Assign(Connection* aConnection,
 
 nsresult
 Connection::
-EndUpdateBatchOp::DoDatastoreWork()
+FlushOp::DoDatastoreWork()
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mConnection);
