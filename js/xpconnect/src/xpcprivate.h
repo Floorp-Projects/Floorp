@@ -1854,6 +1854,10 @@ public:
      */
     JSObject* GetJSObjectPreserveColor() const { return mJSObj.unbarrieredGet(); }
 
+    JSObject* GetJSObjectGlobalPreserveColor() const {
+        return mJSObjGlobal.unbarrieredGet();
+    }
+
     // Returns true if the wrapper chain contains references to multiple
     // compartments. If the wrapper chain contains references to multiple
     // compartments, then it must be registered on the XPCJSContext. Otherwise,
