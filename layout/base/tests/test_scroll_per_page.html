@@ -104,16 +104,11 @@ async function doTests(aWindow) {
   ok(container.scrollTop > previousScrollTop,
      `${description}the document should be scrolled down even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
   let range = selection.getRangeAt(0);
-  todo_is(range.startContainer, editor.firstChild.nextSibling.nextSibling,
-          `${description}selection start shouldn't be moved to outside of the editing host (got: ${getNodeDescription(range.startContainer)})`);
+  is(range.startContainer, editor.firstChild.nextSibling.nextSibling,
+     `${description}selection start shouldn't be moved to outside of the editing host (got: ${getNodeDescription(range.startContainer)})`);
   ok(range.collapsed, description + "selection should be collapsed");
-  if (kUseKeyboardEvent) {
-    todo_is(doc.activeElement, editor,
-            description + "the editing host should keep having focus");
-  } else {
-    is(doc.activeElement, editor,
-       description + "the editing host should keep having focus");
-  }
+  is(doc.activeElement, editor,
+     description + "the editing host should keep having focus");
 
   description = "PageUp in non-scrollable editing host: ";
   previousScrollTop = container.scrollTop;
@@ -121,16 +116,11 @@ async function doTests(aWindow) {
   ok(container.scrollTop < previousScrollTop,
      `${description}the document should be scrolled up even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
   range = selection.getRangeAt(0);
-  todo_is(range.startContainer, editor.firstChild,
-          `${description}selection start shouldn't be moved to outside of the editing host (got: ${getNodeDescription(range.startContainer)})`);
+  is(range.startContainer, editor.firstChild,
+     `${description}selection start shouldn't be moved to outside of the editing host (got: ${getNodeDescription(range.startContainer)})`);
   ok(range.collapsed, description + "selection should be collapsed");
-  if (kUseKeyboardEvent) {
-    todo_is(doc.activeElement, editor,
-            description + "the editing host should keep having focus");
-  } else {
-    is(doc.activeElement, editor,
-       description + "the editing host should keep having focus");
-  }
+  is(doc.activeElement, editor,
+     description + "the editing host should keep having focus");
 
   body.innerHTML = '<div id="largeDiv" style="height: 1500px;">' +
     	             "<p>previous line of the editor.</p>" +
