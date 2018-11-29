@@ -22,7 +22,6 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsAtom.h"
-#include "nsCSSFrameConstructor.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/NodeInfo.h"
