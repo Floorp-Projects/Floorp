@@ -1533,8 +1533,8 @@ void wr_dp_push_rect(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
-WrClipId wr_dp_push_reference_frame(WrState *aState,
-                                    const LayoutTransform *aTransform)
+uintptr_t wr_dp_push_reference_frame(WrState *aState,
+                                     const LayoutTransform *aTransform)
 WR_FUNC;
 
 WR_INLINE
