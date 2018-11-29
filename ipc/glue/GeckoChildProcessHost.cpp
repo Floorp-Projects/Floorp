@@ -984,8 +984,11 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
       }
       break;
     case GeckoProcessType_RDD:
-      if (mSandboxLevel > 0 && !PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX")) {
-        // TODO: Implement sandbox for RDD process, Bug 1498624.
+      if (!PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX")) {
+        if (!mSandboxBroker.SetSecurityLevelForRDDProcess()) {
+          return false;
+        }
+        shouldSandboxCurrentProcess = true;
       }
       break;
     case GeckoProcessType_Default:
