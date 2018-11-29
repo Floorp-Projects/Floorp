@@ -2886,9 +2886,6 @@ nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   if (!OwnerDoc()->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
       !hasHadScriptHandlingObject &&
       !nsContentUtils::IsSystemCaller(aCx)) {
-    if (IsDocument()) {
-      MOZ_CRASH("Looks like bug 1488480/1405521, with a document that lost its script handling object");
-    }
     Throw(aCx, NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -2897,9 +2894,6 @@ nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   MOZ_ASSERT_IF(obj && ChromeOnlyAccess(),
                 xpc::IsInContentXBLScope(obj) ||
                 !xpc::UseContentXBLScope(JS::GetObjectRealmOrNull(obj)));
-  if (!obj && IsDocument()) {
-    MOZ_CRASH("Looks like bug 1488480/1405521, with WrapNode on a document returning null");
-  }
   return obj;
 }
 
