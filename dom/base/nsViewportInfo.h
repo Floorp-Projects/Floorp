@@ -12,7 +12,7 @@
 /**
  * Default values for the nsViewportInfo class.
  */
-static const mozilla::LayoutDeviceToScreenScale kViewportMinScale(0.1f);
+static const mozilla::LayoutDeviceToScreenScale kViewportMinScale(0.25f);
 static const mozilla::LayoutDeviceToScreenScale kViewportMaxScale(10.0f);
 static const mozilla::CSSIntSize kViewportMinSize(200, 40);
 static const mozilla::CSSIntSize kViewportMaxSize(10000, 10000);
