@@ -7,6 +7,7 @@
 #include "nsAboutRedirector.h"
 #include "nsNetUtil.h"
 #include "nsAboutProtocolUtils.h"
+#include "nsBaseChannel.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsIProtocolHandler.h"
 
@@ -17,6 +18,36 @@ struct RedirEntry
   const char* id;
   const char* url;
   uint32_t flags;
+};
+
+class CrashChannel final : public nsBaseChannel
+{
+public:
+  explicit CrashChannel(nsIURI* aURI)
+  {
+    SetURI(aURI);
+  }
+
+  nsresult OpenContentStream(bool async, nsIInputStream **stream,
+                             nsIChannel** channel) override
+  {
+    nsAutoCString spec;
+    mURI->GetSpec(spec);
+
+    if (spec.EqualsASCII("about:crashparent") && XRE_IsParentProcess()) {
+      MOZ_CRASH("Crash via about:crashparent");
+    }
+
+    if (spec.EqualsASCII("about:crashcontent") && XRE_IsContentProcess()) {
+      MOZ_CRASH("Crash via about:crashcontent");
+    }
+
+    NS_WARNING("Unhandled about:crash* URI or wrong process");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+protected:
+  virtual ~CrashChannel() = default;
 };
 
 /*
@@ -137,12 +168,10 @@ static const RedirEntry kRedirMap[] = {
   },
   {
     "crashparent", "about:blank",
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::HIDE_FROM_ABOUTABOUT
   },
   {
     "crashcontent", "about:blank",
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::HIDE_FROM_ABOUTABOUT |
     nsIAboutModule::URI_CAN_LOAD_IN_CHILD |
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD
@@ -166,12 +195,10 @@ nsAboutRedirector::NewChannel(nsIURI* aURI,
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (XRE_IsParentProcess() && path.EqualsASCII("crashparent")) {
-    MOZ_CRASH("Crash via about:crashparent");
-  }
-
-  if (XRE_IsContentProcess() && path.EqualsASCII("crashcontent")) {
-    MOZ_CRASH("Crash via about:crashcontent");
+  if (path.EqualsASCII("crashparent") || path.EqualsASCII("crashcontent")) {
+    nsCOMPtr<nsIChannel> channel = new CrashChannel(aURI);
+    channel.forget(aResult);
+    return NS_OK;
   }
 
   for (int i = 0; i < kRedirTotal; i++) {
