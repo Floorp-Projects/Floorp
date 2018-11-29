@@ -5262,9 +5262,9 @@ QuotaManager::OpenDirectoryInternal(const Nullable<PersistenceType>& aPersistenc
     lock->GetBlockedOnLocks();
 
   for (DirectoryLockImpl* blockedOnLock : blockedOnLocks) {
-    blockedOnLock->Invalidate();
-
     if (!blockedOnLock->IsInternal()) {
+      blockedOnLock->Invalidate();
+
       MOZ_ASSERT(!blockedOnLock->GetClientType().IsNull());
       Client::Type clientType = blockedOnLock->GetClientType().Value();
       MOZ_ASSERT(clientType < Client::TypeMax());
