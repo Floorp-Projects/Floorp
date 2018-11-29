@@ -95,8 +95,7 @@ class DecodedStreamGraphListener {
       return;
     }
     if (aStream) {
-      int64_t t = aStream->StreamTimeToMicroseconds(aCurrentTrackTime);
-      mOnOutput.Notify(t);
+      mOnOutput.Notify(aStream->StreamTimeToMicroseconds(aCurrentTrackTime));
     }
   }
 
@@ -232,9 +231,8 @@ DecodedStreamData::DecodedStreamData(
       mNextAudioTime(aInit.mStartTime),
       mHaveSentFinishAudio(false),
       mHaveSentFinishVideo(false),
-      mStream(aOutputStreamManager->mSourceStream)
+      mStream(aOutputStreamManager->mSourceStream),
       // DecodedStreamGraphListener will resolve these promises.
-      ,
       mListener(MakeRefPtr<DecodedStreamGraphListener>(
           mStream, aInit.mAudioTrackID, std::move(aAudioPromise),
           aInit.mVideoTrackID, std::move(aVideoPromise), aMainThread)),
