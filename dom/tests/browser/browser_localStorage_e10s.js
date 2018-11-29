@@ -79,6 +79,10 @@ async function cleanupTabs(knownTabs) {
  * - Us generating a "domstorage-test-flush-force" observer notification.
  */
 function waitForLocalStorageFlush() {
+  if (Services.lsm.nextGenLocalStorageEnabled) {
+    return new Promise(resolve => executeSoon(resolve));
+  }
+
   return new Promise(function(resolve) {
     let observer = {
       observe: function() {
@@ -101,6 +105,10 @@ function waitForLocalStorageFlush() {
  * notifications, but correctness is guaranteed after the second notification.
  */
 function triggerAndWaitForLocalStorageFlush() {
+  if (Services.lsm.nextGenLocalStorageEnabled) {
+    return new Promise(resolve => executeSoon(resolve));
+  }
+
   SpecialPowers.notifyObservers(null, "domstorage-test-flush-force");
   // This first wait is ambiguous...
   return waitForLocalStorageFlush().then(function() {
@@ -127,6 +135,18 @@ function clearOriginStorageEnsuringNoPreload() {
   let principal =
     Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
       HELPER_PAGE_ORIGIN);
+
+  if (Services.lsm.nextGenLocalStorageEnabled) {
+    let request =
+      Services.qms.clearStoragesForPrincipal(principal, "default", "ls");
+    let promise = new Promise(resolve => {
+      request.callback = () => {
+        resolve();
+      };
+    });
+    return promise;
+  }
+
   // We want to use createStorage to force the cache to be created so we can
   // issue the clear.  It's possible for getStorage to return false but for the
   // origin preload hash to still have our origin in it.
@@ -146,6 +166,9 @@ async function verifyTabPreload(knownTab, expectStorageExists) {
       let principal =
         Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
           origin);
+      if (Services.lsm.nextGenLocalStorageEnabled) {
+        return Services.lsm.isPreloaded(principal);
+      }
       return !!Services.domStorageManager.getStorage(null, principal);
     });
   is(storageExists, expectStorageExists, "Storage existence === preload");

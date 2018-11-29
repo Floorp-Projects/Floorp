@@ -19,6 +19,7 @@
 #include "mozilla/dom/PBackgroundLSObjectChild.h"
 #include "mozilla/dom/PBackgroundLSObserverChild.h"
 #include "mozilla/dom/PBackgroundLSRequestChild.h"
+#include "mozilla/dom/PBackgroundLSSimpleRequestChild.h"
 #include "mozilla/dom/PBackgroundSDBConnectionChild.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
@@ -310,6 +311,24 @@ BackgroundChildImpl::AllocPBackgroundLocalStorageCacheChild(
 bool
 BackgroundChildImpl::DeallocPBackgroundLocalStorageCacheChild(
                                       PBackgroundLocalStorageCacheChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
+BackgroundChildImpl::PBackgroundLSSimpleRequestChild*
+BackgroundChildImpl::AllocPBackgroundLSSimpleRequestChild(
+                                           const LSSimpleRequestParams& aParams)
+{
+  MOZ_CRASH("PBackgroundLSSimpleRequestChild actor should be manually "
+            "constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundLSSimpleRequestChild(
+                                        PBackgroundLSSimpleRequestChild* aActor)
 {
   MOZ_ASSERT(aActor);
 

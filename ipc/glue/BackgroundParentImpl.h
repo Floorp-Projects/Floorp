@@ -115,6 +115,21 @@ protected:
   DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor)
                                     override;
 
+  virtual PBackgroundLSSimpleRequestParent*
+  AllocPBackgroundLSSimpleRequestParent(const LSSimpleRequestParams& aParams)
+                                        override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPBackgroundLSSimpleRequestConstructor(
+                                       PBackgroundLSSimpleRequestParent* aActor,
+                                       const LSSimpleRequestParams& aParams)
+                                       override;
+
+  virtual bool
+  DeallocPBackgroundLSSimpleRequestParent(
+                                       PBackgroundLSSimpleRequestParent* aActor)
+                                       override;
+
   virtual PBackgroundLocalStorageCacheParent*
   AllocPBackgroundLocalStorageCacheParent(const PrincipalInfo& aPrincipalInfo,
                                           const nsCString& aOriginKey,

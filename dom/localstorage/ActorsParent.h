@@ -19,9 +19,11 @@ class PrincipalInfo;
 namespace dom {
 
 class LSRequestParams;
+class LSSimpleRequestParams;
 class PBackgroundLSObjectParent;
 class PBackgroundLSObserverParent;
 class PBackgroundLSRequestParent;
+class PBackgroundLSSimpleRequestParent;
 
 namespace quota {
 
@@ -66,6 +68,18 @@ RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
 
 bool
 DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor);
+
+PBackgroundLSSimpleRequestParent*
+AllocPBackgroundLSSimpleRequestParent(const LSSimpleRequestParams& aParams);
+
+bool
+RecvPBackgroundLSSimpleRequestConstructor(
+                                       PBackgroundLSSimpleRequestParent* aActor,
+                                       const LSSimpleRequestParams& aParams);
+
+bool
+DeallocPBackgroundLSSimpleRequestParent(
+                                      PBackgroundLSSimpleRequestParent* aActor);
 
 namespace localstorage {
 
