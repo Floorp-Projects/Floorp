@@ -272,7 +272,6 @@ class BaselineCodeGen
     js::Vector<RetAddrEntry, 16, SystemAllocPolicy> retAddrEntries_;
     js::Vector<CodeOffset> traceLoggerToggleOffsets_;
 
-    FixedList<Label> labels_;
     NonAssertingLabel return_;
     NonAssertingLabel postBarrierSlot_;
 
@@ -290,10 +289,6 @@ class BaselineCodeGen
     template <typename... HandlerArgs>
     BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script,
                     HandlerArgs&&... args);
-
-    Label* labelOf(jsbytecode* pc) {
-        return &labels_[script->pcToOffset(pc)];
-    }
 
     MOZ_MUST_USE bool appendRetAddrEntry(RetAddrEntry::Kind kind, uint32_t retOffset) {
         if (!retAddrEntries_.emplaceBack(script->pcToOffset(pc), kind, CodeOffset(retOffset))) {
@@ -368,6 +363,17 @@ class BaselineCodeGen
     // Handles JSOP_LT, JSOP_GT, and friends
     MOZ_MUST_USE bool emitCompare();
 
+    // For a JOF_JUMP op, jumps to the op's jump target.
+    void emitJump();
+
+    // For a JOF_JUMP op, jumps to the op's jump target depending on the Value
+    // in |val|.
+    void emitTestBooleanTruthy(bool branchIfTrue, ValueOperand val);
+
+    // Converts |val| to an index in the jump table and stores this in |dest|
+    // or branches to the default pc if not int32 or out-of-range.
+    void emitGetTableSwitchIndex(ValueOperand val, Register dest);
+
     MOZ_MUST_USE bool emitReturn();
 
     MOZ_MUST_USE bool emitToBoolean();
@@ -405,10 +411,19 @@ class BaselineCodeGen
 // Interface used by BaselineCodeGen for BaselineCompiler.
 class BaselineCompilerHandler
 {
+    TempAllocator& alloc_;
+    FixedList<Label> labels_;
+    JSScript* script_;
     bool compileDebugInstrumentation_;
 
   public:
-    explicit BaselineCompilerHandler(JSScript* script);
+    BaselineCompilerHandler(TempAllocator& alloc, JSScript* script);
+
+    MOZ_MUST_USE bool init();
+
+    Label* labelOf(jsbytecode* pc) {
+        return &labels_[script_->pcToOffset(pc)];
+    }
 
     void setCompileDebugInstrumentation() {
         compileDebugInstrumentation_ = true;
