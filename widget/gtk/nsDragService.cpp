@@ -1739,11 +1739,16 @@ nsDragService::SourceBeginDrag(GdkDragContext *aContext)
     for (uint32_t i = 0; i < flavors.Length(); ++i) {
         if (flavors[i].EqualsLiteral(kFilePromiseDestFilename)) {
             nsCOMPtr<nsISupports> data;
-            transferable->GetTransferData(kFilePromiseDestFilename,
-                                          getter_AddRefs(data));
-            nsCOMPtr<nsISupportsString> fileName = do_QueryInterface(data);
-            if (!fileName)
+            rv  = transferable->GetTransferData(kFilePromiseDestFilename,
+                                                getter_AddRefs(data));
+            if (NS_FAILED(rv)) {
                 return;
+            }
+
+            nsCOMPtr<nsISupportsString> fileName = do_QueryInterface(data);
+            if (!fileName) {
+                return;
+            }
 
             nsAutoString fileNameStr;
             fileName->GetData(fileNameStr);

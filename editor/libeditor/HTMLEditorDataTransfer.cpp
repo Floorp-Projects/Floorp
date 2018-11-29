@@ -1595,8 +1595,11 @@ HTMLEditor::PasteInternal(int32_t aClipboardType,
     contextTransferable->Init(nullptr);
     contextTransferable->AddDataFlavor(kHTMLContext);
     clipboard->GetData(contextTransferable, aClipboardType);
-    contextTransferable->GetTransferData(kHTMLContext,
-                                         getter_AddRefs(contextDataObj));
+    rv = contextTransferable->GetTransferData(kHTMLContext,
+                                              getter_AddRefs(contextDataObj));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     nsCOMPtr<nsITransferable> infoTransferable =
       do_CreateInstance("@mozilla.org/widget/transferable;1");
@@ -1606,8 +1609,11 @@ HTMLEditor::PasteInternal(int32_t aClipboardType,
     infoTransferable->Init(nullptr);
     infoTransferable->AddDataFlavor(kHTMLInfo);
     clipboard->GetData(infoTransferable, aClipboardType);
-    infoTransferable->GetTransferData(kHTMLInfo,
-                                      getter_AddRefs(infoDataObj));
+    rv = infoTransferable->GetTransferData(kHTMLInfo,
+                                           getter_AddRefs(infoDataObj));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     if (contextDataObj) {
       textDataObj = do_QueryInterface(contextDataObj);
