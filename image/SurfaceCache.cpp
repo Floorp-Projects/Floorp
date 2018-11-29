@@ -1228,6 +1228,7 @@ public:
   {
     StaticMutexAutoLock lock(sInstanceMutex);
 
+    // clang-format off
     // We have explicit memory reporting for the surface cache which is more
     // accurate than the cost metrics we report here, but these metrics are
     // still useful to report, since they control the cache's behavior.
@@ -1246,6 +1247,7 @@ public:
       KIND_OTHER, UNITS_COUNT, mOverflowCount,
 "Count of how many times the surface cache has hit its capacity and been "
 "unable to insert a new surface.");
+    // clang-format on
 
     return NS_OK;
   }
