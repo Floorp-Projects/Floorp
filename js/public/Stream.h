@@ -11,40 +11,6 @@
  * of the objects defined in the Streams standard. One difference is that the
  * functionality of the JS controller object is exposed to C++ as functions
  * taking ReadableStream instances instead, for convenience.
- *
- * ## External streams
- *
- * Embeddings can create ReadableStreams that read from custom C++ data
- * sources. Such streams are always byte streams: the chunks they produce are
- * typed arrays (and they will support ReadableStreamBYOBReader once we have
- * it).
- *
- * When creating an "external readable stream" using
- * JS::NewReadableExternalSourceStreamObject, an underlying source can be
- * passed to be stored on the stream. The underlying source is treated as an
- * opaque void* pointer by the JS engine: it's purely meant as a reference to
- * be used by the embedding to identify whatever actual source it uses to
- * supply data for the stream.
- *
- * External readable streams are optimized to allow the embedding to interact
- * with them with a minimum of overhead: chunks aren't enqueued as individual
- * typed arrays; instead, the embedding only updates the amount of data
- * available using ReadableStreamUpdateDataAvailableFromSource. When JS
- * requests data from a reader, WriteIntoReadRequestBufferCallback is invoked,
- * asking the embedding to write data directly into the buffer we're about to
- * hand to JS.
- *
- * Additionally, ReadableStreamGetExternalUnderlyingSource can be used to get
- * the void* pointer to the underlying source. This locks the stream until it
- * is released again using JS::ReadableStreamReleaseExternalUnderlyingSource.
- *
- * Embeddings can use this to optimize away the JS `ReadableStream` overhead
- * when an embedding-defined C++ stream is passed to an embedding-defined C++
- * consumer. For example, consider a ServiceWorker piping a `fetch` Response
- * body to a TextDecoder. Instead of copying chunks of data into JS typed array
- * buffers and creating a Promise per chunk, only to immediately resolve the
- * Promises and read the data out again, the embedding can directly feed the
- * incoming data to the TextDecoder.
  */
 
 #ifndef js_Stream_h
@@ -60,109 +26,130 @@
 namespace JS {
 
 /**
- * ## Readable stream callbacks
+ * Abstract base class for external underlying sources.
  *
- * Compartment safety: All callbacks (except Finalize) receive `cx` and
+ * The term "underlying source" is defined in the Streams spec:
+ *   https://streams.spec.whatwg.org/#underlying-source
+ *
+ * A `ReadableStreamUnderlyingSource` is an underlying source that is
+ * implemented in C++ rather than JS. It can be passed to
+ * `JS::NewReadableExternalSourceStreamObject` to create a custom,
+ * embedding-defined ReadableStream.
+ *
+ * There are several API difference between this class and the standard API for
+ * underlying sources implemented in JS:
+ *
+ * -   JS underlying sources can be either byte sources or non-byte sources.
+ *     External underlying source are always byte sources.
+ *
+ * -   The C++ API does not bother with controller objects. Instead of using
+ *     controller methods, the underlying source directly calls API functions
+ *     like JS::ReadableStream{UpdateDataAvailableFromSource,Close,Error}.
+ *
+ * -   External readable streams are optimized to allow the embedding to
+ *     interact with them with a minimum of overhead: chunks aren't enqueued as
+ *     individual typed arrays; instead, the embedding only updates the amount
+ *     of data available using
+ *     JS::ReadableStreamUpdateDataAvailableFromSource. When JS requests data
+ *     from a reader, writeIntoReadRequestBuffer is invoked, asking the
+ *     embedding to write data directly into the buffer we're about to hand to
+ *     JS.
+ *
+ * -   The C++ API provides extra callbacks onClosed() and onErrored().
+ *
+ * -   This class has a `finalize()` method, because C++ cares about lifetimes.
+ *
+ * Additionally, ReadableStreamGetExternalUnderlyingSource can be used to get
+ * the pointer to the underlying source. This locks the stream until it is
+ * released again using JS::ReadableStreamReleaseExternalUnderlyingSource.
+ *
+ * Embeddings can use this to optimize away the JS `ReadableStream` overhead
+ * when an embedding-defined C++ stream is passed to an embedding-defined C++
+ * consumer. For example, consider a ServiceWorker piping a `fetch` Response
+ * body to a TextDecoder. Instead of copying chunks of data into JS typed array
+ * buffers and creating a Promise per chunk, only to immediately resolve the
+ * Promises and read the data out again, the embedding can directly feed the
+ * incoming data to the TextDecoder.
+ *
+ * Compartment safety: All methods (except `finalize`) receive `cx` and
  * `stream` arguments. SpiderMonkey enters the realm of the stream object
- * before invoking these callbacks, so `stream` is never a wrapper. Other
+ * before invoking these methods, so `stream` is never a wrapper. Other
  * arguments may be wrappers.
  */
+class JS_PUBLIC_API ReadableStreamUnderlyingSource
+{
+  public:
+    virtual ~ReadableStreamUnderlyingSource() {}
 
-/**
- * Invoked whenever a reader desires more data from a ReadableStream's
- * embedding-provided underlying source.
- *
- * The given |desiredSize| is the absolute size, not a delta from the previous
- * desired size.
- */
-typedef void
-(* RequestReadableStreamDataCallback)(JSContext* cx, HandleObject stream,
-                                      void* underlyingSource, size_t desiredSize);
+    /**
+     * Invoked whenever a reader desires more data from this source.
+     *
+     * The given `desiredSize` is the absolute size, not a delta from the
+     * previous desired size.
+     */
+    virtual void requestData(JSContext* cx, HandleObject stream, size_t desiredSize) = 0;
 
-/**
- * Invoked to cause the embedding to fill the given |buffer| with data from
- * the given embedding-provided underlying source.
- *
- * This can only happen after the embedding has updated the amount of data
- * available using JS::ReadableStreamUpdateDataAvailableFromSource. If at
- * least one read request is pending when
- * JS::ReadableStreamUpdateDataAvailableFromSource is called,
- * the WriteIntoReadRequestBufferCallback is invoked immediately from under
- * the call to JS::WriteIntoReadRequestBufferCallback. If not, it is invoked
- * if and when a new read request is made.
- *
- * Note: This callback *must not cause GC*, because that could potentially
- * invalidate the |buffer| pointer.
- */
-typedef void
-(* WriteIntoReadRequestBufferCallback)(JSContext* cx, HandleObject stream,
-                                       void* underlyingSource, void* buffer, size_t length,
-                                       size_t* bytesWritten);
+    /**
+     * Invoked to cause the embedding to fill the given `buffer` with data from
+     * this underlying source.
+     *
+     * This is called only after the embedding has updated the amount of data
+     * available using JS::ReadableStreamUpdateDataAvailableFromSource. If at
+     * least one read request is pending when
+     * JS::ReadableStreamUpdateDataAvailableFromSource is called, this method
+     * is invoked immediately from under the call to
+     * JS::ReadableStreamUpdateDataAvailableFromSource. If not, it is invoked
+     * if and when a new read request is made.
+     *
+     * Note: This method *must not cause GC*, because that could potentially
+     * invalidate the `buffer` pointer.
+     */
+    virtual void writeIntoReadRequestBuffer(JSContext* cx, HandleObject stream,
+                                            void* buffer, size_t length,
+                                            size_t* bytesWritten) = 0;
 
-/**
- * Invoked in reaction to the ReadableStream being canceled to allow the
- * embedding to free the underlying source.
- *
- * This is equivalent to calling |cancel| on non-external underlying sources
- * provided to the ReadableStream constructor in JavaScript.
- *
- * The given |reason| is the JS::Value that was passed as an argument to
- * ReadableStream#cancel().
- *
- * The returned JS::Value will be used to resolve the Promise returned by
- * ReadableStream#cancel().
- */
-typedef Value
-(* CancelReadableStreamCallback)(JSContext* cx, HandleObject stream,
-                                 void* underlyingSource, HandleValue reason);
+    /**
+     * Invoked in reaction to the ReadableStream being canceled. This is
+     * equivalent to the `cancel` method on non-external underlying sources
+     * provided to the ReadableStream constructor in JavaScript.
+     *
+     * The underlying source may free up some resources in this method, but
+     * `*this` must not be destroyed until `finalize()` is called.
+     *
+     * The given `reason` is the JS::Value that was passed as an argument to
+     * ReadableStream#cancel().
+     *
+     * The returned JS::Value will be used to resolve the Promise returned by
+     * ReadableStream#cancel().
+     */
+    virtual Value cancel(JSContext* cx, HandleObject stream, HandleValue reason) = 0;
 
-/**
- * Invoked in reaction to a ReadableStream with an embedding-provided
- * underlying source being closed.
- */
-typedef void
-(* ReadableStreamClosedCallback)(JSContext* cx, HandleObject stream, void* underlyingSource);
+    /**
+     * Invoked when the associated ReadableStream becomes closed.
+     *
+     * The underlying source may free up some resources in this method, but
+     * `*this` must not be destroyed until `finalize()` is called.
+     */
+    virtual void onClosed(JSContext* cx, HandleObject stream) = 0;
 
-/**
- * Invoked in reaction to a ReadableStream with an embedding-provided
- * underlying source being errored with the
- * given reason.
- */
-typedef void
-(* ReadableStreamErroredCallback)(JSContext* cx, HandleObject stream, void* underlyingSource,
-                                  HandleValue reason);
+    /**
+     * Invoked when the associated ReadableStream becomes errored.
+     *
+     * The underlying source may free up some resources in this method, but
+     * `*this` must not be destroyed until `finalize()` is called.
+     */
+    virtual void onErrored(JSContext* cx, HandleObject stream, HandleValue reason) = 0;
 
-/**
- * Invoked in reaction to a ReadableStream with an embedding-provided
- * underlying source being finalized. Only the underlying source is passed
- * as an argument, while the ReadableStream itself is not to prevent the
- * embedding from operating on a JSObject that might not be in a valid state
- * anymore.
- *
- * Note: the ReadableStream might be finalized on a background thread. That
- * means this callback might be invoked from an arbitrary thread, which the
- * embedding must be able to handle.
- */
-typedef void
-(* ReadableStreamFinalizeCallback)(void* underlyingSource);
-
-/**
- * Sets runtime-wide callbacks to use for interacting with embedding-provided
- * hooks for operating on ReadableStream instances.
- *
- * See the documentation for the individual callback types for details.
- */
-extern JS_PUBLIC_API void
-SetReadableStreamCallbacks(JSContext* cx,
-                           RequestReadableStreamDataCallback dataRequestCallback,
-                           WriteIntoReadRequestBufferCallback writeIntoReadRequestCallback,
-                           CancelReadableStreamCallback cancelCallback,
-                           ReadableStreamClosedCallback closedCallback,
-                           ReadableStreamErroredCallback erroredCallback,
-                           ReadableStreamFinalizeCallback finalizeCallback);
-
-extern JS_PUBLIC_API bool
-HasReadableStreamCallbacks(JSContext* cx);
+    /**
+     * Invoked when the associated ReadableStream object is finalized. The
+     * stream object is not passed as an argument, as it might not be in a
+     * valid state anymore.
+     *
+     * Note: Finalization can happen on a background thread, so the embedding
+     * must be prepared for `finalize()` to be invoked from any thread.
+     */
+    virtual void finalize() = 0;
+};
 
 /**
  * Returns a new instance of the ReadableStream builtin class in the current
@@ -177,24 +164,20 @@ NewReadableDefaultStreamObject(JSContext* cx, HandleObject underlyingSource = nu
 
 /**
  * Returns a new instance of the ReadableStream builtin class in the current
- * compartment, with the right slot layout. If a |proto| is passed, that gets
- * set as the instance's [[Prototype]] instead of the original value of
- * |ReadableStream.prototype|.
+ * compartment. If a |proto| is passed, that gets set as the instance's
+ * [[Prototype]] instead of the original value of |ReadableStream.prototype|.
  *
  * The instance is optimized for operating as a byte stream backed by an
- * embedding-provided underlying source, using the callbacks set via
- * |JS::SetReadableStreamCallbacks|.
+ * embedding-provided underlying source, using the virtual methods of
+ * |underlyingSource| as callbacks.
  *
- * Note: the embedding is responsible for ensuring that the pointer to the
- * underlying source stays valid as long as the stream can be read from.
- * The underlying source can be freed if the tree is canceled or errored.
- * It can also be freed if the stream is destroyed. The embedding is notified
- * of that using ReadableStreamFinalizeCallback.
- *
- * Note: |underlyingSource| must have an even address.
+ * Note: The embedding must ensure that |*underlyingSource| lives as long as
+ * the new stream object. The JS engine will call the finalize() method when
+ * the stream object is destroyed.
  */
 extern JS_PUBLIC_API JSObject*
-NewReadableExternalSourceStreamObject(JSContext* cx, void* underlyingSource,
+NewReadableExternalSourceStreamObject(JSContext* cx,
+                                      ReadableStreamUnderlyingSource* underlyingSource,
                                       HandleObject proto = nullptr);
 
 /**
@@ -222,7 +205,8 @@ NewReadableExternalSourceStreamObject(JSContext* cx, void* underlyingSource,
  * Asserts that the stream has an embedding-provided underlying source.
  */
 extern JS_PUBLIC_API bool
-ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject stream, void** source);
+ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject stream,
+                                          ReadableStreamUnderlyingSource** source);
 
 /**
  * Releases the embedding-provided underlying source of the given |stream|,
@@ -245,7 +229,7 @@ ReadableStreamReleaseExternalUnderlyingSource(JSContext* cx, HandleObject stream
  *
  * Can only be used for streams with an embedding-provided underlying source.
  * The JS engine will use the given value to satisfy read requests for the
- * stream by invoking the JS::WriteIntoReadRequestBuffer callback.
+ * stream by invoking the writeIntoReadRequestBuffer method.
  *
  * Asserts that |stream| is a ReadableStream object or an unwrappable wrapper
  * for one.
@@ -376,13 +360,12 @@ extern JS_PUBLIC_API bool
 ReadableStreamGetDesiredSize(JSContext* cx, JSObject* stream, bool* hasValue, double* value);
 
 /**
- * Closes the given ReadableStream.
+ * Close the given ReadableStream. This is equivalent to `controller.close()`
+ * in JS.
  *
- * Throws a TypeError and returns false if the closing operation fails.
- *
- * Note: This is semantically equivalent to the |close| method on
- * the stream controller's prototype in JS. We expose it with the stream
- * itself as a target for simplicity.
+ * This can fail with or without an exception pending under a variety of
+ * circumstances. On failure, the stream may or may not be closed, and
+ * downstream consumers may or may not have been notified.
  *
  * Asserts that |stream| is a ReadableStream object or an unwrappable wrapper
  * for one.

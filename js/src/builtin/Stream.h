@@ -98,7 +98,8 @@ class ReadableStream : public NativeObject
     bool locked() const;
 
     static MOZ_MUST_USE ReadableStream* create(JSContext* cx, HandleObject proto = nullptr);
-    static ReadableStream* createExternalSourceStream(JSContext* cx, void* underlyingSource,
+    static ReadableStream* createExternalSourceStream(JSContext* cx,
+                                                      JS::ReadableStreamUnderlyingSource* source,
                                                       HandleObject proto = nullptr);
 
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
@@ -268,6 +269,18 @@ class ReadableStreamController : public StreamController
     void setUnderlyingSource(const Value& underlyingSource) {
         setFixedSlot(Slot_UnderlyingSource, underlyingSource);
     }
+    JS::ReadableStreamUnderlyingSource* externalSource() const {
+        static_assert(alignof(JS::ReadableStreamUnderlyingSource) >= 2,
+                      "External underling sources are stored as PrivateValues, "
+                      "so they must have even addresses");
+        MOZ_ASSERT(hasExternalSource());
+        return static_cast<JS::ReadableStreamUnderlyingSource*>(underlyingSource().toPrivate());
+    }
+    void setExternalSource(JS::ReadableStreamUnderlyingSource* underlyingSource) {
+        MOZ_ASSERT(getFixedSlot(Slot_Flags).isUndefined());
+        setUnderlyingSource(JS::PrivateValue(underlyingSource));
+        setFlags(Flag_ExternalSource);
+    }
     double strategyHWM() const { return getFixedSlot(Slot_StrategyHWM).toNumber(); }
     void setStrategyHWM(double highWaterMark) {
         setFixedSlot(Slot_StrategyHWM, NumberValue(highWaterMark));
@@ -330,8 +343,9 @@ class ReadableByteStreamController : public ReadableStreamController
      * Memory layout for ReadableByteStreamControllers, starting after the
      * slots shared among all types of controllers.
      *
-     * PendingPullIntos is guaranteed to be in the  same compartment as the
-     * controller, but might contain wrappers for objects from other compartments.
+     * PendingPullIntos is guaranteed to be in the same compartment as the
+     * controller, but might contain wrappers for objects from other
+     * compartments.
      *
      * AutoAllocateSize is a primitive (numeric) value.
      */
