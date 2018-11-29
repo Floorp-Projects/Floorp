@@ -7407,13 +7407,13 @@ nscoord nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
   // https://drafts.csswg.org/css-grid/#auto-repeat
   // They're only used for auto-repeat so we skip computing them otherwise.
   RepeatTrackSizingInput repeatSizing(state.mWM);
-  if (state.mColFunctions.mHasRepeatAuto) {
+  if (!IsColSubgrid() && state.mColFunctions.mHasRepeatAuto) {
     repeatSizing.SetDefiniteSizes(eLogicalAxisInline, state.mWM,
                                   state.mGridStyle->MinISize(state.mWM),
                                   state.mGridStyle->ISize(state.mWM),
                                   state.mGridStyle->MaxISize(state.mWM));
   }
-  if (state.mRowFunctions.mHasRepeatAuto &&
+  if (!IsRowSubgrid() && state.mRowFunctions.mHasRepeatAuto &&
       !(state.mGridStyle->mGridAutoFlow & NS_STYLE_GRID_AUTO_FLOW_ROW)) {
     // Only 'grid-auto-flow:column' can create new implicit columns, so that's
     // the only case where our block-size can affect the number of columns.
@@ -7424,23 +7424,34 @@ nscoord nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
   }
 
   Grid grid;
-  grid.PlaceGridItems(state, repeatSizing);  // XXX optimize
-  if (grid.mGridColEnd == 0) {
-    return 0;
+  if (MOZ_LIKELY(!IsSubgrid())) {
+    grid.PlaceGridItems(state, repeatSizing);  // XXX optimize
+  } else {
+    auto* subgrid = GetProperty(Subgrid::Prop());
+    state.mGridItems = subgrid->mGridItems;
+    state.mAbsPosItems = subgrid->mAbsPosItems;
+    grid.mGridColEnd = subgrid->mGridColEnd;
+    grid.mGridRowEnd = subgrid->mGridRowEnd;
   }
-  state.mCols.Initialize(state.mColFunctions, state.mGridStyle->mColumnGap,
-                         grid.mGridColEnd, NS_UNCONSTRAINEDSIZE);
+  if (grid.mGridColEnd == 0) {
+    return nscoord(0);
+  }
+
   auto constraint = aType == nsLayoutUtils::MIN_ISIZE
                         ? SizingConstraint::MinContent
                         : SizingConstraint::MaxContent;
-  state.mCols.CalculateSizes(state, state.mGridItems, state.mColFunctions,
-                             NS_UNCONSTRAINEDSIZE, &GridArea::mCols,
-                             constraint);
-  nscoord length = 0;
-  for (const TrackSize& sz : state.mCols.mSizes) {
-    length += sz.mBase;
+  state.CalculateTrackSizesForAxis(eLogicalAxisInline, grid,
+                                   NS_UNCONSTRAINEDSIZE, constraint);
+
+  if (MOZ_LIKELY(!IsSubgrid())) {
+    nscoord length = 0;
+    for (const TrackSize& sz : state.mCols.mSizes) {
+      length += sz.mBase;
+    }
+    return length + state.mCols.SumOfGridGaps();
   }
-  return length + state.mCols.SumOfGridGaps();
+  const auto& last = state.mCols.mSizes.LastElement();
+  return last.mPosition + last.mBase;
 }
 
 nscoord nsGridContainerFrame::GetMinISize(gfxContext* aRC) {
