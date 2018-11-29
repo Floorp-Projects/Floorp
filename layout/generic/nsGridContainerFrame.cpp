@@ -5783,12 +5783,47 @@ void nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
 LogicalSize nsGridContainerFrame::GridReflowInput::PercentageBasisFor(
     LogicalAxis aAxis, const GridItemInfo& aGridItem) const {
   auto wm = aGridItem.mFrame->GetWritingMode();
-  if (aAxis == eLogicalAxisInline) {
+  const auto* itemParent = aGridItem.mFrame->GetParent();
+  if (MOZ_UNLIKELY(itemParent != mFrame)) {
+    // The item comes from a descendant subgrid.  Use the subgrid's
+    // used track sizes to resolve the grid area size, if present.
+    MOZ_ASSERT(itemParent->IsGridContainerFrame());
+    auto* subgridFrame = static_cast<const nsGridContainerFrame*>(itemParent);
+    MOZ_ASSERT(subgridFrame->IsSubgrid());
+    if (auto* uts = subgridFrame->GetUsedTrackSizes()) {
+      auto subgridWM = subgridFrame->GetWritingMode();
+      LogicalSize cbSize(subgridWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+      if (!subgridFrame->IsSubgrid(eLogicalAxisInline) &&
+          uts->mCanResolveLineRangeSize[eLogicalAxisInline]) {
+        // NOTE: At this point aGridItem.mArea is in this->mFrame coordinates
+        // and thus may have been transposed.  The range values in a non-
+        // subgridded axis still has its original values in subgridFrame's
+        // coordinates though.
+        auto rangeAxis = subgridWM.IsOrthogonalTo(mWM) ? eLogicalAxisBlock
+                                                       : eLogicalAxisInline;
+        const auto& range = aGridItem.mArea.LineRangeForAxis(rangeAxis);
+        cbSize.ISize(subgridWM) =
+            range.ToLength(uts->mSizes[eLogicalAxisInline]);
+      }
+      if (!subgridFrame->IsSubgrid(eLogicalAxisBlock) &&
+          uts->mCanResolveLineRangeSize[eLogicalAxisBlock]) {
+        auto rangeAxis = subgridWM.IsOrthogonalTo(mWM) ? eLogicalAxisInline
+                                                       : eLogicalAxisBlock;
+        const auto& range = aGridItem.mArea.LineRangeForAxis(rangeAxis);
+        cbSize.BSize(subgridWM) =
+            range.ToLength(uts->mSizes[eLogicalAxisBlock]);
+      }
+      return cbSize.ConvertTo(wm, subgridWM);
+    }
+
+    return LogicalSize(wm, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
+
+  if (aAxis == eLogicalAxisInline || !mCols.mCanResolveLineRangeSize) {
     return LogicalSize(wm, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
   // Note: for now, we only resolve transferred percentages to row sizing.
   // We may need to adjust these assertions once we implement bug 1300366.
-  MOZ_ASSERT(mCols.mCanResolveLineRangeSize);
   MOZ_ASSERT(!mRows.mCanResolveLineRangeSize);
   nscoord colSize = aGridItem.mArea.mCols.ToLength(mCols.mSizes);
   nscoord rowSize = NS_UNCONSTRAINEDSIZE;
