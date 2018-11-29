@@ -151,9 +151,8 @@ class nsGridContainerFrame final : public nsContainerFrame {
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     nsFrameList& aFrameList) override;
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
-  uint16_t CSSAlignmentForAbsPosChild(
-      const ReflowInput& aChildRI,
-      mozilla::LogicalAxis aLogicalAxis) const override;
+  uint16_t CSSAlignmentForAbsPosChild(const ReflowInput& aChildRI,
+                                      LogicalAxis aLogicalAxis) const override;
 
 #ifdef DEBUG
   void SetInitialChildList(ChildListID aListID,
@@ -218,7 +217,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
   }
 
   /** Return true if this frame is subgridded in its aAxis. */
-  bool IsSubgrid(mozilla::LogicalAxis aAxis) const {
+  bool IsSubgrid(LogicalAxis aAxis) const {
     return HasAnyStateBits(aAxis == mozilla::eLogicalAxisBlock
                                ? NS_STATE_GRID_IS_ROW_SUBGRID
                                : NS_STATE_GRID_IS_COL_SUBGRID);
@@ -232,7 +231,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
   }
 
   /** Return true if this frame has an item that is subgridded in our aAxis. */
-  bool HasSubgridItems(mozilla::LogicalAxis aAxis) const {
+  bool HasSubgridItems(LogicalAxis aAxis) const {
     return HasAnyStateBits(aAxis == mozilla::eLogicalAxisBlock
                                ? NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM
                                : NS_STATE_GRID_HAS_COL_SUBGRID_ITEM);
@@ -258,6 +257,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
   static nsGridContainerFrame* GetGridFrameWithComputedInfo(nsIFrame* aFrame);
 
   struct Subgrid;
+  struct UsedTrackSizes;
   struct TrackSize;
   struct GridItemInfo;
   struct GridReflowInput;
@@ -290,6 +290,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
   class LineNameMap;
   struct LineRange;
   struct SharedGridData;
+  struct SubgridFallbackTrackSizingFunctions;
   struct TrackSizingFunctions;
   struct Tracks;
   struct TranslatedLineRange;
@@ -382,8 +383,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
    * Synthesize a Grid container baseline for aGroup.
    */
   nscoord SynthesizeBaseline(const FindItemInGridOrderResult& aItem,
-                             mozilla::LogicalAxis aAxis,
-                             BaselineSharingGroup aGroup,
+                             LogicalAxis aAxis, BaselineSharingGroup aGroup,
                              const nsSize& aCBPhysicalSize, nscoord aCBSize,
                              WritingMode aCBWM);
   /**
@@ -468,6 +468,13 @@ class nsGridContainerFrame final : public nsContainerFrame {
                          const GridReflowInput& aState,
                          const LogicalRect& aContentArea,
                          ReflowOutput& aDesiredSize, nsReflowStatus& aStatus);
+
+  // Return the stored UsedTrackSizes, if any.
+  UsedTrackSizes* GetUsedTrackSizes() const;
+
+  // Store the given TrackSizes in aAxis on a UsedTrackSizes frame property.
+  void StoreUsedTrackSizes(LogicalAxis aAxis,
+                           const nsTArray<TrackSize>& aSizes);
 
   /**
    * Cached values to optimize GetMinISize/GetPrefISize.
