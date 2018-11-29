@@ -769,12 +769,54 @@ struct nsGridContainerFrame::Subgrid {
   // The margin+border+padding for the subgrid box in its parent grid's WM.
   // (This also includes the size of any scrollbars.)
   LogicalMargin mMarginBorderPadding;
-  // Does the subgrid frame have orthogonal writing-mode to its parent?
+  // Does the subgrid frame have orthogonal writing-mode to its parent grid container?
   bool mIsOrthogonal;
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, Subgrid)
 };
 using Subgrid = nsGridContainerFrame::Subgrid;
+
+/**
+ * Track size data for use by subgrids (which don't do sizing of their own
+ * in a subgridded axis).  A non-subgrid container stores its resolved sizes,
+ * but only if it has any subgrid children.  A subgrid always stores one.
+ * In a subgridded axis, we copy the parent's sizes (see CopyUsedTrackSizes).
+ *
+ * This struct us stored on a frame property, which may be null before the track
+ * sizing step for the given container.  A null property is semantically
+ * equivalent to mCanResolveLineRangeSize being false in both axes.
+ * @note the axis used to access this data is in the grid container's own
+ * writing-mode, same as in other track-sizing functions.
+ */
+struct nsGridContainerFrame::UsedTrackSizes {
+  UsedTrackSizes() : mCanResolveLineRangeSize{false, false} {}
+
+  /**
+   * Setup mSizes by copying track sizes from aFrame's grid container
+   * parent when aAxis is subgridded (and recurse if the parent is a subgrid
+   * that doesn't have sizes yet), or by running the Track Sizing Algo when
+   * the axis is not subgridded (for a subgrid).
+   * Set mCanResolveLineRangeSize[aAxis] to true once we have obtained
+   * sizes for an axis (if it's already true then this method is a NOP).
+   */
+  void ResolveTrackSizesForAxis(nsGridContainerFrame* aFrame, LogicalAxis aAxis,
+                                gfxContext& aRC);
+
+  /** Helper function for the above method */
+  void ResolveSubgridTrackSizesForAxis(nsGridContainerFrame* aFrame,
+                                       LogicalAxis aAxis, Subgrid* aSubgrid,
+                                       gfxContext& aRC, nscoord aCBSize);
+
+  // This only has valid sizes when mCanResolveLineRangeSize is true in
+  // the same axis.  It may have zero tracks (a grid with only abs.pos.
+  // subgrids/items may have zero tracks).
+  PerLogicalAxis<nsTArray<TrackSize>> mSizes;
+  // True if mSizes can be used to resolve line range sizes in an axis.
+  PerLogicalAxis<bool> mCanResolveLineRangeSize;
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, UsedTrackSizes)
+};
+using UsedTrackSizes = nsGridContainerFrame::UsedTrackSizes;
 
 #ifdef DEBUG
 void nsGridContainerFrame::GridItemInfo::Dump() const {
@@ -1202,24 +1244,38 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
  * Encapsulates CSS track-sizing functions.
  */
 struct nsGridContainerFrame::TrackSizingFunctions {
-  TrackSizingFunctions(const nsStyleGridTemplate& aGridTemplate,
+  TrackSizingFunctions(const nsTArray<nsStyleCoord>& aMinSizingFunctions,
+                       const nsTArray<nsStyleCoord>& aMaxSizingFunctions,
                        const nsStyleCoord& aAutoMinSizing,
-                       const nsStyleCoord& aAutoMaxSizing)
-      : mMinSizingFunctions(aGridTemplate.mMinTrackSizingFunctions),
-        mMaxSizingFunctions(aGridTemplate.mMaxTrackSizingFunctions),
+                       const nsStyleCoord& aAutoMaxSizing, bool aHasRepeatAuto,
+                       int32_t aRepeatAutoIndex)
+      : mMinSizingFunctions(aMinSizingFunctions),
+        mMaxSizingFunctions(aMaxSizingFunctions),
         mAutoMinSizing(aAutoMinSizing),
         mAutoMaxSizing(aAutoMaxSizing),
         mExplicitGridOffset(0),
-        mRepeatAutoStart(
-            aGridTemplate.HasRepeatAuto() ? aGridTemplate.mRepeatAutoIndex : 0),
+        mRepeatAutoStart(aHasRepeatAuto ? aRepeatAutoIndex : 0),
         mRepeatAutoEnd(mRepeatAutoStart),
         mRepeatEndDelta(0),
-        mHasRepeatAuto(aGridTemplate.HasRepeatAuto()) {
+        mHasRepeatAuto(aHasRepeatAuto) {
     MOZ_ASSERT(mMinSizingFunctions.Length() == mMaxSizingFunctions.Length());
     MOZ_ASSERT(!mHasRepeatAuto ||
                (mMinSizingFunctions.Length() >= 1 &&
                 mRepeatAutoStart < mMinSizingFunctions.Length()));
   }
+
+  TrackSizingFunctions(const nsStyleGridTemplate& aGridTemplate,
+                       const nsStyleCoord& aAutoMinSizing,
+                       const nsStyleCoord& aAutoMaxSizing)
+      // Note: if mIsSubgrid is true below then the HasRepeatAuto bit is for
+      // the mLineNameList, so we suppress that so that we can use this struct
+      // also when it's true.  This can happen when a specified 'subgrid' has
+      // no grid parent, which will behave as 'none'.
+      : TrackSizingFunctions(aGridTemplate.mMinTrackSizingFunctions,
+                             aGridTemplate.mMaxTrackSizingFunctions,
+                             aAutoMinSizing, aAutoMaxSizing,
+                             !aGridTemplate.mIsSubgrid && aGridTemplate.HasRepeatAuto(),
+                             aGridTemplate.mRepeatAutoIndex) {}
 
   /**
    * Initialize the number of auto-fill/fit tracks to use and return that.
@@ -1377,12 +1433,81 @@ struct nsGridContainerFrame::TrackSizingFunctions {
 };
 
 /**
+ * This is used in a subgridded axis to resolve sizes before its parent's
+ * sizes are known for intrinsic sizing purposes.  It copies the slice of
+ * the nearest non-subgridded axis' track sizing functions spanned by
+ * the subgrid.
+ *
+ * FIXME: this was written before there was a spec... the spec now says:
+ * "If calculating the layout of a grid item in this step depends on
+ *  the available space in the block axis, assume the available space
+ *  that it would have if any row with a definite max track sizing
+ *  function had that size and all other rows were infinite."
+ * https://drafts.csswg.org/css-grid-2/#subgrid-sizing
+ */
+struct MOZ_STACK_CLASS nsGridContainerFrame::SubgridFallbackTrackSizingFunctions {
+  SubgridFallbackTrackSizingFunctions(nsGridContainerFrame* aSubgridFrame,
+                                      const Subgrid* aSubgrid,
+                                      nsGridContainerFrame* aParentGridContainer,
+                                      LogicalAxis aParentAxis) {
+    MOZ_ASSERT(aSubgrid);
+    MOZ_ASSERT(aSubgridFrame->IsSubgrid(
+        aSubgrid->mIsOrthogonal ? GetOrthogonalAxis(aParentAxis) : aParentAxis));
+    nsGridContainerFrame* parent = aParentGridContainer;
+    auto parentAxis = aParentAxis;
+    LineRange range = aSubgrid->mArea.LineRangeForAxis(parentAxis);
+    // Find our nearest non-subgridded axis and use its track sizing functions.
+    while (parent->IsSubgrid(parentAxis)) {
+      const auto* parentSubgrid = parent->GetProperty(Subgrid::Prop());
+      auto* grandParent = parent->ParentGridContainerForSubgrid();
+      auto grandParentWM = grandParent->GetWritingMode();
+      bool isSameDirInAxis = parent->GetWritingMode().
+          ParallelAxisStartsOnSameSide(parentAxis, grandParentWM);
+      if (MOZ_UNLIKELY(!isSameDirInAxis)) {
+        auto end = parentAxis == eLogicalAxisBlock ? parentSubgrid->mGridRowEnd
+                                                   : parentSubgrid->mGridColEnd;
+        range.ReverseDirection(end);
+        // range is now in the same direction as the grand-parent's axis
+      }
+      auto grandParentAxis = parentSubgrid->mIsOrthogonal ?
+          GetOrthogonalAxis(parentAxis) : parentAxis;
+      const auto& parentRange = parentSubgrid->mArea.LineRangeForAxis(grandParentAxis);
+      range.Translate(parentRange.mStart);
+      // range is now in the grand-parent's coordinates
+      parentAxis = grandParentAxis;
+      parent = grandParent;
+    }
+    const auto* pos = parent->StylePosition();
+    const auto isInlineAxis = parentAxis == eLogicalAxisInline;
+    const auto& szf = isInlineAxis ? pos->GridTemplateColumns()
+                                   : pos->GridTemplateRows();
+    const auto& minAuto = isInlineAxis ? pos->mGridAutoColumnsMin
+                                       : pos->mGridAutoRowsMin;
+    const auto& maxAuto = isInlineAxis ? pos->mGridAutoColumnsMax
+                                       : pos->mGridAutoRowsMax;
+    TrackSizingFunctions tsf(szf, minAuto, maxAuto);
+    for (auto i : range.Range()) {
+      mMinSizingFunctions.AppendElement(tsf.MinSizingFor(i));
+      mMaxSizingFunctions.AppendElement(tsf.MaxSizingFor(i));
+    }
+    mAutoMinSizing = &minAuto;
+    mAutoMaxSizing = &maxAuto;
+  }
+  nsTArray<nsStyleCoord> mMinSizingFunctions;
+  nsTArray<nsStyleCoord> mMaxSizingFunctions;
+  const nsStyleCoord* mAutoMinSizing;
+  const nsStyleCoord* mAutoMaxSizing;
+  uint32_t mRepeatAutoIndex = 0;
+  bool mHasRepeatAuto = false;
+};
+
+/**
  * State for the tracks in one dimension.
  */
 struct nsGridContainerFrame::Tracks {
   explicit Tracks(LogicalAxis aAxis)
-      : mContentBoxSize(0),
-        mGridGap(0),
+      : mContentBoxSize(NS_UNCONSTRAINEDSIZE),
+        mGridGap(NS_UNCONSTRAINEDSIZE),
         mStateUnion(TrackSize::StateBits(0)),
         mAxis(aAxis),
         mCanResolveLineRangeSize(false) {
@@ -1900,7 +2025,7 @@ struct nsGridContainerFrame::Tracks {
    * https://drafts.csswg.org/css-align-3/#propdef-align-content
    */
   void AlignJustifyContent(const nsStylePosition* aStyle, WritingMode aWM,
-                           nscoord aContentSize);
+                           nscoord aContentSize, bool aIsSubgridded);
 
   nscoord GridLineEdge(uint32_t aLine, GridLineSide aSide) const {
     if (MOZ_UNLIKELY(mSizes.IsEmpty())) {
@@ -2146,6 +2271,17 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
     mCols = mSharedGridData->mCols;
     mRows = mSharedGridData->mRows;
 
+    if (firstInFlow->GetProperty(UsedTrackSizes::Prop())) {
+      auto* prop = aGridContainerFrame->GetProperty(UsedTrackSizes::Prop());
+      if (!prop) {
+        prop = new UsedTrackSizes();
+        aGridContainerFrame->SetProperty(UsedTrackSizes::Prop(), prop);
+      }
+      prop->mCanResolveLineRangeSize = { true, true };
+      prop->mSizes[eLogicalAxisInline] = mCols.mSizes;
+      prop->mSizes[eLogicalAxisBlock] = mRows.mSizes;
+    }
+
     // Copy item data from each child's first-in-flow data in mSharedGridData.
     // XXX NOTE: This is O(n^2) in the number of items. (bug 1252186)
     mIter.Reset();
@@ -2189,6 +2325,13 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
       aGridContainerFrame->AddStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
     }
   }
+
+  /**
+   * Calculate our track sizes in the given axis.
+   */
+  void CalculateTrackSizesForAxis(LogicalAxis aAxis, const Grid& aGrid,
+                                  nscoord aCBSize,
+                                  SizingConstraint aConstraint);
 
   /**
    * Calculate our track sizes.
@@ -2756,22 +2899,228 @@ static Subgrid* SubgridComputeMarginBorderPadding(
   return subgrid;
 }
 
+static void CopyUsedTrackSizes(nsTArray<TrackSize>& aResult,
+                               const nsGridContainerFrame* aUsedTrackSizesFrame,
+                               const UsedTrackSizes* aUsedTrackSizes,
+                               const nsGridContainerFrame* aSubgridFrame,
+                               const Subgrid* aSubgrid,
+                               LogicalAxis aSubgridAxis) {
+  MOZ_ASSERT(aSubgridFrame->ParentGridContainerForSubgrid() ==
+             aUsedTrackSizesFrame);
+  aResult.SetLength(aSubgridAxis == eLogicalAxisInline ? aSubgrid->mGridColEnd
+                                                       : aSubgrid->mGridRowEnd);
+  auto parentAxis =
+      aSubgrid->mIsOrthogonal ? GetOrthogonalAxis(aSubgridAxis) : aSubgridAxis;
+  const auto& parentSizes = aUsedTrackSizes->mSizes[parentAxis];
+  MOZ_ASSERT(aUsedTrackSizes->mCanResolveLineRangeSize[parentAxis]);
+  if (parentSizes.IsEmpty()) {
+    return;
+  }
+  const auto& range = aSubgrid->mArea.LineRangeForAxis(parentAxis);
+  const auto cbwm = aUsedTrackSizesFrame->GetWritingMode();
+  const auto wm = aSubgridFrame->GetWritingMode();
+  // Recompute the MBP to resolve percentages against the resolved track sizes.
+  if (parentAxis == eLogicalAxisInline) {
+    // Find the subgrid's grid item frame in its parent grid container.  This
+    // is usually the same as aSubgridFrame but it may also have a ScrollFrame,
+    // FieldSetFrame etc.  We just loop until we see the first ancestor
+    // GridContainerFrame and pick the last frame we saw before that.
+    // Note that all subgrids are inside a parent (sub)grid container.
+    const nsIFrame* outerGridItemFrame = aSubgridFrame;
+    for (nsIFrame* parent = aSubgridFrame->GetParent();
+         parent != aUsedTrackSizesFrame;
+         parent = parent->GetParent()) {
+      MOZ_ASSERT(!parent->IsGridContainerFrame());
+      outerGridItemFrame = parent;
+    }
+    auto sizeInAxis = range.ToLength(aUsedTrackSizes->mSizes[parentAxis]);
+    LogicalSize pmPercentageBasis = aSubgrid->mIsOrthogonal
+        ? LogicalSize(wm, nscoord(0), sizeInAxis)
+        : LogicalSize(wm, sizeInAxis, nscoord(0));
+    GridItemInfo info(const_cast<nsIFrame*>(outerGridItemFrame),
+                      aSubgrid->mArea);
+    SubgridComputeMarginBorderPadding(info, pmPercentageBasis);
+  }
+  const LogicalMargin& mbp = aSubgrid->mMarginBorderPadding;
+  if (MOZ_LIKELY(cbwm.ParallelAxisStartsOnSameSide(parentAxis, wm))) {
+    uint32_t i = range.mStart;
+    nscoord startMBP = mbp.Start(parentAxis, cbwm);
+    nscoord startPos = parentSizes[i].mPosition + startMBP;
+    for (auto& sz : aResult) {
+      sz = parentSizes[i++];
+      sz.mPosition -= startPos;
+    }
+    aResult[0].mPosition = 0;
+    aResult[0].mBase -= startMBP;
+    aResult.LastElement().mBase -= mbp.End(parentAxis, cbwm);
+  } else {
+    const uint32_t first = range.mEnd - 1;
+    uint32_t i = first;
+    const auto& parentEnd = parentSizes[first];
+    nscoord startMBP = mbp.End(parentAxis, cbwm);
+    nscoord parentEndPos = parentEnd.mPosition + parentEnd.mBase - startMBP;
+    for (auto& sz : aResult) {
+      sz = parentSizes[i--];
+      sz.mPosition = parentEndPos - (sz.mPosition + sz.mBase);
+    }
+    aResult[0].mPosition = 0;
+    aResult[0].mBase -= startMBP;
+    aResult.LastElement().mBase -= mbp.Start(parentAxis, cbwm);
+  }
+}
+
+void nsGridContainerFrame::UsedTrackSizes::ResolveTrackSizesForAxis(
+  nsGridContainerFrame* aFrame, LogicalAxis aAxis, gfxContext& aRC) {
+  if (mCanResolveLineRangeSize[aAxis]) {
+    return;
+  }
+  if (!aFrame->IsSubgrid()) {
+    // We can't resolve sizes in this axis at this point. aFrame is the top grid
+    // container, which will store its final track sizes later once they're
+    // resolved in this axis (in GridReflowInput::CalculateTrackSizesForAxis).
+    // The single caller of this method only needs track sizes for
+    // calculating a CB size and it will treat it as indefinite when
+    // this happens.
+    return;
+  }
+  auto* parent = aFrame->ParentGridContainerForSubgrid();
+  auto* parentSizes = parent->GetUsedTrackSizes();
+  if (!parentSizes) {
+    parentSizes = new UsedTrackSizes();
+    parent->SetProperty(UsedTrackSizes::Prop(), parentSizes);
+  }
+  auto* subgrid = aFrame->GetProperty(Subgrid::Prop());
+  const auto parentAxis =
+    subgrid->mIsOrthogonal ? GetOrthogonalAxis(aAxis) : aAxis;
+  parentSizes->ResolveTrackSizesForAxis(parent, parentAxis, aRC);
+  if (!parentSizes->mCanResolveLineRangeSize[parentAxis]) {
+    if (aFrame->IsSubgrid(aAxis)) {
+      ResolveSubgridTrackSizesForAxis(aFrame, aAxis, subgrid, aRC,
+                                      NS_UNCONSTRAINEDSIZE);
+    }
+    return;
+  }
+  if (aFrame->IsSubgrid(aAxis)) {
+    CopyUsedTrackSizes(mSizes[aAxis], parent, parentSizes, aFrame, subgrid,
+                       aAxis);
+    mCanResolveLineRangeSize[aAxis] = true;
+  } else {
+    const auto& range = subgrid->mArea.LineRangeForAxis(parentAxis);
+    nscoord cbSize = range.ToLength(parentSizes->mSizes[parentAxis]);
+    ResolveSubgridTrackSizesForAxis(aFrame, aAxis, subgrid, aRC, cbSize);
+  }
+}
+
+void nsGridContainerFrame::UsedTrackSizes::ResolveSubgridTrackSizesForAxis(
+    nsGridContainerFrame* aFrame, LogicalAxis aAxis, Subgrid* aSubgrid,
+    gfxContext& aRC, nscoord aCBSize) {
+  GridReflowInput state(aFrame, aRC);
+  state.mGridItems = aSubgrid->mGridItems;
+  Grid grid;
+  grid.mGridColEnd = aSubgrid->mGridColEnd;
+  grid.mGridRowEnd = aSubgrid->mGridRowEnd;
+  state.CalculateTrackSizesForAxis(aAxis, grid, aCBSize,
+                                   SizingConstraint::NoConstraint);
+  const auto& tracks = aAxis == eLogicalAxisInline ? state.mCols : state.mRows;
+  mSizes[aAxis] = tracks.mSizes;
+  mCanResolveLineRangeSize[aAxis] = tracks.mCanResolveLineRangeSize;
+  MOZ_ASSERT(mCanResolveLineRangeSize[aAxis]);
+}
+
+void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
+    LogicalAxis aAxis, const Grid& aGrid, nscoord aContentSize,
+    SizingConstraint aConstraint) {
+  auto& tracks = aAxis == eLogicalAxisInline ? mCols : mRows;
+  const auto& sizingFunctions =
+      aAxis == eLogicalAxisInline ? mColFunctions : mRowFunctions;
+  const auto& gapStyle = aAxis == eLogicalAxisInline ? mGridStyle->mColumnGap
+                                                     : mGridStyle->mRowGap;
+  uint32_t gridEnd =
+      aAxis == eLogicalAxisInline ? aGrid.mGridColEnd : aGrid.mGridRowEnd;
+  Maybe<SubgridFallbackTrackSizingFunctions> fallbackTrackSizing;
+
+  bool useParentGaps = false;
+  const bool isSubgriddedAxis = mFrame->IsSubgrid(aAxis);
+  if (MOZ_LIKELY(!isSubgriddedAxis)) {
+    tracks.Initialize(sizingFunctions, gapStyle, gridEnd, aContentSize);
+  } else {
+    tracks.mGridGap = nsLayoutUtils::ResolveGapToLength(gapStyle, aContentSize);
+    tracks.mContentBoxSize = aContentSize;
+    const auto* subgrid = mFrame->GetProperty(Subgrid::Prop());
+    tracks.mSizes.SetLength(gridEnd);
+    auto* parent = mFrame->ParentGridContainerForSubgrid();
+    auto parentAxis = subgrid->mIsOrthogonal ? GetOrthogonalAxis(aAxis) : aAxis;
+    const auto* parentSizes = parent->GetUsedTrackSizes();
+    if (parentSizes && parentSizes->mCanResolveLineRangeSize[parentAxis]) {
+      CopyUsedTrackSizes(tracks.mSizes, parent, parentSizes, mFrame, subgrid,
+                         aAxis);
+      useParentGaps = gapStyle.IsNormal();
+    } else {
+      fallbackTrackSizing.emplace(mFrame, subgrid, parent, parentAxis);
+      tracks.Initialize(
+          TrackSizingFunctions(fallbackTrackSizing->mMinSizingFunctions,
+                               fallbackTrackSizing->mMaxSizingFunctions,
+                               *fallbackTrackSizing->mAutoMinSizing,
+                               *fallbackTrackSizing->mAutoMaxSizing,
+                               fallbackTrackSizing->mHasRepeatAuto,
+                               fallbackTrackSizing->mRepeatAutoIndex),
+          gapStyle, gridEnd, aContentSize);
+    }
+  }
+
+  // We run the Track Sizing Algorithm in non-subgridded axes, and in some
+  // cases in a subgridded axis when our parent track sizes aren't resolved yet.
+  if (MOZ_LIKELY(!isSubgriddedAxis) || fallbackTrackSizing.isSome()) {
+    const size_t origGridItemCount = mGridItems.Length();
+    if (mFrame->HasSubgridItems(aAxis)) {
+      CollectSubgridItemsForAxis(aAxis, mGridItems);
+    }
+    tracks.CalculateSizes(
+        *this, mGridItems,
+        fallbackTrackSizing.isSome()
+            ? TrackSizingFunctions(fallbackTrackSizing->mMinSizingFunctions,
+                                   fallbackTrackSizing->mMaxSizingFunctions,
+                                   *fallbackTrackSizing->mAutoMinSizing,
+                                   *fallbackTrackSizing->mAutoMaxSizing,
+                                   fallbackTrackSizing->mHasRepeatAuto,
+                                   fallbackTrackSizing->mRepeatAutoIndex)
+            : sizingFunctions,
+        aContentSize,
+        aAxis == eLogicalAxisInline ? &GridArea::mCols : &GridArea::mRows,
+        aConstraint);
+    // XXXmats we're losing the baseline state of subgrid descendants that
+    // CollectSubgridItemsForAxis added here.  We need to propagate that
+    // state into the subgrid's Reflow somehow...
+    mGridItems.TruncateLength(origGridItemCount);
+  }
+
+  if (aContentSize != NS_UNCONSTRAINEDSIZE) {
+    tracks.AlignJustifyContent(mGridStyle, mWM, aContentSize, isSubgriddedAxis);
+  } else if (!useParentGaps) {
+    const nscoord gridGap = tracks.mGridGap;
+    nscoord pos = 0;
+    for (TrackSize& sz : tracks.mSizes) {
+      sz.mPosition = pos;
+      pos += sz.mBase + gridGap;
+    }
+  }
+
+  if (aConstraint == SizingConstraint::NoConstraint &&
+      (mFrame->HasSubgridItems() || mFrame->IsSubgrid())) {
+    mFrame->StoreUsedTrackSizes(aAxis, tracks.mSizes);
+  }
+
+  // positions and sizes are now final
+  tracks.mCanResolveLineRangeSize = true;
+}
+
 void nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
     const Grid& aGrid, const LogicalSize& aContentBox,
     SizingConstraint aConstraint) {
-  mCols.Initialize(mColFunctions, mGridStyle->mColumnGap, aGrid.mGridColEnd,
-                   aContentBox.ISize(mWM));
-  mRows.Initialize(mRowFunctions, mGridStyle->mRowGap, aGrid.mGridRowEnd,
-                   aContentBox.BSize(mWM));
-
-  mCols.CalculateSizes(*this, mGridItems, mColFunctions, aContentBox.ISize(mWM),
-                       &GridArea::mCols, aConstraint);
-  mCols.AlignJustifyContent(mGridStyle, mWM, aContentBox.ISize(mWM));
-  // Column positions and sizes are now final.
-  mCols.mCanResolveLineRangeSize = true;
-
-  mRows.CalculateSizes(*this, mGridItems, mRowFunctions, aContentBox.BSize(mWM),
-                       &GridArea::mRows, aConstraint);
+  CalculateTrackSizesForAxis(eLogicalAxisInline, aGrid,
+                             aContentBox.ISize(mWM), aConstraint);
+  CalculateTrackSizesForAxis(eLogicalAxisBlock, aGrid,
+                             aContentBox.BSize(mWM), aConstraint);
 }
 
 /**
@@ -3501,9 +3850,17 @@ void nsGridContainerFrame::Grid::SubgridPlaceGridItems(
 
 void nsGridContainerFrame::Grid::PlaceGridItems(
     GridReflowInput& aState, const RepeatTrackSizingInput& aSizes) {
-  mAreas = aState.mFrame->GetImplicitNamedAreas();
-  const nsStylePosition* const gridStyle = aState.mGridStyle;
   MOZ_ASSERT(mCellMap.mCells.IsEmpty(), "unexpected entries in cell map");
+
+  mAreas = aState.mFrame->GetImplicitNamedAreas();
+
+  if (aState.mFrame->HasSubgridItems()) {
+    if (auto* uts = aState.mFrame->GetUsedTrackSizes()) {
+      uts->mCanResolveLineRangeSize = { false, false };
+      uts->mSizes[eLogicalAxisInline].ClearAndRetainStorage();
+      uts->mSizes[eLogicalAxisBlock].ClearAndRetainStorage();
+    }
+  }
 
   // SubgridPlaceGridItems will set these if we find any subgrid items.
   aState.mFrame->RemoveStateBits(NS_STATE_GRID_HAS_COL_SUBGRID_ITEM |
@@ -3516,6 +3873,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   // Also initialize the Implicit Grid (mGridCol[Row]End) to the same values.
   // Note that this is for a grid with a 1,1 origin.  We'll change that
   // to a 0,0 based grid after placing definite lines.
+  const nsStylePosition* const gridStyle = aState.mGridStyle;
   auto areas = gridStyle->mGridTemplateAreas.get();
   int32_t clampMinColLine = nsStyleGridLine::kMinLine;
   int32_t clampMaxColLine = nsStyleGridLine::kMaxLine;
@@ -4124,22 +4482,69 @@ static nscoord ContentContribution(
     }
   }
 
+  // XXX add in subgrid gap contribution here... (bug 1547560)
+
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   nscoord size = nsLayoutUtils::IntrinsicForAxis(
       axis, aRC, child, aConstraint, aPercentageBasis,
       aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED, aMinSizeClamp);
-  if (size == NS_INTRINSIC_ISIZE_UNKNOWN) {
+  auto childWM = child->GetWritingMode();
+  const bool isOrthogonal = childWM.IsOrthogonalTo(aCBWM);
+  auto childAxis = isOrthogonal ? GetOrthogonalAxis(aAxis) : aAxis;
+  if (size == NS_INTRINSIC_ISIZE_UNKNOWN && childAxis == eLogicalAxisBlock) {
     // We need to reflow the child to find its BSize contribution.
     // XXX this will give mostly correct results for now (until bug 1174569).
     nscoord availISize = INFINITE_ISIZE_COORD;
     nscoord availBSize = NS_UNCONSTRAINEDSIZE;
-    auto childWM = child->GetWritingMode();
-    const bool isOrthogonal = childWM.IsOrthogonalTo(aCBWM);
     // The next two variables are MinSizeClamp values in the child's axes.
     nscoord iMinSizeClamp = NS_MAXSIZE;
     nscoord bMinSizeClamp = NS_MAXSIZE;
     LogicalSize cbSize(childWM, 0, NS_UNCONSTRAINEDSIZE);
-    if (aState.mCols.mCanResolveLineRangeSize) {
+    // Below, we try to resolve the child's grid-area size in its inline-axis
+    // to use as the CB/Available size in the MeasuringReflow that follows.
+    if (child->GetParent() != aState.mFrame) {
+      // This item is a child of a subgrid descendant.
+      auto* subgridFrame = static_cast<nsGridContainerFrame*>(child->GetParent());
+      MOZ_ASSERT(subgridFrame->IsGridContainerFrame());
+      auto* uts = subgridFrame->GetProperty(UsedTrackSizes::Prop());
+      if (!uts) {
+        uts = new UsedTrackSizes();
+        subgridFrame->SetProperty(UsedTrackSizes::Prop(), uts);
+      }
+      // The grid-item's inline-axis as expressed in the subgrid's WM.
+      auto subgridAxis = childWM.IsOrthogonalTo(subgridFrame->GetWritingMode())
+                            ? eLogicalAxisBlock
+                            : eLogicalAxisInline;
+      uts->ResolveTrackSizesForAxis(subgridFrame, subgridAxis, *aRC);
+      if (uts->mCanResolveLineRangeSize[subgridAxis]) {
+        auto* subgrid =
+            subgridFrame->GetProperty(nsGridContainerFrame::Subgrid::Prop());
+        const GridItemInfo* originalItem = nullptr;
+        for (const auto& item : subgrid->mGridItems) {
+          if (item.mFrame == child) {
+            originalItem = &item;
+            break;
+          }
+        }
+        MOZ_ASSERT(originalItem, "huh?");
+        const auto& range = originalItem->mArea.LineRangeForAxis(subgridAxis);
+        nscoord pos, sz;
+        range.ToPositionAndLength(uts->mSizes[subgridAxis], &pos, &sz);
+        if (childWM.IsOrthogonalTo(subgridFrame->GetWritingMode())) {
+          availBSize = sz;
+          cbSize.BSize(childWM) = sz;
+          if (aGridItem.mState[aAxis] & ItemState::eClampMarginBoxMinSize) {
+            bMinSizeClamp = sz;
+          }
+        } else {
+          availISize = sz;
+          cbSize.ISize(childWM) = sz;
+          if (aGridItem.mState[aAxis] & ItemState::eClampMarginBoxMinSize) {
+            iMinSizeClamp = sz;
+          }
+        }
+      }
+    } else if (aState.mCols.mCanResolveLineRangeSize) {
       nscoord sz = aState.mCols.ResolveSize(aGridItem.mArea.mCols);
       if (isOrthogonal) {
         availBSize = sz;
@@ -4485,11 +4890,19 @@ void nsGridContainerFrame::Tracks::CalculateItemBaselines(
 
 void nsGridContainerFrame::Tracks::InitializeItemBaselines(
     GridReflowInput& aState, nsTArray<GridItemInfo>& aGridItems) {
+  if (aState.mFrame->IsSubgrid(mAxis)) {
+    // A grid container's subgridded axis doesn't have a baseline.
+    return;
+  }
   nsTArray<ItemBaselineData> firstBaselineItems;
   nsTArray<ItemBaselineData> lastBaselineItems;
   WritingMode wm = aState.mWM;
   ComputedStyle* containerSC = aState.mFrame->Style();
   for (GridItemInfo& gridItem : aGridItems) {
+    if (gridItem.IsSubgrid(mAxis)) {
+      // A subgrid itself is never baseline-aligned.
+      continue;
+    }
     nsIFrame* child = gridItem.mFrame;
     uint32_t baselineTrack = kAutoLine;
     auto state = ItemState(0);
@@ -4580,6 +4993,9 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
     }
 
     if (state & ItemState::eIsBaselineAligned) {
+      // XXXmats if |child| is a descendant of a subgrid then the metrics
+      // below needs to account for the accumulated MPB somehow...
+
       // XXX available size issue
       LogicalSize avail(childWM, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
       auto* rc = &aState.mRenderingContext;
@@ -5167,7 +5583,8 @@ void nsGridContainerFrame::Tracks::StretchFlexibleTracks(
 }
 
 void nsGridContainerFrame::Tracks::AlignJustifyContent(
-    const nsStylePosition* aStyle, WritingMode aWM, nscoord aContentSize) {
+    const nsStylePosition* aStyle, WritingMode aWM, nscoord aContentSize,
+    bool aIsSubgriddedAxis) {
   if (mSizes.IsEmpty()) {
     return;
   }
@@ -5179,6 +5596,12 @@ void nsGridContainerFrame::Tracks::AlignJustifyContent(
   auto alignment =
       ::GetAlignJustifyValue(valueAndFallback, aWM, isAlign, &overflowSafe);
   if (alignment == NS_STYLE_ALIGN_NORMAL) {
+    if (aIsSubgriddedAxis) {
+      auto& gap = isAlign ? aStyle->mRowGap : aStyle->mColumnGap;
+      if (gap.IsNormal()) {
+        return;
+      }
+    }
     MOZ_ASSERT(valueAndFallback == NS_STYLE_ALIGN_NORMAL,
                "*-content:normal cannot be specified with explicit fallback");
     alignment = NS_STYLE_ALIGN_STRETCH;
@@ -6529,12 +6952,18 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     // we should use them but *they* should be computed as if we had no
     // children. To be fixed in bug 1488878.
     if (!aReflowInput.mStyleDisplay->IsContainSize()) {
-      // Note: we can't use GridLineEdge here since we haven't calculated
-      // the rows' mPosition yet (happens in AlignJustifyContent below).
-      for (const auto& sz : gridReflowInput.mRows.mSizes) {
-        bSize += sz.mBase;
+      const auto& rowSizes = gridReflowInput.mRows.mSizes;
+      if (MOZ_LIKELY(!IsSubgrid(eLogicalAxisBlock))) {
+        // Note: we can't use GridLineEdge here since we haven't calculated
+        // the rows' mPosition yet (happens in AlignJustifyContent below).
+        for (const auto& sz : rowSizes) {
+          bSize += sz.mBase;
+        }
+        bSize += gridReflowInput.mRows.SumOfGridGaps();
+      } else if (computedBSize == NS_AUTOHEIGHT) {
+        bSize = gridReflowInput.mRows.GridLineEdge(rowSizes.Length(),
+                                                   GridLineSide::BeforeGridGap);
       }
-      bSize += gridReflowInput.mRows.SumOfGridGaps();
     }
   } else {
     consumedBSize = ConsumedBSize(wm);
@@ -6560,6 +6989,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
                           bSize);
 
   if (!prevInFlow) {
+    const auto& rowSizes = gridReflowInput.mRows.mSizes;
     if (computedBSize == NS_AUTOHEIGHT &&
         stylePos->mRowGap.IsLengthPercentage() &&
         stylePos->mRowGap.AsLengthPercentage().HasPercent()) {
@@ -6567,9 +6997,23 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
       gridReflowInput.mRows.mGridGap =
           nsLayoutUtils::ResolveGapToLength(stylePos->mRowGap, bSize);
     }
-    // Apply 'align/justify-content' to the grid.
-    // CalculateTrackSizes did the columns.
-    gridReflowInput.mRows.AlignJustifyContent(stylePos, wm, bSize);
+    if (!IsRowSubgrid()) {
+      // Apply 'align-content' to the grid.
+      gridReflowInput.mRows.AlignJustifyContent(stylePos, wm, bSize, false);
+    } else if (!rowSizes.IsEmpty()) {
+      gridReflowInput.mRows.mGridGap =
+        nsLayoutUtils::ResolveGapToLength(stylePos->mRowGap, bSize);
+      gridReflowInput.mRows.AlignJustifyContent(stylePos, wm, bSize, true);
+      if (computedBSize == NS_AUTOHEIGHT) {
+        bSize = gridReflowInput.mRows.GridLineEdge(rowSizes.Length(),
+                                                   GridLineSide::BeforeGridGap);
+        contentArea.BSize(wm) = bSize;
+      }
+    }
+    // Save the final row sizes for use by subgrids, if needed.
+    if (HasSubgridItems() || IsSubgrid()) {
+      StoreUsedTrackSizes(eLogicalAxisBlock, rowSizes);
+    }
   }
 
   bSize = ReflowChildren(gridReflowInput, contentArea, aDesiredSize, aStatus);
@@ -7365,6 +7809,27 @@ nsGridContainerFrame::FindLastItemInGridOrder(
     }
   }
   return result;
+}
+
+nsGridContainerFrame::UsedTrackSizes* nsGridContainerFrame::GetUsedTrackSizes()
+    const {
+  return GetProperty(UsedTrackSizes::Prop());
+}
+
+void nsGridContainerFrame::StoreUsedTrackSizes(
+    LogicalAxis aAxis, const nsTArray<TrackSize>& aSizes) {
+  auto* uts = GetUsedTrackSizes();
+  if (!uts) {
+    uts = new UsedTrackSizes();
+    SetProperty(UsedTrackSizes::Prop(), uts);
+  }
+  uts->mSizes[aAxis] = aSizes;
+  uts->mCanResolveLineRangeSize[aAxis] = true;
+  // XXX is resetting these bits necessary?
+  for (auto& sz : uts->mSizes[aAxis]) {
+    sz.mState &= ~(TrackSize::eFrozen | TrackSize::eSkipGrowUnlimited |
+                   TrackSize::eInfinitelyGrowable);
+  }
 }
 
 #ifdef DEBUG
