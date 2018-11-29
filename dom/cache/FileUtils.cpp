@@ -294,7 +294,7 @@ BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
   int64_t fileSize = 0;
   RefPtr<QuotaObject> quotaObject =
     quotaManager->GetQuotaObject(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo.mGroup,
-                                 aQuotaInfo.mOrigin, bodyFile, &fileSize);
+                                 aQuotaInfo.mOrigin, bodyFile, -1, &fileSize);
   MOZ_DIAGNOSTIC_ASSERT(quotaObject);
   MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
   // XXXtt: bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422815

@@ -21,6 +21,7 @@
 #include "mozilla/dom/PBackgroundLSSharedTypes.h"
 #include "mozilla/dom/PBackgroundLSSimpleRequestParent.h"
 #include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundParent.h"
@@ -862,6 +863,7 @@ class Datastore final
 {
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
+  RefPtr<QuotaObject> mQuotaObject;
   nsCOMPtr<nsITimer> mAutoCommitTimer;
   nsCOMPtr<nsIRunnable> mCompleteCallback;
   nsTHashtable<nsPtrHashKey<PrepareDatastoreOp>> mPrepareDatastoreOps;
@@ -880,6 +882,7 @@ public:
             int64_t aUsage,
             already_AddRefed<DirectoryLock>&& aDirectoryLock,
             already_AddRefed<Connection>&& aConnection,
+            already_AddRefed<QuotaObject>&& aQuotaObject,
             nsDataHashtable<nsStringHashKey, nsString>& aValues);
 
   const nsCString&
@@ -1436,6 +1439,10 @@ class PrepareDatastoreOp
   bool mRequestedDirectoryLock;
   bool mInvalidated;
 
+#ifdef DEBUG
+  int64_t mDEBUGUsage;
+#endif
+
 public:
   PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
                      const LSRequestParams& aParams);
@@ -1504,7 +1511,9 @@ private:
   DatabaseNotAvailable();
 
   nsresult
-  EnsureDirectoryEntry(nsIFile* aEntry, bool aDirectory);
+  EnsureDirectoryEntry(nsIFile* aEntry,
+                       bool aDirectory,
+                       bool* aAlreadyExisted = nullptr);
 
   nsresult
   VerifyDatabaseInformation(mozIStorageConnection* aConnection);
@@ -1826,6 +1835,11 @@ StaticAutoPtr<ObserverHashtable> gObservers;
 
 Atomic<uint32_t, Relaxed> gOriginLimitKB(kDefaultOriginLimitKB);
 
+typedef nsDataHashtable<nsCStringHashKey, int64_t> UsageHashtable;
+
+// Can only be touched on the Quota Manager I/O thread.
+StaticAutoPtr<UsageHashtable> gUsages;
+
 bool
 IsOnConnectionThread()
 {
@@ -1838,6 +1852,19 @@ AssertIsOnConnectionThread()
 {
   MOZ_ASSERT(gConnectionThread);
   gConnectionThread->AssertIsOnConnectionThread();
+}
+
+void
+InitUsageForOrigin(const nsACString& aOrigin, int64_t aUsage)
+{
+  AssertIsOnIOThread();
+
+  if (!gUsages) {
+    gUsages = new UsageHashtable();
+  }
+
+  MOZ_ASSERT(!gUsages->Contains(aOrigin));
+  gUsages->Put(aOrigin, aUsage);
 }
 
 } // namespace
@@ -2623,9 +2650,11 @@ Datastore::Datastore(const nsACString& aOrigin,
                      int64_t aUsage,
                      already_AddRefed<DirectoryLock>&& aDirectoryLock,
                      already_AddRefed<Connection>&& aConnection,
+                     already_AddRefed<QuotaObject>&& aQuotaObject,
                      nsDataHashtable<nsStringHashKey, nsString>& aValues)
   : mDirectoryLock(std::move(aDirectoryLock))
   , mConnection(std::move(aConnection))
+  , mQuotaObject(std::move(aQuotaObject))
   , mOrigin(aOrigin)
   , mPrivateBrowsingId(aPrivateBrowsingId)
   , mUsage(aUsage)
@@ -2654,6 +2683,7 @@ Datastore::Close()
 
   if (IsPersistent()) {
     MOZ_ASSERT(mConnection);
+    MOZ_ASSERT(mQuotaObject);
 
     if (mConnection->InTransaction()) {
       MOZ_ASSERT(mAutoCommitTimer);
@@ -2673,6 +2703,7 @@ Datastore::Close()
     mConnection->Close(callback);
   } else {
     MOZ_ASSERT(!mConnection);
+    MOZ_ASSERT(!mQuotaObject);
 
     // There's no connection, so it's safe to release the directory lock and
     // unregister itself from the hashtable.
@@ -2987,7 +3018,11 @@ Datastore::ConnectionClosedCallback()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(mConnection);
+  MOZ_ASSERT(mQuotaObject);
   MOZ_ASSERT(mClosed);
+
+  // Release the quota object first.
+  mQuotaObject = nullptr;
 
   // Now it's safe to release the directory lock and unregister itself from
   // the hashtable.
@@ -3021,12 +3056,41 @@ Datastore::UpdateUsage(int64_t aDelta)
 {
   AssertIsOnBackgroundThread();
 
+  // Check internal LocalStorage origin limit.
   int64_t newUsage = mUsage + aDelta;
   if (newUsage > gOriginLimitKB * 1024) {
     return false;
   }
 
+  // Check QuotaManager limits (group and global limit).
+  if (IsPersistent()) {
+    MOZ_ASSERT(mQuotaObject);
+
+    if (!mQuotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
+      return false;
+    }
+
+  }
+
+  // Quota checks passed, set new usage.
+
   mUsage = newUsage;
+
+  if (IsPersistent()) {
+    RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "Datastore::UpdateUsage",
+      [origin = mOrigin, newUsage] () {
+        MOZ_ASSERT(gUsages);
+        MOZ_ASSERT(gUsages->Contains(origin));
+        gUsages->Put(origin, newUsage);
+      });
+
+    QuotaManager* quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
+
+    MOZ_ALWAYS_SUCCEEDS(
+      quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
+  }
 
   return true;
 }
@@ -3745,6 +3809,9 @@ PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
   , mDatabaseNotAvailable(false)
   , mRequestedDirectoryLock(false)
   , mInvalidated(false)
+#ifdef DEBUG
+  , mDEBUGUsage(0)
+#endif
 {
   MOZ_ASSERT(aParams.type() ==
                LSRequestParams::TLSRequestPrepareDatastoreParams);
@@ -4076,12 +4143,22 @@ PrepareDatastoreOp::DatabaseWork()
     return rv;
   }
 
-  rv = EnsureDirectoryEntry(directoryEntry, /* aIsDirectory */ false);
+  bool alreadyExisted;
+  rv = EnsureDirectoryEntry(directoryEntry,
+                            /* aIsDirectory */ false,
+                            &alreadyExisted);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     return DatabaseNotAvailable();
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  if (alreadyExisted) {
+    MOZ_ASSERT(gUsages);
+    MOZ_ASSERT(gUsages->Get(mOrigin, &mUsage));
+  } else {
+    InitUsageForOrigin(mOrigin, 0);
   }
 
   rv = directoryEntry->GetPath(mDatabaseFilePath);
@@ -4141,7 +4218,9 @@ PrepareDatastoreOp::DatabaseNotAvailable()
 }
 
 nsresult
-PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry, bool aIsDirectory)
+PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry,
+                                         bool aIsDirectory,
+                                         bool* aAlreadyExisted)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aEntry);
@@ -4172,6 +4251,9 @@ PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry, bool aIsDirectory)
   }
 #endif
 
+  if (aAlreadyExisted) {
+    *aAlreadyExisted = exists;
+  }
   return NS_OK;
 }
 
@@ -4316,11 +4398,30 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
   }
 
   if (!mDatastore) {
+    MOZ_ASSERT(mUsage == mDEBUGUsage);
+
+    RefPtr<QuotaObject> quotaObject;
+
+    if (mPrivateBrowsingId == 0) {
+      MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
+
+      QuotaManager* quotaManager = QuotaManager::Get();
+      MOZ_ASSERT(quotaManager);
+
+      quotaObject = quotaManager->GetQuotaObject(PERSISTENCE_TYPE_DEFAULT,
+                                                 mGroup,
+                                                 mOrigin,
+                                                 mDatabaseFilePath,
+                                                 mUsage);
+      MOZ_ASSERT(quotaObject);
+    }
+
     mDatastore = new Datastore(mOrigin,
                                mPrivateBrowsingId,
                                mUsage,
                                mDirectoryLock.forget(),
                                mConnection.forget(),
+                               quotaObject.forget(),
                                mValues);
 
     mDatastore->NoteLivePrepareDatastoreOp(this);
@@ -4541,7 +4642,9 @@ LoadDataOp::DoDatastoreWork()
     }
 
     mPrepareDatastoreOp->mValues.Put(key, value);
-    mPrepareDatastoreOp->mUsage += key.Length() + value.Length();
+#ifdef DEBUG
+    mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.Length();
+#endif
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4912,28 +5015,7 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                         UsageInfo* aUsageInfo)
 {
   AssertIsOnIOThread();
-
-  if (!aUsageInfo) {
-    return NS_OK;
-  }
-
-  return GetUsageForOrigin(aPersistenceType,
-                           aGroup,
-                           aOrigin,
-                           aCanceled,
-                           aUsageInfo);
-}
-
-nsresult
-QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
-                               const nsACString& aGroup,
-                               const nsACString& aOrigin,
-                               const AtomicBool& aCanceled,
-                               UsageInfo* aUsageInfo)
-{
-  AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
-  MOZ_ASSERT(aUsageInfo);
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
@@ -4991,7 +5073,42 @@ QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
     }
 
     // TODO: Use a special file that contains logical size of the database.
-    //       For now, don't add to origin usage.
+    //       For now, get the usage from the database.
+
+    nsCOMPtr<mozIStorageConnection> connection;
+    rv = CreateStorageConnection(file, aOrigin, getter_AddRefs(connection));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT sum(length(key) + length(value)) "
+      "FROM data"
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool hasResult;
+    rv = stmt->ExecuteStep(&hasResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(!hasResult)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    int64_t usage;
+    rv = stmt->GetInt64(0, &usage);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    InitUsageForOrigin(aOrigin, usage);
+
+    aUsageInfo->AppendToDatabaseUsage(uint64_t(usage));
   }
 
   // Report unknown files, don't fail, just warn.
@@ -5051,17 +5168,51 @@ QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
   return NS_OK;
 }
 
+nsresult
+QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
+                               const nsACString& aGroup,
+                               const nsACString& aOrigin,
+                               const AtomicBool& aCanceled,
+                               UsageInfo* aUsageInfo)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
+  MOZ_ASSERT(aUsageInfo);
+
+  // We can't open the database at this point, since it can be already used
+  // by the connection thread. Use the cached value instead.
+
+  if (gUsages) {
+    int64_t usage;
+    if (gUsages->Get(aOrigin, &usage)) {
+      aUsageInfo->AppendToDatabaseUsage(usage);
+    }
+  }
+
+  return NS_OK;
+}
+
 void
 QuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
                                     const nsACString& aOrigin)
 {
   AssertIsOnIOThread();
+
+  if (aPersistenceType != PERSISTENCE_TYPE_DEFAULT) {
+    return;
+  }
+
+  if (gUsages) {
+    gUsages->Remove(aOrigin);
+  }
 }
 
 void
 QuotaClient::ReleaseIOThreadObjects()
 {
   AssertIsOnIOThread();
+
+  gUsages = nullptr;
 }
 
 void
