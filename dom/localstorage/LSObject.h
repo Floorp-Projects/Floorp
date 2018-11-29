@@ -16,18 +16,25 @@ namespace mozilla {
 
 class ErrorResult;
 
+namespace ipc {
+
+class PrincipalInfo;
+
+} // namespace ipc
+
 namespace dom {
 
 class LSDatabase;
 class LSRequestChild;
 class LSRequestChildCallback;
 class LSRequestParams;
-class PrincipalOrQuotaInfo;
 
 class LSObject final
   : public Storage
 {
-  nsAutoPtr<PrincipalOrQuotaInfo> mInfo;
+  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
+
+  nsAutoPtr<PrincipalInfo> mPrincipalInfo;
 
   RefPtr<LSDatabase> mDatabase;
 
@@ -35,6 +42,14 @@ public:
   static nsresult
   Create(nsPIDOMWindowInner* aWindow,
          Storage** aStorage);
+
+  /**
+   * Used for requests from the parent process to the parent process; in that
+   * case we want ActorsParent to know our event-target and this is better than
+   * trying to tunnel the pointer through IPC.
+   */
+  static already_AddRefed<nsIEventTarget>
+  GetSyncLoopEventTarget();
 
   static void
   CancelSyncLoop();

@@ -83,6 +83,17 @@ public:
     MOZ_ASSERT(IsOnOwningThread());
   }
 
+  // Used for requests from the parent process to the parent process; in that
+  // case we want ActorsParent to know our event-target and this is better than
+  // trying to tunnel the pointer through IPC.
+  const nsCOMPtr<nsIEventTarget>&
+  GetSyncLoopEventTarget() const
+  {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
+    return mNestedEventTarget;
+  }
+
   nsresult
   StartAndReturnResponse(LSRequestResponse& aResponse);
 
@@ -146,50 +157,38 @@ LSObject::Create(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
-
-  nsAutoPtr<PrincipalOrQuotaInfo> info(new PrincipalOrQuotaInfo());
-  if (XRE_IsParentProcess()) {
-    nsCString suffix;
-    nsCString group;
-    nsCString origin;
-    rv = QuotaManager::GetInfoFromPrincipal(principal,
-                                            &suffix,
-                                            &group,
-                                            &origin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    QuotaInfo quotaInfo;
-    quotaInfo.suffix() = suffix;
-    quotaInfo.group() = group;
-    quotaInfo.origin() = origin;
-
-    *info = quotaInfo;
-
-    // This service has to be started on the main thread currently.
-    nsCOMPtr<mozIStorageService> ss;
-    if (NS_WARN_IF(!(ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID)))) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    PrincipalInfo principalInfo;
-    rv = PrincipalToPrincipalInfo(principal, &principalInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
-
-    *info = principalInfo;
+  nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
+  nsresult rv = PrincipalToPrincipalInfo(principal, principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
+  MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo);
+
   RefPtr<LSObject> object = new LSObject(aWindow, principal);
-  object->mInfo = std::move(info);
+  object->mPrincipalInfo = std::move(principalInfo);
 
   object.forget(aStorage);
   return NS_OK;
+}
+
+// static
+already_AddRefed<nsIEventTarget>
+LSObject::GetSyncLoopEventTarget()
+{
+  RefPtr<RequestHelper> helper;
+
+  {
+    StaticMutexAutoLock lock(gRequestHelperMutex);
+    helper = gRequestHelper;
+  }
+
+  nsCOMPtr<nsIEventTarget> target;
+  if (helper) {
+    target = helper->GetSyncLoopEventTarget();
+  }
+
+  return target.forget();
 }
 
 // static
@@ -436,7 +435,7 @@ LSObject::EnsureDatabase()
   }
 
   LSRequestPrepareDatastoreParams params;
-  params.info() = *mInfo;
+  params.principalInfo() = *mPrincipalInfo;
 
   RefPtr<RequestHelper> helper = new RequestHelper(this, params);
 

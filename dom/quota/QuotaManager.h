@@ -117,7 +117,8 @@ public:
   static const char kReplaceChars[];
 
   static void
-  GetOrCreate(nsIRunnable* aCallback);
+  GetOrCreate(nsIRunnable* aCallback,
+              nsIEventTarget* aMainEventTarget = nullptr);
 
   // Returns a non-owning reference.
   static QuotaManager*
