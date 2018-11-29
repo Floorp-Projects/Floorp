@@ -610,6 +610,7 @@ QuotaManagerService::Clear(nsIQuotaRequest** _retval)
 NS_IMETHODIMP
 QuotaManagerService::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
                                                const nsACString& aPersistenceType,
+                                               const nsAString& aClientType,
                                                bool aClearAll,
                                                nsIQuotaRequest** _retval)
 {
@@ -646,6 +647,19 @@ QuotaManagerService::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
   } else {
     params.persistenceType() = persistenceType.Value();
     params.persistenceTypeIsExplicit() = true;
+  }
+
+  Nullable<Client::Type> clientType;
+  rv = Client::NullableTypeFromText(aClientType, &clientType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (clientType.IsNull()) {
+    params.clientTypeIsExplicit() = false;
+  } else {
+    params.clientType() = clientType.Value();
+    params.clientTypeIsExplicit() = true;
   }
 
   params.clearAll() = aClearAll;

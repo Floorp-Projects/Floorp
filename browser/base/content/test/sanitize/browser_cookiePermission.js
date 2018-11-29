@@ -277,7 +277,7 @@ add_task(async function deleteStorageInAboutURL() {
 
   let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("about:newtab");
   await new Promise(aResolve => {
-    let req = Services.qms.clearStoragesForPrincipal(principal, null, false);
+    let req = Services.qms.clearStoragesForPrincipal(principal);
     req.callback = () => { aResolve(); };
   });
 });
@@ -313,7 +313,7 @@ add_task(async function deleteStorageOnlyCustomPermissionInAboutURL() {
 
   let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("about:newtab");
   await new Promise(aResolve => {
-    let req = Services.qms.clearStoragesForPrincipal(principal, null, false);
+    let req = Services.qms.clearStoragesForPrincipal(principal);
     req.callback = () => { aResolve(); };
   });
 

@@ -13,6 +13,9 @@ include "mozilla/dom/quota/SerializationHelpers.h";
 using mozilla::dom::quota::PersistenceType
   from "mozilla/dom/quota/PersistenceType.h";
 
+using mozilla::dom::quota::Client::Type
+  from "mozilla/dom/quota/Client.h";
+
 namespace mozilla {
 namespace dom {
 namespace quota {
@@ -53,6 +56,8 @@ struct ClearOriginParams
   PrincipalInfo principalInfo;
   PersistenceType persistenceType;
   bool persistenceTypeIsExplicit;
+  Type clientType;
+  bool clientTypeIsExplicit;
   bool clearAll;
 };
 

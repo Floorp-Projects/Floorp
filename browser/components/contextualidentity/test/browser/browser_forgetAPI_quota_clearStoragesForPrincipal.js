@@ -127,7 +127,7 @@ add_task(async function test_quota_clearStoragesForPrincipal() {
   let httpURI = caUtils.makeURI("http://" + TEST_HOST);
   let httpPrincipal = Services.scriptSecurityManager
                               .createCodebasePrincipal(httpURI, {});
-  Services.qms.clearStoragesForPrincipal(httpPrincipal, null, true);
+  Services.qms.clearStoragesForPrincipal(httpPrincipal, null, null, true);
 
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.

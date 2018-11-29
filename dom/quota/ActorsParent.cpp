@@ -953,6 +953,7 @@ class NormalOriginOperationBase
 protected:
   Nullable<PersistenceType> mPersistenceType;
   OriginScope mOriginScope;
+  Nullable<Client::Type> mClientType;
   mozilla::Atomic<bool> mCanceled;
   const bool mExclusive;
 
@@ -5506,16 +5507,22 @@ QuotaManager::EnsureOriginDirectory(nsIFile* aDirectory,
 
 void
 QuotaManager::OriginClearCompleted(PersistenceType aPersistenceType,
-                                   const nsACString& aOrigin)
+                                   const nsACString& aOrigin,
+                                   const Nullable<Client::Type>& aClientType)
 {
   AssertIsOnIOThread();
 
-  if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    mInitializedOrigins.RemoveElement(aOrigin);
-  }
+  if (aClientType.IsNull()) {
+    if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+      mInitializedOrigins.RemoveElement(aOrigin);
+    }
 
-  for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-    mClients[index]->OnOriginClearCompleted(aPersistenceType, aOrigin);
+    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
+      mClients[index]->OnOriginClearCompleted(aPersistenceType, aOrigin);
+    }
+  } else {
+    mClients[aClientType.Value()]->OnOriginClearCompleted(aPersistenceType,
+                                                          aOrigin);
   }
 }
 
@@ -5987,7 +5994,8 @@ QuotaManager::CheckTemporaryStorageLimits()
 
   for (const OriginParams& doomedOrigin : doomedOrigins) {
     OriginClearCompleted(doomedOrigin.mPersistenceType,
-                         doomedOrigin.mOrigin);
+                         doomedOrigin.mOrigin,
+                         Nullable<Client::Type>());
   }
 
   if (mTemporaryStorageUsage > mTemporaryStorageLimit) {
@@ -6527,7 +6535,8 @@ FinalizeOriginEvictionOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 
   for (RefPtr<DirectoryLockImpl>& lock : mLocks) {
     aQuotaManager->OriginClearCompleted(lock->GetPersistenceType().Value(),
-                                        lock->GetOriginScope().GetOrigin());
+                                        lock->GetOriginScope().GetOrigin(),
+                                        Nullable<Client::Type>());
   }
 
   return NS_OK;
@@ -6561,7 +6570,7 @@ NormalOriginOperationBase::Open()
 
   QuotaManager::Get()->OpenDirectoryInternal(mPersistenceType,
                                              mOriginScope,
-                                             Nullable<Client::Type>(),
+                                             mClientType,
                                              mExclusive,
                                              this);
 }
@@ -7713,6 +7722,62 @@ ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
       return;
     }
 
+    UsageInfo usageInfo;
+
+    if (!mClientType.IsNull()) {
+      Client::Type clientType = mClientType.Value();
+
+      nsAutoString clientDirectoryName;
+      rv = Client::TypeToText(clientType, clientDirectoryName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+
+      rv = file->Append(clientDirectoryName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+
+      bool exists;
+      rv = file->Exists(&exists);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+
+      if (!exists) {
+        continue;
+      }
+
+      bool initialized;
+      if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+        initialized = aQuotaManager->IsOriginInitialized(origin);
+      } else {
+        initialized = aQuotaManager->IsTemporaryStorageInitialized();
+      }
+
+      Client* client = aQuotaManager->GetClient(clientType);
+      MOZ_ASSERT(client);
+
+      Atomic<bool> dummy(false);
+      if (initialized) {
+        rv = client->GetUsageForOrigin(aPersistenceType,
+                                       group,
+                                       origin,
+                                       dummy,
+                                       &usageInfo);
+      } else {
+        rv = client->InitOrigin(aPersistenceType,
+                                group,
+                                origin,
+                                dummy,
+                                &usageInfo);
+
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+    }
+
     for (uint32_t index = 0; index < 10; index++) {
       // We can't guarantee that this will always succeed on Windows...
       if (NS_SUCCEEDED((rv = file->Remove(true)))) {
@@ -7729,12 +7794,18 @@ ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
     }
 
     if (aPersistenceType != PERSISTENCE_TYPE_PERSISTENT) {
-      aQuotaManager->RemoveQuotaForOrigin(aPersistenceType, group, origin);
+      if (mClientType.IsNull()) {
+        aQuotaManager->RemoveQuotaForOrigin(aPersistenceType, group, origin);
+      } else {
+        aQuotaManager->DecreaseUsageForOrigin(aPersistenceType,
+                                              group,
+                                              origin,
+                                              usageInfo.TotalUsage());
+      }
     }
 
-    aQuotaManager->OriginClearCompleted(aPersistenceType, origin);
+    aQuotaManager->OriginClearCompleted(aPersistenceType, origin, mClientType);
   }
-
 }
 
 nsresult
@@ -7776,6 +7847,12 @@ ClearOriginOp::Init(Quota* aQuota)
     MOZ_ASSERT(mParams.persistenceType() != PERSISTENCE_TYPE_INVALID);
 
     mPersistenceType.SetValue(mParams.persistenceType());
+  }
+
+  if (mParams.clientTypeIsExplicit()) {
+    MOZ_ASSERT(mParams.clientType() != Client::TYPE_MAX);
+
+    mClientType.SetValue(mParams.clientType());
   }
 
   mNeedsMainThreadInit = true;

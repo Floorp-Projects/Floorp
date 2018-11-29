@@ -301,7 +301,7 @@ const QuotaCleaner = {
       .then(exceptionThrown => {
         // QuotaManager
         return new Promise((aResolve, aReject) => {
-          let req = Services.qms.clearStoragesForPrincipal(aPrincipal, null, false);
+          let req = Services.qms.clearStoragesForPrincipal(aPrincipal);
           req.callback = () => {
             if (exceptionThrown) {
               aReject();
@@ -334,11 +334,11 @@ const QuotaCleaner = {
                                      .createCodebasePrincipal(httpsURI, aOriginAttributes);
         return Promise.all([
           new Promise(aResolve => {
-            let req = Services.qms.clearStoragesForPrincipal(httpPrincipal, null, true);
+            let req = Services.qms.clearStoragesForPrincipal(httpPrincipal, null, null, true);
             req.callback = () => { aResolve(); };
           }),
           new Promise(aResolve => {
-            let req = Services.qms.clearStoragesForPrincipal(httpsPrincipal, null, true);
+            let req = Services.qms.clearStoragesForPrincipal(httpsPrincipal, null, null, true);
             req.callback = () => { aResolve(); };
           }),
         ]).then(() => {
@@ -395,7 +395,7 @@ const QuotaCleaner = {
                   principal.URI.scheme == "https" ||
                   principal.URI.scheme == "file") {
                 promises.push(new Promise(aResolve => {
-                  let req = Services.qms.clearStoragesForPrincipal(principal, null, false);
+                  let req = Services.qms.clearStoragesForPrincipal(principal);
                   req.callback = () => { aResolve(); };
                 }));
               }

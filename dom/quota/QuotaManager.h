@@ -308,7 +308,8 @@ public:
 
   void
   OriginClearCompleted(PersistenceType aPersistenceType,
-                       const nsACString& aOrigin);
+                       const nsACString& aOrigin,
+                       const Nullable<Client::Type>& aClientType);
 
   void
   ResetOrClearCompleted();

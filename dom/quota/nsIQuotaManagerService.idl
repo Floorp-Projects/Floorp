@@ -104,7 +104,20 @@ interface nsIQuotaManagerService : nsISupports
    *        A principal for the origin whose storages are to be cleared.
    * @param aPersistenceType
    *        An optional string that tells what persistence type of storages
-   *        will be cleared.
+   *        will be cleared.  If omitted (or void), all persistence types will
+   *        be cleared for the principal.  If a single persistence type
+   *        ("persistent", "temporary", or "default") is provided, then only
+   *        that persistence directory will be considered.  Note that
+   *        "persistent" is different than being "persisted" via persist() and
+   *        is only for chrome principals.  See bug 1354500 for more info.
+   *        In general, null is the right thing to pass here.
+   * @param aClientType
+   *        An optional string that tells what client type of storages
+   *        will be cleared.  If omitted (or void), all client types will be
+   *        cleared for the principal.  If a single client type is provided
+   *        from Client.h, then only that client's storage will be cleared.
+   *        If you want to clear multiple client types (but not all), then you
+   *        must call this method multiple times.
    * @param aClearAll
    *        An optional boolean to indicate clearing all storages under the
    *        given origin.
@@ -112,6 +125,7 @@ interface nsIQuotaManagerService : nsISupports
   [must_use] nsIQuotaRequest
   clearStoragesForPrincipal(in nsIPrincipal aPrincipal,
                             [optional] in ACString aPersistenceType,
+                            [optional] in AString aClientType,
                             [optional] in boolean aClearAll);
 
   /**

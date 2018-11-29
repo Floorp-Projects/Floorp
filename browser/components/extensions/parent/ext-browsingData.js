@@ -77,22 +77,26 @@ const clearHistory = options => {
 const clearIndexedDB = async function(options) {
   let promises = [];
 
-  await new Promise(resolve => {
+  await new Promise((resolve, reject) => {
     quotaManagerService.getUsage(request => {
       if (request.resultCode != Cr.NS_OK) {
-        // We are probably shutting down. We don't want to propagate the error,
-        // rejecting the promise.
-        resolve();
+        reject({message: "Clear indexedDB failed"});
         return;
       }
 
       for (let item of request.result) {
         let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
-        let uri = principal.URI;
-        if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file") {
-          promises.push(new Promise(r => {
-            let req = quotaManagerService.clearStoragesForPrincipal(principal, null, false);
-            req.callback = () => { r(); };
+        let scheme = principal.URI.scheme;
+        if (scheme == "http" || scheme == "https" || scheme == "file") {
+          promises.push(new Promise((resolve, reject) => {
+            let clearRequest = quotaManagerService.clearStoragesForPrincipal(principal, null, "idb");
+            clearRequest.callback = () => {
+              if (clearRequest.resultCode == Cr.NS_OK) {
+                resolve();
+              } else {
+                reject({message: "Clear indexedDB failed"});
+              }
+            };
           }));
         }
       }
