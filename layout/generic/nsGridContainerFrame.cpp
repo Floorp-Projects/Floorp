@@ -4320,6 +4320,20 @@ TrackSize::StateBits nsGridContainerFrame::Tracks::StateBitsForRange(
   return state;
 }
 
+static void AddSubgridContribution(TrackSize& aSize,
+                                   nscoord aMarginBorderPadding) {
+  if (aSize.mState & TrackSize::eIntrinsicMinSizing) {
+    aSize.mBase = std::max(aSize.mBase, aMarginBorderPadding);
+    aSize.mLimit = std::max(aSize.mLimit, aSize.mBase);
+  }
+  // XXX maybe eFlexMaxSizing too?
+  // (once we implement https://github.com/w3c/csswg-drafts/issues/2177)
+  if (aSize.mState &
+      (TrackSize::eIntrinsicMaxSizing | TrackSize::eFitContent)) {
+    aSize.mLimit = std::max(aSize.mLimit, aMarginBorderPadding);
+  }
+}
+
 bool nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
     GridReflowInput& aState, const TrackSizingFunctions& aFunctions,
     nscoord aPercentageBasis, SizingConstraint aConstraint,
@@ -4758,6 +4772,31 @@ void nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     const GridArea& area = gridItem.mArea;
     const LineRange& lineRange = area.*aRange;
     uint32_t span = lineRange.Extent();
+    if (MOZ_UNLIKELY(gridItem.mState[mAxis] & ItemState::eIsSubgrid)) {
+      auto itemWM = gridItem.mFrame->GetWritingMode();
+      auto percentageBasis = aState.PercentageBasisFor(mAxis, gridItem);
+      if (percentageBasis.ISize(itemWM) == NS_UNCONSTRAINEDSIZE) {
+        percentageBasis.ISize(itemWM) = nscoord(0);
+      }
+      if (percentageBasis.BSize(itemWM) == NS_UNCONSTRAINEDSIZE) {
+        percentageBasis.BSize(itemWM) = nscoord(0);
+      }
+      auto* subgrid =
+          SubgridComputeMarginBorderPadding(gridItem, percentageBasis);
+      LogicalMargin mbp = SubgridAccumulatedMarginBorderPadding(
+          gridItem.SubgridFrame(), subgrid, wm, mAxis);
+      if (span == 1) {
+        AddSubgridContribution(mSizes[lineRange.mStart],
+                               mbp.StartEnd(mAxis, wm));
+      } else {
+        AddSubgridContribution(mSizes[lineRange.mStart],
+                               mbp.Start(mAxis, wm));
+        AddSubgridContribution(mSizes[lineRange.mEnd - 1],
+                               mbp.End(mAxis, wm));
+      }
+      continue;
+    }
+
     if (span == 1) {
       // Step 1. Size tracks to fit non-spanning items.
       if (ResolveIntrinsicSizeStep1(aState, aFunctions, aPercentageBasis,
