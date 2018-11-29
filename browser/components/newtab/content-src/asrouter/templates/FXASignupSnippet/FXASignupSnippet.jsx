@@ -6,10 +6,10 @@ export const FXASignupSnippet = props => {
   const userAgent = window.navigator.userAgent.match(/Firefox\/([0-9]+)\./);
   const firefox_version = userAgent ? parseInt(userAgent[1], 10) : 0;
   const extendedContent = {
-    form_action: "https://accounts.firefox.com/",
     scene1_button_label: schema.properties.scene1_button_label.default,
     scene2_email_placeholder_text: schema.properties.scene2_email_placeholder_text.default,
     scene2_button_label: schema.properties.scene2_button_label.default,
+    scene2_dismiss_button_text: schema.properties.scene2_dismiss_button_text.default,
     ...props.content,
     hidden_inputs: {
       action: "email",
@@ -27,5 +27,6 @@ export const FXASignupSnippet = props => {
   return (<SubmitFormSnippet
     {...props}
     content={extendedContent}
+    form_action={"https://accounts.firefox.com/"}
     form_method="GET" />);
 };

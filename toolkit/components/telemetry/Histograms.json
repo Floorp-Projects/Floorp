@@ -5720,7 +5720,7 @@
     "kind": "count",
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1137447],
-    "description": "Update: count of when nsIApplicationUpdateService::getAutoUpdateIsEnabled does not return the default value of true (true values are not submitted)"
+    "description": "Update: count of when getAppUpdateAutoEnabled from UpdateUtils.jsm does not return the default value of true (true values are not submitted)"
   },
   "UPDATE_NOT_PREF_UPDATE_AUTO_NOTIFY": {
     "record_in_processes": ["main"],
@@ -5729,7 +5729,7 @@
     "kind": "count",
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1137447],
-    "description": "Update: count of when nsIApplicationUpdateService::getAutoUpdateIsEnabled does not return the default value of true (true values are not submitted)"
+    "description": "Update: count of when getAppUpdateAutoEnabled from UpdateUtils.jsm does not return the default value of true (true values are not submitted)"
   },
   "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_EXTERNAL": {
     "record_in_processes": ["main"],

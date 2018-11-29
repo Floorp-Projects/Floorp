@@ -1715,9 +1715,7 @@ main {
     [lwt-newtab-brighttext] .SnippetBaseContainer a {
       font-weight: bold; }
   .SnippetBaseContainer input[type='checkbox'] {
-    margin-inline-start: 0;
-    height: 16px;
-    width: 16px; }
+    margin-inline-start: 0; }
   .SnippetBaseContainer .innerWrapper {
     margin: 0 auto;
     display: flex;
@@ -1849,6 +1847,111 @@ main {
       .modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active, .modalOverlayInner .footer .modalButton:hover {
         box-shadow: 0 0 0 5px #D7D7DB;
         transition: box-shadow 150ms; }
+
+.ReturnToAMOOverlay,
+.amo + body.hide-main {
+  background: #F9F9FA;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2100; }
+  .ReturnToAMOOverlay .ReturnToAMOText,
+  .amo + body.hide-main .ReturnToAMOText {
+    color: rgba(12, 12, 13, 0.8);
+    line-height: 32px;
+    font-size: 23px;
+    width: 100%; }
+    .ReturnToAMOOverlay .ReturnToAMOText img,
+    .amo + body.hide-main .ReturnToAMOText img {
+      margin-inline-start: 6px;
+      margin-inline-end: 6px; }
+  .ReturnToAMOOverlay h2,
+  .amo + body.hide-main h2 {
+    color: rgba(74, 74, 79, 0.6);
+    font-weight: 100;
+    margin: 0 0 22px;
+    font-size: 36px;
+    line-height: 48px;
+    letter-spacing: 1.2px; }
+  .ReturnToAMOOverlay p,
+  .amo + body.hide-main p {
+    color: rgba(12, 12, 13, 0.5);
+    font-size: 14px;
+    line-height: 18px;
+    margin-bottom: 4px; }
+  .ReturnToAMOOverlay .puffy,
+  .amo + body.hide-main .puffy {
+    border-radius: 4px;
+    height: 48px;
+    padding: 0 16px;
+    font-size: 15px; }
+  .ReturnToAMOOverlay .blue,
+  .amo + body.hide-main .blue {
+    border: 0;
+    color: #FFF;
+    background-color: #0060DF; }
+    .ReturnToAMOOverlay .blue:hover,
+    .amo + body.hide-main .blue:hover {
+      box-shadow: none;
+      background-color: #003EAA; }
+    .ReturnToAMOOverlay .blue:active,
+    .amo + body.hide-main .blue:active {
+      background-color: #002275; }
+  .ReturnToAMOOverlay .default,
+  .amo + body.hide-main .default {
+    border-radius: 2px;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 15px; }
+  .ReturnToAMOOverlay .grey,
+  .amo + body.hide-main .grey {
+    border: 0;
+    background-color: rgba(12, 12, 13, 0.1); }
+    .ReturnToAMOOverlay .grey:hover,
+    .amo + body.hide-main .grey:hover {
+      box-shadow: none;
+      background-color: rgba(12, 12, 13, 0.2); }
+    .ReturnToAMOOverlay .grey:active,
+    .amo + body.hide-main .grey:active {
+      background-color: rgba(12, 12, 13, 0.3); }
+  .ReturnToAMOOverlay .ReturnToAMOGetStarted,
+  .amo + body.hide-main .ReturnToAMOGetStarted {
+    margin-top: 40px;
+    float: right; }
+    .ReturnToAMOOverlay .ReturnToAMOGetStarted:dir(rtl),
+    .amo + body.hide-main .ReturnToAMOGetStarted:dir(rtl) {
+      float: left; }
+  .ReturnToAMOOverlay .ReturnToAMOAddExtension,
+  .amo + body.hide-main .ReturnToAMOAddExtension {
+    margin-top: 20px; }
+  .ReturnToAMOOverlay .ReturnToAMOContainer,
+  .amo + body.hide-main .ReturnToAMOContainer {
+    width: 835px;
+    background: #FFF;
+    box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    display: flex;
+    padding: 38px 96px 28px 48px; }
+  .ReturnToAMOOverlay .ReturnToAMOAddonContents,
+  .amo + body.hide-main .ReturnToAMOAddonContents {
+    width: 400px;
+    margin-top: 42px; }
+  .ReturnToAMOOverlay .ReturnToAMOIcon,
+  .amo + body.hide-main .ReturnToAMOIcon {
+    width: 292px;
+    height: 254px;
+    background-size: 292px 254px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-image: url("resource://activity-stream/data/content/assets/gift-extension.svg"); }
+  .ReturnToAMOOverlay .icon-add,
+  .amo + body.hide-main .icon-add {
+    fill: #FFF;
+    vertical-align: sub; }
 
 .SimpleSnippet.tall {
   padding: 27px 0; }
@@ -2146,11 +2249,6 @@ main {
       border: 1px dotted var(--newtab-link-primary-color); }
   .EOYSnippetForm .monthly-checkbox-container {
     width: 100%; }
-    .EOYSnippetForm .monthly-checkbox-container input[type='checkbox'] {
-      width: 24px;
-      height: 24px; }
-    .EOYSnippetForm .monthly-checkbox-container label {
-      vertical-align: super; }
   .EOYSnippetForm .donation-form-url {
     margin-inline-start: 18px;
     align-self: flex-end;
@@ -2206,7 +2304,7 @@ main {
       opacity: 1; }
 
 .background,
-body.hide-main {
+.fxa + body.hide-main {
   width: 100%;
   height: 100%;
   display: block;

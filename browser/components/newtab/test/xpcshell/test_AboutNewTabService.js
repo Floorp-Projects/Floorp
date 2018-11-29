@@ -42,9 +42,11 @@ function setExpectedUrlsWithScripts() {
 
 function setExpectedUrlsWithoutScripts() {
   ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/prerendered/en-US/activity-stream-prerendered-noscripts.html";
-  ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-prerendered-debug-noscripts.html";
   ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/en-US/activity-stream-noscripts.html";
-  ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-debug-noscripts.html";
+
+  // Debug urls are the same as non-debug because debug scripts load dynamically
+  ACTIVITY_STREAM_PRERENDER_DEBUG_URL = ACTIVITY_STREAM_PRERENDER_URL;
+  ACTIVITY_STREAM_DEBUG_URL = ACTIVITY_STREAM_URL;
 }
 
 function nextChangeNotificationPromise(aNewURL, testMessage) {

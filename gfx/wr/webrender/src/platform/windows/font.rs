@@ -125,21 +125,17 @@ impl FontContext {
         }
     }
 
-    pub fn add_native_font(&mut self, font_key: &FontKey, font_handle: dwrote::FontDescriptor) {
-        if self.fonts.contains_key(font_key) {
-            return;
-        }
-
-        let system_fc = dwrote::FontCollection::system();
+    pub fn load_system_font(font_handle: &dwrote::FontDescriptor, update: bool) -> Result<dwrote::Font, String> {
+        let system_fc = dwrote::FontCollection::get_system(update);
         // A version of get_font_from_descriptor() that panics early to help with bug 1455848
-        let font = if let Some(family) = system_fc.get_font_family_by_name(&font_handle.family_name) {
+        if let Some(family) = system_fc.get_font_family_by_name(&font_handle.family_name) {
             let font = family.get_first_matching_font(font_handle.weight, font_handle.stretch, font_handle.style);
             // Exact matches only here
             if font.weight() == font_handle.weight &&
                 font.stretch() == font_handle.stretch &&
                 font.style() == font_handle.style
             {
-                font
+                Ok(font)
             } else {
                 // We can't depend on the family's fonts being in a particular order, so the first match may not
                 // be an exact match, even though it is sufficiently close to be a match. As a slower fallback,
@@ -155,13 +151,25 @@ impl FontContext {
                     } else {
                         None
                     }
-                }).next().unwrap_or_else(|| {
-                    panic!("font mismatch for descriptor {:?} {:?}", font_handle, font.to_descriptor())
+                }).next().ok_or_else(|| {
+                    format!("font mismatch for descriptor {:?} {:?}", font_handle, font.to_descriptor())
                 })
             }
         } else {
-            panic!("missing font family for descriptor {:?}", font_handle)
-        };
+            Err(format!("missing font family for descriptor {:?}", font_handle))
+        }
+    }
+
+    pub fn add_native_font(&mut self, font_key: &FontKey, font_handle: dwrote::FontDescriptor) {
+        if self.fonts.contains_key(font_key) {
+            return;
+        }
+        // First try to load the font without updating the system font collection.
+        // If the font can't be found, try again after updating the system font collection.
+        // If even that fails, panic...
+        let font = Self::load_system_font(&font_handle, false).unwrap_or_else(|_| {
+            Self::load_system_font(&font_handle, true).unwrap()
+        });
         let face = font.create_font_face();
         self.fonts.insert(*font_key, face);
     }

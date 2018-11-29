@@ -3872,7 +3872,7 @@ function stop_httpserver(aCallback) {
 function createAppInfo(aID, aName, aVersion, aPlatformVersion) {
   const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
   const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
-  let ifaces = [Ci.nsIXULAppInfo, Ci.nsIXULRuntime];
+  let ifaces = [Ci.nsIXULAppInfo, Ci.nsIPlatformInfo, Ci.nsIXULRuntime];
   if (IS_WIN) {
     ifaces.push(Ci.nsIWinAppHelper);
   }

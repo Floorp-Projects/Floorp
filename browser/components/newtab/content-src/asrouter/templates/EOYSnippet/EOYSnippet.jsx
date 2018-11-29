@@ -41,8 +41,14 @@ class EOYSnippetBase extends React.PureComponent {
       color: this.props.content.button_color,
       backgroundColor: this.props.content.button_background_color,
     };
+    const donationURLParams = [];
+    const paramsStartIndex = this.props.content.donation_form_url.indexOf("?");
+    for (const entry of new URLSearchParams(this.props.content.donation_form_url.slice(paramsStartIndex)).entries()) {
+      donationURLParams.push(entry);
+    }
 
     return (<form className="EOYSnippetForm" action={this.props.content.donation_form_url} method={this.props.form_method} onSubmit={this.handleSubmit} ref="form">
+      {donationURLParams.map(([key, value], idx) => <input type="hidden" name={key} value={value} key={idx} />)}
       {fieldNames.map((field, idx) => {
         const button_name = `donation_amount_${field}`;
         const amount = this.props.content[button_name];

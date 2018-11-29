@@ -20,9 +20,10 @@ ChromeUtils.defineModuleGetter(this, "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "SelectionChangedMenulist",
                                "resource:///modules/SelectionChangedMenulist.jsm");
+ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
-  gAUS: ["@mozilla.org/updates/update-service;1", "nsIApplicationUpdateService"],
   gHandlerService: ["@mozilla.org/uriloader/handler-service;1", "nsIHandlerService"],
   gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
 });
@@ -1333,7 +1334,7 @@ var gMainPane = {
       let radiogroup = document.getElementById("updateRadioGroup");
       radiogroup.disabled = true;
       try {
-        let enabled = await gAUS.getAutoUpdateIsEnabled();
+        let enabled = await UpdateUtils.getAppUpdateAutoEnabled();
         radiogroup.value = enabled;
         radiogroup.disabled = false;
       } catch (error) {
@@ -1352,7 +1353,7 @@ var gMainPane = {
       let updateAutoValue = (radiogroup.value == "true");
       radiogroup.disabled = true;
       try {
-        await gAUS.setAutoUpdateIsEnabled(updateAutoValue);
+        await UpdateUtils.setAppUpdateAutoEnabled(updateAutoValue);
         radiogroup.disabled = false;
       } catch (error) {
         Cu.reportError(error);

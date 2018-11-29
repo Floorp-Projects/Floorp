@@ -1,6 +1,6 @@
 import {mount} from "enzyme";
 import React from "react";
-import schema from "content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.schema.json";
+import schema from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet.schema.json";
 import {SendToDeviceSnippet} from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet";
 import {SnippetsTestMessageProvider} from "lib/SnippetsTestMessageProvider.jsm";
 
@@ -72,14 +72,14 @@ describe("SendToDeviceSnippet", () => {
     // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
     const {props} = wrapper.children().get(0);
 
-    assert.propertyVal(props.content, "scene1_button_label", "Learn more");
-    assert.propertyVal(props.content, "scene2_dismiss_button_text", "Dismiss");
-    assert.propertyVal(props.content, "scene2_button_label", "Send");
-    assert.propertyVal(props.content, "scene2_input_placeholder", "Your email here");
-    assert.propertyVal(props.content, "locale", "en-US");
-    assert.propertyVal(props.content, "country", "us");
-    assert.propertyVal(props.content, "include_sms", false);
-    assert.propertyVal(props.content, "message_id_email", "");
+    const defaultProperties = Object.keys(schema.properties)
+      .filter(prop => schema.properties[prop].default);
+    assert.lengthOf(defaultProperties, 6);
+    defaultProperties.forEach(prop => assert.propertyVal(props.content, prop, schema.properties[prop].default));
+
+    const defaultHiddenProperties = Object.keys(schema.properties.hidden_inputs.properties)
+      .filter(prop => schema.properties.hidden_inputs.properties[prop].default);
+    assert.lengthOf(defaultHiddenProperties, 0);
   });
 
   describe("form input", () => {

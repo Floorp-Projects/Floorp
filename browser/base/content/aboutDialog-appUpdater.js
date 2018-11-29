@@ -40,7 +40,7 @@ function appUpdater(options = {}) {
 
   this.options = options;
   this.updateDeck = document.getElementById("updateDeck");
-  this.promiseAutoUpdateSetting;
+  this.promiseAutoUpdateSetting = null;
 
   // Hide the update deck when the update window is already open and it's not
   // already applied, to avoid syncing issues between them. Applied updates
@@ -83,7 +83,7 @@ function appUpdater(options = {}) {
   }
 
   // We might need this value later, so start loading it from the disk now.
-  this.promiseAutoUpdateSetting = this.aus.getAutoUpdateIsEnabled();
+  this.promiseAutoUpdateSetting = UpdateUtils.getAppUpdateAutoEnabled();
 
   // That leaves the options
   // "Check for updates, but let me choose whether to install them", and
@@ -257,7 +257,7 @@ appUpdater.prototype =
       }
 
       if (!gAppUpdater.promiseAutoUpdateSetting) {
-        gAppUpdater.promiseAutoUpdateSetting = gAppUpdater.aus.getAutoUpdateIsEnabled();
+        gAppUpdater.promiseAutoUpdateSetting = UpdateUtils.getAppUpdateAutoEnabled();
       }
       gAppUpdater.promiseAutoUpdateSetting.then(updateAuto => {
         if (updateAuto) { // automatically download and install

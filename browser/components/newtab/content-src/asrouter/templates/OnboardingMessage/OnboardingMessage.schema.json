@@ -34,6 +34,10 @@
           "properties": {
             "string_id": {
               "type": "string"
+            },
+            "args": {
+              "type": "object",
+              "description": "An optional argument to pass to the localization module"
             }
           },
           "required": ["string_id"],
@@ -50,44 +54,89 @@
         }
       ]
     },
-    "button_label": {
-      "oneOf": [
-        {
-          "type": "string",
-          "description": "The label of the onboarding card's action button"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "string_id": {
-              "type": "string"
-            }
-          },
-          "required": ["string_id"],
-          "description": "Id of localized string for onboarding card button"
-        }
-      ],
-      "description": "Id of localized string or message override."
-    },
-    "button_action": {
+    "primary_button": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "description": "Action dispatched by the button."
-        },
-        "data": {
-          "properties": {
-            "args": {
+        "label": {
+          "oneOf": [
+            {
               "type": "string",
-              "description": "Additional parameters for button action, for example which link the button should open."
+              "description": "The label of the onboarding messages' action button"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "string_id": {
+                  "type": "string"
+                }
+              },
+              "required": ["string_id"],
+              "description": "Id of localized string for onboarding messages' button"
+            }
+          ],
+          "description": "Id of localized string or message override."
+        },
+        "action": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Action dispatched by the button."
+            },
+            "data": {
+              "properties": {
+                "args": {
+                  "type": "string",
+                  "description": "Additional parameters for button action, for example which link the button should open."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "secondary_buttons": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "The label of the onboarding messages' (optional) secondary action button"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "string_id": {
+                  "type": "string"
+                }
+              },
+              "required": ["string_id"],
+              "description": "Id of localized string for onboarding messages' button"
+            }
+          ],
+          "description": "Id of localized string or message override."
+        },
+        "action": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Action dispatched by the button."
+            },
+            "data": {
+              "properties": {
+                "args": {
+                  "type": "string",
+                  "description": "Additional parameters for button action, for example which link the button should open."
+                }
+              }
             }
           }
         }
       }
     }
   },
-  "additionalProperties": false,
-  "required": ["title", "text", "icon", "button_label", "button_action"]
+  "additionalProperties": true,
+  "required": ["title", "text", "icon", "primary_button"]
 }
-

@@ -49,12 +49,13 @@ export class _StartupOverlay extends React.PureComponent {
     // to trigger the animation.
     setTimeout(() => {
       this.setState({show: true});
+      this.props.onReady();
     }, 10);
   }
 
   removeOverlay() {
     window.removeEventListener("visibilitychange", this.removeOverlay);
-    document.body.classList.remove("hide-main");
+    document.body.classList.remove("hide-main", "fxa");
     this.setState({show: false});
     this.props.onBlock();
     setTimeout(() => {

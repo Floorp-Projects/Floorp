@@ -32,8 +32,10 @@ describe("EOYSnippet", () => {
       onAction: sandbox.stub(),
       onBlock: sandbox.stub(),
     };
-    assert.jsonSchema(props.content, schema);
-    return mount(<EOYSnippet {...props} />);
+    const comp = mount(<EOYSnippet {...props} />);
+    // Check schema with the final props the component receives (including defaults)
+    assert.jsonSchema(comp.children().get(0).props.content, schema);
+    return comp;
   }
 
   beforeEach(() => {
@@ -43,6 +45,17 @@ describe("EOYSnippet", () => {
 
   afterEach(() => {
     sandbox.restore();
+  });
+
+  it("should have the correct defaults", () => {
+    wrapper = mountAndCheckProps();
+    // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
+    const {props} = wrapper.children().get(0);
+
+    const defaultProperties = Object.keys(schema.properties)
+      .filter(prop => schema.properties[prop].default);
+    assert.lengthOf(defaultProperties, 4);
+    defaultProperties.forEach(prop => assert.propertyVal(props.content, prop, schema.properties[prop].default));
   });
 
   it("should render 4 donation options", () => {
@@ -84,6 +97,17 @@ describe("EOYSnippet", () => {
     assert.notCalled(onBlockStub);
   });
 
+  it("it should preserve URL GET params as hidden inputs", () => {
+    wrapper = mountAndCheckProps({donation_form_url: "https://donate.mozilla.org/pl/?utm_source=desktop-snippet&amp;utm_medium=snippet&amp;utm_campaign=donate&amp;utm_term=7556"});
+
+    const hiddenInputs = wrapper.find("input[type='hidden']");
+
+    assert.propertyVal(hiddenInputs.find("[name='utm_source']").props(), "value", "desktop-snippet");
+    assert.propertyVal(hiddenInputs.find("[name='amp;utm_medium']").props(), "value", "snippet");
+    assert.propertyVal(hiddenInputs.find("[name='amp;utm_campaign']").props(), "value", "donate");
+    assert.propertyVal(hiddenInputs.find("[name='amp;utm_term']").props(), "value", "7556");
+  });
+
   describe("locale", () => {
     let stub;
     let globals;
@@ -100,7 +124,7 @@ describe("EOYSnippet", () => {
 
     it("should use content.locale for Intl", () => {
       // triggers component rendering and calls the function we're testing
-      wrapper.setProps({content: {locale: "locale-foo"}});
+      wrapper.setProps({content: {locale: "locale-foo", donation_form_url: DEFAULT_CONTENT.donation_form_url}});
 
       assert.calledOnce(stub);
       assert.calledWithExactly(stub, "locale-foo", sinon.match.object);
@@ -108,7 +132,7 @@ describe("EOYSnippet", () => {
 
     it("should use navigator.language as locale fallback", () => {
       // triggers component rendering and calls the function we're testing
-      wrapper.setProps({content: {locale: null}});
+      wrapper.setProps({content: {locale: null, donation_form_url: DEFAULT_CONTENT.donation_form_url}});
 
       assert.calledOnce(stub);
       assert.calledWithExactly(stub, navigator.language, sinon.match.object);
