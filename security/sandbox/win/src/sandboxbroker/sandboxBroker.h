@@ -49,6 +49,7 @@ public:
 #endif
 
   void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel);
+  bool SetSecurityLevelForRDDProcess();
 
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel);
   enum SandboxLevel {
