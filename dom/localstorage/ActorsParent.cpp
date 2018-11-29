@@ -853,11 +853,13 @@ class Datastore final
   nsTHashtable<nsPtrHashKey<Database>> mDatabases;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
   const nsCString mOrigin;
+  const uint32_t mPrivateBrowsingId;
   bool mClosed;
 
 public:
   // Created by PrepareDatastoreOp.
   Datastore(const nsACString& aOrigin,
+            uint32_t aPrivateBrowsingId,
             already_AddRefed<DirectoryLock>&& aDirectoryLock,
             already_AddRefed<Connection>&& aConnection,
             nsDataHashtable<nsStringHashKey, nsString>& aValues);
@@ -866,6 +868,18 @@ public:
   Origin() const
   {
     return mOrigin;
+  }
+
+  uint32_t
+  PrivateBrowsingId() const
+  {
+    return mPrivateBrowsingId;
+  }
+
+  bool
+  IsPersistent() const
+  {
+    return mPrivateBrowsingId == 0;
   }
 
   void
@@ -920,6 +934,9 @@ private:
 
   void
   ConnectionClosedCallback();
+
+  void
+  CleanupMetadata();
 
   void
   EnsureTransaction();
@@ -1155,6 +1172,7 @@ class PrepareDatastoreOp
   nsCString mMainThreadOrigin;
   nsCString mOrigin;
   nsString mDatabaseFilePath;
+  uint32_t mPrivateBrowsingId;
   State mState;
   bool mRequestedDirectoryLock;
   bool mInvalidated;
@@ -1304,7 +1322,11 @@ private:
 class QuotaClient final
   : public mozilla::dom::quota::Client
 {
+  class ClearPrivateBrowsingRunnable;
+  class PrivateBrowsingObserver;
+
   static QuotaClient* sInstance;
+  static bool sPrivateBrowsingObserverRegistered;
 
   bool mShutdownRequested;
 
@@ -1330,6 +1352,9 @@ public:
 
     return QuotaManager::IsShuttingDown();
   }
+
+  static nsresult
+  RegisterObservers(nsIEventTarget* aBackgroundEventTarget);
 
   bool
   IsShuttingDown() const
@@ -1383,6 +1408,45 @@ public:
 
 private:
   ~QuotaClient() override;
+};
+
+class QuotaClient::ClearPrivateBrowsingRunnable final
+  : public Runnable
+{
+public:
+  ClearPrivateBrowsingRunnable()
+    : Runnable("mozilla::dom::ClearPrivateBrowsingRunnable")
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+private:
+  ~ClearPrivateBrowsingRunnable() = default;
+
+  NS_DECL_NSIRUNNABLE
+};
+
+class QuotaClient::PrivateBrowsingObserver final
+  : public nsIObserver
+{
+  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
+
+public:
+  explicit PrivateBrowsingObserver(nsIEventTarget* aBackgroundEventTarget)
+    : mBackgroundEventTarget(aBackgroundEventTarget)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_DECL_ISUPPORTS
+
+private:
+  ~PrivateBrowsingObserver()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_DECL_NSIOBSERVER
 };
 
 /*******************************************************************************
@@ -2097,12 +2161,14 @@ ClearOp::DoDatastoreWork()
  ******************************************************************************/
 
 Datastore::Datastore(const nsACString& aOrigin,
+                     uint32_t aPrivateBrowsingId,
                      already_AddRefed<DirectoryLock>&& aDirectoryLock,
                      already_AddRefed<Connection>&& aConnection,
                      nsDataHashtable<nsStringHashKey, nsString>& aValues)
   : mDirectoryLock(std::move(aDirectoryLock))
   , mConnection(std::move(aConnection))
   , mOrigin(aOrigin)
+  , mPrivateBrowsingId(aPrivateBrowsingId)
   , mClosed(false)
 {
   AssertIsOnBackgroundThread();
@@ -2123,26 +2189,38 @@ Datastore::Close()
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(!mDatabases.Count());
   MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(mConnection);
 
   mClosed = true;
 
-  if (mConnection->InTransaction()) {
-    MOZ_ASSERT(mAutoCommitTimer);
-    MOZ_ALWAYS_SUCCEEDS(mAutoCommitTimer->Cancel());
+  if (IsPersistent()) {
+    MOZ_ASSERT(mConnection);
 
-    mConnection->Commit();
+    if (mConnection->InTransaction()) {
+      MOZ_ASSERT(mAutoCommitTimer);
+      MOZ_ALWAYS_SUCCEEDS(mAutoCommitTimer->Cancel());
 
-    mAutoCommitTimer = nullptr;
+      mConnection->Commit();
+
+      mAutoCommitTimer = nullptr;
+    }
+
+    // We can't release the directory lock and unregister itself from the
+    // hashtable until the connection is fully closed.
+    nsCOMPtr<nsIRunnable> callback =
+      NewRunnableMethod("dom::Datastore::ConnectionClosedCallback",
+                        this,
+                        &Datastore::ConnectionClosedCallback);
+    mConnection->Close(callback);
+  } else {
+    MOZ_ASSERT(!mConnection);
+
+    // There's no connection, so it's safe to release the directory lock and
+    // unregister itself from the hashtable.
+
+    mDirectoryLock = nullptr;
+
+    CleanupMetadata();
   }
-
-  // We can't release the directory lock and unregister itself from the
-  // hashtable until the connection is fully closed.
-  nsCOMPtr<nsIRunnable> callback =
-    NewRunnableMethod("dom::Datastore::ConnectionClosedCallback",
-                      this,
-                      &Datastore::ConnectionClosedCallback);
-  mConnection->Close(callback);
 }
 
 void
@@ -2236,6 +2314,10 @@ Datastore::SetItem(const nsString& aKey, const nsString& aValue)
 
   mValues.Put(aKey, aValue);
 
+  if (!IsPersistent()) {
+    return;
+  }
+
   EnsureTransaction();
 
   RefPtr<SetItemOp> op = new SetItemOp(mConnection, aKey, aValue);
@@ -2250,6 +2332,10 @@ Datastore::RemoveItem(const nsString& aKey)
 
   mValues.Remove(aKey);
 
+  if (!IsPersistent()) {
+    return;
+  }
+
   EnsureTransaction();
 
   RefPtr<RemoveItemOp> op = new RemoveItemOp(mConnection, aKey);
@@ -2263,6 +2349,10 @@ Datastore::Clear()
   MOZ_ASSERT(!mClosed);
 
   mValues.Clear();
+
+  if (!IsPersistent()) {
+    return;
+  }
 
   EnsureTransaction();
 
@@ -2295,16 +2385,24 @@ Datastore::ConnectionClosedCallback()
   mDirectoryLock = nullptr;
   mConnection = nullptr;
 
+  CleanupMetadata();
+
+  if (mCompleteCallback) {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mCompleteCallback.forget()));
+  }
+}
+
+void
+Datastore::CleanupMetadata()
+{
+  AssertIsOnBackgroundThread();
+
   MOZ_ASSERT(gDatastores);
   MOZ_ASSERT(gDatastores->Get(mOrigin));
   gDatastores->Remove(mOrigin);
 
   if (!gDatastores->Count()) {
     gDatastores = nullptr;
-  }
-
-  if (mCompleteCallback) {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mCompleteCallback.forget()));
   }
 }
 
@@ -2623,6 +2721,7 @@ PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
   : mMainEventTarget(aMainEventTarget)
   , mLoadDataOp(nullptr)
   , mParams(aParams.get_LSRequestPrepareDatastoreParams())
+  , mPrivateBrowsingId(0)
   , mState(State::Initial)
   , mRequestedDirectoryLock(false)
   , mInvalidated(false)
@@ -2685,12 +2784,22 @@ PrepareDatastoreOp::Open()
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    rv = principal->GetPrivateBrowsingId(&mPrivateBrowsingId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // This service has to be started on the main thread currently.
   nsCOMPtr<mozIStorageService> ss;
   if (NS_WARN_IF(!(ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID)))) {
     return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = QuotaClient::RegisterObservers(OwningEventTarget());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   mState = State::CheckExistingOperations;
@@ -2866,6 +2975,22 @@ PrepareDatastoreOp::SendToIOThread()
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
     return NS_ERROR_FAILURE;
+  }
+
+  // Skip all disk related stuff and transition to SendingReadyMessage if we
+  // are preparing a datastore for private browsing.
+  // Note that we do use a directory lock for private browsing even though we
+  // don't do any stuff on disk. The thing is that without a directory lock,
+  // quota manager wouldn't call AbortOperations for our private browsing
+  // origin when a clear origin operation is requested. AbortOperations
+  // requests all databases to close and the datastore is destroyed in the end.
+  // Any following LocalStorage API call will trigger preparation of a new
+  // (empty) datastore.
+  if (mPrivateBrowsingId) {
+    mState = State::SendingReadyMessage;
+    Unused << this->Run();
+
+    return NS_OK;
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -3086,6 +3211,7 @@ PrepareDatastoreOp::SendResults()
     if (NS_SUCCEEDED(ResultCode())) {
       if (!mDatastore) {
         mDatastore = new Datastore(mOrigin,
+                                   mPrivateBrowsingId,
                                    mDirectoryLock.forget(),
                                    mConnection.forget(),
                                    mValues);
@@ -3432,6 +3558,7 @@ LoadDataOp::Cleanup()
  ******************************************************************************/
 
 QuotaClient* QuotaClient::sInstance = nullptr;
+bool QuotaClient::sPrivateBrowsingObserverRegistered = false;
 
 QuotaClient::QuotaClient()
   : mShutdownRequested(false)
@@ -3454,6 +3581,33 @@ mozilla::dom::quota::Client::Type
 QuotaClient::GetType()
 {
   return QuotaClient::LS;
+}
+
+// static
+nsresult
+QuotaClient::RegisterObservers(nsIEventTarget* aBackgroundEventTarget)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aBackgroundEventTarget);
+
+  if (!sPrivateBrowsingObserverRegistered) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (NS_WARN_IF(!obs)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIObserver> observer =
+      new PrivateBrowsingObserver(aBackgroundEventTarget);
+
+    nsresult rv = obs->AddObserver(observer, "last-pb-context-exited", false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    sPrivateBrowsingObserverRegistered = true;
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -3758,6 +3912,46 @@ QuotaClient::ShutdownWorkThreads()
 
     gConnectionThread = nullptr;
   }
+}
+
+NS_IMETHODIMP
+QuotaClient::
+ClearPrivateBrowsingRunnable::Run()
+{
+  AssertIsOnBackgroundThread();
+
+  if (gDatastores) {
+    for (auto iter = gDatastores->ConstIter(); !iter.Done(); iter.Next()) {
+      Datastore* datastore = iter.Data();
+      MOZ_ASSERT(datastore);
+
+      if (datastore->PrivateBrowsingId()) {
+        datastore->Clear();
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(QuotaClient::PrivateBrowsingObserver, nsIObserver)
+
+NS_IMETHODIMP
+QuotaClient::
+PrivateBrowsingObserver::Observe(nsISupports* aSubject,
+                                 const char* aTopic,
+                                 const char16_t* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aTopic, "last-pb-context-exited"));
+
+  RefPtr<ClearPrivateBrowsingRunnable> runnable =
+    new ClearPrivateBrowsingRunnable();
+
+  MOZ_ALWAYS_SUCCEEDS(
+    mBackgroundEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL));
+
+  return NS_OK;
 }
 
 } // namespace dom
