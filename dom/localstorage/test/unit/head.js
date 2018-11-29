@@ -106,6 +106,81 @@ function resetOrigin(principal, callback)
   return request;
 }
 
+function installPackage(packageName)
+{
+  let directoryService = Cc["@mozilla.org/file/directory_service;1"]
+                         .getService(Ci.nsIProperties);
+
+  let currentDir = directoryService.get("CurWorkD", Ci.nsIFile);
+
+  let packageFile = currentDir.clone();
+  packageFile.append(packageName + ".zip");
+
+  let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
+                  .createInstance(Ci.nsIZipReader);
+  zipReader.open(packageFile);
+
+  let entryNames = [];
+  let entries = zipReader.findEntries(null);
+  while (entries.hasMore()) {
+    let entry = entries.getNext();
+    entryNames.push(entry);
+  }
+  entryNames.sort();
+
+  for (let entryName of entryNames) {
+    let zipentry = zipReader.getEntry(entryName);
+
+    let file = getRelativeFile(entryName);
+
+    if (zipentry.isDirectory) {
+      file.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
+    } else {
+      let istream = zipReader.getInputStream(entryName);
+
+      var ostream = Cc["@mozilla.org/network/file-output-stream;1"]
+                    .createInstance(Ci.nsIFileOutputStream);
+      ostream.init(file, -1, parseInt("0644", 8), 0);
+
+      let bostream = Cc['@mozilla.org/network/buffered-output-stream;1']
+                     .createInstance(Ci.nsIBufferedOutputStream);
+      bostream.init(ostream, 32768);
+
+      bostream.writeFrom(istream, istream.available());
+
+      istream.close();
+      bostream.close();
+    }
+  }
+
+  zipReader.close();
+}
+
+function getProfileDir()
+{
+  let directoryService =
+    Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
+  return directoryService.get("ProfD", Ci.nsIFile);
+}
+
+// Given a "/"-delimited path relative to the profile directory,
+// return an nsIFile representing the path.  This does not test
+// for the existence of the file or parent directories.
+// It is safe even on Windows where the directory separator is not "/",
+// but make sure you're not passing in a "\"-delimited path.
+function getRelativeFile(relativePath)
+{
+  let profileDir = getProfileDir();
+
+  let file = profileDir.clone();
+  relativePath.split('/').forEach(function(component) {
+    file.append(component);
+  });
+
+  return file;
+}
+
 function repeatChar(count, ch) {
   if (count == 0) {
     return "";
@@ -123,10 +198,13 @@ function repeatChar(count, ch) {
   return result + result.substring(0, count - result.length);
 }
 
-function getPrincipal(url)
+function getPrincipal(url, attrs)
 {
   let uri = Services.io.newURI(url);
-  return Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  if (!attrs) {
+    attrs = {};
+  }
+  return Services.scriptSecurityManager.createCodebasePrincipal(uri, attrs);
 }
 
 function getCurrentPrincipal()
