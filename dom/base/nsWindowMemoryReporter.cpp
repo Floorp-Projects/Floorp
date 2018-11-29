@@ -561,6 +561,7 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
       aData);
   }
 
+  // clang-format off
   MOZ_COLLECT_REPORT(
     "ghost-windows", KIND_OTHER, UNITS_COUNT, ghostWindows.Count(),
 "The number of ghost windows present (the number of nodes underneath "
@@ -571,6 +572,7 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 "about:memory's minimize memory usage button.\n\n"
 "Ghost windows can happen legitimately, but they are often indicative of "
 "leaks in the browser or add-ons.");
+  // clang-format on
 
   WindowPaths windowPaths;
   WindowPaths topWindowPaths;
