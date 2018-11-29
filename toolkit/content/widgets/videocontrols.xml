@@ -1281,7 +1281,7 @@
       },
 
       get isVideoInFullScreen() {
-        return document.mozFullScreenElement == this.video;
+        return this.video.getRootNode().mozFullScreenElement == this.video;
       },
 
       toggleFullscreen() {
