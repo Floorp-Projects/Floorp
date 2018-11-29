@@ -60,32 +60,43 @@ LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo,
   MOZ_ASSERT(!mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
-  const nsTArray<LSItemInfo>& itemInfos = aInitInfo.itemInfos();
-  for (uint32_t i = 0; i < itemInfos.Length(); i++) {
-    const LSItemInfo& itemInfo = itemInfos[i];
-    mLoadedItems.PutEntry(itemInfo.key());
-    mValues.Put(itemInfo.key(), itemInfo.value());
-  }
-
-  if (itemInfos.Length() == aInitInfo.totalLength()) {
-    mLoadState = LoadState::AllOrderedItems;
-  } else {
-    mLoadState = LoadState::Partial;
-    mInitLength = aInitInfo.totalLength();
-    mLength = mInitLength;
-  }
-
-  mExactUsage = aInitInfo.initialUsage();
-  mPeakUsage = aInitInfo.peakUsage();
-
-  mExplicit = aExplicit;
-
-  if (mExplicit) {
+  if (aExplicit) {
     mSelfRef = this;
   } else {
     nsCOMPtr<nsIRunnable> runnable = this;
     nsContentUtils::RunInStableState(runnable.forget());
   }
+
+  LoadState loadState = aInitInfo.loadState();
+
+  const nsTArray<LSItemInfo>& itemInfos = aInitInfo.itemInfos();
+  for (uint32_t i = 0; i < itemInfos.Length(); i++) {
+    const LSItemInfo& itemInfo = itemInfos[i];
+
+    const nsString& value = itemInfo.value();
+
+    if (loadState != LoadState::AllOrderedItems && !value.IsVoid()) {
+      mLoadedItems.PutEntry(itemInfo.key());
+    }
+
+    mValues.Put(itemInfo.key(), value);
+  }
+
+  if (loadState == LoadState::Partial) {
+    mInitLength = aInitInfo.totalLength();
+    mLength = mInitLength;
+  } else if (loadState == LoadState::AllOrderedKeys) {
+    mInitLength = aInitInfo.totalLength();
+  } else {
+    MOZ_ASSERT(loadState == LoadState::AllOrderedItems);
+  }
+
+  mExactUsage = aInitInfo.initialUsage();
+  mPeakUsage = aInitInfo.peakUsage();
+
+  mLoadState = aInitInfo.loadState();
+
+  mExplicit = aExplicit;
 
 #ifdef DEBUG
   mInitialized = true;

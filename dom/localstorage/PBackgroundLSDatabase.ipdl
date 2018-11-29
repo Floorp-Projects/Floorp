@@ -5,6 +5,11 @@
 include protocol PBackground;
 include protocol PBackgroundLSSnapshot;
 
+include "mozilla/dom/localstorage/SerializationHelpers.h";
+
+using mozilla::dom::LSSnapshot::LoadState
+  from "mozilla/dom/LSSnapshot.h";
+
 namespace mozilla {
 namespace dom {
 
@@ -20,6 +25,7 @@ struct LSSnapshotInitInfo
   uint32_t totalLength;
   int64_t initialUsage;
   int64_t peakUsage;
+  LoadState loadState;
 };
 
 sync protocol PBackgroundLSDatabase
