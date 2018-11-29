@@ -1403,12 +1403,9 @@ NS_IMETHODIMP nsDocLoader::OnSecurityChange(
 
   nsCOMPtr<nsIRequest> request = do_QueryInterface(aContext);
   nsIWebProgress* webProgress = static_cast<nsIWebProgress*>(this);
-  nsAutoString contentBlockingLogJSON(
-      aContentBlockingLog ? aContentBlockingLog->Stringify() : EmptyString());
 
   NOTIFY_LISTENERS(nsIWebProgress::NOTIFY_SECURITY,
-                   listener->OnSecurityChange(webProgress, request, aOldState,
-                                              aState, contentBlockingLogJSON););
+                   listener->OnSecurityChange(webProgress, request, aState););
 
   // Pass the notification up to the parent...
   if (mParent) {
