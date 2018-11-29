@@ -38,6 +38,7 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/HangDetails.h"
+#include "nscore.h"
 #include "nsDebugImpl.h"
 #include "nsIGfxInfo.h"
 #include "nsThreadManager.h"
@@ -47,6 +48,8 @@
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
+#include "cairo.h"
+#include "skia/include/core/SkGraphics.h"
 #if defined(XP_WIN)
 # include "mozilla/gfx/DeviceManagerDx.h"
 # include <process.h>
@@ -54,6 +57,7 @@
 #endif
 #ifdef MOZ_WIDGET_GTK
 # include <gtk/gtk.h>
+# include "skia/include/ports/SkTypeface_cairo.h"
 #endif
 #ifdef MOZ_GECKO_PROFILER
 #include "ChildProfilerController.h"
@@ -220,6 +224,10 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
     LayerTreeOwnerTracker::Get()->Map(map.layersId(), map.ownerId());
   }
 
+  // We bypass gfxPlatform::Init, so we must initialize any relevant libraries
+  // here that would normally be initialized there.
+  SkGraphics::Init();
+
 #if defined(XP_WIN)
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     DeviceManagerDx::Get()->CreateCompositorDevices();
@@ -260,6 +268,8 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
     FT_Library library = Factory::NewFTLibrary();
     MOZ_ASSERT(library);
     Factory::SetFTLibrary(library);
+
+    SkInitCairoFT(true);
   }
 #endif
 
@@ -552,6 +562,14 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 #endif
 
   Factory::ShutDown();
+
+  // We bypass gfxPlatform shutdown, so we must shutdown any libraries here
+  // that would normally be handled by it.
+#ifdef NS_FREE_PERMANENT_DATA
+  SkGraphics::PurgeFontCache();
+  cairo_debug_reset_static_data();
+#endif
+
 #if defined(XP_WIN)
   DeviceManagerDx::Shutdown();
 #endif
