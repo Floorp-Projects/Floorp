@@ -467,6 +467,8 @@ var gBrowserLanguagesDialog = {
       this._availableLocales.items.shift();
       this._availableLocales.setItems(this._availableLocales.items);
     }
+    // The label isn't always reset when the selected item is removed, so set it again.
+    this._availableLocales.enableWithMessageId("browser-languages-select-language");
   },
 
   async requestRemoteLanguage(item) {
