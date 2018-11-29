@@ -1522,6 +1522,13 @@ var generateRequestMethods = function(actorSpec, frontProto) {
     }
 
     frontProto[name] = function(...args) {
+      // If this.actorID are not available, the request will not be able to complete.
+      // The front was probably destroyed earlier.
+      if (!this.actorID) {
+        throw new Error(
+          `Can not send request because front '${this.typeName}' is already destroyed.`);
+      }
+
       let packet;
       try {
         packet = spec.request.write(args, this);
