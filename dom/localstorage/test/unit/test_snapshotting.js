@@ -3,9 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator = testSteps();
-
-function* testSteps()
+async function testSteps()
 {
   const url = "http://example.com";
 
@@ -72,8 +70,7 @@ function* testSteps()
     info("Returning to event loop");
 
     // Returning to event loop forces the internal snapshot to finish.
-    continueToNextStep();
-    yield undefined;
+    await returnToEventLoop();
 
     // 2nd snapshot
 
@@ -99,8 +96,7 @@ function* testSteps()
 
     info("Returning to event loop");
 
-    continueToNextStep();
-    yield undefined;
+    await returnToEventLoop();
 
     // 3rd snapshot
 
@@ -136,8 +132,7 @@ function* testSteps()
 
     info("Returning to event loop");
 
-    continueToNextStep();
-    yield undefined;
+    await returnToEventLoop();
 
     // 4th snapshot
 
@@ -156,8 +151,7 @@ function* testSteps()
 
     info("Returning to event loop");
 
-    continueToNextStep();
-    yield undefined;
+    await returnToEventLoop();
 
     // 5th snapshot
 
@@ -181,8 +175,7 @@ function* testSteps()
 
     info("Returning to event loop");
 
-    continueToNextStep();
-    yield undefined;
+    await returnToEventLoop();
 
     // 6th snapshot
     info("Verifying unknown item");
@@ -195,8 +188,7 @@ function* testSteps()
 
     info("Returning to event loop");
 
-    continueToNextStep();
-    yield undefined;
+    await returnToEventLoop();
 
     // 7th snapshot
 
@@ -205,8 +197,7 @@ function* testSteps()
 
     savedKeys = Object.keys(storage);
 
-    continueToNextStep();
-    yield undefined;
+    await returnToEventLoop();
 
     // 8th snapshot
 
@@ -228,8 +219,7 @@ function* testSteps()
       is(keys[i], savedKeys[i], "Correct key");
     }
 
-    continueToNextStep();
-    yield undefined;
+    await returnToEventLoop();
 
     // 9th snapshot
 
@@ -239,9 +229,6 @@ function* testSteps()
 
     info("Returning to event loop");
 
-    continueToNextStep();
-    yield undefined;
+    await returnToEventLoop();
   }
-
-  finishTest();
 }

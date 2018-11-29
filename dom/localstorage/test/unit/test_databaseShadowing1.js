@@ -3,11 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator = testSteps();
-
 loadSubscript("databaseShadowing-shared.js");
 
-function* testSteps()
+async function testSteps()
 {
   enableNextGenLocalStorage();
 
@@ -16,12 +14,10 @@ function* testSteps()
   verifyData([]);
 
   // Wait for all database connections to close.
-  reset(continueToNextStepSync);
-  yield undefined;
+  let request = reset();
+  await requestFinished(request);
 
   exportShadowDatabase("shadowdb.sqlite");
 
   // The shadow database is now prepared for test_databaseShadowing2.js
-
-  finishTest();
 }

@@ -3,9 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator = testSteps();
-
-function* testSteps()
+async function testSteps()
 {
   const principalInfos = [
     { url: "http://localhost", attrs: {} },
@@ -59,8 +57,8 @@ function* testSteps()
 
   info("Clearing");
 
-  clear(continueToNextStepSync);
-  yield undefined;
+  let request = clear();
+  await requestFinished(request);
 
   info("Installing package");
 
@@ -77,8 +75,8 @@ function* testSteps()
   for (let type of ["origin", "prefix", "pattern"]) {
     info("Clearing");
 
-    clear(continueToNextStepSync);
-    yield undefined;
+    request = clear();
+    await requestFinished(request);
 
     info("Installing package");
 
@@ -90,8 +88,8 @@ function* testSteps()
     switch (type) {
       case "origin": {
         let principal = getPrincipal("http://origin.test", {});
-        clearOrigin(principal, "default", continueToNextStepSync);
-        yield undefined;
+        request = clearOrigin(principal, "default");
+        await requestFinished(request);
 
         clearedOrigins.push(4);
 
@@ -100,8 +98,8 @@ function* testSteps()
 
       case "prefix": {
         let principal = getPrincipal("http://prefix.test", {});
-        clearOriginsByPrefix(principal, "default", continueToNextStepSync);
-        yield undefined;
+        request = clearOriginsByPrefix(principal, "default");
+        await requestFinished(request);
 
         clearedOrigins.push(5, 6);
 
@@ -109,9 +107,8 @@ function* testSteps()
       }
 
       case "pattern": {
-        clearOriginsByPattern(JSON.stringify({ userContextId: 15 }),
-                              continueToNextStepSync);
-        yield undefined;
+        request = clearOriginsByPattern(JSON.stringify({ userContextId: 15 }));
+        await requestFinished(request);
 
         clearedOrigins.push(7, 8, 9);
 
@@ -125,6 +122,4 @@ function* testSteps()
 
     verifyData(clearedOrigins);
   }
-
-  finishTest();
 }
