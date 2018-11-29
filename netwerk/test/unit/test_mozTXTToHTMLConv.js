@@ -16,27 +16,15 @@ function run_test() {
       input: "RFC1738: <URL:http://mozilla.org> then",
       url: "http://mozilla.org"
     },
-    {
-      input: "RFC1738: <URL:mailto:john.doe+test@mozilla.org> then",
-      url: "mailto:john.doe+test@mozilla.org"
-    },
     // -- RFC2396E
     {
       input: "RFC2396E: <http://mozilla.org/> then",
       url: "http://mozilla.org/"
     },
-    {
-      input: "RFC2396E: <john.doe+test@mozilla.org> then",
-      url: "mailto:john.doe+test@mozilla.org"
-    },
     // -- abbreviated
     {
       input: "see www.mozilla.org maybe",
       url: "http://www.mozilla.org"
-    },
-    {
-      input: "mail john.doe+test@mozilla.org maybe",
-      url: "mailto:john.doe+test@mozilla.org"
     },
     // -- delimiters
     {
@@ -98,24 +86,12 @@ function run_test() {
       url: "http://localhost/"
     },
     {
-      input: "bracket: john.doe+test@mozilla.org[1] etc.",
-      url: "mailto:john.doe+test@mozilla.org"
-    },
-    {
       input: "parenthesis: (http://localhost/) etc.",
       url: "http://localhost/"
     },
     {
-      input: "parenthesis: (john.doe+test@mozilla.org) etc.",
-      url: "mailto:john.doe+test@mozilla.org"
-    },
-    {
       input: "(thunderbird)http://mozilla.org/thunderbird",
       url: "http://mozilla.org/thunderbird"
-    },
-    {
-      input: "(mail)john.doe+test@mozilla.org",
-      url: "mailto:john.doe+test@mozilla.org"
     },
     {
       input: "()http://mozilla.org",
@@ -148,16 +124,6 @@ function run_test() {
     {
       input: "test http://www.map.com/map.php?t=Nova_Scotia&markers=//Not_a_survey||description=plm2 test",
       url: "http://www.map.com/map.php?t=Nova_Scotia&amp;markers=//Not_a_survey||description=plm2"
-    },
-    {
-      input: "bug#1509493 (john@mozilla.org)john@mozilla.org test",
-      url: "mailto:john@mozilla.org",
-      text: "john@mozilla.org"
-    },
-    {
-      input: "bug#1509493 {john@mozilla.org}john@mozilla.org test",
-      url: "mailto:john@mozilla.org",
-      text: "john@mozilla.org"
     }
   ];
 
@@ -220,23 +186,13 @@ function run_test() {
     return ' href="' + url + '"';
   }
 
-  function linkText(plaintext) {
-    return '>' + plaintext + '</a>';
-  }
-
   for (let i = 0; i < scanTXTtests.length; i++) {
     let t = scanTXTtests[i];
     let output = converter.scanTXT(t.input, Ci.mozITXTToHTMLConv.kURLs);
     let link = hrefLink(t.url);
-    let text;
-    if (t.text)
-      text = linkText(t.text);
     if (!output.includes(link))
       do_throw("Unexpected conversion by scanTXT: input=" + t.input +
                ", output=" + output + ", link=" + link);
-    if (text && !output.includes(text))
-      do_throw("Unexpected conversion by scanTXT: input=" + t.input +
-               ", output=" + output + ", text=" + text);
   }
 
   for (let i = 0; i < scanHTMLtests.length; i++) {
