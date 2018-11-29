@@ -48,7 +48,20 @@ LocalStorageManager2::CreateStorage(mozIDOMWindow* aWindow,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(_retval);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
+
+  RefPtr<LSObject> object;
+  nsresult rv = LSObject::CreateForPrincipal(inner,
+                                             aPrincipal,
+                                             aDocumentURI,
+                                             aPrivate,
+                                             getter_AddRefs(object));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  object.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
