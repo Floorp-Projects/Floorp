@@ -182,7 +182,13 @@ void
 ShadowRoot::Unattach()
 {
   MOZ_ASSERT(!HasSlots(), "Won't work!");
-  MOZ_ASSERT(GetHost());
+  if (!GetHost()) {
+    // It is possible that we've been unlinked already. In such case host
+    // should have called Unbind and ShadowRoot's own unlink
+    // RemoveMutationObserver.
+    return;
+  }
+
   Unbind();
   GetHost()->RemoveMutationObserver(this);
   SetHost(nullptr);
