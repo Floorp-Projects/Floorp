@@ -317,6 +317,8 @@ class nsGridContainerFrame final : public nsContainerFrame {
   void AddImplicitNamedAreas(
       const nsTArray<nsTArray<nsString>>& aLineNameLists);
 
+  void NormalizeChildLists();
+
   /**
    * Reflow and place our children.
    * @return the consumed size of all of this grid container's continuations
