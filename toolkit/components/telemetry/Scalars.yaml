@@ -1038,6 +1038,62 @@ devtools.copy.xpath:
     record_in_processes:
       - 'main'
 
+devtools.layout.flexboxhighlighter:
+  opened:
+    bug_numbers:
+      - 1509907
+    description: >
+      Number of times the DevTools flexbox highlighter was activated from the layout view.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.markup.flexboxhighlighter:
+  opened:
+    bug_numbers:
+      - 1509907
+    description: >
+      Number of times the DevTools flexbox highlighter was activated from the markup view.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.rules.flexboxhighlighter:
+  opened:
+    bug_numbers:
+      - 1509907
+    description: >
+      Number of times the DevTools flexbox highlighter was activated from the rules view.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.markup.gridinspector:
+  opened:
+    bug_numbers:
+      - 1509907
+    description: >
+      Number of times the DevTools grid inspector was opened from the markup view.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools.rules.gridinspector:
   opened:
     bug_numbers:
