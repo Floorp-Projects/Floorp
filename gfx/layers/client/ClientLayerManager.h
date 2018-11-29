@@ -327,6 +327,7 @@ private:
   bool mCompositorMightResample;
   bool mNeedsComposite;
   bool mQueuedAsyncPaints;
+  bool mNotifyingWidgetListener;
 
   // An incrementing sequence number for paints.
   // Incremented in BeginTransaction(), but not for repeat transactions.
