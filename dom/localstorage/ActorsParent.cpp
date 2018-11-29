@@ -23,6 +23,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
 #include "nsISimpleEnumerator.h"
 #include "ReportInternalError.h"
 
@@ -46,6 +47,8 @@ using namespace mozilla::ipc;
 
 namespace {
 
+class Connection;
+class ConnectionThread;
 class Database;
 
 /*******************************************************************************
@@ -96,6 +99,14 @@ static_assert(kSQLiteGrowthIncrement >= 0 &&
 
 #define DATA_FILE_NAME "data.sqlite"
 #define JOURNAL_FILE_NAME "data.sqlite-journal"
+
+const uint32_t kAutoCommitTimeoutMs = 5000;
+
+bool
+IsOnConnectionThread();
+
+void
+AssertIsOnConnectionThread();
 
 /*******************************************************************************
  * SQLite functions
@@ -392,6 +403,53 @@ CreateStorageConnection(nsIFile* aDBFile,
   return NS_OK;
 }
 
+nsresult
+GetStorageConnection(const nsAString& aDatabaseFilePath,
+                     mozIStorageConnection** aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
+  MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, NS_LITERAL_STRING(".sqlite")));
+  MOZ_ASSERT(aConnection);
+
+  nsCOMPtr<nsIFile> databaseFile;
+  nsresult rv = NS_NewLocalFile(aDatabaseFilePath, false,
+                                getter_AddRefs(databaseFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = databaseFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(!exists)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageConnection> connection;
+  rv = ss->OpenDatabase(databaseFile, getter_AddRefs(connection));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = SetDefaultPragmas(connection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  connection.forget(aConnection);
+  return NS_OK;
+}
+
 /*******************************************************************************
  * Non-actor class declarations
  ******************************************************************************/
@@ -434,6 +492,15 @@ public:
   ResultCode() const
   {
     return mResultCode;
+  }
+
+  void
+  SetFailureCode(nsresult aErrorCode)
+  {
+    MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
+    MOZ_ASSERT(NS_FAILED(aErrorCode));
+
+    mResultCode = aErrorCode;
   }
 
   void
@@ -486,9 +553,303 @@ protected:
   }
 };
 
+class ConnectionDatastoreOperationBase
+  : public DatastoreOperationBase
+{
+protected:
+  RefPtr<Connection> mConnection;
+
+public:
+  // This callback will be called on the background thread before releasing the
+  // final reference to this request object. Subclasses may perform any
+  // additional cleanup here but must always call the base class implementation.
+  virtual void
+  Cleanup();
+
+protected:
+  ConnectionDatastoreOperationBase(Connection* aConnection);
+
+  ~ConnectionDatastoreOperationBase();
+
+  // Must be overridden in subclasses. Called on the target thread to allow the
+  // subclass to perform necessary datastore operations. A successful return
+  // value will trigger an OnSuccess callback on the background thread while
+  // while a failure value will trigger an OnFailure callback.
+  virtual nsresult
+  DoDatastoreWork() = 0;
+
+  // Methods that subclasses may implement.
+  virtual void
+  OnSuccess();
+
+  virtual void
+  OnFailure(nsresult aResultCode);
+
+private:
+  void
+  RunOnConnectionThread();
+
+  void
+  RunOnOwningThread();
+
+  // Not to be overridden by subclasses.
+  NS_DECL_NSIRUNNABLE
+};
+
+class Connection final
+{
+  friend class ConnectionThread;
+
+public:
+  class CachedStatement;
+
+private:
+  class BeginOp;
+  class CommitOp;
+  class CloseOp;
+
+  RefPtr<ConnectionThread> mConnectionThread;
+  nsCOMPtr<mozIStorageConnection> mStorageConnection;
+  nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
+    mCachedStatements;
+  const nsCString mOrigin;
+  const nsString mFilePath;
+  bool mInTransaction;
+
+public:
+  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Connection)
+
+  void
+  AssertIsOnOwningThread() const
+  {
+    NS_ASSERT_OWNINGTHREAD(Connection);
+  }
+
+  // Methods which can only be called on the owning thread.
+
+  bool
+  InTransaction()
+  {
+    AssertIsOnOwningThread();
+    return mInTransaction;
+  }
+
+  // This method is used to asynchronously execute a connection datastore
+  // operation on the connection thread.
+  void
+  Dispatch(ConnectionDatastoreOperationBase* aOp);
+
+  // This method is used to asynchronously start a transaction on the connection
+  // thread.
+  void
+  Begin(bool aReadonly);
+
+  // This method is used to asynchronously end a transaction on the connection
+  // thread.
+  void
+  Commit();
+
+  // This method is used to asynchronously close the storage connection on the
+  // connection thread.
+  void
+  Close(nsIRunnable* aCallback);
+
+  // Methods which can only be called on the connection thread.
+
+  nsresult
+  EnsureStorageConnection();
+
+  mozIStorageConnection*
+  StorageConnection() const
+  {
+    AssertIsOnConnectionThread();
+    MOZ_ASSERT(mStorageConnection);
+
+    return mStorageConnection;
+  }
+
+  void
+  CloseStorageConnection();
+
+  nsresult
+  GetCachedStatement(const nsACString& aQuery,
+                     CachedStatement* aCachedStatement);
+
+private:
+  // Only created by ConnectionThread.
+  Connection(ConnectionThread* aConnectionThread,
+             const nsACString& aOrigin,
+             const nsAString& aFilePath);
+
+  ~Connection();
+};
+
+class Connection::CachedStatement final
+{
+  friend class Connection;
+
+  nsCOMPtr<mozIStorageStatement> mStatement;
+  Maybe<mozStorageStatementScoper> mScoper;
+
+public:
+  CachedStatement();
+  ~CachedStatement();
+
+  mozIStorageStatement*
+  operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN;
+
+private:
+  // Only called by Connection.
+  void
+  Assign(Connection* aConnection,
+         already_AddRefed<mozIStorageStatement> aStatement);
+
+  // No funny business allowed.
+  CachedStatement(const CachedStatement&) = delete;
+  CachedStatement& operator=(const CachedStatement&) = delete;
+};
+
+class Connection::BeginOp final
+  : public ConnectionDatastoreOperationBase
+{
+  const bool mReadonly;
+
+public:
+  BeginOp(Connection* aConnection,
+          bool aReadonly)
+    : ConnectionDatastoreOperationBase(aConnection)
+    , mReadonly(aReadonly)
+  { }
+
+private:
+  nsresult
+  DoDatastoreWork() override;
+};
+
+class Connection::CommitOp final
+  : public ConnectionDatastoreOperationBase
+{
+public:
+  explicit CommitOp(Connection* aConnection)
+    : ConnectionDatastoreOperationBase(aConnection)
+  { }
+
+private:
+  nsresult
+  DoDatastoreWork() override;
+};
+
+class Connection::CloseOp final
+  : public ConnectionDatastoreOperationBase
+{
+  nsCOMPtr<nsIRunnable> mCallback;
+
+public:
+  CloseOp(Connection* aConnection,
+          nsIRunnable* aCallback)
+    : ConnectionDatastoreOperationBase(aConnection)
+    , mCallback(aCallback)
+  { }
+
+private:
+  nsresult
+  DoDatastoreWork() override;
+
+  void
+  Cleanup() override;
+};
+
+class ConnectionThread final
+{
+  friend class Connection;
+
+  nsCOMPtr<nsIThread> mThread;
+  nsRefPtrHashtable<nsCStringHashKey, Connection> mConnections;
+
+public:
+  ConnectionThread();
+
+  void
+  AssertIsOnOwningThread() const
+  {
+    NS_ASSERT_OWNINGTHREAD(ConnectionThread);
+  }
+
+  bool
+  IsOnConnectionThread();
+
+  void
+  AssertIsOnConnectionThread();
+
+  already_AddRefed<Connection>
+  CreateConnection(const nsACString& aOrigin,
+                   const nsAString& aFilePath);
+
+  void
+  Shutdown();
+
+  NS_INLINE_DECL_REFCOUNTING(ConnectionThread)
+
+private:
+  ~ConnectionThread();
+};
+
+class SetItemOp final
+  : public ConnectionDatastoreOperationBase
+{
+  nsString mKey;
+  nsString mValue;
+
+public:
+  SetItemOp(Connection* aConnection,
+            const nsAString& aKey,
+            const nsAString& aValue)
+    : ConnectionDatastoreOperationBase(aConnection)
+    , mKey(aKey)
+    , mValue(aValue)
+  { }
+
+private:
+  nsresult
+  DoDatastoreWork() override;
+};
+
+class RemoveItemOp final
+  : public ConnectionDatastoreOperationBase
+{
+  nsString mKey;
+
+public:
+  RemoveItemOp(Connection* aConnection,
+               const nsAString& aKey)
+    : ConnectionDatastoreOperationBase(aConnection)
+    , mKey(aKey)
+  { }
+
+private:
+  nsresult
+  DoDatastoreWork() override;
+};
+
+class ClearOp final
+  : public ConnectionDatastoreOperationBase
+{
+public:
+  explicit ClearOp(Connection* aConnection)
+    : ConnectionDatastoreOperationBase(aConnection)
+  { }
+
+private:
+  nsresult
+  DoDatastoreWork() override;
+};
+
 class Datastore final
 {
   RefPtr<DirectoryLock> mDirectoryLock;
+  RefPtr<Connection> mConnection;
+  nsCOMPtr<nsITimer> mAutoCommitTimer;
+  nsCOMPtr<nsIRunnable> mCompleteCallback;
   nsTHashtable<nsPtrHashKey<Database>> mDatabases;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
   const nsCString mOrigin;
@@ -497,7 +858,9 @@ class Datastore final
 public:
   // Created by PrepareDatastoreOp.
   Datastore(const nsACString& aOrigin,
-            already_AddRefed<DirectoryLock>&& aDirectoryLock);
+            already_AddRefed<DirectoryLock>&& aDirectoryLock,
+            already_AddRefed<Connection>&& aConnection,
+            nsDataHashtable<nsStringHashKey, nsString>& aValues);
 
   const nsCString&
   Origin() const
@@ -515,6 +878,9 @@ public:
 
     return mClosed;
   }
+
+  void
+  WaitForConnectionToComplete(nsIRunnable* aCallback);
 
   void
   NoteLiveDatabase(Database* aDatabase);
@@ -551,6 +917,15 @@ public:
 private:
   // Reference counted.
   ~Datastore();
+
+  void
+  ConnectionClosedCallback();
+
+  void
+  EnsureTransaction();
+
+  static void
+  AutoCommitTimerCallback(nsITimer* aTimer, void* aClosure);
 };
 
 class PreparedDatastore
@@ -687,7 +1062,7 @@ public:
   virtual void
   Dispatch() = 0;
 
-private:
+protected:
   // IPDL methods.
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
@@ -700,18 +1075,25 @@ class PrepareDatastoreOp
   : public LSRequestBase
   , public OpenDirectoryListener
 {
+  class LoadDataOp;
+
   enum class State
   {
     // Just created on the PBackground thread. Next step is OpeningOnMainThread
     // or OpeningOnOwningThread.
     Initial,
 
-    // Waiting to open/opening on the main thread. Next step is FinishOpen.
+    // Waiting to open/opening on the main thread. Next step is
+    // CheckExistingOperations.
     Opening,
 
     // Checking if a prepare datastore operation is already running for given
-    // origin on the PBackground thread. Next step is PreparationPending.
-    FinishOpen,
+    // origin on the PBackground thread. Next step is CheckClosingDatastore.
+    CheckExistingOperations,
+
+    // Checking if a datastore is closing the connection for given origin on
+    // the PBackground thread. Next step is PreparationPending.
+    CheckClosingDatastore,
 
     // Opening directory or initializing quota manager on the PBackground
     // thread. Next step is either DirectoryOpenPending if quota manager is
@@ -732,8 +1114,17 @@ class PrepareDatastoreOp
     DirectoryOpenPending,
 
     // Waiting to do/doing work on the QuotaManager IO thread. Its next step is
-    // SendingReadyMessage.
+    // BeginLoadData.
     DatabaseWorkOpen,
+
+    // Starting a load data operation on the PBackground thread. Next step is
+    // DatabaseWorkLoadData.
+    BeginLoadData,
+
+    // Waiting to do/doing work on the connection thread. This involves waiting
+    // for the LoadDataOp to do its work. Eventually the state will transition
+    // to SendingReadyMessage.
+    DatabaseWorkLoadData,
 
     // Waiting to send/sending the ready message on the PBackground thread. Next
     // step is WaitingForFinish.
@@ -754,12 +1145,16 @@ class PrepareDatastoreOp
   nsCOMPtr<nsIEventTarget> mMainEventTarget;
   RefPtr<PrepareDatastoreOp> mDelayedOp;
   RefPtr<DirectoryLock> mDirectoryLock;
+  RefPtr<Connection> mConnection;
   RefPtr<Datastore> mDatastore;
+  LoadDataOp* mLoadDataOp;
+  nsDataHashtable<nsStringHashKey, nsString> mValues;
   const LSRequestPrepareDatastoreParams mParams;
   nsCString mSuffix;
   nsCString mGroup;
   nsCString mMainThreadOrigin;
   nsCString mOrigin;
+  nsString mDatabaseFilePath;
   State mState;
   bool mRequestedDirectoryLock;
   bool mInvalidated;
@@ -811,7 +1206,10 @@ private:
   Open();
 
   nsresult
-  FinishOpen();
+  CheckExistingOperations();
+
+  nsresult
+  CheckClosingDatastore();
 
   nsresult
   PreparationOpen();
@@ -834,6 +1232,9 @@ private:
   nsresult
   VerifyDatabaseInformation(mozIStorageConnection* aConnection);
 
+  nsresult
+  BeginLoadData();
+
   void
   SendReadyMessage();
 
@@ -843,12 +1244,21 @@ private:
   void
   Cleanup();
 
+  void
+  ConnectionClosedCallback();
+
+  void
+  CleanupMetadata();
+
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
   Run() override;
 
   // IPDL overrides.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
   mozilla::ipc::IPCResult
   RecvFinish() override;
 
@@ -858,6 +1268,33 @@ private:
 
   void
   DirectoryLockFailed() override;
+};
+
+class PrepareDatastoreOp::LoadDataOp final
+  : public ConnectionDatastoreOperationBase
+{
+  RefPtr<PrepareDatastoreOp> mPrepareDatastoreOp;
+
+public:
+  explicit LoadDataOp(PrepareDatastoreOp* aPrepareDatastoreOp)
+    : ConnectionDatastoreOperationBase(aPrepareDatastoreOp->mConnection)
+    , mPrepareDatastoreOp(aPrepareDatastoreOp)
+  { }
+
+private:
+  ~LoadDataOp() = default;
+
+  nsresult
+  DoDatastoreWork() override;
+
+  void
+  OnSuccess() override;
+
+  void
+  OnFailure(nsresult aResultCode) override;
+
+  void
+  Cleanup() override;
 };
 
 /*******************************************************************************
@@ -970,6 +1407,22 @@ StaticAutoPtr<PreparedDatastoreHashtable> gPreparedDatastores;
 typedef nsTArray<Database*> LiveDatabaseArray;
 
 StaticAutoPtr<LiveDatabaseArray> gLiveDatabases;
+
+StaticRefPtr<ConnectionThread> gConnectionThread;
+
+bool
+IsOnConnectionThread()
+{
+  MOZ_ASSERT(gConnectionThread);
+  return gConnectionThread->IsOnConnectionThread();
+}
+
+void
+AssertIsOnConnectionThread()
+{
+  MOZ_ASSERT(gConnectionThread);
+  gConnectionThread->AssertIsOnConnectionThread();
+}
 
 } // namespace
 
@@ -1144,16 +1597,517 @@ CreateQuotaClient()
  ******************************************************************************/
 
 /*******************************************************************************
+ * ConnectionDatastoreOperationBase
+ ******************************************************************************/
+
+ConnectionDatastoreOperationBase::ConnectionDatastoreOperationBase(
+                                                        Connection* aConnection)
+  : mConnection(aConnection)
+{
+  MOZ_ASSERT(aConnection);
+}
+
+ConnectionDatastoreOperationBase::~ConnectionDatastoreOperationBase()
+{
+  MOZ_ASSERT(!mConnection,
+             "ConnectionDatabaseOperationBase::Cleanup() was not called by a "
+             "subclass!");
+}
+
+void
+ConnectionDatastoreOperationBase::Cleanup()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mConnection);
+
+  mConnection = nullptr;
+
+  NoteComplete();
+}
+
+void
+ConnectionDatastoreOperationBase::OnSuccess()
+{
+  AssertIsOnOwningThread();
+}
+
+void
+ConnectionDatastoreOperationBase::OnFailure(nsresult aResultCode)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_FAILED(aResultCode));
+}
+
+void
+ConnectionDatastoreOperationBase::RunOnConnectionThread()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mConnection);
+  MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
+
+  if (!MayProceedOnNonOwningThread()) {
+    SetFailureCode(NS_ERROR_FAILURE);
+  } else {
+    nsresult rv = mConnection->EnsureStorageConnection();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      SetFailureCode(rv);
+    } else {
+      MOZ_ASSERT(mConnection->StorageConnection());
+
+      rv = DoDatastoreWork();
+      if (NS_FAILED(rv)) {
+        SetFailureCode(rv);
+      }
+    }
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
+}
+
+void
+ConnectionDatastoreOperationBase::RunOnOwningThread()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mConnection);
+
+  if (!MayProceed()) {
+    MaybeSetFailureCode(NS_ERROR_FAILURE);
+  } else {
+    if (NS_SUCCEEDED(ResultCode())) {
+      OnSuccess();
+    } else {
+      OnFailure(ResultCode());
+    }
+  }
+
+  Cleanup();
+}
+
+NS_IMETHODIMP
+ConnectionDatastoreOperationBase::Run()
+{
+  if (IsOnConnectionThread()) {
+    RunOnConnectionThread();
+  } else {
+    RunOnOwningThread();
+  }
+
+  return NS_OK;
+}
+
+/*******************************************************************************
+ * Connection implementation
+ ******************************************************************************/
+
+Connection::Connection(ConnectionThread* aConnectionThread,
+                       const nsACString& aOrigin,
+                       const nsAString& aFilePath)
+  : mConnectionThread(aConnectionThread)
+  , mOrigin(aOrigin)
+  , mFilePath(aFilePath)
+  , mInTransaction(false)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!aOrigin.IsEmpty());
+  MOZ_ASSERT(!aFilePath.IsEmpty());
+}
+
+Connection::~Connection()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!mStorageConnection);
+  MOZ_ASSERT(!mCachedStatements.Count());
+  MOZ_ASSERT(!mInTransaction);
+}
+
+void
+Connection::Dispatch(ConnectionDatastoreOperationBase* aOp)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mConnectionThread);
+
+  MOZ_ALWAYS_SUCCEEDS(mConnectionThread->mThread->Dispatch(aOp,
+                                                           NS_DISPATCH_NORMAL));
+}
+
+void
+Connection::Begin(bool aReadonly)
+{
+  AssertIsOnOwningThread();
+
+  RefPtr<BeginOp> op = new BeginOp(this, aReadonly);
+
+  Dispatch(op);
+
+  mInTransaction = true;
+}
+
+void
+Connection::Commit()
+{
+  AssertIsOnOwningThread();
+
+  RefPtr<CommitOp> op = new CommitOp(this);
+
+  Dispatch(op);
+
+  mInTransaction = false;
+}
+
+void
+Connection::Close(nsIRunnable* aCallback)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aCallback);
+
+  RefPtr<CloseOp> op = new CloseOp(this, aCallback);
+
+  Dispatch(op);
+}
+
+nsresult
+Connection::EnsureStorageConnection()
+{
+  AssertIsOnConnectionThread();
+
+  if (!mStorageConnection) {
+    nsCOMPtr<mozIStorageConnection> storageConnection;
+    nsresult rv =
+      GetStorageConnection(mFilePath,
+                           getter_AddRefs(storageConnection));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    mStorageConnection = storageConnection;
+  }
+
+  return NS_OK;
+}
+
+void
+Connection::CloseStorageConnection()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mStorageConnection);
+
+  mCachedStatements.Clear();
+
+  MOZ_ALWAYS_SUCCEEDS(mStorageConnection->Close());
+  mStorageConnection = nullptr;
+}
+
+nsresult
+Connection::GetCachedStatement(const nsACString& aQuery,
+                                       CachedStatement* aCachedStatement)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(!aQuery.IsEmpty());
+  MOZ_ASSERT(aCachedStatement);
+  MOZ_ASSERT(mStorageConnection);
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+
+  if (!mCachedStatements.Get(aQuery, getter_AddRefs(stmt))) {
+    nsresult rv =
+      mStorageConnection->CreateStatement(aQuery, getter_AddRefs(stmt));
+    if (NS_FAILED(rv)) {
+#ifdef DEBUG
+      nsCString msg;
+      MOZ_ALWAYS_SUCCEEDS(mStorageConnection->GetLastErrorString(msg));
+
+      nsAutoCString error =
+        NS_LITERAL_CSTRING("The statement '") + aQuery +
+        NS_LITERAL_CSTRING("' failed to compile with the error message '") +
+        msg + NS_LITERAL_CSTRING("'.");
+
+      NS_WARNING(error.get());
+#endif
+      return rv;
+    }
+
+    mCachedStatements.Put(aQuery, stmt);
+  }
+
+  aCachedStatement->Assign(this, stmt.forget());
+  return NS_OK;
+}
+
+Connection::
+CachedStatement::CachedStatement()
+{
+  AssertIsOnConnectionThread();
+
+  MOZ_COUNT_CTOR(Connection::CachedStatement);
+}
+
+Connection::
+CachedStatement::~CachedStatement()
+{
+  AssertIsOnConnectionThread();
+
+  MOZ_COUNT_DTOR(Connection::CachedStatement);
+}
+
+mozIStorageStatement*
+Connection::
+CachedStatement::operator->() const
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mStatement);
+
+  return mStatement;
+}
+
+void
+Connection::
+CachedStatement::Assign(Connection* aConnection,
+                        already_AddRefed<mozIStorageStatement> aStatement)
+{
+  AssertIsOnConnectionThread();
+
+  mScoper.reset();
+
+  mStatement = aStatement;
+
+  if (mStatement) {
+    mScoper.emplace(mStatement);
+  }
+}
+
+nsresult
+Connection::
+BeginOp::DoDatastoreWork()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mConnection);
+
+  CachedStatement stmt;
+  nsresult rv;
+  if (mReadonly) {
+    rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING("BEGIN;"), &stmt);
+  } else {
+    rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE;"),
+                                         &stmt);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+Connection::
+CommitOp::DoDatastoreWork()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mConnection);
+
+  CachedStatement stmt;
+  nsresult rv =
+    mConnection->GetCachedStatement(NS_LITERAL_CSTRING("COMMIT;"), &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+Connection::
+CloseOp::DoDatastoreWork()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mConnection);
+
+  mConnection->CloseStorageConnection();
+
+  return NS_OK;
+}
+
+void
+Connection::
+CloseOp::Cleanup()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mConnection);
+
+  mConnection->mConnectionThread->mConnections.Remove(mConnection->mOrigin);
+
+  nsCOMPtr<nsIRunnable> callback;
+  mCallback.swap(callback);
+
+  callback->Run();
+
+  ConnectionDatastoreOperationBase::Cleanup();
+}
+
+/*******************************************************************************
+ * ConnectionThread implementation
+ ******************************************************************************/
+
+ConnectionThread::ConnectionThread()
+{
+  AssertIsOnOwningThread();
+  AssertIsOnBackgroundThread();
+
+  MOZ_ALWAYS_SUCCEEDS(NS_NewNamedThread("LS Thread", getter_AddRefs(mThread)));
+}
+
+ConnectionThread::~ConnectionThread()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!mConnections.Count());
+}
+
+bool
+ConnectionThread::IsOnConnectionThread()
+{
+  MOZ_ASSERT(mThread);
+
+  bool current;
+  return NS_SUCCEEDED(mThread->IsOnCurrentThread(&current)) && current;
+}
+
+void
+ConnectionThread::AssertIsOnConnectionThread()
+{
+  MOZ_ASSERT(IsOnConnectionThread());
+}
+
+already_AddRefed<Connection>
+ConnectionThread::CreateConnection(const nsACString& aOrigin,
+                                   const nsAString& aFilePath)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!aOrigin.IsEmpty());
+  MOZ_ASSERT(!mConnections.GetWeak(aOrigin));
+
+  RefPtr<Connection> connection = new Connection(this, aOrigin, aFilePath);
+  mConnections.Put(aOrigin, connection);
+
+  return connection.forget();
+}
+
+void
+ConnectionThread::Shutdown()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mThread);
+
+  mThread->Shutdown();
+}
+
+nsresult
+SetItemOp::DoDatastoreWork()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mConnection);
+
+  Connection::CachedStatement stmt;
+  nsresult rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "INSERT OR REPLACE INTO data (key, value) "
+    "VALUES(:key, :value)"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+RemoveItemOp::DoDatastoreWork()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mConnection);
+
+  Connection::CachedStatement stmt;
+  nsresult rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM data "
+      "WHERE key = :key;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+ClearOp::DoDatastoreWork()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mConnection);
+
+  Connection::CachedStatement stmt;
+  nsresult rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM data;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+/*******************************************************************************
  * Datastore
  ******************************************************************************/
 
 Datastore::Datastore(const nsACString& aOrigin,
-                     already_AddRefed<DirectoryLock>&& aDirectoryLock)
+                     already_AddRefed<DirectoryLock>&& aDirectoryLock,
+                     already_AddRefed<Connection>&& aConnection,
+                     nsDataHashtable<nsStringHashKey, nsString>& aValues)
   : mDirectoryLock(std::move(aDirectoryLock))
+  , mConnection(std::move(aConnection))
   , mOrigin(aOrigin)
   , mClosed(false)
 {
   AssertIsOnBackgroundThread();
+
+  mValues.SwapElements(aValues);
 }
 
 Datastore::~Datastore()
@@ -1169,18 +2123,37 @@ Datastore::Close()
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(!mDatabases.Count());
   MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(mConnection);
 
   mClosed = true;
 
-  mDirectoryLock = nullptr;
+  if (mConnection->InTransaction()) {
+    MOZ_ASSERT(mAutoCommitTimer);
+    MOZ_ALWAYS_SUCCEEDS(mAutoCommitTimer->Cancel());
 
-  MOZ_ASSERT(gDatastores);
-  MOZ_ASSERT(gDatastores->Get(mOrigin));
-  gDatastores->Remove(mOrigin);
+    mConnection->Commit();
 
-  if (!gDatastores->Count()) {
-    gDatastores = nullptr;
+    mAutoCommitTimer = nullptr;
   }
+
+  // We can't release the directory lock and unregister itself from the
+  // hashtable until the connection is fully closed.
+  nsCOMPtr<nsIRunnable> callback =
+    NewRunnableMethod("dom::Datastore::ConnectionClosedCallback",
+                      this,
+                      &Datastore::ConnectionClosedCallback);
+  mConnection->Close(callback);
+}
+
+void
+Datastore::WaitForConnectionToComplete(nsIRunnable* aCallback)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aCallback);
+  MOZ_ASSERT(!mCompleteCallback);
+  MOZ_ASSERT(mClosed);
+
+  mCompleteCallback = aCallback;
 }
 
 void
@@ -1223,6 +2196,7 @@ uint32_t
 Datastore::GetLength() const
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
 
   return mValues.Count();
 }
@@ -1231,6 +2205,7 @@ void
 Datastore::GetKey(uint32_t aIndex, nsString& aKey) const
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
 
   aKey.SetIsVoid(true);
   for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
@@ -1246,6 +2221,7 @@ void
 Datastore::GetItem(const nsString& aKey, nsString& aValue) const
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
 
   if (!mValues.Get(aKey, &aValue)) {
     aValue.SetIsVoid(true);
@@ -1256,34 +2232,119 @@ void
 Datastore::SetItem(const nsString& aKey, const nsString& aValue)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
 
   mValues.Put(aKey, aValue);
+
+  EnsureTransaction();
+
+  RefPtr<SetItemOp> op = new SetItemOp(mConnection, aKey, aValue);
+  mConnection->Dispatch(op);
 }
 
 void
 Datastore::RemoveItem(const nsString& aKey)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
 
   mValues.Remove(aKey);
+
+  EnsureTransaction();
+
+  RefPtr<RemoveItemOp> op = new RemoveItemOp(mConnection, aKey);
+  mConnection->Dispatch(op);
 }
 
 void
 Datastore::Clear()
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
 
   mValues.Clear();
+
+  EnsureTransaction();
+
+  RefPtr<ClearOp> op = new ClearOp(mConnection);
+  mConnection->Dispatch(op);
 }
 
 void
 Datastore::GetKeys(nsTArray<nsString>& aKeys) const
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
 
   for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
     aKeys.AppendElement(iter.Key());
   }
+}
+
+void
+Datastore::ConnectionClosedCallback()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(mConnection);
+  MOZ_ASSERT(mClosed);
+
+  // Now it's safe to release the directory lock and unregister itself from
+  // the hashtable.
+
+  mDirectoryLock = nullptr;
+  mConnection = nullptr;
+
+  MOZ_ASSERT(gDatastores);
+  MOZ_ASSERT(gDatastores->Get(mOrigin));
+  gDatastores->Remove(mOrigin);
+
+  if (!gDatastores->Count()) {
+    gDatastores = nullptr;
+  }
+
+  if (mCompleteCallback) {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mCompleteCallback.forget()));
+  }
+}
+
+void
+Datastore::EnsureTransaction()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mConnection);
+
+  if (!mConnection->InTransaction()) {
+    mConnection->Begin(/* aReadonly */ false);
+
+    if (!mAutoCommitTimer) {
+      mAutoCommitTimer = NS_NewTimer();
+      MOZ_ASSERT(mAutoCommitTimer);
+    }
+
+    MOZ_ALWAYS_SUCCEEDS(
+      mAutoCommitTimer->InitWithNamedFuncCallback(
+                                          AutoCommitTimerCallback,
+                                          this,
+                                          kAutoCommitTimeoutMs,
+                                          nsITimer::TYPE_ONE_SHOT,
+                                          "Database::AutoCommitTimerCallback"));
+  }
+}
+
+// static
+void
+Datastore::AutoCommitTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  MOZ_ASSERT(aClosure);
+
+  auto* self = static_cast<Datastore*>(aClosure);
+  MOZ_ASSERT(self);
+
+  MOZ_ASSERT(self->mConnection);
+  MOZ_ASSERT(self->mConnection->InTransaction());
+
+  self->mConnection->Commit();
 }
 
 /*******************************************************************************
@@ -1560,6 +2621,7 @@ LSRequestBase::RecvCancel()
 PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
                                        const LSRequestParams& aParams)
   : mMainEventTarget(aMainEventTarget)
+  , mLoadDataOp(nullptr)
   , mParams(aParams.get_LSRequestPrepareDatastoreParams())
   , mState(State::Initial)
   , mRequestedDirectoryLock(false)
@@ -1574,6 +2636,7 @@ PrepareDatastoreOp::~PrepareDatastoreOp()
   MOZ_ASSERT(!mDirectoryLock);
   MOZ_ASSERT_IF(MayProceedOnNonOwningThread(),
                 mState == State::Initial || mState == State::Completed);
+  MOZ_ASSERT(!mLoadDataOp);
 }
 
 void
@@ -1630,17 +2693,17 @@ PrepareDatastoreOp::Open()
     return NS_ERROR_FAILURE;
   }
 
-  mState = State::FinishOpen;
+  mState = State::CheckExistingOperations;
   MOZ_ALWAYS_SUCCEEDS(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
 
 nsresult
-PrepareDatastoreOp::FinishOpen()
+PrepareDatastoreOp::CheckExistingOperations()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::FinishOpen);
+  MOZ_ASSERT(mState == State::CheckExistingOperations);
   MOZ_ASSERT(gPrepareDatastoreOps);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
@@ -1658,7 +2721,7 @@ PrepareDatastoreOp::FinishOpen()
 
   MOZ_ASSERT(!mOrigin.IsEmpty());
 
-  mState = State::PreparationPending;
+  mState = State::CheckClosingDatastore;
 
   // See if this PrepareDatastoreOp needs to wait.
   bool foundThis = false;
@@ -1679,6 +2742,36 @@ PrepareDatastoreOp::FinishOpen()
     }
   }
 
+  nsresult rv = CheckClosingDatastore();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PrepareDatastoreOp::CheckClosingDatastore()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::CheckClosingDatastore);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      !MayProceed()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mState = State::PreparationPending;
+
+  RefPtr<Datastore> datastore;
+  if (gDatastores &&
+      (datastore = gDatastores->Get(mOrigin)) &&
+      datastore->IsClosed()) {
+    datastore->WaitForConnectionToComplete(this);
+
+    return NS_OK;
+  }
+
   nsresult rv = BeginDatastorePreparation();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1694,6 +2787,8 @@ PrepareDatastoreOp::BeginDatastorePreparation()
   MOZ_ASSERT(mState == State::PreparationPending);
 
   if (gDatastores && (mDatastore = gDatastores->Get(mOrigin))) {
+    MOZ_ASSERT(!mDatastore->IsClosed());
+
     mState = State::SendingReadyMessage;
     Unused << this->Run();
 
@@ -1848,6 +2943,11 @@ PrepareDatastoreOp::DatabaseWork()
     return rv;
   }
 
+  rv = dbFile->GetPath(mDatabaseFilePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   nsCOMPtr<mozIStorageConnection> connection;
   rv = CreateStorageConnection(dbFile, mOrigin, getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1859,9 +2959,13 @@ PrepareDatastoreOp::DatabaseWork()
     return rv;
   }
 
+  // Must close connection before dispatching otherwise we might race with the
+  // connection thread which needs to open the same database.
+  MOZ_ALWAYS_SUCCEEDS(connection->Close());
+
   // Must set mState before dispatching otherwise we will race with the owning
   // thread.
-  mState = State::SendingReadyMessage;
+  mState = State::BeginLoadData;
 
   rv = OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1909,6 +3013,46 @@ PrepareDatastoreOp::VerifyDatabaseInformation(mozIStorageConnection* aConnection
   return NS_OK;
 }
 
+nsresult
+PrepareDatastoreOp::BeginLoadData()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::BeginLoadData);
+  MOZ_ASSERT(!mConnection);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      !MayProceed()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!gConnectionThread) {
+    gConnectionThread = new ConnectionThread();
+  }
+
+  mConnection = gConnectionThread->CreateConnection(mOrigin,
+                                                    mDatabaseFilePath);
+  MOZ_ASSERT(mConnection);
+
+  MOZ_ASSERT(!mConnection->InTransaction());
+
+  // Must set this before dispatching otherwise we will race with the
+  // connection thread.
+  mState = State::DatabaseWorkLoadData;
+
+  // Can't assign to mLoadDataOp directly since that's a weak reference and
+  // LoadDataOp is reference counted.
+  RefPtr<LoadDataOp> loadDataOp = new LoadDataOp(this);
+
+  // This add refs loadDataOp.
+  mConnection->Dispatch(loadDataOp);
+
+  // This is cleared in LoadDataOp::Cleanup() before the load data op is
+  // destroyed.
+  mLoadDataOp = loadDataOp;
+
+  return NS_OK;
+}
+
 void
 PrepareDatastoreOp::SendReadyMessage()
 {
@@ -1941,7 +3085,10 @@ PrepareDatastoreOp::SendResults()
 
     if (NS_SUCCEEDED(ResultCode())) {
       if (!mDatastore) {
-        mDatastore = new Datastore(mOrigin, mDirectoryLock.forget());
+        mDatastore = new Datastore(mOrigin,
+                                   mDirectoryLock.forget(),
+                                   mConnection.forget(),
+                                   mValues);
 
         if (!gDatastores) {
           gDatastores = new DatastoreHashtable();
@@ -1991,6 +3138,7 @@ PrepareDatastoreOp::Cleanup()
 
   if (mDatastore) {
     MOZ_ASSERT(!mDirectoryLock);
+    MOZ_ASSERT(!mConnection);
 
     if (NS_FAILED(ResultCode())) {
       MOZ_ASSERT(!mDatastore->IsClosed());
@@ -2000,12 +3148,54 @@ PrepareDatastoreOp::Cleanup()
 
     // Make sure to release the datastore on this thread.
     mDatastore = nullptr;
-  } else if (mDirectoryLock) {
-    // If we have a directory lock then the operation must have failed.
+
+    CleanupMetadata();
+  } else if (mConnection) {
+    // If we have a connection then the operation must have failed and there
+    // must be a directory lock too.
     MOZ_ASSERT(NS_FAILED(ResultCode()));
+    MOZ_ASSERT(mDirectoryLock);
+
+    // We must close the connection on the connection thread before releasing
+    // it on this thread. The directory lock can't be released either.
+    nsCOMPtr<nsIRunnable> callback =
+      NewRunnableMethod("dom::OpenDatabaseOp::ConnectionClosedCallback",
+                        this,
+                        &PrepareDatastoreOp::ConnectionClosedCallback);
+
+    mConnection->Close(callback);
+  } else {
+    // If we don't have a connection, but we do have a directory lock then the
+    // operation must have failed too.
+    MOZ_ASSERT_IF(mDirectoryLock, NS_FAILED(ResultCode()));
+
+    // There's no connection, so it's safe to release the directory lock and
+    // unregister itself from the array.
 
     mDirectoryLock = nullptr;
+
+    CleanupMetadata();
   }
+}
+
+void
+PrepareDatastoreOp::ConnectionClosedCallback()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_FAILED(ResultCode()));
+  MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(mConnection);
+
+  mConnection = nullptr;
+  mDirectoryLock = nullptr;
+
+  CleanupMetadata();
+}
+
+void
+PrepareDatastoreOp::CleanupMetadata()
+{
+  AssertIsOnOwningThread();
 
   if (mDelayedOp) {
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mDelayedOp.forget()));
@@ -2031,8 +3221,12 @@ PrepareDatastoreOp::Run()
       rv = Open();
       break;
 
-    case State::FinishOpen:
-      rv = FinishOpen();
+    case State::CheckExistingOperations:
+      rv = CheckExistingOperations();
+      break;
+
+    case State::CheckClosingDatastore:
+      rv = CheckClosingDatastore();
       break;
 
     case State::PreparationPending:
@@ -2045,6 +3239,10 @@ PrepareDatastoreOp::Run()
 
     case State::DatabaseWorkOpen:
       rv = DatabaseWork();
+      break;
+
+    case State::BeginLoadData:
+      rv = BeginLoadData();
       break;
 
     case State::SendingReadyMessage:
@@ -2075,6 +3273,18 @@ PrepareDatastoreOp::Run()
   }
 
   return NS_OK;
+}
+
+void
+PrepareDatastoreOp::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  LSRequestBase::ActorDestroy(aWhy);
+
+  if (mLoadDataOp) {
+    mLoadDataOp->NoteComplete();
+  }
 }
 
 mozilla::ipc::IPCResult
@@ -2126,6 +3336,95 @@ PrepareDatastoreOp::DirectoryLockFailed()
 
   mState = State::SendingReadyMessage;
   MOZ_ALWAYS_SUCCEEDS(Run());
+}
+
+nsresult
+PrepareDatastoreOp::
+LoadDataOp::DoDatastoreWork()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mConnection);
+  MOZ_ASSERT(mPrepareDatastoreOp);
+  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::DatabaseWorkLoadData);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      !MayProceedOnNonOwningThread()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Connection::CachedStatement stmt;
+  nsresult rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "SELECT key, value "
+      "FROM data;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
+    nsString key;
+    rv = stmt->GetString(0, key);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsString value;
+    rv = stmt->GetString(1, value);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    mPrepareDatastoreOp->mValues.Put(key, value);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+void
+PrepareDatastoreOp::
+LoadDataOp::OnSuccess()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mPrepareDatastoreOp);
+  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::DatabaseWorkLoadData);
+  MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
+
+  mPrepareDatastoreOp->mState = State::SendingReadyMessage;
+
+  MOZ_ALWAYS_SUCCEEDS(mPrepareDatastoreOp->Run());
+}
+
+void
+PrepareDatastoreOp::
+LoadDataOp::OnFailure(nsresult aResultCode)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mPrepareDatastoreOp);
+  MOZ_ASSERT(mPrepareDatastoreOp->mState == State::DatabaseWorkLoadData);
+  MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
+
+  mPrepareDatastoreOp->SetFailureCode(aResultCode);
+  mPrepareDatastoreOp->mState = State::SendingReadyMessage;
+
+  MOZ_ALWAYS_SUCCEEDS(mPrepareDatastoreOp->Run());
+}
+
+void
+PrepareDatastoreOp::
+LoadDataOp::Cleanup()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mPrepareDatastoreOp);
+  MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
+
+  mPrepareDatastoreOp->mLoadDataOp = nullptr;
+  mPrepareDatastoreOp = nullptr;
+
+  ConnectionDatastoreOperationBase::Cleanup();
 }
 
 /*******************************************************************************
@@ -2446,10 +3745,19 @@ QuotaClient::ShutdownWorkThreads()
     }
   }
 
+  // This should release any local storage related quota objects or directory
+  // locks.
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
     // Don't have to check gPreparedDatastores since we nulled it out above.
     return !gPrepareDatastoreOps && !gDatastores && !gLiveDatabases;
   }));
+
+  // And finally, shutdown the connection thread.
+  if (gConnectionThread) {
+    gConnectionThread->Shutdown();
+
+    gConnectionThread = nullptr;
+  }
 }
 
 } // namespace dom
