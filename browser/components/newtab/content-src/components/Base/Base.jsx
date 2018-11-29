@@ -41,6 +41,9 @@ export class _Base extends React.PureComponent {
   componentWillMount() {
     const {locale} = this.props;
     addLocaleDataForReactIntl(locale);
+    if (this.props.isFirstrun) {
+      global.document.body.classList.add("welcome", "hide-main");
+    }
   }
 
   componentDidMount() {

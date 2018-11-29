@@ -1,0 +1,124 @@
+.ReturnToAMOOverlay,
+.amo + body.hide-main {  // sass-lint:disable-line no-qualifying-elements
+  background: $grey-10;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2100;
+
+  .ReturnToAMOText {
+    color: $grey-90-80;
+    line-height: 32px;
+    font-size: 23px;
+    width: 100%;
+
+    img {
+      margin-inline-start: 6px;
+      margin-inline-end: 6px;
+    }
+  }
+
+  h2 {
+    color: $grey-60-60;
+    font-weight: 100;
+    margin: 0 0 22px;
+    font-size: 36px;
+    line-height: 48px;
+    letter-spacing: 1.2px;
+  }
+
+  p {
+    color: $grey-90-50;
+    font-size: 14px;
+    line-height: 18px;
+    margin-bottom: 4px;
+  }
+
+  .puffy {
+    border-radius: 4px;
+    height: 48px;
+    padding: 0 16px;
+    font-size: 15px;
+  }
+
+  .blue {
+    border: 0;
+    color: $white;
+    background-color: $blue-60;
+
+    &:hover {
+      box-shadow: none;
+      background-color: $blue-70;
+    }
+
+    &:active {
+      background-color: $blue-80;
+    }
+  }
+
+  .default {
+    border-radius: 2px;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 15px;
+  }
+
+  .grey {
+    border: 0;
+    background-color: $grey-90-10;
+
+    &:hover {
+      box-shadow: none;
+      background-color: $grey-90-20;
+    }
+
+    &:active {
+      background-color: $grey-90-30;
+    }
+  }
+
+  .ReturnToAMOGetStarted {
+    margin-top: 40px;
+    float: right;
+
+    &:dir(rtl) {
+      float: left;
+    }
+  }
+
+  .ReturnToAMOAddExtension {
+    margin-top: 20px;
+  }
+
+  .ReturnToAMOContainer {
+    width: 835px;
+    background: $white;
+    box-shadow: 0 1px 15px 0 $black-30;
+    border-radius: 4px;
+    display: flex;
+    padding: 38px 96px 28px 48px;
+  }
+
+  .ReturnToAMOAddonContents {
+    width: 400px;
+    margin-top: 42px;
+  }
+
+  .ReturnToAMOIcon {
+    width: 292px;
+    height: 254px;
+    background-size: 292px 254px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-image: url('resource://activity-stream/data/content/assets/gift-extension.svg');
+  }
+
+  .icon-add {
+    fill: $white;
+    vertical-align: sub;
+  }
+}

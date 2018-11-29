@@ -97,27 +97,27 @@ function setUpdateTimerPrefs() {
  * In addition to changing the value of the Auto Update setting, this function
  * also takes care of cleaning up after itself.
  */
-async function setAutoUpdateIsEnabled(enabled) {
+async function setAppUpdateAutoEnabledHelper(enabled) {
   if (gOriginalUpdateAutoValue == null) {
-    gOriginalUpdateAutoValue = await gAUS.getAutoUpdateIsEnabled();
+    gOriginalUpdateAutoValue = await UpdateUtils.getAppUpdateAutoEnabled();
     registerCleanupFunction(async () => {
-      await gAUS.setAutoUpdateIsEnabled(gOriginalUpdateAutoValue);
+      await UpdateUtils.setAppUpdateAutoEnabled(gOriginalUpdateAutoValue);
     });
   }
-  await gAUS.setAutoUpdateIsEnabled(enabled);
+  await UpdateUtils.setAppUpdateAutoEnabled(enabled);
 }
 
-
 add_task(async function setDefaults() {
-  // Most tests in this directory expect auto update to be enabled. Those that
-  // don't will explicitly change this.
-  await setAutoUpdateIsEnabled(true);
   await SpecialPowers.pushPrefEnv({
     set: [
+      [PREF_APP_UPDATE_LOG, DEBUG_AUS_TEST],
       // See bug 1505790 - uses a very large value to prevent the sync code
       // from running since it has nothing to do with these tests.
       ["services.sync.autoconnectDelay", 600000],
     ]});
+  // Most tests in this directory expect auto update to be enabled. Those that
+  // don't will explicitly change this.
+  await setAppUpdateAutoEnabledHelper(true);
 });
 
 /**
@@ -152,7 +152,6 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
         [PREF_APP_UPDATE_IDLETIME, 0],
         [PREF_APP_UPDATE_URL_MANUAL, URL_MANUAL_UPDATE],
-        [PREF_APP_UPDATE_LOG, DEBUG_AUS_TEST],
       ]});
 
     await setupTestUpdater();
@@ -208,7 +207,6 @@ function runUpdateProcessingTest(updates, steps) {
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
         [PREF_APP_UPDATE_IDLETIME, 0],
         [PREF_APP_UPDATE_URL_MANUAL, URL_MANUAL_UPDATE],
-        [PREF_APP_UPDATE_LOG, DEBUG_AUS_TEST],
       ]});
 
     await setupTestUpdater();

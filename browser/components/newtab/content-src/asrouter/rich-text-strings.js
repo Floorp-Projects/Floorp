@@ -10,6 +10,7 @@ const RICH_TEXT_CONFIG = {
   "success_text": "success_text",
   "error_text": "error_text",
   "scene2_text": "scene2_text",
+  "amo_html": "amo_html",
   "privacy_html": "scene2_privacy_html",
   "disclaimer_html": "scene2_disclaimer_html",
 };

@@ -338,7 +338,7 @@ android.applicationVariants.all { variant ->
     // what we want for Fennec, however, with applicationId.  To use the same
     // manifest as moz.build, we replace the package with org.mozilla.gecko (the
     // eventual package) here.
-    def rewriteManifestPackage = task("rewriteManifestPackageFor${variant.name.capitalize()}", type: Copy, dependsOn: rootProject.generateCodeAndResources) {
+    def rewriteManifestPackage = task("rewriteManifestPackageFor${variant.name.capitalize()}", type: Copy, dependsOn: rootProject.machBuildFaster) {
         into("${project.buildDir}/moz.build/src/${variant.name}")
         from("${topobjdir}/mobile/android/base/AndroidManifest.xml")
         filter { it.replaceFirst(/package=".*?"/, 'package="org.mozilla.gecko"') }
@@ -359,9 +359,9 @@ android.applicationVariants.all { variant ->
     // re-entrant.  Official builds are driven by the moz.build system and
     // should never be re-entrant in this way.
     if (!mozconfig.substs.MOZILLA_OFFICIAL) {
-        syncPreprocessedJava.dependsOn rootProject.generateCodeAndResources
-        syncPreprocessedRes.dependsOn rootProject.generateCodeAndResources
-        rewriteManifestPackage.dependsOn rootProject.generateCodeAndResources
+        syncPreprocessedJava.dependsOn rootProject.machBuildFaster
+        syncPreprocessedRes.dependsOn rootProject.machBuildFaster
+        rewriteManifestPackage.dependsOn rootProject.machBuildFaster
     }
 
     // When driven from moz.build via |mach build|, Gradle does not require or
