@@ -147,6 +147,7 @@ modules/pdfium/.*
 modules/woff2/.*
 modules/xz-embedded/.*
 modules/zlib/.*
+netwerk/dns/nsIDNKitInterface.h
 netwerk/sctp/src/.*
 netwerk/srtp/src/.*
 nsprpub/.*
