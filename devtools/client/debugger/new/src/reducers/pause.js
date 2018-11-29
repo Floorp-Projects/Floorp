@@ -13,7 +13,7 @@
 import { createSelector } from "reselect";
 import { isGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
-import { getSelectedSource } from "./sources";
+import { getSelectedSource, getSource } from "./sources";
 
 import type { OriginalScope } from "../utils/pause/mapScopes";
 import type { Action } from "../actions/types";
@@ -118,7 +118,11 @@ function update(
     }
 
     case "MAP_FRAMES": {
-      return { ...state, frames: action.frames };
+      return {
+        ...state,
+        frames: action.frames,
+        selectedFrameId: action.selectedFrameId
+      };
     }
 
     case "ADD_EXTRA": {
