@@ -1440,6 +1440,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         }
 
         override fun onUrlChanged(session: Session, url: String) {
+            if (crashReporterIsVisible()) return
+
             val host = try {
                 URL(url).host
             } catch (_: MalformedURLException) {
