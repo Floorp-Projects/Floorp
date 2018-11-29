@@ -179,6 +179,7 @@ public:
                  const nsACString& aGroup,
                  const nsACString& aOrigin,
                  nsIFile* aFile,
+                 int64_t aFileSize = -1,
                  int64_t* aFileSizeOut = nullptr);
 
   already_AddRefed<QuotaObject>
@@ -186,6 +187,7 @@ public:
                  const nsACString& aGroup,
                  const nsACString& aOrigin,
                  const nsAString& aPath,
+                 int64_t aFileSize = -1,
                  int64_t* aFileSizeOut = nullptr);
 
   Nullable<bool>
