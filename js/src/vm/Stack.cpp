@@ -1835,7 +1835,7 @@ jit::JitActivation::registerIonFrameRecovery(RInstructionResults&& results)
 jit::RInstructionResults*
 jit::JitActivation::maybeIonFrameRecovery(JitFrameLayout* fp)
 {
-    for (RInstructionResults* it = ionRecovery_.begin(); it != ionRecovery_.end(); ) {
+    for (RInstructionResults* it = ionRecovery_.begin(); it != ionRecovery_.end(); it++) {
         if (it->frame() == fp) {
             return it;
         }

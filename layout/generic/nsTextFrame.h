@@ -72,7 +72,7 @@ public:
 
   // nsIFrame
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                        const nsDisplayListSet& aLists) override;
+                        const nsDisplayListSet& aLists) final;
 
   void Init(nsIContent* aContent,
             nsContainerFrame* aParent,
@@ -80,7 +80,7 @@ public:
 
   void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
-  nsresult GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) override;
+  nsresult GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) final;
 
   nsresult CharacterDataChanged(const CharacterDataChangeInfo&) final;
 
@@ -103,7 +103,7 @@ public:
       GetContent()->UnsetFlags(NS_HAS_FLOWLENGTH_PROPERTY);
     }
   }
-  nsIFrame* GetNextInFlowVirtual() const override { return GetNextInFlow(); }
+  nsIFrame* GetNextInFlowVirtual() const final { return GetNextInFlow(); }
   nsTextFrame* GetNextInFlow() const
   {
     return mNextContinuation &&
@@ -156,20 +156,20 @@ public:
     return Style()->ShouldSuppressLineBreak();
   }
 
-  void InvalidateFrame(uint32_t aDisplayItemKey = 0, bool aRebuildDisplayItems = true) override;
+  void InvalidateFrame(uint32_t aDisplayItemKey = 0, bool aRebuildDisplayItems = true) final;
   void InvalidateFrameWithRect(const nsRect& aRect,
                                uint32_t aDisplayItemKey = 0,
-                               bool aRebuildDisplayItems = true) override;
+                               bool aRebuildDisplayItems = true) final;
 
 #ifdef DEBUG_FRAME_DUMP
   void List(FILE* out = stderr,
             const char* aPrefix = "",
-            uint32_t aFlags = 0) const override;
-  nsresult GetFrameName(nsAString& aResult) const override;
+            uint32_t aFlags = 0) const final;
+  nsresult GetFrameName(nsAString& aResult) const final;
   void ToCString(nsCString& aBuf, int32_t* aTotalContentLength) const;
 #endif
 
-  ContentOffsets CalcContentOffsetsFromFramePoint(const nsPoint& aPoint) override;
+  ContentOffsets CalcContentOffsetsFromFramePoint(const nsPoint& aPoint) final;
   ContentOffsets GetCharacterOffsetAtFramePoint(const nsPoint& aPoint);
 
   /**
@@ -187,24 +187,24 @@ public:
                         SelectionType aSelectionType);
 
   FrameSearchResult PeekOffsetNoAmount(bool aForward,
-                                       int32_t* aOffset) override;
+                                       int32_t* aOffset) final;
   FrameSearchResult
   PeekOffsetCharacter(bool aForward,
                       int32_t* aOffset,
                       PeekOffsetCharacterOptions aOptions =
-                        PeekOffsetCharacterOptions()) override;
+                        PeekOffsetCharacterOptions()) final;
   FrameSearchResult PeekOffsetWord(bool aForward,
                                    bool aWordSelectEatSpace,
                                    bool aIsKeyboardSelect,
                                    int32_t* aOffset,
-                                   PeekWordState* aState) override;
+                                   PeekWordState* aState) final;
 
   nsresult CheckVisibility(nsPresContext* aContext,
                            int32_t aStartIndex,
                            int32_t aEndIndex,
                            bool aRecurse,
                            bool* aFinished,
-                           bool* _retval) override;
+                           bool* _retval) final;
 
   // Flags for aSetLengthFlags
   enum
@@ -217,27 +217,27 @@ public:
                  nsLineLayout* aLineLayout,
                  uint32_t aSetLengthFlags = 0);
 
-  nsresult GetOffsets(int32_t& start, int32_t& end) const override;
+  nsresult GetOffsets(int32_t& start, int32_t& end) const final;
 
-  void AdjustOffsetsForBidi(int32_t start, int32_t end) override;
+  void AdjustOffsetsForBidi(int32_t start, int32_t end) final;
 
-  nsresult GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) override;
+  nsresult GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) final;
   nsresult GetCharacterRectsInRange(int32_t aInOffset,
                                     int32_t aLength,
-                                    nsTArray<nsRect>& aRects) override;
+                                    nsTArray<nsRect>& aRects) final;
 
   nsresult GetChildFrameContainingOffset(int32_t inContentOffset,
                                          bool inHint,
                                          int32_t* outFrameContentOffset,
-                                         nsIFrame** outChildFrame) override;
+                                         nsIFrame** outChildFrame) final;
 
-  bool IsVisibleInSelection(mozilla::dom::Selection* aSelection) override;
+  bool IsVisibleInSelection(mozilla::dom::Selection* aSelection) final;
 
-  bool IsEmpty() override;
-  bool IsSelfEmpty() override { return IsEmpty(); }
+  bool IsEmpty() final;
+  bool IsSelfEmpty() final { return IsEmpty(); }
   nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const final;
 
-  bool HasSignificantTerminalNewline() const override;
+  bool HasSignificantTerminalNewline() const final;
 
   /**
    * Returns true if this text frame is logically adjacent to the end of the
@@ -255,7 +255,7 @@ public:
   }
 
 #ifdef ACCESSIBILITY
-  mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() final;
 #endif
 
   float GetFontSizeInflation() const;
@@ -266,9 +266,9 @@ public:
   }
   void SetFontSizeInflation(float aInflation);
 
-  void MarkIntrinsicISizesDirty() override;
-  nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  void MarkIntrinsicISizesDirty() final;
+  nscoord GetMinISize(gfxContext* aRenderingContext) final;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) final;
   void AddInlineMinISize(gfxContext* aRenderingContext,
                          InlineMinISizeData* aData) override;
   void AddInlinePrefISize(gfxContext* aRenderingContext,
@@ -280,16 +280,16 @@ public:
                                    const mozilla::LogicalSize& aMargin,
                                    const mozilla::LogicalSize& aBorder,
                                    const mozilla::LogicalSize& aPadding,
-                                   ComputeSizeFlags aFlags) override;
-  nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
+                                   ComputeSizeFlags aFlags) final;
+  nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const final;
   nsresult GetPrefWidthTightBounds(gfxContext* aContext,
                                    nscoord* aX,
-                                   nscoord* aXMost) override;
+                                   nscoord* aXMost) final;
   void Reflow(nsPresContext* aPresContext,
               ReflowOutput& aMetrics,
               const ReflowInput& aReflowInput,
-              nsReflowStatus& aStatus) override;
-  bool CanContinueTextRun() const override;
+              nsReflowStatus& aStatus) final;
+  bool CanContinueTextRun() const final;
   // Method that is called for a text frame that is logically
   // adjacent to the end of the line (i.e. followed only by empty text frames,
   // placeholders or inlines containing such).
@@ -307,7 +307,7 @@ public:
     uint32_t aEndOffset = UINT32_MAX,
     TextOffsetType aOffsetType = TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
     TrailingWhitespace aTrimTrailingWhitespace =
-      TrailingWhitespace::TRIM_TRAILING_WHITESPACE) override;
+      TrailingWhitespace::TRIM_TRAILING_WHITESPACE) final;
 
   nsOverflowAreas RecomputeOverflow(nsIFrame* aBlockFrame);
 
@@ -544,7 +544,7 @@ public:
                          const nscolor* aDecorationOverrideColor,
                          PropertyProvider* aProvider);
 
-  nscolor GetCaretColorAt(int32_t aOffset) override;
+  nscolor GetCaretColorAt(int32_t aOffset) final;
 
   int16_t GetSelectionStatus(int16_t* aSelectionFlags);
 
@@ -655,14 +655,14 @@ public:
 
   bool IsInitialLetterChild() const;
 
-  bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
+  bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) final;
 
   void AssignJustificationGaps(const mozilla::JustificationAssignment& aAssign);
   mozilla::JustificationAssignment GetJustificationAssignment() const;
 
   uint32_t CountGraphemeClusters() const;
 
-  bool HasAnyNoncollapsedCharacters() override;
+  bool HasAnyNoncollapsedCharacters() final;
 
   /**
    * Call this after you have manually changed the text node contents without
@@ -704,7 +704,7 @@ protected:
    * Return true if the frame is part of a Selection.
    * Helper method to implement the public IsSelected() API.
    */
-  bool IsFrameSelected() const override;
+  bool IsFrameSelected() const final;
 
   mozilla::UniquePtr<SelectionDetails> GetSelectionDetails();
 
