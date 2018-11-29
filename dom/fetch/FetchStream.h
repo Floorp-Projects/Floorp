@@ -28,6 +28,7 @@ class WeakWorkerRef;
 class FetchStream final : public nsIInputStreamCallback
                         , public nsIObserver
                         , public nsSupportsWeakReference
+                        , private JS::ReadableStreamUnderlyingSource
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -43,7 +44,7 @@ public:
   Close();
 
   static nsresult
-  RetrieveInputStream(void* aUnderlyingReadableStreamSource,
+  RetrieveInputStream(JS::ReadableStreamUnderlyingSource* aUnderlyingReadableStreamSource,
                       nsIInputStream** aInputStream);
 
 private:
@@ -59,30 +60,26 @@ private:
   AssertIsOnOwningThread() {}
 #endif
 
-  static void
-  RequestDataCallback(JSContext* aCx, JS::HandleObject aStream,
-                      void* aUnderlyingSource, size_t aDesiredSize);
+  void
+  requestData(JSContext* aCx, JS::HandleObject aStream, size_t aDesiredSize) override;
 
-  static void
-  WriteIntoReadRequestCallback(JSContext* aCx, JS::HandleObject aStream,
-                               void* aUnderlyingSource,
-                               void* aBuffer, size_t aLength,
-                               size_t* aByteWritten);
+  void
+  writeIntoReadRequestBuffer(JSContext* aCx, JS::HandleObject aStream,
+                             void* aBuffer, size_t aLength,
+                             size_t* aBytesWritten) override;
 
-  static JS::Value
-  CancelCallback(JSContext* aCx, JS::HandleObject aStream,
-                 void* aUnderlyingSource, JS::HandleValue aReason);
+  JS::Value
+  cancel(JSContext* aCx, JS::HandleObject aStream, JS::HandleValue aReason) override;
 
-  static void
-  ClosedCallback(JSContext* aCx, JS::HandleObject aStream,
-                 void* aUnderlyingSource);
+  void
+  onClosed(JSContext* aCx, JS::HandleObject aStream) override;
 
-  static void
-  ErroredCallback(JSContext* aCx, JS::HandleObject aStream,
-                  void* aUnderlyingSource, JS::HandleValue reason);
+  void
+  onErrored(JSContext* aCx, JS::HandleObject aStream, JS::HandleValue aReason) override;
 
-  static void
-  FinalizeCallback(void* aUnderlyingSource);
+  void
+  finalize() override;
+
 
   void
   ErrorPropagation(JSContext* aCx,
