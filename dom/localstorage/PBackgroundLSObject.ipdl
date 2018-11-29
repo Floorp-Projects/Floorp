@@ -2,25 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include PBackgroundSharedTypes;
+include protocol PBackground;
+include protocol PBackgroundLSDatabase;
 
 namespace mozilla {
 namespace dom {
 
-struct LSRequestPrepareDatastoreParams
+sync protocol PBackgroundLSObject
 {
-  PrincipalInfo principalInfo;
-};
+  manager PBackground;
 
-struct LSRequestPrepareObserverParams
-{
-  PrincipalInfo principalInfo;
-};
+  manages PBackgroundLSDatabase;
 
-union LSRequestParams
-{
-  LSRequestPrepareDatastoreParams;
-  LSRequestPrepareObserverParams;
+parent:
+  async DeleteMe();
+
+  async PBackgroundLSDatabase(uint64_t datastoreId);
+
+child:
+  async __delete__();
 };
 
 } // namespace dom

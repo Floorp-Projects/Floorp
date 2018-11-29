@@ -6,7 +6,8 @@ include protocol PAsmJSCacheEntry;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundIndexedDBUtils;
 include protocol PBackgroundSDBConnection;
-include protocol PBackgroundLSDatabase;
+include protocol PBackgroundLSObject;
+include protocol PBackgroundLSObserver;
 include protocol PBackgroundLSRequest;
 include protocol PBackgroundLocalStorageCache;
 include protocol PBackgroundStorage;
@@ -75,7 +76,8 @@ sync protocol PBackground
   manages PBackgroundIDBFactory;
   manages PBackgroundIndexedDBUtils;
   manages PBackgroundSDBConnection;
-  manages PBackgroundLSDatabase;
+  manages PBackgroundLSObject;
+  manages PBackgroundLSObserver;
   manages PBackgroundLSRequest;
   manages PBackgroundLocalStorageCache;
   manages PBackgroundStorage;
@@ -124,7 +126,11 @@ parent:
 
   async PBackgroundSDBConnection(PrincipalInfo principalInfo);
 
-  async PBackgroundLSDatabase(uint64_t datastoreId);
+  async PBackgroundLSObject(PrincipalInfo principalInfo,
+                            nsString documentURI,
+                            uint32_t privateBrowsingId);
+
+  async PBackgroundLSObserver(uint64_t observerId);
 
   async PBackgroundLSRequest(LSRequestParams params);
 

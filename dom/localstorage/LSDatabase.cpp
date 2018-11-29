@@ -121,44 +121,66 @@ LSDatabase::GetKeys(nsTArray<nsString>& aKeys)
 
 nsresult
 LSDatabase::SetItem(const nsAString& aKey,
-                    const nsAString& aValue)
+                    const nsAString& aValue,
+                    bool* aChanged,
+                    nsAString& aOldValue)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  if (NS_WARN_IF(!mActor->SendSetItem(nsString(aKey), nsString(aValue)))) {
+  bool changed;
+  nsString oldValue;
+  if (NS_WARN_IF(!mActor->SendSetItem(nsString(aKey),
+                                      nsString(aValue),
+                                      &changed,
+                                      &oldValue))) {
     return NS_ERROR_FAILURE;
   }
 
+  *aChanged = changed;
+  aOldValue = oldValue;
   return NS_OK;
 }
 
 nsresult
-LSDatabase::RemoveItem(const nsAString& aKey)
+LSDatabase::RemoveItem(const nsAString& aKey,
+                       bool* aChanged,
+                       nsAString& aOldValue)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  if (NS_WARN_IF(!mActor->SendRemoveItem(nsString(aKey)))) {
+  bool changed;
+  nsString oldValue;
+  if (NS_WARN_IF(!mActor->SendRemoveItem(nsString(aKey),
+                                         &changed,
+                                         &oldValue))) {
     return NS_ERROR_FAILURE;
   }
 
+  *aChanged = changed;
+  aOldValue = oldValue;
   return NS_OK;
 }
 
 nsresult
-LSDatabase::Clear()
+LSDatabase::Clear(bool* aChanged)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  if (NS_WARN_IF(!mActor->SendClear())) {
+  bool changed;
+  if (NS_WARN_IF(!mActor->SendClear(&changed))) {
     return NS_ERROR_FAILURE;
   }
 
+  *aChanged = changed;
   return NS_OK;
 }
 
