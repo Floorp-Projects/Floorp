@@ -15,13 +15,18 @@ function* testSteps()
 
   verifyData([]);
 
+  let principal = getPrincipal("http://prefix.test", {});
+  clearOriginsByPrefix(principal, "default", continueToNextStepSync);
+  yield undefined;
+
   // Wait for all database connections to close.
   reset(continueToNextStepSync);
   yield undefined;
 
-  exportShadowDatabase("shadowdb.sqlite");
+  exportShadowDatabase("shadowdb-clearedOriginsByPrefix.sqlite");
 
-  // The shadow database is now prepared for test_databaseShadowing2.js
+  // The shadow database is now prepared for
+  // test_databaseShadowing_clearOriginsByPrefix2.js
 
   finishTest();
 }

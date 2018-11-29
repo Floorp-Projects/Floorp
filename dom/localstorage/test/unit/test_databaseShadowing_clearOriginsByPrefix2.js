@@ -9,16 +9,17 @@ loadSubscript("databaseShadowing-shared.js");
 
 function* testSteps()
 {
-  // The shadow database was prepared in test_databaseShadowing1.js
+  // The shadow database was prepared in
+  // test_databaseShadowing_clearOriginsByPrefix1.js
 
   disableNextGenLocalStorage();
 
-  if (!importShadowDatabase("shadowdb.sqlite")) {
+  if (!importShadowDatabase("shadowdb-clearedOriginsByPrefix.sqlite")) {
     finishTest();
     return;
   }
 
-  verifyData([]);
+  verifyData([2,3]);
 
   finishTest();
 }
