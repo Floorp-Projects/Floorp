@@ -10,20 +10,27 @@
 namespace mozilla {
 namespace dom {
 
+class LSDatabase;
+class LSNotifyInfo;
 class LSSnapshotChild;
+class LSSnapshotInitInfo;
+class LSWriteInfo;
 
 class LSSnapshot final
   : public nsIRunnable
 {
+public:
   enum class LoadState
   {
     Initial,
     Partial,
     AllOrderedKeys,
     AllUnorderedItems,
-    AllOrderedItems
+    AllOrderedItems,
+    EndGuard
   };
 
+private:
   RefPtr<LSSnapshot> mSelfRef;
 
   RefPtr<LSDatabase> mDatabase;
@@ -41,6 +48,7 @@ class LSSnapshot final
   int64_t mPeakUsage;
 
   LoadState mLoadState;
+
   bool mExplicit;
 
 #ifdef DEBUG
