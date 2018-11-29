@@ -8,18 +8,21 @@
 #define mozilla_dom_localstorage_LocalStorageManager2_h
 
 #include "nsIDOMStorageManager.h"
+#include "nsILocalStorageManager.h"
 
 namespace mozilla {
 namespace dom {
 
 class LocalStorageManager2 final
   : public nsIDOMStorageManager
+  , public nsILocalStorageManager
 {
 public:
   LocalStorageManager2();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMSTORAGEMANAGER
+  NS_DECL_NSILOCALSTORAGEMANAGER
 
 private:
   ~LocalStorageManager2();
