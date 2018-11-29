@@ -396,8 +396,17 @@ GetSpecialBaseDomain(const nsCOMPtr<nsIURI>& aCodebase,
 {
   *aHandled = false;
 
-  // For a file URI, we return the file path.
+  // Special handling for a file URI.
   if (NS_URIIsLocalFile(aCodebase)) {
+    // If strict file origin policy is not in effect, all local files are
+    // considered to be same-origin, so return a known dummy domain here.
+    if (!nsScriptSecurityManager::GetStrictFileOriginPolicy()) {
+      *aHandled = true;
+      aBaseDomain.AssignLiteral("UNIVERSAL_FILE_URI_ORIGIN");
+      return NS_OK;
+    }
+
+    // Otherwise, we return the file path.
     nsCOMPtr<nsIURL> url = do_QueryInterface(aCodebase);
 
     if (url) {
