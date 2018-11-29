@@ -114,6 +114,10 @@ function run_test() {
       url: "http://mozilla.org/thunderbird"
     },
     {
+      input: "(mail)john.doe+test@mozilla.org",
+      url: "mailto:john.doe+test@mozilla.org"
+    },
+    {
       input: "()http://mozilla.org",
       url: "http://mozilla.org"
     },
