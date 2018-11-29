@@ -106,7 +106,6 @@ class Flexbox extends PureComponent {
     }
 
     const {
-      flexItems,
       flexItemShown,
     } = flexContainer;
 
@@ -121,7 +120,7 @@ class Flexbox extends PureComponent {
           onToggleFlexboxHighlighter,
           setSelectedNode,
         }),
-        !flexItemShown && flexItems.length > 0 ? this.renderFlexItemList() : null,
+        !flexItemShown ? this.renderFlexItemList() : null,
         flexItemShown ? this.renderFlexItemSizing() : null,
       )
     );
