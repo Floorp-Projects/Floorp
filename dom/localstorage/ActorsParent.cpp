@@ -1390,8 +1390,7 @@ public:
   NoteInactiveDatabase(Database* aDatabase);
 
   void
-  GetSnapshotInitInfo(int64_t aRequestedSize,
-                      nsTHashtable<nsStringHashKey>& aLoadedItems,
+  GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
                       nsTArray<LSItemInfo>& aItemInfos,
                       uint32_t& aTotalLength,
                       int64_t& aInitialUsage,
@@ -1430,14 +1429,18 @@ public:
   void
   EndUpdateBatch(int64_t aSnapshotPeakUsage);
 
-  bool
-  UpdateUsage(int64_t aDelta);
+  int64_t
+  RequestUpdateUsage(int64_t aRequestedSize,
+                     int64_t aMinSize);
 
   NS_INLINE_DECL_REFCOUNTING(Datastore)
 
 private:
   // Reference counted.
   ~Datastore();
+
+  bool
+  UpdateUsage(int64_t aDelta);
 
   void
   MaybeClose();
@@ -1651,13 +1654,17 @@ private:
 
   PBackgroundLSSnapshotParent*
   AllocPBackgroundLSSnapshotParent(const nsString& aDocumentURI,
+                                   const bool& aIncreasePeakUsage,
                                    const int64_t& aRequestedSize,
+                                   const int64_t& aMinSize,
                                    LSSnapshotInitInfo* aInitInfo) override;
 
   mozilla::ipc::IPCResult
   RecvPBackgroundLSSnapshotConstructor(PBackgroundLSSnapshotParent* aActor,
                                        const nsString& aDocumentURI,
+                                       const bool& aIncreasePeakUsage,
                                        const int64_t& aRequestedSize,
+                                       const int64_t& aMinSize,
                                        LSSnapshotInitInfo* aInitInfo) override;
 
   bool
@@ -3757,8 +3764,7 @@ Datastore::NoteInactiveDatabase(Database* aDatabase)
 }
 
 void
-Datastore::GetSnapshotInitInfo(int64_t aRequestedSize,
-                               nsTHashtable<nsStringHashKey>& aLoadedItems,
+Datastore::GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
                                nsTArray<LSItemInfo>& aItemInfos,
                                uint32_t& aTotalLength,
                                int64_t& aInitialUsage,
@@ -3832,9 +3838,6 @@ Datastore::GetSnapshotInitInfo(int64_t aRequestedSize,
 
   aInitialUsage = mUsage;
   aPeakUsage = aInitialUsage;
-  if (aRequestedSize && UpdateUsage(aRequestedSize)) {
-    aPeakUsage += aRequestedSize;
-  }
 }
 
 void
@@ -4076,6 +4079,25 @@ Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage)
 #ifdef DEBUG
   mInUpdateBatch = false;
 #endif
+}
+
+int64_t
+Datastore::RequestUpdateUsage(int64_t aRequestedSize,
+                              int64_t aMinSize)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aRequestedSize > 0);
+  MOZ_ASSERT(aMinSize > 0);
+
+  if (UpdateUsage(aRequestedSize)) {
+    return aRequestedSize;
+  }
+
+  if (UpdateUsage(aMinSize)) {
+    return aMinSize;
+  }
+
+  return 0;
 }
 
 bool
@@ -4411,12 +4433,19 @@ Database::RecvAllowToClose()
 
 PBackgroundLSSnapshotParent*
 Database::AllocPBackgroundLSSnapshotParent(const nsString& aDocumentURI,
+                                           const bool& aIncreasePeakUsage,
                                            const int64_t& aRequestedSize,
+                                           const int64_t& aMinSize,
                                            LSSnapshotInitInfo* aInitInfo)
 {
   AssertIsOnBackgroundThread();
 
-  if (NS_WARN_IF(aRequestedSize < 0)) {
+  if (NS_WARN_IF(aIncreasePeakUsage && aRequestedSize <= 0)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(aIncreasePeakUsage && aMinSize <= 0)) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
@@ -4436,11 +4465,14 @@ mozilla::ipc::IPCResult
 Database::RecvPBackgroundLSSnapshotConstructor(
                                             PBackgroundLSSnapshotParent* aActor,
                                             const nsString& aDocumentURI,
+                                            const bool& aIncreasePeakUsage,
                                             const int64_t& aRequestedSize,
+                                            const int64_t& aMinSize,
                                             LSSnapshotInitInfo* aInitInfo)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aRequestedSize >= 0);
+  MOZ_ASSERT_IF(aIncreasePeakUsage, aRequestedSize > 0);
+  MOZ_ASSERT_IF(aIncreasePeakUsage, aMinSize > 0);
   MOZ_ASSERT(aInitInfo);
   MOZ_ASSERT(!mAllowedToClose);
 
@@ -4454,13 +4486,17 @@ Database::RecvPBackgroundLSSnapshotConstructor(
   int64_t initialUsage;
   int64_t peakUsage;
   LSSnapshot::LoadState loadState;
-  mDatastore->GetSnapshotInitInfo(aRequestedSize,
-                                  loadedItems,
+  mDatastore->GetSnapshotInitInfo(loadedItems,
                                   itemInfos,
                                   totalLength,
                                   initialUsage,
                                   peakUsage,
                                   loadState);
+
+  if (aIncreasePeakUsage) {
+    int64_t size = mDatastore->RequestUpdateUsage(aRequestedSize, aMinSize);
+    peakUsage += size;
+  }
 
   snapshot->Init(loadedItems, totalLength, initialUsage, peakUsage, loadState);
 
@@ -4781,15 +4817,11 @@ Snapshot::RecvIncreasePeakUsage(const int64_t& aRequestedSize,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (mDatastore->UpdateUsage(aRequestedSize)) {
-    mPeakUsage += aRequestedSize;
-    *aSize = aRequestedSize;
-  } else if (mDatastore->UpdateUsage(aMinSize)) {
-    mPeakUsage += aMinSize;
-    *aSize = aMinSize;
-  } else {
-    *aSize = 0;
-  }
+  int64_t size = mDatastore->RequestUpdateUsage(aRequestedSize, aMinSize);
+
+  mPeakUsage += size;
+
+  *aSize = size;
 
   return IPC_OK();
 }

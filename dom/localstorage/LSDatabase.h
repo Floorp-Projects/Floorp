@@ -108,7 +108,6 @@ private:
 
   nsresult
   EnsureSnapshot(LSObject* aObject,
-                 bool aRequestedBySetItem,
                  bool aExplicit = false);
 
   void

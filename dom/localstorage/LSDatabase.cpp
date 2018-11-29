@@ -101,7 +101,7 @@ LSDatabase::GetLength(LSObject* aObject,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -124,7 +124,7 @@ LSDatabase::GetKey(LSObject* aObject,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -147,7 +147,7 @@ LSDatabase::GetItem(LSObject* aObject,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -169,7 +169,7 @@ LSDatabase::GetKeys(LSObject* aObject,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -193,7 +193,7 @@ LSDatabase::SetItem(LSObject* aObject,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ true);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -216,7 +216,7 @@ LSDatabase::RemoveItem(LSObject* aObject,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -238,7 +238,7 @@ LSDatabase::Clear(LSObject* aObject,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -263,9 +263,7 @@ LSDatabase::BeginExplicitSnapshot(LSObject* aObject)
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  nsresult rv = EnsureSnapshot(aObject,
-                               /* aRequestedBySetItem */ false,
-                               /* aExplicit */ true);
+  nsresult rv = EnsureSnapshot(aObject, /* aExplicit */ true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -297,7 +295,6 @@ LSDatabase::EndExplicitSnapshot(LSObject* aObject)
 
 nsresult
 LSDatabase::EnsureSnapshot(LSObject* aObject,
-                           bool aRequestedBySetItem,
                            bool aExplicit)
 {
   MOZ_ASSERT(aObject);
@@ -313,13 +310,13 @@ LSDatabase::EnsureSnapshot(LSObject* aObject,
 
   LSSnapshotChild* actor = new LSSnapshotChild(snapshot);
 
-  int64_t requestedSize = aRequestedBySetItem ? 4096 : 0;
-
   LSSnapshotInitInfo initInfo;
   bool ok =
     mActor->SendPBackgroundLSSnapshotConstructor(actor,
                                                  aObject->DocumentURI(),
-                                                 requestedSize,
+                                                 /* increasePeakUsage */ true,
+                                                 /* requestedSize */ 131072,
+                                                 /* minSize */ 4096,
                                                  &initInfo);
   if (NS_WARN_IF(!ok)) {
     return NS_ERROR_FAILURE;
