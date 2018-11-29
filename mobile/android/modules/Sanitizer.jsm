@@ -205,7 +205,7 @@ Sanitizer.prototype = {
               let uri = principal.URI;
               if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file") {
                 promises.push(new Promise(r => {
-                  let req = quotaManagerService.clearStoragesForPrincipal(principal, null, false);
+                  let req = quotaManagerService.clearStoragesForPrincipal(principal);
                   req.callback = () => { r(); };
                 }));
               }

@@ -122,6 +122,24 @@ public:
     return NS_OK;
   }
 
+  static nsresult
+  NullableTypeFromText(const nsAString& aText, Nullable<Type>* aType)
+  {
+    if (aText.IsVoid()) {
+      *aType = Nullable<Type>();
+      return NS_OK;
+    }
+
+    Type type;
+    nsresult rv = TypeFromText(aText, type);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    *aType = Nullable<Type>(type);
+    return NS_OK;
+  }
+
   // Methods which are called on the IO thread.
   virtual nsresult
   UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory)
