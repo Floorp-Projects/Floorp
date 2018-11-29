@@ -236,6 +236,36 @@ GetCacheIRReceiverForUnboxedProperty(ICCacheIR_Updated* stub, ReceiverGuard* rec
     return true;
 }
 
+ICScript*
+BaselineInspector::icScript() const
+{
+    return script->icScript();
+}
+
+ICEntry&
+BaselineInspector::icEntryFromPC(jsbytecode* pc)
+{
+    ICEntry* entry = maybeICEntryFromPC(pc);
+    MOZ_ASSERT(entry);
+    return *entry;
+}
+
+ICEntry*
+BaselineInspector::maybeICEntryFromPC(jsbytecode* pc)
+{
+    MOZ_ASSERT(hasICScript());
+    MOZ_ASSERT(isValidPC(pc));
+    ICEntry* ent =
+        icScript()->maybeICEntryFromPCOffset(script->pcToOffset(pc), prevLookedUpEntry);
+    if (!ent) {
+        return nullptr;
+    }
+
+    MOZ_ASSERT(ent->isForOp());
+    prevLookedUpEntry = ent;
+    return ent;
+}
+
 bool
 BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
                                           ObjectGroupVector& convertUnboxedGroups)
@@ -248,7 +278,7 @@ BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receiv
     MOZ_ASSERT(receivers.empty());
     MOZ_ASSERT(convertUnboxedGroups.empty());
 
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return true;
     }
 
@@ -299,7 +329,7 @@ BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receiv
 ICStub*
 BaselineInspector::monomorphicStub(jsbytecode* pc)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return nullptr;
     }
 
@@ -324,7 +354,7 @@ BaselineInspector::monomorphicStub(jsbytecode* pc)
 bool
 BaselineInspector::dimorphicStub(jsbytecode* pc, ICStub** pfirst, ICStub** psecond)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 
@@ -683,7 +713,7 @@ TryToSpecializeBinaryArithOp(ICStub** stubs,
 MIRType
 BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return MIRType::None;
     }
 
@@ -716,7 +746,7 @@ BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc)
 bool
 BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode* pc)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 
@@ -732,7 +762,7 @@ BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode* pc)
 bool
 BaselineInspector::hasSeenAccessedGetter(jsbytecode* pc)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 
@@ -750,7 +780,7 @@ BaselineInspector::hasSeenNonStringIterMore(jsbytecode* pc)
 {
     MOZ_ASSERT(JSOp(*pc) == JSOP_MOREITER);
 
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 
@@ -763,7 +793,7 @@ BaselineInspector::hasSeenNonStringIterMore(jsbytecode* pc)
 bool
 BaselineInspector::hasSeenDoubleResult(jsbytecode* pc)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 
@@ -782,7 +812,7 @@ BaselineInspector::hasSeenDoubleResult(jsbytecode* pc)
 JSObject*
 BaselineInspector::getTemplateObject(jsbytecode* pc)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return nullptr;
     }
 
@@ -811,7 +841,7 @@ BaselineInspector::getTemplateObject(jsbytecode* pc)
 ObjectGroup*
 BaselineInspector::getTemplateObjectGroup(jsbytecode* pc)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return nullptr;
     }
 
@@ -833,7 +863,7 @@ BaselineInspector::getSingleCallee(jsbytecode* pc)
 {
     MOZ_ASSERT(*pc == JSOP_NEW);
 
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return nullptr;
     }
 
@@ -854,7 +884,7 @@ BaselineInspector::getSingleCallee(jsbytecode* pc)
 JSObject*
 BaselineInspector::getTemplateObjectForNative(jsbytecode* pc, Native native)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return nullptr;
     }
 
@@ -872,7 +902,7 @@ bool
 BaselineInspector::isOptimizableConstStringSplit(jsbytecode* pc, JSString** strOut,
                                                  JSString** sepOut, ArrayObject** objOut)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 
@@ -897,7 +927,7 @@ BaselineInspector::isOptimizableConstStringSplit(jsbytecode* pc, JSString** strO
 JSObject*
 BaselineInspector::getTemplateObjectForClassHook(jsbytecode* pc, const Class* clasp)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return nullptr;
     }
 
@@ -914,11 +944,11 @@ BaselineInspector::getTemplateObjectForClassHook(jsbytecode* pc, const Class* cl
 LexicalEnvironmentObject*
 BaselineInspector::templateNamedLambdaObject()
 {
-    if (!hasBaselineScript()) {
+    if (!script->hasBaselineScript()) {
         return nullptr;
     }
 
-    JSObject* res = baselineScript()->templateEnvironment();
+    JSObject* res = script->baselineScript()->templateEnvironment();
     if (script->bodyScope()->hasEnvironment()) {
         res = res->enclosingEnvironment();
     }
@@ -930,11 +960,11 @@ BaselineInspector::templateNamedLambdaObject()
 CallObject*
 BaselineInspector::templateCallObject()
 {
-    if (!hasBaselineScript()) {
+    if (!script->hasBaselineScript()) {
         return nullptr;
     }
 
-    JSObject* res = baselineScript()->templateEnvironment();
+    JSObject* res = script->baselineScript()->templateEnvironment();
     MOZ_ASSERT(res);
 
     return &res->as<CallObject>();
@@ -1222,7 +1252,7 @@ BaselineInspector::commonGetPropFunction(jsbytecode* pc, bool innerized,
                                          ReceiverVector& receivers,
                                          ObjectGroupVector& convertUnboxedGroups)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 
@@ -1291,7 +1321,7 @@ bool
 BaselineInspector::megamorphicGetterSetterFunction(jsbytecode* pc, bool isGetter,
                                                    JSFunction** getterOrSetter)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 
@@ -1448,7 +1478,7 @@ BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shap
                                          ReceiverVector& receivers,
                                          ObjectGroupVector& convertUnboxedGroups)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 
@@ -1548,7 +1578,7 @@ BaselineInspector::maybeInfoForProtoReadSlot(jsbytecode* pc, ReceiverVector& rec
     MOZ_ASSERT(convertUnboxedGroups.empty());
     MOZ_ASSERT(!*holder);
 
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return true;
     }
 
@@ -1613,7 +1643,7 @@ GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub)
 MIRType
 BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
 {
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return MIRType::Value;
     }
 
@@ -1653,7 +1683,7 @@ BaselineInspector::instanceOfData(jsbytecode* pc, Shape** shape, uint32_t* slot,
                                   JSObject** prototypeObject)
 {
     MOZ_ASSERT(*pc == JSOP_INSTANCEOF);
-    if (!hasBaselineScript()) {
+    if (!hasICScript()) {
         return false;
     }
 

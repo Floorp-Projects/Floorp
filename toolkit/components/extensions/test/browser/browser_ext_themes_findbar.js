@@ -10,13 +10,13 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar": TOOLBAR_COLOR,
-          "toolbar_text": TOOLBAR_TEXT_COLOR,
+          "bookmark_text": TOOLBAR_TEXT_COLOR,
         },
       },
     },
@@ -54,11 +54,11 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar_field": TOOLBAR_FIELD_COLOR,
           "toolbar_field_text": TOOLBAR_FIELD_TEXT_COLOR,
           "toolbar_field_border": TOOLBAR_FIELD_BORDER_COLOR,

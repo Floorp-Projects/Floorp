@@ -3517,6 +3517,11 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
         initFromModuleContext(script);
     }
 
+#ifdef JS_STRUCTURED_SPEW
+    // We want this to happen after line number initialization to allow filtering to work.
+    script->setSpewEnabled(StructuredSpewer::enabled(script));
+#endif
+
 #ifdef DEBUG
     script->assertValidJumpTargets();
 #endif
@@ -3629,7 +3634,7 @@ JSScript::finalize(FreeOp* fop)
     fop->runtime()->geckoProfiler().onScriptFinalized(this);
 
     if (types_) {
-        types_->destroy();
+        types_->destroy(zone());
     }
 
     jit::DestroyJitScripts(fop, this);

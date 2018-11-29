@@ -22,55 +22,6 @@ namespace jit {
 // Baseline->Ion OSR, which is used to jump into compiled loops.
 
 //
-// A volatile location due to recompilation of an on-stack baseline script
-// (e.g., for debug mode toggling).
-//
-// It is usually used in fallback stubs which may trigger on-stack
-// recompilation by calling out into the VM. Example use:
-//
-//     DebugModeOSRVolatileStub<FallbackStubT*> stub(frame, stub_)
-//
-//     // Call out to the VM
-//     // Other effectful operations like TypeScript::Monitor
-//
-//     if (stub.invalid()) {
-//         return true;
-//     }
-//
-//     // First use of stub after VM call.
-//
-template <typename T>
-class DebugModeOSRVolatileStub
-{
-    T stub_;
-    BaselineFrame* frame_;
-    uint32_t pcOffset_;
-
-  public:
-    DebugModeOSRVolatileStub(BaselineFrame* frame, ICFallbackStub* stub)
-      : stub_(static_cast<T>(stub)),
-        frame_(frame),
-        pcOffset_(stub->icEntry()->pcOffset())
-    { }
-
-    bool invalid() const {
-        MOZ_ASSERT(!frame_->isHandlingException());
-        ICEntry& entry = frame_->script()->baselineScript()->icEntryFromPCOffset(pcOffset_);
-        return stub_ != entry.fallbackStub();
-    }
-
-    operator const T&() const { MOZ_ASSERT(!invalid()); return stub_; }
-    T operator->() const { MOZ_ASSERT(!invalid()); return stub_; }
-    T* address() { MOZ_ASSERT(!invalid()); return &stub_; }
-    const T* address() const { MOZ_ASSERT(!invalid()); return &stub_; }
-    T& get() { MOZ_ASSERT(!invalid()); return stub_; }
-    const T& get() const { MOZ_ASSERT(!invalid()); return stub_; }
-
-    bool operator!=(const T& other) const { MOZ_ASSERT(!invalid()); return stub_ != other; }
-    bool operator==(const T& other) const { MOZ_ASSERT(!invalid()); return stub_ == other; }
-};
-
-//
 // A frame iterator that updates internal JSJitFrameIter in case of
 // recompilation of an on-stack baseline script.
 //

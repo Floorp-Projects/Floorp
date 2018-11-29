@@ -50,10 +50,8 @@ BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript
     alloc_(alloc),
     analysis_(alloc, script),
     frame(script, masm),
-    stubSpace_(),
-    icEntries_(),
     pcMappingEntries_(),
-    icLoadLabels_(),
+    icEntryIndex_(0),
     pushedBeforeCall_(0),
 #ifdef DEBUG
     inCall_(false),
@@ -246,7 +244,6 @@ BaselineCompiler::compile()
                             debugOsrEpilogueOffset_.offset(),
                             profilerEnterFrameToggleOffset_.offset(),
                             profilerExitFrameToggleOffset_.offset(),
-                            icEntries_.length(),
                             retAddrEntries_.length(),
                             pcMappingIndexEntries.length(),
                             pcEntries.length(),
@@ -272,30 +269,14 @@ BaselineCompiler::compile()
     MOZ_ASSERT(pcEntries.length() > 0);
     baselineScript->copyPCMappingEntries(pcEntries);
 
-    // Copy ICEntries and RetAddrEntries.
-    if (icEntries_.length() > 0) {
-        baselineScript->copyICEntries(script, &icEntries_[0]);
-    }
+    // Copy RetAddrEntries.
     if (retAddrEntries_.length() > 0) {
         baselineScript->copyRetAddrEntries(script, &retAddrEntries_[0]);
     }
 
-    // Adopt fallback stubs from the compiler into the baseline script.
-    baselineScript->adoptFallbackStubs(&stubSpace_);
-
     // If profiler instrumentation is enabled, toggle instrumentation on.
     if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime())) {
         baselineScript->toggleProfilerInstrumentation(true);
-    }
-
-    // Patch IC loads using IC entries.
-    for (size_t i = 0; i < icLoadLabels_.length(); i++) {
-        CodeOffset label = icLoadLabels_[i].label;
-        size_t icEntry = icLoadLabels_[i].icEntry;
-        ICEntry* entryAddr = &(baselineScript->icEntry(icEntry));
-        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label),
-                                           ImmPtr(entryAddr),
-                                           ImmPtr((void*)-1));
     }
 
     if (modifiesArguments_) {
@@ -585,31 +566,33 @@ BaselineCompiler::emitOutOfLinePostBarrierSlot()
 }
 
 bool
-BaselineCompiler::emitIC(ICStub* stub, bool isForOp)
+BaselineCompiler::emitNextIC()
 {
-    MOZ_ASSERT_IF(isForOp, BytecodeOpHasIC(JSOp(*pc)));
+    // Emit a call to an IC stored in ICScript. Calls to this must match the
+    // ICEntry order in ICScript: first the non-op IC entries for |this| and
+    // formal arguments, then the for-op IC entries for JOF_IC ops.
 
-    if (!stub) {
-        return false;
-    }
+    uint32_t pcOffset = script->pcToOffset(pc);
 
-    CodeOffset patchOffset, callOffset;
-    EmitCallIC(masm, &patchOffset, &callOffset);
+    // We don't use every ICEntry and we can skip unreachable ops, so we have
+    // to loop until we find an ICEntry for the current pc.
+    const ICEntry* entry;
+    do {
+        entry = &script->icScript()->icEntry(icEntryIndex_);
+        icEntryIndex_++;
+    } while (entry->pcOffset() < pcOffset);
 
-    // ICs need both an ICEntry and a RetAddrEntry.
+    MOZ_RELEASE_ASSERT(entry->pcOffset() == pcOffset);
+    MOZ_ASSERT_IF(entry->isForOp(), BytecodeOpHasIC(JSOp(*pc)));
 
-    RetAddrEntry::Kind kind = isForOp ? RetAddrEntry::Kind::IC : RetAddrEntry::Kind::NonOpIC;
+    CodeOffset callOffset;
+    EmitCallIC(masm, entry, &callOffset);
+
+    RetAddrEntry::Kind kind =
+        entry->isForOp() ? RetAddrEntry::Kind::IC : RetAddrEntry::Kind::NonOpIC;
+
     if (!retAddrEntries_.emplaceBack(script->pcToOffset(pc), kind, callOffset)) {
         ReportOutOfMemory(cx);
-        return false;
-    }
-
-    if (!icEntries_.emplaceBack(stub, script->pcToOffset(pc), isForOp)) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
-    if (!addICLoadLabel(patchOffset)) {
         return false;
     }
 
@@ -947,8 +930,7 @@ BaselineCompiler::emitWarmUpCounterIncrement(bool allowOsr)
     if (JSOp(*pc) == JSOP_LOOPENTRY) {
         // During the loop entry we can try to OSR into ion.
         // The ic has logic for this.
-        ICWarmUpCounter_Fallback::Compiler stubCompiler(cx);
-        if (!emitNonOpIC(stubCompiler.getStub(&stubSpace_))) {
+        if (!emitNextIC()) {
             return false;
         }
     } else {
@@ -982,8 +964,7 @@ BaselineCompiler::emitArgumentTypeChecks()
     frame.pushThis();
     frame.popRegsAndSync(1);
 
-    ICTypeMonitor_Fallback::Compiler compiler(cx, uint32_t(0));
-    if (!emitNonOpIC(compiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -991,8 +972,7 @@ BaselineCompiler::emitArgumentTypeChecks()
         frame.pushArg(i);
         frame.popRegsAndSync(1);
 
-        ICTypeMonitor_Fallback::Compiler compiler(cx, i + 1);
-        if (!emitNonOpIC(compiler.getStub(&stubSpace_))) {
+        if (!emitNextIC()) {
             return false;
         }
     }
@@ -1435,8 +1415,7 @@ BaselineCompiler::emitToBoolean()
     masm.branchTestBoolean(Assembler::Equal, R0, &skipIC);
 
     // Call IC
-    ICToBool_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -1531,8 +1510,7 @@ BaselineCompiler::emit_JSOP_POS()
     masm.branchTestNumber(Assembler::Equal, R0, &done);
 
     // Call IC.
-    ICToNumber_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2159,8 +2137,7 @@ BaselineCompiler::emitBinaryArith()
     frame.popRegsAndSync(2);
 
     // Call IC
-    ICBinaryArith_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2176,8 +2153,7 @@ BaselineCompiler::emitUnaryArith()
     frame.popRegsAndSync(1);
 
     // Call IC
-    ICUnaryArith_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2243,8 +2219,7 @@ BaselineCompiler::emitCompare()
     frame.popRegsAndSync(2);
 
     // Call IC.
-    ICCompare_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2314,13 +2289,7 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     // Pass length in R0.
     masm.move32(Imm32(AssertedCast<int32_t>(length)), R0.scratchReg());
 
-    ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
-    if (!group) {
-        return false;
-    }
-
-    ICNewArray_Fallback::Compiler stubCompiler(cx, group);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2372,8 +2341,7 @@ BaselineCompiler::emit_JSOP_INITELEM_ARRAY()
     masm.moveValue(Int32Value(AssertedCast<int32_t>(index)), R1);
 
     // Call IC.
-    ICSetElem_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2387,8 +2355,7 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
 {
     frame.syncStack(0);
 
-    ICNewObject_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2401,8 +2368,7 @@ BaselineCompiler::emit_JSOP_NEWINIT()
 {
     frame.syncStack(0);
 
-    ICNewObject_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2428,8 +2394,7 @@ BaselineCompiler::emit_JSOP_INITELEM()
     frame.pushScratchValue();
 
     // Call IC.
-    ICSetElem_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2479,8 +2444,7 @@ BaselineCompiler::emit_JSOP_INITPROP()
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
 
     // Call IC.
-    ICSetProp_Fallback::Compiler compiler(cx);
-    if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2508,8 +2472,7 @@ BaselineCompiler::emit_JSOP_GETELEM()
     frame.popRegsAndSync(2);
 
     // Call IC.
-    ICGetElem_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2531,8 +2494,7 @@ BaselineCompiler::emit_JSOP_GETELEM_SUPER()
     // Keep obj on the stack.
     frame.pushScratchValue();
 
-    ICGetElem_Fallback::Compiler stubCompiler(cx, /* hasReceiver = */ true);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2561,8 +2523,7 @@ BaselineCompiler::emit_JSOP_SETELEM()
     frame.pushScratchValue();
 
     // Call IC.
-    ICSetElem_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2653,8 +2614,7 @@ BaselineCompiler::emit_JSOP_IN()
 {
     frame.popRegsAndSync(2);
 
-    ICIn_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2667,8 +2627,7 @@ BaselineCompiler::emit_JSOP_HASOWN()
 {
     frame.popRegsAndSync(2);
 
-    ICHasOwn_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2704,8 +2663,7 @@ BaselineCompiler::emit_JSOP_GETGNAME()
     masm.movePtr(ImmGCPtr(&script->global().lexicalEnvironment()), R0.scratchReg());
 
     // Call IC.
-    ICGetName_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2779,8 +2737,7 @@ BaselineCompiler::emit_JSOP_SETPROP()
     frame.syncStack(0);
 
     // Call IC.
-    ICSetProp_Fallback::Compiler compiler(cx);
-    if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2865,8 +2822,7 @@ BaselineCompiler::emit_JSOP_GETPROP()
     frame.popRegsAndSync(1);
 
     // Call IC.
-    ICGetProp_Fallback::Compiler compiler(cx);
-    if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2901,8 +2857,7 @@ BaselineCompiler::emit_JSOP_GETPROP_SUPER()
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
     frame.pop();
 
-    ICGetProp_Fallback::Compiler compiler(cx, /* hasReceiver = */ true);
-    if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -2988,8 +2943,7 @@ BaselineCompiler::emit_JSOP_GETALIASEDVAR()
 
     if (ionCompileable_) {
         // No need to monitor types if we know Ion can't compile this script.
-        ICTypeMonitor_Fallback::Compiler compiler(cx, nullptr);
-        if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+        if (!emitNextIC()) {
             return false;
         }
     }
@@ -3015,8 +2969,7 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
         masm.tagValue(JSVAL_TYPE_OBJECT, R2.scratchReg(), R0);
 
         // Call SETPROP IC.
-        ICSetProp_Fallback::Compiler compiler(cx);
-        if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+        if (!emitNextIC()) {
             return false;
         }
 
@@ -3055,8 +3008,7 @@ BaselineCompiler::emit_JSOP_GETNAME()
     masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
 
     // Call IC.
-    ICGetName_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -3077,8 +3029,7 @@ BaselineCompiler::emit_JSOP_BINDNAME()
     }
 
     // Call IC.
-    ICBindName_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -3145,8 +3096,7 @@ BaselineCompiler::emit_JSOP_GETIMPORT()
 
     if (ionCompileable_) {
         // No need to monitor types if we know Ion can't compile this script.
-        ICTypeMonitor_Fallback::Compiler compiler(cx, nullptr);
-        if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+        if (!emitNextIC()) {
             return false;
         }
     }
@@ -3160,8 +3110,7 @@ BaselineCompiler::emit_JSOP_GETINTRINSIC()
 {
     frame.syncStack(0);
 
-    ICGetIntrinsic_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -3375,8 +3324,7 @@ BaselineCompiler::emit_JSOP_INITELEM_INC()
     masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R1);
 
     // Call IC.
-    ICSetElem_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -3673,9 +3621,7 @@ BaselineCompiler::emitCall()
     masm.move32(Imm32(argc), R0.scratchReg());
 
     // Call IC
-    ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ construct,
-                                           /* isSpread = */ false);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -3695,9 +3641,7 @@ BaselineCompiler::emitSpreadCall()
 
     // Call IC
     bool construct = JSOp(*pc) == JSOP_SPREADNEW || JSOp(*pc) == JSOP_SPREADSUPERCALL;
-    ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ construct,
-                                           /* isSpread = */ true);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -3853,8 +3797,7 @@ BaselineCompiler::emit_JSOP_INSTANCEOF()
 {
     frame.popRegsAndSync(2);
 
-    ICInstanceOf_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -3867,8 +3810,7 @@ BaselineCompiler::emit_JSOP_TYPEOF()
 {
     frame.popRegsAndSync(1);
 
-    ICTypeOf_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -4536,8 +4478,7 @@ BaselineCompiler::emit_JSOP_ITER()
 {
     frame.popRegsAndSync(1);
 
-    ICGetIterator_Fallback::Compiler compiler(cx);
-    if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -4551,8 +4492,7 @@ BaselineCompiler::emit_JSOP_MOREITER()
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
 
-    ICIteratorMore_Fallback::Compiler compiler(cx);
-    if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 
@@ -4593,8 +4533,11 @@ BaselineCompiler::emit_JSOP_ENDITER()
     }
     frame.popRegsAndSync(1);
 
-    ICIteratorClose_Fallback::Compiler compiler(cx);
-    return emitOpIC(compiler.getStub(&stubSpace_));
+    if (!emitNextIC()) {
+        return false;
+    }
+
+    return true;
 }
 
 bool
@@ -4830,16 +4773,7 @@ BaselineCompiler::emit_JSOP_REST()
 {
     frame.syncStack(0);
 
-    ArrayObject* templateObject =
-        ObjectGroup::newArrayObject(cx, nullptr, 0, TenuredObject,
-                                    ObjectGroup::NewArrayKind::UnknownIndex);
-    if (!templateObject) {
-        return false;
-    }
-
-    // Call IC.
-    ICRest_Fallback::Compiler compiler(cx, templateObject);
-    if (!emitOpIC(compiler.getStub(&stubSpace_))) {
+    if (!emitNextIC()) {
         return false;
     }
 

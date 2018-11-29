@@ -108,9 +108,6 @@ void AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     // This calls MixerCallback below
     mMixer.FinishMixing();
   }
-
-  // Regardless of the status of the input tracks, we go foward.
-  mTracks.AdvanceKnownTracksTime(GraphTimeToStreamTimeWithBlocking((aTo)));
 }
 
 void AudioCaptureStream::MixerCallback(AudioDataValue* aMixedBuffer,

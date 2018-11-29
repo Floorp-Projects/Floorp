@@ -1063,6 +1063,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
 
     const uint32_t pcOff = script->pcToOffset(pc);
     BaselineScript* baselineScript = script->baselineScript();
+    ICScript* icScript = script->icScript();
 
 #ifdef DEBUG
     uint32_t expectedDepth;
@@ -1120,7 +1121,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
             // Not every monitored op has a monitored fallback stub, e.g.
             // JSOP_NEWOBJECT, which always returns the same type for a
             // particular script/pc location.
-            ICEntry& icEntry = baselineScript->icEntryFromPCOffset(pcOff);
+            ICEntry& icEntry = icScript->icEntryFromPCOffset(pcOff);
             ICFallbackStub* fallbackStub = icEntry.firstStub()->getChainFallback();
             if (fallbackStub->isMonitoredFallback()) {
                 enterMonitorChain = true;
@@ -1137,7 +1138,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
         builder.setResumeFramePtr(prevFramePtr);
 
         if (enterMonitorChain) {
-            ICEntry& icEntry = baselineScript->icEntryFromPCOffset(pcOff);
+            ICEntry& icEntry = icScript->icEntryFromPCOffset(pcOff);
             ICFallbackStub* fallbackStub = icEntry.firstStub()->getChainFallback();
             MOZ_ASSERT(fallbackStub->isMonitoredFallback());
             JitSpew(JitSpew_BaselineBailouts, "      [TYPE-MONITOR CHAIN]");
@@ -1317,7 +1318,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
 
     // Calculate and write out return address.
     // The icEntry in question MUST have an inlinable fallback stub.
-    ICEntry& icEntry = baselineScript->icEntryFromPCOffset(pcOff);
+    ICEntry& icEntry = icScript->icEntryFromPCOffset(pcOff);
     MOZ_ASSERT(IsInlinableFallback(icEntry.firstStub()->getChainFallback()));
 
     RetAddrEntry& retAddrEntry =

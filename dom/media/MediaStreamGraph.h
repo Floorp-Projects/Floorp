@@ -420,7 +420,7 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
    * This must be idempotent.
    */
   virtual void DestroyImpl();
-  StreamTime GetTracksEnd() const { return mTracks.GetEnd(); }
+  StreamTime GetTracksEnd() const { return mTracks.GetEarliestTrackEnd(); }
 #ifdef DEBUG
   void DumpTrackInfo() const { return mTracks.DumpTrackInfo(); }
 #endif
@@ -658,13 +658,14 @@ class SourceMediaStream : public MediaStream {
   // Main thread only
 
   /**
-   * Enable or disable pulling. When pulling is enabled, NotifyPull
-   * gets called on MediaStream/TrackListeners for this stream during the
-   * MediaStreamGraph control loop. Pulling is initially disabled.
-   * Due to unavoidable race conditions, after a call to SetPullEnabled(false)
+   * Enable or disable pulling for a specific track.
+   * When pulling is enabled, NotifyPull gets called on the corresponding
+   * MediaStreamTrackListeners for this stream during the MediaStreamGraph
+   * control loop. Pulling is initially disabled for all tracks. Due to
+   * unavoidable race conditions, after a call to SetPullingEnabled(false)
    * it is still possible for a NotifyPull to occur.
    */
-  void SetPullEnabled(bool aEnabled);
+  void SetPullingEnabled(TrackID aTrackID, bool aEnabled);
 
   // Users of audio inputs go through the stream so it can track when the
   // last stream referencing an input goes away, so it can close the cubeb
@@ -698,9 +699,8 @@ class SourceMediaStream : public MediaStream {
     ADDTRACK_QUEUED = 0x01  // Queue track add until FinishAddTracks()
   };
   /**
-   * Add a new track to the stream starting at the stream's current time
-   * (which must be greater than or equal to the last time passed to
-   * AdvanceKnownTracksTime). Takes ownership of aSegment.
+   * Add a new track to the stream starting at the stream's current time.
+   * Takes ownership of aSegment.
    */
   void AddTrack(TrackID aID, MediaSegment* aSegment, uint32_t aFlags = 0) {
     AddTrackInternal(aID, GraphRate(), aSegment, aFlags);
@@ -739,12 +739,6 @@ class SourceMediaStream : public MediaStream {
    * Ignored if the track does not exist.
    */
   void EndTrack(TrackID aID);
-  /**
-   * Indicate that no tracks will be added starting before time aKnownTime.
-   * aKnownTime must be >= its value at the last call to AdvanceKnownTracksTime.
-   */
-  void AdvanceKnownTracksTime(StreamTime aKnownTime);
-  void AdvanceKnownTracksTimeWithLockHeld(StreamTime aKnownTime);
   /**
    * Indicate that this stream should enter the "finished" state. All tracks
    * must have been ended via EndTrack. The finish time of the stream is
@@ -816,6 +810,8 @@ class SourceMediaStream : public MediaStream {
     // Each time the track updates are flushed to the media graph thread,
     // this is cleared.
     uint32_t mCommands;
+    // True if the producer of this track is having data pulled by the graph.
+    bool mPullingEnabled;
   };
 
   bool NeedsMixing();
@@ -867,7 +863,6 @@ class SourceMediaStream : public MediaStream {
   // held together.
   Mutex mMutex;
   // protected by mMutex
-  StreamTime mUpdateKnownTracksTime;
   // This time stamp will be updated in adding and blocked SourceMediaStream,
   // |AddStreamGraphThread| and |AdvanceTimeVaryingValuesToCurrentTime| in
   // particularly.
@@ -875,7 +870,6 @@ class SourceMediaStream : public MediaStream {
   nsTArray<TrackData> mUpdateTracks;
   nsTArray<TrackData> mPendingTracks;
   nsTArray<TrackBound<DirectMediaStreamTrackListener>> mDirectTrackListeners;
-  bool mPullEnabled;
   bool mFinishPending;
 };
 

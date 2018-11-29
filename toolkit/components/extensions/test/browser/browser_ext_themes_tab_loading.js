@@ -8,12 +8,12 @@ add_task(async function test_support_tab_loading_filling() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": "#000",
+          "frame": "#000",
           "toolbar": "#124455",
-          "textcolor": TAB_TEXT_COLOR,
+          "tab_background_text": TAB_TEXT_COLOR,
           "tab_loading":  TAB_LOADING_COLOR,
         },
       },

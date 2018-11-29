@@ -23,4 +23,10 @@ private:
   virtual ~OSReauthenticator() = default;
 };
 
+#ifdef XP_MACOSX
+nsresult
+ReauthenticateUserMacOS(const nsACString& aPrompt,
+              /* out */ bool& aReauthenticated);
+#endif // XP_MACOSX
+
 #endif // OSReauthenticator_h

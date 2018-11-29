@@ -31,16 +31,13 @@ EmitRepushTailCallReg(MacroAssembler& masm)
 }
 
 inline void
-EmitCallIC(MacroAssembler& masm, CodeOffset* patchOffset, CodeOffset* callOffset)
+EmitCallIC(MacroAssembler& masm, const ICEntry* entry, CodeOffset* callOffset)
 {
-    // Move ICEntry offset into ICStubReg
-    CodeOffset offset = masm.movWithPatch(ImmWord(-1), ICStubReg);
-    *patchOffset = offset;
+    // Load stub pointer into ICStubReg.
+    masm.loadPtr(AbsoluteAddress(entry).offset(ICEntry::offsetOfFirstStub()),
+                 ICStubReg);
 
-    // Load stub pointer into ICStubReg
-    masm.loadPtr(Address(ICStubReg, ICEntry::offsetOfFirstStub()), ICStubReg);
-
-    // Load stubcode pointer from BaselineStubEntry.
+    // Load stubcode pointer from the ICStub.
     // R2 won't be active when we call ICs, so we can use r0.
     MOZ_ASSERT(R2 == ValueOperand(r1, r0));
     masm.loadPtr(Address(ICStubReg, ICStub::offsetOfStubCode()), r0);

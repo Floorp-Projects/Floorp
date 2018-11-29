@@ -462,6 +462,47 @@ class TestNrSocketTest : public MtransportTest {
 
 using mozilla::TestNrSocketTest;
 using mozilla::TestNat;
+using mozilla::NrSocketBase;
+
+TEST_F(TestNrSocketTest, UnsafePortRejectedUDP) {
+  nr_transport_addr address;
+  ASSERT_FALSE(nr_str_port_to_transport_addr("127.0.0.1",
+                                             // ssh
+                                             22,
+                                             IPPROTO_UDP,
+                                             &address));
+  ASSERT_TRUE(NrSocketBase::IsForbiddenAddress(&address));
+}
+
+TEST_F(TestNrSocketTest, UnsafePortRejectedTCP) {
+  nr_transport_addr address;
+  ASSERT_FALSE(nr_str_port_to_transport_addr("127.0.0.1",
+                                             // ssh
+                                             22,
+                                             IPPROTO_TCP,
+                                             &address));
+  ASSERT_TRUE(NrSocketBase::IsForbiddenAddress(&address));
+}
+
+TEST_F(TestNrSocketTest, SafePortAcceptedUDP) {
+  nr_transport_addr address;
+  ASSERT_FALSE(nr_str_port_to_transport_addr("127.0.0.1",
+                                             // stuns
+                                             5349,
+                                             IPPROTO_UDP,
+                                             &address));
+  ASSERT_FALSE(NrSocketBase::IsForbiddenAddress(&address));
+}
+
+TEST_F(TestNrSocketTest, SafePortAcceptedTCP) {
+  nr_transport_addr address;
+  ASSERT_FALSE(nr_str_port_to_transport_addr("127.0.0.1",
+                                             // turns
+                                             5349,
+                                             IPPROTO_TCP,
+                                             &address));
+  ASSERT_FALSE(NrSocketBase::IsForbiddenAddress(&address));
+}
 
 TEST_F(TestNrSocketTest, PublicConnectivity) {
   CreatePublicAddrs(2);

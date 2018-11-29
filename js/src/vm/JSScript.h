@@ -33,6 +33,7 @@
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
+#include "util/StructuredSpewer.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
@@ -52,6 +53,7 @@ namespace js {
 
 namespace jit {
     struct BaselineScript;
+    class ICScript;
     struct IonScriptCounts;
 } // namespace jit
 
@@ -1776,6 +1778,9 @@ class JSScript : public js::gc::TenuredCell
 
         // Set if the debugger's onNewScript hook has not yet been called.
         HideScriptFromDebugger = 1 << 19,
+
+        // Set if the script has opted into spew
+        SpewEnabled = 1 << 20,
     };
   private:
     // Note: don't make this a bitfield! It makes it hard to read these flags
@@ -2188,6 +2193,13 @@ class JSScript : public js::gc::TenuredCell
         clearFlag(MutableFlags::HideScriptFromDebugger);
     }
 
+    bool spewEnabled() const {
+        return hasFlag(MutableFlags::SpewEnabled);
+    }
+    void setSpewEnabled(bool enabled) {
+        setFlag(MutableFlags::SpewEnabled, enabled);
+    }
+
     bool needsHomeObject() const {
         return hasFlag(ImmutableFlags::NeedsHomeObject);
     }
@@ -2298,6 +2310,14 @@ class JSScript : public js::gc::TenuredCell
         return baseline;
     }
     inline void setBaselineScript(JSRuntime* rt, js::jit::BaselineScript* baselineScript);
+
+    inline js::jit::ICScript* icScript() const;
+
+    bool hasICScript() const {
+        // ICScript is stored in TypeScript so we have an ICScript iff we have a
+        // TypeScript.
+        return !!types_;
+    }
 
     void updateJitCodeRaw(JSRuntime* rt);
 
