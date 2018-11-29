@@ -187,7 +187,6 @@ public:
   typedef mozilla::ScreenMargin ScreenMargin;
   typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
-  typedef mozilla::LayoutDeviceSize LayoutDeviceSize;
   typedef mozilla::StyleGeometryBox StyleGeometryBox;
   typedef mozilla::SVGImageContext SVGImageContext;
   typedef mozilla::LogicalSize LogicalSize;

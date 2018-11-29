@@ -15,6 +15,7 @@ namespace layers {
 StackingContextHelper::StackingContextHelper()
   : mBuilder(nullptr)
   , mScale(1.0f, 1.0f)
+  , mAffectsClipPositioning(false)
   , mIsPreserve3D(false)
   , mRasterizeLocally(false)
 {
@@ -25,10 +26,10 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const ActiveScrolledRoot* aAsr,
                                              wr::DisplayListBuilder& aBuilder,
                                              const nsTArray<wr::WrFilterOp>& aFilters,
+                                             const LayoutDeviceRect& aBounds,
                                              const gfx::Matrix4x4* aBoundTransform,
                                              const wr::WrAnimationProperty* aAnimation,
                                              const float* aOpacityPtr,
-                                             const LayoutDevicePoint& aOrigin,
                                              const gfx::Matrix4x4* aTransformPtr,
                                              const gfx::Matrix4x4* aPerspectivePtr,
                                              const gfx::CompositionOp& aMixBlendMode,
@@ -39,15 +40,10 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              bool aAnimated)
   : mBuilder(&aBuilder)
   , mScale(1.0f, 1.0f)
-  , mInheritedStickyOrigin(aOrigin)
   , mDeferredTransformItem(aDeferredTransformItem)
   , mIsPreserve3D(aIsPreserve3D)
   , mRasterizeLocally(aAnimated || aParentSC.mRasterizeLocally)
 {
-  if (aOrigin != LayoutDevicePoint()) {
-    mOriginFrameId = Some(mBuilder->PushOrigin(wr::ToLayoutPoint(aOrigin)));
-  }
-
   // Compute scale for fallback rendering. We don't try to guess a scale for 3d
   // transformed items
   gfx::Matrix transform2d;
@@ -71,6 +67,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
     : wr::RasterSpace::Screen();
 
   mReferenceFrameId = mBuilder->PushStackingContext(
+          wr::ToLayoutRect(aBounds),
           aClipNodeId,
           aAnimation,
           aOpacityPtr,
@@ -81,6 +78,9 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
           aFilters,
           aBackfaceVisible,
           rasterSpace);
+
+  mAffectsClipPositioning = mReferenceFrameId.isSome() ||
+      (aBounds.TopLeft() != LayoutDevicePoint());
 
   // If the parent stacking context has a deferred transform item, inherit it
   // into this stacking context, as long as the ASR hasn't changed. Refer to
@@ -99,27 +99,13 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
       mDeferredAncestorTransform = aParentSC.mDeferredAncestorTransform;
     }
   }
-
-  // Update the origin for use by sticky frames.
-  if (!mReferenceFrameId) {
-    mInheritedStickyOrigin += aParentSC.mInheritedStickyOrigin;
-  }
 }
 
 StackingContextHelper::~StackingContextHelper()
 {
   if (mBuilder) {
     mBuilder->PopStackingContext(mReferenceFrameId.isSome());
-    if (mOriginFrameId) {
-      mBuilder->PopOrigin();
-    }
   }
-}
-
-Maybe<wr::WrClipId>
-StackingContextHelper::ReferenceFrameId() const
-{
-  return mReferenceFrameId ? mReferenceFrameId : mOriginFrameId;
 }
 
 const Maybe<nsDisplayTransform*>&
