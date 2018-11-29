@@ -1285,6 +1285,12 @@ pref("dom.disable_open_click_delay", 1000);
 pref("dom.serviceWorkers.disable_open_click_delay", 1000);
 
 pref("dom.storage.enabled", true);
+// Whether or not LSNG (Next Generation Local Storage) is enabled.
+#ifdef NIGHTLY_BUILD
+pref("dom.storage.next_gen", true);
+#else
+pref("dom.storage.next_gen", false);
+#endif
 pref("dom.storage.default_quota",      5120);
 pref("dom.storage.testing", false);
 

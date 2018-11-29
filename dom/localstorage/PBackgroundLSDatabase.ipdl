@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+namespace mozilla {
+namespace dom {
+
+sync protocol PBackgroundLSDatabase
+{
+  manager PBackground;
+
+parent:
+  // The DeleteMe message is used to avoid a race condition between the parent
+  // actor and the child actor. The PBackgroundLSDatabase protocol could be
+  // simply destroyed by sending the __delete__ message from the child side.
+  // However, that would destroy the child actor immediatelly and the parent
+  // could be sending a message to the child at the same time resulting in a
+  // routing error since the child actor wouldn't exist anymore. A routing
+  // error typically causes a crash. The race can be prevented by doing the
+  // teardown in two steps. First, we send the DeleteMe message to the parent
+  // and the parent then sends the __delete__ message to the child.
+  async DeleteMe();
+
+  sync GetLength()
+    returns (uint32_t length);
+
+  sync GetKey(uint32_t index)
+    returns (nsString key);
+
+  sync GetItem(nsString key)
+    returns (nsString value);
+
+  sync GetKeys()
+    returns (nsString[] keys);
+
+  sync SetItem(nsString key, nsString value);
+
+  sync RemoveItem(nsString key);
+
+  sync Clear();
+
+child:
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla
