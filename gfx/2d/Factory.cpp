@@ -46,7 +46,6 @@
 #include <d3d10_1.h>
 #include "HelpersD2D.h"
 #include "HelpersWinFonts.h"
-#include "mozilla/Mutex.h"
 #endif
 
 #include "DrawTargetCapture.h"
@@ -67,8 +66,6 @@
 #ifdef MOZ_ENABLE_FREETYPE
 #include "ft2build.h"
 #include FT_FREETYPE_H
-
-#include "mozilla/Mutex.h"
 #endif
 #include "MainThreadUtils.h"
 
@@ -219,7 +216,7 @@ int32_t LoggingPrefs::sGfxLogLevel = LOG_DEFAULT;
 
 #ifdef MOZ_ENABLE_FREETYPE
 FT_Library Factory::mFTLibrary = nullptr;
-Mutex* Factory::mFTLock = nullptr;
+StaticMutex Factory::mFTLock;
 #endif
 
 #ifdef WIN32
@@ -243,10 +240,6 @@ Factory::Init(const Config& aConfig)
 {
   MOZ_ASSERT(!sConfig);
   sConfig = new Config(aConfig);
-
-#ifdef MOZ_ENABLE_FREETYPE
-  mFTLock = new Mutex("Factory::mFTLock");
-#endif
 }
 
 void
@@ -260,10 +253,6 @@ Factory::ShutDown()
 
 #ifdef MOZ_ENABLE_FREETYPE
   mFTLibrary = nullptr;
-  if (mFTLock) {
-    delete mFTLock;
-    mFTLock = nullptr;
-  }
 #endif
 }
 
@@ -764,22 +753,19 @@ Factory::ReleaseFTLibrary(FT_Library aFTLibrary)
 void
 Factory::LockFTLibrary(FT_Library aFTLibrary)
 {
-  MOZ_ASSERT(mFTLock);
-  mFTLock->Lock();
+  mFTLock.Lock();
 }
 
 void
 Factory::UnlockFTLibrary(FT_Library aFTLibrary)
 {
-  MOZ_ASSERT(mFTLock);
-  mFTLock->Unlock();
+  mFTLock.Unlock();
 }
 
 FT_Face
 Factory::NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex)
 {
-  MOZ_ASSERT(mFTLock);
-  MutexAutoLock lock(*mFTLock);
+  StaticMutexAutoLock lock(mFTLock);
   if (!aFTLibrary) {
     aFTLibrary = mFTLibrary;
   }
@@ -793,8 +779,7 @@ Factory::NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex)
 FT_Face
 Factory::NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize, int aFaceIndex)
 {
-  MOZ_ASSERT(mFTLock);
-  MutexAutoLock lock(*mFTLock);
+  StaticMutexAutoLock lock(mFTLock);
   if (!aFTLibrary) {
     aFTLibrary = mFTLibrary;
   }
@@ -808,23 +793,14 @@ Factory::NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t a
 void
 Factory::ReleaseFTFace(FT_Face aFace)
 {
-  // May be called during shutdown when the lock is already destroyed.
-  // However, there are no other threads using the face by this point,
-  // so it is safe to skip locking if the lock is not around.
-  if (mFTLock) {
-    mFTLock->Lock();
-  }
+  StaticMutexAutoLock lock(mFTLock);
   FT_Done_Face(aFace);
-  if (mFTLock) {
-    mFTLock->Unlock();
-  }
 }
 
 FT_Error
 Factory::LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags)
 {
-  MOZ_ASSERT(mFTLock);
-  MutexAutoLock lock(*mFTLock);
+  StaticMutexAutoLock lock(mFTLock);
   return FT_Load_Glyph(aFace, aGlyphIndex, aFlags);
 }
 #endif
@@ -1028,7 +1004,7 @@ Factory::CreateScaledFontForDWriteFont(IDWriteFontFace* aFontFace,
                                          aStyle);
 }
 
-#endif // XP_WIN
+#endif // WIN32
 
 #ifdef USE_SKIA_GPU
 already_AddRefed<DrawTarget>
