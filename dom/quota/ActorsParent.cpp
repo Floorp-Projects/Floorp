@@ -6102,6 +6102,31 @@ QuotaManager::AreOriginsEqualOnDisk(nsACString& aOrigin1,
   return origin1Sanitized == origin2Sanitized;
 }
 
+// static
+bool
+QuotaManager::ParseOrigin(const nsACString& aOrigin,
+                          nsCString& aSpec,
+                          OriginAttributes* aAttrs)
+{
+  MOZ_ASSERT(aAttrs);
+
+  if (aOrigin.Equals(kChromeOrigin)) {
+    aSpec = kChromeOrigin;
+    return true;
+  }
+
+  nsCString sanitizedOrigin(aOrigin);
+  SanitizeOriginString(sanitizedOrigin);
+
+  OriginParser::ResultType result =
+    OriginParser::ParseOrigin(sanitizedOrigin, aSpec, aAttrs);
+  if (NS_WARN_IF(result != OriginParser::ValidOrigin)) {
+    return false;
+  }
+
+  return true;
+}
+
 uint64_t
 QuotaManager::LockedCollectOriginsForEviction(
                                   uint64_t aMinSizeToBeFreed,
