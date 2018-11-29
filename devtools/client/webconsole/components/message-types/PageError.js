@@ -36,6 +36,7 @@ function PageError(props) {
   } = props;
   const {
     id: messageId,
+    executionPoint,
     indent,
     source,
     type,
@@ -58,6 +59,7 @@ function PageError(props) {
   return Message({
     dispatch,
     messageId,
+    executionPoint,
     isPaused,
     open,
     collapsible: Array.isArray(stacktrace),
