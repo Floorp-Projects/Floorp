@@ -288,6 +288,20 @@ js::PutEscapedStringImpl(char* buffer, size_t bufferSize, GenericPrinter* out, c
     return n;
 }
 
+bool
+js::ContainsFlag(const char* str, const char* flag)
+{
+    size_t flaglen = strlen(flag);
+    const char* index = strstr(str, flag);
+    while (index) {
+        if ((index == str || index[-1] == ',') && (index[flaglen] == 0 || index[flaglen] == ',')) {
+            return true;
+        }
+        index = strstr(index + flaglen, flag);
+    }
+    return false;
+}
+
 template size_t
 js::PutEscapedStringImpl(char* buffer, size_t bufferSize, GenericPrinter* out, const Latin1Char* chars,
                          size_t length, uint32_t quote);

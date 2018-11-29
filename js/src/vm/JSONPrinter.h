@@ -62,6 +62,7 @@ class JSONPrinter
 #endif
 
     void formatProperty(const char* name, const char* format, ...) MOZ_FORMAT_PRINTF(3, 4);
+    void formatProperty(const char* name, const char* format, va_list ap);
 
     // JSON requires decimals to be separated by periods, but the LC_NUMERIC
     // setting may cause printf to use commas in some locales.
