@@ -54,6 +54,12 @@ private:
   nsTArray<RefPtr<IPCBlobInputStreamChild>> mPendingActors;
 };
 
+bool
+IsOnDOMFileThread();
+
+void
+AssertIsOnDOMFileThread();
+
 } // dom namespace
 } // mozilla namespace
 
