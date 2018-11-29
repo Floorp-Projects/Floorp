@@ -264,7 +264,6 @@ class BaselineCodeGen
     jsbytecode* pc;
     StackMacroAssembler masm;
     bool ionCompileable_;
-    bool compileDebugInstrumentation_;
 
     TempAllocator& alloc_;
     BytecodeAnalysis analysis_;
@@ -288,7 +287,9 @@ class BaselineCodeGen
     // Whether any on stack arguments are modified.
     bool modifiesArguments_;
 
-    BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script);
+    template <typename... HandlerArgs>
+    BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script,
+                    HandlerArgs&&... args);
 
     Label* labelOf(jsbytecode* pc) {
         return &labels_[script->pcToOffset(pc)];
@@ -330,6 +331,17 @@ class BaselineCodeGen
         }
         retAddrEntries_.back().setKind(RetAddrEntry::Kind::NonOpCallVM);
         return true;
+    }
+
+    // ifDebuggee should be a function emitting code for when the script is a
+    // debuggee script. ifNotDebuggee (if present) is called to emit code for
+    // non-debuggee scripts.
+    template <typename F1, typename F2>
+    MOZ_MUST_USE bool emitDebugInstrumentation(const F1& ifDebuggee,
+                                               const mozilla::Maybe<F2>& ifNotDebuggee);
+    template <typename F>
+    MOZ_MUST_USE bool emitDebugInstrumentation(const F& ifDebuggee) {
+        return emitDebugInstrumentation(ifDebuggee, mozilla::Maybe<F>());
     }
 
     MOZ_MUST_USE bool emitCheckThis(ValueOperand val, bool reinit=false);
@@ -384,10 +396,22 @@ class BaselineCodeGen
 // Interface used by BaselineCodeGen for BaselineCompiler.
 class BaselineCompilerHandler
 {
+    bool compileDebugInstrumentation_;
+
   public:
+    explicit BaselineCompilerHandler(JSScript* script);
+
+    void setCompileDebugInstrumentation() {
+        compileDebugInstrumentation_ = true;
+    }
+    bool compileDebugInstrumentation() const {
+        return compileDebugInstrumentation_;
+    }
 };
 
-class BaselineCompiler final : private BaselineCodeGen<BaselineCompilerHandler>
+using BaselineCompilerCodeGen = BaselineCodeGen<BaselineCompilerHandler>;
+
+class BaselineCompiler final : private BaselineCompilerCodeGen
 {
     // Stores the native code offset for a bytecode pc.
     struct PCMappingEntry
@@ -434,8 +458,11 @@ class BaselineCompiler final : private BaselineCodeGen<BaselineCompilerHandler>
 
     MethodStatus compile();
 
+    bool compileDebugInstrumentation() const {
+        return handler.compileDebugInstrumentation();
+    }
     void setCompileDebugInstrumentation() {
-        compileDebugInstrumentation_ = true;
+        handler.setCompileDebugInstrumentation();
     }
 
   private:
@@ -483,9 +510,12 @@ class BaselineCompiler final : private BaselineCodeGen<BaselineCompilerHandler>
 class BaselineInterpreterHandler
 {
   public:
+    explicit BaselineInterpreterHandler();
 };
 
-class BaselineInterpreterGenerator final : private BaselineCodeGen<BaselineInterpreterHandler>
+using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
+
+class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen
 {
   public:
 };
