@@ -1024,11 +1024,13 @@ public:
   {
     int64_t amount;
     if (NS_SUCCEEDED(PrivateDistinguishedAmount(&amount))) {
+      // clang-format off
       MOZ_COLLECT_REPORT(
         "private", KIND_OTHER, UNITS_BYTES, amount,
 "Memory that cannot be shared with other processes, including memory that is "
 "committed and marked MEM_PRIVATE, data that is not mapped, and executable "
 "pages that have been written to.");
+      // clang-format on
     }
     return NS_OK;
   }
@@ -1049,6 +1051,7 @@ public:
   {
     int64_t amount;
     if (NS_SUCCEEDED(VsizeDistinguishedAmount(&amount))) {
+      // clang-format off
       MOZ_COLLECT_REPORT(
         "vsize", KIND_OTHER, UNITS_BYTES, amount,
 "Memory mapped by the process, including code and data segments, the heap, "
@@ -1058,6 +1061,7 @@ public:
 "processes share huge amounts of memory with one another.  But even on other "
 "operating systems, 'resident' is a much better measure of the memory "
 "resources used by the process.");
+      // clang-format on
     }
     return NS_OK;
   }
@@ -1076,6 +1080,7 @@ public:
   {
     int64_t amount;
     if (NS_SUCCEEDED(ResidentDistinguishedAmount(&amount))) {
+      // clang-format off
       MOZ_COLLECT_REPORT(
         "resident", KIND_OTHER, UNITS_BYTES, amount,
 "Memory mapped by the process that is present in physical memory, also known "
@@ -1084,6 +1089,7 @@ public:
 "other processes being run and details of the OS kernel and so is best used "
 "for comparing the memory usage of a single process at different points in "
 "time.");
+      // clang-format on
     }
     return NS_OK;
   }
@@ -1105,12 +1111,14 @@ public:
   {
     int64_t amount = 0;
     if (NS_SUCCEEDED(ResidentUniqueDistinguishedAmount(&amount))) {
+      // clang-format off
       MOZ_COLLECT_REPORT(
         "resident-unique", KIND_OTHER, UNITS_BYTES, amount,
 "Memory mapped by the process that is present in physical memory and not "
 "shared with any other processes.  This is also known as the process's unique "
 "set size (USS).  This is the amount of RAM we'd expect to be freed if we "
 "closed this process.");
+      // clang-format on
     }
     return NS_OK;
   }
@@ -1133,12 +1141,14 @@ public:
   {
     int64_t amount;
     if (NS_SUCCEEDED(SystemHeapSize(&amount))) {
+      // clang-format off
       MOZ_COLLECT_REPORT(
         "system-heap-allocated", KIND_OTHER, UNITS_BYTES, amount,
 "Memory used by the system allocator that is currently allocated to the "
 "application. This is distinct from the jemalloc heap that Firefox uses for "
 "most or all of its heap allocations. Ideally this number is zero, but "
 "on some platforms we cannot force every heap allocation through jemalloc.");
+      // clang-format on
     }
     return NS_OK;
   }
@@ -1214,6 +1224,7 @@ public:
     int err = getrusage(RUSAGE_SELF, &usage);
     if (err == 0) {
       int64_t amount = usage.ru_minflt;
+      // clang-format off
       MOZ_COLLECT_REPORT(
         "page-faults-soft", KIND_OTHER, UNITS_COUNT_CUMULATIVE, amount,
 "The number of soft page faults (also known as 'minor page faults') that "
@@ -1225,6 +1236,7 @@ public:
 "page faults even when the machine has plenty of available physical memory, "
 "and because the OS services a soft page fault without accessing the disk, "
 "they impact performance much less than hard page faults.");
+      // clang-format on
     }
     return NS_OK;
   }
@@ -1255,6 +1267,7 @@ public:
   {
     int64_t amount = 0;
     if (NS_SUCCEEDED(PageFaultsHardDistinguishedAmount(&amount))) {
+      // clang-format off
       MOZ_COLLECT_REPORT(
         "page-faults-hard", KIND_OTHER, UNITS_COUNT_CUMULATIVE, amount,
 "The number of hard page faults (also known as 'major page faults') that have "
@@ -1267,6 +1280,7 @@ public:
 "to a million times slower than accessing RAM, the program may run very "
 "slowly when it is experiencing more than 100 or so hard page faults a "
 "second.");
+      // clang-format on
     }
     return NS_OK;
   }
@@ -1313,6 +1327,7 @@ public:
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
 
+    // clang-format off
     MOZ_COLLECT_REPORT(
       "heap-committed/allocated", KIND_OTHER, UNITS_BYTES, stats.allocated,
 "Memory mapped by the heap allocator that is currently allocated to the "
@@ -1368,6 +1383,8 @@ public:
     MOZ_COLLECT_REPORT(
       "heap-chunksize", KIND_OTHER, UNITS_BYTES, stats.chunksize,
       "Size of chunks.");
+
+    // clang-format on
 
     return NS_OK;
   }
