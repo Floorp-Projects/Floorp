@@ -382,13 +382,13 @@ class TaskGraphGenerator(object):
          )
 
 
-def load_tasks_for_kind(parameters, kind):
+def load_tasks_for_kind(parameters, kind, root_dir=None):
     """
     Get all the tasks of a given kind.
 
     This function is designed to be called from outside of taskgraph.
     """
-    tgg = TaskGraphGenerator(root_dir=None, parameters=parameters, target_kind=kind)
+    tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters, target_kind=kind)
     return {
         task.task['metadata']['name']: task
         for task in tgg.full_task_set

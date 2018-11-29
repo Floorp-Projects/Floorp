@@ -7,6 +7,8 @@
 #include "ViewRegion.h"
 #import <Cocoa/Cocoa.h>
 
+#include "nsChildView.h"
+
 using namespace mozilla;
 
 ViewRegion::~ViewRegion()

@@ -162,12 +162,10 @@ const JSPropertySpec WeakSetObject::properties[] = {
 };
 
 const JSFunctionSpec WeakSetObject::methods[] = {
-    // clang-format off
     JS_FN("add", add, 1, 0),
     JS_FN("delete", delete_, 1, 0),
     JS_FN("has", has, 1, 0),
     JS_FS_END
-    // clang-format on
 };
 
 WeakSetObject*

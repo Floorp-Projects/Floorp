@@ -1092,7 +1092,6 @@ math_toSource(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec math_static_methods[] = {
-    // clang-format off
     JS_FN(js_toSource_str,  math_toSource,        0, 0),
     JS_INLINABLE_FN("abs",    math_abs,             1, 0, MathAbs),
     JS_INLINABLE_FN("acos",   math_acos,            1, 0, MathACos),
@@ -1130,7 +1129,6 @@ static const JSFunctionSpec math_static_methods[] = {
     JS_INLINABLE_FN("sign",   math_sign,            1, 0, MathSign),
     JS_INLINABLE_FN("cbrt",   math_cbrt,            1, 0, MathCbrt),
     JS_FS_END
-    // clang-format on
 };
 
 JSObject*

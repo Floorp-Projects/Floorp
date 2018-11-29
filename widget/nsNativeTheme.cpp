@@ -22,6 +22,7 @@
 #include "nsMenuFrame.h"
 #include "nsRangeFrame.h"
 #include "nsCSSRendering.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBodyElement.h"
@@ -816,49 +817,4 @@ nsNativeTheme::IsWidgetScrollbarPart(StyleAppearance aAppearance)
     default:
       return false;
   }
-}
-
-static nscolor
-GetOpaqueBackgroundColor(ComputedStyle* aStyle)
-{
-  nscolor color = aStyle->StyleBackground()->BackgroundColor(aStyle);
-  if (NS_GET_A(color) == 255) {
-    return color;
-  }
-  // Compose white background with the background color.
-  return NS_ComposeColors(NS_RGB(255, 255, 255), color);
-}
-
-nscolor
-nsNativeTheme::GetScrollbarFaceColor(ComputedStyle* aStyle,
-                                     AutoColorGetter aAutoGetter)
-{
-  StyleComplexColor complexColor = aStyle->StyleUI()->mScrollbarFaceColor;
-  if (complexColor.IsAuto()) {
-    return aAutoGetter(aStyle);
-  }
-  nscolor color = complexColor.CalcColor(aStyle);
-  if (NS_GET_A(color) == 255) {
-    return color;
-  }
-  nscolor bgColor = GetOpaqueBackgroundColor(aStyle);
-  return NS_ComposeColors(bgColor, color);
-}
-
-nscolor
-nsNativeTheme::GetScrollbarTrackColor(ComputedStyle* aStyle,
-                                      AutoColorGetter aAutoGetter)
-{
-  StyleComplexColor complexColor = aStyle->StyleUI()->mScrollbarTrackColor;
-  nscolor color;
-  if (complexColor.IsAuto()) {
-    color = aAutoGetter(aStyle);
-  } else {
-    color = complexColor.CalcColor(aStyle);
-  }
-  if (NS_GET_A(color) == 255) {
-    return color;
-  }
-  nscolor bgColor = GetOpaqueBackgroundColor(aStyle);
-  return NS_ComposeColors(bgColor, color);
 }

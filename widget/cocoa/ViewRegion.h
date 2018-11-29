@@ -10,6 +10,8 @@
 #include "Units.h"
 #include "nsTArray.h"
 
+class nsChildView;
+
 @class NSView;
 
 namespace mozilla {
@@ -41,7 +43,7 @@ public:
   /**
    * Return an NSView from the region, if there is any.
    */
-  NSView* GetAnyView() { return mViews.Length() > 0 ? mViews[0] : nil; }
+  NSView* GetAnyView() { return mViews.Length() > 0 ? mViews[0] : NULL; }
 
 private:
   mozilla::LayoutDeviceIntRegion mRegion;
