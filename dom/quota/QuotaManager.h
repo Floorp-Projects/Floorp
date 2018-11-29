@@ -506,6 +506,9 @@ private:
   MaybeRemoveLocalStorageDirectories();
 
   nsresult
+  MaybeCreateLocalStorageArchive();
+
+  nsresult
   InitializeRepository(PersistenceType aPersistenceType);
 
   nsresult

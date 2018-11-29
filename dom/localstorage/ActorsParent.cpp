@@ -20,6 +20,8 @@
 #include "mozilla/dom/PBackgroundLSRequestParent.h"
 #include "mozilla/dom/PBackgroundLSSharedTypes.h"
 #include "mozilla/dom/PBackgroundLSSimpleRequestParent.h"
+#include "mozilla/dom/StorageDBUpdater.h"
+#include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/UsageInfo.h"
@@ -49,10 +51,12 @@ namespace mozilla {
 namespace dom {
 
 using namespace mozilla::dom::quota;
+using namespace mozilla::dom::StorageUtils;
 using namespace mozilla::ipc;
 
 namespace {
 
+class ArchivedOriginInfo;
 class Connection;
 class ConnectionThread;
 class Database;
@@ -116,6 +120,8 @@ const uint32_t kDefaultOriginLimitKB = 5 * 1024;
 const char kDefaultQuotaPref[] = "dom.storage.default_quota";
 
 const uint32_t kPreparedDatastoreTimeoutMs = 20000;
+
+#define LS_ARCHIVE_FILE_NAME "ls-archive.sqlite"
 
 bool
 IsOnConnectionThread();
@@ -462,6 +468,158 @@ GetStorageConnection(const nsAString& aDatabaseFilePath,
   }
 
   connection.forget(aConnection);
+  return NS_OK;
+}
+
+nsresult
+GetArchiveFile(const nsAString& aStoragePath,
+               nsIFile** aArchiveFile)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!aStoragePath.IsEmpty());
+  MOZ_ASSERT(aArchiveFile);
+
+  nsCOMPtr<nsIFile> archiveFile;
+  nsresult rv = NS_NewLocalFile(aStoragePath,
+                                false,
+                                getter_AddRefs(archiveFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = archiveFile->Append(NS_LITERAL_STRING(LS_ARCHIVE_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  archiveFile.forget(aArchiveFile);
+  return NS_OK;
+}
+
+nsresult
+CreateArchiveStorageConnection(const nsAString& aStoragePath,
+                               mozIStorageConnection** aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!aStoragePath.IsEmpty());
+  MOZ_ASSERT(aConnection);
+
+  nsCOMPtr<nsIFile> archiveFile;
+  nsresult rv = GetArchiveFile(aStoragePath, getter_AddRefs(archiveFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // QuotaManager ensures this file always exists.
+  DebugOnly<bool> exists;
+  MOZ_ASSERT(NS_SUCCEEDED(archiveFile->Exists(&exists)));
+  MOZ_ASSERT(exists);
+
+  bool isDirectory;
+  rv = archiveFile->IsDirectory(&isDirectory);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (isDirectory) {
+    LS_WARNING("ls-archive is not a file!");
+    *aConnection = nullptr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageConnection> connection;
+  rv = ss->OpenUnsharedDatabase(archiveFile, getter_AddRefs(connection));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // Don't throw an error, leave a corrupted ls-archive database as it is.
+    *aConnection = nullptr;
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = StorageDBUpdater::Update(connection);
+  if (NS_FAILED(rv)) {
+    // Don't throw an error, leave a non-updateable ls-archive database as
+    // it is.
+    *aConnection = nullptr;
+    return NS_OK;
+  }
+
+  connection.forget(aConnection);
+  return NS_OK;
+}
+
+nsresult
+AttachArchiveDatabase(const nsAString& aStoragePath,
+                      mozIStorageConnection* aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!aStoragePath.IsEmpty());
+  MOZ_ASSERT(aConnection);
+  nsCOMPtr<nsIFile> archiveFile;
+
+  nsresult rv = GetArchiveFile(aStoragePath, getter_AddRefs(archiveFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+#ifdef DEBUG
+  bool exists;
+  rv = archiveFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(exists);
+#endif
+
+  nsString path;
+  rv = archiveFile->GetPath(path);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = aConnection->CreateStatement(
+    NS_LITERAL_CSTRING("ATTACH DATABASE :path AS archive;"),
+    getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("path"), path);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+DetachArchiveDatabase(mozIStorageConnection* aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DETACH DATABASE archive"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   return NS_OK;
 }
 
@@ -1424,6 +1582,7 @@ class PrepareDatastoreOp
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
   RefPtr<Datastore> mDatastore;
+  nsAutoPtr<ArchivedOriginInfo> mArchivedOriginInfo;
   LoadDataOp* mLoadDataOp;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
   const LSRequestPrepareDatastoreParams mParams;
@@ -1512,11 +1671,15 @@ private:
 
   nsresult
   EnsureDirectoryEntry(nsIFile* aEntry,
+                       bool aCreateIfNotExists,
                        bool aDirectory,
                        bool* aAlreadyExisted = nullptr);
 
   nsresult
   VerifyDatabaseInformation(mozIStorageConnection* aConnection);
+
+  already_AddRefed<QuotaObject>
+  GetQuotaObject();
 
   nsresult
   BeginLoadData();
@@ -1666,6 +1829,44 @@ private:
 /*******************************************************************************
  * Other class declarations
  ******************************************************************************/
+
+class ArchivedOriginInfo
+{
+  nsCString mOriginSuffix;
+  nsCString mOriginNoSuffix;
+
+public:
+  static ArchivedOriginInfo*
+  Create(nsIPrincipal* aPrincipal);
+
+  const nsCString&
+  OriginSuffix() const
+  {
+    return mOriginSuffix;
+  }
+
+  const nsCString&
+  OriginNoSuffix() const
+  {
+    return mOriginNoSuffix;
+  }
+
+  const nsCString
+  Origin() const
+  {
+    return mOriginSuffix + NS_LITERAL_CSTRING(":") + mOriginNoSuffix;
+  }
+
+  nsresult
+  BindToStatement(mozIStorageStatement* aStatement) const;
+
+private:
+  ArchivedOriginInfo(const nsACString& aOriginSuffix,
+                     const nsACString& aOriginNoSuffix)
+    : mOriginSuffix(aOriginSuffix)
+    , mOriginNoSuffix(aOriginNoSuffix)
+  { }
+};
 
 class QuotaClient final
   : public mozilla::dom::quota::Client
@@ -1840,6 +2041,10 @@ typedef nsDataHashtable<nsCStringHashKey, int64_t> UsageHashtable;
 // Can only be touched on the Quota Manager I/O thread.
 StaticAutoPtr<UsageHashtable> gUsages;
 
+typedef nsTHashtable<nsCStringHashKey> ArchivedOriginHashtable;
+
+StaticAutoPtr<ArchivedOriginHashtable> gArchivedOrigins;
+
 bool
 IsOnConnectionThread()
 {
@@ -1865,6 +2070,117 @@ InitUsageForOrigin(const nsACString& aOrigin, int64_t aUsage)
 
   MOZ_ASSERT(!gUsages->Contains(aOrigin));
   gUsages->Put(aOrigin, aUsage);
+}
+
+nsresult
+LoadArchivedOrigins()
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!gArchivedOrigins);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  // Ensure that the webappsstore.sqlite is moved to new place.
+  nsresult rv = quotaManager->EnsureStorageIsInitialized();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageConnection> connection;
+  rv = CreateArchiveStorageConnection(quotaManager->GetStoragePath(),
+                                      getter_AddRefs(connection));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!connection) {
+    gArchivedOrigins = new ArchivedOriginHashtable();
+    return NS_OK;
+  }
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT DISTINCT originAttributes || ':' || originKey "
+      "FROM webappsstore2;"
+  ), getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsAutoPtr<ArchivedOriginHashtable> archivedOrigins(
+    new ArchivedOriginHashtable());
+
+  bool hasResult;
+  while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
+    nsCString origin;
+    rv = stmt->GetUTF8String(0, origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    archivedOrigins->PutEntry(origin);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  gArchivedOrigins = archivedOrigins.forget();
+  return NS_OK;
+}
+
+nsresult
+GetUsage(mozIStorageConnection* aConnection,
+         ArchivedOriginInfo* aArchivedOriginInfo,
+         int64_t* aUsage)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(aUsage);
+
+  nsresult rv;
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  if (aArchivedOriginInfo) {
+    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT sum(length(key) + length(value)) "
+      "FROM webappsstore2 "
+      "WHERE originKey = :originKey "
+      "AND originAttributes = :originAttributes;"
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aArchivedOriginInfo->BindToStatement(stmt);
+  } else {
+    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT sum(length(key) + length(value)) "
+      "FROM data"
+    ), getter_AddRefs(stmt));
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(!hasResult)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int64_t usage;
+  rv = stmt->GetInt64(0, &usage);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  *aUsage = usage;
+  return NS_OK;
 }
 
 } // namespace
@@ -3863,6 +4179,11 @@ PrepareDatastoreOp::Open()
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    mArchivedOriginInfo = ArchivedOriginInfo::Create(principal);
+    if (NS_WARN_IF(!mArchivedOriginInfo)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // This service has to be started on the main thread currently.
@@ -4099,6 +4420,7 @@ nsresult
 PrepareDatastoreOp::DatabaseWork()
 {
   AssertIsOnIOThread();
+  MOZ_ASSERT(mArchivedOriginInfo);
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
@@ -4110,14 +4432,28 @@ PrepareDatastoreOp::DatabaseWork()
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
+  nsresult rv;
+
+  if (!gArchivedOrigins) {
+    rv = LoadArchivedOrigins();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    MOZ_ASSERT(gArchivedOrigins);
+  }
+
+  bool hasDataForMigration =
+    gArchivedOrigins->GetEntry(mArchivedOriginInfo->Origin());
+
+  bool createIfNotExists = mParams.createIfNotExists() || hasDataForMigration;
+
   nsCOMPtr<nsIFile> directoryEntry;
-  nsresult rv =
-    quotaManager->EnsureOriginIsInitialized(PERSISTENCE_TYPE_DEFAULT,
-                                            mSuffix,
-                                            mGroup,
-                                            mOrigin,
-                                            mParams.createIfNotExists(),
-                                            getter_AddRefs(directoryEntry));
+  rv = quotaManager->EnsureOriginIsInitialized(PERSISTENCE_TYPE_DEFAULT,
+                                               mSuffix,
+                                               mGroup,
+                                               mOrigin,
+                                               createIfNotExists,
+                                               getter_AddRefs(directoryEntry));
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     return DatabaseNotAvailable();
   }
@@ -4130,7 +4466,9 @@ PrepareDatastoreOp::DatabaseWork()
     return rv;
   }
 
-  rv = EnsureDirectoryEntry(directoryEntry, /* aIsDirectory */ true);
+  rv = EnsureDirectoryEntry(directoryEntry,
+                            createIfNotExists,
+                            /* aIsDirectory */ true);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     return DatabaseNotAvailable();
   }
@@ -4145,6 +4483,7 @@ PrepareDatastoreOp::DatabaseWork()
 
   bool alreadyExisted;
   rv = EnsureDirectoryEntry(directoryEntry,
+                            createIfNotExists,
                             /* aIsDirectory */ false,
                             &alreadyExisted);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -4158,7 +4497,8 @@ PrepareDatastoreOp::DatabaseWork()
     MOZ_ASSERT(gUsages);
     MOZ_ASSERT(gUsages->Get(mOrigin, &mUsage));
   } else {
-    InitUsageForOrigin(mOrigin, 0);
+    MOZ_ASSERT(mUsage == 0);
+    InitUsageForOrigin(mOrigin, mUsage);
   }
 
   rv = directoryEntry->GetPath(mDatabaseFilePath);
@@ -4177,6 +4517,93 @@ PrepareDatastoreOp::DatabaseWork()
   rv = VerifyDatabaseInformation(connection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  if (hasDataForMigration) {
+    MOZ_ASSERT(mUsage == 0);
+
+    rv = AttachArchiveDatabase(quotaManager->GetStoragePath(), connection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    int64_t newUsage;
+    rv = GetUsage(connection, mArchivedOriginInfo, &newUsage);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    RefPtr<QuotaObject> quotaObject = GetQuotaObject();
+    MOZ_ASSERT(quotaObject);
+
+    if (!quotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
+      return NS_ERROR_FILE_NO_DEVICE_SPACE;
+    }
+
+    mozStorageTransaction transaction(connection, false,
+                                  mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+      "INSERT INTO data (key, value) "
+        "SELECT key, value "
+        "FROM webappsstore2 "
+        "WHERE originKey = :originKey "
+        "AND originAttributes = :originAttributes;"
+
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = mArchivedOriginInfo->BindToStatement(stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM webappsstore2 "
+        "WHERE originKey = :originKey "
+        "AND originAttributes = :originAttributes;"
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = mArchivedOriginInfo->BindToStatement(stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = transaction.Commit();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = DetachArchiveDatabase(connection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(gArchivedOrigins);
+    MOZ_ASSERT(gArchivedOrigins->GetEntry(mArchivedOriginInfo->Origin()));
+    gArchivedOrigins->RemoveEntry(mArchivedOriginInfo->Origin());
+
+    mUsage = newUsage;
+
+    MOZ_ASSERT(gUsages);
+    MOZ_ASSERT(gUsages->Contains(mOrigin));
+    gUsages->Put(mOrigin, newUsage);
   }
 
   // Must close connection before dispatching otherwise we might race with the
@@ -4219,6 +4646,7 @@ PrepareDatastoreOp::DatabaseNotAvailable()
 
 nsresult
 PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry,
+                                         bool aCreateIfNotExists,
                                          bool aIsDirectory,
                                          bool* aAlreadyExisted)
 {
@@ -4232,7 +4660,7 @@ PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry,
   }
 
   if (!exists) {
-    if (!mParams.createIfNotExists()) {
+    if (!aCreateIfNotExists) {
       return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -4293,6 +4721,28 @@ PrepareDatastoreOp::VerifyDatabaseInformation(mozIStorageConnection* aConnection
   }
 
   return NS_OK;
+}
+
+already_AddRefed<QuotaObject>
+PrepareDatastoreOp::GetQuotaObject()
+{
+  MOZ_ASSERT(IsOnOwningThread() || IsOnIOThread());
+  MOZ_ASSERT(!mGroup.IsEmpty());
+  MOZ_ASSERT(!mOrigin.IsEmpty());
+  MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  RefPtr<QuotaObject> quotaObject =
+    quotaManager->GetQuotaObject(PERSISTENCE_TYPE_DEFAULT,
+                                 mGroup,
+                                 mOrigin,
+                                 mDatabaseFilePath,
+                                 mUsage);
+  MOZ_ASSERT(quotaObject);
+
+  return quotaObject.forget();
 }
 
 nsresult
@@ -4403,16 +4853,7 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
     RefPtr<QuotaObject> quotaObject;
 
     if (mPrivateBrowsingId == 0) {
-      MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
-
-      QuotaManager* quotaManager = QuotaManager::Get();
-      MOZ_ASSERT(quotaManager);
-
-      quotaObject = quotaManager->GetQuotaObject(PERSISTENCE_TYPE_DEFAULT,
-                                                 mGroup,
-                                                 mOrigin,
-                                                 mDatabaseFilePath,
-                                                 mUsage);
+      quotaObject = GetQuotaObject();
       MOZ_ASSERT(quotaObject);
     }
 
@@ -4945,6 +5386,49 @@ PreloadedOp::GetResponse(LSSimpleRequestResponse& aResponse)
 }
 
 /*******************************************************************************
+ * ArchivedOriginInfo
+ ******************************************************************************/
+
+// static
+ArchivedOriginInfo*
+ArchivedOriginInfo::Create(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  nsCString originAttrSuffix;
+  nsCString originKey;
+  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  return new ArchivedOriginInfo(originAttrSuffix, originKey);
+}
+
+nsresult
+ArchivedOriginInfo::BindToStatement(mozIStorageStatement* aStatement) const
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aStatement);
+
+  nsresult rv =
+    aStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("originKey"),
+                                     mOriginNoSuffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("originAttributes"),
+                                        mOriginSuffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+/*******************************************************************************
  * QuotaClient
  ******************************************************************************/
 
@@ -5081,27 +5565,8 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       return rv;
     }
 
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT sum(length(key) + length(value)) "
-      "FROM data"
-    ), getter_AddRefs(stmt));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (NS_WARN_IF(!hasResult)) {
-      return NS_ERROR_FAILURE;
-    }
-
     int64_t usage;
-    rv = stmt->GetInt64(0, &usage);
+    rv = GetUsage(connection, /* aArchivedOriginInfo */ nullptr, &usage);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5213,6 +5678,8 @@ QuotaClient::ReleaseIOThreadObjects()
   AssertIsOnIOThread();
 
   gUsages = nullptr;
+
+  gArchivedOrigins = nullptr;
 }
 
 void

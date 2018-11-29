@@ -223,7 +223,9 @@ function installPackage(packageName)
     let file = getRelativeFile(entryName);
 
     if (zipentry.isDirectory) {
-      file.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
+      if (!file.exists()) {
+        file.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
+      }
     } else {
       let istream = zipReader.getInputStream(entryName);
 
