@@ -412,6 +412,43 @@ BackgroundParentImpl::DeallocPBackgroundLSRequestParent(
   return mozilla::dom::DeallocPBackgroundLSRequestParent(aActor);
 }
 
+BackgroundParentImpl::PBackgroundLSSimpleRequestParent*
+BackgroundParentImpl::AllocPBackgroundLSSimpleRequestParent(
+                                           const LSSimpleRequestParams& aParams)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::AllocPBackgroundLSSimpleRequestParent(aParams);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPBackgroundLSSimpleRequestConstructor(
+                                       PBackgroundLSSimpleRequestParent* aActor,
+                                       const LSSimpleRequestParams& aParams)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  if (!mozilla::dom::RecvPBackgroundLSSimpleRequestConstructor(aActor,
+                                                               aParams)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundLSSimpleRequestParent(
+                                       PBackgroundLSSimpleRequestParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::DeallocPBackgroundLSSimpleRequestParent(aActor);
+}
+
 BackgroundParentImpl::PBackgroundLocalStorageCacheParent*
 BackgroundParentImpl::AllocPBackgroundLocalStorageCacheParent(
                                             const PrincipalInfo& aPrincipalInfo,

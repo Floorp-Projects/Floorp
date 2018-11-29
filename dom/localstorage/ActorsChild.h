@@ -11,6 +11,7 @@
 #include "mozilla/dom/PBackgroundLSObjectChild.h"
 #include "mozilla/dom/PBackgroundLSObserverChild.h"
 #include "mozilla/dom/PBackgroundLSRequestChild.h"
+#include "mozilla/dom/PBackgroundLSSimpleRequestChild.h"
 
 namespace mozilla {
 
@@ -22,10 +23,12 @@ class BackgroundChildImpl;
 
 namespace dom {
 
+class LocalStorageManager2;
 class LSDatabase;
 class LSObject;
 class LSObserver;
 class LSRequestChildCallback;
+class LSSimpleRequestChildCallback;
 
 class LSObjectChild final
   : public PBackgroundLSObjectChild
@@ -193,6 +196,50 @@ public:
 
 protected:
   virtual ~LSRequestChildCallback()
+  { }
+};
+
+class LSSimpleRequestChild final
+  : public PBackgroundLSSimpleRequestChild
+{
+  friend class LocalStorageManager2;
+
+  RefPtr<LSSimpleRequestChildCallback> mCallback;
+
+  NS_DECL_OWNINGTHREAD
+
+public:
+  void
+  AssertIsOnOwningThread() const
+  {
+    NS_ASSERT_OWNINGTHREAD(LSSimpleReqeustChild);
+  }
+
+private:
+  // Only created by LocalStorageManager2.
+  explicit LSSimpleRequestChild(LSSimpleRequestChildCallback* aCallback);
+
+  // Only destroyed by mozilla::ipc::BackgroundChildImpl.
+  ~LSSimpleRequestChild();
+
+  // IPDL methods are only called by IPDL.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult
+  Recv__delete__(const LSSimpleRequestResponse& aResponse) override;
+};
+
+class NS_NO_VTABLE LSSimpleRequestChildCallback
+{
+public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  virtual void
+  OnResponse(const LSSimpleRequestResponse& aResponse) = 0;
+
+protected:
+  virtual ~LSSimpleRequestChildCallback()
   { }
 };
 

@@ -18,6 +18,7 @@
 #include "mozilla/dom/PBackgroundLSObserverParent.h"
 #include "mozilla/dom/PBackgroundLSRequestParent.h"
 #include "mozilla/dom/PBackgroundLSSharedTypes.h"
+#include "mozilla/dom/PBackgroundLSSimpleRequestParent.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -1494,6 +1495,74 @@ private:
   GetResponse(LSRequestResponse& aResponse) override;
 };
 
+class LSSimpleRequestBase
+  : public DatastoreOperationBase
+  , public PBackgroundLSSimpleRequestParent
+{
+protected:
+  enum class State
+  {
+    // Just created on the PBackground thread. Next step is Opening.
+    Initial,
+
+    // Waiting to open/opening on the main thread. Next step is SendingResults.
+    Opening,
+
+    // Waiting to send/sending results on the PBackground thread. Next step is
+    // Completed.
+    SendingResults,
+
+    // All done.
+    Completed
+  };
+
+  State mState;
+
+public:
+  LSSimpleRequestBase();
+
+  void
+  Dispatch();
+
+protected:
+  ~LSSimpleRequestBase() override;
+
+  virtual nsresult
+  Open() = 0;
+
+  virtual void
+  GetResponse(LSSimpleRequestResponse& aResponse) = 0;
+
+private:
+  void
+  SendResults();
+
+  // Common nsIRunnable implementation that subclasses may not override.
+  NS_IMETHOD
+  Run() final;
+
+  // IPDL methods.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+};
+
+class PreloadedOp
+  : public LSSimpleRequestBase
+{
+  const LSSimpleRequestPreloadedParams mParams;
+  nsCString mOrigin;
+
+public:
+  explicit PreloadedOp(const LSSimpleRequestParams& aParams);
+
+private:
+  nsresult
+  Open() override;
+
+  void
+  GetResponse(LSSimpleRequestResponse& aResponse) override;
+};
+
 /*******************************************************************************
  * Other class declarations
  ******************************************************************************/
@@ -1873,6 +1942,67 @@ DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor)
   // Transfer ownership back from IPDL.
   RefPtr<LSRequestBase> actor =
     dont_AddRef(static_cast<LSRequestBase*>(aActor));
+
+  return true;
+}
+
+PBackgroundLSSimpleRequestParent*
+AllocPBackgroundLSSimpleRequestParent(const LSSimpleRequestParams& aParams)
+{
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
+    return nullptr;
+  }
+
+  RefPtr<LSSimpleRequestBase> actor;
+
+  switch (aParams.type()) {
+    case LSSimpleRequestParams::TLSSimpleRequestPreloadedParams: {
+      RefPtr<PreloadedOp> preloadedOp =
+        new PreloadedOp(aParams);
+
+      actor = std::move(preloadedOp);
+
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  // Transfer ownership to IPDL.
+  return actor.forget().take();
+}
+
+bool
+RecvPBackgroundLSSimpleRequestConstructor(
+                                       PBackgroundLSSimpleRequestParent* aActor,
+                                       const LSSimpleRequestParams& aParams)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+  MOZ_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+
+  // The actor is now completely built.
+
+  auto* op = static_cast<LSSimpleRequestBase*>(aActor);
+
+  op->Dispatch();
+
+  return true;
+}
+
+bool
+DeallocPBackgroundLSSimpleRequestParent(
+                                       PBackgroundLSSimpleRequestParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+
+  // Transfer ownership back from IPDL.
+  RefPtr<LSSimpleRequestBase> actor =
+    dont_AddRef(static_cast<LSSimpleRequestBase*>(aActor));
 
   return true;
 }
@@ -4225,6 +4355,173 @@ PrepareObserverOp::GetResponse(LSRequestResponse& aResponse)
   prepareObserverResponse.observerId() = observerId;
 
   aResponse = prepareObserverResponse;
+}
+
+/*******************************************************************************
++ * LSSimpleRequestBase
++ ******************************************************************************/
+
+LSSimpleRequestBase::LSSimpleRequestBase()
+  : mState(State::Initial)
+{
+}
+
+LSSimpleRequestBase::~LSSimpleRequestBase()
+{
+  MOZ_ASSERT_IF(MayProceedOnNonOwningThread(),
+                mState == State::Initial || mState == State::Completed);
+}
+
+void
+LSSimpleRequestBase::Dispatch()
+{
+  AssertIsOnOwningThread();
+
+  mState = State::Opening;
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+}
+
+void
+LSSimpleRequestBase::SendResults()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::SendingResults);
+
+  if (!MayProceed()) {
+    MaybeSetFailureCode(NS_ERROR_FAILURE);
+  } else {
+    LSSimpleRequestResponse response;
+
+    if (NS_SUCCEEDED(ResultCode())) {
+      GetResponse(response);
+    } else {
+      response = ResultCode();
+    }
+
+    Unused <<
+      PBackgroundLSSimpleRequestParent::Send__delete__(this, response);
+  }
+
+  mState = State::Completed;
+}
+
+NS_IMETHODIMP
+LSSimpleRequestBase::Run()
+{
+  nsresult rv;
+
+  switch (mState) {
+    case State::Opening:
+      rv = Open();
+      break;
+
+    case State::SendingResults:
+      SendResults();
+      return NS_OK;
+
+    default:
+      MOZ_CRASH("Bad state!");
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::SendingResults) {
+    MaybeSetFailureCode(rv);
+
+    // Must set mState before dispatching otherwise we will race with the owning
+    // thread.
+    mState = State::SendingResults;
+
+    if (IsOnOwningThread()) {
+      SendResults();
+    } else {
+      MOZ_ALWAYS_SUCCEEDS(
+        OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+LSSimpleRequestBase::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  NoteComplete();
+}
+
+/*******************************************************************************
+ * PreloadedOp
+ ******************************************************************************/
+
+PreloadedOp::PreloadedOp(const LSSimpleRequestParams& aParams)
+  : mParams(aParams.get_LSSimpleRequestPreloadedParams())
+{
+  MOZ_ASSERT(aParams.type() ==
+               LSSimpleRequestParams::TLSSimpleRequestPreloadedParams);
+}
+
+nsresult
+PreloadedOp::Open()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == State::Opening);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      !MayProceedOnNonOwningThread()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const PrincipalInfo& principalInfo = mParams.principalInfo();
+
+  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    QuotaManager::GetInfoForChrome(nullptr, nullptr, &mOrigin);
+  } else {
+    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> principal =
+      PrincipalInfoToPrincipal(principalInfo, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = QuotaManager::GetInfoFromPrincipal(principal,
+                                            nullptr,
+                                            nullptr,
+                                            &mOrigin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  mState = State::SendingResults;
+  MOZ_ALWAYS_SUCCEEDS(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
+
+  return NS_OK;
+}
+
+void
+PreloadedOp::GetResponse(LSSimpleRequestResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::SendingResults);
+  MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
+
+  bool preloaded;
+  RefPtr<Datastore> datastore;
+  if (gDatastores &&
+      (datastore = gDatastores->Get(mOrigin)) &&
+      !datastore->IsClosed()) {
+    preloaded = true;
+  } else {
+    preloaded = false;
+  }
+
+  LSSimpleRequestPreloadedResponse preloadedResponse;
+  preloadedResponse.preloaded() = preloaded;
+
+  aResponse = preloadedResponse;
 }
 
 /*******************************************************************************

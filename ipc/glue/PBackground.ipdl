@@ -9,6 +9,7 @@ include protocol PBackgroundSDBConnection;
 include protocol PBackgroundLSObject;
 include protocol PBackgroundLSObserver;
 include protocol PBackgroundLSRequest;
+include protocol PBackgroundLSSimpleRequest;
 include protocol PBackgroundLocalStorageCache;
 include protocol PBackgroundStorage;
 include protocol PBackgroundTest;
@@ -79,6 +80,7 @@ sync protocol PBackground
   manages PBackgroundLSObject;
   manages PBackgroundLSObserver;
   manages PBackgroundLSRequest;
+  manages PBackgroundLSSimpleRequest;
   manages PBackgroundLocalStorageCache;
   manages PBackgroundStorage;
   manages PBackgroundTest;
@@ -133,6 +135,8 @@ parent:
   async PBackgroundLSObserver(uint64_t observerId);
 
   async PBackgroundLSRequest(LSRequestParams params);
+
+  async PBackgroundLSSimpleRequest(LSSimpleRequestParams params);
 
   async PBackgroundLocalStorageCache(PrincipalInfo principalInfo,
                                      nsCString originKey,

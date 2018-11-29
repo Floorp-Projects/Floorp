@@ -100,6 +100,15 @@ protected:
   virtual bool
   DeallocPBackgroundLSRequestChild(PBackgroundLSRequestChild* aActor) override;
 
+  virtual PBackgroundLSSimpleRequestChild*
+  AllocPBackgroundLSSimpleRequestChild(const LSSimpleRequestParams& aParams)
+                                       override;
+
+  virtual bool
+  DeallocPBackgroundLSSimpleRequestChild(
+                                        PBackgroundLSSimpleRequestChild* aActor)
+                                        override;
+
   virtual PBackgroundLocalStorageCacheChild*
   AllocPBackgroundLocalStorageCacheChild(const PrincipalInfo& aPrincipalInfo,
                                          const nsCString& aOriginKey,
