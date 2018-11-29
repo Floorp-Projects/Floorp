@@ -49,6 +49,8 @@ gfx/webrender_bindings/webrender_ffi_generated.h
 intl/unicharutil/util/nsUnicodePropertyData.cpp
 intl/unicharutil/util/nsUnicodeScriptCodes.h
 media/mp4parse-rust/mp4parse.h
+widget/gtk/wayland/gtk-primary-selection-client-protocol.h
+widget/gtk/wayland/gtk-primary-selection-protocol.c
 
 # The XPTCall stubs files have some inline assembly macros
 # that get reformatted badly. See bug 1510781.
