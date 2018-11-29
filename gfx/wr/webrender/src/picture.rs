@@ -857,14 +857,6 @@ impl TileCache {
             }
         }
 
-        // If we had any retained tiles from the last scene that were not picked
-        // up by the new frame, then just discard them eagerly.
-        // TODO(gw): Maybe it's worth keeping them around for a bit longer in
-        //           some cases?
-        for (_, handle) in retained_tiles.drain() {
-            resource_cache.texture_cache.mark_unused(&handle);
-        }
-
         self.dirty_region = if dirty_rect.is_empty() {
             None
         } else {
