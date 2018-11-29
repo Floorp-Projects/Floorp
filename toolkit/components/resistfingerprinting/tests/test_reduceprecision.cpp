@@ -13,6 +13,7 @@
 
 using namespace mozilla;
 
+// clang-format off
 /*
    Hello! Are you looking at this file because you got an error you don't understand?
    Perhaps something that looks like the following?
@@ -43,6 +44,7 @@ using namespace mozilla;
 
    They're supposed to be equal. They're not. But they both round to 2064.83.
 */
+// clang-format on
 
 bool setupJitter(bool enabled) {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -213,6 +215,7 @@ TEST(ResistFingerprinting, ReducePrecision_Aggressive) {
 TEST(ResistFingerprinting, ReducePrecision_JitterTestVectors) {
   bool jitterEnabled = setupJitter(true);
 
+  // clang-format off
   /*
    * Here's our test vector. First we set the secret to the 16 byte value
    * 0x000102030405060708 0x101112131415161718
@@ -241,6 +244,7 @@ TEST(ResistFingerprinting, ReducePrecision_JitterTestVectors) {
    *   5000: 829259d5 % 500 = 218
    *   5500: b260a4a6 % 500 = 14
    */
+  // clang-format on
 
   // Set the secret
   long long throwAway;

@@ -35,28 +35,31 @@ namespace net {
    of 2 would just let you eat 2 slices on day 5 (the credits for day 4 and day
    5) and finish the cake in the usual 8 days.
 
-   EventTokenBucket(hz=20, burst=5) creates a token bucket with the following properties:
+   EventTokenBucket(hz=20, burst=5) creates a token bucket with the following
+   properties:
 
   + events from an infinite stream will be admitted 20 times per second (i.e.
-    hz=20 means 1 event per 50 ms). Timers will be used to space things evenly down to
-    5ms gaps (i.e. up to 200hz). Token buckets with rates greater than 200hz will admit
-    multiple events with 5ms gaps between them. 10000hz is the maximum rate and 1hz is
-    the minimum rate.
+    hz=20 means 1 event per 50 ms). Timers will be used to space things evenly
+    down to 5ms gaps (i.e. up to 200hz). Token buckets with rates greater than
+    200hz will admit multiple events with 5ms gaps between them. 10000hz is the
+    maximum rate and 1hz is the minimum rate.
 
-  + The burst size controls the limit of 'credits' that a token bucket can accumulate
-    when idle. For our (20,5) example each event requires 50ms of credit (again, 20hz = 50ms
-    per event). a burst size of 5 means that the token bucket can accumulate a
-    maximum of 250ms (5 * 50ms) for this bucket. If no events have been admitted for the
-    last full second the bucket can still only accumulate 250ms of credit - but that credit
-    means that 5 events can be admitted without delay. A burst size of 1 is the minimum.
-    The EventTokenBucket is created with maximum credits already applied, but they
-    can be cleared with the ClearCredits() method. The maximum burst size is
-    15 minutes worth of events.
+  + The burst size controls the limit of 'credits' that a token bucket can
+    accumulate when idle. For our (20,5) example each event requires 50ms of
+    credit (again, 20hz = 50ms per event). a burst size of 5 means that the
+    token bucket can accumulate a maximum of 250ms (5 * 50ms) for this bucket.
+    If no events have been admitted for the last full second the bucket can
+    still only accumulate 250ms of credit - but that credit means that 5 events
+    can be admitted without delay. A burst size of 1 is the minimum.  The
+    EventTokenBucket is created with maximum credits already applied, but they
+    can be cleared with the ClearCredits() method. The maximum burst size is 15
+    minutes worth of events.
 
-  + An event is submitted to the token bucket asynchronously through SubmitEvent().
-    The OnTokenBucketAdmitted() method of the submitted event is used as a callback
-    when the event is ready to run. A cancelable event is returned to the SubmitEvent() caller
-    for use in the case they do not wish to wait for the callback.
+  + An event is submitted to the token bucket asynchronously through
+    SubmitEvent().  The OnTokenBucketAdmitted() method of the submitted event
+    is used as a callback when the event is ready to run. A cancelable event is
+    returned to the SubmitEvent() caller for use in the case they do not wish
+    to wait for the callback.
 */
 
 class EventTokenBucket;

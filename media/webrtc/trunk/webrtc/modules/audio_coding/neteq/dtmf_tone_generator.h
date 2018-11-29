@@ -17,15 +17,6 @@
 
 namespace webrtc {
 
-const int NumDtmfSampleRates = 5;
-const int DtmfSampleRates[NumDtmfSampleRates] = {
-  8000,
-  16000,
-  32000,
-  44100,
-  48000
-};
-
 // This class provides a generator for DTMF tones.
 class DtmfToneGenerator {
  public:
@@ -42,11 +33,10 @@ class DtmfToneGenerator {
   virtual bool initialized() const;
 
  private:
-  static const int kCoeff1[NumDtmfSampleRates][16];  // 1st oscillator model coefficient table.
-  static const int kCoeff2[NumDtmfSampleRates][16];  // 2nd oscillator model coefficient table.
-  static const int kInitValue1[NumDtmfSampleRates][16];  // Initialization for 1st oscillator.
-  static const int kInitValue2[NumDtmfSampleRates][16];  // Initialization for 2nd oscillator.
-
+  static const int kCoeff1[4][16];  // 1st oscillator model coefficient table.
+  static const int kCoeff2[4][16];  // 2nd oscillator model coefficient table.
+  static const int kInitValue1[4][16];  // Initialization for 1st oscillator.
+  static const int kInitValue2[4][16];  // Initialization for 2nd oscillator.
   static const int kAmplitude[64];  // Amplitude for 0 through -63 dBm0.
   static const int16_t kAmpMultiplier = 23171;  // 3 dB attenuation (in Q15).
 

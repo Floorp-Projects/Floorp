@@ -100,14 +100,13 @@ Atomic<bool> sShutdownNotified;
 PRThread* CreateSystemThread(void (*start)(void* arg),
                              void* arg)
 {
-  PRThread* thread = PR_CreateThread(
-    PR_SYSTEM_THREAD, /* This thread will not prevent the process from terminating */
-    start,
-    arg,
-    PR_PRIORITY_LOW,
-    PR_GLOBAL_THREAD /* Make sure that the thread is never cooperatively scheduled */,
-    PR_UNJOINABLE_THREAD,
-    0 /* Use default stack size */
+  PRThread* thread =
+    PR_CreateThread(PR_SYSTEM_THREAD, /* This thread will not prevent the
+                                         process from terminating */
+                    start, arg, PR_PRIORITY_LOW,
+                    PR_GLOBAL_THREAD, /* Make sure that the thread is never
+                                         cooperatively scheduled */
+                    PR_UNJOINABLE_THREAD, 0 /* Use default stack size */
   );
   MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(thread); // This pointer will never be deallocated.
   return thread;

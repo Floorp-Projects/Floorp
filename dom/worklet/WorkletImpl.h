@@ -74,8 +74,9 @@ public:
   WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
               JS::Handle<JSObject*> aGivenProto);
 
-  dom::WorkletThread* GetOrCreateThread();
-  void TerminateThread();
+  nsresult SendControlMessage(already_AddRefed<nsIRunnable> aRunnable);
+
+  void NotifyWorkletFinished();
 
   // Execution thread only.
   already_AddRefed<dom::WorkletGlobalScope> CreateGlobalScope(JSContext* aCx);
@@ -83,9 +84,6 @@ public:
   // Any thread.
 
   const WorkletLoadInfo& LoadInfo() const { return mWorkletLoadInfo; }
-
-  // Use DispatchRunnable only when the thread is known to already exist.
-  nsresult DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
 protected:
   WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
@@ -99,6 +97,7 @@ protected:
 
   // Parent thread only.
   RefPtr<dom::WorkletThread> mWorkletThread;
+  bool mTerminated;
 };
 
 } // namespace mozilla

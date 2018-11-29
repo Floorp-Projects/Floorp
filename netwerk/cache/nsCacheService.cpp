@@ -2873,7 +2873,10 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
                 rv = entry->RequestAccess(request, &accessGranted);
                 NS_ASSERTION(NS_SUCCEEDED(rv),
                              "if entry is valid, RequestAccess must succeed.");
-                // XXX if (newWriter)  NS_ASSERTION( accessGranted == request->AccessRequested(), "why not?");
+                // XXX if (newWriter) {
+                //       NS_ASSERTION( accessGranted ==
+                //                     request->AccessRequested(), "why not?");
+                //     }
 
                 // entry->CreateDescriptor dequeues request, and queues descriptor
                 nsICacheEntryDescriptor *descriptor = nullptr;

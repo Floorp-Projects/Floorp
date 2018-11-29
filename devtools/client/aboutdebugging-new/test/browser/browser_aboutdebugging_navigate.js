@@ -49,7 +49,11 @@ add_task(async function() {
   const backgroundTab2 = await addTab(TAB_URL_2, { background: true });
 
   info("Click on the ThisFirefox item in the sidebar");
+  const requestsSuccess = waitForRequestsSuccess(window);
   thisFirefoxLink.click();
+
+  info("Wait for all target requests to complete");
+  await requestsSuccess;
 
   info("Wait until ThisFirefox page is displayed");
   await waitUntil(() => document.querySelector(".js-runtime-page"));

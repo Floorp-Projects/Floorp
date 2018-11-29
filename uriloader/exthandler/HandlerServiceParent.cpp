@@ -102,7 +102,8 @@ NS_IMETHODIMP ProxyHandlerInfo::GetDefaultDescription(nsAString & aDefaultDescri
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void launchWithURI (in nsIURI aURI, [optional] in nsIInterfaceRequestor aWindowContext); */
+/* void launchWithURI (in nsIURI aURI,
+                       [optional] in nsIInterfaceRequestor aWindowContext); */
 NS_IMETHODIMP ProxyHandlerInfo::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

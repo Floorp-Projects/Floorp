@@ -44,7 +44,8 @@
  * 1. Write a long jump to our interceptor function into the five bytes of NOPs
  *    before the function.
  *
- * 2. Write a short jump -5 into the two-byte nop at the beginning of the function.
+ * 2. Write a short jump -5 into the two-byte nop at the beginning of the
+ *    function.
  *
  * This mechanism is nice because it's thread-safe.  It's even safe to do if
  * another thread is currently running the function we're modifying!

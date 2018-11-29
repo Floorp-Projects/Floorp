@@ -45,6 +45,7 @@
   padding-left: 12px;
   padding-top: 4px;
   font-size: 1.46em;
+  color: var(--theme-toolbar-color);
 }
 
 .debug-target-info .target {

@@ -47,7 +47,8 @@ ServerTimingParser::Parse()
   // Server-Timing             = #server-timing-metric
   // server-timing-metric      = metric-name *( OWS ";" OWS server-timing-param )
   // metric-name               = token
-  // server-timing-param       = server-timing-param-name OWS "=" OWS server-timing-param-value
+  // server-timing-param       = server-timing-param-name OWS "=" OWS
+  //                             server-timing-param-value
   // server-timing-param-name  = token
   // server-timing-param-value = token / quoted-string
 

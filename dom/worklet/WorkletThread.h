@@ -11,7 +11,6 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/TimeStamp.h"
 #include "nsThread.h"
 
 class nsIRunnable;
@@ -27,31 +26,17 @@ public:
 
   static already_AddRefed<WorkletThread> Create();
 
-  static WorkletThread*
-  Get();
-
   static bool
   IsOnWorkletThread();
 
   static void
   AssertIsOnWorkletThread();
 
-  JSContext*
-  GetJSContext() const;
-
   nsresult
   DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
   void
   Terminate();
-
-  DOMHighResTimeStamp
-  TimeStampToDOMHighRes(const TimeStamp& aTimeStamp) const
-  {
-    MOZ_ASSERT(!aTimeStamp.IsNull());
-    TimeDuration duration = aTimeStamp - mCreationTimeStamp;
-    return duration.ToMilliseconds();
-  }
 
 private:
   WorkletThread();
@@ -76,11 +61,7 @@ private:
   NS_IMETHOD
   DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
 
-  TimeStamp mCreationTimeStamp;
-
-  // Touched only on the worklet thread. This is a raw pointer because it's set
-  // and nullified by RunEventLoop().
-  JSContext* mJSContext;
+  bool mExitLoop; // worklet execution thread
 
   bool mIsTerminating; // main thread
 };

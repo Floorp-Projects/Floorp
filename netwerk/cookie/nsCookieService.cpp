@@ -3859,6 +3859,7 @@ nsCookieService::AddInternal(const nsCookieKey &aKey,
  * private cookie header parsing functions
  ******************************************************************************/
 
+// clang-format off
 // The following comment block elucidates the function of ParseAttributes.
 /******************************************************************************
  ** Augmented BNF, modified from RFC2109 Section 4.2.2 and RFC2616 Section 2.1
@@ -3927,6 +3928,7 @@ nsCookieService::AddInternal(const nsCookieKey &aKey,
                   | "HttpOnly"
 
 ******************************************************************************/
+// clang-format on
 
 // helper functions for GetTokenValue
 static inline bool iswhitespace     (char c) { return c == ' '  || c == '\t'; }

@@ -113,11 +113,6 @@ function analyzeInputString(str) {
           const nextNonSpaceCharIndex = after.indexOf(nextNonSpaceChar);
           const previousNonSpaceChar = trimmedBefore[trimmedBefore.length - 1];
 
-          // There's only spaces after that, so we can return.
-          if (!nextNonSpaceChar) {
-            return buildReturnObject();
-          }
-
           // If the previous char isn't a dot or opening bracket, and the next one isn't
           // one either, and the current computed statement is not a
           // variable/function/class declaration, update the start position.
@@ -126,7 +121,16 @@ function analyzeInputString(str) {
             previousNonSpaceChar !== "[" && nextNonSpaceChar !== "[" &&
             !NO_AUTOCOMPLETE_PREFIXES.includes(currentLastStatement)
           ) {
-            start = i + nextNonSpaceCharIndex;
+            start = i + (
+              nextNonSpaceCharIndex >= 0
+                ? nextNonSpaceCharIndex
+                : (after.length + 1)
+            );
+          }
+
+          // There's only spaces after that, so we can return.
+          if (!nextNonSpaceChar) {
+            return buildReturnObject();
           }
 
           // Let's jump to handle the next non-space char.

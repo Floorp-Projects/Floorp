@@ -57,7 +57,8 @@ that has been read is stored mInputData
   nsHttpTransaction::WriteSegment(real http transaction)
   TLSFilterTransaction::OnWriteSegment() removes tls on way back up stack
   SpdyConnectTransaction.mTunneledConn::OnWriteSegment()
-  SpdyConnectTransaction.mTunneledConn.mTunnelStreamIn->Read() // gets data from mInputData
+  // gets data from mInputData
+  SpdyConnectTransaction.mTunneledConn.mTunnelStreamIn->Read()
 
 The output path works similarly:
   nsHttpConnection::OnOutputStreamReady (real socket)
@@ -68,10 +69,14 @@ The output path works similarly:
   SpdyConnectTransaction.mTunneledConn::OnOutputStreamReady (tunnel connection)
   SpdyConnectTransaction.mTunneledConn::OnSocketWritable (tunnel connection)
   TLSFilterTransaction::ReadSegment()
-  nsHttpTransaction::ReadSegment (real http transaction generates plaintext on way down)
-  TLSFilterTransaction::OnReadSegment (BUF and LEN gets encrypted here on way down)
-  SpdyConnectTransaction.mTunneledConn::OnReadSegment (BUF and LEN) (tunnel connection)
-  SpdyConnectTransaction.mTunneledConn.mTunnelStreamOut->Write(BUF, LEN) .. get stored in mOutputData
+  nsHttpTransaction::ReadSegment (real http transaction generates plaintext on
+                                  way down)
+  TLSFilterTransaction::OnReadSegment (BUF and LEN gets encrypted here on way
+                                       down)
+  SpdyConnectTransaction.mTunneledConn::OnReadSegment (BUF and LEN)
+                                                      (tunnel connection)
+  SpdyConnectTransaction.mTunneledConn.mTunnelStreamOut->Write(BUF, LEN) ..
+                                                     get stored in mOutputData
 
 Now pop the stack back up to SpdyConnectTransaction::ReadSegment(), where it has
 the encrypted text available in mOutputData

@@ -2052,9 +2052,9 @@ static SystemRedirection gSystemRedirections[] = {
                  RR_WriteOptionalBufferFixedSize<1, PATH_MAX>>> },
 
   // By passing through events when initializing the sandbox, we ensure both
-  // that we actually initialize the process sandbox while replaying as well as
-  // while recording, and that any activity in these calls does not interfere
-  // with the replay.
+  // that we actually initialize the process sandbox while replaying as well
+  // as while recording, and that any activity in these calls does not
+  // interfere with the replay.
   { "sandbox_init", nullptr, Preamble_PassThrough },
   { "sandbox_init_with_parameters", nullptr, Preamble_PassThrough },
 

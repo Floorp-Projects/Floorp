@@ -1379,8 +1379,10 @@ internal_CanRecordForScalarID(const StaticMutexAutoLock& lock,
  * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aId The scalar identifier.
  * @param aKeyed Are we attempting to write a keyed scalar?
- * @param aForce Whether to allow recording even if the probe is not allowed on the current process.
- *        This must only be true for GeckoView persistence and recorded actions.
+ * @param aForce Whether to allow recording even if the probe is not allowed on
+ *        the current process.
+ *        This must only be true for GeckoView persistence and recorded
+ *        actions.
  * @return ScalarResult::Ok if we can record, an error code otherwise.
  */
 ScalarResult
@@ -1446,9 +1448,9 @@ internal_GetEnumByScalarName(const StaticMutexAutoLock& lock,
  * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aId The scalar identifier.
  * @param aProcessStorage This drives the selection of the map to use to store
- *        the scalar data coming from child processes. This is only meaningful when
- *        this function is called in parent process. If that's the case, if
- *        this is not |GeckoProcessType_Default|, the process id is used to
+ *        the scalar data coming from child processes. This is only meaningful
+ *        when this function is called in parent process. If that's the case,
+ *        if this is not |GeckoProcessType_Default|, the process id is used to
  *        allocate and store the scalars.
  * @param aRes The output variable that stores scalar object.
  * @return
@@ -1763,14 +1765,14 @@ namespace {
  * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aId The scalar identifier.
  * @param aProcessStorage This drives the selection of the map to use to store
- *        the scalar data coming from child processes. This is only meaningful when
- *        this function is called in parent process. If that's the case, if
- *        this is not |GeckoProcessType_Default|, the process id is used to
+ *        the scalar data coming from child processes. This is only meaningful
+ *        when this function is called in parent process. If that's the case,
+ *        if this is not |GeckoProcessType_Default|, the process id is used to
  *        allocate and store the scalars.
  * @param aRet The output variable that stores scalar object.
  * @return
- *   NS_ERROR_INVALID_ARG if the scalar id is unknown or a this is a keyed string
- *                        scalar.
+ *   NS_ERROR_INVALID_ARG if the scalar id is unknown or a this is a keyed
+ *                        string scalar.
  *   NS_ERROR_NOT_AVAILABLE if the scalar is expired.
  *   NS_OK if the scalar was found. If that's the case, aResult contains a
  *   valid pointer to a scalar type.
@@ -2006,7 +2008,8 @@ internal_RegisterScalars(const StaticMutexAutoLock& lock,
  * @param {aScalarsToReflect} The table that will contain the snapshot.
  * @param {aDataset} The dataset we're asking the snapshot for.
  * @param {aProcessStorage} The scalar storage to take a snapshot of.
- * @param {aIsBuiltinDynamic} Whether or not the storage is for dynamic builtin scalars.
+ * @param {aIsBuiltinDynamic} Whether or not the storage is for dynamic builtin
+ *                            scalars.
  * @return NS_OK or the error code describing the failure reason.
  */
 nsresult
@@ -2065,7 +2068,8 @@ internal_ScalarSnapshotter(const StaticMutexAutoLock& aLock,
  * @param {aScalarsToReflect} The table that will contain the snapshot.
  * @param {aDataset} The dataset we're asking the snapshot for.
  * @param {aProcessStorage} The scalar storage to take a snapshot of.
- * @param {aIsBuiltinDynamic} Whether or not the storage is for dynamic builtin scalars.
+ * @param {aIsBuiltinDynamic} Whether or not the storage is for dynamic builtin
+ *                            scalars.
  * @return NS_OK or the error code describing the failure reason.
  */
 nsresult

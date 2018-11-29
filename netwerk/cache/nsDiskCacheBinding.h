@@ -73,11 +73,13 @@ nsDiskCacheBinding *   GetCacheEntryBinding(nsCacheEntry * entry);
  *  (which need to be doomed, instead of just evicted.  Collisions are linked
  *  using a PRCList to keep track of current generation number.
  *
- *  Used to detect hash number collisions, and find available generation numbers.
+ *  Used to detect hash number collisions, and find available generation
+ *  numbers.
  *
  *  Not all nsDiskCacheBinding have a generation number.
  *
- *  Generation numbers may be aquired late, or lost (when data fits in block file)
+ *  Generation numbers may be aquired late, or lost (when data fits in block
+ *  file)
  *
  *  Collisions can occur:
  *      BindEntry()       - hashnumbers collide (possibly different keys)

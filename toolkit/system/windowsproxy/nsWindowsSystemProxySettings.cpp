@@ -273,7 +273,8 @@ nsWindowsSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
     return NS_OK;
 }
 
-#define NS_WINDOWSSYSTEMPROXYSERVICE_CID  /* 4e22d3ea-aaa2-436e-ada4-9247de57d367 */\
+/* 4e22d3ea-aaa2-436e-ada4-9247de57d367 */
+#define NS_WINDOWSSYSTEMPROXYSERVICE_CID  \
     { 0x4e22d3ea, 0xaaa2, 0x436e, \
         {0xad, 0xa4, 0x92, 0x47, 0xde, 0x57, 0xd3, 0x67 } }
 

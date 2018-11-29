@@ -455,9 +455,9 @@ nsMultiMixedConv::AsyncConvertData(const char *aFromType, const char *aToType,
     // hook up our final listener. this guy gets the various On*() calls we want to throw
     // at him.
     //
-    // WARNING: this listener must be able to handle multiple OnStartRequest, OnDataAvail()
-    //  and OnStopRequest() call combinations. We call of series of these for each sub-part
-    //  in the raw stream.
+    // WARNING: this listener must be able to handle multiple OnStartRequest,
+    // OnDataAvail() and OnStopRequest() call combinations. We call of series
+    // of these for each sub-part in the raw stream.
     mFinalListener = aListener;
 
     return NS_OK;

@@ -763,7 +763,8 @@ class nsIWidget : public nsISupports
      * previous call to SetSizeConstraints will be applied.
      *
      * @param aWidth  the new width expressed in the parent's coordinate system
-     * @param aHeight the new height expressed in the parent's coordinate system
+     * @param aHeight the new height expressed in the parent's coordinate
+     *                system
      * @param aRepaint whether the widget should be repainted
      */
     virtual void Resize(double aWidth,
@@ -774,11 +775,15 @@ class nsIWidget : public nsISupports
      * Move or resize this widget. Any size constraints set for the window by
      * a previous call to SetSizeConstraints will be applied.
      *
-     * @param aX       the new x position expressed in the parent's coordinate system
-     * @param aY       the new y position expressed in the parent's coordinate system
+     * @param aX       the new x position expressed in the parent's coordinate
+     *                 system
+     * @param aY       the new y position expressed in the parent's coordinate
+     *                 system
      * @param aWidth   the new width expressed in the parent's coordinate system
-     * @param aHeight  the new height expressed in the parent's coordinate system
-     * @param aRepaint whether the widget should be repainted if the size changes
+     * @param aHeight  the new height expressed in the parent's coordinate
+     *                 system
+     * @param aRepaint whether the widget should be repainted if the size
+     *                 changes
      *
      */
     virtual void Resize(double aX,

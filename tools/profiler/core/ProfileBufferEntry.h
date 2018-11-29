@@ -366,13 +366,13 @@ private:
 //   {
 //     "schema":
 //     {
-//       "stack": 0,           /* index into stackTable */
-//       "time": 1,            /* number */
-//       "responsiveness": 2,  /* number */
+//       "stack": 0,          /* index into stackTable */
+//       "time": 1,           /* number */
+//       "responsiveness": 2, /* number */
 //     },
 //     "data":
 //     [
-//       [ 1, 0.0, 0.0 ]       /* { stack: 1, time: 0.0, responsiveness: 0.0 } */
+//       [ 1, 0.0, 0.0 ]      /* { stack: 1, time: 0.0, responsiveness: 0.0 } */
 //     ]
 //   },
 //
@@ -380,13 +380,13 @@ private:
 //   {
 //     "schema":
 //     {
-//       "name": 0,            /* index into stringTable */
-//       "time": 1,            /* number */
-//       "data": 2             /* arbitrary JSON */
+//       "name": 0,           /* index into stringTable */
+//       "time": 1,           /* number */
+//       "data": 2            /* arbitrary JSON */
 //     },
 //     "data":
 //     [
-//       [ 3, 0.1 ]            /* { name: 'example marker', time: 0.1 } */
+//       [ 3, 0.1 ]           /* { name: 'example marker', time: 0.1 } */
 //     ]
 //   },
 //
@@ -394,13 +394,13 @@ private:
 //   {
 //     "schema":
 //     {
-//       "prefix": 0,          /* index into stackTable */
-//       "frame": 1            /* index into frameTable */
+//       "prefix": 0,         /* index into stackTable */
+//       "frame": 1           /* index into frameTable */
 //     },
 //     "data":
 //     [
-//       [ null, 0 ],          /* (root) */
-//       [ 0,    1 ]           /* (root) > foo.js */
+//       [ null, 0 ],         /* (root) */
+//       [ 0,    1 ]          /* (root) > foo.js */
 //     ]
 //   },
 //
@@ -408,17 +408,18 @@ private:
 //   {
 //     "schema":
 //     {
-//       "location": 0,        /* index into stringTable */
-//       "implementation": 1,  /* index into stringTable */
-//       "optimizations": 2,   /* arbitrary JSON */
-//       "line": 3,            /* number */
-//       "column": 4,          /* number */
-//       "category": 5         /* number */
+//       "location": 0,       /* index into stringTable */
+//       "implementation": 1, /* index into stringTable */
+//       "optimizations": 2,  /* arbitrary JSON */
+//       "line": 3,           /* number */
+//       "column": 4,         /* number */
+//       "category": 5        /* number */
 //     },
 //     "data":
 //     [
-//       [ 0 ],                /* { location: '(root)' } */
-//       [ 1, 2 ]              /* { location: 'foo.js', implementation: 'baseline' } */
+//       [ 0 ],               /* { location: '(root)' } */
+//       [ 1, 2 ]             /* { location: 'foo.js',
+//                                 implementation: 'baseline' } */
 //     ]
 //   },
 //
@@ -448,18 +449,19 @@ private:
 //       "sample_groups:
 //       [
 //         {
-//           "id": 42,    /* number (thread id, or object identifier (tab), etc) */
+//           "id": 42, /* number (thread id, or object identifier (tab), etc) */
 //           "samples:
 //           {
 //             "schema":
 //             {
-//               "time": 1,            /* number */
-//               "number": 2,          /* number (of times the counter was touched) */
-//               "count": 3            /* number (total for the counter) */
+//               "time": 1,   /* number */
+//               "number": 2, /* number (of times the counter was touched) */
+//               "count": 3   /* number (total for the counter) */
 //             },
 //             "data":
 //             [
-//               [ 0.1, 1824, 454622 ] /* { time: 0.1, number: 1824, count: 454622 } */
+//               [ 0.1, 1824,
+//                 454622 ]   /* { time: 0.1, number: 1824, count: 454622 } */
 //             ]
 //           },
 //         },
