@@ -349,7 +349,7 @@ LSObject::GetLength(nsIPrincipal& aSubjectPrincipal,
   }
 
   uint32_t result;
-  rv = mDatabase->GetLength(&result);
+  rv = mDatabase->GetLength(this, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return 0;
@@ -378,7 +378,7 @@ LSObject::Key(uint32_t aIndex,
   }
 
   nsString result;
-  rv = mDatabase->GetKey(aIndex, result);
+  rv = mDatabase->GetKey(this, aIndex, result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
@@ -407,7 +407,7 @@ LSObject::GetItem(const nsAString& aKey,
   }
 
   nsString result;
-  rv = mDatabase->GetItem(aKey, result);
+  rv = mDatabase->GetItem(this, aKey, result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
@@ -432,7 +432,7 @@ LSObject::GetSupportedNames(nsTArray<nsString>& aNames)
     return;
   }
 
-  rv = mDatabase->GetKeys(aNames);
+  rv = mDatabase->GetKeys(this, aNames);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -457,16 +457,12 @@ LSObject::SetItem(const nsAString& aKey,
     return;
   }
 
-  LSWriteOpResponse response;
-  rv = mDatabase->SetItem(mDocumentURI, aKey, aValue, response);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aError.Throw(rv);
-    return;
-  }
-
   LSNotifyInfo info;
-  rv = GetInfoFromResponse(response, info);
-  if (NS_FAILED(rv)) {
+  rv = mDatabase->SetItem(this, aKey, aValue, info);
+  if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
+    rv = NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
   }
@@ -494,16 +490,9 @@ LSObject::RemoveItem(const nsAString& aKey,
     return;
   }
 
-  LSWriteOpResponse response;
-  rv = mDatabase->RemoveItem(mDocumentURI, aKey, response);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aError.Throw(rv);
-    return;
-  }
-
   LSNotifyInfo info;
-  rv = GetInfoFromResponse(response, info);
-  if (NS_FAILED(rv)) {
+  rv = mDatabase->RemoveItem(this, aKey, info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
   }
@@ -530,16 +519,9 @@ LSObject::Clear(nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
-  LSWriteOpResponse response;
-  rv = mDatabase->Clear(mDocumentURI, response);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aError.Throw(rv);
-    return;
-  }
-
   LSNotifyInfo info;
-  rv = GetInfoFromResponse(response, info);
-  if (NS_FAILED(rv)) {
+  rv = mDatabase->Clear(this, info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
   }
@@ -778,28 +760,6 @@ LSObject::DropObserver()
   if (mObserver) {
     mObserver = nullptr;
   }
-}
-
-nsresult
-LSObject::GetInfoFromResponse(const LSWriteOpResponse& aResponse,
-                              LSNotifyInfo& aInfo)
-{
-  AssertIsOnOwningThread();
-
-  if (aResponse.type() == LSWriteOpResponse::Tnsresult) {
-    nsresult errorCode = aResponse.get_nsresult();
-
-    if (errorCode == NS_ERROR_FILE_NO_DEVICE_SPACE) {
-      errorCode = NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
-    }
-
-    return errorCode;
-  }
-
-  MOZ_ASSERT(aResponse.type() == LSWriteOpResponse::TLSNotifyInfo);
-
-  aInfo = aResponse.get_LSNotifyInfo();
-  return NS_OK;
 }
 
 void

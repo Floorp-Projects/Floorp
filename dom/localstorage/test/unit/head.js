@@ -43,6 +43,13 @@ function finishTest()
   })
 }
 
+function continueToNextStep()
+{
+  executeSoon(function() {
+    testGenerator.next();
+  });
+}
+
 function continueToNextStepSync()
 {
   testGenerator.next();

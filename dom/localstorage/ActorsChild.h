@@ -11,6 +11,7 @@
 #include "mozilla/dom/PBackgroundLSObserverChild.h"
 #include "mozilla/dom/PBackgroundLSRequestChild.h"
 #include "mozilla/dom/PBackgroundLSSimpleRequestChild.h"
+#include "mozilla/dom/PBackgroundLSSnapshotChild.h"
 
 namespace mozilla {
 
@@ -28,6 +29,7 @@ class LSObject;
 class LSObserver;
 class LSRequestChildCallback;
 class LSSimpleRequestChildCallback;
+class LSSnapshot;
 
 class LSDatabaseChild final
   : public PBackgroundLSDatabaseChild
@@ -63,6 +65,15 @@ private:
 
   mozilla::ipc::IPCResult
   RecvRequestAllowToClose() override;
+
+  PBackgroundLSSnapshotChild*
+  AllocPBackgroundLSSnapshotChild(const nsString& aDocumentURI,
+                                  const int64_t& aRequestedSize,
+                                  LSSnapshotInitInfo* aInitInfo) override;
+
+  bool
+  DeallocPBackgroundLSSnapshotChild(PBackgroundLSSnapshotChild* aActor)
+                                    override;
 };
 
 class LSObserverChild final
@@ -201,6 +212,38 @@ public:
 protected:
   virtual ~LSSimpleRequestChildCallback()
   { }
+};
+
+class LSSnapshotChild final
+  : public PBackgroundLSSnapshotChild
+{
+  friend class LSDatabase;
+  friend class LSSnapshot;
+
+  LSSnapshot* mSnapshot;
+
+  NS_DECL_OWNINGTHREAD
+
+public:
+  void
+  AssertIsOnOwningThread() const
+  {
+    NS_ASSERT_OWNINGTHREAD(LSSnapshotChild);
+  }
+
+private:
+  // Only created by LSDatabase.
+  explicit LSSnapshotChild(LSSnapshot* aSnapshot);
+
+  // Only destroyed by LSDatabaseChild.
+  ~LSSnapshotChild();
+
+  void
+  SendDeleteMeInternal();
+
+  // IPDL methods are only called by IPDL.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
 } // namespace dom

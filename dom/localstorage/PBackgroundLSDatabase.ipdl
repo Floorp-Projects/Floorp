@@ -3,25 +3,28 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
+include protocol PBackgroundLSSnapshot;
 
 namespace mozilla {
 namespace dom {
 
-struct LSNotifyInfo
+struct LSItemInfo
 {
-  bool changed;
-  nsString oldValue;
+  nsString key;
+  nsString value;
 };
 
-union LSWriteOpResponse
+struct LSSnapshotInitInfo
 {
-  nsresult;
-  LSNotifyInfo;
+  LSItemInfo[] itemInfos;
+  int64_t initialUsage;
+  int64_t peakUsage;
 };
 
 sync protocol PBackgroundLSDatabase
 {
   manager PBackground;
+  manages PBackgroundLSSnapshot;
 
 parent:
   // The DeleteMe message is used to avoid a race condition between the parent
@@ -37,26 +40,9 @@ parent:
 
   async AllowToClose();
 
-  sync GetLength()
-    returns (uint32_t length);
-
-  sync GetKey(uint32_t index)
-    returns (nsString key);
-
-  sync GetItem(nsString key)
-    returns (nsString value);
-
-  sync GetKeys()
-    returns (nsString[] keys);
-
-  sync SetItem(nsString documentURI, nsString key, nsString value)
-    returns (LSWriteOpResponse response);
-
-  sync RemoveItem(nsString documentURI, nsString key)
-    returns (LSWriteOpResponse response);
-
-  sync Clear(nsString documentURI)
-    returns (LSWriteOpResponse response);
+  sync PBackgroundLSSnapshot(nsString documentURI,
+                             int64_t requestedSize)
+    returns (LSSnapshotInitInfo initInfo);
 
 child:
   async __delete__();

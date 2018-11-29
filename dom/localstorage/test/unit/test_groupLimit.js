@@ -67,6 +67,11 @@ function* testSteps()
 
   storages[0].clear();
 
+  // Let the internal snapshot finish (usage is not descreased until all
+  // snapshots finish)..
+  continueToNextStep();
+  yield undefined;
+
   info("Verifying more data can be written");
 
   for (let i = 0; i < urls.length; i++) {
