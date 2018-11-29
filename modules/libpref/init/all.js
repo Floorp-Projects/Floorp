@@ -211,20 +211,12 @@ pref("dom.gamepad.haptic_feedback.enabled", true);
 // If this is true, TextEventDispatcher dispatches keydown and keyup events
 // even during composition (keypress events are never fired during composition
 // even if this is true).
-#ifdef EARLY_BETA_OR_EARLIER
 pref("dom.keyboardevent.dispatch_during_composition", true);
-#else
-pref("dom.keyboardevent.dispatch_during_composition", false);
-#endif
 
 // If this is true, TextEventDispatcher dispatches keypress event with setting
 // WidgetEvent::mFlags::mOnlySystemGroupDispatchInContent to true if it won't
 // cause inputting printable character.
-#ifdef NIGHTLY_BUILD
 pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", true);
-#else
-pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", false);
-#endif
 
 // Blacklist of domains of web apps which are not aware of strict keypress
 // dispatching behavior.  This is comma separated list.  If you need to match
@@ -272,11 +264,7 @@ pref("dom.script_loader.binast_encoding.enabled", false);
 #endif
 
 // Whether window.event is enabled
-#ifdef NIGHTLY_BUILD
 pref("dom.window.event.enabled", true);
-#else
-pref("dom.window.event.enabled", false);
-#endif
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
