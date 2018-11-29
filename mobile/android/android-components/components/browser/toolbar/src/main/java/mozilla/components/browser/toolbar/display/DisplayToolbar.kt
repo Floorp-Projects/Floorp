@@ -6,15 +6,15 @@ package mozilla.components.browser.toolbar.display
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.support.v7.widget.AppCompatImageButton
+import android.support.v7.widget.AppCompatImageView
+import android.support.v7.widget.AppCompatTextView
 import android.transition.TransitionManager
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.ProgressBar
-import android.widget.TextView
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
@@ -70,14 +70,14 @@ internal class DisplayToolbar(
             menuView.visibility = if (value == null) View.GONE else View.VISIBLE
         }
 
-    internal val iconView = ImageView(context).apply {
+    internal val iconView = AppCompatImageView(context).apply {
         val padding = resources.pxToDp(ICON_PADDING_DP)
         setPadding(padding, padding, padding, padding)
 
         setImageResource(mozac_ic_globe)
     }
 
-    internal val urlView = TextView(context).apply {
+    internal val urlView = AppCompatTextView(context).apply {
         gravity = Gravity.CENTER_VERTICAL
         textSize = URL_TEXT_SIZE
         setFadingEdgeLength(URL_FADING_EDGE_SIZE_DP)
@@ -94,7 +94,7 @@ internal class DisplayToolbar(
         }
     }
 
-    private val menuView = ImageButton(context).apply {
+    private val menuView = AppCompatImageButton(context).apply {
         val padding = resources.pxToDp(MENU_PADDING_DP)
         setPadding(padding, padding, padding, padding)
 
