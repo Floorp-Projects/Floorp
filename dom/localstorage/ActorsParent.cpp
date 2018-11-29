@@ -123,6 +123,12 @@ const char kSnapshotPrefillPref[] = "dom.storage.snapshot_prefill";
 const uint32_t kPreparedDatastoreTimeoutMs = 20000;
 
 #define LS_ARCHIVE_FILE_NAME "ls-archive.sqlite"
+#define WEB_APPS_STORE_FILE_NAME "webappsstore.sqlite"
+
+// Shadow database Write Ahead Log's maximum size is 512KB
+const uint32_t kShadowMaxWALSize = 512 * 1024;
+
+const uint32_t kShadowJournalSizeLimit = kShadowMaxWALSize * 3;
 
 bool
 IsOnConnectionThread();
@@ -624,6 +630,260 @@ DetachArchiveDatabase(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
+nsresult
+GetShadowFile(const nsAString& aBasePath,
+              nsIFile** aArchiveFile)
+{
+  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(!aBasePath.IsEmpty());
+  MOZ_ASSERT(aArchiveFile);
+
+  nsCOMPtr<nsIFile> archiveFile;
+  nsresult rv = NS_NewLocalFile(aBasePath,
+                                false,
+                                getter_AddRefs(archiveFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = archiveFile->Append(NS_LITERAL_STRING(WEB_APPS_STORE_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  archiveFile.forget(aArchiveFile);
+  return NS_OK;
+}
+
+nsresult
+SetShadowJournalMode(mozIStorageConnection* aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  // Try enabling WAL mode. This can fail in various circumstances so we have to
+  // check the results here.
+  NS_NAMED_LITERAL_CSTRING(journalModeQueryStart, "PRAGMA journal_mode = ");
+  NS_NAMED_LITERAL_CSTRING(journalModeWAL, "wal");
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv =
+    aConnection->CreateStatement(journalModeQueryStart + journalModeWAL,
+                                 getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(hasResult);
+
+  nsCString journalMode;
+  rv = stmt->GetUTF8String(0, journalMode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (journalMode.Equals(journalModeWAL)) {
+    // WAL mode successfully enabled. Set limits on its size here.
+
+    // Set the threshold for auto-checkpointing the WAL. We don't want giant
+    // logs slowing down us.
+    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "PRAGMA page_size;"
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool hasResult;
+    rv = stmt->ExecuteStep(&hasResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(hasResult);
+
+    int32_t pageSize;
+    rv = stmt->GetInt32(0, &pageSize);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(pageSize >= 512 && pageSize <= 65536);
+
+    nsAutoCString pageCount;
+    pageCount.AppendInt(static_cast<int32_t>(kShadowMaxWALSize / pageSize));
+
+    rv = aConnection->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("PRAGMA wal_autocheckpoint = ") + pageCount);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Set the maximum WAL log size to reduce footprint on mobile (large empty
+    // WAL files will be truncated)
+    nsAutoCString sizeLimit;
+    sizeLimit.AppendInt(kShadowJournalSizeLimit);
+
+    rv = aConnection->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("PRAGMA journal_size_limit = ") + sizeLimit);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    rv = aConnection->ExecuteSimpleSQL(journalModeQueryStart +
+                                       NS_LITERAL_CSTRING("truncate"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+CreateShadowStorageConnection(const nsAString& aBasePath,
+                              mozIStorageConnection** aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!aBasePath.IsEmpty());
+  MOZ_ASSERT(aConnection);
+
+  nsCOMPtr<nsIFile> shadowFile;
+  nsresult rv = GetShadowFile(aBasePath, getter_AddRefs(shadowFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageConnection> connection;
+  rv = ss->OpenUnsharedDatabase(shadowFile, getter_AddRefs(connection));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    rv = shadowFile->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = ss->OpenUnsharedDatabase(shadowFile, getter_AddRefs(connection));
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = SetShadowJournalMode(connection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = StorageDBUpdater::Update(connection);
+  if (NS_FAILED(rv)) {
+    rv = connection->Close();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = shadowFile->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = ss->OpenUnsharedDatabase(shadowFile, getter_AddRefs(connection));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = SetShadowJournalMode(connection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = StorageDBUpdater::Update(connection);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  connection.forget(aConnection);
+  return NS_OK;
+}
+
+nsresult
+AttachShadowDatabase(const nsAString& aBasePath,
+                     mozIStorageConnection* aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(!aBasePath.IsEmpty());
+  MOZ_ASSERT(aConnection);
+
+  nsCOMPtr<nsIFile> shadowFile;
+  nsresult rv = GetShadowFile(aBasePath, getter_AddRefs(shadowFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+#ifdef DEBUG
+  bool exists;
+  rv = shadowFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(exists);
+#endif
+
+  nsString path;
+  rv = shadowFile->GetPath(path);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = aConnection->CreateStatement(
+    NS_LITERAL_CSTRING("ATTACH DATABASE :path AS shadow;"),
+    getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("path"), path);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+DetachShadowDatabase(mozIStorageConnection* aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DETACH DATABASE shadow"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 /*******************************************************************************
  * Non-actor class declarations
  ******************************************************************************/
@@ -787,6 +1047,7 @@ private:
 
   RefPtr<ConnectionThread> mConnectionThread;
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
+  nsAutoPtr<ArchivedOriginInfo> mArchivedOriginInfo;
   nsTArray<nsAutoPtr<WriteInfo>> mWriteInfos;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;
@@ -803,6 +1064,12 @@ public:
   AssertIsOnOwningThread() const
   {
     NS_ASSERT_OWNINGTHREAD(Connection);
+  }
+
+  ArchivedOriginInfo*
+  GetArchivedOriginInfo() const
+  {
+    return mArchivedOriginInfo;
   }
 
   // Methods which can only be called on the owning thread.
@@ -858,7 +1125,8 @@ private:
   // Only created by ConnectionThread.
   Connection(ConnectionThread* aConnectionThread,
              const nsACString& aOrigin,
-             const nsAString& aFilePath);
+             const nsAString& aFilePath,
+             nsAutoPtr<ArchivedOriginInfo>&& aArchivedOriginInfo);
 
   ~Connection();
 };
@@ -873,6 +1141,8 @@ class Connection::CachedStatement final
 public:
   CachedStatement();
   ~CachedStatement();
+
+  operator mozIStorageStatement*() const;
 
   mozIStorageStatement*
   operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN;
@@ -1004,7 +1274,8 @@ public:
 
   already_AddRefed<Connection>
   CreateConnection(const nsACString& aOrigin,
-                   const nsAString& aFilePath);
+                   const nsAString& aFilePath,
+                   nsAutoPtr<ArchivedOriginInfo>&& aArchivedOriginInfo);
 
   void
   Shutdown();
@@ -2145,6 +2416,9 @@ typedef nsTHashtable<nsCStringHashKey> ArchivedOriginHashtable;
 
 StaticAutoPtr<ArchivedOriginHashtable> gArchivedOrigins;
 
+// Can only be touched on the Quota Manager I/O thread.
+bool gInitializedShadowStorage = false;
+
 bool
 IsOnConnectionThread()
 {
@@ -2723,8 +2997,10 @@ ConnectionDatastoreOperationBase::Run()
 
 Connection::Connection(ConnectionThread* aConnectionThread,
                        const nsACString& aOrigin,
-                       const nsAString& aFilePath)
+                       const nsAString& aFilePath,
+                       nsAutoPtr<ArchivedOriginInfo>&& aArchivedOriginInfo)
   : mConnectionThread(aConnectionThread)
+  , mArchivedOriginInfo(std::move(aArchivedOriginInfo))
   , mOrigin(aOrigin)
   , mFilePath(aFilePath)
 #ifdef DEBUG
@@ -2908,6 +3184,14 @@ CachedStatement::~CachedStatement()
   MOZ_COUNT_DTOR(Connection::CachedStatement);
 }
 
+Connection::
+CachedStatement::operator mozIStorageStatement*() const
+{
+  AssertIsOnConnectionThread();
+
+  return mStatement;
+}
+
 mozIStorageStatement*
 Connection::
 CachedStatement::operator->() const
@@ -2965,6 +3249,46 @@ SetItemInfo::Perform(Connection* aConnection)
     return rv;
   }
 
+  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "INSERT OR REPLACE INTO shadow.webappsstore2 "
+      "(originAttributes, originKey, scope, key, value) "
+      "VALUES (:originAttributes, :originKey, :scope, :key, :value) "),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  ArchivedOriginInfo* archivedOriginInfo = aConnection->GetArchivedOriginInfo();
+
+  rv = archivedOriginInfo->BindToStatement(stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString scope = Scheme0Scope(archivedOriginInfo->OriginSuffix(),
+                                 archivedOriginInfo->OriginNoSuffix());
+
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
+                                  scope);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   return NS_OK;
 }
 
@@ -2980,6 +3304,31 @@ RemoveItemInfo::Perform(Connection* aConnection)
     "DELETE FROM data "
       "WHERE key = :key;"),
     &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM shadow.webappsstore2 "
+      "WHERE originAttributes = :originAttributes "
+      "AND originKey = :originKey "
+      "AND key = :key;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetArchivedOriginInfo()->BindToStatement(stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3017,6 +3366,25 @@ ClearInfo::Perform(Connection* aConnection)
     return rv;
   }
 
+  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM shadow.webappsstore2 "
+      "WHERE originAttributes = :originAttributes "
+      "AND originKey = :originKey;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetArchivedOriginInfo()->BindToStatement(stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   return NS_OK;
 }
 
@@ -3027,10 +3395,22 @@ EndUpdateBatchOp::DoDatastoreWork()
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mConnection);
 
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  nsCOMPtr<mozIStorageConnection> storageConnection =
+    mConnection->StorageConnection();
+  MOZ_ASSERT(storageConnection);
+
+  nsresult rv = AttachShadowDatabase(quotaManager->GetBasePath(),
+                                     storageConnection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   CachedStatement stmt;
-  nsresult rv =
-    mConnection->GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE;"),
-                                    &stmt);
+  rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE;"),
+                                       &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3050,6 +3430,11 @@ EndUpdateBatchOp::DoDatastoreWork()
   }
 
   rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = DetachShadowDatabase(storageConnection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3120,14 +3505,17 @@ ConnectionThread::AssertIsOnConnectionThread()
 }
 
 already_AddRefed<Connection>
-ConnectionThread::CreateConnection(const nsACString& aOrigin,
-                                   const nsAString& aFilePath)
+ConnectionThread::CreateConnection(
+                            const nsACString& aOrigin,
+                            const nsAString& aFilePath,
+                            nsAutoPtr<ArchivedOriginInfo>&& aArchivedOriginInfo)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(!mConnections.GetWeak(aOrigin));
 
-  RefPtr<Connection> connection = new Connection(this, aOrigin, aFilePath);
+  RefPtr<Connection> connection =
+    new Connection(this, aOrigin, aFilePath, std::move(aArchivedOriginInfo));
   mConnections.Put(aOrigin, connection);
 
   return connection.forget();
@@ -5134,9 +5522,24 @@ PrepareDatastoreOp::DatabaseWork()
     gUsages->Put(mOrigin, newUsage);
   }
 
-  // Must close connection before dispatching otherwise we might race with the
-  // connection thread which needs to open the same database.
+  nsCOMPtr<mozIStorageConnection> shadowConnection;
+  if (!gInitializedShadowStorage) {
+    rv = CreateShadowStorageConnection(quotaManager->GetBasePath(),
+                                       getter_AddRefs(shadowConnection));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    gInitializedShadowStorage = true;
+  }
+
+  // Must close connections before dispatching otherwise we might race with the
+  // connection thread which needs to open the same databases.
   MOZ_ALWAYS_SUCCEEDS(connection->Close());
+
+  if (shadowConnection) {
+    MOZ_ALWAYS_SUCCEEDS(shadowConnection->Close());
+  }
 
   // Must set this before dispatching otherwise we will race with the owning
   // thread.
@@ -5285,8 +5688,10 @@ PrepareDatastoreOp::BeginLoadData()
     gConnectionThread = new ConnectionThread();
   }
 
-  mConnection = gConnectionThread->CreateConnection(mOrigin,
-                                                    mDatabaseFilePath);
+  mConnection =
+    gConnectionThread->CreateConnection(mOrigin,
+                                        mDatabaseFilePath,
+                                        std::move(mArchivedOriginInfo));
   MOZ_ASSERT(mConnection);
 
   // Must set this before dispatching otherwise we will race with the
@@ -5954,7 +6359,7 @@ ArchivedOriginInfo::Create(nsIPrincipal* aPrincipal)
 nsresult
 ArchivedOriginInfo::BindToStatement(mozIStorageStatement* aStatement) const
 {
-  AssertIsOnIOThread();
+  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
   MOZ_ASSERT(aStatement);
 
   nsresult rv =
