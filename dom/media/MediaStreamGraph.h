@@ -698,9 +698,8 @@ class SourceMediaStream : public MediaStream {
     ADDTRACK_QUEUED = 0x01  // Queue track add until FinishAddTracks()
   };
   /**
-   * Add a new track to the stream starting at the stream's current time
-   * (which must be greater than or equal to the last time passed to
-   * AdvanceKnownTracksTime). Takes ownership of aSegment.
+   * Add a new track to the stream starting at the stream's current time.
+   * Takes ownership of aSegment.
    */
   void AddTrack(TrackID aID, MediaSegment* aSegment, uint32_t aFlags = 0) {
     AddTrackInternal(aID, GraphRate(), aSegment, aFlags);
@@ -739,12 +738,6 @@ class SourceMediaStream : public MediaStream {
    * Ignored if the track does not exist.
    */
   void EndTrack(TrackID aID);
-  /**
-   * Indicate that no tracks will be added starting before time aKnownTime.
-   * aKnownTime must be >= its value at the last call to AdvanceKnownTracksTime.
-   */
-  void AdvanceKnownTracksTime(StreamTime aKnownTime);
-  void AdvanceKnownTracksTimeWithLockHeld(StreamTime aKnownTime);
   /**
    * Indicate that this stream should enter the "finished" state. All tracks
    * must have been ended via EndTrack. The finish time of the stream is
@@ -867,7 +860,6 @@ class SourceMediaStream : public MediaStream {
   // held together.
   Mutex mMutex;
   // protected by mMutex
-  StreamTime mUpdateKnownTracksTime;
   // This time stamp will be updated in adding and blocked SourceMediaStream,
   // |AddStreamGraphThread| and |AdvanceTimeVaryingValuesToCurrentTime| in
   // particularly.

@@ -4194,7 +4194,6 @@ RefPtr<SourceListener::InitPromise> SourceListener::InitializeAsync() {
 
         // Start() queued the tracks to be added synchronously to avoid races
         stream->FinishAddTracks();
-        stream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
         LOG(("started all sources"));
 
         aHolder.Resolve(true, __func__);

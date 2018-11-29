@@ -15,8 +15,7 @@ extern LazyLogModule gMediaStreamGraphLog;
 #define STREAM_LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
 void StreamTracks::DumpTrackInfo() const {
-  STREAM_LOG(LogLevel::Info,
-             ("DumpTracks: mTracksKnownTime %" PRId64, mTracksKnownTime));
+  STREAM_LOG(LogLevel::Info, ("Dumping StreamTracks"));
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
     if (track->IsEnded()) {

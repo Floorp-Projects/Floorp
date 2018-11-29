@@ -724,12 +724,6 @@ StreamTime DecodedStream::SentDuration() {
   return std::max(mData->mStreamAudioWritten, mData->mStreamVideoWritten);
 }
 
-void DecodedStream::AdvanceTracks() {
-  AssertOwnerThread();
-
-  mData->mStream->AdvanceKnownTracksTime(mStreamTimeOffset + SentDuration());
-}
-
 void DecodedStream::SendData() {
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isSome(), "Must be called after StartPlayback()");
@@ -741,7 +735,6 @@ void DecodedStream::SendData() {
 
   SendAudio(mParams.mVolume, mSameOrigin, mPrincipalHandle);
   SendVideo(mSameOrigin, mPrincipalHandle);
-  AdvanceTracks();
 }
 
 TimeUnit DecodedStream::GetEndTime(TrackType aType) const {

@@ -81,7 +81,6 @@ class DecodedStream : public media::MediaSink {
                  const PrincipalHandle& aPrincipalHandle);
   void SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHandle);
   StreamTime SentDuration();
-  void AdvanceTracks();
   void SendData();
   void NotifyOutput(int64_t aTime);
   void NotifyTrackEnd(StreamTime aEndTime);
