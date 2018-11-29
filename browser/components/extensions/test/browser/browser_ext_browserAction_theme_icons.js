@@ -3,13 +3,13 @@
 "use strict";
 
 const LIGHT_THEME_COLORS = {
-  "accentcolor": "#FFF",
-  "textcolor": "#000",
+  "frame": "#FFF",
+  "tab_background_text": "#000",
 };
 
 const DARK_THEME_COLORS = {
-  "accentcolor": "#000",
-  "textcolor": "#FFF",
+  "frame": "#000",
+  "tab_background_text": "#FFF",
 };
 
 const TOOLBAR_MAPPING = {
@@ -142,10 +142,10 @@ add_task(async function browseraction_theme_icons_dark_theme() {
 
 add_task(async function browseraction_theme_icons_different_toolbars() {
   let themeData = {
-    "accentcolor": "#000",
-    "textcolor": "#fff",
+    "frame": "#000",
+    "tab_background_text": "#fff",
     "toolbar": "#fff",
-    "toolbar_text": "#000",
+    "bookmark_text": "#000",
   };
   await testStaticTheme({
     themeData,

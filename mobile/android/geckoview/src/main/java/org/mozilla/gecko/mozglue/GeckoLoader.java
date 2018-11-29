@@ -154,7 +154,9 @@ public final class GeckoLoader {
         putenv("CACHE_DIRECTORY=" + f.getPath());
 
         f = context.getExternalFilesDir(null);
-        putenv("PUBLIC_STORAGE=" + f.getPath());
+        if (f != null) {
+            putenv("PUBLIC_STORAGE=" + f.getPath());
+        }
 
         if (Build.VERSION.SDK_INT >= 17) {
             android.os.UserManager um = (android.os.UserManager)context.getSystemService(Context.USER_SERVICE);

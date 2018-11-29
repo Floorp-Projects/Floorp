@@ -216,57 +216,6 @@ ReauthenticateUserWindows(const nsACString& aPrompt,
 }
 #endif // XP_WIN
 
-#ifdef XP_MACOSX
-#include <CoreFoundation/CoreFoundation.h>
-#include <Security/Security.h>
-
-static nsresult
-ReauthenticateUserMacOS(const nsACString& aPrompt,
-              /* out */ bool& aReauthenticated)
-{
-  // The idea here is that we ask to be authorized to unlock the user's session.
-  // This should cause a prompt to come up for the user asking them for their
-  // password. If they correctly enter it, we'll return a successful result. If
-  // they cancel the prompt or otherwise fail to provide their password, we
-  // return a failing result.
-  AuthorizationItem authorizationItems[] = {
-    { "system.login.screensaver", 0, NULL, 0 },
-  };
-  AuthorizationRights authorizationRights = {
-    ArrayLength(authorizationItems),
-    authorizationItems,
-  };
-  const nsCString& promptFlat = PromiseFlatCString(aPrompt);
-  // All "kAuthorization..." constants come from the MacOS SDK.
-  AuthorizationItem environmentItems[] =  {
-    { kAuthorizationEnvironmentPrompt,
-      promptFlat.Length(),
-      (void*)promptFlat.get(),
-      0
-    },
-  };
-  AuthorizationEnvironment environment = {
-    ArrayLength(environmentItems),
-    environmentItems,
-  };
-  AuthorizationFlags flags = kAuthorizationFlagDefaults |
-                             kAuthorizationFlagInteractionAllowed |
-                             kAuthorizationFlagExtendRights |
-                             kAuthorizationFlagPreAuthorize |
-                             kAuthorizationFlagDestroyRights;
-  AuthorizationRef authorizationRef = nullptr;
-  OSStatus result = AuthorizationCreate(&authorizationRights,
-                                        &environment,
-                                        flags,
-                                        &authorizationRef);
-  aReauthenticated = result == errAuthorizationSuccess;
-  if (authorizationRef) {
-    AuthorizationFree(authorizationRef, kAuthorizationFlagDestroyRights);
-  }
-  return NS_OK;
-}
-#endif // XP_MACOSX
-
 static nsresult
 ReauthenticateUser(const nsACString& prompt, /* out */ bool& reauthenticated)
 {

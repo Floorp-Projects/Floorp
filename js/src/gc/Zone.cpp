@@ -9,6 +9,7 @@
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
+#include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/JitRealm.h"
@@ -18,6 +19,7 @@
 
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Realm-inl.h"
 
 using namespace js;
@@ -260,10 +262,19 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode, bool releaseTypes)
             script->baselineScript()->setControlFlowGraph(nullptr);
         }
 
-        // Try to release the script's TypeScript. This should happen last
-        // because we can't do this when the script still has JIT code.
+        // Try to release the script's TypeScript. This should happen after
+        // releasing JIT code because we can't do this when the script still has
+        // JIT code.
         if (releaseTypes) {
             script->maybeReleaseTypes();
+        }
+
+        // The optimizedStubSpace will be purged below so make sure ICScript
+        // doesn't point into it. We do this after (potentially) releasing types
+        // because TypeScript contains the ICScript* and there's no need to
+        // purge stubs if we just destroyed the Typescript.
+        if (discardBaselineCode && script->hasICScript()) {
+            script->icScript()->purgeOptimizedStubs(script->zone());
         }
     }
 

@@ -196,7 +196,7 @@ void MediaStreamGraphImpl::UpdateCurrentTimeForStreams(
     // out.
     if (stream->mFinished && !stream->mNotifiedFinished &&
         mProcessedTime >= stream->StreamTimeToGraphTime(
-                              stream->GetStreamTracks().GetAllTracksEnd())) {
+                              stream->GetStreamTracks().GetLatestTrackEnd())) {
       stream->mNotifiedFinished = true;
       SetStreamOrderDirty();
     }
@@ -1200,7 +1200,7 @@ void MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
       // The stream's not suspended, and since it's finished, underruns won't
       // stop it playing out. So there's no blocking other than what we impose
       // here.
-      GraphTime endTime = stream->GetStreamTracks().GetAllTracksEnd() +
+      GraphTime endTime = stream->GetStreamTracks().GetLatestTrackEnd() +
                           stream->mTracksStartTime;
       if (endTime <= mStateComputedTime) {
         LOG(LogLevel::Verbose,
@@ -1221,10 +1221,19 @@ void MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
     } else {
       stream->mStartBlocking = WillUnderrun(stream, aEndBlockingDecisions);
 
-      SourceMediaStream* s = stream->AsSourceStream();
-      if (s && s->mPullEnabled) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      if (SourceMediaStream* s = stream->AsSourceStream()) {
         for (StreamTracks::TrackIter i(s->mTracks); !i.IsEnded(); i.Next()) {
           if (i->IsEnded()) {
+            continue;
+          }
+          SourceMediaStream::TrackData* data;
+          {
+            MutexAutoLock lock(s->mMutex);
+            data = s->FindDataForTrack(i->GetID());
+          }
+          MOZ_ASSERT(data);
+          if (!data->mPullingEnabled) {
             continue;
           }
           if (i->GetEnd() <
@@ -1246,6 +1255,7 @@ void MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
           }
         }
       }
+#endif /* MOZ_DIAGNOSTIC_ASSERT_ENABLED */
     }
   }
 
@@ -1307,7 +1317,7 @@ void MediaStreamGraphImpl::Process() {
           ps->ProcessInput(mProcessedTime, mStateComputedTime,
                            ProcessedMediaStream::ALLOW_FINISH);
           NS_ASSERTION(
-              stream->mTracks.GetEnd() >=
+              stream->mTracks.GetEarliestTrackEnd() >=
                   GraphTimeToStreamTimeWithBlocking(stream, mStateComputedTime),
               "Stream did not produce enough data");
         }
@@ -1964,7 +1974,6 @@ void MediaStream::FinishOnGraphThread() {
   }
 #endif
   mFinished = true;
-  mTracks.AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   // Let the MSG knows that this stream can be destroyed if necessary to avoid
   // unnecessarily processing it in the future.
@@ -2460,8 +2469,6 @@ void MediaStream::AddMainThreadListener(
 SourceMediaStream::SourceMediaStream()
     : MediaStream(),
       mMutex("mozilla::media::SourceMediaStream"),
-      mUpdateKnownTracksTime(0),
-      mPullEnabled(false),
       mFinishPending(false) {}
 
 nsresult SourceMediaStream::OpenAudioInput(CubebUtils::AudioDeviceID aID,
@@ -2498,39 +2505,53 @@ void SourceMediaStream::DestroyImpl() {
   MediaStream::DestroyImpl();
 }
 
-void SourceMediaStream::SetPullEnabled(bool aEnabled) {
+void SourceMediaStream::SetPullingEnabled(TrackID aTrackID, bool aEnabled) {
   class Message : public ControlMessage {
    public:
-    Message(SourceMediaStream* aStream, bool aEnabled)
-        : ControlMessage(nullptr), mStream(aStream), mEnabled(aEnabled) {}
+    Message(SourceMediaStream* aStream, TrackID aTrackID, bool aEnabled)
+        : ControlMessage(nullptr),
+          mStream(aStream),
+          mTrackID(aTrackID),
+          mEnabled(aEnabled) {}
     void Run() override {
       MutexAutoLock lock(mStream->mMutex);
-      mStream->mPullEnabled = mEnabled;
+      TrackData* data = mStream->FindDataForTrack(mTrackID);
+      if (!data) {
+        // We can't enable pulling for a track that was never added. We ignore
+        // this if we're disabling pulling, since shutdown sequences are
+        // complex. If there's truly an issue we'll have issues enabling anyway.
+        MOZ_ASSERT_IF(mEnabled,
+                      mStream->mTracks.FindTrack(mTrackID) &&
+                          mStream->mTracks.FindTrack(mTrackID)->IsEnded());
+        return;
+      }
+      data->mPullingEnabled = mEnabled;
     }
     SourceMediaStream* mStream;
+    TrackID mTrackID;
     bool mEnabled;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aEnabled));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackID, aEnabled));
 }
 
 bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
   TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p", this);
   MutexAutoLock lock(mMutex);
-  if (!mPullEnabled || mFinished) {
+  if (mFinished) {
     return false;
   }
   // Compute how much stream time we'll need assuming we don't block
   // the stream at all.
   StreamTime t = GraphTimeToStreamTime(aDesiredUpToTime);
-  StreamTime current = mTracks.GetEnd();
+  StreamTime current = mTracks.GetEarliestTrackEnd();
   LOG(LogLevel::Verbose,
       ("%p: Calling NotifyPull aStream=%p t=%f current end=%f", GraphImpl(),
        this, GraphImpl()->MediaTimeToSeconds(t),
        GraphImpl()->MediaTimeToSeconds(current)));
-  if (t <= current) {
-    return false;
-  }
   for (const TrackData& track : mUpdateTracks) {
+    if (!track.mPullingEnabled) {
+      continue;
+    }
     if (track.mCommands & TrackEventCommand::TRACK_EVENT_ENDED) {
       continue;
     }
@@ -2602,11 +2623,8 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
       mUpdateTracks.RemoveElementAt(i);
     }
   }
-  if (!mFinished) {
-    mTracks.AdvanceKnownTracksTime(mUpdateKnownTracksTime);
-  }
 
-  if (mTracks.GetEnd() > 0) {
+  if (mTracks.GetEarliestTrackEnd() > 0) {
     mHasCurrentData = true;
   }
 
@@ -2631,6 +2649,7 @@ void SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate,
   data->mEndOfFlushedData = 0;
   data->mCommands = TRACK_CREATE;
   data->mData = aSegment;
+  data->mPullingEnabled = false;
   ResampleAudioToGraphSampleRate(data, aSegment);
   if (!(aFlags & ADDTRACK_QUEUED) && GraphImpl()) {
     GraphImpl()->EnsureNextIteration();
@@ -2841,15 +2860,6 @@ void SourceMediaStream::EndTrack(TrackID aID) {
   if (track) {
     track->mCommands |= TrackEventCommand::TRACK_EVENT_ENDED;
   }
-  if (auto graph = GraphImpl()) {
-    graph->EnsureNextIteration();
-  }
-}
-
-void SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime) {
-  MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(aKnownTime >= mUpdateKnownTracksTime);
-  mUpdateKnownTracksTime = aKnownTime;
   if (auto graph = GraphImpl()) {
     graph->EnsureNextIteration();
   }

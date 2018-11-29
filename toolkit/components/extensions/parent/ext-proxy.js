@@ -32,6 +32,13 @@ const PROXY_TYPES_MAP = new Map([
   ["autoConfig", proxySvc.PROXYCONFIG_PAC],
 ]);
 
+const DEFAULT_PORTS = new Map([
+  ["http", 80],
+  ["ssl", 443],
+  ["ftp", 21],
+  ["socks", 1080],
+]);
+
 ExtensionPreferencesManager.addSetting("proxy.settings", {
   prefNames: [
     "network.proxy.type",
@@ -66,8 +73,8 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
       if (value[prop]) {
         let url = new URL(`http://${value[prop]}`);
         prefs[`network.proxy.${prop}`] = url.hostname;
-        let port = parseInt(url.port, 10);
-        prefs[`network.proxy.${prop}_port`] = isNaN(port) ? 0 : port;
+        let port = parseInt(url.port, 10) || DEFAULT_PORTS.get(prop);
+        prefs[`network.proxy.${prop}_port`] = port;
       } else {
         prefs[`network.proxy.${prop}`] = undefined;
         prefs[`network.proxy.${prop}_port`] = undefined;

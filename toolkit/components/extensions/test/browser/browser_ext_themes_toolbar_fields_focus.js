@@ -11,8 +11,8 @@ add_task(async function test_toolbar_field_hover() {
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": "#FF0000",
-          "textcolor": "#ffffff",
+          "frame": "#FF0000",
+          "tab_background_color": "#ffffff",
           "toolbar_field": TOOLBAR_FIELD_BACKGROUND,
           "toolbar_field_text": TOOLBAR_FIELD_COLOR,
           "toolbar_field_focus": TOOLBAR_FOCUS_BACKGROUND,

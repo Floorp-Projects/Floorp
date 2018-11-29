@@ -9,8 +9,8 @@ add_task(async function test_support_tab_line() {
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "tab_line": TAB_LINE_COLOR,
         },
       },

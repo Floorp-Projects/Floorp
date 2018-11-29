@@ -7,8 +7,8 @@ add_task(async function test_support_tab_separators() {
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": "#000",
-          "textcolor": "#9400ff",
+          "frame": "#000",
+          "tab_background_text": "#9400ff",
           "tab_background_separator":  TAB_SEPARATOR_COLOR,
         },
       },

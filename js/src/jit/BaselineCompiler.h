@@ -262,8 +262,6 @@ class BaselineCompiler final
     BytecodeAnalysis analysis_;
     FrameInfo frame;
 
-    FallbackICStubSpace stubSpace_;
-    js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries_;
     js::Vector<RetAddrEntry, 16, SystemAllocPolicy> retAddrEntries_;
 
     // Stores the native code offset for a bytecode pc.
@@ -280,15 +278,8 @@ class BaselineCompiler final
 
     js::Vector<PCMappingEntry, 16, SystemAllocPolicy> pcMappingEntries_;
 
-    // Labels for the 'movWithPatch' for loading IC entry pointers in
-    // the generated IC-calling code in the main jitcode.  These need
-    // to be patched with the actual icEntry offsets after the BaselineScript
-    // has been allocated.
-    struct ICLoadLabel {
-        size_t icEntry;
-        CodeOffset label;
-    };
-    js::Vector<ICLoadLabel, 16, SystemAllocPolicy> icLoadLabels_;
+    // Index of the current ICEntry in the script's ICScript.
+    uint32_t icEntryIndex_;
 
     uint32_t pushedBeforeCall_;
 #ifdef DEBUG
@@ -345,18 +336,6 @@ class BaselineCompiler final
   private:
     MOZ_MUST_USE bool appendRetAddrEntry(RetAddrEntry::Kind kind, uint32_t retOffset) {
         if (!retAddrEntries_.emplaceBack(script->pcToOffset(pc), kind, CodeOffset(retOffset))) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-        return true;
-    }
-
-    bool addICLoadLabel(CodeOffset label) {
-        MOZ_ASSERT(!icEntries_.empty());
-        ICLoadLabel loadLabel;
-        loadLabel.label = label;
-        loadLabel.icEntry = icEntries_.length() - 1;
-        if (!icLoadLabels_.append(loadLabel)) {
             ReportOutOfMemory(cx);
             return false;
         }
@@ -420,14 +399,7 @@ class BaselineCompiler final
     MOZ_MUST_USE bool emitPrologue();
     MOZ_MUST_USE bool emitEpilogue();
     MOZ_MUST_USE bool emitOutOfLinePostBarrierSlot();
-    MOZ_MUST_USE bool emitIC(ICStub* stub, bool isForOp);
-    MOZ_MUST_USE bool emitOpIC(ICStub* stub) {
-        return emitIC(stub, true);
-    }
-    MOZ_MUST_USE bool emitNonOpIC(ICStub* stub) {
-        return emitIC(stub, false);
-    }
-
+    MOZ_MUST_USE bool emitNextIC();
     MOZ_MUST_USE bool emitStackCheck();
     MOZ_MUST_USE bool emitInterruptCheck();
     MOZ_MUST_USE bool emitWarmUpCounterIncrement(bool allowOsr=true);

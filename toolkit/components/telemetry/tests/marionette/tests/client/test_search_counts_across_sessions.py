@@ -10,8 +10,6 @@ from telemetry_harness.ping_filters import (
     MAIN_SHUTDOWN_PING,
 )
 
-CANARY_CLIENT_ID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0"
-
 
 class TestSearchCounts(TelemetryTestCase):
     """Test for SEARCH_COUNTS across sessions."""
@@ -86,11 +84,7 @@ class TestSearchCounts(TelemetryTestCase):
         #     - SEARCH_COUNTS values should match performed search action
 
         client_id = ping1["clientId"]
-        self.assertIsNotNone(client_id)
-        self.assertNotEqual(client_id, "")
-
-        # Check for client ID that used when Telemetry upload is disabled
-        self.assertNotEqual(client_id, CANARY_CLIENT_ID)
+        self.assertIsValidUUID(client_id)
 
         ping1_info = ping1["payload"]["info"]
         self.assertEqual(ping1_info["reason"], "shutdown")

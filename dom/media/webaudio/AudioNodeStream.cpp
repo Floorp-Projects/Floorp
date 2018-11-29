@@ -562,9 +562,6 @@ void AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom) {
 
 void AudioNodeStream::AdvanceOutputSegment() {
   StreamTracks::Track* track = EnsureTrack(AUDIO_TRACK);
-  // No more tracks will be coming
-  mTracks.AdvanceKnownTracksTime(STREAM_TIME_MAX);
-
   AudioSegment* segment = track->Get<AudioSegment>();
 
   AudioChunk copyChunk = *mLastChunks[0].AsMutableChunk();

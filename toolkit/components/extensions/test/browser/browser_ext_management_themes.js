@@ -17,7 +17,7 @@ add_task(async function test_management_themes() {
       "description": "test theme",
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
       },
     },

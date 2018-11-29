@@ -23,11 +23,11 @@ add_task(async function test_support_toolbar_field_properties() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar_field": TOOLBAR_FIELD_BACKGROUND,
           "toolbar_field_text": TOOLBAR_FIELD_COLOR,
           "toolbar_field_border": TOOLBAR_FIELD_BORDER,
@@ -88,8 +88,8 @@ add_task(async function test_support_toolbar_field_brighttext() {
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar_field": "#fff",
           "toolbar_field_text": "#000",
         },
@@ -110,8 +110,8 @@ add_task(async function test_support_toolbar_field_brighttext() {
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar_field": "#000",
           "toolbar_field_text": "#fff",
         },

@@ -88,7 +88,8 @@
               },
               "headerURL": {
                 "$ref": "ImageDataOrExtensionURL",
-                "optional": true
+                "optional": true,
+                "deprecated": "Please use <em>theme.images.theme_frame</em>, this alias will be removed in Firefox 69."
               },
               "theme_frame": {
                 "$ref": "ImageDataOrExtensionURL",
@@ -107,7 +108,8 @@
               },
               "accentcolor": {
                 "$ref": "ThemeColor",
-                "optional": true
+                "optional": true,
+                "deprecated": "Please use <em>theme.colors.frame</em>, this alias will be removed in Firefox 69."
               },
               "frame": {
                 "$ref": "ThemeColor",
@@ -119,7 +121,8 @@
               },
               "textcolor": {
                 "$ref": "ThemeColor",
-                "optional": true
+                "optional": true,
+                "deprecated": "Please use <em>theme.colors.tab_background_text</em>, this alias will be removed in Firefox 69."
               },
               "tab_background_text": {
                 "$ref": "ThemeColor",
@@ -147,7 +150,8 @@
               },
               "toolbar_text": {
                 "$ref": "ThemeColor",
-                "optional": true
+                "optional": true,
+                "deprecated": "Please use <em>theme.colors.bookmark_text</em>, this alias will be removed in Firefox 69."
               },
               "bookmark_text": {
                 "$ref": "ThemeColor",

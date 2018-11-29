@@ -2,13 +2,14 @@ var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content
 var gNewWindow = null;
 
 add_task(async function() {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(async function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
     Services.prefs.clearUserPref("plugins.click_to_play");
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     gNewWindow.close();
+    await BrowserTestUtils.waitForEvent(gNewWindow, "unload", true);
     gNewWindow = null;
     window.focus();
   });
