@@ -38,6 +38,10 @@ function* testSteps()
     -1,                  // full prefill
   ];
 
+  info("Setting pref");
+
+  Services.prefs.setBoolPref("dom.storage.snapshot_reusing", false);
+
   for (let prefillValue of prefillValues) {
     info("Setting prefill value");
 

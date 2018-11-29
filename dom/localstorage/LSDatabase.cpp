@@ -74,7 +74,9 @@ LSDatabase::RequestAllowToClose()
 
   mRequestedAllowToClose = true;
 
-  if (!mSnapshot) {
+  if (mSnapshot) {
+    mSnapshot->MarkDirty();
+  } else {
     AllowToClose();
   }
 }
@@ -285,7 +287,7 @@ LSDatabase::EndExplicitSnapshot(LSObject* aObject)
 
   MOZ_ASSERT(mSnapshot->Explicit());
 
-  nsresult rv = mSnapshot->Finish();
+  nsresult rv = mSnapshot->End();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

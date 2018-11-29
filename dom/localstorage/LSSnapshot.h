@@ -35,6 +35,8 @@ private:
 
   RefPtr<LSDatabase> mDatabase;
 
+  nsCOMPtr<nsITimer> mTimer;
+
   LSSnapshotChild* mActor;
 
   nsTHashtable<nsStringHashKey> mLoadedItems;
@@ -50,6 +52,9 @@ private:
   LoadState mLoadState;
 
   bool mExplicit;
+  bool mHasPendingStableStateCallback;
+  bool mHasPendingTimerCallback;
+  bool mDirty;
 
 #ifdef DEBUG
   bool mInitialized;
@@ -113,11 +118,20 @@ public:
   nsresult
   Clear(LSNotifyInfo& aNotifyInfo);
 
+  void
+  MarkDirty();
+
   nsresult
-  Finish();
+  End();
 
 private:
   ~LSSnapshot();
+
+  void
+  ScheduleStableStateCallback();
+
+  void
+  MaybeScheduleStableStateCallback();
 
   nsresult
   GetItemInternal(const nsAString& aKey,
@@ -129,6 +143,18 @@ private:
 
   nsresult
   UpdateUsage(int64_t aDelta);
+
+  nsresult
+  Checkpoint();
+
+  nsresult
+  Finish();
+
+  void
+  CancelTimer();
+
+  static void
+  TimerCallback(nsITimer* aTimer, void* aClosure);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE

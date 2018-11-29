@@ -60,6 +60,9 @@ add_task(async function testLocalStorage() {
     await browser.browsingData.remove({}, {localStorage: true});
     await sendMessageToTabs(tabs, "checkLocalStorageCleared");
 
+    // Cleanup (checkLocalStorageCleared creates empty LS databases).
+    await browser.browsingData.removeLocalStorage({});
+
     browser.tabs.remove(tabs.map(tab => tab.id));
 
     browser.test.notifyPass("done");
