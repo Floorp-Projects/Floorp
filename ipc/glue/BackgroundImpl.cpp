@@ -24,6 +24,8 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/ipc/ProtocolTypes.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -293,7 +295,7 @@ class ChildImpl final : public BackgroundChildImpl
   typedef mozilla::ipc::Transport Transport;
 
   class ShutdownObserver;
-  class ActorCreatedRunnable;
+  class SendInitBackgroundRunnable;
 
   // A thread-local index that is not valid.
   static const unsigned int kBadThreadLocalIndex =
@@ -313,6 +315,7 @@ class ChildImpl final : public BackgroundChildImpl
     }
 
     RefPtr<ChildImpl> mActor;
+    RefPtr<SendInitBackgroundRunnable> mSendInitBackgroundRunnable;
     nsAutoPtr<BackgroundChildImpl::ThreadLocal> mConsumerThreadLocal;
 #ifdef DEBUG
     bool mClosed;
@@ -410,20 +413,7 @@ private:
   GetThreadLocalForCurrentThread();
 
   static void
-  ThreadLocalDestructor(void* aThreadLocal)
-  {
-    auto threadLocalInfo = static_cast<ThreadLocalInfo*>(aThreadLocal);
-
-    if (threadLocalInfo) {
-      MOZ_ASSERT(threadLocalInfo->mClosed);
-
-      if (threadLocalInfo->mActor) {
-        threadLocalInfo->mActor->Close();
-        threadLocalInfo->mActor->AssertActorDestroyed();
-      }
-      delete threadLocalInfo;
-    }
-  }
+  ThreadLocalDestructor(void* aThreadLocal);
 
   // This class is reference counted.
   ~ChildImpl()
@@ -621,6 +611,43 @@ private:
   {
     AssertIsOnMainThread();
   }
+};
+
+class ChildImpl::SendInitBackgroundRunnable final
+  : public CancelableRunnable
+{
+  nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
+  RefPtr<StrongWorkerRef> mWorkerRef;
+  Endpoint<PBackgroundParent> mParent;
+  mozilla::Mutex mMutex;
+  bool mSentInitBackground;
+
+public:
+  static already_AddRefed<SendInitBackgroundRunnable>
+  Create(Endpoint<PBackgroundParent>&& aParent);
+
+  void
+  ClearEventTarget()
+  {
+    mWorkerRef = nullptr;
+
+    mozilla::MutexAutoLock lock(mMutex);
+    mOwningEventTarget = nullptr;
+  }
+
+private:
+  explicit SendInitBackgroundRunnable(Endpoint<PBackgroundParent>&& aParent)
+    : CancelableRunnable("Background::ChildImpl::SendInitBackgroundRunnable")
+    , mOwningEventTarget(GetCurrentThreadSerialEventTarget())
+    , mParent(std::move(aParent))
+    , mMutex("SendInitBackgroundRunnable::mMutex")
+    , mSentInitBackground(false)
+  { }
+
+  ~SendInitBackgroundRunnable()
+  { }
+
+  NS_DECL_NSIRUNNABLE
 };
 
 } // namespace
@@ -1489,6 +1516,29 @@ ChildImpl::GetOrCreateForCurrentThread(nsIEventTarget* aMainEventTarget)
   }
 
   if (threadLocalInfo->mActor) {
+    RefPtr<SendInitBackgroundRunnable>& runnable =
+      threadLocalInfo->mSendInitBackgroundRunnable;
+
+    if (aMainEventTarget && runnable) {
+      // The SendInitBackgroundRunnable was already dispatched to the main
+      // thread to finish initialization of a new background child actor.
+      // However, the caller passed a custom main event target which indicates
+      // that synchronous blocking of the main thread is happening (done by
+      // creating a nested event target and spinning the event loop).
+      // It can happen that the SendInitBackgroundRunnable didn't have a chance
+      // to run before the synchronous blocking has occured. Unblocking of the
+      // main thread can depend on an IPC message received on this thread, so
+      // we have to dispatch the SendInitBackgroundRunnable to the custom main
+      // event target too, otherwise IPC will be only queueing messages on this
+      // thread. The runnable will run twice in the end, but that's a harmless
+      // race between the main and nested event queue of the main thread.
+      // There's a guard in the runnable implementation for calling
+      // SendInitBackground only once.
+
+      MOZ_ALWAYS_SUCCEEDS(aMainEventTarget->Dispatch(runnable,
+                                                     NS_DISPATCH_NORMAL));
+    }
+
     return threadLocalInfo->mActor;
   }
 
@@ -1525,6 +1575,14 @@ ChildImpl::GetOrCreateForCurrentThread(nsIEventTarget* aMainEventTarget)
     return nullptr;
   }
 
+  RefPtr<SendInitBackgroundRunnable> runnable;
+  if (!NS_IsMainThread()) {
+    runnable = SendInitBackgroundRunnable::Create(std::move(parent));
+    if (!runnable) {
+      return nullptr;
+    }
+  }
+
   RefPtr<ChildImpl> strongActor = new ChildImpl();
 
   if (!child.Bind(strongActor)) {
@@ -1541,18 +1599,14 @@ ChildImpl::GetOrCreateForCurrentThread(nsIEventTarget* aMainEventTarget)
       return nullptr;
     }
   } else {
-    nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod<Endpoint<PBackgroundParent>&&>(
-        "dom::ContentChild::SendInitBackground",
-        content,
-        &ContentChild::SendInitBackground,
-        std::move(parent));
     if (aMainEventTarget) {
       MOZ_ALWAYS_SUCCEEDS(aMainEventTarget->Dispatch(runnable,
                                                      NS_DISPATCH_NORMAL));
     } else {
       MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
     }
+
+    threadLocalInfo->mSendInitBackgroundRunnable = runnable;
   }
 
   RefPtr<ChildImpl>& actor = threadLocalInfo->mActor;
@@ -1611,6 +1665,28 @@ ChildImpl::GetThreadLocalForCurrentThread()
   return threadLocalInfo->mConsumerThreadLocal;
 }
 
+// static
+void
+ChildImpl::ThreadLocalDestructor(void* aThreadLocal)
+{
+  auto threadLocalInfo = static_cast<ThreadLocalInfo*>(aThreadLocal);
+
+  if (threadLocalInfo) {
+    MOZ_ASSERT(threadLocalInfo->mClosed);
+
+    if (threadLocalInfo->mActor) {
+      threadLocalInfo->mActor->Close();
+      threadLocalInfo->mActor->AssertActorDestroyed();
+    }
+
+    if (threadLocalInfo->mSendInitBackgroundRunnable) {
+      threadLocalInfo->mSendInitBackgroundRunnable->ClearEventTarget();
+    }
+
+    delete threadLocalInfo;
+  }
+}
+
 void
 ChildImpl::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -1635,6 +1711,83 @@ ChildImpl::ShutdownObserver::Observe(nsISupports* aSubject,
   MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID));
 
   ChildImpl::Shutdown();
+
+  return NS_OK;
+}
+
+// static
+already_AddRefed<ChildImpl::SendInitBackgroundRunnable>
+ChildImpl::
+SendInitBackgroundRunnable::Create(Endpoint<PBackgroundParent>&& aParent)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  RefPtr<SendInitBackgroundRunnable> runnable =
+    new SendInitBackgroundRunnable(std::move(aParent));
+
+  WorkerPrivate* workerPrivate = mozilla::dom::GetCurrentThreadWorkerPrivate();
+  if (!workerPrivate) {
+    return runnable.forget();
+  }
+
+  workerPrivate->AssertIsOnWorkerThread();
+
+  runnable->mWorkerRef =
+    StrongWorkerRef::Create(workerPrivate,
+                            "ChildImpl::SendInitBackgroundRunnable");
+  if (NS_WARN_IF(!runnable->mWorkerRef)) {
+    return nullptr;
+  }
+
+  return runnable.forget();
+}
+
+NS_IMETHODIMP
+ChildImpl::
+SendInitBackgroundRunnable::Run()
+{
+  if (NS_IsMainThread()) {
+    if (mSentInitBackground) {
+      return NS_OK;
+    }
+
+    mSentInitBackground = true;
+
+    RefPtr<ContentChild> content = ContentChild::GetSingleton();
+    MOZ_ASSERT(content);
+
+    if (!content->SendInitBackground(std::move(mParent))) {
+      MOZ_CRASH("Failed to create top level actor!");
+    }
+
+    nsCOMPtr<nsISerialEventTarget> owningEventTarget;
+    {
+      mozilla::MutexAutoLock lock(mMutex);
+      owningEventTarget = mOwningEventTarget;
+    }
+
+    if (!owningEventTarget) {
+      return NS_OK;
+    }
+
+    nsresult rv = owningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  ClearEventTarget();
+
+  auto threadLocalInfo =
+    static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
+
+  if (!threadLocalInfo) {
+    return NS_OK;
+  }
+
+  threadLocalInfo->mSendInitBackgroundRunnable = nullptr;
 
   return NS_OK;
 }
