@@ -1305,6 +1305,7 @@ class Datastore final
   const uint32_t mPrivateBrowsingId;
   int64_t mUsage;
   int64_t mUpdateBatchUsage;
+  int64_t mSizeOfKeys;
   bool mClosed;
 #ifdef DEBUG
   bool mInUpdateBatch;
@@ -1315,6 +1316,7 @@ public:
   Datastore(const nsACString& aOrigin,
             uint32_t aPrivateBrowsingId,
             int64_t aUsage,
+            int64_t aSizeOfKeys,
             already_AddRefed<DirectoryLock>&& aDirectoryLock,
             already_AddRefed<Connection>&& aConnection,
             already_AddRefed<QuotaObject>&& aQuotaObject,
@@ -1337,13 +1339,6 @@ public:
   IsPersistent() const
   {
     return mPrivateBrowsingId == 0;
-  }
-
-  int64_t
-  Usage() const
-  {
-    AssertIsOnBackgroundThread();
-    return mUsage;
   }
 
   void
@@ -1394,12 +1389,14 @@ public:
   void
   NoteInactiveDatabase(Database* aDatabase);
 
-  uint32_t
-  GetLength() const;
-
   void
-  GetItemInfos(nsTHashtable<nsStringHashKey>& aLoadedItems,
-               nsTArray<LSItemInfo>& aItemInfos);
+  GetSnapshotInitInfo(int64_t aRequestedSize,
+                      nsTHashtable<nsStringHashKey>& aLoadedItems,
+                      nsTArray<LSItemInfo>& aItemInfos,
+                      uint32_t& aTotalLength,
+                      int64_t& aInitialUsage,
+                      int64_t& aPeakUsage,
+                      LSSnapshot::LoadState& aLoadState);
 
   void
   GetItem(const nsString& aKey, nsString& aValue) const;
@@ -1698,12 +1695,13 @@ public:
        uint32_t aTotalLength,
        int64_t aInitialUsage,
        int64_t aPeakUsage,
-       bool aFullPrefill)
+       LSSnapshot::LoadState aLoadState)
   {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(aInitialUsage >= 0);
     MOZ_ASSERT(aPeakUsage >= aInitialUsage);
-    MOZ_ASSERT_IF(aFullPrefill, aLoadedItems.Count() == 0);
+    MOZ_ASSERT_IF(aLoadState == LSSnapshot::LoadState::AllOrderedItems,
+                  aLoadedItems.Count() == 0);
     MOZ_ASSERT(mTotalLength == 0);
     MOZ_ASSERT(mInitialUsage == -1);
     MOZ_ASSERT(mPeakUsage == -1);
@@ -1712,7 +1710,9 @@ public:
     mTotalLength = aTotalLength;
     mInitialUsage = aInitialUsage;
     mPeakUsage = aPeakUsage;
-    if (aFullPrefill) {
+    if (aLoadState == LSSnapshot::LoadState::AllOrderedKeys) {
+      mLoadKeysReceived = true;
+    } else if (aLoadState == LSSnapshot::LoadState::AllOrderedItems) {
       mLoadedReceived = true;
       mLoadedAllItems = true;
       mLoadKeysReceived = true;
@@ -1951,6 +1951,7 @@ class PrepareDatastoreOp
   nsString mDatabaseFilePath;
   uint32_t mPrivateBrowsingId;
   int64_t mUsage;
+  int64_t mSizeOfKeys;
   NestedState mNestedState;
   bool mDatabaseNotAvailable;
   bool mRequestedDirectoryLock;
@@ -3537,6 +3538,7 @@ ConnectionThread::Shutdown()
 Datastore::Datastore(const nsACString& aOrigin,
                      uint32_t aPrivateBrowsingId,
                      int64_t aUsage,
+                     int64_t aSizeOfKeys,
                      already_AddRefed<DirectoryLock>&& aDirectoryLock,
                      already_AddRefed<Connection>&& aConnection,
                      already_AddRefed<QuotaObject>&& aQuotaObject,
@@ -3549,6 +3551,7 @@ Datastore::Datastore(const nsACString& aOrigin,
   , mPrivateBrowsingId(aPrivateBrowsingId)
   , mUsage(aUsage)
   , mUpdateBatchUsage(-1)
+  , mSizeOfKeys(aSizeOfKeys)
   , mClosed(false)
 #ifdef DEBUG
   , mInUpdateBatch(false)
@@ -3753,43 +3756,85 @@ Datastore::NoteInactiveDatabase(Database* aDatabase)
   }
 }
 
-uint32_t
-Datastore::GetLength() const
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mClosed);
-
-  return mValues.Count();
-}
-
 void
-Datastore::GetItemInfos(nsTHashtable<nsStringHashKey>& aLoadedItems,
-                        nsTArray<LSItemInfo>& aItemInfos)
+Datastore::GetSnapshotInitInfo(int64_t aRequestedSize,
+                               nsTHashtable<nsStringHashKey>& aLoadedItems,
+                               nsTArray<LSItemInfo>& aItemInfos,
+                               uint32_t& aTotalLength,
+                               int64_t& aInitialUsage,
+                               int64_t& aPeakUsage,
+                               LSSnapshot::LoadState& aLoadState)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mClosed);
+
+#ifdef DEBUG
+  int64_t sizeOfKeys = 0;
+  for (auto key : mKeys) {
+    sizeOfKeys += static_cast<int64_t>(key.Length());
+  }
+  MOZ_ASSERT(mSizeOfKeys == sizeOfKeys);
+#endif
 
   int64_t size = 0;
-  for (auto key : mKeys) {
+  if (mSizeOfKeys <= gSnapshotPrefill) {
     nsString value;
-    DebugOnly<bool> hasValue = mValues.Get(key, &value);
-    MOZ_ASSERT(hasValue);
+    for (auto key : mKeys) {
+      if (!value.IsVoid()) {
+        DebugOnly<bool> hasValue = mValues.Get(key, &value);
+        MOZ_ASSERT(hasValue);
 
-    size += static_cast<int64_t>(key.Length()) +
-            static_cast<int64_t>(value.Length());
+        size += static_cast<int64_t>(key.Length()) +
+                static_cast<int64_t>(value.Length());
 
-    if (size > gSnapshotPrefill) {
-      return;
+        if (size > gSnapshotPrefill) {
+          value.SetIsVoid(true);
+        } else {
+          aLoadedItems.PutEntry(key);
+        }
+      }
+
+      LSItemInfo* itemInfo = aItemInfos.AppendElement();
+      itemInfo->key() = key;
+      itemInfo->value() = value;
     }
 
-    aLoadedItems.PutEntry(key);
+    if (value.IsVoid()) {
+      aLoadState = LSSnapshot::LoadState::AllOrderedKeys;
+    } else {
+      aLoadedItems.Clear();
+      aLoadState = LSSnapshot::LoadState::AllOrderedItems;
+    }
+  } else {
+    for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
+      const nsAString& key = iter.Key();
+      const nsString& value = iter.Data();
 
-    LSItemInfo* itemInfo = aItemInfos.AppendElement();
-    itemInfo->key() = key;
-    itemInfo->value() = value;
+      size += static_cast<int64_t>(key.Length()) +
+              static_cast<int64_t>(value.Length());
+
+      if (size > gSnapshotPrefill) {
+        break;
+      }
+
+      aLoadedItems.PutEntry(key);
+
+      LSItemInfo* itemInfo = aItemInfos.AppendElement();
+      itemInfo->key() = iter.Key();
+      itemInfo->value() = iter.Data();
+    }
+
+    MOZ_ASSERT(aItemInfos.Length() < mKeys.Length());
+    aLoadState = LSSnapshot::LoadState::Partial;
   }
 
-  aLoadedItems.Clear();
+  aTotalLength = mValues.Count();
+
+  aInitialUsage = mUsage;
+  aPeakUsage = aInitialUsage;
+  if (aRequestedSize && UpdateUsage(aRequestedSize)) {
+    aPeakUsage += aRequestedSize;
+  }
 }
 
 void
@@ -3828,26 +3873,23 @@ Datastore::SetItem(Database* aDatabase,
   GetItem(aKey, oldValue);
 
   if (oldValue != aValue || oldValue.IsVoid() != aValue.IsVoid()) {
-    bool affectsOrder;
+    bool isNewItem = oldValue.IsVoid();
 
-    int64_t delta = static_cast<int64_t>(aValue.Length()) -
-                    static_cast<int64_t>(oldValue.Length());
-
-    if (oldValue.IsVoid()) {
-      affectsOrder = true;
-
-      delta += static_cast<int64_t>(aKey.Length());
-
-      mUpdateBatchAppends.AppendElement(aKey);
-    } else {
-      affectsOrder = false;
-    }
-
-    mUpdateBatchUsage += delta;
-
-    NotifySnapshots(aDatabase, aKey, oldValue, affectsOrder);
+    NotifySnapshots(aDatabase, aKey, oldValue, /* affectsOrder */ isNewItem);
 
     mValues.Put(aKey, aValue);
+
+    if (isNewItem) {
+      mUpdateBatchAppends.AppendElement(aKey);
+
+      mUpdateBatchUsage += static_cast<int64_t>(aKey.Length()) +
+                           static_cast<int64_t>(aValue.Length());
+
+      mSizeOfKeys += static_cast<int64_t>(aKey.Length());
+    } else {
+      mUpdateBatchUsage += static_cast<int64_t>(aValue.Length()) -
+                           static_cast<int64_t>(oldValue.Length());
+    }
 
     if (IsPersistent()) {
       mConnection->SetItem(aKey, aValue);
@@ -3872,6 +3914,10 @@ Datastore::RemoveItem(Database* aDatabase,
   GetItem(aKey, oldValue);
 
   if (!oldValue.IsVoid()) {
+    NotifySnapshots(aDatabase, aKey, oldValue, /* aAffectsOrder */ true);
+
+    mValues.Remove(aKey);
+
     auto entry = mUpdateBatchRemovals.LookupForAdd(aKey);
     if (entry) {
       entry.Data()++;
@@ -3879,14 +3925,10 @@ Datastore::RemoveItem(Database* aDatabase,
       entry.OrInsert([]() { return 1; });
     }
 
-    int64_t delta = -(static_cast<int64_t>(aKey.Length()) +
-                      static_cast<int64_t>(oldValue.Length()));
+    mUpdateBatchUsage -= (static_cast<int64_t>(aKey.Length()) +
+                          static_cast<int64_t>(oldValue.Length()));
 
-    mUpdateBatchUsage += delta;
-
-    NotifySnapshots(aDatabase, aKey, oldValue, /* aAffectsOrder */ true);
-
-    mValues.Remove(aKey);
+    mSizeOfKeys -= static_cast<int64_t>(aKey.Length());
 
     if (IsPersistent()) {
       mConnection->RemoveItem(aKey);
@@ -3906,23 +3948,27 @@ Datastore::Clear(Database* aDatabase,
   MOZ_ASSERT(mInUpdateBatch);
 
   if (mValues.Count()) {
-    mUpdateBatchRemovals.Clear();
-    mUpdateBatchAppends.Clear();
-
+    int64_t updateBatchUsage = mUpdateBatchUsage;
     for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
       const nsAString& key = iter.Key();
       const nsAString& value = iter.Data();
 
-      int64_t delta = -(static_cast<int64_t>(key.Length()) +
-                        static_cast<int64_t>(value.Length()));
-
-      mUpdateBatchUsage += delta;
+      updateBatchUsage -= (static_cast<int64_t>(key.Length()) +
+                           static_cast<int64_t>(value.Length()));
 
       NotifySnapshots(aDatabase, key, value, /* aAffectsOrder */ true);
     }
 
     mValues.Clear();
+
+    mUpdateBatchRemovals.Clear();
+    mUpdateBatchAppends.Clear();
+
     mKeys.Clear();
+
+    mUpdateBatchUsage = updateBatchUsage;
+
+    mSizeOfKeys = 0;
 
     if (IsPersistent()) {
       mConnection->Clear();
@@ -3948,7 +3994,10 @@ Datastore::PrivateBrowsingClear()
     MOZ_ASSERT(ok);
 
     mValues.Clear();
+
     mKeys.Clear();
+
+    mSizeOfKeys = 0;
   }
 }
 
@@ -4392,6 +4441,7 @@ Database::RecvPBackgroundLSSnapshotConstructor(
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aRequestedSize >= 0);
+  MOZ_ASSERT(aInitInfo);
   MOZ_ASSERT(!mAllowedToClose);
 
   auto* snapshot = static_cast<Snapshot*>(aActor);
@@ -4400,22 +4450,19 @@ Database::RecvPBackgroundLSSnapshotConstructor(
   //       creation. For example clear() doesn't need to receive items at all.
   nsTHashtable<nsStringHashKey> loadedItems;
   nsTArray<LSItemInfo> itemInfos;
-  mDatastore->GetItemInfos(loadedItems, itemInfos);
+  uint32_t totalLength;
+  int64_t initialUsage;
+  int64_t peakUsage;
+  LSSnapshot::LoadState loadState;
+  mDatastore->GetSnapshotInitInfo(aRequestedSize,
+                                  loadedItems,
+                                  itemInfos,
+                                  totalLength,
+                                  initialUsage,
+                                  peakUsage,
+                                  loadState);
 
-  uint32_t totalLength = mDatastore->GetLength();
-
-  int64_t initialUsage = mDatastore->Usage();
-
-  int64_t peakUsage = initialUsage;
-  if (aRequestedSize && mDatastore->UpdateUsage(aRequestedSize)) {
-    peakUsage += aRequestedSize;
-  }
-
-  snapshot->Init(loadedItems,
-                 totalLength,
-                 initialUsage,
-                 peakUsage,
-                 /* aFullPrefill */ itemInfos.Length() == totalLength);
+  snapshot->Init(loadedItems, totalLength, initialUsage, peakUsage, loadState);
 
   RegisterSnapshot(snapshot);
 
@@ -4423,6 +4470,7 @@ Database::RecvPBackgroundLSSnapshotConstructor(
   aInitInfo->totalLength() = totalLength;
   aInitInfo->initialUsage() = initialUsage;
   aInitInfo->peakUsage() = peakUsage;
+  aInitInfo->loadState() = loadState;
 
   return IPC_OK();
 }
@@ -5010,6 +5058,7 @@ PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
   , mParams(aParams.get_LSRequestPrepareDatastoreParams())
   , mPrivateBrowsingId(0)
   , mUsage(0)
+  , mSizeOfKeys(0)
   , mNestedState(NestedState::BeforeNesting)
   , mDatabaseNotAvailable(false)
   , mRequestedDirectoryLock(false)
@@ -5820,6 +5869,7 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
     mDatastore = new Datastore(mOrigin,
                                mPrivateBrowsingId,
                                mUsage,
+                               mSizeOfKeys,
                                mDirectoryLock.forget(),
                                mConnection.forget(),
                                quotaObject.forget(),
@@ -6035,6 +6085,7 @@ LoadDataOp::DoDatastoreWork()
 
     mPrepareDatastoreOp->mValues.Put(key, value);
     mPrepareDatastoreOp->mKeys.AppendElement(key);
+    mPrepareDatastoreOp->mSizeOfKeys += key.Length();
 #ifdef DEBUG
     mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.Length();
 #endif

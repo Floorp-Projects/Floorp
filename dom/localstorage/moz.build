@@ -16,6 +16,7 @@ XPIDL_MODULE = 'dom_localstorage'
 
 EXPORTS.mozilla.dom.localstorage += [
     'ActorsParent.h',
+    'SerializationHelpers.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -23,6 +24,7 @@ EXPORTS.mozilla.dom += [
     'LocalStorageManager2.h',
     'LSObject.h',
     'LSObserver.h',
+    'LSSnapshot.h',
 ]
 
 UNIFIED_SOURCES += [
