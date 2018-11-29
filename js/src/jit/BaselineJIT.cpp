@@ -353,7 +353,6 @@ BaselineScript::New(JSScript* jsscript,
                     uint32_t debugOsrEpilogueOffset,
                     uint32_t profilerEnterToggleOffset,
                     uint32_t profilerExitToggleOffset,
-                    size_t icEntries,
                     size_t retAddrEntries,
                     size_t pcMappingIndexEntries, size_t pcMappingSize,
                     size_t bytecodeTypeMapEntries,
@@ -362,14 +361,12 @@ BaselineScript::New(JSScript* jsscript,
 {
     static const unsigned DataAlignment = sizeof(uintptr_t);
 
-    size_t icEntriesSize = icEntries * sizeof(ICEntry);
     size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
     size_t pcMappingIndexEntriesSize = pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
     size_t bytecodeTypeMapSize = bytecodeTypeMapEntries * sizeof(uint32_t);
     size_t resumeEntriesSize = resumeEntries * sizeof(uintptr_t);
     size_t tlEntriesSize = traceLoggerToggleOffsetEntries * sizeof(uint32_t);
 
-    size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
     size_t paddedRetAddrEntriesSize = AlignBytes(retAddrEntriesSize, DataAlignment);
     size_t paddedPCMappingIndexEntriesSize = AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
     size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
@@ -377,8 +374,7 @@ BaselineScript::New(JSScript* jsscript,
     size_t paddedResumeEntriesSize = AlignBytes(resumeEntriesSize, DataAlignment);
     size_t paddedTLEntriesSize = AlignBytes(tlEntriesSize, DataAlignment);
 
-    size_t allocBytes = paddedICEntriesSize +
-                        paddedRetAddrEntriesSize +
+    size_t allocBytes = paddedRetAddrEntriesSize +
                         paddedPCMappingIndexEntriesSize +
                         paddedPCMappingSize +
                         paddedBytecodeTypesMapSize +
@@ -397,10 +393,6 @@ BaselineScript::New(JSScript* jsscript,
 
     size_t offsetCursor = sizeof(BaselineScript);
     MOZ_ASSERT(offsetCursor == AlignBytes(sizeof(BaselineScript), DataAlignment));
-
-    script->icEntriesOffset_ = offsetCursor;
-    script->icEntries_ = icEntries;
-    offsetCursor += paddedICEntriesSize;
 
     script->retAddrEntriesOffset_ = offsetCursor;
     script->retAddrEntries_ = retAddrEntries;
@@ -433,7 +425,11 @@ BaselineScript::trace(JSTracer* trc)
 {
     TraceEdge(trc, &method_, "baseline-method");
     TraceNullableEdge(trc, &templateEnv_, "baseline-template-environment");
+}
 
+void
+ICScript::trace(JSTracer* trc)
+{
     // Mark all IC stub codes hanging off the IC stub entries.
     for (size_t i = 0; i < numICEntries(); i++) {
         ICEntry& ent = icEntry(i);
@@ -463,16 +459,6 @@ BaselineScript::Destroy(FreeOp* fop, BaselineScript* script)
     MOZ_ASSERT(!script->hasPendingIonBuilder());
 
     script->unlinkDependentWasmImports(fop);
-
-    /*
-     * When the script contains pointers to nursery things, the store buffer can
-     * contain entries that point into the fallback stub space. Since we can
-     * destroy scripts outside the context of a GC, this situation could result
-     * in us trying to mark invalid store buffer entries.
-     *
-     * Defer freeing any allocated blocks until after the next minor GC.
-     */
-    script->fallbackStubSpace_.freeAllAfterMinorGC(script->method()->zone());
 
     fop->delete_(script);
 }
@@ -535,13 +521,6 @@ BaselineScript::removeDependentWasmImport(wasm::Instance& instance, uint32_t idx
     }
 }
 
-ICEntry&
-BaselineScript::icEntry(size_t index)
-{
-    MOZ_ASSERT(index < numICEntries());
-    return icEntryList()[index];
-}
-
 RetAddrEntry&
 BaselineScript::retAddrEntry(size_t index)
 {
@@ -573,15 +552,15 @@ struct ICEntries
 {
     using EntryT = ICEntry;
 
-    BaselineScript* const baseline_;
+    ICScript* const icScript_;
 
-    explicit ICEntries(BaselineScript* baseline) : baseline_(baseline) {}
+    explicit ICEntries(ICScript* icScript) : icScript_(icScript) {}
 
     size_t numEntries() const {
-        return baseline_->numICEntries();
+        return icScript_->numICEntries();
     }
     ICEntry& operator[](size_t index) const {
-        return baseline_->icEntry(index);
+        return icScript_->icEntry(index);
     }
 };
 
@@ -628,11 +607,11 @@ BaselineScript::retAddrEntryFromReturnOffset(CodeOffset returnOffset)
     return retAddrEntry(loc);
 }
 
-template <typename Entries>
+template <typename Entries, typename ScriptT>
 static inline bool
-ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset, size_t* loc)
+ComputeBinarySearchMid(ScriptT* script, uint32_t pcOffset, size_t* loc)
 {
-    Entries entries(baseline);
+    Entries entries(script);
     return BinarySearchIf(entries, 0, entries.numEntries(),
                           [pcOffset](typename Entries::EntryT& entry) {
                               uint32_t entryOffset = entry.pcOffset();
@@ -654,7 +633,7 @@ BaselineScript::returnAddressForEntry(const RetAddrEntry& ent)
 }
 
 ICEntry*
-BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
+ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
 {
     // Multiple IC entries can have the same PC offset, but this method only looks for
     // those which have isForOp() set.
@@ -688,7 +667,7 @@ BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
 }
 
 ICEntry&
-BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
+ICScript::icEntryFromPCOffset(uint32_t pcOffset)
 {
     ICEntry* entry = maybeICEntryFromPCOffset(pcOffset);
     MOZ_RELEASE_ASSERT(entry);
@@ -696,7 +675,7 @@ BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
 }
 
 ICEntry*
-BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry)
+ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry)
 {
     // Do a linear forward search from the last queried PC offset, or fallback to a
     // binary search if the last offset is too far away.
@@ -719,7 +698,7 @@ BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedU
 }
 
 ICEntry&
-BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry)
+ICScript::icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry)
 {
     ICEntry* entry = maybeICEntryFromPCOffset(pcOffset, prevLookedUpEntry);
     MOZ_RELEASE_ASSERT(entry);
@@ -803,13 +782,13 @@ BaselineScript::computeResumeNativeOffsets(JSScript* script)
 }
 
 void
-BaselineScript::copyICEntries(JSScript* script, const ICEntry* entries)
+ICScript::initICEntries(JSScript* script, const ICEntry* entries)
 {
     // Fix up the return offset in the IC entries and copy them in.
     // Also write out the IC entry ptrs in any fallback stubs that were added.
     for (uint32_t i = 0; i < numICEntries(); i++) {
         ICEntry& realEntry = icEntry(i);
-        realEntry = entries[i];
+        new (&realEntry) ICEntry(entries[i]);
 
         // If the attached stub is a fallback stub, then fix it up with
         // a pointer to the (now available) realEntry.
@@ -830,12 +809,6 @@ BaselineScript::copyRetAddrEntries(JSScript* script, const RetAddrEntry* entries
     for (uint32_t i = 0; i < numRetAddrEntries(); i++) {
         retAddrEntry(i) = entries[i];
     }
-}
-
-void
-BaselineScript::adoptFallbackStubs(FallbackICStubSpace* stubSpace)
-{
-    fallbackStubSpace_.adoptFrom(stubSpace);
 }
 
 void
@@ -1107,7 +1080,7 @@ BaselineScript::toggleProfilerInstrumentation(bool enable)
 }
 
 void
-BaselineScript::purgeOptimizedStubs(Zone* zone)
+ICScript::purgeOptimizedStubs(Zone* zone)
 {
     JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
 
@@ -1199,17 +1172,18 @@ HasEnteredCounters(ICEntry& entry)
 void
 jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason)
 {
-    MOZ_ASSERT(script->hasBaselineScript());
-    BaselineScript* blScript = script->baselineScript();
+    MOZ_ASSERT(script->hasICScript());
     JSContext* cx = TlsContext.get();
     AutoStructuredSpewer spew(cx, SpewChannel::BaselineICStats, script);
     if (!spew) {
         return;
     }
+
+    ICScript* icScript = script->icScript();
     spew->property("reason", dumpReason);
     spew->beginListProperty("entries");
-    for (size_t i = 0; i < blScript->numICEntries(); i++) {
-        ICEntry& entry = blScript->icEntry(i);
+    for (size_t i = 0; i < icScript->numICEntries(); i++) {
+        ICEntry& entry = icScript->icEntry(i);
         if (!HasEnteredCounters(entry)) {
             continue;
         }
@@ -1254,10 +1228,6 @@ jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script)
     }
 
     if (script->baselineScript()->active()) {
-        // Script is live on the stack. Keep the BaselineScript, but destroy
-        // stubs allocated in the optimized stub space.
-        script->baselineScript()->purgeOptimizedStubs(script->zone());
-
         // Reset |active| flag so that we don't need a separate script
         // iteration to unmark them.
         script->baselineScript()->resetActive();
@@ -1277,8 +1247,13 @@ void
 jit::AddSizeOfBaselineData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf, size_t* data,
                            size_t* fallbackStubs)
 {
+    if (script->hasICScript()) {
+        // ICScript is stored in TypeScript but we report its size here and not
+        // in TypeScript::sizeOfIncludingThis.
+        script->icScript()->addSizeOfIncludingThis(mallocSizeOf, data, fallbackStubs);
+    }
     if (script->hasBaselineScript()) {
-        script->baselineScript()->addSizeOfIncludingThis(mallocSizeOf, data, fallbackStubs);
+        script->baselineScript()->addSizeOfIncludingThis(mallocSizeOf, data);
     }
 }
 

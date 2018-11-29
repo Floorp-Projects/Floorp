@@ -12,6 +12,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "gc/Marking.h"
+#include "jit/BaselineIC.h"
 #include "js/CharacterEncoding.h"
 #include "js/Value.h"
 #include "vm/Debugger.h"
@@ -22,6 +23,7 @@
 #include "vm/ArrayObject-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/TypeInference-inl.h"
 #include "vm/UnboxedObject-inl.h"
@@ -2339,12 +2341,12 @@ GetExistingProperty(JSContext* cx,
     {
         jsbytecode* pc;
         JSScript* script = cx->currentScript(&pc);
-        if (script && script->hasBaselineScript()) {
+        if (script && script->hasICScript()) {
             switch (JSOp(*pc)) {
               case JSOP_GETPROP:
               case JSOP_CALLPROP:
               case JSOP_LENGTH:
-                script->baselineScript()->noteAccessedGetter(script->pcToOffset(pc));
+                script->icScript()->noteAccessedGetter(script->pcToOffset(pc));
                 break;
               default:
                 break;

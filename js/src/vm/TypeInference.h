@@ -37,6 +37,7 @@ class HeapTypeSetKey;
 
 namespace jit {
 
+class ICScript;
 struct IonScript;
 class TempAllocator;
 
@@ -234,6 +235,10 @@ class TypeScript
     // them as well.
     RecompileInfoVector inlinedCompilations_;
 
+    // ICScript and TypeScript have the same lifetimes, so we store a pointer to
+    // ICScript here to not increase sizeof(JSScript).
+    js::UniquePtr<js::jit::ICScript> icScript_;
+
     // Variable-size array
     StackTypeSet typeArray_[1];
 
@@ -246,6 +251,11 @@ class TypeScript
             return true;
         }
         return inlinedCompilations_.append(info);
+    }
+
+    jit::ICScript* icScript() const {
+        MOZ_ASSERT(icScript_);
+        return icScript_.get();
     }
 
     /* Array of type sets for variables and JOF_TYPESET ops. */
@@ -314,9 +324,10 @@ class TypeScript
 
     static void Purge(JSContext* cx, HandleScript script);
 
-    void destroy();
+    void destroy(Zone* zone);
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        // Note: icScript_ size is reported in jit::AddSizeOfBaselineData.
         return mallocSizeOf(this);
     }
 

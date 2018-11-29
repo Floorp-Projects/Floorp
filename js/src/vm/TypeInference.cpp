@@ -20,6 +20,7 @@
 #include "builtin/String.h"
 
 #include "gc/HashUtil.h"
+#include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
 #include "jit/Ion.h"
@@ -3747,6 +3748,16 @@ JSScript::makeTypes(JSContext* cx)
 
     AutoEnterAnalysis enter(cx);
 
+    UniquePtr<jit::ICScript> icScript(jit::ICScript::create(cx, this));
+    if (!icScript) {
+        return false;
+    }
+
+    // We need to call prepareForDestruction on ICScript before we |delete| it.
+    auto prepareForDestruction = mozilla::MakeScopeExit([&] {
+        icScript->prepareForDestruction(cx->zone());
+    });
+
     unsigned count = TypeScript::NumTypeSets(this);
 
     size_t size = TypeScript::SizeIncludingTypeArray(count);
@@ -3754,6 +3765,9 @@ JSScript::makeTypes(JSContext* cx)
     if (!typeScript) {
         return false;
     }
+
+    prepareForDestruction.release();
+    typeScript->icScript_ = std::move(icScript);
 
 #ifdef JS_CRASH_DIAGNOSTICS
     {
@@ -4909,7 +4923,7 @@ JSScript::maybeReleaseTypes()
 
     MOZ_ASSERT(!hasIonScript());
 
-    types_->destroy();
+    types_->destroy(zone());
     types_ = nullptr;
 
     // Freeze constraints on stack type sets need to be regenerated the
@@ -4918,8 +4932,10 @@ JSScript::maybeReleaseTypes()
 }
 
 void
-TypeScript::destroy()
+TypeScript::destroy(Zone* zone)
 {
+    icScript_->prepareForDestruction(zone);
+
     js_delete(this);
 }
 

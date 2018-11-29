@@ -53,6 +53,7 @@ namespace js {
 
 namespace jit {
     struct BaselineScript;
+    class ICScript;
     struct IonScriptCounts;
 } // namespace jit
 
@@ -2309,6 +2310,14 @@ class JSScript : public js::gc::TenuredCell
         return baseline;
     }
     inline void setBaselineScript(JSRuntime* rt, js::jit::BaselineScript* baselineScript);
+
+    inline js::jit::ICScript* icScript() const;
+
+    bool hasICScript() const {
+        // ICScript is stored in TypeScript so we have an ICScript iff we have a
+        // TypeScript.
+        return !!types_;
+    }
 
     void updateJitCodeRaw(JSRuntime* rt);
 

@@ -2414,65 +2414,6 @@ ICCacheIR_Updated::stubDataStart()
     return reinterpret_cast<uint8_t*>(this) + stubInfo_->stubDataOffset();
 }
 
-/* static */ ICCacheIR_Regular*
-ICCacheIR_Regular::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                         ICCacheIR_Regular& other)
-{
-    const CacheIRStubInfo* stubInfo = other.stubInfo();
-    MOZ_ASSERT(stubInfo->makesGCCalls());
-
-    size_t bytesNeeded = stubInfo->stubDataOffset() + stubInfo->stubDataSize();
-    void* newStub = space->alloc(bytesNeeded);
-    if (!newStub) {
-        return nullptr;
-    }
-
-    ICCacheIR_Regular* res = new(newStub) ICCacheIR_Regular(other.jitCode(), stubInfo);
-    stubInfo->copyStubData(&other, res);
-    return res;
-}
-
-
-/* static */ ICCacheIR_Monitored*
-ICCacheIR_Monitored::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                           ICCacheIR_Monitored& other)
-{
-    const CacheIRStubInfo* stubInfo = other.stubInfo();
-    MOZ_ASSERT(stubInfo->makesGCCalls());
-
-    size_t bytesNeeded = stubInfo->stubDataOffset() + stubInfo->stubDataSize();
-    void* newStub = space->alloc(bytesNeeded);
-    if (!newStub) {
-        return nullptr;
-    }
-
-    ICCacheIR_Monitored* res = new(newStub) ICCacheIR_Monitored(other.jitCode(), firstMonitorStub,
-                                                                stubInfo);
-    stubInfo->copyStubData(&other, res);
-    return res;
-}
-
-/* static */ ICCacheIR_Updated*
-ICCacheIR_Updated::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                         ICCacheIR_Updated& other)
-{
-    const CacheIRStubInfo* stubInfo = other.stubInfo();
-    MOZ_ASSERT(stubInfo->makesGCCalls());
-
-    size_t bytesNeeded = stubInfo->stubDataOffset() + stubInfo->stubDataSize();
-    void* newStub = space->alloc(bytesNeeded);
-    if (!newStub) {
-        return nullptr;
-    }
-
-    ICCacheIR_Updated* res = new(newStub) ICCacheIR_Updated(other.jitCode(), stubInfo);
-    res->updateStubGroup() = other.updateStubGroup();
-    res->updateStubId() = other.updateStubId();
-
-    stubInfo->copyStubData(&other, res);
-    return res;
-}
-
 bool
 BaselineCacheIRCompiler::emitCallStringConcatResult()
 {

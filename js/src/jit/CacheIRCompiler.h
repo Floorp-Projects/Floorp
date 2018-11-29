@@ -983,8 +983,6 @@ class CacheIRStubInfo
     }
 
     uintptr_t getStubRawWord(ICStub* stub, uint32_t field) const;
-
-    void copyStubData(ICStub* src, ICStub* dest) const;
 };
 
 template <typename T>
