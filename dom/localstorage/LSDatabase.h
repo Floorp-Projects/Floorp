@@ -11,6 +11,7 @@ namespace mozilla {
 namespace dom {
 
 class LSDatabaseChild;
+class LSWriteOpResponse;
 
 class LSDatabase final
 {
@@ -69,16 +70,14 @@ public:
   nsresult
   SetItem(const nsAString& aKey,
           const nsAString& aValue,
-          bool* aChanged,
-          nsAString& aOldValue);
+          LSWriteOpResponse& aResponse);
 
   nsresult
   RemoveItem(const nsAString& aKey,
-             bool* aChanged,
-             nsAString& aOldValue);
+             LSWriteOpResponse& aResponse);
 
   nsresult
-  Clear(bool* aChanged);
+  Clear(LSWriteOpResponse& aResponse);
 
 private:
   ~LSDatabase();

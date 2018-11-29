@@ -7,6 +7,18 @@ include protocol PBackgroundLSObject;
 namespace mozilla {
 namespace dom {
 
+struct LSNotifyInfo
+{
+  bool changed;
+  nsString oldValue;
+};
+
+union LSWriteOpResponse
+{
+  nsresult;
+  LSNotifyInfo;
+};
+
 sync protocol PBackgroundLSDatabase
 {
   manager PBackgroundLSObject;
@@ -38,13 +50,13 @@ parent:
     returns (nsString[] keys);
 
   sync SetItem(nsString key, nsString value)
-    returns (bool changed, nsString oldValue);
+    returns (LSWriteOpResponse response);
 
   sync RemoveItem(nsString key)
-    returns (bool changed, nsString oldValue);
+    returns (LSWriteOpResponse response);
 
   sync Clear()
-    returns (bool changed);
+    returns (LSWriteOpResponse response);
 
 child:
   async __delete__();
