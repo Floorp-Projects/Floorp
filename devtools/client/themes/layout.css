@@ -2,6 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ :root {
+  --flex-basis-outline-border-color: var(--blue-40);
+  --flex-basis-outline-background-color: rgba(69, 161, 255, 0.25);
+  --flex-growing-delta-outline-background-color: rgba(221, 0, 169, 0.13);
+  --flex-shrinking-delta-outline-background-color: #E9E3FF;
+}
+
+:root.theme-dark {
+  --flex-basis-outline-border-color: rgba(10, 132, 255, 0.85);
+  --flex-basis-outline-background-color: rgba(10, 132, 255, 0.3);
+  --flex-growing-delta-outline-background-color: rgba(255, 26, 217, 0.25);
+  --flex-shrinking-delta-outline-background-color: #322952;
+}
+
 .layout-container {
   height: 100%;
   width: 100%;
@@ -312,10 +326,23 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 }
 
 .flex-outline-basis {
-  border-style: dotted;
-  border-width: 3px;
-  margin: 1px;
+  position: relative;
+  border: 3px dotted var(--flex-basis-outline-border-color);
+  margin: 2px;
   grid-column: basis-start / basis-end;
+}
+
+/* Fills the basis outline with a blue background color that is contained inside the
+   dotted border. This gives the impression the dotted border alternates between
+   white and blue. */
+.flex-outline-basis::before {
+  content: "";
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background-color: var(--flex-basis-outline-background-color);
 }
 
 .flex-outline-basis.zero-basis {
@@ -324,9 +351,17 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 
 .flex-outline-delta {
   grid-column: delta-start / delta-end;
-  margin: 3px 0;
-  opacity: .5;
   position: relative;
+}
+
+.flex-outline.growing .flex-outline-delta {
+  background-color: var(--flex-growing-delta-outline-background-color);
+  right: 2px;
+}
+
+.flex-outline.shrinking .flex-outline-delta {
+  background-color: var(--flex-shrinking-delta-outline-background-color);
+  margin: 5px 5px 5px 0px;
 }
 
 .flex-outline-delta::before {
@@ -336,7 +371,7 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
   right: 2px;
   top: calc(50% - .5px);
   height: 1px;
-  background: currentColor;
+  background: var(--theme-highlight-red);
 }
 
 .flex-outline-delta::after {
@@ -345,7 +380,7 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
   width: 5px;
   height: 5px;
   top: 50%;
-  border: 1px solid currentColor;
+  border: 1px solid var(--theme-highlight-red);
 }
 
 .flex-outline.growing .flex-outline-delta:after {
@@ -373,6 +408,7 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 .flex-outline-point.basisfinal {
   grid-column-end: basis-end;
   justify-self: end;
+  color: var(--theme-highlight-blue);
 }
 
 .flex-outline.shrinking .flex-outline-point.basis {
