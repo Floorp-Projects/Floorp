@@ -390,9 +390,10 @@ bool CacheEntry::Load(bool aTruncate, bool aPriority)
   bool reportMiss = false;
 
   // Check the index under two conditions for two states and take appropriate action:
-  // 1. When this is a disk entry and not told to truncate, check there is a disk file.
-  //    If not, set the 'truncate' flag to true so that this entry will open instantly
-  //    as a new one.
+  // 1. When this is a disk entry and not told to truncate, check there is a
+  //    disk file.
+  //    If not, set the 'truncate' flag to true so that this entry will open
+  //    instantly as a new one.
   // 2. When this is a memory-only entry, check there is a disk file.
   //    If there is or could be, doom that file.
   if ((!aTruncate || !mUseDisk) && NS_SUCCEEDED(rv)) {

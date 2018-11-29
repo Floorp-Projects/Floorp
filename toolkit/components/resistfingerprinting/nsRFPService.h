@@ -221,7 +221,8 @@ public:
   /**
    * This method for getting spoofed modifier states for the given keyboard event.
    *
-   * @param aDoc           [in]  the owner's document for getting content language.
+   * @param aDoc           [in]  the owner's document for getting content
+   *                             language.
    * @param aKeyboardEvent [in]  the keyboard event that needs to be spoofed.
    * @param aModifier      [in]  the modifier that needs to be spoofed.
    * @param aOut           [out] the spoofed state for the given modifier.
@@ -235,10 +236,12 @@ public:
   /**
    * This method for getting spoofed code for the given keyboard event.
    *
-   * @param aDoc           [in]  the owner's document for getting content language.
+   * @param aDoc           [in]  the owner's document for getting content
+   *                             language.
    * @param aKeyboardEvent [in]  the keyboard event that needs to be spoofed.
    * @param aOut           [out] the spoofed code.
-   * @return               true if there is a spoofed code in the fake keyboard layout.
+   * @return               true if there is a spoofed code in the fake keyboard
+   *                       layout.
    */
   static bool GetSpoofedCode(const nsIDocument* aDoc,
                              const WidgetKeyboardEvent* aKeyboardEvent,
@@ -247,10 +250,12 @@ public:
   /**
    * This method for getting spoofed keyCode for the given keyboard event.
    *
-   * @param aDoc           [in]  the owner's document for getting content language.
+   * @param aDoc           [in]  the owner's document for getting content
+   *                             language.
    * @param aKeyboardEvent [in]  the keyboard event that needs to be spoofed.
    * @param aOut           [out] the spoofed keyCode.
-   * @return               true if there is a spoofed keyCode in the fake keyboard layout.
+   * @return               true if there is a spoofed keyCode in the fake
+   *                       keyboard layout.
    */
   static bool GetSpoofedKeyCode(const nsIDocument* aDoc,
                                 const WidgetKeyboardEvent* aKeyboardEvent,

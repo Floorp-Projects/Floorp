@@ -45,6 +45,7 @@ static const struct codepair {
   unsigned short keysym;
   unsigned short ucs;
 } keysymtab[] = {
+  // clang-format off
   { 0x01a1, 0x0104 }, /*                     Aogonek Ą LATIN CAPITAL LETTER A WITH OGONEK */
   { 0x01a2, 0x02d8 }, /*                       breve ˘ BREVE */
   { 0x01a3, 0x0141 }, /*                     Lstroke Ł LATIN CAPITAL LETTER L WITH STROKE */
@@ -831,6 +832,7 @@ static const struct codepair {
   { 0x20aa, 0x20aa }, /*               NewSheqelSign ₪ NEW SHEQEL SIGN */
   { 0x20ab, 0x20ab }, /*                    DongSign ₫ DONG SIGN */
   { 0x20ac, 0x20ac }, /*                    EuroSign € EURO SIGN */
+  // clang-format on
 };
 
 long keysym2ucs(KeySym keysym)

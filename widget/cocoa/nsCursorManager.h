@@ -11,9 +11,11 @@
 
 /*! @class      nsCursorManager
     @abstract   Singleton service provides access to all cursors available in the application.
-    @discussion Use <code>nsCusorManager</code> to set the current cursor using an XP <code>nsCusor</code> enum value.
-                <code>nsCursorManager</code> encapsulates the details of setting different types of cursors, animating
-                cursors and cleaning up cursors when they are no longer in use.
+    @discussion Use <code>nsCusorManager</code> to set the current cursor using
+                an XP <code>nsCusor</code> enum value.
+                <code>nsCursorManager</code> encapsulates the details of
+                setting different types of cursors, animating cursors and
+                cleaning up cursors when they are no longer in use.
  */
 @interface nsCursorManager : NSObject
 {

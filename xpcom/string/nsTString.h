@@ -270,7 +270,8 @@ public:
    *  @return  offset in string, or kNotFound
    */
 
-  // int32_t FindChar( char16_t aChar, int32_t aOffset=0, int32_t aCount=-1 ) const;
+  // int32_t FindChar( char16_t aChar, int32_t aOffset=0,
+  //                   int32_t aCount=-1 ) const;
   int32_t RFindChar(char16_t aChar, int32_t aOffset = -1,
                     int32_t aCount = -1) const;
 
@@ -362,13 +363,17 @@ public:
    * |Left|, |Mid|, and |Right| are annoying signatures that seem better almost
    * any _other_ way than they are now.  Consider these alternatives
    *
-   * aWritable = aReadable.Left(17);   // ...a member function that returns a |Substring|
-   * aWritable = Left(aReadable, 17);  // ...a global function that returns a |Substring|
-   * Left(aReadable, 17, aWritable);   // ...a global function that does the assignment
+   * // ...a member function that returns a |Substring|
+   * aWritable = aReadable.Left(17);
+   * // ...a global function that returns a |Substring|
+   * aWritable = Left(aReadable, 17);
+   * // ...a global function that does the assignment
+   * Left(aReadable, 17, aWritable);
    *
    * as opposed to the current signature
    *
-   * aReadable.Left(aWritable, 17);    // ...a member function that does the assignment
+   * // ...a member function that does the assignment
+   * aReadable.Left(aWritable, 17);
    *
    * or maybe just stamping them out in favor of |Substring|, they are just duplicate functionality
    *

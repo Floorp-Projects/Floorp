@@ -24,10 +24,12 @@ class PanGestureInput;
  * SwipeTracker turns PanGestureInput events into swipe events
  * (WidgetSimpleGestureEvent) and dispatches them into Gecko.
  * The swiping behavior mirrors the behavior of the Cocoa API
- * -[NSEvent trackSwipeEventWithOptions:dampenAmountThresholdMin:max:usingHandler:].
+ * -[NSEvent
+ *     trackSwipeEventWithOptions:dampenAmountThresholdMin:max:usingHandler:].
  * The advantage of using this class over the Cocoa API is that this class
  * properly supports submitting queued up events to it, and that it hopefully
- * doesn't intermittently break scrolling the way the Cocoa API does (bug 927702).
+ * doesn't intermittently break scrolling the way the Cocoa API does (bug
+ * 927702).
  *
  * The swipe direction is either left or right. It is determined before the
  * SwipeTracker is created and stays fixed during the swipe.

@@ -264,7 +264,8 @@ void profiler_shutdown();
 // selected options. Stops and restarts the profiler if it is already active.
 // After starting the profiler is "active". The samples will be recorded in a
 // circular buffer.
-//   "aCapacity" is the maximum number of entries in the profiler's circular buffer.
+//   "aCapacity" is the maximum number of entries in the profiler's circular
+//               buffer.
 //   "aInterval" the sampling interval, measured in millseconds.
 //   "aFeatures" is the feature set. Features unsupported by this
 //               platform/configuration are ignored.
@@ -823,8 +824,9 @@ public:
     Push(sProfilingStack.get(), aLabel, aDynamicString, aCategory, aFlags);
   }
 
-  // This is the AUTO_PROFILER_LABEL_FAST variant. It retrieves the ProfilingStack
-  // from the JSContext and does nothing if the profiler is inactive.
+  // This is the AUTO_PROFILER_LABEL_FAST variant. It retrieves the
+  // ProfilingStack from the JSContext and does nothing if the profiler is
+  // inactive.
   AutoProfilerLabel(JSContext* aJSContext,
                     const char* aLabel, const char* aDynamicString,
                     js::ProfilingStackFrame::Category aCategory,

@@ -127,7 +127,8 @@ private:
  * Get the path to the Android Data dir.
  *
  * @param {nsTString<PathChar>} aOutDir - the variable holding the path.
- * @return {nsresult} NS_OK if the data dir path was found, a failure value otherwise.
+ * @return {nsresult} NS_OK if the data dir path was found, a failure value
+ *                    otherwise.
  */
 nsresult
 GetAndroidDataDir(nsTString<PathChar>& aOutDir)
@@ -148,8 +149,10 @@ GetAndroidDataDir(nsTString<PathChar>& aOutDir)
 /**
  * Get the path to the persistence file in the Android Data dir.
  *
- * @param {nsCOMPtr<nsIFile>} aOutFile - the nsIFile pointer holding the file info.
- * @return {nsresult} NS_OK if the persistence file was found, a failure value otherwise.
+ * @param {nsCOMPtr<nsIFile>} aOutFile - the nsIFile pointer holding the file
+ *                                       info.
+ * @return {nsresult} NS_OK if the persistence file was found, a failure value
+ *                          otherwise.
  */
 nsresult
 GetPersistenceFile(nsCOMPtr<nsIFile>& aOutFile)
@@ -173,7 +176,8 @@ GetPersistenceFile(nsCOMPtr<nsIFile>& aOutFile)
  *
  * @param {nsCOMPtr<nsIFile>} aFile - the nsIFile handle to the file.
  * @param {nsACString} fileContent - the content of the file.
- * @return {nsresult} NS_OK if the file was correctly read, an error code otherwise.
+ * @return {nsresult} NS_OK if the file was correctly read, an error code
+ *                          otherwise.
  */
 nsresult
 ReadFromFile(const nsCOMPtr<nsIFile>& aFile, nsACString& fileContent)

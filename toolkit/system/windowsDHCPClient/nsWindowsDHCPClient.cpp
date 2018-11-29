@@ -72,7 +72,8 @@ nsWindowsDHCPClient::GetOption(uint8_t aOption, nsACString& aRetVal)
   return NS_OK;
 }
 
-#define NS_WINDOWSDHCPCLIENTSERVICE_CID  /* {FEBF1D69-4D7D-4891-9524-045AD18B5592} */\
+/* {FEBF1D69-4D7D-4891-9524-045AD18B5592} */
+#define NS_WINDOWSDHCPCLIENTSERVICE_CID  \
     { 0xFEBF1D69, 0x4D7D, 0x4891, \
          {0x95, 0x24, 0x04, 0x5a, 0xd1, 0x8b, 0x55, 0x92 } }
 

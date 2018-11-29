@@ -118,8 +118,10 @@ find_key(const char *keyList, char* key)
  *
  * @param path       Path to the .ini file to read
  * @param keyList    List of zero-delimited keys ending with two zero characters
- * @param numStrings Number of strings to read into results buffer - must be equal to the number of keys
- * @param results    Two-dimensional array of strings to be filled in the same order as the keys provided
+ * @param numStrings Number of strings to read into results buffer - must be
+ *                   equal to the number of keys
+ * @param results    Two-dimensional array of strings to be filled in the same
+ *                   order as the keys provided
  * @param section    Optional name of the section to read; defaults to "Strings"
  */
 int

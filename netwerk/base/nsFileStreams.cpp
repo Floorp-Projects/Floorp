@@ -803,9 +803,11 @@ nsAtomicFileOutputStream::DoOpen()
     }
 
     // follow symlinks, for two reasons:
-    // 1) if a user has deliberately set up a profile file as a symlink, we honor it
-    // 2) to make the MoveToNative() in Finish() an atomic operation (which may not
-    //    be the case if moving across directories on different filesystems).
+    // 1) if a user has deliberately set up a profile file as a symlink, we
+    //    honor it
+    // 2) to make the MoveToNative() in Finish() an atomic operation (which may
+    //    not be the case if moving across directories on different
+    //    filesystems).
     nsCOMPtr<nsIFile> tempResult;
     rv = file->Clone(getter_AddRefs(tempResult));
     if (NS_SUCCEEDED(rv)) {
