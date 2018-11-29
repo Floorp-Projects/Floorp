@@ -420,7 +420,7 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
    * This must be idempotent.
    */
   virtual void DestroyImpl();
-  StreamTime GetTracksEnd() const { return mTracks.GetEnd(); }
+  StreamTime GetTracksEnd() const { return mTracks.GetEarliestTrackEnd(); }
 #ifdef DEBUG
   void DumpTrackInfo() const { return mTracks.DumpTrackInfo(); }
 #endif

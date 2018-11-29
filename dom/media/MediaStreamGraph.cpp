@@ -196,7 +196,7 @@ void MediaStreamGraphImpl::UpdateCurrentTimeForStreams(
     // out.
     if (stream->mFinished && !stream->mNotifiedFinished &&
         mProcessedTime >= stream->StreamTimeToGraphTime(
-                              stream->GetStreamTracks().GetAllTracksEnd())) {
+                              stream->GetStreamTracks().GetLatestTrackEnd())) {
       stream->mNotifiedFinished = true;
       SetStreamOrderDirty();
     }
@@ -1200,7 +1200,7 @@ void MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
       // The stream's not suspended, and since it's finished, underruns won't
       // stop it playing out. So there's no blocking other than what we impose
       // here.
-      GraphTime endTime = stream->GetStreamTracks().GetAllTracksEnd() +
+      GraphTime endTime = stream->GetStreamTracks().GetLatestTrackEnd() +
                           stream->mTracksStartTime;
       if (endTime <= mStateComputedTime) {
         LOG(LogLevel::Verbose,
@@ -1307,7 +1307,7 @@ void MediaStreamGraphImpl::Process() {
           ps->ProcessInput(mProcessedTime, mStateComputedTime,
                            ProcessedMediaStream::ALLOW_FINISH);
           NS_ASSERTION(
-              stream->mTracks.GetEnd() >=
+              stream->mTracks.GetEarliestTrackEnd() >=
                   GraphTimeToStreamTimeWithBlocking(stream, mStateComputedTime),
               "Stream did not produce enough data");
         }
@@ -2520,7 +2520,7 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
   // Compute how much stream time we'll need assuming we don't block
   // the stream at all.
   StreamTime t = GraphTimeToStreamTime(aDesiredUpToTime);
-  StreamTime current = mTracks.GetEnd();
+  StreamTime current = mTracks.GetEarliestTrackEnd();
   LOG(LogLevel::Verbose,
       ("%p: Calling NotifyPull aStream=%p t=%f current end=%f", GraphImpl(),
        this, GraphImpl()->MediaTimeToSeconds(t),
@@ -2601,7 +2601,7 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
     }
   }
 
-  if (mTracks.GetEnd() > 0) {
+  if (mTracks.GetEarliestTrackEnd() > 0) {
     mHasCurrentData = true;
   }
 
