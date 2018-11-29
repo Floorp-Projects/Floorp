@@ -94,6 +94,9 @@ public:
   Clear(nsIPrincipal& aSubjectPrincipal,
         ErrorResult& aError) override;
 
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LSObject, Storage)
+
 private:
   LSObject(nsPIDOMWindowInner* aWindow,
            nsIPrincipal* aPrincipal);
@@ -102,6 +105,13 @@ private:
 
   nsresult
   EnsureDatabase();
+
+  void
+  DropDatabase();
+
+  // Storage overrides.
+  void
+  LastRelease() override;
 };
 
 } // namespace dom

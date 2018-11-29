@@ -392,14 +392,33 @@ LSObject::Clear(nsIPrincipal& aSubjectPrincipal,
   }
 }
 
+NS_IMPL_ADDREF_INHERITED(LSObject, Storage)
+NS_IMPL_RELEASE_INHERITED(LSObject, Storage)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LSObject)
+NS_INTERFACE_MAP_END_INHERITING(Storage)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(LSObject)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(LSObject, Storage)
+  tmp->AssertIsOnOwningThread();
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(LSObject, Storage)
+  tmp->AssertIsOnOwningThread();
+  tmp->DropDatabase();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 nsresult
 LSObject::EnsureDatabase()
 {
   AssertIsOnOwningThread();
 
-  if (mDatabase) {
+  if (mDatabase && !mDatabase->IsAllowedToClose()) {
     return NS_OK;
   }
+
+  mDatabase = nullptr;
 
   // We don't need this yet, but once the request successfully finishes, it's
   // too late to initialize PBackground child on the owning thread, because
@@ -455,6 +474,27 @@ LSObject::EnsureDatabase()
   mDatabase = std::move(database);
 
   return NS_OK;
+}
+
+void
+LSObject::DropDatabase()
+{
+  AssertIsOnOwningThread();
+
+  if (mDatabase) {
+    if (!mDatabase->IsAllowedToClose()) {
+      mDatabase->AllowToClose();
+    }
+    mDatabase = nullptr;
+  }
+}
+
+void
+LSObject::LastRelease()
+{
+  AssertIsOnOwningThread();
+
+  DropDatabase();
 }
 
 nsresult

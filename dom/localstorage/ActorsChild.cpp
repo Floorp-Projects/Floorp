@@ -57,6 +57,18 @@ LSDatabaseChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
+mozilla::ipc::IPCResult
+LSDatabaseChild::RecvRequestAllowToClose()
+{
+  AssertIsOnOwningThread();
+
+  if (mDatabase) {
+    mDatabase->AllowToClose();
+  }
+
+  return IPC_OK();
+}
+
 /*******************************************************************************
  * LocalStorageRequestChild
  ******************************************************************************/

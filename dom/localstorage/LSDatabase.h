@@ -16,6 +16,8 @@ class LSDatabase final
 {
   LSDatabaseChild* mActor;
 
+  bool mAllowedToClose;
+
 public:
   LSDatabase();
 
@@ -37,6 +39,17 @@ public:
     MOZ_ASSERT(mActor);
 
     mActor = nullptr;
+  }
+
+  void
+  AllowToClose();
+
+  bool
+  IsAllowedToClose() const
+  {
+    AssertIsOnOwningThread();
+
+    return mAllowedToClose;
   }
 
   nsresult

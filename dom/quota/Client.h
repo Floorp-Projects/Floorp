@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
+#include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/ipc/IdType.h"
 
 #include "PersistenceType.h"
@@ -39,13 +40,22 @@ public:
 
   enum Type {
     IDB = 0,
-    //LS,
     //APPCACHE,
     ASMJS,
     DOMCACHE,
     SDB,
+    LS,
     TYPE_MAX
   };
+
+  static Type
+  TypeMax()
+  {
+    if (CachedNextGenLocalStorageEnabled()) {
+      return TYPE_MAX;
+    }
+    return LS;
+  }
 
   virtual Type
   GetType() = 0;
@@ -70,6 +80,13 @@ public:
         aText.AssignLiteral(SDB_DIRECTORY_NAME);
         break;
 
+      case LS:
+        if (CachedNextGenLocalStorageEnabled()) {
+          aText.AssignLiteral(LS_DIRECTORY_NAME);
+          break;
+        }
+        MOZ_FALLTHROUGH;
+
       case TYPE_MAX:
       default:
         MOZ_ASSERT_UNREACHABLE("Bad id value!");
@@ -93,6 +110,10 @@ public:
     }
     else if (aText.EqualsLiteral(SDB_DIRECTORY_NAME)) {
       aType = SDB;
+    }
+    else if (CachedNextGenLocalStorageEnabled() &&
+             aText.EqualsLiteral(LS_DIRECTORY_NAME)) {
+      aType = LS;
     }
     else {
       return NS_ERROR_FAILURE;

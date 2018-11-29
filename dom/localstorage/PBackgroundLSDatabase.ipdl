@@ -23,6 +23,8 @@ parent:
   // and the parent then sends the __delete__ message to the child.
   async DeleteMe();
 
+  async AllowToClose();
+
   sync GetLength()
     returns (uint32_t length);
 
@@ -43,6 +45,8 @@ parent:
 
 child:
   async __delete__();
+
+  async RequestAllowToClose();
 };
 
 } // namespace dom

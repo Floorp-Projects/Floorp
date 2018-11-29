@@ -34,6 +34,7 @@
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
+#include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/quota/PQuotaParent.h"
 #include "mozilla/dom/quota/PQuotaRequestParent.h"
 #include "mozilla/dom/quota/PQuotaUsageRequestParent.h"
@@ -2561,7 +2562,7 @@ DirectoryLockImpl::DirectoryLockImpl(QuotaManager* aQuotaManager,
   MOZ_ASSERT_IF(!aInternal, !aGroup.IsEmpty());
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
-  MOZ_ASSERT_IF(!aInternal, aClientType.Value() != Client::TYPE_MAX);
+  MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
   MOZ_ASSERT_IF(!aInternal, aOpenListener);
 }
 
@@ -2665,6 +2666,8 @@ CreateRunnable::Init()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  Unused << NextGenLocalStorageEnabled();
 
   return NS_OK;
 }
@@ -3299,7 +3302,7 @@ QuotaManager::CreateDirectoryLock(const Nullable<PersistenceType>& aPersistenceT
   MOZ_ASSERT_IF(!aInternal, !aGroup.IsEmpty());
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
-  MOZ_ASSERT_IF(!aInternal, aClientType.Value() != Client::TYPE_MAX);
+  MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
   MOZ_ASSERT_IF(!aInternal, aOpenListener);
 
   RefPtr<DirectoryLockImpl> lock = new DirectoryLockImpl(this,
@@ -3647,7 +3650,8 @@ QuotaManager::Init(const nsAString& aBasePath)
                 Client::ASMJS == 1 &&
                 Client::DOMCACHE == 2 &&
                 Client::SDB == 3 &&
-                Client::TYPE_MAX == 4,
+                Client::LS == 4 &&
+                Client::TYPE_MAX == 5,
                 "Fix the registration!");
 
   MOZ_ASSERT(mClients.Capacity() == Client::TYPE_MAX,
@@ -3658,6 +3662,11 @@ QuotaManager::Init(const nsAString& aBasePath)
   mClients.AppendElement(asmjscache::CreateClient());
   mClients.AppendElement(cache::CreateQuotaClient());
   mClients.AppendElement(simpledb::CreateQuotaClient());
+  if (CachedNextGenLocalStorageEnabled()) {
+    mClients.AppendElement(localstorage::CreateQuotaClient());
+  } else {
+    mClients.SetLength(Client::TypeMax());
+  }
 
   return NS_OK;
 }
@@ -3685,7 +3694,7 @@ QuotaManager::Shutdown()
 
   // Each client will spin the event loop while we wait on all the threads
   // to close. Our timer may fire during that loop.
-  for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
+  for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
     mClients[index]->ShutdownWorkThreads();
   }
 
@@ -5222,7 +5231,7 @@ QuotaManager::OpenDirectoryInternal(const Nullable<PersistenceType>& aPersistenc
   // We also need to notify clients to abort operations for them.
   AutoTArray<nsAutoPtr<nsTHashtable<nsCStringHashKey>>,
                Client::TYPE_MAX> origins;
-  origins.SetLength(Client::TYPE_MAX);
+  origins.SetLength(Client::TypeMax());
 
   const nsTArray<DirectoryLockImpl*>& blockedOnLocks =
     lock->GetBlockedOnLocks();
@@ -5233,7 +5242,7 @@ QuotaManager::OpenDirectoryInternal(const Nullable<PersistenceType>& aPersistenc
     if (!blockedOnLock->IsInternal()) {
       MOZ_ASSERT(!blockedOnLock->GetClientType().IsNull());
       Client::Type clientType = blockedOnLock->GetClientType().Value();
-      MOZ_ASSERT(clientType < Client::TYPE_MAX);
+      MOZ_ASSERT(clientType < Client::TypeMax());
 
       const OriginScope& originScope = blockedOnLock->GetOriginScope();
       MOZ_ASSERT(originScope.IsOrigin());
@@ -5247,7 +5256,7 @@ QuotaManager::OpenDirectoryInternal(const Nullable<PersistenceType>& aPersistenc
     }
   }
 
-  for (uint32_t index : IntegerRange(uint32_t(Client::TYPE_MAX))) {
+  for (uint32_t index : IntegerRange(uint32_t(Client::TypeMax()))) {
     if (origins[index]) {
       for (auto iter = origins[index]->Iter(); !iter.Done(); iter.Next()) {
         MOZ_ASSERT(mClients[index]);
@@ -5486,7 +5495,7 @@ QuotaManager::OriginClearCompleted(PersistenceType aPersistenceType,
     mInitializedOrigins.RemoveElement(aOrigin);
   }
 
-  for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
+  for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
     mClients[index]->OnOriginClearCompleted(aPersistenceType, aOrigin);
   }
 }
@@ -5507,7 +5516,7 @@ Client*
 QuotaManager::GetClient(Client::Type aClientType)
 {
   MOZ_ASSERT(aClientType >= Client::IDB);
-  MOZ_ASSERT(aClientType < Client::TYPE_MAX);
+  MOZ_ASSERT(aClientType < Client::TypeMax());
 
   return mClients.ElementAt(aClientType);
 }

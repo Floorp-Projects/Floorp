@@ -11,6 +11,7 @@ namespace dom {
 
 LSDatabase::LSDatabase()
   : mActor(nullptr)
+  , mAllowedToClose(false)
 {
   AssertIsOnOwningThread();
 }
@@ -18,6 +19,10 @@ LSDatabase::LSDatabase()
 LSDatabase::~LSDatabase()
 {
   AssertIsOnOwningThread();
+
+  if (!mAllowedToClose) {
+    AllowToClose();
+  }
 
   if (mActor) {
     mActor->SendDeleteMeInternal();
@@ -35,11 +40,25 @@ LSDatabase::SetActor(LSDatabaseChild* aActor)
   mActor = aActor;
 }
 
+void
+LSDatabase::AllowToClose()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!mAllowedToClose);
+
+  mAllowedToClose = true;
+
+  if (mActor) {
+    mActor->SendAllowToClose();
+  }
+}
+
 nsresult
 LSDatabase::GetLength(uint32_t* aResult)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
 
   uint32_t result;
   if (NS_WARN_IF(!mActor->SendGetLength(&result))) {
@@ -56,6 +75,7 @@ LSDatabase::GetKey(uint32_t aIndex,
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
 
   nsString result;
   if (NS_WARN_IF(!mActor->SendGetKey(aIndex, &result))) {
@@ -72,6 +92,7 @@ LSDatabase::GetItem(const nsAString& aKey,
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
 
   nsString result;
   if (NS_WARN_IF(!mActor->SendGetItem(nsString(aKey), &result))) {
@@ -87,6 +108,7 @@ LSDatabase::GetKeys(nsTArray<nsString>& aKeys)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
 
   nsTArray<nsString> result;
   if (NS_WARN_IF(!mActor->SendGetKeys(&result))) {
@@ -103,6 +125,7 @@ LSDatabase::SetItem(const nsAString& aKey,
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
 
   if (NS_WARN_IF(!mActor->SendSetItem(nsString(aKey), nsString(aValue)))) {
     return NS_ERROR_FAILURE;
@@ -116,6 +139,7 @@ LSDatabase::RemoveItem(const nsAString& aKey)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
 
   if (NS_WARN_IF(!mActor->SendRemoveItem(nsString(aKey)))) {
     return NS_ERROR_FAILURE;
@@ -129,6 +153,7 @@ LSDatabase::Clear()
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
 
   if (NS_WARN_IF(!mActor->SendClear())) {
     return NS_ERROR_FAILURE;
