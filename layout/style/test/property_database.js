@@ -238,12 +238,6 @@ var validGradientAndElementValues = [
   "radial-gradient(at left calc(100px + -25%), red, blue)",
   "radial-gradient(at calc(100px + -25px) top, red, blue)",
   "radial-gradient(at left calc(100px + -25px), red, blue)",
-
-  "-webkit-linear-gradient(top, red, blue)",
-  "-moz-linear-gradient(top, red, blue)",
-  "-moz-linear-gradient(center 0%, red, blue)",
-  "-moz-linear-gradient(50% top, red, blue)",
-  "-moz-linear-gradient(50% 0%, red, blue)",
 ];
 var invalidGradientAndElementValues = [
   "-moz-element(#a:1)",
@@ -647,6 +641,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     "-webkit-radial-gradient(contain ellipse, red, blue)",
 
     // Initial side/corner/point (valid only for -moz/-webkit prefixed):
+    "-webkit-linear-gradient(top, red, blue)",
     "-webkit-linear-gradient(left, red, blue)",
     "-webkit-linear-gradient(bottom, red, blue)",
     "-webkit-linear-gradient(right top, red, blue)",
@@ -849,6 +844,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-linear-gradient(red -99px, yellow, green, blue 120%)",
     "-moz-linear-gradient(#ffff00, #ef3, rgba(10, 20, 30, 0.4))",
     "-moz-linear-gradient(rgba(10, 20, 30, 0.4), #ffff00, #ef3)",
+
+    "-moz-linear-gradient(top, red, blue)",
+    "-moz-linear-gradient(center 0%, red, blue)",
+    "-moz-linear-gradient(50% top, red, blue)",
+    "-moz-linear-gradient(50% 0%, red, blue)",
 
     "-moz-linear-gradient(to top, red, blue)",
     "-moz-linear-gradient(to bottom, red, blue)",
