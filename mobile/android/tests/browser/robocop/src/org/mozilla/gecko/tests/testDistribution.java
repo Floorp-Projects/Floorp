@@ -385,6 +385,7 @@ public class testDistribution extends ContentProviderTest {
     }
 
     private void checkAddon() {
+        /* Bug 1511211
         try {
             final String[] prefNames = { "distribution.test.addonEnabled" };
             final JSONArray preferences = getPrefs(prefNames);
@@ -393,6 +394,7 @@ public class testDistribution extends ContentProviderTest {
         } catch (JSONException e) {
             mAsserter.ok(false, "exception getting preferences", e.toString());
         }
+        */
     }
 
     private JSONArray getPrefs(String[] prefNames) throws JSONException {
