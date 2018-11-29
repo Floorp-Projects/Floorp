@@ -7,6 +7,7 @@
 #include "ActorsParent.h"
 
 #include "LocalStorageCommon.h"
+#include "LSObject.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageService.h"
 #include "mozStorageCID.h"
@@ -706,10 +707,7 @@ class PrepareDatastoreOp
     Initial,
 
     // Waiting to open/opening on the main thread. Next step is FinishOpen.
-    OpeningOnMainThread,
-
-    // Waiting to open/opening on the owning thread. Next step is FinishOpen.
-    OpeningOnOwningThread,
+    Opening,
 
     // Checking if a prepare datastore operation is already running for given
     // origin on the PBackground thread. Next step is PreparationPending.
@@ -753,6 +751,7 @@ class PrepareDatastoreOp
     Completed
   };
 
+  nsCOMPtr<nsIEventTarget> mMainEventTarget;
   RefPtr<PrepareDatastoreOp> mDelayedOp;
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Datastore> mDatastore;
@@ -766,7 +765,8 @@ class PrepareDatastoreOp
   bool mInvalidated;
 
 public:
-  explicit PrepareDatastoreOp(const LSRequestParams& aParams);
+  PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
+                     const LSRequestParams& aParams);
 
   bool
   OriginIsKnown() const
@@ -808,10 +808,7 @@ private:
   ~PrepareDatastoreOp() override;
 
   nsresult
-  OpenOnMainThread();
-
-  nsresult
-  OpenOnOwningThread();
+  Open();
 
   nsresult
   FinishOpen();
@@ -1066,31 +1063,19 @@ AllocPBackgroundLSRequestParent(PBackgroundParent* aBackgroundActor,
     return nullptr;
   }
 
+  // If we're in the same process as the actor, we need to get the target event
+  // queue from the current RequestHelper.
+  nsCOMPtr<nsIEventTarget> mainEventTarget;
+  if (!BackgroundParent::IsOtherProcessActor(aBackgroundActor)) {
+    mainEventTarget = LSObject::GetSyncLoopEventTarget();
+  }
+
   RefPtr<LSRequestBase> actor;
 
   switch (aParams.type()) {
     case LSRequestParams::TLSRequestPrepareDatastoreParams: {
-      bool isOtherProcess =
-        BackgroundParent::IsOtherProcessActor(aBackgroundActor);
-
-      const LSRequestPrepareDatastoreParams& params =
-        aParams.get_LSRequestPrepareDatastoreParams();
-
-      const PrincipalOrQuotaInfo& info = params.info();
-
-      PrincipalOrQuotaInfo::Type infoType = info.type();
-
-      bool paramsOk =
-        (isOtherProcess && infoType == PrincipalOrQuotaInfo::TPrincipalInfo) ||
-        (!isOtherProcess && infoType == PrincipalOrQuotaInfo::TQuotaInfo);
-
-      if (NS_WARN_IF(!paramsOk)) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-
       RefPtr<PrepareDatastoreOp> prepareDatastoreOp =
-        new PrepareDatastoreOp(aParams);
+        new PrepareDatastoreOp(mainEventTarget, aParams);
 
       if (!gPrepareDatastoreOps) {
         gPrepareDatastoreOps = new PrepareDatastoreOpArray();
@@ -1572,8 +1557,10 @@ LSRequestBase::RecvCancel()
  * PrepareDatastoreOp
  ******************************************************************************/
 
-PrepareDatastoreOp::PrepareDatastoreOp(const LSRequestParams& aParams)
-  : mParams(aParams.get_LSRequestPrepareDatastoreParams())
+PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
+                                       const LSRequestParams& aParams)
+  : mMainEventTarget(aMainEventTarget)
+  , mParams(aParams.get_LSRequestPrepareDatastoreParams())
   , mState(State::Initial)
   , mRequestedDirectoryLock(false)
   , mInvalidated(false)
@@ -1594,35 +1581,27 @@ PrepareDatastoreOp::Dispatch()
 {
   AssertIsOnOwningThread();
 
-  const PrincipalOrQuotaInfo& info = mParams.info();
+  mState = State::Opening;
 
-  if (info.type() == PrincipalOrQuotaInfo::TPrincipalInfo) {
-    mState = State::OpeningOnMainThread;
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+  if (mMainEventTarget) {
+    MOZ_ALWAYS_SUCCEEDS(mMainEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
   } else {
-    MOZ_ASSERT(info.type() == PrincipalOrQuotaInfo::TQuotaInfo);
-
-    mState = State::OpeningOnOwningThread;
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
   }
 }
 
 nsresult
-PrepareDatastoreOp::OpenOnMainThread()
+PrepareDatastoreOp::Open()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State::OpeningOnMainThread);
+  MOZ_ASSERT(mState == State::Opening);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
     return NS_ERROR_FAILURE;
   }
 
-  const PrincipalOrQuotaInfo& info = mParams.info();
-
-  MOZ_ASSERT(info.type() == PrincipalOrQuotaInfo::TPrincipalInfo);
-
-  const PrincipalInfo& principalInfo = info.get_PrincipalInfo();
+  const PrincipalInfo& principalInfo = mParams.principalInfo();
 
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     QuotaManager::GetInfoForChrome(&mSuffix, &mGroup, &mOrigin);
@@ -1658,33 +1637,6 @@ PrepareDatastoreOp::OpenOnMainThread()
 }
 
 nsresult
-PrepareDatastoreOp::OpenOnOwningThread()
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::OpeningOnOwningThread);
-
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
-      !MayProceed()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  const PrincipalOrQuotaInfo& info = mParams.info();
-
-  MOZ_ASSERT(info.type() == PrincipalOrQuotaInfo::TQuotaInfo);
-
-  const QuotaInfo& quotaInfo = info.get_QuotaInfo();
-
-  mSuffix = quotaInfo.suffix();
-  mGroup = quotaInfo.group();
-  mOrigin = quotaInfo.origin();
-
-  mState = State::FinishOpen;
-  MOZ_ALWAYS_SUCCEEDS(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
-
-  return NS_OK;
-}
-
-nsresult
 PrepareDatastoreOp::FinishOpen()
 {
   AssertIsOnOwningThread();
@@ -1702,9 +1654,7 @@ PrepareDatastoreOp::FinishOpen()
   // However, the methods OriginIsKnown and Origin can be called at any time.
   // So we have to make sure the member variable is set on the same thread as
   // those methods are called.
-  if (mParams.info().type() == PrincipalOrQuotaInfo::TPrincipalInfo) {
-    mOrigin = mMainThreadOrigin;
-  }
+  mOrigin = mMainThreadOrigin;
 
   MOZ_ASSERT(!mOrigin.IsEmpty());
 
@@ -1760,7 +1710,7 @@ PrepareDatastoreOp::BeginDatastorePreparation()
   }
 
   mState = State::QuotaManagerPending;
-  QuotaManager::GetOrCreate(this);
+  QuotaManager::GetOrCreate(this, mMainEventTarget);
 
   return NS_OK;
 }
@@ -2077,12 +2027,8 @@ PrepareDatastoreOp::Run()
   nsresult rv;
 
   switch (mState) {
-    case State::OpeningOnMainThread:
-      rv = OpenOnMainThread();
-      break;
-
-    case State::OpeningOnOwningThread:
-      rv = OpenOnOwningThread();
+    case State::Opening:
+      rv = Open();
       break;
 
     case State::FinishOpen:
