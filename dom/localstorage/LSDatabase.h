@@ -17,10 +17,15 @@ class LSDatabase final
 {
   LSDatabaseChild* mActor;
 
+  const nsCString mOrigin;
+
   bool mAllowedToClose;
 
 public:
-  LSDatabase();
+  explicit LSDatabase(const nsACString& aOrigin);
+
+  static LSDatabase*
+  Get(const nsACString& aOrigin);
 
   NS_INLINE_DECL_REFCOUNTING(LSDatabase)
 
@@ -68,16 +73,19 @@ public:
   GetKeys(nsTArray<nsString>& aKeys);
 
   nsresult
-  SetItem(const nsAString& aKey,
+  SetItem(const nsAString& aDocumentURI,
+          const nsAString& aKey,
           const nsAString& aValue,
           LSWriteOpResponse& aResponse);
 
   nsresult
-  RemoveItem(const nsAString& aKey,
+  RemoveItem(const nsAString& aDocumentURI,
+             const nsAString& aKey,
              LSWriteOpResponse& aResponse);
 
   nsresult
-  Clear(LSWriteOpResponse& aResponse);
+  Clear(const nsAString& aDocumentURI,
+        LSWriteOpResponse& aResponse);
 
 private:
   ~LSDatabase();

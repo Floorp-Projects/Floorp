@@ -15,69 +15,6 @@ namespace mozilla {
 namespace dom {
 
 /*******************************************************************************
- * LSObjectChild
- ******************************************************************************/
-
-LSObjectChild::LSObjectChild(LSObject* aObject)
-  : mObject(aObject)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
-  aObject->AssertIsOnOwningThread();
-
-  MOZ_COUNT_CTOR(LSObjectChild);
-}
-
-LSObjectChild::~LSObjectChild()
-{
-  AssertIsOnOwningThread();
-
-  MOZ_COUNT_DTOR(LSObjectChild);
-}
-
-void
-LSObjectChild::SendDeleteMeInternal()
-{
-  AssertIsOnOwningThread();
-
-  if (mObject) {
-    mObject->ClearActor();
-    mObject = nullptr;
-
-    MOZ_ALWAYS_TRUE(PBackgroundLSObjectChild::SendDeleteMe());
-  }
-}
-
-void
-LSObjectChild::ActorDestroy(ActorDestroyReason aWhy)
-{
-  AssertIsOnOwningThread();
-
-  if (mObject) {
-    mObject->ClearActor();
-#ifdef DEBUG
-    mObject = nullptr;
-#endif
-  }
-}
-
-LSObjectChild::PBackgroundLSDatabaseChild*
-LSObjectChild::AllocPBackgroundLSDatabaseChild(const uint64_t& aDatastoreId)
-{
-  MOZ_CRASH("PBackgroundLSDatabaseChild actor should be manually constructed!");
-}
-
-bool
-LSObjectChild::DeallocPBackgroundLSDatabaseChild(
-                                             PBackgroundLSDatabaseChild* aActor)
-{
-  MOZ_ASSERT(aActor);
-
-  delete aActor;
-  return true;
-}
-
-/*******************************************************************************
  * LSDatabaseChild
  ******************************************************************************/
 

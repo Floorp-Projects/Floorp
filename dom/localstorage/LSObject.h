@@ -47,12 +47,9 @@ class LSObject final
   RefPtr<LSDatabase> mDatabase;
   RefPtr<LSObserver> mObserver;
 
-  LSObjectChild* mActor;
-
   uint32_t mPrivateBrowsingId;
   nsCString mOrigin;
   nsString mDocumentURI;
-  bool mActorFailed;
 
 public:
   static nsresult
@@ -81,14 +78,6 @@ public:
   AssertIsOnOwningThread() const
   {
     NS_ASSERT_OWNINGTHREAD(LSObject);
-  }
-
-  void
-  ClearActor()
-  {
-    AssertIsOnOwningThread();
-
-    mActor = nullptr;
   }
 
   LSRequestChild*
