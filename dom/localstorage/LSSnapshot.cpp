@@ -14,8 +14,12 @@ namespace dom {
 LSSnapshot::LSSnapshot(LSDatabase* aDatabase)
   : mDatabase(aDatabase)
   , mActor(nullptr)
+  , mInitLength(0)
+  , mLength(0)
   , mExactUsage(0)
   , mPeakUsage(0)
+  , mLoadState(LoadState::Initial)
+  , mExplicit(false)
 #ifdef DEBUG
   , mInitialized(false)
   , mSentFinish(false)
@@ -47,24 +51,41 @@ LSSnapshot::SetActor(LSSnapshotChild* aActor)
 }
 
 nsresult
-LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo)
+LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo,
+                 bool aExplicit)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mLoadState == LoadState::Initial);
   MOZ_ASSERT(!mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
   const nsTArray<LSItemInfo>& itemInfos = aInitInfo.itemInfos();
   for (uint32_t i = 0; i < itemInfos.Length(); i++) {
     const LSItemInfo& itemInfo = itemInfos[i];
+    mLoadedItems.PutEntry(itemInfo.key());
     mValues.Put(itemInfo.key(), itemInfo.value());
+  }
+
+  if (itemInfos.Length() == aInitInfo.totalLength()) {
+    mLoadState = LoadState::AllOrderedItems;
+  } else {
+    mLoadState = LoadState::Partial;
+    mInitLength = aInitInfo.totalLength();
+    mLength = mInitLength;
   }
 
   mExactUsage = aInitInfo.initialUsage();
   mPeakUsage = aInitInfo.peakUsage();
 
-  nsCOMPtr<nsIRunnable> runnable = this;
-  nsContentUtils::RunInStableState(runnable.forget());
+  mExplicit = aExplicit;
+
+  if (mExplicit) {
+    mSelfRef = this;
+  } else {
+    nsCOMPtr<nsIRunnable> runnable = this;
+    nsContentUtils::RunInStableState(runnable.forget());
+  }
 
 #ifdef DEBUG
   mInitialized = true;
@@ -81,7 +102,11 @@ LSSnapshot::GetLength(uint32_t* aResult)
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
-  *aResult = mValues.Count();
+  if (mLoadState == LoadState::Partial) {
+    *aResult = mLength;
+  } else {
+    *aResult = mValues.Count();
+  }
 
   return NS_OK;
 }
@@ -94,6 +119,11 @@ LSSnapshot::GetKey(uint32_t aIndex,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
+
+  nsresult rv = EnsureAllKeys();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   aResult.SetIsVoid(true);
   for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
@@ -117,8 +147,74 @@ LSSnapshot::GetItem(const nsAString& aKey,
   MOZ_ASSERT(!mSentFinish);
 
   nsString result;
-  if (!mValues.Get(aKey, &result)) {
-    result.SetIsVoid(true);
+
+  switch (mLoadState) {
+    case LoadState::Partial: {
+      if (mValues.Get(aKey, &result)) {
+        MOZ_ASSERT(!result.IsVoid());
+      } else if (mLoadedItems.GetEntry(aKey) || mUnknownItems.GetEntry(aKey)) {
+        result.SetIsVoid(true);
+      } else {
+        if (NS_WARN_IF(!mActor->SendLoadItem(nsString(aKey), &result))) {
+          return NS_ERROR_FAILURE;
+        }
+
+        if (result.IsVoid()) {
+          mUnknownItems.PutEntry(aKey);
+        } else {
+          mLoadedItems.PutEntry(aKey);
+          mValues.Put(aKey, result);
+
+          if (mLoadedItems.Count() == mInitLength) {
+            mLoadedItems.Clear();
+            mUnknownItems.Clear();
+            mLength = 0;
+            mLoadState = LoadState::AllUnorderedItems;
+          }
+        }
+      }
+
+      break;
+    }
+
+    case LoadState::AllOrderedKeys: {
+      if (mValues.Get(aKey, &result)) {
+        if (result.IsVoid()) {
+          if (NS_WARN_IF(!mActor->SendLoadItem(nsString(aKey), &result))) {
+            return NS_ERROR_FAILURE;
+          }
+
+          MOZ_ASSERT(!result.IsVoid());
+
+          mLoadedItems.PutEntry(aKey);
+          mValues.Put(aKey, result);
+
+          if (mLoadedItems.Count() == mInitLength) {
+            mLoadedItems.Clear();
+            MOZ_ASSERT(mLength == 0);
+            mLoadState = LoadState::AllOrderedItems;
+          }
+        }
+      } else {
+        result.SetIsVoid(true);
+      }
+
+      break;
+    }
+
+    case LoadState::AllUnorderedItems:
+    case LoadState::AllOrderedItems: {
+      if (mValues.Get(aKey, &result)) {
+        MOZ_ASSERT(!result.IsVoid());
+      } else {
+        result.SetIsVoid(true);
+      }
+
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Bad state!");
   }
 
   aResult = result;
@@ -132,6 +228,11 @@ LSSnapshot::GetKeys(nsTArray<nsString>& aKeys)
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
+
+  nsresult rv = EnsureAllKeys();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
     aKeys.AppendElement(iter.Key());
@@ -176,6 +277,10 @@ LSSnapshot::SetItem(const nsAString& aKey,
 
     mValues.Put(aKey, nsString(aValue));
 
+    if (oldValue.IsVoid() && mLoadState == LoadState::Partial) {
+      mLength++;
+    }
+
     LSSetItemInfo setItemInfo;
     setItemInfo.key() = aKey;
     setItemInfo.oldValue() = oldValue;
@@ -219,6 +324,10 @@ LSSnapshot::RemoveItem(const nsAString& aKey,
 
     mValues.Remove(aKey);
 
+    if (mLoadState == LoadState::Partial) {
+      mLength--;
+    }
+
     LSRemoveItemInfo removeItemInfo;
     removeItemInfo.key() = aKey;
     removeItemInfo.oldValue() = oldValue;
@@ -240,8 +349,23 @@ LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo)
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
+  uint32_t length;
+  if (mLoadState == LoadState::Partial) {
+    length = mLength;
+    MOZ_ASSERT(length);
+
+    MOZ_ALWAYS_TRUE(mActor->SendLoaded());
+
+    mLoadedItems.Clear();
+    mUnknownItems.Clear();
+    mLength = 0;
+    mLoadState = LoadState::AllOrderedItems;
+  } else {
+    length = mValues.Count();
+  }
+
   bool changed;
-  if (!mValues.Count()) {
+  if (!length) {
     changed = false;
   } else {
     changed = true;
@@ -257,6 +381,112 @@ LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo)
   }
 
   aNotifyInfo.changed() = changed;
+
+  return NS_OK;
+}
+
+nsresult
+LSSnapshot::Finish()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mDatabase);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(!mSentFinish);
+
+  MOZ_ALWAYS_TRUE(mActor->SendFinish(mWriteInfos));
+
+#ifdef DEBUG
+  mSentFinish = true;
+#endif
+
+  if (mExplicit) {
+    if (NS_WARN_IF(!mActor->SendPing())) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  mDatabase->NoteFinishedSnapshot(this);
+
+  if (mExplicit) {
+    mSelfRef = nullptr;
+  } else {
+    MOZ_ASSERT(!mSelfRef);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LSSnapshot::EnsureAllKeys()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(!mSentFinish);
+  MOZ_ASSERT(mLoadState != LoadState::Initial);
+
+  if (mLoadState == LoadState::AllOrderedKeys ||
+      mLoadState == LoadState::AllOrderedItems) {
+    return NS_OK;
+  }
+
+  nsTArray<nsString> keys;
+  if (NS_WARN_IF(!mActor->SendLoadKeys(&keys))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsDataHashtable<nsStringHashKey, nsString> newValues;
+
+  for (auto key : keys) {
+    newValues.Put(key, VoidString());
+  }
+
+  for (uint32_t index = 0; index < mWriteInfos.Length(); index++) {
+    const LSWriteInfo& writeInfo = mWriteInfos[index];
+
+    switch (writeInfo.type()) {
+      case LSWriteInfo::TLSSetItemInfo: {
+        newValues.Put(writeInfo.get_LSSetItemInfo().key(), VoidString());
+        break;
+      }
+      case LSWriteInfo::TLSRemoveItemInfo: {
+        newValues.Remove(writeInfo.get_LSRemoveItemInfo().key());
+        break;
+      }
+      case LSWriteInfo::TLSClearInfo: {
+        newValues.Clear();
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Should never get here!");
+    }
+  }
+
+  MOZ_ASSERT_IF(mLoadState == LoadState::AllUnorderedItems,
+                newValues.Count() == mValues.Count());
+
+  for (auto iter = newValues.Iter(); !iter.Done(); iter.Next()) {
+    nsString value;
+    if (mValues.Get(iter.Key(), &value)) {
+      iter.Data() = value;
+    }
+  }
+
+  mValues.SwapElements(newValues);
+
+  if (mLoadState == LoadState::Partial) {
+    mUnknownItems.Clear();
+    mLength = 0;
+    mLoadState = LoadState::AllOrderedKeys;
+  } else {
+    MOZ_ASSERT(mLoadState == LoadState::AllUnorderedItems);
+
+    MOZ_ASSERT(mUnknownItems.Count() == 0);
+    MOZ_ASSERT(mLength == 0);
+    mLoadState = LoadState::AllOrderedItems;
+  }
 
   return NS_OK;
 }
@@ -301,17 +531,9 @@ NS_IMETHODIMP
 LSSnapshot::Run()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mDatabase);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mSentFinish);
+  MOZ_ASSERT(!mExplicit);
 
-  MOZ_ALWAYS_TRUE(mActor->SendFinish(mWriteInfos));
-
-#ifdef DEBUG
-  mSentFinish = true;
-#endif
-
-  mDatabase->NoteFinishedSnapshot(this);
+  MOZ_ALWAYS_SUCCEEDS(Finish());
 
   return NS_OK;
 }

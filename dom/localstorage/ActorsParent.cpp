@@ -118,7 +118,9 @@ const uint32_t kAutoCommitTimeoutMs = 5000;
 const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 
 const uint32_t kDefaultOriginLimitKB = 5 * 1024;
+const uint32_t kDefaultSnapshotPrefill = 4096;
 const char kDefaultQuotaPref[] = "dom.storage.default_quota";
+const char kSnapshotPrefillPref[] = "dom.storage.snapshot_prefill";
 
 const uint32_t kPreparedDatastoreTimeoutMs = 20000;
 
@@ -1127,11 +1129,18 @@ public:
   void
   NoteInactiveDatabase(Database* aDatabase);
 
+  uint32_t
+  GetLength() const;
+
   void
-  GetItemInfos(nsTArray<LSItemInfo>* aItemInfos);
+  GetItemInfos(nsTHashtable<nsStringHashKey>& aLoadedItems,
+               nsTArray<LSItemInfo>& aItemInfos);
 
   void
   GetItem(const nsString& aKey, nsString& aValue) const;
+
+  void
+  GetKeys(nsTArray<nsString>& aKeys) const;
 
   void
   SetItem(Database* aDatabase,
@@ -1176,6 +1185,12 @@ private:
 
   void
   CleanupMetadata();
+
+  void
+  NotifySnapshots(Database* aDatabase,
+                  const nsAString& aKey,
+                  const nsAString& aOldValue,
+                  bool aAffectsOrder);
 
   void
   NotifyObservers(Database* aDatabase,
@@ -1349,6 +1364,13 @@ public:
   void
   UnregisterSnapshot(Snapshot* aSnapshot);
 
+  Snapshot*
+  GetSnapshot() const
+  {
+    AssertIsOnBackgroundThread();
+    return mSnapshot;
+  }
+
   void
   RequestAllowToClose();
 
@@ -1392,11 +1414,20 @@ class Snapshot final
 {
   RefPtr<Database> mDatabase;
   RefPtr<Datastore> mDatastore;
+  nsTHashtable<nsStringHashKey> mLoadedItems;
+  nsTHashtable<nsStringHashKey> mUnknownItems;
+  nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsTArray<nsString> mKeys;
   nsString mDocumentURI;
+  uint32_t mTotalLength;
   int64_t mInitialUsage;
   int64_t mPeakUsage;
+  bool mSavedKeys;
   bool mActorDestroyed;
   bool mFinishReceived;
+  bool mLoadedReceived;
+  bool mLoadedAllItems;
+  bool mLoadKeysReceived;
 
 public:
   // Created in AllocPBackgroundLSSnapshotParent.
@@ -1404,18 +1435,35 @@ public:
            const nsAString& aDocumentURI);
 
   void
-  SetUsage(int64_t aInitialUsage,
-           int64_t aPeakUsage)
+  Init(nsTHashtable<nsStringHashKey>& aLoadedItems,
+       uint32_t aTotalLength,
+       int64_t aInitialUsage,
+       int64_t aPeakUsage,
+       bool aFullPrefill)
   {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(aInitialUsage >= 0);
     MOZ_ASSERT(aPeakUsage >= aInitialUsage);
+    MOZ_ASSERT_IF(aFullPrefill, aLoadedItems.Count() == 0);
+    MOZ_ASSERT(mTotalLength == 0);
     MOZ_ASSERT(mInitialUsage == -1);
     MOZ_ASSERT(mPeakUsage == -1);
 
+    mLoadedItems.SwapElements(aLoadedItems);
+    mTotalLength = aTotalLength;
     mInitialUsage = aInitialUsage;
     mPeakUsage = aPeakUsage;
+    if (aFullPrefill) {
+      mLoadedReceived = true;
+      mLoadedAllItems = true;
+      mLoadKeysReceived = true;
+    }
   }
+
+  void
+  SaveItem(const nsAString& aKey,
+           const nsAString& aOldValue,
+           bool aAffectsOrder);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Snapshot)
 
@@ -1434,9 +1482,22 @@ private:
   RecvFinish(const LSSnapshotFinishInfo& aFinishInfo) override;
 
   mozilla::ipc::IPCResult
+  RecvLoaded() override;
+
+  mozilla::ipc::IPCResult
+  RecvLoadItem(const nsString& aKey,
+               nsString* aValue) override;
+
+  mozilla::ipc::IPCResult
+  RecvLoadKeys(nsTArray<nsString>* aKeys) override;
+
+  mozilla::ipc::IPCResult
   RecvIncreasePeakUsage(const int64_t& aRequestedSize,
                         const int64_t& aMinSize,
                         int64_t* aSize) override;
+
+  mozilla::ipc::IPCResult
+  RecvPing() override;
 };
 
 class Observer final
@@ -2085,6 +2146,7 @@ typedef nsClassHashtable<nsCStringHashKey, nsTArray<Observer*>>
 StaticAutoPtr<ObserverHashtable> gObservers;
 
 Atomic<uint32_t, Relaxed> gOriginLimitKB(kDefaultOriginLimitKB);
+Atomic<int32_t, Relaxed> gSnapshotPrefill(kDefaultSnapshotPrefill);
 
 typedef nsDataHashtable<nsCStringHashKey, int64_t> UsageHashtable;
 
@@ -2231,6 +2293,24 @@ GetUsage(mozIStorageConnection* aConnection,
 
   *aUsage = usage;
   return NS_OK;
+}
+
+void
+SnapshotPrefillPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPrefName, kSnapshotPrefillPref));
+  MOZ_ASSERT(!aClosure);
+
+  int32_t snapshotPrefill =
+    Preferences::GetInt(aPrefName, kDefaultSnapshotPrefill);
+
+  // The magic -1 is for use only by tests.
+  if (snapshotPrefill == -1) {
+    snapshotPrefill = INT32_MAX;
+  }
+
+  gSnapshotPrefill = snapshotPrefill;
 }
 
 } // namespace
@@ -3278,18 +3358,43 @@ Datastore::NoteInactiveDatabase(Database* aDatabase)
   }
 }
 
-void
-Datastore::GetItemInfos(nsTArray<LSItemInfo>* aItemInfos)
+uint32_t
+Datastore::GetLength() const
 {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
+
+  return mValues.Count();
+}
+
+void
+Datastore::GetItemInfos(nsTHashtable<nsStringHashKey>& aLoadedItems,
+                        nsTArray<LSItemInfo>& aItemInfos)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
+
+  int64_t size = 0;
   for (auto key : mKeys) {
     nsString value;
     DebugOnly<bool> hasValue = mValues.Get(key, &value);
     MOZ_ASSERT(hasValue);
 
-    LSItemInfo* itemInfo = aItemInfos->AppendElement();
+    size += static_cast<int64_t>(key.Length()) +
+            static_cast<int64_t>(value.Length());
+
+    if (size > gSnapshotPrefill) {
+      return;
+    }
+
+    aLoadedItems.PutEntry(key);
+
+    LSItemInfo* itemInfo = aItemInfos.AppendElement();
     itemInfo->key() = key;
     itemInfo->value() = value;
   }
+
+  aLoadedItems.Clear();
 }
 
 void
@@ -3301,6 +3406,15 @@ Datastore::GetItem(const nsString& aKey, nsString& aValue) const
   if (!mValues.Get(aKey, &aValue)) {
     aValue.SetIsVoid(true);
   }
+}
+
+void
+Datastore::GetKeys(nsTArray<nsString>& aKeys) const
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mClosed);
+
+  aKeys.AppendElements(mKeys);
 }
 
 void
@@ -3319,16 +3433,24 @@ Datastore::SetItem(Database* aDatabase,
   GetItem(aKey, oldValue);
 
   if (oldValue != aValue || oldValue.IsVoid() != aValue.IsVoid()) {
+    bool affectsOrder;
+
     int64_t delta = static_cast<int64_t>(aValue.Length()) -
                     static_cast<int64_t>(oldValue.Length());
 
     if (oldValue.IsVoid()) {
+      affectsOrder = true;
+
       delta += static_cast<int64_t>(aKey.Length());
 
       mUpdateBatchAppends.AppendElement(aKey);
+    } else {
+      affectsOrder = false;
     }
 
     mUpdateBatchUsage += delta;
+
+    NotifySnapshots(aDatabase, aKey, oldValue, affectsOrder);
 
     mValues.Put(aKey, aValue);
 
@@ -3370,6 +3492,8 @@ Datastore::RemoveItem(Database* aDatabase,
 
     mUpdateBatchUsage += delta;
 
+    NotifySnapshots(aDatabase, aKey, oldValue, /* aAffectsOrder */ true);
+
     mValues.Remove(aKey);
 
     if (IsPersistent()) {
@@ -3404,6 +3528,8 @@ Datastore::Clear(Database* aDatabase,
                         static_cast<int64_t>(value.Length()));
 
       mUpdateBatchUsage += delta;
+
+      NotifySnapshots(aDatabase, key, value, /* aAffectsOrder */ true);
     }
 
     mValues.Clear();
@@ -3601,6 +3727,28 @@ Datastore::CleanupMetadata()
 
   if (!gDatastores->Count()) {
     gDatastores = nullptr;
+  }
+}
+
+void
+Datastore::NotifySnapshots(Database* aDatabase,
+                           const nsAString& aKey,
+                           const nsAString& aOldValue,
+                           bool aAffectsOrder)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
+
+  for (auto iter = mDatabases.ConstIter(); !iter.Done(); iter.Next()) {
+    Database* database = iter.Get()->GetKey();
+    if (database == aDatabase) {
+      continue;
+    }
+
+    Snapshot* snapshot = database->GetSnapshot();
+    if (snapshot) {
+      snapshot->SaveItem(aKey, aOldValue, aAffectsOrder);
+    }
   }
 }
 
@@ -3895,8 +4043,11 @@ Database::RecvPBackgroundLSSnapshotConstructor(
 
   // TODO: This can be optimized depending on which operation triggers snapshot
   //       creation. For example clear() doesn't need to receive items at all.
+  nsTHashtable<nsStringHashKey> loadedItems;
   nsTArray<LSItemInfo> itemInfos;
-  mDatastore->GetItemInfos(&itemInfos);
+  mDatastore->GetItemInfos(loadedItems, itemInfos);
+
+  uint32_t totalLength = mDatastore->GetLength();
 
   int64_t initialUsage = mDatastore->Usage();
 
@@ -3905,11 +4056,16 @@ Database::RecvPBackgroundLSSnapshotConstructor(
     peakUsage += aRequestedSize;
   }
 
-  snapshot->SetUsage(initialUsage, peakUsage);
+  snapshot->Init(loadedItems,
+                 totalLength,
+                 initialUsage,
+                 peakUsage,
+                 /* aFullPrefill */ itemInfos.Length() == totalLength);
 
   RegisterSnapshot(snapshot);
 
   aInitInfo->itemInfos() = std::move(itemInfos);
+  aInitInfo->totalLength() = totalLength;
   aInitInfo->initialUsage() = initialUsage;
   aInitInfo->peakUsage() = peakUsage;
 
@@ -3938,10 +4094,15 @@ Snapshot::Snapshot(Database* aDatabase,
   : mDatabase(aDatabase)
   , mDatastore(aDatabase->GetDatastore())
   , mDocumentURI(aDocumentURI)
+  , mTotalLength(0)
   , mInitialUsage(-1)
   , mPeakUsage(-1)
+  , mSavedKeys(false)
   , mActorDestroyed(false)
   , mFinishReceived(false)
+  , mLoadedReceived(false)
+  , mLoadedAllItems(false)
+  , mLoadKeysReceived(false)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
@@ -3951,6 +4112,30 @@ Snapshot::~Snapshot()
 {
   MOZ_ASSERT(mActorDestroyed);
   MOZ_ASSERT(mFinishReceived);
+}
+
+void
+Snapshot::SaveItem(const nsAString& aKey,
+                   const nsAString& aOldValue,
+                   bool aAffectsOrder)
+{
+  AssertIsOnBackgroundThread();
+
+  if (mLoadedAllItems) {
+    return;
+  }
+
+  if (!mLoadedItems.GetEntry(aKey) && !mUnknownItems.GetEntry(aKey)) {
+    nsString oldValue(aOldValue);
+    mValues.LookupForAdd(aKey).OrInsert([oldValue]() {
+      return oldValue;
+    });
+  }
+
+  if (aAffectsOrder && !mSavedKeys && !mLoadKeysReceived) {
+    mDatastore->GetKeys(mKeys);
+    mSavedKeys = true;
+  }
 }
 
 void
@@ -4045,6 +4230,132 @@ Snapshot::RecvFinish(const LSSnapshotFinishInfo& aFinishInfo)
 }
 
 mozilla::ipc::IPCResult
+Snapshot::RecvLoaded()
+{
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(mFinishReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (NS_WARN_IF(mLoadedReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (NS_WARN_IF(mLoadedAllItems)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (NS_WARN_IF(mLoadKeysReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  mLoadedReceived = true;
+
+  mLoadedItems.Clear();
+  mUnknownItems.Clear();
+  mValues.Clear();
+  mKeys.Clear();
+  mLoadedAllItems = true;
+  mLoadKeysReceived = true;
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+Snapshot::RecvLoadItem(const nsString& aKey,
+                       nsString* aValue)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aValue);
+  MOZ_ASSERT(mDatastore);
+
+  if (NS_WARN_IF(mFinishReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (NS_WARN_IF(mLoadedReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (NS_WARN_IF(mLoadedAllItems)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (mLoadedItems.GetEntry(aKey) || mUnknownItems.GetEntry(aKey)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (auto entry = mValues.Lookup(aKey)) {
+    *aValue = entry.Data();
+    entry.Remove();
+  } else {
+    mDatastore->GetItem(aKey, *aValue);
+  }
+
+  if (aValue->IsVoid()) {
+    mUnknownItems.PutEntry(aKey);
+  } else {
+    mLoadedItems.PutEntry(aKey);
+
+    if (mLoadedItems.Count() == mTotalLength) {
+      mLoadedItems.Clear();
+      mUnknownItems.Clear();
+#ifdef DEBUG
+      for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
+        MOZ_ASSERT(iter.Data().IsVoid());
+      }
+#endif
+      mValues.Clear();
+      mLoadedAllItems = true;
+    }
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+Snapshot::RecvLoadKeys(nsTArray<nsString>* aKeys)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aKeys);
+  MOZ_ASSERT(mDatastore);
+
+  if (NS_WARN_IF(mFinishReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (NS_WARN_IF(mLoadedReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (NS_WARN_IF(mLoadKeysReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  mLoadKeysReceived = true;
+
+  if (mSavedKeys) {
+    aKeys->AppendElements(std::move(mKeys));
+  } else {
+    mDatastore->GetKeys(*aKeys);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 Snapshot::RecvIncreasePeakUsage(const int64_t& aRequestedSize,
                                 const int64_t& aMinSize,
                                 int64_t* aSize)
@@ -4076,6 +4387,17 @@ Snapshot::RecvIncreasePeakUsage(const int64_t& aRequestedSize,
   } else {
     *aSize = 0;
   }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+Snapshot::RecvPing()
+{
+  AssertIsOnBackgroundThread();
+
+  // Do nothing here. This is purely a sync message allowing the child to
+  // confirm that the actor has received previous async message.
 
   return IPC_OK();
 }
@@ -5742,6 +6064,9 @@ QuotaClient::RegisterObservers(nsIEventTarget* aBackgroundEventTarget)
                                                      kDefaultOriginLimitKB))) {
       NS_WARNING("Unable to respond to default quota pref changes!");
     }
+
+    Preferences::RegisterCallbackAndCall(SnapshotPrefillPrefChangedCallback,
+                                         kSnapshotPrefillPref);
 
     sObserversRegistered = true;
   }
