@@ -56,7 +56,6 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
-#include "nsCSSFrameConstructor.h"
 #include "nsDocShell.h"
 #include "nsEmbedCID.h"
 #include "nsGlobalWindow.h"

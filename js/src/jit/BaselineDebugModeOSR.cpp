@@ -1104,16 +1104,41 @@ JitRuntime::getBaselineDebugModeOSRHandlerAddress(JSContext* cx, bool popFrameRe
 }
 
 static void
+PushCallVMOutputRegisters(MacroAssembler& masm)
+{
+    // callVMs can use several different output registers, depending on the
+    // type of their outparam.
+    masm.push(ReturnReg);
+    masm.push(ReturnDoubleReg);
+    masm.Push(JSReturnOperand);
+}
+
+static void
+PopCallVMOutputRegisters(MacroAssembler& masm)
+{
+    masm.Pop(JSReturnOperand);
+    masm.pop(ReturnDoubleReg);
+    masm.pop(ReturnReg);
+}
+
+static void
+TakeCallVMOutputRegisters(AllocatableGeneralRegisterSet& regs)
+{
+    regs.take(ReturnReg);
+    regs.take(JSReturnOperand);
+}
+
+static void
 EmitBaselineDebugModeOSRHandlerTail(MacroAssembler& masm, Register temp, bool returnFromCallVM)
 {
     // Save real return address on the stack temporarily.
     //
     // If we're returning from a callVM, we don't need to worry about R0 and
-    // R1 but do need to propagate the original ReturnReg value. Otherwise we
-    // need to worry about R0 and R1 but can clobber ReturnReg. Indeed, on
-    // x86, R1 contains ReturnReg.
+    // R1 but do need to propagate the registers the call might write to.
+    // Otherwise we need to worry about R0 and R1 but can clobber ReturnReg.
+    // Indeed, on x86, R1 contains ReturnReg.
     if (returnFromCallVM) {
-        masm.push(ReturnReg);
+        PushCallVMOutputRegisters(masm);
     } else {
         masm.pushValue(Address(temp, offsetof(BaselineDebugModeOSRInfo, valueR0)));
         masm.pushValue(Address(temp, offsetof(BaselineDebugModeOSRInfo, valueR1)));
@@ -1130,7 +1155,7 @@ EmitBaselineDebugModeOSRHandlerTail(MacroAssembler& masm, Register temp, bool re
     // Restore saved values.
     AllocatableGeneralRegisterSet jumpRegs(GeneralRegisterSet::All());
     if (returnFromCallVM) {
-        jumpRegs.take(ReturnReg);
+        TakeCallVMOutputRegisters(jumpRegs);
     } else {
         jumpRegs.take(R0);
         jumpRegs.take(R1);
@@ -1141,7 +1166,7 @@ EmitBaselineDebugModeOSRHandlerTail(MacroAssembler& masm, Register temp, bool re
     masm.pop(target);
     masm.pop(BaselineFrameReg);
     if (returnFromCallVM) {
-        masm.pop(ReturnReg);
+        PopCallVMOutputRegisters(masm);
     } else {
         masm.popValue(R1);
         masm.popValue(R0);
@@ -1157,7 +1182,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrame
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(BaselineFrameReg);
-    regs.take(ReturnReg);
+    TakeCallVMOutputRegisters(regs);
     Register temp = regs.takeAny();
     Register syncedStackStart = regs.takeAny();
 
@@ -1170,7 +1195,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrame
 
     // Record the stack pointer for syncing.
     masm.moveStackPtrTo(syncedStackStart);
-    masm.push(ReturnReg);
+    PushCallVMOutputRegisters(masm);
     masm.push(BaselineFrameReg);
 
     // Call a stub to fully initialize the info.
@@ -1186,7 +1211,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrame
     // a callVM, and prepareCallVM in BaselineCompiler always fully syncs the
     // stack.
     masm.pop(BaselineFrameReg);
-    masm.pop(ReturnReg);
+    PopCallVMOutputRegisters(masm);
     masm.loadPtr(Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScratchValue()), temp);
     masm.addToStackPtr(Address(temp, offsetof(BaselineDebugModeOSRInfo, stackAdjust)));
 

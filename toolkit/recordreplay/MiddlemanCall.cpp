@@ -172,12 +172,16 @@ ProcessMiddlemanCall(const char* aInputData, size_t aInputSize,
     CallArguments arguments;
     call->mArguments.CopyTo(&arguments);
 
+    bool skipCall;
     {
       MiddlemanCallContext cx(call, &arguments, MiddlemanCallPhase::MiddlemanInput);
       redirection.mMiddlemanCall(cx);
+      skipCall = cx.mSkipCallInMiddleman;
     }
 
-    RecordReplayInvokeCall(redirection.mBaseFunction, &arguments);
+    if (!skipCall) {
+      RecordReplayInvokeCall(redirection.mBaseFunction, &arguments);
+    }
 
     {
       MiddlemanCallContext cx(call, &arguments, MiddlemanCallPhase::MiddlemanOutput);
