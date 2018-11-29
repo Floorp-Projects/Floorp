@@ -64,6 +64,11 @@ LSDatabaseChild::RecvRequestAllowToClose()
 
   if (mDatabase) {
     mDatabase->AllowToClose();
+
+    // TODO: A new datastore will be prepared at first LocalStorage API
+    //       synchronous call. It would be better to start preparing a new
+    //       datastore right here, but asynchronously.
+    //       However, we probably shouldn't do that if we are shutting down.
   }
 
   return IPC_OK();
