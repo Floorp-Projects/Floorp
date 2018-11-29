@@ -8,6 +8,10 @@ XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/xpcshell.ini'
 ]
 
+TEST_HARNESS_FILES.xpcshell.dom.localstorage.test.unit += [
+    'test/unit/databaseShadowing-shared.js',
+]
+
 XPIDL_SOURCES += [
     'nsILocalStorageManager.idl',
 ]
