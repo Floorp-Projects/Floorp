@@ -72,7 +72,7 @@
 }
 
 .background,
-body.hide-main { // sass-lint:disable-line no-qualifying-elements
+.fxa + body.hide-main { // sass-lint:disable-line no-qualifying-elements
   width: 100%;
   height: 100%;
   display: block;
