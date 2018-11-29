@@ -8,6 +8,7 @@ export const NewsletterSnippet = props => {
     scene2_email_placeholder_text: schema.properties.scene2_email_placeholder_text.default,
     scene2_button_label: schema.properties.scene2_button_label.default,
     scene2_dismiss_button_text: schema.properties.scene2_dismiss_button_text.default,
+    scene2_newsletter: schema.properties.scene2_newsletter.default,
     ...props.content,
     hidden_inputs: {
       newsletters: props.content.scene2_newsletter || schema.properties.scene2_newsletter.default,

@@ -1,7 +1,7 @@
 import {FXASignupSnippet} from "content-src/asrouter/templates/FXASignupSnippet/FXASignupSnippet";
 import {mount} from "enzyme";
 import React from "react";
-import schema from "content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.schema.json";
+import schema from "content-src/asrouter/templates/FXASignupSnippet/FXASignupSnippet.schema.json";
 import {SnippetsTestMessageProvider} from "lib/SnippetsTestMessageProvider.jsm";
 
 const DEFAULT_CONTENT = SnippetsTestMessageProvider.getMessages().find(msg => msg.template === "fxa_signup_snippet").content;
@@ -12,7 +12,7 @@ describe("FXASignupSnippet", () => {
   function mountAndCheckProps(content = {}) {
     const props = {
       id: "foo123",
-      content: Object.assign({}, DEFAULT_CONTENT, content),
+      content: Object.assign({utm_campaign: "foo", utm_term: "bar"}, DEFAULT_CONTENT, content),
       onBlock() {},
       onDismiss: sandbox.stub(),
       sendUserActionTelemetry: sandbox.stub(),
@@ -25,7 +25,7 @@ describe("FXASignupSnippet", () => {
   }
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
   });
   afterEach(() => {
     sandbox.restore();
@@ -44,15 +44,20 @@ describe("FXASignupSnippet", () => {
     // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
     const {props} = wrapper.children().get(0);
 
-    assert.propertyVal(props.content, "form_action", "https://accounts.firefox.com/");
-    assert.propertyVal(props.content, "scene1_button_label", "Learn more");
-    assert.propertyVal(props.content, "scene2_button_label", "Sign me up");
-    assert.propertyVal(props.content, "scene2_email_placeholder_text", "Your email here");
-    assert.propertyVal(props.content.hidden_inputs, "action", "email");
-    assert.propertyVal(props.content.hidden_inputs, "context", "fx_desktop_v3");
-    assert.propertyVal(props.content.hidden_inputs, "entrypoint", "snippets");
-    assert.propertyVal(props.content.hidden_inputs, "service", "sync");
-    assert.propertyVal(props.content.hidden_inputs, "utm_source", "snippet");
+    const defaultProperties = Object.keys(schema.properties)
+      .filter(prop => schema.properties[prop].default);
+    assert.lengthOf(defaultProperties, 4);
+    defaultProperties.forEach(prop => assert.propertyVal(props.content, prop, schema.properties[prop].default));
+
+    const defaultHiddenProperties = Object.keys(schema.properties.hidden_inputs.properties)
+      .filter(prop => schema.properties.hidden_inputs.properties[prop].default);
+    assert.lengthOf(defaultHiddenProperties, 0);
+  });
+
+  it("should have a form_action", () => {
+    const wrapper = mountAndCheckProps();
+
+    assert.propertyVal(wrapper.children().get(0).props, "form_action", "https://accounts.firefox.com/");
   });
 
   it("should navigate to scene2", () => {
