@@ -171,7 +171,7 @@ TypeSet::ObjectGroupString(const ObjectGroup* group)
 #ifdef DEBUG
 
 bool
-js::InferSpewActive(SpewChannel channel)
+js::InferSpewActive(TypeSpewChannel channel)
 {
     static bool active[SPEW_COUNT];
     static bool checked = false;

@@ -226,6 +226,10 @@ FileEscapedString(FILE* fp, const char* chars, size_t length, uint32_t quote)
 JSString*
 EncodeURI(JSContext* cx, const char* chars, size_t length);
 
+// Return true if input string contains a given flag in a comma separated list.
+bool
+ContainsFlag(const char* str, const char* flag);
+
 } // namespace js
 
 #endif // util_Text_h
