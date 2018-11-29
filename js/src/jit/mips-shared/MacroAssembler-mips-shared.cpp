@@ -1439,6 +1439,7 @@ MacroAssemblerMIPSShared::asMasm() const
     return *static_cast<const MacroAssembler*>(this);
 }
 
+// clang-format off
 //{{{ check_macroassembler_style
 // ===============================================================
 // MacroAssembler high-level usage.
@@ -2928,3 +2929,4 @@ MacroAssembler::speculationBarrier()
     MOZ_CRASH();
 }
 //}}} check_macroassembler_style
+// clang-format on
