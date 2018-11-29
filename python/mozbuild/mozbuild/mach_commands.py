@@ -1313,8 +1313,6 @@ class PackageFrontend(MachCommandBase):
         import requests
         import shutil
 
-        from taskgraph.config import load_graph_config
-        from taskgraph.generator import Kind
         from taskgraph.util.taskcluster import (
             get_artifact_url,
         )
@@ -1433,7 +1431,8 @@ class PackageFrontend(MachCommandBase):
                 strict=False,
             )
 
-            toolchains = load_tasks_for_kind(params, 'toolchain')
+            root_dir = mozpath.join(self.topsrcdir, 'taskcluster/ci')
+            toolchains = load_tasks_for_kind(params, 'toolchain', root_dir=root_dir)
 
             aliases = {}
             for t in toolchains.values():

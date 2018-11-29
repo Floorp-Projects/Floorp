@@ -21,6 +21,8 @@
 #include "nsIWidget.h"
 #include "nsIDocument.h"
 
+using namespace mozilla;
+
 using mozilla::dom::Event;
 using mozilla::dom::CallerType;
 
