@@ -22,7 +22,9 @@ LocalStorageManager2::~LocalStorageManager2()
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-NS_IMPL_ISUPPORTS(LocalStorageManager2, nsIDOMStorageManager)
+NS_IMPL_ISUPPORTS(LocalStorageManager2,
+                  nsIDOMStorageManager,
+                  nsILocalStorageManager)
 
 NS_IMETHODIMP
 LocalStorageManager2::PrecacheStorage(nsIPrincipal* aPrincipal,
@@ -82,6 +84,16 @@ LocalStorageManager2::CheckStorage(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(_retval);
 
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+LocalStorageManager2::GetNextGenLocalStorageEnabled(bool* aResult)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aResult);
+
+  *aResult = NextGenLocalStorageEnabled();
+  return NS_OK;
 }
 
 } // namespace dom
