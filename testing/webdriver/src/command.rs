@@ -329,7 +329,7 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 WebDriverCommand::TakeElementScreenshot(element)
             }
             Route::Status => WebDriverCommand::Status,
-            Route::Extension(ref extension) => try!(extension.command(params, &body_data)),
+            Route::Extension(ref extension) => extension.command(params, &body_data)?,
         };
         Ok(WebDriverMessage::new(session_id, command))
     }
