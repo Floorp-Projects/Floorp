@@ -1352,6 +1352,7 @@ OpenOp::DatabaseWork()
                                             mSuffix,
                                             mGroup,
                                             mOrigin,
+                                            /* aCreateIfNotExists */ true,
                                             getter_AddRefs(dbDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

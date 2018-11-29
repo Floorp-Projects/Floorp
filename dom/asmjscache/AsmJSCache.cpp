@@ -792,7 +792,9 @@ ParentRunnable::ReadMetadata()
 
   nsresult rv =
     qm->EnsureOriginIsInitialized(quota::PERSISTENCE_TYPE_TEMPORARY, mSuffix,
-                                  mGroup, mOrigin, getter_AddRefs(mDirectory));
+                                  mGroup, mOrigin,
+                                  /* aCreateIfNotExists */ true,
+                                  getter_AddRefs(mDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mResult = JS::AsmJSCache_StorageInitFailure;
     return rv;

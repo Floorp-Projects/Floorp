@@ -10,6 +10,7 @@ namespace dom {
 struct LSRequestPrepareDatastoreParams
 {
   PrincipalInfo principalInfo;
+  bool createIfNotExists;
 };
 
 struct LSRequestPrepareObserverParams

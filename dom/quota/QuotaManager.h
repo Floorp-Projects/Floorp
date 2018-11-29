@@ -289,6 +289,7 @@ public:
                             const nsACString& aSuffix,
                             const nsACString& aGroup,
                             const nsACString& aOrigin,
+                            bool aCreateIfNotExists,
                             nsIFile** aDirectory);
 
   nsresult
@@ -296,6 +297,7 @@ public:
                                     const nsACString& aSuffix,
                                     const nsACString& aGroup,
                                     const nsACString& aOrigin,
+                                    bool aCreateIfNotExists,
                                     nsIFile** aDirectory,
                                     bool* aCreated);
 
@@ -304,6 +306,7 @@ public:
 
   nsresult
   EnsureOriginDirectory(nsIFile* aDirectory,
+                        bool aCreateIfNotExists,
                         bool* aCreated);
 
   void
