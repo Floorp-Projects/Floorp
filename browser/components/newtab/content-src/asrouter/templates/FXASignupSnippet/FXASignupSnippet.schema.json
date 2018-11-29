@@ -87,7 +87,7 @@
           "enum": ["sync"]
         },
         "utm_content": {
-          "type": "string",
+          "type": "number",
           "description": "Firefox version number"
         },
         "utm_source": {
