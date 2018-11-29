@@ -155,7 +155,7 @@ const loadListener = {
       // command can return immediately if the page load is already done.
       let readyState = content.document.readyState;
       let documentURI = content.document.documentURI;
-      logger.debug(truncate`Check readyState ${readyState} for ${documentURI}`);
+      logger.trace(truncate`Check readyState ${readyState} for ${documentURI}`);
       // If the page load has already finished, don't setup listeners and
       // timers but return immediatelly.
       if (this.handleReadyState(readyState, documentURI)) {
@@ -210,7 +210,7 @@ const loadListener = {
     }
 
     let location = event.target.documentURI || event.target.location.href;
-    logger.debug(truncate`Received DOM event ${event.type} for ${location}`);
+    logger.trace(truncate`Received DOM event ${event.type} for ${location}`);
 
     switch (event.type) {
       case "beforeunload":
@@ -347,7 +347,7 @@ const loadListener = {
     const winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     const curWinID = win.windowUtils.outerWindowID;
 
-    logger.debug(`Received observer notification ${topic}`);
+    logger.trace(`Received observer notification ${topic}`);
 
     switch (topic) {
       // In the case when the currently selected frame is closed,
@@ -440,7 +440,7 @@ const loadListener = {
  * an ID, we start the listeners. Otherwise, nothing happens.
  */
 function registerSelf() {
-  logger.debug("Frame script loaded");
+  logger.trace("Frame script loaded");
 
   sandboxes.clear();
   curContainer = {
@@ -457,7 +457,7 @@ function registerSelf() {
   }
 
   if (reply[0].outerWindowID === outerWindowID) {
-    logger.debug("Frame script registered");
+    logger.trace("Frame script registered");
     startListeners();
     sendAsyncMessage("Marionette:ListenersAttached", {outerWindowID});
   }
