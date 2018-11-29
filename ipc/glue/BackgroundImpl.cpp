@@ -177,7 +177,7 @@ private:
 
 public:
   static already_AddRefed<ChildImpl>
-  CreateActorForSameProcess();
+  CreateActorForSameProcess(nsIEventTarget* aMainEventTarget);
 
   static bool
   IsOnBackgroundThread()
@@ -399,7 +399,7 @@ private:
 
   // Forwarded from BackgroundChild.
   static PBackgroundChild*
-  GetOrCreateForCurrentThread();
+  GetOrCreateForCurrentThread(nsIEventTarget* aMainEventTarget);
 
   // Forwarded from BackgroundChild.
   static void
@@ -569,7 +569,8 @@ public:
   }
 
   nsresult
-  BlockAndGetResults(RefPtr<ParentImpl>& aParentActor,
+  BlockAndGetResults(nsIEventTarget* aMainEventTarget,
+                     RefPtr<ParentImpl>& aParentActor,
                      nsCOMPtr<nsIThread>& aThread);
 
 private:
@@ -716,9 +717,9 @@ BackgroundChild::GetForCurrentThread()
 
 // static
 PBackgroundChild*
-BackgroundChild::GetOrCreateForCurrentThread()
+BackgroundChild::GetOrCreateForCurrentThread(nsIEventTarget* aMainEventTarget)
 {
-  return ChildImpl::GetOrCreateForCurrentThread();
+  return ChildImpl::GetOrCreateForCurrentThread(aMainEventTarget);
 }
 
 // static
@@ -914,7 +915,7 @@ ParentImpl::Alloc(ContentParent* aContent,
 
 // static
 already_AddRefed<ChildImpl>
-ParentImpl::CreateActorForSameProcess()
+ParentImpl::CreateActorForSameProcess(nsIEventTarget* aMainEventTarget)
 {
   AssertIsInMainProcess();
 
@@ -936,7 +937,9 @@ ParentImpl::CreateActorForSameProcess()
   } else {
     RefPtr<CreateActorHelper> helper = new CreateActorHelper();
 
-    nsresult rv = helper->BlockAndGetResults(parentActor, backgroundThread);
+    nsresult rv = helper->BlockAndGetResults(aMainEventTarget,
+                                             parentActor,
+                                             backgroundThread);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -1302,10 +1305,17 @@ ParentImpl::ConnectActorRunnable::Run()
 
 nsresult
 ParentImpl::
-CreateActorHelper::BlockAndGetResults(RefPtr<ParentImpl>& aParentActor,
+CreateActorHelper::BlockAndGetResults(nsIEventTarget* aMainEventTarget,
+                                      RefPtr<ParentImpl>& aParentActor,
                                       nsCOMPtr<nsIThread>& aThread)
 {
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+  AssertIsNotOnMainThread();
+
+  if (aMainEventTarget) {
+    MOZ_ALWAYS_SUCCEEDS(aMainEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+  } else {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+  }
 
   mozilla::MonitorAutoLock lock(mMonitor);
   while (mWaiting) {
@@ -1449,8 +1459,10 @@ ChildImpl::GetForCurrentThread()
 
 /* static */
 PBackgroundChild*
-ChildImpl::GetOrCreateForCurrentThread()
+ChildImpl::GetOrCreateForCurrentThread(nsIEventTarget* aMainEventTarget)
 {
+  MOZ_ASSERT_IF(NS_IsMainThread(), !aMainEventTarget);
+
   MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex,
              "BackgroundChild::Startup() was never called!");
 
@@ -1481,7 +1493,8 @@ ChildImpl::GetOrCreateForCurrentThread()
   }
 
   if (XRE_IsParentProcess()) {
-    RefPtr<ChildImpl> strongActor = ParentImpl::CreateActorForSameProcess();
+    RefPtr<ChildImpl> strongActor =
+      ParentImpl::CreateActorForSameProcess(aMainEventTarget);
     if (NS_WARN_IF(!strongActor)) {
       return nullptr;
     }
@@ -1534,7 +1547,12 @@ ChildImpl::GetOrCreateForCurrentThread()
         content,
         &ContentChild::SendInitBackground,
         std::move(parent));
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+    if (aMainEventTarget) {
+      MOZ_ALWAYS_SUCCEEDS(aMainEventTarget->Dispatch(runnable,
+                                                     NS_DISPATCH_NORMAL));
+    } else {
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+    }
   }
 
   RefPtr<ChildImpl>& actor = threadLocalInfo->mActor;
