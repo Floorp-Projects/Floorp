@@ -53,8 +53,8 @@ def check_executable_version(exe, wrap_call_with_node=False):
     May raise ``subprocess.CalledProcessError`` or ``ValueError`` on failure.
     """
     out = None
-    # npm may be a script, so we must call it with node.
-    if wrap_call_with_node:
+    # npm may be a script (Except on Windows), so we must call it with node.
+    if wrap_call_with_node and platform.system() != "Windows":
         binary, _ = find_node_executable()
         if binary:
             out = subprocess.check_output([binary, exe, "--version"]).lstrip('v').rstrip()
