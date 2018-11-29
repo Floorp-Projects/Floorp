@@ -741,8 +741,12 @@ void GridItemInfo::ReverseDirection(LogicalAxis aAxis, uint32_t aGridEnd) {
 
 // Each subgrid stores this data about its items etc on a frame property.
 struct nsGridContainerFrame::Subgrid {
-  Subgrid(const GridArea& aArea, bool aIsOrthogonal)
-      : mArea(aArea), mIsOrthogonal(aIsOrthogonal) {}
+  Subgrid(const GridArea& aArea, bool aIsOrthogonal, WritingMode aCBWM)
+      : mArea(aArea),
+        mGridColEnd(0),
+        mGridRowEnd(0),
+        mMarginBorderPadding(aCBWM),
+        mIsOrthogonal(aIsOrthogonal) {}
 
   // Return the relevant line range for the subgrid column axis.
   const LineRange& SubgridCols() const {
@@ -762,6 +766,9 @@ struct nsGridContainerFrame::Subgrid {
   // The (inner) grid size for the subgrid, zero-based.
   uint32_t mGridColEnd;
   uint32_t mGridRowEnd;
+  // The margin+border+padding for the subgrid box in its parent grid's WM.
+  // (This also includes the size of any scrollbars.)
+  LogicalMargin mMarginBorderPadding;
   // Does the subgrid frame have orthogonal writing-mode to its parent?
   bool mIsOrthogonal;
 
@@ -2708,6 +2715,47 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid {
   const LineNameMap* mRowNameMap;
 };
 
+/**
+ * Compute margin+border+padding for aGridItem.mFrame (a subgrid) and store it
+ * on its Subgrid property (and return that property).
+ * aPercentageBasis is in the grid item's writing-mode.
+ */
+static Subgrid* SubgridComputeMarginBorderPadding(
+    const GridItemInfo& aGridItem, const LogicalSize& aPercentageBasis) {
+  auto* subgridFrame = aGridItem.SubgridFrame();
+  auto cbWM = aGridItem.mFrame->GetParent()->GetWritingMode();
+  nsMargin physicalMBP;
+  {
+    auto wm = subgridFrame->GetWritingMode();
+    auto pmPercentageBasis = cbWM.IsOrthogonalTo(wm)
+        ? aPercentageBasis.BSize(wm) : aPercentageBasis.ISize(wm);
+    SizeComputationInput sz(subgridFrame, nullptr, cbWM, pmPercentageBasis);
+    physicalMBP = sz.ComputedPhysicalMargin() +
+                  sz.ComputedPhysicalBorderPadding();
+  }
+  auto* subgrid = subgridFrame->GetProperty(Subgrid::Prop());
+  subgrid->mMarginBorderPadding = LogicalMargin(cbWM, physicalMBP);
+  if (aGridItem.mFrame != subgridFrame) {
+    nsIScrollableFrame* scrollFrame = aGridItem.mFrame->GetScrollTargetFrame();
+    if (scrollFrame) {
+      nsMargin ssz = scrollFrame->GetActualScrollbarSizes();
+      subgrid->mMarginBorderPadding += LogicalMargin(cbWM, ssz);
+    }
+
+    if (aGridItem.mFrame->IsFieldSetFrame()) {
+      const auto* f = static_cast<nsFieldSetFrame*>(aGridItem.mFrame);
+      const auto* inner = f->GetInner();
+      auto wm = inner->GetWritingMode();
+      LogicalPoint pos = inner->GetLogicalPosition(aGridItem.mFrame->GetSize());
+      // The legend is always on the BStart side and it inflates the fieldset's
+      // "border area" size.  The inner frame's b-start pos equals that size.
+      LogicalMargin offsets(wm, pos.B(wm), 0, 0, 0);
+      subgrid->mMarginBorderPadding += offsets.ConvertTo(cbWM, wm);
+    }
+  }
+  return subgrid;
+}
+
 void nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
     const Grid& aGrid, const LogicalSize& aContentBox,
     SizingConstraint aConstraint) {
@@ -3397,7 +3445,7 @@ void nsGridContainerFrame::Grid::SubgridPlaceGridItems(
   // Record the subgrid's GridArea in a frame property.
   auto* subgrid = childGrid->GetProperty(Subgrid::Prop());
   if (!subgrid) {
-    subgrid = new Subgrid(aGridItem.mArea, isOrthogonal);
+    subgrid = new Subgrid(aGridItem.mArea, isOrthogonal, aParentState.mWM);
     childGrid->SetProperty(Subgrid::Prop(), subgrid);
   } else {
     subgrid->mArea = aGridItem.mArea;
@@ -3989,6 +4037,60 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
   parent->DeleteProperty(nsContainerFrame::DebugReflowingWithInfiniteISize());
 #endif
   return childSize.BSize(wm);
+}
+
+/**
+ * Return the accumulated margin+border+padding in aAxis for aFrame (a subgrid)
+ * and its ancestor subgrids.
+ */
+static LogicalMargin SubgridAccumulatedMarginBorderPadding(
+    nsIFrame* aFrame, const Subgrid* aSubgrid, WritingMode aResultWM,
+    LogicalAxis aAxis) {
+  MOZ_ASSERT(aFrame->IsGridContainerFrame());
+  auto* subgridFrame = static_cast<nsGridContainerFrame*>(aFrame);
+  LogicalMargin result(aSubgrid->mMarginBorderPadding);
+  auto* parent = subgridFrame->ParentGridContainerForSubgrid();
+  auto subgridCBWM = parent->GetWritingMode();
+  auto childRange = aSubgrid->mArea.LineRangeForAxis(aAxis);
+  bool skipStartSide = false;
+  bool skipEndSide = false;
+  auto axis = aSubgrid->mIsOrthogonal ? GetOrthogonalAxis(aAxis) : aAxis;
+  // If aFrame's parent is also a subgrid, then add its MBP on the edges that
+  // are adjacent (i.e. start or end in the same track), recursively.
+  // ("parent" refers to the grid-frame we're currently adding MBP for,
+  // and "grandParent" its parent, as we walk up the chain.)
+  while (parent->IsSubgrid(axis)) {
+    auto* parentSubgrid = parent->GetProperty(Subgrid::Prop());
+    auto* grandParent = parent->ParentGridContainerForSubgrid();
+    auto parentCBWM = grandParent->GetWritingMode();
+    if (parentCBWM.IsOrthogonalTo(subgridCBWM)) {
+      axis = GetOrthogonalAxis(axis);
+    }
+    const auto& parentRange = parentSubgrid->mArea.LineRangeForAxis(axis);
+    bool sameDir = parentCBWM.ParallelAxisStartsOnSameSide(axis, subgridCBWM);
+    if (sameDir) {
+      skipStartSide |= childRange.mStart != 0;
+      skipEndSide |= childRange.mEnd != parentRange.Extent();
+    } else {
+      skipEndSide |= childRange.mStart != 0;
+      skipStartSide |= childRange.mEnd != parentRange.Extent();
+    }
+    if (skipStartSide && skipEndSide) {
+      break;
+    }
+    auto mbp =
+        parentSubgrid->mMarginBorderPadding.ConvertTo(subgridCBWM, parentCBWM);
+    if (skipStartSide) {
+      mbp.Start(aAxis, subgridCBWM) = nscoord(0);
+    }
+    if (skipEndSide) {
+      mbp.End(aAxis, subgridCBWM) = nscoord(0);
+    }
+    result += mbp;
+    parent = grandParent;
+    childRange = parentRange;
+  }
+  return result.ConvertTo(aResultWM, subgridCBWM);
 }
 
 /**
