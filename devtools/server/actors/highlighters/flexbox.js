@@ -682,6 +682,14 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const containerBounds = containerQuad.getBounds();
     const { width: containerWidth, height: containerHeight } = containerBounds;
 
+    const offset = (getDisplayPixelRatio(this.win) / 2) % 1;
+    const zoom = getCurrentZoom(this.win);
+    const canvasX = Math.round(this._canvasPosition.x * this.win.devicePixelRatio * zoom);
+    const canvasY = Math.round(this._canvasPosition.y * this.win.devicePixelRatio * zoom);
+
+    this.ctx.save();
+    this.ctx.translate(offset - canvasX, offset - canvasY);
+
     for (const flexLine of this.flexData.lines) {
       const { crossStart, crossSize } = flexLine;
       let mainStart = 0;
@@ -744,6 +752,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
           break;
       }
     }
+
+    this.ctx.restore();
   }
 
   _update() {
