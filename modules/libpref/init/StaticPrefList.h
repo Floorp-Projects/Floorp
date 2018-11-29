@@ -714,12 +714,18 @@ VARCACHE_PREF(
   bool, true
 )
 
-// Is -moz-prefixed gradient functions enabled?
+// Are -moz-prefixed gradient functions enabled?
+#ifdef EARLY_BETA_OR_EARLIER
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
 VARCACHE_PREF(
   "layout.css.prefixes.gradients",
    layout_css_prefixes_gradients,
-  bool, true
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 // Whether the offset-* logical property aliases are enabled.
 VARCACHE_PREF(
