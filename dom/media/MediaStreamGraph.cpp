@@ -2525,9 +2525,6 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
       ("%p: Calling NotifyPull aStream=%p t=%f current end=%f", GraphImpl(),
        this, GraphImpl()->MediaTimeToSeconds(t),
        GraphImpl()->MediaTimeToSeconds(current)));
-  if (t <= current) {
-    return false;
-  }
   for (const TrackData& track : mUpdateTracks) {
     if (track.mCommands & TrackEventCommand::TRACK_EVENT_ENDED) {
       continue;
