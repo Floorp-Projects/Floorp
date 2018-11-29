@@ -294,49 +294,49 @@ BackgroundParentImpl::DeallocPBackgroundSDBConnectionParent(
   return mozilla::dom::DeallocPBackgroundSDBConnectionParent(aActor);
 }
 
-BackgroundParentImpl::PBackgroundLSObjectParent*
-BackgroundParentImpl::AllocPBackgroundLSObjectParent(
+BackgroundParentImpl::PBackgroundLSDatabaseParent*
+BackgroundParentImpl::AllocPBackgroundLSDatabaseParent(
                                             const PrincipalInfo& aPrincipalInfo,
-                                            const nsString& aDocumentURI,
-                                            const uint32_t& aPrivateBrowsingId)
+                                            const uint32_t& aPrivateBrowsingId,
+                                            const uint64_t& aDatastoreId)
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  return mozilla::dom::AllocPBackgroundLSObjectParent(aPrincipalInfo,
-                                                      aDocumentURI,
-                                                      aPrivateBrowsingId);
+  return mozilla::dom::AllocPBackgroundLSDatabaseParent(aPrincipalInfo,
+                                                        aPrivateBrowsingId,
+                                                        aDatastoreId);
 }
 
 mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPBackgroundLSObjectConstructor(
-                                            PBackgroundLSObjectParent* aActor,
+BackgroundParentImpl::RecvPBackgroundLSDatabaseConstructor(
+                                            PBackgroundLSDatabaseParent* aActor,
                                             const PrincipalInfo& aPrincipalInfo,
-                                            const nsString& aDocumentURI,
-                                            const uint32_t& aPrivateBrowsingId)
+                                            const uint32_t& aPrivateBrowsingId,
+                                            const uint64_t& aDatastoreId)
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  if (!mozilla::dom::RecvPBackgroundLSObjectConstructor(aActor,
-                                                        aPrincipalInfo,
-                                                        aDocumentURI,
-                                                        aPrivateBrowsingId)) {
+  if (!mozilla::dom::RecvPBackgroundLSDatabaseConstructor(aActor,
+                                                          aPrincipalInfo,
+                                                          aPrivateBrowsingId,
+                                                          aDatastoreId)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
 }
 
 bool
-BackgroundParentImpl::DeallocPBackgroundLSObjectParent(
-                                              PBackgroundLSObjectParent* aActor)
+BackgroundParentImpl::DeallocPBackgroundLSDatabaseParent(
+                                            PBackgroundLSDatabaseParent* aActor)
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  return mozilla::dom::DeallocPBackgroundLSObjectParent(aActor);
+  return mozilla::dom::DeallocPBackgroundLSDatabaseParent(aActor);
 }
 
 BackgroundParentImpl::PBackgroundLSObserverParent*

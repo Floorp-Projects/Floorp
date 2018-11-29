@@ -8,7 +8,6 @@
 #define mozilla_dom_localstorage_ActorsChild_h
 
 #include "mozilla/dom/PBackgroundLSDatabaseChild.h"
-#include "mozilla/dom/PBackgroundLSObjectChild.h"
 #include "mozilla/dom/PBackgroundLSObserverChild.h"
 #include "mozilla/dom/PBackgroundLSRequestChild.h"
 #include "mozilla/dom/PBackgroundLSSimpleRequestChild.h"
@@ -29,45 +28,6 @@ class LSObject;
 class LSObserver;
 class LSRequestChildCallback;
 class LSSimpleRequestChildCallback;
-
-class LSObjectChild final
-  : public PBackgroundLSObjectChild
-{
-  friend class mozilla::ipc::BackgroundChildImpl;
-  friend class LSObject;
-
-  LSObject* mObject;
-
-  NS_DECL_OWNINGTHREAD
-
-public:
-  void
-  AssertIsOnOwningThread() const
-  {
-    NS_ASSERT_OWNINGTHREAD(LSObjectChild);
-  }
-
-private:
-  // Only created by LSObject.
-  explicit LSObjectChild(LSObject* aObject);
-
-  // Only destroyed by mozilla::ipc::BackgroundChildImpl.
-  ~LSObjectChild();
-
-  void
-  SendDeleteMeInternal();
-
-  // IPDL methods are only called by IPDL.
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
-
-  PBackgroundLSDatabaseChild*
-  AllocPBackgroundLSDatabaseChild(const uint64_t& aDatastoreId) override;
-
-  bool
-  DeallocPBackgroundLSDatabaseChild(PBackgroundLSDatabaseChild* aActor)
-                                    override;
-};
 
 class LSDatabaseChild final
   : public PBackgroundLSDatabaseChild
