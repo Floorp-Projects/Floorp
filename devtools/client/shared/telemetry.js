@@ -732,14 +732,12 @@ function getChartsFromToolId(id) {
       timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
       countHist = `DEVTOOLS_${id}_OPENED_COUNT`;
       break;
+    case "FLEXBOX_HIGHLIGHTER":
+      timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
+      break;
     default:
       timerHist = `DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS`;
       countHist = `DEVTOOLS_CUSTOM_OPENED_COUNT`;
-  }
-
-  if (!timerHist || (!countHist && !countScalar)) {
-    throw new Error(`getChartsFromToolId cannot be called without a timer ` +
-                    `histogram and either a count histogram or count scalar.`);
   }
 
   return {
