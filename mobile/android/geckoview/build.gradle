@@ -288,31 +288,70 @@ android.libraryVariants.all { variant ->
     configureLibraryVariantWithJNIWrappers(variant, "Generated")
 }
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
-uploadArchives {
-    repositories.mavenDeployer {
-        pom.groupId = 'org.mozilla.geckoview'
+version = computeVersionNumber()
 
-        if (mozconfig.substs.MOZ_UPDATE_CHANNEL == 'release') {
-            // release artifacts don't specify the channel, for the sake of simplicity
-            pom.artifactId = "geckoview-${mozconfig.substs.ANDROID_CPU_ARCH}"
-        } else {
-            pom.artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
-        }
+publishing {
+    publications {
+        android.libraryVariants.all { variant ->
+            "${variant.name}"(MavenPublication) {
+                pom {
+                    groupId = 'org.mozilla.geckoview'
 
-        pom.version = computeVersionNumber()
+                    if (mozconfig.substs.MOZ_UPDATE_CHANNEL == 'release') {
+                        // release artifacts don't specify the channel, for the sake of simplicity
+                        artifactId = "geckoview-${mozconfig.substs.ANDROID_CPU_ARCH}"
+                    } else {
+                        artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
+                    }
 
-        pom.project {
-            licenses {
-                license {
-                    name 'The Mozilla Public License, v. 2.0'
-                    url 'http://mozilla.org/MPL/2.0/'
-                    distribution 'repo'
+                    url = 'https://wiki.mozilla.org/Mobile/GeckoView'
+
+                    licenses {
+                        license {
+                            name = 'The Mozilla Public License, v. 2.0'
+                            url = 'http://mozilla.org/MPL/2.0/'
+                            distribution = 'repo'
+                        }
+                    }
+
+                    scm {
+                        connection = 'scm::hg::https://hg.mozilla.org/mozilla-central/'
+                        url = 'https://hg.mozilla.org/mozilla-central/'
+                    }
+
+                    // Unfortunately Gradle does not provide a way to expose dependencies for custom
+                    // project types like Android plugins. So we need to add them manually to the POM
+                    // XML here, or use a plugin that achieves the same (like
+                    // https://github.com/wupdigital/android-maven-publish). We elect to do this
+                    // manually since our dependencies are simple and plugins increase our complexity
+                    // surface. This workaround can be removed after this issue is fixed:
+                    // https://github.com/gradle/gradle/issues/1842
+                    withXml {
+                        def dependenciesNode = asNode().appendNode('dependencies')
+
+                        configurations.getByName("implementation").dependencies.each {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
                 }
+
+                artifact tasks["bundle${variant.name.capitalize()}"]
+
+                // Javadoc and sources for developer ergononomics.
+                artifact tasks["javadocJar${variant.name.capitalize()}"]
+                artifact tasks["sourcesJar${variant.name.capitalize()}"]
             }
         }
-        repository(url: "file://${project.buildDir}/maven")
+    }
+    repositories {
+        maven {
+            url = "${project.buildDir}/maven"
+        }
     }
 }
 
@@ -333,14 +372,6 @@ afterEvaluate {
     // are withoutGeckoBinaries and not suitable for distribution.)
     def Configuration archivesConfig = project.getConfigurations().getByName('archives')
     archivesConfig.artifacts.removeAll { it.extension.equals('aar') }
-
-    artifacts {
-        // Instead of default (release) configuration, publish one with Gecko binaries.
-        archives bundleWithGeckoBinariesRelease
-        // Javadoc and sources for developer ergononomics.
-        archives javadocJarWithGeckoBinariesRelease
-        archives sourcesJarWithGeckoBinariesRelease
-    }
 
     // For now, ensure Kotlin is only used in tests.
     android.sourceSets.all { sourceSet ->
