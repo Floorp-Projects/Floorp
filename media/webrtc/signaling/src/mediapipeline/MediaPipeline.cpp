@@ -1680,7 +1680,7 @@ public:
   {
     if (!mListening) {
       mListening = true;
-      mSource->SetPullEnabled(true);
+      mSource->SetPullingEnabled(mTrackId, true);
       mMaybeTrackNeedsUnmute = true;
     }
   }
@@ -1689,7 +1689,7 @@ public:
   {
     if (mListening) {
       mListening = false;
-      mSource->SetPullEnabled(false);
+      mSource->SetPullingEnabled(mTrackId, false);
     }
   }
 
