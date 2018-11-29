@@ -43,17 +43,6 @@
 
   .monthly-checkbox-container {
     width: 100%;
-
-    input {
-      &[type='checkbox'] {
-        width: 24px;
-        height: 24px;
-      }
-    }
-
-    label {
-      vertical-align: super;
-    }
   }
 
   .donation-form-url {
