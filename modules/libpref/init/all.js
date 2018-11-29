@@ -222,6 +222,10 @@ pref("dom.keyboardevent.dispatch_during_composition", false);
 // cause inputting printable character.
 #ifdef NIGHTLY_BUILD
 pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", true);
+#else
+pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", false);
+#endif
+
 // Blacklist of domains of web apps which are not aware of strict keypress
 // dispatching behavior.  This is comma separated list.  If you need to match
 // all sub-domains, you can specify it as "*.example.com".  Additionally, you
@@ -229,18 +233,13 @@ pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_i
 // if you need to limit under a directory, the path should end with "/" like
 // "example.com/foo/".  Note that this cannot limit port number for now.
 pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "");
-#else
-pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", false);
-#endif
 
-#ifdef NIGHTLY_BUILD
 // Blacklist of domains of web apps which handle keyCode and charCode of
 // keypress events with a path only for Firefox (i.e., broken if we set
 // non-zero keyCode or charCode value to the other).  The format is exactly
 // same as "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So,
 // check its explanation for the detail.
 pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "");
-#endif
 
 // Whether the WebMIDI API is enabled
 pref("dom.webmidi.enabled", false);

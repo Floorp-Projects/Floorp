@@ -866,7 +866,6 @@ private:
   // Whether we have ever handled a user input event
   bool mHasHandledUserInput : 1;
 
-#ifdef NIGHTLY_BUILD
   // Whether we should dispatch keypress events even for non-printable keys
   // for keeping backward compatibility.
   bool mForceDispatchKeyPressEventsForNonPrintableKeys : 1;
@@ -878,7 +877,6 @@ private:
   // Whether mForceDispatchKeyPressEventsForNonPrintableKeys and
   // mForceUseLegacyKeyCodeAndCharCodeValues are initialized.
   bool mInitializedWithKeyPressEventDispatchingBlacklist : 1;
-#endif // #ifdef NIGHTLY_BUILD
 
   static bool sDisableNonTestMouseEvents;
 
