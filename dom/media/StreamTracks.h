@@ -200,14 +200,14 @@ class StreamTracks {
    * The end time for the StreamTracks is the latest time for which we have
    * data for all tracks that haven't ended by that time.
    */
-  StreamTime GetEnd() const;
+  StreamTime GetEarliestTrackEnd() const;
 
   /**
    * Returns the earliest time >= 0 at which all tracks have ended and all
    * their data has been played out, or STREAM_TIME_MAX if there is no such
    * time.
    */
-  StreamTime GetAllTracksEnd() const;
+  StreamTime GetLatestTrackEnd() const;
 
 #ifdef DEBUG
   void DumpTrackInfo() const;

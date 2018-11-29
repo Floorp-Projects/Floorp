@@ -28,8 +28,8 @@ void StreamTracks::DumpTrackInfo() const {
 }
 #endif
 
-StreamTime StreamTracks::GetEnd() const {
-  StreamTime t = mTracksKnownTime;
+StreamTime StreamTracks::GetEarliestTrackEnd() const {
+  StreamTime t = STREAM_TIME_MAX;
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
     if (!track->IsEnded()) {
@@ -39,11 +39,7 @@ StreamTime StreamTracks::GetEnd() const {
   return t;
 }
 
-StreamTime StreamTracks::GetAllTracksEnd() const {
-  if (mTracksKnownTime < STREAM_TIME_MAX) {
-    // A track might be added.
-    return STREAM_TIME_MAX;
-  }
+StreamTime StreamTracks::GetLatestTrackEnd() const {
   StreamTime t = 0;
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
