@@ -10,59 +10,57 @@
 <body>
   <script type="application/javascript">
 
-let tests = [
-  function() {
-    SpecialPowers.pushPrefEnv({
-      "set": [["dom.caches.enabled", true],
-              ["dom.caches.testing.enabled", true],
-              ["dom.quotaManager.testing", true]]
-    }, next);
-  },
+async function tests() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [["dom.caches.enabled", true],
+            ["dom.caches.testing.enabled", true],
+            ["dom.quotaManager.testing", true]]
+  });
 
-  function() { test_nativeStream(SAME_COMPARTMENT); },
-  function() { test_nativeStream(IFRAME_COMPARTMENT); },
-  function() { workify('test_nativeStream'); },
+  await test_nativeStream(SAME_COMPARTMENT);
+  await test_nativeStream(IFRAME_COMPARTMENT);
+  await workify('test_nativeStream');
 
-  function() { test_timeout(SAME_COMPARTMENT); },
-  function() { test_timeout(IFRAME_COMPARTMENT); },
-  function() { workify('test_timeout'); },
+  await test_timeout(SAME_COMPARTMENT);
+  await test_timeout(IFRAME_COMPARTMENT);
+  await workify('test_timeout');
 
-  function() { test_nonNativeStream(SAME_COMPARTMENT); },
-  function() { test_nonNativeStream(IFRAME_COMPARTMENT); },
-  function() { workify('test_nonNativeStream'); },
+  await test_nonNativeStream(SAME_COMPARTMENT);
+  await test_nonNativeStream(IFRAME_COMPARTMENT);
+  await workify('test_nonNativeStream');
 
-  function() { test_pendingStream(SAME_COMPARTMENT); },
-  function() { test_pendingStream(IFRAME_COMPARTMENT); },
-  function() { workify('test_pendingStream'); },
+  await test_pendingStream(SAME_COMPARTMENT);
+  await test_pendingStream(IFRAME_COMPARTMENT);
+  await workify('test_pendingStream');
 
-  function() { test_noUint8Array(SAME_COMPARTMENT); },
-  function() { test_noUint8Array(IFRAME_COMPARTMENT); },
-  function() { workify('test_noUint8Array'); },
+  await test_noUint8Array(SAME_COMPARTMENT);
+  await test_noUint8Array(IFRAME_COMPARTMENT);
+  await workify('test_noUint8Array');
 
-  function() { test_nativeStream_cache(SAME_COMPARTMENT); },
-  function() { test_nativeStream_cache(IFRAME_COMPARTMENT); },
-  function() { workify('test_nativeStream_cache'); },
+  await test_nativeStream_cache(SAME_COMPARTMENT);
+  await test_nativeStream_cache(IFRAME_COMPARTMENT);
+  await workify('test_nativeStream_cache');
 
-  function() { test_nonNativeStream_cache(SAME_COMPARTMENT); },
-  function() { test_nonNativeStream_cache(IFRAME_COMPARTMENT); },
-  function() { workify('test_nonNativeStream_cache'); },
+  await test_nonNativeStream_cache(SAME_COMPARTMENT);
+  await test_nonNativeStream_cache(IFRAME_COMPARTMENT);
+  await workify('test_nonNativeStream_cache');
 
-  function() { test_codeExecution(SAME_COMPARTMENT); },
-  function() { test_codeExecution(IFRAME_COMPARTMENT); },
+  await test_codeExecution(SAME_COMPARTMENT);
+  await test_codeExecution(IFRAME_COMPARTMENT);
 
-  function() { test_global(SAME_COMPARTMENT); },
-  function() { test_global(IFRAME_COMPARTMENT); },
-  function() { workify('test_global'); },
-];
+  await test_global(SAME_COMPARTMENT);
+  await test_global(IFRAME_COMPARTMENT);
+  await workify('test_global');
+}
 
-function next() {
-  if (!tests.length) {
+async function runTests() {
+  try {
+    await tests();
+  } catch (exc) {
+    ok(false, exc.toString());
+  } finally {
     SimpleTest.finish();
-    return;
   }
-
-  let test = tests.shift();
-  test();
 }
 
 SimpleTest.waitForExplicitFinish();

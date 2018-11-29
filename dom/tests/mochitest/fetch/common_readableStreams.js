@@ -17,14 +17,12 @@ function makeBuffer(size) {
 
 function apply_compartment(compartment, data) {
   if (compartment == SAME_COMPARTMENT) {
-    self[data.func](data.args, self);
-    return;
+    return self[data.func](data.args, self);
   }
 
   if (compartment == IFRAME_COMPARTMENT) {
     const iframe = document.querySelector("#iframe").contentWindow;
-    iframe[data.func](data.args, self);
-    return;
+    return iframe[data.func](data.args, self);
   }
 
   ok(false, "Invalid compartment value");
@@ -35,9 +33,9 @@ async function test_nativeStream(compartment) {
 
   let r = await fetch('/');
 
-  apply_compartment(compartment,
-                    { func: "test_nativeStream_continue",
-                      args: r });
+  return apply_compartment(compartment,
+                           { func: "test_nativeStream_continue",
+                             args: r });
 }
 
 async function test_nativeStream_continue(r, that) {
@@ -60,8 +58,6 @@ async function test_nativeStream_continue(r, that) {
   blob = await b.blob();
 
   that.ok(blob instanceof Blob, "We have a blob");
-
-  that.next();
 }
 
 async function test_timeout(compartment) {
@@ -70,23 +66,22 @@ async function test_timeout(compartment) {
   let blob = new Blob([""]);
   let r = await fetch(URL.createObjectURL(blob));
 
-  apply_compartment(compartment,
-                    { func: "test_timeout_continue",
-                      args: r });
+  return apply_compartment(compartment,
+                           { func: "test_timeout_continue",
+                             args: r });
 }
 
 async function test_timeout_continue(r, that) {
   await r.body.getReader().read();
 
-  setTimeout(() => {
-    r.blob().then(b => {
-      that.ok(false, "We cannot have a blob here!");
-    }, () => {
-      that.ok(true, "We cannot have a blob here!");
-    }).then(() => {
-      that.next();
-    });
-  }, 0);
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  try {
+    await r.blob();
+    that.ok(false, "We cannot have a blob here!");
+  } catch (exc) {
+    that.ok(true, "We cannot have a blob here!");
+  }
 }
 
 async function test_nonNativeStream(compartment) {
@@ -100,9 +95,9 @@ async function test_nonNativeStream(compartment) {
     controller.close();
   }}));
 
-  apply_compartment(compartment,
-                    { func: "test_nonNativeStream_continue",
-                      args: { r, buffer } });
+  return apply_compartment(compartment,
+                           { func: "test_nonNativeStream_continue",
+                             args: { r, buffer } });
 }
 
 async function test_nonNativeStream_continue(data, that) {
@@ -126,8 +121,6 @@ async function test_nonNativeStream_continue(data, that) {
 
   that.ok(blob instanceof Blob, "We have a blob");
   that.is(blob.size, data.buffer.byteLength, "Blob size matches");
-
-  that.next();
 }
 
 async function test_noUint8Array(compartment) {
@@ -138,19 +131,20 @@ async function test_noUint8Array(compartment) {
     controller.close();
   }}));
 
-  apply_compartment(compartment,
-                    { func: "test_noUint8Array_continue",
-                      args: r });
+  return apply_compartment(compartment,
+                           { func: "test_noUint8Array_continue",
+                             args: r });
 }
 
 async function test_noUint8Array_continue(r, that) {
   that.ok(r.body instanceof that.ReadableStream, "We have a ReadableStream");
 
-  r.blob().then(b => {
+  try {
+    await r.blob();
     that.ok(false, "We cannot have a blob here!");
-  }, () => {
+  } catch {
     that.ok(true, "We cannot have a blob here!");
-  }).then(that.next);
+  }
 }
 
 async function test_pendingStream(compartment) {
@@ -160,9 +154,9 @@ async function test_pendingStream(compartment) {
     self.ccc = controller;
   }}));
 
-  apply_compartment(compartment,
-                    { func: "test_pendingStream_continue",
-                      args: r });
+  return apply_compartment(compartment,
+                           { func: "test_pendingStream_continue",
+                             args: r });
 }
 
 async function test_pendingStream_continue(r, that) {
@@ -173,8 +167,6 @@ async function test_pendingStream_continue(r, that) {
   if ("close" in that) {
     that.close();
   }
-
-  that.next();
 }
 
 async function test_nativeStream_cache(compartment) {
@@ -188,9 +180,9 @@ async function test_nativeStream_cache(compartment) {
   info("Storing a body as a string");
   await cache.put(url, new Response(origBody));
 
-  apply_compartment(compartment,
-                    { func: "test_nativeStream_cache_continue",
-                      args: { caches, cache, url, origBody } });
+  return apply_compartment(compartment,
+                           { func: "test_nativeStream_cache_continue",
+                             args: { caches, cache, url, origBody } });
 }
 
 async function test_nativeStream_cache_continue(data, that) {
@@ -203,8 +195,6 @@ async function test_nativeStream_cache_continue(data, that) {
   that.is(data.origBody, cacheBody, "Bodies match");
 
   await data.caches.delete('nativeStream');
-
-  that.next();
 };
 
 async function test_nonNativeStream_cache(compartment) {
@@ -222,9 +212,9 @@ async function test_nonNativeStream_cache(compartment) {
     controller.close();
   }}));
 
-  apply_compartment(compartment,
-                    { func: "test_nonNativeStream_cache_continue",
-                      args: { caches, cache, buffer, r } });
+  return apply_compartment(compartment,
+                           { func: "test_nonNativeStream_cache_continue",
+                             args: { caches, cache, buffer, r } });
 }
 
 async function test_nonNativeStream_cache_continue(data, that) {
@@ -245,8 +235,6 @@ async function test_nonNativeStream_cache_continue(data, that) {
   }
 
   await data.caches.delete('nonNativeStream');
-
-  that.next();
 };
 
 async function test_codeExecution(compartment) {
@@ -261,9 +249,9 @@ async function test_codeExecution(compartment) {
     }
   }));
 
-  apply_compartment(compartment,
-                    { func: "test_codeExecution_continue",
-                      args: r });
+  return apply_compartment(compartment,
+                           { func: "test_codeExecution_continue",
+                             args: r });
 }
 
 async function test_codeExecution_continue(r, that) {
@@ -291,8 +279,6 @@ async function test_codeExecution_continue(r, that) {
 
   r.body.getReader().read();
   await promise;
-
-  that.next();
 };
 
 async function test_global(compartment) {
@@ -320,9 +306,9 @@ async function test_global(compartment) {
     }
   }));
 
-  apply_compartment(compartment,
-                    { func: "test_global_continue",
-                    args: r });
+  return apply_compartment(compartment,
+                           { func: "test_global_continue",
+                             args: r });
 }
 
 async function test_global_continue(r, that) {
@@ -334,31 +320,34 @@ async function test_global_continue(r, that) {
   for (let i = 0; i < ITER_MAX; ++i) {
     that.is(new Uint8Array(a)[i], 42, "Byte " + i + " is correct");
   }
-
-  that.next();
 };
 
 function workify(func) {
-  info("Workifing " + func);
+  info("Workifying " + func);
 
-  let worker = new Worker('worker_readableStreams.js');
-  worker.postMessage(func);
-  worker.onmessage = function(e) {
-    if (e.data.type == 'done') {
-      next();
-      return;
+  return new Promise((resolve, reject) => {
+    let worker = new Worker('worker_readableStreams.js');
+    worker.postMessage(func);
+    worker.onmessage = function(e) {
+      if (e.data.type == 'done') {
+        resolve();
+        return;
+      }
+
+      if (e.data.type == 'error') {
+        reject(e.data.message);
+        return;
+      }
+
+      if (e.data.type == 'test') {
+        ok(e.data.test, e.data.message);
+        return;
+      }
+
+      if (e.data.type == 'info') {
+        info(e.data.message);
+        return;
+      }
     }
-
-    if (e.data.type == 'test') {
-      ok(e.data.test, e.data.message);
-      return;
-    }
-
-    if (e.data.type == 'info') {
-      info(e.data.message);
-      return;
-    }
-  }
-
-  return worker;
+  });
 }
