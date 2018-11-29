@@ -524,7 +524,7 @@ private:
   {
     AssertIsOnIOThread();
 
-    for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
+    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
       mClients[index]->ReleaseIOThreadObjects();
     }
   }

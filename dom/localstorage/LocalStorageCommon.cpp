@@ -11,7 +11,7 @@ namespace dom {
 
 namespace {
 
-int32_t gNextGenLocalStorageEnabled = -1;
+Atomic<int32_t> gNextGenLocalStorageEnabled(-1);
 
 } // namespace
 
@@ -24,6 +24,14 @@ NextGenLocalStorageEnabled()
     bool enabled = Preferences::GetBool("dom.storage.next_gen", false);
     gNextGenLocalStorageEnabled = enabled ? 1 : 0;
   }
+
+  return !!gNextGenLocalStorageEnabled;
+}
+
+bool
+CachedNextGenLocalStorageEnabled()
+{
+  MOZ_ASSERT(gNextGenLocalStorageEnabled != -1);
 
   return !!gNextGenLocalStorageEnabled;
 }
