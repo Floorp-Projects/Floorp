@@ -1,8 +1,4 @@
-<iframe src="iframe_readableStreams.html" id="iframe"></iframe>
 <script type="application/javascript" src="common_readableStreams.js"></script>
 <script>
-function runTest(data) {
-  const iframe = document.querySelector("#iframe").contentWindow;
-  self[data.func].call(iframe, data.args, parent);
-}
+parent.next();
 </script>
