@@ -13,11 +13,11 @@ add_task(async function test_support_separator_properties() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar_top_separator": SEPARATOR_TOP_COLOR,
           "toolbar_vertical_separator": SEPARATOR_VERTICAL_COLOR,
           "toolbar_field_separator": SEPARATOR_FIELD_COLOR,

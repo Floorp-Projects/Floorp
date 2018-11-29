@@ -18,6 +18,7 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "threading/ProtectedData.h"
+#include "util/StructuredSpewer.h"
 #include "vm/ErrorReporting.h"
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
@@ -959,6 +960,15 @@ struct JSContext : public JS::RootingContext,
     template <class... Args> inline void check(const Args&... args);
     template <class... Args> inline void releaseCheck(const Args&... args);
     template <class... Args> MOZ_ALWAYS_INLINE void debugOnlyCheck(const Args&... args);
+
+#ifdef JS_STRUCTURED_SPEW
+  private:
+    // Spewer for this thread
+    js::ThreadData<js::StructuredSpewer> structuredSpewer_;
+  public:
+    js::StructuredSpewer& spewer() { return structuredSpewer_.ref(); }
+#endif
+
 }; /* struct JSContext */
 
 inline JS::Result<>

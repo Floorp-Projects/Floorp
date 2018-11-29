@@ -8,11 +8,11 @@ add_task(async function test_on_updated() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
         },
       },
     },
@@ -36,12 +36,12 @@ add_task(async function test_on_updated() {
   await theme.startup();
   const {theme: receivedTheme, windowId} = await updatedPromise;
   Assert.ok(!windowId, "No window id in static theme update event");
-  Assert.ok(receivedTheme.images.headerURL.includes("image1.png"),
-            "Theme header URL should be applied");
-  Assert.equal(receivedTheme.colors.accentcolor, ACCENT_COLOR,
-               "Theme accent color should be applied");
-  Assert.equal(receivedTheme.colors.textcolor, TEXT_COLOR,
-               "Theme text color should be applied");
+  Assert.ok(receivedTheme.images.theme_frame.includes("image1.png"),
+            "Theme theme_frame image should be applied");
+  Assert.equal(receivedTheme.colors.frame, ACCENT_COLOR,
+               "Theme frame color should be applied");
+  Assert.equal(receivedTheme.colors.tab_background_text, TEXT_COLOR,
+               "Theme tab_background_text color should be applied");
 
   info("Testing update event on static theme unload");
   updatedPromise = extension.awaitMessage("theme-updated");

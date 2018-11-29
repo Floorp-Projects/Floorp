@@ -370,6 +370,11 @@ set_define('JS_JITSPEW',
 set_config('JS_JITSPEW',
            depends_if('--enable-jitspew')(lambda _: True))
 
+# Also enable the structured spewer
+set_define('JS_STRUCTURED_SPEW',
+           depends_if('--enable-jitspew')(lambda _: True))
+set_config('JS_STRUCTURED_SPEW',
+           depends_if('--enable-jitspew')(lambda _: True))
 # When enabled, masm will generate assumeUnreachable calls that act as
 # assertions in the generated code. This option is worth disabling when you
 # have to track mutated values through the generated code, to avoid constantly

@@ -151,9 +151,11 @@ if CONFIG['MOZ_LIB_SECRET']:
 if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
         'KeychainSecret.cpp',
+        'OSReauthenticatorDarwin.mm',
     ]
     OS_LIBS += [
-        '-framework Security'
+        '-framework LocalAuthentication',
+        '-framework Security',
     ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

@@ -143,8 +143,6 @@ void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     // all our tracks have actually finished and been removed from our map,
     // so we're finished now.
     FinishOnGraphThread();
-  } else {
-    mTracks.AdvanceKnownTracksTime(GraphTimeToStreamTimeWithBlocking(aTo));
   }
   if (allHaveCurrentData) {
     // We can make progress if we're not blocked

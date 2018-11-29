@@ -943,55 +943,6 @@ CacheIRStubInfo::stubDataSize() const
     }
 }
 
-void
-CacheIRStubInfo::copyStubData(ICStub* src, ICStub* dest) const
-{
-    uint8_t* srcBytes = reinterpret_cast<uint8_t*>(src);
-    uint8_t* destBytes = reinterpret_cast<uint8_t*>(dest);
-
-    size_t field = 0;
-    size_t offset = 0;
-    while (true) {
-        StubField::Type type = fieldType(field);
-        switch (type) {
-          case StubField::Type::RawWord:
-            *reinterpret_cast<uintptr_t*>(destBytes + offset) =
-                *reinterpret_cast<uintptr_t*>(srcBytes + offset);
-            break;
-          case StubField::Type::RawInt64:
-          case StubField::Type::DOMExpandoGeneration:
-            *reinterpret_cast<uint64_t*>(destBytes + offset) =
-                *reinterpret_cast<uint64_t*>(srcBytes + offset);
-            break;
-          case StubField::Type::Shape:
-            getStubField<ICStub, Shape*>(dest, offset).init(getStubField<ICStub, Shape*>(src, offset));
-            break;
-          case StubField::Type::JSObject:
-            getStubField<ICStub, JSObject*>(dest, offset).init(getStubField<ICStub, JSObject*>(src, offset));
-            break;
-          case StubField::Type::ObjectGroup:
-            getStubField<ICStub, ObjectGroup*>(dest, offset).init(getStubField<ICStub, ObjectGroup*>(src, offset));
-            break;
-          case StubField::Type::Symbol:
-            getStubField<ICStub, JS::Symbol*>(dest, offset).init(getStubField<ICStub, JS::Symbol*>(src, offset));
-            break;
-          case StubField::Type::String:
-            getStubField<ICStub, JSString*>(dest, offset).init(getStubField<ICStub, JSString*>(src, offset));
-            break;
-          case StubField::Type::Id:
-            getStubField<ICStub, jsid>(dest, offset).init(getStubField<ICStub, jsid>(src, offset));
-            break;
-          case StubField::Type::Value:
-            getStubField<ICStub, Value>(dest, offset).init(getStubField<ICStub, Value>(src, offset));
-            break;
-          case StubField::Type::Limit:
-            return; // Done.
-        }
-        field++;
-        offset += StubField::sizeInBytes(type);
-    }
-}
-
 template <typename T>
 static GCPtr<T>*
 AsGCPtr(uintptr_t* ptr)

@@ -24,11 +24,11 @@ add_task(async function test_popup_styling(browser, accDoc) {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "popup": POPUP_BACKGROUND_COLOR,
           "popup_text": POPUP_TEXT_COLOR,
           "popup_border": POPUP_BORDER_COLOR,

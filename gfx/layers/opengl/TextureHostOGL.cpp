@@ -699,7 +699,7 @@ SurfaceTextureHost::PushResourceUpdates(wr::TransactionBuilder& aResources,
 {
   auto method = aOp == TextureHost::ADD_IMAGE ? &wr::TransactionBuilder::AddExternalImage
                                               : &wr::TransactionBuilder::UpdateExternalImage;
-  auto bufferType = wr::WrExternalImageBufferType::TextureRectHandle;
+  auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
 
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:

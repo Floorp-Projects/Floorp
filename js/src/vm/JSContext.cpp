@@ -1375,6 +1375,9 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     canSkipEnqueuingJobs(false),
     promiseRejectionTrackerCallback(nullptr),
     promiseRejectionTrackerCallbackData(nullptr)
+#ifdef JS_STRUCTURED_SPEW
+    , structuredSpewer_()
+#endif
 {
     MOZ_ASSERT(static_cast<JS::RootingContext*>(this) ==
                JS::RootingContext::get(this));

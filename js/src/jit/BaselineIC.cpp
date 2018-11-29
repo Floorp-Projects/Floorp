@@ -123,6 +123,335 @@ ICEntry::trace(JSTracer* trc)
     }
 }
 
+/* static */ UniquePtr<ICScript>
+ICScript::create(JSContext* cx, JSScript* script)
+{
+    FallbackICStubSpace stubSpace;
+    js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries;
+
+    auto addIC = [cx, &icEntries, script](jsbytecode* pc, ICStub* stub) {
+        if (!stub) {
+            MOZ_ASSERT(cx->isExceptionPending());
+            return false;
+        }
+        uint32_t offset = pc ? script->pcToOffset(pc) : ICEntry::NonOpPCOffset;
+        if (!icEntries.emplaceBack(stub, offset)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
+    };
+
+    // Add ICEntries and fallback stubs for this/argument type checks.
+    // Note: we pass a nullptr pc to indicate this is a non-op IC.
+    // See ICEntry::NonOpPCOffset.
+    if (JSFunction* fun = script->functionNonDelazifying()) {
+        ICTypeMonitor_Fallback::Compiler compiler(cx, uint32_t(0));
+        if (!addIC(nullptr, compiler.getStub(&stubSpace))) {
+            return nullptr;
+        }
+
+        for (size_t i = 0; i < fun->nargs(); i++) {
+            ICTypeMonitor_Fallback::Compiler compiler(cx, i + 1);
+            if (!addIC(nullptr, compiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+        }
+    }
+
+    jsbytecode const* pcEnd = script->codeEnd();
+
+    // Add ICEntries and fallback stubs for JOF_IC bytecode ops.
+    for (jsbytecode* pc = script->code(); pc < pcEnd; pc = GetNextPc(pc)) {
+        JSOp op = JSOp(*pc);
+        if (!BytecodeOpHasIC(op)) {
+            continue;
+        }
+
+        switch (op) {
+          case JSOP_NOT:
+          case JSOP_AND:
+          case JSOP_OR:
+          case JSOP_IFEQ:
+          case JSOP_IFNE: {
+            ICToBool_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_BITNOT:
+          case JSOP_NEG: {
+            ICUnaryArith_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_BITOR:
+          case JSOP_BITXOR:
+          case JSOP_BITAND:
+          case JSOP_LSH:
+          case JSOP_RSH:
+          case JSOP_URSH:
+          case JSOP_ADD:
+          case JSOP_SUB:
+          case JSOP_MUL:
+          case JSOP_DIV:
+          case JSOP_MOD:
+          case JSOP_POW: {
+            ICBinaryArith_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_EQ:
+          case JSOP_NE:
+          case JSOP_LT:
+          case JSOP_LE:
+          case JSOP_GT:
+          case JSOP_GE:
+          case JSOP_STRICTEQ:
+          case JSOP_STRICTNE: {
+            ICCompare_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_POS: {
+            ICToNumber_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_LOOPENTRY: {
+            ICWarmUpCounter_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_NEWARRAY: {
+            ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
+            if (!group) {
+                return nullptr;
+            }
+            ICNewArray_Fallback::Compiler stubCompiler(cx, group);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_NEWOBJECT:
+          case JSOP_NEWINIT: {
+            ICNewObject_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_INITELEM:
+          case JSOP_INITHIDDENELEM:
+          case JSOP_INITELEM_ARRAY:
+          case JSOP_INITELEM_INC:
+          case JSOP_SETELEM:
+          case JSOP_STRICTSETELEM: {
+            ICSetElem_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_INITPROP:
+          case JSOP_INITLOCKEDPROP:
+          case JSOP_INITHIDDENPROP:
+          case JSOP_SETALIASEDVAR:
+          case JSOP_INITGLEXICAL:
+          case JSOP_INITALIASEDLEXICAL:
+          case JSOP_SETPROP:
+          case JSOP_STRICTSETPROP:
+          case JSOP_SETNAME:
+          case JSOP_STRICTSETNAME:
+          case JSOP_SETGNAME:
+          case JSOP_STRICTSETGNAME: {
+            ICSetProp_Fallback::Compiler compiler(cx);
+            if (!addIC(pc, compiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_GETPROP:
+          case JSOP_CALLPROP:
+          case JSOP_LENGTH:
+          case JSOP_GETPROP_SUPER:
+          case JSOP_GETBOUNDNAME: {
+            bool hasReceiver = (op == JSOP_GETPROP_SUPER);
+            ICGetProp_Fallback::Compiler compiler(cx, hasReceiver);
+            if (!addIC(pc, compiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_GETELEM:
+          case JSOP_CALLELEM:
+          case JSOP_GETELEM_SUPER: {
+            bool hasReceiver = (op == JSOP_GETELEM_SUPER);
+            ICGetElem_Fallback::Compiler stubCompiler(cx, hasReceiver);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_IN: {
+            ICIn_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_HASOWN: {
+            ICHasOwn_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_GETNAME:
+          case JSOP_GETGNAME: {
+            ICGetName_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_BINDNAME:
+          case JSOP_BINDGNAME: {
+            ICBindName_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_GETALIASEDVAR:
+          case JSOP_GETIMPORT: {
+            ICTypeMonitor_Fallback::Compiler compiler(cx, nullptr);
+            if (!addIC(pc, compiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_GETINTRINSIC: {
+            ICGetIntrinsic_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_CALL:
+          case JSOP_CALL_IGNORES_RV:
+          case JSOP_CALLITER:
+          case JSOP_SUPERCALL:
+          case JSOP_FUNCALL:
+          case JSOP_FUNAPPLY:
+          case JSOP_NEW:
+          case JSOP_EVAL:
+          case JSOP_STRICTEVAL: {
+            bool construct = JSOp(*pc) == JSOP_NEW || JSOp(*pc) == JSOP_SUPERCALL;
+            ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ construct,
+                                                   /* isSpread = */ false);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_SPREADCALL:
+          case JSOP_SPREADSUPERCALL:
+          case JSOP_SPREADNEW:
+          case JSOP_SPREADEVAL:
+          case JSOP_STRICTSPREADEVAL: {
+            bool construct = JSOp(*pc) == JSOP_SPREADNEW || JSOp(*pc) == JSOP_SPREADSUPERCALL;
+            ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ construct,
+                                                   /* isSpread = */ true);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_INSTANCEOF: {
+            ICInstanceOf_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_TYPEOF:
+          case JSOP_TYPEOFEXPR: {
+            ICTypeOf_Fallback::Compiler stubCompiler(cx);
+            if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_ITER: {
+            ICGetIterator_Fallback::Compiler compiler(cx);
+            if (!addIC(pc, compiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_MOREITER: {
+            ICIteratorMore_Fallback::Compiler compiler(cx);
+            if (!addIC(pc, compiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_ENDITER: {
+            ICIteratorClose_Fallback::Compiler compiler(cx);
+            if (!addIC(pc, compiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          case JSOP_REST: {
+            ArrayObject* templateObject =
+                ObjectGroup::newArrayObject(cx, nullptr, 0, TenuredObject,
+                                            ObjectGroup::NewArrayKind::UnknownIndex);
+            if (!templateObject) {
+                return nullptr;
+            }
+            ICRest_Fallback::Compiler compiler(cx, templateObject);
+            if (!addIC(pc, compiler.getStub(&stubSpace))) {
+                return nullptr;
+            }
+            break;
+          }
+          default:
+            MOZ_CRASH("JOF_IC op not handled");
+        }
+    }
+
+    UniquePtr<ICScript> icScript(
+        script->zone()->pod_malloc_with_extra<ICScript, ICEntry>(icEntries.length()));
+    if (!icScript) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+    new (icScript.get()) ICScript(icEntries.length());
+
+    // Adopt fallback stubs into the ICScript.
+    icScript->fallbackStubSpace_.adoptFrom(&stubSpace);
+
+    if (icEntries.length() > 0) {
+        icScript->initICEntries(script, &icEntries[0]);
+    }
+
+    return icScript;
+}
+
 ICStubConstIterator&
 ICStubConstIterator::operator++()
 {
@@ -717,7 +1046,7 @@ ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, JSScript* script)
     MOZ_ASSERT(fallbackMonitorStub_ == nullptr);
 
     ICTypeMonitor_Fallback::Compiler compiler(cx, this);
-    ICStubSpace* space = script->baselineScript()->fallbackStubSpace();
+    ICStubSpace* space = script->icScript()->fallbackStubSpace();
     ICTypeMonitor_Fallback* stub = compiler.getStub(space);
     if (!stub) {
         return false;
@@ -750,6 +1079,15 @@ ICUpdatedStub::initUpdatingChain(JSContext* cx, ICStubSpace* space)
 
     firstUpdateStub_ = stub;
     return true;
+}
+
+/* static */ ICStubSpace*
+ICStubCompiler::StubSpaceForStub(bool makesGCCalls, JSScript* script)
+{
+    if (makesGCCalls) {
+        return script->icScript()->fallbackStubSpace();
+    }
+    return script->zone()->jitZone()->optimizedStubSpace();
 }
 
 JitCode*
@@ -891,9 +1229,8 @@ ICStubCompiler::PushStubPayload(MacroAssembler& masm, Register scratch)
     masm.adjustFrame(sizeof(intptr_t));
 }
 
-//
 void
-BaselineScript::noteAccessedGetter(uint32_t pcOffset)
+ICScript::noteAccessedGetter(uint32_t pcOffset)
 {
     ICEntry& entry = icEntryFromPCOffset(pcOffset);
     ICFallbackStub* stub = entry.fallbackStub();
@@ -1698,11 +2035,9 @@ StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub)
 //
 
 static bool
-DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_, HandleValue lhs,
+DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub, HandleValue lhs,
                   HandleValue rhs, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICGetElem_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -1765,11 +2100,6 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
         TypeScript::Monitor(cx, script, pc, types, res);
     }
 
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
-
     // Add a type monitor stub for the resulting value.
     if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
         return false;
@@ -1790,12 +2120,10 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
 }
 
 static bool
-DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_,
+DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub,
                        HandleValue lhs, HandleValue rhs, HandleValue receiver,
                        MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICGetElem_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -1842,11 +2170,6 @@ DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* 
         return false;
     }
     TypeScript::Monitor(cx, script, pc, types, res);
-
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
 
     // Add a type monitor stub for the resulting value.
     if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
@@ -1931,11 +2254,9 @@ SetUpdateStubData(ICCacheIR_Updated* stub, const PropertyTypeCheckInfo* info)
 }
 
 static bool
-DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_, Value* stack,
+DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub, Value* stack,
                   HandleValue objv, HandleValue index, HandleValue rhs)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICSetElem_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -2034,11 +2355,6 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
     MOZ_ASSERT(stack[2] == objv);
     stack[2] = rhs;
 
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
-
     if (attached) {
         return true;
     }
@@ -2122,7 +2438,7 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 }
 
 void
-BaselineScript::noteHasDenseAdd(uint32_t pcOffset)
+ICScript::noteHasDenseAdd(uint32_t pcOffset)
 {
     ICEntry& entry = icEntryFromPCOffset(pcOffset);
     ICFallbackStub* stub = entry.fallbackStub();
@@ -2222,11 +2538,9 @@ StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
 //
 
 static bool
-DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
+DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub,
              HandleValue key, HandleValue objValue, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICIn_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     FallbackICSpew(cx, stub, "In");
@@ -2276,11 +2590,9 @@ ICIn_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-DoHasOwnFallback(JSContext* cx, BaselineFrame* frame, ICHasOwn_Fallback* stub_,
+DoHasOwnFallback(JSContext* cx, BaselineFrame* frame, ICHasOwn_Fallback* stub,
                  HandleValue keyValue, HandleValue objValue, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICIn_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     FallbackICSpew(cx, stub, "HasOwn");
@@ -2327,11 +2639,9 @@ ICHasOwn_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_,
+DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub,
                   HandleObject envChain, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICGetName_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -2359,11 +2669,6 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
 
     StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
     TypeScript::Monitor(cx, script, pc, types, res);
-
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
 
     // Add a type monitor stub for the resulting value.
     if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
@@ -2445,11 +2750,9 @@ ICBindName_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame, ICGetIntrinsic_Fallback* stub_,
+DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame, ICGetIntrinsic_Fallback* stub,
                        MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICGetIntrinsic_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -2468,11 +2771,6 @@ DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame, ICGetIntrinsic_Fallb
     // directly.
 
     TypeScript::Monitor(cx, script, pc, res);
-
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
 
     TryAttachStub<GetIntrinsicIRGenerator>("GetIntrinsic", cx, frame, stub, BaselineCacheIRStubKind::Regular, res);
 
@@ -2533,15 +2831,13 @@ ComputeGetPropResult(JSContext* cx, BaselineFrame* frame, JSOp op, HandlePropert
 }
 
 static bool
-DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_,
+DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub,
                   MutableHandleValue val, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICGetProp_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
-    jsbytecode* pc = stub_->icEntry()->pc(script);
+    jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetProp(%s)", CodeName[op]);
 
@@ -2593,11 +2889,6 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
     StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
     TypeScript::Monitor(cx, script, pc, types, res);
 
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
-
     // Add a type monitor stub for the resulting value.
     if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
         return false;
@@ -2606,15 +2897,13 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
 }
 
 static bool
-DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_,
+DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub,
                        HandleValue receiver, MutableHandleValue val, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICGetProp_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
-    jsbytecode* pc = stub_->icEntry()->pc(script);
+    jsbytecode* pc = stub->icEntry()->pc(script);
     FallbackICSpew(cx, stub, "GetPropSuper(%s)", CodeName[JSOp(*pc)]);
 
     MOZ_ASSERT(JSOp(*pc) == JSOP_GETPROP_SUPER);
@@ -2663,11 +2952,6 @@ DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* 
 
     StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
     TypeScript::Monitor(cx, script, pc, types, res);
-
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
 
     // Add a type monitor stub for the resulting value.
     if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
@@ -2754,11 +3038,9 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
 //
 
 static bool
-DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_, Value* stack,
+DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub, Value* stack,
                   HandleValue lhs, HandleValue rhs)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICSetProp_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -2877,11 +3159,6 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
     // Overwrite the LHS on the stack (pushed for the decompiler) with the RHS.
     MOZ_ASSERT(stack[1] == lhs);
     stack[1] = rhs;
-
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
 
     if (attached) {
         return true;
@@ -3570,11 +3847,9 @@ TryAttachConstStringSplit(JSContext* cx, ICCall_Fallback* stub, HandleScript scr
 }
 
 static bool
-DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint32_t argc,
+DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub, uint32_t argc,
                Value* vp, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICCall_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -3675,11 +3950,6 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
     TypeScript::Monitor(cx, script, pc, types, res);
 
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
-
     // Add a type monitor stub for the resulting value.
     if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
         return false;
@@ -3709,11 +3979,9 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
 }
 
 static bool
-DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, Value* vp,
+DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub, Value* vp,
                      MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICCall_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -3741,11 +4009,6 @@ DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_
 
     if (!SpreadCallOperation(cx, script, pc, thisv, callee, arr, newTarget, res)) {
         return false;
-    }
-
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
     }
 
     // Add a type monitor stub for the resulting value.
@@ -5141,22 +5404,15 @@ ICGetIterator_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-DoIteratorMoreFallback(JSContext* cx, BaselineFrame* frame, ICIteratorMore_Fallback* stub_,
+DoIteratorMoreFallback(JSContext* cx, BaselineFrame* frame, ICIteratorMore_Fallback* stub,
                        HandleObject iterObj, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICIteratorMore_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     FallbackICSpew(cx, stub, "IteratorMore");
 
     if (!IteratorMore(cx, iterObj, res)) {
         return false;
-    }
-
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
     }
 
     if (!res.isMagic(JS_NO_ITER_VALUE) && !res.isString()) {
@@ -5275,11 +5531,9 @@ ICIteratorClose_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback* stub_,
+DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback* stub,
                      HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICInstanceOf_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     FallbackICSpew(cx, stub, "InstanceOf");
@@ -5296,11 +5550,6 @@ DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback*
     }
 
     res.setBoolean(cond);
-
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
 
     if (!obj->is<JSFunction>()) {
         // ensure we've recorded at least one failure, so we can detect there was a non-optimizable case
@@ -5406,21 +5655,6 @@ ICCall_Scripted::ICCall_Scripted(JitCode* stubCode, ICStub* firstMonitorStub,
     pcOffset_(pcOffset)
 { }
 
-/* static */ ICCall_Scripted*
-ICCall_Scripted::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                       ICCall_Scripted& other)
-{
-    return New<ICCall_Scripted>(cx, space, other.jitCode(), firstMonitorStub, other.callee_,
-                                other.templateObject_, other.pcOffset_);
-}
-
-/* static */ ICCall_AnyScripted*
-ICCall_AnyScripted::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                          ICCall_AnyScripted& other)
-{
-    return New<ICCall_AnyScripted>(cx, space, other.jitCode(), firstMonitorStub, other.pcOffset_);
-}
-
 ICCall_Native::ICCall_Native(JitCode* stubCode, ICStub* firstMonitorStub,
                              JSFunction* callee, JSObject* templateObject,
                              uint32_t pcOffset)
@@ -5438,14 +5672,6 @@ ICCall_Native::ICCall_Native(JitCode* stubCode, ICStub* firstMonitorStub,
 #endif
 }
 
-/* static */ ICCall_Native*
-ICCall_Native::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                     ICCall_Native& other)
-{
-    return New<ICCall_Native>(cx, space, other.jitCode(), firstMonitorStub, other.callee_,
-                              other.templateObject_, other.pcOffset_);
-}
-
 ICCall_ClassHook::ICCall_ClassHook(JitCode* stubCode, ICStub* firstMonitorStub,
                                    const Class* clasp, Native native,
                                    JSObject* templateObject, uint32_t pcOffset)
@@ -5461,45 +5687,6 @@ ICCall_ClassHook::ICCall_ClassHook(JitCode* stubCode, ICStub* firstMonitorStub,
     // pointer in the stub.
     native_ = Simulator::RedirectNativeFunction(native_, Args_General3);
 #endif
-}
-
-/* static */ ICCall_ClassHook*
-ICCall_ClassHook::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                        ICCall_ClassHook& other)
-{
-    ICCall_ClassHook* res = New<ICCall_ClassHook>(cx, space, other.jitCode(), firstMonitorStub,
-                                                  other.clasp(), nullptr, other.templateObject_,
-                                                  other.pcOffset_);
-    if (res) {
-        res->native_ = other.native();
-    }
-    return res;
-}
-
-/* static */ ICCall_ScriptedApplyArray*
-ICCall_ScriptedApplyArray::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                                 ICCall_ScriptedApplyArray& other)
-{
-    return New<ICCall_ScriptedApplyArray>(cx, space, other.jitCode(), firstMonitorStub,
-                                          other.pcOffset_);
-}
-
-/* static */ ICCall_ScriptedApplyArguments*
-ICCall_ScriptedApplyArguments::Clone(JSContext* cx,
-                                     ICStubSpace* space,
-                                     ICStub* firstMonitorStub,
-                                     ICCall_ScriptedApplyArguments& other)
-{
-    return New<ICCall_ScriptedApplyArguments>(cx, space, other.jitCode(), firstMonitorStub,
-                                              other.pcOffset_);
-}
-
-/* static */ ICCall_ScriptedFunCall*
-ICCall_ScriptedFunCall::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                              ICCall_ScriptedFunCall& other)
-{
-    return New<ICCall_ScriptedFunCall>(cx, space, other.jitCode(), firstMonitorStub,
-                                       other.pcOffset_);
 }
 
 //
@@ -5548,8 +5735,6 @@ static bool
 DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback* stub,
                      HandleValue val, MutableHandleValue res)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICUnaryArith_Fallback*> debug_stub(frame, stub);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -5575,11 +5760,6 @@ DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback*
       }
       default:
         MOZ_CRASH("Unexpected op");
-    }
-
-    // Check if debug mode toggling made the stub invalid.
-    if (debug_stub.invalid()) {
-        return true;
     }
 
     if (res.isDouble()) {
@@ -5620,11 +5800,9 @@ ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallback* stub_,
+DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallback* stub,
                       HandleValue lhs, HandleValue rhs, MutableHandleValue ret)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICBinaryArith_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -5712,11 +5890,6 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
         MOZ_CRASH("Unhandled baseline arith op");
     }
 
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
-
     if (ret.isDouble()) {
         stub->setSawDoubleResult();
     }
@@ -5756,11 +5929,9 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 // Compare_Fallback
 //
 static bool
-DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_, HandleValue lhs,
+DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub, HandleValue lhs,
                   HandleValue rhs, MutableHandleValue ret)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICCompare_Fallback*> stub(frame, stub_);
     stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
@@ -5823,11 +5994,6 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
     }
 
     ret.setBoolean(out);
-
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
 
     TryAttachStub<CompareIRGenerator>("Compare", cx, frame, stub, BaselineCacheIRStubKind::Regular, op, lhs, rhs);
     return true;

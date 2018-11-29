@@ -144,7 +144,6 @@ class StreamTracks {
 
   StreamTracks()
       : mGraphRate(0),
-        mTracksKnownTime(0),
         mForgottenTime(0),
         mTracksDirty(false)
 #ifdef DEBUG
@@ -194,35 +193,21 @@ class StreamTracks {
     mTracks.InsertElementSorted(track, CompareTracksByID());
     mTracksDirty = true;
 
-    if (mTracksKnownTime == STREAM_TIME_MAX) {
-      // There exists code like
-      // http://mxr.mozilla.org/mozilla-central/source/media/webrtc/signaling/src/mediapipeline/MediaPipeline.cpp?rev=96b197deb91e&mark=1292-1297#1292
-      NS_WARNING(
-          "Adding track to StreamTracks that should have no more tracks");
-    } else {
-      // NS_ASSERTION(mTracksKnownTime <= aStart, "Start time too early");
-    }
     return *track;
-  }
-
-  void AdvanceKnownTracksTime(StreamTime aKnownTime) {
-    NS_ASSERTION(aKnownTime >= mTracksKnownTime,
-                 "Can't move tracks-known time earlier");
-    mTracksKnownTime = aKnownTime;
   }
 
   /**
    * The end time for the StreamTracks is the latest time for which we have
    * data for all tracks that haven't ended by that time.
    */
-  StreamTime GetEnd() const;
+  StreamTime GetEarliestTrackEnd() const;
 
   /**
-   * Returns the earliest time >= 0 at which all tracks have ended
-   * and all their data has been played out and no new tracks can be added,
-   * or STREAM_TIME_MAX if there is no such time.
+   * Returns the earliest time >= 0 at which all tracks have ended and all
+   * their data has been played out, or STREAM_TIME_MAX if there is no such
+   * time.
    */
-  StreamTime GetAllTracksEnd() const;
+  StreamTime GetLatestTrackEnd() const;
 
 #ifdef DEBUG
   void DumpTrackInfo() const;
@@ -299,9 +284,6 @@ class StreamTracks {
 
  protected:
   TrackRate mGraphRate;  // StreamTime per second
-  // Any new tracks added will start at or after this time. In other words, the
-  // track list is complete and correct for all times less than this time.
-  StreamTime mTracksKnownTime;
   StreamTime mForgottenTime;
 
  private:

@@ -12,9 +12,9 @@ add_task(async function test_theme_transition_effects() {
     manifest: {
       "theme": {
         "colors": {
-          "textcolor": TEXT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar": TOOLBAR,
-          "toolbar_text": TEXT_COLOR,
+          "bookmark_text": TEXT_COLOR,
         },
       },
     },

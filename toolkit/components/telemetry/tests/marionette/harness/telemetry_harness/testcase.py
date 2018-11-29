@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 import simplejson as json
 import time
 import zlib
@@ -13,6 +14,12 @@ from marionette_driver.errors import MarionetteException
 from marionette_driver.wait import Wait
 from marionette_harness import MarionetteTestCase
 from marionette_harness.runner import httpd
+
+
+CANARY_CLIENT_ID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0"
+UUID_PATTERN = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+)
 
 
 class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
@@ -80,6 +87,21 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
 
         # Wait 5 seconds to ensure that telemetry has reinitialized
         time.sleep(5)
+
+    def assertIsValidUUID(self, value):
+        """Check if the given UUID is valid."""
+        self.assertIsNotNone(value)
+        self.assertNotEqual(value, "")
+
+        # Check for client ID that is used when Telemetry upload is disabled
+        self.assertNotEqual(
+            value, CANARY_CLIENT_ID, msg="UUID is CANARY CLIENT ID"
+        )
+
+        self.assertIsNotNone(
+            re.match(UUID_PATTERN, value),
+            msg="UUID does not match regular expression",
+        )
 
     def wait_for_pings(self, action_func, ping_filter, count):
         """Call the given action and wait for pings to come in and return

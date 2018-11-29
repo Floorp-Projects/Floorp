@@ -5,12 +5,12 @@ add_task(async function test_support_backgrounds_position() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "face1.png",
+          "theme_frame": "face1.png",
           "additional_backgrounds": ["face2.png", "face2.png", "face2.png"],
         },
         "colors": {
-          "accentcolor": `rgb(${FRAME_COLOR.join(",")})`,
-          "textcolor": `rgb(${TAB_BACKGROUND_TEXT_COLOR.join(",")})`,
+          "frame": `rgb(${FRAME_COLOR.join(",")})`,
+          "tab_background_text": `rgb(${TAB_BACKGROUND_TEXT_COLOR.join(",")})`,
         },
         "properties": {
           "additional_backgrounds_alignment": ["left top", "center top", "right bottom"],
