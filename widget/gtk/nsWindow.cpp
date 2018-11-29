@@ -3996,15 +3996,6 @@ nsWindow::Create(nsIWidget* aParent,
               cairo_region_destroy(region);
             }
         }
-
-#ifdef MOZ_X11
-        // Set window manager hint to keep fullscreen windows composited.
-        //
-        // If the window were to get unredirected, there could be visible
-        // tearing because Gecko does not align its framebuffer updates with
-        // vblank.
-        SetCompositorHint(GTK_WIDGET_COMPOSIDED_ENABLED);
-#endif
     }
         break;
 
@@ -4211,6 +4202,15 @@ nsWindow::Create(nsIWidget* aParent,
 
       mSurfaceProvider.Initialize(mXDisplay, mXWindow, mXVisual, mXDepth,
                                   shaped);
+
+      if (mIsTopLevel) {
+        // Set window manager hint to keep fullscreen windows composited.
+        //
+        // If the window were to get unredirected, there could be visible
+        // tearing because Gecko does not align its framebuffer updates with
+        // vblank.
+        SetCompositorHint(GTK_WIDGET_COMPOSIDED_ENABLED);
+      }
     }
 #ifdef MOZ_WAYLAND
     else if (!mIsX11Display) {
@@ -7400,7 +7400,8 @@ nsWindow::SetProgress(unsigned long progressPercent)
 void
 nsWindow::SetCompositorHint(WindowComposeRequest aState)
 {
-    if (mIsX11Display) {
+    if (mIsX11Display &&
+        (!GetLayerManager() || GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC)) {
         gulong value = aState;
         GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
         gdk_property_change(gtk_widget_get_window(mShell),

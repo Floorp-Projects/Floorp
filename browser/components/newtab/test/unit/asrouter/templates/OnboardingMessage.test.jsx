@@ -6,10 +6,12 @@ const DEFAULT_CONTENT = {
   "title": "A title",
   "text": "A description",
   "icon": "icon",
-  "button_label": "some_button_label",
-  "button_action": {
-    "type": "SOME_TYPE",
-    "data": {"args": "example.com"},
+  "primary_button": {
+    "label": "some_button_label",
+    "action": {
+      "type": "SOME_TYPE",
+      "data": {"args": "example.com"},
+    },
   },
 };
 
@@ -17,8 +19,10 @@ const L10N_CONTENT = {
   "title": {string_id: "onboarding-private-browsing-title"},
   "text": {string_id: "onboarding-private-browsing-text"},
   "icon": "icon",
-  "button_label": {string_id: "onboarding-button-label-try-now"},
-  "button_action": {type: "SOME_TYPE"},
+  "primary_button": {
+    "label": {string_id: "onboarding-button-label-try-now"},
+    "action": {type: "SOME_TYPE"},
+  },
 };
 
 describe("OnboardingMessage", () => {

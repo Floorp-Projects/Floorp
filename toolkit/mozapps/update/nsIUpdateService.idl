@@ -363,48 +363,6 @@ interface nsIApplicationUpdateService : nsISupports
   readonly attribute boolean canCheckForUpdates;
 
   /**
-   * Determines whether or not the Update Service automatically downloads and
-   * installs updates. This corresponds to whether or not the user has selected
-   * "Automatically install updates" in about:preferences.
-   *
-   * On Windows, this setting is shared across all profiles for the
-   * installation. On other operating systems, this setting is stored in a pref
-   * and is thus a per-profile setting.
-   *
-   * Note: On Windows, this setting is stored in a file on the disk, so this
-   *       operation involves reading that file.
-   *
-   * @return A Promise that resolves with a boolean.
-   */
-  jsval getAutoUpdateIsEnabled();
-
-  /**
-   * Toggles whether the Update Service automatically downloads and installs
-   * updates. This effectively selects between the "Automatically install
-   * updates" and "Check for updates but let you choose to install them" options
-   * in about:preferences.
-   *
-   * On Windows, this setting is shared across all profiles for the
-   * installation. On other operating systems, this setting is stored in a pref
-   * and is thus a per-profile setting.
-   *
-   * Note: On Windows, this setting is stored in a file on disk, so this
-   *       operation involves writing to that file.
-   *
-   * @param enabled If set to true, automatic download and installation of
-   *                updates will be enabled. If set to false, this will be
-   *                disabled.
-   * @return A Promise that, once the setting has been saved, resolves with the
-   *         boolean value that was saved. If the setting could not be
-   *         successfully saved, the Promise will reject.
-   *         On Windows, where this setting is stored in a file, this Promise
-   *         may reject with an I/O error.
-   *         On other operating systems, this promise should not reject as
-   *         this operation simply sets a pref.
-   */
-  jsval setAutoUpdateIsEnabled(in boolean enabled);
-
-  /**
    * Whether or not the installation requires elevation. Currently only
    * implemented on OSX, returns false on other platforms.
    */

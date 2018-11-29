@@ -152,10 +152,8 @@ function writeFiles(name, destPath, filesMap, {html, state}, options) {
 
 const STATIC_FILES = new Map([
   ["activity-stream-debug.html", ({options}) => templateHTML(options)],
-  ["activity-stream-debug-noscripts.html", ({options}) => templateHTML(Object.assign({}, options, {noscripts: true}))],
   ["activity-stream-initial-state.js", ({state}) => templateJs("gActivityStreamPrerenderedState", "static", state)],
   ["activity-stream-prerendered-debug.html", ({html, options}) => templateHTML(options, html)],
-  ["activity-stream-prerendered-debug-noscripts.html", ({html, options}) => templateHTML(Object.assign({}, options, {noscripts: true}), html)],
 ]);
 
 const LOCALIZED_FILES = new Map([

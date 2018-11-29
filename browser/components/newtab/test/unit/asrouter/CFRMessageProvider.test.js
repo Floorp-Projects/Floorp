@@ -5,15 +5,16 @@ const REGULAR_IDS = [
   "FACEBOOK_CONTAINER",
   "GOOGLE_TRANSLATE",
   "YOUTUBE_ENHANCE",
-  "WIKIPEDIA_CONTEXT_MENU_SEARCH",
-  "REDDIT_ENHANCEMENT",
+  // These are excluded for now.
+  // "WIKIPEDIA_CONTEXT_MENU_SEARCH",
+  // "REDDIT_ENHANCEMENT",
 ];
 
 describe("CFRMessageProvider", () => {
-  it("should have a total of 5 messages", () => {
-    assert.lengthOf(messages, 5);
+  it("should have a total of 3 messages", () => {
+    assert.lengthOf(messages, 3);
   });
-  it("should have one message each for the five regular addons", () => {
+  it("should have one message each for the three regular addons", () => {
     for (const id of REGULAR_IDS) {
       const cohort3 = messages.find(msg => msg.id === `${id}_3`);
       assert.ok(cohort3, `contains three day cohort for ${id}`);

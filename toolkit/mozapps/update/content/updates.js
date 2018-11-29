@@ -11,6 +11,8 @@
 ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/UpdateTelemetry.jsm", this);
+ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gAUS",
                                    "@mozilla.org/updates/update-service;1",
@@ -264,9 +266,9 @@ var gUpdates = {
    *   should remain active for the duration of the download.
    * SRCEVT_BACKGROUND:
    *   A background update check caused this UI to appear, probably because
-   *   nsIApplicationUpdateService::getAutoUpdateIsEnabled returned false,
-   *   indicating that the user has selected the setting "Check for updates but
-   *   let you choose to install them".
+   *   UpdateUtils.getAppUpdateAutoEnabled returned false, indicating that the
+   *   user has selected the setting "Check for updates but let you choose to
+   *   install them".
    */
   sourceEvent: SRCEVT_FOREGROUND,
 
@@ -563,7 +565,7 @@ var gNoUpdatesPage = {
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
 
-    let autoUpdateEnabled = await gAUS.getAutoUpdateIsEnabled();
+    let autoUpdateEnabled = await UpdateUtils.getAppUpdateAutoEnabled();
     if (autoUpdateEnabled)
       document.getElementById("noUpdatesAutoEnabled").hidden = false;
     else
