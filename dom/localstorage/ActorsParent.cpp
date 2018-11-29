@@ -888,6 +888,128 @@ DetachShadowDatabase(mozIStorageConnection* aConnection)
  * Non-actor class declarations
  ******************************************************************************/
 
+class WriteOptimizer final
+{
+  class WriteInfo;
+  class AddItemInfo;
+  class UpdateItemInfo;
+  class RemoveItemInfo;
+
+  nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
+  bool mClearedWriteInfos;
+
+public:
+  WriteOptimizer()
+    : mClearedWriteInfos(false)
+  { }
+
+  void
+  AddItem(const nsString& aKey,
+          const nsString& aValue);
+
+  void
+  UpdateItem(const nsString& aKey,
+             const nsString& aValue);
+
+  void
+  RemoveItem(const nsString& aKey);
+
+  void
+  Clear();
+
+  void
+  ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems);
+};
+
+class WriteOptimizer::WriteInfo
+{
+public:
+  enum Type {
+    AddItem = 0,
+    UpdateItem,
+    RemoveItem
+  };
+
+  virtual Type
+  GetType() = 0;
+
+  virtual ~WriteInfo() = default;
+};
+
+class WriteOptimizer::AddItemInfo
+  : public WriteInfo
+{
+  nsString mKey;
+  nsString mValue;
+
+public:
+  AddItemInfo(const nsAString& aKey,
+              const nsAString& aValue)
+    : mKey(aKey)
+    , mValue(aValue)
+  { }
+
+  const nsAString&
+  GetKey() const
+  {
+    return mKey;
+  }
+
+  const nsAString&
+  GetValue() const
+  {
+    return mValue;
+  }
+
+private:
+  Type
+  GetType() override
+  {
+    return AddItem;
+  }
+};
+
+class WriteOptimizer::UpdateItemInfo final
+  : public AddItemInfo
+{
+public:
+  UpdateItemInfo(const nsAString& aKey,
+                 const nsAString& aValue)
+    : AddItemInfo(aKey, aValue)
+  { }
+
+private:
+  Type
+  GetType() override
+  {
+    return UpdateItem;
+  }
+};
+
+class WriteOptimizer::RemoveItemInfo final
+  : public WriteInfo
+{
+  nsString mKey;
+
+public:
+  explicit RemoveItemInfo(const nsAString& aKey)
+    : mKey(aKey)
+  { }
+
+  const nsAString&
+  GetKey() const
+  {
+    return mKey;
+  }
+
+private:
+  Type
+  GetType() override
+  {
+    return RemoveItem;
+  }
+};
+
 class DatastoreOperationBase
   : public Runnable
 {
@@ -1297,15 +1419,15 @@ class Datastore final
   nsTHashtable<nsPtrHashKey<Database>> mDatabases;
   nsTHashtable<nsPtrHashKey<Database>> mActiveDatabases;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
-  nsDataHashtable<nsStringHashKey, uint32_t> mUpdateBatchRemovals;
-  nsTArray<nsString> mUpdateBatchAppends;
-  nsTArray<nsString> mKeys;
+  nsTArray<LSItemInfo> mOrderedItems;
   nsTArray<int64_t> mPendingUsageDeltas;
+  WriteOptimizer mWriteOptimizer;
   const nsCString mOrigin;
   const uint32_t mPrivateBrowsingId;
   int64_t mUsage;
   int64_t mUpdateBatchUsage;
   int64_t mSizeOfKeys;
+  int64_t mSizeOfItems;
   bool mClosed;
 #ifdef DEBUG
   bool mInUpdateBatch;
@@ -1317,11 +1439,12 @@ public:
             uint32_t aPrivateBrowsingId,
             int64_t aUsage,
             int64_t aSizeOfKeys,
+            int64_t aSizeOfItems,
             already_AddRefed<DirectoryLock>&& aDirectoryLock,
             already_AddRefed<Connection>&& aConnection,
             already_AddRefed<QuotaObject>&& aQuotaObject,
             nsDataHashtable<nsStringHashKey, nsString>& aValues,
-            nsTArray<nsString>& aKeys);
+            nsTArray<LSItemInfo>& aOrderedItems);
 
   const nsCString&
   Origin() const
@@ -1949,7 +2072,7 @@ class PrepareDatastoreOp
   nsAutoPtr<ArchivedOriginInfo> mArchivedOriginInfo;
   LoadDataOp* mLoadDataOp;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
-  nsTArray<nsString> mKeys;
+  nsTArray<LSItemInfo> mOrderedItems;
   const LSRequestPrepareDatastoreParams mParams;
   nsCString mSuffix;
   nsCString mGroup;
@@ -1959,6 +2082,7 @@ class PrepareDatastoreOp
   uint32_t mPrivateBrowsingId;
   int64_t mUsage;
   int64_t mSizeOfKeys;
+  int64_t mSizeOfItems;
   NestedState mNestedState;
   bool mDatabaseNotAvailable;
   bool mRequestedDirectoryLock;
@@ -2897,6 +3021,122 @@ CreateQuotaClient()
 } // namespace localstorage
 
 /*******************************************************************************
+ * WriteOptimizer
+ ******************************************************************************/
+
+void
+WriteOptimizer::AddItem(const nsString& aKey,
+                        const nsString& aValue)
+{
+  AssertIsOnBackgroundThread();
+
+  WriteInfo* existingWriteInfo;
+  nsAutoPtr<WriteInfo> newWriteInfo;
+  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
+      existingWriteInfo->GetType() == WriteInfo::RemoveItem) {
+    newWriteInfo = new UpdateItemInfo(aKey, aValue);
+  } else {
+    newWriteInfo = new AddItemInfo(aKey, aValue);
+  }
+  mWriteInfos.Put(aKey, newWriteInfo.forget());
+}
+
+void
+WriteOptimizer::UpdateItem(const nsString& aKey,
+                           const nsString& aValue)
+{
+  AssertIsOnBackgroundThread();
+
+  WriteInfo* existingWriteInfo;
+  nsAutoPtr<WriteInfo> newWriteInfo;
+  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
+      existingWriteInfo->GetType() == WriteInfo::AddItem) {
+    newWriteInfo = new AddItemInfo(aKey, aValue);
+  } else {
+    newWriteInfo = new UpdateItemInfo(aKey, aValue);
+  }
+  mWriteInfos.Put(aKey, newWriteInfo.forget());
+}
+
+void
+WriteOptimizer::RemoveItem(const nsString& aKey)
+{
+  AssertIsOnBackgroundThread();
+
+  WriteInfo* existingWriteInfo;
+  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
+      existingWriteInfo->GetType() == WriteInfo::AddItem) {
+    mWriteInfos.Remove(aKey);
+    return;
+  }
+
+  nsAutoPtr<WriteInfo> newWriteInfo(new RemoveItemInfo(aKey));
+  mWriteInfos.Put(aKey, newWriteInfo.forget());
+}
+
+void
+WriteOptimizer::Clear()
+{
+  AssertIsOnBackgroundThread();
+
+  mWriteInfos.Clear();
+  mClearedWriteInfos = true;
+}
+
+void
+WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems)
+{
+  if (mClearedWriteInfos) {
+    aOrderedItems.Clear();
+    mClearedWriteInfos = false;
+  }
+
+  for (int32_t index = aOrderedItems.Length() - 1;
+       index >= 0;
+       index--) {
+    LSItemInfo& item = aOrderedItems[index];
+
+    if (auto entry = mWriteInfos.Lookup(item.key())) {
+      WriteInfo* writeInfo = entry.Data();
+
+      switch (writeInfo->GetType()) {
+        case WriteInfo::RemoveItem:
+          aOrderedItems.RemoveElementAt(index);
+          entry.Remove();
+          break;
+
+        case WriteInfo::UpdateItem: {
+          auto updateItemInfo = static_cast<UpdateItemInfo*>(writeInfo);
+          item.value() = updateItemInfo->GetValue();
+          entry.Remove();
+          break;
+        }
+
+        case WriteInfo::AddItem:
+          break;
+
+        default:
+          MOZ_CRASH("Bad type!");
+      }
+    }
+  }
+
+  for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
+    WriteInfo* writeInfo = iter.Data();
+
+    MOZ_ASSERT(writeInfo->GetType() == WriteInfo::AddItem);
+
+    auto addItemInfo = static_cast<AddItemInfo*>(writeInfo);
+
+    LSItemInfo* itemInfo = aOrderedItems.AppendElement();
+    itemInfo->key() = addItemInfo->GetKey();
+    itemInfo->value() = addItemInfo->GetValue();
+  }
+
+  mWriteInfos.Clear();
+}
+
+/*******************************************************************************
  * DatastoreOperationBase
  ******************************************************************************/
 
@@ -3546,11 +3786,12 @@ Datastore::Datastore(const nsACString& aOrigin,
                      uint32_t aPrivateBrowsingId,
                      int64_t aUsage,
                      int64_t aSizeOfKeys,
+                     int64_t aSizeOfItems,
                      already_AddRefed<DirectoryLock>&& aDirectoryLock,
                      already_AddRefed<Connection>&& aConnection,
                      already_AddRefed<QuotaObject>&& aQuotaObject,
                      nsDataHashtable<nsStringHashKey, nsString>& aValues,
-                     nsTArray<nsString>& aKeys)
+                     nsTArray<LSItemInfo>& aOrderedItems)
   : mDirectoryLock(std::move(aDirectoryLock))
   , mConnection(std::move(aConnection))
   , mQuotaObject(std::move(aQuotaObject))
@@ -3559,6 +3800,7 @@ Datastore::Datastore(const nsACString& aOrigin,
   , mUsage(aUsage)
   , mUpdateBatchUsage(-1)
   , mSizeOfKeys(aSizeOfKeys)
+  , mSizeOfItems(aSizeOfItems)
   , mClosed(false)
 #ifdef DEBUG
   , mInUpdateBatch(false)
@@ -3567,7 +3809,7 @@ Datastore::Datastore(const nsACString& aOrigin,
   AssertIsOnBackgroundThread();
 
   mValues.SwapElements(aValues);
-  mKeys.SwapElements(aKeys);
+  mOrderedItems.SwapElements(aOrderedItems);
 }
 
 Datastore::~Datastore()
@@ -3773,43 +4015,47 @@ Datastore::GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(!mInUpdateBatch);
 
 #ifdef DEBUG
   int64_t sizeOfKeys = 0;
-  for (auto key : mKeys) {
-    sizeOfKeys += static_cast<int64_t>(key.Length());
+  int64_t sizeOfItems = 0;
+  for (auto item : mOrderedItems) {
+    int64_t sizeOfKey = static_cast<int64_t>(item.key().Length());
+    sizeOfKeys += sizeOfKey;
+    sizeOfItems += sizeOfKey + static_cast<int64_t>(item.value().Length());
   }
   MOZ_ASSERT(mSizeOfKeys == sizeOfKeys);
+  MOZ_ASSERT(mSizeOfItems == sizeOfItems);
 #endif
 
   int64_t size = 0;
   if (mSizeOfKeys <= gSnapshotPrefill) {
-    nsString value;
-    for (auto key : mKeys) {
-      if (!value.IsVoid()) {
-        DebugOnly<bool> hasValue = mValues.Get(key, &value);
-        MOZ_ASSERT(hasValue);
+    if (mSizeOfItems <= gSnapshotPrefill) {
+      aItemInfos.AppendElements(mOrderedItems);
+      aLoadState = LSSnapshot::LoadState::AllOrderedItems;
+    } else {
+      nsString value;
+      for (auto item : mOrderedItems) {
+        if (!value.IsVoid()) {
+          value = item.value();
 
-        size += static_cast<int64_t>(key.Length()) +
-                static_cast<int64_t>(value.Length());
+          size += static_cast<int64_t>(item.key().Length()) +
+                  static_cast<int64_t>(value.Length());
 
-        if (size > gSnapshotPrefill) {
-          value.SetIsVoid(true);
-        } else {
-          aLoadedItems.PutEntry(key);
+          if (size <= gSnapshotPrefill) {
+            aLoadedItems.PutEntry(item.key());
+          } else {
+            value.SetIsVoid(true);
+          }
         }
+
+        LSItemInfo* itemInfo = aItemInfos.AppendElement();
+        itemInfo->key() = item.key();
+        itemInfo->value() = value;
       }
 
-      LSItemInfo* itemInfo = aItemInfos.AppendElement();
-      itemInfo->key() = key;
-      itemInfo->value() = value;
-    }
-
-    if (value.IsVoid()) {
       aLoadState = LSSnapshot::LoadState::AllOrderedKeys;
-    } else {
-      aLoadedItems.Clear();
-      aLoadState = LSSnapshot::LoadState::AllOrderedItems;
     }
   } else {
     for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
@@ -3830,7 +4076,7 @@ Datastore::GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
       itemInfo->value() = iter.Data();
     }
 
-    MOZ_ASSERT(aItemInfos.Length() < mKeys.Length());
+    MOZ_ASSERT(aItemInfos.Length() < mOrderedItems.Length());
     aLoadState = LSSnapshot::LoadState::Partial;
   }
 
@@ -3857,7 +4103,9 @@ Datastore::GetKeys(nsTArray<nsString>& aKeys) const
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mClosed);
 
-  aKeys.AppendElements(mKeys);
+  for (auto item : mOrderedItems) {
+    aKeys.AppendElement(item.key());
+  }
 }
 
 void
@@ -3883,15 +4131,24 @@ Datastore::SetItem(Database* aDatabase,
     mValues.Put(aKey, aValue);
 
     if (isNewItem) {
-      mUpdateBatchAppends.AppendElement(aKey);
+      mWriteOptimizer.AddItem(aKey, aValue);
 
-      mUpdateBatchUsage += static_cast<int64_t>(aKey.Length()) +
-                           static_cast<int64_t>(aValue.Length());
+      int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
+      int64_t sizeOfItem = sizeOfKey + static_cast<int64_t>(aValue.Length());
 
-      mSizeOfKeys += static_cast<int64_t>(aKey.Length());
+      mUpdateBatchUsage += sizeOfItem;
+
+      mSizeOfKeys += sizeOfKey;
+      mSizeOfItems += sizeOfItem;
     } else {
-      mUpdateBatchUsage += static_cast<int64_t>(aValue.Length()) -
-                           static_cast<int64_t>(oldValue.Length());
+      mWriteOptimizer.UpdateItem(aKey, aValue);
+
+      int64_t delta = static_cast<int64_t>(aValue.Length()) -
+                      static_cast<int64_t>(oldValue.Length());
+
+      mUpdateBatchUsage += delta;
+
+      mSizeOfItems += delta;
     }
 
     if (IsPersistent()) {
@@ -3921,17 +4178,15 @@ Datastore::RemoveItem(Database* aDatabase,
 
     mValues.Remove(aKey);
 
-    auto entry = mUpdateBatchRemovals.LookupForAdd(aKey);
-    if (entry) {
-      entry.Data()++;
-    } else {
-      entry.OrInsert([]() { return 1; });
-    }
+    mWriteOptimizer.RemoveItem(aKey);
 
-    mUpdateBatchUsage -= (static_cast<int64_t>(aKey.Length()) +
-                          static_cast<int64_t>(oldValue.Length()));
+    int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
+    int64_t sizeOfItem = sizeOfKey + static_cast<int64_t>(oldValue.Length());
 
-    mSizeOfKeys -= static_cast<int64_t>(aKey.Length());
+    mUpdateBatchUsage -= sizeOfItem;
+
+    mSizeOfKeys -= sizeOfKey;
+    mSizeOfItems -= sizeOfItem;
 
     if (IsPersistent()) {
       mConnection->RemoveItem(aKey);
@@ -3964,14 +4219,12 @@ Datastore::Clear(Database* aDatabase,
 
     mValues.Clear();
 
-    mUpdateBatchRemovals.Clear();
-    mUpdateBatchAppends.Clear();
-
-    mKeys.Clear();
+    mWriteOptimizer.Clear();
 
     mUpdateBatchUsage = updateBatchUsage;
 
     mSizeOfKeys = 0;
+    mSizeOfItems = 0;
 
     if (IsPersistent()) {
       mConnection->Clear();
@@ -3998,9 +4251,10 @@ Datastore::PrivateBrowsingClear()
 
     mValues.Clear();
 
-    mKeys.Clear();
+    mOrderedItems.Clear();
 
     mSizeOfKeys = 0;
+    mSizeOfItems = 0;
   }
 }
 
@@ -4032,26 +4286,7 @@ Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage)
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mInUpdateBatch);
 
-  if (mUpdateBatchAppends.Length()) {
-    mKeys.AppendElements(std::move(mUpdateBatchAppends));
-  }
-
-  if (mUpdateBatchRemovals.Count()) {
-    RefPtr<Datastore> self = this;
-
-    mKeys.RemoveElementsBy([self](const nsString& aKey) {
-      if (auto entry = self->mUpdateBatchRemovals.Lookup(aKey)) {
-        if (--entry.Data() == 0) {
-          entry.Remove();
-        }
-        return true;
-      }
-      return false;
-    });
-  }
-
-  MOZ_ASSERT(mUpdateBatchAppends.Length() == 0);
-  MOZ_ASSERT(mUpdateBatchRemovals.Count() == 0);
+  mWriteOptimizer.ApplyWrites(mOrderedItems);
 
   int64_t delta = mUpdateBatchUsage - aSnapshotPeakUsage;
 
@@ -5091,6 +5326,7 @@ PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
   , mPrivateBrowsingId(0)
   , mUsage(0)
   , mSizeOfKeys(0)
+  , mSizeOfItems(0)
   , mNestedState(NestedState::BeforeNesting)
   , mDatabaseNotAvailable(false)
   , mRequestedDirectoryLock(false)
@@ -5902,11 +6138,12 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
                                mPrivateBrowsingId,
                                mUsage,
                                mSizeOfKeys,
+                               mSizeOfItems,
                                mDirectoryLock.forget(),
                                mConnection.forget(),
                                quotaObject.forget(),
                                mValues,
-                               mKeys);
+                               mOrderedItems);
 
     mDatastore->NoteLivePrepareDatastoreOp(this);
 
@@ -6116,8 +6353,11 @@ LoadDataOp::DoDatastoreWork()
     }
 
     mPrepareDatastoreOp->mValues.Put(key, value);
-    mPrepareDatastoreOp->mKeys.AppendElement(key);
+    auto item = mPrepareDatastoreOp->mOrderedItems.AppendElement();
+    item->key() = key;
+    item->value() = value;
     mPrepareDatastoreOp->mSizeOfKeys += key.Length();
+    mPrepareDatastoreOp->mSizeOfItems += key.Length() + value.Length();
 #ifdef DEBUG
     mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.Length();
 #endif
