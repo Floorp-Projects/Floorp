@@ -92,9 +92,8 @@ NeckoParent::NeckoParent()
   }
 }
 
-/* static */ PBOverrideStatus
-NeckoParent::PBOverrideStatusFromLoadContext(
-  const SerializedLoadContext& aSerialized)
+static PBOverrideStatus
+PBOverrideStatusFromLoadContext(const SerializedLoadContext& aSerialized)
 {
   if (!aSerialized.IsNotNull() && aSerialized.IsPrivateBitValid()) {
     return (aSerialized.mOriginAttributes.mPrivateBrowsingId > 0) ?
@@ -104,9 +103,8 @@ NeckoParent::PBOverrideStatusFromLoadContext(
   return kPBOverride_Unset;
 }
 
-/* static */ already_AddRefed<nsIPrincipal>
-NeckoParent::GetRequestingPrincipal(
-  const OptionalLoadInfoArgs& aOptionalLoadInfoArgs)
+static already_AddRefed<nsIPrincipal>
+GetRequestingPrincipal(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs)
 {
   if (aOptionalLoadInfoArgs.type() != OptionalLoadInfoArgs::TLoadInfoArgs) {
     return nullptr;
@@ -126,8 +124,8 @@ NeckoParent::GetRequestingPrincipal(
   return PrincipalInfoToPrincipal(principalInfo);
 }
 
-/* static */ already_AddRefed<nsIPrincipal>
-NeckoParent::GetRequestingPrincipal(const HttpChannelCreationArgs& aArgs)
+static already_AddRefed<nsIPrincipal>
+GetRequestingPrincipal(const HttpChannelCreationArgs& aArgs)
 {
   if (aArgs.type() != HttpChannelCreationArgs::THttpChannelOpenArgs) {
     return nullptr;
@@ -137,8 +135,8 @@ NeckoParent::GetRequestingPrincipal(const HttpChannelCreationArgs& aArgs)
   return GetRequestingPrincipal(args.loadInfo());
 }
 
-/* static */ already_AddRefed<nsIPrincipal>
-NeckoParent::GetRequestingPrincipal(const FTPChannelCreationArgs& aArgs)
+static already_AddRefed<nsIPrincipal>
+GetRequestingPrincipal(const FTPChannelCreationArgs& aArgs)
 {
   if (aArgs.type() != FTPChannelCreationArgs::TFTPChannelOpenArgs) {
     return nullptr;
@@ -159,7 +157,7 @@ void CrashWithReason(const char * reason)
 #endif
 }
 
-/* static */ const char*
+const char*
 NeckoParent::GetValidatedOriginAttributes(const SerializedLoadContext& aSerialized,
                                           PContentParent* aContent,
                                           nsIPrincipal* aRequestingPrincipal,
@@ -235,7 +233,7 @@ NeckoParent::GetValidatedOriginAttributes(const SerializedLoadContext& aSerializ
   return "App does not have permission";
 }
 
-/* static */ const char *
+const char *
 NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                                       PContentParent* aContent,
                                       const SerializedLoadContext& aSerialized,
@@ -286,9 +284,25 @@ NeckoParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 PHttpChannelParent*
-NeckoParent::AllocPHttpChannelParent()
+NeckoParent::AllocPHttpChannelParent(const PBrowserOrId& aBrowser,
+                                     const SerializedLoadContext& aSerialized,
+                                     const HttpChannelCreationArgs& aOpenArgs)
 {
-  HttpChannelParent* p = new HttpChannelParent();
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+    GetRequestingPrincipal(aOpenArgs);
+
+  nsCOMPtr<nsILoadContext> loadContext;
+  const char *error = CreateChannelLoadContext(aBrowser, Manager(),
+                                               aSerialized, requestingPrincipal,
+                                               loadContext);
+  if (error) {
+    printf_stderr("NeckoParent::AllocPHttpChannelParent: "
+                  "FATAL error: %s: KILLING CHILD PROCESS\n",
+                  error);
+    return nullptr;
+  }
+  PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(aSerialized);
+  HttpChannelParent *p = new HttpChannelParent(aBrowser, loadContext, overrideStatus);
   p->AddRef();
   return p;
 }
@@ -299,6 +313,20 @@ NeckoParent::DeallocPHttpChannelParent(PHttpChannelParent* channel)
   HttpChannelParent *p = static_cast<HttpChannelParent *>(channel);
   p->Release();
   return true;
+}
+
+mozilla::ipc::IPCResult
+NeckoParent::RecvPHttpChannelConstructor(
+                      PHttpChannelParent* aActor,
+                      const PBrowserOrId& aBrowser,
+                      const SerializedLoadContext& aSerialized,
+                      const HttpChannelCreationArgs& aOpenArgs)
+{
+  HttpChannelParent* p = static_cast<HttpChannelParent*>(aActor);
+  if (!p->Init(aOpenArgs)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 PStunAddrsRequestParent*

@@ -71,6 +71,10 @@ nsXPCWrappedJS::CanSkip()
     if (obj && JS::ObjectIsMarkedGray(obj)) {
         return false;
     }
+    JSObject* global = GetJSObjectGlobalPreserveColor();
+    if (global && JS::ObjectIsMarkedGray(global)) {
+        return false;
+    }
 
     // For non-root wrappers, check if the root wrapper will be
     // added to the CC graph.
@@ -130,6 +134,8 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::TraverseNative
         MOZ_ASSERT(refcnt > 1);
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSObj");
         cb.NoteJSChild(JS::GCCellPtr(tmp->GetJSObjectPreserveColor()));
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSObjGlobal");
+        cb.NoteJSChild(JS::GCCellPtr(tmp->GetJSObjectGlobalPreserveColor()));
     }
 
     if (tmp->IsRootWrapper()) {

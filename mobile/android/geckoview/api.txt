@@ -331,8 +331,12 @@ package org.mozilla.geckoview {
     method public void onTitleChange(org.mozilla.geckoview.GeckoSession, java.lang.String);
   }
 
-  public static final class GeckoSession.ContentDelegate.ContextElement {
+  public static class GeckoSession.ContentDelegate.ContextElement {
     ctor protected ContextElement(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String);
+    field public static final int TYPE_AUDIO = 3;
+    field public static final int TYPE_IMAGE = 1;
+    field public static final int TYPE_NONE = 0;
+    field public static final int TYPE_VIDEO = 2;
     field public final java.lang.String altText;
     field public final java.lang.String linkUri;
     field public final java.lang.String srcUri;

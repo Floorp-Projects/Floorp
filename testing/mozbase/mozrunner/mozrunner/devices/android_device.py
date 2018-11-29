@@ -238,12 +238,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
         response = ''
         while not device.is_app_installed(app):
             try:
-                if 'fennec' not in app and 'firefox' not in app:
-                    response = raw_input(
-                        "It looks like %s is not installed on this device,\n"
-                        "but I don't know how to install it.\n"
-                        "Install it now, then hit Enter or quit to exit " % app)
-                else:
+                if 'fennec' in app or 'firefox' in app:
                     response = response = raw_input(
                         "It looks like %s is not installed on this device.\n"
                         "Install Firefox? (Y/n) or quit to exit " % app).strip()
@@ -251,6 +246,32 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
                         _log_info("Installing Firefox. This may take a while...")
                         build_obj._run_make(directory=".", target='install',
                                             ensure_exit_code=False)
+                elif app == 'org.mozilla.geckoview.test':
+                    response = response = raw_input(
+                        "It looks like %s is not installed on this device.\n"
+                        "Install geckoview AndroidTest? (Y/n) or quit to exit " % app).strip()
+                    if response.lower().startswith('y') or response == '':
+                        _log_info("Installing geckoview AndroidTest. This may take a while...")
+                        sub = 'geckoview:installWithGeckoBinariesDebugAndroidTest'
+                        build_obj._mach_context.commands.dispatch('gradle',
+                                                                  args=[sub],
+                                                                  context=build_obj._mach_context)
+                elif app == 'org.mozilla.geckoview_example':
+                    response = response = raw_input(
+                        "It looks like %s is not installed on this device.\n"
+                        "Install geckoview_example? (Y/n) or quit to exit " % app).strip()
+                    if response.lower().startswith('y') or response == '':
+                        _log_info("Installing geckoview_example. This may take a while...")
+                        sub = 'install-geckoview_example'
+                        build_obj._mach_context.commands.dispatch('android',
+                                                                  subcommand=sub,
+                                                                  args=[],
+                                                                  context=build_obj._mach_context)
+                else:
+                    response = raw_input(
+                        "It looks like %s is not installed on this device,\n"
+                        "but I don't know how to install it.\n"
+                        "Install it now, then hit Enter or quit to exit " % app)
             except EOFError:
                 response = 'quit'
             if response == 'quit':

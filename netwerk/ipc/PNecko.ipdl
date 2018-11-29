@@ -72,7 +72,9 @@ parent:
   async __delete__();
 
   nested(inside_cpow) async PCookieService();
-  async PHttpChannel();
+  async PHttpChannel(PBrowserOrId browser,
+                     SerializedLoadContext loadContext,
+                     HttpChannelCreationArgs args);
   async PWyciwygChannel();
   async PFTPChannel(PBrowserOrId browser, SerializedLoadContext loadContext,
                     FTPChannelCreationArgs args);

@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, createRef, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -61,6 +61,13 @@ class LayoutApp extends PureComponent {
     };
   }
 
+  constructor(props) {
+    super(props);
+    this.containerRef = createRef();
+
+    this.scrollToTop = this.scrollToTop.bind(this);
+  }
+
   getFlexboxHeader(flexContainer) {
     if (!flexContainer.actorID) {
       // No flex container or flex item selected.
@@ -72,6 +79,13 @@ class LayoutApp extends PureComponent {
 
     const grip = translateNodeFrontToGrip(flexContainer.nodeFront);
     return LAYOUT_L10N.getFormatStr("flexbox.flexItemOf", getSelectorFromGrip(grip));
+  }
+
+  /**
+   * Scrolls to top of the layout container.
+   */
+  scrollToTop() {
+    this.containerRef.current.scrollTop = 0;
   }
 
   render() {
@@ -106,6 +120,7 @@ class LayoutApp extends PureComponent {
         componentProps: {
           ...this.props,
           flexContainer: this.props.flexbox.flexContainer,
+          scrollToTop: this.scrollToTop,
         },
         header: this.getFlexboxHeader(this.props.flexbox.flexContainer),
         opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
@@ -127,6 +142,7 @@ class LayoutApp extends PureComponent {
           componentProps: {
             ...this.props,
             flexContainer: this.props.flexbox.flexItemContainer,
+            scrollToTop: this.scrollToTop,
           },
           header: this.getFlexboxHeader(this.props.flexbox.flexItemContainer),
           opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
@@ -139,7 +155,7 @@ class LayoutApp extends PureComponent {
     }
 
     return (
-      dom.div({ className: "layout-container" },
+      dom.div({ className: "layout-container", ref: this.containerRef },
         Accordion({ items })
       )
     );
