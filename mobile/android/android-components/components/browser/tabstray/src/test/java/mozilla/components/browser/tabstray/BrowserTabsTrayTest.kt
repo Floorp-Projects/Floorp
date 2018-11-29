@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.tabstray
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -11,15 +13,17 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserTabsTrayTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `holders will unsubscribe if view gets detached`() {
         val adapter: TabsAdapter = mock()
-        val tabsTray = BrowserTabsTray(RuntimeEnvironment.application, tabsAdapter = adapter)
+        val tabsTray = BrowserTabsTray(context, tabsAdapter = adapter)
 
         val shadow = Shadows.shadowOf(tabsTray)
         shadow.callOnDetachedFromWindow()
@@ -30,7 +34,7 @@ class BrowserTabsTrayTest {
     @Test
     fun `TabsTray concept methods are forwarded to adapter`() {
         val adapter: TabsAdapter = mock()
-        val tabsTray = BrowserTabsTray(RuntimeEnvironment.application, tabsAdapter = adapter)
+        val tabsTray = BrowserTabsTray(context, tabsAdapter = adapter)
 
         val sessions = listOf<Session>()
 
@@ -55,8 +59,8 @@ class BrowserTabsTrayTest {
 
     @Test
     fun `TabsTray is set on adapter`() {
-        val adapter: TabsAdapter = TabsAdapter()
-        val tabsTray = BrowserTabsTray(RuntimeEnvironment.application, tabsAdapter = adapter)
+        val adapter = TabsAdapter()
+        val tabsTray = BrowserTabsTray(context, tabsAdapter = adapter)
 
         assertEquals(tabsTray, adapter.tabsTray)
     }

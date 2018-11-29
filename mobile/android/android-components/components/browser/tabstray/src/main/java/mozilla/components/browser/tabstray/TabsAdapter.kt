@@ -33,7 +33,9 @@ class TabsAdapter(
             LayoutInflater.from(parent.context).inflate(
                 R.layout.mozac_browser_tabstray_item,
                 parent,
-                false)).also {
+                false),
+            tabsTray
+        ).also {
             holders.add(it)
         }
     }
