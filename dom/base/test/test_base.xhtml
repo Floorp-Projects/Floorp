@@ -21,12 +21,12 @@ addLoadEvent(function() {
      "body base");
 
   var expected =
-    ["http://mochi.test:8888/tests/dom/base/supercalifragilisticexpialidocious",
-     "http://mochi.test:8888/tests/dom/base/supercalifragilisticexpialidocious",
-     "http://mochi.test:8888/tests/dom/base/hello/",
-     "http://mochi.test:8888/tests/dom/base/hello/world",
-     "http://mochi.test:8888/tests/dom/base/hello/world#iamtheverymodelofamodernmajorgeneral",
-     "http://mochi.test:8888/tests/dom/base/hello/world#iamtheverymodelofamodernmajorgeneral",
+    ["http://mochi.test:8888/tests/dom/base/",
+     "http://mochi.test:8888/tests/dom/base/",
+     "http://mochi.test:8888/tests/dom/base/",
+     "http://mochi.test:8888/tests/dom/base/",
+     "http://mochi.test:8888/tests/dom/base/",
+     "http://mochi.test:8888/tests/dom/base/",
      ];
   var node = document.getElementById("1");
   while(node) {
@@ -36,9 +36,9 @@ addLoadEvent(function() {
   is(expected.length, 0, "found all expected nodes");
 
   var svgExpected =
-    ["http://mochi.test:8888/tests/dom/base/test/file_base_xbl.xml",
-     "http://mochi.test:8888/tests/dom/base/test/file_base_xbl.xml",
-     "http://mochi.test:8888/tests/dom/base/test/file_base_xbl.xml#shesellsseashellsbytheseashore",
+    ["http://mochi.test:8888/tests/dom/base/",
+     "http://mochi.test:8888/tests/dom/base/",
+     "http://mochi.test:8888/tests/dom/base/",
      ];
   node = SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById("bound"))[0];
   while(node) {

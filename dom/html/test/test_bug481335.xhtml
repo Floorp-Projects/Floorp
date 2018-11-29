@@ -10,6 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=481335
     a { color:blue; }
     a:visited { color:red; }
   </style>
+  <base href="http://www.example.com/" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481335">Mozilla Bug 481335</a>
@@ -17,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=481335
   <a id="t">A link</a>
   <iframe id="i"></iframe>
 </p>
-<p id="newparent" xml:base="http://www.example.com/"></p>
+<p id="newparent"></p>
 <div id="content" style="display: none"></div>
 <pre id="test">
 <script type="application/javascript">
@@ -33,11 +34,9 @@ is($("t").href, "",
    "Unexpected cached href before set");
 
 $("t").setAttribute("href", rand);
-is($("t").href,
-   window.location.href.replace(/test_bug481335.xhtml([\?].*)?/, rand),
+is($("t").href, "http://www.example.com/" + rand,
    "Unexpected href after set");
-is($("t").href,
-   window.location.href.replace(/test_bug481335.xhtml([\?].*)?/, rand),
+is($("t").href, "http://www.example.com/" + rand,
    "Unexpected cached href after set");
 const unvisitedColor = "rgb(0, 0, 255)";
 const visitedColor = "rgb(255, 0, 0)";
