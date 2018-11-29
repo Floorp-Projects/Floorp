@@ -3,9 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator = testSteps();
-
-function* testSteps()
+async function testSteps()
 {
   const globalLimitKB = 5 * 1024;
 
@@ -28,8 +26,8 @@ function* testSteps()
 
   setGlobalLimit(globalLimitKB);
 
-  clear(continueToNextStepSync);
-  yield undefined;
+  let request = clear();
+  await requestFinished(request);
 
   info("Getting storages");
 
@@ -65,13 +63,13 @@ function* testSteps()
 
   let principal = getPrincipal("http://example0.com");
 
-  resetOrigin(principal, continueToNextStepSync);
-  yield undefined;
+  request = resetOrigin(principal);
+  await requestFinished(request);
 
   info("Getting usage for first origin");
 
-  let request = getOriginUsage(principal, continueToNextStepSync);
-  yield undefined;
+  request = getOriginUsage(principal);
+  await requestFinished(request);
 
   is(request.result.usage, data.sizeKB * 1024, "Correct usage");
 
@@ -83,10 +81,8 @@ function* testSteps()
 
   info("Getting usage for first origin");
 
-  request = getOriginUsage(principal, continueToNextStepSync);
-  yield undefined;
+  request = getOriginUsage(principal);
+  await requestFinished(request);
 
   is(request.result.usage, 0, "Zero usage");
-
-  finishTest();
 }

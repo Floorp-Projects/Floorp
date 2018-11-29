@@ -3,11 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator = testSteps();
-
 loadSubscript("databaseShadowing-shared.js");
 
-function* testSteps()
+async function testSteps()
 {
   enableNextGenLocalStorage();
 
@@ -15,20 +13,17 @@ function* testSteps()
 
   verifyData([]);
 
-  clearOriginsByPattern(JSON.stringify({ userContextId: 15 }),
-                        continueToNextStepSync);
-  yield undefined;
+  let request = clearOriginsByPattern(JSON.stringify({ userContextId: 15 }));
+  await requestFinished(request);
 
   verifyData([4,5,6]);
 
   // Wait for all database connections to close.
-  reset(continueToNextStepSync);
-  yield undefined;
+  request = reset();
+  await requestFinished(request);
 
   exportShadowDatabase("shadowdb-clearedOriginsByPattern.sqlite");
 
   // The shadow database is now prepared for
   // test_databaseShadowing_clearOriginsByPattern2.js
-
-  finishTest();
 }

@@ -29,30 +29,26 @@ if (!this.runTest) {
 
     enableTesting();
 
-    do_test_pending();
-    testGenerator.next();
+    Assert.ok(typeof testSteps === "function",
+              "There should be a testSteps function");
+    Assert.ok(testSteps.constructor.name === "AsyncFunction",
+              "testSteps should be an async function");
+
+    registerCleanupFunction(resetTesting);
+
+    add_task(testSteps);
+
+    // Since we defined run_test, we must invoke run_next_test() to start the
+    // async test.
+    run_next_test();
   }
 }
 
-function finishTest()
+function returnToEventLoop()
 {
-  resetTesting();
-
-  executeSoon(function() {
-    do_test_finished();
-  })
-}
-
-function continueToNextStep()
-{
-  executeSoon(function() {
-    testGenerator.next();
+  return new Promise(function(resolve) {
+    executeSoon(resolve);
   });
-}
-
-function continueToNextStepSync()
-{
-  testGenerator.next();
 }
 
 function enableTesting()
@@ -88,43 +84,38 @@ function resetOriginLimit()
   Services.prefs.clearUserPref("dom.storage.default_quota");
 }
 
-function getOriginUsage(principal, callback)
+function getOriginUsage(principal)
 {
-  let request = Services.qms.getUsageForPrincipal(principal, callback);
-  request.callback = callback;
+  let request = Services.qms.getUsageForPrincipal(principal, function() { });
 
   return request;
 }
 
-function clear(callback)
+function clear()
 {
   let request = Services.qms.clear();
-  request.callback = callback;
 
   return request;
 }
 
-function clearOriginsByPattern(pattern, callback)
+function clearOriginsByPattern(pattern)
 {
   let request = Services.qms.clearStoragesForOriginAttributesPattern(pattern);
-  request.callback = callback;
 
   return request;
 }
 
-function clearOriginsByPrefix(principal, persistence, callback)
+function clearOriginsByPrefix(principal, persistence)
 {
   let request =
     Services.qms.clearStoragesForPrincipal(principal, persistence, null, true);
-  request.callback = callback;
 
   return request;
 }
 
-function clearOrigin(principal, persistence, callback)
+function clearOrigin(principal, persistence)
 {
   let request = Services.qms.clearStoragesForPrincipal(principal, persistence);
-  request.callback = callback;
 
   return request;
 }
@@ -137,11 +128,10 @@ function reset(callback)
   return request;
 }
 
-function resetOrigin(principal, callback)
+function resetOrigin(principal)
 {
   let request =
     Services.qms.resetStoragesForPrincipal(principal, "default", "ls");
-  request.callback = callback;
 
   return request;
 }
@@ -259,6 +249,18 @@ function getLocalStorage(principal)
   }
 
   return Services.domStorageManager.createStorage(null, principal, "");
+}
+
+function requestFinished(request) {
+  return new Promise(function(resolve, reject) {
+    request.callback = function(request) {
+      if (request.resultCode == Cr.NS_OK) {
+        resolve(request.result);
+      } else {
+        reject(request.resultCode);
+      }
+    }
+  });
 }
 
 function loadSubscript(path)

@@ -3,11 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator = testSteps();
-
 loadSubscript("databaseShadowing-shared.js");
 
-function* testSteps()
+async function testSteps()
 {
   // The shadow database was prepared in
   // test_databaseShadowing_clearOriginsByPattern1.js
@@ -15,11 +13,8 @@ function* testSteps()
   disableNextGenLocalStorage();
 
   if (!importShadowDatabase("shadowdb-clearedOriginsByPattern.sqlite")) {
-    finishTest();
     return;
   }
 
   verifyData([4,5,6]);
-
-  finishTest();
 }
