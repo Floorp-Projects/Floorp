@@ -28,6 +28,10 @@ nsresult
 CreateReversedDomain(const nsACString& aAsciiDomain,
                      nsACString& aKey);
 
+nsCString
+Scheme0Scope(const nsACString& aOriginSuffix,
+             const nsACString& aOriginNoSuffix);
+
 } // StorageUtils namespace
 } // dom namespace
 } // mozilla namespace
