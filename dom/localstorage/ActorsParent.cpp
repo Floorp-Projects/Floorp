@@ -12,6 +12,7 @@
 #include "mozIStorageService.h"
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/PBackgroundLSDatabaseParent.h"
 #include "mozilla/dom/PBackgroundLSObjectParent.h"
@@ -107,6 +108,9 @@ static_assert(kSQLiteGrowthIncrement >= 0 &&
 const uint32_t kAutoCommitTimeoutMs = 5000;
 
 const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
+
+const uint32_t kDefaultOriginLimitKB = 5 * 1024;
+const char kDefaultQuotaPref[] = "dom.storage.default_quota";
 
 bool
 IsOnConnectionThread();
@@ -860,12 +864,14 @@ class Datastore final
   nsDataHashtable<nsStringHashKey, nsString> mValues;
   const nsCString mOrigin;
   const uint32_t mPrivateBrowsingId;
+  int64_t mUsage;
   bool mClosed;
 
 public:
   // Created by PrepareDatastoreOp.
   Datastore(const nsACString& aOrigin,
             uint32_t aPrivateBrowsingId,
+            int64_t aUsage,
             already_AddRefed<DirectoryLock>&& aDirectoryLock,
             already_AddRefed<Connection>&& aConnection,
             nsDataHashtable<nsStringHashKey, nsString>& aValues);
@@ -949,6 +955,9 @@ private:
 
   void
   CleanupMetadata();
+
+  bool
+  UpdateUsage(int64_t aDelta);
 
   void
   NotifyObservers(Database* aDatabase,
@@ -1347,6 +1356,7 @@ class PrepareDatastoreOp
   nsCString mOrigin;
   nsString mDatabaseFilePath;
   uint32_t mPrivateBrowsingId;
+  int64_t mUsage;
   NestedState mNestedState;
   bool mRequestedDirectoryLock;
   bool mInvalidated;
@@ -1732,6 +1742,8 @@ typedef nsClassHashtable<nsCStringHashKey, nsTArray<Observer*>>
   ObserverHashtable;
 
 StaticAutoPtr<ObserverHashtable> gObservers;
+
+Atomic<uint32_t, Relaxed> gOriginLimitKB(kDefaultOriginLimitKB);
 
 bool
 IsOnConnectionThread()
@@ -2527,6 +2539,7 @@ ClearOp::DoDatastoreWork()
 
 Datastore::Datastore(const nsACString& aOrigin,
                      uint32_t aPrivateBrowsingId,
+                     int64_t aUsage,
                      already_AddRefed<DirectoryLock>&& aDirectoryLock,
                      already_AddRefed<Connection>&& aConnection,
                      nsDataHashtable<nsStringHashKey, nsString>& aValues)
@@ -2534,6 +2547,7 @@ Datastore::Datastore(const nsACString& aOrigin,
   , mConnection(std::move(aConnection))
   , mOrigin(aOrigin)
   , mPrivateBrowsingId(aPrivateBrowsingId)
+  , mUsage(aUsage)
   , mClosed(false)
 {
   AssertIsOnBackgroundThread();
@@ -2692,6 +2706,20 @@ Datastore::SetItem(Database* aDatabase,
   } else {
     changed = true;
 
+    int64_t delta = 0;
+
+    if (oldValue.IsVoid()) {
+      delta += static_cast<int64_t>(aKey.Length());
+    }
+
+    delta += static_cast<int64_t>(aValue.Length()) -
+             static_cast<int64_t>(oldValue.Length());
+
+    if (!UpdateUsage(delta)) {
+      aResponse = NS_ERROR_FILE_NO_DEVICE_SPACE;
+      return;
+    }
+
     mValues.Put(aKey, aValue);
 
     NotifyObservers(aDatabase, aKey, oldValue, aValue);
@@ -2727,6 +2755,12 @@ Datastore::RemoveItem(Database* aDatabase,
   } else {
     changed = true;
 
+    int64_t delta = -(static_cast<int64_t>(aKey.Length()) +
+                      static_cast<int64_t>(oldValue.Length()));
+
+    DebugOnly<bool> ok = UpdateUsage(delta);
+    MOZ_ASSERT(ok);
+
     mValues.Remove(aKey);
 
     NotifyObservers(aDatabase, aKey, oldValue, VoidString());
@@ -2757,6 +2791,9 @@ Datastore::Clear(Database* aDatabase,
     changed = false;
   } else {
     changed = true;
+
+    DebugOnly<bool> ok = UpdateUsage(-mUsage);
+    MOZ_ASSERT(ok);
 
     mValues.Clear();
 
@@ -2821,6 +2858,21 @@ Datastore::CleanupMetadata()
   if (!gDatastores->Count()) {
     gDatastores = nullptr;
   }
+}
+
+bool
+Datastore::UpdateUsage(int64_t aDelta)
+{
+  AssertIsOnBackgroundThread();
+
+  int64_t newUsage = mUsage + aDelta;
+  if (newUsage > gOriginLimitKB * 1024) {
+    return false;
+  }
+
+  mUsage = newUsage;
+
+  return true;
 }
 
 void
@@ -3504,6 +3556,7 @@ PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
   , mLoadDataOp(nullptr)
   , mParams(aParams.get_LSRequestPrepareDatastoreParams())
   , mPrivateBrowsingId(0)
+  , mUsage(0)
   , mNestedState(NestedState::BeforeNesting)
   , mRequestedDirectoryLock(false)
   , mInvalidated(false)
@@ -4014,6 +4067,7 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
   if (!mDatastore) {
     mDatastore = new Datastore(mOrigin,
                                mPrivateBrowsingId,
+                               mUsage,
                                mDirectoryLock.forget(),
                                mConnection.forget(),
                                mValues);
@@ -4225,6 +4279,7 @@ LoadDataOp::DoDatastoreWork()
     }
 
     mPrepareDatastoreOp->mValues.Put(key, value);
+    mPrepareDatastoreOp->mUsage += key.Length() + value.Length();
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4573,6 +4628,12 @@ QuotaClient::RegisterObservers(nsIEventTarget* aBackgroundEventTarget)
       obs->AddObserver(observer, kPrivateBrowsingObserverTopic, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    if (NS_FAILED(Preferences::AddAtomicUintVarCache(&gOriginLimitKB,
+                                                     kDefaultQuotaPref,
+                                                     kDefaultOriginLimitKB))) {
+      NS_WARNING("Unable to respond to default quota pref changes!");
     }
 
     sObserversRegistered = true;
