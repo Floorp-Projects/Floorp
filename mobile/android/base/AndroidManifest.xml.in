@@ -40,8 +40,6 @@
         <service android:name="org.mozilla.gecko.RemotePresentationService" android:exported="false"/>
 #endif
 
-        <service android:name="org.mozilla.gecko.FennecKiller" />
-
         <!-- This activity handles all incoming Intents and dispatches them to other activities. -->
         <activity android:name="org.mozilla.gecko.LauncherActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
