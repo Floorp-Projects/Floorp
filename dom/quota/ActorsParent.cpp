@@ -1314,8 +1314,13 @@ class ClearRequestBase
   : public QuotaRequestBase
 {
 protected:
-  explicit ClearRequestBase(bool aExclusive)
+  const bool mClear;
+
+protected:
+  ClearRequestBase(bool aExclusive,
+                   bool aClear)
     : QuotaRequestBase(aExclusive)
+    , mClear(aClear)
   {
     AssertIsOnOwningThread();
   }
@@ -1331,7 +1336,7 @@ protected:
 class ClearOriginOp final
   : public ClearRequestBase
 {
-  const ClearOriginParams mParams;
+  const ClearResetOriginParams mParams;
 
 public:
   explicit ClearOriginOp(const RequestParams& aParams);
@@ -6815,6 +6820,7 @@ Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
       break;
 
     case RequestParams::TClearOriginParams:
+    case RequestParams::TResetOriginParams:
       actor = new ClearOriginOp(aParams);
       break;
 
@@ -7651,7 +7657,6 @@ ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
   AssertIsOnIOThread();
   MOZ_ASSERT(aQuotaManager);
 
-
   nsCOMPtr<nsIFile> directory;
   nsresult rv = NS_NewLocalFile(aQuotaManager->GetStoragePath(aPersistenceType),
                                 false, getter_AddRefs(directory));
@@ -7815,22 +7820,29 @@ ClearRequestBase::DoDirectoryWork(QuotaManager* aQuotaManager)
 
   AUTO_PROFILER_LABEL("ClearRequestBase::DoDirectoryWork", OTHER);
 
-  if (mPersistenceType.IsNull()) {
-    for (const PersistenceType type : kAllPersistenceTypes) {
-      DeleteFiles(aQuotaManager, type);
+  if (mClear) {
+    if (mPersistenceType.IsNull()) {
+      for (const PersistenceType type : kAllPersistenceTypes) {
+        DeleteFiles(aQuotaManager, type);
+      }
+    } else {
+      DeleteFiles(aQuotaManager, mPersistenceType.Value());
     }
-  } else {
-    DeleteFiles(aQuotaManager, mPersistenceType.Value());
   }
 
   return NS_OK;
 }
 
 ClearOriginOp::ClearOriginOp(const RequestParams& aParams)
-  : ClearRequestBase(/* aExclusive */ true)
-  , mParams(aParams)
+  : ClearRequestBase(/* aExclusive */ true,
+                     aParams.type() == RequestParams::TClearOriginParams)
+  , mParams(aParams.type() == RequestParams::TClearOriginParams ?
+              aParams.get_ClearOriginParams().commonParams() :
+              aParams.get_ResetOriginParams().commonParams())
+
 {
-  MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams);
+  MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams ||
+             aParams.type() == RequestParams::TResetOriginParams);
 }
 
 bool
@@ -7884,7 +7896,7 @@ ClearOriginOp::DoInitOnMainThread()
     return rv;
   }
 
-  if (mParams.clearAll()) {
+  if (mParams.matchAll()) {
     mOriginScope.SetFromPrefix(origin);
   } else {
     mOriginScope.SetFromOrigin(origin);
@@ -7898,11 +7910,16 @@ ClearOriginOp::GetResponse(RequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
 
-  aResponse = ClearOriginResponse();
+  if (mClear) {
+    aResponse = ClearOriginResponse();
+  } else {
+    aResponse = ResetOriginResponse();
+  }
 }
 
 ClearDataOp::ClearDataOp(const RequestParams& aParams)
-  : ClearRequestBase(/* aExclusive */ true)
+  : ClearRequestBase(/* aExclusive */ true,
+                     /* aClear */ true)
   , mParams(aParams)
 {
   MOZ_ASSERT(aParams.type() == RequestParams::TClearDataParams);

@@ -51,14 +51,24 @@ union UsageRequestParams
   OriginUsageParams;
 };
 
-struct ClearOriginParams
+struct ClearResetOriginParams
 {
   PrincipalInfo principalInfo;
   PersistenceType persistenceType;
   bool persistenceTypeIsExplicit;
   Type clientType;
   bool clientTypeIsExplicit;
-  bool clearAll;
+  bool matchAll;
+};
+
+struct ClearOriginParams
+{
+  ClearResetOriginParams commonParams;
+};
+
+struct ResetOriginParams
+{
+  ClearResetOriginParams commonParams;
 };
 
 struct ClearDataParams
@@ -90,6 +100,7 @@ union RequestParams
   InitTemporaryStorageParams;
   InitOriginParams;
   ClearOriginParams;
+  ResetOriginParams;
   ClearDataParams;
   ClearAllParams;
   ResetAllParams;

@@ -33,3 +33,12 @@ interface Storage {
   [ChromeOnly]
   readonly attribute boolean isSessionOnly;
 };
+
+// Testing only.
+partial interface Storage {
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  void open();
+
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  void close();
+};

@@ -140,6 +140,14 @@ public:
   Clear(nsIPrincipal& aSubjectPrincipal,
         ErrorResult& aError) override;
 
+  void
+  Open(nsIPrincipal& aSubjectPrincipal,
+       ErrorResult& aError) override;
+
+  void
+  Close(nsIPrincipal& aSubjectPrincipal,
+        ErrorResult& aError) override;
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LSObject, Storage)
 
