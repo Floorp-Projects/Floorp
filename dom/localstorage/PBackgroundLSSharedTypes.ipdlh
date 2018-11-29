@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include PBackgroundSharedTypes;
+
+namespace mozilla {
+namespace dom {
+
+struct QuotaInfo {
+  nsCString suffix;
+  nsCString group;
+  nsCString origin;
+};
+
+union PrincipalOrQuotaInfo {
+  PrincipalInfo;
+  QuotaInfo;
+};
+
+struct LSRequestPrepareDatastoreParams
+{
+  PrincipalOrQuotaInfo info;
+};
+
+union LSRequestParams
+{
+  LSRequestPrepareDatastoreParams;
+};
+
+} // namespace dom
+} // namespace mozilla

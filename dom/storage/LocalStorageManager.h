@@ -117,7 +117,7 @@ private:
                    const nsACString& aKeyPrefix);
 
   // Global getter of localStorage manager service
-  static LocalStorageManager* Self() { return sSelf; }
+  static LocalStorageManager* Self();
 
   // Like Self, but creates an instance if we're not yet initialized.
   static LocalStorageManager* Ensure();

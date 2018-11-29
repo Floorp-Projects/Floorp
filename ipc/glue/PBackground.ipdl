@@ -6,6 +6,8 @@ include protocol PAsmJSCacheEntry;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundIndexedDBUtils;
 include protocol PBackgroundSDBConnection;
+include protocol PBackgroundLSDatabase;
+include protocol PBackgroundLSRequest;
 include protocol PBackgroundLocalStorageCache;
 include protocol PBackgroundStorage;
 include protocol PBackgroundTest;
@@ -44,6 +46,7 @@ include DOMTypes;
 include IPCBlob;
 include IPCServiceWorkerDescriptor;
 include IPCServiceWorkerRegistrationDescriptor;
+include PBackgroundLSSharedTypes;
 include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
@@ -72,6 +75,8 @@ sync protocol PBackground
   manages PBackgroundIDBFactory;
   manages PBackgroundIndexedDBUtils;
   manages PBackgroundSDBConnection;
+  manages PBackgroundLSDatabase;
+  manages PBackgroundLSRequest;
   manages PBackgroundLocalStorageCache;
   manages PBackgroundStorage;
   manages PBackgroundTest;
@@ -118,6 +123,10 @@ parent:
   async FlushPendingFileDeletions();
 
   async PBackgroundSDBConnection(PrincipalInfo principalInfo);
+
+  async PBackgroundLSDatabase(uint64_t datastoreId);
+
+  async PBackgroundLSRequest(LSRequestParams params);
 
   async PBackgroundLocalStorageCache(PrincipalInfo principalInfo,
                                      nsCString originKey,

@@ -63,7 +63,9 @@
 #include "mozilla/dom/BlobURL.h"
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/SDBConnection.h"
+#include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/LocalStorageManager.h"
+#include "mozilla/dom/LocalStorageManager2.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/StorageActivityService.h"
@@ -165,7 +167,6 @@ already_AddRefed<nsIPresentationService> NS_CreatePresentationService();
 // Factory Constructor
 typedef mozilla::dom::BlobURL::Mutator BlobURLMutator;
 NS_GENERIC_FACTORY_CONSTRUCTOR(BlobURLMutator)
-NS_GENERIC_FACTORY_CONSTRUCTOR(LocalStorageManager)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(DOMRequestService,
                                          DOMRequestService::FactoryCreate)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(QuotaManagerService,
@@ -493,6 +494,19 @@ NS_DEFINE_NAMED_CID(PRESENTATION_TCP_SESSION_TRANSPORT_CID);
 NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
 
 NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
+
+static nsresult
+LocalStorageManagerConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult)
+{
+  if (NextGenLocalStorageEnabled()) {
+    RefPtr<LocalStorageManager2> manager = new LocalStorageManager2();
+    return manager->QueryInterface(aIID, aResult);
+  }
+
+  RefPtr<LocalStorageManager> manager = new LocalStorageManager();
+  return manager->QueryInterface(aIID, aResult);
+}
 
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   // clang-format off
