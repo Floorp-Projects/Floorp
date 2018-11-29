@@ -1292,6 +1292,7 @@ pref("dom.storage.next_gen", true);
 pref("dom.storage.next_gen", false);
 #endif
 pref("dom.storage.default_quota",      5120);
+pref("dom.storage.shadow_writes", true);
 pref("dom.storage.snapshot_prefill", 16384);
 pref("dom.storage.snapshot_reusing", true);
 pref("dom.storage.testing", false);

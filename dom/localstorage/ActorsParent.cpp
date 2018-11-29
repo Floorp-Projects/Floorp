@@ -119,8 +119,10 @@ const uint32_t kFlushTimeoutMs = 5000;
 const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 
 const uint32_t kDefaultOriginLimitKB = 5 * 1024;
+const uint32_t kDefaultShadowWrites = true;
 const uint32_t kDefaultSnapshotPrefill = 4096;
 const char kDefaultQuotaPref[] = "dom.storage.default_quota";
+const char kShadowWritesPref[] = "dom.storage.shadow_writes";
 const char kSnapshotPrefillPref[] = "dom.storage.snapshot_prefill";
 
 const uint32_t kPreparedDatastoreTimeoutMs = 20000;
@@ -941,7 +943,7 @@ public:
   ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems);
 
   nsresult
-  PerformWrites(Connection* aConnection);
+  PerformWrites(Connection* aConnection, bool aShadowWrites);
 };
 
 class WriteOptimizer::WriteInfo
@@ -958,7 +960,7 @@ public:
   GetType() = 0;
 
   virtual nsresult
-  Perform(Connection* aConnection) = 0;
+  Perform(Connection* aConnection, bool aShadowWrites) = 0;
 
   virtual ~WriteInfo() = default;
 };
@@ -996,7 +998,7 @@ private:
   }
 
   nsresult
-  Perform(Connection* aConnection) override;
+  Perform(Connection* aConnection, bool aShadowWrites) override;
 };
 
 class WriteOptimizer::UpdateItemInfo final
@@ -1040,7 +1042,7 @@ private:
   }
 
   nsresult
-  Perform(Connection* aConnection) override;
+  Perform(Connection* aConnection, bool aShadowWrites) override;
 };
 
 class WriteOptimizer::ClearInfo final
@@ -1058,7 +1060,7 @@ private:
   }
 
   nsresult
-  Perform(Connection* aConnection) override;
+  Perform(Connection* aConnection, bool aShadowWrites) override;
 };
 
 class DatastoreOperationBase
@@ -1346,13 +1348,11 @@ class Connection::FlushOp final
   : public ConnectionDatastoreOperationBase
 {
   WriteOptimizer mWriteOptimizer;
+  bool mShadowWrites;
 
 public:
   FlushOp(Connection* aConnection,
-          WriteOptimizer&& aWriteOptimizer)
-    : ConnectionDatastoreOperationBase(aConnection)
-    , mWriteOptimizer(std::move(aWriteOptimizer))
-  { }
+          WriteOptimizer&& aWriteOptimizer);
 
 private:
   nsresult
@@ -2577,6 +2577,7 @@ typedef nsClassHashtable<nsCStringHashKey, nsTArray<Observer*>>
 StaticAutoPtr<ObserverHashtable> gObservers;
 
 Atomic<uint32_t, Relaxed> gOriginLimitKB(kDefaultOriginLimitKB);
+Atomic<bool> gShadowWrites(kDefaultShadowWrites);
 Atomic<int32_t, Relaxed> gSnapshotPrefill(kDefaultSnapshotPrefill);
 
 typedef nsDataHashtable<nsCStringHashKey, int64_t> UsageHashtable;
@@ -2727,6 +2728,16 @@ GetUsage(mozIStorageConnection* aConnection,
 
   *aUsage = usage;
   return NS_OK;
+}
+
+void
+ShadowWritesPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPrefName, kShadowWritesPref));
+  MOZ_ASSERT(!aClosure);
+
+  gShadowWrites = Preferences::GetBool(aPrefName, kDefaultShadowWrites);
 }
 
 void
@@ -3189,7 +3200,7 @@ WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems)
 }
 
 nsresult
-WriteOptimizer::PerformWrites(Connection* aConnection)
+WriteOptimizer::PerformWrites(Connection* aConnection, bool aShadowWrites)
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
@@ -3197,14 +3208,14 @@ WriteOptimizer::PerformWrites(Connection* aConnection)
   nsresult rv;
 
   if (mClearInfo) {
-    rv = mClearInfo->Perform(aConnection);
+    rv = mClearInfo->Perform(aConnection, aShadowWrites);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
   for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
-    rv = iter.Data()->Perform(aConnection);
+    rv = iter.Data()->Perform(aConnection, aShadowWrites);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -3215,7 +3226,7 @@ WriteOptimizer::PerformWrites(Connection* aConnection)
 
 nsresult
 WriteOptimizer::
-AddItemInfo::Perform(Connection* aConnection)
+AddItemInfo::Perform(Connection* aConnection, bool aShadowWrites)
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
@@ -3242,6 +3253,10 @@ AddItemInfo::Perform(Connection* aConnection)
   rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  if (!aShadowWrites) {
+    return NS_OK;
   }
 
   rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
@@ -3289,7 +3304,7 @@ AddItemInfo::Perform(Connection* aConnection)
 
 nsresult
 WriteOptimizer::
-RemoveItemInfo::Perform(Connection* aConnection)
+RemoveItemInfo::Perform(Connection* aConnection, bool aShadowWrites)
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
@@ -3311,6 +3326,10 @@ RemoveItemInfo::Perform(Connection* aConnection)
   rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  if (!aShadowWrites) {
+    return NS_OK;
   }
 
   rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
@@ -3343,7 +3362,7 @@ RemoveItemInfo::Perform(Connection* aConnection)
 
 nsresult
 WriteOptimizer::
-ClearInfo::Perform(Connection* aConnection)
+ClearInfo::Perform(Connection* aConnection, bool aShadowWrites)
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
@@ -3359,6 +3378,10 @@ ClearInfo::Perform(Connection* aConnection)
   rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  if (!aShadowWrites) {
+    return NS_OK;
   }
 
   rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
@@ -3779,6 +3802,15 @@ CachedStatement::Assign(Connection* aConnection,
   }
 }
 
+Connection::
+FlushOp::FlushOp(Connection* aConnection,
+                 WriteOptimizer&& aWriteOptimizer)
+  : ConnectionDatastoreOperationBase(aConnection)
+  , mWriteOptimizer(std::move(aWriteOptimizer))
+  , mShadowWrites(gShadowWrites)
+{
+}
+
 nsresult
 Connection::
 FlushOp::DoDatastoreWork()
@@ -3793,10 +3825,13 @@ FlushOp::DoDatastoreWork()
     mConnection->StorageConnection();
   MOZ_ASSERT(storageConnection);
 
-  nsresult rv = AttachShadowDatabase(quotaManager->GetBasePath(),
-                                     storageConnection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsresult rv;
+
+  if (mShadowWrites) {
+    rv = AttachShadowDatabase(quotaManager->GetBasePath(), storageConnection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   CachedStatement stmt;
@@ -3811,7 +3846,7 @@ FlushOp::DoDatastoreWork()
     return rv;
   }
 
-  rv = mWriteOptimizer.PerformWrites(mConnection);
+  rv = mWriteOptimizer.PerformWrites(mConnection, mShadowWrites);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3826,9 +3861,11 @@ FlushOp::DoDatastoreWork()
     return rv;
   }
 
-  rv = DetachShadowDatabase(storageConnection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (mShadowWrites) {
+    rv = DetachShadowDatabase(storageConnection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -6978,6 +7015,9 @@ QuotaClient::RegisterObservers(nsIEventTarget* aBackgroundEventTarget)
                                                      kDefaultOriginLimitKB))) {
       NS_WARNING("Unable to respond to default quota pref changes!");
     }
+
+    Preferences::RegisterCallbackAndCall(ShadowWritesPrefChangedCallback,
+                                         kShadowWritesPref);
 
     Preferences::RegisterCallbackAndCall(SnapshotPrefillPrefChangedCallback,
                                          kSnapshotPrefillPref);
