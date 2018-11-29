@@ -19,9 +19,10 @@ function* testSteps()
     return "http://example" + index + ".com";
   }
 
-  info("Setting pref");
+  info("Setting prefs");
 
   Services.prefs.setBoolPref("dom.storage.next_gen", true);
+  Services.prefs.setBoolPref("dom.storage.snapshot_reusing", false);
 
   info("Setting limits");
 

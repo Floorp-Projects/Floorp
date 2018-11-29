@@ -32,11 +32,6 @@ union LSWriteInfo
   LSClearInfo;
 };
 
-struct LSSnapshotFinishInfo
-{
-  LSWriteInfo[] writeInfos;
-};
-
 sync protocol PBackgroundLSSnapshot
 {
   manager PBackgroundLSDatabase;
@@ -44,7 +39,9 @@ sync protocol PBackgroundLSSnapshot
 parent:
   async DeleteMe();
 
-  async Finish(LSSnapshotFinishInfo finishInfo);
+  async Checkpoint(LSWriteInfo[] writeInfos);
+
+  async Finish();
 
   async Loaded();
 
@@ -63,6 +60,8 @@ parent:
   sync Ping();
 
 child:
+  async MarkDirty();
+
   async __delete__();
 };
 

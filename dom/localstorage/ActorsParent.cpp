@@ -1550,7 +1550,7 @@ public:
   void
   BeginUpdateBatch(int64_t aSnapshotInitialUsage);
 
-  void
+  int64_t
   EndUpdateBatch(int64_t aSnapshotPeakUsage);
 
   int64_t
@@ -1580,6 +1580,9 @@ private:
                   const nsAString& aKey,
                   const nsAString& aOldValue,
                   bool aAffectsOrder);
+
+  void
+  MarkSnapshotsDirty();
 
   void
   NotifyObservers(Database* aDatabase,
@@ -1824,7 +1827,7 @@ class Snapshot final
   nsTArray<nsString> mKeys;
   nsString mDocumentURI;
   uint32_t mTotalLength;
-  int64_t mInitialUsage;
+  int64_t mUsage;
   int64_t mPeakUsage;
   bool mSavedKeys;
   bool mActorDestroyed;
@@ -1832,6 +1835,7 @@ class Snapshot final
   bool mLoadedReceived;
   bool mLoadedAllItems;
   bool mLoadKeysReceived;
+  bool mSentMarkDirty;
 
 public:
   // Created in AllocPBackgroundLSSnapshotParent.
@@ -1851,12 +1855,12 @@ public:
     MOZ_ASSERT_IF(aLoadState == LSSnapshot::LoadState::AllOrderedItems,
                   aLoadedItems.Count() == 0);
     MOZ_ASSERT(mTotalLength == 0);
-    MOZ_ASSERT(mInitialUsage == -1);
+    MOZ_ASSERT(mUsage == -1);
     MOZ_ASSERT(mPeakUsage == -1);
 
     mLoadedItems.SwapElements(aLoadedItems);
     mTotalLength = aTotalLength;
-    mInitialUsage = aInitialUsage;
+    mUsage = aInitialUsage;
     mPeakUsage = aPeakUsage;
     if (aLoadState == LSSnapshot::LoadState::AllOrderedKeys) {
       mLoadKeysReceived = true;
@@ -1872,11 +1876,17 @@ public:
            const nsAString& aOldValue,
            bool aAffectsOrder);
 
+  void
+  MarkDirty();
+
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Snapshot)
 
 private:
   // Reference counted.
   ~Snapshot();
+
+  void
+  Finish();
 
   // IPDL methods are only called by IPDL.
   void
@@ -1886,7 +1896,10 @@ private:
   RecvDeleteMe() override;
 
   mozilla::ipc::IPCResult
-  RecvFinish(const LSSnapshotFinishInfo& aFinishInfo) override;
+  RecvCheckpoint(nsTArray<LSWriteInfo>&& aWriteInfos) override;
+
+  mozilla::ipc::IPCResult
+  RecvFinish() override;
 
   mozilla::ipc::IPCResult
   RecvLoaded() override;
@@ -4272,14 +4285,17 @@ Datastore::PrivateBrowsingClear()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mPrivateBrowsingId);
   MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(!mInUpdateBatch);
 
   if (mValues.Count()) {
-    DebugOnly<bool> ok = UpdateUsage(-mUsage);
-    MOZ_ASSERT(ok);
+    MarkSnapshotsDirty();
 
     mValues.Clear();
 
     mOrderedItems.Clear();
+
+    DebugOnly<bool> ok = UpdateUsage(-mSizeOfItems);
+    MOZ_ASSERT(ok);
 
     mSizeOfKeys = 0;
     mSizeOfItems = 0;
@@ -4306,33 +4322,35 @@ Datastore::BeginUpdateBatch(int64_t aSnapshotInitialUsage)
 #endif
 }
 
-void
+int64_t
 Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aSnapshotPeakUsage >= 0);
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mInUpdateBatch);
 
   mWriteOptimizer.ApplyWrites(mOrderedItems);
 
-  int64_t delta = mUpdateBatchUsage - aSnapshotPeakUsage;
+  if (aSnapshotPeakUsage >= 0) {
+    int64_t delta = mUpdateBatchUsage - aSnapshotPeakUsage;
 
-  if (mActiveDatabases.Count()) {
-    // We can't apply deltas while other databases are still active.
-    // The final delta must be zero or negative, but individual deltas can be
-    // positive. A positive delta can't be applied asynchronously since there's
-    // no way to fire the quota exceeded error event.
+    if (mActiveDatabases.Count()) {
+      // We can't apply deltas while other databases are still active.
+      // The final delta must be zero or negative, but individual deltas can
+      // be positive. A positive delta can't be applied asynchronously since
+      // there's no way to fire the quota exceeded error event.
 
-    mPendingUsageDeltas.AppendElement(delta);
-  } else {
-    MOZ_ASSERT(delta <= 0);
-    if (delta != 0) {
-      DebugOnly<bool> ok = UpdateUsage(delta);
-      MOZ_ASSERT(ok);
+      mPendingUsageDeltas.AppendElement(delta);
+    } else {
+      MOZ_ASSERT(delta <= 0);
+      if (delta != 0) {
+        DebugOnly<bool> ok = UpdateUsage(delta);
+        MOZ_ASSERT(ok);
+      }
     }
   }
 
+  int64_t result = mUpdateBatchUsage;
   mUpdateBatchUsage = -1;
 
   if (IsPersistent()) {
@@ -4342,6 +4360,8 @@ Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage)
 #ifdef DEBUG
   mInUpdateBatch = false;
 #endif
+
+  return result;
 }
 
 int64_t
@@ -4476,6 +4496,21 @@ Datastore::NotifySnapshots(Database* aDatabase,
     Snapshot* snapshot = database->GetSnapshot();
     if (snapshot) {
       snapshot->SaveItem(aKey, aOldValue, aAffectsOrder);
+    }
+  }
+}
+
+void
+Datastore::MarkSnapshotsDirty()
+{
+  AssertIsOnBackgroundThread();
+
+  for (auto iter = mDatabases.ConstIter(); !iter.Done(); iter.Next()) {
+    Database* database = iter.Get()->GetKey();
+
+    Snapshot* snapshot = database->GetSnapshot();
+    if (snapshot) {
+      snapshot->MarkDirty();
     }
   }
 }
@@ -4799,7 +4834,7 @@ Snapshot::Snapshot(Database* aDatabase,
   , mDatastore(aDatabase->GetDatastore())
   , mDocumentURI(aDocumentURI)
   , mTotalLength(0)
-  , mInitialUsage(-1)
+  , mUsage(-1)
   , mPeakUsage(-1)
   , mSavedKeys(false)
   , mActorDestroyed(false)
@@ -4807,6 +4842,7 @@ Snapshot::Snapshot(Database* aDatabase,
   , mLoadedReceived(false)
   , mLoadedAllItems(false)
   , mLoadKeysReceived(false)
+  , mSentMarkDirty(false)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
@@ -4824,6 +4860,8 @@ Snapshot::SaveItem(const nsAString& aKey,
                    bool aAffectsOrder)
 {
   AssertIsOnBackgroundThread();
+
+  MarkDirty();
 
   if (mLoadedAllItems) {
     return;
@@ -4843,6 +4881,34 @@ Snapshot::SaveItem(const nsAString& aKey,
 }
 
 void
+Snapshot::MarkDirty()
+{
+  AssertIsOnBackgroundThread();
+
+  if (!mSentMarkDirty) {
+    Unused << SendMarkDirty();
+    mSentMarkDirty = true;
+  }
+}
+
+void
+Snapshot::Finish()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mDatabase);
+  MOZ_ASSERT(mDatastore);
+  MOZ_ASSERT(!mFinishReceived);
+
+  mDatastore->BeginUpdateBatch(mUsage);
+
+  mDatastore->EndUpdateBatch(mPeakUsage);
+
+  mDatabase->UnregisterSnapshot(this);
+
+  mFinishReceived = true;
+}
+
+void
 Snapshot::ActorDestroy(ActorDestroyReason aWhy)
 {
   AssertIsOnBackgroundThread();
@@ -4851,11 +4917,7 @@ Snapshot::ActorDestroy(ActorDestroyReason aWhy)
   mActorDestroyed = true;
 
   if (!mFinishReceived) {
-    mDatabase->UnregisterSnapshot(this);
-
-    mDatastore->BeginUpdateBatch(mInitialUsage);
-
-    mDatastore->EndUpdateBatch(mPeakUsage);
+    Finish();
   }
 }
 
@@ -4873,26 +4935,21 @@ Snapshot::RecvDeleteMe()
 }
 
 mozilla::ipc::IPCResult
-Snapshot::RecvFinish(const LSSnapshotFinishInfo& aFinishInfo)
+Snapshot::RecvCheckpoint(nsTArray<LSWriteInfo>&& aWriteInfos)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mInitialUsage >= 0);
-  MOZ_ASSERT(mPeakUsage >= mInitialUsage);
+  MOZ_ASSERT(mUsage >= 0);
+  MOZ_ASSERT(mPeakUsage >= mUsage);
 
-  if (NS_WARN_IF(mFinishReceived)) {
+  if (NS_WARN_IF(aWriteInfos.IsEmpty())) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mFinishReceived = true;
+  mDatastore->BeginUpdateBatch(mUsage);
 
-  mDatabase->UnregisterSnapshot(this);
-
-  mDatastore->BeginUpdateBatch(mInitialUsage);
-
-  const nsTArray<LSWriteInfo>& writeInfos = aFinishInfo.writeInfos();
-  for (uint32_t index = 0; index < writeInfos.Length(); index++) {
-    const LSWriteInfo& writeInfo = writeInfos[index];
+  for (uint32_t index = 0; index < aWriteInfos.Length(); index++) {
+    const LSWriteInfo& writeInfo = aWriteInfos[index];
     switch (writeInfo.type()) {
       case LSWriteInfo::TLSSetItemInfo: {
         const LSSetItemInfo& info = writeInfo.get_LSSetItemInfo();
@@ -4928,7 +4985,22 @@ Snapshot::RecvFinish(const LSSnapshotFinishInfo& aFinishInfo)
     }
   }
 
-  mDatastore->EndUpdateBatch(mPeakUsage);
+  mUsage = mDatastore->EndUpdateBatch(-1);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+Snapshot::RecvFinish()
+{
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(mFinishReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  Finish();
 
   return IPC_OK();
 }

@@ -26,6 +26,10 @@ function* testSteps()
   data.value = repeatChar(data.sizeKB * 1024 - data.key.length, ".");
   data.urlCount = groupLimitKB / data.sizeKB;
 
+  info("Setting pref");
+
+  Services.prefs.setBoolPref("dom.storage.snapshot_reusing", false);
+
   info("Setting limits");
 
   setGlobalLimit(globalLimitKB);
