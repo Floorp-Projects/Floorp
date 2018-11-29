@@ -30,6 +30,10 @@ function startTest()
 
 SimpleTest.waitForExplicitFinish();
 
+// Initialize storage before setting the cookie, otherwise we won't be testing
+// the checks in setItem/getItem methods.
+var storage = localStorage;
+
 SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': false, 'context': document}], startTest);
 
 </script>
