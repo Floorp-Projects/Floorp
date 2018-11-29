@@ -1,6 +1,8 @@
-use command::{AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
-              GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters,
-              CHROME_ELEMENT_KEY, LEGACY_ELEMENT_KEY};
+use crate::command::{
+    AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
+    GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters, CHROME_ELEMENT_KEY,
+    LEGACY_ELEMENT_KEY,
+};
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
@@ -48,10 +50,10 @@ use webdriver::response::{CloseWindowResponse, CookieResponse, CookiesResponse,
                           ValueResponse, WebDriverResponse, WindowRectResponse};
 use webdriver::server::{Session, WebDriverHandler};
 
-use build::BuildInfo;
-use capabilities::{FirefoxCapabilities, FirefoxOptions};
-use logging;
-use prefs;
+use crate::build::BuildInfo;
+use crate::capabilities::{FirefoxCapabilities, FirefoxOptions};
+use crate::logging;
+use crate::prefs;
 
 // localhost may be routed to the IPv6 stack on certain systems,
 // and nsIServerSocket in Marionette only supports IPv4

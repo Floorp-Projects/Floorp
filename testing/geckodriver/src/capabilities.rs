@@ -1,6 +1,6 @@
 use base64;
-use command::LogOptions;
-use logging::Level;
+use crate::command::LogOptions;
+use crate::logging::Level;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::platform::firefox_default_path;
@@ -500,7 +500,7 @@ mod tests {
 
     use self::mozprofile::preferences::Pref;
     use super::*;
-    use marionette::MarionetteHandler;
+    use crate::marionette::MarionetteHandler;
     use std::default::Default;
     use std::fs::File;
     use std::io::Read;
