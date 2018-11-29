@@ -950,7 +950,7 @@ impl DisplayListBuilder {
             let mut iter = BuiltDisplayListIter::new(&temp);
             while let Some(item) = iter.next_raw() {
                 if index >= range.start.unwrap_or(0) && range.end.map_or(true, |e| index < e) {
-                    writeln!(sink, "{}{:?}", "  ".repeat(indent), item.display_item());
+                    writeln!(sink, "{}{:?}", "  ".repeat(indent), item.display_item()).unwrap();
                 }
                 index += 1;
             }
