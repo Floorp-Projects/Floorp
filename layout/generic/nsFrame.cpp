@@ -1053,8 +1053,15 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
   DisplayItemArray* items = GetProperty(DisplayItems());
   if (items) {
     for (nsDisplayItem* i : *items) {
-      if (i->GetDependentFrame() == this &&
-          !i->HasDeletedFrame()) {
+      if (i->HasDeletedFrame() || i->Frame() == this) {
+        // Ignore the items with deleted frames, and the items with |this| as
+        // the primary frame.
+        continue;
+      }
+
+      if (i->GetDependentFrame() == this) {
+        // For items with |this| as a dependent frame, mark the primary frame
+        // for rebuild.
         i->Frame()->MarkNeedsDisplayItemRebuild();
       }
     }
