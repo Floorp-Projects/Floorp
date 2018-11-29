@@ -97,12 +97,19 @@ public:
   Clear(LSObject* aObject,
         LSNotifyInfo& aNotifyInfo);
 
+  nsresult
+  BeginExplicitSnapshot(LSObject* aObject);
+
+  nsresult
+  EndExplicitSnapshot(LSObject* aObject);
+
 private:
   ~LSDatabase();
 
   nsresult
   EnsureSnapshot(LSObject* aObject,
-                 bool aRequestedBySetItem);
+                 bool aRequestedBySetItem,
+                 bool aExplicit = false);
 
   void
   AllowToClose();

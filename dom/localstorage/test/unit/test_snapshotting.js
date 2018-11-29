@@ -14,36 +14,229 @@ function* testSteps()
     { key: "key2", value: "value2" },
     { key: "key3", value: "value3" },
     { key: "key4", value: "value4" },
-    { key: "key5", value: "value5" }
+    { key: "key5", value: "value5" },
+    { key: "key6", value: "value6" },
+    { key: "key7", value: "value7" },
+    { key: "key8", value: "value8" },
+    { key: "key9", value: "value9" },
+    { key: "key10", value: "value10" }
   ];
 
-  info("Getting storage");
-
-  let storage = getLocalStorage(getPrincipal(url));
-
-  info("Adding data");
-
-  for (let item of items) {
-    storage.setItem(item.key, item.value);
+  function getPartialPrefill()
+  {
+    let size = 0;
+    for (let i = 0; i < items.length / 2; i++) {
+      let item = items[i];
+      size += item.key.length + item.value.length;
+    }
+    return size;
   }
 
-  info("Saving key order");
+  const prefillValues = [
+    0,                   // no prefill
+    getPartialPrefill(), // partial prefill
+    -1,                  // full prefill
+  ];
 
-  let keys = [];
-  for (let i = 0; i < items.length; i++) {
-    keys.push(storage.key(i));
-  }
+  for (let prefillValue of prefillValues) {
+    info("Setting prefill value");
 
-  // Let the internal snapshot finish by returning to the event loop.
-  continueToNextStep();
-  yield undefined;
+    Services.prefs.setIntPref("dom.storage.snapshot_prefill", prefillValue);
 
-  is(storage.length, items.length, "Correct length");
+    info("Getting storage");
 
-  info("Verifying key order");
+    let storage = getLocalStorage(getPrincipal(url));
 
-  for (let i = 0; i < items.length; i++) {
-    is(storage.key(i), keys[i], "Correct key");
+    // 1st snapshot
+
+    info("Adding data");
+
+    for (let item of items) {
+      storage.setItem(item.key, item.value);
+    }
+
+    info("Saving key order");
+
+    // This forces GetKeys to be called internally.
+    let savedKeys = Object.keys(storage);
+
+    // GetKey should match GetKeys
+    for (let i = 0; i < savedKeys.length; i++) {
+      is(storage.key(i), savedKeys[i], "Correct key");
+    }
+
+    info("Returning to event loop");
+
+    // Returning to event loop forces the internal snapshot to finish.
+    continueToNextStep();
+    yield undefined;
+
+    // 2nd snapshot
+
+    info("Verifying length");
+
+    is(storage.length, items.length, "Correct length");
+
+    info("Verifying key order");
+
+    let keys = Object.keys(storage);
+
+    is(keys.length, savedKeys.length);
+
+    for (let i = 0; i < keys.length; i++) {
+      is(keys[i], savedKeys[i], "Correct key");
+    }
+
+    info("Verifying values");
+
+    for (let item of items) {
+      is(storage.getItem(item.key), item.value, "Correct value");
+    }
+
+    info("Returning to event loop");
+
+    continueToNextStep();
+    yield undefined;
+
+    // 3rd snapshot
+
+    // Force key2 to load.
+    storage.getItem("key2");
+
+    // Fill out write infos a bit.
+    storage.removeItem("key5");
+    storage.setItem("key5", "value5");
+    storage.removeItem("key5");
+    storage.setItem("key11", "value11");
+    storage.setItem("key5", "value5");
+
+    items.push({ key: "key11", value: "value11" });
+
+    info("Verifying length");
+
+    is(storage.length, items.length, "Correct length");
+
+    // This forces to get all keys from the parent and then apply write infos
+    // on already cached values.
+    savedKeys = Object.keys(storage);
+
+    info("Verifying values");
+
+    for (let item of items) {
+      is(storage.getItem(item.key), item.value, "Correct value");
+    }
+
+    storage.removeItem("key11");
+
+    items.pop();
+
+    info("Returning to event loop");
+
+    continueToNextStep();
+    yield undefined;
+
+    // 4th snapshot
+
+    // Force loading of all items.
+    info("Verifying length");
+
+    is(storage.length, items.length, "Correct length");
+
+    info("Verifying values");
+
+    for (let item of items) {
+      is(storage.getItem(item.key), item.value, "Correct value");
+    }
+
+    is(storage.getItem("key11"), null, "Correct value");
+
+    info("Returning to event loop");
+
+    continueToNextStep();
+    yield undefined;
+
+    // 5th snapshot
+
+    // Force loading of all keys.
+    info("Saving key order");
+
+    savedKeys = Object.keys(storage);
+
+    // Force loading of all items.
+    info("Verifying length");
+
+    is(storage.length, items.length, "Correct length");
+
+    info("Verifying values");
+
+    for (let item of items) {
+      is(storage.getItem(item.key), item.value, "Correct value");
+    }
+
+    is(storage.getItem("key11"), null, "Correct value");
+
+    info("Returning to event loop");
+
+    continueToNextStep();
+    yield undefined;
+
+    // 6th snapshot
+    info("Verifying unknown item");
+
+    is(storage.getItem("key11"), null, "Correct value");
+
+    info("Verifying unknown item again");
+
+    is(storage.getItem("key11"), null, "Correct value");
+
+    info("Returning to event loop");
+
+    continueToNextStep();
+    yield undefined;
+
+    // 7th snapshot
+
+    // Save actual key order.
+    info("Saving key order");
+
+    savedKeys = Object.keys(storage);
+
+    continueToNextStep();
+    yield undefined;
+
+    // 8th snapshot
+
+    // Force loading of all items, but in reverse order.
+    info("Getting values");
+
+    for (let i = items.length - 1; i >= 0; i--) {
+      let item = items[i];
+      storage.getItem(item.key);
+    }
+
+    info("Verifying key order");
+
+    keys = Object.keys(storage);
+
+    is(keys.length, savedKeys.length);
+
+    for (let i = 0; i < keys.length; i++) {
+      is(keys[i], savedKeys[i], "Correct key");
+    }
+
+    continueToNextStep();
+    yield undefined;
+
+    // 9th snapshot
+
+    info("Clearing");
+
+    storage.clear();
+
+    info("Returning to event loop");
+
+    continueToNextStep();
+    yield undefined;
   }
 
   finishTest();

@@ -49,6 +49,8 @@ class LSObject final
   nsCString mOrigin;
   nsString mDocumentURI;
 
+  bool mInExplicitSnapshot;
+
 public:
   static nsresult
   CreateForWindow(nsPIDOMWindowInner* aWindow,
@@ -141,6 +143,14 @@ public:
   Close(nsIPrincipal& aSubjectPrincipal,
         ErrorResult& aError) override;
 
+  void
+  BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
+                        ErrorResult& aError) override;
+
+  void
+  EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
+                      ErrorResult& aError) override;
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LSObject, Storage)
 
@@ -170,6 +180,9 @@ private:
   OnChange(const nsAString& aKey,
            const nsAString& aOldValue,
            const nsAString& aNewValue);
+
+  nsresult
+  EndExplicitSnapshotInternal();
 
   // Storage overrides.
   void

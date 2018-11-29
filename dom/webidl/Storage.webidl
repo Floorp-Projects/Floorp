@@ -41,4 +41,10 @@ partial interface Storage {
 
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
   void close();
+
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  void beginExplicitSnapshot();
+
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  void endExplicitSnapshot();
 };
