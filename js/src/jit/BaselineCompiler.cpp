@@ -42,8 +42,13 @@ using namespace js::jit;
 using mozilla::AssertedCast;
 using mozilla::Maybe;
 
-BaselineCompilerHandler::BaselineCompilerHandler(JSScript* script)
-  : compileDebugInstrumentation_(script->isDebuggee())
+namespace js {
+namespace jit {
+
+BaselineCompilerHandler::BaselineCompilerHandler(TempAllocator& alloc, JSScript* script)
+  : alloc_(alloc),
+    script_(script),
+    compileDebugInstrumentation_(script->isDebuggee())
 {
 }
 
@@ -74,7 +79,8 @@ BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc, J
 }
 
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script)
-  : BaselineCodeGen(cx, alloc, script, script),
+  : BaselineCodeGen(cx, alloc, script,
+                    /* HandlerArgs = */ alloc, script),
     pcMappingEntries_(),
     profilerPushToggleOffset_(),
     profilerEnterFrameToggleOffset_(),
@@ -87,18 +93,30 @@ BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript
 }
 
 bool
+BaselineCompilerHandler::init()
+{
+    uint32_t len = script_->length();
+
+    if (!labels_.init(alloc_, len)) {
+        return false;
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        new (&labels_[i]) Label();
+    }
+
+    return true;
+}
+
+bool
 BaselineCompiler::init()
 {
     if (!analysis_.init(alloc_, cx->caches().gsnCache)) {
         return false;
     }
 
-    if (!labels_.init(alloc_, script->length())) {
+    if (!handler.init()) {
         return false;
-    }
-
-    for (size_t i = 0; i < script->length(); i++) {
-        new (&labels_[i]) Label();
     }
 
     if (!frame.init(alloc_)) {
@@ -1188,7 +1206,7 @@ BaselineCompiler::emitBody()
             // Fully sync the stack if there are incoming jumps.
             frame.syncStack(0);
             frame.setStackDepth(info->stackDepth);
-            masm.bind(labelOf(pc));
+            masm.bind(handler.labelOf(pc));
         } else if (MOZ_UNLIKELY(compileDebugInstrumentation())) {
             // Also fully sync the stack if the debugger is enabled.
             frame.syncStack(0);
@@ -1436,14 +1454,52 @@ BaselineCodeGen<Handler>::emit_JSOP_UNPICK()
     return true;
 }
 
+template <>
+void
+BaselineCompilerCodeGen::emitJump()
+{
+    MOZ_ASSERT(IsJumpOpcode(JSOp(*pc)));
+    frame.assertSyncedStack();
+
+    jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
+    masm.jump(handler.labelOf(target));
+}
+
+template <>
+void
+BaselineInterpreterCodeGen::emitJump()
+{
+    // We have to add the current pc's jump offset to the frame's pc.
+    MOZ_CRASH("NYI: interpreter emitJump");
+}
+
+template <>
+void
+BaselineCompilerCodeGen::emitTestBooleanTruthy(bool branchIfTrue, ValueOperand val)
+{
+    MOZ_ASSERT(IsJumpOpcode(JSOp(*pc)));
+    frame.assertSyncedStack();
+
+    jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
+    masm.branchTestBooleanTruthy(branchIfTrue, val, handler.labelOf(target));
+}
+
+template <>
+void
+BaselineInterpreterCodeGen::emitTestBooleanTruthy(bool branchIfTrue, ValueOperand val)
+{
+    Label done;
+    masm.branchTestBooleanTruthy(!branchIfTrue, val, &done);
+    emitJump();
+    masm.bind(&done);
+}
+
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_GOTO()
 {
     frame.syncStack(0);
-
-    jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
-    masm.jump(labelOf(target));
+    emitJump();
     return true;
 }
 
@@ -1477,7 +1533,7 @@ BaselineCodeGen<Handler>::emitTest(bool branchIfTrue)
     }
 
     // IC will leave a BooleanValue in R0, just need to branch on it.
-    masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
+    emitTestBooleanTruthy(branchIfTrue, R0);
     return true;
 }
 
@@ -1509,7 +1565,7 @@ BaselineCodeGen<Handler>::emitAndOr(bool branchIfTrue)
         return false;
     }
 
-    masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
+    emitTestBooleanTruthy(branchIfTrue, R0);
     return true;
 }
 
@@ -2361,12 +2417,11 @@ BaselineCodeGen<Handler>::emit_JSOP_CASE()
     frame.popRegsAndSync(1);
 
     Label done;
-    jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
     masm.branchTestBooleanTruthy(/* branchIfTrue */ false, R0, &done);
     {
         // Pop the switch value if the case matches.
         masm.addToStackPtr(Imm32(sizeof(Value)));
-        masm.jump(labelOf(target));
+        emitJump();
     }
     masm.bind(&done);
     return true;
@@ -2410,7 +2465,7 @@ BaselineCodeGen<Handler>::emit_JSOP_NEWARRAY()
 }
 
 typedef ArrayObject* (*NewArrayCopyOnWriteFn)(JSContext*, HandleArrayObject, gc::InitialHeap);
-const VMFunction jit::NewArrayCopyOnWriteInfo =
+const VMFunction NewArrayCopyOnWriteInfo =
     FunctionInfo<NewArrayCopyOnWriteFn>(js::NewDenseCopyOnWriteArray, "NewDenseCopyOnWriteArray");
 
 template <typename Handler>
@@ -3998,7 +4053,7 @@ BaselineCodeGen<Handler>::emit_JSOP_OPTIMIZE_SPREADCALL()
 
 typedef bool (*ImplicitThisFn)(JSContext*, HandleObject, HandlePropertyName,
                                MutableHandleValue);
-const VMFunction jit::ImplicitThisInfo =
+const VMFunction ImplicitThisInfo =
     FunctionInfo<ImplicitThisFn>(ImplicitThisOperation, "ImplicitThisOperation");
 
 template <typename Handler>
@@ -4129,8 +4184,7 @@ BaselineCodeGen<Handler>::emit_JSOP_GOSUB()
 {
     // Jump to the finally block.
     frame.syncStack(0);
-    jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
-    masm.jump(labelOf(target));
+    emitJump();
     return true;
 }
 
@@ -4759,19 +4813,43 @@ BaselineCodeGen<Handler>::emit_JSOP_TOSTRING()
     return true;
 }
 
+template <>
+void
+BaselineCompilerCodeGen::emitGetTableSwitchIndex(ValueOperand val, Register dest)
+{
+    jsbytecode* defaultpc = pc + GET_JUMP_OFFSET(pc);
+    Label* defaultLabel = handler.labelOf(defaultpc);
+
+    int32_t low = GET_JUMP_OFFSET(pc + 1 * JUMP_OFFSET_LEN);
+    int32_t high = GET_JUMP_OFFSET(pc + 2 * JUMP_OFFSET_LEN);
+    int32_t length = high - low + 1;
+
+    // Jump to the 'default' pc if not int32 (tableswitch is only used when
+    // all cases are int32).
+    masm.branchTestInt32(Assembler::NotEqual, val, defaultLabel);
+    masm.unboxInt32(val, dest);
+
+    // Subtract 'low'. Bounds check.
+    if (low != 0) {
+        masm.sub32(Imm32(low), dest);
+    }
+    masm.branch32(Assembler::AboveOrEqual, dest, Imm32(length), defaultLabel);
+}
+
+template <>
+void
+BaselineInterpreterCodeGen::emitGetTableSwitchIndex(ValueOperand val, Register dest)
+{
+    MOZ_CRASH("NYI: interpreter emitTableSwitchJumpTableIndex");
+}
+
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_TABLESWITCH()
 {
     frame.popRegsAndSync(1);
 
-    jsbytecode* defaultpc = pc + GET_JUMP_OFFSET(pc);
-    Label* defaultLabel = labelOf(defaultpc);
-
-    int32_t low = GET_JUMP_OFFSET(pc + 1 * JUMP_OFFSET_LEN);
-    int32_t high = GET_JUMP_OFFSET(pc + 2 * JUMP_OFFSET_LEN);
     uint32_t firstResumeIndex = GET_RESUMEINDEX(pc + 3 * JUMP_OFFSET_LEN);
-    int32_t length = high - low + 1;
 
     Register key = R0.scratchReg();
     Register scratch1 = R1.scratchReg();
@@ -4781,16 +4859,9 @@ BaselineCodeGen<Handler>::emit_JSOP_TABLESWITCH()
     // Note: this stub may clobber scratch1.
     masm.call(cx->runtime()->jitRuntime()->getDoubleToInt32ValueStub());
 
-    // Jump to the 'default' pc if not int32 (tableswitch is only used when
-    // all cases are int32).
-    masm.branchTestInt32(Assembler::NotEqual, R0, defaultLabel);
-    masm.unboxInt32(R0, key);
-
-    // Subtract 'low'. Bounds check.
-    if (low != 0) {
-        masm.sub32(Imm32(low), key);
-    }
-    masm.branch32(Assembler::AboveOrEqual, key, Imm32(length), defaultLabel);
+    // Load the index in the jump table in |key|, or branch to default pc if not
+    // int32 or out-of-range.
+    emitGetTableSwitchIndex(R0, key);
 
     // Jump to resumeEntries[firstResumeIndex + key].
     //
@@ -5809,3 +5880,6 @@ BaselineCodeGen<Handler>::emit_JSOP_DYNAMIC_IMPORT()
 
 // Instantiate explicitly for now to make sure it compiles.
 template class jit::BaselineCodeGen<BaselineInterpreterHandler>;
+
+} // namespace jit
+} // namespace js
