@@ -15,8 +15,8 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
-#include "nsRefPtrHashtable.h"
 
 #define DISABLE_ASSERTS_FOR_FUZZING 0
 
@@ -171,6 +171,28 @@ private:
   ~Datastore();
 };
 
+class PreparedDatastore
+{
+  RefPtr<Datastore> mDatastore;
+
+public:
+  explicit PreparedDatastore(Datastore* aDatastore)
+    : mDatastore(aDatastore)
+  {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(aDatastore);
+  }
+
+  already_AddRefed<Datastore>
+  ForgetDatastore()
+  {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(mDatastore);
+
+    return mDatastore.forget();
+  }
+};
+
 /*******************************************************************************
  * Actor class declarations
  ******************************************************************************/
@@ -180,8 +202,10 @@ class Database final
 {
   RefPtr<Datastore> mDatastore;
 
-#ifdef DEBUG
+  bool mAllowedToClose;
   bool mActorDestroyed;
+  bool mRequestedAllowToClose;
+#ifdef DEBUG
   bool mActorWasAlive;
 #endif
 
@@ -192,11 +216,17 @@ public:
   void
   SetActorAlive(already_AddRefed<Datastore>&& aDatastore);
 
+  void
+  RequestAllowToClose();
+
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Database)
 
 private:
   // Reference counted.
   ~Database();
+
+  void
+  AllowToClose();
 
   // IPDL methods are only called by IPDL.
   void
@@ -204,6 +234,9 @@ private:
 
   mozilla::ipc::IPCResult
   RecvDeleteMe() override;
+
+  mozilla::ipc::IPCResult
+  RecvAllowToClose() override;
 
   mozilla::ipc::IPCResult
   RecvGetLength(uint32_t* aLength) override;
@@ -304,6 +337,9 @@ private:
   void
   SendResults();
 
+  void
+  Cleanup();
+
   NS_IMETHOD
   Run() override;
 
@@ -313,8 +349,100 @@ private:
 };
 
 /*******************************************************************************
+ * Other class declarations
+ ******************************************************************************/
+
+class QuotaClient final
+  : public mozilla::dom::quota::Client
+{
+  static QuotaClient* sInstance;
+
+  bool mShutdownRequested;
+
+public:
+  QuotaClient();
+
+  static bool
+  IsShuttingDownOnBackgroundThread()
+  {
+    AssertIsOnBackgroundThread();
+
+    if (sInstance) {
+      return sInstance->IsShuttingDown();
+    }
+
+    return QuotaManager::IsShuttingDown();
+  }
+
+  static bool
+  IsShuttingDownOnNonBackgroundThread()
+  {
+    MOZ_ASSERT(!IsOnBackgroundThread());
+
+    return QuotaManager::IsShuttingDown();
+  }
+
+  bool
+  IsShuttingDown() const
+  {
+    AssertIsOnBackgroundThread();
+
+    return mShutdownRequested;
+  }
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::QuotaClient, override)
+
+  Type
+  GetType() override;
+
+  nsresult
+  InitOrigin(PersistenceType aPersistenceType,
+             const nsACString& aGroup,
+             const nsACString& aOrigin,
+             const AtomicBool& aCanceled,
+             UsageInfo* aUsageInfo) override;
+
+  nsresult
+  GetUsageForOrigin(PersistenceType aPersistenceType,
+                    const nsACString& aGroup,
+                    const nsACString& aOrigin,
+                    const AtomicBool& aCanceled,
+                    UsageInfo* aUsageInfo) override;
+
+  void
+  OnOriginClearCompleted(PersistenceType aPersistenceType,
+                         const nsACString& aOrigin)
+                         override;
+
+  void
+  ReleaseIOThreadObjects() override;
+
+  void
+  AbortOperations(const nsACString& aOrigin) override;
+
+  void
+  AbortOperationsForProcess(ContentParentId aContentParentId) override;
+
+  void
+  StartIdleMaintenance() override;
+
+  void
+  StopIdleMaintenance() override;
+
+  void
+  ShutdownWorkThreads() override;
+
+private:
+  ~QuotaClient() override;
+};
+
+/*******************************************************************************
  * Globals
  ******************************************************************************/
+
+typedef nsTArray<PrepareDatastoreOp*> PrepareDatastoreOpArray;
+
+StaticAutoPtr<PrepareDatastoreOpArray> gPrepareDatastoreOps;
 
 typedef nsDataHashtable<nsCStringHashKey, Datastore*> DatastoreHashtable;
 
@@ -322,10 +450,10 @@ StaticAutoPtr<DatastoreHashtable> gDatastores;
 
 uint64_t gLastDatastoreId = 0;
 
-typedef nsRefPtrHashtable<nsUint64HashKey, Datastore>
-  TemporaryStrongDatastoreHashtable;
+typedef nsClassHashtable<nsUint64HashKey, PreparedDatastore>
+  PreparedDatastoreHashtable;
 
-StaticAutoPtr<TemporaryStrongDatastoreHashtable> gTemporaryStrongDatastores;
+StaticAutoPtr<PreparedDatastoreHashtable> gPreparedDatastores;
 
 typedef nsTArray<Database*> LiveDatabaseArray;
 
@@ -342,19 +470,23 @@ AllocPBackgroundLSDatabaseParent(const uint64_t& aDatastoreId)
 {
   AssertIsOnBackgroundThread();
 
-  if (NS_WARN_IF(!gTemporaryStrongDatastores)) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(!gPreparedDatastores)) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
-  Datastore* datastore = gTemporaryStrongDatastores->GetWeak(aDatastoreId);
-  if (NS_WARN_IF(!datastore)) {
+  PreparedDatastore* preparedDatastore = gPreparedDatastores->Get(aDatastoreId);
+  if (NS_WARN_IF(!preparedDatastore)) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
   // If we ever decide to return null from this point on, we need to make sure
-  // that the prepared datastore is removed from the gTemporaryStrongDatastores
+  // that the prepared datastore is removed from the gPreparedDatastores
   // hashtable.
   // We also assume that IPDL must call RecvPBackgroundLSDatabaseConstructor
   // once we return a valid actor in this method.
@@ -371,20 +503,21 @@ RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT(gTemporaryStrongDatastores);
-  MOZ_ASSERT(gTemporaryStrongDatastores->GetWeak(aDatastoreId));
+  MOZ_ASSERT(gPreparedDatastores);
+  MOZ_ASSERT(gPreparedDatastores->Get(aDatastoreId));
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
   // The actor is now completely built (it has a manager, channel and it's
   // registered as a subprotocol).
   // ActorDestroy will be called if we fail here.
 
-  RefPtr<Datastore> datastore;
-  gTemporaryStrongDatastores->Remove(aDatastoreId, datastore.StartAssignment());
-  MOZ_ASSERT(datastore);
+  nsAutoPtr<PreparedDatastore> preparedDatastore;
+  gPreparedDatastores->Remove(aDatastoreId, &preparedDatastore);
+  MOZ_ASSERT(preparedDatastore);
 
   auto* database = static_cast<Database*>(aActor);
 
-  database->SetActorAlive(datastore.forget());
+  database->SetActorAlive(preparedDatastore->ForgetDatastore());
 
   return true;
 }
@@ -406,6 +539,10 @@ AllocPBackgroundLSRequestParent(PBackgroundParent* aBackgroundActor,
                                 const LSRequestParams& aParams)
 {
   AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
+    return nullptr;
+  }
 
   RefPtr<LSRequestBase> actor;
 
@@ -430,7 +567,16 @@ AllocPBackgroundLSRequestParent(PBackgroundParent* aBackgroundActor,
         return nullptr;
       }
 
-      actor = new PrepareDatastoreOp(aParams);
+      RefPtr<PrepareDatastoreOp> prepareDatastoreOp =
+        new PrepareDatastoreOp(aParams);
+
+      if (!gPrepareDatastoreOps) {
+        gPrepareDatastoreOps = new PrepareDatastoreOpArray();
+      }
+      gPrepareDatastoreOps->AppendElement(prepareDatastoreOp);
+
+      actor = std::move(prepareDatastoreOp);
+
       break;
     }
 
@@ -449,6 +595,7 @@ RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
   // The actor is now completely built.
 
@@ -470,6 +617,20 @@ DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor)
 
   return true;
 }
+
+namespace localstorage {
+
+already_AddRefed<mozilla::dom::quota::Client>
+CreateQuotaClient()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
+
+  RefPtr<QuotaClient> client = new QuotaClient();
+  return client.forget();
+}
+
+} // namespace localstorage
 
 /*******************************************************************************
  * DatastoreOperationBase
@@ -570,8 +731,10 @@ Datastore::GetKeys(nsTArray<nsString>& aKeys) const
  ******************************************************************************/
 
 Database::Database()
+  : mAllowedToClose(false)
+  , mActorDestroyed(false)
+  , mRequestedAllowToClose(false)
 #ifdef DEBUG
-  : mActorDestroyed(false)
   , mActorWasAlive(false)
 #endif
 {
@@ -580,6 +743,7 @@ Database::Database()
 
 Database::~Database()
 {
+  MOZ_ASSERT_IF(mActorWasAlive, mAllowedToClose);
   MOZ_ASSERT_IF(mActorWasAlive, mActorDestroyed);
 }
 
@@ -604,15 +768,33 @@ Database::SetActorAlive(already_AddRefed<Datastore>&& aDatastore)
 }
 
 void
-Database::ActorDestroy(ActorDestroyReason aWhy)
+Database::RequestAllowToClose()
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
+
+  if (mRequestedAllowToClose) {
+    return;
+  }
+
+  mRequestedAllowToClose = true;
+
+  // Send the RequestAllowToClose message to the child to avoid racing with the
+  // child actor. Except the case when the actor was already destroyed.
+  if (mActorDestroyed) {
+    MOZ_ASSERT(mAllowedToClose);
+  } else {
+    Unused << SendRequestAllowToClose();
+  }
+}
+
+void
+Database::AllowToClose()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mAllowedToClose);
   MOZ_ASSERT(mDatastore);
 
-#ifdef DEBUG
-  mActorDestroyed = true;
-#endif
+  mAllowedToClose = true;
 
   mDatastore = nullptr;
 
@@ -621,6 +803,19 @@ Database::ActorDestroy(ActorDestroyReason aWhy)
 
   if (gLiveDatabases->IsEmpty()) {
     gLiveDatabases = nullptr;
+  }
+}
+
+void
+Database::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  mActorDestroyed = true;
+
+  if (!mAllowedToClose) {
+    AllowToClose();
   }
 }
 
@@ -638,11 +833,31 @@ Database::RecvDeleteMe()
 }
 
 mozilla::ipc::IPCResult
+Database::RecvAllowToClose()
+{
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(mAllowedToClose)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  AllowToClose();
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 Database::RecvGetLength(uint32_t* aLength)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aLength);
   MOZ_ASSERT(mDatastore);
+
+  if (NS_WARN_IF(mAllowedToClose)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
 
   *aLength = mDatastore->GetLength();
 
@@ -656,6 +871,11 @@ Database::RecvGetKey(const uint32_t& aIndex, nsString* aKey)
   MOZ_ASSERT(aKey);
   MOZ_ASSERT(mDatastore);
 
+  if (NS_WARN_IF(mAllowedToClose)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   mDatastore->GetKey(aIndex, *aKey);
 
   return IPC_OK();
@@ -668,6 +888,11 @@ Database::RecvGetItem(const nsString& aKey, nsString* aValue)
   MOZ_ASSERT(aValue);
   MOZ_ASSERT(mDatastore);
 
+  if (NS_WARN_IF(mAllowedToClose)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   mDatastore->GetItem(aKey, *aValue);
 
   return IPC_OK();
@@ -678,6 +903,11 @@ Database::RecvSetItem(const nsString& aKey, const nsString& aValue)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mDatastore);
+
+  if (NS_WARN_IF(mAllowedToClose)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
 
   mDatastore->SetItem(aKey, aValue);
 
@@ -690,6 +920,11 @@ Database::RecvRemoveItem(const nsString& aKey)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mDatastore);
 
+  if (NS_WARN_IF(mAllowedToClose)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   mDatastore->RemoveItem(aKey);
 
   return IPC_OK();
@@ -700,6 +935,11 @@ Database::RecvClear()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mDatastore);
+
+  if (NS_WARN_IF(mAllowedToClose)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
 
   mDatastore->Clear();
 
@@ -712,6 +952,11 @@ Database::RecvGetKeys(nsTArray<nsString>* aKeys)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aKeys);
   MOZ_ASSERT(mDatastore);
+
+  if (NS_WARN_IF(mAllowedToClose)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
 
   mDatastore->GetKeys(*aKeys);
 
@@ -785,7 +1030,8 @@ PrepareDatastoreOp::OpenOnMainThread()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::OpeningOnMainThread);
 
-  if (!MayProceedOnNonOwningThread()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      !MayProceedOnNonOwningThread()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -828,7 +1074,8 @@ PrepareDatastoreOp::OpenOnOwningThread()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::OpeningOnOwningThread);
 
-  if (!MayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      !MayProceed()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -856,6 +1103,8 @@ PrepareDatastoreOp::SendReadyMessage()
 
   if (!MayProceed()) {
     MaybeSetFailureCode(NS_ERROR_FAILURE);
+
+    Cleanup();
 
     mState = State::Completed;
   } else {
@@ -895,10 +1144,13 @@ PrepareDatastoreOp::SendResults()
 
       uint64_t datastoreId = ++gLastDatastoreId;
 
-      if (!gTemporaryStrongDatastores) {
-        gTemporaryStrongDatastores = new TemporaryStrongDatastoreHashtable();
+      nsAutoPtr<PreparedDatastore> preparedDatastore(
+        new PreparedDatastore(datastore));
+
+      if (!gPreparedDatastores) {
+        gPreparedDatastores = new PreparedDatastoreHashtable();
       }
-      gTemporaryStrongDatastores->Put(datastoreId, datastore);
+      gPreparedDatastores->Put(datastoreId, preparedDatastore.forget());
 
       LSRequestPrepareDatastoreResponse prepareDatastoreResponse;
       prepareDatastoreResponse.datastoreId() = datastoreId;
@@ -912,7 +1164,22 @@ PrepareDatastoreOp::SendResults()
       PBackgroundLSRequestParent::Send__delete__(this, response);
   }
 
+  Cleanup();
+
   mState = State::Completed;
+}
+
+void
+PrepareDatastoreOp::Cleanup()
+{
+  AssertIsOnOwningThread();
+
+  MOZ_ASSERT(gPrepareDatastoreOps);
+  gPrepareDatastoreOps->RemoveElement(this);
+
+  if (gPrepareDatastoreOps->IsEmpty()) {
+    gPrepareDatastoreOps = nullptr;
+  }
 }
 
 NS_IMETHODIMP
@@ -969,6 +1236,141 @@ PrepareDatastoreOp::RecvFinish()
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
 
   return IPC_OK();
+}
+
+/*******************************************************************************
+ * QuotaClient
+ ******************************************************************************/
+
+QuotaClient* QuotaClient::sInstance = nullptr;
+
+QuotaClient::QuotaClient()
+  : mShutdownRequested(false)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
+
+  sInstance = this;
+}
+
+QuotaClient::~QuotaClient()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(sInstance == this, "We expect this to be a singleton!");
+
+  sInstance = nullptr;
+}
+
+mozilla::dom::quota::Client::Type
+QuotaClient::GetType()
+{
+  return QuotaClient::LS;
+}
+
+nsresult
+QuotaClient::InitOrigin(PersistenceType aPersistenceType,
+                        const nsACString& aGroup,
+                        const nsACString& aOrigin,
+                        const AtomicBool& aCanceled,
+                        UsageInfo* aUsageInfo)
+{
+  AssertIsOnIOThread();
+
+  if (!aUsageInfo) {
+    return NS_OK;
+  }
+
+  return GetUsageForOrigin(aPersistenceType,
+                           aGroup,
+                           aOrigin,
+                           aCanceled,
+                           aUsageInfo);
+}
+
+nsresult
+QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
+                               const nsACString& aGroup,
+                               const nsACString& aOrigin,
+                               const AtomicBool& aCanceled,
+                               UsageInfo* aUsageInfo)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aUsageInfo);
+
+  return NS_OK;
+}
+
+void
+QuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
+                                    const nsACString& aOrigin)
+{
+  AssertIsOnIOThread();
+}
+
+void
+QuotaClient::ReleaseIOThreadObjects()
+{
+  AssertIsOnIOThread();
+}
+
+void
+QuotaClient::AbortOperations(const nsACString& aOrigin)
+{
+  AssertIsOnBackgroundThread();
+}
+
+void
+QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId)
+{
+  AssertIsOnBackgroundThread();
+}
+
+void
+QuotaClient::StartIdleMaintenance()
+{
+  AssertIsOnBackgroundThread();
+}
+
+void
+QuotaClient::StopIdleMaintenance()
+{
+  AssertIsOnBackgroundThread();
+}
+
+void
+QuotaClient::ShutdownWorkThreads()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mShutdownRequested);
+
+  mShutdownRequested = true;
+
+  // gPrepareDatastoreOps are short lived objects running a state machine.
+  // The shutdown flag is checked between states, so we don't have to notify
+  // all the objects here.
+  // Allocation of a new PrepareDatastoreOp object is prevented once the
+  // shutdown flag is set.
+  // When the last PrepareDatastoreOp finishes, the gPrepareDatastoreOps array
+  // is destroyed.
+
+  // If database actors haven't been created yet, don't do anything special.
+  // We are shutting down and we can release prepared datastores immediatelly
+  // since database actors will never be created for them.
+  if (gPreparedDatastores) {
+    gPreparedDatastores->Clear();
+    gPreparedDatastores = nullptr;
+  }
+
+  if (gLiveDatabases) {
+    for (Database* database : *gLiveDatabases) {
+      database->RequestAllowToClose();
+    }
+  }
+
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
+    // Don't have to check gPreparedDatastores since we nulled it out above.
+    return !gPrepareDatastoreOps && !gDatastores && !gLiveDatabases;
+  }));
 }
 
 } // namespace dom

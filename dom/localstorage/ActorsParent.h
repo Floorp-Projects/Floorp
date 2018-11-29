@@ -21,6 +21,12 @@ class LSRequestParams;
 class PBackgroundLSDatabaseParent;
 class PBackgroundLSRequestParent;
 
+namespace quota {
+
+class Client;
+
+} // namespace quota
+
 PBackgroundLSDatabaseParent*
 AllocPBackgroundLSDatabaseParent(const uint64_t& aDatastoreId);
 
@@ -42,6 +48,13 @@ RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
 
 bool
 DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor);
+
+namespace localstorage {
+
+already_AddRefed<mozilla::dom::quota::Client>
+CreateQuotaClient();
+
+} // namespace localstorage
 
 } // namespace dom
 } // namespace mozilla
