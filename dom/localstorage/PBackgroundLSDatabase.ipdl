@@ -17,6 +17,7 @@ struct LSItemInfo
 struct LSSnapshotInitInfo
 {
   LSItemInfo[] itemInfos;
+  uint32_t totalLength;
   int64_t initialUsage;
   int64_t peakUsage;
 };

@@ -252,11 +252,57 @@ LSDatabase::Clear(LSObject* aObject,
 }
 
 nsresult
+LSDatabase::BeginExplicitSnapshot(LSObject* aObject)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  if (mSnapshot) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
+  nsresult rv = EnsureSnapshot(aObject,
+                               /* aRequestedBySetItem */ false,
+                               /* aExplicit */ true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LSDatabase::EndExplicitSnapshot(LSObject* aObject)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  if (!mSnapshot) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  MOZ_ASSERT(mSnapshot->Explicit());
+
+  nsresult rv = mSnapshot->Finish();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 LSDatabase::EnsureSnapshot(LSObject* aObject,
-                           bool aRequestedBySetItem)
+                           bool aRequestedBySetItem,
+                           bool aExplicit)
 {
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
+  MOZ_ASSERT_IF(mSnapshot, !aExplicit);
   MOZ_ASSERT(!mAllowedToClose);
 
   if (mSnapshot) {
@@ -282,7 +328,7 @@ LSDatabase::EnsureSnapshot(LSObject* aObject,
   snapshot->SetActor(actor);
 
   // This add refs snapshot.
-  nsresult rv = snapshot->Init(initInfo);
+  nsresult rv = snapshot->Init(initInfo, aExplicit);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

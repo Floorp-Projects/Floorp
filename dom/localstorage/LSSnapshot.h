@@ -15,15 +15,33 @@ class LSSnapshotChild;
 class LSSnapshot final
   : public nsIRunnable
 {
+  enum class LoadState
+  {
+    Initial,
+    Partial,
+    AllOrderedKeys,
+    AllUnorderedItems,
+    AllOrderedItems
+  };
+
+  RefPtr<LSSnapshot> mSelfRef;
+
   RefPtr<LSDatabase> mDatabase;
 
   LSSnapshotChild* mActor;
 
+  nsTHashtable<nsStringHashKey> mLoadedItems;
+  nsTHashtable<nsStringHashKey> mUnknownItems;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
   nsTArray<LSWriteInfo> mWriteInfos;
 
+  uint32_t mInitLength;
+  uint32_t mLength;
   int64_t mExactUsage;
   int64_t mPeakUsage;
+
+  LoadState mLoadState;
+  bool mExplicit;
 
 #ifdef DEBUG
   bool mInitialized;
@@ -51,8 +69,15 @@ public:
     mActor = nullptr;
   }
 
+  bool
+  Explicit() const
+  {
+    return mExplicit;
+  }
+
   nsresult
-  Init(const LSSnapshotInitInfo& aInitInfo);
+  Init(const LSSnapshotInitInfo& aInitInfo,
+       bool aExplicit);
 
   nsresult
   GetLength(uint32_t* aResult);
@@ -80,8 +105,14 @@ public:
   nsresult
   Clear(LSNotifyInfo& aNotifyInfo);
 
+  nsresult
+  Finish();
+
 private:
   ~LSSnapshot();
+
+  nsresult
+  EnsureAllKeys();
 
   nsresult
   UpdateUsage(int64_t aDelta);
