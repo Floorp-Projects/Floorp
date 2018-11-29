@@ -15,6 +15,8 @@
   <video width="320" height="240" id="video" controls mozNoDynamicControls preload="auto"></video>
 </div>
 
+<div id="host"></div>
+
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -55,6 +57,9 @@ const fullscreenButtonCenterY = videoHeight - Math.round(fullscreenButtonHeight 
 // X center, just the offset of its box.
 const scrubberOffsetX = controlBarMargin + playButtonWidth + scrubberMargin;
 const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
+
+const screenWidth = window.screen.width;
+const screenHeight = window.screen.height;
 
 const video = document.getElementById("video");
 
@@ -405,6 +410,35 @@ add_task(async function ensure_fullscreen_cursor() {
   // Restore
   video.setAttribute("mozNoDynamicControls", "");
   document.mozCancelFullScreen();
+  await waitForEvent("mozfullscreenchange");
+  if (!video.paused) {
+    video.pause();
+    await waitForEvent("pause");
+  }
+});
+
+// Bug 1505547: Make sure the fullscreen button works if the video element is in shadow tree.
+add_task(async function ensure_fullscreen_button() {
+  video.removeAttribute("mozNoDynamicControls");
+  let host = document.getElementById("host");
+  let root = host.attachShadow({ mode: "open" });
+  root.appendChild(video);
+
+  video.mozRequestFullScreen();
+  await waitForEvent("mozfullscreenchange");
+
+  const buttonCenterX = screenWidth - Math.round(fullscreenButtonWidth / 2) - controlBarMargin;
+  const buttonCenterY = screenHeight - Math.round(fullscreenButtonHeight / 2);
+
+  // Wiggle the mouse a bit
+  synthesizeMouse(video, buttonCenterX, buttonCenterY, { type: "mousemove" });
+
+  synthesizeMouse(video, buttonCenterX, buttonCenterY, {});
+  await waitForEvent("mozfullscreenchange");
+
+  // Restore
+  video.setAttribute("mozNoDynamicControls", "");
+  document.getElementById("content").appendChild(video);
 });
 
 </script>
