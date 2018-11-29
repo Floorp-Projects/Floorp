@@ -22,8 +22,8 @@
         ]
       }, function (options) {
         options = options || {};
-        options.expectedLocalCandidateType = "serverreflexive";
-        options.expectedRemoteCandidateType = "relayed";
+        options.expectedLocalCandidateType = "srflx";
+        options.expectedRemoteCandidateType = "relay";
         // If both have TURN, it is a toss-up which one will end up using a
         // relay.
         options.turn_disabled_local = true;

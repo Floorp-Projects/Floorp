@@ -12,7 +12,7 @@ import os
 from .registry import register_callback_action
 
 from .util import find_decision_task, find_existing_tasks_from_previous_kinds
-from taskgraph.util.hg import find_hg_revision_pushlog_id
+from taskgraph.util.hg import find_hg_revision_push_info
 from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.partials import populate_release_history
 from taskgraph.util.partners import (
@@ -292,8 +292,11 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     previous_graph_ids = input.get('previous_graph_ids')
     if not previous_graph_ids:
         revision = input.get('revision')
-        parameters['pushlog_id'] = parameters['pushlog_id'] or \
-            find_hg_revision_pushlog_id(parameters, graph_config, revision)
+        if not parameters['pushlog_id']:
+            repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
+            push_info = find_hg_revision_push_info(
+                repository=parameters[repo_param], revision=revision)
+            parameters['pushlog_id'] = push_info['pushid']
         previous_graph_ids = [find_decision_task(parameters, graph_config)]
 
     # Download parameters from the first decision task

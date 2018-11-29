@@ -17,7 +17,6 @@
 #include "gfxPrefs.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/WindowsVersion.h"

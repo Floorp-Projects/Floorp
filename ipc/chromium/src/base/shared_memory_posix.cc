@@ -31,6 +31,20 @@ SharedMemory::SharedMemory()
       max_size_(0) {
 }
 
+SharedMemory::SharedMemory(SharedMemory&& other) {
+  if (this == &other) {
+    return;
+  }
+
+  mapped_file_ = other.mapped_file_;
+  memory_ = other.memory_;
+  read_only_ = other.read_only_;
+  max_size_ = other.max_size_;
+
+  other.mapped_file_ = -1;
+  other.memory_ = nullptr;
+}
+
 SharedMemory::~SharedMemory() {
   Close();
 }

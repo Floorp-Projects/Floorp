@@ -69,7 +69,6 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Move.h"
-#include "mozilla/Services.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsRefPtrHashtable.h"

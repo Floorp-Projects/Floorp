@@ -169,6 +169,7 @@ static bool ToNrIceCandidate(const nr_ice_candidate& candc,
   out->codeword = candc.codeword;
   out->label = candc.label;
   out->trickled = candc.trickled;
+  out->priority = candc.priority;
   return true;
 }
 

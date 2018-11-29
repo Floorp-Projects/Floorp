@@ -61,15 +61,10 @@ ClipManager::EndBuild()
 void
 ClipManager::BeginList(const StackingContextHelper& aStackingContext)
 {
-  if (aStackingContext.AffectsClipPositioning()) {
-    if (aStackingContext.ReferenceFrameId()) {
-      PushOverrideForASR(
-          mItemClipStack.empty() ? nullptr : mItemClipStack.top().mASR,
-          aStackingContext.ReferenceFrameId().ref());
-    } else {
-      // Start a new cache
-      mCacheStack.emplace();
-    }
+  if (aStackingContext.ReferenceFrameId()) {
+    PushOverrideForASR(
+        mItemClipStack.empty() ? nullptr : mItemClipStack.top().mASR,
+        aStackingContext.ReferenceFrameId().ref());
   }
 
   ItemClips clips(nullptr, nullptr, false);
@@ -86,14 +81,9 @@ ClipManager::EndList(const StackingContextHelper& aStackingContext)
   mItemClipStack.top().Unapply(mBuilder);
   mItemClipStack.pop();
 
-  if (aStackingContext.AffectsClipPositioning()) {
-    if (aStackingContext.ReferenceFrameId()) {
-      PopOverrideForASR(
+  if (aStackingContext.ReferenceFrameId()) {
+    PopOverrideForASR(
         mItemClipStack.empty() ? nullptr : mItemClipStack.top().mASR);
-    } else {
-      MOZ_ASSERT(!mCacheStack.empty());
-      mCacheStack.pop();
-    }
   }
 }
 

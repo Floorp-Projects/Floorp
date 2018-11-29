@@ -61,31 +61,28 @@ private:
 
   static void
   RequestDataCallback(JSContext* aCx, JS::HandleObject aStream,
-                      void* aUnderlyingSource, uint8_t aFlags,
-                      size_t aDesiredSize);
+                      void* aUnderlyingSource, size_t aDesiredSize);
 
   static void
   WriteIntoReadRequestCallback(JSContext* aCx, JS::HandleObject aStream,
-                               void* aUnderlyingSource, uint8_t aFlags,
+                               void* aUnderlyingSource,
                                void* aBuffer, size_t aLength,
                                size_t* aByteWritten);
 
   static JS::Value
   CancelCallback(JSContext* aCx, JS::HandleObject aStream,
-                 void* aUnderlyingSource, uint8_t aFlags,
-                 JS::HandleValue aReason);
+                 void* aUnderlyingSource, JS::HandleValue aReason);
 
   static void
   ClosedCallback(JSContext* aCx, JS::HandleObject aStream,
-                 void* aUnderlyingSource, uint8_t aFlags);
+                 void* aUnderlyingSource);
 
   static void
   ErroredCallback(JSContext* aCx, JS::HandleObject aStream,
-                  void* aUnderlyingSource, uint8_t aFlags,
-                  JS::HandleValue reason);
+                  void* aUnderlyingSource, JS::HandleValue reason);
 
   static void
-  FinalizeCallback(void* aUnderlyingSource, uint8_t aFlags);
+  FinalizeCallback(void* aUnderlyingSource);
 
   void
   ErrorPropagation(JSContext* aCx,

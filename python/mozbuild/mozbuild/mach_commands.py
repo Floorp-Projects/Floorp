@@ -1427,23 +1427,13 @@ class PackageFrontend(MachCommandBase):
                 return 1
             from taskgraph.optimize import IndexSearch
             from taskgraph.parameters import Parameters
+            from taskgraph.generator import load_tasks_for_kind
             params = Parameters(
                 level=os.environ.get('MOZ_SCM_LEVEL', '3'),
                 strict=False,
-                ignore_fetches=True,
             )
 
-            # TODO: move to the taskcluster package
-            def tasks(kind_name):
-                root_path = mozpath.join(self.topsrcdir, 'taskcluster', 'ci')
-                graph_config = load_graph_config(root_path)
-                tasks = Kind.load(root_path, graph_config, kind_name).load_tasks(params, {})
-                return {
-                    task.task['metadata']['name']: task
-                    for task in tasks
-                }
-
-            toolchains = tasks('toolchain')
+            toolchains = load_tasks_for_kind(params, 'toolchain')
 
             aliases = {}
             for t in toolchains.values():
@@ -2336,11 +2326,14 @@ class StaticAnalysis(MachCommandBase):
                      help='Show diff output on instead of applying changes')
     @CommandArgument('--assume-filename', '-a', nargs=1, default=None,
                      help='This option is usually used in the context of hg-formatsource.'
-                          ' When reading from stdin, clang-format assumes this'
-                          ' filename to look for a style config file (with'
-                          ' -style=file) and to determine the language. When'
-                          ' specifying this option only one file should be used'
-                          ' as an input and the output will be forwarded to stdin.')
+                          'When reading from stdin, clang-format assumes this '
+                          'filename to look for a style config file (with '
+                          '-style=file) and to determine the language. When '
+                          'specifying this option only one file should be used '
+                          'as an input and the output will be forwarded to stdin. '
+                          'This option also impairs the download of the clang-tools '
+                          'and assumes the package is already located in it\'s default '
+                          'location')
     @CommandArgument('--path', '-p', nargs='+', default=None,
                      help='Specify the path(s) to reformat')
     def clang_format(self, show, assume_filename, path, verbose=False):
@@ -2354,21 +2347,23 @@ class StaticAnalysis(MachCommandBase):
         # With assume_filename we want to have stdout clean since the result of the
         # format will be redirected to stdout. Only in case of errror we
         # write something to stdout.
-        # The call to _get_clang_tools is only to correctly set the paths.
+        # We don't actually want to get the clang-tools here since we want in some
+        # scenarios to do this in parallel so we relay on the fact that the tools
+        # have already been downloaded via './mach bootstrap' or directly via
+        # './mach static-analysis install'
         if assume_filename:
-            from subprocess import check_output, CalledProcessError
-            try:
-                command = [os.path.join(self.topsrcdir, 'mach'), 'static-analysis', 'install', '--minimal-install']
-                check_output(command)
-            except CalledProcessError as e:
-                # Something wrong happend
-                print(
-                    "clang-format: An error occured while downloading the artifact for clang-format:\{}".format(e.output))
-                return e.returncode
+            rc = self._set_clang_tools_paths()
+            if rc != 0:
+                print("clang-format: Unable to set path to clang-format tools.")
+                return rc
 
-        rc = self._get_clang_tools(verbose=verbose)
-        if rc != 0:
-            return rc
+            if not self._do_clang_tools_exist():
+                print("clang-format: Unable to set locate clang-format tools.")
+                return 1
+        else:
+            rc = self._get_clang_tools(verbose=verbose)
+            if rc != 0:
+                return rc
 
         if path is None:
             return self._run_clang_format_diff(self._clang_format_diff,
@@ -2575,75 +2570,86 @@ class StaticAnalysis(MachCommandBase):
             tmp_path.append(os.path.abspath(f))
         return tmp_path
 
-    def _get_clang_tools(self, force=False, skip_cache=False,
-                         source=None, download_if_needed=True,
-                         verbose=False):
+    def _set_clang_tools_paths(self):
         rc, config, _ = self._get_config_environment()
 
         if rc != 0:
             return rc
 
-        clang_tools_path = mozpath.join(self._mach_context.state_dir, "clang-tools")
-        self._clang_tidy_path = mozpath.join(clang_tools_path, "clang-tidy", "bin",
+        self._clang_tools_path = mozpath.join(self._mach_context.state_dir, "clang-tools")
+        self._clang_tidy_path = mozpath.join(self._clang_tools_path, "clang-tidy", "bin",
                                              "clang-tidy" + config.substs.get('BIN_SUFFIX', ''))
         self._clang_format_path = mozpath.join(
-            clang_tools_path, "clang-tidy", "bin",
+            self._clang_tools_path, "clang-tidy", "bin",
             "clang-format" + config.substs.get('BIN_SUFFIX', ''))
         self._clang_apply_replacements = mozpath.join(
-            clang_tools_path, "clang-tidy", "bin",
+            self._clang_tools_path, "clang-tidy", "bin",
             "clang-apply-replacements" + config.substs.get('BIN_SUFFIX', ''))
-        self._run_clang_tidy_path = mozpath.join(clang_tools_path, "clang-tidy", "share", "clang",
+        self._run_clang_tidy_path = mozpath.join(self._clang_tools_path, "clang-tidy", "share", "clang",
                                                  "run-clang-tidy.py")
-        self._clang_format_diff = mozpath.join(clang_tools_path, "clang-tidy", "share", "clang",
+        self._clang_format_diff = mozpath.join(self._clang_tools_path, "clang-tidy", "share", "clang",
                                                "clang-format-diff.py")
-        if os.path.exists(self._clang_tidy_path) and \
-           os.path.exists(self._clang_format_path) and \
-           os.path.exists(self._clang_apply_replacements) and \
-           os.path.exists(self._run_clang_tidy_path) and \
-           not force:
-            return 0
-        else:
-            if os.path.isdir(clang_tools_path) and download_if_needed:
-                # The directory exists, perhaps it's corrupted?  Delete it
-                # and start from scratch.
-                import shutil
-                shutil.rmtree(clang_tools_path)
-                return self._get_clang_tools(force=force, skip_cache=skip_cache,
-                                             source=source, verbose=verbose,
-                                             download_if_needed=download_if_needed)
+        return 0
 
-            # Create base directory where we store clang binary
-            os.mkdir(clang_tools_path)
+    def _do_clang_tools_exist(self):
+        return os.path.exists(self._clang_tidy_path) and \
+               os.path.exists(self._clang_format_path) and \
+               os.path.exists(self._clang_apply_replacements) and \
+               os.path.exists(self._run_clang_tidy_path)
 
-            if source:
-                return self._get_clang_tools_from_source(source)
+    def _get_clang_tools(self, force=False, skip_cache=False,
+                         source=None, download_if_needed=True,
+                         verbose=False):
 
-            self._artifact_manager = PackageFrontend(self._mach_context)
+        rc = self._set_clang_tools_paths()
 
-            if not download_if_needed:
-                return 0
-
-            job, _ = self.platform
-
-            if job is None:
-                raise Exception('The current platform isn\'t supported. '
-                                'Currently only the following platforms are '
-                                'supported: win32/win64, linux64 and macosx64.')
-            else:
-                job += '-clang-tidy'
-
-            # We want to unpack data in the clang-tidy mozbuild folder
-            currentWorkingDir = os.getcwd()
-            os.chdir(clang_tools_path)
-            rc = self._artifact_manager.artifact_toolchain(verbose=verbose,
-                                                           skip_cache=skip_cache,
-                                                           from_build=[job],
-                                                           no_unpack=False,
-                                                           retry=0)
-            # Change back the cwd
-            os.chdir(currentWorkingDir)
-
+        if rc != 0:
             return rc
+
+        if self._do_clang_tools_exist() and not force:
+            return 0
+
+        if os.path.isdir(self._clang_tools_path) and download_if_needed:
+            # The directory exists, perhaps it's corrupted?  Delete it
+            # and start from scratch.
+            import shutil
+            shutil.rmtree(self._clang_tools_path)
+            return self._get_clang_tools(force=force, skip_cache=skip_cache,
+                                            source=source, verbose=verbose,
+                                            download_if_needed=download_if_needed)
+
+        # Create base directory where we store clang binary
+        os.mkdir(self._clang_tools_path)
+
+        if source:
+            return self._get_clang_tools_from_source(source)
+
+        self._artifact_manager = PackageFrontend(self._mach_context)
+
+        if not download_if_needed:
+            return 0
+
+        job, _ = self.platform
+
+        if job is None:
+            raise Exception('The current platform isn\'t supported. '
+                            'Currently only the following platforms are '
+                            'supported: win32/win64, linux64 and macosx64.')
+        else:
+            job += '-clang-tidy'
+
+        # We want to unpack data in the clang-tidy mozbuild folder
+        currentWorkingDir = os.getcwd()
+        os.chdir(self._clang_tools_path)
+        rc = self._artifact_manager.artifact_toolchain(verbose=verbose,
+                                                        skip_cache=skip_cache,
+                                                        from_build=[job],
+                                                        no_unpack=False,
+                                                        retry=0)
+        # Change back the cwd
+        os.chdir(currentWorkingDir)
+
+        return rc
 
     def _get_clang_tools_from_source(self, filename):
         from mozbuild.action.tooltool import unpack_file

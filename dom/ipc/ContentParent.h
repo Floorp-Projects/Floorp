@@ -11,6 +11,7 @@
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
 #include "mozilla/gfx/GPUProcessListener.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/HalTypes.h"
@@ -18,9 +19,9 @@
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Variant.h"
 #include "mozilla/UniquePtr.h"
 
-#include "ContentProcessHost.h"
 #include "nsDataHashtable.h"
 #include "nsPluginTags.h"
 #include "nsFrameMessageManager.h"
@@ -114,6 +115,7 @@ class ContentParent final : public PContentParent
                           , public gfx::GPUProcessListener
                           , public mozilla::MemoryReportingProcess
 {
+  typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
   typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
   typedef mozilla::ipc::PFileDescriptorSetParent PFileDescriptorSetParent;
   typedef mozilla::ipc::TestShellParent TestShellParent;
@@ -121,7 +123,6 @@ class ContentParent final : public PContentParent
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
-  friend class ContentProcessHost;
   friend class mozilla::PreallocatedProcessManagerImpl;
 #ifdef FUZZING
   friend class mozilla::ipc::ProtocolFuzzerHelper;
@@ -131,10 +132,13 @@ public:
 
   virtual bool IsContentParent() const override { return true; }
 
+  using LaunchError = GeckoChildProcessHost::LaunchError;
+  using LaunchPromise = GeckoChildProcessHost::LaunchPromise<RefPtr<ContentParent>>;
+
   /**
    * Create a subprocess suitable for use later as a content process.
    */
-  static already_AddRefed<ContentParent> PreallocateProcess();
+  static RefPtr<LaunchPromise> PreallocateProcess();
 
   /**
    * Start up the content-process machinery.  This might include
@@ -393,7 +397,7 @@ public:
     return mJSPluginID != nsFakePluginTag::NOT_JSPLUGIN;
   }
 
-  ContentProcessHost* Process() const
+  GeckoChildProcessHost* Process() const
   {
     return mSubprocess;
   }
@@ -798,7 +802,20 @@ private:
 
   // Launch the subprocess and associated initialization.
   // Returns false if the process fails to start.
-  bool LaunchSubprocess(hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND);
+  // Deprecated in favor of LaunchSubprocessAsync.
+  bool LaunchSubprocessSync(hal::ProcessPriority aInitialPriority);
+
+  // Launch the subprocess and associated initialization;
+  // returns a promise and signals failure by rejecting.
+  // OS-level launching work is dispatched to another thread, but some
+  // initialization (creating IPDL actors, etc.; see Init()) is run on
+  // the main thread.
+  RefPtr<LaunchPromise> LaunchSubprocessAsync(hal::ProcessPriority aInitialPriority);
+
+  // Common implementation of LaunchSubprocess{Sync,Async}.
+  void LaunchSubprocessInternal(
+    hal::ProcessPriority aInitialPriority,
+    mozilla::Variant<bool*, RefPtr<LaunchPromise>*>&& aRetval);
 
   // Common initialization after sub process launch.
   void InitInternal(ProcessPriority aPriority);
@@ -1292,8 +1309,9 @@ private:
   // release these objects in ShutDownProcess.  See the comment there for more
   // details.
 
-  ContentProcessHost* mSubprocess;
+  GeckoChildProcessHost* mSubprocess;
   const TimeStamp mLaunchTS; // used to calculate time to start content process
+  TimeStamp mLaunchYieldTS; // used to calculate async launch main thread time
   TimeStamp mActivateTS;
   ContentParent* mOpener;
 

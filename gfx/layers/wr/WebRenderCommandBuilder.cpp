@@ -1149,7 +1149,7 @@ Grouper::ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
 
   // we compute the geometry change here because we have the transform around still
   aGroup->ComputeGeometryChange(aItem, data, mTransform, mDisplayListBuilder);
-  
+
   // Temporarily restrict the image bounds to the bounds of the container so that
   // clipped children within the container know about the clip.
   IntRect oldImageBounds = aGroup->mImageBounds;
@@ -1362,7 +1362,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     }
 
     StackingContextHelper pageRootSc(sc, nullptr, aBuilder, aFilters,
-        LayoutDeviceRect(), nullptr, mZoomProp.ptrOr(nullptr));
+        nullptr, mZoomProp.ptrOr(nullptr));
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex = aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
     }
@@ -1624,7 +1624,6 @@ WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
     MOZ_ASSERT(aAsyncImageBounds);
 
     LayoutDeviceRect rect = aAsyncImageBounds.value();
-    LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), rect.Size());
     gfx::MaybeIntSize scaleToSize;
     if (!aContainer->GetScaleHint().IsEmpty()) {
       scaleToSize = Some(aContainer->GetScaleHint());
@@ -1637,7 +1636,6 @@ WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
                                                  aContainer,
                                                  aSc,
                                                  rect,
-                                                 scBounds,
                                                  transform,
                                                  scaleToSize,
                                                  aRendering,

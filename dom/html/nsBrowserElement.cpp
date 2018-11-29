@@ -7,7 +7,6 @@
 #include "nsBrowserElement.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
 #include "mozilla/dom/BrowserElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"

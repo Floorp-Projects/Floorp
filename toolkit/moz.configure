@@ -870,12 +870,6 @@ add_old_configure_assignment('FT2_LIBS',
 add_old_configure_assignment('FT2_CFLAGS',
                              ft2_info.cflags)
 
-# Mortar
-# ==============================================================
-option('--enable-mortar', help='Enable mortar extension')
-
-set_config('MOZ_MORTAR', True, when='--enable-mortar')
-
 # Marionette remote protocol
 # ==============================================================
 #

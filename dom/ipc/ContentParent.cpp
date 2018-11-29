@@ -622,7 +622,7 @@ bool ContentParent::sEarlySandboxInit = false;
 
 // PreallocateProcess is called by the PreallocatedProcessManager.
 // ContentParent then takes this process back within GetNewOrUsedBrowserProcess.
-/*static*/ already_AddRefed<ContentParent>
+/*static*/ RefPtr<ContentParent::LaunchPromise>
 ContentParent::PreallocateProcess()
 {
   RefPtr<ContentParent> process =
@@ -631,13 +631,7 @@ ContentParent::PreallocateProcess()
                       eNotRecordingOrReplaying,
                       /* aRecordingFile = */ EmptyString());
 
-  PreallocatedProcessManager::AddBlocker(process);
-
-  if (!process->LaunchSubprocess(PROCESS_PRIORITY_PREALLOC)) {
-    return nullptr;
-  }
-
-  return process.forget();
+  return process->LaunchSubprocessAsync(PROCESS_PRIORITY_PREALLOC);
 }
 
 /*static*/ void
@@ -902,12 +896,12 @@ ContentParent::GetNewOrUsedBrowserProcess(Element* aFrameElement,
   // Create a new process from scratch.
   RefPtr<ContentParent> p = new ContentParent(aOpener, aRemoteType, recordReplayState, recordingFile);
 
-  // Until the new process is ready let's not allow to start up any preallocated processes.
-  PreallocatedProcessManager::AddBlocker(p);
-
-  if (!p->LaunchSubprocess(aPriority)) {
+  if (!p->LaunchSubprocessSync(aPriority)) {
     return nullptr;
   }
+
+  // Until the new process is ready let's not allow to start up any preallocated processes.
+  PreallocatedProcessManager::AddBlocker(p);
 
   if (recordReplayState == eNotRecordingOrReplaying) {
     contentParents.AppendElement(p);
@@ -935,7 +929,7 @@ ContentParent::GetNewOrUsedJSPluginProcess(uint32_t aPluginID,
 
   p = new ContentParent(aPluginID);
 
-  if (!p->LaunchSubprocess(aPriority)) {
+  if (!p->LaunchSubprocessSync(aPriority)) {
     return nullptr;
   }
 
@@ -1619,9 +1613,7 @@ ContentParent::OnChannelConnected(int32_t pid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifndef ASYNC_CONTENTPROC_LAUNCH
   SetOtherProcessId(pid);
-#endif
 
 #if defined(ANDROID) || defined(LINUX)
   // Check nice preference
@@ -1645,11 +1637,6 @@ ContentParent::OnChannelConnected(int32_t pid)
       setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
     }
   }
-#endif
-
-#if defined(MOZ_CODE_COVERAGE) && defined(ASYNC_CONTENTPROC_LAUNCH)
-  Unused << SendShareCodeCoverageMutex(
-              CodeCoverageHandler::Get()->GetMutexHandle(pid));
 #endif
 }
 
@@ -2208,14 +2195,30 @@ ContentParent::AppendSandboxParams(std::vector<std::string>& aArgs)
 }
 #endif // XP_MACOSX && MOZ_CONTENT_SANDBOX
 
-bool
-ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PRIORITY_FOREGROUND */)
+void
+ContentParent::LaunchSubprocessInternal(
+  ProcessPriority aInitialPriority,
+  mozilla::Variant<bool*, RefPtr<LaunchPromise>*>&& aRetval)
 {
   AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess", OTHER);
+  const bool isSync = aRetval.is<bool*>();
+
+  Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_IS_SYNC,
+                        static_cast<uint32_t>(isSync));
+
+  auto earlyReject = [aRetval, isSync]() {
+    if (isSync) {
+      *aRetval.as<bool*>() = false;
+    } else {
+      *aRetval.as<RefPtr<LaunchPromise>*>() = LaunchPromise::CreateAndReject(
+        GeckoChildProcessHost::LaunchError(), __func__);
+    }
+  };
 
   if (!ContentProcessManager::GetSingleton()) {
     // Shutdown has begun, we shouldn't spawn any more child processes.
-    return false;
+    earlyReject();
+    return;
   }
 
   std::vector<std::string> extraArgs;
@@ -2240,12 +2243,14 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   if (!shm.Create(prefs.Length())) {
     NS_ERROR("failed to create shared memory in the parent");
     MarkAsDead();
-    return false;
+    earlyReject();
+    return;
   }
   if (!shm.Map(prefs.Length())) {
     NS_ERROR("failed to map shared memory in the parent");
     MarkAsDead();
-    return false;
+    earlyReject();
+    return;
   }
 
   // Copy the serialized prefs into the shared memory.
@@ -2321,58 +2326,113 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     extraArgs.push_back(NS_ConvertUTF16toUTF8(mRecordingFile).get());
   }
 
-  SetOtherProcessId(kInvalidProcessId, ProcessIdState::ePending);
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-  if (!mSubprocess->Launch(extraArgs)) {
-#else
-  if (!mSubprocess->LaunchAndWaitForProcessHandle(extraArgs)) {
-#endif
+  RefPtr<ContentParent> self(this);
+
+  auto reject = [self, this](GeckoChildProcessHost::LaunchError err) {
     NS_ERROR("failed to launch child in the parent");
     MarkAsDead();
-    return false;
-  }
+    return LaunchPromise::CreateAndReject(err, __func__);
+  };
 
   // See also ActorDestroy.
   mSelfRef = this;
 
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-  OpenWithAsyncPid(mSubprocess->GetChannel());
-#else
-  base::ProcessId procId =
-    base::GetProcId(mSubprocess->GetChildProcessHandle());
-  Open(mSubprocess->GetChannel(), procId);
+  // Lifetime note: the GeckoChildProcessHost holds a strong reference
+  // to the launch promise, which takes ownership of these closures,
+  // which hold strong references to this ContentParent; the
+  // ContentParent then owns the GeckoChildProcessHost (and that
+  // ownership is not exposed to the cycle collector).  Therefore,
+  // this all stays alive until the promise is resolved or rejected.
+
+  auto resolve = [self, this, aInitialPriority, isSync,
+                  // Transfer ownership of RAII file descriptor/handle
+                  // holders so that they won't be closed before the
+                  // child can inherit them.
+                  shm = std::move(shm),
+                  prefMapHandle = std::move(prefMapHandle)
+                 ](base::ProcessHandle handle) {
+    AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess::resolve", OTHER);
+    const auto launchResumeTS = TimeStamp::Now();
+
+    base::ProcessId procId = base::GetProcId(handle);
+    Open(mSubprocess->GetChannel(), procId);
 #ifdef MOZ_CODE_COVERAGE
-  Unused << SendShareCodeCoverageMutex(
-              CodeCoverageHandler::Get()->GetMutexHandle(procId));
+    Unused << SendShareCodeCoverageMutex(
+      CodeCoverageHandler::Get()->GetMutexHandle(procId));
 #endif
-#endif // ASYNC_CONTENTPROC_LAUNCH
 
-  InitInternal(aInitialPriority);
+    mIsAlive = true;
+    InitInternal(aInitialPriority);
 
-  ContentProcessManager::GetSingleton()->AddContentProcess(this);
+    ContentProcessManager::GetSingleton()->AddContentProcess(this);
 
-  mHangMonitorActor = ProcessHangMonitor::AddProcess(this);
+    mHangMonitorActor = ProcessHangMonitor::AddProcess(this);
 
-  // Set a reply timeout for CPOWs.
-  SetReplyTimeoutMs(Preferences::GetInt("dom.ipc.cpow.timeout", 0));
+    // Set a reply timeout for CPOWs.
+    SetReplyTimeoutMs(Preferences::GetInt("dom.ipc.cpow.timeout", 0));
 
-  // TODO: In ASYNC_CONTENTPROC_LAUNCH, if OtherPid() is not called between
-  // mSubprocess->Launch() and this, then we're not really measuring how long it
-  // took to spawn the process.
-  Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_TIME_MS,
-                        static_cast<uint32_t>((TimeStamp::Now() - mLaunchTS)
-                                              .ToMilliseconds()));
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      nsAutoString cpId;
+      cpId.AppendInt(static_cast<uint64_t>(this->ChildID()));
+      obs->NotifyObservers(static_cast<nsIObserver*>(this), "ipc:content-initializing", cpId.get());
+    }
 
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    nsAutoString cpId;
-    cpId.AppendInt(static_cast<uint64_t>(this->ChildID()));
-    obs->NotifyObservers(static_cast<nsIObserver*>(this), "ipc:content-initializing", cpId.get());
+    Init();
+
+    if (isSync) {
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CONTENT_PROCESS_SYNC_LAUNCH_MS, mLaunchTS);
+    } else {
+      Telemetry::AccumulateTimeDelta(
+        Telemetry::CONTENT_PROCESS_LAUNCH_TOTAL_MS, mLaunchTS);
+
+      Telemetry::Accumulate(
+        Telemetry::CONTENT_PROCESS_LAUNCH_MAINTHREAD_MS,
+        static_cast<uint32_t>(((mLaunchYieldTS - mLaunchTS) +
+                               (TimeStamp::Now() - launchResumeTS))
+                              .ToMilliseconds()));
+    }
+
+    return LaunchPromise::CreateAndResolve(self, __func__);
+  };
+
+  if (isSync) {
+    bool ok = mSubprocess->LaunchAndWaitForProcessHandle(std::move(extraArgs));
+    if (ok) {
+      Unused << resolve(mSubprocess->GetChildProcessHandle());
+    } else {
+      Unused << reject(GeckoChildProcessHost::LaunchError{});
+    }
+    *aRetval.as<bool*>() = ok;
+  } else {
+    auto* retptr = aRetval.as<RefPtr<LaunchPromise>*>();
+    if (mSubprocess->AsyncLaunch(std::move(extraArgs))) {
+      RefPtr<GeckoChildProcessHost::HandlePromise> ready =
+        mSubprocess->WhenProcessHandleReady();
+      mLaunchYieldTS = TimeStamp::Now();
+      *retptr = ready->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                            std::move(resolve), std::move(reject));
+    } else {
+      *retptr = reject(GeckoChildProcessHost::LaunchError{});
+    }
   }
+}
 
-  Init();
+/* static */ bool
+ContentParent::LaunchSubprocessSync(hal::ProcessPriority aInitialPriority)
+{
+  bool retval;
+  LaunchSubprocessInternal(aInitialPriority, mozilla::AsVariant(&retval));
+  return retval;
+}
 
-  return true;
+/* static */ RefPtr<ContentParent::LaunchPromise>
+ContentParent::LaunchSubprocessAsync(hal::ProcessPriority aInitialPriority)
+{
+  RefPtr<LaunchPromise> retval;
+  LaunchSubprocessInternal(aInitialPriority, mozilla::AsVariant(&retval));
+  return retval;
 }
 
 ContentParent::ContentParent(ContentParent* aOpener,
@@ -2384,7 +2444,8 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mSelfRef(nullptr)
   , mSubprocess(nullptr)
   , mLaunchTS(TimeStamp::Now())
-  , mActivateTS(TimeStamp::Now())
+  , mLaunchYieldTS(mLaunchTS)
+  , mActivateTS(mLaunchTS)
   , mOpener(aOpener)
   , mRemoteType(aRemoteType)
   , mChildID(gContentChildID++)
@@ -2393,7 +2454,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mRemoteWorkerActors(0)
   , mNumDestroyingTabs(0)
   , mIsAvailable(true)
-  , mIsAlive(true)
+  , mIsAlive(false)
   , mIsForBrowser(!mRemoteType.IsEmpty())
   , mRecordReplayState(aRecordReplayState)
   , mRecordingFile(aRecordingFile)
@@ -2428,7 +2489,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   bool isFile = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
-  mSubprocess = new ContentProcessHost(this, isFile);
+  mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, isFile);
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
   // sEarlySandboxInit is statically initialized to false.
@@ -2460,15 +2521,17 @@ ContentParent::~ContentParent()
                !sBrowserContentParents->Contains(mRemoteType) ||
                !sBrowserContentParents->Get(mRemoteType)->Contains(this));
   }
+
+  // Normally mSubprocess is destroyed in ActorDestroy, but that won't
+  // happen if the process wasn't launched or if it failed to launch.
+  if (mSubprocess) {
+    DelayedDeleteSubprocess(mSubprocess);
+  }
 }
 
 void
 ContentParent::InitInternal(ProcessPriority aInitialPriority)
 {
-  Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_TIME_MS,
-                        static_cast<uint32_t>((TimeStamp::Now() - mLaunchTS)
-                                              .ToMilliseconds()));
-
   XPCOMInitData xpcomInit;
 
   nsCOMPtr<nsIIOService> io(do_GetIOService());
