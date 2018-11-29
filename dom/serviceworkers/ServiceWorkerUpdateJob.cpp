@@ -542,12 +542,8 @@ ServiceWorkerUpdateJob::Install()
   // Step 6 of the Install algorithm resolving the job promise.
   InvokeResultCallbacks(NS_OK);
 
-  // The job promise cannot be rejected after this point, but the job can
-  // still fail; e.g. if the install event handler throws, etc.
-
-  // Note, the updatefound event is fired automatically when the installing
-  // property is set on the ServiceWorkerRegistration binding object.  This
-  // happens via the TransitionEvaluatingToInstalling() call above.
+  // Queue a task to fire an event named updatefound at all the ServiceWorkerRegistration.
+  mRegistration->FireUpdateFound();
 
   nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
     new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(

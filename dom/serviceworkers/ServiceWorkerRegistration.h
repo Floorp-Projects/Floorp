@@ -122,6 +122,9 @@ public:
   void
   WhenVersionReached(uint64_t aVersion, ServiceWorkerBoolCallback&& aCallback);
 
+  void
+  MaybeDispatchUpdateFoundRunnable();
+
 private:
   ServiceWorkerRegistration(nsIGlobalObject* aGlobal,
                             const ServiceWorkerRegistrationDescriptor& aDescriptor,
@@ -139,9 +142,6 @@ private:
 
   void
   MaybeDispatchUpdateFound();
-
-  void
-  UpdatePromiseSettled();
 
   ServiceWorkerRegistrationDescriptor mDescriptor;
   RefPtr<Inner> mInner;
@@ -167,7 +167,6 @@ private:
 
   uint64_t mScheduledUpdateFoundId;
   uint64_t mDispatchedUpdateFoundId;
-  uint32_t mPendingUpdatePromises;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorkerRegistration, NS_DOM_SERVICEWORKERREGISTRATION_IID)

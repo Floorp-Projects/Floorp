@@ -55,6 +55,9 @@ public:
   UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
 
   void
+  FireUpdateFound() override;
+
+  void
   RegistrationRemoved() override;
 
   void
@@ -128,6 +131,9 @@ private:
 
   void
   UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor);
+
+  void
+  FireUpdateFound();
 
   // This can be called only by WorkerListener.
   WorkerPrivate*

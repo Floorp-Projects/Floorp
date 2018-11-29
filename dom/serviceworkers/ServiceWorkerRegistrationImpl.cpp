@@ -103,6 +103,8 @@ ServiceWorkerRegistrationMainThread::RegistrationRemovedInternal()
   StopListeningForEvents();
 }
 
+// NB: These functions use NS_ENSURE_TRUE_VOID to be noisy about preconditions
+// that would otherwise cause things to silently not happen if they were false.
 void
 ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
@@ -124,6 +126,28 @@ ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistration
     global->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget(),
                                                           NS_DISPATCH_NORMAL);
 }
+
+void
+ServiceWorkerRegistrationMainThread::FireUpdateFound()
+{
+  NS_ENSURE_TRUE_VOID(mOuter);
+
+  nsIGlobalObject* global = mOuter->GetParentObject();
+  NS_ENSURE_TRUE_VOID(global);
+
+  RefPtr<ServiceWorkerRegistrationMainThread> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ServiceWorkerRegistrationMainThread::FireUpdateFound",
+    [self] () mutable {
+      NS_ENSURE_TRUE_VOID(self->mOuter);
+      self->mOuter->MaybeDispatchUpdateFoundRunnable();
+    });
+
+  Unused <<
+    global->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget(),
+                                                          NS_DISPATCH_NORMAL);
+}
+
 
 void
 ServiceWorkerRegistrationMainThread::RegistrationRemoved()
@@ -679,11 +703,34 @@ public:
   }
 
   void
+  FireUpdateFound() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIRunnable> r =
+      NewCancelableRunnableMethod(
+        "WorkerListener::FireUpdateFound",
+        this,
+        &WorkerListener::FireUpdateFoundOnWorkerThread);
+
+    Unused << mEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  }
+
+  void
   UpdateStateOnWorkerThread(const ServiceWorkerRegistrationDescriptor& aDescriptor)
   {
     MOZ_ASSERT(IsCurrentThreadRunningWorker());
     if (mRegistration) {
       mRegistration->UpdateState(aDescriptor);
+    }
+  }
+
+  void
+  FireUpdateFoundOnWorkerThread()
+  {
+    MOZ_ASSERT(IsCurrentThreadRunningWorker());
+    if (mRegistration) {
+      mRegistration->FireUpdateFound();
     }
   }
 
@@ -936,6 +983,14 @@ ServiceWorkerRegistrationWorkerThread::UpdateState(const ServiceWorkerRegistrati
 {
   if (mOuter) {
     mOuter->UpdateState(aDescriptor);
+  }
+}
+
+void
+ServiceWorkerRegistrationWorkerThread::FireUpdateFound()
+{
+  if (mOuter) {
+    mOuter->MaybeDispatchUpdateFoundRunnable();
   }
 }
 

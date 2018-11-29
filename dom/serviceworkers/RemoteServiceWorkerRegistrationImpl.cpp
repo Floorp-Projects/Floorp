@@ -169,5 +169,13 @@ RemoteServiceWorkerRegistrationImpl::UpdateState(const ServiceWorkerRegistration
   }
 }
 
+void
+RemoteServiceWorkerRegistrationImpl::FireUpdateFound()
+{
+  if (mOuter) {
+    mOuter->MaybeDispatchUpdateFoundRunnable();
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

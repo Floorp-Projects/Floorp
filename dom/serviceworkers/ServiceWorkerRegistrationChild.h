@@ -29,6 +29,9 @@ class ServiceWorkerRegistrationChild final : public PServiceWorkerRegistrationCh
   mozilla::ipc::IPCResult
   RecvUpdateState(const IPCServiceWorkerRegistrationDescriptor& aDescriptor) override;
 
+  mozilla::ipc::IPCResult
+  RecvFireUpdateFound() override;
+
   // WorkerHolderToken::Listener
   void
   WorkerShuttingDown() override;

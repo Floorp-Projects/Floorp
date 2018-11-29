@@ -44,6 +44,16 @@ ServiceWorkerRegistrationProxy::UpdateStateOnBGThread(const ServiceWorkerRegistr
 }
 
 void
+ServiceWorkerRegistrationProxy::FireUpdateFoundOnBGThread()
+{
+  AssertIsOnBackgroundThread();
+  if (!mActor) {
+    return;
+  }
+  Unused << mActor->SendFireUpdateFound();
+}
+
+void
 ServiceWorkerRegistrationProxy::InitOnMainThread()
 {
   AssertIsOnMainThread();
@@ -105,6 +115,18 @@ ServiceWorkerRegistrationProxy::UpdateState(const ServiceWorkerRegistrationDescr
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod<ServiceWorkerRegistrationDescriptor>(
     __func__, this, &ServiceWorkerRegistrationProxy::UpdateStateOnBGThread,
     aDescriptor);
+
+  MOZ_ALWAYS_SUCCEEDS(mEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL));
+}
+
+void
+ServiceWorkerRegistrationProxy::FireUpdateFound()
+{
+  AssertIsOnMainThread();
+
+  nsCOMPtr<nsIRunnable> r =
+    NewRunnableMethod(__func__, this,
+                      &ServiceWorkerRegistrationProxy::FireUpdateFoundOnBGThread);
 
   MOZ_ALWAYS_SUCCEEDS(mEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL));
 }
