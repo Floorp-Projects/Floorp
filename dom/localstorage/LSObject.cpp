@@ -677,6 +677,7 @@ LSObject::EnsureDatabase()
 
   LSRequestPrepareDatastoreParams params;
   params.principalInfo() = *mPrincipalInfo;
+  params.createIfNotExists() = true;
 
   LSRequestResponse response;
 
@@ -691,7 +692,9 @@ LSObject::EnsureDatabase()
   const LSRequestPrepareDatastoreResponse& prepareDatastoreResponse =
     response.get_LSRequestPrepareDatastoreResponse();
 
-  uint64_t datastoreId = prepareDatastoreResponse.datastoreId();
+  const NullableDatastoreId& datastoreId = prepareDatastoreResponse.datastoreId();
+
+  MOZ_ASSERT(datastoreId.type() == NullableDatastoreId::Tuint64_t);
 
   // The datastore is now ready on the parent side (prepared by the asynchronous
   // request on the DOM File thread).
