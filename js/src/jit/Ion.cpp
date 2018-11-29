@@ -3302,6 +3302,10 @@ jit::TraceJitScripts(JSTracer* trc, JSScript* script)
     if (script->hasBaselineScript()) {
         jit::BaselineScript::Trace(trc, script->baselineScript());
     }
+
+    if (script->hasICScript()) {
+        script->icScript()->trace(trc);
+    }
 }
 
 bool
