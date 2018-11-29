@@ -150,6 +150,8 @@ NS_xstrdup(const char* aString)
   return str;
 }
 
+// clang-format off
+
 // This table maps uppercase characters to lower case characters;
 // characters that are neither upper nor lower case are unaffected.
 const unsigned char nsLowerUpperUtils::kUpper2Lower[256] = {
@@ -199,6 +201,8 @@ const unsigned char nsLowerUpperUtils::kLower2Upper[256] = {
   224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
   240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255
 };
+
+// clang-format on
 
 bool
 NS_IsUpper(char aChar)

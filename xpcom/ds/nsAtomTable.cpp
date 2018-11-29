@@ -64,7 +64,8 @@ enum class GCKind {
 // This atomic can be accessed during the GC and other places where recorded
 // events are not allowed, so its value is not preserved when recording or
 // replaying.
-static Atomic<int32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve> gUnusedAtomCount(0);
+Atomic<int32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
+  nsDynamicAtom::gUnusedAtomCount;
 
 nsDynamicAtom::nsDynamicAtom(const nsAString& aString, uint32_t aHash, bool aIsAsciiLowercase)
   : nsAtom(aString, aHash, aIsAsciiLowercase)
@@ -112,27 +113,6 @@ nsDynamicAtom::Destroy(nsDynamicAtom* aAtom)
 {
   aAtom->~nsDynamicAtom();
   free(aAtom);
-}
-
-const nsStaticAtom*
-nsAtom::AsStatic() const
-{
-  MOZ_ASSERT(IsStatic());
-  return static_cast<const nsStaticAtom*>(this);
-}
-
-const nsDynamicAtom*
-nsAtom::AsDynamic() const
-{
-  MOZ_ASSERT(IsDynamic());
-  return static_cast<const nsDynamicAtom*>(this);
-}
-
-nsDynamicAtom*
-nsAtom::AsDynamic()
-{
-  MOZ_ASSERT(IsDynamic());
-  return static_cast<nsDynamicAtom*>(this);
 }
 
 void
@@ -450,7 +430,7 @@ void nsAtomTable::GC(GCKind aKind)
   // so we won't try to resurrect a zero refcount atom while trying to delete
   // it.
 
-  MOZ_ASSERT_IF(aKind == GCKind::Shutdown, gUnusedAtomCount == 0);
+  MOZ_ASSERT_IF(aKind == GCKind::Shutdown, nsDynamicAtom::gUnusedAtomCount == 0);
 }
 
 size_t
@@ -519,61 +499,16 @@ nsAtomSubTable::GCLocked(GCKind aKind)
     NS_ASSERTION(nonZeroRefcountAtomsCount == 0, msg.get());
   }
 
-  gUnusedAtomCount -= removedCount;
+  nsDynamicAtom::gUnusedAtomCount -= removedCount;
 }
 
-static void
-GCAtomTable()
+void
+nsDynamicAtom::GCAtomTable()
 {
   MOZ_ASSERT(gAtomTable);
   if (NS_IsMainThread()) {
     gAtomTable->GC(GCKind::RegularOperation);
   }
-}
-
-MOZ_ALWAYS_INLINE MozExternalRefCountType
-nsDynamicAtom::AddRef()
-{
-  MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
-  nsrefcnt count = ++mRefCnt;
-  if (count == 1) {
-    gUnusedAtomCount--;
-  }
-  return count;
-}
-
-MOZ_ALWAYS_INLINE MozExternalRefCountType
-nsDynamicAtom::Release()
-{
-  #ifdef DEBUG
-  // We set a lower GC threshold for atoms in debug builds so that we exercise
-  // the GC machinery more often.
-  static const int32_t kAtomGCThreshold = 20;
-  #else
-  static const int32_t kAtomGCThreshold = 10000;
-  #endif
-
-  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
-  nsrefcnt count = --mRefCnt;
-  if (count == 0) {
-    if (++gUnusedAtomCount >= kAtomGCThreshold) {
-      GCAtomTable();
-    }
-  }
-
-  return count;
-}
-
-MozExternalRefCountType
-nsAtom::AddRef()
-{
-  return IsStatic() ? 2 : AsDynamic()->AddRef();
-}
-
-MozExternalRefCountType
-nsAtom::Release()
-{
-  return IsStatic() ? 1 : AsDynamic()->Release();
 }
 
 //----------------------------------------------------------------------
@@ -792,7 +727,7 @@ NS_GetNumberOfAtoms(void)
 int32_t
 NS_GetUnusedAtomCount(void)
 {
-  return gUnusedAtomCount;
+  return nsDynamicAtom::gUnusedAtomCount;
 }
 
 nsStaticAtom*

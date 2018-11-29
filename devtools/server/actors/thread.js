@@ -440,6 +440,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.dbg.allowUnobservedAsmJS = !options.observeAsmJS;
     }
 
+    if ("skipBreakpoints" in options) {
+      this.skipBreakpoints = options.skipBreakpoints;
+    }
+
     Object.assign(this._options, options);
 
     // Update the global source store

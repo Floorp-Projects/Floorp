@@ -27,10 +27,8 @@ job-template:
         docker-image: {in-tree: "lint"}
         max-run-time: 600
     run:
-        using: run-task
-        command: >
-            cd /builds/worker/checkouts/gecko &&
-            ./mach python build/upload_generated_sources.py ${ARTIFACT_URL}
+        using: mach
+        mach: python build/upload_generated_sources.py ${ARTIFACT_URL}
         sparse-profile: upload-generated-sources
     optimization:
         only-if-dependencies-run: null

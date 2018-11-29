@@ -131,7 +131,7 @@ add_task(async function test_text() {
     EventUtils.synthesizeMouseAtCenter(searchbarEngine, {});
   });
 
-  let url = Services.search.currentEngine
+  let url = Services.search.defaultEngine
                            .getSubmission(searchbar.textbox.value).uri.spec;
   await promiseTabLoadEvent(gBrowser.selectedTab, url);
 

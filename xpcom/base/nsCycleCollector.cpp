@@ -1159,8 +1159,8 @@ public:
   void SelectPointers(CCGraphBuilder& aBuilder);
 
   // RemoveSkippable removes entries from the purple buffer synchronously
-  // (1) if aAsyncSnowWhiteFreeing is false and nsPurpleBufferEntry::mRefCnt is 0 or
-  // (2) if the object's nsXPCOMCycleCollectionParticipant::CanSkip() returns true or
+  // (1) if !aAsyncSnowWhiteFreeing and nsPurpleBufferEntry::mRefCnt is 0 or
+  // (2) if nsXPCOMCycleCollectionParticipant::CanSkip() for the obj or
   // (3) if nsPurpleBufferEntry::mRefCnt->IsPurple() is false.
   // (4) If removeChildlessNodes is true, then any nodes in the purple buffer
   //     that will have no children in the cycle collector graph will also be
@@ -1248,7 +1248,8 @@ enum ccPhase
 
 enum ccType
 {
-  SliceCC,     /* If a CC is in progress, continue it. Otherwise, start a new one. */
+  SliceCC,     /* If a CC is in progress, continue it.
+                  Otherwise, start a new one. */
   ManualCC,    /* Explicitly triggered. */
   ShutdownCC   /* Shutdown CC, used for finding leaks. */
 };

@@ -11,7 +11,6 @@
 #include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/Services.h"
 #include "prerror.h"
 #include "prio.h"
 #include "prmem.h"

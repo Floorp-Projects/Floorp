@@ -13,7 +13,6 @@
 #include "webrtc/modules/video_capture/video_capture_impl.h"
 #include "webrtc/modules/video_capture/video_capture_defines.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
-#include "webrtc/video_engine/desktop_capture_impl.h"
 #include <memory>
 #include <functional>
 

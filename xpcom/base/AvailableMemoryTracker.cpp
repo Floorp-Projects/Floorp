@@ -297,6 +297,7 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
   {
+    // clang-format off
     MOZ_COLLECT_REPORT(
       "low-memory-events/virtual", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
       LowMemoryEventsVirtualDistinguishedAmount(),
@@ -323,6 +324,7 @@ public:
 "of physical memory available (if zero, this behavior is disabled).  The "
 "machine will start to page if it runs out of physical memory.  This may "
 "cause it to run slowly, but it shouldn't cause it to crash.");
+    // clang-format on
 
     return NS_OK;
   }

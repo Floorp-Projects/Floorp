@@ -15,6 +15,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 
@@ -47,7 +48,8 @@ public:
 
   // Does not block.  The IPC channel may not be initialized yet, and
   // the child process may or may not have been created when this
-  // method returns.
+  // method returns.  This GeckoChildProcessHost must not be destroyed
+  // while the launch is in progress.
   bool AsyncLaunch(StringVector aExtraOpts=StringVector());
 
   virtual bool WaitUntilConnected(int32_t aTimeoutMs = 0);
@@ -72,12 +74,19 @@ public:
   bool SyncLaunch(StringVector aExtraOpts=StringVector(),
                   int32_t timeoutMs=0);
 
-  virtual void OnProcessHandleReady(ProcessHandle aProcessHandle);
-  virtual void OnProcessLaunchError();
   virtual void OnChannelConnected(int32_t peer_pid) override;
   virtual void OnMessageReceived(IPC::Message&& aMsg) override;
   virtual void OnChannelError() override;
   virtual void GetQueuedMessages(std::queue<IPC::Message>& queue) override;
+
+  struct LaunchError {};
+  template <typename T>
+  using LaunchPromise = mozilla::MozPromise<T, LaunchError, /* excl: */ false>;
+  using HandlePromise = LaunchPromise<base::ProcessHandle>;
+
+  // Resolves to the process handle when it's available (see
+  // LaunchAndWaitForProcessHandle); use with AsyncLaunch.
+  RefPtr<HandlePromise> WhenProcessHandleReady();
 
   virtual void InitializeChannel();
 
@@ -172,6 +181,7 @@ protected:
 #if defined(OS_MACOSX)
   task_t mChildTask;
 #endif
+  RefPtr<HandlePromise::Private> mHandlePromise;
 
   bool OpenPrivilegedHandle(base::ProcessId aPid);
 

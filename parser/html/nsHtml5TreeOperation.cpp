@@ -7,7 +7,6 @@
 #include "nsHtml5TreeOperation.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Services.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"

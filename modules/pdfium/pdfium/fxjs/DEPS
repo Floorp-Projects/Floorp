@@ -1,4 +1,0 @@
-include_rules = [
-  '+core/fxcrt',
-  '+v8/include',
-]

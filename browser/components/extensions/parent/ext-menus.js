@@ -387,7 +387,11 @@ var gMenuBuilder = {
     }, {once: true});
 
     element.addEventListener("click", event => { // eslint-disable-line mozilla/balanced-listeners
-      if (event.target !== event.currentTarget) {
+      if (event.target !== event.currentTarget ||
+          // Ignore menu items that are usually not clickeable,
+          // such as separators and parents of submenus and disabled items.
+          element.localName !== "menuitem" ||
+          element.disabled) {
         return;
       }
 

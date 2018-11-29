@@ -3,9 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function, unicode_literals
-import copy
 import json
-import subprocess
+from pipes import quote as shell_quote
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.scriptworker import get_release_config
@@ -22,13 +21,13 @@ transforms = TransformSequence()
 @transforms.add
 def add_command(config, jobs):
     for job in jobs:
-        job = copy.deepcopy(job)  # don't overwrite dict values here
         command = [
-            "cd", "/builds/worker/checkouts/gecko", "&&",
-            "./mach", "python",
-            "testing/mozharness/scripts/release/bouncer_check.py",
+            "python", "testing/mozharness/scripts/release/bouncer_check.py",
         ]
-        job["run"]["command"] = command
+        job['run'].update({
+            'using': 'mach',
+            'mach': command,
+        })
         yield job
 
 
@@ -44,8 +43,7 @@ def add_previous_versions(config, jobs):
             extra_params.append("--previous-version={}".format(partial.split("build")[0].strip()))
 
         for job in jobs:
-            job = copy.deepcopy(job)  # don't overwrite dict values here
-            job["run"]["command"].extend(extra_params)
+            job["run"]["mach"].extend(extra_params)
             yield job
 
 
@@ -62,23 +60,22 @@ def handle_keyed_by(config, jobs):
     version = release_config["version"]
 
     for job in jobs:
-        job = copy.deepcopy(job)  # don't overwrite dict values here
         for field in fields:
             resolve_keyed_by(item=job, field=field, item_name=job['name'],
                              project=config.params['project'])
 
         for cfg in job["run"]["config"]:
-            job["run"]["command"].extend(["--config", cfg])
+            job["run"]["mach"].extend(["--config", cfg])
 
         if config.kind == "cron-bouncer-check":
-            job["run"]["command"].extend([
+            job["run"]["mach"].extend([
                 "--product-field={}".format(job["run"]["product-field"]),
                 "--products-url={}".format(job["run"]["products-url"]),
             ])
             del job["run"]["product-field"]
             del job["run"]["products-url"]
         elif config.kind == "release-bouncer-check":
-            job["run"]["command"].append("--version={}".format(version))
+            job["run"]["mach"].append("--version={}".format(version))
 
         del job["run"]["config"]
 
@@ -94,6 +91,5 @@ def handle_keyed_by(config, jobs):
 def command_to_string(config, jobs):
     """Convert command to string to make it work properly with run-task"""
     for job in jobs:
-        job = copy.deepcopy(job)  # don't overwrite dict values here
-        job["run"]["command"] = subprocess.list2cmdline(job["run"]["command"])
+        job["run"]["mach"] = ' '.join(map(shell_quote, job["run"]["mach"]))
         yield job

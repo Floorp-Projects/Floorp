@@ -61,7 +61,7 @@ add_task(async function test_overrides_update_removal() {
   let extension = ExtensionTestUtils.loadExtension(extensionInfo);
 
   let defaultHomepageURL = HomePage.get();
-  let defaultEngineName = Services.search.currentEngine.name;
+  let defaultEngineName = Services.search.defaultEngine.name;
 
   let prefPromise = promisePrefChanged(HOMEPAGE_URI);
   await extension.startup();
@@ -70,7 +70,7 @@ add_task(async function test_overrides_update_removal() {
   equal(extension.version, "1.0", "The installed addon has the expected version.");
   ok(HomePage.get().endsWith(HOMEPAGE_URI),
      "Home page url is overridden by the extension.");
-  equal(Services.search.currentEngine.name,
+  equal(Services.search.defaultEngine.name,
         "DuckDuckGo",
         "Default engine is overridden by the extension");
 
@@ -91,7 +91,7 @@ add_task(async function test_overrides_update_removal() {
   equal(HomePage.get(),
         defaultHomepageURL,
         "Home page url reverted to the default after update.");
-  equal(Services.search.currentEngine.name,
+  equal(Services.search.defaultEngine.name,
         defaultEngineName,
         "Default engine reverted to the default after update.");
 

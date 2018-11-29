@@ -195,7 +195,7 @@ AsyncImagePipelineManager::RemoveAsyncImagePipeline(const wr::PipelineId& aPipel
 
 void
 AsyncImagePipelineManager::UpdateAsyncImagePipeline(const wr::PipelineId& aPipelineId,
-                                                    const LayoutDeviceRect& aScBounds,
+                                                    const LayoutDeviceSize& aSize,
                                                     const gfx::Matrix4x4& aScTransform,
                                                     const gfx::MaybeIntSize& aScaleToSize,
                                                     const wr::ImageRendering& aFilter,
@@ -209,7 +209,7 @@ AsyncImagePipelineManager::UpdateAsyncImagePipeline(const wr::PipelineId& aPipel
     return;
   }
   pipeline->mInitialised = true;
-  pipeline->Update(aScBounds,
+  pipeline->Update(aSize,
                    aScTransform,
                    aScaleToSize,
                    aFilter,
@@ -417,13 +417,10 @@ AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
   }
 
   aPipeline->mIsChanged = false;
-
-  wr::LayoutSize contentSize { aPipeline->mScBounds.Width(), aPipeline->mScBounds.Height() };
-  wr::DisplayListBuilder builder(aPipelineId, contentSize);
+  wr::DisplayListBuilder builder(aPipelineId, wr::ToLayoutSize(aPipeline->mSize));
 
   float opacity = 1.0f;
   Maybe<wr::WrClipId> referenceFrameId = builder.PushStackingContext(
-    wr::ToRoundedLayoutRect(aPipeline->mScBounds),
     nullptr,
     nullptr,
     &opacity,
@@ -469,7 +466,7 @@ AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
   aSceneBuilderTxn.SetDisplayList(
     gfx::Color(0.f, 0.f, 0.f, 0.f),
     aEpoch,
-    LayerSize(aPipeline->mScBounds.Width(), aPipeline->mScBounds.Height()),
+    aPipeline->mSize,
     aPipelineId, builderContentSize,
     dl.dl_desc, dl.dl);
 }
@@ -516,17 +513,17 @@ AsyncImagePipelineManager::SetEmptyDisplayList(const wr::PipelineId& aPipelineId
   auto& txn = pipeline->mImageHost->GetAsyncRef() ? aTxnForImageBridge : aTxn;
 
   wr::Epoch epoch = GetNextImageEpoch();
-  wr::LayoutSize contentSize { pipeline->mScBounds.Width(), pipeline->mScBounds.Height() };
-  wr::DisplayListBuilder builder(aPipelineId, contentSize);
+  wr::DisplayListBuilder builder(aPipelineId, wr::ToLayoutSize(pipeline->mSize));
 
   wr::BuiltDisplayList dl;
   wr::LayoutSize builderContentSize;
   builder.Finalize(builderContentSize, dl);
-  txn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f),
-                     epoch,
-                     LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
-                     aPipelineId, builderContentSize,
-                     dl.dl_desc, dl.dl);
+  txn.SetDisplayList(
+    gfx::Color(0.f, 0.f, 0.f, 0.f),
+    epoch,
+    pipeline->mSize,
+    aPipelineId, builderContentSize,
+    dl.dl_desc, dl.dl);
 }
 
 void

@@ -7,7 +7,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Services.h"
 #include "mozilla/TextUtils.h"
 
 #include "mozilla/dom/ToJSValue.h"

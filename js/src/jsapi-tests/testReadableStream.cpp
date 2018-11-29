@@ -37,7 +37,7 @@ NewDefaultStream(JSContext* cx, HandleObject source = nullptr, HandleFunction si
 
 static bool dataRequestCBCalled = false;
 static void
-DataRequestCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags,
+DataRequestCB(JSContext* cx, HandleObject stream, void* underlyingSource,
               size_t desiredSize)
 {
     js::AssertSameCompartment(cx, stream);
@@ -47,7 +47,7 @@ DataRequestCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_
 
 static bool writeIntoRequestBufferCBCalled = false;
 static void
-WriteIntoRequestBufferCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags,
+WriteIntoRequestBufferCB(JSContext* cx, HandleObject stream, void* underlyingSource,
                          void* buffer, size_t length, size_t* bytesWritten)
 {
     js::AssertSameCompartment(cx, stream);
@@ -64,7 +64,7 @@ WriteIntoRequestBufferCB(JSContext* cx, HandleObject stream, void* underlyingSou
 static bool cancelStreamCBCalled = false;
 static Value cancelStreamReason;
 static Value
-CancelStreamCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags,
+CancelStreamCB(JSContext* cx, HandleObject stream, void* underlyingSource,
                HandleValue reason)
 {
     js::AssertSameCompartment(cx, stream);
@@ -78,7 +78,7 @@ CancelStreamCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8
 static bool streamClosedCBCalled = false;
 static Value streamClosedReason;
 static void
-StreamClosedCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags)
+StreamClosedCB(JSContext* cx, HandleObject stream, void* underlyingSource)
 {
     js::AssertSameCompartment(cx, stream);
     MOZ_ASSERT(!streamClosedCBCalled, "Invalid test setup");
@@ -88,7 +88,7 @@ StreamClosedCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8
 static bool streamErroredCBCalled = false;
 static Value streamErroredReason;
 static void
-StreamErroredCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags,
+StreamErroredCB(JSContext* cx, HandleObject stream, void* underlyingSource,
                 HandleValue reason)
 {
     js::AssertSameCompartment(cx, stream);
@@ -101,7 +101,7 @@ StreamErroredCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint
 static bool finalizeStreamCBCalled = false;
 static void* finalizedStreamUnderlyingSource;
 static void
-FinalizeStreamCB(void* underlyingSource, uint8_t flags)
+FinalizeStreamCB(void* underlyingSource)
 {
     MOZ_ASSERT(!finalizeStreamCBCalled, "Invalid test setup");
     finalizeStreamCBCalled = true;
@@ -766,28 +766,6 @@ BEGIN_FIXTURE_TEST(StreamTestFixture,
 }
 END_FIXTURE_TEST(StreamTestFixture,
                  testReadableStream_ReadableStreamOtherGlobalDefaultReaderRead)
-
-BEGIN_FIXTURE_TEST(StreamTestFixture,
-                   testReadableStream_ReadableStreamGetEmbeddingFlags)
-{
-    RootedObject stream(cx, NewDefaultStream(cx));
-    CHECK(stream);
-    uint8_t flags;
-    CHECK(ReadableStreamGetEmbeddingFlags(cx, stream, &flags));
-
-    RootedObject otherGlobal(cx, createGlobal());
-    CHECK(otherGlobal);
-    {
-        JSAutoRealm ar(cx, otherGlobal);
-        CHECK(JS_WrapObject(cx, &stream));
-        uint8_t flags;
-        CHECK(ReadableStreamGetEmbeddingFlags(cx, stream, &flags));
-    }
-
-    return true;
-}
-END_FIXTURE_TEST(StreamTestFixture,
-                 testReadableStream_ReadableStreamGetEmbeddingFlags)
 
 BEGIN_FIXTURE_TEST(StreamTestFixture,
                    testReadableStream_ReadableStreamGetExternalUnderlyingSource)

@@ -298,9 +298,6 @@ if (!build_with_chromium) {
         "system_wrappers:field_trial_default",
         "system_wrappers:metrics_default",
       ]
-      if (!is_android) {
-        deps += [ "video_engine" ]
-      }
     } else {
       deps += [
         "api",

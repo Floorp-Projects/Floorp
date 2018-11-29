@@ -2572,30 +2572,6 @@ class ICCall_ConstStringSplit : public ICMonitoredStub
    };
 };
 
-class ICCall_IsSuspendedGenerator : public ICStub
-{
-    friend class ICStubSpace;
-
-  protected:
-    explicit ICCall_IsSuspendedGenerator(JitCode* stubCode)
-      : ICStub(ICStub::Call_IsSuspendedGenerator, stubCode)
-    {}
-
-  public:
-    class Compiler : public ICStubCompiler {
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
-
-      public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::Call_IsSuspendedGenerator)
-        {}
-        ICStub* getStub(ICStubSpace* space) override {
-            return newStub<ICCall_IsSuspendedGenerator>(space, getStubCode());
-        }
-   };
-};
-
 // IC for constructing an iterator from an input value.
 class ICGetIterator_Fallback : public ICFallbackStub
 {

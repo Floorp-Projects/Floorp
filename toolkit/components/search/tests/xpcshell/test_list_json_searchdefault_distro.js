@@ -24,7 +24,7 @@ add_task(async function test_defaultEngineNamePref() {
   Services.prefs.setCharPref(kDefaultenginenamePref, "Bing");
 
   await asyncInit();
-  Assert.equal(Services.search.currentEngine.name,
+  Assert.equal(Services.search.defaultEngine.name,
                defaultEngineName, "expected default search engine after pref set");
 
   Services.prefs.clearUserPref(kDefaultenginenamePref);
@@ -41,7 +41,7 @@ add_task(async function test_defaultEngineNameUserPrefUS() {
   Services.prefs.setCharPref(kDefaultenginenamePref, "Bing");
 
   await asyncReInit();
-  Assert.equal(Services.search.currentEngine.name,
+  Assert.equal(Services.search.defaultEngine.name,
                defaultEngineName, "expected US default search engine after pref set");
 
   Services.prefs.clearUserPref(kDefaultenginenamePref);
@@ -61,7 +61,7 @@ add_task(async function test_defaultEngineNameDefaultPrefUS() {
                             "data:text/plain,browser.search.defaultenginename=Bing");
 
   await asyncReInit();
-  Assert.equal(Services.search.currentEngine.name,
+  Assert.equal(Services.search.defaultEngine.name,
                "Bing", "expected new default search engine after pref set");
 
   Services.prefs.clearUserPref("browser.search.region");
