@@ -16,7 +16,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/dom/ClientManagerActors.h"
-#include "mozilla/dom/PBackgroundLSObjectChild.h"
+#include "mozilla/dom/PBackgroundLSDatabaseChild.h"
 #include "mozilla/dom/PBackgroundLSObserverChild.h"
 #include "mozilla/dom/PBackgroundLSRequestChild.h"
 #include "mozilla/dom/PBackgroundLSSimpleRequestChild.h"
@@ -245,18 +245,18 @@ BackgroundChildImpl::DeallocPBackgroundSDBConnectionChild(
   return true;
 }
 
-BackgroundChildImpl::PBackgroundLSObjectChild*
-BackgroundChildImpl::AllocPBackgroundLSObjectChild(
+BackgroundChildImpl::PBackgroundLSDatabaseChild*
+BackgroundChildImpl::AllocPBackgroundLSDatabaseChild(
                                             const PrincipalInfo& aPrincipalInfo,
-                                            const nsString& aDocumentURI,
-                                            const uint32_t& aPrivateBrowsingId)
+                                            const uint32_t& aPrivateBrowsingId,
+                                            const uint64_t& aDatastoreId)
 {
-  MOZ_CRASH("PBackgroundLSObjectChild actor should be manually constructed!");
+  MOZ_CRASH("PBackgroundLSDatabaseChild actor should be manually constructed!");
 }
 
 bool
-BackgroundChildImpl::DeallocPBackgroundLSObjectChild(
-                                               PBackgroundLSObjectChild* aActor)
+BackgroundChildImpl::DeallocPBackgroundLSDatabaseChild(
+                                             PBackgroundLSDatabaseChild* aActor)
 {
   MOZ_ASSERT(aActor);
 

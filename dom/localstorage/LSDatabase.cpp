@@ -9,11 +9,27 @@
 namespace mozilla {
 namespace dom {
 
-LSDatabase::LSDatabase()
+namespace {
+
+typedef nsDataHashtable<nsCStringHashKey, LSDatabase*> LSDatabaseHashtable;
+
+StaticAutoPtr<LSDatabaseHashtable> gLSDatabases;
+
+} // namespace
+
+LSDatabase::LSDatabase(const nsACString& aOrigin)
   : mActor(nullptr)
+  , mOrigin(aOrigin)
   , mAllowedToClose(false)
 {
   AssertIsOnOwningThread();
+
+  if (!gLSDatabases) {
+    gLSDatabases = new LSDatabaseHashtable();
+  }
+
+  MOZ_ASSERT(!gLSDatabases->Get(mOrigin));
+  gLSDatabases->Put(mOrigin, this);
 }
 
 LSDatabase::~LSDatabase()
@@ -28,6 +44,13 @@ LSDatabase::~LSDatabase()
     mActor->SendDeleteMeInternal();
     MOZ_ASSERT(!mActor, "SendDeleteMeInternal should have cleared!");
   }
+}
+
+// static
+LSDatabase*
+LSDatabase::Get(const nsACString& aOrigin)
+{
+  return gLSDatabases ? gLSDatabases->Get(aOrigin) : nullptr;
 }
 
 void
@@ -50,6 +73,14 @@ LSDatabase::AllowToClose()
 
   if (mActor) {
     mActor->SendAllowToClose();
+  }
+
+  MOZ_ASSERT(gLSDatabases);
+  MOZ_ASSERT(gLSDatabases->Get(mOrigin));
+  gLSDatabases->Remove(mOrigin);
+
+  if (!gLSDatabases->Count()) {
+    gLSDatabases = nullptr;
   }
 }
 
@@ -120,7 +151,8 @@ LSDatabase::GetKeys(nsTArray<nsString>& aKeys)
 }
 
 nsresult
-LSDatabase::SetItem(const nsAString& aKey,
+LSDatabase::SetItem(const nsAString& aDocumentURI,
+                    const nsAString& aKey,
                     const nsAString& aValue,
                     LSWriteOpResponse& aResponse)
 {
@@ -129,7 +161,8 @@ LSDatabase::SetItem(const nsAString& aKey,
   MOZ_ASSERT(!mAllowedToClose);
 
   LSWriteOpResponse response;
-  if (NS_WARN_IF(!mActor->SendSetItem(nsString(aKey),
+  if (NS_WARN_IF(!mActor->SendSetItem(nsString(aDocumentURI),
+                                      nsString(aKey),
                                       nsString(aValue),
                                       &response))) {
     return NS_ERROR_FAILURE;
@@ -140,7 +173,8 @@ LSDatabase::SetItem(const nsAString& aKey,
 }
 
 nsresult
-LSDatabase::RemoveItem(const nsAString& aKey,
+LSDatabase::RemoveItem(const nsAString& aDocumentURI,
+                       const nsAString& aKey,
                        LSWriteOpResponse& aResponse)
 {
   AssertIsOnOwningThread();
@@ -148,7 +182,9 @@ LSDatabase::RemoveItem(const nsAString& aKey,
   MOZ_ASSERT(!mAllowedToClose);
 
   LSWriteOpResponse response;
-  if (NS_WARN_IF(!mActor->SendRemoveItem(nsString(aKey), &response))) {
+  if (NS_WARN_IF(!mActor->SendRemoveItem(nsString(aDocumentURI),
+                                         nsString(aKey),
+                                         &response))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -157,14 +193,15 @@ LSDatabase::RemoveItem(const nsAString& aKey,
 }
 
 nsresult
-LSDatabase::Clear(LSWriteOpResponse& aResponse)
+LSDatabase::Clear(const nsAString& aDocumentURI,
+                  LSWriteOpResponse& aResponse)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
   LSWriteOpResponse response;
-  if (NS_WARN_IF(!mActor->SendClear(&response))) {
+  if (NS_WARN_IF(!mActor->SendClear(nsString(aDocumentURI), &response))) {
     return NS_ERROR_FAILURE;
   }
 

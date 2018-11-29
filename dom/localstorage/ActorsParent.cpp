@@ -15,7 +15,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/PBackgroundLSDatabaseParent.h"
-#include "mozilla/dom/PBackgroundLSObjectParent.h"
 #include "mozilla/dom/PBackgroundLSObserverParent.h"
 #include "mozilla/dom/PBackgroundLSRequestParent.h"
 #include "mozilla/dom/PBackgroundLSSharedTypes.h"
@@ -1114,17 +1113,20 @@ public:
 
   void
   SetItem(Database* aDatabase,
+          const nsString& aDocumentURI,
           const nsString& aKey,
           const nsString& aValue,
           LSWriteOpResponse& aResponse);
 
   void
   RemoveItem(Database* aDatabase,
+             const nsString& aDocumentURI,
              const nsString& aKey,
              LSWriteOpResponse& aResponse);
 
   void
   Clear(Database* aDatabase,
+        const nsString& aDocumentURI,
         LSWriteOpResponse& aResponse);
 
   void
@@ -1150,6 +1152,7 @@ private:
 
   void
   NotifyObservers(Database* aDatabase,
+                  const nsString& aDocumentURI,
                   const nsString& aKey,
                   const nsString& aOldValue,
                   const nsString& aNewValue);
@@ -1262,19 +1265,27 @@ private:
  * Actor class declarations
  ******************************************************************************/
 
-class Object final
-  : public PBackgroundLSObjectParent
+class Database final
+  : public PBackgroundLSDatabaseParent
 {
+  RefPtr<Datastore> mDatastore;
   const PrincipalInfo mPrincipalInfo;
-  const nsString mDocumentURI;
+  // Strings share buffers if possible, so it's not a problem to duplicate the
+  // origin here.
+  nsCString mOrigin;
   uint32_t mPrivateBrowsingId;
+  bool mAllowedToClose;
   bool mActorDestroyed;
+  bool mRequestedAllowToClose;
+#ifdef DEBUG
+  bool mActorWasAlive;
+#endif
 
 public:
-  // Created in AllocPBackgroundLSObjectParent.
-  Object(const PrincipalInfo& aPrincipalInfo,
-         const nsAString& aDocumentURI,
-         uint32_t aPrivateBrowsingId);
+  // Created in AllocPBackgroundLSDatabaseParent.
+  Database(const PrincipalInfo& aPrincipalInfo,
+           const nsACString& aOrigin,
+           uint32_t aPrivateBrowsingId);
 
   const PrincipalInfo&
   GetPrincipalInfo() const
@@ -1286,65 +1297,6 @@ public:
   PrivateBrowsingId() const
   {
     return mPrivateBrowsingId;
-  }
-
-  const nsString&
-  DocumentURI() const
-  {
-    return mDocumentURI;
-  }
-
-  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Object)
-
-private:
-  // Reference counted.
-  ~Object();
-
-  // IPDL methods are only called by IPDL.
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
-
-  mozilla::ipc::IPCResult
-  RecvDeleteMe() override;
-
-  PBackgroundLSDatabaseParent*
-  AllocPBackgroundLSDatabaseParent(const uint64_t& aDatastoreId) override;
-
-  mozilla::ipc::IPCResult
-  RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
-                                       const uint64_t& aDatastoreId) override;
-
-  bool
-  DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor)
-                                     override;
-};
-
-class Database final
-  : public PBackgroundLSDatabaseParent
-{
-  RefPtr<Object> mObject;
-  RefPtr<Datastore> mDatastore;
-  // Strings share buffers if possible, so it's not a problem to duplicate the
-  // origin here.
-  nsCString mOrigin;
-  bool mAllowedToClose;
-  bool mActorDestroyed;
-  bool mRequestedAllowToClose;
-#ifdef DEBUG
-  bool mActorWasAlive;
-#endif
-
-public:
-  // Created in AllocPBackgroundLSDatabaseParent.
-  Database(Object* aObject,
-           const nsACString& aOrigin);
-
-  Object*
-  GetObject() const
-  {
-    AssertIsOnBackgroundThread();
-
-    return mObject;
   }
 
   const nsCString&
@@ -1391,16 +1343,19 @@ private:
   RecvGetKeys(nsTArray<nsString>* aKeys) override;
 
   mozilla::ipc::IPCResult
-  RecvSetItem(const nsString& aKey,
+  RecvSetItem(const nsString& aDocumentURI,
+              const nsString& aKey,
               const nsString& aValue,
               LSWriteOpResponse* aResponse) override;
 
   mozilla::ipc::IPCResult
-  RecvRemoveItem(const nsString& aKey,
+  RecvRemoveItem(const nsString& aDocumentURI,
+                 const nsString& aKey,
                  LSWriteOpResponse* aResponse) override;
 
   mozilla::ipc::IPCResult
-  RecvClear(LSWriteOpResponse* aResponse) override;
+  RecvClear(const nsString& aDocumentURI,
+            LSWriteOpResponse* aResponse) override;
 };
 
 class Observer final
@@ -1421,6 +1376,7 @@ public:
 
   void
   Observe(Database* aDatabase,
+          const nsString& aDocumentURI,
           const nsString& aKey,
           const nsString& aOldValue,
           const nsString& aNewValue);
@@ -2189,10 +2145,10 @@ GetUsage(mozIStorageConnection* aConnection,
  * Exported functions
  ******************************************************************************/
 
-PBackgroundLSObjectParent*
-AllocPBackgroundLSObjectParent(const PrincipalInfo& aPrincipalInfo,
-                               const nsString& aDocumentURI,
-                               const uint32_t& aPrivateBrowsingId)
+PBackgroundLSDatabaseParent*
+AllocPBackgroundLSDatabaseParent(const PrincipalInfo& aPrincipalInfo,
+                                 const uint32_t& aPrivateBrowsingId,
+                                 const uint64_t& aDatastoreId)
 {
   AssertIsOnBackgroundThread();
 
@@ -2200,34 +2156,73 @@ AllocPBackgroundLSObjectParent(const PrincipalInfo& aPrincipalInfo,
     return nullptr;
   }
 
-  RefPtr<Object> object =
-    new Object(aPrincipalInfo, aDocumentURI, aPrivateBrowsingId);
+  if (NS_WARN_IF(!gPreparedDatastores)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  PreparedDatastore* preparedDatastore = gPreparedDatastores->Get(aDatastoreId);
+  if (NS_WARN_IF(!preparedDatastore)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  // If we ever decide to return null from this point on, we need to make sure
+  // that the datastore is closed and the prepared datastore is removed from the
+  // gPreparedDatastores hashtable.
+  // We also assume that IPDL must call RecvPBackgroundLSDatabaseConstructor
+  // once we return a valid actor in this method.
+
+  RefPtr<Database> database = new Database(aPrincipalInfo,
+                                           preparedDatastore->Origin(),
+                                           aPrivateBrowsingId);
 
   // Transfer ownership to IPDL.
-  return object.forget().take();
+  return database.forget().take();
 }
 
 bool
-RecvPBackgroundLSObjectConstructor(PBackgroundLSObjectParent* aActor,
-                                   const PrincipalInfo& aPrincipalInfo,
-                                   const nsString& aDocumentURI,
-                                   const uint32_t& aPrivateBrowsingId)
+RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
+                                     const PrincipalInfo& aPrincipalInfo,
+                                     const uint32_t& aPrivateBrowsingId,
+                                     const uint64_t& aDatastoreId)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
+  MOZ_ASSERT(gPreparedDatastores);
+  MOZ_ASSERT(gPreparedDatastores->Get(aDatastoreId));
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+
+  // The actor is now completely built (it has a manager, channel and it's
+  // registered as a subprotocol).
+  // ActorDestroy will be called if we fail here.
+
+  nsAutoPtr<PreparedDatastore> preparedDatastore;
+  gPreparedDatastores->Remove(aDatastoreId, &preparedDatastore);
+  MOZ_ASSERT(preparedDatastore);
+
+  auto* database = static_cast<Database*>(aActor);
+
+  database->SetActorAlive(preparedDatastore->GetDatastore());
+
+  // It's possible that AbortOperations was called before the database actor
+  // was created and became live. Let the child know that the database in no
+  // longer valid.
+  if (preparedDatastore->IsInvalidated()) {
+    database->RequestAllowToClose();
+  }
 
   return true;
 }
 
 bool
-DeallocPBackgroundLSObjectParent(PBackgroundLSObjectParent* aActor)
+DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
-  RefPtr<Object> actor = dont_AddRef(static_cast<Object*>(aActor));
+  RefPtr<Database> actor = dont_AddRef(static_cast<Database*>(aActor));
 
   return true;
 }
@@ -3178,6 +3173,7 @@ Datastore::GetItem(const nsString& aKey, nsString& aValue) const
 
 void
 Datastore::SetItem(Database* aDatabase,
+                   const nsString& aDocumentURI,
                    const nsString& aKey,
                    const nsString& aValue,
                    LSWriteOpResponse& aResponse)
@@ -3213,7 +3209,7 @@ Datastore::SetItem(Database* aDatabase,
 
     mValues.Put(aKey, aValue);
 
-    NotifyObservers(aDatabase, aKey, oldValue, aValue);
+    NotifyObservers(aDatabase, aDocumentURI, aKey, oldValue, aValue);
 
     if (IsPersistent()) {
       EnsureTransaction();
@@ -3231,6 +3227,7 @@ Datastore::SetItem(Database* aDatabase,
 
 void
 Datastore::RemoveItem(Database* aDatabase,
+                      const nsString& aDocumentURI,
                       const nsString& aKey,
                       LSWriteOpResponse& aResponse)
 {
@@ -3254,7 +3251,7 @@ Datastore::RemoveItem(Database* aDatabase,
 
     mValues.Remove(aKey);
 
-    NotifyObservers(aDatabase, aKey, oldValue, VoidString());
+    NotifyObservers(aDatabase, aDocumentURI, aKey, oldValue, VoidString());
 
     if (IsPersistent()) {
       EnsureTransaction();
@@ -3272,6 +3269,7 @@ Datastore::RemoveItem(Database* aDatabase,
 
 void
 Datastore::Clear(Database* aDatabase,
+                 const nsString& aDocumentURI,
                  LSWriteOpResponse& aResponse)
 {
   AssertIsOnBackgroundThread();
@@ -3289,7 +3287,11 @@ Datastore::Clear(Database* aDatabase,
     mValues.Clear();
 
     if (aDatabase) {
-      NotifyObservers(aDatabase, VoidString(), VoidString(), VoidString());
+      NotifyObservers(aDatabase,
+                      aDocumentURI,
+                      VoidString(),
+                      VoidString(),
+                      VoidString());
     }
 
     if (IsPersistent()) {
@@ -3413,6 +3415,7 @@ Datastore::UpdateUsage(int64_t aDelta)
 
 void
 Datastore::NotifyObservers(Database* aDatabase,
+                           const nsString& aDocumentURI,
                            const nsString& aKey,
                            const nsString& aOldValue,
                            const nsString& aNewValue)
@@ -3431,11 +3434,11 @@ Datastore::NotifyObservers(Database* aDatabase,
 
   MOZ_ASSERT(array);
 
-  PBackgroundParent* databaseBackgroundActor = aDatabase->Manager()->Manager();
+  PBackgroundParent* databaseBackgroundActor = aDatabase->Manager();
 
   for (Observer* observer : *array) {
     if (observer->Manager() != databaseBackgroundActor) {
-      observer->Observe(aDatabase, aKey, aOldValue, aNewValue);
+      observer->Observe(aDatabase, aDocumentURI, aKey, aOldValue, aNewValue);
     }
   }
 }
@@ -3508,133 +3511,15 @@ PreparedDatastore::TimerCallback(nsITimer* aTimer, void* aClosure)
 }
 
 /*******************************************************************************
- * Object
- ******************************************************************************/
-
-Object::Object(const PrincipalInfo& aPrincipalInfo,
-               const nsAString& aDocumentURI,
-               uint32_t aPrivateBrowsingId)
-  : mPrincipalInfo(aPrincipalInfo)
-  , mDocumentURI(aDocumentURI)
-  , mPrivateBrowsingId(aPrivateBrowsingId)
-  , mActorDestroyed(false)
-{
-  AssertIsOnBackgroundThread();
-}
-
-Object::~Object()
-{
-  MOZ_ASSERT(mActorDestroyed);
-}
-
-void
-Object::ActorDestroy(ActorDestroyReason aWhy)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
-
-  mActorDestroyed = true;
-}
-
-mozilla::ipc::IPCResult
-Object::RecvDeleteMe()
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
-
-  IProtocol* mgr = Manager();
-  if (!PBackgroundLSObjectParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
-  return IPC_OK();
-}
-
-PBackgroundLSDatabaseParent*
-Object::AllocPBackgroundLSDatabaseParent(const uint64_t& aDatastoreId)
-{
-  AssertIsOnBackgroundThread();
-
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
-    return nullptr;
-  }
-
-  if (NS_WARN_IF(!gPreparedDatastores)) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-
-  PreparedDatastore* preparedDatastore = gPreparedDatastores->Get(aDatastoreId);
-  if (NS_WARN_IF(!preparedDatastore)) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-
-  // If we ever decide to return null from this point on, we need to make sure
-  // that the datastore is closed and the prepared datastore is removed from the
-  // gPreparedDatastores hashtable.
-  // We also assume that IPDL must call RecvPBackgroundLSDatabaseConstructor
-  // once we return a valid actor in this method.
-
-  RefPtr<Database> database = new Database(this,
-                                           preparedDatastore->Origin());
-
-  // Transfer ownership to IPDL.
-  return database.forget().take();
-}
-
-mozilla::ipc::IPCResult
-Object::RecvPBackgroundLSDatabaseConstructor(
-                                            PBackgroundLSDatabaseParent* aActor,
-                                            const uint64_t& aDatastoreId)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(gPreparedDatastores);
-  MOZ_ASSERT(gPreparedDatastores->Get(aDatastoreId));
-  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
-
-  // The actor is now completely built (it has a manager, channel and it's
-  // registered as a subprotocol).
-  // ActorDestroy will be called if we fail here.
-
-  nsAutoPtr<PreparedDatastore> preparedDatastore;
-  gPreparedDatastores->Remove(aDatastoreId, &preparedDatastore);
-  MOZ_ASSERT(preparedDatastore);
-
-  auto* database = static_cast<Database*>(aActor);
-
-  database->SetActorAlive(preparedDatastore->GetDatastore());
-
-  // It's possible that AbortOperations was called before the database actor
-  // was created and became live. Let the child know that the database in no
-  // longer valid.
-  if (preparedDatastore->IsInvalidated()) {
-    database->RequestAllowToClose();
-  }
-
-  return IPC_OK();
-}
-
-bool
-Object::DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  // Transfer ownership back from IPDL.
-  RefPtr<Database> actor = dont_AddRef(static_cast<Database*>(aActor));
-
-  return true;
-}
-
-/*******************************************************************************
  * Database
  ******************************************************************************/
 
-Database::Database(Object* aObject,
-                   const nsACString& aOrigin)
-  : mObject(aObject)
+Database::Database(const PrincipalInfo& aPrincipalInfo,
+                   const nsACString& aOrigin,
+                   uint32_t aPrivateBrowsingId)
+  : mPrincipalInfo(aPrincipalInfo)
   , mOrigin(aOrigin)
+  , mPrivateBrowsingId(aPrivateBrowsingId)
   , mAllowedToClose(false)
   , mActorDestroyed(false)
   , mRequestedAllowToClose(false)
@@ -3807,7 +3692,8 @@ Database::RecvGetItem(const nsString& aKey, nsString* aValue)
 }
 
 mozilla::ipc::IPCResult
-Database::RecvSetItem(const nsString& aKey,
+Database::RecvSetItem(const nsString& aDocumentURI,
+                      const nsString& aKey,
                       const nsString& aValue,
                       LSWriteOpResponse* aResponse)
 {
@@ -3820,13 +3706,14 @@ Database::RecvSetItem(const nsString& aKey,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->SetItem(this, aKey, aValue, *aResponse);
+  mDatastore->SetItem(this, aDocumentURI, aKey, aValue, *aResponse);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-Database::RecvRemoveItem(const nsString& aKey,
+Database::RecvRemoveItem(const nsString& aDocumentURI,
+                         const nsString& aKey,
                          LSWriteOpResponse* aResponse)
 {
   AssertIsOnBackgroundThread();
@@ -3838,13 +3725,14 @@ Database::RecvRemoveItem(const nsString& aKey,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->RemoveItem(this, aKey, *aResponse);
+  mDatastore->RemoveItem(this, aDocumentURI, aKey, *aResponse);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-Database::RecvClear(LSWriteOpResponse* aResponse)
+Database::RecvClear(const nsString& aDocumentURI,
+                    LSWriteOpResponse* aResponse)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aResponse);
@@ -3855,7 +3743,7 @@ Database::RecvClear(LSWriteOpResponse* aResponse)
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->Clear(this, *aResponse);
+  mDatastore->Clear(this, aDocumentURI, *aResponse);
 
   return IPC_OK();
 }
@@ -3895,6 +3783,7 @@ Observer::~Observer()
 
 void
 Observer::Observe(Database* aDatabase,
+                  const nsString& aDocumentURI,
                   const nsString& aKey,
                   const nsString& aOldValue,
                   const nsString& aNewValue)
@@ -3902,12 +3791,9 @@ Observer::Observe(Database* aDatabase,
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
 
-  Object* object = aDatabase->GetObject();
-  MOZ_ASSERT(object);
-
-  Unused << SendObserve(object->GetPrincipalInfo(),
-                        object->PrivateBrowsingId(),
-                        object->DocumentURI(),
+  Unused << SendObserve(aDatabase->GetPrincipalInfo(),
+                        aDatabase->PrivateBrowsingId(),
+                        aDocumentURI,
                         aKey,
                         aOldValue,
                         aNewValue);
@@ -5827,7 +5713,7 @@ ClearPrivateBrowsingRunnable::Run()
 
       if (datastore->PrivateBrowsingId()) {
         LSWriteOpResponse dummy;
-        datastore->Clear(nullptr, dummy);
+        datastore->Clear(nullptr, EmptyString(), dummy);
       }
     }
   }

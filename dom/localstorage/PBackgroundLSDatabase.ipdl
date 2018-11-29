@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBackgroundLSObject;
+include protocol PBackground;
 
 namespace mozilla {
 namespace dom {
@@ -21,7 +21,7 @@ union LSWriteOpResponse
 
 sync protocol PBackgroundLSDatabase
 {
-  manager PBackgroundLSObject;
+  manager PBackground;
 
 parent:
   // The DeleteMe message is used to avoid a race condition between the parent
@@ -49,13 +49,13 @@ parent:
   sync GetKeys()
     returns (nsString[] keys);
 
-  sync SetItem(nsString key, nsString value)
+  sync SetItem(nsString documentURI, nsString key, nsString value)
     returns (LSWriteOpResponse response);
 
-  sync RemoveItem(nsString key)
+  sync RemoveItem(nsString documentURI, nsString key)
     returns (LSWriteOpResponse response);
 
-  sync Clear()
+  sync Clear(nsString documentURI)
     returns (LSWriteOpResponse response);
 
 child:

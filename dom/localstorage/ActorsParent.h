@@ -20,7 +20,7 @@ namespace dom {
 
 class LSRequestParams;
 class LSSimpleRequestParams;
-class PBackgroundLSObjectParent;
+class PBackgroundLSDatabaseParent;
 class PBackgroundLSObserverParent;
 class PBackgroundLSRequestParent;
 class PBackgroundLSSimpleRequestParent;
@@ -31,21 +31,21 @@ class Client;
 
 } // namespace quota
 
-PBackgroundLSObjectParent*
-AllocPBackgroundLSObjectParent(
+PBackgroundLSDatabaseParent*
+AllocPBackgroundLSDatabaseParent(
                               const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                              const nsString& aDocumentURI,
-                              const uint32_t& aPrivateBrowsingId);
+                              const uint32_t& aPrivateBrowsingId,
+                              const uint64_t& aDatastoreId);
 
 bool
-RecvPBackgroundLSObjectConstructor(
-                              PBackgroundLSObjectParent* aActor,
+RecvPBackgroundLSDatabaseConstructor(
+                              PBackgroundLSDatabaseParent* aActor,
                               const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                              const nsString& aDocumentURI,
-                              const uint32_t& aPrivateBrowsingId);
+                              const uint32_t& aPrivateBrowsingId,
+                              const uint64_t& aDatastoreId);
 
 bool
-DeallocPBackgroundLSObjectParent(PBackgroundLSObjectParent* aActor);
+DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor);
 
 PBackgroundLSObserverParent*
 AllocPBackgroundLSObserverParent(const uint64_t& aObserverId);

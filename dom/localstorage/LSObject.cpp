@@ -127,9 +127,7 @@ private:
 LSObject::LSObject(nsPIDOMWindowInner* aWindow,
                    nsIPrincipal* aPrincipal)
   : Storage(aWindow, aPrincipal)
-  , mActor(nullptr)
   , mPrivateBrowsingId(0)
-  , mActorFailed(false)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NextGenLocalStorageEnabled());
@@ -138,14 +136,8 @@ LSObject::LSObject(nsPIDOMWindowInner* aWindow,
 LSObject::~LSObject()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(mActorFailed, !mActor);
 
   DropObserver();
-
-  if (mActor) {
-    mActor->SendDeleteMeInternal();
-    MOZ_ASSERT(!mActor, "SendDeleteMeInternal should have cleared!");
-  }
 }
 
 // static
@@ -466,7 +458,7 @@ LSObject::SetItem(const nsAString& aKey,
   }
 
   LSWriteOpResponse response;
-  rv = mDatabase->SetItem(aKey, aValue, response);
+  rv = mDatabase->SetItem(mDocumentURI, aKey, aValue, response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
@@ -503,7 +495,7 @@ LSObject::RemoveItem(const nsAString& aKey,
   }
 
   LSWriteOpResponse response;
-  rv = mDatabase->RemoveItem(aKey, response);
+  rv = mDatabase->RemoveItem(mDocumentURI, aKey, response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
@@ -539,7 +531,7 @@ LSObject::Clear(nsIPrincipal& aSubjectPrincipal,
   }
 
   LSWriteOpResponse response;
-  rv = mDatabase->Clear(response);
+  rv = mDatabase->Clear(mDocumentURI, response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
@@ -652,33 +644,20 @@ LSObject::EnsureDatabase()
     return NS_OK;
   }
 
-  mDatabase = nullptr;
+  mDatabase = LSDatabase::Get(mOrigin);
 
-  if (mActorFailed) {
-    return NS_ERROR_FAILURE;
+  if (mDatabase) {
+    MOZ_ASSERT(!mDatabase->IsAllowedToClose());
+    return NS_OK;
   }
 
-  if (!mActor) {
-    PBackgroundChild* backgroundActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
-    if (NS_WARN_IF(!backgroundActor)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    LSObjectChild* actor = new LSObjectChild(this);
-
-    mActor =
-      static_cast<LSObjectChild*>(
-        backgroundActor->SendPBackgroundLSObjectConstructor(
-                                                           actor,
-                                                           *mPrincipalInfo,
-                                                           mDocumentURI,
-                                                           mPrivateBrowsingId));
-
-    if (NS_WARN_IF(!mActor)) {
-      mActorFailed = true;
-      return NS_ERROR_FAILURE;
-    }
+  // We don't need this yet, but once the request successfully finishes, it's
+  // too late to initialize PBackground child on the owning thread, because
+  // it can fail and parent would keep an extra strong ref to the datastore.
+  PBackgroundChild* backgroundActor =
+    BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!backgroundActor)) {
+    return NS_ERROR_FAILURE;
   }
 
   LSRequestPrepareDatastoreParams params;
@@ -709,12 +688,15 @@ LSObject::EnsureDatabase()
   // Note that we now can't error out, otherwise parent will keep an extra
   // strong reference to the datastore.
 
-  RefPtr<LSDatabase> database = new LSDatabase();
+  RefPtr<LSDatabase> database = new LSDatabase(mOrigin);
 
   LSDatabaseChild* actor = new LSDatabaseChild(database);
 
   MOZ_ALWAYS_TRUE(
-    mActor->SendPBackgroundLSDatabaseConstructor(actor, datastoreId));
+    backgroundActor->SendPBackgroundLSDatabaseConstructor(actor,
+                                                          *mPrincipalInfo,
+                                                          mPrivateBrowsingId,
+                                                          datastoreId));
 
   database->SetActor(actor);
 
@@ -728,12 +710,7 @@ LSObject::DropDatabase()
 {
   AssertIsOnOwningThread();
 
-  if (mDatabase) {
-    if (!mDatabase->IsAllowedToClose()) {
-      mDatabase->AllowToClose();
-    }
-    mDatabase = nullptr;
-  }
+  mDatabase = nullptr;
 }
 
 nsresult

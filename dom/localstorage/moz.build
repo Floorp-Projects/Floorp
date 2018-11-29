@@ -38,7 +38,6 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES += [
     'PBackgroundLSDatabase.ipdl',
-    'PBackgroundLSObject.ipdl',
     'PBackgroundLSObserver.ipdl',
     'PBackgroundLSRequest.ipdl',
     'PBackgroundLSSharedTypes.ipdlh',
