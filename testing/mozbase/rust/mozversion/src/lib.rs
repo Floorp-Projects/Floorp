@@ -2,8 +2,8 @@ extern crate ini;
 extern crate regex;
 extern crate semver;
 
+use crate::platform::ini_path;
 use ini::Ini;
-use platform::ini_path;
 use regex::Regex;
 use std::default::Default;
 use std::error;
