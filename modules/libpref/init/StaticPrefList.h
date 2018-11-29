@@ -205,17 +205,11 @@ VARCACHE_PREF(
 
 // If this is true, "keypress" event's keyCode value and charCode value always
 // become same if the event is not created/initialized by JS.
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE  true
-#else
-# define PREF_VALUE  false
-#endif
 VARCACHE_PREF(
   "dom.keyboardevent.keypress.set_keycode_and_charcode_to_same_value",
    dom_keyboardevent_keypress_set_keycode_and_charcode_to_same_value,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 // NOTE: This preference is used in unit tests. If it is removed or its default
 // value changes, please update test_sharedMap_var_caches.js accordingly.
