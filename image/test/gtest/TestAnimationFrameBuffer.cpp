@@ -146,7 +146,8 @@ VerifyMarkComplete(AnimationFrameBuffer& aQueue,
   if (aQueue.IsRecycling() && !aQueue.SizeKnown()) {
     const AnimationFrameRecyclingQueue& queue =
       *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
-    EXPECT_TRUE(queue.FirstFrameRefreshArea().IsEmpty());
+    EXPECT_EQ(queue.FirstFrame()->GetRect(),
+              queue.FirstFrameRefreshArea());
   }
 
   bool keepDecoding = aQueue.MarkComplete(aRefreshArea);
@@ -193,12 +194,6 @@ VerifyReset(AnimationFrameBuffer& aQueue,
     EXPECT_EQ(size_t(0), queue.Display().size());
     EXPECT_EQ(aFirstFrame, queue.FirstFrame());
     EXPECT_EQ(nullptr, aQueue.Get(0, false));
-  }
-
-  if (aQueue.IsRecycling()) {
-    const AnimationFrameRecyclingQueue& queue =
-      *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
-    EXPECT_EQ(size_t(0), queue.Recycle().size());
   }
 }
 
@@ -743,6 +738,60 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingReset)
   const imgFrame* firstFrame = retained.Frames()[0].get();
   AnimationFrameRecyclingQueue buffer(std::move(retained));
   TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
+}
+
+TEST_F(ImageAnimationFrameBuffer, RecyclingResetBeforeComplete)
+{
+  const size_t kThreshold = 3;
+  const size_t kBatch = 1;
+  const size_t kStartFrame = 0;
+  const IntSize kImageSize(100, 100);
+  const IntRect kImageRect(IntPoint(0, 0), kImageSize);
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+
+  // Get the starting buffer to just before the point where we need to switch
+  // to a discarding buffer, reset the animation so advancing points at the
+  // first frame, and insert the last frame to cross the threshold.
+  RefPtr<imgFrame> frame;
+  frame = CreateEmptyFrame(kImageSize, kImageRect, false);
+  AnimationFrameBuffer::InsertStatus status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)), false);
+  status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+
+  VerifyAdvance(retained, 1, true);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(20, 10), IntSize(1, 1)), false);
+  status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::DISCARD_YIELD, status);
+
+  AnimationFrameRecyclingQueue buffer(std::move(retained));
+  bool restartDecoding = buffer.Reset();
+  EXPECT_TRUE(restartDecoding);
+
+  // None of the buffers were recyclable.
+  EXPECT_TRUE(buffer.Recycle().empty());
+
+  // Reinsert the first two frames as recyclable and reset again.
+  frame = CreateEmptyFrame(kImageSize, kImageRect, true);
+  status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(10, 10), IntSize(1, 1)), true);
+  status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+
+  restartDecoding = buffer.Reset();
+  EXPECT_TRUE(restartDecoding);
+
+  // Now both buffers should have been saved and the dirty rect replaced with
+  // the full image rect since we don't know the first frame refresh area yet.
+  EXPECT_EQ(size_t(2), buffer.Recycle().size());
+  for (const auto& entry : buffer.Recycle()) {
+    EXPECT_EQ(kImageRect, entry.mDirtyRect);
+  }
 }
 
 TEST_F(ImageAnimationFrameBuffer, RecyclingRect)
