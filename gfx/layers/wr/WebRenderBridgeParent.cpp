@@ -333,6 +333,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mDestroyed(false)
   , mReceivedDisplayList(false)
   , mIsFirstPaint(true)
+  , mSkippedComposite(false)
 {
   MOZ_ASSERT(mAsyncImageManager);
   MOZ_ASSERT(mAnimStorage);
@@ -354,6 +355,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
   , mDestroyed(true)
   , mReceivedDisplayList(false)
   , mIsFirstPaint(false)
+  , mSkippedComposite(false)
 {
 }
 
@@ -1777,6 +1779,15 @@ WebRenderBridgeParent::SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacit
 }
 
 void
+WebRenderBridgeParent::CompositeIfNeeded()
+{
+  if (mSkippedComposite) {
+    mSkippedComposite = false;
+    CompositeToTarget(nullptr, nullptr);
+  }
+}
+
+void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
   // This function should only get called in the root WRBP
@@ -1793,9 +1804,9 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
 
-  if (wr::RenderThread::Get()->TooManyPendingFrames(mApi->GetId())) {
+  if (mSkippedComposite || wr::RenderThread::Get()->TooManyPendingFrames(mApi->GetId())) {
     // Render thread is busy, try next time.
-    mCompositorScheduler->ScheduleComposition();
+    mSkippedComposite = true;
     mPreviousFrameTimeStamp = TimeStamp();
 
     // Record that we skipped presenting a frame for

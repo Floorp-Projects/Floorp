@@ -366,6 +366,10 @@ NotifyDidRender(layers::CompositorBridgeParent* aBridge,
         aEnd,
         &aStats);
   }
+
+  if (aBridge->GetWrBridge()) {
+    aBridge->GetWrBridge()->CompositeIfNeeded();
+  }
 }
 
 void
