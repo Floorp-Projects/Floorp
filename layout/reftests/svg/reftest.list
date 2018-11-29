@@ -199,10 +199,11 @@ fuzzy-if(skiaContent,0-1,0-2) == fallback-color-04.svg pass.svg
 == filter-basic-03.svg pass.svg
 == filter-bounds-01.svg pass.svg
 == filter-bounds-02.svg pass.svg
+# Disabled for now, see bug 1286798 comment 180, 187, 190 and 196.
 # This pref is normally on by default, but we turn it off in reftest runs to
 # disable an unnecessary security-check. This reftest is actually testing that
 # the security check works, though, so it needs the pref to be turned on:
-fails-if(Android) pref(security.fileuri.strict_origin_policy,true) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
+skip pref(security.fileuri.strict_origin_policy,true) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
 == filter-foreignObject-01.svg pass.svg
 == filter-in-mask-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
