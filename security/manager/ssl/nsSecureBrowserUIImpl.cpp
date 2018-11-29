@@ -21,7 +21,7 @@ using namespace mozilla;
 
 LazyLogModule gSecureBrowserUILog("nsSecureBrowserUI");
 
-nsSecureBrowserUIImpl::nsSecureBrowserUIImpl() : mOldState(0), mState(0) {
+nsSecureBrowserUIImpl::nsSecureBrowserUIImpl() : mState(0) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -106,8 +106,6 @@ void nsSecureBrowserUIImpl::CheckForBlockedContent() {
       return;
     }
   }
-
-  mOldState = mState;
 
   // Has mixed content been loaded or blocked in nsMixedContentBlocker?
   // This only applies to secure documents even if they're affected by mixed
@@ -353,7 +351,6 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     return NS_OK;
   }
 
-  mOldState = 0;
   mState = 0;
   mTopLevelSecurityInfo = nullptr;
 
@@ -380,21 +377,12 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     }
   }
 
-  mozilla::dom::ContentBlockingLog* contentBlockingLog = nullptr;
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
-  if (docShell) {
-    nsIDocument* doc = docShell->GetDocument();
-    if (doc) {
-      contentBlockingLog = doc->GetContentBlockingLog();
-    }
-  }
-
   nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
   if (eventSink) {
     MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
             ("  calling OnSecurityChange %p %x", aRequest, mState));
-    Unused << eventSink->OnSecurityChange(aRequest, mOldState, mState,
-                                          contentBlockingLog);
+    Unused << eventSink->OnSecurityChange(aRequest, mState);
   } else {
     MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
             ("  no docShell or couldn't QI it to nsISecurityEventSink?"));
