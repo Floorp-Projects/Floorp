@@ -4207,8 +4207,6 @@ RefPtr<SourceListener::InitPromise> SourceListener::InitializeAsync() {
           return InitPromise::CreateAndResolve(true, __func__);
         }
 
-        mStream->SetPullEnabled(true);
-
         for (DeviceState* state :
              {mAudioDeviceState.get(), mVideoDeviceState.get()}) {
           if (!state) {
@@ -4221,6 +4219,15 @@ RefPtr<SourceListener::InitPromise> SourceListener::InitializeAsync() {
           state->mDeviceEnabled = true;
           state->mTrackEnabled = true;
           state->mTrackEnabledTime = TimeStamp::Now();
+
+          if (state->mDevice->GetMediaSource() !=
+              MediaSourceEnum::AudioCapture) {
+            // For AudioCapture mStream is a dummy stream, so we don't try to
+            // enable pulling - there won't be a track to enable it for.
+            mStream->SetPullingEnabled(
+                state == mAudioDeviceState.get() ? kAudioTrack : kVideoTrack,
+                true);
+          }
         }
         return InitPromise::CreateAndResolve(true, __func__);
       },
@@ -4295,11 +4302,12 @@ void SourceListener::Remove() {
     // We disable pulling before removing so we don't risk having live tracks
     // without a listener attached - that wouldn't produce data and would be
     // illegal to the graph.
-    mStream->SetPullEnabled(false);
     if (mAudioDeviceState) {
+      mStream->SetPullingEnabled(kAudioTrack, false);
       mStream->RemoveTrackListener(mAudioDeviceState->mListener, kAudioTrack);
     }
     if (mVideoDeviceState) {
+      mStream->SetPullingEnabled(kVideoTrack, false);
       mStream->RemoveTrackListener(mVideoDeviceState->mListener, kVideoTrack);
     }
   }

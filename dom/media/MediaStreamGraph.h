@@ -658,13 +658,14 @@ class SourceMediaStream : public MediaStream {
   // Main thread only
 
   /**
-   * Enable or disable pulling. When pulling is enabled, NotifyPull
-   * gets called on MediaStream/TrackListeners for this stream during the
-   * MediaStreamGraph control loop. Pulling is initially disabled.
-   * Due to unavoidable race conditions, after a call to SetPullEnabled(false)
+   * Enable or disable pulling for a specific track.
+   * When pulling is enabled, NotifyPull gets called on the corresponding
+   * MediaStreamTrackListeners for this stream during the MediaStreamGraph
+   * control loop. Pulling is initially disabled for all tracks. Due to
+   * unavoidable race conditions, after a call to SetPullingEnabled(false)
    * it is still possible for a NotifyPull to occur.
    */
-  void SetPullEnabled(bool aEnabled);
+  void SetPullingEnabled(TrackID aTrackID, bool aEnabled);
 
   // Users of audio inputs go through the stream so it can track when the
   // last stream referencing an input goes away, so it can close the cubeb
@@ -809,6 +810,8 @@ class SourceMediaStream : public MediaStream {
     // Each time the track updates are flushed to the media graph thread,
     // this is cleared.
     uint32_t mCommands;
+    // True if the producer of this track is having data pulled by the graph.
+    bool mPullingEnabled;
   };
 
   bool NeedsMixing();
@@ -867,7 +870,6 @@ class SourceMediaStream : public MediaStream {
   nsTArray<TrackData> mUpdateTracks;
   nsTArray<TrackData> mPendingTracks;
   nsTArray<TrackBound<DirectMediaStreamTrackListener>> mDirectTrackListeners;
-  bool mPullEnabled;
   bool mFinishPending;
 };
 
