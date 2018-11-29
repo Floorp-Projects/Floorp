@@ -8,7 +8,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-  <iframe src="iframe_readableStreams.html" id="iframe"></iframe>
   <script type="application/javascript">
 
 let tests = [
@@ -67,9 +66,9 @@ function next() {
 }
 
 SimpleTest.waitForExplicitFinish();
-next();
-
+// The iframe starts the tests by calling parent.next() when it loads.
   </script>
+  <iframe src="iframe_readableStreams.html" id="iframe"></iframe>
 </body>
 </html>
 
