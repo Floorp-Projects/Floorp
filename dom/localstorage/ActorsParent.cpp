@@ -1605,7 +1605,13 @@ private:
   CheckExistingOperations();
 
   nsresult
+  CheckClosingDatastoreInternal();
+
+  nsresult
   CheckClosingDatastore();
+
+  nsresult
+  BeginDatastorePreparationInternal();
 
   nsresult
   BeginDatastorePreparation();
@@ -1616,7 +1622,7 @@ private:
   nsresult
   OpenDirectory();
 
-  nsresult
+  void
   SendToIOThread();
 
   nsresult
@@ -1639,6 +1645,12 @@ private:
 
   nsresult
   BeginLoadData();
+
+  void
+  FinishNesting();
+
+  nsresult
+  FinishNestingOnNonOwningThread();
 
   nsresult
   NestedRun() override;
@@ -3879,16 +3891,19 @@ LSRequestBase::SendReadyMessage()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingReadyMessage);
 
-  if (!MayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      !MayProceed()) {
     MaybeSetFailureCode(NS_ERROR_FAILURE);
+  }
 
-    Cleanup();
-
-    mState = State::Completed;
-  } else {
+  if (MayProceed()) {
     Unused << SendReady();
 
     mState = State::WaitingForFinish;
+  } else {
+    Cleanup();
+
+    mState = State::Completed;
   }
 }
 
@@ -3898,9 +3913,12 @@ LSRequestBase::SendResults()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingResults);
 
-  if (!MayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      !MayProceed()) {
     MaybeSetFailureCode(NS_ERROR_FAILURE);
-  } else {
+  }
+
+  if (MayProceed()) {
     LSRequestResponse response;
 
     if (NS_SUCCEEDED(ResultCode())) {
@@ -3990,7 +4008,12 @@ LSRequestBase::RecvFinish()
   MOZ_ASSERT(mState == State::WaitingForFinish);
 
   mState = State::SendingResults;
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
+
+  // This LSRequestBase can only be held alive by the IPDL. Run() can end up
+  // with clearing that last reference. So we need to add a self reference here.
+  RefPtr<LSRequestBase> kungFuDeathGrip = this;
+
+  MOZ_ALWAYS_SUCCEEDS(this->Run());
 
   return IPC_OK();
 }
@@ -4135,7 +4158,7 @@ PrepareDatastoreOp::CheckExistingOperations()
     }
   }
 
-  nsresult rv = CheckClosingDatastore();
+  nsresult rv = CheckClosingDatastoreInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4155,6 +4178,23 @@ PrepareDatastoreOp::CheckClosingDatastore()
     return NS_ERROR_FAILURE;
   }
 
+  nsresult rv = CheckClosingDatastoreInternal();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PrepareDatastoreOp::CheckClosingDatastoreInternal()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::CheckClosingDatastore);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_ASSERT(MayProceed());
+
   mNestedState = NestedState::PreparationPending;
 
   RefPtr<Datastore> datastore;
@@ -4166,7 +4206,7 @@ PrepareDatastoreOp::CheckClosingDatastore()
     return NS_OK;
   }
 
-  nsresult rv = BeginDatastorePreparation();
+  nsresult rv = BeginDatastorePreparationInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4181,15 +4221,34 @@ PrepareDatastoreOp::BeginDatastorePreparation()
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::PreparationPending);
 
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      !MayProceed()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = BeginDatastorePreparationInternal();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PrepareDatastoreOp::BeginDatastorePreparationInternal()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::PreparationPending);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_ASSERT(MayProceed());
+
   if (gDatastores && (mDatastore = gDatastores->Get(mOrigin))) {
     MOZ_ASSERT(!mDatastore->IsClosed());
 
     mDatastore->NoteLivePrepareDatastoreOp(this);
 
-    mState = State::SendingReadyMessage;
-    mNestedState = NestedState::AfterNesting;
-
-    Unused << this->Run();
+    FinishNesting();
 
     return NS_OK;
   }
@@ -4243,6 +4302,7 @@ PrepareDatastoreOp::OpenDirectory()
   MOZ_ASSERT(!mOrigin.IsEmpty());
   MOZ_ASSERT(!mDirectoryLock);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_ASSERT(MayProceed());
   MOZ_ASSERT(QuotaManager::Get());
 
   mNestedState = NestedState::DirectoryOpenPending;
@@ -4258,17 +4318,14 @@ PrepareDatastoreOp::OpenDirectory()
   return NS_OK;
 }
 
-nsresult
+void
 PrepareDatastoreOp::SendToIOThread()
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
-
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
-      !MayProceed()) {
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_ASSERT(MayProceed());
 
   // Skip all disk related stuff and transition to SendingReadyMessage if we
   // are preparing a datastore for private browsing.
@@ -4280,12 +4337,9 @@ PrepareDatastoreOp::SendToIOThread()
   // Any following LocalStorage API call will trigger preparation of a new
   // (empty) datastore.
   if (mPrivateBrowsingId) {
-    mState = State::SendingReadyMessage;
-    mNestedState = NestedState::AfterNesting;
+    FinishNesting();
 
-    Unused << this->Run();
-
-    return NS_OK;
+    return;
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -4294,12 +4348,8 @@ PrepareDatastoreOp::SendToIOThread()
   // Must set this before dispatching otherwise we will race with the IO thread.
   mNestedState = NestedState::DatabaseWorkOpen;
 
-  nsresult rv = quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
+  MOZ_ALWAYS_SUCCEEDS(
+    quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 nsresult
@@ -4517,12 +4567,7 @@ PrepareDatastoreOp::DatabaseNotAvailable()
 
   mDatabaseNotAvailable = true;
 
-  // Must set this before dispatching otherwise we will race with the owning
-  // thread.
-  mState = State::SendingReadyMessage;
-  mNestedState = NestedState::AfterNesting;
-
-  nsresult rv = OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL);
+  nsresult rv = FinishNestingOnNonOwningThread();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4668,6 +4713,40 @@ PrepareDatastoreOp::BeginLoadData()
   // This is cleared in LoadDataOp::Cleanup() before the load data op is
   // destroyed.
   mLoadDataOp = loadDataOp;
+
+  return NS_OK;
+}
+
+void
+PrepareDatastoreOp::FinishNesting()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::Nesting);
+
+  // The caller holds a strong reference to us, no need for a self reference
+  // before calling Run().
+
+  mState = State::SendingReadyMessage;
+  mNestedState = NestedState::AfterNesting;
+
+  MOZ_ALWAYS_SUCCEEDS(Run());
+}
+
+nsresult
+PrepareDatastoreOp::FinishNestingOnNonOwningThread()
+{
+  MOZ_ASSERT(!IsOnOwningThread());
+  MOZ_ASSERT(mState == State::Nesting);
+
+  // Must set mState before dispatching otherwise we will race with the owning
+  // thread.
+  mState = State::SendingReadyMessage;
+  mNestedState = NestedState::AfterNesting;
+
+  nsresult rv = OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -4892,22 +4971,18 @@ PrepareDatastoreOp::DirectoryLockAcquired(DirectoryLock* aLock)
   MOZ_ASSERT(mNestedState == NestedState::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
-  mDirectoryLock = aLock;
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      !MayProceed()) {
+    MaybeSetFailureCode(NS_ERROR_FAILURE);
 
-  nsresult rv = SendToIOThread();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    MaybeSetFailureCode(rv);
-
-    // The caller holds a strong reference to us, no need for a self reference
-    // before calling Run().
-
-    mState = State::SendingReadyMessage;
-    mNestedState = NestedState::AfterNesting;
-
-    MOZ_ALWAYS_SUCCEEDS(Run());
+    FinishNesting();
 
     return;
   }
+
+  mDirectoryLock = aLock;
+
+  SendToIOThread();
 }
 
 void
@@ -4920,13 +4995,7 @@ PrepareDatastoreOp::DirectoryLockFailed()
 
   MaybeSetFailureCode(NS_ERROR_FAILURE);
 
-  // The caller holds a strong reference to us, no need for a self reference
-  // before calling Run().
-
-  mState = State::SendingReadyMessage;
-  mNestedState = NestedState::AfterNesting;
-
-  MOZ_ALWAYS_SUCCEEDS(Run());
+  FinishNesting();
 }
 
 nsresult
@@ -4991,10 +5060,7 @@ LoadDataOp::OnSuccess()
                NestedState::DatabaseWorkLoadData);
   MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
 
-  mPrepareDatastoreOp->mState = State::SendingReadyMessage;
-  mPrepareDatastoreOp->mNestedState = NestedState::AfterNesting;
-
-  MOZ_ALWAYS_SUCCEEDS(mPrepareDatastoreOp->Run());
+  mPrepareDatastoreOp->FinishNesting();
 }
 
 void
@@ -5009,10 +5075,8 @@ LoadDataOp::OnFailure(nsresult aResultCode)
   MOZ_ASSERT(mPrepareDatastoreOp->mLoadDataOp == this);
 
   mPrepareDatastoreOp->SetFailureCode(aResultCode);
-  mPrepareDatastoreOp->mState = State::SendingReadyMessage;
-  mPrepareDatastoreOp->mNestedState = NestedState::AfterNesting;
 
-  MOZ_ALWAYS_SUCCEEDS(mPrepareDatastoreOp->Run());
+  mPrepareDatastoreOp->FinishNesting();
 }
 
 void
@@ -5135,9 +5199,12 @@ LSSimpleRequestBase::SendResults()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingResults);
 
-  if (!MayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      !MayProceed()) {
     MaybeSetFailureCode(NS_ERROR_FAILURE);
-  } else {
+  }
+
+  if (MayProceed()) {
     LSSimpleRequestResponse response;
 
     if (NS_SUCCEEDED(ResultCode())) {
