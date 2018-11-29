@@ -240,6 +240,7 @@ UNIFIED_SOURCES += [
     'util/NativeStack.cpp',
     'util/Printf.cpp',
     'util/StringBuffer.cpp',
+    'util/StructuredSpewer.cpp',
     'util/Text.cpp',
     'util/Unicode.cpp',
     'vm/ArgumentsObject.cpp',
