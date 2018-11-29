@@ -1120,21 +1120,21 @@ struct NonParameterStorageClass
 
 // Choose storage&passing strategy based on preferred storage type:
 // - If IsParameterStorageClass<T>::value is true, use as-is.
-// - RC*       -> StoreRefPtrPassByPtr<RC>       : Store RefPtr<RC>, pass RC*
+// - RC*       -> StoreRefPtrPassByPtr<RC>       :Store RefPtr<RC>, pass RC*
 //   ^^ RC quacks like a ref-counted type (i.e., has AddRef and Release methods)
-// - const T*  -> StoreConstPtrPassByConstPtr<T> : Store const T*, pass const T*
-// - T*        -> StorePtrPassByPtr<T>           : Store T*, pass T*.
-// - const T&  -> StoreConstRefPassByConstLRef<T>: Store const T&, pass const T&.
-// - T&        -> StoreRefPassByLRef<T>          : Store T&, pass T&.
-// - T&&       -> StoreCopyPassByRRef<T>         : Store T, pass std::move(T).
+// - const T*  -> StoreConstPtrPassByConstPtr<T> :Store const T*, pass const T*
+// - T*        -> StorePtrPassByPtr<T>           :Store T*, pass T*.
+// - const T&  -> StoreConstRefPassByConstLRef<T>:Store const T&, pass const T&.
+// - T&        -> StoreRefPassByLRef<T>          :Store T&, pass T&.
+// - T&&       -> StoreCopyPassByRRef<T>         :Store T, pass std::move(T).
 // - RefPtr<T>, nsCOMPtr<T>
-//             -> StoreRefPtrPassByPtr<T>        : Store RefPtr<T>, pass T*
-// - Other T   -> StoreCopyPassByConstLRef<T>    : Store T, pass const T&.
+//             -> StoreRefPtrPassByPtr<T>        :Store RefPtr<T>, pass T*
+// - Other T   -> StoreCopyPassByConstLRef<T>    :Store T, pass const T&.
 // Other available explicit options:
-// -              StoreCopyPassByValue<T>        : Store T, pass T.
-// -              StoreCopyPassByLRef<T>         : Store T, pass T& (of copy!)
-// -              StoreCopyPassByConstPtr<T>     : Store T, pass const T*
-// -              StoreCopyPassByPtr<T>          : Store T, pass T* (of copy!)
+// -              StoreCopyPassByValue<T>        :Store T, pass T.
+// -              StoreCopyPassByLRef<T>         :Store T, pass T& (of copy!)
+// -              StoreCopyPassByConstPtr<T>     :Store T, pass const T*
+// -              StoreCopyPassByPtr<T>          :Store T, pass T* (of copy!)
 // Or create your own class with PassAsParameter() method, optional
 // clean-up in destructor, and with associated IsParameterStorageClass<>.
 template<typename T>
@@ -1358,7 +1358,8 @@ using NonOwningIdleRunnableMethodWithTimerImpl = RunnableMethodImpl<
 // The simplest use of NewRunnableMethod looks like:
 //
 //   nsCOMPtr<nsIRunnable> event =
-//     mozilla::NewRunnableMethod("description", myObject, &MyClass::HandleEvent);
+//     mozilla::NewRunnableMethod("description", myObject,
+//                                &MyClass::HandleEvent);
 //   NS_DispatchToCurrentThread(event);
 //
 // Statically enforced constraints:
@@ -1386,7 +1387,8 @@ using NonOwningIdleRunnableMethodWithTimerImpl = RunnableMethodImpl<
 // natural extension of the above:
 //
 //   nsCOMPtr<nsIRunnable> event =
-//     mozilla::NewRunnableMethod("description", myObject, &MyClass::HandleEvent,
+//     mozilla::NewRunnableMethod("description", myObject,
+//                                &MyClass::HandleEvent,
 //                                arg1, arg2, ...);
 //
 // can lead to security hazards (e.g. passing in raw pointers to refcounted

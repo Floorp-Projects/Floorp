@@ -353,12 +353,13 @@ private:
   bool mSecurityInfoLoaded : 1;
   // Prevents any callback invocation
   bool mPreventCallbacks : 1;
-  // true: after load and an existing file, or after output stream has been opened.
-  //       note - when opening an input stream, and this flag is false, output stream
-  //       is open along ; this makes input streams on new entries behave correctly
-  //       when EOF is reached (WOULD_BLOCK is returned).
-  // false: after load and a new file, or dropped to back to false when a writer
-  //        fails to open an output stream.
+  // true: after load and an existing file, or after output stream has been
+  //       opened.
+  //       note - when opening an input stream, and this flag is false, output
+  //       stream is open along ; this makes input streams on new entries
+  //       behave correctly when EOF is reached (WOULD_BLOCK is returned).
+  // false: after load and a new file, or dropped to back to false when a
+  //        writer fails to open an output stream.
   bool mHasData : 1;
   // The indication of pinning this entry was open with
   bool mPinned : 1;

@@ -324,6 +324,7 @@ int ParseFTPList(const char *line, struct list_state *state,
         }
         if (lstyle == 'V')
         {
+          // clang-format off
           /*
           * MultiNet FTP:
           *   LOGIN.COM;2                 1   4-NOV-1994 04:09 [ANONYMOUS] (RWE,RWE,,)
@@ -341,6 +342,7 @@ int ParseFTPList(const char *line, struct list_state *state,
           *   THIS-IS-A-LONG-VMS-FILENAME.AND-THIS-IS-A-LONG-VMS-FILETYPE\r\n
           *                    213[/nnn]  29-JAN-1996 03:33[:nn]  [ANONYMOU,ANONYMOUS] (RWED,RWED,,)
           */
+          // clang-format on
           tokmarker = 0;
           p = tokens[0];
           pos = 0;
@@ -714,6 +716,7 @@ int ParseFTPList(const char *line, struct list_state *state,
 #if defined(SUPPORT_DOS) /* WinNT DOS dirstyle */
     if (!lstyle && (!state->lstyle || state->lstyle == 'W'))
     {
+      // clang-format off
       /*
        * "10-23-00  01:27PM       <DIR>          veronist"
        * "06-15-00  07:37AM       <DIR>          zoe"
@@ -727,6 +730,7 @@ int ParseFTPList(const char *line, struct list_state *state,
       // "10-10-2014  10:10AM       <DIR>        FTP"
       // Windows CE FTP server returns time in 24-hour format:
       // "05-03-13  22:01       <DIR>          APPS"
+      // clang-format on
       if ((numtoks >= 4) && (toklen[0] == 8 || toklen[0] == 10) &&
           (toklen[1] == 5 || toklen[1] == 7) &&
           (*tokens[2] == '<' || IsAsciiDigit(*tokens[2])) )

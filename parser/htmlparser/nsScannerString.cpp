@@ -344,24 +344,27 @@ nsScannerString::DiscardPrefix( const nsScannerIterator& aIter )
 void
 nsScannerString::UngetReadable( const nsAString& aReadable, const nsScannerIterator& aInsertPoint )
     /*
-     * Warning: this routine manipulates the shared buffer list in an unexpected way.
-     *  The original design did not really allow for insertions, but this call promises
-     *  that if called for a point after the end of all extant token strings, that no token string
-     *  or the work string will be invalidated.
+     * Warning: this routine manipulates the shared buffer list in an
+     * unexpected way.  The original design did not really allow for
+     * insertions, but this call promises that if called for a point after the
+     * end of all extant token strings, that no token string or the work string
+     * will be invalidated.
      *
-     *  This routine is protected because it is the responsibility of the derived class to keep those promises.
+     * This routine is protected because it is the responsibility of the
+     * derived class to keep those promises.
      */
   {
     Position insertPos(aInsertPoint);
 
     mBufferList->SplitBuffer(insertPos);
-      // splitting to the right keeps the work string and any extant token pointing to and
-      //  holding a reference count on the same buffer
+      // splitting to the right keeps the work string and any extant token
+      // pointing to and holding a reference count on the same buffer
 
     Buffer* new_buffer = AllocBufferFromString(aReadable);
       // make a new buffer with all the data to insert...
-      //  BULLSHIT ALERT: we may have empty space to re-use in the split buffer, measure the cost
-      //  of this and decide if we should do the work to fill it
+      // BULLSHIT ALERT: we may have empty space to re-use in the split buffer,
+      // measure the cost of this and decide if we should do the work to fill
+      // it
 
     Buffer* buffer_to_split = insertPos.mBuffer;
     mBufferList->InsertAfter(new_buffer, buffer_to_split);

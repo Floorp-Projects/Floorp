@@ -124,9 +124,11 @@ GetMemoryMappings(nsTArray<MemoryMapping>& aMappings)
 
     name[0] = 0;
 
+    // clang-format off
     // Match the start of an entry. A typical line looks something like:
     //
     // 1487118a7000-148711a5a000 r-xp 00000000 103:03 54004561                  /usr/lib/libc-2.27.so
+    // clang-format on
     if (sscanf(buffer.c_str(), "%zx-%zx %4c %zx %*u:%*u %*u %511s\n",
                &start, &end, flags, &offset, name) >= 4) {
       PermSet perms;

@@ -1,4 +1,4 @@
-/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -78,7 +78,8 @@ bool CanRecordProduct(SupportedProduct aProducts);
  * Return the number of milliseconds since process start using monotonic
  * timestamps (unaffected by system clock changes).
  *
- * @return NS_OK on success, NS_ERROR_NOT_AVAILABLE if TimeStamp doesn't have the data.
+ * @return NS_OK on success, NS_ERROR_NOT_AVAILABLE if TimeStamp doesn't have
+ *               the data.
  */
 nsresult MsSinceProcessStart(double* aResult);
 

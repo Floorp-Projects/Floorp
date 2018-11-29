@@ -475,7 +475,8 @@ CacheFileOutputStream::NotifyListener()
 size_t
 CacheFileOutputStream::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-  // Everything the stream keeps a reference to is already reported somewhere else.
+  // Everything the stream keeps a reference to is already reported somewhere
+  // else.
   // mFile reports itself.
   // mChunk reported as part of CacheFile.
   // mCloseListener is CacheEntry, already reported.

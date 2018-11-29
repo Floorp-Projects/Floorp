@@ -252,7 +252,8 @@ private:
 /**
   @param text (in), col0 (in): see GlyphHit
   @param tagTXT (in): Smily, see also StructPhraseHit
-  @param imageName (in): the basename of the file that contains the image for this smilie
+  @param imageName (in): the basename of the file that contains the image for
+                         this smilie
   @param outputHTML (out): new string containing the html for the smily
   @param glyphTextLen (out): see GlyphHit
 */

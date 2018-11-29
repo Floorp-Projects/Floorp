@@ -103,7 +103,8 @@
        first time changes its status to SYNC_STATUS_NORMAL. For bookmarks
        restored from a backup, we set SYNC_STATUS_UNKNOWN = 0, indicating that
        Sync should reconcile them with bookmarks on the server. If Sync is
-       disconnected or never set up, all bookmarks will stay in SYNC_STATUS_NEW.
+       disconnected or never set up, all bookmarks will stay in
+       SYNC_STATUS_NEW.
     */ \
     ", syncStatus INTEGER NOT NULL DEFAULT 0" \
     /* This field is incremented for every bookmark change that should trigger

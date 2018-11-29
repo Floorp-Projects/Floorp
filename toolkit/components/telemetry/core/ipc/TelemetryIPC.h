@@ -1,4 +1,4 @@
-/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -61,7 +61,8 @@ void UpdateChildScalars(Telemetry::ProcessID aProcessType,
 /**
  * Update keyed scalars for the given process type with the data coming from child process.
  *
- * @param aProcessType - the process type to process the keyed scalar actions for
+ * @param aProcessType - the process type to process the keyed scalar actions
+ *                       for
  * @param aScalarActions - actions to update the keyed scalar data
  */
 void UpdateChildKeyedScalars(Telemetry::ProcessID aProcessType,

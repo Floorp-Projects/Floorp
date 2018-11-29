@@ -761,7 +761,8 @@ namespace {
  *
  * @param {StaticMutexAutoLock} the proof we hold the mutex.
  * @param {Histogram} the histogram to reflect.
- * @return {nsresult} NS_ERROR_FAILURE if we fail to allocate memory for the snapshot.
+ * @return {nsresult} NS_ERROR_FAILURE if we fail to allocate memory for the
+ *                    snapshot.
  */
 nsresult
 internal_GetHistogramAndSamples(const StaticMutexAutoLock& aLock,
@@ -912,7 +913,8 @@ internal_ShouldReflectHistogram(const StaticMutexAutoLock& aLock, base::Histogra
  * @param {aClearSubsession} whether or not to clear the data after
  *        taking the snapshot.
  * @param {aIncludeGPU} whether or not to include data for the GPU.
- * @param {aOutSnapshot} the container in which the snapshot data will be stored.
+ * @param {aOutSnapshot} the container in which the snapshot data will be
+ *                       stored.
  * @return {nsresult} NS_OK if the snapshot was successfully taken or
  *         NS_ERROR_OUT_OF_MEMORY if it failed to allocate memory.
  */
@@ -1471,7 +1473,8 @@ KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
  * @param {aClearSubsession} whether or not to clear the data after
  *        taking the snapshot.
  * @param {aIncludeGPU} whether or not to include data for the GPU.
- * @param {aOutSnapshot} the container in which the snapshot data will be stored.
+ * @param {aOutSnapshot} the container in which the snapshot data will be
+ *                       stored.
  * @param {aSkipEmpty} whether or not to skip empty keyed histograms from the
  *        snapshot. Can't always assume "true" for consistency with the other
  *        callers.

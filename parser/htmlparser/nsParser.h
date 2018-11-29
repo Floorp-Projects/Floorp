@@ -278,7 +278,8 @@ class nsParser final : public nsIParser,
 
     /**  
      *  Set to parser state to indicate whether parsing tokens can be interrupted
-     *  @param aCanInterrupt true if parser can be interrupted, false if it can not be interrupted.
+     *  @param aCanInterrupt true if parser can be interrupted, false if it can
+     *                       not be interrupted.
      *  @update  kmcclusk 5/18/98
      */
     void SetCanInterrupt(bool aCanInterrupt);
