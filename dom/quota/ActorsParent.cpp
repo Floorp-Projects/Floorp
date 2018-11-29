@@ -3116,9 +3116,16 @@ QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate)
     // This will block the thread without holding the lock while waitting.
 
     AutoTArray<RefPtr<DirectoryLockImpl>, 10> locks;
+    uint64_t sizeToBeFreed;
 
-    uint64_t sizeToBeFreed =
-      quotaManager->LockedCollectOriginsForEviction(delta, locks);
+    if (IsOnBackgroundThread()) {
+      MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
+
+      sizeToBeFreed = quotaManager->CollectOriginsForEviction(delta, locks);
+    } else {
+      sizeToBeFreed = quotaManager->LockedCollectOriginsForEviction(delta,
+                                                                    locks);
+    }
 
     if (!sizeToBeFreed) {
       uint64_t usage = quotaManager->mTemporaryStorageUsage;
@@ -3876,6 +3883,7 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
                              const nsACString& aGroup,
                              const nsACString& aOrigin,
                              nsIFile* aFile,
+                             int64_t aFileSize,
                              int64_t* aFileSizeOut /* = nullptr */)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
@@ -3894,16 +3902,20 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
 
   int64_t fileSize;
 
-  bool exists;
-  rv = aFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  if (exists) {
-    rv = aFile->GetFileSize(&fileSize);
+  if (aFileSize == -1) {
+    bool exists;
+    rv = aFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, nullptr);
-  }
-  else {
-    fileSize = 0;
+
+    if (exists) {
+      rv = aFile->GetFileSize(&fileSize);
+      NS_ENSURE_SUCCESS(rv, nullptr);
+    }
+    else {
+      fileSize = 0;
+    }
+  } else {
+    fileSize = aFileSize;
   }
 
   // Re-escape our parameters above to make sure we get the right quota group.
@@ -3969,6 +3981,7 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
                              const nsACString& aGroup,
                              const nsACString& aOrigin,
                              const nsAString& aPath,
+                             int64_t aFileSize,
                              int64_t* aFileSizeOut /* = nullptr */)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
@@ -3981,7 +3994,12 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
   nsresult rv = NS_NewLocalFile(aPath, false, getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  return GetQuotaObject(aPersistenceType, aGroup, aOrigin, file, aFileSizeOut);
+  return GetQuotaObject(aPersistenceType,
+                        aGroup,
+                        aOrigin,
+                        file,
+                        aFileSize,
+                        aFileSizeOut);
 }
 
 Nullable<bool>
