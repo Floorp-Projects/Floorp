@@ -4103,6 +4103,26 @@ static nscoord ContentContribution(
     const Maybe<LogicalSize>& aPercentageBasis, IntrinsicISizeType aConstraint,
     nscoord aMinSizeClamp = NS_MAXSIZE, uint32_t aFlags = 0) {
   nsIFrame* child = aGridItem.mFrame;
+
+  // If |child| is a subgrid descendant, then it contributes its subgrids'
+  // margin+border+padding for any edge tracks that it spans.
+  nscoord extraMargin = 0;
+  nsGridContainerFrame::Subgrid* subgrid = nullptr;
+  if (child->GetParent() != aState.mFrame &&
+      (aGridItem.mState[aAxis] & ItemState::eEdgeBits)) {
+    auto* subgridFrame = child->GetParent();
+    subgrid = subgridFrame->GetProperty(Subgrid::Prop());
+    LogicalMargin mbp = SubgridAccumulatedMarginBorderPadding(
+        subgridFrame, subgrid, aCBWM, aAxis);
+    auto state = aGridItem.mState[aAxis];
+    if (state & ItemState::eStartEdge) {
+      extraMargin += mbp.Start(aAxis, aCBWM);
+    }
+    if (state & ItemState::eEndEdge) {
+      extraMargin += mbp.End(aAxis, aCBWM);
+    }
+  }
+
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   nscoord size = nsLayoutUtils::IntrinsicForAxis(
       axis, aRC, child, aConstraint, aPercentageBasis,
@@ -4157,6 +4177,7 @@ static nscoord ContentContribution(
                  aGridItem.mBaselineOffset[aAxis] == nscoord(0),
              "baseline offset should be zero when not baseline-aligned");
   size += aGridItem.mBaselineOffset[aAxis];
+  size += extraMargin;
   return std::max(size, 0);
 }
 
