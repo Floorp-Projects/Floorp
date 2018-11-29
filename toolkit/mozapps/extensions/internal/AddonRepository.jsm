@@ -971,14 +971,7 @@ var AddonDatabase = {
 
       if (!this._blockerAdded) {
         AsyncShutdown.profileBeforeChange.addBlocker(
-          "Flush AddonRepository",
-          async () => {
-            if (!this._saveTask) {
-              return;
-            }
-            await this._saveTask.finalize();
-            this._saveTask = null;
-          });
+          "Flush AddonRepository", () => this.flush());
         this._blockerAdded = true;
       }
     }
