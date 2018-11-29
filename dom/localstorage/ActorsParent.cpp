@@ -105,6 +105,8 @@ static_assert(kSQLiteGrowthIncrement >= 0 &&
 
 const uint32_t kAutoCommitTimeoutMs = 5000;
 
+const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
+
 bool
 IsOnConnectionThread();
 
@@ -921,18 +923,16 @@ public:
   SetItem(Database* aDatabase,
           const nsString& aKey,
           const nsString& aValue,
-          bool* aChanged,
-          nsString& aOldValue);
+          LSWriteOpResponse& aResponse);
 
   void
   RemoveItem(Database* aDatabase,
              const nsString& aKey,
-             bool* aChanged,
-             nsString& aOldValue);
+             LSWriteOpResponse& aResponse);
 
   void
   Clear(Database* aDatabase,
-        bool* aChanged);
+        LSWriteOpResponse& aResponse);
 
   void
   GetKeys(nsTArray<nsString>& aKeys) const;
@@ -1148,16 +1148,14 @@ private:
   mozilla::ipc::IPCResult
   RecvSetItem(const nsString& aKey,
               const nsString& aValue,
-              bool* aChanged,
-              nsString* aOldValue) override;
+              LSWriteOpResponse* aResponse) override;
 
   mozilla::ipc::IPCResult
   RecvRemoveItem(const nsString& aKey,
-                 bool* aChanged,
-                 nsString* aOldValue) override;
+                 LSWriteOpResponse* aResponse) override;
 
   mozilla::ipc::IPCResult
-  RecvClear(bool* aChanged) override;
+  RecvClear(LSWriteOpResponse* aResponse) override;
 };
 
 class Observer final
@@ -1504,10 +1502,10 @@ class QuotaClient final
   : public mozilla::dom::quota::Client
 {
   class ClearPrivateBrowsingRunnable;
-  class PrivateBrowsingObserver;
+  class Observer;
 
   static QuotaClient* sInstance;
-  static bool sPrivateBrowsingObserverRegistered;
+  static bool sObserversRegistered;
 
   bool mShutdownRequested;
 
@@ -1607,13 +1605,13 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class QuotaClient::PrivateBrowsingObserver final
+class QuotaClient::Observer final
   : public nsIObserver
 {
   nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
 
 public:
-  explicit PrivateBrowsingObserver(nsIEventTarget* aBackgroundEventTarget)
+  explicit Observer(nsIEventTarget* aBackgroundEventTarget)
     : mBackgroundEventTarget(aBackgroundEventTarget)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -1622,7 +1620,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~PrivateBrowsingObserver()
+  ~Observer()
   {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -2547,12 +2545,10 @@ void
 Datastore::SetItem(Database* aDatabase,
                    const nsString& aKey,
                    const nsString& aValue,
-                   bool* aChanged,
-                   nsString& aOldValue)
+                   LSWriteOpResponse& aResponse)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(!mClosed);
 
   nsString oldValue;
@@ -2578,15 +2574,16 @@ Datastore::SetItem(Database* aDatabase,
     }
   }
 
-  *aChanged = changed;
-  aOldValue = oldValue;
+  LSNotifyInfo info;
+  info.changed() = changed;
+  info.oldValue() = oldValue;
+  aResponse = info;
 }
 
 void
 Datastore::RemoveItem(Database* aDatabase,
                       const nsString& aKey,
-                      bool* aChanged,
-                      nsString& aOldValue)
+                      LSWriteOpResponse& aResponse)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
@@ -2612,16 +2609,17 @@ Datastore::RemoveItem(Database* aDatabase,
     }
   }
 
-  *aChanged = changed;
-  aOldValue = oldValue;
+  LSNotifyInfo info;
+  info.changed() = changed;
+  info.oldValue() = oldValue;
+  aResponse = info;
 }
 
 void
 Datastore::Clear(Database* aDatabase,
-                 bool* aChanged)
+                 LSWriteOpResponse& aResponse)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aChanged);
   MOZ_ASSERT(!mClosed);
 
   bool changed;
@@ -2644,7 +2642,9 @@ Datastore::Clear(Database* aDatabase,
     }
   }
 
-  *aChanged = changed;
+  LSNotifyInfo info;
+  info.changed() = changed;
+  aResponse = info;
 }
 
 void
@@ -3063,12 +3063,10 @@ Database::RecvGetItem(const nsString& aKey, nsString* aValue)
 mozilla::ipc::IPCResult
 Database::RecvSetItem(const nsString& aKey,
                       const nsString& aValue,
-                      bool* aChanged,
-                      nsString* aOldValue)
+                      LSWriteOpResponse* aResponse)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aChanged);
-  MOZ_ASSERT(aOldValue);
+  MOZ_ASSERT(aResponse);
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mAllowedToClose)) {
@@ -3076,19 +3074,17 @@ Database::RecvSetItem(const nsString& aKey,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->SetItem(this, aKey, aValue, aChanged, *aOldValue);
+  mDatastore->SetItem(this, aKey, aValue, *aResponse);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 Database::RecvRemoveItem(const nsString& aKey,
-                         bool* aChanged,
-                         nsString* aOldValue)
+                         LSWriteOpResponse* aResponse)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aChanged);
-  MOZ_ASSERT(aOldValue);
+  MOZ_ASSERT(aResponse);
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mAllowedToClose)) {
@@ -3096,16 +3092,16 @@ Database::RecvRemoveItem(const nsString& aKey,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->RemoveItem(this, aKey, aChanged, *aOldValue);
+  mDatastore->RemoveItem(this, aKey, *aResponse);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-Database::RecvClear(bool* aChanged)
+Database::RecvClear(LSWriteOpResponse* aResponse)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aChanged);
+  MOZ_ASSERT(aResponse);
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mAllowedToClose)) {
@@ -3113,7 +3109,7 @@ Database::RecvClear(bool* aChanged)
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->Clear(this, aChanged);
+  mDatastore->Clear(this, *aResponse);
 
   return IPC_OK();
 }
@@ -4236,7 +4232,7 @@ PrepareObserverOp::GetResponse(LSRequestResponse& aResponse)
  ******************************************************************************/
 
 QuotaClient* QuotaClient::sInstance = nullptr;
-bool QuotaClient::sPrivateBrowsingObserverRegistered = false;
+bool QuotaClient::sObserversRegistered = false;
 
 QuotaClient::QuotaClient()
   : mShutdownRequested(false)
@@ -4268,21 +4264,21 @@ QuotaClient::RegisterObservers(nsIEventTarget* aBackgroundEventTarget)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBackgroundEventTarget);
 
-  if (!sPrivateBrowsingObserverRegistered) {
+  if (!sObserversRegistered) {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     if (NS_WARN_IF(!obs)) {
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIObserver> observer =
-      new PrivateBrowsingObserver(aBackgroundEventTarget);
+    nsCOMPtr<nsIObserver> observer = new Observer(aBackgroundEventTarget);
 
-    nsresult rv = obs->AddObserver(observer, "last-pb-context-exited", false);
+    nsresult rv =
+      obs->AddObserver(observer, kPrivateBrowsingObserverTopic, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    sPrivateBrowsingObserverRegistered = true;
+    sObserversRegistered = true;
   }
 
   return NS_OK;
@@ -4609,8 +4605,8 @@ ClearPrivateBrowsingRunnable::Run()
       MOZ_ASSERT(datastore);
 
       if (datastore->PrivateBrowsingId()) {
-        bool dummy;
-        datastore->Clear(nullptr, &dummy);
+        LSWriteOpResponse dummy;
+        datastore->Clear(nullptr, dummy);
       }
     }
   }
@@ -4618,23 +4614,27 @@ ClearPrivateBrowsingRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(QuotaClient::PrivateBrowsingObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(QuotaClient::Observer, nsIObserver)
 
 NS_IMETHODIMP
 QuotaClient::
-PrivateBrowsingObserver::Observe(nsISupports* aSubject,
-                                 const char* aTopic,
-                                 const char16_t* aData)
+Observer::Observe(nsISupports* aSubject,
+                  const char* aTopic,
+                  const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aTopic, "last-pb-context-exited"));
 
-  RefPtr<ClearPrivateBrowsingRunnable> runnable =
-    new ClearPrivateBrowsingRunnable();
+  if (!strcmp(aTopic, kPrivateBrowsingObserverTopic)) {
+    RefPtr<ClearPrivateBrowsingRunnable> runnable =
+      new ClearPrivateBrowsingRunnable();
 
-  MOZ_ALWAYS_SUCCEEDS(
-    mBackgroundEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL));
+    MOZ_ALWAYS_SUCCEEDS(
+      mBackgroundEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL));
 
+    return NS_OK;
+  }
+
+  NS_WARNING("Unknown observer topic!");
   return NS_OK;
 }
 
