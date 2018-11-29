@@ -180,6 +180,8 @@ public:
                                             nsTArray<FrameStats>* aOutputStats = nullptr);
   void NotifySceneBuiltForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime);
 
+  void CompositeIfNeeded();
+
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
   void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications);
@@ -385,6 +387,7 @@ private:
   bool mDestroyed;
   bool mReceivedDisplayList;
   bool mIsFirstPaint;
+  bool mSkippedComposite;
 };
 
 } // namespace layers
