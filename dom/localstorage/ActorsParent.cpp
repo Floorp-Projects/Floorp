@@ -113,8 +113,6 @@ static_assert(kSQLiteGrowthIncrement >= 0 &&
 #define DATA_FILE_NAME "data.sqlite"
 #define JOURNAL_FILE_NAME "data.sqlite-journal"
 
-const uint32_t kAutoCommitTimeoutMs = 5000;
-
 const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 
 const uint32_t kDefaultOriginLimitKB = 5 * 1024;
@@ -780,17 +778,23 @@ public:
   class CachedStatement;
 
 private:
-  class BeginOp;
-  class CommitOp;
+  class WriteInfo;
+  class SetItemInfo;
+  class RemoveItemInfo;
+  class ClearInfo;
+  class EndUpdateBatchOp;
   class CloseOp;
 
   RefPtr<ConnectionThread> mConnectionThread;
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
+  nsTArray<nsAutoPtr<WriteInfo>> mWriteInfos;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;
   const nsCString mOrigin;
   const nsString mFilePath;
-  bool mInTransaction;
+#ifdef DEBUG
+  bool mInUpdateBatch;
+#endif
 
 public:
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Connection)
@@ -803,32 +807,31 @@ public:
 
   // Methods which can only be called on the owning thread.
 
-  bool
-  InTransaction()
-  {
-    AssertIsOnOwningThread();
-    return mInTransaction;
-  }
-
   // This method is used to asynchronously execute a connection datastore
   // operation on the connection thread.
   void
   Dispatch(ConnectionDatastoreOperationBase* aOp);
 
-  // This method is used to asynchronously start a transaction on the connection
-  // thread.
-  void
-  Begin(bool aReadonly);
-
-  // This method is used to asynchronously end a transaction on the connection
-  // thread.
-  void
-  Commit();
-
   // This method is used to asynchronously close the storage connection on the
   // connection thread.
   void
   Close(nsIRunnable* aCallback);
+
+  void
+  SetItem(const nsString& aKey,
+          const nsString& aValue);
+
+  void
+  RemoveItem(const nsString& aKey);
+
+  void
+  Clear();
+
+  void
+  BeginUpdateBatch();
+
+  void
+  EndUpdateBatch();
 
   // Methods which can only be called on the connection thread.
 
@@ -885,30 +888,72 @@ private:
   CachedStatement& operator=(const CachedStatement&) = delete;
 };
 
-class Connection::BeginOp final
-  : public ConnectionDatastoreOperationBase
+class Connection::WriteInfo
 {
-  const bool mReadonly;
+public:
+  virtual nsresult
+  Perform(Connection* aConnection) = 0;
+
+  virtual ~WriteInfo() = default;
+};
+
+class Connection::SetItemInfo final
+  : public WriteInfo
+{
+  nsString mKey;
+  nsString mValue;
 
 public:
-  BeginOp(Connection* aConnection,
-          bool aReadonly)
-    : ConnectionDatastoreOperationBase(aConnection)
-    , mReadonly(aReadonly)
+  SetItemInfo(const nsAString& aKey,
+              const nsAString& aValue)
+    : mKey(aKey)
+    , mValue(aValue)
   { }
 
 private:
   nsresult
-  DoDatastoreWork() override;
+  Perform(Connection* aConnection) override;
 };
 
-class Connection::CommitOp final
-  : public ConnectionDatastoreOperationBase
+class Connection::RemoveItemInfo final
+  : public WriteInfo
+{
+  nsString mKey;
+
+public:
+  explicit RemoveItemInfo(const nsAString& aKey)
+    : mKey(aKey)
+  { }
+
+private:
+  nsresult
+  Perform(Connection* aConnection) override;
+};
+
+class Connection::ClearInfo final
+  : public WriteInfo
 {
 public:
-  explicit CommitOp(Connection* aConnection)
-    : ConnectionDatastoreOperationBase(aConnection)
+  ClearInfo()
   { }
+
+private:
+  nsresult
+  Perform(Connection* aConnection) override;
+};
+
+class Connection::EndUpdateBatchOp final
+  : public ConnectionDatastoreOperationBase
+{
+  nsTArray<nsAutoPtr<WriteInfo>> mWriteInfos;
+
+public:
+  explicit EndUpdateBatchOp(Connection* aConnection,
+                            nsTArray<nsAutoPtr<WriteInfo>>& aWriteInfos)
+    : ConnectionDatastoreOperationBase(aConnection)
+  {
+    mWriteInfos.SwapElements(aWriteInfos);
+  }
 
 private:
   nsresult
@@ -970,62 +1015,11 @@ private:
   ~ConnectionThread();
 };
 
-class SetItemOp final
-  : public ConnectionDatastoreOperationBase
-{
-  nsString mKey;
-  nsString mValue;
-
-public:
-  SetItemOp(Connection* aConnection,
-            const nsAString& aKey,
-            const nsAString& aValue)
-    : ConnectionDatastoreOperationBase(aConnection)
-    , mKey(aKey)
-    , mValue(aValue)
-  { }
-
-private:
-  nsresult
-  DoDatastoreWork() override;
-};
-
-class RemoveItemOp final
-  : public ConnectionDatastoreOperationBase
-{
-  nsString mKey;
-
-public:
-  RemoveItemOp(Connection* aConnection,
-               const nsAString& aKey)
-    : ConnectionDatastoreOperationBase(aConnection)
-    , mKey(aKey)
-  { }
-
-private:
-  nsresult
-  DoDatastoreWork() override;
-};
-
-class ClearOp final
-  : public ConnectionDatastoreOperationBase
-{
-public:
-  explicit ClearOp(Connection* aConnection)
-    : ConnectionDatastoreOperationBase(aConnection)
-  { }
-
-private:
-  nsresult
-  DoDatastoreWork() override;
-};
-
 class Datastore final
 {
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
   RefPtr<QuotaObject> mQuotaObject;
-  nsCOMPtr<nsITimer> mAutoCommitTimer;
   nsCOMPtr<nsIRunnable> mCompleteCallback;
   nsTHashtable<nsPtrHashKey<PrepareDatastoreOp>> mPrepareDatastoreOps;
   nsTHashtable<nsPtrHashKey<PreparedDatastore>> mPreparedDatastores;
@@ -1198,12 +1192,6 @@ private:
                   const nsString& aKey,
                   const nsString& aOldValue,
                   const nsString& aNewValue);
-
-  void
-  EnsureTransaction();
-
-  static void
-  AutoCommitTimerCallback(nsITimer* aTimer, void* aClosure);
 };
 
 class PreparedDatastore
@@ -2739,7 +2727,9 @@ Connection::Connection(ConnectionThread* aConnectionThread,
   : mConnectionThread(aConnectionThread)
   , mOrigin(aOrigin)
   , mFilePath(aFilePath)
-  , mInTransaction(false)
+#ifdef DEBUG
+  , mInUpdateBatch(false)
+#endif
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aOrigin.IsEmpty());
@@ -2751,7 +2741,7 @@ Connection::~Connection()
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mStorageConnection);
   MOZ_ASSERT(!mCachedStatements.Count());
-  MOZ_ASSERT(!mInTransaction);
+  MOZ_ASSERT(!mInUpdateBatch);
 }
 
 void
@@ -2765,30 +2755,6 @@ Connection::Dispatch(ConnectionDatastoreOperationBase* aOp)
 }
 
 void
-Connection::Begin(bool aReadonly)
-{
-  AssertIsOnOwningThread();
-
-  RefPtr<BeginOp> op = new BeginOp(this, aReadonly);
-
-  Dispatch(op);
-
-  mInTransaction = true;
-}
-
-void
-Connection::Commit()
-{
-  AssertIsOnOwningThread();
-
-  RefPtr<CommitOp> op = new CommitOp(this);
-
-  Dispatch(op);
-
-  mInTransaction = false;
-}
-
-void
 Connection::Close(nsIRunnable* aCallback)
 {
   AssertIsOnOwningThread();
@@ -2797,6 +2763,65 @@ Connection::Close(nsIRunnable* aCallback)
   RefPtr<CloseOp> op = new CloseOp(this, aCallback);
 
   Dispatch(op);
+}
+
+void
+Connection::SetItem(const nsString& aKey,
+                    const nsString& aValue)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mInUpdateBatch);
+
+  nsAutoPtr<WriteInfo> writeInfo(new SetItemInfo(aKey, aValue));
+  mWriteInfos.AppendElement(writeInfo.forget());
+}
+
+void
+Connection::RemoveItem(const nsString& aKey)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mInUpdateBatch);
+
+  nsAutoPtr<WriteInfo> writeInfo(new RemoveItemInfo(aKey));
+  mWriteInfos.AppendElement(writeInfo.forget());
+}
+
+void
+Connection::Clear()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mInUpdateBatch);
+
+  nsAutoPtr<WriteInfo> writeInfo(new ClearInfo());
+  mWriteInfos.AppendElement(writeInfo.forget());
+}
+
+void
+Connection::BeginUpdateBatch()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!mInUpdateBatch);
+
+#ifdef DEBUG
+  mInUpdateBatch = true;
+#endif
+}
+
+void
+Connection::EndUpdateBatch()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mInUpdateBatch);
+
+  if (!mWriteInfos.IsEmpty()) {
+    RefPtr<EndUpdateBatchOp> op = new EndUpdateBatchOp(this, mWriteInfos);
+
+    Dispatch(op);
+  }
+
+#ifdef DEBUG
+  mInUpdateBatch = false;
+#endif
 }
 
 nsresult
@@ -2911,19 +2936,26 @@ CachedStatement::Assign(Connection* aConnection,
 
 nsresult
 Connection::
-BeginOp::DoDatastoreWork()
+SetItemInfo::Perform(Connection* aConnection)
 {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mConnection);
+  MOZ_ASSERT(aConnection);
 
-  CachedStatement stmt;
-  nsresult rv;
-  if (mReadonly) {
-    rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING("BEGIN;"), &stmt);
-  } else {
-    rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE;"),
-                                         &stmt);
+  Connection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "INSERT OR REPLACE INTO data (key, value) "
+    "VALUES(:key, :value)"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2938,14 +2970,81 @@ BeginOp::DoDatastoreWork()
 
 nsresult
 Connection::
-CommitOp::DoDatastoreWork()
+RemoveItemInfo::Perform(Connection* aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(aConnection);
+
+  Connection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM data "
+      "WHERE key = :key;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+Connection::
+ClearInfo::Perform(Connection* aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(aConnection);
+
+  Connection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM data;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+Connection::
+EndUpdateBatchOp::DoDatastoreWork()
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mConnection);
 
   CachedStatement stmt;
   nsresult rv =
-    mConnection->GetCachedStatement(NS_LITERAL_CSTRING("COMMIT;"), &stmt);
+    mConnection->GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE;"),
+                                    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  for (auto writeInfo : mWriteInfos) {
+    writeInfo->Perform(mConnection);
+  }
+
+  rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING("COMMIT;"), &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3043,89 +3142,6 @@ ConnectionThread::Shutdown()
   mThread->Shutdown();
 }
 
-nsresult
-SetItemOp::DoDatastoreWork()
-{
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(mConnection);
-
-  Connection::CachedStatement stmt;
-  nsresult rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-    "INSERT OR REPLACE INTO data (key, value) "
-    "VALUES(:key, :value)"),
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-RemoveItemOp::DoDatastoreWork()
-{
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(mConnection);
-
-  Connection::CachedStatement stmt;
-  nsresult rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM data "
-      "WHERE key = :key;"),
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-ClearOp::DoDatastoreWork()
-{
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(mConnection);
-
-  Connection::CachedStatement stmt;
-  nsresult rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM data;"),
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 /*******************************************************************************
  * Datastore
  ******************************************************************************/
@@ -3175,15 +3191,6 @@ Datastore::Close()
   if (IsPersistent()) {
     MOZ_ASSERT(mConnection);
     MOZ_ASSERT(mQuotaObject);
-
-    if (mConnection->InTransaction()) {
-      MOZ_ASSERT(mAutoCommitTimer);
-      MOZ_ALWAYS_SUCCEEDS(mAutoCommitTimer->Cancel());
-
-      mConnection->Commit();
-
-      mAutoCommitTimer = nullptr;
-    }
 
     // We can't release the directory lock and unregister itself from the
     // hashtable until the connection is fully closed.
@@ -3455,10 +3462,7 @@ Datastore::SetItem(Database* aDatabase,
     mValues.Put(aKey, aValue);
 
     if (IsPersistent()) {
-      EnsureTransaction();
-
-      RefPtr<SetItemOp> op = new SetItemOp(mConnection, aKey, aValue);
-      mConnection->Dispatch(op);
+      mConnection->SetItem(aKey, aValue);
     }
   }
 
@@ -3497,10 +3501,7 @@ Datastore::RemoveItem(Database* aDatabase,
     mValues.Remove(aKey);
 
     if (IsPersistent()) {
-      EnsureTransaction();
-
-      RefPtr<RemoveItemOp> op = new RemoveItemOp(mConnection, aKey);
-      mConnection->Dispatch(op);
+      mConnection->RemoveItem(aKey);
     }
   }
 
@@ -3536,10 +3537,7 @@ Datastore::Clear(Database* aDatabase,
     mKeys.Clear();
 
     if (IsPersistent()) {
-      EnsureTransaction();
-
-      RefPtr<ClearOp> op = new ClearOp(mConnection);
-      mConnection->Dispatch(op);
+      mConnection->Clear();
     }
   }
 
@@ -3576,6 +3574,10 @@ Datastore::BeginUpdateBatch(int64_t aSnapshotInitialUsage)
   MOZ_ASSERT(!mInUpdateBatch);
 
   mUpdateBatchUsage = aSnapshotInitialUsage;
+
+  if (IsPersistent()) {
+    mConnection->BeginUpdateBatch();
+  }
 
 #ifdef DEBUG
   mInUpdateBatch = true;
@@ -3629,6 +3631,10 @@ Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage)
   }
 
   mUpdateBatchUsage = -1;
+
+  if (IsPersistent()) {
+    mConnection->EndUpdateBatch();
+  }
 
 #ifdef DEBUG
   mInUpdateBatch = false;
@@ -3780,45 +3786,6 @@ Datastore::NotifyObservers(Database* aDatabase,
       observer->Observe(aDatabase, aDocumentURI, aKey, aOldValue, aNewValue);
     }
   }
-}
-
-void
-Datastore::EnsureTransaction()
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mConnection);
-
-  if (!mConnection->InTransaction()) {
-    mConnection->Begin(/* aReadonly */ false);
-
-    if (!mAutoCommitTimer) {
-      mAutoCommitTimer = NS_NewTimer();
-      MOZ_ASSERT(mAutoCommitTimer);
-    }
-
-    MOZ_ALWAYS_SUCCEEDS(
-      mAutoCommitTimer->InitWithNamedFuncCallback(
-                                          AutoCommitTimerCallback,
-                                          this,
-                                          kAutoCommitTimeoutMs,
-                                          nsITimer::TYPE_ONE_SHOT,
-                                          "Database::AutoCommitTimerCallback"));
-  }
-}
-
-// static
-void
-Datastore::AutoCommitTimerCallback(nsITimer* aTimer, void* aClosure)
-{
-  MOZ_ASSERT(aClosure);
-
-  auto* self = static_cast<Datastore*>(aClosure);
-  MOZ_ASSERT(self);
-
-  MOZ_ASSERT(self->mConnection);
-  MOZ_ASSERT(self->mConnection->InTransaction());
-
-  self->mConnection->Commit();
 }
 
 /*******************************************************************************
@@ -5321,8 +5288,6 @@ PrepareDatastoreOp::BeginLoadData()
   mConnection = gConnectionThread->CreateConnection(mOrigin,
                                                     mDatabaseFilePath);
   MOZ_ASSERT(mConnection);
-
-  MOZ_ASSERT(!mConnection->InTransaction());
 
   // Must set this before dispatching otherwise we will race with the
   // connection thread.
