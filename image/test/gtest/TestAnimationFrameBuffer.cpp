@@ -635,6 +635,31 @@ TEST_F(ImageAnimationFrameBuffer, DiscardingReset)
   TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
 }
 
+TEST_F(ImageAnimationFrameBuffer, ResetBeforeDiscardingThreshold)
+{
+  const size_t kThreshold = 3;
+  const size_t kBatch = 1;
+  const size_t kStartFrame = 0;
+
+  // Get the starting buffer to just before the point where we need to switch
+  // to a discarding buffer, reset the animation so advancing points at the
+  // first frame, and insert the last frame to cross the threshold.
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  VerifyInsertAndAdvance(retained, 1, AnimationFrameBuffer::InsertStatus::YIELD);
+  bool restartDecoder = retained.Reset();
+  EXPECT_FALSE(restartDecoder);
+  VerifyInsert(retained, AnimationFrameBuffer::InsertStatus::DISCARD_YIELD);
+
+  const imgFrame* firstFrame = retained.Frames()[0].get();
+  EXPECT_TRUE(firstFrame != nullptr);
+  AnimationFrameDiscardingQueue buffer(std::move(retained));
+  const imgFrame* displayFirstFrame = buffer.Get(0, true);
+  const imgFrame* advanceFirstFrame = buffer.Get(0, false);
+  EXPECT_EQ(firstFrame, displayFirstFrame);
+  EXPECT_EQ(firstFrame, advanceFirstFrame);
+}
+
 TEST_F(ImageAnimationFrameBuffer, RecyclingReset)
 {
   const size_t kThreshold = 8;
