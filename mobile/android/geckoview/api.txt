@@ -53,10 +53,10 @@ package org.mozilla.geckoview {
 
   public class CrashReporter {
     ctor public CrashReporter();
-    method public static void sendCrashReport(android.content.Context, android.content.Intent, java.lang.String);
-    method public static void sendCrashReport(android.content.Context, android.os.Bundle, java.lang.String);
-    method public static void sendCrashReport(android.content.Context, java.io.File, java.io.File, boolean, java.lang.String);
-    method public static void sendCrashReport(android.content.Context, java.io.File, java.util.Map<java.lang.String,java.lang.String>, boolean, java.lang.String);
+    method public static org.mozilla.geckoview.GeckoResult<java.lang.String> sendCrashReport(android.content.Context, android.content.Intent, java.lang.String);
+    method public static org.mozilla.geckoview.GeckoResult<java.lang.String> sendCrashReport(android.content.Context, android.os.Bundle, java.lang.String);
+    method public static org.mozilla.geckoview.GeckoResult<java.lang.String> sendCrashReport(android.content.Context, java.io.File, java.io.File, boolean, java.lang.String);
+    method public static org.mozilla.geckoview.GeckoResult<java.lang.String> sendCrashReport(android.content.Context, java.io.File, java.util.Map<java.lang.String,java.lang.String>, boolean, java.lang.String);
   }
 
   public final class DynamicToolbarAnimator {
