@@ -1,6 +1,6 @@
 use base64;
+use crate::logging;
 use hyper::Method;
-use logging;
 use regex::Captures;
 use serde::de::{self, Deserialize, Deserializer};
 use serde_json::{self, Value};
@@ -236,9 +236,9 @@ pub struct LogOptions {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test::check_deserialize;
     use std::fs::File;
     use std::io::Read;
-    use test::check_deserialize;
 
     #[test]
     fn test_json_addon_install_parameters_null() {

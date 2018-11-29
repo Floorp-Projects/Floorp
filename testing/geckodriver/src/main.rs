@@ -46,9 +46,9 @@ mod prefs;
 #[cfg(test)]
 pub mod test;
 
-use build::BuildInfo;
-use command::extension_routes;
-use marionette::{MarionetteHandler, MarionetteSettings};
+use crate::build::BuildInfo;
+use crate::command::extension_routes;
+use crate::marionette::{MarionetteHandler, MarionetteSettings};
 
 type ProgramResult = std::result::Result<(), (ExitCode, String)>;
 
