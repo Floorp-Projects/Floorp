@@ -23,7 +23,7 @@ function apply_compartment(compartment, data) {
 
   if (compartment == IFRAME_COMPARTMENT) {
     const iframe = document.querySelector("#iframe").contentWindow;
-    iframe.runTest.call(iframe, data);
+    iframe[data.func](data.args, self);
     return;
   }
 
