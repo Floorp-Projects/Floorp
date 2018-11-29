@@ -605,11 +605,13 @@ PaymentOptions::PaymentOptions(const bool aRequestPayerName,
                                const bool aRequestPayerEmail,
                                const bool aRequestPayerPhone,
                                const bool aRequestShipping,
+                               const bool aRequestBillingAddress,
                                const nsAString& aShippingType)
   : mRequestPayerName(aRequestPayerName)
   , mRequestPayerEmail(aRequestPayerEmail)
   , mRequestPayerPhone(aRequestPayerPhone)
   , mRequestShipping(aRequestShipping)
+  , mRequestBillingAddress(aRequestBillingAddress)
   , mShippingType(aShippingType)
 {
 }
@@ -625,6 +627,7 @@ PaymentOptions::Create(const IPCPaymentOptions& aIPCOptions,
                        aIPCOptions.requestPayerEmail(),
                        aIPCOptions.requestPayerPhone(),
                        aIPCOptions.requestShipping(),
+                       aIPCOptions.requestBillingAddress(),
                        aIPCOptions.shippingType());
   options.forget(aOptions);
   return NS_OK;
@@ -659,6 +662,14 @@ PaymentOptions::GetRequestShipping(bool* aRequestShipping)
 {
   NS_ENSURE_ARG_POINTER(aRequestShipping);
   *aRequestShipping = mRequestShipping;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentOptions::GetRequestBillingAddress(bool* aRequestBillingAddress)
+{
+  NS_ENSURE_ARG_POINTER(aRequestBillingAddress);
+  *aRequestBillingAddress = mRequestBillingAddress;
   return NS_OK;
 }
 

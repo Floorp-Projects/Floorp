@@ -414,6 +414,36 @@ var Int64 = /** @class */ (function () {
         }
         return sum;
     };
+    Int64.prototype.toString = function () {
+        var low = (this._data[0] | (this._data[1] << 8) | (this._data[2] << 16) | (this._data[3] << 24)) >>> 0;
+        var high = (this._data[4] | (this._data[5] << 8) | (this._data[6] << 16) | (this._data[7] << 24)) >>> 0;
+        if (low === 0 && high === 0) {
+            return '0';
+        }
+        var sign = false;
+        if (high >> 31) {
+            high = 4294967296 - high;
+            if (low > 0) {
+                high--;
+                low = 4294967296 - low;
+            }
+            sign = true;
+        }
+        var buf = [];
+        while (high > 0) {
+            var t = ((high % 10) * 4294967296) + low;
+            high = Math.floor(high / 10);
+            buf.unshift((t % 10).toString());
+            low = Math.floor(t / 10);
+        }
+        while (low > 0) {
+            buf.unshift((low % 10).toString());
+            low = Math.floor(low / 10);
+        }
+        if (sign)
+            buf.unshift('-');
+        return buf.join('');
+    };
     Object.defineProperty(Int64.prototype, "data", {
         get: function () {
             return this._data;

@@ -68,6 +68,7 @@
 #include "nsIXULRuntime.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsIURIFixup.h"
 #include "nsHttpChannel.h"
 #include "nsRedirectHistoryEntry.h"
 #include "nsServerTiming.h"
@@ -1905,10 +1906,18 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
 
   // strip away any userpass; we don't want to be giving out passwords ;-)
   // This is required by Referrer Policy stripping algorithm.
-  rv = NS_MutateURI(clone)
-         .SetUserPass(EmptyCString())
-         .Finalize(clone);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
+  if (NS_WARN_IF(!urifixup)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIURI> exposableURI;
+  rv = urifixup->CreateExposableURI(clone, getter_AddRefs(exposableURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  clone = exposableURI;
 
   // 0: full URI
   // 1: scheme+host+port+path

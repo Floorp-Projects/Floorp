@@ -34,6 +34,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('cocoa', 'uikit'):
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DEFINES['MOZ_DISABLE_WINDOWS_WRAPPER'] = True
     EXPORTS.cairo += [
         'cairo-win32.h',
     ]

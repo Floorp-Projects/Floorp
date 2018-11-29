@@ -389,5 +389,88 @@ PaymentCompleteActionResponse::IsCompleted(bool* aIsCompleted)
   return NS_OK;
 }
 
+/* PaymentChangeDetails */
+
+NS_IMPL_ISUPPORTS(MethodChangeDetails, nsIMethodChangeDetails)
+
+NS_IMETHODIMP
+MethodChangeDetails::GetType(uint32_t* aType)
+{
+  NS_ENSURE_ARG_POINTER(aType);
+  *aType = mType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MethodChangeDetails::Init(const uint32_t aType)
+{
+  if (aType != nsIMethodChangeDetails::GENERAL_DETAILS &&
+      aType != nsIMethodChangeDetails::BASICCARD_DETAILS) {
+    return NS_ERROR_FAILURE;
+  }
+  mType = aType;
+  return NS_OK;
+}
+
+/* GeneralMethodChangeDetails */
+
+NS_IMPL_ISUPPORTS_INHERITED(GeneralMethodChangeDetails,
+                            MethodChangeDetails,
+                            nsIGeneralChangeDetails)
+
+GeneralMethodChangeDetails::GeneralMethodChangeDetails()
+  : mDetails(NS_LITERAL_STRING("{}"))
+{
+  Init(nsIMethodChangeDetails::GENERAL_DETAILS);
+}
+
+NS_IMETHODIMP
+GeneralMethodChangeDetails::GetDetails(nsAString& aDetails)
+{
+  aDetails = mDetails;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GeneralMethodChangeDetails::InitData(JS::HandleValue aDetails, JSContext* aCx)
+{
+  if (aDetails.isNullOrUndefined()) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = SerializeFromJSVal(aCx, aDetails, mDetails);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+/* BasicCardMethodChangeDetails */
+
+NS_IMPL_ISUPPORTS_INHERITED(BasicCardMethodChangeDetails,
+                            MethodChangeDetails,
+                            nsIBasicCardChangeDetails)
+
+BasicCardMethodChangeDetails::BasicCardMethodChangeDetails()
+{
+  Init(nsIMethodChangeDetails::BASICCARD_DETAILS);
+}
+
+NS_IMETHODIMP
+BasicCardMethodChangeDetails::GetBillingAddress(nsIPaymentAddress** aBillingAddress)
+{
+  NS_ENSURE_ARG_POINTER(aBillingAddress);
+  nsCOMPtr<nsIPaymentAddress> address;
+  address = mBillingAddress;
+  address.forget(aBillingAddress);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasicCardMethodChangeDetails::InitData(nsIPaymentAddress* aBillingAddress)
+{
+  mBillingAddress = aBillingAddress;
+  return NS_OK;
+}
+
 } // end of namespace dom
 } // end of namespace mozilla

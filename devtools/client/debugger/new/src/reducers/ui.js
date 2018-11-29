@@ -12,7 +12,7 @@
 import makeRecord from "../utils/makeRecord";
 import { prefs } from "../utils/prefs";
 
-import type { Source } from "../types";
+import type { Source, Range } from "../types";
 
 import type { Action, panelPositionType } from "../actions/types";
 import type { Record } from "../utils/makeRecord";
@@ -23,6 +23,8 @@ export type OrientationType = "horizontal" | "vertical";
 
 export type SelectedPrimaryPaneTabType = "sources" | "outline";
 
+type Viewport = Range;
+
 export type UIState = {
   selectedPrimaryPaneTab: SelectedPrimaryPaneTabType,
   activeSearch: ?ActiveSearchType,
@@ -32,6 +34,7 @@ export type UIState = {
   endPanelCollapsed: boolean,
   frameworkGroupingOn: boolean,
   orientation: OrientationType,
+  viewport: ?Viewport,
   highlightedLineRange?: {
     start?: number,
     end?: number,
@@ -51,7 +54,8 @@ export const createUIState = makeRecord(
     frameworkGroupingOn: prefs.frameworkGroupingOn,
     highlightedLineRange: undefined,
     conditionalPanelLine: null,
-    orientation: "horizontal"
+    orientation: "horizontal",
+    viewport: null
   }: UIState)
 );
 
@@ -121,6 +125,10 @@ function update(
       return state;
     }
 
+    case "SET_VIEWPORT": {
+      return state.set("viewport", action.viewport);
+    }
+
     case "NAVIGATE": {
       return state.set("activeSearch", null).set("highlightedLineRange", {});
     }
@@ -178,6 +186,10 @@ export function getConditionalPanelLine(state: OuterState): null | number {
 
 export function getOrientation(state: OuterState): boolean {
   return state.ui.get("orientation");
+}
+
+export function getViewport(state: OuterState) {
+  return state.ui.get("viewport");
 }
 
 export default update;

@@ -273,104 +273,113 @@ namespace dom {
 // IPC sender for remote GC/CC logging.
 class CycleCollectWithLogsChild final
   : public PCycleCollectWithLogsChild
-  , public nsICycleCollectorLogSink
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_INLINE_DECL_REFCOUNTING(CycleCollectWithLogsChild)
 
-  CycleCollectWithLogsChild(const FileDescriptor& aGCLog,
-                            const FileDescriptor& aCCLog)
+  class Sink final : public nsICycleCollectorLogSink
   {
-    mGCLog = FileDescriptorToFILE(aGCLog, "w");
-    mCCLog = FileDescriptorToFILE(aCCLog, "w");
-  }
+    NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Open(FILE** aGCLog, FILE** aCCLog) override
-  {
-    if (NS_WARN_IF(!mGCLog) || NS_WARN_IF(!mCCLog)) {
-      return NS_ERROR_FAILURE;
+    Sink(CycleCollectWithLogsChild* aActor,
+         const FileDescriptor& aGCLog,
+         const FileDescriptor& aCCLog)
+    {
+      mActor = aActor;
+      mGCLog = FileDescriptorToFILE(aGCLog, "w");
+      mCCLog = FileDescriptorToFILE(aCCLog, "w");
     }
-    *aGCLog = mGCLog;
-    *aCCLog = mCCLog;
-    return NS_OK;
-  }
 
-  NS_IMETHOD CloseGCLog() override
-  {
-    MOZ_ASSERT(mGCLog);
-    fclose(mGCLog);
-    mGCLog = nullptr;
-    SendCloseGCLog();
-    return NS_OK;
-  }
+    NS_IMETHOD Open(FILE** aGCLog, FILE** aCCLog) override
+    {
+      if (NS_WARN_IF(!mGCLog) || NS_WARN_IF(!mCCLog)) {
+        return NS_ERROR_FAILURE;
+      }
+      *aGCLog = mGCLog;
+      *aCCLog = mCCLog;
+      return NS_OK;
+    }
 
-  NS_IMETHOD CloseCCLog() override
-  {
-    MOZ_ASSERT(mCCLog);
-    fclose(mCCLog);
-    mCCLog = nullptr;
-    SendCloseCCLog();
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetFilenameIdentifier(nsAString& aIdentifier) override
-  {
-    return UnimplementedProperty();
-  }
-
-  NS_IMETHOD SetFilenameIdentifier(const nsAString& aIdentifier) override
-  {
-    return UnimplementedProperty();
-  }
-
-  NS_IMETHOD GetProcessIdentifier(int32_t *aIdentifier) override
-  {
-    return UnimplementedProperty();
-  }
-
-  NS_IMETHOD SetProcessIdentifier(int32_t aIdentifier) override
-  {
-    return UnimplementedProperty();
-  }
-
-  NS_IMETHOD GetGcLog(nsIFile** aPath) override
-  {
-    return UnimplementedProperty();
-  }
-
-  NS_IMETHOD GetCcLog(nsIFile** aPath) override
-  {
-    return UnimplementedProperty();
-  }
-
-private:
-  ~CycleCollectWithLogsChild() override
-  {
-    if (mGCLog) {
+    NS_IMETHOD CloseGCLog() override
+    {
+      MOZ_ASSERT(mGCLog);
       fclose(mGCLog);
       mGCLog = nullptr;
+      mActor->SendCloseGCLog();
+      return NS_OK;
     }
-    if (mCCLog) {
+
+    NS_IMETHOD CloseCCLog() override
+    {
+      MOZ_ASSERT(mCCLog);
       fclose(mCCLog);
       mCCLog = nullptr;
+      mActor->SendCloseCCLog();
+      return NS_OK;
     }
-    // The XPCOM refcount drives the IPC lifecycle; see also
-    // DeallocPCycleCollectWithLogsChild.
-    Unused << Send__delete__(this);
-  }
 
-  nsresult UnimplementedProperty()
-  {
-    MOZ_ASSERT(false, "This object is a remote GC/CC logger;"
-                      " this property isn't meaningful.");
-    return NS_ERROR_UNEXPECTED;
-  }
+    NS_IMETHOD GetFilenameIdentifier(nsAString& aIdentifier) override
+    {
+      return UnimplementedProperty();
+    }
 
-  FILE* mGCLog;
-  FILE* mCCLog;
+    NS_IMETHOD SetFilenameIdentifier(const nsAString& aIdentifier) override
+    {
+      return UnimplementedProperty();
+    }
+
+    NS_IMETHOD GetProcessIdentifier(int32_t *aIdentifier) override
+    {
+      return UnimplementedProperty();
+    }
+
+    NS_IMETHOD SetProcessIdentifier(int32_t aIdentifier) override
+    {
+      return UnimplementedProperty();
+    }
+
+    NS_IMETHOD GetGcLog(nsIFile** aPath) override
+    {
+      return UnimplementedProperty();
+    }
+
+    NS_IMETHOD GetCcLog(nsIFile** aPath) override
+    {
+      return UnimplementedProperty();
+    }
+
+  private:
+    ~Sink()
+    {
+      if (mGCLog) {
+        fclose(mGCLog);
+        mGCLog = nullptr;
+      }
+      if (mCCLog) {
+        fclose(mCCLog);
+        mCCLog = nullptr;
+      }
+      // The XPCOM refcount drives the IPC lifecycle;
+      Unused << mActor->Send__delete__(mActor);
+    }
+
+    nsresult UnimplementedProperty()
+    {
+      MOZ_ASSERT(false, "This object is a remote GC/CC logger;"
+                        " this property isn't meaningful.");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    RefPtr<CycleCollectWithLogsChild> mActor;
+    FILE* mGCLog;
+    FILE* mCCLog;
+  };
+
+private:
+  ~CycleCollectWithLogsChild() {}
 };
 
-NS_IMPL_ISUPPORTS(CycleCollectWithLogsChild, nsICycleCollectorLogSink);
+NS_IMPL_ISUPPORTS(CycleCollectWithLogsChild::Sink, nsICycleCollectorLogSink);
 
 class AlertObserver
 {
@@ -1321,9 +1330,7 @@ ContentChild::AllocPCycleCollectWithLogsChild(const bool& aDumpAllTraces,
                                               const FileDescriptor& aGCLog,
                                               const FileDescriptor& aCCLog)
 {
-  auto* actor = new CycleCollectWithLogsChild(aGCLog, aCCLog);
-  // Return actor with refcount 0, which is safe because it has a non-XPCOM type.
-  return actor;
+  return do_AddRef(new CycleCollectWithLogsChild()).take();
 }
 
 mozilla::ipc::IPCResult
@@ -1332,23 +1339,23 @@ ContentChild::RecvPCycleCollectWithLogsConstructor(PCycleCollectWithLogsChild* a
                                                    const FileDescriptor& aGCLog,
                                                    const FileDescriptor& aCCLog)
 {
-  // Take a reference here, where the XPCOM type is regained.
-  RefPtr<CycleCollectWithLogsChild> sink = static_cast<CycleCollectWithLogsChild*>(aActor);
+  // The sink's destructor is called when the last reference goes away, which
+  // will cause the actor to be closed down.
+  auto* actor = static_cast<CycleCollectWithLogsChild*>(aActor);
+  RefPtr<CycleCollectWithLogsChild::Sink> sink =
+    new CycleCollectWithLogsChild::Sink(actor, aGCLog, aCCLog);
+
+  // Invoke the dumper, which will take a reference to the sink.
   nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
-
   dumper->DumpGCAndCCLogsToSink(aDumpAllTraces, sink);
-
-  // The actor's destructor is called when the last reference goes away...
   return IPC_OK();
 }
 
 bool
-ContentChild::DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* /* aActor */)
+ContentChild::DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* aActor)
 {
-  // ...so when we get here, there's nothing for us to do.
-  //
-  // Also, we're already in ~CycleCollectWithLogsChild (q.v.) at
-  // this point, so we shouldn't touch the actor in any case.
+  RefPtr<CycleCollectWithLogsChild> actor =
+    dont_AddRef(static_cast<CycleCollectWithLogsChild*>(aActor));
   return true;
 }
 

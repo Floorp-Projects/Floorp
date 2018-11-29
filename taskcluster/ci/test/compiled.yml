@@ -62,8 +62,22 @@ jittest:
     run-on-projects:
         by-test-platform:
             android-hw.*: ['try']
-            linux.*: []  # redundant with SM(...)
-            windows.*: []  # redundant with SM(p)
+            # Turn off for all linux and windows platforms, since it is
+            # redundant with SM(...) jobs -- except for code coverage builds,
+            # which are still needed since ccov doesn't yet work with
+            # spidermonkey jobs.
+            #
+            # The regex is essentially /linux.*/ but with a negative match for
+            # the last 5 characters being "-ccov". The terminal ..... is needed
+            # because otherwise the .* could match the full string and the
+            # empty string would fail to match /(?!-ccov)/ so the whole thing
+            # would succeed. The beginning /?=linux/ is needed because the
+            # platform "linux64" doesn't have enough characters for both the
+            # beginning /linux/ and the final /...../.
+            #
+            # Additionally, platforms contain suffixes like "/opt" or "/debug".
+            (?=linux).*(?!-ccov)...../.*: []  # redundant with SM(...)
+            (?=windows).*(?!-ccov)...../.*: []  # redundant with SM(p)
             default: built-projects
     chunks:
         by-test-platform:

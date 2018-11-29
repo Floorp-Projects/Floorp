@@ -47,7 +47,6 @@ class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
   MOZ_MUST_USE
   virtual bool AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr) override;
-
 };
 
 nsresult

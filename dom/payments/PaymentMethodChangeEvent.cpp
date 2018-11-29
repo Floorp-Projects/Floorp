@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BasicCardPayment.h"
 #include "mozilla/dom/PaymentMethodChangeEvent.h"
 #include "mozilla/dom/PaymentRequestUpdateEvent.h"
-#include "mozilla/HoldDropJSObjects.h"
+#include "PaymentRequestUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -37,14 +38,17 @@ already_AddRefed<PaymentMethodChangeEvent>
 PaymentMethodChangeEvent::Constructor(
   mozilla::dom::EventTarget* aOwner,
   const nsAString& aType,
-  const PaymentMethodChangeEventInit& aEventInitDict)
+  const PaymentRequestUpdateEventInit& aEventInitDict,
+  const nsAString& aMethodName,
+  const ChangeDetails& aMethodDetails)
 {
   RefPtr<PaymentMethodChangeEvent> e = new PaymentMethodChangeEvent(aOwner);
   bool trusted = e->Init(aOwner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
   e->SetTrusted(trusted);
   e->SetComposed(aEventInitDict.mComposed);
-  e->init(aEventInitDict);
+  e->SetMethodName(aMethodName);
+  e->SetMethodDetails(aMethodDetails);
   return e.forget();
 }
 
@@ -57,7 +61,13 @@ PaymentMethodChangeEvent::Constructor(
 {
   nsCOMPtr<mozilla::dom::EventTarget> owner =
     do_QueryInterface(aGlobal.GetAsSupports());
-  return Constructor(owner, aType, aEventInitDict);
+  RefPtr<PaymentMethodChangeEvent> e = new PaymentMethodChangeEvent(owner);
+  bool trusted = e->Init(owner);
+  e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
+  e->SetTrusted(trusted);
+  e->SetComposed(aEventInitDict.mComposed);
+  e->init(aEventInitDict);
+  return e.forget();
 }
 
 PaymentMethodChangeEvent::PaymentMethodChangeEvent(EventTarget* aOwner)
@@ -68,8 +78,7 @@ PaymentMethodChangeEvent::PaymentMethodChangeEvent(EventTarget* aOwner)
 }
 
 void
-PaymentMethodChangeEvent::init(
-  const PaymentMethodChangeEventInit& aEventInitDict)
+PaymentMethodChangeEvent::init(const PaymentMethodChangeEventInit& aEventInitDict)
 {
   mMethodName.Assign(aEventInitDict.mMethodName);
   mMethodDetails = aEventInitDict.mMethodDetails;
@@ -82,10 +91,83 @@ PaymentMethodChangeEvent::GetMethodName(nsAString& aMethodName)
 }
 
 void
-PaymentMethodChangeEvent::GetMethodDetails(JSContext* cx,
-                                           JS::MutableHandle<JSObject*> retval)
+PaymentMethodChangeEvent::SetMethodName(const nsAString& aMethodName)
 {
-  retval.set(mMethodDetails.get());
+  mMethodName = aMethodName;
+}
+
+void
+PaymentMethodChangeEvent::GetMethodDetails(JSContext* aCx,
+                                           JS::MutableHandle<JSObject*> aRetVal)
+{
+  MOZ_ASSERT(aCx);
+
+  if (mMethodDetails) {
+    aRetVal.set(mMethodDetails.get());
+    return;
+  }
+
+  RefPtr<BasicCardService> service = BasicCardService::GetService();
+  MOZ_ASSERT(service);
+  aRetVal.set(nullptr);
+  switch(mInternalDetails.type()) {
+    case ChangeDetails::GeneralMethodDetails: {
+      const GeneralDetails& rawDetails = mInternalDetails.generalDetails();
+      DeserializeToJSObject(rawDetails.details, aCx, aRetVal);
+      break;
+    }
+    case ChangeDetails::BasicCardMethodDetails: {
+      const BasicCardDetails& rawDetails = mInternalDetails.basicCardDetails();
+      BasicCardChangeDetails basicCardDetails;
+      PaymentOptions options;
+      mRequest->GetOptions(options);
+      if (options.mRequestBillingAddress) {
+        if (!rawDetails.billingAddress.country.IsEmpty() ||
+            !rawDetails.billingAddress.addressLine.IsEmpty() ||
+            !rawDetails.billingAddress.region.IsEmpty() ||
+            !rawDetails.billingAddress.regionCode.IsEmpty() ||
+            !rawDetails.billingAddress.city.IsEmpty() ||
+            !rawDetails.billingAddress.dependentLocality.IsEmpty() ||
+            !rawDetails.billingAddress.postalCode.IsEmpty() ||
+            !rawDetails.billingAddress.sortingCode.IsEmpty() ||
+            !rawDetails.billingAddress.organization.IsEmpty() ||
+            !rawDetails.billingAddress.recipient.IsEmpty() ||
+            !rawDetails.billingAddress.phone.IsEmpty()) {
+          nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetParentObject());
+          basicCardDetails.mBillingAddress.Construct();
+          basicCardDetails.mBillingAddress.Value() =
+            new PaymentAddress(window,
+                               rawDetails.billingAddress.country,
+                               rawDetails.billingAddress.addressLine,
+                               rawDetails.billingAddress.region,
+                               rawDetails.billingAddress.regionCode,
+                               rawDetails.billingAddress.city,
+                               rawDetails.billingAddress.dependentLocality,
+                               rawDetails.billingAddress.postalCode,
+                               rawDetails.billingAddress.sortingCode,
+                               rawDetails.billingAddress.organization,
+                               rawDetails.billingAddress.recipient,
+                               rawDetails.billingAddress.phone);
+        }
+      }
+      MOZ_ASSERT(aCx);
+      JS::RootedValue value(aCx);
+      if (NS_WARN_IF(!basicCardDetails.ToObjectInternal(aCx, &value))) {
+        return;
+      }
+      aRetVal.set(&value.toObject());
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+}
+
+void
+PaymentMethodChangeEvent::SetMethodDetails(const ChangeDetails& aMethodDetails)
+{
+  mInternalDetails = aMethodDetails;
 }
 
 PaymentMethodChangeEvent::~PaymentMethodChangeEvent()

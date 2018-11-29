@@ -47,3 +47,8 @@
 .cell-value {
   word-break: break-all;
 }
+
+td.cell-value > form > input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+}

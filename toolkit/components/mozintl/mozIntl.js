@@ -355,13 +355,7 @@ class MozIntl {
   }
 
   get RelativeTimeFormat() {
-    if (!this._cache.hasOwnProperty("RelativeTimeFormat")) {
-      mozIntlHelper.addRelativeTimeFormatConstructor(this._cache);
-    }
-
-    const RelativeTimeFormat = this._cache.RelativeTimeFormat;
-
-    class MozRelativeTimeFormat extends RelativeTimeFormat {
+    class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
       constructor(locales, options = {}, ...args) {
 
         // If someone is asking for MozRelativeTimeFormat, it's likely they'll want
