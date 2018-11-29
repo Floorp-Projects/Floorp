@@ -104,6 +104,39 @@ function clear(callback)
   return request;
 }
 
+function clearOriginsByPattern(pattern, callback)
+{
+  let request = Services.qms.clearStoragesForOriginAttributesPattern(pattern);
+  request.callback = callback;
+
+  return request;
+}
+
+function clearOriginsByPrefix(principal, persistence, callback)
+{
+  let request =
+    Services.qms.clearStoragesForPrincipal(principal, persistence, null, true);
+  request.callback = callback;
+
+  return request;
+}
+
+function clearOrigin(principal, persistence, callback)
+{
+  let request = Services.qms.clearStoragesForPrincipal(principal, persistence);
+  request.callback = callback;
+
+  return request;
+}
+
+function reset(callback)
+{
+  let request = Services.qms.reset();
+  request.callback = callback;
+
+  return request;
+}
+
 function resetOrigin(principal, callback)
 {
   let request =
@@ -226,4 +259,11 @@ function getLocalStorage(principal)
   }
 
   return Services.domStorageManager.createStorage(null, principal, "");
+}
+
+function loadSubscript(path)
+{
+  let file = do_get_file(path, false);
+  let uri = Services.io.newFileURI(file);
+  Services.scriptloader.loadSubScript(uri.spec);
 }
