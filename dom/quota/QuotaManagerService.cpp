@@ -78,6 +78,53 @@ CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
+nsresult
+GetClearResetOriginParams(nsIPrincipal* aPrincipal,
+                          const nsACString& aPersistenceType,
+                          const nsAString& aClientType,
+                          bool aMatchAll,
+                          ClearResetOriginParams& aParams)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  nsresult rv = CheckedPrincipalToPrincipalInfo(aPrincipal,
+                                                aParams.principalInfo());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  Nullable<PersistenceType> persistenceType;
+  rv = NullablePersistenceTypeFromText(aPersistenceType, &persistenceType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (persistenceType.IsNull()) {
+    aParams.persistenceTypeIsExplicit() = false;
+  } else {
+    aParams.persistenceType() = persistenceType.Value();
+    aParams.persistenceTypeIsExplicit() = true;
+  }
+
+  Nullable<Client::Type> clientType;
+  rv = Client::NullableTypeFromText(aClientType, &clientType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (clientType.IsNull()) {
+    aParams.clientTypeIsExplicit() = false;
+  } else {
+    aParams.clientType() = clientType.Value();
+    aParams.clientTypeIsExplicit() = true;
+  }
+
+  aParams.matchAll() = aMatchAll;
+
+  return NS_OK;
+}
+
 class AbortOperationsRunnable final
   : public Runnable
 {
@@ -628,41 +675,19 @@ QuotaManagerService::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
 
   RefPtr<Request> request = new Request(aPrincipal);
 
-  ClearOriginParams params;
+  ClearResetOriginParams commonParams;
 
-  nsresult rv = CheckedPrincipalToPrincipalInfo(aPrincipal,
-                                                params.principalInfo());
+  nsresult rv = GetClearResetOriginParams(aPrincipal,
+                                          aPersistenceType,
+                                          aClientType,
+                                          aClearAll,
+                                          commonParams);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  Nullable<PersistenceType> persistenceType;
-  rv = NullablePersistenceTypeFromText(aPersistenceType, &persistenceType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (persistenceType.IsNull()) {
-    params.persistenceTypeIsExplicit() = false;
-  } else {
-    params.persistenceType() = persistenceType.Value();
-    params.persistenceTypeIsExplicit() = true;
-  }
-
-  Nullable<Client::Type> clientType;
-  rv = Client::NullableTypeFromText(aClientType, &clientType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (clientType.IsNull()) {
-    params.clientTypeIsExplicit() = false;
-  } else {
-    params.clientType() = clientType.Value();
-    params.clientTypeIsExplicit() = true;
-  }
-
-  params.clearAll() = aClearAll;
+  RequestParams params;
+  params = ClearOriginParams(commonParams);
 
   nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
 
@@ -691,6 +716,56 @@ QuotaManagerService::Reset(nsIQuotaRequest** _retval)
   nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
 
   nsresult rv = InitiateRequest(info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+QuotaManagerService::ResetStoragesForPrincipal(nsIPrincipal* aPrincipal,
+                                               const nsACString& aPersistenceType,
+                                               const nsAString& aClientType,
+                                               bool aResetAll,
+                                               nsIQuotaRequest** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  if (NS_WARN_IF(!gTestingMode)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCString suffix;
+  aPrincipal->OriginAttributesRef().CreateSuffix(suffix);
+
+  if (NS_WARN_IF(aResetAll && !suffix.IsEmpty())) {
+    // The originAttributes should be default originAttributes when the
+    // aClearAll flag is set.
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<Request> request = new Request(aPrincipal);
+
+  ClearResetOriginParams commonParams;
+
+  nsresult rv = GetClearResetOriginParams(aPrincipal,
+                                          aPersistenceType,
+                                          aClientType,
+                                          aResetAll,
+                                          commonParams);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  RequestParams params;
+  params = ResetOriginParams(commonParams);
+
+  nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
+
+  rv = InitiateRequest(info);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

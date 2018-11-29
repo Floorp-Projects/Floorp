@@ -557,6 +557,38 @@ LSObject::Clear(nsIPrincipal& aSubjectPrincipal,
   }
 }
 
+void
+LSObject::Open(nsIPrincipal& aSubjectPrincipal,
+               ErrorResult& aError)
+{
+  AssertIsOnOwningThread();
+
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsresult rv = EnsureDatabase();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aError.Throw(rv);
+    return;
+  }
+}
+
+void
+LSObject::Close(nsIPrincipal& aSubjectPrincipal,
+                ErrorResult& aError)
+{
+  AssertIsOnOwningThread();
+
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  DropDatabase();
+}
+
 NS_IMPL_ADDREF_INHERITED(LSObject, Storage)
 NS_IMPL_RELEASE_INHERITED(LSObject, Storage)
 
