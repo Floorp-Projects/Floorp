@@ -6,10 +6,76 @@
 
 #include "ActorsChild.h"
 
+#include "LocalStorageCommon.h"
 #include "LSDatabase.h"
+#include "LSObject.h"
+#include "LSObserver.h"
 
 namespace mozilla {
 namespace dom {
+
+/*******************************************************************************
+ * LSObjectChild
+ ******************************************************************************/
+
+LSObjectChild::LSObjectChild(LSObject* aObject)
+  : mObject(aObject)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  aObject->AssertIsOnOwningThread();
+
+  MOZ_COUNT_CTOR(LSObjectChild);
+}
+
+LSObjectChild::~LSObjectChild()
+{
+  AssertIsOnOwningThread();
+
+  MOZ_COUNT_DTOR(LSObjectChild);
+}
+
+void
+LSObjectChild::SendDeleteMeInternal()
+{
+  AssertIsOnOwningThread();
+
+  if (mObject) {
+    mObject->ClearActor();
+    mObject = nullptr;
+
+    MOZ_ALWAYS_TRUE(PBackgroundLSObjectChild::SendDeleteMe());
+  }
+}
+
+void
+LSObjectChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  if (mObject) {
+    mObject->ClearActor();
+#ifdef DEBUG
+    mObject = nullptr;
+#endif
+  }
+}
+
+LSObjectChild::PBackgroundLSDatabaseChild*
+LSObjectChild::AllocPBackgroundLSDatabaseChild(const uint64_t& aDatastoreId)
+{
+  MOZ_CRASH("PBackgroundLSDatabaseChild actor should be manually constructed!");
+}
+
+bool
+LSObjectChild::DeallocPBackgroundLSDatabaseChild(
+                                             PBackgroundLSDatabaseChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
 
 /*******************************************************************************
  * LSDatabaseChild
@@ -70,6 +136,86 @@ LSDatabaseChild::RecvRequestAllowToClose()
     //       datastore right here, but asynchronously.
     //       However, we probably shouldn't do that if we are shutting down.
   }
+
+  return IPC_OK();
+}
+
+/*******************************************************************************
+ * LSObserverChild
+ ******************************************************************************/
+
+LSObserverChild::LSObserverChild(LSObserver* aObserver)
+  : mObserver(aObserver)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObserver);
+
+  MOZ_COUNT_CTOR(LSObserverChild);
+}
+
+LSObserverChild::~LSObserverChild()
+{
+  AssertIsOnOwningThread();
+
+  MOZ_COUNT_DTOR(LSObserverChild);
+}
+
+void
+LSObserverChild::SendDeleteMeInternal()
+{
+  AssertIsOnOwningThread();
+
+  if (mObserver) {
+    mObserver->ClearActor();
+    mObserver = nullptr;
+
+    MOZ_ALWAYS_TRUE(PBackgroundLSObserverChild::SendDeleteMe());
+  }
+}
+
+void
+LSObserverChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  if (mObserver) {
+    mObserver->ClearActor();
+#ifdef DEBUG
+    mObserver = nullptr;
+#endif
+  }
+}
+
+mozilla::ipc::IPCResult
+LSObserverChild::RecvObserve(const PrincipalInfo& aPrincipalInfo,
+                             const uint32_t& aPrivateBrowsingId,
+                             const nsString& aDocumentURI,
+                             const nsString& aKey,
+                             const nsString& aOldValue,
+                             const nsString& aNewValue)
+{
+  AssertIsOnOwningThread();
+
+  if (!mObserver) {
+    return IPC_OK();
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  Storage::NotifyChange(/* aStorage */ nullptr,
+                        principal,
+                        aKey,
+                        aOldValue,
+                        aNewValue,
+                        /* aStorageType */ kLocalStorageType,
+                        aDocumentURI,
+                        /* aIsPrivate */ !!aPrivateBrowsingId,
+                        /* aImmediateDispatch */ true);
 
   return IPC_OK();
 }

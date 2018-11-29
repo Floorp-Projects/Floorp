@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include PBackgroundSharedTypes;
+
+namespace mozilla {
+namespace dom {
+
+async protocol PBackgroundLSObserver
+{
+  manager PBackground;
+
+parent:
+  async DeleteMe();
+
+child:
+  async __delete__();
+
+  async Observe(PrincipalInfo principalInfo,
+                uint32_t privateBrowsingId,
+                nsString documentURI,
+                nsString key,
+                nsString oldValue,
+                nsString newValue);
+};
+
+} // namespace dom
+} // namespace mozilla

@@ -68,13 +68,17 @@ public:
 
   nsresult
   SetItem(const nsAString& aKey,
-          const nsAString& aValue);
+          const nsAString& aValue,
+          bool* aChanged,
+          nsAString& aOldValue);
 
   nsresult
-  RemoveItem(const nsAString& aKey);
+  RemoveItem(const nsAString& aKey,
+             bool* aChanged,
+             nsAString& aOldValue);
 
   nsresult
-  Clear();
+  Clear(bool* aChanged);
 
 private:
   ~LSDatabase();

@@ -12,10 +12,16 @@ struct LSRequestPrepareDatastoreResponse
   uint64_t datastoreId;
 };
 
+struct LSRequestPrepareObserverResponse
+{
+  uint64_t observerId;
+};
+
 union LSRequestResponse
 {
   nsresult;
   LSRequestPrepareDatastoreResponse;
+  LSRequestPrepareObserverResponse;
 };
 
 protocol PBackgroundLSRequest
