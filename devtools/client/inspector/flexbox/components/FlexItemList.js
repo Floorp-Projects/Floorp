@@ -36,7 +36,10 @@ class FlexItemList extends PureComponent {
     return (
       dom.div(
         { className: "flex-item-list" },
-        dom.div({ className: "flex-item-list-header" }, getStr("flexbox.flexItems")),
+        dom.div({ className: "flex-item-list-header" },
+          !flexItems.length ?
+            getStr("flexbox.noFlexItems") :
+            getStr("flexbox.flexItems")),
         flexItems.map((flexItem, index) => FlexItem({
           key: flexItem.actorID,
           flexItem,
