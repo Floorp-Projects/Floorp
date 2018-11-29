@@ -1741,7 +1741,7 @@ private:
     eExpectingScheme,
     eExpectingEmptyToken1,
     eExpectingEmptyToken2,
-    eExpectingEmptyToken3,
+    eExpectingEmptyTokenOrUniversalFileOrigin,
     eExpectingHost,
     eExpectingPort,
     eExpectingEmptyTokenOrDriveLetterOrPathnameComponent,
@@ -1764,6 +1764,7 @@ private:
   SchemeType mSchemeType;
   State mState;
   bool mInIsolatedMozBrowser;
+  bool mUniversalFileOrigin;
   bool mMaybeDriveLetter;
   bool mError;
 
@@ -1778,6 +1779,7 @@ public:
     , mSchemeType(eNone)
     , mState(eExpectingAppIdOrScheme)
     , mInIsolatedMozBrowser(false)
+    , mUniversalFileOrigin(false)
     , mMaybeDriveLetter(false)
     , mError(false)
   { }
@@ -8491,11 +8493,17 @@ OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs) -> ResultType
   if (mSchemeType == eFile) {
     spec.AppendLiteral("://");
 
-    for (uint32_t count = mPathnameComponents.Length(), index = 0;
-         index < count;
-         index++) {
-      spec.Append('/');
-      spec.Append(mPathnameComponents[index]);
+    if (mUniversalFileOrigin) {
+      MOZ_ASSERT(mPathnameComponents.Length() == 1);
+
+      spec.Append(mPathnameComponents[0]);
+    } else {
+      for (uint32_t count = mPathnameComponents.Length(), index = 0;
+           index < count;
+           index++) {
+        spec.Append('/');
+        spec.Append(mPathnameComponents[index]);
+      }
     }
 
     aSpec = spec;
@@ -8663,7 +8671,7 @@ OriginParser::HandleToken(const nsDependentCSubstring& aToken)
       }
 
       if (mSchemeType == eFile) {
-        mState = eExpectingEmptyToken3;
+        mState = eExpectingEmptyTokenOrUniversalFileOrigin;
       } else {
         mState = eExpectingHost;
       }
@@ -8671,20 +8679,31 @@ OriginParser::HandleToken(const nsDependentCSubstring& aToken)
       return;
     }
 
-    case eExpectingEmptyToken3: {
+    case eExpectingEmptyTokenOrUniversalFileOrigin: {
       MOZ_ASSERT(mSchemeType == eFile);
 
-      if (!aToken.IsEmpty()) {
-        QM_WARNING("Expected the third empty token!");
+      if (aToken.IsEmpty()) {
+        mState = mTokenizer.hasMoreTokens()
+                   ? eExpectingEmptyTokenOrDriveLetterOrPathnameComponent
+                   : eComplete;
 
-        mError = true;
         return;
       }
 
-      mState = mTokenizer.hasMoreTokens()
-                 ? eExpectingEmptyTokenOrDriveLetterOrPathnameComponent
-                 : eComplete;
+      if (aToken.EqualsLiteral("UNIVERSAL_FILE_URI_ORIGIN")) {
+        mUniversalFileOrigin = true;
 
+        mPathnameComponents.AppendElement(aToken);
+
+        mState = eComplete;
+
+        return;
+      }
+
+      QM_WARNING("Expected the third empty token or "
+                 "UNIVERSAL_FILE_URI_ORIGIN!");
+
+      mError = true;
       return;
     }
 
