@@ -11,7 +11,7 @@
 
 use std::ffi::{OsStr, OsString};
 
-use runner::platform;
+use crate::runner::platform;
 
 fn parse_arg_name<T>(arg: T) -> Option<String>
 where
