@@ -33,7 +33,16 @@ using namespace ipc;
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(LocalStorage, Storage, mManager);
+NS_IMPL_CYCLE_COLLECTION_CLASS(LocalStorage)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(LocalStorage, Storage)
+NS_IMPL_CYCLE_COLLECTION_UNLINK(mManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(LocalStorage, Storage)
+  CycleCollectionNoteChild(cb,
+                           NS_ISUPPORTS_CAST(nsIDOMStorageManager*,
+                                             tmp->mManager.get()),
+                           "mManager");
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LocalStorage)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)

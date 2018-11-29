@@ -8,6 +8,7 @@
 #define mozilla_dom_StorageManager_h
 
 #include "nsIDOMStorageManager.h"
+#include "nsILocalStorageManager.h"
 #include "StorageObserver.h"
 
 #include "LocalStorage.h"
@@ -26,10 +27,12 @@ class OriginAttributesPattern;
 namespace dom {
 
 class LocalStorageManager final : public nsIDOMStorageManager
+                                , public nsILocalStorageManager
                                 , public StorageObserverSink
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMSTORAGEMANAGER
+  NS_DECL_NSILOCALSTORAGEMANAGER
 
 public:
   LocalStorageManager();

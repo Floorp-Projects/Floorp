@@ -57,7 +57,8 @@ LocalStorageManager::GetQuota()
 }
 
 NS_IMPL_ISUPPORTS(LocalStorageManager,
-                  nsIDOMStorageManager)
+                  nsIDOMStorageManager,
+                  nsILocalStorageManager)
 
 LocalStorageManager::LocalStorageManager()
   : mCaches(8)
@@ -367,6 +368,16 @@ LocalStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
   }
 
   *aRetval = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LocalStorageManager::GetNextGenLocalStorageEnabled(bool* aResult)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aResult);
+
+  *aResult = NextGenLocalStorageEnabled();
   return NS_OK;
 }
 
