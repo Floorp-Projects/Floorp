@@ -8381,6 +8381,7 @@ WasmLoop(JSContext* cx, unsigned argc, Value* vp)
 #endif
 }
 
+// clang-format off
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("clone", Clone, 1, 0,
 "clone(fun[, scope])",
@@ -9020,7 +9021,9 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 
     JS_FS_HELP_END
 };
+// clang-format on
 
+// clang-format off
 static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
 "getSelfHostedValue()",
@@ -9104,7 +9107,9 @@ TestAssertRecoveredOnBailout,
 
     JS_FS_HELP_END
 };
+// clang-format on
 
+// clang-format off
 static const JSFunctionSpecWithHelp performance_functions[] = {
     JS_FN_HELP("now", Now, 0, 0,
 "now()",
@@ -9112,7 +9117,9 @@ static const JSFunctionSpecWithHelp performance_functions[] = {
 "  This function is an alias of the dateNow() function."),
     JS_FS_HELP_END
 };
+// clang-format on
 
+// clang-format off
 static const JSFunctionSpecWithHelp console_functions[] = {
     JS_FN_HELP("log", Print, 0, 0,
 "log([exp ...])",
@@ -9120,6 +9127,7 @@ static const JSFunctionSpecWithHelp console_functions[] = {
 "  This function is an alias of the print() function."),
     JS_FS_HELP_END
 };
+// clang-format on
 
 bool
 DefineConsole(JSContext* cx, HandleObject global)

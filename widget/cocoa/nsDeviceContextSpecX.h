@@ -8,6 +8,8 @@
 
 #include "nsIDeviceContextSpec.h"
 
+#include "nsCOMPtr.h"
+
 #include <ApplicationServices/ApplicationServices.h>
 
 class nsDeviceContextSpecX : public nsIDeviceContextSpec

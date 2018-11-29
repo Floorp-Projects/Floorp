@@ -13,9 +13,13 @@
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 
+using mozilla::CSSIntRegion;
 using mozilla::ipc::Shmem;
 using mozilla::dom::TabChild;
 using mozilla::dom::OptionalShmem;
+using mozilla::gfx::DataSourceSurface;
+using mozilla::gfx::SourceSurface;
+using mozilla::gfx::SurfaceFormat;
 using mozilla::LayoutDeviceIntRect;
 using mozilla::Maybe;
 
@@ -66,12 +70,11 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
   LayoutDeviceIntRect dragRect;
   if (mHasImage || mSelection) {
     nsPresContext* pc;
-    RefPtr<mozilla::gfx::SourceSurface> surface;
+    RefPtr<SourceSurface> surface;
     DrawDrag(mSourceNode, aRegion, mScreenPosition, &dragRect, &surface, &pc);
 
     if (surface) {
-      RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
-        surface->GetDataSurface();
+      RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
       if (dataSurface) {
         size_t length;
         int32_t stride;
@@ -101,9 +104,9 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
     }
   }
 
-  mozilla::Unused << child->SendInvokeDragSession(dataTransfers, aActionType,
-                                                  mozilla::void_t(), 0, static_cast<gfx::SurfaceFormat>(0), dragRect,
-                                                  principalURISpec);
+  mozilla::Unused << child->SendInvokeDragSession(
+      dataTransfers, aActionType, mozilla::void_t(), 0,
+      static_cast<SurfaceFormat>(0), dragRect, principalURISpec);
   StartDragSession();
   return NS_OK;
 }
