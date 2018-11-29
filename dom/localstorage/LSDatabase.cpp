@@ -19,8 +19,10 @@ StaticAutoPtr<LSDatabaseHashtable> gLSDatabases;
 
 LSDatabase::LSDatabase(const nsACString& aOrigin)
   : mActor(nullptr)
+  , mSnapshot(nullptr)
   , mOrigin(aOrigin)
   , mAllowedToClose(false)
+  , mRequestedAllowToClose(false)
 {
   AssertIsOnOwningThread();
 
@@ -35,6 +37,7 @@ LSDatabase::LSDatabase(const nsACString& aOrigin)
 LSDatabase::~LSDatabase()
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(!mSnapshot);
 
   if (!mAllowedToClose) {
     AllowToClose();
@@ -64,10 +67,238 @@ LSDatabase::SetActor(LSDatabaseChild* aActor)
 }
 
 void
+LSDatabase::RequestAllowToClose()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!mRequestedAllowToClose);
+
+  mRequestedAllowToClose = true;
+
+  if (!mSnapshot) {
+    AllowToClose();
+  }
+}
+
+void
+LSDatabase::NoteFinishedSnapshot(LSSnapshot* aSnapshot)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aSnapshot == mSnapshot);
+
+  mSnapshot = nullptr;
+
+  if (mRequestedAllowToClose) {
+    AllowToClose();
+  }
+}
+
+nsresult
+LSDatabase::GetLength(LSObject* aObject,
+                      uint32_t* aResult)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mSnapshot->GetLength(aResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LSDatabase::GetKey(LSObject* aObject,
+                   uint32_t aIndex,
+                   nsAString& aResult)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mSnapshot->GetKey(aIndex, aResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LSDatabase::GetItem(LSObject* aObject,
+                    const nsAString& aKey,
+                    nsAString& aResult)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mSnapshot->GetItem(aKey, aResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LSDatabase::GetKeys(LSObject* aObject,
+                    nsTArray<nsString>& aKeys)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mSnapshot->GetKeys(aKeys);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LSDatabase::SetItem(LSObject* aObject,
+                    const nsAString& aKey,
+                    const nsAString& aValue,
+                    LSNotifyInfo& aNotifyInfo)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mSnapshot->SetItem(aKey, aValue, aNotifyInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LSDatabase::RemoveItem(LSObject* aObject,
+                       const nsAString& aKey,
+                       LSNotifyInfo& aNotifyInfo)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mSnapshot->RemoveItem(aKey, aNotifyInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LSDatabase::Clear(LSObject* aObject,
+                  LSNotifyInfo& aNotifyInfo)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  nsresult rv = EnsureSnapshot(aObject, /* aRequestedBySetItem */ false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mSnapshot->Clear(aNotifyInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LSDatabase::EnsureSnapshot(LSObject* aObject,
+                           bool aRequestedBySetItem)
+{
+  MOZ_ASSERT(aObject);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  if (mSnapshot) {
+    return NS_OK;
+  }
+
+  RefPtr<LSSnapshot> snapshot = new LSSnapshot(this);
+
+  LSSnapshotChild* actor = new LSSnapshotChild(snapshot);
+
+  int64_t requestedSize = aRequestedBySetItem ? 4096 : 0;
+
+  LSSnapshotInitInfo initInfo;
+  bool ok =
+    mActor->SendPBackgroundLSSnapshotConstructor(actor,
+                                                 aObject->DocumentURI(),
+                                                 requestedSize,
+                                                 &initInfo);
+  if (NS_WARN_IF(!ok)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  snapshot->SetActor(actor);
+
+  // This add refs snapshot.
+  nsresult rv = snapshot->Init(initInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // This is cleared in LSSnapshot::Run() before the snapshot is destroyed.
+  mSnapshot = snapshot;
+
+  return NS_OK;
+}
+
+void
 LSDatabase::AllowToClose()
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mAllowedToClose);
+  MOZ_ASSERT(!mSnapshot);
 
   mAllowedToClose = true;
 
@@ -82,131 +313,6 @@ LSDatabase::AllowToClose()
   if (!gLSDatabases->Count()) {
     gLSDatabases = nullptr;
   }
-}
-
-nsresult
-LSDatabase::GetLength(uint32_t* aResult)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
-
-  uint32_t result;
-  if (NS_WARN_IF(!mActor->SendGetLength(&result))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aResult = result;
-  return NS_OK;
-}
-
-nsresult
-LSDatabase::GetKey(uint32_t aIndex,
-                   nsAString& aResult)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
-
-  nsString result;
-  if (NS_WARN_IF(!mActor->SendGetKey(aIndex, &result))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aResult = result;
-  return NS_OK;
-}
-
-nsresult
-LSDatabase::GetItem(const nsAString& aKey,
-                    nsAString& aResult)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
-
-  nsString result;
-  if (NS_WARN_IF(!mActor->SendGetItem(nsString(aKey), &result))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aResult = result;
-  return NS_OK;
-}
-
-nsresult
-LSDatabase::GetKeys(nsTArray<nsString>& aKeys)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
-
-  nsTArray<nsString> result;
-  if (NS_WARN_IF(!mActor->SendGetKeys(&result))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aKeys.SwapElements(result);
-  return NS_OK;
-}
-
-nsresult
-LSDatabase::SetItem(const nsAString& aDocumentURI,
-                    const nsAString& aKey,
-                    const nsAString& aValue,
-                    LSWriteOpResponse& aResponse)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
-
-  LSWriteOpResponse response;
-  if (NS_WARN_IF(!mActor->SendSetItem(nsString(aDocumentURI),
-                                      nsString(aKey),
-                                      nsString(aValue),
-                                      &response))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aResponse = response;
-  return NS_OK;
-}
-
-nsresult
-LSDatabase::RemoveItem(const nsAString& aDocumentURI,
-                       const nsAString& aKey,
-                       LSWriteOpResponse& aResponse)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
-
-  LSWriteOpResponse response;
-  if (NS_WARN_IF(!mActor->SendRemoveItem(nsString(aDocumentURI),
-                                         nsString(aKey),
-                                         &response))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aResponse = response;
-  return NS_OK;
-}
-
-nsresult
-LSDatabase::Clear(const nsAString& aDocumentURI,
-                  LSWriteOpResponse& aResponse)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
-
-  LSWriteOpResponse response;
-  if (NS_WARN_IF(!mActor->SendClear(nsString(aDocumentURI), &response))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aResponse = response;
-  return NS_OK;
 }
 
 } // namespace dom

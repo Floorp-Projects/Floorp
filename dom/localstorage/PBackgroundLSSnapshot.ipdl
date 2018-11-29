@@ -1,0 +1,57 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PBackgroundLSDatabase;
+
+namespace mozilla {
+namespace dom {
+
+struct LSSetItemInfo
+{
+  nsString key;
+  nsString oldValue;
+  nsString value;
+};
+
+struct LSRemoveItemInfo
+{
+  nsString key;
+  nsString oldValue;
+};
+
+struct LSClearInfo
+{
+};
+
+union LSWriteInfo
+{
+  LSSetItemInfo;
+  LSRemoveItemInfo;
+  LSClearInfo;
+};
+
+struct LSSnapshotFinishInfo
+{
+  LSWriteInfo[] writeInfos;
+};
+
+sync protocol PBackgroundLSSnapshot
+{
+  manager PBackgroundLSDatabase;
+
+parent:
+  async DeleteMe();
+
+  async Finish(LSSnapshotFinishInfo finishInfo);
+
+  sync IncreasePeakUsage(int64_t requestedSize, int64_t minSize)
+    returns (int64_t size);
+
+child:
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

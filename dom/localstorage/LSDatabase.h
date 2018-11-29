@@ -11,15 +11,18 @@ namespace mozilla {
 namespace dom {
 
 class LSDatabaseChild;
-class LSWriteOpResponse;
+class LSSnapshot;
 
 class LSDatabase final
 {
   LSDatabaseChild* mActor;
 
+  LSSnapshot* mSnapshot;
+
   const nsCString mOrigin;
 
   bool mAllowedToClose;
+  bool mRequestedAllowToClose;
 
 public:
   explicit LSDatabase(const nsACString& aOrigin);
@@ -47,9 +50,6 @@ public:
     mActor = nullptr;
   }
 
-  void
-  AllowToClose();
-
   bool
   IsAllowedToClose() const
   {
@@ -58,37 +58,54 @@ public:
     return mAllowedToClose;
   }
 
-  nsresult
-  GetLength(uint32_t* aResult);
+  void
+  RequestAllowToClose();
+
+  void
+  NoteFinishedSnapshot(LSSnapshot* aSnapshot);
 
   nsresult
-  GetKey(uint32_t aIndex,
+  GetLength(LSObject* aObject,
+            uint32_t* aResult);
+
+  nsresult
+  GetKey(LSObject* aObject,
+         uint32_t aIndex,
          nsAString& aResult);
 
   nsresult
-  GetItem(const nsAString& aKey,
+  GetItem(LSObject* aObject,
+          const nsAString& aKey,
           nsAString& aResult);
 
   nsresult
-  GetKeys(nsTArray<nsString>& aKeys);
+  GetKeys(LSObject* aObject,
+          nsTArray<nsString>& aKeys);
 
   nsresult
-  SetItem(const nsAString& aDocumentURI,
+  SetItem(LSObject* aObject,
           const nsAString& aKey,
           const nsAString& aValue,
-          LSWriteOpResponse& aResponse);
+          LSNotifyInfo& aNotifyInfo);
 
   nsresult
-  RemoveItem(const nsAString& aDocumentURI,
+  RemoveItem(LSObject* aObject,
              const nsAString& aKey,
-             LSWriteOpResponse& aResponse);
+             LSNotifyInfo& aNotifyInfo);
 
   nsresult
-  Clear(const nsAString& aDocumentURI,
-        LSWriteOpResponse& aResponse);
+  Clear(LSObject* aObject,
+        LSNotifyInfo& aNotifyInfo);
 
 private:
   ~LSDatabase();
+
+  nsresult
+  EnsureSnapshot(LSObject* aObject,
+                 bool aRequestedBySetItem);
+
+  void
+  AllowToClose();
 };
 
 } // namespace dom
