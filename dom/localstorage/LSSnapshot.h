@@ -120,6 +120,11 @@ private:
   ~LSSnapshot();
 
   nsresult
+  GetItemInternal(const nsAString& aKey,
+                  const Optional<nsString>& aValue,
+                  nsAString& aResult);
+
+  nsresult
   EnsureAllKeys();
 
   nsresult
