@@ -136,7 +136,10 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
     fn accept_insecure_certs(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
         let version_str = self.version();
         if let Some(x) = version_str {
-            Ok(try!(Version::from_str(&*x).or_else(|x| Err(convert_version_error(x)))).major >= 52)
+            Ok(Version::from_str(&*x)
+                .or_else(|x| Err(convert_version_error(x)))?
+                .major
+                >= 52)
         } else {
             Ok(false)
         }
@@ -151,7 +154,8 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         version: &str,
         comparison: &str,
     ) -> WebDriverResult<bool> {
-        try!(Version::from_str(version).or_else(|x| Err(convert_version_error(x))))
+        Version::from_str(version)
+            .or_else(|x| Err(convert_version_error(x)))?
             .matches(comparison)
             .or_else(|x| Err(convert_version_error(x)))
     }
@@ -320,16 +324,16 @@ impl FirefoxOptions {
         rv.binary = binary_path;
 
         if let Some(json) = matched.remove("moz:firefoxOptions") {
-            let options = try!(json.as_object().ok_or(WebDriverError::new(
+            let options = json.as_object().ok_or(WebDriverError::new(
                 ErrorStatus::InvalidArgument,
                 "'moz:firefoxOptions' \
                  capability is not an object"
-            )));
+            ))?;
 
-            rv.profile = try!(FirefoxOptions::load_profile(&options));
-            rv.args = try!(FirefoxOptions::load_args(&options));
-            rv.log = try!(FirefoxOptions::load_log(&options));
-            rv.prefs = try!(FirefoxOptions::load_prefs(&options));
+            rv.profile = FirefoxOptions::load_profile(&options)?;
+            rv.args = FirefoxOptions::load_args(&options)?;
+            rv.log = FirefoxOptions::load_log(&options)?;
+            rv.prefs = FirefoxOptions::load_prefs(&options)?;
         }
 
         Ok(rv)
@@ -337,22 +341,22 @@ impl FirefoxOptions {
 
     fn load_profile(options: &Capabilities) -> WebDriverResult<Option<Profile>> {
         if let Some(profile_json) = options.get("profile") {
-            let profile_base64 = try!(profile_json.as_str().ok_or(WebDriverError::new(
+            let profile_base64 = profile_json.as_str().ok_or(WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Profile is not a string"
-            )));
-            let profile_zip = &*try!(base64::decode(profile_base64));
+            ))?;
+            let profile_zip = &*base64::decode(profile_base64)?;
 
             // Create an emtpy profile directory
-            let profile = try!(Profile::new(None));
-            try!(unzip_buffer(
+            let profile = Profile::new(None)?;
+            unzip_buffer(
                 profile_zip,
                 profile
                     .temp_dir
                     .as_ref()
                     .expect("Profile doesn't have a path")
                     .path()
-            ));
+            )?;
 
             Ok(Some(profile))
         } else {
@@ -362,22 +366,20 @@ impl FirefoxOptions {
 
     fn load_args(options: &Capabilities) -> WebDriverResult<Option<Vec<String>>> {
         if let Some(args_json) = options.get("args") {
-            let args_array = try!(args_json.as_array().ok_or(WebDriverError::new(
+            let args_array = args_json.as_array().ok_or(WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Arguments were not an \
                  array"
-            )));
-            let args = try!(
-                args_array
-                    .iter()
-                    .map(|x| x.as_str().map(|x| x.to_owned()))
-                    .collect::<Option<Vec<String>>>()
-                    .ok_or(WebDriverError::new(
-                        ErrorStatus::UnknownError,
-                        "Arguments entries were not all \
-                         strings"
-                    ))
-            );
+            ))?;
+            let args = args_array
+                .iter()
+                .map(|x| x.as_str().map(|x| x.to_owned()))
+                .collect::<Option<Vec<String>>>()
+                .ok_or(WebDriverError::new(
+                    ErrorStatus::UnknownError,
+                    "Arguments entries were not all \
+                     strings"
+                ))?;
             Ok(Some(args))
         } else {
             Ok(None)
@@ -413,13 +415,13 @@ impl FirefoxOptions {
 
     pub fn load_prefs(options: &Capabilities) -> WebDriverResult<Vec<(String, Pref)>> {
         if let Some(prefs_data) = options.get("prefs") {
-            let prefs = try!(prefs_data.as_object().ok_or(WebDriverError::new(
+            let prefs = prefs_data.as_object().ok_or(WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Prefs were not an object"
-            )));
+            ))?;
             let mut rv = Vec::with_capacity(prefs.len());
             for (key, value) in prefs.iter() {
-                rv.push((key.clone(), try!(pref_from_json(value))));
+                rv.push((key.clone(), pref_from_json(value)?));
             }
             Ok(rv)
         } else {
@@ -442,16 +444,16 @@ fn pref_from_json(value: &Value) -> WebDriverResult<Pref> {
 
 fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
     let reader = Cursor::new(buf);
-    let mut zip = try!(
-        zip::ZipArchive::new(reader)
-            .map_err(|_| WebDriverError::new(ErrorStatus::UnknownError, "Failed to unzip profile"))
-    );
+    let mut zip = zip::ZipArchive::new(reader)
+        .map_err(|_| WebDriverError::new(ErrorStatus::UnknownError, "Failed to unzip profile"))?;
 
     for i in 0..zip.len() {
-        let mut file = try!(zip.by_index(i).map_err(|_| WebDriverError::new(
-            ErrorStatus::UnknownError,
-            "Processing profile zip file failed"
-        )));
+        let mut file = zip.by_index(i).map_err(|_| {
+            WebDriverError::new(
+                ErrorStatus::UnknownError,
+                "Processing profile zip file failed",
+            )
+        })?;
         let unzip_path = {
             let name = file.name();
             let is_dir = name.ends_with("/");
@@ -467,7 +469,7 @@ fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
                 if let Some(dir) = create_dir {
                     if !dir.exists() {
                         debug!("Creating profile directory tree {}", dir.to_string_lossy());
-                        try!(fs::create_dir_all(dir));
+                        fs::create_dir_all(dir)?;
                     }
                 }
             }
@@ -481,10 +483,10 @@ fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
 
         if let Some(unzip_path) = unzip_path {
             debug!("Extracting profile to {}", unzip_path.to_string_lossy());
-            let dest = try!(fs::File::create(unzip_path));
+            let dest = fs::File::create(unzip_path)?;
             if file.size() > 0 {
                 let mut writer = BufWriter::new(dest);
-                try!(io::copy(&mut file, &mut writer));
+                io::copy(&mut file, &mut writer)?;
             }
         }
     }
