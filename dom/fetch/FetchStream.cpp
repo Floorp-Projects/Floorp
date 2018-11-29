@@ -96,16 +96,6 @@ FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
     stream->mWorkerRef = workerRef.forget();
   }
 
-  if (!JS::HasReadableStreamCallbacks(aCx)) {
-    JS::SetReadableStreamCallbacks(aCx,
-                                   &FetchStream::RequestDataCallback,
-                                   &FetchStream::WriteIntoReadRequestCallback,
-                                   &FetchStream::CancelCallback,
-                                   &FetchStream::ClosedCallback,
-                                   &FetchStream::ErroredCallback,
-                                   &FetchStream::FinalizeCallback);
-  }
-
   aRv.MightThrowJSException();
   JS::Rooted<JSObject*> body(aCx,
     JS::NewReadableExternalSourceStreamObject(aCx, stream));
@@ -122,13 +112,11 @@ FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
   aStream.set(body);
 }
 
-/* static */ void
-FetchStream::RequestDataCallback(JSContext* aCx,
-                                 JS::HandleObject aStream,
-                                 void* aUnderlyingSource,
-                                 size_t aDesiredSize)
+void
+FetchStream::requestData(JSContext* aCx,
+                         JS::HandleObject aStream,
+                         size_t aDesiredSize)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
 #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool disturbed;
   if (!JS::ReadableStreamIsDisturbed(aCx, aStream, &disturbed)) {
@@ -138,188 +126,160 @@ FetchStream::RequestDataCallback(JSContext* aCx,
   }
 #endif
 
-  RefPtr<FetchStream> stream = static_cast<FetchStream*>(aUnderlyingSource);
-  stream->AssertIsOnOwningThread();
+  AssertIsOnOwningThread();
 
-  MutexAutoLock lock(stream->mMutex);
+  MutexAutoLock lock(mMutex);
 
-  MOZ_DIAGNOSTIC_ASSERT(stream->mState == eInitializing ||
-                        stream->mState == eWaiting ||
-                        stream->mState == eChecking ||
-                        stream->mState == eReading);
+  MOZ_DIAGNOSTIC_ASSERT(mState == eInitializing ||
+                        mState == eWaiting ||
+                        mState == eChecking ||
+                        mState == eReading);
 
-  if (stream->mState == eReading) {
+  if (mState == eReading) {
     // We are already reading data.
     return;
   }
 
-  if (stream->mState == eChecking) {
+  if (mState == eChecking) {
     // If we are looking for more data, there is nothing else we should do:
     // let's move this checking operation in a reading.
-    MOZ_ASSERT(stream->mInputStream);
-    stream->mState = eReading;
+    MOZ_ASSERT(mInputStream);
+    mState = eReading;
     return;
   }
 
-  if (stream->mState == eInitializing) {
+  if (mState == eInitializing) {
     // The stream has been used for the first time.
-    stream->mStreamHolder->MarkAsRead();
+    mStreamHolder->MarkAsRead();
   }
 
-  stream->mState = eReading;
+  mState = eReading;
 
-  if (!stream->mInputStream) {
+  if (!mInputStream) {
     // This is the first use of the stream. Let's convert the
     // mOriginalInputStream into an nsIAsyncInputStream.
-    MOZ_ASSERT(stream->mOriginalInputStream);
+    MOZ_ASSERT(mOriginalInputStream);
 
     nsCOMPtr<nsIAsyncInputStream> asyncStream;
     nsresult rv =
-      NS_MakeAsyncNonBlockingInputStream(stream->mOriginalInputStream.forget(),
+      NS_MakeAsyncNonBlockingInputStream(mOriginalInputStream.forget(),
                                          getter_AddRefs(asyncStream));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      stream->ErrorPropagation(aCx, lock, aStream, rv);
+      ErrorPropagation(aCx, lock, aStream, rv);
       return;
     }
 
-    stream->mInputStream = asyncStream;
-    stream->mOriginalInputStream = nullptr;
+    mInputStream = asyncStream;
+    mOriginalInputStream = nullptr;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(stream->mInputStream);
-  MOZ_DIAGNOSTIC_ASSERT(!stream->mOriginalInputStream);
+  MOZ_DIAGNOSTIC_ASSERT(mInputStream);
+  MOZ_DIAGNOSTIC_ASSERT(!mOriginalInputStream);
 
-  nsresult rv =
-    stream->mInputStream->AsyncWait(stream, 0, 0,
-                                    stream->mOwningEventTarget);
+  nsresult rv = mInputStream->AsyncWait(this, 0, 0, mOwningEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    stream->ErrorPropagation(aCx, lock, aStream, rv);
+    ErrorPropagation(aCx, lock, aStream, rv);
     return;
   }
 
   // All good.
 }
 
-/* static */ void
-FetchStream::WriteIntoReadRequestCallback(JSContext* aCx,
-                                          JS::HandleObject aStream,
-                                          void* aUnderlyingSource,
-                                          void* aBuffer, size_t aLength,
-                                          size_t* aByteWritten)
+void
+FetchStream::writeIntoReadRequestBuffer(JSContext* aCx,
+                                        JS::HandleObject aStream,
+                                        void* aBuffer, size_t aLength,
+                                        size_t* aByteWritten)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
   MOZ_DIAGNOSTIC_ASSERT(aBuffer);
   MOZ_DIAGNOSTIC_ASSERT(aByteWritten);
 
-  RefPtr<FetchStream> stream = static_cast<FetchStream*>(aUnderlyingSource);
-  stream->AssertIsOnOwningThread();
+  AssertIsOnOwningThread();
 
-  MutexAutoLock lock(stream->mMutex);
+  MutexAutoLock lock(mMutex);
 
-  MOZ_DIAGNOSTIC_ASSERT(stream->mInputStream);
-  MOZ_DIAGNOSTIC_ASSERT(stream->mState == eWriting);
-  stream->mState = eChecking;
+  MOZ_DIAGNOSTIC_ASSERT(mInputStream);
+  MOZ_DIAGNOSTIC_ASSERT(mState == eWriting);
+  mState = eChecking;
 
   uint32_t written;
   nsresult rv =
-    stream->mInputStream->Read(static_cast<char*>(aBuffer), aLength, &written);
+    mInputStream->Read(static_cast<char*>(aBuffer), aLength, &written);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    stream->ErrorPropagation(aCx, lock, aStream, rv);
+    ErrorPropagation(aCx, lock, aStream, rv);
     return;
   }
 
   *aByteWritten = written;
 
   if (written == 0) {
-    stream->CloseAndReleaseObjects(aCx, lock, aStream);
+    CloseAndReleaseObjects(aCx, lock, aStream);
     return;
   }
 
-  rv = stream->mInputStream->AsyncWait(stream, 0, 0,
-                                       stream->mOwningEventTarget);
+  rv = mInputStream->AsyncWait(this, 0, 0, mOwningEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    stream->ErrorPropagation(aCx, lock, aStream, rv);
+    ErrorPropagation(aCx, lock, aStream, rv);
     return;
   }
 
   // All good.
 }
 
-/* static */ JS::Value
-FetchStream::CancelCallback(JSContext* aCx, JS::HandleObject aStream,
-                            void* aUnderlyingSource, JS::HandleValue aReason)
+JS::Value
+FetchStream::cancel(JSContext* aCx, JS::HandleObject aStream, JS::HandleValue aReason)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
+  AssertIsOnOwningThread();
 
-  // This is safe because we created an extra reference in FetchStream::Create()
-  // that won't be released until FetchStream::FinalizeCallback() is called.
-  // We are guaranteed that won't happen until the js ReadableStream object
-  // is finalized.
-  FetchStream* stream = static_cast<FetchStream*>(aUnderlyingSource);
-  stream->AssertIsOnOwningThread();
-
-  if (stream->mState == eInitializing) {
+  if (mState == eInitializing) {
     // The stream has been used for the first time.
-    stream->mStreamHolder->MarkAsRead();
+    mStreamHolder->MarkAsRead();
   }
 
-  if (stream->mInputStream) {
-    stream->mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
+  if (mInputStream) {
+    mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
   }
 
   // It could be that we don't have mInputStream yet, but we still have the
   // original stream. We need to close that too.
-  if (stream->mOriginalInputStream) {
-    MOZ_ASSERT(!stream->mInputStream);
-    stream->mOriginalInputStream->Close();
+  if (mOriginalInputStream) {
+    MOZ_ASSERT(!mInputStream);
+    mOriginalInputStream->Close();
   }
 
-  stream->ReleaseObjects();
+  ReleaseObjects();
   return JS::UndefinedValue();
 }
 
-/* static */ void
-FetchStream::ClosedCallback(JSContext* aCx, JS::HandleObject aStream,
-                            void* aUnderlyingSource)
+void
+FetchStream::onClosed(JSContext* aCx, JS::HandleObject aStream)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
-}
-
-/* static */ void
-FetchStream::ErroredCallback(JSContext* aCx, JS::HandleObject aStream,
-                             void* aUnderlyingSource, JS::HandleValue aReason)
-{
-  MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
-
-  // This is safe because we created an extra reference in FetchStream::Create()
-  // that won't be released until FetchStream::FinalizeCallback() is called.
-  // We are guaranteed that won't happen until the js ReadableStream object
-  // is finalized.
-  FetchStream* stream = static_cast<FetchStream*>(aUnderlyingSource);
-  stream->AssertIsOnOwningThread();
-
-  if (stream->mState == eInitializing) {
-    // The stream has been used for the first time.
-    stream->mStreamHolder->MarkAsRead();
-  }
-
-  if (stream->mInputStream) {
-    stream->mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
-  }
-
-  stream->ReleaseObjects();
 }
 
 void
-FetchStream::FinalizeCallback(void* aUnderlyingSource)
+FetchStream::onErrored(JSContext* aCx, JS::HandleObject aStream, JS::HandleValue aReason)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
+  AssertIsOnOwningThread();
 
+  if (mState == eInitializing) {
+    // The stream has been used for the first time.
+    mStreamHolder->MarkAsRead();
+  }
+
+  if (mInputStream) {
+    mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
+  }
+
+  ReleaseObjects();
+}
+
+void
+FetchStream::finalize()
+{
   // This can be called in any thread.
 
   // This takes ownership of the ref created in FetchStream::Create().
-  RefPtr<FetchStream> stream =
-    dont_AddRef(static_cast<FetchStream*>(aUnderlyingSource));
+  RefPtr<FetchStream> stream = dont_AddRef(this);
 
   stream->ReleaseObjects();
 }
@@ -433,7 +393,7 @@ FetchStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
 }
 
 /* static */ nsresult
-FetchStream::RetrieveInputStream(void* aUnderlyingReadableStreamSource,
+FetchStream::RetrieveInputStream(JS::ReadableStreamUnderlyingSource* aUnderlyingReadableStreamSource,
                                  nsIInputStream** aInputStream)
 {
   MOZ_ASSERT(aUnderlyingReadableStreamSource);

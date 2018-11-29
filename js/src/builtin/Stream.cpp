@@ -489,10 +489,11 @@ SetUpReadableStreamDefaultController(JSContext* cx,
 
 static MOZ_MUST_USE ReadableByteStreamController*
 CreateExternalReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
-                                           void* underlyingSource);
+                                           JS::ReadableStreamUnderlyingSource* source);
 
 ReadableStream*
-ReadableStream::createExternalSourceStream(JSContext* cx, void* underlyingSource,
+ReadableStream::createExternalSourceStream(JSContext* cx,
+                                           JS::ReadableStreamUnderlyingSource* source,
                                            HandleObject proto /* = nullptr */)
 {
     Rooted<ReadableStream*> stream(cx, create(cx, proto));
@@ -501,7 +502,7 @@ ReadableStream::createExternalSourceStream(JSContext* cx, void* underlyingSource
     }
 
     Rooted<ReadableStreamController*> controller(cx);
-    controller = CreateExternalReadableByteStreamController(cx, stream, underlyingSource);
+    controller = CreateExternalReadableByteStreamController(cx, stream, source);
     if (!controller) {
         return nullptr;
     }
@@ -1517,14 +1518,11 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
         return false;
     }
 
-    if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource &&
-        cx->runtime()->readableStreamClosedCallback)
-    {
+    if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource) {
         // Make sure we're in the stream's compartment.
         AutoRealm ar(cx, unwrappedStream);
-        ReadableStreamController* controller = unwrappedStream->controller();
-        void* source = controller->underlyingSource().toPrivate();
-        cx->runtime()->readableStreamClosedCallback(cx, unwrappedStream, source);
+        JS::ReadableStreamUnderlyingSource* source = unwrappedStream->controller()->externalSource();
+        source->onClosed(cx, unwrappedStream);
     }
 
     return true;
@@ -1642,13 +1640,10 @@ ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
         return false;
     }
 
-    if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource &&
-        cx->runtime()->readableStreamErroredCallback)
-    {
+    if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource) {
         // Make sure we're in the stream's compartment.
         AutoRealm ar(cx, unwrappedStream);
-        ReadableStreamController* controller = unwrappedStream->controller();
-        void* source = controller->underlyingSource().toPrivate();
+        JS::ReadableStreamUnderlyingSource* source = unwrappedStream->controller()->externalSource();
 
         // Ensure that the embedding doesn't have to deal with
         // mixed-compartment arguments to the callback.
@@ -1656,8 +1651,7 @@ ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
         if (!cx->compartment()->wrap(cx, &error)) {
             return false;
         }
-
-        cx->runtime()->readableStreamErroredCallback(cx, unwrappedStream, source, error);
+        source->onErrored(cx, unwrappedStream, error);
     }
 
     return true;
@@ -2568,15 +2562,15 @@ ReadableStreamControllerCancelSteps(JSContext* cx,
         RootedValue rval(cx);
         {
             AutoRealm ar(cx, unwrappedController);
+            JS::ReadableStreamUnderlyingSource* source = unwrappedController->externalSource();
             Rooted<ReadableStream*> stream(cx, unwrappedController->stream());
-            void* source = unwrappedUnderlyingSource.toPrivate();
             RootedValue wrappedReason(cx, reason);
             if (!cx->compartment()->wrap(cx, &wrappedReason)) {
                 return nullptr;
             }
 
             cx->check(stream, wrappedReason);
-            rval = cx->runtime()->readableStreamCancelCallback(cx, stream, source, wrappedReason);
+            rval = source->cancel(cx, stream, wrappedReason);
         }
 
         if (!cx->compartment()->wrap(cx, &rval)) {
@@ -2800,10 +2794,10 @@ ReadableStreamControllerCallPullIfNeeded(JSContext* cx,
     } else if (unwrappedController->hasExternalSource()) {
         {
             AutoRealm ar(cx, unwrappedController);
+            JS::ReadableStreamUnderlyingSource* source = unwrappedController->externalSource();
             Rooted<ReadableStream*> stream(cx, unwrappedController->stream());
-            void* source = unwrappedUnderlyingSource.toPrivate();
             double desiredSize = ReadableStreamControllerGetDesiredSizeUnchecked(unwrappedController);
-            cx->runtime()->readableStreamDataRequestCallback(cx, stream, source, desiredSize);
+            source->requestData(cx, stream, desiredSize);
         }
         pullPromise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
     } else {
@@ -3320,7 +3314,7 @@ ReadableByteStreamController::constructor(JSContext* cx, unsigned argc, Value* v
 static MOZ_MUST_USE ReadableByteStreamController*
 CreateExternalReadableByteStreamController(JSContext* cx,
                                            Handle<ReadableStream*> stream,
-                                           void* underlyingSource)
+                                           JS::ReadableStreamUnderlyingSource* source)
 {
     Rooted<ReadableByteStreamController*> controller(cx,
         NewBuiltinClassInstance<ReadableByteStreamController>(cx));
@@ -3332,10 +3326,11 @@ CreateExternalReadableByteStreamController(JSContext* cx,
     controller->setStream(stream);
 
     // Step 4: Set this.[[underlyingByteSource]] to underlyingByteSource.
-    controller->setUnderlyingSource(PrivateValue(underlyingSource));
+    controller->setExternalSource(source);
 
-    // Step 5: Set this.[[pullAgain]], and this.[[pulling]] to false.
-    controller->setFlags(ReadableStreamController::Flag_ExternalSource);
+    // Step 5: Set this.[[pullAgain]] and this.[[pulling]] to false (implicit).
+    MOZ_ASSERT(!controller->pullAgain());
+    MOZ_ASSERT(!controller->pulling());
 
     // Step 6: Perform ! ReadableByteStreamControllerClearPendingPullIntos(this).
     // Omitted.
@@ -3408,8 +3403,7 @@ ReadableByteStreamControllerFinalize(FreeOp* fop, JSObject* obj)
         return;
     }
 
-    void* underlyingSource = controller.underlyingSource().toPrivate();
-    obj->runtimeFromAnyThread()->readableStreamFinalizeCallback(underlyingSource);
+    controller.externalSource()->finalize();
 }
 
 static const ClassOps ReadableByteStreamControllerClassOps = {
@@ -3465,7 +3459,7 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
         RootedObject view(cx);
 
         if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource) {
-            void* underlyingSource = unwrappedController->underlyingSource().toPrivate();
+            JS::ReadableStreamUnderlyingSource* source = unwrappedController->externalSource();
 
             view = JS_NewUint8Array(cx, queueTotalSize);
             if (!view) {
@@ -3480,9 +3474,8 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
                 bool dummy;
                 void* buffer = JS_GetArrayBufferViewData(view, &dummy, noGC);
 
-                auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
-                MOZ_ASSERT(cb);
-                cb(cx, unwrappedStream, underlyingSource, buffer, queueTotalSize, &bytesWritten);
+                source->writeIntoReadRequestBuffer(cx, unwrappedStream, buffer, queueTotalSize,
+                                                   &bytesWritten);
             }
 
             queueTotalSize = queueTotalSize - bytesWritten;
@@ -4214,45 +4207,6 @@ js::UnwrapReadableStream(JSObject* obj)
     return nullptr;
 }
 
-extern JS_PUBLIC_API void
-JS::SetReadableStreamCallbacks(JSContext* cx,
-                               JS::RequestReadableStreamDataCallback dataRequestCallback,
-                               JS::WriteIntoReadRequestBufferCallback writeIntoReadRequestCallback,
-                               JS::CancelReadableStreamCallback cancelCallback,
-                               JS::ReadableStreamClosedCallback closedCallback,
-                               JS::ReadableStreamErroredCallback erroredCallback,
-                               JS::ReadableStreamFinalizeCallback finalizeCallback)
-{
-    MOZ_ASSERT(dataRequestCallback);
-    MOZ_ASSERT(writeIntoReadRequestCallback);
-    MOZ_ASSERT(cancelCallback);
-    MOZ_ASSERT(closedCallback);
-    MOZ_ASSERT(erroredCallback);
-    MOZ_ASSERT(finalizeCallback);
-
-    JSRuntime* rt = cx->runtime();
-
-    MOZ_ASSERT(!rt->readableStreamDataRequestCallback);
-    MOZ_ASSERT(!rt->readableStreamWriteIntoReadRequestCallback);
-    MOZ_ASSERT(!rt->readableStreamCancelCallback);
-    MOZ_ASSERT(!rt->readableStreamClosedCallback);
-    MOZ_ASSERT(!rt->readableStreamErroredCallback);
-    MOZ_ASSERT(!rt->readableStreamFinalizeCallback);
-
-    rt->readableStreamDataRequestCallback = dataRequestCallback;
-    rt->readableStreamWriteIntoReadRequestCallback = writeIntoReadRequestCallback;
-    rt->readableStreamCancelCallback = cancelCallback;
-    rt->readableStreamClosedCallback = closedCallback;
-    rt->readableStreamErroredCallback = erroredCallback;
-    rt->readableStreamFinalizeCallback = finalizeCallback;
-}
-
-JS_PUBLIC_API bool
-JS::HasReadableStreamCallbacks(JSContext* cx)
-{
-    return cx->runtime()->readableStreamDataRequestCallback;
-}
-
 JS_PUBLIC_API JSObject*
 JS::NewReadableDefaultStreamObject(JSContext* cx,
                                    JS::HandleObject underlyingSource /* = nullptr */,
@@ -4280,24 +4234,16 @@ JS::NewReadableDefaultStreamObject(JSContext* cx,
 
 JS_PUBLIC_API JSObject*
 JS::NewReadableExternalSourceStreamObject(JSContext* cx,
-                                          void* underlyingSource,
+                                          JS::ReadableStreamUnderlyingSource* underlyingSource,
                                           HandleObject proto /* = nullptr */)
 {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
+    MOZ_ASSERT(underlyingSource);
     MOZ_ASSERT((uintptr_t(underlyingSource) & 1) == 0,
                "external underlying source pointers must be aligned");
     cx->check(proto);
-#ifdef DEBUG
-    JSRuntime* rt = cx->runtime();
-    MOZ_ASSERT(rt->readableStreamDataRequestCallback);
-    MOZ_ASSERT(rt->readableStreamWriteIntoReadRequestCallback);
-    MOZ_ASSERT(rt->readableStreamCancelCallback);
-    MOZ_ASSERT(rt->readableStreamClosedCallback);
-    MOZ_ASSERT(rt->readableStreamErroredCallback);
-    MOZ_ASSERT(rt->readableStreamFinalizeCallback);
-#endif // DEBUG
 
     return ReadableStream::createExternalSourceStream(cx, underlyingSource, proto);
 }
@@ -4410,7 +4356,8 @@ JS::ReadableStreamGetReader(JSContext* cx, HandleObject streamObj, ReadableStrea
 }
 
 JS_PUBLIC_API bool
-JS::ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject streamObj, void** source)
+JS::ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject streamObj,
+                                              JS::ReadableStreamUnderlyingSource** source)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
@@ -4435,7 +4382,7 @@ JS::ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject stream
 
     auto unwrappedController = &unwrappedStream->controller()->as<ReadableByteStreamController>();
     unwrappedController->setSourceLocked();
-    *source = unwrappedController->underlyingSource().toPrivate();
+    *source = unwrappedController->externalSource();
     return true;
 }
 
@@ -4533,7 +4480,7 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
             return false;
         }
 
-        void* underlyingSource = unwrappedController->underlyingSource().toPrivate();
+        JS::ReadableStreamUnderlyingSource* source = unwrappedController->externalSource();
 
         size_t bytesWritten;
         {
@@ -4542,9 +4489,8 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
             JS::AutoCheckCannotGC noGC;
             bool dummy;
             void* buffer = JS_GetArrayBufferViewData(transferredView, &dummy, noGC);
-            auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
-            MOZ_ASSERT(cb);
-            cb(cx, unwrappedStream, underlyingSource, buffer, availableData, &bytesWritten);
+            source->writeIntoReadRequestBuffer(cx, unwrappedStream, buffer, availableData,
+                                               &bytesWritten);
         }
 
         // Step iii: Perform ! ReadableStreamFulfillReadRequest(stream,

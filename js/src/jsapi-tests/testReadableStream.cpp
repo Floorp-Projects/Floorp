@@ -12,15 +12,85 @@
 
 using namespace JS;
 
-struct StubExternalUnderlyingSource {
-    void* buffer;
-};
-
 char testBufferData[] = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-StubExternalUnderlyingSource stubExternalUnderlyingSource = {
-    testBufferData
+struct StubExternalUnderlyingSource : public JS::ReadableStreamUnderlyingSource {
+    void* buffer = testBufferData;
+    bool dataRequestCBCalled = false;
+    bool writeIntoRequestBufferCBCalled = false;
+    bool cancelStreamCBCalled = false;
+    Value cancelStreamReason;
+    bool streamClosedCBCalled = false;
+    Value streamClosedReason;
+    bool streamErroredCBCalled = false;
+    Value streamErroredReason;
+    bool finalizeStreamCBCalled = false;
+    void* finalizedStreamUnderlyingSource;
+
+    static StubExternalUnderlyingSource instance;
+
+    void requestData(JSContext* cx, HandleObject stream, size_t desiredSize) override {
+        js::AssertSameCompartment(cx, stream);
+        MOZ_RELEASE_ASSERT(!dataRequestCBCalled, "Invalid test setup");
+        dataRequestCBCalled = true;
+    }
+
+    void writeIntoReadRequestBuffer(JSContext* cx, HandleObject stream,
+                                    void* buffer, size_t length, size_t* bytesWritten) override
+    {
+        js::AssertSameCompartment(cx, stream);
+        MOZ_RELEASE_ASSERT(!writeIntoRequestBufferCBCalled, "Invalid test setup");
+        writeIntoRequestBufferCBCalled = true;
+
+        MOZ_RELEASE_ASSERT(this == &StubExternalUnderlyingSource::instance);
+        MOZ_RELEASE_ASSERT(StubExternalUnderlyingSource::instance.buffer == testBufferData);
+        MOZ_RELEASE_ASSERT(length <= sizeof(testBufferData));
+        memcpy(buffer, testBufferData, length);
+        *bytesWritten = length;
+    }
+
+    Value cancel(JSContext* cx, HandleObject stream, HandleValue reason) override {
+        js::AssertSameCompartment(cx, stream);
+        js::AssertSameCompartment(cx, reason);
+        MOZ_RELEASE_ASSERT(!cancelStreamCBCalled, "Invalid test setup");
+        cancelStreamCBCalled = true;
+        cancelStreamReason = reason;
+        return reason;
+    }
+
+    void onClosed(JSContext* cx, HandleObject stream) override {
+        js::AssertSameCompartment(cx, stream);
+        MOZ_RELEASE_ASSERT(!streamClosedCBCalled, "Invalid test setup");
+        streamClosedCBCalled = true;
+    }
+
+    void onErrored(JSContext* cx, HandleObject stream, HandleValue reason) override {
+        js::AssertSameCompartment(cx, stream);
+        js::AssertSameCompartment(cx, reason);
+        MOZ_RELEASE_ASSERT(!streamErroredCBCalled, "Invalid test setup");
+        streamErroredCBCalled = true;
+        streamErroredReason = reason;
+    }
+
+    void finalize() override {
+        MOZ_RELEASE_ASSERT(!finalizeStreamCBCalled, "Invalid test setup");
+        finalizeStreamCBCalled = true;
+        finalizedStreamUnderlyingSource = this;
+    }
+
+    void reset() {
+        dataRequestCBCalled = false;
+        writeIntoRequestBufferCBCalled = false;
+        cancelStreamReason = UndefinedValue();
+        cancelStreamCBCalled = false;
+        streamClosedCBCalled = false;
+        streamErroredCBCalled = false;
+        finalizeStreamCBCalled = false;
+    }
 };
+
+StubExternalUnderlyingSource StubExternalUnderlyingSource::instance;
+
 
 static_assert(MOZ_ALIGNOF(StubExternalUnderlyingSource) > 1,
               "UnderlyingSource pointers must not have the low bit set");
@@ -31,94 +101,12 @@ NewDefaultStream(JSContext* cx, HandleObject source = nullptr, HandleFunction si
 {
     RootedObject stream(cx, NewReadableDefaultStreamObject(cx, source, size, highWaterMark,
                                                            proto));
-    MOZ_ASSERT_IF(stream, IsReadableStream(stream));
+    if (stream) {
+        MOZ_RELEASE_ASSERT(IsReadableStream(stream));
+    }
     return stream;
 }
 
-static bool dataRequestCBCalled = false;
-static void
-DataRequestCB(JSContext* cx, HandleObject stream, void* underlyingSource,
-              size_t desiredSize)
-{
-    js::AssertSameCompartment(cx, stream);
-    MOZ_ASSERT(!dataRequestCBCalled, "Invalid test setup");
-    dataRequestCBCalled = true;
-}
-
-static bool writeIntoRequestBufferCBCalled = false;
-static void
-WriteIntoRequestBufferCB(JSContext* cx, HandleObject stream, void* underlyingSource,
-                         void* buffer, size_t length, size_t* bytesWritten)
-{
-    js::AssertSameCompartment(cx, stream);
-    MOZ_ASSERT(!writeIntoRequestBufferCBCalled, "Invalid test setup");
-    writeIntoRequestBufferCBCalled = true;
-
-    MOZ_ASSERT(underlyingSource == &stubExternalUnderlyingSource);
-    MOZ_ASSERT(stubExternalUnderlyingSource.buffer == testBufferData);
-    MOZ_ASSERT(length <= sizeof(testBufferData));
-    memcpy(buffer, testBufferData, length);
-    *bytesWritten = length;
-}
-
-static bool cancelStreamCBCalled = false;
-static Value cancelStreamReason;
-static Value
-CancelStreamCB(JSContext* cx, HandleObject stream, void* underlyingSource,
-               HandleValue reason)
-{
-    js::AssertSameCompartment(cx, stream);
-    js::AssertSameCompartment(cx, reason);
-    MOZ_ASSERT(!cancelStreamCBCalled, "Invalid test setup");
-    cancelStreamCBCalled = true;
-    cancelStreamReason = reason;
-    return reason;
-}
-
-static bool streamClosedCBCalled = false;
-static Value streamClosedReason;
-static void
-StreamClosedCB(JSContext* cx, HandleObject stream, void* underlyingSource)
-{
-    js::AssertSameCompartment(cx, stream);
-    MOZ_ASSERT(!streamClosedCBCalled, "Invalid test setup");
-    streamClosedCBCalled = true;
-}
-
-static bool streamErroredCBCalled = false;
-static Value streamErroredReason;
-static void
-StreamErroredCB(JSContext* cx, HandleObject stream, void* underlyingSource,
-                HandleValue reason)
-{
-    js::AssertSameCompartment(cx, stream);
-    js::AssertSameCompartment(cx, reason);
-    MOZ_ASSERT(!streamErroredCBCalled, "Invalid test setup");
-    streamErroredCBCalled = true;
-    streamErroredReason = reason;
-}
-
-static bool finalizeStreamCBCalled = false;
-static void* finalizedStreamUnderlyingSource;
-static void
-FinalizeStreamCB(void* underlyingSource)
-{
-    MOZ_ASSERT(!finalizeStreamCBCalled, "Invalid test setup");
-    finalizeStreamCBCalled = true;
-    finalizedStreamUnderlyingSource = underlyingSource;
-}
-
-static void
-ResetCallbacks()
-{
-    dataRequestCBCalled = false;
-    writeIntoRequestBufferCBCalled = false;
-    cancelStreamReason = UndefinedValue();
-    cancelStreamCBCalled = false;
-    streamClosedCBCalled = false;
-    streamErroredCBCalled = false;
-    finalizeStreamCBCalled = false;
-}
 
 static bool
 GetIterResult(JSContext* cx, HandleObject promise, MutableHandleValue value, bool* done)
@@ -129,11 +117,11 @@ GetIterResult(JSContext* cx, HandleObject promise, MutableHandleValue value, boo
     if (!JS_HasProperty(cx, iterResult, "value", &found)) {
         return false;
     }
-    MOZ_ASSERT(found);
+    MOZ_RELEASE_ASSERT(found);
     if (!JS_HasProperty(cx, iterResult, "done", &found)) {
         return false;
     }
-    MOZ_ASSERT(found);
+    MOZ_RELEASE_ASSERT(found);
 
     RootedValue doneVal(cx);
     if (!JS_GetProperty(cx, iterResult, "value", value)) {
@@ -144,7 +132,9 @@ GetIterResult(JSContext* cx, HandleObject promise, MutableHandleValue value, boo
     }
 
     *done = doneVal.toBoolean();
-    MOZ_ASSERT_IF(*done, value.isUndefined());
+    if (*done) {
+        MOZ_RELEASE_ASSERT(value.isUndefined());
+    }
 
     return true;
 }
@@ -152,9 +142,9 @@ GetIterResult(JSContext* cx, HandleObject promise, MutableHandleValue value, boo
 static JSObject*
 GetReadChunk(JSContext* cx, HandleObject readRequest)
 {
-    MOZ_ASSERT(GetPromiseState(readRequest) == PromiseState::Fulfilled);
+    MOZ_RELEASE_ASSERT(GetPromiseState(readRequest) == PromiseState::Fulfilled);
     RootedValue resultVal(cx, GetPromiseResult(readRequest));
-    MOZ_ASSERT(resultVal.isObject());
+    MOZ_RELEASE_ASSERT(resultVal.isObject());
     RootedObject result(cx, &resultVal.toObject());
     RootedValue chunkVal(cx);
     JS_GetProperty(cx, result, "value", &chunkVal);
@@ -266,9 +256,6 @@ END_FIXTURE_TEST(StreamTestFixture,
 BEGIN_FIXTURE_TEST(StreamTestFixture,
                    testReadableStream_ReadableStreamDefaultReaderClose)
 {
-    SetReadableStreamCallbacks(cx, &DataRequestCB, &WriteIntoRequestBufferCB,
-                               &CancelStreamCB, &StreamClosedCB, &StreamErroredCB,
-                               &FinalizeStreamCB);
     RootedObject stream(cx, NewDefaultStream(cx));
     CHECK(stream);
     RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
@@ -289,7 +276,7 @@ BEGIN_FIXTURE_TEST(StreamTestFixture,
     CHECK(done);
 
     // The callbacks are only invoked for external streams.
-    CHECK(!streamClosedCBCalled);
+    CHECK(!StubExternalUnderlyingSource::instance.streamClosedCBCalled);
 
     return true;
 }
@@ -299,10 +286,7 @@ END_FIXTURE_TEST(StreamTestFixture,
 BEGIN_FIXTURE_TEST(StreamTestFixture,
                    testReadableStream_ReadableStreamDefaultReaderError)
 {
-    ResetCallbacks();
-    SetReadableStreamCallbacks(cx, &DataRequestCB, &WriteIntoRequestBufferCB,
-                               &CancelStreamCB, &StreamClosedCB, &StreamErroredCB,
-                               &FinalizeStreamCB);
+    StubExternalUnderlyingSource::instance.reset();
     RootedObject stream(cx, NewDefaultStream(cx));
     CHECK(stream);
     RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
@@ -328,7 +312,7 @@ BEGIN_FIXTURE_TEST(StreamTestFixture,
     CHECK(reason.toInt32() == 42);
 
     // The callbacks are only invoked for external streams.
-    CHECK(!streamErroredCBCalled);
+    CHECK(!StubExternalUnderlyingSource::instance.streamErroredCBCalled);
 
     return true;
 }
@@ -336,48 +320,34 @@ END_FIXTURE_TEST(StreamTestFixture,
                  testReadableStream_ReadableStreamDefaultReaderError)
 
 static JSObject*
-NewExternalSourceStream(JSContext* cx, void* underlyingSource,
-                        RequestReadableStreamDataCallback dataRequestCallback,
-                        WriteIntoReadRequestBufferCallback writeIntoReadRequestCallback,
-                        CancelReadableStreamCallback cancelCallback,
-                        ReadableStreamClosedCallback closedCallback,
-                        ReadableStreamErroredCallback erroredCallback,
-                        ReadableStreamFinalizeCallback finalizeCallback)
+NewExternalSourceStream(JSContext* cx, ReadableStreamUnderlyingSource* source)
 {
-    SetReadableStreamCallbacks(cx, dataRequestCallback, writeIntoReadRequestCallback,
-                               cancelCallback, closedCallback, erroredCallback,
-                               finalizeCallback);
-    RootedObject stream(cx, NewReadableExternalSourceStreamObject(cx, underlyingSource));
-    MOZ_ASSERT_IF(stream, IsReadableStream(stream));
+    RootedObject stream(cx, NewReadableExternalSourceStreamObject(cx, source));
+    if (stream) {
+        MOZ_RELEASE_ASSERT(IsReadableStream(stream));
+    }
     return stream;
 }
 
 static JSObject*
 NewExternalSourceStream(JSContext* cx)
 {
-    return NewExternalSourceStream(cx,
-                                   &stubExternalUnderlyingSource,
-                                   &DataRequestCB,
-                                   &WriteIntoRequestBufferCB,
-                                   &CancelStreamCB,
-                                   &StreamClosedCB,
-                                   &StreamErroredCB,
-                                   &FinalizeStreamCB);
+    return NewExternalSourceStream(cx, &StubExternalUnderlyingSource::instance);
 }
 
 BEGIN_FIXTURE_TEST(StreamTestFixture,
                    testReadableStream_CreateReadableByteStreamWithExternalSource)
 {
-    ResetCallbacks();
+    StubExternalUnderlyingSource::instance.reset();
 
     RootedObject stream(cx, NewExternalSourceStream(cx));
     CHECK(stream);
     ReadableStreamMode mode;
     CHECK(ReadableStreamGetMode(cx, stream, &mode));
     CHECK(mode == ReadableStreamMode::ExternalSource);
-    void* underlyingSource;
+    ReadableStreamUnderlyingSource* underlyingSource;
     CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &underlyingSource));
-    CHECK(underlyingSource == &stubExternalUnderlyingSource);
+    CHECK(underlyingSource == &StubExternalUnderlyingSource::instance);
     bool locked;
     CHECK(ReadableStreamIsLocked(cx, stream, &locked));
     CHECK(locked);
@@ -391,14 +361,14 @@ END_FIXTURE_TEST(StreamTestFixture,
 BEGIN_FIXTURE_TEST(StreamTestFixture,
                    testReadableStream_ExternalSourceCancel)
 {
-    ResetCallbacks();
+    StubExternalUnderlyingSource::instance.reset();
 
     RootedObject stream(cx, NewExternalSourceStream(cx));
     CHECK(stream);
     RootedValue reason(cx, Int32Value(42));
     CHECK(ReadableStreamCancel(cx, stream, reason));
-    CHECK(cancelStreamCBCalled);
-    CHECK(cancelStreamReason == reason);
+    CHECK(StubExternalUnderlyingSource::instance.cancelStreamCBCalled);
+    CHECK(StubExternalUnderlyingSource::instance.cancelStreamReason == reason);
 
     return true;
 }
@@ -408,7 +378,7 @@ END_FIXTURE_TEST(StreamTestFixture,
 BEGIN_FIXTURE_TEST(StreamTestFixture,
                    testReadableStream_ExternalSourceGetReader)
 {
-    ResetCallbacks();
+    StubExternalUnderlyingSource::instance.reset();
 
     RootedObject stream(cx, NewExternalSourceStream(cx));
     CHECK(stream);
@@ -475,7 +445,7 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
                                   const char* evalSrc2,
                                   uint32_t writtenLength)
     {
-        ResetCallbacks();
+        StubExternalUnderlyingSource::instance.reset();
         definePrint();
 
         // Create the stream.
@@ -485,9 +455,9 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
         js::RunJobs(cx);
 
         // GetExternalUnderlyingSource locks the stream.
-        void* underlyingSource;
+        ReadableStreamUnderlyingSource* underlyingSource;
         CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &underlyingSource));
-        CHECK(underlyingSource == &stubExternalUnderlyingSource);
+        CHECK(underlyingSource == &StubExternalUnderlyingSource::instance);
         bool locked;
         CHECK(ReadableStreamIsLocked(cx, stream, &locked));
         CHECK(locked);
@@ -498,8 +468,8 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
         CHECK(JS_SetProperty(cx, global, "stream", streamVal));
         RootedValue rval(cx);
         EVAL(evalSrc, &rval);
-        CHECK(dataRequestCBCalled);
-        CHECK(!writeIntoRequestBufferCBCalled);
+        CHECK(StubExternalUnderlyingSource::instance.dataRequestCBCalled);
+        CHECK(!StubExternalUnderlyingSource::instance.writeIntoRequestBufferCBCalled);
         CHECK(rval.isObject());
         RootedObject unwrappedPromise(cx, js::CheckedUnwrap(&rval.toObject()));
         CHECK(unwrappedPromise);
@@ -509,7 +479,7 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
         // Stream in some data; this resolves the read() result promise.
         size_t length = sizeof(testBufferData);
         CHECK(ReadableStreamUpdateDataAvailableFromSource(cx, stream, length));
-        CHECK(writeIntoRequestBufferCBCalled);
+        CHECK(StubExternalUnderlyingSource::instance.writeIntoRequestBufferCBCalled);
         CHECK(GetPromiseState(unwrappedPromise) == PromiseState::Fulfilled);
         RootedObject chunk(cx);
         {
@@ -533,11 +503,11 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
         }
 
         // Check the callbacks fired by calling read() again.
-        dataRequestCBCalled = false;
-        writeIntoRequestBufferCBCalled = false;
+        StubExternalUnderlyingSource::instance.dataRequestCBCalled = false;
+        StubExternalUnderlyingSource::instance.writeIntoRequestBufferCBCalled = false;
         EVAL(evalSrc2, &rval);
-        CHECK(dataRequestCBCalled);
-        CHECK(!writeIntoRequestBufferCBCalled);
+        CHECK(StubExternalUnderlyingSource::instance.dataRequestCBCalled);
+        CHECK(!StubExternalUnderlyingSource::instance.writeIntoRequestBufferCBCalled);
 
         return true;
     }
@@ -546,7 +516,7 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
                                const char* evalSrc,
                                uint32_t writtenLength)
     {
-        ResetCallbacks();
+        StubExternalUnderlyingSource::instance.reset();
         definePrint();
 
         // Create a stream.
@@ -555,9 +525,9 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
         CHECK(createExternalSourceStream(compartmentMode, &streamGlobal, &stream));
 
         // Getting the underlying source locks the stream.
-        void* underlyingSource;
+        ReadableStreamUnderlyingSource* underlyingSource;
         CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &underlyingSource));
-        CHECK(underlyingSource == &stubExternalUnderlyingSource);
+        CHECK(underlyingSource == &StubExternalUnderlyingSource::instance);
         bool locked;
         CHECK(ReadableStreamIsLocked(cx, stream, &locked));
         CHECK(locked);
@@ -572,7 +542,7 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
         CHECK(JS_SetProperty(cx, global, "stream", streamVal));
         RootedValue rval(cx);
         EVAL(evalSrc, &rval);
-        CHECK(writeIntoRequestBufferCBCalled);
+        CHECK(StubExternalUnderlyingSource::instance.writeIntoRequestBufferCBCalled);
         CHECK(rval.isObject());
         RootedObject unwrappedPromise(cx, js::CheckedUnwrap(&rval.toObject()));
         CHECK(unwrappedPromise);
@@ -673,7 +643,7 @@ BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
     ReadableStreamClose(cx, stream);
 
     val = GetPromiseResult(request);
-    MOZ_ASSERT(val.isObject());
+    CHECK(val.isObject());
     RootedObject result(cx, &val.toObject());
 
     JS_GetProperty(cx, result, "done", &val);
@@ -770,13 +740,13 @@ END_FIXTURE_TEST(StreamTestFixture,
 BEGIN_FIXTURE_TEST(StreamTestFixture,
                    testReadableStream_ReadableStreamGetExternalUnderlyingSource)
 {
-    ResetCallbacks();
+    StubExternalUnderlyingSource::instance.reset();
 
     RootedObject stream(cx, NewExternalSourceStream(cx));
     CHECK(stream);
-    void* source;
+    ReadableStreamUnderlyingSource* source;
     CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &source));
-    CHECK(source == &stubExternalUnderlyingSource);
+    CHECK(source == &StubExternalUnderlyingSource::instance);
     CHECK(ReadableStreamReleaseExternalUnderlyingSource(cx, stream));
 
     RootedObject otherGlobal(cx, createGlobal());
@@ -784,9 +754,9 @@ BEGIN_FIXTURE_TEST(StreamTestFixture,
     {
         JSAutoRealm ar(cx, otherGlobal);
         CHECK(JS_WrapObject(cx, &stream));
-        void* source;
+        ReadableStreamUnderlyingSource* source;
         CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &source));
-        CHECK(source == &stubExternalUnderlyingSource);
+        CHECK(source == &StubExternalUnderlyingSource::instance);
         CHECK(ReadableStreamReleaseExternalUnderlyingSource(cx, stream));
     }
 

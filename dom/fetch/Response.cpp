@@ -268,7 +268,7 @@ Response::Constructor(const GlobalObject& aGlobal,
       if (streamMode == JS::ReadableStreamMode::ExternalSource) {
         // If this is a DOM generated ReadableStream, we can extract the
         // inputStream directly.
-        void* underlyingSource = nullptr;
+        JS::ReadableStreamUnderlyingSource* underlyingSource = nullptr;
         if (!JS::ReadableStreamGetExternalUnderlyingSource(cx,
                                                            readableStreamObj,
                                                            &underlyingSource)) {
