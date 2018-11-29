@@ -7,6 +7,7 @@ import {LocalizationProvider} from "fluent-react";
 import {OnboardingMessage} from "./templates/OnboardingMessage/OnboardingMessage";
 import React from "react";
 import ReactDOM from "react-dom";
+import {ReturnToAMO} from "./templates/ReturnToAMO/ReturnToAMO";
 import {SnippetsTemplates} from "./templates/template-manifest";
 import {StartupOverlay} from "./templates/StartupOverlay/StartupOverlay";
 
@@ -30,8 +31,8 @@ export const ASRouterUtils = {
   dismissById(id) {
     ASRouterUtils.sendMessage({type: "DISMISS_MESSAGE_BY_ID", data: {id}});
   },
-  blockBundle(bundle) {
-    ASRouterUtils.sendMessage({type: "BLOCK_BUNDLE", data: {bundle}});
+  dismissBundle(bundle) {
+    ASRouterUtils.sendMessage({type: "DISMISS_BUNDLE", data: {bundle}});
   },
   executeAction(button_action) {
     ASRouterUtils.sendMessage({
@@ -139,8 +140,12 @@ export class ASRouterUISurface extends React.PureComponent {
     return () => ASRouterUtils.dismissById(id);
   }
 
-  clearBundle(bundle) {
-    return () => ASRouterUtils.blockBundle(bundle);
+  dismissBundle(bundle) {
+    return () => ASRouterUtils.dismissBundle(bundle);
+  }
+
+  triggerOnboarding() {
+    ASRouterUtils.sendMessage({type: "TRIGGER", data: {trigger: {id: "showOnboarding"}}});
   }
 
   onMessageFromParent({data: action}) {
@@ -186,21 +191,14 @@ export class ASRouterUISurface extends React.PureComponent {
     }
   }
 
-  componentDidMount() {
-    if (this.props.document.location.href === "about:welcome") {
-      // Trigger the onboarding overlay slightly after the startup overlay is mounted,
-      // to ensure we don't flash the onboarding content before hand
-      ASRouterUtils.sendMessage({type: "TRIGGER", data: {trigger: {id: "showOnboarding"}}});
-    }
-  }
-
   componentWillUnmount() {
     ASRouterUtils.removeListener(this.onMessageFromParent);
   }
 
   renderSnippets() {
     if (this.state.bundle.template === "onboarding" ||
-        this.state.message.template === "fxa_overlay") {
+        this.state.message.template === "fxa_overlay" ||
+        this.state.message.template === "return_to_amo_overlay") {
       return null;
     }
     const SnippetComponent = SnippetsTemplates[this.state.message.template];
@@ -234,22 +232,35 @@ export class ASRouterUISurface extends React.PureComponent {
           {...this.state.bundle}
           UISurface="NEWTAB_OVERLAY"
           onAction={ASRouterUtils.executeAction}
-          onDoneButton={this.clearBundle(this.state.bundle.bundle)}
+          onDoneButton={this.dismissBundle(this.state.bundle.bundle)}
           sendUserActionTelemetry={this.sendUserActionTelemetry} />);
     }
     return null;
   }
 
   renderFirstRunOverlay() {
-    if (this.state.message.template === "fxa_overlay") {
-      global.document.body.classList.add("welcome", "hide-main");
+    const {message} = this.state;
+    if (message.template === "fxa_overlay") {
+      global.document.body.classList.add("fxa");
       return (
         <IntlProvider locale={global.document.documentElement.lang} messages={global.gActivityStreamStrings}>
           <StartupOverlay
-            onBlock={this.onBlockById(this.state.message.id)}
+            onReady={this.triggerOnboarding}
+            onBlock={this.onDismissById(message.id)}
             dispatch={this.props.activityStreamStore.dispatch}
             store={this.props.activityStreamStore} />
         </IntlProvider>
+      );
+    } else if (message.template === "return_to_amo_overlay") {
+      global.document.body.classList.add("amo");
+      return (
+        <LocalizationProvider messages={generateMessages({"amo_html": message.content.text})}>
+          <ReturnToAMO
+            {...message}
+            onReady={this.triggerOnboarding}
+            onBlock={this.onDismissById(message.id)}
+            onAction={ASRouterUtils.executeAction} />
+        </LocalizationProvider>
       );
     }
     return null;
