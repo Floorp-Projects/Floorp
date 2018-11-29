@@ -158,74 +158,9 @@ LSSnapshot::GetItem(const nsAString& aKey,
   MOZ_ASSERT(!mSentFinish);
 
   nsString result;
-
-  switch (mLoadState) {
-    case LoadState::Partial: {
-      if (mValues.Get(aKey, &result)) {
-        MOZ_ASSERT(!result.IsVoid());
-      } else if (mLoadedItems.GetEntry(aKey) || mUnknownItems.GetEntry(aKey)) {
-        result.SetIsVoid(true);
-      } else {
-        if (NS_WARN_IF(!mActor->SendLoadItem(nsString(aKey), &result))) {
-          return NS_ERROR_FAILURE;
-        }
-
-        if (result.IsVoid()) {
-          mUnknownItems.PutEntry(aKey);
-        } else {
-          mLoadedItems.PutEntry(aKey);
-          mValues.Put(aKey, result);
-
-          if (mLoadedItems.Count() == mInitLength) {
-            mLoadedItems.Clear();
-            mUnknownItems.Clear();
-            mLength = 0;
-            mLoadState = LoadState::AllUnorderedItems;
-          }
-        }
-      }
-
-      break;
-    }
-
-    case LoadState::AllOrderedKeys: {
-      if (mValues.Get(aKey, &result)) {
-        if (result.IsVoid()) {
-          if (NS_WARN_IF(!mActor->SendLoadItem(nsString(aKey), &result))) {
-            return NS_ERROR_FAILURE;
-          }
-
-          MOZ_ASSERT(!result.IsVoid());
-
-          mLoadedItems.PutEntry(aKey);
-          mValues.Put(aKey, result);
-
-          if (mLoadedItems.Count() == mInitLength) {
-            mLoadedItems.Clear();
-            MOZ_ASSERT(mLength == 0);
-            mLoadState = LoadState::AllOrderedItems;
-          }
-        }
-      } else {
-        result.SetIsVoid(true);
-      }
-
-      break;
-    }
-
-    case LoadState::AllUnorderedItems:
-    case LoadState::AllOrderedItems: {
-      if (mValues.Get(aKey, &result)) {
-        MOZ_ASSERT(!result.IsVoid());
-      } else {
-        result.SetIsVoid(true);
-      }
-
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Bad state!");
+  nsresult rv = GetItemInternal(aKey, Optional<nsString>(), result);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   aResult = result;
@@ -263,7 +198,8 @@ LSSnapshot::SetItem(const nsAString& aKey,
   MOZ_ASSERT(!mSentFinish);
 
   nsString oldValue;
-  nsresult rv = GetItem(aKey, oldValue);
+  nsresult rv =
+    GetItemInternal(aKey, Optional<nsString>(nsString(aValue)), oldValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -283,10 +219,13 @@ LSSnapshot::SetItem(const nsAString& aKey,
 
     rv = UpdateUsage(delta);
     if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (oldValue.IsVoid()) {
+        mValues.Remove(aKey);
+      } else {
+        mValues.Put(aKey, oldValue);
+      }
       return rv;
     }
-
-    mValues.Put(aKey, nsString(aValue));
 
     if (oldValue.IsVoid() && mLoadState == LoadState::Partial) {
       mLength++;
@@ -316,7 +255,8 @@ LSSnapshot::RemoveItem(const nsAString& aKey,
   MOZ_ASSERT(!mSentFinish);
 
   nsString oldValue;
-  nsresult rv = GetItem(aKey, oldValue);
+  nsresult rv =
+    GetItemInternal(aKey, Optional<nsString>(VoidString()), oldValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -332,8 +272,6 @@ LSSnapshot::RemoveItem(const nsAString& aKey,
 
     DebugOnly<nsresult> rv = UpdateUsage(delta);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    mValues.Remove(aKey);
 
     if (mLoadState == LoadState::Partial) {
       mLength--;
@@ -425,6 +363,131 @@ LSSnapshot::Finish()
     MOZ_ASSERT(!mSelfRef);
   }
 
+  return NS_OK;
+}
+
+nsresult
+LSSnapshot::GetItemInternal(const nsAString& aKey,
+                            const Optional<nsString>& aValue,
+                            nsAString& aResult)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(!mSentFinish);
+
+  nsString result;
+
+  switch (mLoadState) {
+    case LoadState::Partial: {
+      if (mValues.Get(aKey, &result)) {
+        MOZ_ASSERT(!result.IsVoid());
+      } else if (mLoadedItems.GetEntry(aKey) || mUnknownItems.GetEntry(aKey)) {
+        result.SetIsVoid(true);
+      } else {
+        if (NS_WARN_IF(!mActor->SendLoadItem(nsString(aKey), &result))) {
+          return NS_ERROR_FAILURE;
+        }
+
+        if (result.IsVoid()) {
+          mUnknownItems.PutEntry(aKey);
+        } else {
+          mLoadedItems.PutEntry(aKey);
+          mValues.Put(aKey, result);
+
+          if (mLoadedItems.Count() == mInitLength) {
+            mLoadedItems.Clear();
+            mUnknownItems.Clear();
+            mLength = 0;
+            mLoadState = LoadState::AllUnorderedItems;
+          }
+        }
+      }
+
+      if (aValue.WasPassed()) {
+        const nsString& value = aValue.Value();
+        if (!value.IsVoid()) {
+          mValues.Put(aKey, value);
+        } else if (!result.IsVoid()) {
+          mValues.Remove(aKey);
+        }
+      }
+
+      break;
+    }
+
+    case LoadState::AllOrderedKeys: {
+      if (mValues.Get(aKey, &result)) {
+        if (result.IsVoid()) {
+          if (NS_WARN_IF(!mActor->SendLoadItem(nsString(aKey), &result))) {
+            return NS_ERROR_FAILURE;
+          }
+
+          MOZ_ASSERT(!result.IsVoid());
+
+          mLoadedItems.PutEntry(aKey);
+          mValues.Put(aKey, result);
+
+          if (mLoadedItems.Count() == mInitLength) {
+            mLoadedItems.Clear();
+            MOZ_ASSERT(mLength == 0);
+            mLoadState = LoadState::AllOrderedItems;
+          }
+        }
+      } else {
+        result.SetIsVoid(true);
+      }
+
+      if (aValue.WasPassed()) {
+        const nsString& value = aValue.Value();
+        if (!value.IsVoid()) {
+          mValues.Put(aKey, value);
+        } else if (!result.IsVoid()) {
+          mValues.Remove(aKey);
+        }
+      }
+
+      break;
+    }
+
+    case LoadState::AllUnorderedItems:
+    case LoadState::AllOrderedItems: {
+      if (aValue.WasPassed()) {
+        const nsString& value = aValue.Value();
+        if (!value.IsVoid()) {
+          auto entry = mValues.LookupForAdd(aKey);
+          if (entry) {
+            result = entry.Data();
+            entry.Data() = value;
+          } else {
+            result.SetIsVoid(true);
+            entry.OrInsert([value]() { return value; });
+          }
+        } else {
+          if (auto entry = mValues.Lookup(aKey)) {
+            result = entry.Data();
+            MOZ_ASSERT(!result.IsVoid());
+            entry.Remove();
+          } else {
+            result.SetIsVoid(true);
+          }
+        }
+      } else {
+        if (mValues.Get(aKey, &result)) {
+          MOZ_ASSERT(!result.IsVoid());
+        } else {
+          result.SetIsVoid(true);
+        }
+      }
+
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Bad state!");
+  }
+
+  aResult = result;
   return NS_OK;
 }
 
