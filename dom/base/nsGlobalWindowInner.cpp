@@ -5830,7 +5830,7 @@ nsGlobalWindowInner::ObserveStorageNotification(StorageEvent* aEvent,
   IgnoredErrorResult error;
   RefPtr<StorageEvent> clonedEvent =
     CloneStorageEvent(eventType, aEvent, error);
-  if (error.Failed()) {
+  if (error.Failed() || !clonedEvent) {
     return;
   }
 

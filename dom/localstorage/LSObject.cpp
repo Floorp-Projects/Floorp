@@ -296,6 +296,11 @@ LSObject::GetLength(nsIPrincipal& aSubjectPrincipal,
 {
   AssertIsOnOwningThread();
 
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return 0;
+  }
+
   nsresult rv = EnsureDatabase();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
@@ -319,6 +324,11 @@ LSObject::Key(uint32_t aIndex,
               ErrorResult& aError)
 {
   AssertIsOnOwningThread();
+
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
 
   nsresult rv = EnsureDatabase();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -344,6 +354,11 @@ LSObject::GetItem(const nsAString& aKey,
 {
   AssertIsOnOwningThread();
 
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
   nsresult rv = EnsureDatabase();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
@@ -365,6 +380,12 @@ LSObject::GetSupportedNames(nsTArray<nsString>& aNames)
 {
   AssertIsOnOwningThread();
 
+  if (!CanUseStorage(*nsContentUtils::SubjectPrincipal())) {
+    // Return just an empty array.
+    aNames.Clear();
+    return;
+  }
+
   nsresult rv = EnsureDatabase();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -383,6 +404,11 @@ LSObject::SetItem(const nsAString& aKey,
                   ErrorResult& aError)
 {
   AssertIsOnOwningThread();
+
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
 
   nsresult rv = EnsureDatabase();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -410,6 +436,11 @@ LSObject::RemoveItem(const nsAString& aKey,
 {
   AssertIsOnOwningThread();
 
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
   nsresult rv = EnsureDatabase();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
@@ -434,6 +465,11 @@ LSObject::Clear(nsIPrincipal& aSubjectPrincipal,
                 ErrorResult& aError)
 {
   AssertIsOnOwningThread();
+
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
 
   nsresult rv = EnsureDatabase();
   if (NS_WARN_IF(NS_FAILED(rv))) {
