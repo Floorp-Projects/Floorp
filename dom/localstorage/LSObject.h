@@ -56,8 +56,15 @@ class LSObject final
 
 public:
   static nsresult
-  Create(nsPIDOMWindowInner* aWindow,
-         Storage** aStorage);
+  CreateForWindow(nsPIDOMWindowInner* aWindow,
+                  Storage** aStorage);
+
+  static nsresult
+  CreateForPrincipal(nsPIDOMWindowInner* aWindow,
+                     nsIPrincipal* aPrincipal,
+                     const nsAString& aDocumentURI,
+                     bool aPrivate,
+                     LSObject** aObject);
 
   /**
    * Used for requests from the parent process to the parent process; in that
