@@ -22,7 +22,8 @@
 
 .ctrlTab-preview {
   -moz-appearance: none;
-  color: inherit;
+  /* !important overrides the :hover color from button.css on Linux */
+  color: inherit !important;
   margin: 0;
   text-shadow: 0 0 1px hsl(0,0%,12%), 0 0 2px hsl(0,0%,12%);
 }
@@ -72,7 +73,6 @@
 }
 
 .ctrlTab-preview:focus > .ctrlTab-preview-inner {
-  color: white;
   background-color: rgba(0,0,0,.75);
   text-shadow: none;
   border-color: #45a1ff;
