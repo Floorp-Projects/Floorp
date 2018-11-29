@@ -4799,6 +4799,10 @@ QuotaManager::MaybeRemoveLocalStorageData()
 {
   AssertIsOnIOThread();
 
+  if (CachedNextGenLocalStorageEnabled()) {
+    return NS_OK;
+  }
+
   // Cleanup the tmp file first, if there's any.
   nsCOMPtr<nsIFile> lsArchiveTmpFile;
   nsresult rv = NS_NewLocalFile(mStoragePath,

@@ -21,6 +21,7 @@ UNIFIED_SOURCES += [
     'LocalStorageManager2.cpp',
     'LSDatabase.cpp',
     'LSObject.cpp',
+    'ReportInternalError.cpp',
 ]
 
 IPDL_SOURCES += [
