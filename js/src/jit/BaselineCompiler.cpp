@@ -2665,10 +2665,8 @@ BaselineCodeGen<Handler>::emit_JSOP_STRICTSETELEM()
 
 template <typename Handler>
 bool
-BaselineCodeGen<Handler>::emit_JSOP_SETELEM_SUPER()
+BaselineCodeGen<Handler>::emitSetElemSuper(bool strict)
 {
-    bool strict = IsCheckStrictOp(JSOp(*pc));
-
     // Incoming stack is |receiver, propval, obj, rval|. We need to shuffle
     // stack to leave rval when operation is complete.
 
@@ -2697,9 +2695,16 @@ BaselineCodeGen<Handler>::emit_JSOP_SETELEM_SUPER()
 
 template <typename Handler>
 bool
+BaselineCodeGen<Handler>::emit_JSOP_SETELEM_SUPER()
+{
+    return emitSetElemSuper(/* strict = */ false);
+}
+
+template <typename Handler>
+bool
 BaselineCodeGen<Handler>::emit_JSOP_STRICTSETELEM_SUPER()
 {
-    return emit_JSOP_SETELEM_SUPER();
+    return emitSetElemSuper(/* strict = */ true);
 }
 
 typedef bool (*DeleteElementFn)(JSContext*, HandleValue, HandleValue, bool*);
@@ -2710,7 +2715,7 @@ static const VMFunction DeleteElementNonStrictInfo
 
 template <typename Handler>
 bool
-BaselineCodeGen<Handler>::emit_JSOP_DELELEM()
+BaselineCodeGen<Handler>::emitDelElem(bool strict)
 {
     // Keep values on the stack for the decompiler.
     frame.syncStack(0);
@@ -2721,8 +2726,6 @@ BaselineCodeGen<Handler>::emit_JSOP_DELELEM()
 
     pushArg(R1);
     pushArg(R0);
-
-    bool strict = JSOp(*pc) == JSOP_STRICTDELELEM;
     if (!callVM(strict ? DeleteElementStrictInfo : DeleteElementNonStrictInfo)) {
         return false;
     }
@@ -2735,9 +2738,16 @@ BaselineCodeGen<Handler>::emit_JSOP_DELELEM()
 
 template <typename Handler>
 bool
+BaselineCodeGen<Handler>::emit_JSOP_DELELEM()
+{
+    return emitDelElem(/* strict = */ false);
+}
+
+template <typename Handler>
+bool
 BaselineCodeGen<Handler>::emit_JSOP_STRICTDELELEM()
 {
-    return emit_JSOP_DELELEM();
+    return emitDelElem(/* strict = */ true);
 }
 
 template <typename Handler>
@@ -2837,7 +2847,7 @@ BaselineCodeGen<Handler>::emit_JSOP_BINDGNAME()
         // Otherwise we have to use the environment chain.
     }
 
-    return emit_JSOP_BINDNAME();
+    return emitBindName(JSOP_BINDGNAME);
 }
 
 typedef JSObject* (*BindVarFn)(JSContext*, HandleObject);
@@ -2923,10 +2933,8 @@ static const VMFunction SetPropertySuperInfo =
 
 template <typename Handler>
 bool
-BaselineCodeGen<Handler>::emit_JSOP_SETPROP_SUPER()
+BaselineCodeGen<Handler>::emitSetPropSuper(bool strict)
 {
-    bool strict = IsCheckStrictOp(JSOp(*pc));
-
     // Incoming stack is |receiver, obj, rval|. We need to shuffle stack to
     // leave rval when operation is complete.
 
@@ -2954,9 +2962,16 @@ BaselineCodeGen<Handler>::emit_JSOP_SETPROP_SUPER()
 
 template <typename Handler>
 bool
+BaselineCodeGen<Handler>::emit_JSOP_SETPROP_SUPER()
+{
+    return emitSetPropSuper(/* strict = */ false);
+}
+
+template <typename Handler>
+bool
 BaselineCodeGen<Handler>::emit_JSOP_STRICTSETPROP_SUPER()
 {
-    return emit_JSOP_SETPROP_SUPER();
+    return emitSetPropSuper(/* strict = */ true);
 }
 
 template <typename Handler>
@@ -3023,7 +3038,7 @@ static const VMFunction DeletePropertyNonStrictInfo =
 
 template <typename Handler>
 bool
-BaselineCodeGen<Handler>::emit_JSOP_DELPROP()
+BaselineCodeGen<Handler>::emitDelProp(bool strict)
 {
     // Keep value on the stack for the decompiler.
     frame.syncStack(0);
@@ -3034,7 +3049,6 @@ BaselineCodeGen<Handler>::emit_JSOP_DELPROP()
     pushArg(ImmGCPtr(script->getName(pc)));
     pushArg(R0);
 
-    bool strict = JSOp(*pc) == JSOP_STRICTDELPROP;
     if (!callVM(strict ? DeletePropertyStrictInfo : DeletePropertyNonStrictInfo)) {
         return false;
     }
@@ -3047,9 +3061,16 @@ BaselineCodeGen<Handler>::emit_JSOP_DELPROP()
 
 template <typename Handler>
 bool
+BaselineCodeGen<Handler>::emit_JSOP_DELPROP()
+{
+    return emitDelProp(/* strict = */ false);
+}
+
+template <typename Handler>
+bool
 BaselineCodeGen<Handler>::emit_JSOP_STRICTDELPROP()
 {
-    return emit_JSOP_DELPROP();
+    return emitDelProp(/* strict = */ true);
 }
 
 template <typename Handler>
@@ -3176,11 +3197,13 @@ BaselineCodeGen<Handler>::emit_JSOP_GETNAME()
 
 template <typename Handler>
 bool
-BaselineCodeGen<Handler>::emit_JSOP_BINDNAME()
+BaselineCodeGen<Handler>::emitBindName(JSOp op)
 {
+    MOZ_ASSERT(op == JSOP_BINDNAME || op == JSOP_BINDGNAME);
+
     frame.syncStack(0);
 
-    if (*pc == JSOP_BINDGNAME && !script->hasNonSyntacticScope()) {
+    if (op == JSOP_BINDGNAME && !script->hasNonSyntacticScope()) {
         masm.movePtr(ImmGCPtr(&script->global().lexicalEnvironment()), R0.scratchReg());
     } else {
         masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
@@ -3194,6 +3217,13 @@ BaselineCodeGen<Handler>::emit_JSOP_BINDNAME()
     // Mark R0 as pushed stack value.
     frame.push(R0);
     return true;
+}
+
+template <typename Handler>
+bool
+BaselineCodeGen<Handler>::emit_JSOP_BINDNAME()
+{
+    return emitBindName(JSOP_BINDNAME);
 }
 
 typedef bool (*DeleteNameFn)(JSContext*, HandlePropertyName, HandleObject,
@@ -3310,19 +3340,14 @@ static const VMFunction DefLexicalInfo = FunctionInfo<DefLexicalFn>(DefLexical, 
 
 template <typename Handler>
 bool
-BaselineCodeGen<Handler>::emit_JSOP_DEFCONST()
+BaselineCodeGen<Handler>::emitDefLexical(JSOp op)
 {
-    return emit_JSOP_DEFLET();
-}
+    MOZ_ASSERT(op == JSOP_DEFCONST || op == JSOP_DEFLET);
 
-template <typename Handler>
-bool
-BaselineCodeGen<Handler>::emit_JSOP_DEFLET()
-{
     frame.syncStack(0);
 
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-    if (*pc == JSOP_DEFCONST) {
+    if (op == JSOP_DEFCONST) {
         attrs |= JSPROP_READONLY;
     }
     MOZ_ASSERT(attrs <= UINT32_MAX);
@@ -3336,6 +3361,20 @@ BaselineCodeGen<Handler>::emit_JSOP_DEFLET()
     pushArg(ImmGCPtr(script->getName(pc)));
 
     return callVM(DefLexicalInfo);
+}
+
+template <typename Handler>
+bool
+BaselineCodeGen<Handler>::emit_JSOP_DEFCONST()
+{
+    return emitDefLexical(JSOP_DEFCONST);
+}
+
+template <typename Handler>
+bool
+BaselineCodeGen<Handler>::emit_JSOP_DEFLET()
+{
+    return emitDefLexical(JSOP_DEFLET);
 }
 
 typedef bool (*DefFunOperationFn)(JSContext*, HandleScript, HandleObject, HandleFunction);
@@ -3369,11 +3408,6 @@ template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emitInitPropGetterSetter()
 {
-    MOZ_ASSERT(JSOp(*pc) == JSOP_INITPROP_GETTER ||
-               JSOp(*pc) == JSOP_INITHIDDENPROP_GETTER ||
-               JSOp(*pc) == JSOP_INITPROP_SETTER ||
-               JSOp(*pc) == JSOP_INITHIDDENPROP_SETTER);
-
     // Keep values on the stack for the decompiler.
     frame.syncStack(0);
 
@@ -3433,11 +3467,6 @@ template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emitInitElemGetterSetter()
 {
-    MOZ_ASSERT(JSOp(*pc) == JSOP_INITELEM_GETTER ||
-               JSOp(*pc) == JSOP_INITHIDDENELEM_GETTER ||
-               JSOp(*pc) == JSOP_INITELEM_SETTER ||
-               JSOp(*pc) == JSOP_INITHIDDENELEM_SETTER);
-
     // Load index and value in R0 and R1, but keep values on the stack for the
     // decompiler.
     frame.syncStack(0);
@@ -3804,14 +3833,13 @@ BaselineCodeGen<Handler>::emit_JSOP_UNINITIALIZED()
 
 template <typename Handler>
 bool
-BaselineCodeGen<Handler>::emitCall()
+BaselineCodeGen<Handler>::emitCall(JSOp op)
 {
-    MOZ_ASSERT(IsCallPC(pc));
-
-    bool construct = JSOp(*pc) == JSOP_NEW || JSOp(*pc) == JSOP_SUPERCALL;
-    uint32_t argc = GET_ARGC(pc);
+    MOZ_ASSERT(IsCallOp(op));
 
     frame.syncStack(0);
+
+    uint32_t argc = GET_ARGC(pc);
     masm.move32(Imm32(argc), R0.scratchReg());
 
     // Call IC
@@ -3820,6 +3848,7 @@ BaselineCodeGen<Handler>::emitCall()
     }
 
     // Update FrameInfo.
+    bool construct = op == JSOP_NEW || op == JSOP_SUPERCALL;
     frame.popn(2 + argc + construct);
     frame.push(R0);
     return true;
@@ -3827,20 +3856,20 @@ BaselineCodeGen<Handler>::emitCall()
 
 template <typename Handler>
 bool
-BaselineCodeGen<Handler>::emitSpreadCall()
+BaselineCodeGen<Handler>::emitSpreadCall(JSOp op)
 {
-    MOZ_ASSERT(IsCallPC(pc));
+    MOZ_ASSERT(IsCallOp(op));
 
     frame.syncStack(0);
     masm.move32(Imm32(1), R0.scratchReg());
 
     // Call IC
-    bool construct = JSOp(*pc) == JSOP_SPREADNEW || JSOp(*pc) == JSOP_SPREADSUPERCALL;
     if (!emitNextIC()) {
         return false;
     }
 
     // Update FrameInfo.
+    bool construct = op == JSOP_SPREADNEW || op == JSOP_SPREADSUPERCALL;
     frame.popn(3 + construct);
     frame.push(R0);
     return true;
@@ -3850,98 +3879,98 @@ template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_CALL()
 {
-    return emitCall();
+    return emitCall(JSOP_CALL);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_CALL_IGNORES_RV()
 {
-    return emitCall();
+    return emitCall(JSOP_CALL_IGNORES_RV);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_CALLITER()
 {
-    return emitCall();
+    return emitCall(JSOP_CALLITER);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_NEW()
 {
-    return emitCall();
+    return emitCall(JSOP_NEW);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_SUPERCALL()
 {
-    return emitCall();
+    return emitCall(JSOP_SUPERCALL);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_FUNCALL()
 {
-    return emitCall();
+    return emitCall(JSOP_FUNCALL);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_FUNAPPLY()
 {
-    return emitCall();
+    return emitCall(JSOP_FUNAPPLY);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_EVAL()
 {
-    return emitCall();
+    return emitCall(JSOP_EVAL);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_STRICTEVAL()
 {
-    return emitCall();
+    return emitCall(JSOP_STRICTEVAL);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_SPREADCALL()
 {
-    return emitSpreadCall();
+    return emitSpreadCall(JSOP_SPREADCALL);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_SPREADNEW()
 {
-    return emitSpreadCall();
+    return emitSpreadCall(JSOP_SPREADNEW);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_SPREADSUPERCALL()
 {
-    return emitSpreadCall();
+    return emitSpreadCall(JSOP_SPREADSUPERCALL);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_SPREADEVAL()
 {
-    return emitSpreadCall();
+    return emitSpreadCall(JSOP_SPREADEVAL);
 }
 
 template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_STRICTSPREADEVAL()
 {
-    return emitSpreadCall();
+    return emitSpreadCall(JSOP_STRICTSPREADEVAL);
 }
 
 typedef bool (*OptimizeSpreadCallFn)(JSContext*, HandleValue, bool*);

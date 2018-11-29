@@ -725,9 +725,15 @@ IsElemPC(jsbytecode* pc)
 }
 
 inline bool
+IsCallOp(JSOp op)
+{
+    return CodeSpec[op].format & JOF_INVOKE;
+}
+
+inline bool
 IsCallPC(jsbytecode* pc)
 {
-    return CodeSpec[*pc].format & JOF_INVOKE;
+    return IsCallOp(JSOp(*pc));
 }
 
 inline bool
