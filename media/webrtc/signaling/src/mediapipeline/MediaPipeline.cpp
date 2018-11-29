@@ -1673,7 +1673,6 @@ public:
              mTrack.get(),
              mSource.get()));
 
-    mSource->AdvanceKnownTracksTime(STREAM_TIME_MAX);
     mSource->AddTrackListener(this, mTrackId);
   }
 

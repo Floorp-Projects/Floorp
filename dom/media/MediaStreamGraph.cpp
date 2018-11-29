@@ -1964,7 +1964,6 @@ void MediaStream::FinishOnGraphThread() {
   }
 #endif
   mFinished = true;
-  mTracks.AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   // Let the MSG knows that this stream can be destroyed if necessary to avoid
   // unnecessarily processing it in the future.
@@ -2460,7 +2459,6 @@ void MediaStream::AddMainThreadListener(
 SourceMediaStream::SourceMediaStream()
     : MediaStream(),
       mMutex("mozilla::media::SourceMediaStream"),
-      mUpdateKnownTracksTime(0),
       mPullEnabled(false),
       mFinishPending(false) {}
 
@@ -2601,9 +2599,6 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
       mTracks.FindTrack(data->mID)->SetEnded();
       mUpdateTracks.RemoveElementAt(i);
     }
-  }
-  if (!mFinished) {
-    mTracks.AdvanceKnownTracksTime(mUpdateKnownTracksTime);
   }
 
   if (mTracks.GetEnd() > 0) {
@@ -2841,15 +2836,6 @@ void SourceMediaStream::EndTrack(TrackID aID) {
   if (track) {
     track->mCommands |= TrackEventCommand::TRACK_EVENT_ENDED;
   }
-  if (auto graph = GraphImpl()) {
-    graph->EnsureNextIteration();
-  }
-}
-
-void SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime) {
-  MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(aKnownTime >= mUpdateKnownTracksTime);
-  mUpdateKnownTracksTime = aKnownTime;
   if (auto graph = GraphImpl()) {
     graph->EnsureNextIteration();
   }

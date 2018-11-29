@@ -115,7 +115,6 @@ OutputStreamDriver::OutputStreamDriver(SourceMediaStream* aSourceStream,
   MOZ_ASSERT(mSourceStream);
   mSourceStream->AddTrack(aTrackId, new VideoSegment());
   mSourceStream->AddTrackListener(mTrackListener, aTrackId);
-  mSourceStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
   mSourceStream->SetPullEnabled(true);
 
   // All CanvasCaptureMediaStreams shall at least get one frame.
