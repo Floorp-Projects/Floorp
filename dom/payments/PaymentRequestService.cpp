@@ -4,11 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/PaymentRequestParent.h"
-#include "PaymentRequestService.h"
 #include "BasicCardPayment.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/BasicCardPaymentBinding.h"
+#include "mozilla/dom/PaymentRequestParent.h"
 #include "nsSimpleEnumerator.h"
+#include "PaymentRequestService.h"
 
 namespace mozilla {
 namespace dom {
@@ -503,6 +504,57 @@ PaymentRequestService::ChangeShippingOption(const nsAString& aRequestId,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PaymentRequestService::ChangePayerDetail(const nsAString& aRequestId,
+                                         const nsAString& aPayerName,
+                                         const nsAString& aPayerEmail,
+                                         const nsAString& aPayerPhone)
+{
+  RefPtr<payments::PaymentRequest> request;
+  nsresult rv = GetPaymentRequestById(aRequestId, getter_AddRefs(request));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  MOZ_ASSERT(request);
+  if (!request->GetIPC()) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = request->GetIPC()->ChangePayerDetail(
+    aRequestId, aPayerName, aPayerEmail, aPayerPhone);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentRequestService::ChangePaymentMethod(const nsAString& aRequestId,
+                                           const nsAString& aMethodName,
+                                           nsIMethodChangeDetails* aMethodDetails)
+{
+  RefPtr<payments::PaymentRequest> request;
+  nsresult rv = GetPaymentRequestById(aRequestId, getter_AddRefs(request));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (!request) {
+    return NS_ERROR_FAILURE;
+  }
+  if (request->GetState() != payments::PaymentRequest::eInteractive) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!request->GetIPC()) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = request->GetIPC()->ChangePaymentMethod(aRequestId,
+                                              aMethodName,
+                                              aMethodDetails);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
 bool
 PaymentRequestService::CanMakePayment(const nsAString& aRequestId)
 {
@@ -585,29 +637,6 @@ PaymentRequestService::IsBasicCardPayment(const nsAString& aRequestId)
     }
   }
   return false;
-}
-
-NS_IMETHODIMP
-PaymentRequestService::ChangePayerDetail(const nsAString& aRequestId,
-                                         const nsAString& aPayerName,
-                                         const nsAString& aPayerEmail,
-                                         const nsAString& aPayerPhone)
-{
-  RefPtr<payments::PaymentRequest> request;
-  nsresult rv = GetPaymentRequestById(aRequestId, getter_AddRefs(request));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  MOZ_ASSERT(request);
-  if (!request->GetIPC()) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = request->GetIPC()->ChangePayerDetail(
-    aRequestId, aPayerName, aPayerEmail, aPayerPhone);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
 }
 
 } // end of namespace dom

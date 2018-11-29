@@ -2584,14 +2584,13 @@ public class GeckoSession implements Parcelable {
         /**
          * Element details for onContextMenu callbacks.
          */
-        public static final class ContextElement {
+        public static class ContextElement {
             @IntDef({TYPE_NONE, TYPE_IMAGE, TYPE_VIDEO, TYPE_AUDIO})
             /* package */ @interface Type {}
-            static final int TYPE_NONE = 0;
-            static final int TYPE_IMAGE = 1;
-            static final int TYPE_VIDEO = 2;
-            static final int TYPE_AUDIO = 3;
-
+            public static final int TYPE_NONE = 0;
+            public static final int TYPE_IMAGE = 1;
+            public static final int TYPE_VIDEO = 2;
+            public static final int TYPE_AUDIO = 3;
 
             /**
              * The link URI (href) of the element.

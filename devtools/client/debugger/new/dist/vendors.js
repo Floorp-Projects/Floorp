@@ -4622,7 +4622,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /***/ 358:
 /***/ (function(module, exports) {
 
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><g fill-rule=\"evenodd\"><path d=\"M5 12.503l.052-9a.5.5 0 0 0-1-.006l-.052 9a.5.5 0 0 0 1 .006zM12 12.497l-.05-9A.488.488 0 0 0 11.474 3a.488.488 0 0 0-.473.503l.05 9a.488.488 0 0 0 .477.497.488.488 0 0 0 .473-.503z\"></path></g></svg>"
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg version=\"1.1\" xmlns:svg=\"http://www.w3.org/2000/svg\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 16 16\"><path d=\"M5,13.5C5,13.8,4.7,14,4.5,14C4.2,14,4,13.8,4,13.5V2.6c0-0.3,0.2-0.5,0.5-0.5C4.7,2.1,5,2.3,5,2.6V13.5z\"></path><path d=\"M11.9,13.5c0,0.3-0.2,0.5-0.5,0.5s-0.5-0.2-0.5-0.5V2.6c0-0.3,0.2-0.5,0.5-0.5s0.5,0.2,0.5,0.5V13.5z\"></path></svg>"
 
 /***/ }),
 
@@ -4678,7 +4678,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /***/ 363:
 /***/ (function(module, exports) {
 
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:svg=\"http://www.w3.org/2000/svg\"><path fill=\"black\" id=\"svg_1\" fill-rule=\"evenodd\" d=\"m4.55195,12.97461l7.4,-5l-7.4,-5l0,10zm-0.925,0l0,-10c0,-0.785 0.8,-1.264 1.415,-0.848l7.4,5c0.58,0.392 0.58,1.304 0,1.696l-7.4,5c-0.615,0.416 -1.415,-0.063 -1.415,-0.848z\"></path></svg>"
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:svg=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"><path fill=\"black\" id=\"svg_1\" fill-rule=\"evenodd\" d=\"m4.55195,12.97461l7.4,-5l-7.4,-5l0,10zm-0.925,0l0,-10c0,-0.785 0.8,-1.264 1.415,-0.848l7.4,5c0.58,0.392 0.58,1.304 0,1.696l-7.4,5c-0.615,0.416 -1.415,-0.063 -1.415,-0.848z\"></path></svg>"
 
 /***/ }),
 
@@ -6012,7 +6012,7 @@ class ArrowExpander extends Component {
     if (expanded) {
       classNames.push("expanded");
     }
-    return _reactDomFactories2.default.img({
+    return _reactDomFactories2.default.button({
       className: classNames.join(" ")
     });
   }
