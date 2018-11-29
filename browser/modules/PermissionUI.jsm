@@ -68,6 +68,8 @@ ChromeUtils.defineModuleGetter(this, "SitePermissions",
   "resource:///modules/SitePermissions.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "URICountListener",
+  "resource:///modules/BrowserUsageTelemetry.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings
@@ -253,8 +255,12 @@ var PermissionPromptPrototype = {
    * be called just before. Subclasses may want to override this
    * in order to, for example, bump a counter Telemetry probe for
    * how often a particular permission request is seen.
+   *
+   * If this returns false, it cancels the process of showing the prompt.  In
+   * that case, it is the responsibility of the onBeforeShow() implementation
+   * to ensure that allow() or cancel() are called on the object appropriately.
    */
-  onBeforeShow() {},
+  onBeforeShow() { return true; },
 
   /**
    * If the prompt was shown to the user, this callback will be called just
@@ -440,14 +446,15 @@ var PermissionPromptPrototype = {
       return false;
     };
 
-    this.onBeforeShow();
-    chromeWin.PopupNotifications.show(this.browser,
-                                      this.notificationID,
-                                      this.message,
-                                      this.anchorID,
-                                      mainAction,
-                                      secondaryActions,
-                                      options);
+    if (this.onBeforeShow() !== false) {
+      chromeWin.PopupNotifications.show(this.browser,
+                                        this.notificationID,
+                                        this.message,
+                                        this.anchorID,
+                                        mainAction,
+                                        secondaryActions,
+                                        options);
+    }
   },
 };
 
@@ -590,6 +597,7 @@ GeolocationPermissionPrompt.prototype = {
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
     const SHOW_REQUEST = Ci.nsISecurityUITelemetry.WARNING_GEOLOCATION_REQUEST;
     secHistogram.add(SHOW_REQUEST);
+    return true;
   },
 };
 
@@ -826,9 +834,6 @@ MIDIPermissionPrompt.prototype = {
         action: Ci.nsIPermissionManager.DENY_ACTION,
     }];
   },
-
-  onBeforeShow() {
-  },
 };
 
 PermissionUI.MIDIPermissionPrompt = MIDIPermissionPrompt;
@@ -911,6 +916,7 @@ AutoplayPermissionPrompt.prototype = {
     };
     this.browser.addEventListener(
       "DOMAudioPlaybackStarted", this.handlePlaybackStart);
+    return true;
   },
 };
 
@@ -918,6 +924,11 @@ PermissionUI.AutoplayPermissionPrompt = AutoplayPermissionPrompt;
 
 function StorageAccessPermissionPrompt(request) {
   this.request = request;
+
+  XPCOMUtils.defineLazyPreferenceGetter(this, "_autoGrants",
+                                        "dom.storage_access.auto_grants");
+  XPCOMUtils.defineLazyPreferenceGetter(this, "_maxConcurrentAutoGrants",
+                                        "dom.storage_access.max_concurrent_auto_grants");
 }
 
 StorageAccessPermissionPrompt.prototype = {
@@ -1007,6 +1018,38 @@ StorageAccessPermissionPrompt.prototype = {
 
   get topLevelPrincipal() {
     return this.request.topLevelPrincipal;
+  },
+
+  get maxConcurrentAutomaticGrants() {
+    // one percent of the number of top-levels origins visited in the current
+    // session (but not to exceed 24 hours), or the value of the
+    // dom.storage_access.max_concurrent_auto_grants preference, whichever is
+    // higher.
+    return Math.max(Math.max(Math.floor(URICountListener.uniqueOriginsVisitedInPast24Hours / 100),
+                             this._maxConcurrentAutoGrants), 0);
+  },
+
+  getOriginsThirdPartyHasAccessTo(thirdPartyOrigin) {
+    let prefix = `3rdPartyStorage^${thirdPartyOrigin}`;
+    let perms = Services.perms.getAllWithTypePrefix(prefix);
+    let origins = new Set();
+    while (perms.length) {
+      let perm = perms.shift();
+      origins.add(perm.principal.origin);
+    }
+    return origins.size;
+  },
+
+  onBeforeShow() {
+    let thirdPartyOrigin = this.request.principal.origin;
+    if (this._autoGrants &&
+        this.getOriginsThirdPartyHasAccessTo(thirdPartyOrigin) <
+          this.maxConcurrentAutomaticGrants) {
+      // Automatically accept the prompt
+      this.allow({"storage-access": "allow-auto-grant"});
+      return false;
+    }
+    return true;
   },
 };
 
