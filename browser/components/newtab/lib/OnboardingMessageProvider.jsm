@@ -4,6 +4,21 @@
 "use strict";
 ChromeUtils.import("resource://gre/modules/Localization.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
+ChromeUtils.import("resource:///modules/AttributionCode.jsm");
+ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
+
+async function getAddonName() {
+  try {
+    const {content} = await AttributionCode.getAttrDataAsync();
+    if (!content) {
+      return null;
+    }
+    const addons = await AddonRepository.getAddonsByIDs([content]);
+    return addons[0].name;
+  } catch (e) {
+    return null;
+  }
+}
 
 const L10N = new Localization([
   "branding/brand.ftl",
@@ -21,8 +36,10 @@ const ONBOARDING_MESSAGES = async () => ([
       title: {string_id: "onboarding-private-browsing-title"},
       text: {string_id: "onboarding-private-browsing-text"},
       icon: "privatebrowsing",
-      button_label: {string_id: "onboarding-button-label-try-now"},
-      button_action: {type: "OPEN_PRIVATE_BROWSER_WINDOW"},
+      primary_button: {
+        label: {string_id: "onboarding-button-label-try-now"},
+        action: {type: "OPEN_PRIVATE_BROWSER_WINDOW"},
+      },
     },
     trigger: {id: "showOnboarding"},
   },
@@ -35,10 +52,12 @@ const ONBOARDING_MESSAGES = async () => ([
       title: {string_id: "onboarding-screenshots-title"},
       text: {string_id: "onboarding-screenshots-text"},
       icon: "screenshots",
-      button_label: {string_id: "onboarding-button-label-try-now"},
-      button_action: {
-        type: "OPEN_URL",
-        data: {args: "https://screenshots.firefox.com/#tour", where: "tabshifted"},
+      primary_button: {
+        label: {string_id: "onboarding-button-label-try-now"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: "https://screenshots.firefox.com/#tour", where: "tabshifted"},
+        },
       },
     },
     trigger: {id: "showOnboarding"},
@@ -52,10 +71,12 @@ const ONBOARDING_MESSAGES = async () => ([
       title: {string_id: "onboarding-addons-title"},
       text: {string_id: "onboarding-addons-text"},
       icon: "addons",
-      button_label: {string_id: "onboarding-button-label-try-now"},
-      button_action: {
-        type: "OPEN_ABOUT_PAGE",
-        data: {args: "addons"},
+      primary_button: {
+        label: {string_id: "onboarding-button-label-try-now"},
+        action: {
+          type: "OPEN_ABOUT_PAGE",
+          data: {args: "addons"},
+        },
       },
     },
     targeting: "attributionData.campaign != 'non-fx-button' && attributionData.source != 'addons.mozilla.org'",
@@ -70,10 +91,12 @@ const ONBOARDING_MESSAGES = async () => ([
       title: {string_id: "onboarding-ghostery-title"},
       text: {string_id: "onboarding-ghostery-text"},
       icon: "gift",
-      button_label: {string_id: "onboarding-button-label-try-now"},
-      button_action: {
-        type: "OPEN_URL",
-        data: {args: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/", where: "tabshifted"},
+      primary_button: {
+        label: {string_id: "onboarding-button-label-try-now"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/", where: "tabshifted"},
+        },
       },
     },
     targeting: "providerCohorts.onboarding == 'ghostery'",
@@ -88,10 +111,12 @@ const ONBOARDING_MESSAGES = async () => ([
       title: {string_id: "onboarding-fxa-title"},
       text: {string_id: "onboarding-fxa-text"},
       icon: "sync",
-      button_label: {string_id: "onboarding-button-label-get-started"},
-      button_action: {
-        type: "OPEN_URL",
-        data: {args: await FxAccountsConfig.promiseEmailFirstURI("onboarding"), where: "tabshifted"},
+      primary_button: {
+        label: {string_id: "onboarding-button-label-get-started"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: await FxAccountsConfig.promiseEmailFirstURI("onboarding"), where: "tabshifted"},
+        },
       },
     },
     targeting: "attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",
@@ -101,6 +126,29 @@ const ONBOARDING_MESSAGES = async () => ([
     id: "FXA_1",
     template: "fxa_overlay",
     targeting: "attributionData.campaign != 'non-fx-button' && attributionData.source != 'addons.mozilla.org'",
+    trigger: {id: "firstRun"},
+  },
+  {
+    id: "RETURN_TO_AMO_1",
+    template: "return_to_amo_overlay",
+    content: {
+      header: {string_id: "onboarding-welcome-header"},
+      title: {string_id: "return-to-amo-sub-header"},
+      addon_icon: null, // to be dynamically filled in, in ASRouter.jsm
+      icon: "gift-extension",
+      text: {string_id: "return-to-amo-addon-header", args: {"addon-name": await getAddonName()}},
+      primary_button: {
+        label: {string_id: "return-to-amo-extension-button"},
+        action: {
+          type: "INSTALL_ADDON_FROM_URL",
+          data: {url: null}, // to be dynamically filled in, in ASRouter.jsm
+        },
+      },
+      secondary_button: {
+        label: {string_id: "return-to-amo-get-started-button"},
+      },
+    },
+    targeting: "attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",
     trigger: {id: "firstRun"},
   },
 ]);
@@ -125,20 +173,32 @@ const OnboardingMessageProvider = {
   async translateMessages(messages) {
     let translatedMessages = [];
     for (const msg of messages) {
-      let translatedMessage = msg;
+      let translatedMessage = {...msg};
+
       // If the message has no content, do not attempt to translate it
-      if (!msg.content) {
-        translatedMessages.push(msg);
+      if (!translatedMessage.content) {
+        translatedMessages.push(translatedMessage);
         continue;
       }
-      const [button_string, title_string, text_string] = await L10N.formatMessages([
-        {id: msg.content.button_label.string_id},
+
+      const [primary_button_string, title_string, text_string] = await L10N.formatMessages([
+        {id: msg.content.primary_button.label.string_id},
         {id: msg.content.title.string_id},
-        {id: msg.content.text.string_id},
+        {id: msg.content.text.string_id, args: msg.content.text.args},
       ]);
-      translatedMessage.content.button_label = button_string.value;
+      translatedMessage.content.primary_button.label = primary_button_string.value;
       translatedMessage.content.title = title_string.value;
       translatedMessage.content.text = text_string.value;
+
+      // Translate any secondary buttons separately
+      if (msg.content.secondary_button) {
+        const [secondary_button_string] = await L10N.formatMessages([{id: msg.content.secondary_button.label.string_id}]);
+        translatedMessage.content.secondary_button.label = secondary_button_string.value;
+      }
+      if (msg.content.header) {
+        const [header_string] = await L10N.formatMessages([{id: msg.content.header.string_id}]);
+        translatedMessage.content.header = header_string.value;
+      }
       translatedMessages.push(translatedMessage);
     }
     return translatedMessages;
