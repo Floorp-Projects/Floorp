@@ -801,9 +801,6 @@ class GlobalObject : public NativeObject
     // Implemented in builtin/intl/IntlObject.cpp.
     static bool initIntlObject(JSContext* cx, Handle<GlobalObject*> global);
 
-    // Implemented in builtin/intl/RelativeTimeFormat.cpp.
-    static bool addRelativeTimeFormatConstructor(JSContext* cx, HandleObject intl);
-
     // Implemented in builtin/ModuleObject.cpp
     static bool initModuleProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initImportEntryProto(JSContext* cx, Handle<GlobalObject*> global);

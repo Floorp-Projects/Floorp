@@ -341,7 +341,7 @@ function assertDebugLine(dbg, line) {
   const markedSpans = lineInfo.handle.markedSpans;
   if (markedSpans && markedSpans.length > 0) {
     const classMatch = markedSpans.filter(
-      span => span.marker.className.includes("debug-expression")
+      span => span.marker.className && span.marker.className.includes("debug-expression")
     ).length > 0;
 
     ok(

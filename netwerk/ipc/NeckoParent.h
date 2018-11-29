@@ -33,15 +33,6 @@ public:
   NeckoParent();
   virtual ~NeckoParent() = default;
 
-  static PBOverrideStatus PBOverrideStatusFromLoadContext(
-    const SerializedLoadContext& aSerialized);
-  static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
-    const OptionalLoadInfoArgs& aOptionalLoadInfoArgs);
-  static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
-    const FTPChannelCreationArgs& aArgs);
-  static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
-    const HttpChannelCreationArgs& aArgs);
-
   MOZ_MUST_USE
   static const char *
   GetValidatedOriginAttributes(const SerializedLoadContext& aSerialized,
@@ -102,7 +93,15 @@ public:
   };
 
 protected:
-  virtual PHttpChannelParent* AllocPHttpChannelParent() override;
+  virtual PHttpChannelParent*
+    AllocPHttpChannelParent(const PBrowserOrId&, const SerializedLoadContext&,
+                            const HttpChannelCreationArgs& aOpenArgs) override;
+  virtual mozilla::ipc::IPCResult
+    RecvPHttpChannelConstructor(
+      PHttpChannelParent* aActor,
+      const PBrowserOrId& aBrowser,
+      const SerializedLoadContext& aSerialized,
+      const HttpChannelCreationArgs& aOpenArgs) override;
   virtual bool DeallocPHttpChannelParent(PHttpChannelParent*) override;
 
   virtual PStunAddrsRequestParent* AllocPStunAddrsRequestParent() override;
