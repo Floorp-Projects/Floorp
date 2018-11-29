@@ -106,10 +106,15 @@ def eslint_setup(should_clobber=False):
     npm_is_older_version = version < StrictVersion("5.8.0").version
 
     if npm_is_older_version:
-        cmd = [node_path, npm_path, "install"]
+        cmd = [npm_path, "install"]
         shutil.copy2(package_lock_json_path, package_lock_json_tmp_path)
     else:
-        cmd = [node_path, npm_path, "ci"]
+        cmd = [npm_path, "ci"]
+
+    # On non-Windows, ensure npm is called via node, as node may not be in the
+    # path.
+    if platform.system() != "Windows":
+        cmd.insert(0, node_path)
 
     cmd.extend(extra_parameters)
     print("Installing eslint for mach using \"%s\"..." % (" ".join(cmd)))
