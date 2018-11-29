@@ -89,7 +89,7 @@ public:
                                 wr::TransactionBuilder& aTxn);
 
   void UpdateAsyncImagePipeline(const wr::PipelineId& aPipelineId,
-                                const LayoutDeviceSize& aSize,
+                                const LayoutDeviceRect& aScBounds,
                                 const gfx::Matrix4x4& aScTransform,
                                 const gfx::MaybeIntSize& aScaleToSize,
                                 const wr::ImageRendering& aFilter,
@@ -170,18 +170,18 @@ private:
 
   struct AsyncImagePipeline {
     AsyncImagePipeline();
-    void Update(const LayoutDeviceSize& aSize,
+    void Update(const LayoutDeviceRect& aScBounds,
                 const gfx::Matrix4x4& aScTransform,
                 const gfx::MaybeIntSize& aScaleToSize,
                 const wr::ImageRendering& aFilter,
                 const wr::MixBlendMode& aMixBlendMode)
     {
-      mIsChanged |= mSize != aSize ||
+      mIsChanged |= !mScBounds.IsEqualEdges(aScBounds) ||
                     mScTransform != aScTransform ||
                     mScaleToSize != aScaleToSize ||
                     mFilter != aFilter ||
                     mMixBlendMode != aMixBlendMode;
-      mSize = aSize;
+      mScBounds = aScBounds;
       mScTransform = aScTransform;
       mScaleToSize = aScaleToSize;
       mFilter = aFilter;
@@ -191,7 +191,7 @@ private:
     bool mInitialised;
     bool mIsChanged;
     bool mUseExternalImage;
-    LayoutDeviceSize mSize;
+    LayoutDeviceRect mScBounds;
     gfx::Matrix4x4 mScTransform;
     gfx::MaybeIntSize mScaleToSize;
     wr::ImageRendering mFilter;
