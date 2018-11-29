@@ -26,5 +26,7 @@
   title and alt attributes.
 - Changed `ContentDelegate.ContextElement` TYPE_ constants to public access.
   Changed `ContentDelegate.ContextElement` to non-final class.
+- Update `CrashReporter.sendCrashReport()` to return the crash ID as a
+  GeckoResult<String>.
 
-[api-version]: 01a6677fc7645b27d9824a2ebd3a6ab54c5e192a
+[api-version]: d6c40ef4886c7818a446fb7b7a1cdbde706025ab
