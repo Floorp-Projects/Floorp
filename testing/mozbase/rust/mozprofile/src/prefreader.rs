@@ -1,4 +1,4 @@
-use preferences::{Pref, PrefValue, Preferences};
+use crate::preferences::{Pref, PrefValue, Preferences};
 use std::borrow::Borrow;
 use std::borrow::Cow;
 use std::char;
