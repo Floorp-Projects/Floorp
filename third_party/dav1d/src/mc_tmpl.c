@@ -72,11 +72,11 @@ prep_c(coef *tmp, const pixel *src, const ptrdiff_t src_stride,
      F[6] * src[x + +3 * stride] + \
      F[7] * src[x + +4 * stride])
 
-#define FILTER_8TAP_RND(src, x, F, stride, sh) \
+#define DAV1D_FILTER_8TAP_RND(src, x, F, stride, sh) \
     ((FILTER_8TAP(src, x, F, stride) + ((1 << sh) >> 1)) >> sh)
 
-#define FILTER_8TAP_CLIP(src, x, F, stride, sh) \
-    iclip_pixel(FILTER_8TAP_RND(src, x, F, stride, sh))
+#define DAV1D_FILTER_8TAP_CLIP(src, x, F, stride, sh) \
+    iclip_pixel(DAV1D_FILTER_8TAP_RND(src, x, F, stride, sh))
 
 #define GET_H_FILTER(mx) \
     const int8_t *const fh = !(mx) ? NULL : w > 4 ? \
@@ -110,7 +110,7 @@ put_8tap_c(pixel *dst, ptrdiff_t dst_stride,
             src -= src_stride * 3;
             do {
                 for (int x = 0; x < w; x++)
-                    mid_ptr[x] = FILTER_8TAP_RND(src, x, fh, 1, 2);
+                    mid_ptr[x] = DAV1D_FILTER_8TAP_RND(src, x, fh, 1, 2);
 
                 mid_ptr += 128;
                 src += src_stride;
@@ -119,7 +119,7 @@ put_8tap_c(pixel *dst, ptrdiff_t dst_stride,
             mid_ptr = mid + 128 * 3;
             do {
                 for (int x = 0; x < w; x++)
-                    dst[x] = FILTER_8TAP_CLIP(mid_ptr, x, fv, 128, 10);
+                    dst[x] = DAV1D_FILTER_8TAP_CLIP(mid_ptr, x, fv, 128, 10);
 
                 mid_ptr += 128;
                 dst += dst_stride;
@@ -127,7 +127,7 @@ put_8tap_c(pixel *dst, ptrdiff_t dst_stride,
         } else {
             do {
                 for (int x = 0; x < w; x++) {
-                    const int px = FILTER_8TAP_RND(src, x, fh, 1, 2);
+                    const int px = DAV1D_FILTER_8TAP_RND(src, x, fh, 1, 2);
                     dst[x] = iclip_pixel((px + 8) >> 4);
                 }
 
@@ -138,7 +138,7 @@ put_8tap_c(pixel *dst, ptrdiff_t dst_stride,
     } else if (fv) {
         do {
             for (int x = 0; x < w; x++)
-                dst[x] = FILTER_8TAP_CLIP(src, x, fv, src_stride, 6);
+                dst[x] = DAV1D_FILTER_8TAP_CLIP(src, x, fv, src_stride, 6);
 
             dst += dst_stride;
             src += src_stride;
@@ -164,7 +164,7 @@ put_8tap_scaled_c(pixel *dst, const ptrdiff_t dst_stride,
 
         for (x = 0; x < w; x++) {
             GET_H_FILTER(imx >> 6);
-            mid_ptr[x] = fh ? FILTER_8TAP_RND(src, ioff, fh, 1, 2) : src[ioff] << 4;
+            mid_ptr[x] = fh ? DAV1D_FILTER_8TAP_RND(src, ioff, fh, 1, 2) : src[ioff] << 4;
             imx += dx;
             ioff += imx >> 10;
             imx &= 0x3ff;
@@ -180,7 +180,7 @@ put_8tap_scaled_c(pixel *dst, const ptrdiff_t dst_stride,
         GET_V_FILTER(my >> 6);
 
         for (x = 0; x < w; x++)
-            dst[x] = fv ? FILTER_8TAP_CLIP(mid_ptr, x, fv, 128, 10) :
+            dst[x] = fv ? DAV1D_FILTER_8TAP_CLIP(mid_ptr, x, fv, 128, 10) :
                           iclip_pixel((mid_ptr[x] + 8) >> 4);
 
         my += dy;
@@ -206,7 +206,7 @@ prep_8tap_c(coef *tmp, const pixel *src, ptrdiff_t src_stride,
             src -= src_stride * 3;
             do {
                 for (int x = 0; x < w; x++)
-                    mid_ptr[x] = FILTER_8TAP_RND(src, x, fh, 1, 2);
+                    mid_ptr[x] = DAV1D_FILTER_8TAP_RND(src, x, fh, 1, 2);
 
                 mid_ptr += 128;
                 src += src_stride;
@@ -215,7 +215,7 @@ prep_8tap_c(coef *tmp, const pixel *src, ptrdiff_t src_stride,
             mid_ptr = mid + 128 * 3;
             do {
                 for (int x = 0; x < w; x++)
-                    tmp[x] = FILTER_8TAP_RND(mid_ptr, x, fv, 128, 6);
+                    tmp[x] = DAV1D_FILTER_8TAP_RND(mid_ptr, x, fv, 128, 6);
 
                 mid_ptr += 128;
                 tmp += w;
@@ -223,7 +223,7 @@ prep_8tap_c(coef *tmp, const pixel *src, ptrdiff_t src_stride,
         } else {
             do {
                 for (int x = 0; x < w; x++)
-                    tmp[x] = FILTER_8TAP_RND(src, x, fh, 1, 2);
+                    tmp[x] = DAV1D_FILTER_8TAP_RND(src, x, fh, 1, 2);
 
                 tmp += w;
                 src += src_stride;
@@ -232,7 +232,7 @@ prep_8tap_c(coef *tmp, const pixel *src, ptrdiff_t src_stride,
     } else if (fv) {
         do {
             for (int x = 0; x < w; x++)
-                tmp[x] = FILTER_8TAP_RND(src, x, fv, src_stride, 2);
+                tmp[x] = DAV1D_FILTER_8TAP_RND(src, x, fv, src_stride, 2);
 
             tmp += w;
             src += src_stride;
@@ -257,7 +257,7 @@ prep_8tap_scaled_c(coef *tmp, const pixel *src, ptrdiff_t src_stride,
 
         for (x = 0; x < w; x++) {
             GET_H_FILTER(imx >> 6);
-            mid_ptr[x] = fh ? FILTER_8TAP_RND(src, ioff, fh, 1, 2) : src[ioff] << 4;
+            mid_ptr[x] = fh ? DAV1D_FILTER_8TAP_RND(src, ioff, fh, 1, 2) : src[ioff] << 4;
             imx += dx;
             ioff += imx >> 10;
             imx &= 0x3ff;
@@ -273,7 +273,7 @@ prep_8tap_scaled_c(coef *tmp, const pixel *src, ptrdiff_t src_stride,
         GET_V_FILTER(my >> 6);
 
         for (x = 0; x < w; x++)
-            tmp[x] = fv ? FILTER_8TAP_RND(mid_ptr, x, fv, 128, 6) : mid_ptr[x];
+            tmp[x] = fv ? DAV1D_FILTER_8TAP_RND(mid_ptr, x, fv, 128, 6) : mid_ptr[x];
 
         my += dy;
         mid_ptr += (my >> 10) * 128;
@@ -324,15 +324,15 @@ static void prep_8tap_##type##_scaled_c(coef *const tmp, \
                        type_h | (type_v << 2)); \
 }
 
-filter_fns(regular,        FILTER_8TAP_REGULAR, FILTER_8TAP_REGULAR)
-filter_fns(regular_sharp,  FILTER_8TAP_REGULAR, FILTER_8TAP_SHARP)
-filter_fns(regular_smooth, FILTER_8TAP_REGULAR, FILTER_8TAP_SMOOTH)
-filter_fns(smooth,         FILTER_8TAP_SMOOTH,  FILTER_8TAP_SMOOTH)
-filter_fns(smooth_regular, FILTER_8TAP_SMOOTH,  FILTER_8TAP_REGULAR)
-filter_fns(smooth_sharp,   FILTER_8TAP_SMOOTH,  FILTER_8TAP_SHARP)
-filter_fns(sharp,          FILTER_8TAP_SHARP,   FILTER_8TAP_SHARP)
-filter_fns(sharp_regular,  FILTER_8TAP_SHARP,   FILTER_8TAP_REGULAR)
-filter_fns(sharp_smooth,   FILTER_8TAP_SHARP,   FILTER_8TAP_SMOOTH)
+filter_fns(regular,        DAV1D_FILTER_8TAP_REGULAR, DAV1D_FILTER_8TAP_REGULAR)
+filter_fns(regular_sharp,  DAV1D_FILTER_8TAP_REGULAR, DAV1D_FILTER_8TAP_SHARP)
+filter_fns(regular_smooth, DAV1D_FILTER_8TAP_REGULAR, DAV1D_FILTER_8TAP_SMOOTH)
+filter_fns(smooth,         DAV1D_FILTER_8TAP_SMOOTH,  DAV1D_FILTER_8TAP_SMOOTH)
+filter_fns(smooth_regular, DAV1D_FILTER_8TAP_SMOOTH,  DAV1D_FILTER_8TAP_REGULAR)
+filter_fns(smooth_sharp,   DAV1D_FILTER_8TAP_SMOOTH,  DAV1D_FILTER_8TAP_SHARP)
+filter_fns(sharp,          DAV1D_FILTER_8TAP_SHARP,   DAV1D_FILTER_8TAP_SHARP)
+filter_fns(sharp_regular,  DAV1D_FILTER_8TAP_SHARP,   DAV1D_FILTER_8TAP_REGULAR)
+filter_fns(sharp_smooth,   DAV1D_FILTER_8TAP_SHARP,   DAV1D_FILTER_8TAP_SMOOTH)
 
 #define FILTER_BILIN(src, x, mxy, stride) \
     (16 * src[x] + ((mxy) * (src[x + stride] - src[x])))
@@ -782,6 +782,34 @@ static void emu_edge_c(const intptr_t bw, const intptr_t bh,
     }
 }
 
+static void resize_c(pixel *dst, const ptrdiff_t dst_stride,
+                     const pixel *src, const ptrdiff_t src_stride,
+                     const int dst_w, const int src_w, int h,
+                     const int dx, const int mx0)
+{
+    do {
+        int mx = mx0, src_x = -1;
+        for (int x = 0; x < dst_w; x++) {
+            const int16_t *const F = dav1d_resize_filter[mx >> 8];
+            dst[x] = iclip_pixel((F[0] * src[iclip(src_x - 3, 0, src_w - 1)] +
+                                  F[1] * src[iclip(src_x - 2, 0, src_w - 1)] +
+                                  F[2] * src[iclip(src_x - 1, 0, src_w - 1)] +
+                                  F[3] * src[iclip(src_x + 0, 0, src_w - 1)] +
+                                  F[4] * src[iclip(src_x + 1, 0, src_w - 1)] +
+                                  F[5] * src[iclip(src_x + 2, 0, src_w - 1)] +
+                                  F[6] * src[iclip(src_x + 3, 0, src_w - 1)] +
+                                  F[7] * src[iclip(src_x + 4, 0, src_w - 1)] +
+                                  64) >> 7);
+            mx += dx;
+            src_x += mx >> 14;
+            mx &= 0x3fff;
+        }
+
+        dst += PXSTRIDE(dst_stride);
+        src += PXSTRIDE(src_stride);
+    } while (--h);
+}
+
 void bitfn(dav1d_mc_dsp_init)(Dav1dMCDSPContext *const c) {
 #define init_mc_fns(type, name) do { \
     c->mc        [type] = put_##name##_c; \
@@ -813,6 +841,7 @@ void bitfn(dav1d_mc_dsp_init)(Dav1dMCDSPContext *const c) {
     c->warp8x8  = warp_affine_8x8_c;
     c->warp8x8t = warp_affine_8x8t_c;
     c->emu_edge = emu_edge_c;
+    c->resize   = resize_c;
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM

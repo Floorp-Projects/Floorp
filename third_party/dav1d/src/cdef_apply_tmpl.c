@@ -88,8 +88,8 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
     pixel *ptrs[3] = { p[0], p[1], p[2] };
     const int sbsz = 16;
     const int sb64w = f->sb128w << 1;
-    const int damping = f->frame_hdr.cdef.damping + BITDEPTH - 8;
-    const enum Dav1dPixelLayout layout = f->cur.p.p.layout;
+    const int damping = f->frame_hdr->cdef.damping + BITDEPTH - 8;
+    const enum Dav1dPixelLayout layout = f->cur.p.layout;
     const int uv_idx = DAV1D_PIXEL_LAYOUT_I444 - layout;
     const int has_chroma = layout != DAV1D_PIXEL_LAYOUT_I400;
     const int ss_ver = layout == DAV1D_PIXEL_LAYOUT_I420;
@@ -106,7 +106,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
 
         if (edges & HAVE_BOTTOM) {
             // backup pre-filter data for next iteration
-            backup2lines(f->lf.cdef_line_ptr[!tf], ptrs, f->cur.p.stride,
+            backup2lines(f->lf.cdef_line_ptr[!tf], ptrs, f->cur.stride,
                          8, f->bw * 4, layout);
         }
 
@@ -119,15 +119,15 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
             const int sb64_idx = ((by & sbsz) >> 3) + (sbx & 1);
             const int cdef_idx = lflvl[sb128x].cdef_idx[sb64_idx];
             if (cdef_idx == -1 ||
-                (!f->frame_hdr.cdef.y_strength[cdef_idx] &&
-                 !f->frame_hdr.cdef.uv_strength[cdef_idx]))
+                (!f->frame_hdr->cdef.y_strength[cdef_idx] &&
+                 !f->frame_hdr->cdef.uv_strength[cdef_idx]))
             {
                 last_skip = 1;
                 goto next_sb;
             }
 
-            const int y_lvl = f->frame_hdr.cdef.y_strength[cdef_idx];
-            const int uv_lvl = f->frame_hdr.cdef.uv_strength[cdef_idx];
+            const int y_lvl = f->frame_hdr->cdef.y_strength[cdef_idx];
+            const int uv_lvl = f->frame_hdr->cdef.uv_strength[cdef_idx];
             pixel *bptrs[3] = { iptrs[0], iptrs[1], iptrs[2] };
             for (int bx = sbx * sbsz; bx < imin((sbx + 1) * sbsz, f->bw);
                  bx += 2, edges |= HAVE_LEFT)
@@ -148,11 +148,11 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                 if (last_skip && edges & HAVE_LEFT) {
                     // we didn't backup the prefilter data because it wasn't
                     // there, so do it here instead
-                    backup2x8(lr_bak[bit], bptrs, f->cur.p.stride, 0, layout);
+                    backup2x8(lr_bak[bit], bptrs, f->cur.stride, 0, layout);
                 }
                 if (edges & HAVE_RIGHT) {
                     // backup pre-filter data for next iteration
-                    backup2x8(lr_bak[!bit], bptrs, f->cur.p.stride, 8, layout);
+                    backup2x8(lr_bak[!bit], bptrs, f->cur.stride, 8, layout);
                 }
 
                 // the actual filter
@@ -165,10 +165,10 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                 uv_sec_lvl += uv_sec_lvl == 3;
                 uv_sec_lvl <<= BITDEPTH - 8;
                 unsigned variance;
-                const int dir = dsp->cdef.dir(bptrs[0], f->cur.p.stride[0],
+                const int dir = dsp->cdef.dir(bptrs[0], f->cur.stride[0],
                                               &variance);
                 if (y_lvl) {
-                    dsp->cdef.fb[0](bptrs[0], f->cur.p.stride[0], lr_bak[bit][0],
+                    dsp->cdef.fb[0](bptrs[0], f->cur.stride[0], lr_bak[bit][0],
                                     (pixel *const [2]) {
                                         &f->lf.cdef_line_ptr[tf][0][0][bx * 4],
                                         &f->lf.cdef_line_ptr[tf][0][1][bx * 4],
@@ -179,10 +179,10 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                 }
                 if (uv_lvl && has_chroma) {
                     const int uvdir =
-                        f->cur.p.p.layout != DAV1D_PIXEL_LAYOUT_I422 ? dir :
+                        f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I422 ? dir :
                         ((uint8_t[]) { 7, 0, 2, 4, 5, 6, 6, 6 })[dir];
                     for (int pl = 1; pl <= 2; pl++) {
-                        dsp->cdef.fb[uv_idx](bptrs[pl], f->cur.p.stride[1],
+                        dsp->cdef.fb[uv_idx](bptrs[pl], f->cur.stride[1],
                                              lr_bak[bit][pl],
                                              (pixel *const [2]) {
                                                  &f->lf.cdef_line_ptr[tf][pl][0][bx * 4 >> ss_hor],
@@ -209,9 +209,9 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
             iptrs[2] += sbsz * 4 >> ss_hor;
         }
 
-        ptrs[0] += 8 * PXSTRIDE(f->cur.p.stride[0]);
-        ptrs[1] += 8 * PXSTRIDE(f->cur.p.stride[1]) >> ss_ver;
-        ptrs[2] += 8 * PXSTRIDE(f->cur.p.stride[1]) >> ss_ver;
+        ptrs[0] += 8 * PXSTRIDE(f->cur.stride[0]);
+        ptrs[1] += 8 * PXSTRIDE(f->cur.stride[1]) >> ss_ver;
+        ptrs[2] += 8 * PXSTRIDE(f->cur.stride[1]) >> ss_ver;
         f->lf.top_pre_cdef_toggle ^= 1;
     }
 }

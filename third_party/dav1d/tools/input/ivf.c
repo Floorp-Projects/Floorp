@@ -36,12 +36,20 @@
 
 #include "input/demuxer.h"
 
+#ifdef _MSC_VER
+#define ftello _ftelli64
+#endif
+
 typedef struct DemuxerPriv {
     FILE *f;
 } IvfInputContext;
 
 static unsigned rl32(const uint8_t *const p) {
     return ((uint32_t)p[3] << 24U) | (p[2] << 16U) | (p[1] << 8U) | p[0];
+}
+
+static int64_t rl64(const uint8_t *const p) {
+    return (((uint64_t) rl32(&p[4])) << 32) | rl32(p);
 }
 
 static int ivf_open(IvfInputContext *const c, const char *const file,
@@ -87,16 +95,20 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
 }
 
 static int ivf_read(IvfInputContext *const c, Dav1dData *const buf) {
-    uint8_t data[4];
+    uint8_t data[8];
     uint8_t *ptr;
     int res;
 
+    const int64_t off = ftello(c->f);
     if ((res = fread(data, 4, 1, c->f)) != 1)
         return -1; // EOF
-    fseek(c->f, 8, SEEK_CUR); // skip timestamp
     const ptrdiff_t sz = rl32(data);
+    if ((res = fread(data, 8, 1, c->f)) != 1)
+        return -1; // EOF
     ptr = dav1d_data_create(buf, sz);
     if (!ptr) return -1;
+    buf->m.offset = off;
+    buf->m.timestamp = rl64(data);
     if ((res = fread(ptr, sz, 1, c->f)) != 1) {
         fprintf(stderr, "Failed to read frame data: %s\n", strerror(errno));
         dav1d_data_unref(buf);

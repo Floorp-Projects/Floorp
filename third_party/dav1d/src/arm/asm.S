@@ -54,6 +54,14 @@
 #endif
 #endif
 
+#if !defined(PIC)
+#if defined(__PIC__)
+#define PIC __PIC__
+#elif defined(__pic__)
+#define PIC __pic__
+#endif
+#endif
+
 #ifndef PRIVATE_PREFIX
 #define PRIVATE_PREFIX dav1d_
 #endif
@@ -120,5 +128,7 @@ EXTERN\name:
 #else
 #define L(x) .L ## x
 #endif
+
+#define X(x) CONCAT(EXTERN, x)
 
 #endif /* __DAV1D_SRC_ARM_ASM_S__ */

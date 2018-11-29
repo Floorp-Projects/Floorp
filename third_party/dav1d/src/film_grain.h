@@ -25,37 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_COMMON_H__
-#define __DAV1D_COMMON_H__
+#ifndef __DAV1D_SRC_FILM_GRAIN_H__
+#define __DAV1D_SRC_FILM_GRAIN_H__
 
-#include <stddef.h>
-#include <stdint.h>
+#include "dav1d/dav1d.h"
 
-#ifndef DAV1D_API
-    #if defined _WIN32
-      #define DAV1D_API __declspec(dllexport)
-    #else
-      #if __GNUC__ >= 4
-        #define DAV1D_API __attribute__ ((visibility ("default")))
-      #else
-        #define DAV1D_API
-      #endif
-    #endif
-#endif
+void dav1d_apply_grain_8bpc(Dav1dPicture *const out,
+                            const Dav1dPicture *const in);
 
-/**
- * Input packet metadata which are copied from the input data used to
- * decode each image into the matching structure of the output image
- * returned back to the user. Since these are metadata fields, they
- * can be used for other purposes than the documented ones, they will
- * still be passed from input data to output picture without being
- * used internally.
- */
-typedef struct Dav1dDataProps {
-    int64_t timestamp; ///< container timestamp of input data, default INT64_MIN
-    uint64_t duration; ///< container duration of input data, default -1
-    int64_t offset; ///< stream offset of input data, default INT64_MIN
-    size_t size; ///< packet size, default Dav1dData.sz
-} Dav1dDataProps;
+void dav1d_apply_grain_10bpc(Dav1dPicture *const out,
+                             const Dav1dPicture *const in);
 
-#endif // __DAV1D_COMMON_H__
+#endif /* __DAV1D_SRC_FILM_GRAIN_H__ */
