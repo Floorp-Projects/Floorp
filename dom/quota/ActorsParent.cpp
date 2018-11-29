@@ -405,6 +405,7 @@ class QuotaManager::CreateRunnable final
   : public BackgroundThreadObject
   , public Runnable
 {
+  nsCOMPtr<nsIEventTarget> mMainEventTarget;
   nsTArray<nsCOMPtr<nsIRunnable>> mCallbacks;
   nsString mBaseDirPath;
   RefPtr<QuotaManager> mManager;
@@ -422,8 +423,9 @@ class QuotaManager::CreateRunnable final
   State mState;
 
 public:
-  CreateRunnable()
+  explicit CreateRunnable(nsIEventTarget* aMainEventTarget)
     : Runnable("dom::quota::QuotaManager::CreateRunnable")
+    , mMainEventTarget(aMainEventTarget)
     , mResultCode(NS_OK)
     , mState(State::Initial)
   {
@@ -2780,7 +2782,11 @@ CreateRunnable::GetNextState(nsCOMPtr<nsIEventTarget>& aThread) -> State
       aThread = mOwningThread;
       return State::CreatingManager;
     case State::CreatingManager:
-      aThread = GetMainThreadEventTarget();
+      if (mMainEventTarget) {
+        aThread = mMainEventTarget;
+      } else {
+        aThread = GetMainThreadEventTarget();
+      }
       return State::RegisteringObserver;
     case State::RegisteringObserver:
       aThread = mOwningThread;
@@ -3245,7 +3251,8 @@ QuotaManager::~QuotaManager()
 }
 
 void
-QuotaManager::GetOrCreate(nsIRunnable* aCallback)
+QuotaManager::GetOrCreate(nsIRunnable* aCallback,
+                          nsIEventTarget* aMainEventTarget)
 {
   AssertIsOnBackgroundThread();
 
@@ -3261,8 +3268,14 @@ QuotaManager::GetOrCreate(nsIRunnable* aCallback)
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(aCallback));
   } else {
     if (!gCreateRunnable) {
-      gCreateRunnable = new CreateRunnable();
-      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(gCreateRunnable));
+      gCreateRunnable = new CreateRunnable(aMainEventTarget);
+      if (aMainEventTarget) {
+        MOZ_ALWAYS_SUCCEEDS(aMainEventTarget->Dispatch(gCreateRunnable,
+                                                       NS_DISPATCH_NORMAL));
+      } else {
+        MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(gCreateRunnable));
+      }
+
     }
 
     gCreateRunnable->AddCallback(aCallback);
