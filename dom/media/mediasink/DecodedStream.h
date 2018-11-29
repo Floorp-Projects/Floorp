@@ -83,7 +83,6 @@ class DecodedStream : public media::MediaSink {
   StreamTime SentDuration();
   void SendData();
   void NotifyOutput(int64_t aTime);
-  void NotifyTrackEnd(StreamTime aEndTime);
 
   void AssertOwnerThread() const {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
