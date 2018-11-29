@@ -4,12 +4,21 @@
 
 include protocol PBackground;
 
+using struct mozilla::null_t
+  from "ipc/IPCMessageUtils.h";
+
 namespace mozilla {
 namespace dom {
 
+union NullableDatastoreId
+{
+  null_t;
+  uint64_t;
+};
+
 struct LSRequestPrepareDatastoreResponse
 {
-  uint64_t datastoreId;
+  NullableDatastoreId datastoreId;
 };
 
 struct LSRequestPrepareObserverResponse

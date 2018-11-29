@@ -14,6 +14,32 @@ namespace dom {
 
 namespace {
 
+class RequestResolver final
+  : public LSRequestChildCallback
+{
+  RefPtr<Promise> mPromise;
+
+public:
+  explicit RequestResolver(Promise* aPromise)
+    : mPromise(aPromise)
+  { }
+
+  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::RequestResolver, override);
+
+private:
+  ~RequestResolver() = default;
+
+  void
+  HandleResponse(nsresult aResponse);
+
+  void
+  HandleResponse(const NullableDatastoreId& aDatastoreId);
+
+  // LSRequestChildCallback
+  void
+  OnResponse(const LSRequestResponse& aResponse) override;
+};
+
 class SimpleRequestResolver final
   : public LSSimpleRequestChildCallback
 {
@@ -183,6 +209,44 @@ LocalStorageManager2::GetNextGenLocalStorageEnabled(bool* aResult)
 }
 
 NS_IMETHODIMP
+LocalStorageManager2::Preload(nsIPrincipal* aPrincipal,
+                              JSContext* aContext,
+                              nsISupports** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(_retval);
+
+  nsresult rv;
+
+  RefPtr<Promise> promise;
+
+  if (aContext) {
+    rv = CreatePromise(aContext, getter_AddRefs(promise));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  LSRequestPrepareDatastoreParams params;
+  params.createIfNotExists() = false;
+
+  rv = CheckedPrincipalToPrincipalInfo(aPrincipal,
+                                       params.principalInfo());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = StartRequest(promise, params);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  promise.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LocalStorageManager2::IsPreloaded(nsIPrincipal* aPrincipal,
                                   JSContext* aContext,
                                   nsISupports** _retval)
@@ -215,6 +279,29 @@ LocalStorageManager2::IsPreloaded(nsIPrincipal* aPrincipal,
 }
 
 nsresult
+LocalStorageManager2::StartRequest(Promise* aPromise,
+                                   const LSRequestParams& aParams)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  PBackgroundChild* backgroundActor =
+    BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!backgroundActor)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<RequestResolver> resolver = new RequestResolver(aPromise);
+
+  auto actor = new LSRequestChild(resolver);
+
+  if (!backgroundActor->SendPBackgroundLSRequestConstructor(actor, aParams)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 LocalStorageManager2::StartSimpleRequest(Promise* aPromise,
                                          const LSSimpleRequestParams& aParams)
 {
@@ -237,6 +324,60 @@ LocalStorageManager2::StartSimpleRequest(Promise* aPromise,
   }
 
   return NS_OK;
+}
+
+void
+RequestResolver::HandleResponse(nsresult aResponse)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mPromise) {
+    return;
+  }
+
+  mPromise->MaybeReject(aResponse);
+}
+
+void
+RequestResolver::HandleResponse(const NullableDatastoreId& aDatastoreId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mPromise) {
+    return;
+  }
+
+  switch (aDatastoreId.type()) {
+    case NullableDatastoreId::Tnull_t:
+      mPromise->MaybeResolve(JS::NullHandleValue);
+      break;
+
+    case NullableDatastoreId::Tuint64_t:
+      mPromise->MaybeResolve(aDatastoreId.get_uint64_t());
+      break;
+
+   default:
+      MOZ_CRASH("Unknown datastore id type!");
+  }
+}
+
+void
+RequestResolver::OnResponse(const LSRequestResponse& aResponse)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  switch (aResponse.type()) {
+    case LSRequestResponse::Tnsresult:
+      HandleResponse(aResponse.get_nsresult());
+      break;
+
+    case LSRequestResponse::TLSRequestPrepareDatastoreResponse:
+      HandleResponse(
+        aResponse.get_LSRequestPrepareDatastoreResponse().datastoreId());
+      break;
+   default:
+      MOZ_CRASH("Unknown response type!");
+  }
 }
 
 void

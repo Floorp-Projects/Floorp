@@ -150,7 +150,7 @@ class LSRequestChild final
   : public PBackgroundLSRequestChild
 {
   friend class LSObject;
-  friend class LSObjectChild;
+  friend class LocalStorageManager2;
 
   RefPtr<LSRequestChildCallback> mCallback;
 

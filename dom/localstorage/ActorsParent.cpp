@@ -55,6 +55,8 @@ namespace {
 class Connection;
 class ConnectionThread;
 class Database;
+class PrepareDatastoreOp;
+class PreparedDatastore;
 
 /*******************************************************************************
  * Constants
@@ -111,6 +113,8 @@ const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 
 const uint32_t kDefaultOriginLimitKB = 5 * 1024;
 const char kDefaultQuotaPref[] = "dom.storage.default_quota";
+
+const uint32_t kPreparedDatastoreTimeoutMs = 20000;
 
 bool
 IsOnConnectionThread();
@@ -860,6 +864,8 @@ class Datastore final
   RefPtr<Connection> mConnection;
   nsCOMPtr<nsITimer> mAutoCommitTimer;
   nsCOMPtr<nsIRunnable> mCompleteCallback;
+  nsTHashtable<nsPtrHashKey<PrepareDatastoreOp>> mPrepareDatastoreOps;
+  nsTHashtable<nsPtrHashKey<PreparedDatastore>> mPreparedDatastores;
   nsTHashtable<nsPtrHashKey<Database>> mDatabases;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
   const nsCString mOrigin;
@@ -909,13 +915,32 @@ public:
   WaitForConnectionToComplete(nsIRunnable* aCallback);
 
   void
+  NoteLivePrepareDatastoreOp(PrepareDatastoreOp* aPrepareDatastoreOp);
+
+  void
+  NoteFinishedPrepareDatastoreOp(PrepareDatastoreOp* aPrepareDatastoreOp);
+
+  void
+  NoteLivePreparedDatastore(PreparedDatastore* aPreparedDatastore);
+
+  void
+  NoteFinishedPreparedDatastore(PreparedDatastore* aPreparedDatastore);
+
+#ifdef DEBUG
+  bool
+  HasLivePreparedDatastores() const;
+#endif
+
+  void
   NoteLiveDatabase(Database* aDatabase);
 
   void
   NoteFinishedDatabase(Database* aDatabase);
 
+#ifdef DEBUG
   bool
   HasLiveDatabases() const;
+#endif
 
   uint32_t
   GetLength() const;
@@ -951,6 +976,9 @@ private:
   ~Datastore();
 
   void
+  MaybeClose();
+
+  void
   ConnectionClosedCallback();
 
   void
@@ -975,29 +1003,57 @@ private:
 class PreparedDatastore
 {
   RefPtr<Datastore> mDatastore;
+  nsCOMPtr<nsITimer> mTimer;
   // Strings share buffers if possible, so it's not a problem to duplicate the
   // origin here.
   const nsCString mOrigin;
+  uint64_t mDatastoreId;
+  bool mForPreload;
   bool mInvalidated;
 
 public:
   PreparedDatastore(Datastore* aDatastore,
-                    const nsACString& aOrigin)
+                    const nsACString& aOrigin,
+                    uint64_t aDatastoreId,
+                    bool aForPreload)
     : mDatastore(aDatastore)
+    , mTimer(NS_NewTimer())
     , mOrigin(aOrigin)
+    , mDatastoreId(aDatastoreId)
+    , mForPreload(aForPreload)
     , mInvalidated(false)
   {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(aDatastore);
+    MOZ_ASSERT(mTimer);
+
+    aDatastore->NoteLivePreparedDatastore(this);
+
+    MOZ_ALWAYS_SUCCEEDS(
+      mTimer->InitWithNamedFuncCallback(TimerCallback,
+                                        this,
+                                        kPreparedDatastoreTimeoutMs,
+                                        nsITimer::TYPE_ONE_SHOT,
+                                        "PreparedDatastore::TimerCallback"));
   }
 
-  already_AddRefed<Datastore>
-  ForgetDatastore()
+  ~PreparedDatastore()
+  {
+    MOZ_ASSERT(mDatastore);
+    MOZ_ASSERT(mTimer);
+
+    mTimer->Cancel();
+
+    mDatastore->NoteFinishedPreparedDatastore(this);
+  }
+
+  Datastore*
+  GetDatastore() const
   {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(mDatastore);
 
-    return mDatastore.forget();
+    return mDatastore;
   }
 
   const nsCString&
@@ -1012,6 +1068,17 @@ public:
     AssertIsOnBackgroundThread();
 
     mInvalidated = true;
+
+    if (mForPreload) {
+      mTimer->Cancel();
+
+      MOZ_ALWAYS_SUCCEEDS(
+        mTimer->InitWithNamedFuncCallback(TimerCallback,
+                                          this,
+                                          0,
+                                          nsITimer::TYPE_ONE_SHOT,
+                                          "PreparedDatastore::TimerCallback"));
+    }
   }
 
   bool
@@ -1021,6 +1088,13 @@ public:
 
     return mInvalidated;
   }
+
+private:
+  void
+  Destroy();
+
+  static void
+  TimerCallback(nsITimer* aTimer, void* aClosure);
 };
 
 /*******************************************************************************
@@ -1119,7 +1193,7 @@ public:
   }
 
   void
-  SetActorAlive(already_AddRefed<Datastore>&& aDatastore);
+  SetActorAlive(Datastore* aDatastore);
 
   void
   RequestAllowToClose();
@@ -1358,6 +1432,7 @@ class PrepareDatastoreOp
   uint32_t mPrivateBrowsingId;
   int64_t mUsage;
   NestedState mNestedState;
+  bool mDatabaseNotAvailable;
   bool mRequestedDirectoryLock;
   bool mInvalidated;
 
@@ -1424,6 +1499,12 @@ private:
 
   nsresult
   DatabaseWork();
+
+  nsresult
+  DatabaseNotAvailable();
+
+  nsresult
+  EnsureDirectoryEntry(nsIFile* aEntry, bool aDirectory);
 
   nsresult
   VerifyDatabaseInformation(mozIStorageConnection* aConnection);
@@ -2614,6 +2695,69 @@ Datastore::WaitForConnectionToComplete(nsIRunnable* aCallback)
 }
 
 void
+Datastore::NoteLivePrepareDatastoreOp(PrepareDatastoreOp* aPrepareDatastoreOp)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aPrepareDatastoreOp);
+  MOZ_ASSERT(!mPrepareDatastoreOps.GetEntry(aPrepareDatastoreOp));
+  MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(!mClosed);
+
+  mPrepareDatastoreOps.PutEntry(aPrepareDatastoreOp);
+}
+
+void
+Datastore::NoteFinishedPrepareDatastoreOp(
+                                        PrepareDatastoreOp* aPrepareDatastoreOp)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aPrepareDatastoreOp);
+  MOZ_ASSERT(mPrepareDatastoreOps.GetEntry(aPrepareDatastoreOp));
+  MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(!mClosed);
+
+  mPrepareDatastoreOps.RemoveEntry(aPrepareDatastoreOp);
+
+  MaybeClose();
+}
+
+void
+Datastore::NoteLivePreparedDatastore(PreparedDatastore* aPreparedDatastore)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aPreparedDatastore);
+  MOZ_ASSERT(!mPreparedDatastores.GetEntry(aPreparedDatastore));
+  MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(!mClosed);
+
+  mPreparedDatastores.PutEntry(aPreparedDatastore);
+}
+
+void
+Datastore::NoteFinishedPreparedDatastore(PreparedDatastore* aPreparedDatastore)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aPreparedDatastore);
+  MOZ_ASSERT(mPreparedDatastores.GetEntry(aPreparedDatastore));
+  MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(!mClosed);
+
+  mPreparedDatastores.RemoveEntry(aPreparedDatastore);
+
+  MaybeClose();
+}
+
+#ifdef DEBUG
+bool
+Datastore::HasLivePreparedDatastores() const
+{
+  AssertIsOnBackgroundThread();
+
+  return mPreparedDatastores.Count();
+}
+#endif
+
+void
 Datastore::NoteLiveDatabase(Database* aDatabase)
 {
   AssertIsOnBackgroundThread();
@@ -2636,11 +2780,10 @@ Datastore::NoteFinishedDatabase(Database* aDatabase)
 
   mDatabases.RemoveEntry(aDatabase);
 
-  if (!mDatabases.Count()) {
-    Close();
-  }
+  MaybeClose();
 }
 
+#ifdef DEBUG
 bool
 Datastore::HasLiveDatabases() const
 {
@@ -2648,6 +2791,7 @@ Datastore::HasLiveDatabases() const
 
   return mDatabases.Count();
 }
+#endif
 
 uint32_t
 Datastore::GetLength() const
@@ -2826,6 +2970,18 @@ Datastore::GetKeys(nsTArray<nsString>& aKeys) const
 }
 
 void
+Datastore::MaybeClose()
+{
+  AssertIsOnBackgroundThread();
+
+  if (!mPrepareDatastoreOps.Count() &&
+      !mPreparedDatastores.Count() &&
+      !mDatabases.Count()) {
+    Close();
+  }
+}
+
+void
 Datastore::ConnectionClosedCallback()
 {
   AssertIsOnBackgroundThread();
@@ -2944,6 +3100,34 @@ Datastore::AutoCommitTimerCallback(nsITimer* aTimer, void* aClosure)
 }
 
 /*******************************************************************************
+ * PreparedDatastore
+ ******************************************************************************/
+
+void
+PreparedDatastore::Destroy()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(gPreparedDatastores);
+  MOZ_ASSERT(gPreparedDatastores->Get(mDatastoreId));
+
+  nsAutoPtr<PreparedDatastore> preparedDatastore;
+  gPreparedDatastores->Remove(mDatastoreId, &preparedDatastore);
+  MOZ_ASSERT(preparedDatastore);
+}
+
+// static
+void
+PreparedDatastore::TimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  AssertIsOnBackgroundThread();
+
+  auto* self = static_cast<PreparedDatastore*>(aClosure);
+  MOZ_ASSERT(self);
+
+  self->Destroy();
+}
+
+/*******************************************************************************
  * Object
  ******************************************************************************/
 
@@ -3039,7 +3223,7 @@ Object::RecvPBackgroundLSDatabaseConstructor(
 
   auto* database = static_cast<Database*>(aActor);
 
-  database->SetActorAlive(preparedDatastore->ForgetDatastore());
+  database->SetActorAlive(preparedDatastore->GetDatastore());
 
   // It's possible that AbortOperations was called before the database actor
   // was created and became live. Let the child know that the database in no
@@ -3088,7 +3272,7 @@ Database::~Database()
 }
 
 void
-Database::SetActorAlive(already_AddRefed<Datastore>&& aDatastore)
+Database::SetActorAlive(Datastore* aDatastore)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorWasAlive);
@@ -3098,7 +3282,7 @@ Database::SetActorAlive(already_AddRefed<Datastore>&& aDatastore)
   mActorWasAlive = true;
 #endif
 
-  mDatastore = std::move(aDatastore);
+  mDatastore = aDatastore;
 
   mDatastore->NoteLiveDatabase(this);
 
@@ -3558,6 +3742,7 @@ PrepareDatastoreOp::PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
   , mPrivateBrowsingId(0)
   , mUsage(0)
   , mNestedState(NestedState::BeforeNesting)
+  , mDatabaseNotAvailable(false)
   , mRequestedDirectoryLock(false)
   , mInvalidated(false)
 {
@@ -3725,6 +3910,8 @@ PrepareDatastoreOp::BeginDatastorePreparation()
   if (gDatastores && (mDatastore = gDatastores->Get(mOrigin))) {
     MOZ_ASSERT(!mDatastore->IsClosed());
 
+    mDatastore->NoteLivePrepareDatastoreOp(this);
+
     mState = State::SendingReadyMessage;
     mNestedState = NestedState::AfterNesting;
 
@@ -3856,60 +4043,56 @@ PrepareDatastoreOp::DatabaseWork()
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  nsCOMPtr<nsIFile> dbDirectory;
+  nsCOMPtr<nsIFile> directoryEntry;
   nsresult rv =
     quotaManager->EnsureOriginIsInitialized(PERSISTENCE_TYPE_DEFAULT,
                                             mSuffix,
                                             mGroup,
                                             mOrigin,
-                                            getter_AddRefs(dbDirectory));
+                                            mParams.createIfNotExists(),
+                                            getter_AddRefs(directoryEntry));
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    return DatabaseNotAvailable();
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = dbDirectory->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
+  rv = directoryEntry->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  bool exists;
-  rv = dbDirectory->Exists(&exists);
+  rv = EnsureDirectoryEntry(directoryEntry, /* aIsDirectory */ true);
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    return DatabaseNotAvailable();
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (!exists) {
-    rv = dbDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-#ifdef DEBUG
-  else {
-    bool isDirectory;
-    MOZ_ASSERT(NS_SUCCEEDED(dbDirectory->IsDirectory(&isDirectory)));
-    MOZ_ASSERT(isDirectory);
-  }
-#endif
-
-  nsCOMPtr<nsIFile> dbFile;
-  rv = dbDirectory->Clone(getter_AddRefs(dbFile));
+  rv = directoryEntry->Append(NS_LITERAL_STRING(DATA_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = dbFile->Append(NS_LITERAL_STRING(DATA_FILE_NAME));
+  rv = EnsureDirectoryEntry(directoryEntry, /* aIsDirectory */ false);
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    return DatabaseNotAvailable();
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = dbFile->GetPath(mDatabaseFilePath);
+  rv = directoryEntry->GetPath(mDatabaseFilePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = CreateStorageConnection(dbFile, mOrigin, getter_AddRefs(connection));
+  rv = CreateStorageConnection(directoryEntry,
+                               mOrigin,
+                               getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3923,7 +4106,7 @@ PrepareDatastoreOp::DatabaseWork()
   // connection thread which needs to open the same database.
   MOZ_ALWAYS_SUCCEEDS(connection->Close());
 
-  // Must set mState before dispatching otherwise we will race with the owning
+  // Must set this before dispatching otherwise we will race with the owning
   // thread.
   mNestedState = NestedState::BeginLoadData;
 
@@ -3931,6 +4114,63 @@ PrepareDatastoreOp::DatabaseWork()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  return NS_OK;
+}
+
+nsresult
+PrepareDatastoreOp::DatabaseNotAvailable()
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mState == State::Nesting);
+  MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
+
+  mDatabaseNotAvailable = true;
+
+  // Must set this before dispatching otherwise we will race with the owning
+  // thread.
+  mState = State::SendingReadyMessage;
+  mNestedState = NestedState::AfterNesting;
+
+  nsresult rv = OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry, bool aIsDirectory)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aEntry);
+
+  bool exists;
+  nsresult rv = aEntry->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!exists) {
+    if (!mParams.createIfNotExists()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    if (aIsDirectory) {
+      rv = aEntry->Create(nsIFile::DIRECTORY_TYPE, 0755);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+  }
+#ifdef DEBUG
+  else {
+    bool isDirectory;
+    MOZ_ASSERT(NS_SUCCEEDED(aEntry->IsDirectory(&isDirectory)));
+    MOZ_ASSERT(isDirectory == aIsDirectory);
+  }
+#endif
 
   return NS_OK;
 }
@@ -4064,6 +4304,17 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
   MOZ_ASSERT(mState == State::SendingResults);
   MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
 
+  if (mDatabaseNotAvailable) {
+    MOZ_ASSERT(!mParams.createIfNotExists());
+
+    LSRequestPrepareDatastoreResponse prepareDatastoreResponse;
+    prepareDatastoreResponse.datastoreId() = null_t();
+
+    aResponse = prepareDatastoreResponse;
+
+    return;
+  }
+
   if (!mDatastore) {
     mDatastore = new Datastore(mOrigin,
                                mPrivateBrowsingId,
@@ -4071,6 +4322,8 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
                                mDirectoryLock.forget(),
                                mConnection.forget(),
                                mValues);
+
+    mDatastore->NoteLivePrepareDatastoreOp(this);
 
     if (!gDatastores) {
       gDatastores = new DatastoreHashtable();
@@ -4083,7 +4336,10 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
   uint64_t datastoreId = ++gLastDatastoreId;
 
   nsAutoPtr<PreparedDatastore> preparedDatastore(
-    new PreparedDatastore(mDatastore, mOrigin));
+    new PreparedDatastore(mDatastore,
+                          mOrigin,
+                          datastoreId,
+                          /* aForPreload */ !mParams.createIfNotExists()));
 
   if (!gPreparedDatastores) {
     gPreparedDatastores = new PreparedDatastoreHashtable();
@@ -4114,10 +4370,14 @@ PrepareDatastoreOp::Cleanup()
     if (NS_FAILED(ResultCode())) {
       MOZ_ASSERT(!mDatastore->IsClosed());
       MOZ_ASSERT(!mDatastore->HasLiveDatabases());
+      MOZ_ASSERT(!mDatastore->HasLivePreparedDatastores());
       mDatastore->Close();
     }
 
     // Make sure to release the datastore on this thread.
+
+    mDatastore->NoteFinishedPrepareDatastoreOp(this);
+
     mDatastore = nullptr;
 
     CleanupMetadata();
@@ -4137,8 +4397,10 @@ PrepareDatastoreOp::Cleanup()
     mConnection->Close(callback);
   } else {
     // If we don't have a connection, but we do have a directory lock then the
-    // operation must have failed too.
-    MOZ_ASSERT_IF(mDirectoryLock, NS_FAILED(ResultCode()));
+    // operation must have failed or we were preloading a datastore and there
+    // was no physical database on disk.
+    MOZ_ASSERT_IF(mDirectoryLock,
+                  NS_FAILED(ResultCode()) || mDatabaseNotAvailable);
 
     // There's no connection, so it's safe to release the directory lock and
     // unregister itself from the array.
@@ -4903,23 +5165,6 @@ QuotaClient::ShutdownWorkThreads()
   // When the last PrepareDatastoreOp finishes, the gPrepareDatastoreOps array
   // is destroyed.
 
-  // There may be datastores that are only held alive by prepared datastores
-  // (ones which have no live database actors). We need to explicitly close
-  // them here.
-  if (gDatastores) {
-    for (auto iter = gDatastores->ConstIter(); !iter.Done(); iter.Next()) {
-      Datastore* datastore = iter.Data();
-      MOZ_ASSERT(datastore);
-
-      if (!datastore->IsClosed() && !datastore->HasLiveDatabases()) {
-        datastore->Close();
-      }
-    }
-  }
-
-  // If database actors haven't been created yet, don't do anything special.
-  // We are shutting down and we can release prepared datastores immediatelly
-  // since database actors will never be created for them.
   if (gPreparedDatastores) {
     gPreparedDatastores->Clear();
     gPreparedDatastores = nullptr;
