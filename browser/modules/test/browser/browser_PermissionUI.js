@@ -294,7 +294,6 @@ add_task(async function test_on_before_show() {
       promptActions: [mainAction],
       onBeforeShow() {
         beforeShown = true;
-        return true;
       },
     };
 
@@ -354,7 +353,6 @@ add_task(async function test_no_request() {
       promptActions: [mainAction, secondaryAction],
       onBeforeShow() {
         beforeShown = true;
-        return true;
       },
     };
 

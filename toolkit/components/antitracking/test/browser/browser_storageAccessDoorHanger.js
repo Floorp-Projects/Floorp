@@ -1,30 +1,18 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const CHROME_BASE = "chrome://mochitests/content/browser/browser/modules/test/browser/";
 Services.scriptloader.loadSubScript(CHROME_BASE + "head.js", this);
 /* import-globals-from ../../../../../browser/modules/test/browser/head.js */
 
-const BLOCK = 0;
-const ALLOW = 1;
-const ALLOW_ON_ANY_SITE = 2;
-
-async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
-  info(`Running doorhanger test with choice #${choice}, showPrompt: ${showPrompt} and ` +
-       `topPage: ${topPage}, maxConcurrent: ${maxConcurrent}`);
-
-  if (!showPrompt) {
-    is(choice, ALLOW, "When not showing a prompt, we can only auto-grant");
-  }
+async function testDoorHanger(choice) {
+  info(`Running doorhanger test with choice #${choice}`);
 
   await SpecialPowers.flushPrefEnv();
   await SpecialPowers.pushPrefEnv({"set": [
     ["browser.contentblocking.allowlist.annotations.enabled", true],
     ["browser.contentblocking.allowlist.storage.enabled", true],
     [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
-    ["dom.storage_access.auto_grants", true],
     ["dom.storage_access.enabled", true],
-    ["dom.storage_access.max_concurrent_auto_grants", maxConcurrent],
     ["dom.storage_access.prompt.testing", false],
     ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
     ["privacy.trackingprotection.enabled", false],
@@ -35,19 +23,13 @@ async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
 
   await UrlClassifierTestUtils.addTestTrackers();
 
-  let tab = BrowserTestUtils.addTab(gBrowser, topPage);
+  let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
   gBrowser.selectedTab = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
   async function runChecks() {
-    // We need to repeat these constants here since runChecks is stringified
-    // and sent to the content process.
-    const BLOCK = 0;
-    const ALLOW = 1;
-    const ALLOW_ON_ANY_SITE = 2;
-
     await new Promise(resolve => {
       addEventListener("message", function onMessage(e) {
         if (e.data.startsWith("choice:")) {
@@ -79,7 +61,7 @@ async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
     /* import-globals-from storageAccessAPIHelpers.js */
     await callRequestStorageAccess();
 
-    if (choice == BLOCK) {
+    if (choice == 0) {
       // We've said no, so cookies are still blocked
       is(document.cookie, "", "Still no cookies for me");
       document.cookie = "name=value";
@@ -92,55 +74,49 @@ async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
     }
   }
 
-  let permChanged = TestUtils.topicObserved("perm-changed",
-    (subject, data) => {
-      let result;
-      if (choice == ALLOW) {
-        result = subject &&
-                 subject.QueryInterface(Ci.nsIPermission)
-                        .type.startsWith("3rdPartyStorage^") &&
-                 subject.principal.origin == (new URL(topPage)).origin &&
-                 data == "added";
-      } else if (choice == ALLOW_ON_ANY_SITE) {
-        result = subject &&
-                 subject.QueryInterface(Ci.nsIPermission)
-                        .type == "cookie" &&
-                 subject.principal.origin == "https://tracking.example.org" &&
-                 data == "added";
-      }
-      return result;
-    });
   let shownPromise =
     BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
   shownPromise.then(async _ => {
-    if (topPage != gBrowser.currentURI.spec) {
-      return;
-    }
-    ok(showPrompt, "We shouldn't show the prompt when we don't intend to");
-    let notification = await new Promise(function poll(resolve) {
-      let notification =
-        PopupNotifications.getNotification("storage-access", browser);
-      if (notification) {
-        resolve(notification);
-        return;
-      }
-      setTimeout(poll, 10);
-    });
+    let notification =
+      PopupNotifications.getNotification("storage-access", browser);
     Assert.ok(notification, "Should have gotten the notification");
 
-    if (choice == BLOCK) {
+    let permChanged = TestUtils.topicObserved("perm-changed",
+      (subject, data) => {
+        let result;
+        if (choice == 1) {
+          result = subject &&
+                   subject.QueryInterface(Ci.nsIPermission)
+                          .type.startsWith("3rdPartyStorage^") &&
+                   subject.principal.origin == "http://example.net" &&
+                   data == "added";
+        } else if (choice == 2) {
+          result = subject &&
+                   subject.QueryInterface(Ci.nsIPermission)
+                          .type == "cookie" &&
+                   subject.principal.origin == "https://tracking.example.org" &&
+                   data == "added";
+        }
+        return result;
+      });
+    if (choice == 0) {
       await clickMainAction();
-    } else if (choice == ALLOW) {
+    } else if (choice == 1) {
       await clickSecondaryAction(choice - 1);
-    } else if (choice == ALLOW_ON_ANY_SITE) {
+    } else if (choice == 2) {
       await clickSecondaryAction(choice - 1);
     }
-    if (choice != BLOCK) {
+    if (choice != 0) {
       await permChanged;
     }
   });
 
-  let url = TEST_3RD_PARTY_PAGE + "?disableWaitUntilPermission";
+  let url;
+  if (choice == 2) {
+    url = TEST_3RD_PARTY_PAGE + "?disableWaitUntilPermission";
+  } else {
+    url = TEST_3RD_PARTY_PAGE;
+  }
   let ct = ContentTask.spawn(browser,
                              { page: url,
                                callback: runChecks.toString(),
@@ -183,112 +159,11 @@ async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
       ifr.src = obj.page;
     });
   });
-  if (showPrompt) {
-    await Promise.all([ct, shownPromise]);
-  } else {
-    await Promise.all([ct, permChanged]);
-  }
+  await Promise.all([ct, shownPromise]);
 
   BrowserTestUtils.removeTab(tab);
 
   UrlClassifierTestUtils.cleanupTestTrackers();
-}
-
-async function preparePermissionsFromOtherSites(topPage) {
-  info("Faking permissions from other sites");
-  let type = "3rdPartyStorage^https://tracking.example.org";
-  let permission = Services.perms.ALLOW_ACTION;
-  let expireType = Services.perms.EXPIRE_SESSION;
-  if (topPage == TEST_TOP_PAGE) {
-    // For the first page, don't do anything
-  } else if (topPage == TEST_TOP_PAGE_2) {
-    // For the second page, only add the permission from the first page
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-  } else if (topPage == TEST_TOP_PAGE_3) {
-    // For the third page, add the permissions from the first two pages
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_2),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-  } else if (topPage == TEST_TOP_PAGE_4) {
-    // For the fourth page, add the permissions from the first three pages
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_2),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_3),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-  } else if (topPage == TEST_TOP_PAGE_5) {
-    // For the fifth page, add the permissions from the first four pages
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_2),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_3),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_4),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-  } else if (topPage == TEST_TOP_PAGE_6) {
-    // For the sixth page, add the permissions from the first five pages
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_2),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_3),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_4),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-    Services.perms.add(Services.io.newURI(TEST_DOMAIN_5),
-                       type,
-                       permission,
-                       expireType,
-                       0);
-  } else {
-    ok(false, "Unexpected top page: " + topPage);
-  }
 }
 
 async function cleanUp() {
@@ -298,30 +173,13 @@ async function cleanUp() {
   });
 }
 
-async function runRound(topPage, showPrompt, maxConcurrent) {
-  if (showPrompt) {
-    await preparePermissionsFromOtherSites(topPage);
-    await testDoorHanger(BLOCK, showPrompt, topPage, maxConcurrent);
-    await cleanUp();
-    await preparePermissionsFromOtherSites(topPage);
-    await testDoorHanger(ALLOW, showPrompt, topPage, maxConcurrent);
-    await cleanUp();
-    await preparePermissionsFromOtherSites(topPage);
-    await testDoorHanger(ALLOW_ON_ANY_SITE, showPrompt, topPage, maxConcurrent);
-  } else {
-    await preparePermissionsFromOtherSites(topPage);
-    await testDoorHanger(ALLOW, showPrompt, topPage, maxConcurrent);
-  }
+async function runRound(n) {
+  await testDoorHanger(n);
   await cleanUp();
 }
 
 add_task(async function() {
-  await runRound(TEST_TOP_PAGE, false, 1);
-  await runRound(TEST_TOP_PAGE_2, true, 1);
-  await runRound(TEST_TOP_PAGE, false, 5);
-  await runRound(TEST_TOP_PAGE_2, false, 5);
-  await runRound(TEST_TOP_PAGE_3, false, 5);
-  await runRound(TEST_TOP_PAGE_4, false, 5);
-  await runRound(TEST_TOP_PAGE_5, false, 5);
-  await runRound(TEST_TOP_PAGE_6, true, 5);
+  await runRound(0);
+  await runRound(1);
+  await runRound(2);
 });

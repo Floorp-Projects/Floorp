@@ -19,14 +19,12 @@ StorageAccessPermissionRequest::StorageAccessPermissionRequest(
     nsPIDOMWindowInner* aWindow,
     nsIPrincipal* aNodePrincipal,
     AllowCallback&& aAllowCallback,
-    AllowAutoGrantCallback&& aAllowAutoGrantCallback,
     AllowAnySiteCallback&& aAllowAnySiteCallback,
     CancelCallback&& aCancelCallback)
   : ContentPermissionRequestBase(aNodePrincipal, false, aWindow,
                                  NS_LITERAL_CSTRING("dom.storage_access"),
                                  NS_LITERAL_CSTRING("storage-access")),
     mAllowCallback(std::move(aAllowCallback)),
-    mAllowAutoGrantCallback(std::move(aAllowAutoGrantCallback)),
     mAllowAnySiteCallback(std::move(aAllowAnySiteCallback)),
     mCancelCallback(std::move(aCancelCallback)),
     mCallbackCalled(false)
@@ -63,9 +61,6 @@ StorageAccessPermissionRequest::Allow(JS::HandleValue aChoices)
     if (choices.Length() == 1 &&
         choices[0].choice().EqualsLiteral("allow-on-any-site")) {
       mAllowAnySiteCallback();
-    } else if (choices.Length() == 1 &&
-               choices[0].choice().EqualsLiteral("allow-auto-grant")) {
-      mAllowAutoGrantCallback();
     } else {
       mAllowCallback();
     }
@@ -76,7 +71,6 @@ StorageAccessPermissionRequest::Allow(JS::HandleValue aChoices)
 already_AddRefed<StorageAccessPermissionRequest>
 StorageAccessPermissionRequest::Create(nsPIDOMWindowInner* aWindow,
                                        AllowCallback&& aAllowCallback,
-                                       AllowAutoGrantCallback&& aAllowAutoGrantCallback,
                                        AllowAnySiteCallback&& aAllowAnySiteCallback,
                                        CancelCallback&& aCancelCallback)
 {
@@ -91,7 +85,6 @@ StorageAccessPermissionRequest::Create(nsPIDOMWindowInner* aWindow,
     new StorageAccessPermissionRequest(aWindow,
                                        win->GetPrincipal(),
                                        std::move(aAllowCallback),
-                                       std::move(aAllowAutoGrantCallback),
                                        std::move(aAllowAnySiteCallback),
                                        std::move(aCancelCallback));
   return request.forget();

@@ -77,12 +77,6 @@ public:
     eOpenerAfterUserInteraction,
     eOpener
   };
-  enum StorageAccessPromptChoices
-  {
-    eAllow,
-    eAllowAutoGrant,
-    eAllowOnAnySite
-  };
 
   // Grant the permission for aOrigin to have access to the first party storage.
   // This method can handle 2 different scenarios:
@@ -99,9 +93,9 @@ public:
   //   Ex: example.net import tracker.com/script.js which does opens a popup and
   //   the user interacts with it. tracker.com is allowed when loaded by
   //   example.net.
-  typedef MozPromise<int, bool, true> StorageAccessFinalCheckPromise;
+  typedef MozPromise<bool, bool, true> StorageAccessFinalCheckPromise;
   typedef std::function<RefPtr<StorageAccessFinalCheckPromise>()> PerformFinalChecks;
-  typedef MozPromise<int, bool, true> StorageAccessGrantPromise;
+  typedef MozPromise<bool, bool, true> StorageAccessGrantPromise;
   static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise>
   AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipal,
                                        nsPIDOMWindowInner* aParentWindow,
@@ -126,7 +120,7 @@ public:
                                                              nsIPrincipal* aTrackingPrinciapl,
                                                              const nsCString& aParentOrigin,
                                                              const nsCString& aGrantedOrigin,
-                                                             int aAllowMode);
+                                                             bool aAnySite);
 
   enum ContentBlockingAllowListPurpose {
     eStorageChecks,
