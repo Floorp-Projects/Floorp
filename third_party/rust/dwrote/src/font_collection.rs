@@ -5,7 +5,7 @@
 use comptr::ComPtr;
 use winapi::um::dwrite::{IDWriteFontFamily, IDWriteFont, IDWriteFontCollection};
 use winapi::um::dwrite::{IDWriteFontCollectionLoader};
-use winapi::shared::minwindef::{BOOL, FALSE};
+use winapi::shared::minwindef::{BOOL, FALSE, TRUE};
 use winapi::shared::winerror::S_OK;
 use std::cell::UnsafeCell;
 use std::mem;
@@ -47,16 +47,23 @@ pub struct FontCollection {
 }
 
 impl FontCollection {
-    pub fn system() -> FontCollection {
+    pub fn get_system(update: bool) -> FontCollection {
         unsafe {
             let mut native: ComPtr<IDWriteFontCollection> = ComPtr::new();
-            let hr = (*DWriteFactory()).GetSystemFontCollection(native.getter_addrefs(), FALSE);
+            let hr = (*DWriteFactory()).GetSystemFontCollection(
+                native.getter_addrefs(),
+                if update { TRUE } else { FALSE },
+            );
             assert!(hr == 0);
 
             FontCollection {
                 native: UnsafeCell::new(native)
             }
         }
+    }
+
+    pub fn system() -> FontCollection {
+        FontCollection::get_system(false)
     }
 
     pub fn take(native: ComPtr<IDWriteFontCollection>) -> FontCollection {
