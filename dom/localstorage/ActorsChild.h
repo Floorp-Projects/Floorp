@@ -246,6 +246,9 @@ private:
   // IPDL methods are only called by IPDL.
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult
+  RecvMarkDirty() override;
 };
 
 } // namespace dom

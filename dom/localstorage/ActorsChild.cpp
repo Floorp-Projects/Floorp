@@ -318,5 +318,19 @@ LSSnapshotChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
+mozilla::ipc::IPCResult
+LSSnapshotChild::RecvMarkDirty()
+{
+  AssertIsOnOwningThread();
+
+  if (!mSnapshot) {
+    return IPC_OK();
+  }
+
+  mSnapshot->MarkDirty();
+
+  return IPC_OK();
+}
+
 } // namespace dom
 } // namespace mozilla
