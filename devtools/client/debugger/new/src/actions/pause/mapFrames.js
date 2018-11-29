@@ -14,6 +14,18 @@ import type { ThunkArgs } from "../types";
 
 import { isGeneratedId } from "devtools-source-map";
 
+function getSelectedFrameId(state, frames) {
+  if (frames.length == 0) {
+    return null;
+  }
+
+  const selectedFrame =  frames.find(frame => 
+    !getSource(state, frame.location.sourceId).isBlackBoxed
+  )
+
+  return selectedFrame && selectedFrame.id
+}
+
 export function updateFrameLocation(frame: Frame, sourceMaps: any) {
   if (frame.isOriginal) {
     return Promise.resolve(frame);
@@ -149,9 +161,11 @@ export function mapFrames() {
     mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
     mappedFrames = mapDisplayNames(mappedFrames, getState);
 
+    const selectedFrameId = getSelectedFrameId(getState(), mappedFrames)
     dispatch({
       type: "MAP_FRAMES",
-      frames: mappedFrames
+      frames: mappedFrames,
+      selectedFrameId
     });
   };
 }

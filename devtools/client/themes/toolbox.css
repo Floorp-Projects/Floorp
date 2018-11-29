@@ -634,7 +634,6 @@
 .webreplay-player .tick {
   position: absolute;
   height: 100%;
-  transition-duration: var(--progress-bar-transition);
 }
 
 .webreplay-player .tick::before,
