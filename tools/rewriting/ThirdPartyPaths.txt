@@ -94,6 +94,7 @@ other-licenses/
 parser/expat/
 security/nss/
 security/sandbox/chromium/
+security/sandbox/chromium-shim/
 testing/gtest/gmock/
 testing/gtest/gtest/
 testing/talos/talos/tests/dromaeo/
