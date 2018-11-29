@@ -895,14 +895,22 @@ class WriteOptimizer final
   class AddItemInfo;
   class UpdateItemInfo;
   class RemoveItemInfo;
+  class ClearInfo;
 
+  nsAutoPtr<WriteInfo> mClearInfo;
   nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
-  bool mClearedWriteInfos;
 
 public:
   WriteOptimizer()
-    : mClearedWriteInfos(false)
   { }
+
+  WriteOptimizer(WriteOptimizer&& aWriteOptimizer)
+    : mClearInfo(std::move(aWriteOptimizer.mClearInfo))
+  {
+    MOZ_ASSERT(&aWriteOptimizer != this);
+
+    mWriteInfos.SwapElements(aWriteOptimizer.mWriteInfos);
+  }
 
   void
   AddItem(const nsString& aKey,
@@ -920,6 +928,9 @@ public:
 
   void
   ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems);
+
+  nsresult
+  PerformWrites(Connection* aConnection);
 };
 
 class WriteOptimizer::WriteInfo
@@ -928,11 +939,15 @@ public:
   enum Type {
     AddItem = 0,
     UpdateItem,
-    RemoveItem
+    RemoveItem,
+    Clear
   };
 
   virtual Type
   GetType() = 0;
+
+  virtual nsresult
+  Perform(Connection* aConnection) = 0;
 
   virtual ~WriteInfo() = default;
 };
@@ -968,6 +983,9 @@ private:
   {
     return AddItem;
   }
+
+  nsresult
+  Perform(Connection* aConnection) override;
 };
 
 class WriteOptimizer::UpdateItemInfo final
@@ -1009,6 +1027,27 @@ private:
   {
     return RemoveItem;
   }
+
+  nsresult
+  Perform(Connection* aConnection) override;
+};
+
+class WriteOptimizer::ClearInfo final
+  : public WriteInfo
+{
+public:
+  ClearInfo()
+  { }
+
+private:
+  Type
+  GetType() override
+  {
+    return Clear;
+  }
+
+  nsresult
+  Perform(Connection* aConnection) override;
 };
 
 class DatastoreOperationBase
@@ -1161,21 +1200,15 @@ public:
   class CachedStatement;
 
 private:
-  class WriteInfo;
-  class AddItemInfo;
-  class UpdateItemInfo;
-  class RemoveItemInfo;
-  class ClearInfo;
   class EndUpdateBatchOp;
   class CloseOp;
 
   RefPtr<ConnectionThread> mConnectionThread;
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
   nsAutoPtr<ArchivedOriginInfo> mArchivedOriginInfo;
-  nsAutoPtr<WriteInfo> mClearInfo;
-  nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;
+  WriteOptimizer mWriteOptimizer;
   const nsCString mOrigin;
   const nsString mFilePath;
 #ifdef DEBUG
@@ -1287,123 +1320,17 @@ private:
   CachedStatement& operator=(const CachedStatement&) = delete;
 };
 
-class Connection::WriteInfo
-{
-public:
-  enum Type {
-    AddItem = 0,
-    UpdateItem,
-    RemoveItem,
-    Clear,
-  };
-
-  virtual Type
-  GetType() = 0;
-
-  virtual nsresult
-  Perform(Connection* aConnection) = 0;
-
-  virtual ~WriteInfo() = default;
-};
-
-class Connection::AddItemInfo
-  : public WriteInfo
-{
-  nsString mKey;
-  nsString mValue;
-
-public:
-  AddItemInfo(const nsAString& aKey,
-              const nsAString& aValue)
-    : mKey(aKey)
-    , mValue(aValue)
-  { }
-
-private:
-  Type
-  GetType() override
-  {
-    return AddItem;
-  }
-
-  nsresult
-  Perform(Connection* aConnection) override;
-};
-
-class Connection::UpdateItemInfo final
-  : public AddItemInfo
-{
-  nsString mKey;
-  nsString mValue;
-
-public:
-  UpdateItemInfo(const nsAString& aKey,
-                 const nsAString& aValue)
-    : AddItemInfo(aKey, aValue)
-  { }
-
-private:
-  Type
-  GetType() override
-  {
-    return UpdateItem;
-  }
-};
-
-class Connection::RemoveItemInfo final
-  : public WriteInfo
-{
-  nsString mKey;
-
-public:
-  explicit RemoveItemInfo(const nsAString& aKey)
-    : mKey(aKey)
-  { }
-
-private:
-Type
-  GetType() override
-  {
-    return RemoveItem;
-  }
-
-  nsresult
-  Perform(Connection* aConnection) override;
-};
-
-class Connection::ClearInfo final
-  : public WriteInfo
-{
-public:
-  ClearInfo()
-  { }
-
-private:
-  Type
-  GetType() override
-  {
-    return Clear;
-  }
-
-  nsresult
-  Perform(Connection* aConnection) override;
-};
-
 class Connection::EndUpdateBatchOp final
   : public ConnectionDatastoreOperationBase
 {
-  nsAutoPtr<WriteInfo> mClearInfo;
-  nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
+  WriteOptimizer mWriteOptimizer;
 
 public:
   EndUpdateBatchOp(Connection* aConnection,
-                   nsAutoPtr<WriteInfo>&& aClearInfo,
-                   nsClassHashtable<nsStringHashKey, WriteInfo>& aWriteInfos)
+                   WriteOptimizer&& aWriteOptimizer)
     : ConnectionDatastoreOperationBase(aConnection)
-    , mClearInfo(std::move(aClearInfo))
-  {
-    mWriteInfos.SwapElements(aWriteInfos);
-  }
+    , mWriteOptimizer(std::move(aWriteOptimizer))
+  { }
 
 private:
   nsresult
@@ -3178,15 +3105,18 @@ WriteOptimizer::Clear()
   AssertIsOnBackgroundThread();
 
   mWriteInfos.Clear();
-  mClearedWriteInfos = true;
+
+  if (!mClearInfo) {
+    mClearInfo = new ClearInfo();
+  }
 }
 
 void
 WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems)
 {
-  if (mClearedWriteInfos) {
+  if (mClearInfo) {
     aOrderedItems.Clear();
-    mClearedWriteInfos = false;
+    mClearInfo = nullptr;
   }
 
   for (int32_t index = aOrderedItems.Length() - 1;
@@ -3232,6 +3162,201 @@ WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems)
   }
 
   mWriteInfos.Clear();
+}
+
+nsresult
+WriteOptimizer::PerformWrites(Connection* aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv;
+
+  if (mClearInfo) {
+    rv = mClearInfo->Perform(aConnection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
+    rv = iter.Data()->Perform(aConnection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+WriteOptimizer::
+AddItemInfo::Perform(Connection* aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(aConnection);
+
+  Connection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "INSERT OR REPLACE INTO data (key, value) "
+    "VALUES(:key, :value)"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "INSERT OR REPLACE INTO shadow.webappsstore2 "
+      "(originAttributes, originKey, scope, key, value) "
+      "VALUES (:originAttributes, :originKey, :scope, :key, :value) "),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  ArchivedOriginInfo* archivedOriginInfo = aConnection->GetArchivedOriginInfo();
+
+  rv = archivedOriginInfo->BindToStatement(stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString scope = Scheme0Scope(archivedOriginInfo->OriginSuffix(),
+                                 archivedOriginInfo->OriginNoSuffix());
+
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
+                                  scope);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+WriteOptimizer::
+RemoveItemInfo::Perform(Connection* aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(aConnection);
+
+  Connection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM data "
+      "WHERE key = :key;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM shadow.webappsstore2 "
+      "WHERE originAttributes = :originAttributes "
+      "AND originKey = :originKey "
+      "AND key = :key;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetArchivedOriginInfo()->BindToStatement(stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+WriteOptimizer::
+ClearInfo::Perform(Connection* aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(aConnection);
+
+  Connection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM data;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM shadow.webappsstore2 "
+      "WHERE originAttributes = :originAttributes "
+      "AND originKey = :originKey;"),
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetArchivedOriginInfo()->BindToStatement(stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 /*******************************************************************************
@@ -3394,16 +3519,7 @@ Connection::AddItem(const nsString& aKey,
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  WriteInfo* existingWriteInfo;
-  nsAutoPtr<WriteInfo> newWriteInfo;
-  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
-      existingWriteInfo->GetType() == WriteInfo::RemoveItem) {
-    newWriteInfo = new UpdateItemInfo(aKey, aValue);
-  } else {
-    newWriteInfo = new AddItemInfo(aKey, aValue);
-  }
-
-  mWriteInfos.Put(aKey, newWriteInfo.forget());
+  mWriteOptimizer.AddItem(aKey, aValue);
 }
 
 void
@@ -3413,16 +3529,7 @@ Connection::UpdateItem(const nsString& aKey,
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  WriteInfo* existingWriteInfo;
-  nsAutoPtr<WriteInfo> newWriteInfo;
-  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
-      existingWriteInfo->GetType() == WriteInfo::AddItem) {
-    newWriteInfo = new AddItemInfo(aKey, aValue);
-  } else {
-    newWriteInfo = new UpdateItemInfo(aKey, aValue);
-  }
-
-  mWriteInfos.Put(aKey, newWriteInfo.forget());
+  mWriteOptimizer.UpdateItem(aKey, aValue);
 }
 
 void
@@ -3431,15 +3538,7 @@ Connection::RemoveItem(const nsString& aKey)
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  WriteInfo* existingWriteInfo;
-  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
-      existingWriteInfo->GetType() == WriteInfo::AddItem) {
-    mWriteInfos.Remove(aKey);
-    return;
-  }
-
-  nsAutoPtr<WriteInfo> newWriteInfo(new RemoveItemInfo(aKey));
-  mWriteInfos.Put(aKey, newWriteInfo.forget());
+  mWriteOptimizer.RemoveItem(aKey);
 }
 
 void
@@ -3448,11 +3547,7 @@ Connection::Clear()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteInfos.Clear();
-
-  if (!mClearInfo) {
-    mClearInfo = new ClearInfo();
-  }
+  mWriteOptimizer.Clear();
 }
 
 void
@@ -3473,7 +3568,7 @@ Connection::EndUpdateBatch()
   MOZ_ASSERT(mInUpdateBatch);
 
   RefPtr<EndUpdateBatchOp> op =
-    new EndUpdateBatchOp(this, std::move(mClearInfo), mWriteInfos);
+    new EndUpdateBatchOp(this, std::move(mWriteOptimizer));
 
   Dispatch(op);
 
@@ -3602,176 +3697,6 @@ CachedStatement::Assign(Connection* aConnection,
 
 nsresult
 Connection::
-AddItemInfo::Perform(Connection* aConnection)
-{
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(aConnection);
-
-  Connection::CachedStatement stmt;
-  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-    "INSERT OR REPLACE INTO data (key, value) "
-    "VALUES(:key, :value)"),
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-    "INSERT OR REPLACE INTO shadow.webappsstore2 "
-      "(originAttributes, originKey, scope, key, value) "
-      "VALUES (:originAttributes, :originKey, :scope, :key, :value) "),
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  ArchivedOriginInfo* archivedOriginInfo = aConnection->GetArchivedOriginInfo();
-
-  rv = archivedOriginInfo->BindToStatement(stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCString scope = Scheme0Scope(archivedOriginInfo->OriginSuffix(),
-                                 archivedOriginInfo->OriginNoSuffix());
-
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                  scope);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-Connection::
-RemoveItemInfo::Perform(Connection* aConnection)
-{
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(aConnection);
-
-  Connection::CachedStatement stmt;
-  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM data "
-      "WHERE key = :key;"),
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM shadow.webappsstore2 "
-      "WHERE originAttributes = :originAttributes "
-      "AND originKey = :originKey "
-      "AND key = :key;"),
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aConnection->GetArchivedOriginInfo()->BindToStatement(stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-Connection::
-ClearInfo::Perform(Connection* aConnection)
-{
-  AssertIsOnConnectionThread();
-  MOZ_ASSERT(aConnection);
-
-  Connection::CachedStatement stmt;
-  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM data;"),
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM shadow.webappsstore2 "
-      "WHERE originAttributes = :originAttributes "
-      "AND originKey = :originKey;"),
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aConnection->GetArchivedOriginInfo()->BindToStatement(stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-Connection::
 EndUpdateBatchOp::DoDatastoreWork()
 {
   AssertIsOnConnectionThread();
@@ -3802,12 +3727,9 @@ EndUpdateBatchOp::DoDatastoreWork()
     return rv;
   }
 
-  if (mClearInfo) {
-    mClearInfo->Perform(mConnection);
-  }
-
-  for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Data()->Perform(mConnection);
+  rv = mWriteOptimizer.PerformWrites(mConnection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING("COMMIT;"), &stmt);
