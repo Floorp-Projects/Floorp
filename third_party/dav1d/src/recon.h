@@ -32,7 +32,7 @@
 #include "src/levels.h"
 
 #define DEBUG_BLOCK_INFO 0 && \
-        f->frame_hdr.frame_offset == 2 && t->by >= 0 && t->by < 4 && \
+        f->frame_hdr->frame_offset == 2 && t->by >= 0 && t->by < 4 && \
         t->bx >= 8 && t->bx < 12
 #define DEBUG_B_PIXELS 0
 

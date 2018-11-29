@@ -48,4 +48,6 @@ Dav1dRef *dav1d_ref_wrap(const uint8_t *ptr,
 void dav1d_ref_inc(Dav1dRef *ref);
 void dav1d_ref_dec(Dav1dRef **ref);
 
+int dav1d_ref_is_writable(Dav1dRef *ref);
+
 #endif /* __DAV1D_SRC_REF_H__ */

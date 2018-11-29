@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include "src/intra_edge.h"
 #include "src/levels.h"

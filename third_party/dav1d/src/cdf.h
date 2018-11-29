@@ -40,7 +40,7 @@ typedef struct CdfModeContext {
     uint16_t filter_intra[5 + 1];
     uint16_t uv_mode[2][N_INTRA_PRED_MODES][N_UV_INTRA_PRED_MODES + 1];
     uint16_t angle_delta[8][8];
-    uint16_t filter[2][8][N_SWITCHABLE_FILTERS + 1];
+    uint16_t filter[2][8][DAV1D_N_SWITCHABLE_FILTERS + 1];
     uint16_t newmv_mode[6][2];
     uint16_t globalmv_mode[2][2];
     uint16_t refmv_mode[6][2];
@@ -68,7 +68,7 @@ typedef struct CdfModeContext {
     uint16_t skip_mode[3][2];
     uint16_t partition[N_BL_LEVELS][4][N_PARTITIONS + 1];
     uint16_t seg_pred[3][2];
-    uint16_t seg_id[3][NUM_SEGMENTS + 1];
+    uint16_t seg_id[3][DAV1D_MAX_SEGMENTS + 1];
     uint16_t cfl_sign[8 + 1];
     uint16_t cfl_alpha[6][16 + 1];
     uint16_t restore_wiener[2];
@@ -132,7 +132,7 @@ typedef struct CdfThreadContext {
 } CdfThreadContext;
 
 void dav1d_init_states(CdfThreadContext *cdf, int qidx);
-void dav1d_update_tile_cdf(const Av1FrameHeader *hdr, CdfContext *dst,
+void dav1d_update_tile_cdf(const Dav1dFrameHeader *hdr, CdfContext *dst,
                          const CdfContext *src);
 
 void dav1d_cdf_thread_alloc(CdfThreadContext *cdf, struct thread_data *t);

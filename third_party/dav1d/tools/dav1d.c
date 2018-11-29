@@ -99,6 +99,23 @@ int main(const int argc, char *const *const argv) {
     if (!cli_settings.quiet)
         fprintf(stderr, "dav1d %s - by VideoLAN\n", DAV1D_VERSION);
 
+    // skip frames until a sequence header is found
+    if (cli_settings.skip) {
+        Dav1dSequenceHeader seq;
+        unsigned seq_skip = 0;
+        while (dav1d_parse_sequence_header(&seq, data.data, data.sz)) {
+            if ((res = input_read(in, &data)) < 0) {
+                input_close(in);
+                return res;
+            }
+            seq_skip++;
+        }
+        if (seq_skip && !cli_settings.quiet)
+            fprintf(stderr,
+                    "skipped %u packets due to missing sequence header\n",
+                    seq_skip);
+    }
+
     //getc(stdin);
     if (cli_settings.limit != 0 && cli_settings.limit < total)
         total = cli_settings.limit;

@@ -324,6 +324,8 @@ endif
 
 subdir('include')
 
+subdir('doc')
+
 subdir('src')
 
 subdir('tools')
