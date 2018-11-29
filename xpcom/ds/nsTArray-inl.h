@@ -79,7 +79,8 @@ nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const
   // (as we ensured at the beginning of the method), GetAutoArrayBuffer(8)
   // always points to memory owned by |*this|, because (as we assert below)
   //
-  //   * GetAutoArrayBuffer(8) is at most 4 bytes past GetAutoArrayBuffer(4), and
+  //   * GetAutoArrayBuffer(8) is at most 4 bytes past GetAutoArrayBuffer(4),
+  //     and
   //   * sizeof(nsTArrayHeader) > 4.
   //
   // Since AutoTArray always contains an nsTArrayHeader,

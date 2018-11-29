@@ -1200,7 +1200,8 @@ WinUtils::InvalidatePluginAsWorkaround(nsIWidget* aWidget,
 /************************************************************************
  * Constructs as AsyncFaviconDataReady Object
  * @param aIOThread : the thread which performs the action
- * @param aURLShortcut : Differentiates between (false)Jumplistcache and (true)Shortcutcache
+ * @param aURLShortcut : Differentiates between (false)Jumplistcache and
+ *                       (true)Shortcutcache
  ************************************************************************/
 
 AsyncFaviconDataReady::AsyncFaviconDataReady(nsIURI *aNewURI, 
@@ -1514,7 +1515,8 @@ AsyncDeleteAllFaviconsFromDisk::~AsyncDeleteAllFaviconsFromDisk()
  * @param aFaviconPageURI The URI of the page to obtain
  * @param aICOFilePath The path of the icon file
  * @param aIOThread The thread to perform the Fetch on
- * @param aURLShortcut to distinguish between jumplistcache(false) and shortcutcache(true)
+ * @param aURLShortcut to distinguish between jumplistcache(false) and
+ *        shortcutcache(true)
  */
 nsresult FaviconHelper::ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
                                              nsString &aICOFilePath,

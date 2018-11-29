@@ -406,21 +406,21 @@ Timers::Finish(JSContext* aCx,
   }
 
   NS_ConvertUTF16toUTF8 histogram(aHistogram);
-  bool ok;
+  nsresult rv;
   if (!aKey.IsVoid()) {
     NS_ConvertUTF16toUTF8 key(aKey);
-    ok = TelemetryHistogram::Accumulate(histogram.get(), key, delta);
+    rv = TelemetryHistogram::Accumulate(histogram.get(), key, delta);
   } else {
-    ok = TelemetryHistogram::Accumulate(histogram.get(), delta);
+    rv = TelemetryHistogram::Accumulate(histogram.get(), delta);
   }
-  if (!ok && !mSuppressErrors) {
+  if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE && !mSuppressErrors) {
     LogError(aCx, nsPrintfCString(
       "TelemetryStopwatch: failed to update the Histogram "
       "\"%s\", using key: \"%s\"",
       NS_ConvertUTF16toUTF8(aHistogram).get(),
       NS_ConvertUTF16toUTF8(aKey).get()));
   }
-  return ok ? delta : -1;
+  return NS_SUCCEEDED(rv) ? delta : -1;
 }
 
 

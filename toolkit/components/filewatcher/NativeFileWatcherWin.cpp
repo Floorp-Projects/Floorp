@@ -889,13 +889,14 @@ NativeFileWatcherIOTask::DeactivateRunnableMethod()
 }
 
 /**
- * Helper function to dispatch a change notification to all the registered callbacks.
+ * Helper function to dispatch a change notification to all the registered
+ * callbacks.
  * @param aResourceDescriptor
  *        The resource descriptor.
  * @param aChangedResource
  *        The path of the changed resource.
- * @return NS_OK if all the callbacks are dispatched correctly, a |nsresult| error code
- *         otherwise.
+ * @return NS_OK if all the callbacks are dispatched correctly, a |nsresult|
+ *         error code otherwise.
  */
 nsresult
 NativeFileWatcherIOTask::DispatchChangeCallbacks(
@@ -1025,12 +1026,14 @@ NativeFileWatcherIOTask::ReportSuccess(
  * Instructs the OS to report the changes concerning the directory of interest.
  *
  * @param aDirectoryDescriptor
- *        A |WatchedResourceDescriptor| instance describing the directory to watch.
+ *        A |WatchedResourceDescriptor| instance describing the directory to
+ *        watch.
  * @param aDispatchErrorCode
- *        If |ReadDirectoryChangesW| fails and dispatching an error callback to the
- *        main thread fails as well, the error code is stored here. If the OS API call
- *        does not fail, it gets set to NS_OK.
- * @return |true| if |ReadDirectoryChangesW| returned no error, |false| otherwise.
+ *        If |ReadDirectoryChangesW| fails and dispatching an error callback to
+ *        the main thread fails as well, the error code is stored here. If the
+ *        OS API call does not fail, it gets set to NS_OK.
+ * @return |true| if |ReadDirectoryChangesW| returned no error, |false|
+ *         otherwise.
  */
 nsresult
 NativeFileWatcherIOTask::AddDirectoryToWatchList(
@@ -1361,8 +1364,9 @@ NativeFileWatcherService::AddPath(const nsAString& aPathToWatch,
  *        The optional callback to invoke when the file watcher stops
  *        watching the resource for changes.
  *
- * @return NS_OK or NS_ERROR_NOT_INITIALIZED if the instance was not initialized.
- *         Other errors are reported by the error callback function.
+ * @return NS_OK or NS_ERROR_NOT_INITIALIZED if the instance was not
+ *         initialized.  Other errors are reported by the error callback
+ *         function.
  */
 NS_IMETHODIMP
 NativeFileWatcherService::RemovePath(const nsAString& aPathToRemove,

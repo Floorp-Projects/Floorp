@@ -351,10 +351,10 @@ public:
   /**
    * Called to indicate that the z-index of a view has been changed.
    * The z-index is relative to all siblings of the view.
-   * @param aAuto Indicate that the z-index of a view is "auto". An "auto" z-index
-   * means that the view does not define a new stacking context,
-   * which means that the z-indicies of the view's children are
-   * relative to the view's siblings.
+   * @param aAuto Indicate that the z-index of a view is "auto". An "auto"
+   *              z-index means that the view does not define a new stacking
+   *              context, which means that the z-indicies of the view's
+   *              children are relative to the view's siblings.
    * @param zindex new z depth
    */
   void SetZIndex(bool aAuto, int32_t aZIndex);

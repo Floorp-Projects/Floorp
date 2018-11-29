@@ -626,7 +626,8 @@ nsDiskCacheMap::VisitRecords( nsDiskCacheRecordVisitor *  visitor)
 /**
  *  EvictRecords
  *
- *  Just like VisitRecords, but visits the records in order of their eviction rank
+ *  Just like VisitRecords, but visits the records in order of their eviction
+ *  rank
  */
 nsresult
 nsDiskCacheMap::EvictRecords( nsDiskCacheRecordVisitor * visitor)

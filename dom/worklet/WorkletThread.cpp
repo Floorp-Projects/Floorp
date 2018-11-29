@@ -115,10 +115,8 @@ public:
 class WorkletJSContext final : public CycleCollectedJSContext
 {
 public:
-  explicit WorkletJSContext(WorkletThread* aWorkletThread)
-    : mWorkletThread(aWorkletThread)
+  WorkletJSContext()
   {
-    MOZ_ASSERT(aWorkletThread);
     MOZ_ASSERT(!NS_IsMainThread());
 
     nsCycleCollector_startup();
@@ -174,10 +172,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(runnable);
 
-    WorkletThread* workletThread = WorkletThread::Get();
-    MOZ_ASSERT(workletThread);
-
-    JSContext* cx = workletThread->GetJSContext();
+    JSContext* cx = Context();
     MOZ_ASSERT(cx);
 
 #ifdef DEBUG
@@ -189,19 +184,11 @@ public:
     GetMicroTaskQueue().push(runnable.forget());
   }
 
-  WorkletThread* GetWorkletThread() const
-  {
-    return mWorkletThread;
-  }
-
   bool IsSystemCaller() const override
   {
     // Currently no support for special system worklet privileges.
     return false;
   }
-
-private:
-  RefPtr<WorkletThread> mWorkletThread;
 };
 
 // This is the first runnable to be dispatched. It calls the RunEventLoop() so
@@ -263,8 +250,7 @@ WorkletThread::WorkletThread()
   : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
                MakeUnique<mozilla::EventQueue>()),
              nsThread::NOT_MAIN_THREAD, kWorkletStackSize)
-  , mCreationTimeStamp(TimeStamp::Now())
-  , mJSContext(nullptr)
+  , mExitLoop(false)
   , mIsTerminating(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -273,8 +259,8 @@ WorkletThread::WorkletThread()
 
 WorkletThread::~WorkletThread()
 {
-  // This should be gone during the termination step.
-  MOZ_ASSERT(!mJSContext);
+  // This should be set during the termination step.
+  MOZ_ASSERT(mExitLoop);
 }
 
 // static
@@ -335,7 +321,7 @@ WorkletThread::RunEventLoop(JSRuntime* aParentRuntime)
 
   PR_SetCurrentThreadName("worklet");
 
-  auto context = MakeUnique<WorkletJSContext>(this);
+  auto context = MakeUnique<WorkletJSContext>();
   nsresult rv = context->Initialize(aParentRuntime);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // TODO: error propagation
@@ -357,13 +343,9 @@ WorkletThread::RunEventLoop(JSRuntime* aParentRuntime)
     return;
   }
 
-  mJSContext = context->Context();
-
-  while (mJSContext) {
+  while (!mExitLoop) {
     MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(this, /* wait: */ true));
   }
-
-  MOZ_ASSERT(mJSContext == nullptr);
 }
 
 void
@@ -390,20 +372,12 @@ WorkletThread::TerminateInternal()
 {
   AssertIsOnWorkletThread();
 
-  mJSContext = nullptr;
+  mExitLoop = true;
 
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod("WorkletThread::Shutdown", this,
                       &WorkletThread::Shutdown);
   NS_DispatchToMainThread(runnable);
-}
-
-JSContext*
-WorkletThread::GetJSContext() const
-{
-  AssertIsOnWorkletThread();
-  MOZ_ASSERT(mJSContext);
-  return mJSContext;
 }
 
 /* static */ bool
@@ -417,19 +391,6 @@ WorkletThread::IsOnWorkletThread()
 WorkletThread::AssertIsOnWorkletThread()
 {
   MOZ_ASSERT(IsOnWorkletThread());
-}
-
-/* static */ WorkletThread*
-WorkletThread::Get()
-{
-  AssertIsOnWorkletThread();
-
-  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
-  MOZ_ASSERT(ccjscx);
-
-  WorkletJSContext* workletjscx = ccjscx->GetAsWorkletJSContext();
-  MOZ_ASSERT(workletjscx);
-  return workletjscx->GetWorkletThread();
 }
 
 // nsIObserver

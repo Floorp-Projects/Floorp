@@ -7010,8 +7010,9 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
 
       // N.B.: According with MS documentation
       // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317334(v=vs.85).aspx
-      // TOUCHEVENTF_DOWN cannot be combined with TOUCHEVENTF_MOVE or TOUCHEVENTF_UP.
-      // Possibly, it means that TOUCHEVENTF_MOVE and TOUCHEVENTF_UP can be combined together.
+      // TOUCHEVENTF_DOWN cannot be combined with TOUCHEVENTF_MOVE or
+      // TOUCHEVENTF_UP.  Possibly, it means that TOUCHEVENTF_MOVE and
+      // TOUCHEVENTF_UP can be combined together.
 
       if (pInputs[i].dwFlags & (TOUCHEVENTF_DOWN | TOUCHEVENTF_MOVE)) {
         if (touchInput.mTimeStamp.IsNull()) {

@@ -519,7 +519,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
  * nsTHashtable specialization below; nsVoidPtrHashKey is simply typedefed to a
  * specialization of nsPtrHashKey, and the formulation:
  *
- * class nsTHashtable<nsPtrHashKey<T>> : protected nsTHashtable<nsPtrHashKey<const void>
+ * class nsTHashtable<nsPtrHashKey<T>> :
+ *   protected nsTHashtable<nsPtrHashKey<const void>
  *
  * is not going to turn out very well, since we'd wind up with an nsTHashtable
  * instantiation that is its own base class.

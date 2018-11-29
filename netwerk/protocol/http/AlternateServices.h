@@ -14,7 +14,8 @@ https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06
  * use established https channel for http instead separate of conninfo hash
  * pin via http-tls header
  * clear based on origin when a random fail happens not just 421
- * upon establishment of channel, cancel and retry trans that have not yet written anything
+ * upon establishment of channel, cancel and retry trans that have not yet
+     written anything
  * persistent storage (including private browsing filter)
  * memory reporter for cache, but this is rather tiny
 */

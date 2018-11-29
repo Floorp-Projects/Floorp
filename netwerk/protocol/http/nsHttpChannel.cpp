@@ -2169,7 +2169,7 @@ nsHttpChannel::ProcessAltService()
     nsAutoCString originHost;
     int32_t originPort = 80;
     mURI->GetPort(&originPort);
-    if (NS_FAILED(mURI->GetHost(originHost))) {
+    if (NS_FAILED(mURI->GetAsciiHost(originHost))) {
         return;
     }
 

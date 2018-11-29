@@ -8,8 +8,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
 
-const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
-
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {

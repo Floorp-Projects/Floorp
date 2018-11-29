@@ -19,9 +19,10 @@ namespace system {
 namespace windowsDHCPClient {
 
 //
-// The comments on this page reference the following Microsoft documentation pages (both retrieved 2017-06-27)
-// [1] https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx
-// [2] https://msdn.microsoft.com/en-us/library/windows/desktop/aa363298(v=vs.85).aspx
+// The comments on this page reference the following Microsoft documentation
+// pages (both retrieved 2017-06-27)
+// https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx
+// https://msdn.microsoft.com/en-us/library/windows/desktop/aa363298(v=vs.85).aspx
 mozilla::LazyLogModule gDhcpUtilsLog("dhcpUtils");
 
 #undef LOG

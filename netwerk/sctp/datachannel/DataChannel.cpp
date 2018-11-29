@@ -1303,9 +1303,10 @@ DataChannelConnection::SendDeferredMessages()
     bool wasOverThreshold = bufferedAmount >= threshold;
 
     // Send buffered data messages
-    // Warning: This will fail in case ndata is inactive and a previously deallocated data channel
-    //          has not been closed properly. If you ever see that no messages can be sent on any
-    //          channel, this is likely the cause (an explicit EOR message partially sent whose
+    // Warning: This will fail in case ndata is inactive and a previously
+    //          deallocated data channel has not been closed properly. If you
+    //          ever see that no messages can be sent on any channel, this is
+    //          likely the cause (an explicit EOR message partially sent whose
     //          remaining chunks are still being waited for).
     blocked = SendBufferedMessages(channel->mBufferedData);
     bufferedAmount = channel->GetBufferedAmountLocked();
@@ -1330,8 +1331,9 @@ DataChannelConnection::SendDeferredMessages()
     }
 
     // Update current stream index
-    // Note: If ndata is not active, the outstanding data messages on this stream need to be sent
-    //       first before other streams can be used for sending.
+    // Note: If ndata is not active, the outstanding data messages on this
+    //       stream need to be sent first before other streams can be used for
+    //       sending.
     if (mSendInterleaved || !blocked) {
       i = UpdateCurrentStreamIndex();
     }
@@ -1552,8 +1554,8 @@ DataChannelConnection::BufferMessage(nsACString& recvBuffer, const void *data,
   }
 
   // Ensure it doesn't blow up our buffer
-  // TODO: Change 'WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_LOCAL' to whatever the new buffer is capable
-  //       of holding.
+  // TODO: Change 'WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_LOCAL' to whatever the
+  //       new buffer is capable of holding.
   if (((uint64_t) recvBuffer.Length()) + ((uint64_t) length) > WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_LOCAL) {
     bufferFlags |= DATA_CHANNEL_BUFFER_MESSAGE_FLAGS_TOO_LARGE;
     return bufferFlags;
@@ -1882,8 +1884,8 @@ DataChannelConnection::HandleAssociationChangeEvent(const struct sctp_assoc_chan
 #if defined(SCTP_ASSOC_SUPPORTS_INTERLEAVING)
         case SCTP_ASSOC_SUPPORTS_INTERLEAVING:
           LOG(("Supports: NDATA"));
-          // TODO: This should probably be set earlier above in 'case SCTP_COMM_UP' but we also
-          //       need this for 'SCTP_RESTART'.
+          // TODO: This should probably be set earlier above in 'case
+          //       SCTP_COMM_UP' but we also need this for 'SCTP_RESTART'.
           mSendInterleaved = true;
           break;
 #endif
@@ -2784,9 +2786,9 @@ DataChannelConnection::SendDataMsg(DataChannel &channel, const uint8_t *data, si
   // SendDataMsgInternalOrBuffer avoids blocking.
 
   if (mPpidFragmentation) {
-    // TODO: Bug 1381136, remove this block and all other code that uses PPIDs for fragmentation
-    //       and reassembly once older Firefoxes without EOR are no longer supported as target
-    //       clients.
+    // TODO: Bug 1381136, remove this block and all other code that uses PPIDs
+    //       for fragmentation and reassembly once older Firefoxes without EOR
+    //       are no longer supported as target clients.
 
     // Use the deprecated PPID-level fragmentation if enabled. Should be enabled
     // in case we can be certain that the other peer is an older Firefox browser
@@ -2800,8 +2802,9 @@ DataChannelConnection::SendDataMsg(DataChannel &channel, const uint8_t *data, si
 
       size_t left = len;
       while (left > 0) {
-        // Note: For correctness, chunkLen should also consider mMaxMessageSize as minimum but as
-        //       this block is going to be removed soon, I see no need for it.
+        // Note: For correctness, chunkLen should also consider mMaxMessageSize
+        //       as minimum but as this block is going to be removed soon, I
+        //       see no need for it.
         size_t chunkLen = std::min<size_t>(left, DATA_CHANNEL_MAX_BINARY_FRAGMENT);
         left -= chunkLen;
         uint32_t ppid = left > 0 ? ppidPartial : ppidFinal;

@@ -698,7 +698,8 @@ nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
 // <or>
 //     freshnessLifetime = expires_value - date_value
 // <or>
-//     freshnessLifetime = min(one-week,(date_value - last_modified_value) * 0.10)
+//     freshnessLifetime = min(one-week,
+//                             (date_value - last_modified_value) * 0.10)
 // <or>
 //     freshnessLifetime = 0
 //

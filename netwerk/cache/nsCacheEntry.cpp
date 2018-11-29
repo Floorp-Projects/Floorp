@@ -128,7 +128,8 @@ nsCacheEntry::TouchMetaData()
  *      0 descriptors (new entry)
  *      0 descriptors (existing, bound entry)
  *      n descriptors (existing, bound entry) valid
- *      n descriptors (existing, bound entry) not valid (wait until valid or doomed)
+ *      n descriptors (existing, bound entry) not valid (wait until valid or
+ *                    doomed)
  */
 
 nsresult

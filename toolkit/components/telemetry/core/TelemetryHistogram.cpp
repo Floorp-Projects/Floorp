@@ -761,7 +761,8 @@ namespace {
  *
  * @param {StaticMutexAutoLock} the proof we hold the mutex.
  * @param {Histogram} the histogram to reflect.
- * @return {nsresult} NS_ERROR_FAILURE if we fail to allocate memory for the snapshot.
+ * @return {nsresult} NS_ERROR_FAILURE if we fail to allocate memory for the
+ *                    snapshot.
  */
 nsresult
 internal_GetHistogramAndSamples(const StaticMutexAutoLock& aLock,
@@ -912,7 +913,8 @@ internal_ShouldReflectHistogram(const StaticMutexAutoLock& aLock, base::Histogra
  * @param {aClearSubsession} whether or not to clear the data after
  *        taking the snapshot.
  * @param {aIncludeGPU} whether or not to include data for the GPU.
- * @param {aOutSnapshot} the container in which the snapshot data will be stored.
+ * @param {aOutSnapshot} the container in which the snapshot data will be
+ *                       stored.
  * @return {nsresult} NS_OK if the snapshot was successfully taken or
  *         NS_ERROR_OUT_OF_MEMORY if it failed to allocate memory.
  */
@@ -1471,7 +1473,8 @@ KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
  * @param {aClearSubsession} whether or not to clear the data after
  *        taking the snapshot.
  * @param {aIncludeGPU} whether or not to include data for the GPU.
- * @param {aOutSnapshot} the container in which the snapshot data will be stored.
+ * @param {aOutSnapshot} the container in which the snapshot data will be
+ *                       stored.
  * @param {aSkipEmpty} whether or not to skip empty keyed histograms from the
  *        snapshot. Can't always assume "true" for consistency with the other
  *        callers.
@@ -2626,23 +2629,23 @@ TelemetryHistogram::Accumulate(HistogramID aID, const nsCString& aKey,
   }
 }
 
-bool
+nsresult
 TelemetryHistogram::Accumulate(const char* name, uint32_t sample)
 {
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   if (!internal_CanRecordBase()) {
-    return false;
+    return NS_ERROR_NOT_AVAILABLE;
   }
   HistogramID id;
   nsresult rv = internal_GetHistogramIdByName(locker, nsDependentCString(name), &id);
   if (NS_FAILED(rv)) {
-    return false;
+    return rv;
   }
   internal_Accumulate(locker, id, sample);
-  return true;
+  return NS_OK;
 }
 
-bool
+nsresult
 TelemetryHistogram::Accumulate(const char* name,
                                const nsCString& key, uint32_t sample)
 {
@@ -2651,7 +2654,7 @@ TelemetryHistogram::Accumulate(const char* name,
   {
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
     if (!internal_CanRecordBase()) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
     HistogramID id;
     nsresult rv = internal_GetHistogramIdByName(locker, nsDependentCString(name), &id);
@@ -2659,7 +2662,7 @@ TelemetryHistogram::Accumulate(const char* name,
       // Check if we're allowed to record in the provided key, for this histogram.
       if (gHistogramInfos[id].allows_key(key)) {
         internal_Accumulate(locker, id, key, sample);
-        return true;
+        return NS_OK;
       }
       // We're holding |gTelemetryHistogramMutex|, so we can't print a message
       // here.
@@ -2674,7 +2677,7 @@ TelemetryHistogram::Accumulate(const char* name,
       mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_UNKNOWN_HISTOGRAM_KEYS,
       NS_ConvertASCIItoUTF16(name), 1);
   }
-  return false;
+  return NS_ERROR_FAILURE;
 }
 
 void

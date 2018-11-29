@@ -135,8 +135,10 @@ protected:
 
   /**
    * On construction:
-   * - mPrintSettings and mPageSetup are just new objects with defaults determined by GTK.
-   * - mGTKPrinter is nullptr!!! Remember to be careful when accessing this property.
+   * - mPrintSettings and mPageSetup are just new objects with defaults
+   *   determined by GTK.
+   * - mGTKPrinter is nullptr!!! Remember to be careful when accessing this
+   *   property.
    */
   GtkPageSetup* mPageSetup;
   GtkPrintSettings* mPrintSettings;
