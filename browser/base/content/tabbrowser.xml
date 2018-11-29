@@ -1909,10 +1909,6 @@
                     anonid="tab-throbber"
                     class="tab-throbber"
                     layer="true"/>
-          <xul:image xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected"
-                     class="tab-throbber-fallback"
-                     role="presentation"
-                     layer="true"/>
           <xul:hbox xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected,pendingicon"
                     anonid="tab-icon-pending"
                     class="tab-icon-pending"/>
