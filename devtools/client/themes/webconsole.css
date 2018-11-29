@@ -968,9 +968,12 @@ body {
 .webconsole-output-wrapper .object-inspector .tree-node .arrow {
   width: 10px;
   height: 10px;
-  vertical-align: 0px;
-  line-height: 1;
-  background-color: var(--theme-twisty-fill);
+  background: url("chrome://devtools/skin/images/arrow.svg") no-repeat center;
+  background-size: 10px;
+  /* Needed for alignment */
+  margin-top: -1px;
+  -moz-context-properties: fill;
+  fill: var(--theme-twisty-fill);
 }
 
 /* Sidebar */
