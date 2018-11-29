@@ -1030,6 +1030,9 @@ class Datastore final
   nsTHashtable<nsPtrHashKey<Database>> mDatabases;
   nsTHashtable<nsPtrHashKey<Database>> mActiveDatabases;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsDataHashtable<nsStringHashKey, uint32_t> mUpdateBatchRemovals;
+  nsTArray<nsString> mUpdateBatchAppends;
+  nsTArray<nsString> mKeys;
   nsTArray<int64_t> mPendingUsageDeltas;
   const nsCString mOrigin;
   const uint32_t mPrivateBrowsingId;
@@ -1048,7 +1051,8 @@ public:
             already_AddRefed<DirectoryLock>&& aDirectoryLock,
             already_AddRefed<Connection>&& aConnection,
             already_AddRefed<QuotaObject>&& aQuotaObject,
-            nsDataHashtable<nsStringHashKey, nsString>& aValues);
+            nsDataHashtable<nsStringHashKey, nsString>& aValues,
+            nsTArray<nsString>& aKeys);
 
   const nsCString&
   Origin() const
@@ -1618,6 +1622,7 @@ class PrepareDatastoreOp
   nsAutoPtr<ArchivedOriginInfo> mArchivedOriginInfo;
   LoadDataOp* mLoadDataOp;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsTArray<nsString> mKeys;
   const LSRequestPrepareDatastoreParams mParams;
   nsCString mSuffix;
   nsCString mGroup;
@@ -3051,7 +3056,8 @@ Datastore::Datastore(const nsACString& aOrigin,
                      already_AddRefed<DirectoryLock>&& aDirectoryLock,
                      already_AddRefed<Connection>&& aConnection,
                      already_AddRefed<QuotaObject>&& aQuotaObject,
-                     nsDataHashtable<nsStringHashKey, nsString>& aValues)
+                     nsDataHashtable<nsStringHashKey, nsString>& aValues,
+                     nsTArray<nsString>& aKeys)
   : mDirectoryLock(std::move(aDirectoryLock))
   , mConnection(std::move(aConnection))
   , mQuotaObject(std::move(aQuotaObject))
@@ -3067,6 +3073,7 @@ Datastore::Datastore(const nsACString& aOrigin,
   AssertIsOnBackgroundThread();
 
   mValues.SwapElements(aValues);
+  mKeys.SwapElements(aKeys);
 }
 
 Datastore::~Datastore()
@@ -3274,10 +3281,14 @@ Datastore::NoteInactiveDatabase(Database* aDatabase)
 void
 Datastore::GetItemInfos(nsTArray<LSItemInfo>* aItemInfos)
 {
-  for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
+  for (auto key : mKeys) {
+    nsString value;
+    DebugOnly<bool> hasValue = mValues.Get(key, &value);
+    MOZ_ASSERT(hasValue);
+
     LSItemInfo* itemInfo = aItemInfos->AppendElement();
-    itemInfo->key() = iter.Key();
-    itemInfo->value() = iter.Data();
+    itemInfo->key() = key;
+    itemInfo->value() = value;
   }
 }
 
@@ -3313,6 +3324,8 @@ Datastore::SetItem(Database* aDatabase,
 
     if (oldValue.IsVoid()) {
       delta += static_cast<int64_t>(aKey.Length());
+
+      mUpdateBatchAppends.AppendElement(aKey);
     }
 
     mUpdateBatchUsage += delta;
@@ -3345,6 +3358,13 @@ Datastore::RemoveItem(Database* aDatabase,
   GetItem(aKey, oldValue);
 
   if (!oldValue.IsVoid()) {
+    auto entry = mUpdateBatchRemovals.LookupForAdd(aKey);
+    if (entry) {
+      entry.Data()++;
+    } else {
+      entry.OrInsert([]() { return 1; });
+    }
+
     int64_t delta = -(static_cast<int64_t>(aKey.Length()) +
                       static_cast<int64_t>(oldValue.Length()));
 
@@ -3373,6 +3393,9 @@ Datastore::Clear(Database* aDatabase,
   MOZ_ASSERT(mInUpdateBatch);
 
   if (mValues.Count()) {
+    mUpdateBatchRemovals.Clear();
+    mUpdateBatchAppends.Clear();
+
     for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
       const nsAString& key = iter.Key();
       const nsAString& value = iter.Data();
@@ -3384,6 +3407,7 @@ Datastore::Clear(Database* aDatabase,
     }
 
     mValues.Clear();
+    mKeys.Clear();
 
     if (IsPersistent()) {
       EnsureTransaction();
@@ -3412,6 +3436,7 @@ Datastore::PrivateBrowsingClear()
     MOZ_ASSERT(ok);
 
     mValues.Clear();
+    mKeys.Clear();
   }
 }
 
@@ -3438,6 +3463,27 @@ Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage)
   MOZ_ASSERT(aSnapshotPeakUsage >= 0);
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mInUpdateBatch);
+
+  if (mUpdateBatchAppends.Length()) {
+    mKeys.AppendElements(std::move(mUpdateBatchAppends));
+  }
+
+  if (mUpdateBatchRemovals.Count()) {
+    RefPtr<Datastore> self = this;
+
+    mKeys.RemoveElementsBy([self](const nsString& aKey) {
+      if (auto entry = self->mUpdateBatchRemovals.Lookup(aKey)) {
+        if (--entry.Data() == 0) {
+          entry.Remove();
+        }
+        return true;
+      }
+      return false;
+    });
+  }
+
+  MOZ_ASSERT(mUpdateBatchAppends.Length() == 0);
+  MOZ_ASSERT(mUpdateBatchRemovals.Count() == 0);
 
   int64_t delta = mUpdateBatchUsage - aSnapshotPeakUsage;
 
@@ -5085,7 +5131,8 @@ PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse)
                                mDirectoryLock.forget(),
                                mConnection.forget(),
                                quotaObject.forget(),
-                               mValues);
+                               mValues,
+                               mKeys);
 
     mDatastore->NoteLivePrepareDatastoreOp(this);
 
@@ -5295,6 +5342,7 @@ LoadDataOp::DoDatastoreWork()
     }
 
     mPrepareDatastoreOp->mValues.Put(key, value);
+    mPrepareDatastoreOp->mKeys.AppendElement(key);
 #ifdef DEBUG
     mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.Length();
 #endif
