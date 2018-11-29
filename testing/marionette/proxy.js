@@ -144,7 +144,7 @@ proxy.AsyncMessageChannel = class {
       // The currently selected tab or window is closing. Make sure to wait
       // until it's fully gone.
       this.closeHandler = async ({type, target}) => {
-        log.debug(`Received DOM event ${type} for ${target}`);
+        log.trace(`Received DOM event ${type} for ${target}`);
 
         let messageManager;
         switch (type) {
@@ -165,7 +165,7 @@ proxy.AsyncMessageChannel = class {
       // the active command has to be aborted. Therefore remove all handlers,
       // and cancel any ongoing requests in the listener.
       this.dialogueObserver_ = (subject, topic) => {
-        log.debug(`Received observer notification ${topic}`);
+        log.trace(`Received observer notification ${topic}`);
 
         this.removeAllListeners_();
         // TODO(ato): It's not ideal to have listener specific behaviour here:

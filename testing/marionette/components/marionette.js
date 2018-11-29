@@ -310,7 +310,7 @@ class MarionetteParentProcess {
   }
 
   observe(subject, topic) {
-    log.debug(`Received observer notification ${topic}`);
+    log.trace(`Received observer notification ${topic}`);
 
     switch (topic) {
       case "nsPref:changed":
@@ -400,7 +400,7 @@ class MarionetteParentProcess {
         }
 
         if (this.gfxWindow) {
-          log.debug("GFX sanity window detected, waiting until it has been closed...");
+          log.trace("GFX sanity window detected, waiting until it has been closed...");
           Services.obs.addObserver(this, "domwindowclosed");
         } else {
           Services.obs.addObserver(this, "xpcom-will-shutdown");
@@ -421,7 +421,7 @@ class MarionetteParentProcess {
     win.addEventListener("load", () => {
       if (win.document.getElementById("safeModeDialog")) {
         // accept the dialog to start in safe-mode
-        log.debug("Safe mode detected, supressing dialog");
+        log.trace("Safe mode detected, supressing dialog");
         win.setTimeout(() => {
           win.document.documentElement.getButton("accept").click();
         });
@@ -436,15 +436,15 @@ class MarionetteParentProcess {
       return;
     }
 
-    log.debug(`Waiting for delayed startup...`);
+    log.trace(`Waiting until startup recorder finished recording startup scripts...`);
     Services.tm.idleDispatchToMainThread(async () => {
       let startupRecorder = Promise.resolve();
       if ("@mozilla.org/test/startuprecorder;1" in Cc) {
-        log.debug(`Waiting for startup tests...`);
         startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"]
             .getService().wrappedJSObject.done;
       }
       await startupRecorder;
+      log.trace(`All scripts recorded.`);
 
       if (MarionettePrefs.recommendedPrefs) {
         for (let [k, v] of RECOMMENDED_PREFS) {

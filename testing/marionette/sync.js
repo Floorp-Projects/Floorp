@@ -264,7 +264,7 @@ function Sleep(timeout) {
 function MessageManagerDestroyedPromise(messageManager) {
   return new Promise(resolve => {
     function observe(subject, topic) {
-      log.debug(`Received observer notification ${topic}`);
+      log.trace(`Received observer notification ${topic}`);
 
       if (subject == messageManager) {
         Services.obs.removeObserver(this, "message-manager-disconnect");
