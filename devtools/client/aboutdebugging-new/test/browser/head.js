@@ -55,7 +55,8 @@ async function openAboutDebugging(page, win) {
   const browser = tab.linkedBrowser;
   const document = browser.contentDocument;
   const window = browser.contentWindow;
-  await waitForInitialDispatch(window);
+  info("wait for the initial about:debugging requests to be successful");
+  await waitForRequestsSuccess(window);
 
   return { tab, document, window };
 }
@@ -67,14 +68,16 @@ async function reloadAboutDebugging(tab) {
   const browser = tab.linkedBrowser;
   const document = browser.contentDocument;
   const window = browser.contentWindow;
-  await waitForInitialDispatch(window);
+  info("wait for the initial about:debugging requests to be successful");
+  await waitForRequestsSuccess(window);
 
   return document;
 }
 
-function waitForInitialDispatch(win) {
-  info("wait for the initial about debugging actions to be dispatched");
-
+// Wait for all about:debugging target request actions to succeed.
+// They will typically be triggered after watching a new runtime or loading
+// about:debugging.
+function waitForRequestsSuccess(win) {
   const { AboutDebugging } = win;
   return Promise.all([
     waitForDispatch(AboutDebugging.store, "REQUEST_EXTENSIONS_SUCCESS"),
