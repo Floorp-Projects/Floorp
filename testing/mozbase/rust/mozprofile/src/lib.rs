@@ -8,9 +8,9 @@ pub mod profile;
 mod test {
     //    use std::fs::File;
     //    use profile::Profile;
-    use preferences::Pref;
-    use prefreader::{parse, serialize, tokenize};
-    use prefreader::{Position, PrefToken};
+    use crate::preferences::Pref;
+    use crate::prefreader::{parse, serialize, tokenize};
+    use crate::prefreader::{Position, PrefToken};
     use std::collections::BTreeMap;
     use std::error::Error;
     use std::io::Cursor;

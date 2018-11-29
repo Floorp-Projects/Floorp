@@ -1,5 +1,5 @@
-use preferences::{Pref, Preferences};
-use prefreader::{parse, serialize, PrefReaderError};
+use crate::preferences::{Pref, Preferences};
+use crate::prefreader::{parse, serialize, PrefReaderError};
 use std::collections::btree_map::Iter;
 use std::fs::File;
 use std::io::prelude::*;
