@@ -33,6 +33,7 @@ UNIFIED_SOURCES += [
     'LSDatabase.cpp',
     'LSObject.cpp',
     'LSObserver.cpp',
+    'LSSnapshot.cpp',
     'ReportInternalError.cpp',
 ]
 
@@ -42,6 +43,7 @@ IPDL_SOURCES += [
     'PBackgroundLSRequest.ipdl',
     'PBackgroundLSSharedTypes.ipdlh',
     'PBackgroundLSSimpleRequest.ipdl',
+    'PBackgroundLSSnapshot.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

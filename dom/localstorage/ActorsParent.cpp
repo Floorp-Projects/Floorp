@@ -19,6 +19,7 @@
 #include "mozilla/dom/PBackgroundLSRequestParent.h"
 #include "mozilla/dom/PBackgroundLSSharedTypes.h"
 #include "mozilla/dom/PBackgroundLSSimpleRequestParent.h"
+#include "mozilla/dom/PBackgroundLSSnapshotParent.h"
 #include "mozilla/dom/StorageDBUpdater.h"
 #include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -61,6 +62,7 @@ class ConnectionThread;
 class Database;
 class PrepareDatastoreOp;
 class PreparedDatastore;
+class Snapshot;
 
 /*******************************************************************************
  * Constants
@@ -1026,11 +1028,17 @@ class Datastore final
   nsTHashtable<nsPtrHashKey<PrepareDatastoreOp>> mPrepareDatastoreOps;
   nsTHashtable<nsPtrHashKey<PreparedDatastore>> mPreparedDatastores;
   nsTHashtable<nsPtrHashKey<Database>> mDatabases;
+  nsTHashtable<nsPtrHashKey<Database>> mActiveDatabases;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsTArray<int64_t> mPendingUsageDeltas;
   const nsCString mOrigin;
   const uint32_t mPrivateBrowsingId;
   int64_t mUsage;
+  int64_t mUpdateBatchUsage;
   bool mClosed;
+#ifdef DEBUG
+  bool mInUpdateBatch;
+#endif
 
 public:
   // Created by PrepareDatastoreOp.
@@ -1058,6 +1066,13 @@ public:
   IsPersistent() const
   {
     return mPrivateBrowsingId == 0;
+  }
+
+  int64_t
+  Usage() const
+  {
+    AssertIsOnBackgroundThread();
+    return mUsage;
   }
 
   void
@@ -1102,11 +1117,14 @@ public:
   HasLiveDatabases() const;
 #endif
 
-  uint32_t
-  GetLength() const;
+  void
+  NoteActiveDatabase(Database* aDatabase);
 
   void
-  GetKey(uint32_t aIndex, nsString& aKey) const;
+  NoteInactiveDatabase(Database* aDatabase);
+
+  void
+  GetItemInfos(nsTArray<LSItemInfo>* aItemInfos);
 
   void
   GetItem(const nsString& aKey, nsString& aValue) const;
@@ -1115,22 +1133,30 @@ public:
   SetItem(Database* aDatabase,
           const nsString& aDocumentURI,
           const nsString& aKey,
-          const nsString& aValue,
-          LSWriteOpResponse& aResponse);
+          const nsString& aOldValue,
+          const nsString& aValue);
 
   void
   RemoveItem(Database* aDatabase,
              const nsString& aDocumentURI,
              const nsString& aKey,
-             LSWriteOpResponse& aResponse);
+             const nsString& aOldValue);
 
   void
   Clear(Database* aDatabase,
-        const nsString& aDocumentURI,
-        LSWriteOpResponse& aResponse);
+        const nsString& aDocumentURI);
 
   void
-  GetKeys(nsTArray<nsString>& aKeys) const;
+  PrivateBrowsingClear();
+
+  void
+  BeginUpdateBatch(int64_t aSnapshotInitialUsage);
+
+  void
+  EndUpdateBatch(int64_t aSnapshotPeakUsage);
+
+  bool
+  UpdateUsage(int64_t aDelta);
 
   NS_INLINE_DECL_REFCOUNTING(Datastore)
 
@@ -1146,9 +1172,6 @@ private:
 
   void
   CleanupMetadata();
-
-  bool
-  UpdateUsage(int64_t aDelta);
 
   void
   NotifyObservers(Database* aDatabase,
@@ -1269,6 +1292,7 @@ class Database final
   : public PBackgroundLSDatabaseParent
 {
   RefPtr<Datastore> mDatastore;
+  Snapshot* mSnapshot;
   const PrincipalInfo mPrincipalInfo;
   // Strings share buffers if possible, so it's not a problem to duplicate the
   // origin here.
@@ -1286,6 +1310,13 @@ public:
   Database(const PrincipalInfo& aPrincipalInfo,
            const nsACString& aOrigin,
            uint32_t aPrivateBrowsingId);
+
+  Datastore*
+  GetDatastore() const
+  {
+    AssertIsOnBackgroundThread();
+    return mDatastore;
+  }
 
   const PrincipalInfo&
   GetPrincipalInfo() const
@@ -1309,6 +1340,12 @@ public:
   SetActorAlive(Datastore* aDatastore);
 
   void
+  RegisterSnapshot(Snapshot* aSnapshot);
+
+  void
+  UnregisterSnapshot(Snapshot* aSnapshot);
+
+  void
   RequestAllowToClose();
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Database)
@@ -1330,32 +1367,72 @@ private:
   mozilla::ipc::IPCResult
   RecvAllowToClose() override;
 
-  mozilla::ipc::IPCResult
-  RecvGetLength(uint32_t* aLength) override;
+  PBackgroundLSSnapshotParent*
+  AllocPBackgroundLSSnapshotParent(const nsString& aDocumentURI,
+                                   const int64_t& aRequestedSize,
+                                   LSSnapshotInitInfo* aInitInfo) override;
 
   mozilla::ipc::IPCResult
-  RecvGetKey(const uint32_t& aIndex, nsString* aKey) override;
+  RecvPBackgroundLSSnapshotConstructor(PBackgroundLSSnapshotParent* aActor,
+                                       const nsString& aDocumentURI,
+                                       const int64_t& aRequestedSize,
+                                       LSSnapshotInitInfo* aInitInfo) override;
+
+  bool
+  DeallocPBackgroundLSSnapshotParent(PBackgroundLSSnapshotParent* aActor)
+                                     override;
+};
+
+class Snapshot final
+  : public PBackgroundLSSnapshotParent
+{
+  RefPtr<Database> mDatabase;
+  RefPtr<Datastore> mDatastore;
+  nsString mDocumentURI;
+  int64_t mInitialUsage;
+  int64_t mPeakUsage;
+  bool mActorDestroyed;
+  bool mFinishReceived;
+
+public:
+  // Created in AllocPBackgroundLSSnapshotParent.
+  Snapshot(Database* aDatabase,
+           const nsAString& aDocumentURI);
+
+  void
+  SetUsage(int64_t aInitialUsage,
+           int64_t aPeakUsage)
+  {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(aInitialUsage >= 0);
+    MOZ_ASSERT(aPeakUsage >= aInitialUsage);
+    MOZ_ASSERT(mInitialUsage == -1);
+    MOZ_ASSERT(mPeakUsage == -1);
+
+    mInitialUsage = aInitialUsage;
+    mPeakUsage = aPeakUsage;
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Snapshot)
+
+private:
+  // Reference counted.
+  ~Snapshot();
+
+  // IPDL methods are only called by IPDL.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult
-  RecvGetItem(const nsString& aKey, nsString* aValue) override;
+  RecvDeleteMe() override;
 
   mozilla::ipc::IPCResult
-  RecvGetKeys(nsTArray<nsString>* aKeys) override;
+  RecvFinish(const LSSnapshotFinishInfo& aFinishInfo) override;
 
   mozilla::ipc::IPCResult
-  RecvSetItem(const nsString& aDocumentURI,
-              const nsString& aKey,
-              const nsString& aValue,
-              LSWriteOpResponse* aResponse) override;
-
-  mozilla::ipc::IPCResult
-  RecvRemoveItem(const nsString& aDocumentURI,
-                 const nsString& aKey,
-                 LSWriteOpResponse* aResponse) override;
-
-  mozilla::ipc::IPCResult
-  RecvClear(const nsString& aDocumentURI,
-            LSWriteOpResponse* aResponse) override;
+  RecvIncreasePeakUsage(const int64_t& aRequestedSize,
+                        const int64_t& aMinSize,
+                        int64_t* aSize) override;
 };
 
 class Observer final
@@ -2981,7 +3058,11 @@ Datastore::Datastore(const nsACString& aOrigin,
   , mOrigin(aOrigin)
   , mPrivateBrowsingId(aPrivateBrowsingId)
   , mUsage(aUsage)
+  , mUpdateBatchUsage(-1)
   , mClosed(false)
+#ifdef DEBUG
+  , mInUpdateBatch(false)
+#endif
 {
   AssertIsOnBackgroundThread();
 
@@ -3129,6 +3210,7 @@ Datastore::NoteFinishedDatabase(Database* aDatabase)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(mDatabases.GetEntry(aDatabase));
+  MOZ_ASSERT(!mActiveDatabases.GetEntry(aDatabase));
   MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(!mClosed);
 
@@ -3147,28 +3229,55 @@ Datastore::HasLiveDatabases() const
 }
 #endif
 
-uint32_t
-Datastore::GetLength() const
+void
+Datastore::NoteActiveDatabase(Database* aDatabase)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
+  MOZ_ASSERT(mDatabases.GetEntry(aDatabase));
+  MOZ_ASSERT(!mActiveDatabases.GetEntry(aDatabase));
   MOZ_ASSERT(!mClosed);
 
-  return mValues.Count();
+  mActiveDatabases.PutEntry(aDatabase);
 }
 
 void
-Datastore::GetKey(uint32_t aIndex, nsString& aKey) const
+Datastore::NoteInactiveDatabase(Database* aDatabase)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
+  MOZ_ASSERT(mDatabases.GetEntry(aDatabase));
+  MOZ_ASSERT(mActiveDatabases.GetEntry(aDatabase));
   MOZ_ASSERT(!mClosed);
 
-  aKey.SetIsVoid(true);
-  for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
-    if (aIndex == 0) {
-      aKey = iter.Key();
-      return;
+  mActiveDatabases.RemoveEntry(aDatabase);
+
+  if (!mActiveDatabases.Count() &&
+      mPendingUsageDeltas.Length()) {
+    int64_t finalDelta = 0;
+
+    for (auto delta : mPendingUsageDeltas) {
+      finalDelta += delta;
     }
-    aIndex--;
+
+    MOZ_ASSERT(finalDelta <= 0);
+
+    if (finalDelta != 0) {
+      DebugOnly<bool> ok = UpdateUsage(finalDelta);
+      MOZ_ASSERT(ok);
+    }
+
+    mPendingUsageDeltas.Clear();
+  }
+}
+
+void
+Datastore::GetItemInfos(nsTArray<LSItemInfo>* aItemInfos)
+{
+  for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
+    LSItemInfo* itemInfo = aItemInfos->AppendElement();
+    itemInfo->key() = iter.Key();
+    itemInfo->value() = iter.Data();
   }
 }
 
@@ -3187,41 +3296,28 @@ void
 Datastore::SetItem(Database* aDatabase,
                    const nsString& aDocumentURI,
                    const nsString& aKey,
-                   const nsString& aValue,
-                   LSWriteOpResponse& aResponse)
+                   const nsString& aOldValue,
+                   const nsString& aValue)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(mInUpdateBatch);
 
   nsString oldValue;
-  if (!mValues.Get(aKey, &oldValue)) {
-    oldValue.SetIsVoid(true);
-  }
+  GetItem(aKey, oldValue);
 
-  bool changed;
-  if (oldValue == aValue && oldValue.IsVoid() == aValue.IsVoid()) {
-    changed = false;
-  } else {
-    changed = true;
-
-    int64_t delta = 0;
+  if (oldValue != aValue || oldValue.IsVoid() != aValue.IsVoid()) {
+    int64_t delta = static_cast<int64_t>(aValue.Length()) -
+                    static_cast<int64_t>(oldValue.Length());
 
     if (oldValue.IsVoid()) {
       delta += static_cast<int64_t>(aKey.Length());
     }
 
-    delta += static_cast<int64_t>(aValue.Length()) -
-             static_cast<int64_t>(oldValue.Length());
-
-    if (!UpdateUsage(delta)) {
-      aResponse = NS_ERROR_FILE_NO_DEVICE_SPACE;
-      return;
-    }
+    mUpdateBatchUsage += delta;
 
     mValues.Put(aKey, aValue);
-
-    NotifyObservers(aDatabase, aDocumentURI, aKey, oldValue, aValue);
 
     if (IsPersistent()) {
       EnsureTransaction();
@@ -3231,39 +3327,30 @@ Datastore::SetItem(Database* aDatabase,
     }
   }
 
-  LSNotifyInfo info;
-  info.changed() = changed;
-  info.oldValue() = oldValue;
-  aResponse = info;
+  NotifyObservers(aDatabase, aDocumentURI, aKey, aOldValue, aValue);
 }
 
 void
 Datastore::RemoveItem(Database* aDatabase,
                       const nsString& aDocumentURI,
                       const nsString& aKey,
-                      LSWriteOpResponse& aResponse)
+                      const nsString& aOldValue)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(mInUpdateBatch);
 
-  bool changed;
   nsString oldValue;
-  if (!mValues.Get(aKey, &oldValue)) {
-    oldValue.SetIsVoid(true);
-    changed = false;
-  } else {
-    changed = true;
+  GetItem(aKey, oldValue);
 
+  if (!oldValue.IsVoid()) {
     int64_t delta = -(static_cast<int64_t>(aKey.Length()) +
                       static_cast<int64_t>(oldValue.Length()));
 
-    DebugOnly<bool> ok = UpdateUsage(delta);
-    MOZ_ASSERT(ok);
+    mUpdateBatchUsage += delta;
 
     mValues.Remove(aKey);
-
-    NotifyObservers(aDatabase, aDocumentURI, aKey, oldValue, VoidString());
 
     if (IsPersistent()) {
       EnsureTransaction();
@@ -3273,38 +3360,30 @@ Datastore::RemoveItem(Database* aDatabase,
     }
   }
 
-  LSNotifyInfo info;
-  info.changed() = changed;
-  info.oldValue() = oldValue;
-  aResponse = info;
+  NotifyObservers(aDatabase, aDocumentURI, aKey, aOldValue, VoidString());
 }
 
 void
 Datastore::Clear(Database* aDatabase,
-                 const nsString& aDocumentURI,
-                 LSWriteOpResponse& aResponse)
+                 const nsString& aDocumentURI)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(mInUpdateBatch);
 
-  bool changed;
-  if (!mValues.Count()) {
-    changed = false;
-  } else {
-    changed = true;
+  if (mValues.Count()) {
+    for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
+      const nsAString& key = iter.Key();
+      const nsAString& value = iter.Data();
 
-    DebugOnly<bool> ok = UpdateUsage(-mUsage);
-    MOZ_ASSERT(ok);
+      int64_t delta = -(static_cast<int64_t>(key.Length()) +
+                        static_cast<int64_t>(value.Length()));
+
+      mUpdateBatchUsage += delta;
+    }
 
     mValues.Clear();
-
-    if (aDatabase) {
-      NotifyObservers(aDatabase,
-                      aDocumentURI,
-                      VoidString(),
-                      VoidString(),
-                      VoidString());
-    }
 
     if (IsPersistent()) {
       EnsureTransaction();
@@ -3314,20 +3393,118 @@ Datastore::Clear(Database* aDatabase,
     }
   }
 
-  LSNotifyInfo info;
-  info.changed() = changed;
-  aResponse = info;
+  NotifyObservers(aDatabase,
+                  aDocumentURI,
+                  VoidString(),
+                  VoidString(),
+                  VoidString());
 }
 
 void
-Datastore::GetKeys(nsTArray<nsString>& aKeys) const
+Datastore::PrivateBrowsingClear()
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mPrivateBrowsingId);
   MOZ_ASSERT(!mClosed);
 
-  for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
-    aKeys.AppendElement(iter.Key());
+  if (mValues.Count()) {
+    DebugOnly<bool> ok = UpdateUsage(-mUsage);
+    MOZ_ASSERT(ok);
+
+    mValues.Clear();
   }
+}
+
+void
+Datastore::BeginUpdateBatch(int64_t aSnapshotInitialUsage)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aSnapshotInitialUsage >= 0);
+  MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(mUpdateBatchUsage == -1);
+  MOZ_ASSERT(!mInUpdateBatch);
+
+  mUpdateBatchUsage = aSnapshotInitialUsage;
+
+#ifdef DEBUG
+  mInUpdateBatch = true;
+#endif
+}
+
+void
+Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aSnapshotPeakUsage >= 0);
+  MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(mInUpdateBatch);
+
+  int64_t delta = mUpdateBatchUsage - aSnapshotPeakUsage;
+
+  if (mActiveDatabases.Count()) {
+    // We can't apply deltas while other databases are still active.
+    // The final delta must be zero or negative, but individual deltas can be
+    // positive. A positive delta can't be applied asynchronously since there's
+    // no way to fire the quota exceeded error event.
+
+    mPendingUsageDeltas.AppendElement(delta);
+  } else {
+    MOZ_ASSERT(delta <= 0);
+    if (delta != 0) {
+      DebugOnly<bool> ok = UpdateUsage(delta);
+      MOZ_ASSERT(ok);
+    }
+  }
+
+  mUpdateBatchUsage = -1;
+
+#ifdef DEBUG
+  mInUpdateBatch = false;
+#endif
+}
+
+bool
+Datastore::UpdateUsage(int64_t aDelta)
+{
+  AssertIsOnBackgroundThread();
+
+  // Check internal LocalStorage origin limit.
+  int64_t newUsage = mUsage + aDelta;
+  if (newUsage > gOriginLimitKB * 1024) {
+    return false;
+  }
+
+  // Check QuotaManager limits (group and global limit).
+  if (IsPersistent()) {
+    MOZ_ASSERT(mQuotaObject);
+
+    if (!mQuotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
+      return false;
+    }
+
+  }
+
+  // Quota checks passed, set new usage.
+
+  mUsage = newUsage;
+
+  if (IsPersistent()) {
+    RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "Datastore::UpdateUsage",
+      [origin = mOrigin, newUsage] () {
+        MOZ_ASSERT(gUsages);
+        MOZ_ASSERT(gUsages->Contains(origin));
+        gUsages->Put(origin, newUsage);
+      });
+
+    QuotaManager* quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
+
+    MOZ_ALWAYS_SUCCEEDS(
+      quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
+  }
+
+  return true;
 }
 
 void
@@ -3379,50 +3556,6 @@ Datastore::CleanupMetadata()
   if (!gDatastores->Count()) {
     gDatastores = nullptr;
   }
-}
-
-bool
-Datastore::UpdateUsage(int64_t aDelta)
-{
-  AssertIsOnBackgroundThread();
-
-  // Check internal LocalStorage origin limit.
-  int64_t newUsage = mUsage + aDelta;
-  if (newUsage > gOriginLimitKB * 1024) {
-    return false;
-  }
-
-  // Check QuotaManager limits (group and global limit).
-  if (IsPersistent()) {
-    MOZ_ASSERT(mQuotaObject);
-
-    if (!mQuotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
-      return false;
-    }
-
-  }
-
-  // Quota checks passed, set new usage.
-
-  mUsage = newUsage;
-
-  if (IsPersistent()) {
-    RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "Datastore::UpdateUsage",
-      [origin = mOrigin, newUsage] () {
-        MOZ_ASSERT(gUsages);
-        MOZ_ASSERT(gUsages->Contains(origin));
-        gUsages->Put(origin, newUsage);
-      });
-
-    QuotaManager* quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    MOZ_ALWAYS_SUCCEEDS(
-      quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
-  }
-
-  return true;
 }
 
 void
@@ -3529,7 +3662,8 @@ PreparedDatastore::TimerCallback(nsITimer* aTimer, void* aClosure)
 Database::Database(const PrincipalInfo& aPrincipalInfo,
                    const nsACString& aOrigin,
                    uint32_t aPrivateBrowsingId)
-  : mPrincipalInfo(aPrincipalInfo)
+  : mSnapshot(nullptr)
+  , mPrincipalInfo(aPrincipalInfo)
   , mOrigin(aOrigin)
   , mPrivateBrowsingId(aPrivateBrowsingId)
   , mAllowedToClose(false)
@@ -3568,6 +3702,31 @@ Database::SetActorAlive(Datastore* aDatastore)
   }
 
   gLiveDatabases->AppendElement(this);
+}
+
+void
+Database::RegisterSnapshot(Snapshot* aSnapshot)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aSnapshot);
+  MOZ_ASSERT(!mSnapshot);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  // Only one snapshot at a time is currently supported.
+  mSnapshot = aSnapshot;
+
+  mDatastore->NoteActiveDatabase(this);
+}
+
+void
+Database::UnregisterSnapshot(Snapshot* aSnapshot)
+{
+  MOZ_ASSERT(aSnapshot);
+  MOZ_ASSERT(mSnapshot == aSnapshot);
+
+  mSnapshot = nullptr;
+
+  mDatastore->NoteInactiveDatabase(this);
 }
 
 void
@@ -3652,127 +3811,225 @@ Database::RecvAllowToClose()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-Database::RecvGetLength(uint32_t* aLength)
+PBackgroundLSSnapshotParent*
+Database::AllocPBackgroundLSSnapshotParent(const nsString& aDocumentURI,
+                                           const int64_t& aRequestedSize,
+                                           LSSnapshotInitInfo* aInitInfo)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aLength);
-  MOZ_ASSERT(mDatastore);
+
+  if (NS_WARN_IF(aRequestedSize < 0)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
 
   if (NS_WARN_IF(mAllowedToClose)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  RefPtr<Snapshot> snapshot = new Snapshot(this, aDocumentURI);
+
+  // Transfer ownership to IPDL.
+  return snapshot.forget().take();
+}
+
+mozilla::ipc::IPCResult
+Database::RecvPBackgroundLSSnapshotConstructor(
+                                            PBackgroundLSSnapshotParent* aActor,
+                                            const nsString& aDocumentURI,
+                                            const int64_t& aRequestedSize,
+                                            LSSnapshotInitInfo* aInitInfo)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aRequestedSize >= 0);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  auto* snapshot = static_cast<Snapshot*>(aActor);
+
+  // TODO: This can be optimized depending on which operation triggers snapshot
+  //       creation. For example clear() doesn't need to receive items at all.
+  nsTArray<LSItemInfo> itemInfos;
+  mDatastore->GetItemInfos(&itemInfos);
+
+  int64_t initialUsage = mDatastore->Usage();
+
+  int64_t peakUsage = initialUsage;
+  if (aRequestedSize && mDatastore->UpdateUsage(aRequestedSize)) {
+    peakUsage += aRequestedSize;
+  }
+
+  snapshot->SetUsage(initialUsage, peakUsage);
+
+  RegisterSnapshot(snapshot);
+
+  aInitInfo->itemInfos() = std::move(itemInfos);
+  aInitInfo->initialUsage() = initialUsage;
+  aInitInfo->peakUsage() = peakUsage;
+
+  return IPC_OK();
+}
+
+bool
+Database::DeallocPBackgroundLSSnapshotParent(
+                                            PBackgroundLSSnapshotParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  // Transfer ownership back from IPDL.
+  RefPtr<Snapshot> actor = dont_AddRef(static_cast<Snapshot*>(aActor));
+
+  return true;
+}
+
+/*******************************************************************************
+ * Snapshot
+ ******************************************************************************/
+
+Snapshot::Snapshot(Database* aDatabase,
+                   const nsAString& aDocumentURI)
+  : mDatabase(aDatabase)
+  , mDatastore(aDatabase->GetDatastore())
+  , mDocumentURI(aDocumentURI)
+  , mInitialUsage(-1)
+  , mPeakUsage(-1)
+  , mActorDestroyed(false)
+  , mFinishReceived(false)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
+}
+
+Snapshot::~Snapshot()
+{
+  MOZ_ASSERT(mActorDestroyed);
+  MOZ_ASSERT(mFinishReceived);
+}
+
+void
+Snapshot::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  mActorDestroyed = true;
+
+  if (!mFinishReceived) {
+    mDatabase->UnregisterSnapshot(this);
+
+    mDatastore->BeginUpdateBatch(mInitialUsage);
+
+    mDatastore->EndUpdateBatch(mPeakUsage);
+  }
+}
+
+mozilla::ipc::IPCResult
+Snapshot::RecvDeleteMe()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  IProtocol* mgr = Manager();
+  if (!PBackgroundLSSnapshotParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(mgr);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+Snapshot::RecvFinish(const LSSnapshotFinishInfo& aFinishInfo)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mInitialUsage >= 0);
+  MOZ_ASSERT(mPeakUsage >= mInitialUsage);
+
+  if (NS_WARN_IF(mFinishReceived)) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
-  *aLength = mDatastore->GetLength();
+  mFinishReceived = true;
+
+  mDatabase->UnregisterSnapshot(this);
+
+  mDatastore->BeginUpdateBatch(mInitialUsage);
+
+  const nsTArray<LSWriteInfo>& writeInfos = aFinishInfo.writeInfos();
+  for (uint32_t index = 0; index < writeInfos.Length(); index++) {
+    const LSWriteInfo& writeInfo = writeInfos[index];
+    switch (writeInfo.type()) {
+      case LSWriteInfo::TLSSetItemInfo: {
+        const LSSetItemInfo& info = writeInfo.get_LSSetItemInfo();
+
+        mDatastore->SetItem(mDatabase,
+                            mDocumentURI,
+                            info.key(),
+                            info.oldValue(),
+                            info.value());
+
+        break;
+      }
+
+      case LSWriteInfo::TLSRemoveItemInfo: {
+        const LSRemoveItemInfo& info = writeInfo.get_LSRemoveItemInfo();
+
+        mDatastore->RemoveItem(mDatabase,
+                               mDocumentURI,
+                               info.key(),
+                               info.oldValue());
+
+        break;
+      }
+
+      case LSWriteInfo::TLSClearInfo: {
+        mDatastore->Clear(mDatabase, mDocumentURI);
+
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Should never get here!");
+    }
+  }
+
+  mDatastore->EndUpdateBatch(mPeakUsage);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-Database::RecvGetKey(const uint32_t& aIndex, nsString* aKey)
+Snapshot::RecvIncreasePeakUsage(const int64_t& aRequestedSize,
+                                const int64_t& aMinSize,
+                                int64_t* aSize)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aKey);
-  MOZ_ASSERT(mDatastore);
+  MOZ_ASSERT(aSize);
 
-  if (NS_WARN_IF(mAllowedToClose)) {
+  if (NS_WARN_IF(aRequestedSize <= 0)) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->GetKey(aIndex, *aKey);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-Database::RecvGetItem(const nsString& aKey, nsString* aValue)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aValue);
-  MOZ_ASSERT(mDatastore);
-
-  if (NS_WARN_IF(mAllowedToClose)) {
+  if (NS_WARN_IF(aMinSize <= 0)) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->GetItem(aKey, *aValue);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-Database::RecvSetItem(const nsString& aDocumentURI,
-                      const nsString& aKey,
-                      const nsString& aValue,
-                      LSWriteOpResponse* aResponse)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aResponse);
-  MOZ_ASSERT(mDatastore);
-
-  if (NS_WARN_IF(mAllowedToClose)) {
+  if (NS_WARN_IF(mFinishReceived)) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mDatastore->SetItem(this, aDocumentURI, aKey, aValue, *aResponse);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-Database::RecvRemoveItem(const nsString& aDocumentURI,
-                         const nsString& aKey,
-                         LSWriteOpResponse* aResponse)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aResponse);
-  MOZ_ASSERT(mDatastore);
-
-  if (NS_WARN_IF(mAllowedToClose)) {
-    ASSERT_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+  if (mDatastore->UpdateUsage(aRequestedSize)) {
+    mPeakUsage += aRequestedSize;
+    *aSize = aRequestedSize;
+  } else if (mDatastore->UpdateUsage(aMinSize)) {
+    mPeakUsage += aMinSize;
+    *aSize = aMinSize;
+  } else {
+    *aSize = 0;
   }
-
-  mDatastore->RemoveItem(this, aDocumentURI, aKey, *aResponse);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-Database::RecvClear(const nsString& aDocumentURI,
-                    LSWriteOpResponse* aResponse)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aResponse);
-  MOZ_ASSERT(mDatastore);
-
-  if (NS_WARN_IF(mAllowedToClose)) {
-    ASSERT_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  mDatastore->Clear(this, aDocumentURI, *aResponse);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-Database::RecvGetKeys(nsTArray<nsString>* aKeys)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aKeys);
-  MOZ_ASSERT(mDatastore);
-
-  if (NS_WARN_IF(mAllowedToClose)) {
-    ASSERT_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  mDatastore->GetKeys(*aKeys);
 
   return IPC_OK();
 }
@@ -5779,8 +6036,7 @@ ClearPrivateBrowsingRunnable::Run()
       MOZ_ASSERT(datastore);
 
       if (datastore->PrivateBrowsingId()) {
-        LSWriteOpResponse dummy;
-        datastore->Clear(nullptr, EmptyString(), dummy);
+        datastore->PrivateBrowsingClear();
       }
     }
   }

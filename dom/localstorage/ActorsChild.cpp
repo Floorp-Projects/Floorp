@@ -10,6 +10,7 @@
 #include "LSDatabase.h"
 #include "LSObject.h"
 #include "LSObserver.h"
+#include "LSSnapshot.h"
 
 namespace mozilla {
 namespace dom {
@@ -66,7 +67,7 @@ LSDatabaseChild::RecvRequestAllowToClose()
   AssertIsOnOwningThread();
 
   if (mDatabase) {
-    mDatabase->AllowToClose();
+    mDatabase->RequestAllowToClose();
 
     // TODO: A new datastore will be prepared at first LocalStorage API
     //       synchronous call. It would be better to start preparing a new
@@ -75,6 +76,24 @@ LSDatabaseChild::RecvRequestAllowToClose()
   }
 
   return IPC_OK();
+}
+
+PBackgroundLSSnapshotChild*
+LSDatabaseChild::AllocPBackgroundLSSnapshotChild(const nsString& aDocumentURI,
+                                                 const int64_t& aRequestedSize,
+                                                 LSSnapshotInitInfo* aInitInfo)
+{
+  MOZ_CRASH("PBackgroundLSSnapshotChild actor should be manually constructed!");
+}
+
+bool
+LSDatabaseChild::DeallocPBackgroundLSSnapshotChild(
+                                             PBackgroundLSSnapshotChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
 }
 
 /*******************************************************************************
@@ -249,6 +268,52 @@ LSSimpleRequestChild::Recv__delete__(const LSSimpleRequestResponse& aResponse)
   mCallback->OnResponse(aResponse);
 
   return IPC_OK();
+}
+
+/*******************************************************************************
+ * LSSnapshotChild
+ ******************************************************************************/
+
+LSSnapshotChild::LSSnapshotChild(LSSnapshot* aSnapshot)
+  : mSnapshot(aSnapshot)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aSnapshot);
+
+  MOZ_COUNT_CTOR(LSSnapshotChild);
+}
+
+LSSnapshotChild::~LSSnapshotChild()
+{
+  AssertIsOnOwningThread();
+
+  MOZ_COUNT_DTOR(LSSnapshotChild);
+}
+
+void
+LSSnapshotChild::SendDeleteMeInternal()
+{
+  AssertIsOnOwningThread();
+
+  if (mSnapshot) {
+    mSnapshot->ClearActor();
+    mSnapshot = nullptr;
+
+    MOZ_ALWAYS_TRUE(PBackgroundLSSnapshotChild::SendDeleteMe());
+  }
+}
+
+void
+LSSnapshotChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  if (mSnapshot) {
+    mSnapshot->ClearActor();
+#ifdef DEBUG
+    mSnapshot = nullptr;
+#endif
+  }
 }
 
 } // namespace dom
