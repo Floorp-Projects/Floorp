@@ -105,7 +105,7 @@ class TaskGraphGenerator(object):
     # each "phase" of generation.  This allows some mach subcommands to short-
     # circuit generation of the entire graph by never completing the generator.
 
-    def __init__(self, root_dir, parameters):
+    def __init__(self, root_dir, parameters, target_kind=None):
         """
         @param root_dir: root directory, with subdirectories for each kind
         @param paramaters: parameters for this task-graph generation, or callable
@@ -116,6 +116,7 @@ class TaskGraphGenerator(object):
             root_dir = 'taskcluster/ci'
         self.root_dir = root_dir
         self._parameters = parameters
+        self._target_kind = target_kind
 
         # start the generator
         self._run = self._run()
@@ -247,6 +248,12 @@ class TaskGraphGenerator(object):
                 edges.add((kind.name, dep, 'kind-dependency'))
         kind_graph = Graph(set(kinds), edges)
 
+        if self._target_kind:
+            logger.info(
+                "Limiting kinds to {target_kind} and dependencies".format(
+                    target_kind=self._target_kind))
+            kind_graph = kind_graph.transitive_closure({self._target_kind})
+
         logger.info("Generating full task set")
         all_tasks = {}
         for kind_name in kind_graph.visit_postorder():
@@ -373,3 +380,17 @@ class TaskGraphGenerator(object):
             identifiers=registry.keys(),
             appearing_as="inline-literal"
          )
+
+
+def load_tasks_for_kind(parameters, kind):
+    """
+    Get all the tasks of a given kind.
+
+    This function is designed to be called from outside of taskgraph.
+    """
+    tgg = TaskGraphGenerator(root_dir=None, parameters=parameters, target_kind=kind)
+    return {
+        task.task['metadata']['name']: task
+        for task in tgg.full_task_set
+        if task.kind == kind
+    }

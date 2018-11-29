@@ -2,11 +2,16 @@ use mozprofile::preferences::Pref;
 
 // ALL CHANGES TO THIS FILE MUST HAVE REVIEW FROM A GECKODRIVER PEER!
 //
-// geckodriver is used out-of-tree with release channel builds of Firefox.
+// All preferences in this file are not immediately effective, and
+// require a restart of Firefox, or have to be set in the profile before
+// Firefox gets started the first time. If a preference has to be added,
+// which is immediately effective, it needs to be done in Marionette
+// (marionette.js).
+//
+// Note: geckodriver is used out-of-tree with various builds of Firefox.
 // Removing a preference from this file will cause regressions,
 // so please be careful and get review from a Testing :: geckodriver peer
 // before you make any changes to this file.
-
 lazy_static! {
     pub static ref DEFAULT: Vec<(&'static str, Pref)> = vec![
         // Make sure Shield doesn't hit the network.
@@ -16,7 +21,15 @@ lazy_static! {
         ("app.update.checkInstallTime", Pref::new(false)),
 
         // Disable automatically upgrading Firefox
-        ("app.update.disabledForTesting", Pref::new(true)),
+        // Bug 1508726: "disabledForTesting" has no effect in Marionette yet.
+        // As such automatically downloading updates, and installing those
+        // needs to be prevented. Sadly "app.update.auto" will not be enough
+        // anymore, because Windows has changed in how it handles updates. But
+        // at least we can workaround the problem on other platforms.
+        //
+        // DISCLAIMER: Don't remove or change this line until bug 1508726 has
+        // been fixed.
+        ("app.update.auto", Pref::new(false)),
 
         // Enable the dump function, which sends messages to the system
         // console

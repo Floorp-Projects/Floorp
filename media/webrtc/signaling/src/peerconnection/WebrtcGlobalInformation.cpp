@@ -893,7 +893,7 @@ static uint32_t GetCandidateIpAndTransportMask(const RTCIceCandidateStats *cand)
   if (cand->mRelayProtocol.WasPassed()) {
     transport.Assign(NS_ConvertUTF16toUTF8(cand->mRelayProtocol.Value()));
   } else {
-    transport.Assign(NS_ConvertUTF16toUTF8(cand->mTransport.Value()));
+    transport.Assign(NS_ConvertUTF16toUTF8(cand->mProtocol.Value()));
   }
   if (transport == kNrIceTransportUdp) {
     res |= CANDIDATE_BITMASK_UDP;
@@ -958,9 +958,9 @@ static void StoreLongTermICEStatisticsImpl_m(
 
     if (!cand.mType.WasPassed() ||
         !cand.mCandidateType.WasPassed() ||
-        !cand.mTransport.WasPassed() ||
+        !cand.mProtocol.WasPassed() ||
         !cand.mAddress.WasPassed() ||
-        !cand.mComponentId.WasPassed()) {
+        !cand.mTransportId.WasPassed()) {
       // Crash on debug, ignore this candidate otherwise.
       MOZ_CRASH();
       continue;
@@ -1006,19 +1006,19 @@ static void StoreLongTermICEStatisticsImpl_m(
       candBitmask <<= kLocalShift;
     }
 
-    if (cand.mCandidateType.Value() == RTCStatsIceCandidateType::Serverreflexive) {
+    if (cand.mCandidateType.Value() == RTCIceCandidateType::Srflx) {
       candBitmask <<= kSrflxShift;
-    } else if (cand.mCandidateType.Value() == RTCStatsIceCandidateType::Relayed) {
+    } else if (cand.mCandidateType.Value() == RTCIceCandidateType::Relay) {
       candBitmask <<= kRelayShift;
-    } else if (cand.mCandidateType.Value() == RTCStatsIceCandidateType::Peerreflexive) {
+    } else if (cand.mCandidateType.Value() == RTCIceCandidateType::Prflx) {
       candBitmask <<= kPrflxShift;
     }
 
-    // Note: this is not a "component" in the ICE definition, this is really a
-    // stream ID. This is just the way the stats API is standardized right now.
+    // Note: this is not a "transport", this is really a stream ID. This is just
+    // the way the stats API is standardized right now.
     // Very confusing.
     std::string streamId(
-      NS_ConvertUTF16toUTF8(cand.mComponentId.Value()).get());
+      NS_ConvertUTF16toUTF8(cand.mTransportId.Value()).get());
 
     streamResults[streamId].candidateTypeBitpattern |= candBitmask;
   }

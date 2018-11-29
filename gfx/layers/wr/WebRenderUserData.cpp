@@ -229,7 +229,6 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
                                                       ImageContainer* aContainer,
                                                       const StackingContextHelper& aSc,
                                                       const LayoutDeviceRect& aBounds,
-                                                      const LayoutDeviceRect& aSCBounds,
                                                       const gfx::Matrix4x4& aSCTransform,
                                                       const gfx::MaybeIntSize& aScaleToSize,
                                                       const wr::ImageRendering& aFilter,
@@ -263,10 +262,21 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
   // where it will be done when we build the display list for the iframe.
   // That happens in AsyncImagePipelineManager.
   wr::LayoutRect r = wr::ToRoundedLayoutRect(aBounds);
+
+  Maybe<wr::WrClipId> originFrameId;
+  if (r.origin.x != 0.0 || r.origin.y != 0.0) {
+    originFrameId = Some(aBuilder.PushOrigin(r.origin));
+    r.origin = wr::LayoutPoint { 0.0, 0.0 };
+  }
+
   aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref(), /*ignoreMissingPipelines*/ false);
 
+  if (originFrameId) {
+    aBuilder.PopOrigin();
+  }
+
   WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(mPipelineId.value(),
-                                                                   aSCBounds,
+                                                                   aBounds.Size(),
                                                                    aSCTransform,
                                                                    aScaleToSize,
                                                                    aFilter,

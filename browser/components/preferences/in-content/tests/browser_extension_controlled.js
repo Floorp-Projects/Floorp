@@ -451,7 +451,7 @@ add_task(async function testExtensionControlledDefaultSearch() {
      "#search should be in the URI for about:preferences");
 
   let controlledContent = doc.getElementById("browserDefaultSearchExtensionContent");
-  let initialEngine = Services.search.currentEngine;
+  let initialEngine = Services.search.defaultEngine;
 
   // Ensure the controlled content is hidden when not controlled.
   is(controlledContent.hidden, true, "The extension controlled row is hidden");
@@ -471,7 +471,7 @@ add_task(async function testExtensionControlledDefaultSearch() {
 
   // The default search engine has been set by the extension and the user is notified.
   let controlledLabel = controlledContent.querySelector("description");
-  let extensionEngine = Services.search.currentEngine;
+  let extensionEngine = Services.search.defaultEngine;
   ok(initialEngine != extensionEngine, "The default engine has changed.");
   Assert.deepEqual(doc.l10n.getAttributes(controlledLabel), {
     id: "extension-controlled-default-search",
@@ -485,14 +485,14 @@ add_task(async function testExtensionControlledDefaultSearch() {
   setEngine(initialEngine);
   await waitForMessageHidden(controlledContent.id);
 
-  is(initialEngine, Services.search.currentEngine,
+  is(initialEngine, Services.search.defaultEngine,
      "default search engine is set back to default");
   is(controlledContent.hidden, true, "The extension controlled row is hidden");
 
   // Setting the engine back to the extension's engine does not show the message.
   setEngine(extensionEngine);
 
-  is(extensionEngine, Services.search.currentEngine,
+  is(extensionEngine, Services.search.defaultEngine,
      "default search engine is set back to extension");
   is(controlledContent.hidden, true, "The extension controlled row is still hidden");
 
@@ -511,7 +511,7 @@ add_task(async function testExtensionControlledDefaultSearch() {
   // Verify the extension is updated and search engine didn't change.
   is(addon.version, "2.0", "The updated addon has the expected version");
   is(controlledContent.hidden, true, "The extension controlled row is hidden after update");
-  is(initialEngine, Services.search.currentEngine,
+  is(initialEngine, Services.search.defaultEngine,
      "default search engine is still the initial engine after update");
 
   await originalExtension.unload();

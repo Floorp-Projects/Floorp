@@ -152,3 +152,7 @@ lextab.py
 .vscode/
 !.vscode/extensions.json
 !.vscode/tasks.json
+
+# Ignore temp files created by patch command.
+*.orig
+*.rej

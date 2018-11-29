@@ -6,11 +6,11 @@ function run_test() {
   Assert.ok(Services.search.isInitialized);
 
   // Remove the current engine...
-  let currentEngine = Services.search.currentEngine;
+  let currentEngine = Services.search.defaultEngine;
   Services.search.removeEngine(currentEngine);
 
   // ... and verify a new current engine has been set.
-  Assert.notEqual(Services.search.currentEngine.name, currentEngine.name);
+  Assert.notEqual(Services.search.defaultEngine.name, currentEngine.name);
   Assert.ok(currentEngine.hidden);
 
   // Remove all the other engines.
@@ -19,7 +19,7 @@ function run_test() {
 
   // Verify the original default engine is used as a fallback and no
   // longer hidden.
-  Assert.equal(Services.search.currentEngine.name, currentEngine.name);
+  Assert.equal(Services.search.defaultEngine.name, currentEngine.name);
   Assert.ok(!currentEngine.hidden);
   Assert.equal(Services.search.getVisibleEngines().length, 1);
 }

@@ -1,5 +1,4 @@
 browser/components/translation/cld2/
-browser/extensions/mortar/ppapi/
 db/sqlite3/src/
 devtools/client/sourceeditor/codemirror/
 devtools/client/sourceeditor/tern/
@@ -84,7 +83,6 @@ mobile/android/thirdparty/
 modules/brotli/
 modules/fdlibm/
 modules/freetype2/
-modules/pdfium/
 modules/woff2/
 modules/xz-embedded/
 modules/zlib/

@@ -49,14 +49,6 @@ ReadableStream::mode() const
            : JS::ReadableStreamMode::Byte;
 }
 
-uint8_t
-ReadableStream::embeddingFlags() const
-{
-    uint8_t flags = controller()->flags() >> ReadableStreamController::EmbeddingFlagsOffset;
-    MOZ_ASSERT_IF(flags, mode() == JS::ReadableStreamMode::ExternalSource);
-    return flags;
-}
-
 /**
  * Returns the stream associated with the given reader.
  */
@@ -501,7 +493,7 @@ CreateExternalReadableByteStreamController(JSContext* cx, Handle<ReadableStream*
 
 ReadableStream*
 ReadableStream::createExternalSourceStream(JSContext* cx, void* underlyingSource,
-                                           uint8_t flags, HandleObject proto /* = nullptr */)
+                                           HandleObject proto /* = nullptr */)
 {
     Rooted<ReadableStream*> stream(cx, create(cx, proto));
     if (!stream) {
@@ -515,8 +507,6 @@ ReadableStream::createExternalSourceStream(JSContext* cx, void* underlyingSource
     }
 
     stream->setController(controller);
-    controller->setEmbeddingFlags(flags);
-
     return stream;
 }
 
@@ -1534,10 +1524,7 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
         AutoRealm ar(cx, unwrappedStream);
         ReadableStreamController* controller = unwrappedStream->controller();
         void* source = controller->underlyingSource().toPrivate();
-        cx->runtime()->readableStreamClosedCallback(cx,
-                                                    unwrappedStream,
-                                                    source,
-                                                    unwrappedStream->embeddingFlags());
+        cx->runtime()->readableStreamClosedCallback(cx, unwrappedStream, source);
     }
 
     return true;
@@ -1670,11 +1657,7 @@ ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
             return false;
         }
 
-        cx->runtime()->readableStreamErroredCallback(cx,
-                                                     unwrappedStream,
-                                                     source,
-                                                     unwrappedStream->embeddingFlags(),
-                                                     error);
+        cx->runtime()->readableStreamErroredCallback(cx, unwrappedStream, source, error);
     }
 
     return true;
@@ -2593,9 +2576,7 @@ ReadableStreamControllerCancelSteps(JSContext* cx,
             }
 
             cx->check(stream, wrappedReason);
-            rval = cx->runtime()->readableStreamCancelCallback(cx, stream, source,
-                                                               stream->embeddingFlags(),
-                                                               wrappedReason);
+            rval = cx->runtime()->readableStreamCancelCallback(cx, stream, source, wrappedReason);
         }
 
         if (!cx->compartment()->wrap(cx, &rval)) {
@@ -2822,11 +2803,7 @@ ReadableStreamControllerCallPullIfNeeded(JSContext* cx,
             Rooted<ReadableStream*> stream(cx, unwrappedController->stream());
             void* source = unwrappedUnderlyingSource.toPrivate();
             double desiredSize = ReadableStreamControllerGetDesiredSizeUnchecked(unwrappedController);
-            cx->runtime()->readableStreamDataRequestCallback(cx,
-                                                             stream,
-                                                             source,
-                                                             stream->embeddingFlags(),
-                                                             desiredSize);
+            cx->runtime()->readableStreamDataRequestCallback(cx, stream, source, desiredSize);
         }
         pullPromise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
     } else {
@@ -3431,10 +3408,8 @@ ReadableByteStreamControllerFinalize(FreeOp* fop, JSObject* obj)
         return;
     }
 
-    uint8_t embeddingFlags = controller.flags() >> ReadableStreamController::EmbeddingFlagsOffset;
-
     void* underlyingSource = controller.underlyingSource().toPrivate();
-    obj->runtimeFromAnyThread()->readableStreamFinalizeCallback(underlyingSource, embeddingFlags);
+    obj->runtimeFromAnyThread()->readableStreamFinalizeCallback(underlyingSource);
 }
 
 static const ClassOps ReadableByteStreamControllerClassOps = {
@@ -3507,8 +3482,7 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
 
                 auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
                 MOZ_ASSERT(cb);
-                cb(cx, unwrappedStream, underlyingSource, unwrappedStream->embeddingFlags(),
-                   buffer, queueTotalSize, &bytesWritten);
+                cb(cx, unwrappedStream, underlyingSource, buffer, queueTotalSize, &bytesWritten);
             }
 
             queueTotalSize = queueTotalSize - bytesWritten;
@@ -4307,7 +4281,6 @@ JS::NewReadableDefaultStreamObject(JSContext* cx,
 JS_PUBLIC_API JSObject*
 JS::NewReadableExternalSourceStreamObject(JSContext* cx,
                                           void* underlyingSource,
-                                          uint8_t flags /* = 0 */,
                                           HandleObject proto /* = nullptr */)
 {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
@@ -4326,7 +4299,7 @@ JS::NewReadableExternalSourceStreamObject(JSContext* cx,
     MOZ_ASSERT(rt->readableStreamFinalizeCallback);
 #endif // DEBUG
 
-    return ReadableStream::createExternalSourceStream(cx, underlyingSource, flags, proto);
+    return ReadableStream::createExternalSourceStream(cx, underlyingSource, proto);
 }
 
 JS_PUBLIC_API bool
@@ -4388,18 +4361,6 @@ JS::ReadableStreamIsDisturbed(JSContext* cx, HandleObject streamObj, bool* resul
     }
 
     *result = unwrappedStream->disturbed();
-    return true;
-}
-
-JS_PUBLIC_API bool
-JS::ReadableStreamGetEmbeddingFlags(JSContext* cx, HandleObject streamObj, uint8_t* flags)
-{
-    ReadableStream* unwrappedStream = APIUnwrapAndDowncast<ReadableStream>(cx, streamObj);
-    if (!unwrappedStream) {
-        return false;
-    }
-
-    *flags = unwrappedStream->embeddingFlags();
     return true;
 }
 
@@ -4583,8 +4544,7 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
             void* buffer = JS_GetArrayBufferViewData(transferredView, &dummy, noGC);
             auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
             MOZ_ASSERT(cb);
-            cb(cx, unwrappedStream, underlyingSource, unwrappedStream->embeddingFlags(), buffer,
-               availableData, &bytesWritten);
+            cb(cx, unwrappedStream, underlyingSource, buffer, availableData, &bytesWritten);
         }
 
         // Step iii: Perform ! ReadableStreamFulfillReadRequest(stream,

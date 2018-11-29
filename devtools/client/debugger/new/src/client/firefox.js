@@ -6,7 +6,7 @@
 
 import { setupCommands, clientCommands } from "./firefox/commands";
 import { setupEvents, clientEvents } from "./firefox/events";
-import { features } from "../utils/prefs";
+import { features, prefs } from "../utils/prefs";
 import type { Grip } from "../types";
 let DebuggerClient;
 
@@ -44,7 +44,8 @@ export async function onConnect(connection: any, actions: Object): Object {
 
   await threadClient.reconfigure({
     observeAsmJS: true,
-    wasmBinarySource: supportsWasm
+    wasmBinarySource: supportsWasm,
+    skipBreakpoints: prefs.skipPausing
   });
 
   // In Firefox, we need to initially request all of the sources. This

@@ -142,7 +142,7 @@ var spinTests = [
     input.value = 0;
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
-      checkInputEvent(event, "#1");
+      checkInputEvent(evt, "#1");
       if (inputEventCount == 3) {
         is(input.value, "3", "Testing spin-up button");
         synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mousemove" });
@@ -163,7 +163,7 @@ var spinTests = [
     input.value = 0;
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
-      checkInputEvent(event, "#2");
+      checkInputEvent(evt, "#2");
       if (inputEventCount == 3) {
         is(input.value, "-3", "Testing spin-down button");
         synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mousemove" });
@@ -184,7 +184,7 @@ var spinTests = [
     input.value = 0;
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
-      checkInputEvent(event, "#3");
+      checkInputEvent(evt, "#3");
       if (inputEventCount == 3) {
         synthesizeMouse(input, -1, -1, { type: "mousemove" });
         var eventHandler = arguments.callee;
@@ -206,7 +206,7 @@ var spinTests = [
     input.value = 0;
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
-      checkInputEvent(event, "#4");
+      checkInputEvent(evt, "#4");
       if (inputEventCount == 3) {
         input.type = "text"
         var eventHandler = arguments.callee;

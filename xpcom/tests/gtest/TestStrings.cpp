@@ -1440,11 +1440,15 @@ TEST_F(Strings, huge_capacity)
     EXPECT_FALSE(j.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
     j.Truncate();
 
+// Disabled due to intermittent failures.
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1493458
+#if 0
     EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/8 - 1000, fallible));
     EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 1001, fallible));
     EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 998, fallible));
     EXPECT_FALSE(k.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
     k.Truncate();
+#endif
 
     EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8, fallible));
     EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 1, fallible));

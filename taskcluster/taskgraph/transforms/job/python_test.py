@@ -33,10 +33,9 @@ python_test_schema = Schema({
 def docker_worker_python_test(config, job, taskdesc):
     run = job['run']
 
-    # defer to the run_task implementation
-    run['command'] = 'cd {workdir}/checkouts/gecko && ' \
-        './mach python-test --python {python-version} --subsuite {subsuite}'.format(**run)
-    run['using'] = 'run-task'
+    # defer to the mach implementation
+    run['mach'] = 'python-test --python {python-version} --subsuite {subsuite}'.format(**run)
+    run['using'] = 'mach'
     del run['python-version']
     del run['subsuite']
     configure_taskdesc_for_run(config, job, taskdesc, job['worker']['implementation'])

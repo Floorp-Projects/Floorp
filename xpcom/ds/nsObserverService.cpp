@@ -18,7 +18,6 @@
 #include "xpcpublic.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "nsString.h"

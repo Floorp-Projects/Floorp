@@ -50,6 +50,11 @@ intl/unicharutil/util/nsUnicodePropertyData.cpp
 intl/unicharutil/util/nsUnicodeScriptCodes.h
 media/mp4parse-rust/mp4parse.h
 
+# The XPTCall stubs files have some inline assembly macros
+# that get reformatted badly. See bug 1510781.
+xpcom/reflect/xptcall/md/win32/.*
+xpcom/reflect/xptcall/md/unix/.*
+
 # Generated from ./tools/rewriting/ThirdPartyPaths.txt
 # awk '{print ""$1".*"}' ./tools/rewriting/ThirdPartyPaths.txt
 browser/components/translation/cld2/.*

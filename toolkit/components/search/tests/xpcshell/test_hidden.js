@@ -48,7 +48,7 @@ add_task(async function sync_init() {
   Assert.ok(!Services.search.isInitialized);
 
   // Synchronously check the current default engine, to force a sync init.
-  Assert.equal(Services.search.currentEngine.name, "hidden");
+  Assert.equal(Services.search.defaultEngine.name, "hidden");
   Assert.ok(Services.search.isInitialized);
 
   let engines = Services.search.getEngines();

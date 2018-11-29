@@ -117,15 +117,15 @@
 }
 
 #step-over {
-  list-style-image: url(images/debugger-step-over.svg);
+  list-style-image: url(images/canvasdebugger-step-over.svg);
 }
 
 #step-in {
-  list-style-image: url(images/debugger-step-in.svg);
+  list-style-image: url(images/canvasdebugger-step-in.svg);
 }
 
 #step-out {
-  list-style-image: url(images/debugger-step-out.svg);
+  list-style-image: url(images/canvasdebugger-step-out.svg);
 }
 
 #debugging-toolbar-sizer-button {

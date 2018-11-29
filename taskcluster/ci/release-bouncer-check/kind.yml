@@ -23,7 +23,6 @@ job-defaults:
         max-run-time: 1200
         docker-image: {in-tree: "update-verify"}
     run:
-        using: run-task
         sparse-profile: mozharness
     attributes:
         build_platform: linux64

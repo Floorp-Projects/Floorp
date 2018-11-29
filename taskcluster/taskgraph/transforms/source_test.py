@@ -147,7 +147,7 @@ def split_jsshell(config, jobs):
             new_job['treeherder']['symbol'] = join_symbol(group, symbol)
 
             run = new_job['run']
-            run['command'] = run['command'].format(shell=shell, SHELL=shell.upper(), test=test)
+            run['mach'] = run['mach'].format(shell=shell, SHELL=shell.upper(), test=test)
             yield new_job
 
 

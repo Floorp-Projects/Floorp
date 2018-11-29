@@ -9,7 +9,6 @@
 #include "mozilla/HalWakeLock.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"

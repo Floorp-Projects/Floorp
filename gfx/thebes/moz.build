@@ -232,13 +232,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
         'DeviceManagerDx.cpp',
     ]
-    if CONFIG['MOZ_ENABLE_SKIA_PDF']:
-        EXPORTS.mozilla.gfx += [
-            'PrintTargetEMF.h',
-        ]
-        UNIFIED_SOURCES += [
-            'PrintTargetEMF.cpp',
-        ]
 
 if CONFIG['MOZ_ENABLE_SKIA_PDF']:
     EXPORTS.mozilla.gfx += [

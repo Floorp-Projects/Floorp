@@ -13,7 +13,6 @@
 
 #include "AudioConduit.h"
 #include "nsCOMPtr.h"
-#include "mozilla/Services.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrefService.h"

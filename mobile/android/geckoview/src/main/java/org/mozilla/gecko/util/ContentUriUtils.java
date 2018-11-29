@@ -24,6 +24,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 
 /**
  * Based on https://github.com/iPaulPro/aFileChooser/blob/48d65e6649d4201407702b0390326ec9d5c9d17c/aFileChooser/src/com/ipaulpro/afilechooser/utils/FileUtils.java
@@ -61,12 +62,21 @@ public class ContentUriUtils {
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
-
                 final String id = DocumentsContract.getDocumentId(uri);
-                final Uri contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
-
-                return getDataColumn(context, contentUri, null, null);
+                // workaround for issue (https://bugzilla.mozilla.org/show_bug.cgi?id=1502721) and
+                // as per https://github.com/Yalantis/uCrop/issues/318#issuecomment-333066640
+                if (!TextUtils.isEmpty(id)) {
+                    if (id.startsWith("raw:")) {
+                        return id.replaceFirst("raw:", "");
+                    }
+                    try {
+                        final Uri contentUri = ContentUris.withAppendedId(
+                                Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+                        return getDataColumn(context, contentUri, null, null);
+                    } catch (NumberFormatException e) {
+                        return null;
+                    }
+                }
             }
             // MediaProvider
             else if (isMediaDocument(uri)) {

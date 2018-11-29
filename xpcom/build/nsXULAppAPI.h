@@ -388,7 +388,6 @@ enum GeckoProcessType
   GeckoProcessType_GMPlugin, // Gecko Media Plugin
 
   GeckoProcessType_GPU,      // GPU and compositor process
-  GeckoProcessType_PDFium,   // Gecko PDFium process
   GeckoProcessType_VR,       // VR process
   GeckoProcessType_RDD,      // RDD (RemoteDataDecoder process)
   GeckoProcessType_End,
@@ -402,7 +401,6 @@ static const char* const kGeckoProcessTypeString[] = {
   "ipdlunittest",
   "geckomediaplugin",
   "gpu",
-  "pdfium",
   "vr",
   "rdd"
 };

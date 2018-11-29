@@ -21,7 +21,6 @@
 #include "nsThreadUtils.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Services.h"
 
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/dom/GamepadPlatformService.h"

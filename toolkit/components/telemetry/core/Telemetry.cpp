@@ -38,7 +38,6 @@
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessedStack.h"
-#include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
@@ -672,24 +671,6 @@ TelemetryImpl::GetSnapshotForKeyedScalars(const nsACString& aStoreName,
     nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
   return TelemetryScalar::CreateKeyedSnapshots(dataset, aClearStore, aCx, 1,
                                                aResult, aFilterTest, aStoreName);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::SnapshotHistograms(unsigned int aDataset,
-                                  bool aClearHistograms, JSContext* aCx,
-                                  JS::MutableHandleValue aResult)
-{
-  return TelemetryHistogram::CreateHistogramSnapshots(aCx, aResult, NS_LITERAL_CSTRING("main"), aDataset,
-                                                      aClearHistograms);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::SnapshotKeyedHistograms(unsigned int aDataset,
-                                       bool aClearHistograms, JSContext* aCx,
-                                       JS::MutableHandleValue aResult)
-{
-  return TelemetryHistogram::GetKeyedHistogramSnapshots(aCx, aResult, NS_LITERAL_CSTRING("main"), aDataset,
-                                                        aClearHistograms);
 }
 
 bool
@@ -1725,15 +1706,6 @@ TelemetryImpl::ScalarSetMaximum(const nsACString& aName, JS::HandleValue aVal, J
 }
 
 NS_IMETHODIMP
-TelemetryImpl::SnapshotScalars(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
-                               uint8_t optional_argc, JS::MutableHandleValue aResult)
-{
-  return TelemetryScalar::CreateSnapshots(aDataset, aClearScalars, aCx,
-                                          optional_argc, aResult, false,
-                                          NS_LITERAL_CSTRING("main"));
-}
-
-NS_IMETHODIMP
 TelemetryImpl::KeyedScalarAdd(const nsACString& aName, const nsAString& aKey,
                               JS::HandleValue aVal, JSContext* aCx)
 {
@@ -1752,15 +1724,6 @@ TelemetryImpl::KeyedScalarSetMaximum(const nsACString& aName, const nsAString& a
                               JS::HandleValue aVal, JSContext* aCx)
 {
   return TelemetryScalar::SetMaximum(aName, aKey, aVal, aCx);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::SnapshotKeyedScalars(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
-                                    uint8_t optional_argc, JS::MutableHandleValue aResult)
-{
-  return TelemetryScalar::CreateKeyedSnapshots(aDataset, aClearScalars, aCx, optional_argc,
-                                               aResult, false,
-                                               NS_LITERAL_CSTRING("main"));
 }
 
 NS_IMETHODIMP

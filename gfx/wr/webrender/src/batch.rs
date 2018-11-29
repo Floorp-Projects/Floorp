@@ -1001,7 +1001,7 @@ impl AlphaBatchBuilder {
                                         let tile = &tile_cache.tiles[i as usize];
 
                                         // Check if the tile is visible.
-                                        if !tile.is_visible {
+                                        if !tile.is_visible || !tile.in_use {
                                             continue;
                                         }
 

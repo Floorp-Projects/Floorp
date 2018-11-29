@@ -25,7 +25,6 @@
 #include "gfxCrashReporterUtils.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/StackArray.h"
-#include "mozilla/Services.h"
 #include "mozilla/widget/WinCompositorWidget.h"
 
 #include "mozilla/EnumeratedArray.h"

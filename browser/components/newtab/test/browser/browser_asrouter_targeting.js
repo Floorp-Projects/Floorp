@@ -198,10 +198,10 @@ add_task(async function checksearchEngines() {
     "searchEngines.installed should be an array of visible search engines");
   ok(result.current && typeof result.current === "string",
     "searchEngines.current should be a truthy string");
-  is(result.current, Services.search.currentEngine.identifier,
+  is(result.current, Services.search.defaultEngine.identifier,
     "searchEngines.current should be the current engine name");
 
-  const message = {id: "foo", targeting: `searchEngines[.current == ${Services.search.currentEngine.identifier}]`};
+  const message = {id: "foo", targeting: `searchEngines[.current == ${Services.search.defaultEngine.identifier}]`};
   is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
     "should select correct item by searchEngines.current");
 

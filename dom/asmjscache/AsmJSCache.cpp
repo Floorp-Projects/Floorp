@@ -38,7 +38,6 @@
 #include "nsXULAppAPI.h"
 #include "prio.h"
 #include "private/pprio.h"
-#include "mozilla/Services.h"
 
 #define ASMJSCACHE_METADATA_FILE_NAME "metadata"
 #define ASMJSCACHE_ENTRY_FILE_NAME_BASE "module"

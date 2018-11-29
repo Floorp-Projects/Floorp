@@ -46,23 +46,23 @@ const PREF_ENABLED = "marionette.enabled";
 // pref being set to 4444.
 const ENV_PRESERVE_PREFS = "MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS";
 
+// ALL CHANGES TO THIS LIST MUST HAVE REVIEW FROM A MARIONETTE PEER!
+//
 // Marionette sets preferences recommended for automation when it starts,
 // unless marionette.prefs.recommended has been set to false.
-// Where noted, some prefs should also be set in the profile passed to
-// Marionette to prevent them from affecting startup, since some of these
-// are checked before Marionette initialises.
+//
+// All prefs as added here have immediate effect, and don't require a restart
+// nor have to be set in the profile before the application starts. If such a
+// latter preference has to be added, it needs to be done for the client like
+// Marionette client (geckoinstance.py), or geckodriver (prefs.rs).
+//
+// Note: Clients do not always use the latest version of the application. As
+// such backward compatibility has to be ensured at least for the last three
+// releases.
 const RECOMMENDED_PREFS = new Map([
 
   // Make sure Shield doesn't hit the network.
   ["app.normandy.api_url", ""],
-
-  // Disable automatically upgrading Firefox.
-  //
-  // This should also be set in the profile prior to starting Firefox,
-  // as it is picked up at runtime.
-  ["app.update.checkInstallTime", false],
-  ["app.update.disabledForTesting", true],
-  ["security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true],
 
   // Increase the APZ content response timeout in tests to 1 minute.
   // This is to accommodate the fact that test environments tends to be

@@ -16,10 +16,8 @@ bugzilla-components:
         product: source
         job-name: source-bugzilla-info
     run:
-        using: run-task
-        command: >
-            cd /builds/worker/checkouts/gecko
-            && ./mach file-info bugzilla-automation /builds/worker/artifacts
+        using: mach
+        mach: file-info bugzilla-automation /builds/worker/artifacts
     worker:
         artifacts:
             - type: directory

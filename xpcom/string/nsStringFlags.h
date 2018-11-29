@@ -52,12 +52,23 @@ enum class StringDataFlags : uint16_t
   //   points to char_traits::sEmptyBuffer.  Therefore, VOIDED is
   //   mutually exclusive with REFCOUNTED, OWNED, and INLINE.
 
-  TERMINATED   = 1 << 0,  // IsTerminated returns true
-  VOIDED       = 1 << 1,  // IsVoid returns true
-  REFCOUNTED   = 1 << 2,  // mData points to a heap-allocated, shareable, refcounted buffer
-  OWNED        = 1 << 3,  // mData points to a heap-allocated, raw buffer
-  INLINE       = 1 << 4,  // mData points to a writable, inline buffer
-  LITERAL      = 1 << 5   // mData points to a string literal; DataFlags::TERMINATED will also be set
+  // IsTerminated returns true
+  TERMINATED   = 1 << 0,
+
+  // IsVoid returns true
+  VOIDED       = 1 << 1,
+
+  // mData points to a heap-allocated, shareable, refcounted buffer
+  REFCOUNTED   = 1 << 2,
+
+  // mData points to a heap-allocated, raw buffer
+  OWNED        = 1 << 3,
+
+  // mData points to a writable, inline buffer
+  INLINE       = 1 << 4,
+
+  // mData points to a string literal; DataFlags::TERMINATED will also be set
+  LITERAL      = 1 << 5
 };
 
 // bits for mClassFlags

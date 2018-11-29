@@ -60,6 +60,10 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
         return 1
 
     extra_args = lintargs.get('extra_args') or []
+    exclude_args = []
+    for path in config.get('exclude', []):
+        exclude_args.extend(['--ignore-pattern', os.path.relpath(path, lintargs['root'])])
+
     cmd_args = [binary,
                 os.path.join(module_path, "node_modules", "eslint", "bin", "eslint.js"),
                 # Enable the HTML plugin.
@@ -70,7 +74,7 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
                 # This keeps ext as a single argument.
                 '--ext', '[{}]'.format(','.join(config['extensions'])),
                 '--format', 'json',
-                ] + extra_args + paths
+                ] + extra_args + exclude_args + paths
 
     # eslint requires that --fix be set before the --ext argument.
     if fix:
