@@ -12,6 +12,8 @@ function getRemoveButton(document, id) {
   return document.querySelector(`[data-addon-id="${id}"] .uninstall-button`);
 }
 
+// Remove in Bug 1497264
+/*
 add_task(async function removeLegacyExtension() {
   const addonID = "test-devtools@mozilla.org";
   const addonName = "test-devtools";
@@ -36,6 +38,7 @@ add_task(async function removeLegacyExtension() {
 
   await closeAboutDebugging(tab);
 });
+*/
 
 add_task(async function removeWebextension() {
   const addonID = "test-devtools-webextension@mozilla.org";
