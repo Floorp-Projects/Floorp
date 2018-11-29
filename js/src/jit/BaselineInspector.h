@@ -52,13 +52,11 @@ class BaselineInspector
         MOZ_ASSERT(script);
     }
 
-    bool hasBaselineScript() const {
-        return script->hasBaselineScript();
+    bool hasICScript() const {
+        return script->hasICScript();
     }
 
-    BaselineScript* baselineScript() const {
-        return script->baselineScript();
-    }
+    ICScript* icScript() const;
 
   private:
 #ifdef DEBUG
@@ -67,33 +65,13 @@ class BaselineInspector
     }
 #endif
 
-    ICEntry& icEntryFromPC(jsbytecode* pc) {
-        MOZ_ASSERT(hasBaselineScript());
-        MOZ_ASSERT(isValidPC(pc));
-        ICEntry& ent =
-            baselineScript()->icEntryFromPCOffset(script->pcToOffset(pc), prevLookedUpEntry);
-        MOZ_ASSERT(ent.isForOp());
-        prevLookedUpEntry = &ent;
-        return ent;
-    }
-
-    ICEntry* maybeICEntryFromPC(jsbytecode* pc) {
-        MOZ_ASSERT(hasBaselineScript());
-        MOZ_ASSERT(isValidPC(pc));
-        ICEntry* ent =
-            baselineScript()->maybeICEntryFromPCOffset(script->pcToOffset(pc), prevLookedUpEntry);
-        if (!ent) {
-            return nullptr;
-        }
-        MOZ_ASSERT(ent->isForOp());
-        prevLookedUpEntry = ent;
-        return ent;
-    }
+    ICEntry& icEntryFromPC(jsbytecode* pc);
+    ICEntry* maybeICEntryFromPC(jsbytecode* pc);
 
     template <typename ICInspectorType>
     ICInspectorType makeICInspector(jsbytecode* pc, ICStub::Kind expectedFallbackKind) {
         ICEntry* ent = nullptr;
-        if (hasBaselineScript()) {
+        if (hasICScript()) {
             ent = &icEntryFromPC(pc);
             MOZ_ASSERT(ent->fallbackStub()->kind() == expectedFallbackKind);
         }

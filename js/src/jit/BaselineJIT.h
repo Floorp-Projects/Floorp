@@ -245,9 +245,6 @@ struct BaselineScript final
     // scope).
     HeapPtr<EnvironmentObject*> templateEnv_ = nullptr;
 
-    // Allocated space for fallback stubs.
-    FallbackICStubSpace fallbackStubSpace_ = {};
-
     // If non-null, the list of wasm::Modules that contain an optimized call
     // directly to this script.
     Vector<DependentWasmImport>* dependentWasmImports_ = nullptr;
@@ -313,9 +310,6 @@ struct BaselineScript final
   private:
     void trace(JSTracer* trc);
 
-    uint32_t icEntriesOffset_ = 0;
-    uint32_t icEntries_ = 0;
-
     uint32_t retAddrEntriesOffset_ = 0;
     uint32_t retAddrEntries_ = 0;
 
@@ -370,19 +364,12 @@ struct BaselineScript final
     { }
 
   public:
-    ~BaselineScript() {
-        // The contents of the fallback stub space are removed and freed
-        // separately after the next minor GC. See BaselineScript::Destroy.
-        MOZ_ASSERT(fallbackStubSpace_.isEmpty());
-    }
-
     static BaselineScript* New(JSScript* jsscript,
                                uint32_t bailoutPrologueOffset,
                                uint32_t debugOsrPrologueOffset,
                                uint32_t debugOsrEpilogueOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
-                               size_t icEntries,
                                size_t retAddrEntries,
                                size_t pcMappingIndexEntries, size_t pcMappingSize,
                                size_t bytecodeTypeMapEntries,
@@ -392,19 +379,12 @@ struct BaselineScript final
     static void Trace(JSTracer* trc, BaselineScript* script);
     static void Destroy(FreeOp* fop, BaselineScript* script);
 
-    void purgeOptimizedStubs(Zone* zone);
-
     static inline size_t offsetOfMethod() {
         return offsetof(BaselineScript, method_);
     }
 
-    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* data,
-                                size_t* fallbackStubs) const {
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* data) const {
         *data += mallocSizeOf(this);
-
-        // |data| already includes the ICStubSpace itself, so use
-        // sizeOfExcludingThis.
-        *fallbackStubs += fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
     }
 
     bool active() const {
@@ -458,9 +438,6 @@ struct BaselineScript final
         return method_->raw() + debugOsrEpilogueOffset_;
     }
 
-    ICEntry* icEntryList() {
-        return (ICEntry*)(reinterpret_cast<uint8_t*>(this) + icEntriesOffset_);
-    }
     RetAddrEntry* retAddrEntryList() {
         return (RetAddrEntry*)(reinterpret_cast<uint8_t*>(this) + retAddrEntriesOffset_);
     }
@@ -472,9 +449,6 @@ struct BaselineScript final
     }
     uint8_t* pcMappingData() {
         return reinterpret_cast<uint8_t*>(this) + pcMappingOffset_;
-    }
-    FallbackICStubSpace* fallbackStubSpace() {
-        return &fallbackStubSpace_;
     }
 
     JitCode* method() const {
@@ -497,14 +471,6 @@ struct BaselineScript final
         return method()->raw() <= addr && addr <= method()->raw() + method()->instructionsSize();
     }
 
-    ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
-    ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
-                                      ICEntry* prevLookedUpEntry);
-
-    ICEntry& icEntry(size_t index);
-    ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
-    ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry);
-
     uint8_t* returnAddressForEntry(const RetAddrEntry& ent);
 
     RetAddrEntry& retAddrEntry(size_t index);
@@ -513,18 +479,11 @@ struct BaselineScript final
     RetAddrEntry& retAddrEntryFromReturnOffset(CodeOffset returnOffset);
     RetAddrEntry& retAddrEntryFromReturnAddress(uint8_t* returnAddr);
 
-    size_t numICEntries() const {
-        return icEntries_;
-    }
-
     size_t numRetAddrEntries() const {
         return retAddrEntries_;
     }
 
-    void copyICEntries(JSScript* script, const ICEntry* entries);
     void copyRetAddrEntries(JSScript* script, const RetAddrEntry* entries);
-
-    void adoptFallbackStubs(FallbackICStubSpace* stubSpace);
 
     // Copy resumeOffsets list from |script| and convert the pcOffsets
     // to native addresses in the Baseline code.
@@ -585,9 +544,6 @@ struct BaselineScript final
                                            traceLoggerToggleOffsetsOffset_);
     }
 #endif
-
-    void noteAccessedGetter(uint32_t pcOffset);
-    void noteHasDenseAdd(uint32_t pcOffset);
 
     static size_t offsetOfFlags() {
         return offsetof(BaselineScript, flags_);

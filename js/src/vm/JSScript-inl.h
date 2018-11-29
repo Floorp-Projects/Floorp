@@ -229,4 +229,11 @@ JSScript::trackRecordReplayProgress() const
         && mozilla::recordreplay::ShouldUpdateProgressCounter(filename());
 }
 
+inline js::jit::ICScript*
+JSScript::icScript() const
+{
+    MOZ_ASSERT(hasICScript());
+    return types_->icScript();
+}
+
 #endif /* vm_JSScript_inl_h */
