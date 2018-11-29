@@ -373,8 +373,17 @@ class BaselineCodeGen
     MOZ_MUST_USE bool emitToBoolean();
     MOZ_MUST_USE bool emitTest(bool branchIfTrue);
     MOZ_MUST_USE bool emitAndOr(bool branchIfTrue);
-    MOZ_MUST_USE bool emitCall();
-    MOZ_MUST_USE bool emitSpreadCall();
+
+    MOZ_MUST_USE bool emitCall(JSOp op);
+    MOZ_MUST_USE bool emitSpreadCall(JSOp op);
+
+    MOZ_MUST_USE bool emitDelElem(bool strict);
+    MOZ_MUST_USE bool emitDelProp(bool strict);
+    MOZ_MUST_USE bool emitSetElemSuper(bool strict);
+    MOZ_MUST_USE bool emitSetPropSuper(bool strict);
+
+    MOZ_MUST_USE bool emitBindName(JSOp op);
+    MOZ_MUST_USE bool emitDefLexical(JSOp op);
 
     MOZ_MUST_USE bool emitInitPropGetterSetter();
     MOZ_MUST_USE bool emitInitElemGetterSetter();
