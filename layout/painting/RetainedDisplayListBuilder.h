@@ -33,10 +33,20 @@ struct RetainedDisplayListData
     HadWillChange = 1 << 2
   };
 
+  RetainedDisplayListData()
+    : mModifiedFramesCount(0)
+  {
+  }
+
+  /**
+   * Adds the frame to modified frames list.
+   */
+  void AddModifiedFrame(nsIFrame* aFrame);
+
   /**
    * Removes all the frames from this RetainedDisplayListData.
    */
-  void Clear() { mFrames.Clear(); }
+  void Clear() { mFrames.Clear(); mModifiedFramesCount = 0; }
 
   /**
    * Returns a mutable reference to flags set for the given |aFrame|. If the
@@ -57,12 +67,18 @@ struct RetainedDisplayListData
   auto Iterator() { return mFrames.Iter(); }
 
   /**
+   * Returns the count of modified frames in this RetainedDisplayListData.
+   */
+  uint32_t ModifiedFramesCount() const { return mModifiedFramesCount; }
+
+  /**
    * Removes the given |aFrame| from this RetainedDisplayListData.
    */
   bool Remove(nsIFrame* aFrame) { return mFrames.Remove(aFrame); }
 
 private:
   nsDataHashtable<nsPtrHashKey<nsIFrame>, FrameFlags> mFrames;
+  uint32_t mModifiedFramesCount;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RetainedDisplayListData::FrameFlags)

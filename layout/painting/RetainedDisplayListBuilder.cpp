@@ -41,6 +41,14 @@
 
 using namespace mozilla;
 
+void
+RetainedDisplayListData::AddModifiedFrame(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(!aFrame->IsFrameModified());
+  Flags(aFrame) |= RetainedDisplayListData::FrameFlags::Modified;
+  mModifiedFramesCount++;
+}
+
 RetainedDisplayListData*
 GetRetainedDisplayListData(nsIFrame* aRootFrame)
 {
