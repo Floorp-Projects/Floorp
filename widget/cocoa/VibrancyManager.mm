@@ -5,7 +5,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VibrancyManager.h"
+
 #include "nsChildView.h"
+#include "nsCocoaFeatures.h"
 #import <objc/message.h>
 
 using namespace mozilla;

@@ -7,7 +7,7 @@ const kURIs = [
 
 add_task(async function() {
   for (let uri of kURIs) {
-    let dataURI = `data:text/html,<a id=a href="${uri}" target=_blank>Link</a>`;
+    let dataURI = `data:text/html,<a id=a href="${uri}" target=_blank rel="opener">Link</a>`;
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, dataURI);
 
     let tabSwitchPromise = BrowserTestUtils.switchTab(gBrowser, function() {});

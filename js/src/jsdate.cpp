@@ -3350,16 +3350,13 @@ date_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec date_static_methods[] = {
-    // clang-format off
     JS_FN("UTC",                 date_UTC,                7,0),
     JS_FN("parse",               date_parse,              1,0),
     JS_FN("now",                 date_now,                0,0),
     JS_FS_END
-    // clang-format on
 };
 
 static const JSFunctionSpec date_methods[] = {
-    // clang-format off
     JS_FN("getTime",             date_getTime,            0,0),
     JS_FN("getTimezoneOffset",   date_getTimezoneOffset,  0,0),
     JS_FN("getYear",             date_getYear,            0,0),
@@ -3414,7 +3411,6 @@ static const JSFunctionSpec date_methods[] = {
     JS_FN(js_valueOf_str,        date_valueOf,            0,0),
     JS_SYM_FN(toPrimitive,       date_toPrimitive,        1,JSPROP_READONLY),
     JS_FS_END
-    // clang-format on
 };
 
 static bool

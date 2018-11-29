@@ -2391,7 +2391,6 @@ intrinsic_CopyDataPropertiesOrGetOwnKeys(JSContext* cx, unsigned argc, Value* vp
 // Additionally, a set of C++-implemented helper functions is defined on the
 // self-hosting global.
 static const JSFunctionSpec intrinsic_functions[] = {
-    // clang-format off
     JS_INLINABLE_FN("std_Array",                 array_construct,              1,0, Array),
     JS_INLINABLE_FN("std_Array_join",            array_join,                   1,0, ArrayJoin),
     JS_INLINABLE_FN("std_Array_push",            array_push,                   1,0, ArrayPush),
@@ -2665,16 +2664,20 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("SetTypedObjectOffset",           js::SetTypedObjectOffset, 2, 0,
                     IntrinsicSetTypedObjectOffset),
 
+// clang-format off
 #define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)         \
     JS_FN("Store_" #_name, js::StoreScalar##_type::Func, 3, 0),         \
     JS_FN("Load_" #_name,  js::LoadScalar##_type::Func, 3, 0),
     JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(LOAD_AND_STORE_SCALAR_FN_DECLS)
+// clang-format on
 #undef LOAD_AND_STORE_SCALAR_FN_DECLS
 
+// clang-format off
 #define LOAD_AND_STORE_REFERENCE_FN_DECLS(_constant, _type, _name)      \
     JS_FN("Store_" #_name, js::StoreReference##_name::Func, 3, 0),      \
     JS_FN("Load_" #_name,  js::LoadReference##_name::Func, 3, 0),
     JS_FOR_EACH_REFERENCE_TYPE_REPR(LOAD_AND_STORE_REFERENCE_FN_DECLS)
+// clang-format on
 #undef LOAD_AND_STORE_REFERENCE_FN_DECLS
 
     // See builtin/intl/*.h for descriptions of the intl_* functions.
@@ -2803,7 +2806,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("PromiseResolve", intrinsic_PromiseResolve, 2, 0),
 
     JS_FS_END
-    // clang-format on
 };
 
 void
