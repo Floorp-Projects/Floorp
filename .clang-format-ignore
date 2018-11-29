@@ -58,6 +58,10 @@ media/mp4parse-rust/mp4parse.h
 widget/gtk/wayland/gtk-primary-selection-client-protocol.h
 widget/gtk/wayland/gtk-primary-selection-protocol.c
 
+# Ignored because these files are used to generate a windows.h STL wrapper,
+# and reformatting them can break generating that wrapper.
+config/windows-h-.*.h
+
 # The XPTCall stubs files have some inline assembly macros
 # that get reformatted badly. See bug 1510781.
 xpcom/reflect/xptcall/md/win32/.*
