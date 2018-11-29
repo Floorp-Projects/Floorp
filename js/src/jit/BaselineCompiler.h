@@ -249,8 +249,16 @@ namespace jit {
     _(JSOP_IMPORTMETA)         \
     _(JSOP_DYNAMIC_IMPORT)
 
-class BaselineCompiler final
+// Base class for BaselineCompiler and BaselineInterpreterGenerator. The Handler
+// template is a class storing fields/methods that are interpreter or compiler
+// specific. This can be combined with template specialization of methods in
+// this class to specialize behavior.
+template <typename Handler>
+class BaselineCodeGen
 {
+  protected:
+    Handler handler;
+
     JSContext* cx;
     JSScript* script;
     jsbytecode* pc;
@@ -263,20 +271,11 @@ class BaselineCompiler final
     FrameInfo frame;
 
     js::Vector<RetAddrEntry, 16, SystemAllocPolicy> retAddrEntries_;
+    js::Vector<CodeOffset> traceLoggerToggleOffsets_;
 
-    // Stores the native code offset for a bytecode pc.
-    struct PCMappingEntry
-    {
-        uint32_t pcOffset;
-        uint32_t nativeOffset;
-        PCMappingSlotInfo slotInfo;
-
-        // If set, insert a PCMappingIndexEntry before encoding the
-        // current entry.
-        bool addIndexEntry;
-    };
-
-    js::Vector<PCMappingEntry, 16, SystemAllocPolicy> pcMappingEntries_;
+    FixedList<Label> labels_;
+    NonAssertingLabel return_;
+    NonAssertingLabel postBarrierSlot_;
 
     // Index of the current ICEntry in the script's ICScript.
     uint32_t icEntryIndex_;
@@ -286,54 +285,15 @@ class BaselineCompiler final
     bool inCall_;
 #endif
 
-    CodeOffset profilerPushToggleOffset_;
-    CodeOffset profilerEnterFrameToggleOffset_;
-    CodeOffset profilerExitFrameToggleOffset_;
-
-    Vector<CodeOffset> traceLoggerToggleOffsets_;
-    CodeOffset traceLoggerScriptTextIdOffset_;
-
-    FixedList<Label> labels_;
-    NonAssertingLabel return_;
-    NonAssertingLabel postBarrierSlot_;
-
-    // Early Ion bailouts will enter at this address. This is after frame
-    // construction and before environment chain is initialized.
-    CodeOffset bailoutPrologueOffset_;
-
-    // Baseline Debug OSR during prologue will enter at this address. This is
-    // right after where a debug prologue VM call would have returned.
-    CodeOffset debugOsrPrologueOffset_;
-
-    // Baseline Debug OSR during epilogue will enter at this address. This is
-    // right after where a debug epilogue VM call would have returned.
-    CodeOffset debugOsrEpilogueOffset_;
-
     // Whether any on stack arguments are modified.
     bool modifiesArguments_;
+
+    BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script);
 
     Label* labelOf(jsbytecode* pc) {
         return &labels_[script->pcToOffset(pc)];
     }
 
-    // If a script has more |nslots| than this, then emit code to do an
-    // early stack check.
-    static const unsigned EARLY_STACK_CHECK_SLOT_COUNT = 128;
-    bool needsEarlyStackCheck() const {
-        return script->nslots() > EARLY_STACK_CHECK_SLOT_COUNT;
-    }
-
-  public:
-    BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script);
-    MOZ_MUST_USE bool init();
-
-    MethodStatus compile();
-
-    void setCompileDebugInstrumentation() {
-        compileDebugInstrumentation_ = true;
-    }
-
-  private:
     MOZ_MUST_USE bool appendRetAddrEntry(RetAddrEntry::Kind kind, uint32_t retOffset) {
         if (!retAddrEntries_.emplaceBack(script->pcToOffset(pc), kind, CodeOffset(retOffset))) {
             ReportOutOfMemory(cx);
@@ -350,20 +310,6 @@ class BaselineCompiler final
 
     ModuleObject* module() const {
         return script->module();
-    }
-
-    PCMappingSlotInfo getStackTopSlotInfo() {
-        MOZ_ASSERT(frame.numUnsyncedSlots() <= 2);
-        switch (frame.numUnsyncedSlots()) {
-          case 0:
-            return PCMappingSlotInfo::MakeSlotInfo();
-          case 1:
-            return PCMappingSlotInfo::MakeSlotInfo(PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)));
-          case 2:
-          default:
-            return PCMappingSlotInfo::MakeSlotInfo(PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)),
-                                                   PCMappingSlotInfo::ToSlotLocation(frame.peek(-2)));
-        }
     }
 
     template <typename T>
@@ -386,35 +332,13 @@ class BaselineCompiler final
         return true;
     }
 
-    BytecodeAnalysis& analysis() {
-        return analysis_;
-    }
-
-    MethodStatus emitBody();
-
     MOZ_MUST_USE bool emitCheckThis(ValueOperand val, bool reinit=false);
     void emitLoadReturnValue(ValueOperand val);
 
-    void emitInitializeLocals();
-    MOZ_MUST_USE bool emitPrologue();
-    MOZ_MUST_USE bool emitEpilogue();
-    MOZ_MUST_USE bool emitOutOfLinePostBarrierSlot();
     MOZ_MUST_USE bool emitNextIC();
-    MOZ_MUST_USE bool emitStackCheck();
     MOZ_MUST_USE bool emitInterruptCheck();
     MOZ_MUST_USE bool emitWarmUpCounterIncrement(bool allowOsr=true);
-    MOZ_MUST_USE bool emitArgumentTypeChecks();
-    void emitIsDebuggeeCheck();
-    MOZ_MUST_USE bool emitDebugPrologue();
-    MOZ_MUST_USE bool emitDebugTrap();
-    MOZ_MUST_USE bool emitTraceLoggerEnter();
-    MOZ_MUST_USE bool emitTraceLoggerExit();
     MOZ_MUST_USE bool emitTraceLoggerResume(Register script, AllocatableGeneralRegisterSet& regs);
-
-    void emitProfilerEnterFrame();
-    void emitProfilerExitFrame();
-
-    MOZ_MUST_USE bool initEnvironmentChain();
 
     void storeValue(const StackValue* source, const Address& dest,
                     const ValueOperand& scratch);
@@ -450,13 +374,120 @@ class BaselineCompiler final
 
     MOZ_MUST_USE bool emitIsMagicValue();
 
-    MOZ_MUST_USE bool addPCMappingEntry(bool addIndexEntry);
-
     void getEnvironmentCoordinateObject(Register reg);
     Address getEnvironmentCoordinateAddressFromObject(Register objReg, Register reg);
     Address getEnvironmentCoordinateAddress(Register reg);
 
     void getThisEnvironmentCallee(Register reg);
+};
+
+// Interface used by BaselineCodeGen for BaselineCompiler.
+class BaselineCompilerHandler
+{
+  public:
+};
+
+class BaselineCompiler final : private BaselineCodeGen<BaselineCompilerHandler>
+{
+    // Stores the native code offset for a bytecode pc.
+    struct PCMappingEntry
+    {
+        uint32_t pcOffset;
+        uint32_t nativeOffset;
+        PCMappingSlotInfo slotInfo;
+
+        // If set, insert a PCMappingIndexEntry before encoding the
+        // current entry.
+        bool addIndexEntry;
+    };
+
+    js::Vector<PCMappingEntry, 16, SystemAllocPolicy> pcMappingEntries_;
+
+    CodeOffset profilerPushToggleOffset_;
+    CodeOffset profilerEnterFrameToggleOffset_;
+    CodeOffset profilerExitFrameToggleOffset_;
+
+    CodeOffset traceLoggerScriptTextIdOffset_;
+
+    // Early Ion bailouts will enter at this address. This is after frame
+    // construction and before environment chain is initialized.
+    CodeOffset bailoutPrologueOffset_;
+
+    // Baseline Debug OSR during prologue will enter at this address. This is
+    // right after where a debug prologue VM call would have returned.
+    CodeOffset debugOsrPrologueOffset_;
+
+    // Baseline Debug OSR during epilogue will enter at this address. This is
+    // right after where a debug epilogue VM call would have returned.
+    CodeOffset debugOsrEpilogueOffset_;
+
+    // If a script has more |nslots| than this, then emit code to do an
+    // early stack check.
+    static const unsigned EARLY_STACK_CHECK_SLOT_COUNT = 128;
+    bool needsEarlyStackCheck() const {
+        return script->nslots() > EARLY_STACK_CHECK_SLOT_COUNT;
+    }
+
+  public:
+    BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script);
+    MOZ_MUST_USE bool init();
+
+    MethodStatus compile();
+
+    void setCompileDebugInstrumentation() {
+        compileDebugInstrumentation_ = true;
+    }
+
+  private:
+    PCMappingSlotInfo getStackTopSlotInfo() {
+        MOZ_ASSERT(frame.numUnsyncedSlots() <= 2);
+        switch (frame.numUnsyncedSlots()) {
+          case 0:
+            return PCMappingSlotInfo::MakeSlotInfo();
+          case 1:
+            return PCMappingSlotInfo::MakeSlotInfo(PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)));
+          case 2:
+          default:
+            return PCMappingSlotInfo::MakeSlotInfo(PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)),
+                                                   PCMappingSlotInfo::ToSlotLocation(frame.peek(-2)));
+        }
+    }
+
+    BytecodeAnalysis& analysis() {
+        return analysis_;
+    }
+
+    MethodStatus emitBody();
+
+    void emitInitializeLocals();
+    MOZ_MUST_USE bool emitPrologue();
+    MOZ_MUST_USE bool emitEpilogue();
+    MOZ_MUST_USE bool emitOutOfLinePostBarrierSlot();
+    MOZ_MUST_USE bool emitStackCheck();
+    MOZ_MUST_USE bool emitArgumentTypeChecks();
+    void emitIsDebuggeeCheck();
+    MOZ_MUST_USE bool emitDebugPrologue();
+    MOZ_MUST_USE bool emitDebugTrap();
+    MOZ_MUST_USE bool emitTraceLoggerEnter();
+    MOZ_MUST_USE bool emitTraceLoggerExit();
+
+    void emitProfilerEnterFrame();
+    void emitProfilerExitFrame();
+
+    MOZ_MUST_USE bool initEnvironmentChain();
+
+    MOZ_MUST_USE bool addPCMappingEntry(bool addIndexEntry);
+};
+
+// Interface used by BaselineCodeGen for BaselineInterpreterGenerator.
+class BaselineInterpreterHandler
+{
+  public:
+};
+
+class BaselineInterpreterGenerator final : private BaselineCodeGen<BaselineInterpreterHandler>
+{
+  public:
 };
 
 extern const VMFunction NewArrayCopyOnWriteInfo;
