@@ -1644,10 +1644,12 @@ ObjectGroup::getOrFixupCopyOnWriteObject(JSContext* cx, HandleScript script, jsb
     RootedArrayObject obj(cx, &script->getObject(GET_UINT32_INDEX(pc))->as<ArrayObject>());
     MOZ_ASSERT(obj->denseElementsAreCopyOnWrite());
 
-    AutoSweepObjectGroup sweepObjGroup(obj->group());
-    if (obj->group()->fromAllocationSite(sweepObjGroup)) {
-        MOZ_ASSERT(obj->group()->hasAnyFlags(sweepObjGroup, OBJECT_FLAG_COPY_ON_WRITE));
-        return obj;
+    {
+        AutoSweepObjectGroup sweepObjGroup(obj->group());
+        if (obj->group()->fromAllocationSite(sweepObjGroup)) {
+            MOZ_ASSERT(obj->group()->hasAnyFlags(sweepObjGroup, OBJECT_FLAG_COPY_ON_WRITE));
+            return obj;
+        }
     }
 
     RootedObjectGroup group(cx, allocationSiteGroup(cx, script, pc, JSProto_Array));

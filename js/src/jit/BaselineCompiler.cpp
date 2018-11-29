@@ -41,8 +41,10 @@ using namespace js::jit;
 
 using mozilla::AssertedCast;
 
-BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script)
-  : cx(cx),
+template <typename Handler>
+BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script)
+  : handler(),
+    cx(cx),
     script(script),
     pc(script->code()),
     ionCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script)),
@@ -50,18 +52,23 @@ BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript
     alloc_(alloc),
     analysis_(alloc, script),
     frame(script, masm),
-    pcMappingEntries_(),
+    traceLoggerToggleOffsets_(cx),
     icEntryIndex_(0),
     pushedBeforeCall_(0),
 #ifdef DEBUG
     inCall_(false),
 #endif
+    modifiesArguments_(false)
+{
+}
+
+BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script)
+  : BaselineCodeGen(cx, alloc, script),
+    pcMappingEntries_(),
     profilerPushToggleOffset_(),
     profilerEnterFrameToggleOffset_(),
     profilerExitFrameToggleOffset_(),
-    traceLoggerToggleOffsets_(cx),
-    traceLoggerScriptTextIdOffset_(),
-    modifiesArguments_(false)
+    traceLoggerScriptTextIdOffset_()
 {
 #ifdef JS_CODEGEN_NONE
     MOZ_CRASH();
@@ -565,8 +572,9 @@ BaselineCompiler::emitOutOfLinePostBarrierSlot()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitNextIC()
+BaselineCodeGen<Handler>::emitNextIC()
 {
     // Emit a call to an IC stored in ICScript. Calls to this must match the
     // ICEntry order in ICScript: first the non-op IC entries for |this| and
@@ -599,8 +607,9 @@ BaselineCompiler::emitNextIC()
     return true;
 }
 
+template <typename Handler>
 void
-BaselineCompiler::prepareVMCall()
+BaselineCodeGen<Handler>::prepareVMCall()
 {
     pushedBeforeCall_ = masm.framePushed();
 #ifdef DEBUG
@@ -614,8 +623,9 @@ BaselineCompiler::prepareVMCall()
     masm.Push(BaselineFrameReg);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::callVM(const VMFunction& fun, CallVMPhase phase)
+BaselineCodeGen<Handler>::callVM(const VMFunction& fun, CallVMPhase phase)
 {
     TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
 
@@ -858,8 +868,9 @@ typedef bool (*InterruptCheckFn)(JSContext*);
 static const VMFunction InterruptCheckInfo =
     FunctionInfo<InterruptCheckFn>(InterruptCheck, "InterruptCheck");
 
+template <typename Handler>
 bool
-BaselineCompiler::emitInterruptCheck()
+BaselineCodeGen<Handler>::emitInterruptCheck()
 {
     frame.syncStack(0);
 
@@ -882,8 +893,9 @@ static const VMFunction IonCompileScriptForBaselineInfo =
     FunctionInfo<IonCompileScriptForBaselineFn>(IonCompileScriptForBaseline,
                                                 "IonCompileScriptForBaseline");
 
+template <typename Handler>
 bool
-BaselineCompiler::emitWarmUpCounterIncrement(bool allowOsr)
+BaselineCodeGen<Handler>::emitWarmUpCounterIncrement(bool allowOsr)
 {
     // Emit no warm-up counter increments or bailouts if Ion is not
     // enabled, or if the script will never be Ion-compileable
@@ -1073,8 +1085,10 @@ BaselineCompiler::emitTraceLoggerExit()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitTraceLoggerResume(Register baselineScript, AllocatableGeneralRegisterSet& regs)
+BaselineCodeGen<Handler>::emitTraceLoggerResume(Register baselineScript,
+                                                 AllocatableGeneralRegisterSet& regs)
 {
     Register scriptId = regs.takeAny();
     Register loggerReg = regs.takeAny();
@@ -1243,52 +1257,60 @@ OPCODE_LIST(EMIT_OP)
     return Method_Compiled;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NOP()
+BaselineCodeGen<Handler>::emit_JSOP_NOP()
 {
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ITERNEXT()
+BaselineCodeGen<Handler>::emit_JSOP_ITERNEXT()
 {
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NOP_DESTRUCTURING()
+BaselineCodeGen<Handler>::emit_JSOP_NOP_DESTRUCTURING()
 {
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TRY_DESTRUCTURING_ITERCLOSE()
+BaselineCodeGen<Handler>::emit_JSOP_TRY_DESTRUCTURING_ITERCLOSE()
 {
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LABEL()
+BaselineCodeGen<Handler>::emit_JSOP_LABEL()
 {
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_POP()
+BaselineCodeGen<Handler>::emit_JSOP_POP()
 {
     frame.pop();
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_POPN()
+BaselineCodeGen<Handler>::emit_JSOP_POPN()
 {
     frame.popn(GET_UINT16(pc));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DUPAT()
+BaselineCodeGen<Handler>::emit_JSOP_DUPAT()
 {
     frame.syncStack(0);
 
@@ -1302,8 +1324,9 @@ BaselineCompiler::emit_JSOP_DUPAT()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DUP()
+BaselineCodeGen<Handler>::emit_JSOP_DUP()
 {
     // Keep top stack value in R0, sync the rest so that we can use R1. We use
     // separate registers because every register can be used by at most one
@@ -1317,8 +1340,9 @@ BaselineCompiler::emit_JSOP_DUP()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DUP2()
+BaselineCodeGen<Handler>::emit_JSOP_DUP2()
 {
     frame.syncStack(0);
 
@@ -1330,8 +1354,9 @@ BaselineCompiler::emit_JSOP_DUP2()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SWAP()
+BaselineCodeGen<Handler>::emit_JSOP_SWAP()
 {
     // Keep top stack values in R0 and R1.
     frame.popRegsAndSync(2);
@@ -1341,8 +1366,9 @@ BaselineCompiler::emit_JSOP_SWAP()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_PICK()
+BaselineCodeGen<Handler>::emit_JSOP_PICK()
 {
     frame.syncStack(0);
 
@@ -1370,8 +1396,9 @@ BaselineCompiler::emit_JSOP_PICK()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_UNPICK()
+BaselineCodeGen<Handler>::emit_JSOP_UNPICK()
 {
     frame.syncStack(0);
 
@@ -1398,8 +1425,9 @@ BaselineCompiler::emit_JSOP_UNPICK()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GOTO()
+BaselineCodeGen<Handler>::emit_JSOP_GOTO()
 {
     frame.syncStack(0);
 
@@ -1408,8 +1436,9 @@ BaselineCompiler::emit_JSOP_GOTO()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitToBoolean()
+BaselineCodeGen<Handler>::emitToBoolean()
 {
     Label skipIC;
     masm.branchTestBoolean(Assembler::Equal, R0, &skipIC);
@@ -1423,8 +1452,9 @@ BaselineCompiler::emitToBoolean()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitTest(bool branchIfTrue)
+BaselineCodeGen<Handler>::emitTest(bool branchIfTrue)
 {
     bool knownBoolean = frame.peek(-1)->isKnownBoolean();
 
@@ -1440,20 +1470,23 @@ BaselineCompiler::emitTest(bool branchIfTrue)
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_IFEQ()
+BaselineCodeGen<Handler>::emit_JSOP_IFEQ()
 {
     return emitTest(false);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_IFNE()
+BaselineCodeGen<Handler>::emit_JSOP_IFNE()
 {
     return emitTest(true);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitAndOr(bool branchIfTrue)
+BaselineCodeGen<Handler>::emitAndOr(bool branchIfTrue)
 {
     bool knownBoolean = frame.peek(-1)->isKnownBoolean();
 
@@ -1469,20 +1502,23 @@ BaselineCompiler::emitAndOr(bool branchIfTrue)
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_AND()
+BaselineCodeGen<Handler>::emit_JSOP_AND()
 {
     return emitAndOr(false);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_OR()
+BaselineCodeGen<Handler>::emit_JSOP_OR()
 {
     return emitAndOr(true);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NOT()
+BaselineCodeGen<Handler>::emit_JSOP_NOT()
 {
     bool knownBoolean = frame.peek(-1)->isKnownBoolean();
 
@@ -1499,8 +1535,9 @@ BaselineCompiler::emit_JSOP_NOT()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_POS()
+BaselineCodeGen<Handler>::emit_JSOP_POS()
 {
     // Keep top stack value in R0.
     frame.popRegsAndSync(1);
@@ -1519,8 +1556,9 @@ BaselineCompiler::emit_JSOP_POS()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LOOPHEAD()
+BaselineCodeGen<Handler>::emit_JSOP_LOOPHEAD()
 {
     if (!emit_JSOP_JUMPTARGET()) {
         return false;
@@ -1528,8 +1566,9 @@ BaselineCompiler::emit_JSOP_LOOPHEAD()
     return emitInterruptCheck();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LOOPENTRY()
+BaselineCodeGen<Handler>::emit_JSOP_LOOPENTRY()
 {
     if (!emit_JSOP_JUMPTARGET()) {
         return false;
@@ -1544,31 +1583,35 @@ BaselineCompiler::emit_JSOP_LOOPENTRY()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_VOID()
+BaselineCodeGen<Handler>::emit_JSOP_VOID()
 {
     frame.pop();
     frame.push(UndefinedValue());
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_UNDEFINED()
+BaselineCodeGen<Handler>::emit_JSOP_UNDEFINED()
 {
     // If this ever changes, change what JSOP_GIMPLICITTHIS does too.
     frame.push(UndefinedValue());
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_HOLE()
+BaselineCodeGen<Handler>::emit_JSOP_HOLE()
 {
     frame.push(MagicValue(JS_ELEMENTS_HOLE));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NULL()
+BaselineCodeGen<Handler>::emit_JSOP_NULL()
 {
     frame.push(NullValue());
     return true;
@@ -1578,8 +1621,9 @@ typedef bool (*ThrowCheckIsObjectFn)(JSContext*, CheckIsObjectKind);
 static const VMFunction ThrowCheckIsObjectInfo =
     FunctionInfo<ThrowCheckIsObjectFn>(ThrowCheckIsObject, "ThrowCheckIsObject");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CHECKISOBJ()
+BaselineCodeGen<Handler>::emit_JSOP_CHECKISOBJ()
 {
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
@@ -1602,8 +1646,9 @@ typedef bool (*CheckIsCallableFn)(JSContext*, HandleValue, CheckIsCallableKind);
 static const VMFunction CheckIsCallableInfo =
     FunctionInfo<CheckIsCallableFn>(CheckIsCallable, "CheckIsCallable");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CHECKISCALLABLE()
+BaselineCodeGen<Handler>::emit_JSOP_CHECKISCALLABLE()
 {
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
@@ -1629,8 +1674,9 @@ static const VMFunction ThrowInitializedThisInfo =
     FunctionInfo<ThrowInitializedThisFn>(BaselineThrowInitializedThis,
                                          "BaselineThrowInitializedThis");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CHECKTHIS()
+BaselineCodeGen<Handler>::emit_JSOP_CHECKTHIS()
 {
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
@@ -1638,8 +1684,9 @@ BaselineCompiler::emit_JSOP_CHECKTHIS()
     return emitCheckThis(R0);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CHECKTHISREINIT()
+BaselineCodeGen<Handler>::emit_JSOP_CHECKTHISREINIT()
 {
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
@@ -1647,8 +1694,9 @@ BaselineCompiler::emit_JSOP_CHECKTHISREINIT()
     return emitCheckThis(R0, /* reinit = */true);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitCheckThis(ValueOperand val, bool reinit)
+BaselineCodeGen<Handler>::emitCheckThis(ValueOperand val, bool reinit)
 {
     Label thisOK;
     if (reinit) {
@@ -1680,8 +1728,9 @@ typedef bool (*ThrowBadDerivedReturnFn)(JSContext*, HandleValue);
 static const VMFunction ThrowBadDerivedReturnInfo =
     FunctionInfo<ThrowBadDerivedReturnFn>(jit::ThrowBadDerivedReturn, "ThrowBadDerivedReturn");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CHECKRETURN()
+BaselineCodeGen<Handler>::emit_JSOP_CHECKRETURN()
 {
     MOZ_ASSERT(script->isDerivedClassConstructor());
 
@@ -1718,8 +1767,9 @@ typedef bool (*GetFunctionThisFn)(JSContext*, BaselineFrame*, MutableHandleValue
 static const VMFunction GetFunctionThisInfo =
     FunctionInfo<GetFunctionThisFn>(jit::BaselineGetFunctionThis, "BaselineGetFunctionThis");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_FUNCTIONTHIS()
+BaselineCodeGen<Handler>::emit_JSOP_FUNCTIONTHIS()
 {
     MOZ_ASSERT(function());
     MOZ_ASSERT(!function()->isArrow());
@@ -1755,8 +1805,9 @@ static const VMFunction GetNonSyntacticGlobalThisInfo =
     FunctionInfo<GetNonSyntacticGlobalThisFn>(js::GetNonSyntacticGlobalThis,
                                               "GetNonSyntacticGlobalThis");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GLOBALTHIS()
+BaselineCodeGen<Handler>::emit_JSOP_GLOBALTHIS()
 {
     frame.syncStack(0);
 
@@ -1780,93 +1831,106 @@ BaselineCompiler::emit_JSOP_GLOBALTHIS()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TRUE()
+BaselineCodeGen<Handler>::emit_JSOP_TRUE()
 {
     frame.push(BooleanValue(true));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_FALSE()
+BaselineCodeGen<Handler>::emit_JSOP_FALSE()
 {
     frame.push(BooleanValue(false));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ZERO()
+BaselineCodeGen<Handler>::emit_JSOP_ZERO()
 {
     frame.push(Int32Value(0));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ONE()
+BaselineCodeGen<Handler>::emit_JSOP_ONE()
 {
     frame.push(Int32Value(1));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INT8()
+BaselineCodeGen<Handler>::emit_JSOP_INT8()
 {
     frame.push(Int32Value(GET_INT8(pc)));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INT32()
+BaselineCodeGen<Handler>::emit_JSOP_INT32()
 {
     frame.push(Int32Value(GET_INT32(pc)));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_UINT16()
+BaselineCodeGen<Handler>::emit_JSOP_UINT16()
 {
     frame.push(Int32Value(GET_UINT16(pc)));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_UINT24()
+BaselineCodeGen<Handler>::emit_JSOP_UINT24()
 {
     frame.push(Int32Value(GET_UINT24(pc)));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_RESUMEINDEX()
+BaselineCodeGen<Handler>::emit_JSOP_RESUMEINDEX()
 {
     return emit_JSOP_UINT24();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DOUBLE()
+BaselineCodeGen<Handler>::emit_JSOP_DOUBLE()
 {
     frame.push(script->getConst(GET_UINT32_INDEX(pc)));
     return true;
 }
 
 #ifdef ENABLE_BIGINT
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_BIGINT()
+BaselineCodeGen<Handler>::emit_JSOP_BIGINT()
 {
     frame.push(script->getConst(GET_UINT32_INDEX(pc)));
     return true;
 }
 #endif
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRING()
+BaselineCodeGen<Handler>::emit_JSOP_STRING()
 {
     frame.push(StringValue(script->getAtom(pc)));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SYMBOL()
+BaselineCodeGen<Handler>::emit_JSOP_SYMBOL()
 {
     unsigned which = GET_UINT8(pc);
     JS::Symbol* sym = cx->runtime()->wellKnownSymbols->get(which);
@@ -1878,8 +1942,9 @@ typedef JSObject* (*DeepCloneObjectLiteralFn)(JSContext*, HandleObject, NewObjec
 static const VMFunction DeepCloneObjectLiteralInfo =
     FunctionInfo<DeepCloneObjectLiteralFn>(DeepCloneObjectLiteral, "DeepCloneObjectLiteral");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_OBJECT()
+BaselineCodeGen<Handler>::emit_JSOP_OBJECT()
 {
     if (cx->realm()->creationOptions().cloneSingletons()) {
         RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
@@ -1907,8 +1972,9 @@ BaselineCompiler::emit_JSOP_OBJECT()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CALLSITEOBJ()
+BaselineCodeGen<Handler>::emit_JSOP_CALLSITEOBJ()
 {
     RootedObject cso(cx, script->getObject(pc));
     RootedObject raw(cx, script->getObject(GET_UINT32_INDEX(pc) + 1));
@@ -1928,8 +1994,9 @@ typedef JSObject* (*CloneRegExpObjectFn)(JSContext*, Handle<RegExpObject*>);
 static const VMFunction CloneRegExpObjectInfo =
     FunctionInfo<CloneRegExpObjectFn>(CloneRegExpObject, "CloneRegExpObject");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_REGEXP()
+BaselineCodeGen<Handler>::emit_JSOP_REGEXP()
 {
     RootedObject reObj(cx, script->getRegExp(pc));
 
@@ -1948,8 +2015,9 @@ BaselineCompiler::emit_JSOP_REGEXP()
 typedef JSObject* (*LambdaFn)(JSContext*, HandleFunction, HandleObject);
 static const VMFunction LambdaInfo = FunctionInfo<LambdaFn>(js::Lambda, "Lambda");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LAMBDA()
+BaselineCodeGen<Handler>::emit_JSOP_LAMBDA()
 {
     RootedFunction fun(cx, script->getFunction(GET_UINT32_INDEX(pc)));
 
@@ -1973,8 +2041,9 @@ typedef JSObject* (*LambdaArrowFn)(JSContext*, HandleFunction, HandleObject, Han
 static const VMFunction LambdaArrowInfo =
     FunctionInfo<LambdaArrowFn>(js::LambdaArrow, "LambdaArrow");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LAMBDA_ARROW()
+BaselineCodeGen<Handler>::emit_JSOP_LAMBDA_ARROW()
 {
     // Keep pushed newTarget in R0.
     frame.popRegsAndSync(1);
@@ -2002,8 +2071,9 @@ typedef bool (*SetFunNameFn)(JSContext*, HandleFunction, HandleValue, FunctionPr
 static const VMFunction SetFunNameInfo =
     FunctionInfo<SetFunNameFn>(js::SetFunctionNameIfNoOwnName, "SetFunName");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETFUNNAME()
+BaselineCodeGen<Handler>::emit_JSOP_SETFUNNAME()
 {
     frame.popRegsAndSync(2);
 
@@ -2021,9 +2091,10 @@ BaselineCompiler::emit_JSOP_SETFUNNAME()
     return callVM(SetFunNameInfo);
 }
 
+template <typename Handler>
 void
-BaselineCompiler::storeValue(const StackValue* source, const Address& dest,
-                             const ValueOperand& scratch)
+BaselineCodeGen<Handler>::storeValue(const StackValue* source, const Address& dest,
+                                     const ValueOperand& scratch)
 {
     switch (source->kind()) {
       case StackValue::Constant:
@@ -2058,80 +2129,93 @@ BaselineCompiler::storeValue(const StackValue* source, const Address& dest,
     }
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_BITOR()
+BaselineCodeGen<Handler>::emit_JSOP_BITOR()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_BITXOR()
+BaselineCodeGen<Handler>::emit_JSOP_BITXOR()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_BITAND()
+BaselineCodeGen<Handler>::emit_JSOP_BITAND()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LSH()
+BaselineCodeGen<Handler>::emit_JSOP_LSH()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_RSH()
+BaselineCodeGen<Handler>::emit_JSOP_RSH()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_URSH()
+BaselineCodeGen<Handler>::emit_JSOP_URSH()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ADD()
+BaselineCodeGen<Handler>::emit_JSOP_ADD()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SUB()
+BaselineCodeGen<Handler>::emit_JSOP_SUB()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_MUL()
+BaselineCodeGen<Handler>::emit_JSOP_MUL()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DIV()
+BaselineCodeGen<Handler>::emit_JSOP_DIV()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_MOD()
+BaselineCodeGen<Handler>::emit_JSOP_MOD()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_POW()
+BaselineCodeGen<Handler>::emit_JSOP_POW()
 {
     return emitBinaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitBinaryArith()
+BaselineCodeGen<Handler>::emitBinaryArith()
 {
     // Keep top JSStack value in R0 and R2
     frame.popRegsAndSync(2);
@@ -2146,8 +2230,9 @@ BaselineCompiler::emitBinaryArith()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitUnaryArith()
+BaselineCodeGen<Handler>::emitUnaryArith()
 {
     // Keep top stack value in R0.
     frame.popRegsAndSync(1);
@@ -2162,56 +2247,65 @@ BaselineCompiler::emitUnaryArith()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_BITNOT()
+BaselineCodeGen<Handler>::emit_JSOP_BITNOT()
 {
     return emitUnaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NEG()
+BaselineCodeGen<Handler>::emit_JSOP_NEG()
 {
     return emitUnaryArith();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LT()
+BaselineCodeGen<Handler>::emit_JSOP_LT()
 {
     return emitCompare();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LE()
+BaselineCodeGen<Handler>::emit_JSOP_LE()
 {
     return emitCompare();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GT()
+BaselineCodeGen<Handler>::emit_JSOP_GT()
 {
     return emitCompare();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GE()
+BaselineCodeGen<Handler>::emit_JSOP_GE()
 {
     return emitCompare();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_EQ()
+BaselineCodeGen<Handler>::emit_JSOP_EQ()
 {
     return emitCompare();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NE()
+BaselineCodeGen<Handler>::emit_JSOP_NE()
 {
     return emitCompare();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitCompare()
+BaselineCodeGen<Handler>::emitCompare()
 {
     // CODEGEN
 
@@ -2228,26 +2322,30 @@ BaselineCompiler::emitCompare()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTEQ()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTEQ()
 {
     return emitCompare();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTNE()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTNE()
 {
     return emitCompare();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CONDSWITCH()
+BaselineCodeGen<Handler>::emit_JSOP_CONDSWITCH()
 {
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CASE()
+BaselineCodeGen<Handler>::emit_JSOP_CASE()
 {
     frame.popRegsAndSync(1);
 
@@ -2263,21 +2361,24 @@ BaselineCompiler::emit_JSOP_CASE()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DEFAULT()
+BaselineCodeGen<Handler>::emit_JSOP_DEFAULT()
 {
     frame.pop();
     return emit_JSOP_GOTO();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LINENO()
+BaselineCodeGen<Handler>::emit_JSOP_LINENO()
 {
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NEWARRAY()
+BaselineCodeGen<Handler>::emit_JSOP_NEWARRAY()
 {
     frame.syncStack(0);
 
@@ -2301,8 +2402,9 @@ typedef ArrayObject* (*NewArrayCopyOnWriteFn)(JSContext*, HandleArrayObject, gc:
 const VMFunction jit::NewArrayCopyOnWriteInfo =
     FunctionInfo<NewArrayCopyOnWriteFn>(js::NewDenseCopyOnWriteArray, "NewDenseCopyOnWriteArray");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NEWARRAY_COPYONWRITE()
+BaselineCodeGen<Handler>::emit_JSOP_NEWARRAY_COPYONWRITE()
 {
     RootedScript scriptRoot(cx, script);
     JSObject* obj = ObjectGroup::getOrFixupCopyOnWriteObject(cx, scriptRoot, pc);
@@ -2325,8 +2427,9 @@ BaselineCompiler::emit_JSOP_NEWARRAY_COPYONWRITE()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITELEM_ARRAY()
+BaselineCodeGen<Handler>::emit_JSOP_INITELEM_ARRAY()
 {
     // Keep the object and rhs on the stack.
     frame.syncStack(0);
@@ -2350,8 +2453,9 @@ BaselineCompiler::emit_JSOP_INITELEM_ARRAY()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NEWOBJECT()
+BaselineCodeGen<Handler>::emit_JSOP_NEWOBJECT()
 {
     frame.syncStack(0);
 
@@ -2363,8 +2467,9 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NEWINIT()
+BaselineCodeGen<Handler>::emit_JSOP_NEWINIT()
 {
     frame.syncStack(0);
 
@@ -2376,8 +2481,9 @@ BaselineCompiler::emit_JSOP_NEWINIT()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITELEM()
+BaselineCodeGen<Handler>::emit_JSOP_INITELEM()
 {
     // Store RHS in the scratch slot.
     storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
@@ -2403,8 +2509,9 @@ BaselineCompiler::emit_JSOP_INITELEM()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITHIDDENELEM()
+BaselineCodeGen<Handler>::emit_JSOP_INITHIDDENELEM()
 {
     return emit_JSOP_INITELEM();
 }
@@ -2413,8 +2520,9 @@ typedef bool (*MutateProtoFn)(JSContext* cx, HandlePlainObject obj, HandleValue 
 static const VMFunction MutateProtoInfo =
     FunctionInfo<MutateProtoFn>(MutatePrototype, "MutatePrototype");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_MUTATEPROTO()
+BaselineCodeGen<Handler>::emit_JSOP_MUTATEPROTO()
 {
     // Keep values on the stack for the decompiler.
     frame.syncStack(0);
@@ -2435,8 +2543,9 @@ BaselineCompiler::emit_JSOP_MUTATEPROTO()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITPROP()
+BaselineCodeGen<Handler>::emit_JSOP_INITPROP()
 {
     // Load lhs in R0, rhs in R1.
     frame.syncStack(0);
@@ -2453,20 +2562,23 @@ BaselineCompiler::emit_JSOP_INITPROP()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITLOCKEDPROP()
+BaselineCodeGen<Handler>::emit_JSOP_INITLOCKEDPROP()
 {
     return emit_JSOP_INITPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITHIDDENPROP()
+BaselineCodeGen<Handler>::emit_JSOP_INITHIDDENPROP()
 {
     return emit_JSOP_INITPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETELEM()
+BaselineCodeGen<Handler>::emit_JSOP_GETELEM()
 {
     // Keep top two stack values in R0 and R1.
     frame.popRegsAndSync(2);
@@ -2481,8 +2593,9 @@ BaselineCompiler::emit_JSOP_GETELEM()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETELEM_SUPER()
+BaselineCodeGen<Handler>::emit_JSOP_GETELEM_SUPER()
 {
     // Store obj in the scratch slot.
     storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
@@ -2503,14 +2616,16 @@ BaselineCompiler::emit_JSOP_GETELEM_SUPER()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CALLELEM()
+BaselineCodeGen<Handler>::emit_JSOP_CALLELEM()
 {
     return emit_JSOP_GETELEM();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETELEM()
+BaselineCodeGen<Handler>::emit_JSOP_SETELEM()
 {
     // Store RHS in the scratch slot.
     storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
@@ -2530,14 +2645,16 @@ BaselineCompiler::emit_JSOP_SETELEM()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTSETELEM()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTSETELEM()
 {
     return emit_JSOP_SETELEM();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETELEM_SUPER()
+BaselineCodeGen<Handler>::emit_JSOP_SETELEM_SUPER()
 {
     bool strict = IsCheckStrictOp(JSOp(*pc));
 
@@ -2567,8 +2684,9 @@ BaselineCompiler::emit_JSOP_SETELEM_SUPER()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTSETELEM_SUPER()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTSETELEM_SUPER()
 {
     return emit_JSOP_SETELEM_SUPER();
 }
@@ -2579,8 +2697,9 @@ static const VMFunction DeleteElementStrictInfo
 static const VMFunction DeleteElementNonStrictInfo
     = FunctionInfo<DeleteElementFn>(DeleteElementJit<false>, "DeleteElementNonStrict");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DELELEM()
+BaselineCodeGen<Handler>::emit_JSOP_DELELEM()
 {
     // Keep values on the stack for the decompiler.
     frame.syncStack(0);
@@ -2603,14 +2722,16 @@ BaselineCompiler::emit_JSOP_DELELEM()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTDELELEM()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTDELELEM()
 {
     return emit_JSOP_DELELEM();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_IN()
+BaselineCodeGen<Handler>::emit_JSOP_IN()
 {
     frame.popRegsAndSync(2);
 
@@ -2622,8 +2743,9 @@ BaselineCompiler::emit_JSOP_IN()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_HASOWN()
+BaselineCodeGen<Handler>::emit_JSOP_HASOWN()
 {
     frame.popRegsAndSync(2);
 
@@ -2635,8 +2757,9 @@ BaselineCompiler::emit_JSOP_HASOWN()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETGNAME()
+BaselineCodeGen<Handler>::emit_JSOP_GETGNAME()
 {
     if (script->hasNonSyntacticScope()) {
         return emit_JSOP_GETNAME();
@@ -2672,8 +2795,9 @@ BaselineCompiler::emit_JSOP_GETGNAME()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_BINDGNAME()
+BaselineCodeGen<Handler>::emit_JSOP_BINDGNAME()
 {
     if (!script->hasNonSyntacticScope()) {
         // We can bind name to the global lexical scope if the binding already
@@ -2708,8 +2832,9 @@ BaselineCompiler::emit_JSOP_BINDGNAME()
 typedef JSObject* (*BindVarFn)(JSContext*, HandleObject);
 static const VMFunction BindVarInfo = FunctionInfo<BindVarFn>(jit::BindVar, "BindVar");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_BINDVAR()
+BaselineCodeGen<Handler>::emit_JSOP_BINDVAR()
 {
     frame.syncStack(0);
     masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
@@ -2726,8 +2851,9 @@ BaselineCompiler::emit_JSOP_BINDVAR()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETPROP()
+BaselineCodeGen<Handler>::emit_JSOP_SETPROP()
 {
     // Keep lhs in R0, rhs in R1.
     frame.popRegsAndSync(2);
@@ -2744,32 +2870,37 @@ BaselineCompiler::emit_JSOP_SETPROP()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTSETPROP()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTSETPROP()
 {
     return emit_JSOP_SETPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETNAME()
+BaselineCodeGen<Handler>::emit_JSOP_SETNAME()
 {
     return emit_JSOP_SETPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTSETNAME()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTSETNAME()
 {
     return emit_JSOP_SETPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETGNAME()
+BaselineCodeGen<Handler>::emit_JSOP_SETGNAME()
 {
     return emit_JSOP_SETPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTSETGNAME()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTSETGNAME()
 {
     return emit_JSOP_SETPROP();
 }
@@ -2779,8 +2910,9 @@ typedef bool (*SetPropertySuperFn)(JSContext*, HandleObject, HandleValue,
 static const VMFunction SetPropertySuperInfo =
     FunctionInfo<SetPropertySuperFn>(js::SetPropertySuper, "SetPropertySuper");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETPROP_SUPER()
+BaselineCodeGen<Handler>::emit_JSOP_SETPROP_SUPER()
 {
     bool strict = IsCheckStrictOp(JSOp(*pc));
 
@@ -2809,14 +2941,16 @@ BaselineCompiler::emit_JSOP_SETPROP_SUPER()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTSETPROP_SUPER()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTSETPROP_SUPER()
 {
     return emit_JSOP_SETPROP_SUPER();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETPROP()
+BaselineCodeGen<Handler>::emit_JSOP_GETPROP()
 {
     // Keep object in R0.
     frame.popRegsAndSync(1);
@@ -2831,26 +2965,30 @@ BaselineCompiler::emit_JSOP_GETPROP()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CALLPROP()
+BaselineCodeGen<Handler>::emit_JSOP_CALLPROP()
 {
     return emit_JSOP_GETPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LENGTH()
+BaselineCodeGen<Handler>::emit_JSOP_LENGTH()
 {
     return emit_JSOP_GETPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETBOUNDNAME()
+BaselineCodeGen<Handler>::emit_JSOP_GETBOUNDNAME()
 {
     return emit_JSOP_GETPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETPROP_SUPER()
+BaselineCodeGen<Handler>::emit_JSOP_GETPROP_SUPER()
 {
     // Receiver -> R1, Object -> R0
     frame.popRegsAndSync(1);
@@ -2872,8 +3010,9 @@ static const VMFunction DeletePropertyStrictInfo =
 static const VMFunction DeletePropertyNonStrictInfo =
     FunctionInfo<DeletePropertyFn>(DeletePropertyJit<false>, "DeletePropertyNonStrict");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DELPROP()
+BaselineCodeGen<Handler>::emit_JSOP_DELPROP()
 {
     // Keep value on the stack for the decompiler.
     frame.syncStack(0);
@@ -2895,14 +3034,16 @@ BaselineCompiler::emit_JSOP_DELPROP()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTDELPROP()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTDELPROP()
 {
     return emit_JSOP_DELPROP();
 }
 
+template <typename Handler>
 void
-BaselineCompiler::getEnvironmentCoordinateObject(Register reg)
+BaselineCodeGen<Handler>::getEnvironmentCoordinateObject(Register reg)
 {
     EnvironmentCoordinate ec(pc);
 
@@ -2912,8 +3053,9 @@ BaselineCompiler::getEnvironmentCoordinateObject(Register reg)
     }
 }
 
+template <typename Handler>
 Address
-BaselineCompiler::getEnvironmentCoordinateAddressFromObject(Register objReg, Register reg)
+BaselineCodeGen<Handler>::getEnvironmentCoordinateAddressFromObject(Register objReg, Register reg)
 {
     EnvironmentCoordinate ec(pc);
     Shape* shape = EnvironmentCoordinateToEnvironmentShape(script, pc);
@@ -2926,15 +3068,17 @@ BaselineCompiler::getEnvironmentCoordinateAddressFromObject(Register objReg, Reg
     return Address(objReg, NativeObject::getFixedSlotOffset(ec.slot()));
 }
 
+template <typename Handler>
 Address
-BaselineCompiler::getEnvironmentCoordinateAddress(Register reg)
+BaselineCodeGen<Handler>::getEnvironmentCoordinateAddress(Register reg)
 {
     getEnvironmentCoordinateObject(reg);
     return getEnvironmentCoordinateAddressFromObject(reg, reg);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETALIASEDVAR()
+BaselineCodeGen<Handler>::emit_JSOP_GETALIASEDVAR()
 {
     frame.syncStack(0);
 
@@ -2952,8 +3096,9 @@ BaselineCompiler::emit_JSOP_GETALIASEDVAR()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETALIASEDVAR()
+BaselineCodeGen<Handler>::emit_JSOP_SETALIASEDVAR()
 {
     JSScript* outerScript = EnvironmentCoordinateFunctionScript(script, pc);
     if (outerScript && outerScript->treatAsRunOnce()) {
@@ -3000,8 +3145,9 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETNAME()
+BaselineCodeGen<Handler>::emit_JSOP_GETNAME()
 {
     frame.syncStack(0);
 
@@ -3017,8 +3163,9 @@ BaselineCompiler::emit_JSOP_GETNAME()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_BINDNAME()
+BaselineCodeGen<Handler>::emit_JSOP_BINDNAME()
 {
     frame.syncStack(0);
 
@@ -3043,8 +3190,9 @@ typedef bool (*DeleteNameFn)(JSContext*, HandlePropertyName, HandleObject,
 static const VMFunction DeleteNameInfo =
     FunctionInfo<DeleteNameFn>(DeleteNameOperation, "DeleteNameOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DELNAME()
+BaselineCodeGen<Handler>::emit_JSOP_DELNAME()
 {
     frame.syncStack(0);
     masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
@@ -3062,8 +3210,9 @@ BaselineCompiler::emit_JSOP_DELNAME()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETIMPORT()
+BaselineCodeGen<Handler>::emit_JSOP_GETIMPORT()
 {
     ModuleEnvironmentObject* env = GetModuleEnvironmentForScript(script);
     MOZ_ASSERT(env);
@@ -3105,8 +3254,9 @@ BaselineCompiler::emit_JSOP_GETIMPORT()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETINTRINSIC()
+BaselineCodeGen<Handler>::emit_JSOP_GETINTRINSIC()
 {
     frame.syncStack(0);
 
@@ -3121,8 +3271,9 @@ BaselineCompiler::emit_JSOP_GETINTRINSIC()
 typedef bool (*DefVarFn)(JSContext*, HandlePropertyName, unsigned, HandleObject);
 static const VMFunction DefVarInfo = FunctionInfo<DefVarFn>(DefVar, "DefVar");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DEFVAR()
+BaselineCodeGen<Handler>::emit_JSOP_DEFVAR()
 {
     frame.syncStack(0);
 
@@ -3146,14 +3297,16 @@ BaselineCompiler::emit_JSOP_DEFVAR()
 typedef bool (*DefLexicalFn)(JSContext*, HandlePropertyName, unsigned, HandleObject);
 static const VMFunction DefLexicalInfo = FunctionInfo<DefLexicalFn>(DefLexical, "DefLexical");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DEFCONST()
+BaselineCodeGen<Handler>::emit_JSOP_DEFCONST()
 {
     return emit_JSOP_DEFLET();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DEFLET()
+BaselineCodeGen<Handler>::emit_JSOP_DEFLET()
 {
     frame.syncStack(0);
 
@@ -3178,8 +3331,9 @@ typedef bool (*DefFunOperationFn)(JSContext*, HandleScript, HandleObject, Handle
 static const VMFunction DefFunOperationInfo =
     FunctionInfo<DefFunOperationFn>(DefFunOperation, "DefFunOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DEFFUN()
+BaselineCodeGen<Handler>::emit_JSOP_DEFFUN()
 {
     frame.popRegsAndSync(1);
     masm.unboxObject(R0, R0.scratchReg());
@@ -3200,8 +3354,9 @@ static const VMFunction InitPropGetterSetterInfo =
     FunctionInfo<InitPropGetterSetterFn>(InitGetterSetterOperation,
                                          "InitPropGetterSetterOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emitInitPropGetterSetter()
+BaselineCodeGen<Handler>::emitInitPropGetterSetter()
 {
     MOZ_ASSERT(JSOp(*pc) == JSOP_INITPROP_GETTER ||
                JSOp(*pc) == JSOP_INITHIDDENPROP_GETTER ||
@@ -3229,26 +3384,30 @@ BaselineCompiler::emitInitPropGetterSetter()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITPROP_GETTER()
+BaselineCodeGen<Handler>::emit_JSOP_INITPROP_GETTER()
 {
     return emitInitPropGetterSetter();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITHIDDENPROP_GETTER()
+BaselineCodeGen<Handler>::emit_JSOP_INITHIDDENPROP_GETTER()
 {
     return emitInitPropGetterSetter();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITPROP_SETTER()
+BaselineCodeGen<Handler>::emit_JSOP_INITPROP_SETTER()
 {
     return emitInitPropGetterSetter();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITHIDDENPROP_SETTER()
+BaselineCodeGen<Handler>::emit_JSOP_INITHIDDENPROP_SETTER()
 {
     return emitInitPropGetterSetter();
 }
@@ -3259,8 +3418,9 @@ static const VMFunction InitElemGetterSetterInfo =
     FunctionInfo<InitElemGetterSetterFn>(InitGetterSetterOperation,
                                          "InitElemGetterSetterOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emitInitElemGetterSetter()
+BaselineCodeGen<Handler>::emitInitElemGetterSetter()
 {
     MOZ_ASSERT(JSOp(*pc) == JSOP_INITELEM_GETTER ||
                JSOp(*pc) == JSOP_INITHIDDENELEM_GETTER ||
@@ -3289,32 +3449,37 @@ BaselineCompiler::emitInitElemGetterSetter()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITELEM_GETTER()
+BaselineCodeGen<Handler>::emit_JSOP_INITELEM_GETTER()
 {
     return emitInitElemGetterSetter();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITHIDDENELEM_GETTER()
+BaselineCodeGen<Handler>::emit_JSOP_INITHIDDENELEM_GETTER()
 {
     return emitInitElemGetterSetter();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITELEM_SETTER()
+BaselineCodeGen<Handler>::emit_JSOP_INITELEM_SETTER()
 {
     return emitInitElemGetterSetter();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITHIDDENELEM_SETTER()
+BaselineCodeGen<Handler>::emit_JSOP_INITHIDDENELEM_SETTER()
 {
     return emitInitElemGetterSetter();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITELEM_INC()
+BaselineCodeGen<Handler>::emit_JSOP_INITELEM_INC()
 {
     // Keep the object and rhs on the stack.
     frame.syncStack(0);
@@ -3343,15 +3508,17 @@ BaselineCompiler::emit_JSOP_INITELEM_INC()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETLOCAL()
+BaselineCodeGen<Handler>::emit_JSOP_GETLOCAL()
 {
     frame.pushLocal(GET_LOCALNO(pc));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETLOCAL()
+BaselineCodeGen<Handler>::emit_JSOP_SETLOCAL()
 {
     // Ensure no other StackValue refers to the old value, for instance i + (i = 3).
     // This also allows us to use R0 as scratch below.
@@ -3362,8 +3529,9 @@ BaselineCompiler::emit_JSOP_SETLOCAL()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
+BaselineCodeGen<Handler>::emitFormalArgAccess(uint32_t arg, bool get)
 {
     // Fast path: the script does not use |arguments| or formals don't
     // alias the arguments object.
@@ -3436,15 +3604,17 @@ BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETARG()
+BaselineCodeGen<Handler>::emit_JSOP_GETARG()
 {
     uint32_t arg = GET_ARGNO(pc);
     return emitFormalArgAccess(arg, /* get = */ true);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETARG()
+BaselineCodeGen<Handler>::emit_JSOP_SETARG()
 {
     // Ionmonkey can't inline functions with SETARG with magic arguments.
     if (!script->argsObjAliasesFormals() && script->argumentsAliasesFormals()) {
@@ -3457,8 +3627,9 @@ BaselineCompiler::emit_JSOP_SETARG()
     return emitFormalArgAccess(arg, /* get = */ false);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NEWTARGET()
+BaselineCodeGen<Handler>::emit_JSOP_NEWTARGET()
 {
     if (script->isForEval()) {
         frame.pushEvalNewTarget();
@@ -3523,34 +3694,39 @@ static const VMFunction ThrowRuntimeLexicalErrorInfo =
     FunctionInfo<ThrowRuntimeLexicalErrorFn>(jit::ThrowRuntimeLexicalError,
                                              "ThrowRuntimeLexicalError");
 
+template <typename Handler>
 bool
-BaselineCompiler::emitThrowConstAssignment()
+BaselineCodeGen<Handler>::emitThrowConstAssignment()
 {
     prepareVMCall();
     pushArg(Imm32(JSMSG_BAD_CONST_ASSIGN));
     return callVM(ThrowRuntimeLexicalErrorInfo);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_THROWSETCONST()
+BaselineCodeGen<Handler>::emit_JSOP_THROWSETCONST()
 {
     return emitThrowConstAssignment();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_THROWSETALIASEDCONST()
+BaselineCodeGen<Handler>::emit_JSOP_THROWSETALIASEDCONST()
 {
     return emitThrowConstAssignment();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_THROWSETCALLEE()
+BaselineCodeGen<Handler>::emit_JSOP_THROWSETCALLEE()
 {
     return emitThrowConstAssignment();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitUninitializedLexicalCheck(const ValueOperand& val)
+BaselineCodeGen<Handler>::emitUninitializedLexicalCheck(const ValueOperand& val)
 {
     Label done;
     masm.branchTestMagicValue(Assembler::NotEqual, val, JS_UNINITIALIZED_LEXICAL, &done);
@@ -3565,22 +3741,25 @@ BaselineCompiler::emitUninitializedLexicalCheck(const ValueOperand& val)
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CHECKLEXICAL()
+BaselineCodeGen<Handler>::emit_JSOP_CHECKLEXICAL()
 {
     frame.syncStack(0);
     masm.loadValue(frame.addressOfLocal(GET_LOCALNO(pc)), R0);
     return emitUninitializedLexicalCheck(R0);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITLEXICAL()
+BaselineCodeGen<Handler>::emit_JSOP_INITLEXICAL()
 {
     return emit_JSOP_SETLOCAL();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITGLEXICAL()
+BaselineCodeGen<Handler>::emit_JSOP_INITGLEXICAL()
 {
     frame.popRegsAndSync(1);
     frame.push(ObjectValue(script->global().lexicalEnvironment()));
@@ -3588,29 +3767,33 @@ BaselineCompiler::emit_JSOP_INITGLEXICAL()
     return emit_JSOP_SETPROP();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CHECKALIASEDLEXICAL()
+BaselineCodeGen<Handler>::emit_JSOP_CHECKALIASEDLEXICAL()
 {
     frame.syncStack(0);
     masm.loadValue(getEnvironmentCoordinateAddress(R0.scratchReg()), R0);
     return emitUninitializedLexicalCheck(R0);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITALIASEDLEXICAL()
+BaselineCodeGen<Handler>::emit_JSOP_INITALIASEDLEXICAL()
 {
     return emit_JSOP_SETALIASEDVAR();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_UNINITIALIZED()
+BaselineCodeGen<Handler>::emit_JSOP_UNINITIALIZED()
 {
     frame.push(MagicValue(JS_UNINITIALIZED_LEXICAL));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitCall()
+BaselineCodeGen<Handler>::emitCall()
 {
     MOZ_ASSERT(IsCallPC(pc));
 
@@ -3631,8 +3814,9 @@ BaselineCompiler::emitCall()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitSpreadCall()
+BaselineCodeGen<Handler>::emitSpreadCall()
 {
     MOZ_ASSERT(IsCallPC(pc));
 
@@ -3651,86 +3835,100 @@ BaselineCompiler::emitSpreadCall()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CALL()
+BaselineCodeGen<Handler>::emit_JSOP_CALL()
 {
     return emitCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CALL_IGNORES_RV()
+BaselineCodeGen<Handler>::emit_JSOP_CALL_IGNORES_RV()
 {
     return emitCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CALLITER()
+BaselineCodeGen<Handler>::emit_JSOP_CALLITER()
 {
     return emitCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_NEW()
+BaselineCodeGen<Handler>::emit_JSOP_NEW()
 {
     return emitCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SUPERCALL()
+BaselineCodeGen<Handler>::emit_JSOP_SUPERCALL()
 {
     return emitCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_FUNCALL()
+BaselineCodeGen<Handler>::emit_JSOP_FUNCALL()
 {
     return emitCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_FUNAPPLY()
+BaselineCodeGen<Handler>::emit_JSOP_FUNAPPLY()
 {
     return emitCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_EVAL()
+BaselineCodeGen<Handler>::emit_JSOP_EVAL()
 {
     return emitCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTEVAL()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTEVAL()
 {
     return emitCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SPREADCALL()
+BaselineCodeGen<Handler>::emit_JSOP_SPREADCALL()
 {
     return emitSpreadCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SPREADNEW()
+BaselineCodeGen<Handler>::emit_JSOP_SPREADNEW()
 {
     return emitSpreadCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SPREADSUPERCALL()
+BaselineCodeGen<Handler>::emit_JSOP_SPREADSUPERCALL()
 {
     return emitSpreadCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SPREADEVAL()
+BaselineCodeGen<Handler>::emit_JSOP_SPREADEVAL()
 {
     return emitSpreadCall();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_STRICTSPREADEVAL()
+BaselineCodeGen<Handler>::emit_JSOP_STRICTSPREADEVAL()
 {
     return emitSpreadCall();
 }
@@ -3739,8 +3937,9 @@ typedef bool (*OptimizeSpreadCallFn)(JSContext*, HandleValue, bool*);
 static const VMFunction OptimizeSpreadCallInfo =
     FunctionInfo<OptimizeSpreadCallFn>(OptimizeSpreadCall, "OptimizeSpreadCall");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_OPTIMIZE_SPREADCALL()
+BaselineCodeGen<Handler>::emit_JSOP_OPTIMIZE_SPREADCALL()
 {
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
@@ -3762,8 +3961,9 @@ typedef bool (*ImplicitThisFn)(JSContext*, HandleObject, HandlePropertyName,
 const VMFunction jit::ImplicitThisInfo =
     FunctionInfo<ImplicitThisFn>(ImplicitThisOperation, "ImplicitThisOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_IMPLICITTHIS()
+BaselineCodeGen<Handler>::emit_JSOP_IMPLICITTHIS()
 {
     frame.syncStack(0);
     masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
@@ -3781,8 +3981,9 @@ BaselineCompiler::emit_JSOP_IMPLICITTHIS()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GIMPLICITTHIS()
+BaselineCodeGen<Handler>::emit_JSOP_GIMPLICITTHIS()
 {
     if (!script->hasNonSyntacticScope()) {
         frame.push(UndefinedValue());
@@ -3792,8 +3993,9 @@ BaselineCompiler::emit_JSOP_GIMPLICITTHIS()
     return emit_JSOP_IMPLICITTHIS();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INSTANCEOF()
+BaselineCodeGen<Handler>::emit_JSOP_INSTANCEOF()
 {
     frame.popRegsAndSync(2);
 
@@ -3805,8 +4007,9 @@ BaselineCompiler::emit_JSOP_INSTANCEOF()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TYPEOF()
+BaselineCodeGen<Handler>::emit_JSOP_TYPEOF()
 {
     frame.popRegsAndSync(1);
 
@@ -3818,8 +4021,9 @@ BaselineCompiler::emit_JSOP_TYPEOF()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TYPEOFEXPR()
+BaselineCodeGen<Handler>::emit_JSOP_TYPEOFEXPR()
 {
     return emit_JSOP_TYPEOF();
 }
@@ -3828,8 +4032,9 @@ typedef bool (*ThrowMsgFn)(JSContext*, const unsigned);
 static const VMFunction ThrowMsgInfo =
     FunctionInfo<ThrowMsgFn>(js::ThrowMsgOperation, "ThrowMsgOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_THROWMSG()
+BaselineCodeGen<Handler>::emit_JSOP_THROWMSG()
 {
     prepareVMCall();
     pushArg(Imm32(GET_UINT16(pc)));
@@ -3839,8 +4044,9 @@ BaselineCompiler::emit_JSOP_THROWMSG()
 typedef bool (*ThrowFn)(JSContext*, HandleValue);
 static const VMFunction ThrowInfo = FunctionInfo<ThrowFn>(js::Throw, "Throw");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_THROW()
+BaselineCodeGen<Handler>::emit_JSOP_THROW()
 {
     // Keep value to throw in R0.
     frame.popRegsAndSync(1);
@@ -3851,8 +4057,9 @@ BaselineCompiler::emit_JSOP_THROW()
     return callVM(ThrowInfo);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TRY()
+BaselineCodeGen<Handler>::emit_JSOP_TRY()
 {
     if (!emit_JSOP_JUMPTARGET()) {
         return false;
@@ -3863,8 +4070,9 @@ BaselineCompiler::emit_JSOP_TRY()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_FINALLY()
+BaselineCodeGen<Handler>::emit_JSOP_FINALLY()
 {
     // JSOP_FINALLY has a def count of 2, but these values are already on the
     // stack (they're pushed by JSOP_GOSUB). Update the compiler's stack state.
@@ -3875,8 +4083,9 @@ BaselineCompiler::emit_JSOP_FINALLY()
     return emitInterruptCheck();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GOSUB()
+BaselineCodeGen<Handler>::emit_JSOP_GOSUB()
 {
     // Jump to the finally block.
     frame.syncStack(0);
@@ -3897,8 +4106,9 @@ LoadBaselineScriptResumeEntries(MacroAssembler& masm, JSScript* script, Register
     masm.addPtr(scratch, dest);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_RETSUB()
+BaselineCodeGen<Handler>::emit_JSOP_RETSUB()
 {
     frame.popRegsAndSync(2);
 
@@ -3928,10 +4138,11 @@ typedef bool (*PushLexicalEnvFn)(JSContext*, BaselineFrame*, Handle<LexicalScope
 static const VMFunction PushLexicalEnvInfo =
     FunctionInfo<PushLexicalEnvFn>(jit::PushLexicalEnv, "PushLexicalEnv");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_PUSHLEXICALENV()
+BaselineCodeGen<Handler>::emit_JSOP_PUSHLEXICALENV()
 {
-    LexicalScope& scope = script->getScope(pc)->as<LexicalScope>();
+    LexicalScope& scope = script->getScope(pc)->template as<LexicalScope>();
 
     // Call a stub to push the block on the block chain.
     prepareVMCall();
@@ -3952,8 +4163,9 @@ static const VMFunction DebugLeaveThenPopLexicalEnvInfo =
     FunctionInfo<DebugLeaveThenPopLexicalEnvFn>(jit::DebugLeaveThenPopLexicalEnv,
                                                 "DebugLeaveThenPopLexicalEnv");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_POPLEXICALENV()
+BaselineCodeGen<Handler>::emit_JSOP_POPLEXICALENV()
 {
     prepareVMCall();
 
@@ -3978,8 +4190,9 @@ static const VMFunction DebugLeaveThenFreshenLexicalEnvInfo =
     FunctionInfo<DebugLeaveThenFreshenLexicalEnvFn>(jit::DebugLeaveThenFreshenLexicalEnv,
                                                     "DebugLeaveThenFreshenLexicalEnv");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_FRESHENLEXICALENV()
+BaselineCodeGen<Handler>::emit_JSOP_FRESHENLEXICALENV()
 {
     prepareVMCall();
 
@@ -4005,8 +4218,9 @@ static const VMFunction DebugLeaveThenRecreateLexicalEnvInfo =
     FunctionInfo<DebugLeaveThenRecreateLexicalEnvFn>(jit::DebugLeaveThenRecreateLexicalEnv,
                                                      "DebugLeaveThenRecreateLexicalEnv");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_RECREATELEXICALENV()
+BaselineCodeGen<Handler>::emit_JSOP_RECREATELEXICALENV()
 {
     prepareVMCall();
 
@@ -4026,8 +4240,9 @@ typedef bool (*DebugLeaveLexicalEnvFn)(JSContext*, BaselineFrame*, jsbytecode*);
 static const VMFunction DebugLeaveLexicalEnvInfo =
     FunctionInfo<DebugLeaveLexicalEnvFn>(jit::DebugLeaveLexicalEnv, "DebugLeaveLexicalEnv");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DEBUGLEAVELEXICALENV()
+BaselineCodeGen<Handler>::emit_JSOP_DEBUGLEAVELEXICALENV()
 {
     if (!compileDebugInstrumentation_) {
         return true;
@@ -4045,8 +4260,9 @@ typedef bool (*PushVarEnvFn)(JSContext*, BaselineFrame*, HandleScope);
 static const VMFunction PushVarEnvInfo =
     FunctionInfo<PushVarEnvFn>(jit::PushVarEnv, "PushVarEnv");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_PUSHVARENV()
+BaselineCodeGen<Handler>::emit_JSOP_PUSHVARENV()
 {
     prepareVMCall();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
@@ -4060,8 +4276,9 @@ typedef bool (*PopVarEnvFn)(JSContext*, BaselineFrame*);
 static const VMFunction PopVarEnvInfo =
     FunctionInfo<PopVarEnvFn>(jit::PopVarEnv, "PopVarEnv");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_POPVARENV()
+BaselineCodeGen<Handler>::emit_JSOP_POPVARENV()
 {
     prepareVMCall();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
@@ -4074,10 +4291,11 @@ typedef bool (*EnterWithFn)(JSContext*, BaselineFrame*, HandleValue, Handle<With
 static const VMFunction EnterWithInfo =
     FunctionInfo<EnterWithFn>(jit::EnterWith, "EnterWith");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ENTERWITH()
+BaselineCodeGen<Handler>::emit_JSOP_ENTERWITH()
 {
-    WithScope& withScope = script->getScope(pc)->as<WithScope>();
+    WithScope& withScope = script->getScope(pc)->template as<WithScope>();
 
     // Pop "with" object to R0.
     frame.popRegsAndSync(1);
@@ -4097,8 +4315,9 @@ typedef bool (*LeaveWithFn)(JSContext*, BaselineFrame*);
 static const VMFunction LeaveWithInfo =
     FunctionInfo<LeaveWithFn>(jit::LeaveWith, "LeaveWith");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_LEAVEWITH()
+BaselineCodeGen<Handler>::emit_JSOP_LEAVEWITH()
 {
     // Call a stub to pop the with object from the environment chain.
     prepareVMCall();
@@ -4113,8 +4332,9 @@ typedef bool (*GetAndClearExceptionFn)(JSContext*, MutableHandleValue);
 static const VMFunction GetAndClearExceptionInfo =
     FunctionInfo<GetAndClearExceptionFn>(GetAndClearException, "GetAndClearException");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_EXCEPTION()
+BaselineCodeGen<Handler>::emit_JSOP_EXCEPTION()
 {
     prepareVMCall();
 
@@ -4130,8 +4350,9 @@ typedef bool (*OnDebuggerStatementFn)(JSContext*, BaselineFrame*, jsbytecode* pc
 static const VMFunction OnDebuggerStatementInfo =
     FunctionInfo<OnDebuggerStatementFn>(jit::OnDebuggerStatement, "OnDebuggerStatement");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DEBUGGER()
+BaselineCodeGen<Handler>::emit_JSOP_DEBUGGER()
 {
     prepareVMCall();
     pushArg(ImmPtr(pc));
@@ -4160,8 +4381,9 @@ static const VMFunction DebugEpilogueInfo =
     FunctionInfo<DebugEpilogueFn>(jit::DebugEpilogueOnBaselineReturn,
                                   "DebugEpilogueOnBaselineReturn");
 
+template <typename Handler>
 bool
-BaselineCompiler::emitReturn()
+BaselineCodeGen<Handler>::emitReturn()
 {
     if (compileDebugInstrumentation_) {
         // Move return value into the frame's rval slot.
@@ -4195,8 +4417,9 @@ BaselineCompiler::emitReturn()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_RETURN()
+BaselineCodeGen<Handler>::emit_JSOP_RETURN()
 {
     MOZ_ASSERT(frame.stackDepth() == 1);
 
@@ -4204,8 +4427,9 @@ BaselineCompiler::emit_JSOP_RETURN()
     return emitReturn();
 }
 
+template <typename Handler>
 void
-BaselineCompiler::emitLoadReturnValue(ValueOperand val)
+BaselineCodeGen<Handler>::emitLoadReturnValue(ValueOperand val)
 {
     Label done, noRval;
     masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
@@ -4219,8 +4443,9 @@ BaselineCompiler::emitLoadReturnValue(ValueOperand val)
     masm.bind(&done);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_RETRVAL()
+BaselineCodeGen<Handler>::emit_JSOP_RETRVAL()
 {
     MOZ_ASSERT(frame.stackDepth() == 0);
 
@@ -4241,8 +4466,9 @@ BaselineCompiler::emit_JSOP_RETRVAL()
 typedef bool (*ToIdFn)(JSContext*, HandleValue, MutableHandleValue);
 static const VMFunction ToIdInfo = FunctionInfo<ToIdFn>(js::ToIdOperation, "ToIdOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TOID()
+BaselineCodeGen<Handler>::emit_JSOP_TOID()
 {
     // Load index in R0, but keep values on the stack for the decompiler.
     frame.syncStack(0);
@@ -4271,8 +4497,9 @@ BaselineCompiler::emit_JSOP_TOID()
 typedef JSObject* (*ToAsyncFn)(JSContext*, HandleFunction);
 static const VMFunction ToAsyncInfo = FunctionInfo<ToAsyncFn>(js::WrapAsyncFunction, "ToAsync");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TOASYNC()
+BaselineCodeGen<Handler>::emit_JSOP_TOASYNC()
 {
     frame.syncStack(0);
     masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
@@ -4294,8 +4521,9 @@ typedef JSObject* (*ToAsyncGenFn)(JSContext*, HandleFunction);
 static const VMFunction ToAsyncGenInfo =
     FunctionInfo<ToAsyncGenFn>(js::WrapAsyncGenerator, "ToAsyncGen");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TOASYNCGEN()
+BaselineCodeGen<Handler>::emit_JSOP_TOASYNCGEN()
 {
     frame.syncStack(0);
     masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
@@ -4317,8 +4545,9 @@ typedef JSObject* (*ToAsyncIterFn)(JSContext*, HandleObject, HandleValue);
 static const VMFunction ToAsyncIterInfo =
     FunctionInfo<ToAsyncIterFn>(js::CreateAsyncFromSyncIterator, "ToAsyncIter");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TOASYNCITER()
+BaselineCodeGen<Handler>::emit_JSOP_TOASYNCITER()
 {
     frame.syncStack(0);
     masm.unboxObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
@@ -4341,8 +4570,9 @@ BaselineCompiler::emit_JSOP_TOASYNCITER()
 typedef bool (*TrySkipAwaitFn)(JSContext*, HandleValue, MutableHandleValue);
 static const VMFunction TrySkipAwaitInfo = FunctionInfo<TrySkipAwaitFn>(jit::TrySkipAwait, "TrySkipAwait");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TRYSKIPAWAIT()
+BaselineCodeGen<Handler>::emit_JSOP_TRYSKIPAWAIT()
 {
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
@@ -4375,8 +4605,9 @@ typedef bool (*ThrowObjectCoercibleFn)(JSContext*, HandleValue);
 static const VMFunction ThrowObjectCoercibleInfo =
     FunctionInfo<ThrowObjectCoercibleFn>(ThrowObjectCoercible, "ThrowObjectCoercible");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CHECKOBJCOERCIBLE()
+BaselineCodeGen<Handler>::emit_JSOP_CHECKOBJCOERCIBLE()
 {
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
@@ -4402,8 +4633,9 @@ BaselineCompiler::emit_JSOP_CHECKOBJCOERCIBLE()
 typedef JSString* (*ToStringFn)(JSContext*, HandleValue);
 static const VMFunction ToStringInfo = FunctionInfo<ToStringFn>(ToStringSlow, "ToStringSlow");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TOSTRING()
+BaselineCodeGen<Handler>::emit_JSOP_TOSTRING()
 {
     // Keep top stack value in R0.
     frame.popRegsAndSync(1);
@@ -4428,8 +4660,9 @@ BaselineCompiler::emit_JSOP_TOSTRING()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_TABLESWITCH()
+BaselineCodeGen<Handler>::emit_JSOP_TABLESWITCH()
 {
     frame.popRegsAndSync(1);
 
@@ -4473,8 +4706,9 @@ BaselineCompiler::emit_JSOP_TABLESWITCH()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ITER()
+BaselineCodeGen<Handler>::emit_JSOP_ITER()
 {
     frame.popRegsAndSync(1);
 
@@ -4486,8 +4720,9 @@ BaselineCompiler::emit_JSOP_ITER()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_MOREITER()
+BaselineCodeGen<Handler>::emit_JSOP_MOREITER()
 {
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
@@ -4500,8 +4735,9 @@ BaselineCompiler::emit_JSOP_MOREITER()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emitIsMagicValue()
+BaselineCodeGen<Handler>::emitIsMagicValue()
 {
     frame.syncStack(0);
 
@@ -4519,14 +4755,16 @@ BaselineCompiler::emitIsMagicValue()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ISNOITER()
+BaselineCodeGen<Handler>::emit_JSOP_ISNOITER()
 {
     return emitIsMagicValue();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ENDITER()
+BaselineCodeGen<Handler>::emit_JSOP_ENDITER()
 {
     if (!emit_JSOP_JUMPTARGET()) {
         return false;
@@ -4540,14 +4778,16 @@ BaselineCompiler::emit_JSOP_ENDITER()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ISGENCLOSING()
+BaselineCodeGen<Handler>::emit_JSOP_ISGENCLOSING()
 {
     return emitIsMagicValue();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GETRVAL()
+BaselineCodeGen<Handler>::emit_JSOP_GETRVAL()
 {
     frame.syncStack(0);
 
@@ -4557,8 +4797,9 @@ BaselineCompiler::emit_JSOP_GETRVAL()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SETRVAL()
+BaselineCodeGen<Handler>::emit_JSOP_SETRVAL()
 {
     // Store to the frame's return value slot.
     storeValue(frame.peek(-1), frame.addressOfReturnValue(), R2);
@@ -4567,8 +4808,9 @@ BaselineCompiler::emit_JSOP_SETRVAL()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CALLEE()
+BaselineCodeGen<Handler>::emit_JSOP_CALLEE()
 {
     MOZ_ASSERT(function());
     frame.syncStack(0);
@@ -4578,8 +4820,9 @@ BaselineCompiler::emit_JSOP_CALLEE()
     return true;
 }
 
+template <typename Handler>
 void
-BaselineCompiler::getThisEnvironmentCallee(Register reg)
+BaselineCodeGen<Handler>::getThisEnvironmentCallee(Register reg)
 {
     // Directly load callee from frame if we have a HomeObject
     if (function() && function()->allowSuperProperty()) {
@@ -4617,8 +4860,9 @@ typedef JSObject* (*HomeObjectSuperBaseFn)(JSContext*, HandleObject);
 static const VMFunction HomeObjectSuperBaseInfo =
     FunctionInfo<HomeObjectSuperBaseFn>(HomeObjectSuperBase, "HomeObjectSuperBase");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SUPERBASE()
+BaselineCodeGen<Handler>::emit_JSOP_SUPERBASE()
 {
     frame.syncStack(0);
 
@@ -4664,8 +4908,9 @@ typedef JSObject* (*SuperFunOperationFn)(JSContext*, HandleObject);
 static const VMFunction SuperFunOperationInfo =
     FunctionInfo<SuperFunOperationFn>(SuperFunOperation, "SuperFunOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_SUPERFUN()
+BaselineCodeGen<Handler>::emit_JSOP_SUPERFUN()
 {
     frame.syncStack(0);
 
@@ -4716,8 +4961,9 @@ typedef bool (*NewArgumentsObjectFn)(JSContext*, BaselineFrame*, MutableHandleVa
 static const VMFunction NewArgumentsObjectInfo =
     FunctionInfo<NewArgumentsObjectFn>(jit::NewArgumentsObject, "NewArgumentsObject");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_ARGUMENTS()
+BaselineCodeGen<Handler>::emit_JSOP_ARGUMENTS()
 {
     frame.syncStack(0);
 
@@ -4755,8 +5001,9 @@ typedef bool (*RunOnceScriptPrologueFn)(JSContext*, HandleScript);
 static const VMFunction RunOnceScriptPrologueInfo =
     FunctionInfo<RunOnceScriptPrologueFn>(js::RunOnceScriptPrologue, "RunOnceScriptPrologue");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_RUNONCE()
+BaselineCodeGen<Handler>::emit_JSOP_RUNONCE()
 {
     frame.syncStack(0);
 
@@ -4768,8 +5015,9 @@ BaselineCompiler::emit_JSOP_RUNONCE()
     return callVM(RunOnceScriptPrologueInfo);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_REST()
+BaselineCodeGen<Handler>::emit_JSOP_REST()
 {
     frame.syncStack(0);
 
@@ -4786,8 +5034,9 @@ typedef JSObject* (*CreateGeneratorFn)(JSContext*, BaselineFrame*);
 static const VMFunction CreateGeneratorInfo =
     FunctionInfo<CreateGeneratorFn>(jit::CreateGenerator, "CreateGenerator");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_GENERATOR()
+BaselineCodeGen<Handler>::emit_JSOP_GENERATOR()
 {
     MOZ_ASSERT(frame.stackDepth() == 0);
 
@@ -4804,8 +5053,9 @@ BaselineCompiler::emit_JSOP_GENERATOR()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITIALYIELD()
+BaselineCodeGen<Handler>::emit_JSOP_INITIALYIELD()
 {
     frame.syncStack(0);
     MOZ_ASSERT(frame.stackDepth() == 1);
@@ -4841,8 +5091,9 @@ typedef bool (*NormalSuspendFn)(JSContext*, HandleObject, BaselineFrame*, jsbyte
 static const VMFunction NormalSuspendInfo =
     FunctionInfo<NormalSuspendFn>(jit::NormalSuspend, "NormalSuspend");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_YIELD()
+BaselineCodeGen<Handler>::emit_JSOP_YIELD()
 {
     // Store generator in R0.
     frame.popRegsAndSync(1);
@@ -4889,8 +5140,9 @@ BaselineCompiler::emit_JSOP_YIELD()
     return emitReturn();
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_AWAIT()
+BaselineCodeGen<Handler>::emit_JSOP_AWAIT()
 {
     return emit_JSOP_YIELD();
 }
@@ -4899,8 +5151,9 @@ typedef bool (*DebugAfterYieldFn)(JSContext*, BaselineFrame*, jsbytecode*, bool*
 static const VMFunction DebugAfterYieldInfo =
     FunctionInfo<DebugAfterYieldFn>(jit::DebugAfterYield, "DebugAfterYield");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DEBUGAFTERYIELD()
+BaselineCodeGen<Handler>::emit_JSOP_DEBUGAFTERYIELD()
 {
     if (!compileDebugInstrumentation_) {
         return true;
@@ -4931,8 +5184,9 @@ typedef bool (*FinalSuspendFn)(JSContext*, HandleObject, jsbytecode*);
 static const VMFunction FinalSuspendInfo =
     FunctionInfo<FinalSuspendFn>(jit::FinalSuspend, "FinalSuspend");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_FINALYIELDRVAL()
+BaselineCodeGen<Handler>::emit_JSOP_FINALYIELDRVAL()
 {
     // Store generator in R0.
     frame.popRegsAndSync(1);
@@ -4960,8 +5214,9 @@ typedef bool (*GeneratorThrowFn)(JSContext*, BaselineFrame*, Handle<GeneratorObj
 static const VMFunction GeneratorThrowOrReturnInfo =
     FunctionInfo<GeneratorThrowFn>(jit::GeneratorThrowOrReturn, "GeneratorThrowOrReturn", TailCall);
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_RESUME()
+BaselineCodeGen<Handler>::emit_JSOP_RESUME()
 {
     GeneratorObject::ResumeKind resumeKind = GeneratorObject::getResumeKind(pc);
 
@@ -5204,8 +5459,9 @@ typedef bool (*CheckSelfHostedFn)(JSContext*, HandleValue);
 static const VMFunction CheckSelfHostedInfo =
     FunctionInfo<CheckSelfHostedFn>(js::Debug_CheckSelfHosted, "Debug_CheckSelfHosted");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DEBUGCHECKSELFHOSTED()
+BaselineCodeGen<Handler>::emit_JSOP_DEBUGCHECKSELFHOSTED()
 {
 #ifdef DEBUG
     frame.syncStack(0);
@@ -5222,15 +5478,17 @@ BaselineCompiler::emit_JSOP_DEBUGCHECKSELFHOSTED()
 
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_IS_CONSTRUCTING()
+BaselineCodeGen<Handler>::emit_JSOP_IS_CONSTRUCTING()
 {
     frame.push(MagicValue(JS_IS_CONSTRUCTING));
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_JUMPTARGET()
+BaselineCodeGen<Handler>::emit_JSOP_JUMPTARGET()
 {
     if (!script->hasScriptCounts()) {
         return true;
@@ -5246,8 +5504,9 @@ static const VMFunction CheckClassHeritageOperationInfo =
     FunctionInfo<CheckClassHeritageOperationFn>(js::CheckClassHeritageOperation,
                                                 "CheckClassHeritageOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CHECKCLASSHERITAGE()
+BaselineCodeGen<Handler>::emit_JSOP_CHECKCLASSHERITAGE()
 {
     frame.syncStack(0);
 
@@ -5259,8 +5518,9 @@ BaselineCompiler::emit_JSOP_CHECKCLASSHERITAGE()
     return callVM(CheckClassHeritageOperationInfo);
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_INITHOMEOBJECT()
+BaselineCodeGen<Handler>::emit_JSOP_INITHOMEOBJECT()
 {
     // Load HomeObject in R0.
     frame.popRegsAndSync(1);
@@ -5284,8 +5544,9 @@ BaselineCompiler::emit_JSOP_INITHOMEOBJECT()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_BUILTINPROTO()
+BaselineCodeGen<Handler>::emit_JSOP_BUILTINPROTO()
 {
     // The builtin prototype is a constant for a given global.
     JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
@@ -5303,8 +5564,9 @@ static const VMFunction ObjectWithProtoOperationInfo =
     FunctionInfo<ObjectWithProtoOperationFn>(js::ObjectWithProtoOperation,
                                              "ObjectWithProtoOperationInfo");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_OBJWITHPROTO()
+BaselineCodeGen<Handler>::emit_JSOP_OBJWITHPROTO()
 {
     frame.syncStack(0);
 
@@ -5327,8 +5589,9 @@ typedef JSObject* (*FunWithProtoFn)(JSContext*, HandleFunction, HandleObject, Ha
 static const VMFunction FunWithProtoInfo =
     FunctionInfo<FunWithProtoFn>(js::FunWithProtoOperation, "FunWithProtoOperation");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_FUNWITHPROTO()
+BaselineCodeGen<Handler>::emit_JSOP_FUNWITHPROTO()
 {
     frame.popRegsAndSync(1);
 
@@ -5354,8 +5617,9 @@ static const VMFunction MakeDefaultConstructorInfo =
     FunctionInfo<MakeDefaultConstructorFn>(js::MakeDefaultConstructor,
                                            "MakeDefaultConstructor");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_CLASSCONSTRUCTOR()
+BaselineCodeGen<Handler>::emit_JSOP_CLASSCONSTRUCTOR()
 {
     frame.syncStack(0);
 
@@ -5373,8 +5637,9 @@ BaselineCompiler::emit_JSOP_CLASSCONSTRUCTOR()
     return true;
 }
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DERIVEDCONSTRUCTOR()
+BaselineCodeGen<Handler>::emit_JSOP_DERIVEDCONSTRUCTOR()
 {
     frame.popRegsAndSync(1);
 
@@ -5398,8 +5663,9 @@ static const VMFunction GetOrCreateModuleMetaObjectInfo =
     FunctionInfo<GetOrCreateModuleMetaObjectFn>(js::GetOrCreateModuleMetaObject,
                                                 "GetOrCreateModuleMetaObject");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_IMPORTMETA()
+BaselineCodeGen<Handler>::emit_JSOP_IMPORTMETA()
 {
     RootedModuleObject module(cx, GetModuleObjectForScript(script));
     MOZ_ASSERT(module);
@@ -5422,8 +5688,9 @@ static const VMFunction StartDynamicModuleImportInfo =
     FunctionInfo<StartDynamicModuleImportFn>(js::StartDynamicModuleImport,
                                                 "StartDynamicModuleImport");
 
+template <typename Handler>
 bool
-BaselineCompiler::emit_JSOP_DYNAMIC_IMPORT()
+BaselineCodeGen<Handler>::emit_JSOP_DYNAMIC_IMPORT()
 {
     RootedValue referencingPrivate(cx, FindScriptOrModulePrivateForScript(script));
 
@@ -5441,3 +5708,6 @@ BaselineCompiler::emit_JSOP_DYNAMIC_IMPORT()
     frame.push(R0);
     return true;
 }
+
+// Instantiate explicitly for now to make sure it compiles.
+template class jit::BaselineCodeGen<BaselineInterpreterHandler>;
