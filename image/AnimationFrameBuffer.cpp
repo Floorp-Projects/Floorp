@@ -35,6 +35,7 @@ bool AnimationFrameRetainedBuffer::InsertInternal(RefPtr<imgFrame>&& aFrame) {
   MOZ_ASSERT(!mSizeKnown);
   MOZ_ASSERT(mFrames.Length() < mThreshold);
 
+  ++mSize;
   mFrames.AppendElement(std::move(aFrame));
   MOZ_ASSERT(mSize == mFrames.Length());
   return mSize < mThreshold;
@@ -156,6 +157,16 @@ AnimationFrameDiscardingQueue::AnimationFrameDiscardingQueue(
 }
 
 bool AnimationFrameDiscardingQueue::InsertInternal(RefPtr<imgFrame>&& aFrame) {
+  if (mInsertIndex == mSize) {
+    if (mSizeKnown) {
+      // We produced more frames on a subsequent decode than on the first pass.
+      mRedecodeError = true;
+      mPending = 0;
+      return true;
+    }
+    ++mSize;
+  }
+
   // Even though we don't use redecoded first frames for display purposes, we
   // will still use them for recycling, so we still need to insert it.
   mDisplay.push_back(std::move(aFrame));
@@ -176,7 +187,6 @@ bool AnimationFrameDiscardingQueue::ResetInternal() {
 bool AnimationFrameDiscardingQueue::MarkComplete(
     const gfx::IntRect& aFirstFrameRefreshArea) {
   if (NS_WARN_IF(mInsertIndex != mSize)) {
-    MOZ_ASSERT(mSizeKnown);
     mRedecodeError = true;
     mPending = 0;
   }
