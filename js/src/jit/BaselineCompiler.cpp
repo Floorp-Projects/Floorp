@@ -40,15 +40,26 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::AssertedCast;
+using mozilla::Maybe;
+
+BaselineCompilerHandler::BaselineCompilerHandler(JSScript* script)
+  : compileDebugInstrumentation_(script->isDebuggee())
+{
+}
+
+BaselineInterpreterHandler::BaselineInterpreterHandler()
+{
+}
 
 template <typename Handler>
-BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script)
-  : handler(),
+template <typename... HandlerArgs>
+BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script,
+                                          HandlerArgs&&... args)
+  : handler(std::forward<HandlerArgs>(args)...),
     cx(cx),
     script(script),
     pc(script->code()),
     ionCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script)),
-    compileDebugInstrumentation_(script->isDebuggee()),
     alloc_(alloc),
     analysis_(alloc, script),
     frame(script, masm),
@@ -63,7 +74,7 @@ BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc, J
 }
 
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script)
-  : BaselineCodeGen(cx, alloc, script),
+  : BaselineCodeGen(cx, alloc, script, script),
     pcMappingEntries_(),
     profilerPushToggleOffset_(),
     profilerEnterFrameToggleOffset_(),
@@ -308,7 +319,7 @@ BaselineCompiler::compile()
     // Compute yield/await native resume addresses.
     baselineScript->computeResumeNativeOffsets(script);
 
-    if (compileDebugInstrumentation_) {
+    if (compileDebugInstrumentation()) {
         baselineScript->setHasDebugInstrumentation();
     }
 
@@ -756,7 +767,7 @@ BaselineCompiler::emitStackCheck()
 void
 BaselineCompiler::emitIsDebuggeeCheck()
 {
-    if (compileDebugInstrumentation_) {
+    if (compileDebugInstrumentation()) {
         masm.Push(BaselineFrameReg);
         masm.setupUnalignedABICall(R0.scratchReg());
         masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
@@ -773,7 +784,7 @@ static const VMFunction DebugPrologueInfo =
 bool
 BaselineCompiler::emitDebugPrologue()
 {
-    if (compileDebugInstrumentation_) {
+    if (compileDebugInstrumentation()) {
         // Load pointer to BaselineFrame in R0.
         masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
@@ -995,7 +1006,7 @@ BaselineCompiler::emitArgumentTypeChecks()
 bool
 BaselineCompiler::emitDebugTrap()
 {
-    MOZ_ASSERT(compileDebugInstrumentation_);
+    MOZ_ASSERT(compileDebugInstrumentation());
     MOZ_ASSERT(frame.numUnsyncedSlots() == 0);
 
     bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(pc);
@@ -1178,7 +1189,7 @@ BaselineCompiler::emitBody()
             frame.syncStack(0);
             frame.setStackDepth(info->stackDepth);
             masm.bind(labelOf(pc));
-        } else if (MOZ_UNLIKELY(compileDebugInstrumentation_)) {
+        } else if (MOZ_UNLIKELY(compileDebugInstrumentation())) {
             // Also fully sync the stack if the debugger is enabled.
             frame.syncStack(0);
         } else {
@@ -1204,7 +1215,7 @@ BaselineCompiler::emitBody()
         }
 
         // Emit traps for breakpoints and step mode.
-        if (MOZ_UNLIKELY(compileDebugInstrumentation_) && !emitDebugTrap()) {
+        if (MOZ_UNLIKELY(compileDebugInstrumentation()) && !emitDebugTrap()) {
             return Method_Error;
         }
 
@@ -4134,6 +4145,57 @@ BaselineCodeGen<Handler>::emit_JSOP_RETSUB()
     return true;
 }
 
+template <>
+template <typename F1, typename F2>
+MOZ_MUST_USE bool
+BaselineCompilerCodeGen::emitDebugInstrumentation(const F1& ifDebuggee,
+                                                  const Maybe<F2>& ifNotDebuggee)
+{
+    // The JIT calls either ifDebuggee or (if present) ifNotDebuggee, because it
+    // knows statically whether we're compiling with debug instrumentation.
+
+    if (handler.compileDebugInstrumentation()) {
+        return ifDebuggee();
+    }
+
+    if (ifNotDebuggee) {
+        return (*ifNotDebuggee)();
+    }
+
+    return true;
+}
+
+template <>
+template <typename F1, typename F2>
+MOZ_MUST_USE bool
+BaselineInterpreterCodeGen::emitDebugInstrumentation(const F1& ifDebuggee,
+                                                     const Maybe<F2>& ifNotDebuggee)
+{
+    // The interpreter emits both ifDebuggee and (if present) ifNotDebuggee
+    // paths, with a branch based on the frame's DEBUGGEE flag.
+
+    Label isNotDebuggee, done;
+    masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
+                      Imm32(BaselineFrame::DEBUGGEE), &isNotDebuggee);
+
+    if (!ifDebuggee()) {
+        return false;
+    }
+
+    if (ifNotDebuggee) {
+        masm.jump(&done);
+    }
+
+    masm.bind(&isNotDebuggee);
+
+    if (ifNotDebuggee && !(*ifNotDebuggee)()) {
+        return false;
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
 typedef bool (*PushLexicalEnvFn)(JSContext*, BaselineFrame*, Handle<LexicalScope*>);
 static const VMFunction PushLexicalEnvInfo =
     FunctionInfo<PushLexicalEnvFn>(jit::PushLexicalEnv, "PushLexicalEnv");
@@ -4171,14 +4233,16 @@ BaselineCodeGen<Handler>::emit_JSOP_POPLEXICALENV()
 
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    if (compileDebugInstrumentation_) {
+    auto ifDebuggee = [this]() {
         pushArg(ImmPtr(pc));
         pushArg(R0.scratchReg());
         return callVM(DebugLeaveThenPopLexicalEnvInfo);
-    }
-
-    pushArg(R0.scratchReg());
-    return callVM(PopLexicalEnvInfo);
+    };
+    auto ifNotDebuggee = [this]() {
+        pushArg(R0.scratchReg());
+        return callVM(PopLexicalEnvInfo);
+    };
+    return emitDebugInstrumentation(ifDebuggee, mozilla::Some(ifNotDebuggee));
 }
 
 typedef bool (*FreshenLexicalEnvFn)(JSContext*, BaselineFrame*);
@@ -4198,14 +4262,16 @@ BaselineCodeGen<Handler>::emit_JSOP_FRESHENLEXICALENV()
 
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    if (compileDebugInstrumentation_) {
+    auto ifDebuggee = [this]() {
         pushArg(ImmPtr(pc));
         pushArg(R0.scratchReg());
         return callVM(DebugLeaveThenFreshenLexicalEnvInfo);
-    }
-
-    pushArg(R0.scratchReg());
-    return callVM(FreshenLexicalEnvInfo);
+    };
+    auto ifNotDebuggee = [this]() {
+        pushArg(R0.scratchReg());
+        return callVM(FreshenLexicalEnvInfo);
+    };
+    return emitDebugInstrumentation(ifDebuggee, mozilla::Some(ifNotDebuggee));
 }
 
 
@@ -4226,14 +4292,16 @@ BaselineCodeGen<Handler>::emit_JSOP_RECREATELEXICALENV()
 
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    if (compileDebugInstrumentation_) {
+    auto ifDebuggee = [this]() {
         pushArg(ImmPtr(pc));
         pushArg(R0.scratchReg());
         return callVM(DebugLeaveThenRecreateLexicalEnvInfo);
-    }
-
-    pushArg(R0.scratchReg());
-    return callVM(RecreateLexicalEnvInfo);
+    };
+    auto ifNotDebuggee = [this]() {
+        pushArg(R0.scratchReg());
+        return callVM(RecreateLexicalEnvInfo);
+    };
+    return emitDebugInstrumentation(ifDebuggee, mozilla::Some(ifNotDebuggee));
 }
 
 typedef bool (*DebugLeaveLexicalEnvFn)(JSContext*, BaselineFrame*, jsbytecode*);
@@ -4244,16 +4312,14 @@ template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_DEBUGLEAVELEXICALENV()
 {
-    if (!compileDebugInstrumentation_) {
-        return true;
-    }
-
-    prepareVMCall();
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-    pushArg(ImmPtr(pc));
-    pushArg(R0.scratchReg());
-
-    return callVM(DebugLeaveLexicalEnvInfo);
+    auto ifDebuggee = [this]() {
+        prepareVMCall();
+        masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+        pushArg(ImmPtr(pc));
+        pushArg(R0.scratchReg());
+        return callVM(DebugLeaveLexicalEnvInfo);
+    };
+    return emitDebugInstrumentation(ifDebuggee);
 }
 
 typedef bool (*PushVarEnvFn)(JSContext*, BaselineFrame*, HandleScope);
@@ -4385,7 +4451,7 @@ template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emitReturn()
 {
-    if (compileDebugInstrumentation_) {
+    auto ifDebuggee = [this]() {
         // Move return value into the frame's rval slot.
         masm.storeValue(JSReturnOperand, frame.addressOfReturnValue());
         masm.or32(Imm32(BaselineFrame::HAS_RVAL), frame.addressOfFlags());
@@ -4405,6 +4471,10 @@ BaselineCodeGen<Handler>::emitReturn()
         retAddrEntries_.back().setKind(RetAddrEntry::Kind::DebugEpilogue);
 
         masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
+        return true;
+    };
+    if (!emitDebugInstrumentation(ifDebuggee)) {
+        return false;
     }
 
     // Only emit the jump if this JSOP_RETRVAL is not the last instruction.
@@ -5155,29 +5225,28 @@ template <typename Handler>
 bool
 BaselineCodeGen<Handler>::emit_JSOP_DEBUGAFTERYIELD()
 {
-    if (!compileDebugInstrumentation_) {
+    auto ifDebuggee = [this]() {
+        frame.assertSyncedStack();
+        masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+        prepareVMCall();
+        pushArg(ImmPtr(pc));
+        pushArg(R0.scratchReg());
+        if (!callVM(DebugAfterYieldInfo)) {
+            return false;
+        }
+
+        retAddrEntries_.back().setKind(RetAddrEntry::Kind::DebugAfterYield);
+
+        Label done;
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
+        {
+            masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
+            masm.jump(&return_);
+        }
+        masm.bind(&done);
         return true;
-    }
-
-    frame.assertSyncedStack();
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-    prepareVMCall();
-    pushArg(ImmPtr(pc));
-    pushArg(R0.scratchReg());
-    if (!callVM(DebugAfterYieldInfo)) {
-        return false;
-    }
-
-    retAddrEntries_.back().setKind(RetAddrEntry::Kind::DebugAfterYield);
-
-    Label done;
-    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
-    {
-        masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
-        masm.jump(&return_);
-    }
-    masm.bind(&done);
-    return true;
+    };
+    return emitDebugInstrumentation(ifDebuggee);
 }
 
 typedef bool (*FinalSuspendFn)(JSContext*, HandleObject, jsbytecode*);
