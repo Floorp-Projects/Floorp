@@ -58,6 +58,7 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   , mCompositorMightResample(false)
   , mNeedsComposite(false)
   , mQueuedAsyncPaints(false)
+  , mNotifyingWidgetListener(false)
   , mPaintSequenceNumber(0)
   , mForwarder(new ShadowLayerForwarder(this))
 {
@@ -85,6 +86,9 @@ ClientLayerManager::~ClientLayerManager()
 void
 ClientLayerManager::Destroy()
 {
+  MOZ_DIAGNOSTIC_ASSERT(!mNotifyingWidgetListener,
+    "Try to avoid destroying widgets and layer managers during DidCompositeWindow, if you can");
+
   // It's important to call ClearCachedResource before Destroy because the
   // former will early-return if the later has already run.
   ClearCachedResources();
@@ -494,11 +498,18 @@ ClientLayerManager::DidComposite(TransactionId aTransactionId,
   if (aTransactionId.IsValid()) {
     nsIWidgetListener *listener = mWidget->GetWidgetListener();
     if (listener) {
+      mNotifyingWidgetListener = true;
       listener->DidCompositeWindow(aTransactionId, aCompositeStart, aCompositeEnd);
+      mNotifyingWidgetListener = false;
     }
-    listener = mWidget->GetAttachedWidgetListener();
-    if (listener) {
-      listener->DidCompositeWindow(aTransactionId, aCompositeStart, aCompositeEnd);
+    // DidCompositeWindow might have called Destroy on us and nulled out mWidget,
+    // see bug 1510058.
+    // Re-check it here.
+    if (mWidget) {
+      listener = mWidget->GetAttachedWidgetListener();
+      if (listener) {
+        listener->DidCompositeWindow(aTransactionId, aCompositeStart, aCompositeEnd);
+      }
     }
     if (mTransactionIdAllocator) {
       mTransactionIdAllocator->NotifyTransactionCompleted(aTransactionId);
