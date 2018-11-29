@@ -67,8 +67,10 @@
 //    kern_return_t result = sender.SendMessage(message, 1000);
 //
 
+#ifndef PRINT_MACH_RESULT
 #define PRINT_MACH_RESULT(result_, message_) \
   printf(message_" %s (%d)\n", mach_error_string(result_), result_ );
+#endif
 
 //==============================================================================
 // A wrapper class for mach_msg_port_descriptor_t (with same memory layout)
