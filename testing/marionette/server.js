@@ -395,7 +395,7 @@ class TCPConnection {
 
   log_(msg) {
     let dir = (msg.origin == Message.Origin.Client ? "->" : "<-");
-    logger.trace(`${this.id} ${dir} ${msg}`);
+    logger.debug(`${this.id} ${dir} ${msg}`);
   }
 
   toString() {
