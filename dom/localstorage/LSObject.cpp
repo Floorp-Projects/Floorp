@@ -631,7 +631,13 @@ LSObject::DoRequestSynchronously(const LSRequestParams& aParams,
   }
 
   if (aResponse.type() == LSRequestResponse::Tnsresult) {
-    return aResponse.get_nsresult();
+    nsresult errorCode = aResponse.get_nsresult();
+
+    if (errorCode == NS_ERROR_FILE_NO_DEVICE_SPACE) {
+      errorCode = NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
+    }
+
+    return errorCode;
   }
 
   return NS_OK;
