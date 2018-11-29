@@ -23,6 +23,8 @@
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/LocalStorage.h"
+#include "mozilla/dom/LocalStorageCommon.h"
+#include "mozilla/dom/LSObject.h"
 #include "mozilla/dom/PartitionedLocalStorage.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
@@ -4908,32 +4910,38 @@ nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError)
   if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny &&
       (!mLocalStorage ||
         mLocalStorage->Type() == Storage::ePartitionedLocalStorage)) {
-    nsresult rv;
-    nsCOMPtr<nsIDOMStorageManager> storageManager =
-      do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
-    if (NS_FAILED(rv)) {
-      aError.Throw(rv);
-      return nullptr;
-    }
+    RefPtr<Storage> storage;
 
-    nsString documentURI;
-    if (mDoc) {
-      aError = mDoc->GetDocumentURI(documentURI);
-      if (NS_WARN_IF(aError.Failed())) {
+    if (NextGenLocalStorageEnabled()) {
+      aError = LSObject::Create(this, getter_AddRefs(storage));
+    } else {
+      nsresult rv;
+      nsCOMPtr<nsIDOMStorageManager> storageManager =
+        do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
+      if (NS_FAILED(rv)) {
+        aError.Throw(rv);
         return nullptr;
       }
+
+      nsString documentURI;
+      if (mDoc) {
+        aError = mDoc->GetDocumentURI(documentURI);
+        if (NS_WARN_IF(aError.Failed())) {
+          return nullptr;
+        }
+      }
+
+      nsIPrincipal *principal = GetPrincipal();
+      if (!principal) {
+        aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return nullptr;
+      }
+
+      aError = storageManager->CreateStorage(this, principal, documentURI,
+                                             IsPrivateBrowsing(),
+                                             getter_AddRefs(storage));
     }
 
-    nsIPrincipal *principal = GetPrincipal();
-    if (!principal) {
-      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
-    }
-
-    RefPtr<Storage> storage;
-    aError = storageManager->CreateStorage(this, principal, documentURI,
-                                           IsPrivateBrowsing(),
-                                           getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
     }

@@ -41,6 +41,7 @@
 #include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/LSObject.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/PLoginReputationChild.h"
 #include "mozilla/dom/PushNotifier.h"
@@ -3811,15 +3812,21 @@ ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
   }
 }
 
-#ifdef NIGHTLY_BUILD
 void
 ContentChild::OnChannelReceivedMessage(const Message& aMsg)
 {
+  if (aMsg.is_sync()) {
+    LSObject::CancelSyncLoop();
+  }
+
+#ifdef NIGHTLY_BUILD
   if (nsContentUtils::IsMessageInputEvent(aMsg)) {
     mPendingInputEvents++;
   }
+#endif
 }
 
+#ifdef NIGHTLY_BUILD
 PContentChild::Result
 ContentChild::OnMessageReceived(const Message& aMsg)
 {

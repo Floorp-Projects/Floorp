@@ -768,10 +768,10 @@ private:
   virtual already_AddRefed<nsIEventTarget>
   GetSpecificMessageEventTarget(const Message& aMsg) override;
 
-#ifdef NIGHTLY_BUILD
   virtual void
   OnChannelReceivedMessage(const Message& aMsg) override;
 
+#ifdef NIGHTLY_BUILD
   virtual PContentChild::Result
   OnMessageReceived(const Message& aMsg) override;
 

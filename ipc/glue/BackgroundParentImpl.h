@@ -77,6 +77,28 @@ protected:
   DeallocPBackgroundSDBConnectionParent(PBackgroundSDBConnectionParent* aActor)
                                         override;
 
+  virtual PBackgroundLSDatabaseParent*
+  AllocPBackgroundLSDatabaseParent(const uint64_t& aCacheId) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
+                                       const uint64_t& aDatastoreId) override;
+
+  virtual bool
+  DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor)
+                                     override;
+
+  virtual PBackgroundLSRequestParent*
+  AllocPBackgroundLSRequestParent(const LSRequestParams& aParams) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
+                                      const LSRequestParams& aParams) override;
+
+  virtual bool
+  DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor)
+                                    override;
+
   virtual PBackgroundLocalStorageCacheParent*
   AllocPBackgroundLocalStorageCacheParent(const PrincipalInfo& aPrincipalInfo,
                                           const nsCString& aOriginKey,
