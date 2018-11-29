@@ -655,6 +655,30 @@ QuotaManagerService::Clear(nsIQuotaRequest** _retval)
 }
 
 NS_IMETHODIMP
+QuotaManagerService::ClearStoragesForOriginAttributesPattern(
+                                                      const nsAString& aPattern,
+                                                      nsIQuotaRequest** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<Request> request = new Request();
+
+  ClearDataParams params;
+
+  params.pattern() = aPattern;
+
+  nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
+
+  nsresult rv = InitiateRequest(info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 QuotaManagerService::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
                                                const nsACString& aPersistenceType,
                                                const nsAString& aClientType,
@@ -846,14 +870,10 @@ QuotaManagerService::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "clear-origin-attributes-data")) {
-    RefPtr<Request> request = new Request();
-
-    ClearDataParams params;
-    params.pattern() = nsDependentString(aData);
-
-    nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
-
-    nsresult rv = InitiateRequest(info);
+    nsCOMPtr<nsIQuotaRequest> request;
+    nsresult rv =
+      ClearStoragesForOriginAttributesPattern(nsDependentString(aData),
+                                              getter_AddRefs(request));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
