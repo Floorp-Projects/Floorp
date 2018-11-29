@@ -1162,7 +1162,8 @@ public:
 
 private:
   class WriteInfo;
-  class SetItemInfo;
+  class AddItemInfo;
+  class UpdateItemInfo;
   class RemoveItemInfo;
   class ClearInfo;
   class EndUpdateBatchOp;
@@ -1171,7 +1172,8 @@ private:
   RefPtr<ConnectionThread> mConnectionThread;
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
   nsAutoPtr<ArchivedOriginInfo> mArchivedOriginInfo;
-  nsTArray<nsAutoPtr<WriteInfo>> mWriteInfos;
+  nsAutoPtr<WriteInfo> mClearInfo;
+  nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;
   const nsCString mOrigin;
@@ -1208,8 +1210,12 @@ public:
   Close(nsIRunnable* aCallback);
 
   void
-  SetItem(const nsString& aKey,
+  AddItem(const nsString& aKey,
           const nsString& aValue);
+
+  void
+  UpdateItem(const nsString& aKey,
+             const nsString& aValue);
 
   void
   RemoveItem(const nsString& aKey);
@@ -1284,28 +1290,64 @@ private:
 class Connection::WriteInfo
 {
 public:
+  enum Type {
+    AddItem = 0,
+    UpdateItem,
+    RemoveItem,
+    Clear,
+  };
+
+  virtual Type
+  GetType() = 0;
+
   virtual nsresult
   Perform(Connection* aConnection) = 0;
 
   virtual ~WriteInfo() = default;
 };
 
-class Connection::SetItemInfo final
+class Connection::AddItemInfo
   : public WriteInfo
 {
   nsString mKey;
   nsString mValue;
 
 public:
-  SetItemInfo(const nsAString& aKey,
+  AddItemInfo(const nsAString& aKey,
               const nsAString& aValue)
     : mKey(aKey)
     , mValue(aValue)
   { }
 
 private:
+  Type
+  GetType() override
+  {
+    return AddItem;
+  }
+
   nsresult
   Perform(Connection* aConnection) override;
+};
+
+class Connection::UpdateItemInfo final
+  : public AddItemInfo
+{
+  nsString mKey;
+  nsString mValue;
+
+public:
+  UpdateItemInfo(const nsAString& aKey,
+                 const nsAString& aValue)
+    : AddItemInfo(aKey, aValue)
+  { }
+
+private:
+  Type
+  GetType() override
+  {
+    return UpdateItem;
+  }
 };
 
 class Connection::RemoveItemInfo final
@@ -1319,6 +1361,12 @@ public:
   { }
 
 private:
+Type
+  GetType() override
+  {
+    return RemoveItem;
+  }
+
   nsresult
   Perform(Connection* aConnection) override;
 };
@@ -1331,6 +1379,12 @@ public:
   { }
 
 private:
+  Type
+  GetType() override
+  {
+    return Clear;
+  }
+
   nsresult
   Perform(Connection* aConnection) override;
 };
@@ -1338,12 +1392,15 @@ private:
 class Connection::EndUpdateBatchOp final
   : public ConnectionDatastoreOperationBase
 {
-  nsTArray<nsAutoPtr<WriteInfo>> mWriteInfos;
+  nsAutoPtr<WriteInfo> mClearInfo;
+  nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
 
 public:
-  explicit EndUpdateBatchOp(Connection* aConnection,
-                            nsTArray<nsAutoPtr<WriteInfo>>& aWriteInfos)
+  EndUpdateBatchOp(Connection* aConnection,
+                   nsAutoPtr<WriteInfo>&& aClearInfo,
+                   nsClassHashtable<nsStringHashKey, WriteInfo>& aWriteInfos)
     : ConnectionDatastoreOperationBase(aConnection)
+    , mClearInfo(std::move(aClearInfo))
   {
     mWriteInfos.SwapElements(aWriteInfos);
   }
@@ -3331,14 +3388,41 @@ Connection::Close(nsIRunnable* aCallback)
 }
 
 void
-Connection::SetItem(const nsString& aKey,
+Connection::AddItem(const nsString& aKey,
                     const nsString& aValue)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  nsAutoPtr<WriteInfo> writeInfo(new SetItemInfo(aKey, aValue));
-  mWriteInfos.AppendElement(writeInfo.forget());
+  WriteInfo* existingWriteInfo;
+  nsAutoPtr<WriteInfo> newWriteInfo;
+  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
+      existingWriteInfo->GetType() == WriteInfo::RemoveItem) {
+    newWriteInfo = new UpdateItemInfo(aKey, aValue);
+  } else {
+    newWriteInfo = new AddItemInfo(aKey, aValue);
+  }
+
+  mWriteInfos.Put(aKey, newWriteInfo.forget());
+}
+
+void
+Connection::UpdateItem(const nsString& aKey,
+                       const nsString& aValue)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mInUpdateBatch);
+
+  WriteInfo* existingWriteInfo;
+  nsAutoPtr<WriteInfo> newWriteInfo;
+  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
+      existingWriteInfo->GetType() == WriteInfo::AddItem) {
+    newWriteInfo = new AddItemInfo(aKey, aValue);
+  } else {
+    newWriteInfo = new UpdateItemInfo(aKey, aValue);
+  }
+
+  mWriteInfos.Put(aKey, newWriteInfo.forget());
 }
 
 void
@@ -3347,8 +3431,15 @@ Connection::RemoveItem(const nsString& aKey)
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  nsAutoPtr<WriteInfo> writeInfo(new RemoveItemInfo(aKey));
-  mWriteInfos.AppendElement(writeInfo.forget());
+  WriteInfo* existingWriteInfo;
+  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
+      existingWriteInfo->GetType() == WriteInfo::AddItem) {
+    mWriteInfos.Remove(aKey);
+    return;
+  }
+
+  nsAutoPtr<WriteInfo> newWriteInfo(new RemoveItemInfo(aKey));
+  mWriteInfos.Put(aKey, newWriteInfo.forget());
 }
 
 void
@@ -3357,8 +3448,11 @@ Connection::Clear()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  nsAutoPtr<WriteInfo> writeInfo(new ClearInfo());
-  mWriteInfos.AppendElement(writeInfo.forget());
+  mWriteInfos.Clear();
+
+  if (!mClearInfo) {
+    mClearInfo = new ClearInfo();
+  }
 }
 
 void
@@ -3378,11 +3472,10 @@ Connection::EndUpdateBatch()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  if (!mWriteInfos.IsEmpty()) {
-    RefPtr<EndUpdateBatchOp> op = new EndUpdateBatchOp(this, mWriteInfos);
+  RefPtr<EndUpdateBatchOp> op =
+    new EndUpdateBatchOp(this, std::move(mClearInfo), mWriteInfos);
 
-    Dispatch(op);
-  }
+  Dispatch(op);
 
 #ifdef DEBUG
   mInUpdateBatch = false;
@@ -3509,7 +3602,7 @@ CachedStatement::Assign(Connection* aConnection,
 
 nsresult
 Connection::
-SetItemInfo::Perform(Connection* aConnection)
+AddItemInfo::Perform(Connection* aConnection)
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
@@ -3709,8 +3802,12 @@ EndUpdateBatchOp::DoDatastoreWork()
     return rv;
   }
 
-  for (auto writeInfo : mWriteInfos) {
-    writeInfo->Perform(mConnection);
+  if (mClearInfo) {
+    mClearInfo->Perform(mConnection);
+  }
+
+  for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
+    iter.Data()->Perform(mConnection);
   }
 
   rv = mConnection->GetCachedStatement(NS_LITERAL_CSTRING("COMMIT;"), &stmt);
@@ -4193,7 +4290,11 @@ Datastore::SetItem(Database* aDatabase,
     }
 
     if (IsPersistent()) {
-      mConnection->SetItem(aKey, aValue);
+      if (oldValue.IsVoid()) {
+        mConnection->AddItem(aKey, aValue);
+      } else {
+        mConnection->UpdateItem(aKey, aValue);
+      }
     }
   }
 
