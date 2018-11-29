@@ -1801,7 +1801,17 @@ nsFrameSelection::CommonPageMove(bool aForward,
     return;
   }
 
-  if (scrollableFrame) {
+  // If the scrolled frame is outside of current selection limiter,
+  // we need to scroll the frame but keep moving selection in the limiter.
+  nsIFrame* frameToClick = scrolledFrame;
+  if (!IsValidSelectionPoint(this, scrolledFrame->GetContent())) {
+    frameToClick = GetFrameToPageSelect();
+    if (NS_WARN_IF(!frameToClick)) {
+      return;
+    }
+  }
+
+  if (scrollableFrame && scrolledFrame == frameToClick) {
     // If aFrame is scrollable, adjust pseudo-click position with page scroll
     // amount.
     if (aForward) {
@@ -1812,20 +1822,20 @@ nsFrameSelection::CommonPageMove(bool aForward,
   } else {
     // Otherwise, adjust pseudo-click position with the frame size.
     if (aForward) {
-      caretPos.y += scrolledFrame->GetSize().height;
+      caretPos.y += frameToClick->GetSize().height;
     } else {
-      caretPos.y -= scrolledFrame->GetSize().height;
+      caretPos.y -= frameToClick->GetSize().height;
     }
   }
 
-  caretPos += caretFrame->GetOffsetTo(scrolledFrame);
+  caretPos += caretFrame->GetOffsetTo(frameToClick);
 
   // get a content at desired location
   nsPoint desiredPoint;
   desiredPoint.x = caretPos.x;
   desiredPoint.y = caretPos.y + caretPos.height / 2;
   nsIFrame::ContentOffsets offsets =
-      scrolledFrame->GetContentOffsetsFromPoint(desiredPoint);
+      frameToClick->GetContentOffsetsFromPoint(desiredPoint);
 
   if (!offsets.content) {
     return;

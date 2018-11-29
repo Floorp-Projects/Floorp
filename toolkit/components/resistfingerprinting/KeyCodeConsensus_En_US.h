@@ -33,6 +33,7 @@
  * Spoofed keycodes for English content (US English keyboard layout).
  */
 
+// clang-format off
 CONTROL(Alt,         AltLeft,     dom::KeyboardEvent_Binding::DOM_VK_ALT)
 CONTROL(ArrowDown,   ArrowDown,   dom::KeyboardEvent_Binding::DOM_VK_DOWN)
 CONTROL(ArrowLeft,   ArrowLeft,   dom::KeyboardEvent_Binding::DOM_VK_LEFT)
@@ -40,8 +41,8 @@ CONTROL(ArrowRight,  ArrowRight,  dom::KeyboardEvent_Binding::DOM_VK_RIGHT)
 CONTROL(ArrowUp,     ArrowUp,     dom::KeyboardEvent_Binding::DOM_VK_UP)
 CONTROL(Backspace,   Backspace,   dom::KeyboardEvent_Binding::DOM_VK_BACK_SPACE)
 CONTROL(CapsLock,    CapsLock,    dom::KeyboardEvent_Binding::DOM_VK_CAPS_LOCK)
-// Leaving "ContextMenu" key unimplemented; not every english keyboard has this.
-// For example, MACOS doesn't have this.
+// Leaving "ContextMenu" key unimplemented; not every english keyboard has
+// this.  For example, MACOS doesn't have this.
 CONTROL(Control,     ControlLeft, dom::KeyboardEvent_Binding::DOM_VK_CONTROL)
 CONTROL(Delete,      Delete,      dom::KeyboardEvent_Binding::DOM_VK_DELETE)
 CONTROL(End,         End,         dom::KeyboardEvent_Binding::DOM_VK_END)
@@ -70,11 +71,11 @@ CONTROL(F9,          F9,          dom::KeyboardEvent_Binding::DOM_VK_F9)
 CONTROL(F10,         F10,         dom::KeyboardEvent_Binding::DOM_VK_F10)
 CONTROL(F11,         F11,         dom::KeyboardEvent_Binding::DOM_VK_F11)
 CONTROL(F12,         F12,         dom::KeyboardEvent_Binding::DOM_VK_F12)
-// Leaving "F13" to "F35" key unimplemented; they are some how platform dependent.
-// "F13" to "F19" are on MAC's full keyboard but may not exist on usual keyboard.
-// "F20" to "F24" are only available on Windows and Linux.
-// "F25" to "F35" are Linux only.
-// Leaving "Clear" key unimplemented; it's inconsistent between platforms.
+// Leaving "F13" to "F35" key unimplemented; they are some how platform
+// dependent.  "F13" to "F19" are on MAC's full keyboard but may not exist on
+// usual keyboard.  "F20" to "F24" are only available on Windows and Linux.
+// "F25" to "F35" are Linux only.  Leaving "Clear" key unimplemented; it's
+// inconsistent between platforms.
 KEY(" ",  Space,        dom::KeyboardEvent_Binding::DOM_VK_SPACE,  MODIFIER_NONE)
 KEY(",",  Comma,        dom::KeyboardEvent_Binding::DOM_VK_COMMA, MODIFIER_NONE)
 KEY("<",  Comma,        dom::KeyboardEvent_Binding::DOM_VK_COMMA, MODIFIER_SHIFT)
@@ -170,3 +171,4 @@ KEY("^",  Digit6,       dom::KeyboardEvent_Binding::DOM_VK_6, MODIFIER_SHIFT)
 KEY("&",  Digit7,       dom::KeyboardEvent_Binding::DOM_VK_7, MODIFIER_SHIFT)
 KEY("*",  Digit8,       dom::KeyboardEvent_Binding::DOM_VK_8, MODIFIER_SHIFT)
 KEY("(",  Digit9,       dom::KeyboardEvent_Binding::DOM_VK_9, MODIFIER_SHIFT)
+// clang-format on

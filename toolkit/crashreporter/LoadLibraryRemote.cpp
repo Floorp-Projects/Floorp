@@ -91,7 +91,8 @@ CopySections(const unsigned char *data, PIMAGE_NT_HEADERS old_headers, PMEMORYMO
     if (section->SizeOfRawData) {
       memcpy(dest, data + section->PointerToRawData, section->SizeOfRawData);
     }
-    //     section->Misc.PhysicalAddress = (POINTER_TYPE) module->remoteCodeBase + section->VirtualAddress;
+    // section->Misc.PhysicalAddress = (POINTER_TYPE) module->remoteCodeBase +
+    //                                                section->VirtualAddress;
   }
 }
 

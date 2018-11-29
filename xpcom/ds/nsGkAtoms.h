@@ -46,8 +46,10 @@
 // that look like this:
 //
 //   GK_ATOM(a, "a", 0x01234567, nsStaticAtom, Atom)
-//   GK_ATOM(bb, "bb", 0x12345678, nsCSSPseudoElementStaticAtom, PseudoElementAtom)
-//   GK_ATOM(Ccc, "Ccc", 0x23456789, nsCSSAnonBoxPseudoStaticAtom, InheritingAnonBoxAtom)
+//   GK_ATOM(bb, "bb", 0x12345678, nsCSSPseudoElementStaticAtom,
+//           PseudoElementAtom)
+//   GK_ATOM(Ccc, "Ccc", 0x23456789, nsCSSAnonBoxPseudoStaticAtom,
+//           InheritingAnonBoxAtom)
 //
 // Comments throughout this file and nsGkAtoms.cpp show how these entries get
 // expanded by macros.

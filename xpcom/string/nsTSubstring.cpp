@@ -1470,8 +1470,8 @@ nsTSubstring<T>::SizeOfExcludingThisIfUnshared(
   // - DataFlags::VOIDED is set, and this->mData points to sEmptyBuffer;
   // - DataFlags::INLINE is set, and this->mData points to a buffer within a
   //   string object (e.g. nsAutoString);
-  // - None of DataFlags::REFCOUNTED, DataFlags::OWNED, DataFlags::INLINE is set,
-  //   and this->mData points to a buffer owned by something else.
+  // - None of DataFlags::REFCOUNTED, DataFlags::OWNED, DataFlags::INLINE is
+  //   set, and this->mData points to a buffer owned by something else.
   //
   // In all three cases, we don't measure it.
   return 0;

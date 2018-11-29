@@ -37,6 +37,10 @@ function autocomplete(state = getDefaultState(), action) {
         return state;
       }
 
+      if (action.data.matches === null) {
+        return getDefaultState();
+      }
+
       return {
         ...state,
         cache: {

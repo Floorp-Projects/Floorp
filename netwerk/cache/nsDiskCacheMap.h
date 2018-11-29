@@ -23,6 +23,7 @@
 class nsDiskCacheBinding;
 struct nsDiskCacheEntry;
 
+// clang-format off
 /******************************************************************************
  *  nsDiskCacheRecord
  *
@@ -49,6 +50,7 @@ struct nsDiskCacheEntry;
  *                       determine its actual size if necessary.
  *
  *****************************************************************************/
+// clang-format on
 
 /*
   We have 3 block files with roughly the same max size (32MB)

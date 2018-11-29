@@ -17,6 +17,8 @@
     MAX_AUTOCOMPLETE_ATTEMPTS,
     MAX_AUTOCOMPLETIONS
   } = require("devtools/shared/webconsole/js-property-provider");
+  const RESERVED_JS_KEYWORDS = require("devtools/shared/webconsole/reserved-js-words");
+
 
   addEventListener("load", startTest);
 
@@ -106,6 +108,7 @@
       doAutocompleteAfterOperator,
       dontAutocompleteAfterDeclaration,
       doKeywordsAutocomplete,
+      dontAutocomplete,
     ];
 
     if (!isWorker) {
@@ -166,7 +169,7 @@
     info("test autocomplete for 'dump(window.foobarObject.)'");
     let response = await client.autocomplete("dump(window.foobarObject.)");
     ok(!response.matchProp, "matchProp");
-    is(response.matches.length, 0, "matches.length");
+    is(response.matches, null, "matches is null");
   }
 
   async function doAutocompleteLarge1(client) {
@@ -419,23 +422,19 @@
 
     info(`test autocomplete for '['`);
     res = await client.autocomplete(`[`);
-    is(res.matches.length, 0, "it does not return anything");
-    is(res.isElementAccess, false);
+    is(res.matches, null, "it does not return anything");
 
     info(`test autocomplete for '[1,2,3'`);
     res = await client.autocomplete(`[1,2,3`);
-    is(res.matches.length, 0, "it does not return anything");
-    is(res.isElementAccess, false);
+    is(res.matches, null, "it does not return anything");
 
     info(`test autocomplete for '["'`);
     res = await client.autocomplete(`["`);
-    is(res.matches.length, 0, "it does not return anything");
-    is(res.isElementAccess, false);
+    is(res.matches, null, "it does not return anything");
 
     info(`test autocomplete for '[;'`);
     res = await client.autocomplete(`[;`);
-    is(res.matches.length, 0, "it does not return anything");
-    is(res.isElementAccess, false);
+    is(res.matches, null, "it does not return anything");
   }
 
   async function doAutocompleteCommands(client) {
@@ -516,23 +515,23 @@
   async function dontAutocompleteAfterDeclaration(client) {
     info("test autocomplete for 'var win'");
     let matches = (await client.autocomplete("var win")).matches;
-    is(matches.length, 0, "no autocompletion on a var declaration");
+    is(matches, null, "no autocompletion on a var declaration");
 
     info("test autocomplete for 'const win'");
     matches = (await client.autocomplete("const win")).matches;
-    is(matches.length, 0, "no autocompletion on a const declaration");
+    is(matches, null, "no autocompletion on a const declaration");
 
     info("test autocomplete for 'let win'");
     matches = (await client.autocomplete("let win")).matches;
-    is(matches.length, 0, "no autocompletion on a let declaration");
+    is(matches, null, "no autocompletion on a let declaration");
 
     info("test autocomplete for 'function win'");
     matches = (await client.autocomplete("function win")).matches;
-    is(matches.length, 0, "no autocompletion on a function declaration");
+    is(matches, null, "no autocompletion on a function declaration");
 
     info("test autocomplete for 'class win'");
     matches = (await client.autocomplete("class win")).matches;
-    is(matches.length, 0, "no autocompletion on a class declaration");
+    is(matches, null, "no autocompletion on a class declaration");
 
     info("test autocomplete for 'const win = win'");
     matches = (await client.autocomplete("const win = win")).matches;
@@ -563,6 +562,50 @@ async function doKeywordsAutocomplete(client) {
   matches = (await client.autocomplete("window[func")).matches;
   ok(!matches.includes("function"),
     "'function' is not returned when doing an element access");
+  }
+
+  async function dontAutocomplete(client) {
+    const inputs = [
+      "",
+      "       ",
+      "\n",
+      "\n  ",
+      "  \n  ",
+      "  \n",
+      "true;",
+      "true,",
+      "({key:",
+      "a=",
+      "if(a<",
+      "if(a>",
+      "1+",
+      "1-",
+      "++",
+      "--",
+      "1*",
+      "2**",
+      "1/",
+      "1%",
+      "1|",
+      "1&",
+      "1^",
+      "~",
+      "1<<",
+      "1>>",
+      "1>>>",
+      "false||",
+      "false&&",
+      "x=true?",
+      "x=false?1:",
+      "!",
+      ...RESERVED_JS_KEYWORDS.map(keyword => `${keyword} `),
+      ...RESERVED_JS_KEYWORDS.map(keyword => `${keyword}  `),
+    ];
+    for (const input of inputs) {
+      info(`test autocomplete for "${input}"`);
+      let matches = (await client.autocomplete(input)).matches;
+      is(matches, null, `No autocomplete result for ${input}"`);
+    }
   }
 
   async function getAutocompleteMatches(client, input) {

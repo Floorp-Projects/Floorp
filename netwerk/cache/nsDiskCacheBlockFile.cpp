@@ -361,7 +361,8 @@ nsDiskCacheBlockFile::CalcBlockFileSize()
 /******************************************************************************
  *  Write
  *
- *  Wrapper around PR_Write that grows file in larger chunks to combat fragmentation
+ *  Wrapper around PR_Write that grows file in larger chunks to combat
+ *  fragmentation
  *
  *****************************************************************************/
 bool

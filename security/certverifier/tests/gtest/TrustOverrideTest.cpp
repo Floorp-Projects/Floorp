@@ -62,17 +62,20 @@ const char* kOverrideCaIntermediatePem = "-----BEGIN CERTIFICATE-----\n" \
 // SHA256 Fingerprint: A3:05:0C:44:CD:6D:1E:BE:A2:18:80:09:93:69:90:7F
 //                     8C:E3:9F:A4:33:CB:E3:E9:3C:D1:8E:8C:89:23:1B:4A
 
+// clang-format off
 // Invocation: security/manager/tools/crtshToIdentifyingStruct/crtshToIdentifyingStruct.py -listname OverrideCaDNs -dn /tmp/overrideCa.pem
 static const uint8_t CAcaDN[15] = {
   0x30, 0x0D, 0x31, 0x0B, 0x30, 0x09, 0x06, 0x03, 0x55, 0x04, 0x03, 0x0C, 0x02,
   0x63, 0x61,
 };
+// clang-format on
 
 static const DataAndLength OverrideCaDNs[]= {
   { CAcaDN,
     sizeof(CAcaDN) },
 };
 
+// clang-format off
 // Invocation: security/manager/tools/crtshToIdentifyingStruct/crtshToIdentifyingStruct.py -listname OverrideCaSPKIs -spki /tmp/overrideCa.pem
 static const uint8_t CAcaSPKI[294] = {
   0x30, 0x82, 0x01, 0x22, 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7,
@@ -99,6 +102,7 @@ static const uint8_t CAcaSPKI[294] = {
   0x49, 0x23, 0xFA, 0x72, 0x51, 0xC4, 0x31, 0xD5, 0x03, 0xAC, 0xDA, 0x18, 0x0A,
   0x35, 0xED, 0x8D, 0x02, 0x03, 0x01, 0x00, 0x01,
 };
+// clang-format on
 
 static const DataAndLength OverrideCaSPKIs[]= {
   { CAcaSPKI, sizeof(CAcaSPKI) },

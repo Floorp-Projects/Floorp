@@ -108,7 +108,8 @@ private:
   bool                 mDoomWhenFoundPinned : 1;
   bool                 mDoomWhenFoundNonPinned : 1;
   // Set when after shutdown AND:
-  // - when writing: writing data (not metadata) OR the physical file handle is not currently open
+  // - when writing: writing data (not metadata) OR the physical file handle is
+  //   not currently open
   // - when truncating: the physical file handle is not currently open
   // When set it prevents any further writes or truncates on such handles to happen immediately
   // after shutdown and gives a chance to write metadata of already open files quickly as possible
@@ -308,7 +309,8 @@ public:
   // PinningDoomRestriction:
   // NO_RESTRICTION
   //    no restriction is checked, the file is simply always doomed
-  // DOOM_WHEN_(NON)_PINNED, we branch based on the pinning status of the handle:
+  // DOOM_WHEN_(NON)_PINNED, we branch based on the pinning status of the
+  // handle:
   //   UNKNOWN: the handle is marked to be doomed when later found (non)pinned
   //   PINNED/NON_PINNED: doom only when the restriction matches the pin status
   //      and the handle has not yet been required to doom during the UNKNOWN

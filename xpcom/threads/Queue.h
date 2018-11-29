@@ -137,7 +137,8 @@ public:
      * 2. Then we have pageCount(x, y) = y - x.
      *
      * Ex: pageCount(0, 0) = 0 where both head and tail pages point to page 0.
-     *     pageCount(0, 1) = 1 where head points to page 0 and tail points page 1.
+     *     pageCount(0, 1) = 1 where head points to page 0 and tail points
+     *     page 1.
      *
      * 3. number of events = (ItemsPerPage * pageCount(x, y))
      *      - (empty slots in head page) + (non-empty slots in tail page)

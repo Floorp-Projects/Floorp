@@ -443,12 +443,13 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
           switch (fe.cfFormat) {
             case CF_TEXT:
               {
-                // Get the data out of the global data handle. The size we return
-                // should not include the null because the other platforms don't
-                // use nulls, so just return the length we get back from strlen(),
-                // since we know CF_TEXT is null terminated. Recall that GetGlobalData() 
-                // returns the size of the allocated buffer, not the size of the data 
-                // (on 98, these are not the same) so we can't use that.
+                // Get the data out of the global data handle. The size we
+                // return should not include the null because the other
+                // platforms don't use nulls, so just return the length we get
+                // back from strlen(), since we know CF_TEXT is null
+                // terminated. Recall that GetGlobalData() returns the size of
+                // the allocated buffer, not the size of the data (on 98, these
+                // are not the same) so we can't use that.
                 uint32_t allocLen = 0;
                 if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
                   *aLen = strlen ( reinterpret_cast<char*>(*aData) );
@@ -458,12 +459,13 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
             case CF_UNICODETEXT:
               {
-                // Get the data out of the global data handle. The size we return
-                // should not include the null because the other platforms don't
-                // use nulls, so just return the length we get back from strlen(),
-                // since we know CF_UNICODETEXT is null terminated. Recall that GetGlobalData() 
-                // returns the size of the allocated buffer, not the size of the data 
-                // (on 98, these are not the same) so we can't use that.
+                // Get the data out of the global data handle. The size we
+                // return should not include the null because the other
+                // platforms don't use nulls, so just return the length we get
+                // back from strlen(), since we know CF_UNICODETEXT is null
+                // terminated. Recall that GetGlobalData() returns the size of
+                // the allocated buffer, not the size of the data (on 98, these
+                // are not the same) so we can't use that.
                 uint32_t allocLen = 0;
                 if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
                   *aLen = NS_strlen(reinterpret_cast<char16_t*>(*aData)) * 2;
@@ -540,23 +542,26 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
               } 
               else
               {
-                // Get the data out of the global data handle. The size we return
-                // should not include the null because the other platforms don't
-                // use nulls, so just return the length we get back from strlen(),
-                // since we know CF_UNICODETEXT is null terminated. Recall that GetGlobalData() 
-                // returns the size of the allocated buffer, not the size of the data 
-                // (on 98, these are not the same) so we can't use that.
+                // Get the data out of the global data handle. The size we
+                // return should not include the null because the other
+                // platforms don't use nulls, so just return the length we get
+                // back from strlen(), since we know CF_UNICODETEXT is null
+                // terminated. Recall that GetGlobalData() returns the size of
+                // the allocated buffer, not the size of the data (on 98, these
+                // are not the same) so we can't use that.
                 //
-                // NOTE: we are assuming that anything that falls into this default case
-                //        is unicode. As we start to get more kinds of binary data, this
-                //        may become an incorrect assumption. Stay tuned.
+                // NOTE: we are assuming that anything that falls into this
+                //        default case is unicode. As we start to get more
+                //        kinds of binary data, this may become an incorrect
+                //        assumption. Stay tuned.
                 uint32_t allocLen = 0;
                 if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
                   if ( fe.cfFormat == CF_HTML ) {
-                    // CF_HTML is actually UTF8, not unicode, so disregard the assumption
-                    // above. We have to check the header for the actual length, and we'll
-                    // do that in FindPlatformHTML(). For now, return the allocLen. This
-                    // case is mostly to ensure we don't try to call strlen on the buffer.
+                    // CF_HTML is actually UTF8, not unicode, so disregard the
+                    // assumption above. We have to check the header for the
+                    // actual length, and we'll do that in FindPlatformHTML().
+                    // For now, return the allocLen. This case is mostly to
+                    // ensure we don't try to call strlen on the buffer.
                     *aLen = allocLen;
                   } else if (fe.cfFormat == CF_CUSTOMTYPES) {
                     // Binary data

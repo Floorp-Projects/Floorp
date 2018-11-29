@@ -228,13 +228,7 @@ public:
       new ExecutionRunnable(this, mWorklet->mImpl, std::move(scriptTextBuf),
                             scriptTextLength);
 
-    RefPtr<WorkletThread> thread = mWorklet->mImpl->GetOrCreateThread();
-    if (!thread) {
-      RejectPromises(NS_ERROR_FAILURE);
-      return NS_OK;
-    }
-
-    if (NS_FAILED(thread->DispatchRunnable(runnable.forget()))) {
+    if (NS_FAILED(mWorklet->mImpl->SendControlMessage(runnable.forget()))) {
       RejectPromises(NS_ERROR_FAILURE);
       return NS_OK;
     }
@@ -374,11 +368,6 @@ ExecutionRunnable::RunOnWorkletThread()
 {
   WorkletThread::AssertIsOnWorkletThread();
 
-  WorkletThread* workletThread = WorkletThread::Get();
-  MOZ_ASSERT(workletThread);
-
-  JSContext* cx = workletThread->GetJSContext();
-
   AutoJSAPI jsapi;
   jsapi.Init();
 
@@ -387,7 +376,7 @@ ExecutionRunnable::RunOnWorkletThread()
   MOZ_ASSERT(globalScope);
 
   AutoEntryScript aes(globalScope, "Worklet");
-  cx = aes.cx();
+  JSContext* cx = aes.cx();
 
   JS::Rooted<JSObject*> globalObj(cx, globalScope->GetGlobalJSObject());
 
@@ -436,7 +425,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Worklet)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Worklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  tmp->mImpl->TerminateThread();
+  tmp->mImpl->NotifyWorkletFinished();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -469,7 +458,7 @@ Worklet::Worklet(nsPIDOMWindowInner* aWindow, RefPtr<WorkletImpl> aImpl)
 
 Worklet::~Worklet()
 {
-  mImpl->TerminateThread();
+  mImpl->NotifyWorkletFinished();
 }
 
 JSObject*

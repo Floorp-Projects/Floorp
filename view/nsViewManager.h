@@ -45,13 +45,15 @@ public:
   /**
    * Create an ordinary view
    * @param aBounds initial bounds for view
-   *        XXX We should eliminate this parameter; you can set the bounds after CreateView
+   *        XXX We should eliminate this parameter; you can set the bounds
+   *        after CreateView
    * @param aParent intended parent for view. this is not actually set in the
    *        nsView through this method. it is only used by the initialization
    *        code to walk up the view tree, if necessary, to find resources.
    *        XXX We should eliminate this parameter!
    * @param aVisibilityFlag initial visibility state of view
-   *        XXX We should eliminate this parameter; you can set it after CreateView
+   *        XXX We should eliminate this parameter; you can set it after
+   *        CreateView
    * @result The new view.  Never null.
    */
   nsView* CreateView(const nsRect& aBounds,
@@ -199,10 +201,10 @@ public:
    * is above its parent in z-order. Negative z-indices mean that a
    * view is below its parent.
    * The view manager generates the appropriate dirty regions.
-   * @param aAutoZIndex indicate that the z-index of a view is "auto". An "auto" z-index
-   * means that the view does not define a new stacking context,
-   * which means that the z-indicies of the view's children are
-   * relative to the view's siblings.
+   * @param aAutoZIndex indicate that the z-index of a view is "auto". An
+   *     "auto" z-index means that the view does not define a new stacking
+   *     context, which means that the z-indicies of the view's children are
+   *     relative to the view's siblings.
    * @param aView view to change z depth of
    * @param aZindex explicit z depth
    */

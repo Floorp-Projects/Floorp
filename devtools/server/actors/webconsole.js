@@ -1217,10 +1217,17 @@ WebConsoleActor.prototype =
         invokeUnsafeGetter: false,
         webconsoleActor: this,
         selectedNodeActor: request.selectedNodeActor,
-      }) || {};
+      });
 
       if (!hadDebuggee && dbgObject) {
         this.dbg.removeDebuggee(this.evalWindow);
+      }
+
+      if (result === null) {
+        return {
+          from: this.actorID,
+          matches: null,
+        };
       }
 
       matches = result.matches || new Set();

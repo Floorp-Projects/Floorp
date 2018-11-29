@@ -1,4 +1,4 @@
-/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -182,7 +182,8 @@ void AccumulateCategoricalKeyed(const nsCString& key, const nsTArray<E>& enumVal
  * be recorded.
  *
  * @param id - The histogram id.
- * @param label - A string label value that is defined in Histograms.json for this histogram.
+ * @param label - A string label value that is defined in Histograms.json for
+ *                this histogram.
  */
 void AccumulateCategorical(HistogramID id, const nsCString& label);
 

@@ -916,13 +916,11 @@ var AddonDatabase = {
     this.connectionPromise = null;
     this._loaded = false;
 
-    if (aSkipFlush || !this._saveTask) {
+    if (aSkipFlush) {
       return Promise.resolve();
     }
 
-    let promise = this._saveTask.finalize();
-    this._saveTask = null;
-    return promise;
+    return this.flush();
   },
 
   /**
@@ -973,14 +971,7 @@ var AddonDatabase = {
 
       if (!this._blockerAdded) {
         AsyncShutdown.profileBeforeChange.addBlocker(
-          "Flush AddonRepository",
-          async () => {
-            if (!this._saveTask) {
-              return;
-            }
-            await this._saveTask.finalize();
-            this._saveTask = null;
-          });
+          "Flush AddonRepository", () => this.flush());
         this._blockerAdded = true;
       }
     }
