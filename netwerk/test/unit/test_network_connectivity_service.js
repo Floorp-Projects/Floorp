@@ -11,29 +11,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.connectivity-service.DNSv4.domain");
   Services.prefs.clearUserPref("network.connectivity-service.DNSv6.domain");
-  Services.prefs.clearUserPref("network.captive-portal-service.testMode");
-  Services.prefs.clearUserPref("network.connectivity-service.IPv4.url");
-  Services.prefs.clearUserPref("network.connectivity-service.IPv6.url");
 });
-
-let httpserver = null;
-let httpserverv6 = null;
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
-  return "http://localhost:" + httpserver.identity.primaryPort + "/content";
-});
-
-XPCOMUtils.defineLazyGetter(this, "URLv6", function() {
-  return "http://[::1]:" + httpserverv6.identity.primaryPort + "/content";
-});
-
-function contentHandler(metadata, response)
-{
-  response.setHeader("Content-Type", "text/plain");
-  response.setHeader("Cache-Control", "no-cache");
-
-  const responseBody = "anybody";
-  response.bodyOutputStream.write(responseBody, responseBody.length);
-}
 
 const DEFAULT_WAIT_TIME = 200; // ms
 
@@ -77,34 +55,7 @@ add_task(async function testDNS() {
   equal(ncs.DNSv4, Ci.nsINetworkConnectivityService.OK, "Check DNSv4 support (expect OK)");
   equal(ncs.DNSv6, Ci.nsINetworkConnectivityService.OK, "Check DNSv6 support (expect OK)");
 
-  httpserver = new HttpServer();
-  httpserver.registerPathHandler("/content", contentHandler);
-  httpserver.start(-1);
-
-  httpserverv6 = new HttpServer();
-  httpserverv6.registerPathHandler("/contentt", contentHandler);
-  httpserverv6._start(-1, "[::1]");
-  // httpserverv6._start(-1, "ip6-localhost");
-
-  // Before setting the pref, this status is unknown in automation
-  equal(ncs.IPv4, Ci.nsINetworkConnectivityService.UNKNOWN, "Check IPv4 support (expect UNKNOWN)");
-  equal(ncs.IPv6, Ci.nsINetworkConnectivityService.UNKNOWN, "Check IPv6 support (expect UNKNOWN)");
-
-  Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
-  Services.prefs.setCharPref("network.connectivity-service.IPv4.url", URL);
-  Services.prefs.setCharPref("network.connectivity-service.IPv6.url", URLv6);
-  ncs.recheckIPConnectivity();
-  await new Promise(resolve => do_timeout(DEFAULT_WAIT_TIME, resolve));
-
+  // It's difficult to check when there's no connectivity in automation,
   equal(ncs.IPv4, Ci.nsINetworkConnectivityService.OK, "Check IPv4 support (expect OK)");
   equal(ncs.IPv6, Ci.nsINetworkConnectivityService.OK, "Check IPv6 support (expect OK)");
-
-  // check that the CPS status is NOT_AVAILABLE when the endpoint is down.
-  await new Promise(resolve => httpserver.stop(resolve));
-  await new Promise(resolve => httpserverv6.stop(resolve));
-  Services.obs.notifyObservers(null, "network:captive-portal-connectivity", null);
-  await new Promise(resolve => do_timeout(DEFAULT_WAIT_TIME, resolve));
-
-  equal(ncs.IPv4, Ci.nsINetworkConnectivityService.NOT_AVAILABLE, "Check IPv4 support (expect NOT_AVAILABLE)");
-  equal(ncs.IPv6, Ci.nsINetworkConnectivityService.NOT_AVAILABLE, "Check IPv6 support (expect NOT_AVAILABLE)");
 });

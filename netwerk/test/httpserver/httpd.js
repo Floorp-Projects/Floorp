@@ -195,9 +195,6 @@ var gThreadManager = null;
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",
                         "init");
-const ServerSocketIPv6 = CC("@mozilla.org/network/server-socket;1",
-                            "nsIServerSocket",
-                            "initIPv6");
 const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1",
                                  "nsIScriptableInputStream",
                                  "init");
@@ -488,8 +485,7 @@ nsHttpServer.prototype =
 
     try {
       var loopback = true;
-      if (this._host != "127.0.0.1" && this._host != "localhost" &&
-          this._host != "[::1]") {
+      if (this._host != "127.0.0.1" && this._host != "localhost") {
         loopback = false;
       }
 
@@ -500,16 +496,9 @@ nsHttpServer.prototype =
       // ourselves to finite attempts just so we don't loop forever.
       var socket;
       for (var i = 100; i; i--) {
-        var temp = null;
-        if (this._host.includes(":")) {
-          temp = new ServerSocketIPv6(this._port,
-                                      loopback, // true = localhost, false = everybody
-                                      maxConnections);
-        } else {
-          temp = new ServerSocket(this._port,
-                                  loopback, // true = localhost, false = everybody
-                                  maxConnections);
-        }
+        var temp = new ServerSocket(this._port,
+                                    loopback, // true = localhost, false = everybody
+                                    maxConnections);
 
         var allowed = Services.io.allowPort(temp.port, "http");
         if (!allowed) {
@@ -531,12 +520,12 @@ nsHttpServer.prototype =
         throw new Error("No socket server available. Are there no available ports?");
       }
 
+      dumpn(">>> listening on port " + socket.port + ", " + maxConnections +
+            " pending connections");
       socket.asyncListen(this);
       this._port = socket.port;
       this._identity._initialize(socket.port, host, true);
       this._socket = socket;
-      dumpn(">>> listening on port " + socket.port + ", " + maxConnections +
-            " pending connections");
     } catch (e) {
       dump("\n!!! could not start server on port " + port + ": " + e + "\n\n");
       throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
@@ -987,13 +976,8 @@ ServerIdentity.prototype =
     this._defaultPort = port;
 
     // Only add this if we're being called at server startup
-    if (addSecondaryDefault && host != "127.0.0.1") {
-      if (host.includes(":")) {
-        this.add("http", "[::1]", port);
-      } else {
-        this.add("http", "127.0.0.1", port);
-      }
-    }
+    if (addSecondaryDefault && host != "127.0.0.1")
+      this.add("http", "127.0.0.1", port);
   },
 
   /**
@@ -1038,7 +1022,7 @@ ServerIdentity.prototype =
       dumpStack();
       throw Components.Exception("", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
-    if (!HOST_REGEX.test(host) && host != "[::1]") {
+    if (!HOST_REGEX.test(host)) {
       dumpn("*** unexpected host: '" + host + "'");
       throw Components.Exception("", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
@@ -1451,10 +1435,7 @@ RequestReader.prototype =
       if (!metadata._host) {
         var host, port;
         var hostPort = headers.getHeader("Host");
-        var colon = hostPort.lastIndexOf(":");
-        if (hostPort.lastIndexOf("]") > colon) {
-          colon = -1;
-        }
+        var colon = hostPort.indexOf(":");
         if (colon < 0) {
           host = hostPort;
           port = "";
@@ -1466,7 +1447,7 @@ RequestReader.prototype =
         // NB: We allow an empty port here because, oddly, a colon may be
         //     present even without a port number, e.g. "example.com:"; in this
         //     case the default port applies.
-        if ((!HOST_REGEX.test(host) && host != "[::1]") || !/^\d*$/.test(port)) {
+        if (!HOST_REGEX.test(host) || !/^\d*$/.test(port)) {
           dumpn("*** malformed hostname (" + hostPort + ") in Host " +
                 "header, 400 time");
           throw HTTP_400;

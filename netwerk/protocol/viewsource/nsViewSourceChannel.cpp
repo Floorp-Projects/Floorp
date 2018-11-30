@@ -1052,15 +1052,3 @@ const nsTArray<mozilla::Tuple<nsCString, nsCString>>
   }
   return mEmptyArray;
 }
-
-void nsViewSourceChannel::SetIPv4Disabled() {
-  if (mHttpChannelInternal) {
-    mHttpChannelInternal->SetIPv4Disabled();
-  }
-}
-
-void nsViewSourceChannel::SetIPv6Disabled() {
-  if (mHttpChannelInternal) {
-    mHttpChannelInternal->SetIPv6Disabled();
-  }
-}
