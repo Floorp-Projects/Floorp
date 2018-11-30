@@ -33,17 +33,6 @@ class mozTXTToHTMLConv : public mozITXTToHTMLConv {
   NS_DECL_NSISTREAMCONVERTER
 
   /**
-    see mozITXTToHTMLConv::ScanTXT
-   */
-  void ScanTXT(const char16_t* aInString, int32_t aInStringLength,
-               uint32_t whattodo, nsString& aOutString);
-
-  /**
-    see mozITXTToHTMLConv::ScanHTML. We will modify aInString potentially...
-   */
-  void ScanHTML(nsString& aInString, uint32_t whattodo, nsString& aOutString);
-
-  /**
     see mozITXTToHTMLConv::CiteLevelTXT
    */
   int32_t CiteLevelTXT(const char16_t* line, uint32_t& logLineStart);
@@ -112,7 +101,7 @@ class mozTXTToHTMLConv : public mozITXTToHTMLConv {
     @param inAttribute (in) - will escape quotes, too (which is
                               only needed for attribute values)
   */
-  void EscapeChar(const char16_t ch, nsString& aStringToAppendto,
+  void EscapeChar(const char16_t ch, nsAString& aStringToAppendto,
                   bool inAttribute);
 
   /**
@@ -248,7 +237,7 @@ class mozTXTToHTMLConv : public mozITXTToHTMLConv {
   bool StructPhraseHit(const char16_t* aInString, int32_t aInStringLength,
                        bool col0, const char16_t* tagTXT, int32_t aTagTxtLen,
                        const char* tagHTML, const char* attributeHTML,
-                       nsString& aOutputString, uint32_t& openTags);
+                       nsAString& aOutputString, uint32_t& openTags);
 
   /**
     @param text (in), col0 (in): see GlyphHit
@@ -278,7 +267,7 @@ class mozTXTToHTMLConv : public mozITXTToHTMLConv {
     @return see StructPhraseHit
   */
   bool GlyphHit(const char16_t* aInString, int32_t aInLength, bool col0,
-                nsString& aOutString, int32_t& glyphTextLen);
+                nsAString& aOutString, int32_t& glyphTextLen);
 
   /**
     Check if a given url should be linkified.
