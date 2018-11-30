@@ -1517,6 +1517,21 @@ devtools.webreplay:
     record_in_processes:
      - 'main'
 
+devtools.changesview:
+  opened_count:
+    bug_numbers:
+      - 1509890
+    description: >
+      Number of times the Changes panel has been opened.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 navigator.storage:
   estimate_count:
     bug_numbers:
