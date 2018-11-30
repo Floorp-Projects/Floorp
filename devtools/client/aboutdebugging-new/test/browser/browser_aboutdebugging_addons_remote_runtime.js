@@ -15,8 +15,6 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
 // Test that addons are displayed and updated for USB runtimes when expected.
 add_task(async function() {
   const mocks = new Mocks();
-  mocks.enableMocks();
-  registerCleanupFunction(() => mocks.disableMocks());
 
   const { document, tab } = await openAboutDebugging();
 

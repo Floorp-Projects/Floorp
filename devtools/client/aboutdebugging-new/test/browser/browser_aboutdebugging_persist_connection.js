@@ -13,8 +13,6 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
 // Test that remote runtime connections are persisted across about:debugging reloads.
 add_task(async function() {
   const mocks = new Mocks();
-  mocks.enableMocks();
-  registerCleanupFunction(() => mocks.disableMocks());
 
   let { document, tab } = await openAboutDebugging();
 
