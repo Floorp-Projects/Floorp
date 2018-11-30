@@ -555,12 +555,7 @@ class IToplevelProtocol : public IProtocol {
     return false;
   }
 
-  // This method is only used for collecting telemetry bits in various places,
-  // and we shouldn't pay the overhead of having it in protocol vtables when
-  // it's not being used.
-#ifdef EARLY_BETA_OR_EARLIER
   virtual void OnChannelReceivedMessage(const Message& aMsg) {}
-#endif
 
   bool IsMainThreadProtocol() const { return mIsMainThreadProtocol; }
   void SetIsMainThreadProtocol() { mIsMainThreadProtocol = NS_IsMainThread(); }
