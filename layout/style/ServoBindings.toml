@@ -401,6 +401,8 @@ cbindgen-types = [
     { gecko = "StyleUserSelect", servo = "values::computed::UserSelect" },
     { gecko = "StyleBreakBetween", servo = "values::computed::BreakBetween" },
     { gecko = "StyleBreakWithin", servo = "values::computed::BreakWithin" },
+    { gecko = "StyleBorderStyle", servo = "values::computed::BorderStyle" },
+    { gecko = "StyleOutlineStyle", servo = "values::computed::OutlineStyle" },
 ]
 
 mapped-generic-types = [

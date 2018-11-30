@@ -300,20 +300,6 @@ enum class StyleImageLayerRepeat : uint8_t {
 #define NS_STYLE_BORDER_COLLAPSE                0
 #define NS_STYLE_BORDER_SEPARATE                1
 
-enum class StyleBorderStyle : uint8_t {
-  None,
-  Groove,
-  Ridge,
-  Dotted,
-  Dashed,
-  Solid,
-  Double,
-  Inset,
-  Outset,
-  Hidden,
-  Auto,     // for outline-style only
-};
-
 // border-image-repeat
 enum class StyleBorderImageRepeat : uint8_t {
   Stretch,

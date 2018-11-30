@@ -289,10 +289,6 @@ private:
   already_AddRefed<CSSValue> DoGetVerticalAlign();
 
   /* Border Properties */
-  already_AddRefed<CSSValue> DoGetBorderTopStyle();
-  already_AddRefed<CSSValue> DoGetBorderBottomStyle();
-  already_AddRefed<CSSValue> DoGetBorderLeftStyle();
-  already_AddRefed<CSSValue> DoGetBorderRightStyle();
   already_AddRefed<CSSValue> DoGetBorderTopWidth();
   already_AddRefed<CSSValue> DoGetBorderBottomWidth();
   already_AddRefed<CSSValue> DoGetBorderLeftWidth();
@@ -318,7 +314,6 @@ private:
 
   /* Outline Properties */
   already_AddRefed<CSSValue> DoGetOutlineWidth();
-  already_AddRefed<CSSValue> DoGetOutlineStyle();
   already_AddRefed<CSSValue> DoGetOutlineRadiusBottomLeft();
   already_AddRefed<CSSValue> DoGetOutlineRadiusBottomRight();
   already_AddRefed<CSSValue> DoGetOutlineRadiusTopLeft();

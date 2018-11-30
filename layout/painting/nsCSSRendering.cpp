@@ -1153,8 +1153,8 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
   RectCornerRadii outlineRadii;
   ComputePixelRadii(twipsRadii, oneDevPixel, &outlineRadii);
 
-  StyleBorderStyle outlineStyle = ourOutline->mOutlineStyle;
-  if (outlineStyle == StyleBorderStyle::Auto) {
+  StyleBorderStyle outlineStyle;
+  if (ourOutline->mOutlineStyle.IsAuto()) {
     if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
       nsITheme* theme = aPresContext->GetTheme();
       if (theme && theme->ThemeSupportsWidget(
@@ -1173,6 +1173,9 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
     // http://dev.w3.org/csswg/css-ui/#outline
     // "User agents may treat 'auto' as 'solid'."
     outlineStyle = StyleBorderStyle::Solid;
+  } else {
+    MOZ_ASSERT(ourOutline->mOutlineStyle.IsBorderStyle());
+    outlineStyle = ourOutline->mOutlineStyle.border_style._0;
   }
 
   StyleBorderStyle outlineStyles[4] = {
@@ -4097,9 +4100,6 @@ nsCSSRendering::GetTableBorderSolidSegments(
   case StyleBorderStyle::Outset:
   case StyleBorderStyle::Inset:
     MOZ_ASSERT_UNREACHABLE("inset, outset should have been converted to groove, ridge");
-    break;
-  case StyleBorderStyle::Auto:
-    MOZ_ASSERT_UNREACHABLE("Unexpected 'auto' table border");
     break;
   }
 }

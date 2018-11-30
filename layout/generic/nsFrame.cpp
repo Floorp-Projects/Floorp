@@ -9466,7 +9466,7 @@ ComputeAndIncludeOutlineArea(nsIFrame* aFrame, nsOverflowAreas& aOverflowAreas,
   nsRect outerRect(innerRect);
   bool useOutlineAuto = false;
   if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
-    useOutlineAuto = outline->mOutlineStyle == StyleBorderStyle::Auto;
+    useOutlineAuto = outline->mOutlineStyle.IsAuto();
     if (MOZ_UNLIKELY(useOutlineAuto)) {
       nsPresContext* presContext = aFrame->PresContext();
       nsITheme* theme = presContext->GetTheme();
