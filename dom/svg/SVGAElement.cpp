@@ -231,8 +231,8 @@ SVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
 void
 SVGAElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  // Without removing the link state we risk a dangling pointer
-  // in the mStyledLinks hashtable
+  // If this link is ever reinserted into a document, it might
+  // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
 
   SVGAElementBase::UnbindFromTree(aDeep, aNullParent);
