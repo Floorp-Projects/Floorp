@@ -350,7 +350,7 @@ android-x86-kvm-tests:
     # - reftest
     # - test-verify
     - web-platform-tests
-    # - web-platform-tests-reftests
+    - web-platform-tests-reftests
     # - web-platform-tests-wdspec
 
 android-ccov-tests:
