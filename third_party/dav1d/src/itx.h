@@ -28,8 +28,6 @@
 #ifndef __DAV1D_SRC_ITX_H__
 #define __DAV1D_SRC_ITX_H__
 
-#include <stddef.h>
-
 #include "common/bitdepth.h"
 
 #include "src/levels.h"
