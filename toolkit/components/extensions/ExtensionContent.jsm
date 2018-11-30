@@ -724,6 +724,8 @@ class UserScript extends Script {
         return wrapUserScriptAPIMethod(userScriptAPIs[key], key);
       });
     }
+
+    context.userScriptsEvents.emit("on-before-script", clonedMetadata, userScriptScope);
   }
 }
 
@@ -853,6 +855,11 @@ class ContentScriptContextChild extends BaseContext {
     // (e.g. because there are more then one UserScripts that match the related webpage
     // and so the UserScript apiScript has already been executed).
     this.hasUserScriptAPIs = false;
+
+    // A lazy created EventEmitter related to userScripts-specific events.
+    defineLazyGetter(this, "userScriptsEvents", () => {
+      return new ExtensionCommon.EventEmitter();
+    });
   }
 
   injectAPI() {
