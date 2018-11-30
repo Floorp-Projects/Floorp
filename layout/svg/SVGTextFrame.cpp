@@ -2926,7 +2926,7 @@ SVGTextDrawPathCallbacks::SetupContext()
   // seem to do anything with the antialias mode.  So we can perhaps remove it,
   // or make SetAntialiasMode set cairo text antialiasing too.
   switch (mFrame->StyleText()->mTextRendering) {
-  case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
+  case StyleTextRendering::Optimizespeed:
     mContext.SetAntialiasMode(AntialiasMode::NONE);
     break;
   default:
@@ -5550,7 +5550,7 @@ SVGTextFrame::UpdateFontSizeScaleFactor()
       // Unfortunately we can't treat text-rendering:geometricPrecision
       // separately for each text frame.
       geometricPrecision = f->StyleText()->mTextRendering ==
-                             NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION;
+                             StyleTextRendering::Geometricprecision;
     }
     nscoord size = f->StyleFont()->mFont.size;
     if (size) {

@@ -976,10 +976,12 @@ enum class StyleWhiteSpace : uint8_t {
 #define NS_STYLE_TEXT_EMPHASIS_STYLE_STRING         255
 
 // text-rendering
-#define NS_STYLE_TEXT_RENDERING_AUTO               0
-#define NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED      1
-#define NS_STYLE_TEXT_RENDERING_OPTIMIZELEGIBILITY 2
-#define NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION 3
+enum class StyleTextRendering : uint8_t {
+  Auto,
+  Optimizespeed,
+  Optimizelegibility,
+  Geometricprecision,
+};
 
 // color-adjust
 #define NS_STYLE_COLOR_ADJUST_ECONOMY               0
