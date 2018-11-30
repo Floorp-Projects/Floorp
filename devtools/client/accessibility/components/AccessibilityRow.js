@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* global gToolbox, EVENTS */
+/* global gTelemetry, gToolbox, EVENTS */
 
 // React & Redux
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
@@ -29,6 +29,11 @@ loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
 
 const JSON_URL_PREFIX = "data:application/json;charset=UTF-8,";
+
+const TELEMETRY_ACCESSIBLE_CONTEXT_MENU_OPENED =
+  "devtools.accessibility.accessible_context_menu_opened";
+const TELEMETRY_ACCESSIBLE_CONTEXT_MENU_ITEM_ACTIVATED =
+  "devtools.accessibility.accessible_context_menu_item_activated";
 
 class HighlightableTreeRowClass extends TreeRow {
   shouldComponentUpdate(nextProps) {
@@ -153,6 +158,11 @@ class AccessibilityRow extends Component {
       return;
     }
 
+    if (gTelemetry) {
+      gTelemetry.keyedScalarAdd(TELEMETRY_ACCESSIBLE_CONTEXT_MENU_ITEM_ACTIVATED,
+                                "print-to-json", 1);
+    }
+
     const snapshot = await member.object.snapshot();
     openDocLink(`${JSON_URL_PREFIX}${encodeURIComponent(JSON.stringify(snapshot))}`);
   }
@@ -177,6 +187,10 @@ class AccessibilityRow extends Component {
     }
 
     menu.popup(e.screenX, e.screenY, gToolbox);
+
+    if (gTelemetry) {
+      gTelemetry.scalarAdd(TELEMETRY_ACCESSIBLE_CONTEXT_MENU_OPENED, 1);
+    }
   }
 
   get hasContextMenu() {
