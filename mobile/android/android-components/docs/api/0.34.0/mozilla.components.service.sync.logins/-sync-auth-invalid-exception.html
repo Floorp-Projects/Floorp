@@ -1,0 +1,17 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SyncAuthInvalidException - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="index.html">mozilla.components.service.sync.logins</a>&nbsp;/&nbsp;<a href="./-sync-auth-invalid-exception.html">SyncAuthInvalidException</a><br/>
+<br/>
+<h1>SyncAuthInvalidException</h1>
+<code><span class="keyword">typealias </span><span class="identifier">SyncAuthInvalidException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">SyncAuthInvalidException</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L50">(source)</a>
+<p>This indicates that the authentication information (e.g. the <a href="-sync-unlock-info.html">SyncUnlockInfo</a>)
+provided to <a href="-async-logins-storage/sync.html">AsyncLoginsStorage.sync</a> is invalid. This often indicates that it's
+stale and should be refreshed with FxA (however, care should be taken not to
+get into a loop refreshing this information).</p>
+</BODY>
+</HTML>

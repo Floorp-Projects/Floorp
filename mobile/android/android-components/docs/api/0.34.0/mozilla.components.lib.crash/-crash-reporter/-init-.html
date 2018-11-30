@@ -1,0 +1,24 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>CrashReporter.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.crash</a>&nbsp;/&nbsp;<a href="index.html">CrashReporter</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.lib.crash.CrashReporter$&lt;init&gt;(kotlin.collections.List((mozilla.components.lib.crash.service.CrashReporterService)), mozilla.components.lib.crash.CrashReporter.Prompt, kotlin.Boolean, mozilla.components.lib.crash.CrashReporter.PromptConfiguration, android.app.PendingIntent)"></a>
+<code><span class="identifier">CrashReporter</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.crash.CrashReporter$<init>(kotlin.collections.List((mozilla.components.lib.crash.service.CrashReporterService)), mozilla.components.lib.crash.CrashReporter.Prompt, kotlin.Boolean, mozilla.components.lib.crash.CrashReporter.PromptConfiguration, android.app.PendingIntent)/services">services</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.lib.crash.service/-crash-reporter-service/index.html"><span class="identifier">CrashReporterService</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.crash.CrashReporter$<init>(kotlin.collections.List((mozilla.components.lib.crash.service.CrashReporterService)), mozilla.components.lib.crash.CrashReporter.Prompt, kotlin.Boolean, mozilla.components.lib.crash.CrashReporter.PromptConfiguration, android.app.PendingIntent)/shouldPrompt">shouldPrompt</span><span class="symbol">:</span>&nbsp;<a href="-prompt/index.html"><span class="identifier">Prompt</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Prompt.NEVER<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.crash.CrashReporter$<init>(kotlin.collections.List((mozilla.components.lib.crash.service.CrashReporterService)), mozilla.components.lib.crash.CrashReporter.Prompt, kotlin.Boolean, mozilla.components.lib.crash.CrashReporter.PromptConfiguration, android.app.PendingIntent)/enabled">enabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.crash.CrashReporter$<init>(kotlin.collections.List((mozilla.components.lib.crash.service.CrashReporterService)), mozilla.components.lib.crash.CrashReporter.Prompt, kotlin.Boolean, mozilla.components.lib.crash.CrashReporter.PromptConfiguration, android.app.PendingIntent)/promptConfiguration">promptConfiguration</span><span class="symbol">:</span>&nbsp;<a href="-prompt-configuration/index.html"><span class="identifier">PromptConfiguration</span></a>&nbsp;<span class="symbol">=</span>&nbsp;PromptConfiguration()<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.crash.CrashReporter$<init>(kotlin.collections.List((mozilla.components.lib.crash.service.CrashReporterService)), mozilla.components.lib.crash.CrashReporter.Prompt, kotlin.Boolean, mozilla.components.lib.crash.CrashReporter.PromptConfiguration, android.app.PendingIntent)/nonFatalCrashIntent">nonFatalCrashIntent</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/app/PendingIntent.html"><span class="identifier">PendingIntent</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code>
+<p>A generic crash reporter that can report crashes to multiple services.</p>
+<p>In the <code>onCreate()</code> method of your Application class create a <code>CrashReporter</code> instance and call <code>install()</code>:</p>
+<pre><code class="lang-Kotlin">CrashReporter(
+  services = listOf(
+    // List the crash reporting services you want to use
+  )
+).install(this)
+</code></pre>
+<p>With this minimal setup the crash reporting library will capture "uncaught exception" crashes and "native code"
+crashes and forward them to the configured crash reporting services.</p>
+</BODY>
+</HTML>
