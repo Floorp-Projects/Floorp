@@ -775,6 +775,13 @@ test(() => {
 }, 'ReadableStream: desiredSize when errored');
 
 test(() => {
+   class Extended extends ReadableStream {
+     newMethod() { return 'foo' };
+   };
+   assert_equals((new Extended()).newMethod(), 'foo');
+}, 'ReadableStream: ReadableStream is extendable');
+
+test(() => {
 
   let startCalled = false;
   new ReadableStream({
