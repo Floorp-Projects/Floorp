@@ -162,6 +162,9 @@ startup-restore-previous-session =
     .label = Restore previous session
     .accesskey = s
 
+startup-restore-warn-on-quit =
+    .label = Warn you when quitting the browser
+
 disable-extension =
     .label = Disable Extension
 

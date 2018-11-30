@@ -2661,7 +2661,7 @@ window._gBrowser = {
     }
   },
 
-  warnAboutClosingTabs(tabsToClose, aCloseTabs, aOptionalMessage) {
+  warnAboutClosingTabs(tabsToClose, aCloseTabs) {
     if (tabsToClose <= 1)
       return true;
 
@@ -2682,24 +2682,20 @@ window._gBrowser = {
     // solve the problem of windows "obscuring" the prompt.
     // see bug #350299 for more details
     window.focus();
-    var warningMessage;
-    if (aOptionalMessage) {
-      warningMessage = aOptionalMessage;
-    } else {
-      warningMessage =
-        PluralForm.get(tabsToClose, gTabBrowserBundle.GetStringFromName("tabs.closeWarningMultiple"))
-          .replace("#1", tabsToClose);
-    }
+    let warningMessage = gTabBrowserBundle.GetStringFromName("tabs.closeWarningMultiple");
+    warningMessage = PluralForm.get(tabsToClose, warningMessage).replace("#1", tabsToClose);
+    let flags = (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0) +
+      (ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1);
+    let checkboxLabel = aCloseTabs == this.closingTabsEnum.ALL ?
+      gTabBrowserBundle.GetStringFromName("tabs.closeWarningPromptMe") : null;
     var buttonPressed =
       ps.confirmEx(window,
-        gTabBrowserBundle.GetStringFromName("tabs.closeWarningTitle"),
+        gTabBrowserBundle.GetStringFromName("tabs.closeTitleTabs"),
         warningMessage,
-        (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0) +
-        (ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1),
+        flags,
         gTabBrowserBundle.GetStringFromName("tabs.closeButtonMultiple"),
         null, null,
-        aCloseTabs == this.closingTabsEnum.ALL ?
-        gTabBrowserBundle.GetStringFromName("tabs.closeWarningPromptMe") : null,
+        checkboxLabel,
         warnOnClose);
     var reallyClose = (buttonPressed == 0);
 
