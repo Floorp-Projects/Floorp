@@ -38,19 +38,16 @@ add_task(async function() {
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
 
-  for (const {selector, expectedGridTemplate} of TEST_DATA) {
+  for (const { selector, expectedGridTemplate } of TEST_DATA) {
     info(`Checking the grid template for the flex item outline for ${selector}`);
 
-    const flexOutline = await selectNodeAndGetFlexOutline(selector, inspector, doc);
+    await selectNode(selector, inspector);
+    await waitUntil(() => {
+      const flexOutline = doc.querySelector(".flex-outline");
+      return flexOutline &&
+             flexOutline.style.gridTemplateColumns === expectedGridTemplate;
+    });
 
-    is(flexOutline.style.gridTemplateColumns, expectedGridTemplate,
-       "Grid template is correct");
+    ok(true, "Grid template is correct");
   }
 });
-
-async function selectNodeAndGetFlexOutline(selector, inspector, doc) {
-  const onFlexItemOutlineRendered = waitForDOM(doc, ".flex-outline");
-  await selectNode(selector, inspector);
-  const [flexOutlineContainer] = await onFlexItemOutlineRendered;
-  return flexOutlineContainer;
-}
