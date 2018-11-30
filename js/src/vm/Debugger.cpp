@@ -5668,6 +5668,7 @@ Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+    JS::AutoSuppressWarningReporter suppressWarnings(cx);
     frontend::Parser<frontend::FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(),
                                                                   options, chars.twoByteChars(),
                                                                   length,
@@ -5675,12 +5676,10 @@ Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
                                                                   usedNames, nullptr, nullptr,
                                                                   sourceObject,
                                                                   frontend::ParseGoal::Script);
-    JS::WarningReporter older = JS::SetWarningReporter(cx, nullptr);
     if (!parser.checkOptions() || !parser.parse()) {
         // We ran into an error. If it was because we ran out of memory we report
         // it in the usual way.
         if (cx->isThrowingOutOfMemory()) {
-            JS::SetWarningReporter(cx, older);
             return false;
         }
 
@@ -5692,7 +5691,7 @@ Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
 
         cx->clearPendingException();
     }
-    JS::SetWarningReporter(cx, older);
+
     args.rval().setBoolean(result);
     return true;
 }

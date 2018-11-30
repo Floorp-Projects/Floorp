@@ -342,17 +342,15 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
 
         JS::Rooted<JSScript*> script(cx);
         if (JS::CompileUtf8(cx, options, buffer, strlen(buffer), &script)) {
-            JS::WarningReporter older;
 
             ok = JS_ExecuteScript(cx, script, &result);
             if (ok && !result.isUndefined()) {
                 /* Suppress warnings from JS::ToString(). */
-                older = JS::SetWarningReporter(cx, nullptr);
+                JS::AutoSuppressWarningReporter suppressWarnings(cx);
                 str = JS::ToString(cx, result);
                 JS::UniqueChars bytes;
                 if (str)
                     bytes = JS_EncodeStringToLatin1(cx, str);
-                JS::SetWarningReporter(cx, older);
 
                 if (!!bytes)
                     fprintf(stdout, "%s\n", bytes.get());
@@ -512,12 +510,12 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   JS::Rooted<JS::Value> result(cx);
   bool ok = JS_ExecuteScript(cx, script, &result);
   if (ok && !result.isUndefined()) {
-      JS::WarningReporter old = JS::SetWarningReporter(cx, nullptr);
+      /* Suppress warnings from JS::ToString(). */
+      JS::AutoSuppressWarningReporter suppressWarnings(cx);
       JSString* str = JS::ToString(cx, result);
       nsAutoJSString autoStr;
       if (str)
           autoStr.init(cx, str);
-      JS::SetWarningReporter(cx, old);
 
       if (!autoStr.IsEmpty() && aResult) {
           aResult->Assign(autoStr);
