@@ -9,33 +9,29 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="resources/webperftestharness.js"></script>
 <script src="resources/webperftestharnessextension.js"></script>
+<script src="resources/append.js"></script>
 </head>
-<body onload=onload_test()>
+<body>
 <script>
     const context = new PerformanceContext(performance);
-    const bufferSize = 5;
+    const t = async_test("Verify that resourcetimingbufferfull is properly invoked");
+    performance.clearResourceTimings();
+    let bufferSize = 2;
     context.setResourceTimingBufferSize(bufferSize);
     let bufferFullCount = 0;
-    function buffer_full_callback() {
+    function buffer_full_callback(e) {
+        assert_equals(e.bubbles, false, "Event bubbles attribute is false");
         bufferFullCount++;
     }
-    context.registerResourceTimingBufferFullCallback(buffer_full_callback);
+    context.registerResourceTimingBufferFullCallback(t.step_func(buffer_full_callback));
     // Scripts appended in JS to ensure setResourceTimingBufferSize is called before.
-    function appendScript(src) {
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = src;
-        document.body.appendChild(script);
-    }
     appendScript('resources/empty.js');
     appendScript('resources/empty_script.js');
     appendScript('resources/resource_timing_test0.js');
-    setup({ explicit_done: true });
-    function onload_test() {
-        test_equals(context.getEntriesByType('resource').length, bufferSize, 'There should only be |bufferSize| resource entries.');
-        test_equals(bufferFullCount, 1, 'onresourcetimingbufferfull should have been invoked once buffer is full.');
-        done();
-    }
+    window.onload = t.step_func_done(()=>{
+        assert_equals(context.getEntriesByType('resource').length, bufferSize, 'There should only be |bufferSize| resource entries.');
+        assert_equals(bufferFullCount, 1, 'onresourcetimingbufferfull should have been invoked once.');
+    });
 </script>
 </body>
 </html>
