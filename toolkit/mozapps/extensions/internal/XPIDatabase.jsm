@@ -47,14 +47,12 @@ const {nsIBlocklistService} = Ci;
  *         BOOTSTRAP_REASONS,
  *         DB_SCHEMA,
  *         XPIStates,
- *         isWebExtension,
  */
 
 for (let sym of [
   "BOOTSTRAP_REASONS",
   "DB_SCHEMA",
   "XPIStates",
-  "isWebExtension",
 ]) {
   XPCOMUtils.defineLazyGetter(this, sym, () => XPIInternal[sym]);
 }
@@ -97,15 +95,9 @@ const PENDING_INSTALL_METADATA =
      "updateDate", "applyBackgroundUpdates", "compatibilityOverrides",
      "installTelemetryInfo"];
 
-const COMPATIBLE_BY_DEFAULT_TYPES = {
-  extension: true,
-  dictionary: true,
-  "webextension-dictionary": true,
-};
-
 // Properties to save in JSON file
 const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
-                          "updateURL", "optionsURL",
+                          "loader", "updateURL", "optionsURL",
                           "optionsType", "optionsBrowserStyle", "aboutURL",
                           "defaultLocale", "visible", "active", "userDisabled",
                           "appDisabled", "pendingUninstall", "installDate",
@@ -123,20 +115,10 @@ const LEGACY_TYPES = new Set([
   "extension",
 ]);
 
-// Some add-on types that we track internally are presented as other types
-// externally
-const TYPE_ALIASES = {
-  "webextension": "extension",
-  "webextension-dictionary": "dictionary",
-  "webextension-langpack": "locale",
-  "webextension-theme": "theme",
-};
-
 const SIGNED_TYPES = new Set([
   "extension",
-  "webextension",
-  "webextension-langpack",
-  "webextension-theme",
+  "locale",
+  "theme",
 ]);
 
 // Time to wait before async save of XPI JSON database, in milliseconds
@@ -195,46 +177,6 @@ async function getRepositoryAddon(aAddon) {
     aAddon._repositoryAddon = await AddonRepository.getCachedAddonByID(aAddon.id);
   }
   return aAddon;
-}
-
-/**
- * Helper function that determines whether an addon of a certain type is a
- * theme.
- *
- * @param {string} type
- *        The add-on type to check.
- * @returns {boolean}
- */
-function isTheme(type) {
-  return type == "theme" || TYPE_ALIASES[type] == "theme";
-}
-
-/**
- * Converts a list of API types to a list of API types and any aliases for those
- * types.
- *
- * @param {Array<string>?} aTypes
- *        An array of types or null for all types
- * @returns {Set<string>?}
- *        An set of types or null for all types
- */
-function getAllAliasesForTypes(aTypes) {
-  if (!aTypes)
-    return null;
-
-  let types = new Set(aTypes);
-  for (let [alias, type] of Object.entries(TYPE_ALIASES)) {
-    // Add any alias for the internal type
-    if (types.has(type)) {
-      types.add(alias);
-    } else {
-      // If this internal type was explicitly requested and its external
-      // type wasn't, ignore it.
-      types.delete(alias);
-    }
-  }
-
-  return types;
 }
 
 /**
@@ -332,6 +274,10 @@ class AddonInternal {
   addedToDatabase() {
     this._key = `${this.location.name}:${this.id}`;
     this.inDatabase = true;
+  }
+
+  get isWebExtension() {
+    return this.loader == null;
   }
 
   get selectedLocale() {
@@ -494,10 +440,8 @@ class AddonInternal {
     // Only extensions and dictionaries can be compatible by default; themes
     // and language packs always use strict compatibility checking.
     // Dictionaries are compatible by default unless requested by the dictinary.
-    if (this.type in COMPATIBLE_BY_DEFAULT_TYPES &&
-        !this.strictCompatibility &&
-        (!AddonManager.strictCompatibility ||
-         this.type == "webextension-dictionary")) {
+    if (!this.strictCompatibility &&
+        (!AddonManager.strictCompatibility || this.type == "dictionary")) {
 
       // The repository can specify compatibility overrides.
       // Note: For now, only blacklisting is supported by overrides.
@@ -727,14 +671,6 @@ AddonWrapper = class {
     }
 
     return addon.installTelemetryInfo;
-  }
-
-  get type() {
-    return XPIDatabase.getExternalType(addonFor(this).type);
-  }
-
-  get isWebExtension() {
-    return isWebExtension(addonFor(this).type);
   }
 
   get temporarilyInstalled() {
@@ -987,8 +923,8 @@ AddonWrapper = class {
 
     if (addon.inDatabase) {
       // When softDisabling a theme just enable the active theme
-      if (isTheme(addon.type) && val && !addon.userDisabled) {
-        if (isWebExtension(addon.type))
+      if (addon.type === "theme" && val && !addon.userDisabled) {
+        if (addon.isWebExtension)
           XPIDatabase.updateAddonDisabledState(addon, undefined, val);
       } else {
         XPIDatabase.updateAddonDisabledState(addon, undefined, val);
@@ -1111,7 +1047,8 @@ function defineAddonWrapperProperty(name, getter) {
   });
 }
 
-["id", "syncGUID", "version", "isCompatible", "isPlatformCompatible",
+["id", "syncGUID", "version", "type", "isWebExtension",
+ "isCompatible", "isPlatformCompatible",
  "providesUpdatesSecurely", "blocklistState", "appDisabled",
  "softDisabled", "skinnable", "foreignInstall",
  "strictCompatibility", "updateURL", "dependencies",
@@ -1378,7 +1315,42 @@ this.XPIDatabase = {
         throw error;
       }
 
-      if (inputAddons.schemaVersion != DB_SCHEMA) {
+      if (inputAddons.schemaVersion == 27) {
+        // Types were translated in bug 857456.
+        for (let addon of inputAddons.addons) {
+          switch (addon.type) {
+            case "extension":
+            case "dictionary":
+            case "locale":
+            case "theme":
+              addon.loader = "bootstrap";
+              break;
+
+            case "webbextension":
+              addon.type = "extension";
+              addon.loader = null;
+              break;
+
+            case "webextension-dictionary":
+              addon.type = "dictionary";
+              addon.loader = null;
+              break;
+
+            case "webextension-langpack":
+              addon.type = "locale";
+              addon.loader = null;
+              break;
+
+            case "webextension-theme":
+              addon.type = "theme";
+              addon.loader = null;
+              break;
+
+            default:
+              logger.warn(`Not converting unknown addon type ${addon.type}`);
+          }
+        }
+      } else if (inputAddons.schemaVersion != DB_SCHEMA) {
         // For now, we assume compatibility for JSON data with a
         // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
@@ -1622,10 +1594,10 @@ this.XPIDatabase = {
    */
   async addonChanged(aId, aType) {
     // We only care about themes in this provider
-    if (!isTheme(aType))
+    if (aType !== "theme")
       return;
 
-    let addons = this.getAddonsByType("webextension-theme");
+    let addons = this.getAddonsByType("theme");
     for (let theme of addons) {
       if (theme.visible && theme.id != aId)
         await this.updateAddonDisabledState(theme, true, undefined, true);
@@ -1642,21 +1614,6 @@ this.XPIDatabase = {
     }
   },
 
-  /**
-   * Converts an internal add-on type to the type presented through the API.
-   *
-   * @param {string} aType
-   *        The internal add-on type
-   * @returns {string}
-   *        An external add-on type
-   */
-  getExternalType(aType) {
-    if (aType in TYPE_ALIASES)
-      return TYPE_ALIASES[aType];
-    return aType;
-  },
-
-  isTheme,
   SIGNED_TYPES,
 
   /**
@@ -1830,7 +1787,7 @@ this.XPIDatabase = {
    * @returns {Addon[]}
    */
   async getAddonsByTypes(aTypes) {
-    let addons = await this.getVisibleAddons(getAllAliasesForTypes(aTypes));
+    let addons = await this.getVisibleAddons(aTypes ? new Set(aTypes) : null);
     return addons.map(a => a.wrapper);
   },
 
@@ -1845,7 +1802,7 @@ this.XPIDatabase = {
     if (!SIGNED_TYPES.has(aType))
       return false;
 
-    if (aType == "webextension-langpack") {
+    if (aType == "locale") {
       return AddonSettings.LANGPACKS_REQUIRE_SIGNING;
     }
 
@@ -1861,6 +1818,7 @@ this.XPIDatabase = {
    */
   isDisabledLegacy(addon) {
     return (!AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
+            !addon.isWebExtension &&
             LEGACY_TYPES.has(addon.type) &&
 
             // Legacy add-ons are allowed in the system location.
@@ -2243,7 +2201,7 @@ this.XPIDatabase = {
     }
 
     // Notify any other providers that a new theme has been enabled
-    if (isTheme(aAddon.type)) {
+    if (aAddon.type === "theme") {
       if (!isDisabled) {
         AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
         this.updateXPIStates(aAddon);
@@ -2895,7 +2853,7 @@ this.XPIDatabaseReconcile = {
     } else if (xpiState && xpiState.wasRestored) {
       isActive = xpiState.enabled;
 
-      if (currentAddon.type == "webextension-theme")
+      if (currentAddon.isWebExtension && currentAddon.type == "theme")
         currentAddon.userDisabled = !isActive;
 
       // If the add-on wasn't active and it isn't already disabled in some way

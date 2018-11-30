@@ -749,7 +749,7 @@ ElementEditor.prototype = {
       this.stopTrackingFlexboxHighlighterEvents();
 
       this._displayBadge.classList.toggle("active");
-      await this.highlighters.toggleFlexboxHighlighter(this.node);
+      await this.highlighters.toggleFlexboxHighlighter(this.node, "markup");
 
       this.startTrackingFlexboxHighlighterEvents();
     }

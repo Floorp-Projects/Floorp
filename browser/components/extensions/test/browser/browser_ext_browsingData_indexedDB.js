@@ -53,6 +53,9 @@ add_task(async function testIndexedDB() {
       let origins = [];
       Services.qms.getUsage(request => {
         for (let i = 0; i < request.result.length; ++i) {
+          if (request.result[i].usage === 0) {
+            continue;
+          }
           if (request.result[i].origin.startsWith("http://mochi.test") ||
               request.result[i].origin.startsWith("http://example.com")) {
             origins.push(request.result[i].origin);

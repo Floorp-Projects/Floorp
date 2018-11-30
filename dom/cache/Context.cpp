@@ -435,6 +435,7 @@ Context::QuotaInitRunnable::Run()
                                                   mQuotaInfo.mSuffix,
                                                   mQuotaInfo.mGroup,
                                                   mQuotaInfo.mOrigin,
+                                                  /* aCreateIfNotExists */ true,
                                                   getter_AddRefs(mQuotaInfo.mDir));
       if (NS_FAILED(rv)) {
         resolver->Resolve(rv);
