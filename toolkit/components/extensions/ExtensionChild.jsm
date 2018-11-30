@@ -46,7 +46,6 @@ ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
   DefaultMap,
-  ExtensionError,
   LimitedSet,
   getMessageManager,
   getUniqueId,
@@ -934,7 +933,6 @@ class ChildAPIManager {
 
     MessageChannel.addListener(messageManager, "API:RunListener", this);
     messageManager.addMessageListener("API:CallResult", this);
-    messageManager.addMessageListener("API:AddListenerResult", this);
 
     this.messageFilterStrict = {childId: this.id};
 
@@ -1017,15 +1015,6 @@ class ChildAPIManager {
         }
         this.callPromises.delete(data.callId);
         break;
-
-      case "API:AddListenerResult":
-        if ("error" in data) {
-          let listenerMap = this.listeners.get(data.path);
-          listenerMap.ids.delete(data.listenerId);
-
-          Promise.reject(new ExtensionError(data.error.message));
-        }
-        break;
     }
   }
 
@@ -1097,7 +1086,6 @@ class ChildAPIManager {
   close() {
     this.messageManager.sendAsyncMessage("API:CloseProxyContext", {childId: this.id});
     this.messageManager.removeMessageListener("API:CallResult", this);
-    this.messageManager.removeMessageListener("API:AddListenerResult", this);
     MessageChannel.removeListener(this.messageManager, "API:RunListener", this);
 
     if (this.updatePermissions) {
