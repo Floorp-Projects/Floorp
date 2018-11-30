@@ -127,6 +127,31 @@ function run_test() {
     }
   ];
 
+  const scanTXTglyph = [
+    // Some "glyph" testing (not exhaustive, the system supports 16 different
+    // smiley types).
+    {
+      input: "this is superscript: x^2",
+      results: ["<sup", "2", "</sup>"]
+    },
+    {
+      input: "this is plus-minus: +/-",
+      results: ["&plusmn;"]
+    },
+    {
+      input: "this is a smiley :)",
+      results: ["moz-smiley-s1"]
+    },
+    {
+      input: "this is a smiley :-)",
+      results: ["moz-smiley-s1"]
+    },
+    {
+      input: "this is a smiley :-(",
+      results: ["moz-smiley-s2"]
+    },
+  ];
+
   const scanHTMLtests = [
     {
       input: "http://foo.example.com",
@@ -193,6 +218,15 @@ function run_test() {
     if (!output.includes(link))
       do_throw("Unexpected conversion by scanTXT: input=" + t.input +
                ", output=" + output + ", link=" + link);
+  }
+
+  for (let i = 0; i < scanTXTglyph.length; i++) {
+    let t = scanTXTglyph[i];
+    let output = converter.scanTXT(t.input, Ci.mozITXTToHTMLConv.kGlyphSubstitution);
+    for (let j = 0; j < t.results.length; j++)
+      if (!output.includes(t.results[j]))
+        do_throw("Unexpected conversion by scanTXT: input=" + t.input +
+                 ", output=" + output + ", expected=" + t.results[j]);
   }
 
   for (let i = 0; i < scanHTMLtests.length; i++) {
