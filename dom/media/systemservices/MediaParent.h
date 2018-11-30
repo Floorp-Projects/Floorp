@@ -67,8 +67,6 @@ class Parent : public RefCountedParent, public Super {
 
   RefPtr<OriginKeyStore> mOriginKeyStore;
   bool mDestroyed;
-
-  CoatCheck<Pledge<nsCString>> mOutstandingPledges;
 };
 
 template <class Parent>
