@@ -23,8 +23,6 @@ add_task(async function() {
 add_task(async function() {
   // enable USB devices mocks
   const mocks = new Mocks();
-  mocks.enableMocks();
-  registerCleanupFunction(() => mocks.disableMocks());
 
   const { document, tab } = await openAboutDebugging();
 
