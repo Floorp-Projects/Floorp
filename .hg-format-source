@@ -1,4 +1,3 @@
-
 {"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:uriloader/**", "tool": "clang-format"}
 {"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:media/**", "tool": "clang-format"}
 {"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:docshell/**", "tool": "clang-format"}
