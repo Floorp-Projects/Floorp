@@ -341,6 +341,8 @@ bool nsContentUtils::sFragmentParsingActive = false;
 
 bool nsContentUtils::sDoNotTrackEnabled = false;
 
+bool nsContentUtils::sAntiTrackingControlCenterUIEnabled = false;
+
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
 
 PopupControlState nsContentUtils::sPopupControlState = openAbused;
@@ -732,6 +734,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sDisablePopups,
                                "dom.disable_open_during_load", false);
+
+  Preferences::AddBoolVarCache(&sAntiTrackingControlCenterUIEnabled,
+                               "browser.contentblocking.rejecttrackers.control-center.ui.enabled", false);
 
   Preferences::AddIntVarCache(&sBytecodeCacheStrategy,
                               "dom.script_loader.bytecode_cache.strategy", 0);
@@ -9110,18 +9115,20 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   bool disabled =
     StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aPrincipal, aURI,
                                           &rejectedReason);
-  if (aWindow) {
-    AntiTrackingCommon::NotifyBlockingDecision(aWindow,
-                                               disabled ?
-                                                 AntiTrackingCommon::BlockingDecision::eBlock :
-                                                 AntiTrackingCommon::BlockingDecision::eAllow,
-                                               rejectedReason);
-  } else if (aChannel) {
-    AntiTrackingCommon::NotifyBlockingDecision(aChannel,
-                                               disabled ?
-                                                 AntiTrackingCommon::BlockingDecision::eBlock :
-                                                 AntiTrackingCommon::BlockingDecision::eAllow,
-                                               rejectedReason);
+  if (sAntiTrackingControlCenterUIEnabled) {
+    if (aWindow) {
+      AntiTrackingCommon::NotifyBlockingDecision(aWindow,
+                                                 disabled ?
+                                                   AntiTrackingCommon::BlockingDecision::eBlock :
+                                                   AntiTrackingCommon::BlockingDecision::eAllow,
+                                                 rejectedReason);
+    } else if (aChannel) {
+      AntiTrackingCommon::NotifyBlockingDecision(aChannel,
+                                                 disabled ?
+                                                   AntiTrackingCommon::BlockingDecision::eBlock :
+                                                   AntiTrackingCommon::BlockingDecision::eAllow,
+                                                 rejectedReason);
+    }
   }
   return disabled;
 }
