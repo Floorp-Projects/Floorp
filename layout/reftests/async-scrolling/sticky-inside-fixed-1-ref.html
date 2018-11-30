@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testcase for Bug 1501342</title>
+  <style>
+    .panel {
+      height:100%;
+      overflow:hidden;
+      position:fixed;
+      right:0;
+    }
+    .scrollable {
+      height:100%;
+      overflow-y:hidden;
+    }
+    .sticky {
+      position:sticky;
+      top:0;
+      height: 50px;
+      width: 100px;
+      background: red;
+    }
+    .content {
+      margin-top: -50px;
+      height:2000px;
+      width:200px;
+      background:green;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <div class="scrollable">
+      <div class="sticky"></div>
+      <div class="content"></div>
+    </div>
+  </div>
+</body>
+</html>
