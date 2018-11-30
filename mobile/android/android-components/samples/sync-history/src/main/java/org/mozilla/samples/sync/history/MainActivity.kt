@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
                     if (historySyncStatus is SyncError) {
                         txtView.text = getString(R.string.sync_error, historySyncStatus.exception)
                     } else {
-                        val visitedCount = historyStorage.getVisited().await().size
+                        val visitedCount = historyStorage.getVisited().size
                         // visitedCount is passed twice: to get the correct plural form, and then as
                         // an argument for string formatting.
                         txtView.text = resources.getQuantityString(
