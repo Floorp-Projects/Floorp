@@ -12,19 +12,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCodeCoverage)
 NS_DEFINE_NAMED_CID(NS_CODECOVERAGE_CID);
 
 static const mozilla::Module::CIDEntry kCodeCoverageCIDs[] = {
-    { &kNS_CODECOVERAGE_CID, false, nullptr, nsCodeCoverageConstructor },
-    { nullptr }
-};
+    {&kNS_CODECOVERAGE_CID, false, nullptr, nsCodeCoverageConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kCodeCoverageContracts[] = {
-    { "@mozilla.org/tools/code-coverage;1", &kNS_CODECOVERAGE_CID },
-    { nullptr }
-};
+    {"@mozilla.org/tools/code-coverage;1", &kNS_CODECOVERAGE_CID}, {nullptr}};
 
 static const mozilla::Module kCodeCoverageModule = {
-    mozilla::Module::kVersion,
-    kCodeCoverageCIDs,
-    kCodeCoverageContracts
-};
+    mozilla::Module::kVersion, kCodeCoverageCIDs, kCodeCoverageContracts};
 
 NSMODULE_DEFN(nsCodeCoverageModule) = &kCodeCoverageModule;

@@ -5,48 +5,44 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef nsTArray_h__
-#  error "Don't include this file directly"
+#error "Don't include this file directly"
 #endif
 
-template<class Alloc, class Copy>
-nsTArray_base<Alloc, Copy>::nsTArray_base()
-  : mHdr(EmptyHdr())
-{
+template <class Alloc, class Copy>
+nsTArray_base<Alloc, Copy>::nsTArray_base() : mHdr(EmptyHdr()) {
   MOZ_COUNT_CTOR(nsTArray_base);
 }
 
-template<class Alloc, class Copy>
-nsTArray_base<Alloc, Copy>::~nsTArray_base()
-{
+template <class Alloc, class Copy>
+nsTArray_base<Alloc, Copy>::~nsTArray_base() {
   if (mHdr != EmptyHdr() && !UsesAutoArrayBuffer()) {
     Alloc::Free(mHdr);
   }
   MOZ_COUNT_DTOR(nsTArray_base);
 }
 
-template<class Alloc, class Copy>
-const nsTArrayHeader*
-nsTArray_base<Alloc, Copy>::GetAutoArrayBufferUnsafe(size_t aElemAlign) const
-{
+template <class Alloc, class Copy>
+const nsTArrayHeader* nsTArray_base<Alloc, Copy>::GetAutoArrayBufferUnsafe(
+    size_t aElemAlign) const {
   // Assuming |this| points to an nsAutoArray, we want to get a pointer to
   // mAutoBuf.  So just cast |this| to nsAutoArray* and read &mAutoBuf!
 
   const void* autoBuf =
-    &reinterpret_cast<const AutoTArray<nsTArray<uint32_t>, 1>*>(this)->mAutoBuf;
+      &reinterpret_cast<const AutoTArray<nsTArray<uint32_t>, 1>*>(this)
+           ->mAutoBuf;
 
   // If we're on a 32-bit system and aElemAlign is 8, we need to adjust our
   // pointer to take into account the extra alignment in the auto array.
 
-  static_assert(sizeof(void*) != 4 ||
-                (MOZ_ALIGNOF(mozilla::AlignedElem<8>) == 8 &&
-                 sizeof(AutoTArray<mozilla::AlignedElem<8>, 1>) ==
-                   sizeof(void*) + sizeof(nsTArrayHeader) +
-                   4 + sizeof(mozilla::AlignedElem<8>)),
-                "auto array padding wasn't what we expected");
+  static_assert(
+      sizeof(void*) != 4 || (MOZ_ALIGNOF(mozilla::AlignedElem<8>) == 8 &&
+                             sizeof(AutoTArray<mozilla::AlignedElem<8>, 1>) ==
+                                 sizeof(void*) + sizeof(nsTArrayHeader) + 4 +
+                                     sizeof(mozilla::AlignedElem<8>)),
+      "auto array padding wasn't what we expected");
 
   // We don't support alignments greater than 8 bytes.
-  MOZ_ASSERT(aElemAlign <= 4 || aElemAlign == 8,
-             "unsupported alignment.");
+  MOZ_ASSERT(aElemAlign <= 4 || aElemAlign == 8, "unsupported alignment.");
   if (sizeof(void*) == 4 && aElemAlign == 8) {
     autoBuf = reinterpret_cast<const char*>(autoBuf) + 4;
   }
@@ -54,10 +50,8 @@ nsTArray_base<Alloc, Copy>::GetAutoArrayBufferUnsafe(size_t aElemAlign) const
   return reinterpret_cast<const Header*>(autoBuf);
 }
 
-template<class Alloc, class Copy>
-bool
-nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const
-{
+template <class Alloc, class Copy>
+bool nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const {
   if (!mHdr->mIsAutoArray) {
     return false;
   }
@@ -92,8 +86,7 @@ nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const
   // owned by this AutoTArray.  We statically assert that elem_type's
   // alignment is 8 bytes or less in AutoTArray.
 
-  static_assert(sizeof(nsTArrayHeader) > 4,
-                "see comment above");
+  static_assert(sizeof(nsTArrayHeader) > 4, "see comment above");
 
 #ifdef DEBUG
   ptrdiff_t diff = reinterpret_cast<const char*>(GetAutoArrayBuffer(8)) -
@@ -109,13 +102,11 @@ nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const
 bool IsTwiceTheRequiredBytesRepresentableAsUint32(size_t aCapacity,
                                                   size_t aElemSize);
 
-template<class Alloc, class Copy>
-template<typename ActualAlloc>
+template <class Alloc, class Copy>
+template <typename ActualAlloc>
 typename ActualAlloc::ResultTypeProxy
-nsTArray_base<Alloc, Copy>::ExtendCapacity(size_type aLength,
-                                           size_type aCount,
-                                           size_type aElemSize)
-{
+nsTArray_base<Alloc, Copy>::ExtendCapacity(size_type aLength, size_type aCount,
+                                           size_type aElemSize) {
   mozilla::CheckedInt<size_type> newLength = aLength;
   newLength += aCount;
 
@@ -126,12 +117,11 @@ nsTArray_base<Alloc, Copy>::ExtendCapacity(size_type aLength,
   return this->EnsureCapacity<ActualAlloc>(newLength.value(), aElemSize);
 }
 
-template<class Alloc, class Copy>
-template<typename ActualAlloc>
+template <class Alloc, class Copy>
+template <typename ActualAlloc>
 typename ActualAlloc::ResultTypeProxy
 nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type aCapacity,
-                                           size_type aElemSize)
-{
+                                           size_type aElemSize) {
   // This should be the most common case so test this first
   if (aCapacity <= mHdr->mCapacity) {
     return ActualAlloc::SuccessResult();
@@ -172,7 +162,7 @@ nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type aCapacity,
   size_t bytesToAlloc;
   if (reqSize >= slowGrowthThreshold) {
     size_t currSize = sizeof(Header) + Capacity() * aElemSize;
-    size_t minNewSize = currSize + (currSize >> 3); // multiply by 1.125
+    size_t minNewSize = currSize + (currSize >> 3);  // multiply by 1.125
     bytesToAlloc = reqSize > minNewSize ? reqSize : minNewSize;
 
     // Round up to the next multiple of MiB.
@@ -216,16 +206,14 @@ nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type aCapacity,
 
 // We don't need use Alloc template parameter specified here because failure to
 // shrink the capacity will leave the array unchanged.
-template<class Alloc, class Copy>
-void
-nsTArray_base<Alloc, Copy>::ShrinkCapacity(size_type aElemSize,
-                                           size_t aElemAlign)
-{
+template <class Alloc, class Copy>
+void nsTArray_base<Alloc, Copy>::ShrinkCapacity(size_type aElemSize,
+                                                size_t aElemAlign) {
   if (mHdr == EmptyHdr() || UsesAutoArrayBuffer()) {
     return;
   }
 
-  if (mHdr->mLength >= mHdr->mCapacity) { // should never be greater than...
+  if (mHdr->mLength >= mHdr->mCapacity) {  // should never be greater than...
     return;
   }
 
@@ -259,13 +247,12 @@ nsTArray_base<Alloc, Copy>::ShrinkCapacity(size_type aElemSize,
   mHdr->mCapacity = length;
 }
 
-template<class Alloc, class Copy>
-template<typename ActualAlloc>
-void
-nsTArray_base<Alloc, Copy>::ShiftData(index_type aStart,
-                                      size_type aOldLen, size_type aNewLen,
-                                      size_type aElemSize, size_t aElemAlign)
-{
+template <class Alloc, class Copy>
+template <typename ActualAlloc>
+void nsTArray_base<Alloc, Copy>::ShiftData(index_type aStart, size_type aOldLen,
+                                           size_type aNewLen,
+                                           size_type aElemSize,
+                                           size_t aElemAlign) {
   if (aOldLen == aNewLen) {
     return;
   }
@@ -287,18 +274,17 @@ nsTArray_base<Alloc, Copy>::ShiftData(index_type aStart,
     aNewLen *= aElemSize;
     aOldLen *= aElemSize;
     char* baseAddr = reinterpret_cast<char*>(mHdr + 1) + aStart;
-    Copy::MoveOverlappingRegion(baseAddr + aNewLen, baseAddr + aOldLen, num, aElemSize);
+    Copy::MoveOverlappingRegion(baseAddr + aNewLen, baseAddr + aOldLen, num,
+                                aElemSize);
   }
 }
 
-template<class Alloc, class Copy>
-template<typename ActualAlloc>
-void
-nsTArray_base<Alloc, Copy>::SwapFromEnd(index_type aStart,
-                                        size_type aCount,
-                                        size_type aElemSize,
-                                        size_t aElemAlign)
-{
+template <class Alloc, class Copy>
+template <typename ActualAlloc>
+void nsTArray_base<Alloc, Copy>::SwapFromEnd(index_type aStart,
+                                             size_type aCount,
+                                             size_type aElemSize,
+                                             size_t aElemAlign) {
   // This method is part of the implementation of
   // nsTArray::SwapRemoveElement{s,}At. For more information, read the
   // documentation on that method.
@@ -340,24 +326,21 @@ nsTArray_base<Alloc, Copy>::SwapFromEnd(index_type aStart,
              "The range should be nonoverlapping");
 
   char* baseAddr = reinterpret_cast<char*>(mHdr + 1);
-  Copy::MoveNonOverlappingRegion(baseAddr + destBytes,
-                                 baseAddr + sourceBytes,
-                                 relocCount,
-                                 aElemSize);
+  Copy::MoveNonOverlappingRegion(baseAddr + destBytes, baseAddr + sourceBytes,
+                                 relocCount, aElemSize);
 }
 
-template<class Alloc, class Copy>
-template<typename ActualAlloc>
-typename ActualAlloc::ResultTypeProxy
-nsTArray_base<Alloc, Copy>::InsertSlotsAt(index_type aIndex, size_type aCount,
-                                          size_type aElemSize,
-                                          size_t aElemAlign)
-{
+template <class Alloc, class Copy>
+template <typename ActualAlloc>
+typename ActualAlloc::ResultTypeProxy nsTArray_base<Alloc, Copy>::InsertSlotsAt(
+    index_type aIndex, size_type aCount, size_type aElemSize,
+    size_t aElemAlign) {
   if (MOZ_UNLIKELY(aIndex > Length())) {
     InvalidArrayIndex_CRASH(aIndex, Length());
   }
 
-  if (!ActualAlloc::Successful(this->ExtendCapacity<ActualAlloc>(Length(), aCount, aElemSize))) {
+  if (!ActualAlloc::Successful(
+          this->ExtendCapacity<ActualAlloc>(Length(), aCount, aElemSize))) {
     return ActualAlloc::FailureResult();
   }
 
@@ -376,19 +359,13 @@ nsTArray_base<Alloc, Copy>::InsertSlotsAt(index_type aIndex, size_type aCount,
 //   * if array has an auto buffer and mHdr would otherwise point to
 //     sEmptyTArrayHeader, array.mHdr points to array's auto buffer.
 
-template<class Alloc, class Copy>
+template <class Alloc, class Copy>
 nsTArray_base<Alloc, Copy>::IsAutoArrayRestorer::IsAutoArrayRestorer(
-      nsTArray_base<Alloc, Copy>& aArray,
-      size_t aElemAlign)
-  : mArray(aArray)
-  , mElemAlign(aElemAlign)
-  , mIsAuto(aArray.IsAutoArray())
-{
-}
+    nsTArray_base<Alloc, Copy>& aArray, size_t aElemAlign)
+    : mArray(aArray), mElemAlign(aElemAlign), mIsAuto(aArray.IsAutoArray()) {}
 
-template<class Alloc, class Copy>
-nsTArray_base<Alloc, Copy>::IsAutoArrayRestorer::~IsAutoArrayRestorer()
-{
+template <class Alloc, class Copy>
+nsTArray_base<Alloc, Copy>::IsAutoArrayRestorer::~IsAutoArrayRestorer() {
   // Careful: We don't want to set mIsAutoArray = 1 on sEmptyTArrayHeader.
   if (mIsAuto && mArray.mHdr == mArray.EmptyHdr()) {
     // Call GetAutoArrayBufferUnsafe() because GetAutoArrayBuffer() asserts
@@ -400,15 +377,12 @@ nsTArray_base<Alloc, Copy>::IsAutoArrayRestorer::~IsAutoArrayRestorer()
   }
 }
 
-template<class Alloc, class Copy>
-template<typename ActualAlloc, class Allocator>
+template <class Alloc, class Copy>
+template <typename ActualAlloc, class Allocator>
 typename ActualAlloc::ResultTypeProxy
-nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
-                                                            Copy>& aOther,
-                                              size_type aElemSize,
-                                              size_t aElemAlign)
-{
-
+nsTArray_base<Alloc, Copy>::SwapArrayElements(
+    nsTArray_base<Allocator, Copy>& aOther, size_type aElemSize,
+    size_t aElemAlign) {
   // EnsureNotUsingAutoArrayBuffer will set mHdr = sEmptyTArrayHeader even if we
   // have an auto buffer.  We need to point mHdr back to our auto buffer before
   // we return, otherwise we'll forget that we have an auto buffer at all!
@@ -416,16 +390,16 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
 
   IsAutoArrayRestorer ourAutoRestorer(*this, aElemAlign);
   typename nsTArray_base<Allocator, Copy>::IsAutoArrayRestorer
-    otherAutoRestorer(aOther, aElemAlign);
+      otherAutoRestorer(aOther, aElemAlign);
 
   // If neither array uses an auto buffer which is big enough to store the
   // other array's elements, then ensure that both arrays use malloc'ed storage
   // and swap their mHdr pointers.
   if ((!UsesAutoArrayBuffer() || Capacity() < aOther.Length()) &&
       (!aOther.UsesAutoArrayBuffer() || aOther.Capacity() < Length())) {
-
     if (!EnsureNotUsingAutoArrayBuffer<ActualAlloc>(aElemSize) ||
-        !aOther.template EnsureNotUsingAutoArrayBuffer<ActualAlloc>(aElemSize)) {
+        !aOther.template EnsureNotUsingAutoArrayBuffer<ActualAlloc>(
+            aElemSize)) {
       return ActualAlloc::FailureResult();
     }
 
@@ -447,8 +421,10 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
   // write Y straight into X's auto buffer, write X's malloc'ed buffer on top
   // of Y, and then switch X to using its auto buffer.)
 
-  if (!ActualAlloc::Successful(EnsureCapacity<ActualAlloc>(aOther.Length(), aElemSize)) ||
-      !Allocator::Successful(aOther.template EnsureCapacity<Allocator>(Length(), aElemSize))) {
+  if (!ActualAlloc::Successful(
+          EnsureCapacity<ActualAlloc>(aOther.Length(), aElemSize)) ||
+      !Allocator::Successful(
+          aOther.template EnsureCapacity<Allocator>(Length(), aElemSize))) {
     return ActualAlloc::FailureResult();
   }
 
@@ -475,17 +451,21 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
   // auto buffer, so we're likely not allocating a lot of space here.  But one
   // could, in theory, allocate a huge AutoTArray on the heap.)
   AutoTArray<uint8_t, 64 * sizeof(void*)> temp;
-  if (!ActualAlloc::Successful(temp.template EnsureCapacity<ActualAlloc>(smallerLength * aElemSize, sizeof(uint8_t)))) {
+  if (!ActualAlloc::Successful(temp.template EnsureCapacity<ActualAlloc>(
+          smallerLength * aElemSize, sizeof(uint8_t)))) {
     return ActualAlloc::FailureResult();
   }
 
-  Copy::MoveNonOverlappingRegion(temp.Elements(), smallerElements, smallerLength, aElemSize);
-  Copy::MoveNonOverlappingRegion(smallerElements, largerElements, largerLength, aElemSize);
-  Copy::MoveNonOverlappingRegion(largerElements, temp.Elements(), smallerLength, aElemSize);
+  Copy::MoveNonOverlappingRegion(temp.Elements(), smallerElements,
+                                 smallerLength, aElemSize);
+  Copy::MoveNonOverlappingRegion(smallerElements, largerElements, largerLength,
+                                 aElemSize);
+  Copy::MoveNonOverlappingRegion(largerElements, temp.Elements(), smallerLength,
+                                 aElemSize);
 
   // Swap the arrays' lengths.
   MOZ_ASSERT((aOther.Length() == 0 || mHdr != EmptyHdr()) &&
-             (Length() == 0 || aOther.mHdr != EmptyHdr()),
+                 (Length() == 0 || aOther.mHdr != EmptyHdr()),
              "Don't set sEmptyTArrayHeader's length.");
   size_type tempLength = Length();
 
@@ -501,13 +481,11 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
   return ActualAlloc::SuccessResult();
 }
 
-template<class Alloc, class Copy>
-template<typename ActualAlloc>
-bool
-nsTArray_base<Alloc, Copy>::EnsureNotUsingAutoArrayBuffer(size_type aElemSize)
-{
+template <class Alloc, class Copy>
+template <typename ActualAlloc>
+bool nsTArray_base<Alloc, Copy>::EnsureNotUsingAutoArrayBuffer(
+    size_type aElemSize) {
   if (UsesAutoArrayBuffer()) {
-
     // If you call this on a 0-length array, we'll set that array's mHdr to
     // sEmptyTArrayHeader, in flagrant violation of the AutoTArray invariants.
     // It's up to you to set it back!  (If you don't, the AutoTArray will

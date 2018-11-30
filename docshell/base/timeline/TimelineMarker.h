@@ -15,25 +15,23 @@ namespace mozilla {
 // Objects of this type can be added to the timeline if there is an interested
 // consumer. The class can also be subclassed to let a given marker creator
 // provide custom details.
-class TimelineMarker : public AbstractTimelineMarker
-{
-public:
-  TimelineMarker(const char* aName,
+class TimelineMarker : public AbstractTimelineMarker {
+ public:
+  TimelineMarker(const char* aName, MarkerTracingType aTracingType,
+                 MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
+
+  TimelineMarker(const char* aName, const TimeStamp& aTime,
                  MarkerTracingType aTracingType,
                  MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
 
-  TimelineMarker(const char* aName,
-                 const TimeStamp& aTime,
-                 MarkerTracingType aTracingType,
-                 MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
-
-  virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override;
+  virtual void AddDetails(JSContext* aCx,
+                          dom::ProfileTimelineMarker& aMarker) override;
   virtual JSObject* GetStack() override;
 
-protected:
+ protected:
   void CaptureStack();
 
-private:
+ private:
   // While normally it is not a good idea to make a persistent root,
   // in this case changing nsDocShell to participate in cycle
   // collection was deemed too invasive, and the markers are only held
@@ -44,6 +42,6 @@ private:
                                MarkerStackRequest aStackRequest);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_TimelineMarker_h_ */

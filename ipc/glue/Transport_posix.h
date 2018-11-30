@@ -9,36 +9,30 @@
 
 #include "ipc/IPCMessageUtils.h"
 
-
 namespace mozilla {
 namespace ipc {
 
-struct TransportDescriptor
-{
+struct TransportDescriptor {
   base::FileDescriptor mFd;
 };
 
-} // namespace ipc
-} // namespace mozilla
-
+}  // namespace ipc
+}  // namespace mozilla
 
 namespace IPC {
 
-template<>
-struct ParamTraits<mozilla::ipc::TransportDescriptor>
-{
+template <>
+struct ParamTraits<mozilla::ipc::TransportDescriptor> {
   typedef mozilla::ipc::TransportDescriptor paramType;
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mFd);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mFd);
   }
 };
 
-} // namespace IPC
-
+}  // namespace IPC
 
 #endif  // mozilla_ipc_Transport_posix_h

@@ -25,823 +25,782 @@ namespace webgl {
 
 /*static*/ const ImageInfo ImageInfo::kUndefined;
 
-size_t
-ImageInfo::MemoryUsage() const
-{
-    if (!IsDefined())
-        return 0;
+size_t ImageInfo::MemoryUsage() const {
+  if (!IsDefined()) return 0;
 
-    size_t samples = mSamples;
-    if (!samples) {
-        samples = 1;
-    }
+  size_t samples = mSamples;
+  if (!samples) {
+    samples = 1;
+  }
 
-    const size_t bytesPerTexel = mFormat->format->estimatedBytesPerPixel;
-    return size_t(mWidth) * size_t(mHeight) * size_t(mDepth) * samples * bytesPerTexel;
+  const size_t bytesPerTexel = mFormat->format->estimatedBytesPerPixel;
+  return size_t(mWidth) * size_t(mHeight) * size_t(mDepth) * samples *
+         bytesPerTexel;
 }
 
-Maybe<ImageInfo>
-ImageInfo::NextMip(const GLenum target) const
-{
-    MOZ_ASSERT(IsDefined());
+Maybe<ImageInfo> ImageInfo::NextMip(const GLenum target) const {
+  MOZ_ASSERT(IsDefined());
 
-    auto next = *this;
+  auto next = *this;
 
-    if (target == LOCAL_GL_TEXTURE_3D) {
-        if (mWidth <= 1 &&
-            mHeight <= 1 &&
-            mDepth <= 1)
-        {
-            return {};
-        }
-
-        next.mDepth = std::max(uint32_t(1), next.mDepth / 2);
-    } else {
-        // TEXTURE_2D_ARRAY may have depth != 1, but that's normal.
-        if (mWidth <= 1 &&
-            mHeight <= 1)
-        {
-            return {};
-        }
+  if (target == LOCAL_GL_TEXTURE_3D) {
+    if (mWidth <= 1 && mHeight <= 1 && mDepth <= 1) {
+      return {};
     }
 
-    next.mWidth = std::max(uint32_t(1), next.mWidth / 2);
-    next.mHeight = std::max(uint32_t(1), next.mHeight / 2);
-    return Some(next);
+    next.mDepth = std::max(uint32_t(1), next.mDepth / 2);
+  } else {
+    // TEXTURE_2D_ARRAY may have depth != 1, but that's normal.
+    if (mWidth <= 1 && mHeight <= 1) {
+      return {};
+    }
+  }
+
+  next.mWidth = std::max(uint32_t(1), next.mWidth / 2);
+  next.mHeight = std::max(uint32_t(1), next.mHeight / 2);
+  return Some(next);
 }
 
-} // namespace webgl
+}  // namespace webgl
 
 ////////////////////////////////////////
 
-JSObject*
-WebGLTexture::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
-{
-    return dom::WebGLTexture_Binding::Wrap(cx, this, givenProto);
+JSObject* WebGLTexture::WrapObject(JSContext* cx,
+                                   JS::Handle<JSObject*> givenProto) {
+  return dom::WebGLTexture_Binding::Wrap(cx, this, givenProto);
 }
 
 WebGLTexture::WebGLTexture(WebGLContext* webgl, GLuint tex)
-    : WebGLRefCountedObject(webgl)
-    , mGLName(tex)
-    , mTarget(LOCAL_GL_NONE)
-    , mFaceCount(0)
-    , mImmutable(false)
-    , mImmutableLevelCount(0)
-    , mBaseMipmapLevel(0)
-    , mMaxMipmapLevel(1000)
-{
-    mContext->mTextures.insertBack(this);
+    : WebGLRefCountedObject(webgl),
+      mGLName(tex),
+      mTarget(LOCAL_GL_NONE),
+      mFaceCount(0),
+      mImmutable(false),
+      mImmutableLevelCount(0),
+      mBaseMipmapLevel(0),
+      mMaxMipmapLevel(1000) {
+  mContext->mTextures.insertBack(this);
 }
 
-void
-WebGLTexture::Delete()
-{
-    for (auto& cur : mImageInfoArr) {
-        cur = webgl::ImageInfo();
-    }
-    InvalidateCaches();
+void WebGLTexture::Delete() {
+  for (auto& cur : mImageInfoArr) {
+    cur = webgl::ImageInfo();
+  }
+  InvalidateCaches();
 
-    mContext->gl->fDeleteTextures(1, &mGLName);
+  mContext->gl->fDeleteTextures(1, &mGLName);
 
-    LinkedListElement<WebGLTexture>::removeFrom(mContext->mTextures);
+  LinkedListElement<WebGLTexture>::removeFrom(mContext->mTextures);
 }
 
-size_t
-WebGLTexture::MemoryUsage() const
-{
-    if (IsDeleted())
-        return 0;
+size_t WebGLTexture::MemoryUsage() const {
+  if (IsDeleted()) return 0;
 
-    size_t accum = 0;
-    for (const auto& cur : mImageInfoArr) {
-        accum += cur.MemoryUsage();
-    }
-    return accum;
+  size_t accum = 0;
+  for (const auto& cur : mImageInfoArr) {
+    accum += cur.MemoryUsage();
+  }
+  return accum;
 }
 
 // ---------------------------
 
-void
-WebGLTexture::PopulateMipChain(const uint32_t maxLevel)
-{
-    // Used by GenerateMipmap and TexStorage.
-    // Populates based on mBaseMipmapLevel.
+void WebGLTexture::PopulateMipChain(const uint32_t maxLevel) {
+  // Used by GenerateMipmap and TexStorage.
+  // Populates based on mBaseMipmapLevel.
 
-    auto ref = BaseImageInfo();
-    MOZ_ASSERT(ref.mWidth && ref.mHeight && ref.mDepth);
+  auto ref = BaseImageInfo();
+  MOZ_ASSERT(ref.mWidth && ref.mHeight && ref.mDepth);
 
-    for (auto level = mBaseMipmapLevel; level <= maxLevel; ++level) {
-        // GLES 3.0.4, p161
-        // "A cube map texture is mipmap complete if each of the six texture images,
-        //  considered individually, is mipmap complete."
+  for (auto level = mBaseMipmapLevel; level <= maxLevel; ++level) {
+    // GLES 3.0.4, p161
+    // "A cube map texture is mipmap complete if each of the six texture images,
+    //  considered individually, is mipmap complete."
 
-        for (uint8_t face = 0; face < mFaceCount; face++) {
-            auto& cur = ImageInfoAtFace(face, level);
-            cur = ref;
-        }
-
-        const auto next = ref.NextMip(mTarget.get());
-        if (!next)
-            break;
-        ref = next.ref();
+    for (uint8_t face = 0; face < mFaceCount; face++) {
+      auto& cur = ImageInfoAtFace(face, level);
+      cur = ref;
     }
-    InvalidateCaches();
+
+    const auto next = ref.NextMip(mTarget.get());
+    if (!next) break;
+    ref = next.ref();
+  }
+  InvalidateCaches();
 }
 
-static bool
-ZeroTextureData(const WebGLContext* webgl, GLuint tex,
-                TexImageTarget target, uint32_t level,
-                const webgl::FormatUsageInfo* usage, uint32_t width, uint32_t height,
-                uint32_t depth);
+static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
+                            TexImageTarget target, uint32_t level,
+                            const webgl::FormatUsageInfo* usage, uint32_t width,
+                            uint32_t height, uint32_t depth);
 
-bool
-WebGLTexture::IsMipAndCubeComplete(const uint32_t maxLevel, const bool ensureInit,
-                                   bool* const out_initFailed) const
-{
-    *out_initFailed = false;
+bool WebGLTexture::IsMipAndCubeComplete(const uint32_t maxLevel,
+                                        const bool ensureInit,
+                                        bool* const out_initFailed) const {
+  *out_initFailed = false;
 
-    // Reference dimensions based on baseLevel.
-    auto ref = BaseImageInfo();
-    MOZ_ASSERT(ref.mWidth && ref.mHeight && ref.mDepth);
+  // Reference dimensions based on baseLevel.
+  auto ref = BaseImageInfo();
+  MOZ_ASSERT(ref.mWidth && ref.mHeight && ref.mDepth);
 
-    for (auto level = mBaseMipmapLevel; level <= maxLevel; ++level) {
-        // GLES 3.0.4, p161
-        // "A cube map texture is mipmap complete if each of the six texture images,
-        // considered individually, is mipmap complete."
+  for (auto level = mBaseMipmapLevel; level <= maxLevel; ++level) {
+    // GLES 3.0.4, p161
+    // "A cube map texture is mipmap complete if each of the six texture images,
+    // considered individually, is mipmap complete."
 
-        for (uint8_t face = 0; face < mFaceCount; face++) {
-            auto& cur = ImageInfoAtFace(face, level);
+    for (uint8_t face = 0; face < mFaceCount; face++) {
+      auto& cur = ImageInfoAtFace(face, level);
 
-            // "* The set of mipmap arrays `level_base` through `q` (where `q`
-            //    is defined the "Mipmapping" discussion of section 3.8.10) were
-            //    each specified with the same effective internal format."
+      // "* The set of mipmap arrays `level_base` through `q` (where `q`
+      //    is defined the "Mipmapping" discussion of section 3.8.10) were
+      //    each specified with the same effective internal format."
 
-            // "* The dimensions of the arrays follow the sequence described in
-            //    the "Mipmapping" discussion of section 3.8.10."
+      // "* The dimensions of the arrays follow the sequence described in
+      //    the "Mipmapping" discussion of section 3.8.10."
 
-            if (cur.mWidth != ref.mWidth ||
-                cur.mHeight != ref.mHeight ||
-                cur.mDepth != ref.mDepth ||
-                cur.mFormat != ref.mFormat)
-            {
-                return false;
-            }
+      if (cur.mWidth != ref.mWidth || cur.mHeight != ref.mHeight ||
+          cur.mDepth != ref.mDepth || cur.mFormat != ref.mFormat) {
+        return false;
+      }
 
-            if (MOZ_UNLIKELY( ensureInit && !cur.mHasData )) {
-                auto imageTarget = mTarget.get();
-                if (imageTarget == LOCAL_GL_TEXTURE_CUBE_MAP) {
-                    imageTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
-                }
-                if (!ZeroTextureData(mContext, mGLName, imageTarget, level,
-                                     cur.mFormat, cur.mWidth, cur.mHeight, cur.mDepth))
-                {
-                    mContext->ErrorOutOfMemory("Failed to zero tex image data.");
-                    *out_initFailed = true;
-                    return false;
-                }
-                cur.mHasData = true;
-            }
+      if (MOZ_UNLIKELY(ensureInit && !cur.mHasData)) {
+        auto imageTarget = mTarget.get();
+        if (imageTarget == LOCAL_GL_TEXTURE_CUBE_MAP) {
+          imageTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
         }
-
-        const auto next = ref.NextMip(mTarget.get());
-        if (!next)
-            break;
-        ref = next.ref();
+        if (!ZeroTextureData(mContext, mGLName, imageTarget, level, cur.mFormat,
+                             cur.mWidth, cur.mHeight, cur.mDepth)) {
+          mContext->ErrorOutOfMemory("Failed to zero tex image data.");
+          *out_initFailed = true;
+          return false;
+        }
+        cur.mHasData = true;
+      }
     }
 
-    return true;
+    const auto next = ref.NextMip(mTarget.get());
+    if (!next) break;
+    ref = next.ref();
+  }
+
+  return true;
 }
 
-Maybe<const WebGLTexture::CompletenessInfo>
-WebGLTexture::CalcCompletenessInfo(const bool ensureInit, const bool skipMips) const
-{
-    Maybe<CompletenessInfo> ret = Some(CompletenessInfo());
+Maybe<const WebGLTexture::CompletenessInfo> WebGLTexture::CalcCompletenessInfo(
+    const bool ensureInit, const bool skipMips) const {
+  Maybe<CompletenessInfo> ret = Some(CompletenessInfo());
 
-    // -
+  // -
 
-    if (mBaseMipmapLevel > kMaxLevelCount - 1) {
-        ret->incompleteReason = "`level_base` too high.";
-        return ret;
-    }
-
-    // Texture completeness is established at GLES 3.0.4, p160-161.
-    // "[A] texture is complete unless any of the following conditions hold true:"
-
-    // "* Any dimension of the `level_base` array is not positive."
-    const auto& baseImageInfo = ImageInfoAtFace(0, mBaseMipmapLevel);
-    if (!baseImageInfo.IsDefined()) {
-        // In case of undefined texture image, we don't print any message because this is
-        // a very common and often legitimate case (asynchronous texture loading).
-        ret->incompleteReason = nullptr;
-        return ret;
-    }
-
-    if (!baseImageInfo.mWidth || !baseImageInfo.mHeight || !baseImageInfo.mDepth) {
-        ret->incompleteReason = "The dimensions of `level_base` are not all positive.";
-        return ret;
-    }
-
-    // "* The texture is a cube map texture, and is not cube complete."
-    bool initFailed = false;
-    if (!IsMipAndCubeComplete(mBaseMipmapLevel, ensureInit, &initFailed)) {
-        if (initFailed)
-            return {};
-
-        // Can only fail if not cube-complete.
-        ret->incompleteReason = "Cubemaps must be \"cube complete\".";
-        return ret;
-    }
-    ret->levels = 1;
-    ret->usage = baseImageInfo.mFormat;
-    RefreshSwizzle();
-
-    ret->powerOfTwo = mozilla::IsPowerOfTwo(baseImageInfo.mWidth) &&
-                      mozilla::IsPowerOfTwo(baseImageInfo.mHeight);
-    if (mTarget == LOCAL_GL_TEXTURE_3D) {
-        ret->powerOfTwo &= mozilla::IsPowerOfTwo(baseImageInfo.mDepth);
-    }
-
-    // -
-
-    if (!mContext->IsWebGL2() &&
-        !ret->powerOfTwo)
-    {
-        // WebGL 1 mipmaps require POT.
-        ret->incompleteReason = "Mipmapping requires power-of-two sizes.";
-        return ret;
-    }
-
-    // "* `level_base <= level_max`"
-
-    const auto maxLevel = EffectiveMaxLevel();
-    if (mBaseMipmapLevel > maxLevel) {
-        ret->incompleteReason = "`level_base > level_max`.";
-        return ret;
-    }
-
-    if (skipMips)
-        return ret;
-
-    if (!IsMipAndCubeComplete(maxLevel, ensureInit, &initFailed)) {
-        if (initFailed)
-            return {};
-
-        ret->incompleteReason = "Bad mipmap dimension or format.";
-        return ret;
-    }
-    ret->levels = maxLevel - mBaseMipmapLevel + 1;
-    ret->mipmapComplete = true;
-
-    // -
-
+  if (mBaseMipmapLevel > kMaxLevelCount - 1) {
+    ret->incompleteReason = "`level_base` too high.";
     return ret;
+  }
+
+  // Texture completeness is established at GLES 3.0.4, p160-161.
+  // "[A] texture is complete unless any of the following conditions hold true:"
+
+  // "* Any dimension of the `level_base` array is not positive."
+  const auto& baseImageInfo = ImageInfoAtFace(0, mBaseMipmapLevel);
+  if (!baseImageInfo.IsDefined()) {
+    // In case of undefined texture image, we don't print any message because
+    // this is a very common and often legitimate case (asynchronous texture
+    // loading).
+    ret->incompleteReason = nullptr;
+    return ret;
+  }
+
+  if (!baseImageInfo.mWidth || !baseImageInfo.mHeight ||
+      !baseImageInfo.mDepth) {
+    ret->incompleteReason =
+        "The dimensions of `level_base` are not all positive.";
+    return ret;
+  }
+
+  // "* The texture is a cube map texture, and is not cube complete."
+  bool initFailed = false;
+  if (!IsMipAndCubeComplete(mBaseMipmapLevel, ensureInit, &initFailed)) {
+    if (initFailed) return {};
+
+    // Can only fail if not cube-complete.
+    ret->incompleteReason = "Cubemaps must be \"cube complete\".";
+    return ret;
+  }
+  ret->levels = 1;
+  ret->usage = baseImageInfo.mFormat;
+  RefreshSwizzle();
+
+  ret->powerOfTwo = mozilla::IsPowerOfTwo(baseImageInfo.mWidth) &&
+                    mozilla::IsPowerOfTwo(baseImageInfo.mHeight);
+  if (mTarget == LOCAL_GL_TEXTURE_3D) {
+    ret->powerOfTwo &= mozilla::IsPowerOfTwo(baseImageInfo.mDepth);
+  }
+
+  // -
+
+  if (!mContext->IsWebGL2() && !ret->powerOfTwo) {
+    // WebGL 1 mipmaps require POT.
+    ret->incompleteReason = "Mipmapping requires power-of-two sizes.";
+    return ret;
+  }
+
+  // "* `level_base <= level_max`"
+
+  const auto maxLevel = EffectiveMaxLevel();
+  if (mBaseMipmapLevel > maxLevel) {
+    ret->incompleteReason = "`level_base > level_max`.";
+    return ret;
+  }
+
+  if (skipMips) return ret;
+
+  if (!IsMipAndCubeComplete(maxLevel, ensureInit, &initFailed)) {
+    if (initFailed) return {};
+
+    ret->incompleteReason = "Bad mipmap dimension or format.";
+    return ret;
+  }
+  ret->levels = maxLevel - mBaseMipmapLevel + 1;
+  ret->mipmapComplete = true;
+
+  // -
+
+  return ret;
 }
 
-Maybe<const webgl::SampleableInfo>
-WebGLTexture::CalcSampleableInfo(const WebGLSampler* const sampler) const
-{
-    Maybe<webgl::SampleableInfo> ret = Some(webgl::SampleableInfo());
+Maybe<const webgl::SampleableInfo> WebGLTexture::CalcSampleableInfo(
+    const WebGLSampler* const sampler) const {
+  Maybe<webgl::SampleableInfo> ret = Some(webgl::SampleableInfo());
 
-    const bool ensureInit = true;
-    const auto completeness = CalcCompletenessInfo(ensureInit);
-    if (!completeness)
-        return {};
+  const bool ensureInit = true;
+  const auto completeness = CalcCompletenessInfo(ensureInit);
+  if (!completeness) return {};
 
-    ret->incompleteReason = completeness->incompleteReason;
+  ret->incompleteReason = completeness->incompleteReason;
 
-    if (!completeness->levels)
-        return ret;
+  if (!completeness->levels) return ret;
 
-    const auto* sampling = &mSamplingState;
+  const auto* sampling = &mSamplingState;
+  if (sampler) {
+    sampling = &sampler->State();
+  }
+  const auto isDepthTex = bool(completeness->usage->format->d);
+  ret->isDepthTexCompare = isDepthTex & bool(sampling->compareMode.get());
+  // Because if it's not a depth texture, we always ignore compareMode.
+
+  const auto& minFilter = sampling->minFilter;
+  const auto& magFilter = sampling->magFilter;
+
+  // -
+
+  const bool needsMips = (minFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST ||
+                          minFilter == LOCAL_GL_NEAREST_MIPMAP_LINEAR ||
+                          minFilter == LOCAL_GL_LINEAR_MIPMAP_NEAREST ||
+                          minFilter == LOCAL_GL_LINEAR_MIPMAP_LINEAR);
+  if (needsMips & !completeness->mipmapComplete) return ret;
+
+  const bool isMinFilteringNearest =
+      (minFilter == LOCAL_GL_NEAREST ||
+       minFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST);
+  const bool isMagFilteringNearest = (magFilter == LOCAL_GL_NEAREST);
+  const bool isFilteringNearestOnly =
+      (isMinFilteringNearest && isMagFilteringNearest);
+  if (!isFilteringNearestOnly) {
+    bool isFilterable = completeness->usage->isFilterable;
+
+    // "* The effective internal format specified for the texture arrays is a
+    //    sized internal depth or depth and stencil format, the value of
+    //    TEXTURE_COMPARE_MODE is NONE[1], and either the magnification filter
+    //    is not NEAREST, or the minification filter is neither NEAREST nor
+    //    NEAREST_MIPMAP_NEAREST."
+    // [1]: This sounds suspect, but is explicitly noted in the change log for
+    //      GLES 3.0.1:
+    //      "* Clarify that a texture is incomplete if it has a depth component,
+    //         no shadow comparison, and linear filtering (also Bug 9481)."
+    // In short, depth formats are not filterable, but shadow-samplers are.
+    if (ret->isDepthTexCompare) {
+      isFilterable = true;
+    }
+
+    // "* The effective internal format specified for the texture arrays is a
+    //    sized internal color format that is not texture-filterable, and either
+    //    the magnification filter is not NEAREST or the minification filter is
+    //    neither NEAREST nor NEAREST_MIPMAP_NEAREST."
+    // Since all (GLES3) unsized color formats are filterable just like their
+    // sized equivalents, we don't have to care whether its sized or not.
+    if (!isFilterable) {
+      ret->incompleteReason =
+          "Minification or magnification filtering is not"
+          " NEAREST or NEAREST_MIPMAP_NEAREST, and the"
+          " texture's format is not \"texture-filterable\".";
+      return ret;
+    }
+  }
+
+  // Texture completeness is effectively (though not explicitly) amended for
+  // GLES2 by the "Texture Access" section under $3.8 "Fragment Shaders". This
+  // also applies to vertex shaders, as noted on GLES 2.0.25, p41.
+  if (!mContext->IsWebGL2() && !completeness->powerOfTwo) {
+    // GLES 2.0.25, p87-88:
+    // "Calling a sampler from a fragment shader will return (R,G,B,A)=(0,0,0,1)
+    // if
+    //  any of the following conditions are true:"
+
+    // "* A two-dimensional sampler is called, the minification filter is one
+    //    that requires a mipmap[...], and the sampler's associated texture
+    //    object is not complete[.]"
+    // (already covered)
+
+    // "* A two-dimensional sampler is called, the minification filter is
+    //    not one that requires a mipmap (either NEAREST nor[sic] LINEAR), and
+    //    either dimension of the level zero array of the associated texture
+    //    object is not positive."
+    // (already covered)
+
+    // "* A two-dimensional sampler is called, the corresponding texture
+    //    image is a non-power-of-two image[...], and either the texture wrap
+    //    mode is not CLAMP_TO_EDGE, or the minification filter is neither
+    //    NEAREST nor LINEAR."
+
+    // "* A cube map sampler is called, any of the corresponding texture
+    //    images are non-power-of-two images, and either the texture wrap mode
+    //    is not CLAMP_TO_EDGE, or the minification filter is neither NEAREST
+    //    nor LINEAR."
+    // "either the texture wrap mode is not CLAMP_TO_EDGE"
+    if (sampling->wrapS != LOCAL_GL_CLAMP_TO_EDGE ||
+        sampling->wrapT != LOCAL_GL_CLAMP_TO_EDGE) {
+      ret->incompleteReason =
+          "Non-power-of-two textures must have a wrap mode of"
+          " CLAMP_TO_EDGE.";
+      return ret;
+    }
+
+    // "* A cube map sampler is called, and either the corresponding cube
+    //    map texture image is not cube complete, or TEXTURE_MIN_FILTER is one
+    //    that requires a mipmap and the texture is not mipmap cube complete."
+    // (already covered)
+  }
+
+  // Mark complete.
+  ret->incompleteReason =
+      nullptr;  // NB: incompleteReason is also null for undefined
+  ret->levels = completeness->levels;  //   textures.
+  ret->usage = completeness->usage;
+  return ret;
+}
+
+const webgl::SampleableInfo* WebGLTexture::GetSampleableInfo(
+    const WebGLSampler* const sampler) const {
+  auto itr = mSamplingCache.Find(sampler);
+  if (!itr) {
+    const auto info = CalcSampleableInfo(sampler);
+    if (!info) return nullptr;
+
+    auto entry = mSamplingCache.MakeEntry(sampler, info.value());
+    entry->AddInvalidator(*this);
     if (sampler) {
-        sampling = &sampler->State();
+      entry->AddInvalidator(*sampler);
     }
-    const auto isDepthTex = bool(completeness->usage->format->d);
-    ret->isDepthTexCompare = isDepthTex & bool(sampling->compareMode.get());
-    // Because if it's not a depth texture, we always ignore compareMode.
-
-    const auto& minFilter = sampling->minFilter;
-    const auto& magFilter = sampling->magFilter;
-
-    // -
-
-    const bool needsMips = (minFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST ||
-                            minFilter == LOCAL_GL_NEAREST_MIPMAP_LINEAR ||
-                            minFilter == LOCAL_GL_LINEAR_MIPMAP_NEAREST ||
-                            minFilter == LOCAL_GL_LINEAR_MIPMAP_LINEAR);
-    if (needsMips & !completeness->mipmapComplete)
-        return ret;
-
-    const bool isMinFilteringNearest = (minFilter == LOCAL_GL_NEAREST ||
-                                        minFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST);
-    const bool isMagFilteringNearest = (magFilter == LOCAL_GL_NEAREST);
-    const bool isFilteringNearestOnly = (isMinFilteringNearest && isMagFilteringNearest);
-    if (!isFilteringNearestOnly) {
-        bool isFilterable = completeness->usage->isFilterable;
-
-        // "* The effective internal format specified for the texture arrays is a
-        //    sized internal depth or depth and stencil format, the value of
-        //    TEXTURE_COMPARE_MODE is NONE[1], and either the magnification filter is not
-        //    NEAREST, or the minification filter is neither NEAREST nor
-        //    NEAREST_MIPMAP_NEAREST."
-        // [1]: This sounds suspect, but is explicitly noted in the change log for
-        //      GLES 3.0.1:
-        //      "* Clarify that a texture is incomplete if it has a depth component,
-        //         no shadow comparison, and linear filtering (also Bug 9481)."
-        // In short, depth formats are not filterable, but shadow-samplers are.
-        if (ret->isDepthTexCompare) {
-            isFilterable = true;
-        }
-
-        // "* The effective internal format specified for the texture arrays is a
-        //    sized internal color format that is not texture-filterable, and either the
-        //    magnification filter is not NEAREST or the minification filter is neither
-        //    NEAREST nor NEAREST_MIPMAP_NEAREST."
-        // Since all (GLES3) unsized color formats are filterable just like their sized
-        // equivalents, we don't have to care whether its sized or not.
-        if (!isFilterable) {
-            ret->incompleteReason = "Minification or magnification filtering is not"
-                                    " NEAREST or NEAREST_MIPMAP_NEAREST, and the"
-                                    " texture's format is not \"texture-filterable\".";
-            return ret;
-        }
-    }
-
-    // Texture completeness is effectively (though not explicitly) amended for GLES2 by
-    // the "Texture Access" section under $3.8 "Fragment Shaders". This also applies to
-    // vertex shaders, as noted on GLES 2.0.25, p41.
-    if (!mContext->IsWebGL2() &&
-        !completeness->powerOfTwo)
-    {
-        // GLES 2.0.25, p87-88:
-        // "Calling a sampler from a fragment shader will return (R,G,B,A)=(0,0,0,1) if
-        //  any of the following conditions are true:"
-
-        // "* A two-dimensional sampler is called, the minification filter is one
-        //    that requires a mipmap[...], and the sampler's associated texture object is not
-        //    complete[.]"
-        // (already covered)
-
-        // "* A two-dimensional sampler is called, the minification filter is
-        //    not one that requires a mipmap (either NEAREST nor[sic] LINEAR), and either dimension of
-        //    the level zero array of the associated texture object is not positive."
-        // (already covered)
-
-        // "* A two-dimensional sampler is called, the corresponding texture
-        //    image is a non-power-of-two image[...], and either the texture wrap mode is not
-        //    CLAMP_TO_EDGE, or the minification filter is neither NEAREST nor LINEAR."
-
-        // "* A cube map sampler is called, any of the corresponding texture
-        //    images are non-power-of-two images, and either the texture wrap mode is not
-        //    CLAMP_TO_EDGE, or the minification filter is neither NEAREST nor LINEAR."
-        // "either the texture wrap mode is not CLAMP_TO_EDGE"
-        if (sampling->wrapS != LOCAL_GL_CLAMP_TO_EDGE ||
-            sampling->wrapT != LOCAL_GL_CLAMP_TO_EDGE)
-        {
-            ret->incompleteReason = "Non-power-of-two textures must have a wrap mode of"
-                                    " CLAMP_TO_EDGE.";
-            return ret;
-        }
-
-        // "* A cube map sampler is called, and either the corresponding cube
-        //    map texture image is not cube complete, or TEXTURE_MIN_FILTER is one that requires a
-        //    mipmap and the texture is not mipmap cube complete."
-        // (already covered)
-    }
-
-    // Mark complete.
-    ret->incompleteReason = nullptr;    // NB: incompleteReason is also null for undefined
-    ret->levels = completeness->levels; //   textures.
-    ret->usage = completeness->usage;
-    return ret;
-}
-
-const webgl::SampleableInfo*
-WebGLTexture::GetSampleableInfo(const WebGLSampler* const sampler) const
-{
-    auto itr = mSamplingCache.Find(sampler);
-    if (!itr) {
-        const auto info = CalcSampleableInfo(sampler);
-        if (!info)
-            return nullptr;
-
-        auto entry = mSamplingCache.MakeEntry(sampler, info.value());
-        entry->AddInvalidator(*this);
-        if (sampler) {
-            entry->AddInvalidator(*sampler);
-        }
-        itr = mSamplingCache.Insert(std::move(entry));
-    }
-    return itr;
+    itr = mSamplingCache.Insert(std::move(entry));
+  }
+  return itr;
 }
 
 // ---------------------------
 
-uint32_t
-WebGLTexture::EffectiveMaxLevel() const
-{
-    const auto& imageInfo = BaseImageInfo();
-    if (!imageInfo.IsDefined())
-        return mBaseMipmapLevel;
+uint32_t WebGLTexture::EffectiveMaxLevel() const {
+  const auto& imageInfo = BaseImageInfo();
+  if (!imageInfo.IsDefined()) return mBaseMipmapLevel;
 
-    uint32_t largestDim = std::max(imageInfo.mWidth, imageInfo.mHeight);
-    if (mTarget == LOCAL_GL_TEXTURE_3D) {
-        largestDim = std::max(largestDim, imageInfo.mDepth);
-    }
-    if (!largestDim)
-        return mBaseMipmapLevel;
+  uint32_t largestDim = std::max(imageInfo.mWidth, imageInfo.mHeight);
+  if (mTarget == LOCAL_GL_TEXTURE_3D) {
+    largestDim = std::max(largestDim, imageInfo.mDepth);
+  }
+  if (!largestDim) return mBaseMipmapLevel;
 
-    // GLES 3.0.4, 3.8 - Mipmapping: `floor(log2(largest_of_dims)) + 1`
-    const auto numLevels = FloorLog2Size(largestDim) + 1;
+  // GLES 3.0.4, 3.8 - Mipmapping: `floor(log2(largest_of_dims)) + 1`
+  const auto numLevels = FloorLog2Size(largestDim) + 1;
 
-    const auto maxLevelBySize = mBaseMipmapLevel + numLevels - 1;
-    return std::min<uint32_t>(maxLevelBySize, mMaxMipmapLevel);
+  const auto maxLevelBySize = mBaseMipmapLevel + numLevels - 1;
+  return std::min<uint32_t>(maxLevelBySize, mMaxMipmapLevel);
 }
 
 // -
 
-static void
-SetSwizzle(gl::GLContext* gl, TexTarget target, const GLint* swizzle)
-{
-    static const GLint kNoSwizzle[4] = { LOCAL_GL_RED, LOCAL_GL_GREEN, LOCAL_GL_BLUE,
-                                         LOCAL_GL_ALPHA };
-    if (!swizzle) {
-        swizzle = kNoSwizzle;
-    } else if (!gl->IsSupported(gl::GLFeature::texture_swizzle)) {
-        MOZ_CRASH("GFX: Needs swizzle feature to swizzle!");
-    }
+static void SetSwizzle(gl::GLContext* gl, TexTarget target,
+                       const GLint* swizzle) {
+  static const GLint kNoSwizzle[4] = {LOCAL_GL_RED, LOCAL_GL_GREEN,
+                                      LOCAL_GL_BLUE, LOCAL_GL_ALPHA};
+  if (!swizzle) {
+    swizzle = kNoSwizzle;
+  } else if (!gl->IsSupported(gl::GLFeature::texture_swizzle)) {
+    MOZ_CRASH("GFX: Needs swizzle feature to swizzle!");
+  }
 
-    gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_SWIZZLE_R, swizzle[0]);
-    gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_SWIZZLE_G, swizzle[1]);
-    gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_SWIZZLE_B, swizzle[2]);
-    gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_SWIZZLE_A, swizzle[3]);
+  gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_SWIZZLE_R, swizzle[0]);
+  gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_SWIZZLE_G, swizzle[1]);
+  gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_SWIZZLE_B, swizzle[2]);
+  gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_SWIZZLE_A, swizzle[3]);
 }
 
-void
-WebGLTexture::RefreshSwizzle() const
-{
-    const auto& imageInfo = BaseImageInfo();
-    const auto& swizzle = imageInfo.mFormat->textureSwizzleRGBA;
+void WebGLTexture::RefreshSwizzle() const {
+  const auto& imageInfo = BaseImageInfo();
+  const auto& swizzle = imageInfo.mFormat->textureSwizzleRGBA;
 
-    if (swizzle != mCurSwizzle) {
-        SetSwizzle(mContext->gl, mTarget, swizzle);
-        mCurSwizzle = swizzle;
-    }
+  if (swizzle != mCurSwizzle) {
+    SetSwizzle(mContext->gl, mTarget, swizzle);
+    mCurSwizzle = swizzle;
+  }
 }
 
-bool
-WebGLTexture::EnsureImageDataInitialized(const TexImageTarget target,
-                                         const uint32_t level)
-{
-    auto& imageInfo = ImageInfoAt(target, level);
-    if (!imageInfo.IsDefined())
-        return true;
+bool WebGLTexture::EnsureImageDataInitialized(const TexImageTarget target,
+                                              const uint32_t level) {
+  auto& imageInfo = ImageInfoAt(target, level);
+  if (!imageInfo.IsDefined()) return true;
 
-    if (imageInfo.mHasData)
-        return true;
+  if (imageInfo.mHasData) return true;
 
-    if (!ZeroTextureData(mContext, mGLName, target, level, imageInfo.mFormat,
-                         imageInfo.mWidth, imageInfo.mHeight, imageInfo.mDepth))
-    {
-        return false;
-    }
-    imageInfo.mHasData = true;
-    return true;
+  if (!ZeroTextureData(mContext, mGLName, target, level, imageInfo.mFormat,
+                       imageInfo.mWidth, imageInfo.mHeight, imageInfo.mDepth)) {
+    return false;
+  }
+  imageInfo.mHasData = true;
+  return true;
 }
 
-static bool
-ClearDepthTexture(const WebGLContext& webgl, const GLuint tex,
-                  const TexImageTarget imageTarget, const uint32_t level,
-                  const webgl::FormatUsageInfo* const usage, const uint32_t depth)
-{
-    // Depth resources actually clear to 1.0f, not 0.0f!
-    // They are also always renderable.
-    MOZ_ASSERT(usage->IsRenderable());
+static bool ClearDepthTexture(const WebGLContext& webgl, const GLuint tex,
+                              const TexImageTarget imageTarget,
+                              const uint32_t level,
+                              const webgl::FormatUsageInfo* const usage,
+                              const uint32_t depth) {
+  // Depth resources actually clear to 1.0f, not 0.0f!
+  // They are also always renderable.
+  MOZ_ASSERT(usage->IsRenderable());
 
-    const auto& gl = webgl.gl;
-    const auto& format = usage->format;
+  const auto& gl = webgl.gl;
+  const auto& format = usage->format;
 
-    GLenum attachPoint = LOCAL_GL_DEPTH_ATTACHMENT;
-    GLbitfield clearBits = LOCAL_GL_DEPTH_BUFFER_BIT;
+  GLenum attachPoint = LOCAL_GL_DEPTH_ATTACHMENT;
+  GLbitfield clearBits = LOCAL_GL_DEPTH_BUFFER_BIT;
 
-    if (format->s) {
-        attachPoint = LOCAL_GL_DEPTH_STENCIL_ATTACHMENT;
-        clearBits |= LOCAL_GL_STENCIL_BUFFER_BIT;
-    }
+  if (format->s) {
+    attachPoint = LOCAL_GL_DEPTH_STENCIL_ATTACHMENT;
+    clearBits |= LOCAL_GL_STENCIL_BUFFER_BIT;
+  }
 
-    // -
+  // -
 
-    gl::ScopedFramebuffer scopedFB(gl);
-    const gl::ScopedBindFramebuffer scopedBindFB(gl, scopedFB.FB());
-    const webgl::ScopedPrepForResourceClear scopedPrep(webgl);
+  gl::ScopedFramebuffer scopedFB(gl);
+  const gl::ScopedBindFramebuffer scopedBindFB(gl, scopedFB.FB());
+  const webgl::ScopedPrepForResourceClear scopedPrep(webgl);
 
-    const auto fnAttach = [&](const uint32_t z) {
-        switch (imageTarget.get()) {
-        case LOCAL_GL_TEXTURE_3D:
-        case LOCAL_GL_TEXTURE_2D_ARRAY:
-            gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER, attachPoint,
-                                         tex, level, z);
-            break;
-        default:
-            if (attachPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
-                                          imageTarget.get(), tex, level);
-                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
-                                          imageTarget.get(), tex, level);
-            } else {
-                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachPoint,
-                                          imageTarget.get(), tex, level);
-            }
-            break;
+  const auto fnAttach = [&](const uint32_t z) {
+    switch (imageTarget.get()) {
+      case LOCAL_GL_TEXTURE_3D:
+      case LOCAL_GL_TEXTURE_2D_ARRAY:
+        gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER, attachPoint, tex,
+                                     level, z);
+        break;
+      default:
+        if (attachPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+          gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                    LOCAL_GL_DEPTH_ATTACHMENT,
+                                    imageTarget.get(), tex, level);
+          gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                    LOCAL_GL_STENCIL_ATTACHMENT,
+                                    imageTarget.get(), tex, level);
+        } else {
+          gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachPoint,
+                                    imageTarget.get(), tex, level);
         }
-    };
-
-    for (uint32_t z = 0; z < depth; ++z) {
-        fnAttach(z);
-        gl->fClear(clearBits);
+        break;
     }
-    const auto& status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-    const bool isComplete = (status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
-    MOZ_ASSERT(isComplete);
-    return isComplete;
+  };
+
+  for (uint32_t z = 0; z < depth; ++z) {
+    fnAttach(z);
+    gl->fClear(clearBits);
+  }
+  const auto& status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+  const bool isComplete = (status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
+  MOZ_ASSERT(isComplete);
+  return isComplete;
 }
 
-static bool
-ZeroTextureData(const WebGLContext* webgl, GLuint tex,
-                TexImageTarget target, uint32_t level,
-                const webgl::FormatUsageInfo* usage, uint32_t width, uint32_t height,
-                uint32_t depth)
-{
-    // This has two usecases:
-    // 1. Lazy zeroing of uninitialized textures:
-    //    a. Before draw.
-    //    b. Before partial upload. (TexStorage + TexSubImage)
-    // 2. Zero subrects from out-of-bounds blits. (CopyTex(Sub)Image)
+static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
+                            TexImageTarget target, uint32_t level,
+                            const webgl::FormatUsageInfo* usage, uint32_t width,
+                            uint32_t height, uint32_t depth) {
+  // This has two usecases:
+  // 1. Lazy zeroing of uninitialized textures:
+  //    a. Before draw.
+  //    b. Before partial upload. (TexStorage + TexSubImage)
+  // 2. Zero subrects from out-of-bounds blits. (CopyTex(Sub)Image)
 
-    // We have no sympathy for any of these cases.
+  // We have no sympathy for any of these cases.
 
-    // "Doctor, it hurts when I do this!" "Well don't do that!"
-    const auto targetStr = EnumString(target.get());
-    webgl->GeneratePerfWarning("Tex image %s level %u is incurring lazy initialization.",
-                               targetStr.c_str(), level);
+  // "Doctor, it hurts when I do this!" "Well don't do that!"
+  const auto targetStr = EnumString(target.get());
+  webgl->GeneratePerfWarning(
+      "Tex image %s level %u is incurring lazy initialization.",
+      targetStr.c_str(), level);
 
-    gl::GLContext* gl = webgl->GL();
+  gl::GLContext* gl = webgl->GL();
 
-    GLenum scopeBindTarget;
-    switch (target.get()) {
+  GLenum scopeBindTarget;
+  switch (target.get()) {
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        scopeBindTarget = LOCAL_GL_TEXTURE_CUBE_MAP;
-        break;
+      scopeBindTarget = LOCAL_GL_TEXTURE_CUBE_MAP;
+      break;
     default:
-        scopeBindTarget = target.get();
-        break;
-    }
-    const gl::ScopedBindTexture scopeBindTexture(gl, tex, scopeBindTarget);
-    const auto& compression = usage->format->compression;
-    if (compression) {
-        auto sizedFormat = usage->format->sizedFormat;
-        MOZ_RELEASE_ASSERT(sizedFormat, "GFX: texture sized format not set");
+      scopeBindTarget = target.get();
+      break;
+  }
+  const gl::ScopedBindTexture scopeBindTexture(gl, tex, scopeBindTarget);
+  const auto& compression = usage->format->compression;
+  if (compression) {
+    auto sizedFormat = usage->format->sizedFormat;
+    MOZ_RELEASE_ASSERT(sizedFormat, "GFX: texture sized format not set");
 
-        const auto fnSizeInBlocks = [](CheckedUint32 pixels, uint8_t pixelsPerBlock) {
-            return RoundUpToMultipleOf(pixels, pixelsPerBlock) / pixelsPerBlock;
-        };
+    const auto fnSizeInBlocks = [](CheckedUint32 pixels,
+                                   uint8_t pixelsPerBlock) {
+      return RoundUpToMultipleOf(pixels, pixelsPerBlock) / pixelsPerBlock;
+    };
 
-        const auto widthBlocks = fnSizeInBlocks(width, compression->blockWidth);
-        const auto heightBlocks = fnSizeInBlocks(height, compression->blockHeight);
+    const auto widthBlocks = fnSizeInBlocks(width, compression->blockWidth);
+    const auto heightBlocks = fnSizeInBlocks(height, compression->blockHeight);
 
-        CheckedUint32 checkedByteCount = compression->bytesPerBlock;
-        checkedByteCount *= widthBlocks;
-        checkedByteCount *= heightBlocks;
-        checkedByteCount *= depth;
-
-        if (!checkedByteCount.isValid())
-            return false;
-
-        const size_t byteCount = checkedByteCount.value();
-
-        UniqueBuffer zeros = calloc(1, byteCount);
-        if (!zeros)
-            return false;
-
-        ScopedUnpackReset scopedReset(webgl);
-        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1); // Don't bother with striding it
-                                                        // well.
-
-        const auto error = DoCompressedTexSubImage(gl, target.get(), level, 0, 0, 0,
-                                                   width, height, depth, sizedFormat,
-                                                   byteCount, zeros.get());
-        return !error;
-    }
-
-    const auto driverUnpackInfo = usage->idealUnpack;
-    MOZ_RELEASE_ASSERT(driverUnpackInfo, "GFX: ideal unpack info not set.");
-
-    if (usage->format->d) {
-        // ANGLE_depth_texture does not allow uploads, so we have to clear.
-        // (Restriction because of D3D9)
-        // Also, depth resources are cleared to 1.0f and are always renderable, so just
-        // use FB clears.
-        return ClearDepthTexture(*webgl, tex, target, level, usage, depth);
-    }
-
-    const webgl::PackingInfo packing = driverUnpackInfo->ToPacking();
-
-    const auto bytesPerPixel = webgl::BytesPerPixel(packing);
-
-    CheckedUint32 checkedByteCount = bytesPerPixel;
-    checkedByteCount *= width;
-    checkedByteCount *= height;
+    CheckedUint32 checkedByteCount = compression->bytesPerBlock;
+    checkedByteCount *= widthBlocks;
+    checkedByteCount *= heightBlocks;
     checkedByteCount *= depth;
 
-    if (!checkedByteCount.isValid())
-        return false;
+    if (!checkedByteCount.isValid()) return false;
 
     const size_t byteCount = checkedByteCount.value();
 
     UniqueBuffer zeros = calloc(1, byteCount);
-    if (!zeros)
-        return false;
+    if (!zeros) return false;
 
     ScopedUnpackReset scopedReset(webgl);
-    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1); // Don't bother with striding it well.
-    const auto error = DoTexSubImage(gl, target, level, 0, 0, 0, width, height, depth,
-                                     packing, zeros.get());
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);  // Don't bother with
+                                                     // striding it well.
+
+    const auto error =
+        DoCompressedTexSubImage(gl, target.get(), level, 0, 0, 0, width, height,
+                                depth, sizedFormat, byteCount, zeros.get());
     return !error;
+  }
+
+  const auto driverUnpackInfo = usage->idealUnpack;
+  MOZ_RELEASE_ASSERT(driverUnpackInfo, "GFX: ideal unpack info not set.");
+
+  if (usage->format->d) {
+    // ANGLE_depth_texture does not allow uploads, so we have to clear.
+    // (Restriction because of D3D9)
+    // Also, depth resources are cleared to 1.0f and are always renderable, so
+    // just use FB clears.
+    return ClearDepthTexture(*webgl, tex, target, level, usage, depth);
+  }
+
+  const webgl::PackingInfo packing = driverUnpackInfo->ToPacking();
+
+  const auto bytesPerPixel = webgl::BytesPerPixel(packing);
+
+  CheckedUint32 checkedByteCount = bytesPerPixel;
+  checkedByteCount *= width;
+  checkedByteCount *= height;
+  checkedByteCount *= depth;
+
+  if (!checkedByteCount.isValid()) return false;
+
+  const size_t byteCount = checkedByteCount.value();
+
+  UniqueBuffer zeros = calloc(1, byteCount);
+  if (!zeros) return false;
+
+  ScopedUnpackReset scopedReset(webgl);
+  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                   1);  // Don't bother with striding it well.
+  const auto error = DoTexSubImage(gl, target, level, 0, 0, 0, width, height,
+                                   depth, packing, zeros.get());
+  return !error;
 }
 
-void
-WebGLTexture::ClampLevelBaseAndMax()
-{
-    if (!mImmutable)
-        return;
+void WebGLTexture::ClampLevelBaseAndMax() {
+  if (!mImmutable) return;
 
-    // GLES 3.0.4, p158:
-    // "For immutable-format textures, `level_base` is clamped to the range
-    //  `[0, levels-1]`, `level_max` is then clamped to the range `
-    //  `[level_base, levels-1]`, where `levels` is the parameter passed to
-    //   TexStorage* for the texture object."
-    mBaseMipmapLevel = Clamp<uint32_t>(mBaseMipmapLevel, 0, mImmutableLevelCount - 1);
-    mMaxMipmapLevel = Clamp<uint32_t>(mMaxMipmapLevel, mBaseMipmapLevel,
-                                      mImmutableLevelCount - 1);
+  // GLES 3.0.4, p158:
+  // "For immutable-format textures, `level_base` is clamped to the range
+  //  `[0, levels-1]`, `level_max` is then clamped to the range `
+  //  `[level_base, levels-1]`, where `levels` is the parameter passed to
+  //   TexStorage* for the texture object."
+  mBaseMipmapLevel =
+      Clamp<uint32_t>(mBaseMipmapLevel, 0, mImmutableLevelCount - 1);
+  mMaxMipmapLevel = Clamp<uint32_t>(mMaxMipmapLevel, mBaseMipmapLevel,
+                                    mImmutableLevelCount - 1);
 
-    // Note: This means that immutable textures are *always* texture-complete!
+  // Note: This means that immutable textures are *always* texture-complete!
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // GL calls
 
-bool
-WebGLTexture::BindTexture(TexTarget texTarget)
-{
-    if (IsDeleted()) {
-        mContext->ErrorInvalidOperation("bindTexture: Cannot bind a deleted object.");
-        return false;
-    }
+bool WebGLTexture::BindTexture(TexTarget texTarget) {
+  if (IsDeleted()) {
+    mContext->ErrorInvalidOperation(
+        "bindTexture: Cannot bind a deleted object.");
+    return false;
+  }
 
-    const bool isFirstBinding = !mTarget;
-    if (!isFirstBinding && mTarget != texTarget) {
-        mContext->ErrorInvalidOperation("bindTexture: This texture has already been bound"
-                                        " to a different target.");
-        return false;
-    }
+  const bool isFirstBinding = !mTarget;
+  if (!isFirstBinding && mTarget != texTarget) {
+    mContext->ErrorInvalidOperation(
+        "bindTexture: This texture has already been bound"
+        " to a different target.");
+    return false;
+  }
 
-    mTarget = texTarget;
+  mTarget = texTarget;
 
-    mContext->gl->fBindTexture(mTarget.get(), mGLName);
+  mContext->gl->fBindTexture(mTarget.get(), mGLName);
 
-    if (isFirstBinding) {
-        mFaceCount = IsCubeMap() ? 6 : 1;
-
-        gl::GLContext* gl = mContext->gl;
-
-        // Thanks to the WebKit people for finding this out: GL_TEXTURE_WRAP_R
-        // is not present in GLES 2, but is present in GL and it seems as if for
-        // cube maps we need to set it to GL_CLAMP_TO_EDGE to get the expected
-        // GLES behavior.
-        // If we are WebGL 2 though, we'll want to leave it as REPEAT.
-        const bool hasWrapR = gl->IsSupported(gl::GLFeature::texture_3D);
-        if (IsCubeMap() && hasWrapR && !mContext->IsWebGL2()) {
-            gl->fTexParameteri(texTarget.get(), LOCAL_GL_TEXTURE_WRAP_R,
-                               LOCAL_GL_CLAMP_TO_EDGE);
-        }
-    }
-
-    return true;
-}
-
-void
-WebGLTexture::GenerateMipmap()
-{
-    // GLES 3.0.4 p160:
-    // "Mipmap generation replaces texel array levels level base + 1 through q
-    //  with arrrays derived from the level base array, regardless of their previous contents. All
-    //  other mipmap arrays, including the level base array, are left unchanged by this
-    //  computation."
-    // But only check and init the base level.
-    const bool ensureInit = true;
-    const bool skipMips = true;
-    const auto completeness = CalcCompletenessInfo(ensureInit, skipMips);
-    if (!completeness || !completeness->levels) {
-        mContext->ErrorInvalidOperation("The texture's base level must be complete.");
-        return;
-    }
-    const auto& usage = completeness->usage;
-    const auto& format = usage->format;
-    if (!mContext->IsWebGL2()) {
-        if (!completeness->powerOfTwo) {
-            mContext->ErrorInvalidOperation("The base level of the texture does not"
-                                            " have power-of-two dimensions.");
-            return;
-        }
-        if (format->isSRGB) {
-            mContext->ErrorInvalidOperation("EXT_sRGB forbids GenerateMipmap with"
-                                            " sRGB.");
-            return;
-        }
-    }
-
-    if (format->compression) {
-        mContext->ErrorInvalidOperation("Texture data at base level is compressed.");
-        return;
-    }
-
-    if (format->d) {
-        mContext->ErrorInvalidOperation("Depth textures are not supported.");
-        return;
-    }
-
-    // OpenGL ES 3.0.4 p160:
-    // If the level base array was not specified with an unsized internal format from
-    // table 3.3 or a sized internal format that is both color-renderable and
-    // texture-filterable according to table 3.13, an INVALID_OPERATION error
-    // is generated.
-    bool canGenerateMipmap = (usage->IsRenderable() && usage->isFilterable);
-    switch (usage->format->effectiveFormat) {
-    case webgl::EffectiveFormat::Luminance8:
-    case webgl::EffectiveFormat::Alpha8:
-    case webgl::EffectiveFormat::Luminance8Alpha8:
-        // Non-color-renderable formats from Table 3.3.
-        canGenerateMipmap = true;
-        break;
-    default:
-        break;
-    }
-
-    if (!canGenerateMipmap) {
-        mContext->ErrorInvalidOperation("Texture at base level is not unsized"
-                                        " internal format or is not"
-                                        " color-renderable or texture-filterable.");
-        return;
-    }
-
-    // Done with validation. Do the operation.
+  if (isFirstBinding) {
+    mFaceCount = IsCubeMap() ? 6 : 1;
 
     gl::GLContext* gl = mContext->gl;
 
-    if (gl->WorkAroundDriverBugs()) {
-        // bug 696495 - to work around failures in the texture-mips.html test on various drivers, we
-        // set the minification filter before calling glGenerateMipmap. This should not carry a significant performance
-        // overhead so we do it unconditionally.
-        //
-        // note that the choice of GL_NEAREST_MIPMAP_NEAREST really matters. See Chromium bug 101105.
-        gl->fTexParameteri(mTarget.get(), LOCAL_GL_TEXTURE_MIN_FILTER,
-                           LOCAL_GL_NEAREST_MIPMAP_NEAREST);
-        gl->fGenerateMipmap(mTarget.get());
-        gl->fTexParameteri(mTarget.get(), LOCAL_GL_TEXTURE_MIN_FILTER,
-                           mSamplingState.minFilter.get());
-    } else {
-        gl->fGenerateMipmap(mTarget.get());
+    // Thanks to the WebKit people for finding this out: GL_TEXTURE_WRAP_R
+    // is not present in GLES 2, but is present in GL and it seems as if for
+    // cube maps we need to set it to GL_CLAMP_TO_EDGE to get the expected
+    // GLES behavior.
+    // If we are WebGL 2 though, we'll want to leave it as REPEAT.
+    const bool hasWrapR = gl->IsSupported(gl::GLFeature::texture_3D);
+    if (IsCubeMap() && hasWrapR && !mContext->IsWebGL2()) {
+      gl->fTexParameteri(texTarget.get(), LOCAL_GL_TEXTURE_WRAP_R,
+                         LOCAL_GL_CLAMP_TO_EDGE);
     }
+  }
 
-    // Record the results.
-
-    const auto maxLevel = EffectiveMaxLevel();
-    PopulateMipChain(maxLevel);
+  return true;
 }
 
-JS::Value
-WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
-{
-    GLint i = 0;
-    GLfloat f = 0.0f;
+void WebGLTexture::GenerateMipmap() {
+  // GLES 3.0.4 p160:
+  // "Mipmap generation replaces texel array levels level base + 1 through q
+  //  with arrrays derived from the level base array, regardless of their
+  //  previous contents. All other mipmap arrays, including the level base
+  //  array, are left unchanged by this computation."
+  // But only check and init the base level.
+  const bool ensureInit = true;
+  const bool skipMips = true;
+  const auto completeness = CalcCompletenessInfo(ensureInit, skipMips);
+  if (!completeness || !completeness->levels) {
+    mContext->ErrorInvalidOperation(
+        "The texture's base level must be complete.");
+    return;
+  }
+  const auto& usage = completeness->usage;
+  const auto& format = usage->format;
+  if (!mContext->IsWebGL2()) {
+    if (!completeness->powerOfTwo) {
+      mContext->ErrorInvalidOperation(
+          "The base level of the texture does not"
+          " have power-of-two dimensions.");
+      return;
+    }
+    if (format->isSRGB) {
+      mContext->ErrorInvalidOperation(
+          "EXT_sRGB forbids GenerateMipmap with"
+          " sRGB.");
+      return;
+    }
+  }
 
-    switch (pname) {
+  if (format->compression) {
+    mContext->ErrorInvalidOperation(
+        "Texture data at base level is compressed.");
+    return;
+  }
+
+  if (format->d) {
+    mContext->ErrorInvalidOperation("Depth textures are not supported.");
+    return;
+  }
+
+  // OpenGL ES 3.0.4 p160:
+  // If the level base array was not specified with an unsized internal format
+  // from table 3.3 or a sized internal format that is both color-renderable and
+  // texture-filterable according to table 3.13, an INVALID_OPERATION error
+  // is generated.
+  bool canGenerateMipmap = (usage->IsRenderable() && usage->isFilterable);
+  switch (usage->format->effectiveFormat) {
+    case webgl::EffectiveFormat::Luminance8:
+    case webgl::EffectiveFormat::Alpha8:
+    case webgl::EffectiveFormat::Luminance8Alpha8:
+      // Non-color-renderable formats from Table 3.3.
+      canGenerateMipmap = true;
+      break;
+    default:
+      break;
+  }
+
+  if (!canGenerateMipmap) {
+    mContext->ErrorInvalidOperation(
+        "Texture at base level is not unsized"
+        " internal format or is not"
+        " color-renderable or texture-filterable.");
+    return;
+  }
+
+  // Done with validation. Do the operation.
+
+  gl::GLContext* gl = mContext->gl;
+
+  if (gl->WorkAroundDriverBugs()) {
+    // bug 696495 - to work around failures in the texture-mips.html test on
+    // various drivers, we set the minification filter before calling
+    // glGenerateMipmap. This should not carry a significant performance
+    // overhead so we do it unconditionally.
+    //
+    // note that the choice of GL_NEAREST_MIPMAP_NEAREST really matters. See
+    // Chromium bug 101105.
+    gl->fTexParameteri(mTarget.get(), LOCAL_GL_TEXTURE_MIN_FILTER,
+                       LOCAL_GL_NEAREST_MIPMAP_NEAREST);
+    gl->fGenerateMipmap(mTarget.get());
+    gl->fTexParameteri(mTarget.get(), LOCAL_GL_TEXTURE_MIN_FILTER,
+                       mSamplingState.minFilter.get());
+  } else {
+    gl->fGenerateMipmap(mTarget.get());
+  }
+
+  // Record the results.
+
+  const auto maxLevel = EffectiveMaxLevel();
+  PopulateMipChain(maxLevel);
+}
+
+JS::Value WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname) {
+  GLint i = 0;
+  GLfloat f = 0.0f;
+
+  switch (pname) {
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
-        return JS::NumberValue(mBaseMipmapLevel);
+      return JS::NumberValue(mBaseMipmapLevel);
 
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
-        return JS::NumberValue(mMaxMipmapLevel);
+      return JS::NumberValue(mMaxMipmapLevel);
 
     case LOCAL_GL_TEXTURE_IMMUTABLE_FORMAT:
-        return JS::BooleanValue(mImmutable);
+      return JS::BooleanValue(mImmutable);
 
     case LOCAL_GL_TEXTURE_IMMUTABLE_LEVELS:
-        return JS::NumberValue(uint32_t(mImmutableLevelCount));
+      return JS::NumberValue(uint32_t(mImmutableLevelCount));
 
     case LOCAL_GL_TEXTURE_MIN_FILTER:
     case LOCAL_GL_TEXTURE_MAG_FILTER:
@@ -850,35 +809,34 @@ WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
     case LOCAL_GL_TEXTURE_WRAP_R:
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
     case LOCAL_GL_TEXTURE_COMPARE_FUNC:
-        mContext->gl->fGetTexParameteriv(texTarget.get(), pname, &i);
-        return JS::NumberValue(uint32_t(i));
+      mContext->gl->fGetTexParameteriv(texTarget.get(), pname, &i);
+      return JS::NumberValue(uint32_t(i));
 
     case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
     case LOCAL_GL_TEXTURE_MAX_LOD:
     case LOCAL_GL_TEXTURE_MIN_LOD:
-        mContext->gl->fGetTexParameterfv(texTarget.get(), pname, &f);
-        return JS::NumberValue(float(f));
+      mContext->gl->fGetTexParameterfv(texTarget.get(), pname, &f);
+      return JS::NumberValue(float(f));
 
     default:
-        MOZ_CRASH("GFX: Unhandled pname.");
-    }
+      MOZ_CRASH("GFX: Unhandled pname.");
+  }
 }
 
 // Here we have to support all pnames with both int and float params.
 // See this discussion:
 //   https://www.khronos.org/webgl/public-mailing-list/archives/1008/msg00014.html
-void
-WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& param)
-{
-    bool isPNameValid = false;
-    switch (pname) {
+void WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname,
+                                const FloatOrInt& param) {
+  bool isPNameValid = false;
+  switch (pname) {
     // GLES 2.0.25 p76:
     case LOCAL_GL_TEXTURE_WRAP_S:
     case LOCAL_GL_TEXTURE_WRAP_T:
     case LOCAL_GL_TEXTURE_MIN_FILTER:
     case LOCAL_GL_TEXTURE_MAG_FILTER:
-        isPNameValid = true;
-        break;
+      isPNameValid = true;
+      break;
 
     // GLES 3.0.4 p149-150:
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
@@ -888,40 +846,40 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& 
     case LOCAL_GL_TEXTURE_MAX_LOD:
     case LOCAL_GL_TEXTURE_MIN_LOD:
     case LOCAL_GL_TEXTURE_WRAP_R:
-        if (mContext->IsWebGL2())
-            isPNameValid = true;
-        break;
+      if (mContext->IsWebGL2()) isPNameValid = true;
+      break;
 
     case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
-        if (mContext->IsExtensionEnabled(WebGLExtensionID::EXT_texture_filter_anisotropic))
-            isPNameValid = true;
-        break;
-    }
+      if (mContext->IsExtensionEnabled(
+              WebGLExtensionID::EXT_texture_filter_anisotropic))
+        isPNameValid = true;
+      break;
+  }
 
-    if (!isPNameValid) {
-        mContext->ErrorInvalidEnumInfo("texParameter: pname", pname);
-        return;
-    }
+  if (!isPNameValid) {
+    mContext->ErrorInvalidEnumInfo("texParameter: pname", pname);
+    return;
+  }
 
-    ////////////////
-    // Validate params and invalidate if needed.
+  ////////////////
+  // Validate params and invalidate if needed.
 
-    bool paramBadEnum = false;
-    bool paramBadValue = false;
+  bool paramBadEnum = false;
+  bool paramBadValue = false;
 
-    switch (pname) {
+  switch (pname) {
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
-        paramBadValue = (param.i < 0);
-        break;
+      paramBadValue = (param.i < 0);
+      break;
 
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
-        paramBadValue = (param.i != LOCAL_GL_NONE &&
-                         param.i != LOCAL_GL_COMPARE_REF_TO_TEXTURE);
-        break;
+      paramBadValue = (param.i != LOCAL_GL_NONE &&
+                       param.i != LOCAL_GL_COMPARE_REF_TO_TEXTURE);
+      break;
 
     case LOCAL_GL_TEXTURE_COMPARE_FUNC:
-        switch (param.i) {
+      switch (param.i) {
         case LOCAL_GL_LEQUAL:
         case LOCAL_GL_GEQUAL:
         case LOCAL_GL_LESS:
@@ -930,141 +888,142 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& 
         case LOCAL_GL_NOTEQUAL:
         case LOCAL_GL_ALWAYS:
         case LOCAL_GL_NEVER:
-            break;
+          break;
 
         default:
-            paramBadValue = true;
-            break;
-        }
-        break;
+          paramBadValue = true;
+          break;
+      }
+      break;
 
     case LOCAL_GL_TEXTURE_MIN_FILTER:
-        switch (param.i) {
+      switch (param.i) {
         case LOCAL_GL_NEAREST:
         case LOCAL_GL_LINEAR:
         case LOCAL_GL_NEAREST_MIPMAP_NEAREST:
         case LOCAL_GL_LINEAR_MIPMAP_NEAREST:
         case LOCAL_GL_NEAREST_MIPMAP_LINEAR:
         case LOCAL_GL_LINEAR_MIPMAP_LINEAR:
-            break;
+          break;
 
         default:
-            paramBadEnum = true;
-            break;
-        }
-        break;
+          paramBadEnum = true;
+          break;
+      }
+      break;
 
     case LOCAL_GL_TEXTURE_MAG_FILTER:
-        switch (param.i) {
+      switch (param.i) {
         case LOCAL_GL_NEAREST:
         case LOCAL_GL_LINEAR:
-            break;
+          break;
 
         default:
-            paramBadEnum = true;
-            break;
-        }
-        break;
+          paramBadEnum = true;
+          break;
+      }
+      break;
 
     case LOCAL_GL_TEXTURE_WRAP_S:
     case LOCAL_GL_TEXTURE_WRAP_T:
     case LOCAL_GL_TEXTURE_WRAP_R:
-        switch (param.i) {
+      switch (param.i) {
         case LOCAL_GL_CLAMP_TO_EDGE:
         case LOCAL_GL_MIRRORED_REPEAT:
         case LOCAL_GL_REPEAT:
-            break;
+          break;
 
         default:
-            paramBadEnum = true;
-            break;
-        }
-        break;
+          paramBadEnum = true;
+          break;
+      }
+      break;
 
     case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
-        if (param.f < 1.0f)
-            paramBadValue = true;
+      if (param.f < 1.0f) paramBadValue = true;
 
-        break;
+      break;
+  }
+
+  if (paramBadEnum) {
+    if (!param.isFloat) {
+      mContext->ErrorInvalidEnum(
+          "pname 0x%04x: Invalid param"
+          " 0x%04x.",
+          pname, param.i);
+    } else {
+      mContext->ErrorInvalidEnum("pname 0x%04x: Invalid param %g.", pname,
+                                 param.f);
     }
+    return;
+  }
 
-    if (paramBadEnum) {
-        if (!param.isFloat) {
-            mContext->ErrorInvalidEnum("pname 0x%04x: Invalid param"
-                                       " 0x%04x.",
-                                       pname, param.i);
-        } else {
-            mContext->ErrorInvalidEnum("pname 0x%04x: Invalid param %g.",
-                                       pname, param.f);
-        }
-        return;
+  if (paramBadValue) {
+    if (!param.isFloat) {
+      mContext->ErrorInvalidValue(
+          "pname 0x%04x: Invalid param %i"
+          " (0x%x).",
+          pname, param.i, param.i);
+    } else {
+      mContext->ErrorInvalidValue("pname 0x%04x: Invalid param %g.", pname,
+                                  param.f);
     }
+    return;
+  }
 
-    if (paramBadValue) {
-        if (!param.isFloat) {
-            mContext->ErrorInvalidValue("pname 0x%04x: Invalid param %i"
-                                        " (0x%x).",
-                                        pname, param.i, param.i);
-        } else {
-            mContext->ErrorInvalidValue("pname 0x%04x: Invalid param %g.",
-                                        pname, param.f);
-        }
-        return;
-    }
+  ////////////////
+  // Store any needed values
 
-    ////////////////
-    // Store any needed values
-
-    FloatOrInt clamped = param;
-    bool invalidate = true;
-    switch (pname) {
+  FloatOrInt clamped = param;
+  bool invalidate = true;
+  switch (pname) {
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
-        mBaseMipmapLevel = clamped.i;
-        ClampLevelBaseAndMax();
-        clamped = FloatOrInt(GLint(mBaseMipmapLevel));
-        break;
+      mBaseMipmapLevel = clamped.i;
+      ClampLevelBaseAndMax();
+      clamped = FloatOrInt(GLint(mBaseMipmapLevel));
+      break;
 
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
-        mMaxMipmapLevel = clamped.i;
-        ClampLevelBaseAndMax();
-        clamped = FloatOrInt(GLint(mMaxMipmapLevel));
-        break;
+      mMaxMipmapLevel = clamped.i;
+      ClampLevelBaseAndMax();
+      clamped = FloatOrInt(GLint(mMaxMipmapLevel));
+      break;
 
     case LOCAL_GL_TEXTURE_MIN_FILTER:
-        mSamplingState.minFilter = clamped.i;
-        break;
+      mSamplingState.minFilter = clamped.i;
+      break;
 
     case LOCAL_GL_TEXTURE_MAG_FILTER:
-        mSamplingState.magFilter = clamped.i;
-        break;
+      mSamplingState.magFilter = clamped.i;
+      break;
 
     case LOCAL_GL_TEXTURE_WRAP_S:
-        mSamplingState.wrapS = clamped.i;
-        break;
+      mSamplingState.wrapS = clamped.i;
+      break;
 
     case LOCAL_GL_TEXTURE_WRAP_T:
-        mSamplingState.wrapT = clamped.i;
-        break;
+      mSamplingState.wrapT = clamped.i;
+      break;
 
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
-        mSamplingState.compareMode = clamped.i;
-        break;
+      mSamplingState.compareMode = clamped.i;
+      break;
 
     default:
-        invalidate = false; // Texture completeness will not change.
-        break;
-    }
+      invalidate = false;  // Texture completeness will not change.
+      break;
+  }
 
-    if (invalidate) {
-        InvalidateCaches();
-    }
+  if (invalidate) {
+    InvalidateCaches();
+  }
 
-    ////////////////
+  ////////////////
 
-    if (!clamped.isFloat)
-        mContext->gl->fTexParameteri(texTarget.get(), pname, clamped.i);
-    else
-        mContext->gl->fTexParameterf(texTarget.get(), pname, clamped.f);
+  if (!clamped.isFloat)
+    mContext->gl->fTexParameteri(texTarget.get(), pname, clamped.i);
+  else
+    mContext->gl->fTexParameterf(texTarget.get(), pname, clamped.f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1074,4 +1033,4 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLTexture)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLTexture, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLTexture, Release)
 
-} // namespace mozilla
+}  // namespace mozilla

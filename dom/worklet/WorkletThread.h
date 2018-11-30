@@ -18,36 +18,29 @@ class nsIRunnable;
 namespace mozilla {
 namespace dom {
 
-class WorkletThread final : public nsThread, public nsIObserver
-{
-public:
+class WorkletThread final : public nsThread, public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<WorkletThread> Create();
 
-  static bool
-  IsOnWorkletThread();
+  static bool IsOnWorkletThread();
 
-  static void
-  AssertIsOnWorkletThread();
+  static void AssertIsOnWorkletThread();
 
-  nsresult
-  DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable);
+  nsresult DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
-  void
-  Terminate();
+  void Terminate();
 
-private:
+ private:
   WorkletThread();
   ~WorkletThread();
 
-  void
-  RunEventLoop(JSRuntime* aParentRuntime);
+  void RunEventLoop(JSRuntime* aParentRuntime);
   class PrimaryRunnable;
 
-  void
-  TerminateInternal();
+  void TerminateInternal();
   class TerminateRunnable;
 
   // This should only be called by consumers that have an
@@ -61,12 +54,12 @@ private:
   NS_IMETHOD
   DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
 
-  bool mExitLoop; // worklet execution thread
+  bool mExitLoop;  // worklet execution thread
 
-  bool mIsTerminating; // main thread
+  bool mIsTerminating;  // main thread
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_worklet_WorkletThread_h
+#endif  // mozilla_dom_worklet_WorkletThread_h

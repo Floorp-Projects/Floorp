@@ -17,17 +17,16 @@ struct IAccessible;
 namespace mozilla {
 namespace a11y {
 
-class HTMLWin32ObjectOwnerAccessible : public AccessibleWrap
-{
-public:
+class HTMLWin32ObjectOwnerAccessible : public AccessibleWrap {
+ public:
   // This will own the HTMLWin32ObjectAccessible. We create this where the
   // <object> or <embed> exists in the tree, so that get_accNextSibling() etc.
   // will still point to Gecko accessible sibling content. This is necessary
   // because the native plugin accessible doesn't know where it exists in the
   // Mozilla tree, and returns null for previous and next sibling. This would
   // have the effect of cutting off all content after the plugin.
-  HTMLWin32ObjectOwnerAccessible(nsIContent* aContent,
-                                 DocAccessible* aDoc, void* aHwnd);
+  HTMLWin32ObjectOwnerAccessible(nsIContent* aContent, DocAccessible* aDoc,
+                                 void* aHwnd);
   virtual ~HTMLWin32ObjectOwnerAccessible() {}
 
   // Accessible
@@ -35,36 +34,35 @@ public:
   virtual mozilla::a11y::role NativeRole() const override;
   virtual bool NativelyUnavailable() const;
 
-protected:
+ protected:
   void* mHwnd;
   RefPtr<Accessible> mNativeAccessible;
 };
 
 /**
-  * This class is used only internally, we never! send out an IAccessible linked
-  *   back to this object. This class is used to represent a plugin object when
-  *   referenced as a child or sibling of another Accessible node. We need only
-  *   a limited portion of the Accessible interface implemented here. The
-  *   in depth accessible information will be returned by the actual IAccessible
-  *   object returned by us in Accessible::NewAccessible() that gets the IAccessible
-  *   from the windows system from the window handle.
-  */
-class HTMLWin32ObjectAccessible : public DummyAccessible
-{
-public:
+ * This class is used only internally, we never! send out an IAccessible linked
+ *   back to this object. This class is used to represent a plugin object when
+ *   referenced as a child or sibling of another Accessible node. We need only
+ *   a limited portion of the Accessible interface implemented here. The
+ *   in depth accessible information will be returned by the actual IAccessible
+ *   object returned by us in Accessible::NewAccessible() that gets the
+ * IAccessible from the windows system from the window handle.
+ */
+class HTMLWin32ObjectAccessible : public DummyAccessible {
+ public:
   HTMLWin32ObjectAccessible(void* aHwnd, DocAccessible* aDoc);
   virtual ~HTMLWin32ObjectAccessible() {}
 
   virtual void GetNativeInterface(void** aNativeAccessible) override;
 
-protected:
+ protected:
   void* mHwnd;
 #if defined(MOZ_CONTENT_SANDBOX)
   mscom::ProxyUniquePtr<IAccessible> mCOMProxy;
 #endif
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

@@ -15,32 +15,28 @@ namespace dom {
 
 class BlobImpl;
 
-class PendingIPCBlobChild final : public mozilla::ipc::PPendingIPCBlobChild
-{
-public:
+class PendingIPCBlobChild final : public mozilla::ipc::PPendingIPCBlobChild {
+ public:
   explicit PendingIPCBlobChild(const IPCBlob& aBlob);
 
   // After calling one of the following method, the actor will be deleted.
 
   // For File.
-  already_AddRefed<BlobImpl>
-  SetPendingInfoAndDeleteActor(const nsString& aName,
-                               const nsString& aContentType,
-                               uint64_t aLength,
-                               int64_t aLastModifiedDate);
+  already_AddRefed<BlobImpl> SetPendingInfoAndDeleteActor(
+      const nsString& aName, const nsString& aContentType, uint64_t aLength,
+      int64_t aLastModifiedDate);
 
   // For Blob.
-  already_AddRefed<BlobImpl>
-  SetPendingInfoAndDeleteActor(const nsString& aContentType,
-                               uint64_t aLength);
+  already_AddRefed<BlobImpl> SetPendingInfoAndDeleteActor(
+      const nsString& aContentType, uint64_t aLength);
 
-private:
+ private:
   ~PendingIPCBlobChild();
 
   RefPtr<BlobImpl> mBlobImpl;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ipc_PendingIPCBlobChild_h
+#endif  // mozilla_dom_ipc_PendingIPCBlobChild_h

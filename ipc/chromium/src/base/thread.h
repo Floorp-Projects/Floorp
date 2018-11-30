@@ -37,20 +37,20 @@ class Thread : PlatformThread::Delegate {
     uint32_t permanent_hang_timeout;
 
     Options()
-        : message_loop_type(MessageLoop::TYPE_DEFAULT)
-        , stack_size(0)
-        , transient_hang_timeout(0)
-        , permanent_hang_timeout(0) {}
+        : message_loop_type(MessageLoop::TYPE_DEFAULT),
+          stack_size(0),
+          transient_hang_timeout(0),
+          permanent_hang_timeout(0) {}
     Options(MessageLoop::Type type, size_t size)
-        : message_loop_type(type)
-        , stack_size(size)
-        , transient_hang_timeout(0)
-        , permanent_hang_timeout(0) {}
+        : message_loop_type(type),
+          stack_size(size),
+          transient_hang_timeout(0),
+          permanent_hang_timeout(0) {}
   };
 
   // Constructor.
   // name is a display string to identify the thread.
-  explicit Thread(const char *name);
+  explicit Thread(const char* name);
 
   // Destroys the thread, stopping it if necessary.
   //
@@ -113,7 +113,7 @@ class Thread : PlatformThread::Delegate {
   MessageLoop* message_loop() const { return message_loop_; }
 
   // Set the name of this thread (for display in debugger too).
-  const std::string &thread_name() { return name_; }
+  const std::string& thread_name() { return name_; }
 
   // The native thread handle.
   PlatformThreadHandle thread_handle() { return thread_; }
@@ -123,8 +123,8 @@ class Thread : PlatformThread::Delegate {
 
   // Reset thread ID as current thread.
   PlatformThreadId reset_thread_id() {
-      thread_id_ = PlatformThread::CurrentId();
-      return thread_id_;
+    thread_id_ = PlatformThread::CurrentId();
+    return thread_id_;
   }
 
   // Returns true if the thread has been started, and not yet stopped.

@@ -23,53 +23,51 @@ class nsICycleCollectorListener;
 class nsIDocShell;
 
 namespace mozilla {
-template <class> class Maybe;
+template <class>
+class Maybe;
 struct CycleCollectorResults;
-} // namespace mozilla
+}  // namespace mozilla
 
 // The amount of time we wait between a request to GC (due to leaving
 // a page) and doing the actual GC.
-#define NS_GC_DELAY                 4000 // ms
+#define NS_GC_DELAY 4000  // ms
 
 #define NS_MAJOR_FORGET_SKIPPABLE_CALLS 5
 
-class nsJSContext : public nsIScriptContext
-{
-public:
-  nsJSContext(bool aGCOnDestruction, nsIScriptGlobalObject* aGlobalObject);
+class nsJSContext : public nsIScriptContext {
+ public:
+  nsJSContext(bool aGCOnDestruction, nsIScriptGlobalObject *aGlobalObject);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSContext,
                                                          nsIScriptContext)
 
   virtual nsIScriptGlobalObject *GetGlobalObject() override;
-  inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; }
+  inline nsIScriptGlobalObject *GetGlobalObjectRef() {
+    return mGlobalObjectRef;
+  }
 
   virtual nsresult InitContext() override;
   virtual bool IsContextInitialized() override;
 
-  virtual nsresult SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, nsISupports* aVal) override;
+  virtual nsresult SetProperty(JS::Handle<JSObject *> aTarget,
+                               const char *aPropName,
+                               nsISupports *aVal) override;
 
   virtual bool GetProcessingScriptTag() override;
   virtual void SetProcessingScriptTag(bool aResult) override;
 
-  virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj) override;
+  virtual nsresult InitClasses(JS::Handle<JSObject *> aGlobalObj) override;
 
   virtual void WillInitializeContext() override;
   virtual void DidInitializeContext() override;
 
-  virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) override;
-  virtual JSObject* GetWindowProxy() override;
+  virtual void SetWindowProxy(JS::Handle<JSObject *> aWindowProxy) override;
+  virtual JSObject *GetWindowProxy() override;
 
-  enum IsShrinking {
-    ShrinkingGC,
-    NonShrinkingGC
-  };
+  enum IsShrinking { ShrinkingGC, NonShrinkingGC };
 
-  enum IsIncremental {
-    IncrementalGC,
-    NonIncrementalGC
-  };
+  enum IsIncremental { IncrementalGC, NonIncrementalGC };
 
   // Setup all the statics etc - safe to call multiple times after Startup().
   static void EnsureStatics();
@@ -81,30 +79,35 @@ public:
 
   static void CycleCollectNow(nsICycleCollectorListener *aListener = nullptr);
 
-  // Run a cycle collector slice, using a heuristic to decide how long to run it.
+  // Run a cycle collector slice, using a heuristic to decide how long to run
+  // it.
   static void RunCycleCollectorSlice(mozilla::TimeStamp aDeadline);
 
   // Run a cycle collector slice, using the given work budget.
   static void RunCycleCollectorWorkSlice(int64_t aWorkBudget);
 
   static void BeginCycleCollectionCallback();
-  static void EndCycleCollectionCallback(mozilla::CycleCollectorResults &aResults);
+  static void EndCycleCollectionCallback(
+      mozilla::CycleCollectorResults &aResults);
 
-  // Return the longest CC slice time since ClearMaxCCSliceTime() was last called.
+  // Return the longest CC slice time since ClearMaxCCSliceTime() was last
+  // called.
   static uint32_t GetMaxCCSliceTimeSinceClear();
   static void ClearMaxCCSliceTime();
 
   // If there is some pending CC or GC timer/runner, this will run it.
-  static void RunNextCollectorTimer(JS::gcreason::Reason aReason,
-                                    mozilla::TimeStamp aDeadline = mozilla::TimeStamp());
+  static void RunNextCollectorTimer(
+      JS::gcreason::Reason aReason,
+      mozilla::TimeStamp aDeadline = mozilla::TimeStamp());
   // If user has been idle and aDocShell is for an iframe being loaded in an
   // already loaded top level docshell, this will run a CC or GC
   // timer/runner if there is such pending.
-  static void MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
+  static void MaybeRunNextCollectorSlice(nsIDocShell *aDocShell,
                                          JS::gcreason::Reason aReason);
 
   // The GC should probably run soon, in the zone of object aObj (if given).
-  static void PokeGC(JS::gcreason::Reason aReason, JSObject* aObj, int aDelay = 0);
+  static void PokeGC(JS::gcreason::Reason aReason, JSObject *aObj,
+                     int aDelay = 0);
   static void KillGCTimer();
 
   static void PokeShrinkingGC();
@@ -121,28 +124,27 @@ public:
 
   static uint32_t CleanupsSinceLastGC();
 
-  nsIScriptGlobalObject* GetCachedGlobalObject()
-  {
+  nsIScriptGlobalObject *GetCachedGlobalObject() {
     // Verify that we have a global so that this
     // does always return a null when GetGlobalObject() is null.
-    JSObject* global = GetWindowProxy();
+    JSObject *global = GetWindowProxy();
     return global ? mGlobalObjectRef.get() : nullptr;
   }
 
-protected:
+ protected:
   virtual ~nsJSContext();
 
   // Helper to convert xpcom datatypes to jsvals.
   nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
-                                   JS::Handle<JSObject*> aScope,
+                                   JS::Handle<JSObject *> aScope,
                                    JS::AutoValueVector &aArgsOut);
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv);
 
-private:
+ private:
   void Destroy();
 
-  JS::Heap<JSObject*> mWindowProxy;
+  JS::Heap<JSObject *> mWindowProxy;
 
   bool mIsInitialized;
   bool mGCOnDestruction;
@@ -162,39 +164,37 @@ void StartupJSEnvironment();
 void ShutdownJSEnvironment();
 
 // Runnable that's used to do async error reporting
-class AsyncErrorReporter final : public mozilla::Runnable
-{
-public:
+class AsyncErrorReporter final : public mozilla::Runnable {
+ public:
   // aWindow may be null if this error report is not associated with a window
-  explicit AsyncErrorReporter(xpc::ErrorReport* aReport)
-    : Runnable("dom::AsyncErrorReporter")
-    , mReport(aReport)
-  {}
+  explicit AsyncErrorReporter(xpc::ErrorReport *aReport)
+      : Runnable("dom::AsyncErrorReporter"), mReport(aReport) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     mReport->LogToConsole();
     return NS_OK;
   }
 
-protected:
+ protected:
   RefPtr<xpc::ErrorReport> mReport;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 // An interface for fast and native conversion to/from nsIArray. If an object
 // supports this interface, JS can reach directly in for the argv, and avoid
 // nsISupports conversion. If this interface is not supported, the object will
 // be queried for nsIArray, and everything converted via xpcom objects.
-#define NS_IJSARGARRAY_IID \
-{ 0xb6acdac8, 0xf5c6, 0x432c, \
-  { 0xa8, 0x6e, 0x33, 0xee, 0xb1, 0xb0, 0xcd, 0xdc } }
+#define NS_IJSARGARRAY_IID                           \
+  {                                                  \
+    0xb6acdac8, 0xf5c6, 0x432c, {                    \
+      0xa8, 0x6e, 0x33, 0xee, 0xb1, 0xb0, 0xcd, 0xdc \
+    }                                                \
+  }
 
-class nsIJSArgArray : public nsIArray
-{
-public:
+class nsIJSArgArray : public nsIArray {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSARGARRAY_IID)
   // Bug 312003 describes why this must be "void **", but after calling argv
   // may be cast to JS::Value* and the args found at:

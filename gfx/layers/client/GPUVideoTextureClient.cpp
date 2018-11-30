@@ -13,28 +13,19 @@ namespace layers {
 
 using namespace gfx;
 
-GPUVideoTextureData::GPUVideoTextureData(dom::VideoDecoderManagerChild* aManager,
-                                         const SurfaceDescriptorGPUVideo& aSD,
-                                         const gfx::IntSize& aSize)
-  : mManager(aManager)
-  , mSD(aSD)
-  , mSize(aSize)
-{}
+GPUVideoTextureData::GPUVideoTextureData(
+    dom::VideoDecoderManagerChild* aManager,
+    const SurfaceDescriptorGPUVideo& aSD, const gfx::IntSize& aSize)
+    : mManager(aManager), mSD(aSD), mSize(aSize) {}
 
-GPUVideoTextureData::~GPUVideoTextureData()
-{
-}
+GPUVideoTextureData::~GPUVideoTextureData() {}
 
-bool
-GPUVideoTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
-{
+bool GPUVideoTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   aOutDescriptor = mSD;
   return true;
 }
 
-void
-GPUVideoTextureData::FillInfo(TextureData::Info& aInfo) const
-{
+void GPUVideoTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   // TODO: We should probably try do better for this.
   // layers::Image doesn't expose a format, so it's hard
@@ -46,22 +37,16 @@ GPUVideoTextureData::FillInfo(TextureData::Info& aInfo) const
   aInfo.canExposeMappedData = false;
 }
 
-already_AddRefed<SourceSurface>
-GPUVideoTextureData::GetAsSourceSurface()
-{
+already_AddRefed<SourceSurface> GPUVideoTextureData::GetAsSourceSurface() {
   return mManager->Readback(mSD);
 }
 
-void
-GPUVideoTextureData::Deallocate(LayersIPCChannel* aAllocator)
-{
+void GPUVideoTextureData::Deallocate(LayersIPCChannel* aAllocator) {
   mManager->DeallocateSurfaceDescriptorGPUVideo(mSD);
   mSD = SurfaceDescriptorGPUVideo();
 }
 
-void
-GPUVideoTextureData::Forget(LayersIPCChannel* aAllocator)
-{
+void GPUVideoTextureData::Forget(LayersIPCChannel* aAllocator) {
   // We always need to manually deallocate on the client side.
   // Ideally we'd set up our TextureClient with the DEALLOCATE_CLIENT
   // flag, but that forces texture destruction to be synchronous.
@@ -69,5 +54,5 @@ GPUVideoTextureData::Forget(LayersIPCChannel* aAllocator)
   Deallocate(aAllocator);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

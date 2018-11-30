@@ -15,11 +15,11 @@
 
 // Utility functions for encoding/decoding structures used by Certificate
 // Transparency to/from the TLS wire format encoding.
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // Encodes the DigitallySigned |data| to |output|.
-pkix::Result EncodeDigitallySigned(const DigitallySigned& data,
-                                   Buffer& output);
+pkix::Result EncodeDigitallySigned(const DigitallySigned& data, Buffer& output);
 
 // Reads and decodes a DigitallySigned object from |reader|.
 // On failure, the cursor position of |reader| is undefined.
@@ -38,8 +38,7 @@ pkix::Result EncodeLogEntry(const LogEntry& entry, Buffer& output);
 // |extensions| CT extensions.
 pkix::Result EncodeV1SCTSignedData(uint64_t timestamp,
                                    pkix::Input serializedLogEntry,
-                                   pkix::Input extensions,
-                                   Buffer& output);
+                                   pkix::Input extensions, Buffer& output);
 
 // Decodes a list of Signed Certificate Timestamps
 // (SignedCertificateTimestampList as defined in RFC6962). This list
@@ -53,13 +52,14 @@ pkix::Result DecodeSCTList(pkix::Input input, pkix::Reader& listReader);
 pkix::Result ReadSCTListItem(pkix::Reader& listReader, pkix::Input& result);
 
 // Decodes a single SCT from |input| to |output|.
-pkix::Result DecodeSignedCertificateTimestamp(pkix::Reader& input,
-  SignedCertificateTimestamp& output);
+pkix::Result DecodeSignedCertificateTimestamp(
+    pkix::Reader& input, SignedCertificateTimestamp& output);
 
 // Encodes a list of SCTs (|scts|) to |output|.
 pkix::Result EncodeSCTList(const std::vector<pkix::Input>& scts,
                            Buffer& output);
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
-#endif // CTSerialization_h
+#endif  // CTSerialization_h

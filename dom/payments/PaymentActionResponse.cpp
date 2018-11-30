@@ -15,16 +15,14 @@ namespace dom {
 NS_IMPL_ISUPPORTS(PaymentResponseData, nsIPaymentResponseData)
 
 NS_IMETHODIMP
-PaymentResponseData::GetType(uint32_t* aType)
-{
+PaymentResponseData::GetType(uint32_t* aType) {
   NS_ENSURE_ARG_POINTER(aType);
   *aType = mType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentResponseData::Init(const uint32_t aType)
-{
+PaymentResponseData::Init(const uint32_t aType) {
   if (aType != nsIPaymentResponseData::GENERAL_RESPONSE &&
       aType != nsIPaymentResponseData::BASICCARD_RESPONSE) {
     return NS_ERROR_FAILURE;
@@ -35,26 +33,21 @@ PaymentResponseData::Init(const uint32_t aType)
 
 /* GeneralResponseData */
 
-NS_IMPL_ISUPPORTS_INHERITED(GeneralResponseData,
-                            PaymentResponseData,
+NS_IMPL_ISUPPORTS_INHERITED(GeneralResponseData, PaymentResponseData,
                             nsIGeneralResponseData)
 
-GeneralResponseData::GeneralResponseData()
-  : mData(NS_LITERAL_STRING("{}"))
-{
+GeneralResponseData::GeneralResponseData() : mData(NS_LITERAL_STRING("{}")) {
   Init(nsIPaymentResponseData::GENERAL_RESPONSE);
 }
 
 NS_IMETHODIMP
-GeneralResponseData::GetData(nsAString& aData)
-{
+GeneralResponseData::GetData(nsAString& aData) {
   aData = mData;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GeneralResponseData::InitData(JS::HandleValue aValue, JSContext* aCx)
-{
+GeneralResponseData::InitData(JS::HandleValue aValue, JSContext* aCx) {
   if (aValue.isNullOrUndefined()) {
     return NS_ERROR_FAILURE;
   }
@@ -67,53 +60,45 @@ GeneralResponseData::InitData(JS::HandleValue aValue, JSContext* aCx)
 
 /* BasicCardResponseData */
 
-NS_IMPL_ISUPPORTS_INHERITED(BasicCardResponseData,
-                            PaymentResponseData,
+NS_IMPL_ISUPPORTS_INHERITED(BasicCardResponseData, PaymentResponseData,
                             nsIBasicCardResponseData)
 
-BasicCardResponseData::BasicCardResponseData()
-{
+BasicCardResponseData::BasicCardResponseData() {
   Init(nsIPaymentResponseData::BASICCARD_RESPONSE);
 }
 
 NS_IMETHODIMP
-BasicCardResponseData::GetCardholderName(nsAString& aCardholderName)
-{
+BasicCardResponseData::GetCardholderName(nsAString& aCardholderName) {
   aCardholderName = mCardholderName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BasicCardResponseData::GetCardNumber(nsAString& aCardNumber)
-{
+BasicCardResponseData::GetCardNumber(nsAString& aCardNumber) {
   aCardNumber = mCardNumber;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BasicCardResponseData::GetExpiryMonth(nsAString& aExpiryMonth)
-{
+BasicCardResponseData::GetExpiryMonth(nsAString& aExpiryMonth) {
   aExpiryMonth = mExpiryMonth;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BasicCardResponseData::GetExpiryYear(nsAString& aExpiryYear)
-{
+BasicCardResponseData::GetExpiryYear(nsAString& aExpiryYear) {
   aExpiryYear = mExpiryYear;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BasicCardResponseData::GetCardSecurityCode(nsAString& aCardSecurityCode)
-{
+BasicCardResponseData::GetCardSecurityCode(nsAString& aCardSecurityCode) {
   aCardSecurityCode = mCardSecurityCode;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BasicCardResponseData::GetBillingAddress(nsIPaymentAddress** aBillingAddress)
-{
+BasicCardResponseData::GetBillingAddress(nsIPaymentAddress** aBillingAddress) {
   NS_ENSURE_ARG_POINTER(aBillingAddress);
   nsCOMPtr<nsIPaymentAddress> address;
   address = mBillingAddress;
@@ -127,8 +112,7 @@ BasicCardResponseData::InitData(const nsAString& aCardholderName,
                                 const nsAString& aExpiryMonth,
                                 const nsAString& aExpiryYear,
                                 const nsAString& aCardSecurityCode,
-                                nsIPaymentAddress* aBillingAddress)
-{
+                                nsIPaymentAddress* aBillingAddress) {
   // cardNumber is a required attribute, cannot be empty;
   if (aCardNumber.IsEmpty()) {
     return NS_ERROR_FAILURE;
@@ -157,25 +141,19 @@ BasicCardResponseData::InitData(const nsAString& aCardholderName,
 
 /* PaymentActionResponse */
 
-NS_IMPL_ISUPPORTS(PaymentActionResponse,
-                  nsIPaymentActionResponse)
+NS_IMPL_ISUPPORTS(PaymentActionResponse, nsIPaymentActionResponse)
 
 PaymentActionResponse::PaymentActionResponse()
-  : mRequestId(EmptyString())
-  , mType(nsIPaymentActionResponse::NO_TYPE)
-{
-}
+    : mRequestId(EmptyString()), mType(nsIPaymentActionResponse::NO_TYPE) {}
 
 NS_IMETHODIMP
-PaymentActionResponse::GetRequestId(nsAString& aRequestId)
-{
+PaymentActionResponse::GetRequestId(nsAString& aRequestId) {
   aRequestId = mRequestId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentActionResponse::GetType(uint32_t* aType)
-{
+PaymentActionResponse::GetType(uint32_t* aType) {
   NS_ENSURE_ARG_POINTER(aType);
   *aType = mType;
   return NS_OK;
@@ -183,27 +161,23 @@ PaymentActionResponse::GetType(uint32_t* aType)
 
 /* PaymentCanMakeActionResponse */
 
-NS_IMPL_ISUPPORTS_INHERITED(PaymentCanMakeActionResponse,
-                            PaymentActionResponse,
+NS_IMPL_ISUPPORTS_INHERITED(PaymentCanMakeActionResponse, PaymentActionResponse,
                             nsIPaymentCanMakeActionResponse)
 
-PaymentCanMakeActionResponse::PaymentCanMakeActionResponse()
-  : mResult(false)
-{
+PaymentCanMakeActionResponse::PaymentCanMakeActionResponse() : mResult(false) {
   mType = nsIPaymentActionResponse::CANMAKE_ACTION;
 }
 
 NS_IMETHODIMP
-PaymentCanMakeActionResponse::GetResult(bool* aResult)
-{
+PaymentCanMakeActionResponse::GetResult(bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = mResult;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentCanMakeActionResponse::Init(const nsAString& aRequestId, const bool aResult)
-{
+PaymentCanMakeActionResponse::Init(const nsAString& aRequestId,
+                                   const bool aResult) {
   mRequestId = aRequestId;
   mResult = aResult;
   return NS_OK;
@@ -211,34 +185,29 @@ PaymentCanMakeActionResponse::Init(const nsAString& aRequestId, const bool aResu
 
 /* PaymentShowActionResponse */
 
-NS_IMPL_ISUPPORTS_INHERITED(PaymentShowActionResponse,
-                            PaymentActionResponse,
+NS_IMPL_ISUPPORTS_INHERITED(PaymentShowActionResponse, PaymentActionResponse,
                             nsIPaymentShowActionResponse)
 
 PaymentShowActionResponse::PaymentShowActionResponse()
-  : mAcceptStatus(nsIPaymentActionResponse::PAYMENT_REJECTED)
-{
+    : mAcceptStatus(nsIPaymentActionResponse::PAYMENT_REJECTED) {
   mType = nsIPaymentActionResponse::SHOW_ACTION;
 }
 
 NS_IMETHODIMP
-PaymentShowActionResponse::GetAcceptStatus(uint32_t* aAcceptStatus)
-{
+PaymentShowActionResponse::GetAcceptStatus(uint32_t* aAcceptStatus) {
   NS_ENSURE_ARG_POINTER(aAcceptStatus);
   *aAcceptStatus = mAcceptStatus;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentShowActionResponse::GetMethodName(nsAString& aMethodName)
-{
+PaymentShowActionResponse::GetMethodName(nsAString& aMethodName) {
   aMethodName = mMethodName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentShowActionResponse::GetData(nsIPaymentResponseData** aData)
-{
+PaymentShowActionResponse::GetData(nsIPaymentResponseData** aData) {
   NS_ENSURE_ARG_POINTER(aData);
   nsCOMPtr<nsIPaymentResponseData> data = mData;
   data.forget(aData);
@@ -246,22 +215,19 @@ PaymentShowActionResponse::GetData(nsIPaymentResponseData** aData)
 }
 
 NS_IMETHODIMP
-PaymentShowActionResponse::GetPayerName(nsAString& aPayerName)
-{
+PaymentShowActionResponse::GetPayerName(nsAString& aPayerName) {
   aPayerName = mPayerName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentShowActionResponse::GetPayerEmail(nsAString& aPayerEmail)
-{
+PaymentShowActionResponse::GetPayerEmail(nsAString& aPayerEmail) {
   aPayerEmail = mPayerEmail;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentShowActionResponse::GetPayerPhone(nsAString& aPayerPhone)
-{
+PaymentShowActionResponse::GetPayerPhone(nsAString& aPayerPhone) {
   aPayerPhone = mPayerPhone;
   return NS_OK;
 }
@@ -273,8 +239,7 @@ PaymentShowActionResponse::Init(const nsAString& aRequestId,
                                 nsIPaymentResponseData* aData,
                                 const nsAString& aPayerName,
                                 const nsAString& aPayerEmail,
-                                const nsAString& aPayerPhone)
-{
+                                const nsAString& aPayerPhone) {
   if (aAcceptStatus == nsIPaymentActionResponse::PAYMENT_ACCEPTED) {
     NS_ENSURE_ARG_POINTER(aData);
   }
@@ -303,9 +268,7 @@ PaymentShowActionResponse::Init(const nsAString& aRequestId,
         }
         break;
       }
-      default: {
-        return NS_ERROR_FAILURE;
-      }
+      default: { return NS_ERROR_FAILURE; }
     }
   }
   mData = aData;
@@ -317,19 +280,16 @@ PaymentShowActionResponse::Init(const nsAString& aRequestId,
 
 /* PaymentAbortActionResponse */
 
-NS_IMPL_ISUPPORTS_INHERITED(PaymentAbortActionResponse,
-                            PaymentActionResponse,
+NS_IMPL_ISUPPORTS_INHERITED(PaymentAbortActionResponse, PaymentActionResponse,
                             nsIPaymentAbortActionResponse)
 
 PaymentAbortActionResponse::PaymentAbortActionResponse()
-  : mAbortStatus(nsIPaymentActionResponse::ABORT_FAILED)
-{
+    : mAbortStatus(nsIPaymentActionResponse::ABORT_FAILED) {
   mType = nsIPaymentActionResponse::ABORT_ACTION;
 }
 
 NS_IMETHODIMP
-PaymentAbortActionResponse::GetAbortStatus(uint32_t* aAbortStatus)
-{
+PaymentAbortActionResponse::GetAbortStatus(uint32_t* aAbortStatus) {
   NS_ENSURE_ARG_POINTER(aAbortStatus);
   *aAbortStatus = mAbortStatus;
   return NS_OK;
@@ -337,16 +297,14 @@ PaymentAbortActionResponse::GetAbortStatus(uint32_t* aAbortStatus)
 
 NS_IMETHODIMP
 PaymentAbortActionResponse::Init(const nsAString& aRequestId,
-                                 const uint32_t aAbortStatus)
-{
+                                 const uint32_t aAbortStatus) {
   mRequestId = aRequestId;
   mAbortStatus = aAbortStatus;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAbortActionResponse::IsSucceeded(bool* aIsSucceeded)
-{
+PaymentAbortActionResponse::IsSucceeded(bool* aIsSucceeded) {
   NS_ENSURE_ARG_POINTER(aIsSucceeded);
   *aIsSucceeded = (mAbortStatus == nsIPaymentActionResponse::ABORT_SUCCEEDED);
   return NS_OK;
@@ -359,33 +317,28 @@ NS_IMPL_ISUPPORTS_INHERITED(PaymentCompleteActionResponse,
                             nsIPaymentCompleteActionResponse)
 
 PaymentCompleteActionResponse::PaymentCompleteActionResponse()
-  : mCompleteStatus(nsIPaymentActionResponse::COMPLETE_FAILED)
-{
+    : mCompleteStatus(nsIPaymentActionResponse::COMPLETE_FAILED) {
   mType = nsIPaymentActionResponse::COMPLETE_ACTION;
 }
 
-nsresult
-PaymentCompleteActionResponse::Init(const nsAString& aRequestId,
-                                    const uint32_t aCompleteStatus)
-{
+nsresult PaymentCompleteActionResponse::Init(const nsAString& aRequestId,
+                                             const uint32_t aCompleteStatus) {
   mRequestId = aRequestId;
   mCompleteStatus = aCompleteStatus;
   return NS_OK;
 }
 
-nsresult
-PaymentCompleteActionResponse::GetCompleteStatus(uint32_t* aCompleteStatus)
-{
+nsresult PaymentCompleteActionResponse::GetCompleteStatus(
+    uint32_t* aCompleteStatus) {
   NS_ENSURE_ARG_POINTER(aCompleteStatus);
   *aCompleteStatus = mCompleteStatus;
   return NS_OK;
 }
 
-nsresult
-PaymentCompleteActionResponse::IsCompleted(bool* aIsCompleted)
-{
+nsresult PaymentCompleteActionResponse::IsCompleted(bool* aIsCompleted) {
   NS_ENSURE_ARG_POINTER(aIsCompleted);
-  *aIsCompleted = (mCompleteStatus == nsIPaymentActionResponse::COMPLETE_SUCCEEDED);
+  *aIsCompleted =
+      (mCompleteStatus == nsIPaymentActionResponse::COMPLETE_SUCCEEDED);
   return NS_OK;
 }
 
@@ -394,16 +347,14 @@ PaymentCompleteActionResponse::IsCompleted(bool* aIsCompleted)
 NS_IMPL_ISUPPORTS(MethodChangeDetails, nsIMethodChangeDetails)
 
 NS_IMETHODIMP
-MethodChangeDetails::GetType(uint32_t* aType)
-{
+MethodChangeDetails::GetType(uint32_t* aType) {
   NS_ENSURE_ARG_POINTER(aType);
   *aType = mType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MethodChangeDetails::Init(const uint32_t aType)
-{
+MethodChangeDetails::Init(const uint32_t aType) {
   if (aType != nsIMethodChangeDetails::GENERAL_DETAILS &&
       aType != nsIMethodChangeDetails::BASICCARD_DETAILS) {
     return NS_ERROR_FAILURE;
@@ -414,26 +365,22 @@ MethodChangeDetails::Init(const uint32_t aType)
 
 /* GeneralMethodChangeDetails */
 
-NS_IMPL_ISUPPORTS_INHERITED(GeneralMethodChangeDetails,
-                            MethodChangeDetails,
+NS_IMPL_ISUPPORTS_INHERITED(GeneralMethodChangeDetails, MethodChangeDetails,
                             nsIGeneralChangeDetails)
 
 GeneralMethodChangeDetails::GeneralMethodChangeDetails()
-  : mDetails(NS_LITERAL_STRING("{}"))
-{
+    : mDetails(NS_LITERAL_STRING("{}")) {
   Init(nsIMethodChangeDetails::GENERAL_DETAILS);
 }
 
 NS_IMETHODIMP
-GeneralMethodChangeDetails::GetDetails(nsAString& aDetails)
-{
+GeneralMethodChangeDetails::GetDetails(nsAString& aDetails) {
   aDetails = mDetails;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GeneralMethodChangeDetails::InitData(JS::HandleValue aDetails, JSContext* aCx)
-{
+GeneralMethodChangeDetails::InitData(JS::HandleValue aDetails, JSContext* aCx) {
   if (aDetails.isNullOrUndefined()) {
     return NS_ERROR_FAILURE;
   }
@@ -446,18 +393,16 @@ GeneralMethodChangeDetails::InitData(JS::HandleValue aDetails, JSContext* aCx)
 
 /* BasicCardMethodChangeDetails */
 
-NS_IMPL_ISUPPORTS_INHERITED(BasicCardMethodChangeDetails,
-                            MethodChangeDetails,
+NS_IMPL_ISUPPORTS_INHERITED(BasicCardMethodChangeDetails, MethodChangeDetails,
                             nsIBasicCardChangeDetails)
 
-BasicCardMethodChangeDetails::BasicCardMethodChangeDetails()
-{
+BasicCardMethodChangeDetails::BasicCardMethodChangeDetails() {
   Init(nsIMethodChangeDetails::BASICCARD_DETAILS);
 }
 
 NS_IMETHODIMP
-BasicCardMethodChangeDetails::GetBillingAddress(nsIPaymentAddress** aBillingAddress)
-{
+BasicCardMethodChangeDetails::GetBillingAddress(
+    nsIPaymentAddress** aBillingAddress) {
   NS_ENSURE_ARG_POINTER(aBillingAddress);
   nsCOMPtr<nsIPaymentAddress> address;
   address = mBillingAddress;
@@ -466,11 +411,10 @@ BasicCardMethodChangeDetails::GetBillingAddress(nsIPaymentAddress** aBillingAddr
 }
 
 NS_IMETHODIMP
-BasicCardMethodChangeDetails::InitData(nsIPaymentAddress* aBillingAddress)
-{
+BasicCardMethodChangeDetails::InitData(nsIPaymentAddress* aBillingAddress) {
   mBillingAddress = aBillingAddress;
   return NS_OK;
 }
 
-} // end of namespace dom
-} // end of namespace mozilla
+}  // end of namespace dom
+}  // end of namespace mozilla

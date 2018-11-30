@@ -13,9 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-class Pose : public nsWrapperCache
-{
-public:
+class Pose : public nsWrapperCache {
+ public:
   explicit Pose(nsISupports* aParent);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Pose)
@@ -42,12 +41,13 @@ public:
                                       JS::MutableHandle<JSObject*> aRetval,
                                       ErrorResult& aRv) = 0;
 
-protected:
+ protected:
   virtual ~Pose();
 
-  void SetFloat32Array(JSContext* aJSContext, JS::MutableHandle<JSObject*> aRetVal,
-                       JS::Heap<JSObject*>& aObj, float* aVal, uint32_t sizeOfVal,
-                       bool bCreate, ErrorResult& aRv);
+  void SetFloat32Array(JSContext* aJSContext,
+                       JS::MutableHandle<JSObject*> aRetVal,
+                       JS::Heap<JSObject*>& aObj, float* aVal,
+                       uint32_t sizeOfVal, bool bCreate, ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;
 
@@ -59,7 +59,7 @@ protected:
   JS::Heap<JSObject*> mAngularAcceleration;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Pose_h
+#endif  // mozilla_dom_Pose_h

@@ -12,51 +12,46 @@
 
 namespace mozilla {
 namespace ipc {
-    class FileDescriptor;
+class FileDescriptor;
 }
-
 
 namespace loader {
 
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::IPCResult;
 
-class ScriptCacheParent final : public PScriptCacheParent
-{
-public:
-    explicit ScriptCacheParent(bool wantCacheData)
-        : mWantCacheData(wantCacheData)
-    {}
+class ScriptCacheParent final : public PScriptCacheParent {
+ public:
+  explicit ScriptCacheParent(bool wantCacheData)
+      : mWantCacheData(wantCacheData) {}
 
-protected:
-    virtual IPCResult Recv__delete__(nsTArray<ScriptData>&& scripts) override;
+ protected:
+  virtual IPCResult Recv__delete__(nsTArray<ScriptData>&& scripts) override;
 
-    virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
-    bool mWantCacheData;
+ private:
+  bool mWantCacheData;
 };
 
-class ScriptCacheChild final : public PScriptCacheChild
-{
-    friend class mozilla::ScriptPreloader;
+class ScriptCacheChild final : public PScriptCacheChild {
+  friend class mozilla::ScriptPreloader;
 
-public:
-    ScriptCacheChild() = default;
+ public:
+  ScriptCacheChild() = default;
 
-    void Init(const Maybe<FileDescriptor>& cacheFile, bool wantCacheData);
+  void Init(const Maybe<FileDescriptor>& cacheFile, bool wantCacheData);
 
-protected:
-    virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+ protected:
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-    void SendScriptsAndFinalize(ScriptPreloader::ScriptHash& scripts);
+  void SendScriptsAndFinalize(ScriptPreloader::ScriptHash& scripts);
 
-private:
-    bool mWantCacheData = false;
+ private:
+  bool mWantCacheData = false;
 };
 
+}  // namespace loader
+}  // namespace mozilla
 
-} // namespace loader
-} // namespace mozilla
-
-#endif // ScriptCache_h
+#endif  // ScriptCache_h

@@ -38,7 +38,7 @@ static constexpr Register BaselineSecondScratchReg = SecondScratchReg;
 static constexpr FloatRegister FloatReg0 = f0;
 static constexpr FloatRegister FloatReg1 = f2;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_mips32_SharedICRegisters_mips32_h */

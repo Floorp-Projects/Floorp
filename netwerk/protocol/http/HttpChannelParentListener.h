@@ -19,21 +19,23 @@ namespace net {
 
 class HttpChannelParent;
 
-#define HTTP_CHANNEL_PARENT_LISTENER_IID \
-  { 0xe409da52, 0xda76, 0x4eb7, \
-    { 0xa7, 0xf4, 0x03, 0x3d, 0x88, 0xac, 0x87, 0x6d } }
+#define HTTP_CHANNEL_PARENT_LISTENER_IID             \
+  {                                                  \
+    0xe409da52, 0xda76, 0x4eb7, {                    \
+      0xa7, 0xf4, 0x03, 0x3d, 0x88, 0xac, 0x87, 0x6d \
+    }                                                \
+  }
 
 // Note: nsIInterfaceRequestor must be the first base so that do_QueryObject()
 // works correctly on this object, as it's needed to compute a void* pointing to
 // the beginning of this object.
 
-class HttpChannelParentListener final : public nsIInterfaceRequestor
-                                      , public nsIChannelEventSink
-                                      , public nsIRedirectResultListener
-                                      , public nsIStreamListener
-                                      , public nsINetworkInterceptController
-{
-public:
+class HttpChannelParentListener final : public nsIInterfaceRequestor,
+                                        public nsIChannelEventSink,
+                                        public nsIRedirectResultListener,
+                                        public nsIStreamListener,
+                                        public nsINetworkInterceptController {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
@@ -47,18 +49,18 @@ public:
   explicit HttpChannelParentListener(HttpChannelParent* aInitialChannel);
 
   // For channel diversion from child to parent.
-  MOZ_MUST_USE nsresult DivertTo(nsIStreamListener *aListener);
+  MOZ_MUST_USE nsresult DivertTo(nsIStreamListener* aListener);
   MOZ_MUST_USE nsresult SuspendForDiversion();
 
   void SetupInterception(const nsHttpResponseHead& aResponseHead);
   void SetupInterceptionAfterRedirect(bool aShouldIntercept);
   void ClearInterceptedChannel(nsIStreamListener* aListener);
 
-  nsresult TriggerCrossProcessRedirect(nsIChannel *oldChannel,
-                                       nsILoadInfo *aLoadInfo,
+  nsresult TriggerCrossProcessRedirect(nsIChannel* oldChannel,
+                                       nsILoadInfo* aLoadInfo,
                                        uint64_t aIdentifier);
 
-private:
+ private:
   virtual ~HttpChannelParentListener();
 
   // Private partner function to SuspendForDiversion.
@@ -73,7 +75,8 @@ private:
   // When set, no OnStart/OnData/OnStop calls should be received.
   bool mSuspendedForDiversion;
 
-  // Set if this channel should be intercepted before it sets up the HTTP transaction.
+  // Set if this channel should be intercepted before it sets up the HTTP
+  // transaction.
   bool mShouldIntercept;
   // Set if this channel should suspend on interception.
   bool mShouldSuspendIntercept;
@@ -95,7 +98,7 @@ private:
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelParentListener,
                               HTTP_CHANNEL_PARENT_LISTENER_IID)
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_HttpChannelParent_h
+#endif  // mozilla_net_HttpChannelParent_h

@@ -13,30 +13,35 @@ namespace mozilla {
 namespace gfx {
 
 /**
- * Premultiplies source and writes it to destination. Source and destination may be the same
- * to premultiply in-place. The source format must have an alpha channel.
+ * Premultiplies source and writes it to destination. Source and destination may
+ * be the same to premultiply in-place. The source format must have an alpha
+ * channel.
  */
-GFX2D_API bool PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
-                               uint8_t* aDst, int32_t aDstStride, SurfaceFormat aDstFormat,
+GFX2D_API bool PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride,
+                               SurfaceFormat aSrcFormat, uint8_t* aDst,
+                               int32_t aDstStride, SurfaceFormat aDstFormat,
                                const IntSize& aSize);
 
 /**
- * Unpremultiplies source and writes it to destination. Source and destination may be the same
- * to unpremultiply in-place. Both the source and destination formats must have an alpha channel.
+ * Unpremultiplies source and writes it to destination. Source and destination
+ * may be the same to unpremultiply in-place. Both the source and destination
+ * formats must have an alpha channel.
  */
-GFX2D_API bool UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
-                                 uint8_t* aDst, int32_t aDstStride, SurfaceFormat aDstFormat,
+GFX2D_API bool UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride,
+                                 SurfaceFormat aSrcFormat, uint8_t* aDst,
+                                 int32_t aDstStride, SurfaceFormat aDstFormat,
                                  const IntSize& aSize);
 
 /**
- * Swizzles source and writes it to destination. Source and destination may be the same
- * to swizzle in-place.
+ * Swizzles source and writes it to destination. Source and destination may be
+ * the same to swizzle in-place.
  */
-GFX2D_API bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
-                           uint8_t* aDst, int32_t aDstStride, SurfaceFormat aDstFormat,
+GFX2D_API bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride,
+                           SurfaceFormat aSrcFormat, uint8_t* aDst,
+                           int32_t aDstStride, SurfaceFormat aDstFormat,
                            const IntSize& aSize);
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_SWIZZLE_H_ */

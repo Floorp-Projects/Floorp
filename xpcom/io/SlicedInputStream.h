@@ -20,16 +20,15 @@ namespace mozilla {
 
 // A wrapper for a slice of an underlying input stream.
 
-class SlicedInputStream final : public nsIAsyncInputStream
-                              , public nsICloneableInputStream
-                              , public nsIIPCSerializableInputStream
-                              , public nsISeekableStream
-                              , public nsIInputStreamCallback
-                              , public nsIInputStreamLength
-                              , public nsIAsyncInputStreamLength
-                              , public nsIInputStreamLengthCallback
-{
-public:
+class SlicedInputStream final : public nsIAsyncInputStream,
+                                public nsICloneableInputStream,
+                                public nsIIPCSerializableInputStream,
+                                public nsISeekableStream,
+                                public nsIInputStreamCallback,
+                                public nsIInputStreamLength,
+                                public nsIAsyncInputStreamLength,
+                                public nsIInputStreamLengthCallback {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
@@ -59,14 +58,12 @@ public:
   // This CTOR is meant to be used just for IPC.
   SlicedInputStream();
 
-private:
+ private:
   ~SlicedInputStream();
 
-  void
-  SetSourceStream(already_AddRefed<nsIInputStream> aInputStream);
+  void SetSourceStream(already_AddRefed<nsIInputStream> aInputStream);
 
-  uint64_t
-  AdjustRange(uint64_t aRange);
+  uint64_t AdjustRange(uint64_t aRange);
 
   nsCOMPtr<nsIInputStream> mInputStream;
 
@@ -99,6 +96,6 @@ private:
   Mutex mMutex;
 };
 
-} // mozilla namespace
+}  // namespace mozilla
 
-#endif // SlicedInputStream_h
+#endif  // SlicedInputStream_h

@@ -15,18 +15,13 @@ namespace dom {
 
 class CSSKeyframeList;
 
-class CSSKeyframesRule final : public css::Rule
-{
-public:
-  CSSKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule,
-                   StyleSheet* aSheet,
-                   css::Rule* aParentRule,
-                   uint32_t aLine,
-                   uint32_t aColumn);
+class CSSKeyframesRule final : public css::Rule {
+ public:
+  CSSKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule, StyleSheet* aSheet,
+                   css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframesRule,
-                                           css::Rule)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframesRule, css::Rule)
 
   bool IsCCLeaf() const final;
 
@@ -50,19 +45,19 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
-private:
+ private:
   uint32_t FindRuleIndexForKey(const nsAString& aKey);
 
-  template<typename Func>
+  template <typename Func>
   void UpdateRule(Func aCallback);
 
   virtual ~CSSKeyframesRule();
 
   RefPtr<RawServoKeyframesRule> mRawRule;
-  RefPtr<CSSKeyframeList> mKeyframeList; // lazily constructed
+  RefPtr<CSSKeyframeList> mKeyframeList;  // lazily constructed
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CSSKeyframesRule_h
+#endif  // mozilla_dom_CSSKeyframesRule_h

@@ -23,78 +23,60 @@ namespace cache {
 #define PADDING_FILE_NAME ".padding"
 #define PADDING_TMP_FILE_NAME ".padding-tmp"
 
-enum DirPaddingFile
-{
-  FILE,
-  TMP_FILE
-};
+enum DirPaddingFile { FILE, TMP_FILE };
 
-nsresult
-BodyCreateDir(nsIFile* aBaseDir);
+nsresult BodyCreateDir(nsIFile* aBaseDir);
 
 // Note that this function can only be used during the initialization of the
 // database.  We're unlikely to be able to delete the DB successfully past
 // that point due to the file being in use.
-nsresult
-BodyDeleteDir(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir);
+nsresult BodyDeleteDir(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir);
 
-nsresult
-BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId, nsIFile** aCacheDirOut);
+nsresult BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId,
+                         nsIFile** aCacheDirOut);
 
-nsresult
-BodyStartWriteStream(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                     nsIInputStream* aSource, void* aClosure,
-                     nsAsyncCopyCallbackFun aCallback, nsID* aIdOut,
-                     nsISupports** aCopyContextOut);
+nsresult BodyStartWriteStream(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                              nsIInputStream* aSource, void* aClosure,
+                              nsAsyncCopyCallbackFun aCallback, nsID* aIdOut,
+                              nsISupports** aCopyContextOut);
 
-void
-BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext);
+void BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext);
 
-nsresult
-BodyFinalizeWrite(nsIFile* aBaseDir, const nsID& aId);
+nsresult BodyFinalizeWrite(nsIFile* aBaseDir, const nsID& aId);
 
-nsresult
-BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
-         nsIInputStream** aStreamOut);
+nsresult BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                  const nsID& aId, nsIInputStream** aStreamOut);
 
-nsresult
-BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                           const nsID& aId, const uint32_t aPaddingInfo,
-                           int64_t* aPaddingSizeOut);
+nsresult BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo,
+                                    nsIFile* aBaseDir, const nsID& aId,
+                                    const uint32_t aPaddingInfo,
+                                    int64_t* aPaddingSizeOut);
 
-nsresult
-BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                const nsTArray<nsID>& aIdList);
+nsresult BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                         const nsTArray<nsID>& aIdList);
 
-nsresult
-BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                        nsTArray<nsID>& aKnownBodyIdList);
+nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                                 nsTArray<nsID>& aKnownBodyIdList);
 
-nsresult
-CreateMarkerFile(const QuotaInfo& aQuotaInfo);
+nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo);
 
-nsresult
-DeleteMarkerFile(const QuotaInfo& aQuotaInfo);
+nsresult DeleteMarkerFile(const QuotaInfo& aQuotaInfo);
 
-bool
-MarkerFileExists(const QuotaInfo& aQuotaInfo);
+bool MarkerFileExists(const QuotaInfo& aQuotaInfo);
 
-nsresult
-RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
+nsresult RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
 
-nsresult
-RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
+nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
 
-void
-DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
-                          const int64_t& aUpdatingSize);
+void DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
+                               const int64_t& aUpdatingSize);
 
 /**
  * This function is used to check if the directory padding file is existed.
  */
 
-bool
-DirectoryPaddingFileExists(nsIFile* aBaseDir, DirPaddingFile aPaddingFileType);
+bool DirectoryPaddingFileExists(nsIFile* aBaseDir,
+                                DirPaddingFile aPaddingFileType);
 
 /**
  *
@@ -106,34 +88,30 @@ DirectoryPaddingFileExists(nsIFile* aBaseDir, DirPaddingFile aPaddingFileType);
  *
  */
 
-nsresult
-LockedDirectoryPaddingGet(nsIFile* aBaseDir, int64_t* aPaddingSizeOut);
+nsresult LockedDirectoryPaddingGet(nsIFile* aBaseDir, int64_t* aPaddingSizeOut);
 
-nsresult
-LockedDirectoryPaddingInit(nsIFile* aBaseDir);
+nsresult LockedDirectoryPaddingInit(nsIFile* aBaseDir);
 
-nsresult
-LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
-                                 mozIStorageConnection* aConn,
-                                 const int64_t aIncreaseSize,
-                                 const int64_t aDecreaseSize,
-                                 const bool aTemporaryFileExist);
+nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
+                                          mozIStorageConnection* aConn,
+                                          const int64_t aIncreaseSize,
+                                          const int64_t aDecreaseSize,
+                                          const bool aTemporaryFileExist);
 
-nsresult
-LockedDirectoryPaddingTemporaryWrite(nsIFile* aBaseDir, int64_t aPaddingSize);
+nsresult LockedDirectoryPaddingTemporaryWrite(nsIFile* aBaseDir,
+                                              int64_t aPaddingSize);
 
-nsresult
-LockedDirectoryPaddingFinalizeWrite(nsIFile* aBaseDir);
+nsresult LockedDirectoryPaddingFinalizeWrite(nsIFile* aBaseDir);
 
-nsresult
-LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn,
-                              bool aMustRestore, int64_t* aPaddingSizeOut);
+nsresult LockedDirectoryPaddingRestore(nsIFile* aBaseDir,
+                                       mozIStorageConnection* aConn,
+                                       bool aMustRestore,
+                                       int64_t* aPaddingSizeOut);
 
-nsresult
-LockedDirectoryPaddingDeleteFile(nsIFile* aBaseDir,
-                                 DirPaddingFile aPaddingFileType);
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+nsresult LockedDirectoryPaddingDeleteFile(nsIFile* aBaseDir,
+                                          DirPaddingFile aPaddingFileType);
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_FileUtils_h
+#endif  // mozilla_dom_cache_FileUtils_h

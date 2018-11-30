@@ -22,83 +22,58 @@ using namespace SVGTextPathElement_Binding;
 
 class SVGAnimatedLength;
 
-JSObject*
-SVGTextPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGTextPathElement::WrapNode(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return SVGTextPathElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGTextPathElement::sLengthInfo[2] =
-{
-  // from SVGTextContentElement:
-  { nsGkAtoms::textLength, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY },
-  // from SVGTextPathElement:
-  { nsGkAtoms::startOffset, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X }
-};
+nsSVGElement::LengthInfo SVGTextPathElement::sLengthInfo[2] = {
+    // from SVGTextContentElement:
+    {nsGkAtoms::textLength, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::XY},
+    // from SVGTextPathElement:
+    {nsGkAtoms::startOffset, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::X}};
 
 nsSVGEnumMapping SVGTextPathElement::sMethodMap[] = {
-  {nsGkAtoms::align, TEXTPATH_METHODTYPE_ALIGN},
-  {nsGkAtoms::stretch, TEXTPATH_METHODTYPE_STRETCH},
-  {nullptr, 0}
-};
+    {nsGkAtoms::align, TEXTPATH_METHODTYPE_ALIGN},
+    {nsGkAtoms::stretch, TEXTPATH_METHODTYPE_STRETCH},
+    {nullptr, 0}};
 
 nsSVGEnumMapping SVGTextPathElement::sSpacingMap[] = {
-  {nsGkAtoms::_auto, TEXTPATH_SPACINGTYPE_AUTO},
-  {nsGkAtoms::exact, TEXTPATH_SPACINGTYPE_EXACT},
-  {nullptr, 0}
-};
+    {nsGkAtoms::_auto, TEXTPATH_SPACINGTYPE_AUTO},
+    {nsGkAtoms::exact, TEXTPATH_SPACINGTYPE_EXACT},
+    {nullptr, 0}};
 
 nsSVGEnumMapping SVGTextPathElement::sSideMap[] = {
-  {nsGkAtoms::left, TEXTPATH_SIDETYPE_LEFT},
-  {nsGkAtoms::right, TEXTPATH_SIDETYPE_RIGHT},
-  {nullptr, 0}
-};
+    {nsGkAtoms::left, TEXTPATH_SIDETYPE_LEFT},
+    {nsGkAtoms::right, TEXTPATH_SIDETYPE_RIGHT},
+    {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGTextPathElement::sEnumInfo[4] =
-{
-  // from SVGTextContentElement:
-  { nsGkAtoms::lengthAdjust,
-    sLengthAdjustMap,
-    LENGTHADJUST_SPACING
-  },
-  // from SVGTextPathElement:
-  { nsGkAtoms::method,
-    sMethodMap,
-    TEXTPATH_METHODTYPE_ALIGN
-  },
-  { nsGkAtoms::spacing,
-    sSpacingMap,
-    TEXTPATH_SPACINGTYPE_EXACT
-  },
-  { nsGkAtoms::side_,
-    sSideMap,
-    TEXTPATH_SIDETYPE_LEFT
-  }
-};
+nsSVGElement::EnumInfo SVGTextPathElement::sEnumInfo[4] = {
+    // from SVGTextContentElement:
+    {nsGkAtoms::lengthAdjust, sLengthAdjustMap, LENGTHADJUST_SPACING},
+    // from SVGTextPathElement:
+    {nsGkAtoms::method, sMethodMap, TEXTPATH_METHODTYPE_ALIGN},
+    {nsGkAtoms::spacing, sSpacingMap, TEXTPATH_SPACINGTYPE_EXACT},
+    {nsGkAtoms::side_, sSideMap, TEXTPATH_SIDETYPE_LEFT}};
 
-nsSVGElement::StringInfo SVGTextPathElement::sStringInfo[2] =
-{
-  { nsGkAtoms::href, kNameSpaceID_None, true },
-  { nsGkAtoms::href, kNameSpaceID_XLink, true }
-};
+nsSVGElement::StringInfo SVGTextPathElement::sStringInfo[2] = {
+    {nsGkAtoms::href, kNameSpaceID_None, true},
+    {nsGkAtoms::href, kNameSpaceID_XLink, true}};
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGTextPathElement::SVGTextPathElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGTextPathElementBase(std::move(aNodeInfo))
-{
-}
+SVGTextPathElement::SVGTextPathElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGTextPathElementBase(std::move(aNodeInfo)) {}
 
-void
-SVGTextPathElement::HrefAsString(nsAString& aHref)
-{
+void SVGTextPathElement::HrefAsString(nsAString& aHref) {
   if (mStringAttributes[SVGTextPathElement::HREF].IsExplicitlySet()) {
-    mStringAttributes[SVGTextPathElement::HREF]
-      .GetAnimValue(aHref, this);
+    mStringAttributes[SVGTextPathElement::HREF].GetAnimValue(aHref, this);
   } else {
-    mStringAttributes[SVGTextPathElement::XLINK_HREF]
-      .GetAnimValue(aHref, this);
+    mStringAttributes[SVGTextPathElement::XLINK_HREF].GetAnimValue(aHref, this);
   }
 }
 
@@ -107,37 +82,27 @@ SVGTextPathElement::HrefAsString(nsAString& aHref)
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextPathElement)
 
-already_AddRefed<SVGAnimatedString>
-SVGTextPathElement::Href()
-{
+already_AddRefed<SVGAnimatedString> SVGTextPathElement::Href() {
   return mStringAttributes[HREF].IsExplicitlySet()
-         ? mStringAttributes[HREF].ToDOMAnimatedString(this)
-         : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
+             ? mStringAttributes[HREF].ToDOMAnimatedString(this)
+             : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedLength>
-SVGTextPathElement::StartOffset()
-{
+already_AddRefed<SVGAnimatedLength> SVGTextPathElement::StartOffset() {
   return mLengthAttributes[STARTOFFSET].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration>
-SVGTextPathElement::Method()
-{
+already_AddRefed<SVGAnimatedEnumeration> SVGTextPathElement::Method() {
   return mEnumAttributes[METHOD].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration>
-SVGTextPathElement::Spacing()
-{
+already_AddRefed<SVGAnimatedEnumeration> SVGTextPathElement::Spacing() {
   return mEnumAttributes[SPACING].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration>
-SVGTextPathElement::Side()
-{
+already_AddRefed<SVGAnimatedEnumeration> SVGTextPathElement::Side() {
   return mEnumAttributes[SIDE].ToDOMAnimatedEnum(this);
 }
 
@@ -145,43 +110,31 @@ SVGTextPathElement::Side()
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGTextPathElement::IsAttributeMapped(const nsAtom* name) const
-{
+SVGTextPathElement::IsAttributeMapped(const nsAtom* name) const {
   static const MappedAttributeEntry* const map[] = {
-    sColorMap,
-    sFillStrokeMap,
-    sFontSpecificationMap,
-    sGraphicsMap,
-    sTextContentElementsMap
-  };
+      sColorMap, sFillStrokeMap, sFontSpecificationMap, sGraphicsMap,
+      sTextContentElementsMap};
 
   return FindAttributeDependence(name, map) ||
-    SVGTextPathElementBase::IsAttributeMapped(name);
+         SVGTextPathElementBase::IsAttributeMapped(name);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement overrides
 
-nsSVGElement::LengthAttributesInfo
-SVGTextPathElement::GetLengthInfo()
-{
+nsSVGElement::LengthAttributesInfo SVGTextPathElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
 
-nsSVGElement::EnumAttributesInfo
-SVGTextPathElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            ArrayLength(sEnumInfo));
+nsSVGElement::EnumAttributesInfo SVGTextPathElement::GetEnumInfo() {
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::StringAttributesInfo
-SVGTextPathElement::GetStringInfo()
-{
+nsSVGElement::StringAttributesInfo SVGTextPathElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

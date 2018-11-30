@@ -13,34 +13,33 @@ class nsITreeBoxObject;
 nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
                              mozilla::ComputedStyle* aStyle);
 
-class nsTreeColFrame final : public nsBoxFrame
-{
-public:
+class nsTreeColFrame final : public nsBoxFrame {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsTreeColFrame)
 
-  explicit nsTreeColFrame(ComputedStyle* aStyle):
-    nsBoxFrame(aStyle, kClassID) {}
+  explicit nsTreeColFrame(ComputedStyle* aStyle)
+      : nsBoxFrame(aStyle, kClassID) {}
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
-  virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
-                                           const nsDisplayListSet& aLists) override;
+  virtual void BuildDisplayListForChildren(
+      nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                                    nsAtom* aAttribute,
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
-  virtual void SetXULBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+  virtual void SetXULBounds(nsBoxLayoutState& aBoxLayoutState,
+                            const nsRect& aRect,
                             bool aRemoveOverflowArea = false) override;
 
   friend nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
-protected:
+ protected:
   virtual ~nsTreeColFrame();
 
   /**

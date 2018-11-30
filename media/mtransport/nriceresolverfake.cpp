@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 // Original author: ekr@rtfm.com
 
 // Some of this code is cut-and-pasted from nICEr. Copyright is:
@@ -58,9 +57,11 @@ extern "C" {
 
 namespace mozilla {
 
-NrIceResolverFake::NrIceResolverFake() :
-    vtbl_(new nr_resolver_vtbl), addrs_(), delay_ms_(100),
-    allocated_resolvers_(0) {
+NrIceResolverFake::NrIceResolverFake()
+    : vtbl_(new nr_resolver_vtbl),
+      addrs_(),
+      delay_ms_(100),
+      allocated_resolvers_(0) {
   vtbl_->destroy = &NrIceResolverFake::destroy;
   vtbl_->resolve = &NrIceResolverFake::resolve;
   vtbl_->cancel = &NrIceResolverFake::cancel;
@@ -71,28 +72,22 @@ NrIceResolverFake::~NrIceResolverFake() {
   delete vtbl_;
 }
 
-
 nr_resolver *NrIceResolverFake::AllocateResolver() {
   nr_resolver *resolver;
 
-  int r = nr_resolver_create_int((void *)this,
-                                 vtbl_, &resolver);
+  int r = nr_resolver_create_int((void *)this, vtbl_, &resolver);
   MOZ_ASSERT(!r);
-  if(r)
-    return nullptr;
+  if (r) return nullptr;
 
   ++allocated_resolvers_;
 
   return resolver;
 }
 
-void NrIceResolverFake::DestroyResolver() {
-  --allocated_resolvers_;
-}
+void NrIceResolverFake::DestroyResolver() { --allocated_resolvers_; }
 
 int NrIceResolverFake::destroy(void **objp) {
-  if (!objp || !*objp)
-    return 0;
+  if (!objp || !*objp) return 0;
 
   NrIceResolverFake *fake = static_cast<NrIceResolverFake *>(*objp);
   *objp = nullptr;
@@ -102,47 +97,39 @@ int NrIceResolverFake::destroy(void **objp) {
   return 0;
 }
 
-int NrIceResolverFake::resolve(void *obj,
-                               nr_resolver_resource *resource,
-                               int (*cb)(void *cb_arg,
-                                         nr_transport_addr *addr),
-                               void *cb_arg,
-                               void **handle) {
-  int r,_status;
+int NrIceResolverFake::resolve(void *obj, nr_resolver_resource *resource,
+                               int (*cb)(void *cb_arg, nr_transport_addr *addr),
+                               void *cb_arg, void **handle) {
+  int r, _status;
 
   MOZ_ASSERT(obj);
   NrIceResolverFake *fake = static_cast<NrIceResolverFake *>(obj);
 
   MOZ_ASSERT(fake->allocated_resolvers_ > 0);
 
-  PendingResolution *pending =
-      new PendingResolution(fake,
-                            resource->domain_name,
-                            resource->port ? resource->port : 3478,
-                            resource->transport_protocol ?
-                            resource->transport_protocol :
-                            IPPROTO_UDP,
-                            resource->address_family,
-                            cb, cb_arg);
+  PendingResolution *pending = new PendingResolution(
+      fake, resource->domain_name, resource->port ? resource->port : 3478,
+      resource->transport_protocol ? resource->transport_protocol : IPPROTO_UDP,
+      resource->address_family, cb, cb_arg);
 
-  if ((r=NR_ASYNC_TIMER_SET(fake->delay_ms_,NrIceResolverFake::resolve_cb,
-                            (void *)pending, &pending->timer_handle_))) {
+  if ((r = NR_ASYNC_TIMER_SET(fake->delay_ms_, NrIceResolverFake::resolve_cb,
+                              (void *)pending, &pending->timer_handle_))) {
     delete pending;
     ABORT(r);
   }
   *handle = pending;
 
-  _status=0;
+  _status = 0;
 abort:
-  return(_status);
+  return (_status);
 }
 
 void NrIceResolverFake::resolve_cb(NR_SOCKET s, int how, void *cb_arg) {
   MOZ_ASSERT(cb_arg);
   PendingResolution *pending = static_cast<PendingResolution *>(cb_arg);
 
-  const PRNetAddr *addr=pending->resolver_->Resolve(pending->hostname_,
-                                                    pending->address_family_);
+  const PRNetAddr *addr =
+      pending->resolver_->Resolve(pending->hostname_, pending->address_family_);
 
   if (addr) {
     nr_transport_addr transport_addr;
@@ -150,19 +137,16 @@ void NrIceResolverFake::resolve_cb(NR_SOCKET s, int how, void *cb_arg) {
     int r = nr_praddr_to_transport_addr(addr, &transport_addr,
                                         pending->transport_, 0);
     MOZ_ASSERT(!r);
-    if (r)
-      goto abort;
+    if (r) goto abort;
 
-    r=nr_transport_addr_set_port(&transport_addr, pending->port_);
+    r = nr_transport_addr_set_port(&transport_addr, pending->port_);
     MOZ_ASSERT(!r);
-    if (r)
-      goto abort;
+    if (r) goto abort;
 
     /* Fill in the address string */
-    r=nr_transport_addr_fmt_addr_string(&transport_addr);
+    r = nr_transport_addr_fmt_addr_string(&transport_addr);
     MOZ_ASSERT(!r);
-    if (r)
-      goto abort;
+    if (r) goto abort;
 
     pending->cb_(pending->cb_arg_, &transport_addr);
     delete pending;
@@ -185,8 +169,7 @@ int NrIceResolverFake::cancel(void *obj, void *handle) {
   NR_async_timer_cancel(pending->timer_handle_);
   delete pending;
 
-  return(0);
+  return (0);
 }
-
 
 }  // End of namespace mozilla

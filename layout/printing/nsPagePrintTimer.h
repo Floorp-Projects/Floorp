@@ -22,26 +22,22 @@ class nsIDocument;
 //-- Page Timer Class
 //---------------------------------------------------
 class nsPagePrintTimer final : public mozilla::Runnable,
-                               public nsITimerCallback
-{
-public:
-
+                               public nsITimerCallback {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsPagePrintTimer(nsPrintJob* aPrintJob,
                    nsIDocumentViewerPrint* aDocViewerPrint,
-                   nsIDocument* aDocument,
-                   uint32_t aDelay)
-    : Runnable("nsPagePrintTimer")
-    , mPrintJob(aPrintJob)
-    , mDocViewerPrint(*aDocViewerPrint)
-    , mDocument(aDocument)
-    , mDelay(aDelay)
-    , mFiringCount(0)
-    , mPrintObj(nullptr)
-    , mWatchDogCount(0)
-    , mDone(false)
-  {
+                   nsIDocument* aDocument, uint32_t aDelay)
+      : Runnable("nsPagePrintTimer"),
+        mPrintJob(aPrintJob),
+        mDocViewerPrint(*aDocViewerPrint),
+        mDocument(aDocument),
+        mDelay(aDelay),
+        mFiringCount(0),
+        mPrintObj(nullptr),
+        mWatchDogCount(0),
+        mDone(false) {
     MOZ_ASSERT(aDocViewerPrint && aDocument);
     mDocViewerPrint->IncrementDestroyBlockedCount();
   }
@@ -57,41 +53,40 @@ public:
   void WaitForRemotePrint();
   void RemotePrintFinished();
 
-  void Disconnect()
-  {
+  void Disconnect() {
     mPrintJob = nullptr;
     mPrintObj = nullptr;
   }
 
-private:
+ private:
   ~nsPagePrintTimer();
 
   nsresult StartTimer(bool aUseDelay);
   nsresult StartWatchDogTimer();
-  void     StopWatchDogTimer();
-  void     Fail();
+  void StopWatchDogTimer();
+  void Fail();
 
-  nsPrintJob*                mPrintJob;
+  nsPrintJob* mPrintJob;
   const mozilla::OwningNonNull<nsIDocumentViewerPrint> mDocViewerPrint;
-  nsCOMPtr<nsIDocument>      mDocument;
-  nsCOMPtr<nsITimer>         mTimer;
-  nsCOMPtr<nsITimer>         mWatchDogTimer;
-  nsCOMPtr<nsITimer>         mWaitingForRemotePrint;
-  uint32_t                   mDelay;
-  uint32_t                   mFiringCount;
-  nsPrintObject *            mPrintObj;
-  uint32_t                   mWatchDogCount;
-  bool                       mDone;
+  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsITimer> mWatchDogTimer;
+  nsCOMPtr<nsITimer> mWaitingForRemotePrint;
+  uint32_t mDelay;
+  uint32_t mFiringCount;
+  nsPrintObject* mPrintObj;
+  uint32_t mWatchDogCount;
+  bool mDone;
 
-  static const uint32_t WATCH_DOG_INTERVAL  = 1000;
+  static const uint32_t WATCH_DOG_INTERVAL = 1000;
   static const uint32_t WATCH_DOG_MAX_COUNT =
 #ifdef DEBUG
-    // Debug builds are very slow (on Mac at least) and can need extra time
-                                              30
+      // Debug builds are very slow (on Mac at least) and can need extra time
+      30
 #else
-                                              10
+      10
 #endif
-  ;
+      ;
 };
 
 #endif /* nsPagePrintTimer_h___ */

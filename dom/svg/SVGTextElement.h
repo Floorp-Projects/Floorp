@@ -9,43 +9,44 @@
 
 #include "mozilla/dom/SVGTextPositioningElement.h"
 
-nsresult NS_NewSVGTextElement(nsIContent **aResult,
-                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGTextElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
 typedef SVGTextPositioningElement SVGTextElementBase;
 
-class SVGTextElement final : public SVGTextElementBase
-{
-protected:
+class SVGTextElement final : public SVGTextElementBase {
+ protected:
   explicit SVGTextElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* cx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-  friend nsresult (::NS_NewSVGTextElement(nsIContent **aResult,
-                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  friend nsresult(::NS_NewSVGTextElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-public:
+ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-protected:
+ protected:
   virtual EnumAttributesInfo GetEnumInfo() override;
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   nsSVGEnum mEnumAttributes[1];
-  virtual nsSVGEnum* EnumAttributes() override
-    { return mEnumAttributes; }
+  virtual nsSVGEnum* EnumAttributes() override { return mEnumAttributes; }
 
   nsSVGLength2 mLengthAttributes[1];
-  virtual nsSVGLength2* LengthAttributes() override
-    { return mLengthAttributes; }
+  virtual nsSVGLength2* LengthAttributes() override {
+    return mLengthAttributes;
+  }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGTextElement_h
+#endif  // mozilla_dom_SVGTextElement_h

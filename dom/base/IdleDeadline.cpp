@@ -27,36 +27,26 @@ NS_INTERFACE_MAP_END
 
 IdleDeadline::IdleDeadline(nsPIDOMWindowInner* aWindow, bool aDidTimeout,
                            DOMHighResTimeStamp aDeadline)
-  : mWindow(aWindow)
-  , mDidTimeout(aDidTimeout)
-  , mDeadline(aDeadline)
-{
+    : mWindow(aWindow), mDidTimeout(aDidTimeout), mDeadline(aDeadline) {
   bool hasHadSHO;
   mGlobal = aWindow->GetDoc()->GetScriptHandlingObject(hasHadSHO);
 }
 
 IdleDeadline::IdleDeadline(nsIGlobalObject* aGlobal, bool aDidTimeout,
                            DOMHighResTimeStamp aDeadline)
-  : mWindow(nullptr)
-  , mGlobal(aGlobal)
-  , mDidTimeout(aDidTimeout)
-  , mDeadline(aDeadline)
-{
-}
+    : mWindow(nullptr),
+      mGlobal(aGlobal),
+      mDidTimeout(aDidTimeout),
+      mDeadline(aDeadline) {}
 
-IdleDeadline::~IdleDeadline()
-{
-}
+IdleDeadline::~IdleDeadline() {}
 
-JSObject*
-IdleDeadline::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* IdleDeadline::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return IdleDeadline_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-DOMHighResTimeStamp
-IdleDeadline::TimeRemaining()
-{
+DOMHighResTimeStamp IdleDeadline::TimeRemaining() {
   if (mDidTimeout) {
     return 0.0;
   }
@@ -78,11 +68,7 @@ IdleDeadline::TimeRemaining()
   return std::max(mDeadline - timestamp.ToMilliseconds(), 0.0);
 }
 
-bool
-IdleDeadline::DidTimeout() const
-{
-  return mDidTimeout;
-}
+bool IdleDeadline::DidTimeout() const { return mDidTimeout; }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

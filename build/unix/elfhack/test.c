@@ -87,21 +87,19 @@ DEF(times)
 #include <stdlib.h>
 #include <stdio.h>
 
-#define DEF(w) static const char str_ ## w[] = #w;
+#define DEF(w) static const char str_##w[] = #w;
 #include "test.c"
 #undef DEF
 
 const char *strings[] = {
-#define DEF(w) str_ ## w,
+#define DEF(w) str_##w,
 #include "test.c"
 #include "test.c"
 #include "test.c"
 };
 
 /* Create a hole between two zones of relative relocations */
-const int hole[] = {
-    42, 42, 42, 42
-};
+const int hole[] = {42, 42, 42, 42};
 
 const char *strings2[] = {
 #include "test.c"
@@ -115,8 +113,8 @@ const char *strings2[] = {
 static int ret = 1;
 
 int print_status() {
-    fprintf(stderr, "%s\n", ret ? "FAIL" : "PASS");
-    return ret;
+  fprintf(stderr, "%s\n", ret ? "FAIL" : "PASS");
+  return ret;
 }
 
 /* On ARM, this creates a .tbss section before .init_array, which
@@ -134,36 +132,36 @@ __thread long long int bar[512];
 size_t dummy;
 
 void end_test() {
-    static size_t count = 0;
-    /* Only exit when both constructors have been called */
-    if (++count == 2) {
-        ret = 0;
-        // Avoid the dummy variable being stripped out at link time because
-        // it's unused.
-        dummy = 1;
-    }
+  static size_t count = 0;
+  /* Only exit when both constructors have been called */
+  if (++count == 2) {
+    ret = 0;
+    // Avoid the dummy variable being stripped out at link time because
+    // it's unused.
+    dummy = 1;
+  }
 }
 
 void test() {
-    int i = 0, j = 0;
-#define DEF_(a,i,w) \
-    if (a[i++] != str_ ## w) return;
-#define DEF(w) DEF_(strings,i,w)
+  int i = 0, j = 0;
+#define DEF_(a, i, w) \
+  if (a[i++] != str_##w) return;
+#define DEF(w) DEF_(strings, i, w)
 #include "test.c"
 #include "test.c"
 #include "test.c"
 #undef DEF
-#define DEF(w) DEF_(strings2,j,w)
+#define DEF(w) DEF_(strings2, j, w)
 #include "test.c"
 #include "test.c"
 #include "test.c"
 #include "test.c"
 #include "test.c"
 #undef DEF
-    if (i != sizeof(strings)/sizeof(strings[0]) &&
-        j != sizeof(strings2)/sizeof(strings2[0]))
-        fprintf(stderr, "WARNING: Test doesn't cover the whole array\n");
-    end_test();
+  if (i != sizeof(strings) / sizeof(strings[0]) &&
+      j != sizeof(strings2) / sizeof(strings2[0]))
+    fprintf(stderr, "WARNING: Test doesn't cover the whole array\n");
+  end_test();
 }
 
 #pragma GCC visibility pop

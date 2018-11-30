@@ -18,18 +18,18 @@ namespace mozilla {
 namespace layers {
 
 class SimpleVelocityTracker : public VelocityTracker {
-public:
+ public:
   explicit SimpleVelocityTracker(Axis* aAxis);
   void StartTracking(ParentLayerCoord aPos, uint32_t aTimestamp) override;
-  Maybe<float> AddPosition(ParentLayerCoord aPos,
-                           uint32_t aTimestampMs,
+  Maybe<float> AddPosition(ParentLayerCoord aPos, uint32_t aTimestampMs,
                            bool aIsAxisLocked) override;
   float HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
                                      uint32_t aEndTimestampMs,
                                      ParentLayerCoord aDelta) override;
   Maybe<float> ComputeVelocity(uint32_t aTimestampMs) override;
   void Clear() override;
-private:
+
+ private:
   void AddVelocityToQueue(uint32_t aTimestampMs, float aVelocity);
   float ApplyFlingCurveToVelocity(float aVelocity) const;
 
@@ -52,7 +52,7 @@ private:
   ParentLayerCoord mVelocitySamplePos;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

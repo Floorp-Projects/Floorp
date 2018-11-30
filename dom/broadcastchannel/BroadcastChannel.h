@@ -19,7 +19,7 @@ namespace mozilla {
 
 namespace ipc {
 class PrincipalInfo;
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
@@ -27,30 +27,24 @@ class BroadcastChannelChild;
 class BroadcastChannelMessage;
 class WorkerRef;
 
-class BroadcastChannel final
-  : public DOMEventTargetHelper
-{
+class BroadcastChannel final : public DOMEventTargetHelper {
   friend class BroadcastChannelChild;
 
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BroadcastChannel,
                                            DOMEventTargetHelper)
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<BroadcastChannel>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aChannel,
-              ErrorResult& aRv);
+  static already_AddRefed<BroadcastChannel> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aChannel, ErrorResult& aRv);
 
-  void GetName(nsAString& aName) const
-  {
-    aName = mChannel;
-  }
+  void GetName(nsAString& aName) const { aName = mChannel; }
 
   void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                    ErrorResult& aRv);
@@ -62,9 +56,8 @@ public:
 
   void Shutdown();
 
-private:
-  BroadcastChannel(nsPIDOMWindowInner* aWindow,
-                   const nsAString& aChannel);
+ private:
+  BroadcastChannel(nsPIDOMWindowInner* aWindow, const nsAString& aChannel);
 
   ~BroadcastChannel();
 
@@ -78,13 +71,10 @@ private:
 
   nsString mChannel;
 
-  enum {
-    StateActive,
-    StateClosed
-  } mState;
+  enum { StateActive, StateClosed } mState;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_BroadcastChannel_h
+#endif  // mozilla_dom_BroadcastChannel_h

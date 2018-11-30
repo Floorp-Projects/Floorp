@@ -17,58 +17,42 @@ namespace dom {
 
 using mozilla::ipc::IPCResult;
 
-IPCResult
-ClientHandleParent::RecvTeardown()
-{
+IPCResult ClientHandleParent::RecvTeardown() {
   Unused << Send__delete__(this);
   return IPC_OK();
 }
 
-void
-ClientHandleParent::ActorDestroy(ActorDestroyReason aReason)
-{
+void ClientHandleParent::ActorDestroy(ActorDestroyReason aReason) {
   if (mSource) {
     mSource->DetachHandle(this);
     mSource = nullptr;
   }
 }
 
-PClientHandleOpParent*
-ClientHandleParent::AllocPClientHandleOpParent(const ClientOpConstructorArgs& aArgs)
-{
+PClientHandleOpParent* ClientHandleParent::AllocPClientHandleOpParent(
+    const ClientOpConstructorArgs& aArgs) {
   return new ClientHandleOpParent();
 }
 
-bool
-ClientHandleParent::DeallocPClientHandleOpParent(PClientHandleOpParent* aActor)
-{
+bool ClientHandleParent::DeallocPClientHandleOpParent(
+    PClientHandleOpParent* aActor) {
   delete aActor;
   return true;
 }
 
-IPCResult
-ClientHandleParent::RecvPClientHandleOpConstructor(PClientHandleOpParent* aActor,
-                                                   const ClientOpConstructorArgs& aArgs)
-{
+IPCResult ClientHandleParent::RecvPClientHandleOpConstructor(
+    PClientHandleOpParent* aActor, const ClientOpConstructorArgs& aArgs) {
   auto actor = static_cast<ClientHandleOpParent*>(aActor);
   actor->Init(aArgs);
   return IPC_OK();
 }
 
 ClientHandleParent::ClientHandleParent()
-  : mService(ClientManagerService::GetOrCreateInstance())
-  , mSource(nullptr)
-{
-}
+    : mService(ClientManagerService::GetOrCreateInstance()), mSource(nullptr) {}
 
-ClientHandleParent::~ClientHandleParent()
-{
-  MOZ_DIAGNOSTIC_ASSERT(!mSource);
-}
+ClientHandleParent::~ClientHandleParent() { MOZ_DIAGNOSTIC_ASSERT(!mSource); }
 
-void
-ClientHandleParent::Init(const IPCClientInfo& aClientInfo)
-{
+void ClientHandleParent::Init(const IPCClientInfo& aClientInfo) {
   mSource = mService->FindSource(aClientInfo.id(), aClientInfo.principalInfo());
   if (!mSource) {
     Unused << Send__delete__(this);
@@ -78,11 +62,7 @@ ClientHandleParent::Init(const IPCClientInfo& aClientInfo)
   mSource->AttachHandle(this);
 }
 
-ClientSourceParent*
-ClientHandleParent::GetSource() const
-{
-  return mSource;
-}
+ClientSourceParent* ClientHandleParent::GetSource() const { return mSource; }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

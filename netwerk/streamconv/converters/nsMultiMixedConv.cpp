@@ -23,62 +23,58 @@
 #include "mozilla/AutoRestore.h"
 
 nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel, uint32_t aPartID,
-                             nsIStreamListener* aListener) :
-  mMultipartChannel(aMultipartChannel),
-  mListener(aListener),
-  mStatus(NS_OK),
-  mLoadFlags(0),
-  mContentDisposition(0),
-  mContentLength(UINT64_MAX),
-  mIsByteRangeRequest(false),
-  mByteRangeStart(0),
-  mByteRangeEnd(0),
-  mPartID(aPartID),
-  mIsLastPart(false)
-{
-    // Inherit the load flags from the original channel...
-    mMultipartChannel->GetLoadFlags(&mLoadFlags);
+                             nsIStreamListener *aListener)
+    : mMultipartChannel(aMultipartChannel),
+      mListener(aListener),
+      mStatus(NS_OK),
+      mLoadFlags(0),
+      mContentDisposition(0),
+      mContentLength(UINT64_MAX),
+      mIsByteRangeRequest(false),
+      mByteRangeStart(0),
+      mByteRangeEnd(0),
+      mPartID(aPartID),
+      mIsLastPart(false) {
+  // Inherit the load flags from the original channel...
+  mMultipartChannel->GetLoadFlags(&mLoadFlags);
 
-    mMultipartChannel->GetLoadGroup(getter_AddRefs(mLoadGroup));
+  mMultipartChannel->GetLoadGroup(getter_AddRefs(mLoadGroup));
 }
 
-void nsPartChannel::InitializeByteRange(int64_t aStart, int64_t aEnd)
-{
-    mIsByteRangeRequest = true;
+void nsPartChannel::InitializeByteRange(int64_t aStart, int64_t aEnd) {
+  mIsByteRangeRequest = true;
 
-    mByteRangeStart = aStart;
-    mByteRangeEnd   = aEnd;
+  mByteRangeStart = aStart;
+  mByteRangeEnd = aEnd;
 }
 
-nsresult nsPartChannel::SendOnStartRequest(nsISupports* aContext)
-{
-    return mListener->OnStartRequest(this, aContext);
+nsresult nsPartChannel::SendOnStartRequest(nsISupports *aContext) {
+  return mListener->OnStartRequest(this, aContext);
 }
 
-nsresult nsPartChannel::SendOnDataAvailable(nsISupports* aContext,
-                                            nsIInputStream* aStream,
-                                            uint64_t aOffset, uint32_t aLen)
-{
-    return mListener->OnDataAvailable(this, aContext, aStream, aOffset, aLen);
+nsresult nsPartChannel::SendOnDataAvailable(nsISupports *aContext,
+                                            nsIInputStream *aStream,
+                                            uint64_t aOffset, uint32_t aLen) {
+  return mListener->OnDataAvailable(this, aContext, aStream, aOffset, aLen);
 }
 
-nsresult nsPartChannel::SendOnStopRequest(nsISupports* aContext,
-                                          nsresult aStatus)
-{
-    // Drop the listener
-    nsCOMPtr<nsIStreamListener> listener;
-    listener.swap(mListener);
-    return listener->OnStopRequest(this, aContext, aStatus);
+nsresult nsPartChannel::SendOnStopRequest(nsISupports *aContext,
+                                          nsresult aStatus) {
+  // Drop the listener
+  nsCOMPtr<nsIStreamListener> listener;
+  listener.swap(mListener);
+  return listener->OnStopRequest(this, aContext, aStatus);
 }
 
-void nsPartChannel::SetContentDisposition(const nsACString& aContentDispositionHeader)
-{
-    mContentDispositionHeader = aContentDispositionHeader;
-    nsCOMPtr<nsIURI> uri;
-    GetURI(getter_AddRefs(uri));
-    NS_GetFilenameFromDisposition(mContentDispositionFilename,
-                                  mContentDispositionHeader, uri);
-    mContentDisposition = NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
+void nsPartChannel::SetContentDisposition(
+    const nsACString &aContentDispositionHeader) {
+  mContentDispositionHeader = aContentDispositionHeader;
+  nsCOMPtr<nsIURI> uri;
+  GetURI(getter_AddRefs(uri));
+  NS_GetFilenameFromDisposition(mContentDispositionFilename,
+                                mContentDispositionHeader, uri);
+  mContentDisposition =
+      NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
 }
 
 //
@@ -89,11 +85,11 @@ NS_IMPL_ADDREF(nsPartChannel)
 NS_IMPL_RELEASE(nsPartChannel)
 
 NS_INTERFACE_MAP_BEGIN(nsPartChannel)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
-    NS_INTERFACE_MAP_ENTRY(nsIRequest)
-    NS_INTERFACE_MAP_ENTRY(nsIChannel)
-    NS_INTERFACE_MAP_ENTRY(nsIByteRangeRequest)
-    NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannel)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIByteRangeRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannel)
 NS_INTERFACE_MAP_END
 
 //
@@ -101,60 +97,54 @@ NS_INTERFACE_MAP_END
 //
 
 NS_IMETHODIMP
-nsPartChannel::GetName(nsACString &aResult)
-{
-    return mMultipartChannel->GetName(aResult);
+nsPartChannel::GetName(nsACString &aResult) {
+  return mMultipartChannel->GetName(aResult);
 }
 
 NS_IMETHODIMP
-nsPartChannel::IsPending(bool *aResult)
-{
-    // For now, consider the active lifetime of each part the same as
-    // the underlying multipart channel...  This is not exactly right,
-    // but it is good enough :-)
-    return mMultipartChannel->IsPending(aResult);
+nsPartChannel::IsPending(bool *aResult) {
+  // For now, consider the active lifetime of each part the same as
+  // the underlying multipart channel...  This is not exactly right,
+  // but it is good enough :-)
+  return mMultipartChannel->IsPending(aResult);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetStatus(nsresult *aResult)
-{
-    nsresult rv = NS_OK;
+nsPartChannel::GetStatus(nsresult *aResult) {
+  nsresult rv = NS_OK;
 
-    if (NS_FAILED(mStatus)) {
-        *aResult = mStatus;
-    } else {
-        rv = mMultipartChannel->GetStatus(aResult);
-    }
+  if (NS_FAILED(mStatus)) {
+    *aResult = mStatus;
+  } else {
+    rv = mMultipartChannel->GetStatus(aResult);
+  }
 
-    return rv;
+  return rv;
 }
 
 NS_IMETHODIMP
-nsPartChannel::Cancel(nsresult aStatus)
-{
-    // Cancelling an individual part must not cancel the underlying
-    // multipart channel...
-    // XXX but we should stop sending data for _this_ part channel!
-    mStatus = aStatus;
-    return NS_OK;
+nsPartChannel::Cancel(nsresult aStatus) {
+  // Cancelling an individual part must not cancel the underlying
+  // multipart channel...
+  // XXX but we should stop sending data for _this_ part channel!
+  mStatus = aStatus;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::Suspend(void)
-{
-    // Suspending an individual part must not suspend the underlying
-    // multipart channel...
-    // XXX why not?
-    return NS_OK;
+nsPartChannel::Suspend(void) {
+  // Suspending an individual part must not suspend the underlying
+  // multipart channel...
+  // XXX why not?
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::Resume(void)
-{
-    // Resuming an individual part must not resume the underlying
-    // multipart channel...
-    // XXX why not?
-    return NS_OK;
+nsPartChannel::Resume(void) {
+  // Resuming an individual part must not resume the underlying
+  // multipart channel...
+  // XXX why not?
+  return NS_OK;
 }
 
 //
@@ -162,232 +152,199 @@ nsPartChannel::Resume(void)
 //
 
 NS_IMETHODIMP
-nsPartChannel::GetOriginalURI(nsIURI * *aURI)
-{
-    return mMultipartChannel->GetOriginalURI(aURI);
+nsPartChannel::GetOriginalURI(nsIURI **aURI) {
+  return mMultipartChannel->GetOriginalURI(aURI);
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetOriginalURI(nsIURI *aURI)
-{
-    return mMultipartChannel->SetOriginalURI(aURI);
+nsPartChannel::SetOriginalURI(nsIURI *aURI) {
+  return mMultipartChannel->SetOriginalURI(aURI);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetURI(nsIURI * *aURI)
-{
-    return mMultipartChannel->GetURI(aURI);
+nsPartChannel::GetURI(nsIURI **aURI) { return mMultipartChannel->GetURI(aURI); }
+
+NS_IMETHODIMP
+nsPartChannel::Open(nsIInputStream **result) {
+  // This channel cannot be opened!
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsPartChannel::Open(nsIInputStream **result)
-{
-    // This channel cannot be opened!
-    return NS_ERROR_FAILURE;
+nsPartChannel::Open2(nsIInputStream **aStream) {
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Open(aStream);
 }
 
 NS_IMETHODIMP
-nsPartChannel::Open2(nsIInputStream** aStream)
-{
-    nsCOMPtr<nsIStreamListener> listener;
-    nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
-    NS_ENSURE_SUCCESS(rv, rv);
-    return Open(aStream);
+nsPartChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext) {
+  // This channel cannot be opened!
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsPartChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
-{
-    // This channel cannot be opened!
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPartChannel::AsyncOpen2(nsIStreamListener *aListener)
-{
+nsPartChannel::AsyncOpen2(nsIStreamListener *aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
   return AsyncOpen(listener, nullptr);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
-{
-    *aLoadFlags = mLoadFlags;
-    return NS_OK;
+nsPartChannel::GetLoadFlags(nsLoadFlags *aLoadFlags) {
+  *aLoadFlags = mLoadFlags;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
-{
-    mLoadFlags = aLoadFlags;
-    return NS_OK;
+nsPartChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
+  mLoadFlags = aLoadFlags;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetIsDocument(bool *aIsDocument)
-{
-    return NS_GetIsDocumentChannel(this, aIsDocument);
+nsPartChannel::GetIsDocument(bool *aIsDocument) {
+  return NS_GetIsDocumentChannel(this, aIsDocument);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
-{
-    *aLoadGroup = mLoadGroup;
-    NS_IF_ADDREF(*aLoadGroup);
+nsPartChannel::GetLoadGroup(nsILoadGroup **aLoadGroup) {
+  *aLoadGroup = mLoadGroup;
+  NS_IF_ADDREF(*aLoadGroup);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
-{
-    mLoadGroup = aLoadGroup;
+nsPartChannel::SetLoadGroup(nsILoadGroup *aLoadGroup) {
+  mLoadGroup = aLoadGroup;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetOwner(nsISupports* *aOwner)
-{
-    return mMultipartChannel->GetOwner(aOwner);
+nsPartChannel::GetOwner(nsISupports **aOwner) {
+  return mMultipartChannel->GetOwner(aOwner);
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetOwner(nsISupports* aOwner)
-{
-    return mMultipartChannel->SetOwner(aOwner);
+nsPartChannel::SetOwner(nsISupports *aOwner) {
+  return mMultipartChannel->SetOwner(aOwner);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetLoadInfo(nsILoadInfo* *aLoadInfo)
-{
-    return mMultipartChannel->GetLoadInfo(aLoadInfo);
+nsPartChannel::GetLoadInfo(nsILoadInfo **aLoadInfo) {
+  return mMultipartChannel->GetLoadInfo(aLoadInfo);
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
-{
-    return mMultipartChannel->SetLoadInfo(aLoadInfo);
+nsPartChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
+  return mMultipartChannel->SetLoadInfo(aLoadInfo);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aCallbacks)
-{
-    return mMultipartChannel->GetNotificationCallbacks(aCallbacks);
+nsPartChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks) {
+  return mMultipartChannel->GetNotificationCallbacks(aCallbacks);
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
-{
-    return mMultipartChannel->SetNotificationCallbacks(aCallbacks);
+nsPartChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks) {
+  return mMultipartChannel->SetNotificationCallbacks(aCallbacks);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
-{
-    return mMultipartChannel->GetSecurityInfo(aSecurityInfo);
+nsPartChannel::GetSecurityInfo(nsISupports **aSecurityInfo) {
+  return mMultipartChannel->GetSecurityInfo(aSecurityInfo);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentType(nsACString &aContentType)
-{
-    aContentType = mContentType;
-    return NS_OK;
+nsPartChannel::GetContentType(nsACString &aContentType) {
+  aContentType = mContentType;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentType(const nsACString &aContentType)
-{
-    bool dummy;
-    net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
-    return NS_OK;
+nsPartChannel::SetContentType(const nsACString &aContentType) {
+  bool dummy;
+  net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentCharset(nsACString &aContentCharset)
-{
-    aContentCharset = mContentCharset;
-    return NS_OK;
+nsPartChannel::GetContentCharset(nsACString &aContentCharset) {
+  aContentCharset = mContentCharset;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentCharset(const nsACString &aContentCharset)
-{
-    mContentCharset = aContentCharset;
-    return NS_OK;
+nsPartChannel::SetContentCharset(const nsACString &aContentCharset) {
+  mContentCharset = aContentCharset;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentLength(int64_t *aContentLength)
-{
-    *aContentLength = mContentLength;
-    return NS_OK;
+nsPartChannel::GetContentLength(int64_t *aContentLength) {
+  *aContentLength = mContentLength;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentLength(int64_t aContentLength)
-{
-    mContentLength = aContentLength;
-    return NS_OK;
+nsPartChannel::SetContentLength(int64_t aContentLength) {
+  mContentLength = aContentLength;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentDisposition(uint32_t *aContentDisposition)
-{
-    if (mContentDispositionHeader.IsEmpty())
-        return NS_ERROR_NOT_AVAILABLE;
+nsPartChannel::GetContentDisposition(uint32_t *aContentDisposition) {
+  if (mContentDispositionHeader.IsEmpty()) return NS_ERROR_NOT_AVAILABLE;
 
-    *aContentDisposition = mContentDisposition;
-    return NS_OK;
+  *aContentDisposition = mContentDisposition;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentDisposition(uint32_t aContentDisposition)
-{
-    return NS_ERROR_NOT_AVAILABLE;
+nsPartChannel::SetContentDisposition(uint32_t aContentDisposition) {
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentDispositionFilename(nsAString &aContentDispositionFilename)
-{
-    if (mContentDispositionFilename.IsEmpty())
-        return NS_ERROR_NOT_AVAILABLE;
+nsPartChannel::GetContentDispositionFilename(
+    nsAString &aContentDispositionFilename) {
+  if (mContentDispositionFilename.IsEmpty()) return NS_ERROR_NOT_AVAILABLE;
 
-    aContentDispositionFilename = mContentDispositionFilename;
-    return NS_OK;
+  aContentDispositionFilename = mContentDispositionFilename;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentDispositionFilename(const nsAString &aContentDispositionFilename)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-
-NS_IMETHODIMP
-nsPartChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader)
-{
-    if (mContentDispositionHeader.IsEmpty())
-        return NS_ERROR_NOT_AVAILABLE;
-
-    aContentDispositionHeader = mContentDispositionHeader;
-    return NS_OK;
+nsPartChannel::SetContentDispositionFilename(
+    const nsAString &aContentDispositionFilename) {
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetPartID(uint32_t *aPartID)
-{
-    *aPartID = mPartID;
-    return NS_OK;
+nsPartChannel::GetContentDispositionHeader(
+    nsACString &aContentDispositionHeader) {
+  if (mContentDispositionHeader.IsEmpty()) return NS_ERROR_NOT_AVAILABLE;
+
+  aContentDispositionHeader = mContentDispositionHeader;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetIsLastPart(bool *aIsLastPart)
-{
-    *aIsLastPart = mIsLastPart;
-    return NS_OK;
+nsPartChannel::GetPartID(uint32_t *aPartID) {
+  *aPartID = mPartID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetIsLastPart(bool *aIsLastPart) {
+  *aIsLastPart = mIsLastPart;
+  return NS_OK;
 }
 
 //
@@ -395,228 +352,223 @@ nsPartChannel::GetIsLastPart(bool *aIsLastPart)
 //
 
 NS_IMETHODIMP
-nsPartChannel::GetIsByteRangeRequest(bool *aIsByteRangeRequest)
-{
-    *aIsByteRangeRequest = mIsByteRangeRequest;
+nsPartChannel::GetIsByteRangeRequest(bool *aIsByteRangeRequest) {
+  *aIsByteRangeRequest = mIsByteRangeRequest;
 
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsPartChannel::GetStartRange(int64_t *aStartRange)
-{
-    *aStartRange = mByteRangeStart;
-
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetEndRange(int64_t *aEndRange)
-{
-    *aEndRange = mByteRangeEnd;
-    return NS_OK;
+nsPartChannel::GetStartRange(int64_t *aStartRange) {
+  *aStartRange = mByteRangeStart;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetBaseChannel(nsIChannel ** aReturn)
-{
-    NS_ENSURE_ARG_POINTER(aReturn);
+nsPartChannel::GetEndRange(int64_t *aEndRange) {
+  *aEndRange = mByteRangeEnd;
+  return NS_OK;
+}
 
-    *aReturn = mMultipartChannel;
-    NS_IF_ADDREF(*aReturn);
-    return NS_OK;
+NS_IMETHODIMP
+nsPartChannel::GetBaseChannel(nsIChannel **aReturn) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  *aReturn = mMultipartChannel;
+  NS_IF_ADDREF(*aReturn);
+  return NS_OK;
 }
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS(nsMultiMixedConv,
-                  nsIStreamConverter,
-                  nsIStreamListener,
+NS_IMPL_ISUPPORTS(nsMultiMixedConv, nsIStreamConverter, nsIStreamListener,
                   nsIRequestObserver)
-
 
 // nsIStreamConverter implementation
 
 // No syncronous conversion at this time.
 NS_IMETHODIMP
-nsMultiMixedConv::Convert(nsIInputStream *aFromStream,
-                          const char *aFromType,
-                          const char *aToType,
-                          nsISupports *aCtxt, nsIInputStream **_retval) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+nsMultiMixedConv::Convert(nsIInputStream *aFromStream, const char *aFromType,
+                          const char *aToType, nsISupports *aCtxt,
+                          nsIInputStream **_retval) {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// Stream converter service calls this to initialize the actual stream converter (us).
+// Stream converter service calls this to initialize the actual stream converter
+// (us).
 NS_IMETHODIMP
 nsMultiMixedConv::AsyncConvertData(const char *aFromType, const char *aToType,
-                                   nsIStreamListener *aListener, nsISupports *aCtxt) {
-    NS_ASSERTION(aListener && aFromType && aToType, "null pointer passed into multi mixed converter");
+                                   nsIStreamListener *aListener,
+                                   nsISupports *aCtxt) {
+  NS_ASSERTION(aListener && aFromType && aToType,
+               "null pointer passed into multi mixed converter");
 
-    // hook up our final listener. this guy gets the various On*() calls we want to throw
-    // at him.
-    //
-    // WARNING: this listener must be able to handle multiple OnStartRequest,
-    // OnDataAvail() and OnStopRequest() call combinations. We call of series
-    // of these for each sub-part in the raw stream.
-    mFinalListener = aListener;
+  // hook up our final listener. this guy gets the various On*() calls we want
+  // to throw at him.
+  //
+  // WARNING: this listener must be able to handle multiple OnStartRequest,
+  // OnDataAvail() and OnStopRequest() call combinations. We call of series
+  // of these for each sub-part in the raw stream.
+  mFinalListener = aListener;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 // nsIRequestObserver implementation
 NS_IMETHODIMP
-nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
-{
-    // we're assuming the content-type is available at this stage
-    NS_ASSERTION(mBoundary.IsEmpty(), "a second on start???");
+nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+  // we're assuming the content-type is available at this stage
+  NS_ASSERTION(mBoundary.IsEmpty(), "a second on start???");
 
-    nsresult rv;
+  nsresult rv;
 
-    mContext = ctxt;
-    mTotalSent   = 0;
-    mChannel = do_QueryInterface(request, &rv);
-    if (NS_FAILED(rv)) return rv;
+  mContext = ctxt;
+  mTotalSent = 0;
+  mChannel = do_QueryInterface(request, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-    nsAutoCString contentType;
+  nsAutoCString contentType;
 
-    // ask the HTTP channel for the content-type and extract the boundary from it.
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
+  // ask the HTTP channel for the content-type and extract the boundary from it.
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-type"),
+                                        contentType);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    nsCString csp;
+    rv = httpChannel->GetResponseHeader(
+        NS_LITERAL_CSTRING("content-security-policy"), csp);
     if (NS_SUCCEEDED(rv)) {
-        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-type"), contentType);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-        nsCString csp;
-        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-security-policy"),
-                                            csp);
-        if (NS_SUCCEEDED(rv)) {
-          mRootContentSecurityPolicy = csp;
-        }
-    } else {
-        // try asking the channel directly
-        rv = mChannel->GetContentType(contentType);
-        if (NS_FAILED(rv)) {
-            return NS_ERROR_FAILURE;
-        }
+      mRootContentSecurityPolicy = csp;
     }
+  } else {
+    // try asking the channel directly
+    rv = mChannel->GetContentType(contentType);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
 
-    Tokenizer p(contentType);
-    p.SkipUntil(Token::Char(';'));
-    if (!p.CheckChar(';')) {
-        return NS_ERROR_CORRUPTED_CONTENT;
-    }
-    p.SkipWhites();
-    if (!p.CheckWord("boundary")) {
-        return NS_ERROR_CORRUPTED_CONTENT;
-    }
-    p.SkipWhites();
-    if (!p.CheckChar('=')) {
-        return NS_ERROR_CORRUPTED_CONTENT;
-    }
-    p.SkipWhites();
-    Unused << p.ReadUntil(Token::Char(';'), mBoundary);
-    mBoundary.Trim(" \""); // ignoring potential quoted string formatting violations
-    if (mBoundary.IsEmpty()) {
-        return NS_ERROR_CORRUPTED_CONTENT;
-    }
+  Tokenizer p(contentType);
+  p.SkipUntil(Token::Char(';'));
+  if (!p.CheckChar(';')) {
+    return NS_ERROR_CORRUPTED_CONTENT;
+  }
+  p.SkipWhites();
+  if (!p.CheckWord("boundary")) {
+    return NS_ERROR_CORRUPTED_CONTENT;
+  }
+  p.SkipWhites();
+  if (!p.CheckChar('=')) {
+    return NS_ERROR_CORRUPTED_CONTENT;
+  }
+  p.SkipWhites();
+  Unused << p.ReadUntil(Token::Char(';'), mBoundary);
+  mBoundary.Trim(
+      " \"");  // ignoring potential quoted string formatting violations
+  if (mBoundary.IsEmpty()) {
+    return NS_ERROR_CORRUPTED_CONTENT;
+  }
 
-    mHeaderTokens[HEADER_CONTENT_TYPE] =
-      mTokenizer.AddCustomToken("content-type", mTokenizer.CASE_INSENSITIVE, false);
-    mHeaderTokens[HEADER_CONTENT_LENGTH] =
-      mTokenizer.AddCustomToken("content-length", mTokenizer.CASE_INSENSITIVE, false);
-    mHeaderTokens[HEADER_CONTENT_DISPOSITION] =
-      mTokenizer.AddCustomToken("content-disposition", mTokenizer.CASE_INSENSITIVE, false);
-    mHeaderTokens[HEADER_SET_COOKIE] =
-      mTokenizer.AddCustomToken("set-cookie", mTokenizer.CASE_INSENSITIVE, false);
-    mHeaderTokens[HEADER_CONTENT_RANGE] =
-      mTokenizer.AddCustomToken("content-range", mTokenizer.CASE_INSENSITIVE, false);
-    mHeaderTokens[HEADER_RANGE] =
+  mHeaderTokens[HEADER_CONTENT_TYPE] = mTokenizer.AddCustomToken(
+      "content-type", mTokenizer.CASE_INSENSITIVE, false);
+  mHeaderTokens[HEADER_CONTENT_LENGTH] = mTokenizer.AddCustomToken(
+      "content-length", mTokenizer.CASE_INSENSITIVE, false);
+  mHeaderTokens[HEADER_CONTENT_DISPOSITION] = mTokenizer.AddCustomToken(
+      "content-disposition", mTokenizer.CASE_INSENSITIVE, false);
+  mHeaderTokens[HEADER_SET_COOKIE] = mTokenizer.AddCustomToken(
+      "set-cookie", mTokenizer.CASE_INSENSITIVE, false);
+  mHeaderTokens[HEADER_CONTENT_RANGE] = mTokenizer.AddCustomToken(
+      "content-range", mTokenizer.CASE_INSENSITIVE, false);
+  mHeaderTokens[HEADER_RANGE] =
       mTokenizer.AddCustomToken("range", mTokenizer.CASE_INSENSITIVE, false);
-    mHeaderTokens[HEADER_CONTENT_SECURITY_POLICY] =
-      mTokenizer.AddCustomToken("content-security-policy",
-                                mTokenizer.CASE_INSENSITIVE,
-                                false);
+  mHeaderTokens[HEADER_CONTENT_SECURITY_POLICY] = mTokenizer.AddCustomToken(
+      "content-security-policy", mTokenizer.CASE_INSENSITIVE, false);
 
-    mLFToken = mTokenizer.AddCustomToken("\n", mTokenizer.CASE_SENSITIVE, false);
-    mCRLFToken = mTokenizer.AddCustomToken("\r\n", mTokenizer.CASE_SENSITIVE, false);
+  mLFToken = mTokenizer.AddCustomToken("\n", mTokenizer.CASE_SENSITIVE, false);
+  mCRLFToken =
+      mTokenizer.AddCustomToken("\r\n", mTokenizer.CASE_SENSITIVE, false);
 
-    SwitchToControlParsing();
+  SwitchToControlParsing();
 
-    mBoundaryToken =
+  mBoundaryToken =
       mTokenizer.AddCustomToken(mBoundary, mTokenizer.CASE_SENSITIVE);
-    mBoundaryTokenWithDashes =
-      mTokenizer.AddCustomToken(NS_LITERAL_CSTRING("--") + mBoundary, mTokenizer.CASE_SENSITIVE);
+  mBoundaryTokenWithDashes = mTokenizer.AddCustomToken(
+      NS_LITERAL_CSTRING("--") + mBoundary, mTokenizer.CASE_SENSITIVE);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
 nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
                                   nsIInputStream *inStr, uint64_t sourceOffset,
-                                  uint32_t count)
-{
-    // Failing these assertions may indicate that some of the target listeners of this converter
-    // is looping the thead queue, which is harmful to how we collect the raw (content) data.
-    MOZ_DIAGNOSTIC_ASSERT(!mInOnDataAvailable, "nsMultiMixedConv::OnDataAvailable reentered!");
-    MOZ_DIAGNOSTIC_ASSERT(!mRawData, "There are unsent data from the previous tokenizer feed!");
+                                  uint32_t count) {
+  // Failing these assertions may indicate that some of the target listeners of
+  // this converter is looping the thead queue, which is harmful to how we
+  // collect the raw (content) data.
+  MOZ_DIAGNOSTIC_ASSERT(!mInOnDataAvailable,
+                        "nsMultiMixedConv::OnDataAvailable reentered!");
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mRawData, "There are unsent data from the previous tokenizer feed!");
 
-    if (mInOnDataAvailable) {
-        // The multipart logic is incapable of being reentered.
-        return NS_ERROR_UNEXPECTED;
-    }
+  if (mInOnDataAvailable) {
+    // The multipart logic is incapable of being reentered.
+    return NS_ERROR_UNEXPECTED;
+  }
 
-    mozilla::AutoRestore<bool> restore(mInOnDataAvailable);
-    mInOnDataAvailable = true;
+  mozilla::AutoRestore<bool> restore(mInOnDataAvailable);
+  mInOnDataAvailable = true;
 
-    nsresult rv_feed = mTokenizer.FeedInput(inStr, count);
-    // We must do this every time.  Regardless if something has failed during the
-    // parsing process.  Otherwise the raw data reference would not be thrown away.
-    nsresult rv_send = SendData();
+  nsresult rv_feed = mTokenizer.FeedInput(inStr, count);
+  // We must do this every time.  Regardless if something has failed during the
+  // parsing process.  Otherwise the raw data reference would not be thrown
+  // away.
+  nsresult rv_send = SendData();
 
-    return NS_FAILED(rv_send) ? rv_send : rv_feed;
+  return NS_FAILED(rv_send) ? rv_send : rv_feed;
 }
 
 NS_IMETHODIMP
 nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                                nsresult aStatus)
-{
-    nsresult rv;
+                                nsresult aStatus) {
+  nsresult rv;
 
-    if (mBoundary.IsEmpty()) { // no token, no love.
-        return NS_ERROR_FAILURE;
+  if (mBoundary.IsEmpty()) {  // no token, no love.
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mPartChannel) {
+    mPartChannel->SetIsLastPart();
+
+    MOZ_DIAGNOSTIC_ASSERT(
+        !mRawData, "There are unsent data from the previous tokenizer feed!");
+
+    rv = mTokenizer.FinishInput();
+    if (NS_SUCCEEDED(aStatus)) {
+      aStatus = rv;
+    }
+    rv = SendData();
+    if (NS_SUCCEEDED(aStatus)) {
+      aStatus = rv;
     }
 
-    if (mPartChannel) {
-        mPartChannel->SetIsLastPart();
+    (void)SendStop(aStatus);
+  } else if (NS_FAILED(aStatus) && !mRequestListenerNotified) {
+    // underlying data production problem. we should not be in
+    // the middle of sending data. if we were, mPartChannel,
+    // above, would have been non-null.
 
-        MOZ_DIAGNOSTIC_ASSERT(!mRawData, "There are unsent data from the previous tokenizer feed!");
+    (void)mFinalListener->OnStartRequest(request, ctxt);
+    (void)mFinalListener->OnStopRequest(request, ctxt, aStatus);
+  }
 
-        rv = mTokenizer.FinishInput();
-        if (NS_SUCCEEDED(aStatus)) {
-            aStatus = rv;
-        }
-        rv = SendData();
-        if (NS_SUCCEEDED(aStatus)) {
-            aStatus = rv;
-        }
-
-        (void) SendStop(aStatus);
-    } else if (NS_FAILED(aStatus) && !mRequestListenerNotified) {
-        // underlying data production problem. we should not be in
-        // the middle of sending data. if we were, mPartChannel,
-        // above, would have been non-null.
-
-        (void) mFinalListener->OnStartRequest(request, ctxt);
-        (void) mFinalListener->OnStopRequest(request, ctxt, aStatus);
-    }
-
-    return NS_OK;
+  return NS_OK;
 }
 
-nsresult
-nsMultiMixedConv::ConsumeToken(Token const & token)
-{
+nsresult nsMultiMixedConv::ConsumeToken(Token const &token) {
   nsresult rv;
 
   switch (mParserState) {
@@ -671,7 +623,8 @@ nsMultiMixedConv::ConsumeToken(Token const & token)
         break;
       }
       if (mResponseHeader == HEADER_UNKNOWN) {
-        // If the header is not of any we understand, just pass everything till ':'
+        // If the header is not of any we understand, just pass everything till
+        // ':'
         break;
       }
       if (token.Equals(Token::Whitespace())) {
@@ -778,243 +731,219 @@ nsMultiMixedConv::ConsumeToken(Token const & token)
     default:
       MOZ_ASSERT(false, "Missing parser state handling branch");
       break;
-  } // switch
+  }  // switch
 
   return NS_OK;
 }
 
-void
-nsMultiMixedConv::SetHeaderTokensEnabled(bool aEnable)
-{
-    for (uint32_t h = HEADER_FIRST; h < HEADER_UNKNOWN; ++h) {
-        mTokenizer.EnableCustomToken(mHeaderTokens[h], aEnable);
-    }
+void nsMultiMixedConv::SetHeaderTokensEnabled(bool aEnable) {
+  for (uint32_t h = HEADER_FIRST; h < HEADER_UNKNOWN; ++h) {
+    mTokenizer.EnableCustomToken(mHeaderTokens[h], aEnable);
+  }
 }
 
-void
-nsMultiMixedConv::SwitchToBodyParsing()
-{
-    mTokenizer.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
-    mTokenizer.EnableCustomToken(mLFToken, true);
-    mTokenizer.EnableCustomToken(mCRLFToken, true);
-    mTokenizer.EnableCustomToken(mBoundaryTokenWithDashes, true);
-    mTokenizer.EnableCustomToken(mBoundaryToken, true);
+void nsMultiMixedConv::SwitchToBodyParsing() {
+  mTokenizer.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
+  mTokenizer.EnableCustomToken(mLFToken, true);
+  mTokenizer.EnableCustomToken(mCRLFToken, true);
+  mTokenizer.EnableCustomToken(mBoundaryTokenWithDashes, true);
+  mTokenizer.EnableCustomToken(mBoundaryToken, true);
 }
 
-void
-nsMultiMixedConv::SwitchToControlParsing()
-{
-    mTokenizer.SetTokenizingMode(Tokenizer::Mode::FULL);
-    mTokenizer.EnableCustomToken(mLFToken, false);
-    mTokenizer.EnableCustomToken(mCRLFToken, false);
-    mTokenizer.EnableCustomToken(mBoundaryTokenWithDashes, false);
-    mTokenizer.EnableCustomToken(mBoundaryToken, false);
+void nsMultiMixedConv::SwitchToControlParsing() {
+  mTokenizer.SetTokenizingMode(Tokenizer::Mode::FULL);
+  mTokenizer.EnableCustomToken(mLFToken, false);
+  mTokenizer.EnableCustomToken(mCRLFToken, false);
+  mTokenizer.EnableCustomToken(mBoundaryTokenWithDashes, false);
+  mTokenizer.EnableCustomToken(mBoundaryToken, false);
 }
 
 // nsMultiMixedConv methods
-nsMultiMixedConv::nsMultiMixedConv() :
-    mCurrentPartID(0),
-    mInOnDataAvailable(false),
-    mResponseHeader(HEADER_UNKNOWN),
-    // XXX: This is a hack to bypass the raw pointer to refcounted object in
-    // lambda analysis. It should be removed and replaced when the
-    // IncrementalTokenizer API is improved to avoid the need for such
-    // workarounds.
-    //
-    // This is safe because `mTokenizer` will not outlive `this`, meaning that
-    // this std::bind object will be destroyed before `this` dies.
-    mTokenizer(std::bind(&nsMultiMixedConv::ConsumeToken, this, std::placeholders::_1))
-{
-    mContentLength      = UINT64_MAX;
-    mByteRangeStart     = 0;
-    mByteRangeEnd       = 0;
-    mTotalSent          = 0;
-    mIsByteRangeRequest = false;
-    mParserState        = INIT;
-    mRawData            = nullptr;
-    mRequestListenerNotified = false;
+nsMultiMixedConv::nsMultiMixedConv()
+    : mCurrentPartID(0),
+      mInOnDataAvailable(false),
+      mResponseHeader(HEADER_UNKNOWN),
+      // XXX: This is a hack to bypass the raw pointer to refcounted object in
+      // lambda analysis. It should be removed and replaced when the
+      // IncrementalTokenizer API is improved to avoid the need for such
+      // workarounds.
+      //
+      // This is safe because `mTokenizer` will not outlive `this`, meaning that
+      // this std::bind object will be destroyed before `this` dies.
+      mTokenizer(std::bind(&nsMultiMixedConv::ConsumeToken, this,
+                           std::placeholders::_1)) {
+  mContentLength = UINT64_MAX;
+  mByteRangeStart = 0;
+  mByteRangeEnd = 0;
+  mTotalSent = 0;
+  mIsByteRangeRequest = false;
+  mParserState = INIT;
+  mRawData = nullptr;
+  mRequestListenerNotified = false;
 }
 
-nsresult
-nsMultiMixedConv::SendStart()
-{
-    nsresult rv = NS_OK;
+nsresult nsMultiMixedConv::SendStart() {
+  nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIStreamListener> partListener(mFinalListener);
-    if (mContentType.IsEmpty()) {
-        mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
-        nsCOMPtr<nsIStreamConverterService> serv =
-            do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIStreamListener> converter;
-            rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE,
-                                        "*/*",
-                                        mFinalListener,
-                                        mContext,
-                                        getter_AddRefs(converter));
-            if (NS_SUCCEEDED(rv)) {
-                partListener = converter;
-            }
-        }
+  nsCOMPtr<nsIStreamListener> partListener(mFinalListener);
+  if (mContentType.IsEmpty()) {
+    mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
+    nsCOMPtr<nsIStreamConverterService> serv =
+        do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIStreamListener> converter;
+      rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE, "*/*", mFinalListener,
+                                  mContext, getter_AddRefs(converter));
+      if (NS_SUCCEEDED(rv)) {
+        partListener = converter;
+      }
     }
+  }
 
-    // if we already have an mPartChannel, that means we never sent a Stop()
-    // before starting up another "part." that would be bad.
-    MOZ_ASSERT(!mPartChannel, "tisk tisk, shouldn't be overwriting a channel");
+  // if we already have an mPartChannel, that means we never sent a Stop()
+  // before starting up another "part." that would be bad.
+  MOZ_ASSERT(!mPartChannel, "tisk tisk, shouldn't be overwriting a channel");
 
-    nsPartChannel *newChannel;
-    newChannel = new nsPartChannel(mChannel, mCurrentPartID++, partListener);
-    if (!newChannel)
-        return NS_ERROR_OUT_OF_MEMORY;
+  nsPartChannel *newChannel;
+  newChannel = new nsPartChannel(mChannel, mCurrentPartID++, partListener);
+  if (!newChannel) return NS_ERROR_OUT_OF_MEMORY;
 
-    if (mIsByteRangeRequest) {
-        newChannel->InitializeByteRange(mByteRangeStart, mByteRangeEnd);
-    }
+  if (mIsByteRangeRequest) {
+    newChannel->InitializeByteRange(mByteRangeStart, mByteRangeEnd);
+  }
 
-    mTotalSent = 0;
+  mTotalSent = 0;
 
-    // Set up the new part channel...
-    mPartChannel = newChannel;
+  // Set up the new part channel...
+  mPartChannel = newChannel;
 
-    rv = mPartChannel->SetContentType(mContentType);
+  rv = mPartChannel->SetContentType(mContentType);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mPartChannel->SetContentLength(mContentLength);
+  if (NS_FAILED(rv)) return rv;
+
+  mPartChannel->SetContentDisposition(mContentDisposition);
+
+  // Each part of a multipart/replace response can be used
+  // for the top level document.  We must inform upper layers
+  // about this by setting the LOAD_REPLACE flag so that certain
+  // state assertions are evaluated as positive.
+  nsLoadFlags loadFlags = 0;
+  mPartChannel->GetLoadFlags(&loadFlags);
+  loadFlags |= nsIChannel::LOAD_REPLACE;
+  mPartChannel->SetLoadFlags(loadFlags);
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  (void)mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+
+  // Add the new channel to the load group (if any)
+  if (loadGroup) {
+    rv = loadGroup->AddRequest(mPartChannel, nullptr);
     if (NS_FAILED(rv)) return rv;
+  }
 
-    rv = mPartChannel->SetContentLength(mContentLength);
-    if (NS_FAILED(rv)) return rv;
+  // This prevents artificial call to OnStart/StopRequest when the root
+  // channel fails.  Since now it's ensured to keep with the nsIStreamListener
+  // contract every time.
+  mRequestListenerNotified = true;
 
-    mPartChannel->SetContentDisposition(mContentDisposition);
+  // Let's start off the load. NOTE: we don't forward on the channel passed
+  // into our OnDataAvailable() as it's the root channel for the raw stream.
+  return mPartChannel->SendOnStartRequest(mContext);
+}
 
-    // Each part of a multipart/replace response can be used
-    // for the top level document.  We must inform upper layers
-    // about this by setting the LOAD_REPLACE flag so that certain
-    // state assertions are evaluated as positive.
-    nsLoadFlags loadFlags = 0;
-    mPartChannel->GetLoadFlags(&loadFlags);
-    loadFlags |= nsIChannel::LOAD_REPLACE;
-    mPartChannel->SetLoadFlags(loadFlags);
+nsresult nsMultiMixedConv::SendStop(nsresult aStatus) {
+  // Make sure we send out all accumulcated data prior call to OnStopRequest.
+  // If there is no data, this is a no-op.
+  nsresult rv = SendData();
+  if (NS_SUCCEEDED(aStatus)) {
+    aStatus = rv;
+  }
+  if (mPartChannel) {
+    rv = mPartChannel->SendOnStopRequest(mContext, aStatus);
+    // don't check for failure here, we need to remove the channel from
+    // the loadgroup.
 
+    // Remove the channel from its load group (if any)
     nsCOMPtr<nsILoadGroup> loadGroup;
     (void)mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (loadGroup)
+      (void)loadGroup->RemoveRequest(mPartChannel, mContext, aStatus);
+  }
 
-    // Add the new channel to the load group (if any)
-    if (loadGroup) {
-        rv = loadGroup->AddRequest(mPartChannel, nullptr);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // This prevents artificial call to OnStart/StopRequest when the root
-    // channel fails.  Since now it's ensured to keep with the nsIStreamListener
-    // contract every time.
-    mRequestListenerNotified = true;
-
-    // Let's start off the load. NOTE: we don't forward on the channel passed
-    // into our OnDataAvailable() as it's the root channel for the raw stream.
-    return mPartChannel->SendOnStartRequest(mContext);
+  mPartChannel = nullptr;
+  return rv;
 }
 
-nsresult
-nsMultiMixedConv::SendStop(nsresult aStatus)
-{
-    // Make sure we send out all accumulcated data prior call to OnStopRequest.
-    // If there is no data, this is a no-op.
-    nsresult rv = SendData();
-    if (NS_SUCCEEDED(aStatus)) {
-        aStatus = rv;
-    }
-    if (mPartChannel) {
-        rv = mPartChannel->SendOnStopRequest(mContext, aStatus);
-        // don't check for failure here, we need to remove the channel from
-        // the loadgroup.
+void nsMultiMixedConv::AccumulateData(Token const &aToken) {
+  if (!mRawData) {
+    // This is the first read of raw data during this FeedInput loop
+    // of the incremental tokenizer.  All 'raw' tokens are coming from
+    // the same linear buffer, hence begining of this loop raw data
+    // is begining of the first raw token.  Length of this loop raw
+    // data is just sum of all 'raw' tokens we collect during this loop.
+    //
+    // It's ensured we flush (send to to the listener via OnDataAvailable)
+    // and nullify the collected raw data right after FeedInput call.
+    // Hence, the reference can't outlive the actual buffer.
+    mRawData = aToken.Fragment().BeginReading();
+    mRawDataLength = 0;
+  }
 
-        // Remove the channel from its load group (if any)
-        nsCOMPtr<nsILoadGroup> loadGroup;
-        (void) mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-        if (loadGroup)
-            (void) loadGroup->RemoveRequest(mPartChannel, mContext, aStatus);
-    }
-
-    mPartChannel = nullptr;
-    return rv;
+  mRawDataLength += aToken.Fragment().Length();
 }
 
-void
-nsMultiMixedConv::AccumulateData(Token const & aToken)
-{
-    if (!mRawData) {
-        // This is the first read of raw data during this FeedInput loop
-        // of the incremental tokenizer.  All 'raw' tokens are coming from
-        // the same linear buffer, hence begining of this loop raw data
-        // is begining of the first raw token.  Length of this loop raw
-        // data is just sum of all 'raw' tokens we collect during this loop.
-        //
-        // It's ensured we flush (send to to the listener via OnDataAvailable)
-        // and nullify the collected raw data right after FeedInput call.
-        // Hence, the reference can't outlive the actual buffer.
-        mRawData = aToken.Fragment().BeginReading();
-        mRawDataLength = 0;
-    }
+nsresult nsMultiMixedConv::SendData() {
+  nsresult rv;
 
-    mRawDataLength += aToken.Fragment().Length();
+  if (!mRawData) {
+    return NS_OK;
+  }
+
+  nsACString::const_char_iterator rawData = mRawData;
+  mRawData = nullptr;
+
+  if (!mPartChannel) {
+    return NS_ERROR_FAILURE;  // something went wrong w/ processing
+  }
+
+  if (mContentLength != UINT64_MAX) {
+    // make sure that we don't send more than the mContentLength
+    // XXX why? perhaps the Content-Length header was actually wrong!!
+    if ((uint64_t(mRawDataLength) + mTotalSent) > mContentLength)
+      mRawDataLength = static_cast<uint32_t>(mContentLength - mTotalSent);
+
+    if (mRawDataLength == 0) return NS_OK;
+  }
+
+  uint64_t offset = mTotalSent;
+  mTotalSent += mRawDataLength;
+
+  nsCOMPtr<nsIStringInputStream> ss(
+      do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = ss->ShareData(rawData, mRawDataLength);
+  mRawData = nullptr;
+  if (NS_FAILED(rv)) return rv;
+
+  return mPartChannel->SendOnDataAvailable(mContext, ss, offset,
+                                           mRawDataLength);
 }
 
-nsresult
-nsMultiMixedConv::SendData()
-{
-    nsresult rv;
-
-    if (!mRawData) {
-        return NS_OK;
-    }
-
-    nsACString::const_char_iterator rawData = mRawData;
-    mRawData = nullptr;
-
-    if (!mPartChannel) {
-        return NS_ERROR_FAILURE; // something went wrong w/ processing
-    }
-
-    if (mContentLength != UINT64_MAX) {
-        // make sure that we don't send more than the mContentLength
-        // XXX why? perhaps the Content-Length header was actually wrong!!
-        if ((uint64_t(mRawDataLength) + mTotalSent) > mContentLength)
-            mRawDataLength = static_cast<uint32_t>(mContentLength - mTotalSent);
-
-        if (mRawDataLength == 0)
-            return NS_OK;
-    }
-
-    uint64_t offset = mTotalSent;
-    mTotalSent += mRawDataLength;
-
-    nsCOMPtr<nsIStringInputStream> ss(
-            do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = ss->ShareData(rawData, mRawDataLength);
-    mRawData = nullptr;
-    if (NS_FAILED(rv))
-        return rv;
-
-    return mPartChannel->SendOnDataAvailable(mContext, ss, offset, mRawDataLength);
+void nsMultiMixedConv::HeadersToDefault() {
+  mContentLength = UINT64_MAX;
+  mContentType.Truncate();
+  mContentDisposition.Truncate();
+  mContentSecurityPolicy.Truncate();
+  mIsByteRangeRequest = false;
 }
 
-void
-nsMultiMixedConv::HeadersToDefault()
-{
-    mContentLength = UINT64_MAX;
-    mContentType.Truncate();
-    mContentDisposition.Truncate();
-    mContentSecurityPolicy.Truncate();
-    mIsByteRangeRequest = false;
-}
+nsresult nsMultiMixedConv::ProcessHeader() {
+  mozilla::Tokenizer p(mResponseHeaderValue);
 
-nsresult
-nsMultiMixedConv::ProcessHeader()
-{
-    mozilla::Tokenizer p(mResponseHeaderValue);
-
-    switch (mResponseHeader) {
+  switch (mResponseHeader) {
     case HEADER_CONTENT_TYPE:
       mContentType = mResponseHeaderValue;
       mContentType.CompressWhitespace();
@@ -1030,25 +959,25 @@ nsMultiMixedConv::ProcessHeader()
       mContentDisposition.CompressWhitespace();
       break;
     case HEADER_SET_COOKIE: {
-      nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(mChannel);
+      nsCOMPtr<nsIHttpChannelInternal> httpInternal =
+          do_QueryInterface(mChannel);
       mResponseHeaderValue.CompressWhitespace();
       if (httpInternal) {
-        DebugOnly<nsresult> rv = httpInternal->SetCookie(mResponseHeaderValue.get());
+        DebugOnly<nsresult> rv =
+            httpInternal->SetCookie(mResponseHeaderValue.get());
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
       break;
     }
     case HEADER_RANGE:
     case HEADER_CONTENT_RANGE: {
-      if (!p.CheckWord("bytes") ||
-          !p.CheckWhite()) {
+      if (!p.CheckWord("bytes") || !p.CheckWhite()) {
         return NS_ERROR_CORRUPTED_CONTENT;
       }
       p.SkipWhites();
       if (p.CheckChar('*')) {
         mByteRangeStart = mByteRangeEnd = 0;
-      } else if (!p.ReadInteger(&mByteRangeStart) ||
-                 !p.CheckChar('-') ||
+      } else if (!p.ReadInteger(&mByteRangeStart) || !p.CheckChar('-') ||
                  !p.ReadInteger(&mByteRangeEnd)) {
         return NS_ERROR_CORRUPTED_CONTENT;
       }
@@ -1075,8 +1004,7 @@ nsMultiMixedConv::ProcessHeader()
           resultCSP.Append(mContentSecurityPolicy);
         }
         nsresult rv = httpChannel->SetResponseHeader(
-                        NS_LITERAL_CSTRING("Content-Security-Policy"),
-                        resultCSP, false);
+            NS_LITERAL_CSTRING("Content-Security-Policy"), resultCSP, false);
         if (NS_FAILED(rv)) {
           return NS_ERROR_CORRUPTED_CONTENT;
         }
@@ -1086,20 +1014,17 @@ nsMultiMixedConv::ProcessHeader()
     case HEADER_UNKNOWN:
       // We ignore anything else...
       break;
-    }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
-nsresult
-NS_NewMultiMixedConv(nsMultiMixedConv** aMultiMixedConv)
-{
-    MOZ_ASSERT(aMultiMixedConv != nullptr, "null ptr");
-    if (! aMultiMixedConv)
-        return NS_ERROR_NULL_POINTER;
+nsresult NS_NewMultiMixedConv(nsMultiMixedConv **aMultiMixedConv) {
+  MOZ_ASSERT(aMultiMixedConv != nullptr, "null ptr");
+  if (!aMultiMixedConv) return NS_ERROR_NULL_POINTER;
 
-    *aMultiMixedConv = new nsMultiMixedConv();
+  *aMultiMixedConv = new nsMultiMixedConv();
 
-    NS_ADDREF(*aMultiMixedConv);
-    return NS_OK;
+  NS_ADDREF(*aMultiMixedConv);
+  return NS_OK;
 }

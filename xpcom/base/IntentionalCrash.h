@@ -21,9 +21,7 @@
 
 namespace mozilla {
 
-inline void
-NoteIntentionalCrash(const char* aProcessType)
-{
+inline void NoteIntentionalCrash(const char* aProcessType) {
 // In opt builds we don't actually have the leak checking enabled, and the
 // sandbox doesn't allow writing to this path, so we just disable this
 // function's behaviour.
@@ -60,6 +58,6 @@ NoteIntentionalCrash(const char* aProcessType)
 #endif
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_IntentionalCrash_h
+#endif  // mozilla_IntentionalCrash_h

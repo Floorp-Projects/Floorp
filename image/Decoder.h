@@ -23,24 +23,20 @@
 namespace mozilla {
 
 namespace Telemetry {
-  enum HistogramID : uint32_t;
-} // namespace Telemetry
+enum HistogramID : uint32_t;
+}  // namespace Telemetry
 
 namespace image {
 
 class imgFrame;
 
-struct DecoderFinalStatus final
-{
-  DecoderFinalStatus(bool aWasMetadataDecode,
-                     bool aFinished,
-                     bool aHadError,
+struct DecoderFinalStatus final {
+  DecoderFinalStatus(bool aWasMetadataDecode, bool aFinished, bool aHadError,
                      bool aShouldReportError)
-    : mWasMetadataDecode(aWasMetadataDecode)
-    , mFinished(aFinished)
-    , mHadError(aHadError)
-    , mShouldReportError(aShouldReportError)
-  { }
+      : mWasMetadataDecode(aWasMetadataDecode),
+        mFinished(aFinished),
+        mHadError(aHadError),
+        mShouldReportError(aShouldReportError) {}
 
   /// True if this was a metadata decode.
   const bool mWasMetadataDecode : 1;
@@ -56,21 +52,17 @@ struct DecoderFinalStatus final
   const bool mShouldReportError : 1;
 };
 
-struct DecoderTelemetry final
-{
+struct DecoderTelemetry final {
   DecoderTelemetry(const Maybe<Telemetry::HistogramID>& aSpeedHistogram,
-                   size_t aBytesDecoded,
-                   uint32_t aChunkCount,
+                   size_t aBytesDecoded, uint32_t aChunkCount,
                    TimeDuration aDecodeTime)
-    : mSpeedHistogram(aSpeedHistogram)
-    , mBytesDecoded(aBytesDecoded)
-    , mChunkCount(aChunkCount)
-    , mDecodeTime(aDecodeTime)
-  { }
+      : mSpeedHistogram(aSpeedHistogram),
+        mBytesDecoded(aBytesDecoded),
+        mChunkCount(aChunkCount),
+        mDecodeTime(aDecodeTime) {}
 
   /// @return our decoder's speed, in KBps.
-  int32_t Speed() const
-  {
+  int32_t Speed() const {
     return mBytesDecoded / (1024 * mDecodeTime.ToSeconds());
   }
 
@@ -96,9 +88,8 @@ struct DecoderTelemetry final
  * to use recycling. It allows the decoder to get a handle to the recycled
  * frames.
  */
-class IDecoderFrameRecycler
-{
-public:
+class IDecoderFrameRecycler {
+ public:
   /**
    * Request the next available recycled imgFrame from the recycler.
    *
@@ -111,9 +102,8 @@ public:
   virtual RawAccessFrameRef RecycleFrame(gfx::IntRect& aRecycleRect) = 0;
 };
 
-class Decoder
-{
-public:
+class Decoder {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_RECORDED(Decoder)
 
   explicit Decoder(RasterImage* aImage);
@@ -164,8 +154,7 @@ public:
    * TakeInvalidRect() returns only the invalidation region accumulated since
    * the last call to TakeInvalidRect().
    */
-  nsIntRect TakeInvalidRect()
-  {
+  nsIntRect TakeInvalidRect() {
     nsIntRect invalidRect = mInvalidRect;
     mInvalidRect.SetEmpty();
     return invalidRect;
@@ -176,8 +165,7 @@ public:
    * them. This means that each call to TakeProgress() returns only the changes
    * accumulated since the last call to TakeProgress().
    */
-  Progress TakeProgress()
-  {
+  Progress TakeProgress() {
     Progress progress = mProgress;
     mProgress = NoProgress;
     return progress;
@@ -186,9 +174,9 @@ public:
   /**
    * Returns true if there's any progress to report.
    */
-  bool HasProgress() const
-  {
-    return mProgress != NoProgress || !mInvalidRect.IsEmpty() || mFinishedNewFrame;
+  bool HasProgress() const {
+    return mProgress != NoProgress || !mInvalidRect.IsEmpty() ||
+           mFinishedNewFrame;
   }
 
   /*
@@ -200,8 +188,7 @@ public:
    * is enough to determine the image's intrinsic size. A metadata decode is
    * enabled by calling SetMetadataDecode() *before* calling Init().
    */
-  void SetMetadataDecode(bool aMetadataDecode)
-  {
+  void SetMetadataDecode(bool aMetadataDecode) {
     MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
     mMetadataDecode = aMetadataDecode;
   }
@@ -230,7 +217,10 @@ public:
    *
    * Illegal to call if HasSize() returns false.
    */
-  gfx::IntSize OutputSize() const { MOZ_ASSERT(HasSize()); return *mOutputSize; }
+  gfx::IntSize OutputSize() const {
+    MOZ_ASSERT(HasSize());
+    return *mOutputSize;
+  }
 
   /**
    * @return either the size passed to SetOutputSize() or Nothing(), indicating
@@ -242,16 +232,14 @@ public:
    * Sets the expected image size of this decoder. Decoding will fail if this
    * does not match.
    */
-  void SetExpectedSize(const gfx::IntSize& aSize)
-  {
+  void SetExpectedSize(const gfx::IntSize& aSize) {
     mExpectedSize.emplace(aSize);
   }
 
   /**
    * Is the image size what was expected, if specified?
    */
-  bool IsExpectedSize() const
-  {
+  bool IsExpectedSize() const {
     return mExpectedSize.isNothing() || *mExpectedSize == Size();
   }
 
@@ -262,30 +250,24 @@ public:
    * XXX(seth): We should eliminate this method and pass a SourceBufferIterator
    * to the various decoder constructors instead.
    */
-  void SetIterator(SourceBufferIterator&& aIterator)
-  {
+  void SetIterator(SourceBufferIterator&& aIterator) {
     MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
     mIterator.emplace(std::move(aIterator));
   }
 
-  SourceBuffer* GetSourceBuffer() const
-  {
-    return mIterator->Owner();
-  }
+  SourceBuffer* GetSourceBuffer() const { return mIterator->Owner(); }
 
   /**
    * Should this decoder send partial invalidations?
    */
-  bool ShouldSendPartialInvalidations() const
-  {
+  bool ShouldSendPartialInvalidations() const {
     return !(mDecoderFlags & DecoderFlags::IS_REDECODE);
   }
 
   /**
    * Should we stop decoding after the first frame?
    */
-  bool IsFirstFrameDecode() const
-  {
+  bool IsFirstFrameDecode() const {
     return bool(mDecoderFlags & DecoderFlags::FIRST_FRAME_ONLY);
   }
 
@@ -293,8 +275,7 @@ public:
    * Should blend the current frame with the previous frames to produce a
    * complete frame instead of a partial frame for animated images.
    */
-  bool ShouldBlendAnimation() const
-  {
+  bool ShouldBlendAnimation() const {
     return bool(mDecoderFlags & DecoderFlags::BLEND_ANIMATION);
   }
 
@@ -320,9 +301,9 @@ public:
   void SetFinalizeFrames(bool aFinalize) { mFinalizeFrames = aFinalize; }
   bool GetFinalizeFrames() const { return mFinalizeFrames; }
 
-  /// Did we finish decoding enough that calling Decode() again would be useless?
-  bool GetDecodeDone() const
-  {
+  /// Did we finish decoding enough that calling Decode() again would be
+  /// useless?
+  bool GetDecodeDone() const {
     return mReachedTerminalState || mDecodeDone ||
            (mMetadataDecode && HasSize()) || HasError();
   }
@@ -331,28 +312,21 @@ public:
   bool InFrame() const { return mInFrame; }
 
   /// Is the image valid if embedded inside an ICO.
-  virtual bool IsValidICOResource() const
-  {
-    return false;
-  }
+  virtual bool IsValidICOResource() const { return false; }
 
   /// Type of decoder.
-  virtual DecoderType GetType() const
-  {
-    return DecoderType::UNKNOWN;
-  }
+  virtual DecoderType GetType() const { return DecoderType::UNKNOWN; }
 
   enum DecodeStyle {
-      PROGRESSIVE, // produce intermediate frames representing the partial
-                   // state of the image
-      SEQUENTIAL   // decode to final image immediately
+    PROGRESSIVE,  // produce intermediate frames representing the partial
+                  // state of the image
+    SEQUENTIAL    // decode to final image immediately
   };
 
   /**
    * Get or set the DecoderFlags that influence the behavior of this decoder.
    */
-  void SetDecoderFlags(DecoderFlags aDecoderFlags)
-  {
+  void SetDecoderFlags(DecoderFlags aDecoderFlags) {
     MOZ_ASSERT(!mInitialized);
     mDecoderFlags = aDecoderFlags;
   }
@@ -362,8 +336,7 @@ public:
    * Get or set the SurfaceFlags that select the kind of output this decoder
    * will produce.
    */
-  void SetSurfaceFlags(SurfaceFlags aSurfaceFlags)
-  {
+  void SetSurfaceFlags(SurfaceFlags aSurfaceFlags) {
     MOZ_ASSERT(!mInitialized);
     mSurfaceFlags = aSurfaceFlags;
   }
@@ -377,8 +350,7 @@ public:
    *
    * Illegal to call if HasSize() returns false.
    */
-  gfx::IntSize Size() const
-  {
+  gfx::IntSize Size() const {
     MOZ_ASSERT(HasSize());
     return mImageMetadata.GetSize();
   }
@@ -390,8 +362,7 @@ public:
    *
    * Illegal to call if HasSize() returns false.
    */
-  gfx::IntRect FullFrame() const
-  {
+  gfx::IntRect FullFrame() const {
     return gfx::IntRect(gfx::IntPoint(), Size());
   }
 
@@ -406,8 +377,7 @@ public:
    *
    * Illegal to call if HasSize() returns false.
    */
-  gfx::IntRect FullOutputFrame() const
-  {
+  gfx::IntRect FullOutputFrame() const {
     return gfx::IntRect(gfx::IntPoint(), OutputSize());
   }
 
@@ -434,45 +404,36 @@ public:
    */
   RasterImage* GetImageMaybeNull() const { return mImage.get(); }
 
-  RawAccessFrameRef GetCurrentFrameRef()
-  {
-    return mCurrentFrame ? mCurrentFrame->RawAccessRef()
-                         : RawAccessFrameRef();
+  RawAccessFrameRef GetCurrentFrameRef() {
+    return mCurrentFrame ? mCurrentFrame->RawAccessRef() : RawAccessFrameRef();
   }
 
   /**
    * For use during decoding only. Allows the BlendAnimationFilter to get the
    * current frame we are producing for its animation parameters.
    */
-  imgFrame* GetCurrentFrame()
-  {
-    return mCurrentFrame.get();
-  }
+  imgFrame* GetCurrentFrame() { return mCurrentFrame.get(); }
 
   /**
    * For use during decoding only. Allows the BlendAnimationFilter to get the
    * frame it should be pulling the previous frame data from.
    */
-  const RawAccessFrameRef& GetRestoreFrameRef() const
-  {
+  const RawAccessFrameRef& GetRestoreFrameRef() const {
     MOZ_ASSERT(ShouldBlendAnimation());
     return mRestoreFrame;
   }
 
-  const gfx::IntRect& GetRestoreDirtyRect() const
-  {
+  const gfx::IntRect& GetRestoreDirtyRect() const {
     MOZ_ASSERT(ShouldBlendAnimation());
     return mRestoreDirtyRect;
   }
 
-  const gfx::IntRect& GetRecycleRect() const
-  {
+  const gfx::IntRect& GetRecycleRect() const {
     MOZ_ASSERT(ShouldBlendAnimation());
     return mRecycleRect;
   }
 
-  const gfx::IntRect& GetFirstFrameRefreshArea() const
-  {
+  const gfx::IntRect& GetFirstFrameRefreshArea() const {
     return mFirstFrameRefreshArea;
   }
 
@@ -483,12 +444,11 @@ public:
   }
 
   IDecoderFrameRecycler* GetFrameRecycler() const { return mFrameRecycler; }
-  void SetFrameRecycler(IDecoderFrameRecycler* aFrameRecycler)
-  {
+  void SetFrameRecycler(IDecoderFrameRecycler* aFrameRecycler) {
     mFrameRecycler = aFrameRecycler;
   }
 
-protected:
+ protected:
   friend class AutoRecordDecoderTelemetry;
   friend class DecoderTestHelper;
   friend class nsICODecoder;
@@ -517,8 +477,9 @@ protected:
    * speed, or Nothing() if we don't record speed telemetry for this kind of
    * decoder.
    */
-  virtual Maybe<Telemetry::HistogramID> SpeedHistogram() const { return Nothing(); }
-
+  virtual Maybe<Telemetry::HistogramID> SpeedHistogram() const {
+    return Nothing();
+  }
 
   /*
    * Progress notifications.
@@ -526,8 +487,7 @@ protected:
 
   // Called by decoders when they determine the size of the image. Informs
   // the image of its size and sends notifications.
-  void PostSize(int32_t aWidth,
-                int32_t aHeight,
+  void PostSize(int32_t aWidth, int32_t aHeight,
                 Orientation aOrientation = Orientation());
 
   // Called by decoders if they determine that the image has transparency.
@@ -566,8 +526,9 @@ protected:
    *                          the image at our output size). This must
    *                          be supplied if we're downscaling during decode.
    */
-  void PostInvalidation(const gfx::IntRect& aRect,
-                        const Maybe<gfx::IntRect>& aRectAtOutputSize = Nothing());
+  void PostInvalidation(
+      const gfx::IntRect& aRect,
+      const Maybe<gfx::IntRect>& aRectAtOutputSize = Nothing());
 
   // Called by the decoders when they have successfully decoded the image. This
   // may occur as the result of the decoder getting to the appropriate point in
@@ -586,11 +547,10 @@ protected:
    */
   nsresult AllocateFrame(const gfx::IntSize& aOutputSize,
                          const gfx::IntRect& aFrameRect,
-                         gfx::SurfaceFormat aFormat,
-                         uint8_t aPaletteDepth = 0,
+                         gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth = 0,
                          const Maybe<AnimationParams>& aAnimParams = Nothing());
 
-private:
+ private:
   /// Report that an error was encountered while decoding.
   void PostError();
 
@@ -603,8 +563,7 @@ private:
 
   /// @return the number of complete frames we have. Does not include the
   /// current frame if it's unfinished.
-  uint32_t GetCompleteFrameCount()
-  {
+  uint32_t GetCompleteFrameCount() {
     if (mFrameCount == 0) {
       return 0;
     }
@@ -612,14 +571,13 @@ private:
     return mInFrame ? mFrameCount - 1 : mFrameCount;
   }
 
-  RawAccessFrameRef AllocateFrameInternal(const gfx::IntSize& aOutputSize,
-                                          const gfx::IntRect& aFrameRect,
-                                          gfx::SurfaceFormat aFormat,
-                                          uint8_t aPaletteDepth,
-                                          const Maybe<AnimationParams>& aAnimParams,
-                                          RawAccessFrameRef&& aPreviousFrame);
+  RawAccessFrameRef AllocateFrameInternal(
+      const gfx::IntSize& aOutputSize, const gfx::IntRect& aFrameRect,
+      gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth,
+      const Maybe<AnimationParams>& aAnimParams,
+      RawAccessFrameRef&& aPreviousFrame);
 
-protected:
+ protected:
   Maybe<Downscaler> mDownscaler;
 
   uint8_t* mImageData;  // Pointer to image data in either Cairo or 8bit format
@@ -627,7 +585,7 @@ protected:
   uint32_t* mColormap;  // Current colormap to be used in Cairo format
   uint32_t mColormapSize;
 
-private:
+ private:
   RefPtr<RasterImage> mImage;
   Maybe<SourceBufferIterator> mIterator;
   IDecoderFrameRecycler* mFrameRecycler;
@@ -641,19 +599,21 @@ private:
 
   ImageMetadata mImageMetadata;
 
-  gfx::IntRect mInvalidRect; // Tracks new rows as the current frame is decoded.
-  gfx::IntRect mRestoreDirtyRect; // Tracks an invalidation region between the
-                                  // restore frame and the previous frame.
-  gfx::IntRect mRecycleRect; // Tracks an invalidation region between the recycled
-                             // frame and the current frame.
+  gfx::IntRect
+      mInvalidRect;  // Tracks new rows as the current frame is decoded.
+  gfx::IntRect mRestoreDirtyRect;   // Tracks an invalidation region between the
+                                    // restore frame and the previous frame.
+  gfx::IntRect mRecycleRect;        // Tracks an invalidation region between the
+                                    // recycled frame and the current frame.
   Maybe<gfx::IntSize> mOutputSize;  // The size of our output surface.
-  Maybe<gfx::IntSize> mExpectedSize; // The expected size of the image.
+  Maybe<gfx::IntSize> mExpectedSize;  // The expected size of the image.
   Progress mProgress;
 
-  uint32_t mFrameCount; // Number of frames, including anything in-progress
+  uint32_t mFrameCount;      // Number of frames, including anything in-progress
   FrameTimeout mLoopLength;  // Length of a single loop of this image.
-  gfx::IntRect mFirstFrameRefreshArea;  // The area of the image that needs to
-                                        // be invalidated when the animation loops.
+  gfx::IntRect
+      mFirstFrameRefreshArea;  // The area of the image that needs to
+                               // be invalidated when the animation loops.
 
   // Telemetry data for this decoder.
   TimeDuration mDecodeTime;
@@ -678,7 +638,7 @@ private:
   bool mFinalizeFrames : 1;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_Decoder_h
+#endif  // mozilla_image_Decoder_h

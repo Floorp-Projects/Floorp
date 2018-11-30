@@ -14,11 +14,8 @@ namespace mozilla {
 
 AutoRestyleTimelineMarker::AutoRestyleTimelineMarker(
     nsIDocShell* aDocShell,
-    bool aIsAnimationOnly
-    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : mDocShell(nullptr)
-  , mIsAnimationOnly(aIsAnimationOnly)
-{
+    bool aIsAnimationOnly MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : mDocShell(nullptr), mIsAnimationOnly(aIsAnimationOnly) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -32,14 +29,12 @@ AutoRestyleTimelineMarker::AutoRestyleTimelineMarker(
   }
 
   mDocShell = aDocShell;
-  timelines->AddMarkerForDocShell(mDocShell,
-    MakeUnique<RestyleTimelineMarker>(
-      mIsAnimationOnly,
-      MarkerTracingType::START));
+  timelines->AddMarkerForDocShell(
+      mDocShell, MakeUnique<RestyleTimelineMarker>(mIsAnimationOnly,
+                                                   MarkerTracingType::START));
 }
 
-AutoRestyleTimelineMarker::~AutoRestyleTimelineMarker()
-{
+AutoRestyleTimelineMarker::~AutoRestyleTimelineMarker() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mDocShell) {
@@ -51,10 +46,9 @@ AutoRestyleTimelineMarker::~AutoRestyleTimelineMarker()
     return;
   }
 
-  timelines->AddMarkerForDocShell(mDocShell,
-    MakeUnique<RestyleTimelineMarker>(
-      mIsAnimationOnly,
-      MarkerTracingType::END));
+  timelines->AddMarkerForDocShell(
+      mDocShell, MakeUnique<RestyleTimelineMarker>(mIsAnimationOnly,
+                                                   MarkerTracingType::END));
 }
 
-} // namespace mozilla
+}  // namespace mozilla

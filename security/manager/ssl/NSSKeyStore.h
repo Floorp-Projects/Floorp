@@ -10,13 +10,12 @@
 #include "OSKeyStore.h"
 #include "nsString.h"
 
-class NSSKeyStore final : public AbstractOSKeyStore
-{
-public:
+class NSSKeyStore final : public AbstractOSKeyStore {
+ public:
   NSSKeyStore();
 
   virtual nsresult RetrieveSecret(const nsACString& aLabel,
-                        /* out */ nsACString& aSecret) override;
+                                  /* out */ nsACString& aSecret) override;
   virtual nsresult StoreSecret(const nsACString& secret,
                                const nsACString& label) override;
   virtual nsresult DeleteSecret(const nsACString& label) override;
@@ -29,9 +28,9 @@ public:
   virtual bool SecretAvailable(const nsACString& label) override;
   virtual ~NSSKeyStore();
 
-private:
+ private:
   nsresult InitToken();
   UniquePK11SlotInfo mSlot = nullptr;
 };
 
-#endif // NSSKeyStore_h
+#endif  // NSSKeyStore_h

@@ -17,15 +17,11 @@
 
 class ScopedStdioHandle {
  public:
-  ScopedStdioHandle()
-      : handle_(NULL) { }
+  ScopedStdioHandle() : handle_(NULL) {}
 
-  explicit ScopedStdioHandle(FILE* handle)
-      : handle_(handle) { }
+  explicit ScopedStdioHandle(FILE* handle) : handle_(handle) {}
 
-  ~ScopedStdioHandle() {
-    Close();
-  }
+  ~ScopedStdioHandle() { Close(); }
 
   void Close() {
     if (handle_) {
@@ -53,4 +49,4 @@ class ScopedStdioHandle {
   DISALLOW_EVIL_CONSTRUCTORS(ScopedStdioHandle);
 };
 
-#endif // BASE_SCOPED_HANDLE_H_
+#endif  // BASE_SCOPED_HANDLE_H_

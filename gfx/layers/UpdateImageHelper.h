@@ -17,22 +17,16 @@
 namespace mozilla {
 namespace layers {
 
-class UpdateImageHelper
-{
-public:
-  UpdateImageHelper(ImageContainer* aImageContainer,
-                    ImageClient* aImageClient,
-                    gfx::IntSize aImageSize,
-                    gfx::SurfaceFormat aFormat) :
-    mImageContainer(aImageContainer),
-    mImageClient(aImageClient),
-    mImageSize(aImageSize),
-    mIsLocked(false)
-  {
-    mTexture = mImageClient->GetTextureClientRecycler()->CreateOrRecycle(aFormat,
-                                                                         mImageSize,
-                                                                         BackendSelector::Content,
-                                                                         TextureFlags::DEFAULT);
+class UpdateImageHelper {
+ public:
+  UpdateImageHelper(ImageContainer* aImageContainer, ImageClient* aImageClient,
+                    gfx::IntSize aImageSize, gfx::SurfaceFormat aFormat)
+      : mImageContainer(aImageContainer),
+        mImageClient(aImageClient),
+        mImageSize(aImageSize),
+        mIsLocked(false) {
+    mTexture = mImageClient->GetTextureClientRecycler()->CreateOrRecycle(
+        aFormat, mImageSize, BackendSelector::Content, TextureFlags::DEFAULT);
     if (!mTexture) {
       return;
     }
@@ -43,16 +37,14 @@ public:
     }
   }
 
-  ~UpdateImageHelper()
-  {
+  ~UpdateImageHelper() {
     if (mIsLocked) {
       mTexture->Unlock();
       mIsLocked = false;
     }
   }
 
-  already_AddRefed<gfx::DrawTarget> GetDrawTarget()
-  {
+  already_AddRefed<gfx::DrawTarget> GetDrawTarget() {
     RefPtr<gfx::DrawTarget> target;
     if (mTexture) {
       target = mTexture->BorrowDrawTarget();
@@ -60,8 +52,7 @@ public:
     return target.forget();
   }
 
-  bool UpdateImage()
-  {
+  bool UpdateImage() {
     if (!mTexture) {
       return false;
     }
@@ -71,13 +62,13 @@ public:
       mIsLocked = false;
     }
 
-    RefPtr<TextureWrapperImage> image = new TextureWrapperImage(mTexture,
-                                                                gfx::IntRect(gfx::IntPoint(0, 0), mImageSize));
+    RefPtr<TextureWrapperImage> image = new TextureWrapperImage(
+        mTexture, gfx::IntRect(gfx::IntPoint(0, 0), mImageSize));
     mImageContainer->SetCurrentImageInTransaction(image);
-    return mImageClient->UpdateImage(mImageContainer, /* unused */0);
+    return mImageClient->UpdateImage(mImageContainer, /* unused */ 0);
   }
 
-private:
+ private:
   RefPtr<ImageContainer> mImageContainer;
   RefPtr<ImageClient> mImageClient;
   gfx::IntSize mImageSize;
@@ -85,7 +76,7 @@ private:
   bool mIsLocked;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif  // GFX_UPDATEIMAGEHELPER_H

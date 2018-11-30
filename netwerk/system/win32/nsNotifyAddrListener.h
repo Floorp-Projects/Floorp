@@ -18,85 +18,84 @@
 
 class nsNotifyAddrListener : public nsINetworkLinkService,
                              public nsIRunnable,
-                             public nsIObserver
-{
-    virtual ~nsNotifyAddrListener();
+                             public nsIObserver {
+  virtual ~nsNotifyAddrListener();
 
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSINETWORKLINKSERVICE
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSINETWORKLINKSERVICE
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIOBSERVER
+
+  nsNotifyAddrListener();
+
+  nsresult Init(void);
+  void CheckLinkStatus(void);
+
+ protected:
+  class ChangeEvent : public mozilla::Runnable {
+   public:
     NS_DECL_NSIRUNNABLE
-    NS_DECL_NSIOBSERVER
+    ChangeEvent(nsINetworkLinkService *aService, const char *aEventID)
+        : Runnable("nsNotifyAddrListener::ChangeEvent"),
+          mService(aService),
+          mEventID(aEventID) {}
 
-    nsNotifyAddrListener();
+   private:
+    nsCOMPtr<nsINetworkLinkService> mService;
+    const char *mEventID;
+  };
 
-    nsresult Init(void);
-    void CheckLinkStatus(void);
+  bool mLinkUp;
+  bool mStatusKnown;
+  bool mCheckAttempted;
 
-protected:
-    class ChangeEvent : public mozilla::Runnable {
-    public:
-        NS_DECL_NSIRUNNABLE
-        ChangeEvent(nsINetworkLinkService *aService, const char *aEventID)
-            : Runnable("nsNotifyAddrListener::ChangeEvent")
-            , mService(aService)
-            , mEventID(aEventID)
-        {}
-    private:
-        nsCOMPtr<nsINetworkLinkService> mService;
-        const char *mEventID;
-    };
+  nsresult Shutdown(void);
+  nsresult SendEvent(const char *aEventID);
 
-    bool mLinkUp;
-    bool mStatusKnown;
-    bool mCheckAttempted;
+  DWORD CheckAdaptersAddresses(void);
 
-    nsresult Shutdown(void);
-    nsresult SendEvent(const char *aEventID);
+  // Checks for an Internet Connection Sharing (ICS) gateway.
+  bool CheckICSGateway(PIP_ADAPTER_ADDRESSES aAdapter);
+  bool CheckICSStatus(PWCHAR aAdapterName);
 
-    DWORD CheckAdaptersAddresses(void);
+  nsCOMPtr<nsIThread> mThread;
 
-    // Checks for an Internet Connection Sharing (ICS) gateway.
-    bool  CheckICSGateway(PIP_ADAPTER_ADDRESSES aAdapter);
-    bool  CheckICSStatus(PWCHAR aAdapterName);
+ private:
+  // Returns the new timeout period for coalescing (or INFINITE)
+  DWORD nextCoalesceWaitTime();
 
-    nsCOMPtr<nsIThread> mThread;
+  // Called for every detected network change
+  nsresult NetworkChanged();
 
-private:
-    // Returns the new timeout period for coalescing (or INFINITE)
-    DWORD nextCoalesceWaitTime();
+  // Figure out the current network identification
+  void calculateNetworkId(void);
+  bool findMac(char *gateway);
+  nsCString mNetworkId;
 
-    // Called for every detected network change
-    nsresult NetworkChanged();
+  HANDLE mCheckEvent;
 
-    // Figure out the current network identification
-    void calculateNetworkId(void);
-    bool findMac(char *gateway);
-    nsCString mNetworkId;
+  // set true when mCheckEvent means shutdown
+  bool mShutdown;
 
-    HANDLE mCheckEvent;
+  // This is a checksum of various meta data for all network interfaces
+  // considered UP at last check.
+  ULONG mIPInterfaceChecksum;
 
-    // set true when mCheckEvent means shutdown
-    bool mShutdown;
+  // start time of the checking
+  mozilla::TimeStamp mStartTime;
 
-    // This is a checksum of various meta data for all network interfaces
-    // considered UP at last check.
-    ULONG mIPInterfaceChecksum;
+  // Network changed events are enabled
+  bool mAllowChangedEvent;
 
-    // start time of the checking
-    mozilla::TimeStamp mStartTime;
+  // Check for IPv6 network changes
+  bool mIPv6Changes;
 
-    // Network changed events are enabled
-    bool mAllowChangedEvent;
+  // Flag set while coalescing change events
+  bool mCoalescingActive;
 
-    // Check for IPv6 network changes
-    bool mIPv6Changes;
-
-    // Flag set while coalescing change events
-    bool mCoalescingActive;
-
-    // Time stamp for first event during coalescing
-    mozilla::TimeStamp mChangeTime;
+  // Time stamp for first event during coalescing
+  mozilla::TimeStamp mChangeTime;
 };
 
 #endif /* NSNOTIFYADDRLISTENER_H_ */

@@ -22,9 +22,7 @@ typedef intptr_t ssize_t;
 #include "mozilla/Assertions.h"
 #include "FdPrintf.h"
 
-static void
-die(const char* message)
-{
+static void die(const char* message) {
   /* Here, it doesn't matter that fprintf may allocate memory. */
   fprintf(stderr, "%s\n", message);
   exit(1);
@@ -33,17 +31,12 @@ die(const char* message)
 /* We don't want to be using malloc() to allocate our internal tracking
  * data, because that would change the parameters of what is being measured,
  * so we want to use data types that directly use mmap/VirtualAlloc. */
-template<typename T, size_t Len>
-class MappedArray
-{
-public:
-  MappedArray()
-    : mPtr(nullptr)
-  {
-  }
+template <typename T, size_t Len>
+class MappedArray {
+ public:
+  MappedArray() : mPtr(nullptr) {}
 
-  ~MappedArray()
-  {
+  ~MappedArray() {
     if (mPtr) {
 #ifdef _WIN32
       VirtualFree(mPtr, sizeof(T) * Len, MEM_RELEASE);
@@ -53,25 +46,21 @@ public:
     }
   }
 
-  T& operator[](size_t aIndex) const
-  {
+  T& operator[](size_t aIndex) const {
     if (mPtr) {
       return mPtr[aIndex];
     }
 
 #ifdef _WIN32
     mPtr = reinterpret_cast<T*>(VirtualAlloc(
-      nullptr, sizeof(T) * Len, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+        nullptr, sizeof(T) * Len, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
     if (mPtr == nullptr) {
       die("VirtualAlloc error");
     }
 #else
-    mPtr = reinterpret_cast<T*>(mmap(nullptr,
-                                     sizeof(T) * Len,
+    mPtr = reinterpret_cast<T*>(mmap(nullptr, sizeof(T) * Len,
                                      PROT_READ | PROT_WRITE,
-                                     MAP_ANON | MAP_PRIVATE,
-                                     -1,
-                                     0));
+                                     MAP_ANON | MAP_PRIVATE, -1, 0));
     if (mPtr == MAP_FAILED) {
       die("Mmap error");
     }
@@ -79,13 +68,12 @@ public:
     return mPtr[aIndex];
   }
 
-private:
+ private:
   mutable T* mPtr;
 };
 
 /* Type for records of allocations. */
-struct MemSlot
-{
+struct MemSlot {
   void* mPtr;
 };
 
@@ -98,17 +86,15 @@ struct MemSlot
  * Using 1023 groups makes the MemSlotList itself page sized on 32-bits
  * and 2 pages-sized on 64-bits.
  */
-class MemSlotList
-{
+class MemSlotList {
   static const size_t kGroups = 1024 - 1;
   static const size_t kGroupSize = (1024 * 1024) / sizeof(MemSlot);
 
   MappedArray<MemSlot, kGroupSize> mSlots[kGroups];
   MappedArray<MemSlotList, 1> mNext;
 
-public:
-  MemSlot& operator[](size_t aIndex) const
-  {
+ public:
+  MemSlot& operator[](size_t aIndex) const {
     if (aIndex < kGroupSize * kGroups) {
       return mSlots[aIndex / kGroupSize][aIndex % kGroupSize];
     }
@@ -118,36 +104,23 @@ public:
 };
 
 /* Helper class for memory buffers */
-class Buffer
-{
-public:
-  Buffer()
-    : mBuf(nullptr)
-    , mLength(0)
-  {
-  }
+class Buffer {
+ public:
+  Buffer() : mBuf(nullptr), mLength(0) {}
 
   Buffer(const void* aBuf, size_t aLength)
-    : mBuf(reinterpret_cast<const char*>(aBuf))
-    , mLength(aLength)
-  {
-  }
+      : mBuf(reinterpret_cast<const char*>(aBuf)), mLength(aLength) {}
 
   /* Constructor for string literals. */
-  template<size_t Size>
-  explicit Buffer(const char (&aStr)[Size])
-    : mBuf(aStr)
-    , mLength(Size - 1)
-  {
-  }
+  template <size_t Size>
+  explicit Buffer(const char (&aStr)[Size]) : mBuf(aStr), mLength(Size - 1) {}
 
   /* Returns a sub-buffer up-to but not including the given aNeedle character.
    * The "parent" buffer itself is altered to begin after the aNeedle
    * character.
    * If the aNeedle character is not found, return the entire buffer, and empty
    * the "parent" buffer. */
-  Buffer SplitChar(char aNeedle)
-  {
+  Buffer SplitChar(char aNeedle) {
     char* buf = const_cast<char*>(mBuf);
     char* c = reinterpret_cast<char*>(memchr(buf, aNeedle, mLength));
     if (!c) {
@@ -163,8 +136,7 @@ public:
   /* Returns a sub-buffer of at most aLength characters. The "parent" buffer is
    * amputated of those aLength characters. If the "parent" buffer is smaller
    * than aLength, then its length is used instead. */
-  Buffer Split(size_t aLength)
-  {
+  Buffer Split(size_t aLength) {
     Buffer result(mBuf, std::min(aLength, mLength));
     mLength -= result.mLength;
     mBuf += result.mLength;
@@ -173,15 +145,13 @@ public:
 
   /* Move the buffer (including its content) to the memory address of the aOther
    * buffer. */
-  void Slide(Buffer aOther)
-  {
+  void Slide(Buffer aOther) {
     memmove(const_cast<char*>(aOther.mBuf), mBuf, mLength);
     mBuf = aOther.mBuf;
   }
 
   /* Returns whether the two involved buffers have the same content. */
-  bool operator==(Buffer aOther)
-  {
+  bool operator==(Buffer aOther) {
     return mLength == aOther.mLength &&
            (mBuf == aOther.mBuf || !strncmp(mBuf, aOther.mBuf, mLength));
   }
@@ -198,31 +168,24 @@ public:
 
   /* Extend the buffer over the content of the other buffer, assuming it is
    * adjacent. */
-  void Extend(Buffer aOther)
-  {
+  void Extend(Buffer aOther) {
     MOZ_ASSERT(aOther.mBuf == GetEnd());
     mLength += aOther.mLength;
   }
 
-private:
+ private:
   const char* mBuf;
   size_t mLength;
 };
 
 /* Helper class to read from a file descriptor line by line. */
-class FdReader
-{
-public:
+class FdReader {
+ public:
   explicit FdReader(int aFd)
-    : mFd(aFd)
-    , mData(&mRawBuf, 0)
-    , mBuf(&mRawBuf, sizeof(mRawBuf))
-  {
-  }
+      : mFd(aFd), mData(&mRawBuf, 0), mBuf(&mRawBuf, sizeof(mRawBuf)) {}
 
   /* Read a line from the file descriptor and returns it as a Buffer instance */
-  Buffer ReadLine()
-  {
+  Buffer ReadLine() {
     while (true) {
       Buffer result = mData.SplitChar('\n');
 
@@ -257,10 +220,9 @@ public:
     }
   }
 
-private:
+ private:
   /* Fill the read buffer. */
-  void FillBuffer()
-  {
+  void FillBuffer() {
     size_t size = mBuf.GetEnd() - mData.GetEnd();
     Buffer remainder(mData.GetEnd(), size);
 
@@ -290,7 +252,7 @@ MOZ_BEGIN_EXTERN_C
 
 /* Function declarations for all the replace_malloc _impl functions.
  * See memory/build/replace_malloc.c */
-#define MALLOC_DECL(name, return_type, ...)                                    \
+#define MALLOC_DECL(name, return_type, ...) \
   return_type name##_impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
@@ -304,20 +266,15 @@ MOZ_BEGIN_EXTERN_C
 /* mozjemalloc and jemalloc use pthread_atfork, which Android doesn't have.
  * While gecko has one in libmozglue, the replay program can't use that.
  * Since we're not going to fork anyways, make it a dummy function. */
-int
-pthread_atfork(void (*aPrepare)(void),
-               void (*aParent)(void),
-               void (*aChild)(void))
-{
+int pthread_atfork(void (*aPrepare)(void), void (*aParent)(void),
+                   void (*aChild)(void)) {
   return 0;
 }
 #endif
 
 MOZ_END_EXTERN_C
 
-size_t
-parseNumber(Buffer aBuf)
-{
+size_t parseNumber(Buffer aBuf) {
   if (!aBuf) {
     die("Malformed input");
   }
@@ -334,12 +291,9 @@ parseNumber(Buffer aBuf)
 }
 
 /* Class to handle dispatching the replay function calls to replace-malloc. */
-class Replay
-{
-public:
-  Replay()
-    : mOps(0)
-  {
+class Replay {
+ public:
+  Replay() : mOps(0) {
 #ifdef _WIN32
     // See comment in FdPrintf.h as to why native win32 handles are used.
     mStdErr = reinterpret_cast<intptr_t>(GetStdHandle(STD_ERROR_HANDLE));
@@ -350,16 +304,14 @@ public:
 
   MemSlot& operator[](size_t index) const { return mSlots[index]; }
 
-  void malloc(Buffer& aArgs, Buffer& aResult)
-  {
+  void malloc(Buffer& aArgs, Buffer& aResult) {
     MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::malloc_impl(size);
   }
 
-  void posix_memalign(Buffer& aArgs, Buffer& aResult)
-  {
+  void posix_memalign(Buffer& aArgs, Buffer& aResult) {
     MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t alignment = parseNumber(aArgs.SplitChar(','));
@@ -372,8 +324,7 @@ public:
     }
   }
 
-  void aligned_alloc(Buffer& aArgs, Buffer& aResult)
-  {
+  void aligned_alloc(Buffer& aArgs, Buffer& aResult) {
     MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t alignment = parseNumber(aArgs.SplitChar(','));
@@ -381,8 +332,7 @@ public:
     aSlot.mPtr = ::aligned_alloc_impl(alignment, size);
   }
 
-  void calloc(Buffer& aArgs, Buffer& aResult)
-  {
+  void calloc(Buffer& aArgs, Buffer& aResult) {
     MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t num = parseNumber(aArgs.SplitChar(','));
@@ -390,8 +340,7 @@ public:
     aSlot.mPtr = ::calloc_impl(num, size);
   }
 
-  void realloc(Buffer& aArgs, Buffer& aResult)
-  {
+  void realloc(Buffer& aArgs, Buffer& aResult) {
     MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     Buffer dummy = aArgs.SplitChar('#');
@@ -406,8 +355,7 @@ public:
     aSlot.mPtr = ::realloc_impl(old_ptr, size);
   }
 
-  void free(Buffer& aArgs, Buffer& aResult)
-  {
+  void free(Buffer& aArgs, Buffer& aResult) {
     if (aResult) {
       die("Malformed input");
     }
@@ -422,8 +370,7 @@ public:
     slot.mPtr = nullptr;
   }
 
-  void memalign(Buffer& aArgs, Buffer& aResult)
-  {
+  void memalign(Buffer& aArgs, Buffer& aResult) {
     MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t alignment = parseNumber(aArgs.SplitChar(','));
@@ -431,16 +378,14 @@ public:
     aSlot.mPtr = ::memalign_impl(alignment, size);
   }
 
-  void valloc(Buffer& aArgs, Buffer& aResult)
-  {
+  void valloc(Buffer& aArgs, Buffer& aResult) {
     MemSlot& aSlot = SlotForResult(aResult);
     mOps++;
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::valloc_impl(size);
   }
 
-  void jemalloc_stats(Buffer& aArgs, Buffer& aResult)
-  {
+  void jemalloc_stats(Buffer& aArgs, Buffer& aResult) {
     if (aArgs || aResult) {
       die("Malformed input");
     }
@@ -450,20 +395,14 @@ public:
     FdPrintf(mStdErr,
              "#%zu mapped: %zu; allocated: %zu; waste: %zu; dirty: %zu; "
              "bookkeep: %zu; binunused: %zu\n",
-             mOps,
-             stats.mapped,
-             stats.allocated,
-             stats.waste,
-             stats.page_cache,
-             stats.bookkeeping,
-             stats.bin_unused);
+             mOps, stats.mapped, stats.allocated, stats.waste, stats.page_cache,
+             stats.bookkeeping, stats.bin_unused);
     /* TODO: Add more data, like actual RSS as measured by OS, but compensated
      * for the replay internal data. */
   }
 
-private:
-  MemSlot& SlotForResult(Buffer& aResult)
-  {
+ private:
+  MemSlot& SlotForResult(Buffer& aResult) {
     /* Parse result value and get the corresponding slot. */
     Buffer dummy = aResult.SplitChar('=');
     Buffer dummy2 = aResult.SplitChar('#');
@@ -480,9 +419,7 @@ private:
   MemSlotList mSlots;
 };
 
-int
-main()
-{
+int main() {
   size_t first_pid = 0;
   FdReader reader(0);
   Replay replay;

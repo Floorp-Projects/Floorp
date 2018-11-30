@@ -25,7 +25,7 @@ class AutoIPCStream;
 class PBackgroundChild;
 class PBackgroundParent;
 
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
@@ -44,30 +44,26 @@ namespace ipc {
  * StructuredCloneData uses mExternalData which holds a BufferList::Borrow()ed
  * read-only view of the data.)
  */
-class SharedJSAllocatedData final
-{
-public:
+class SharedJSAllocatedData final {
+ public:
   explicit SharedJSAllocatedData(JSStructuredCloneData&& aData)
-    : mData(std::move(aData))
-  { }
+      : mData(std::move(aData)) {}
 
-  static already_AddRefed<SharedJSAllocatedData>
-  CreateFromExternalData(const char* aData, size_t aDataLength)
-  {
+  static already_AddRefed<SharedJSAllocatedData> CreateFromExternalData(
+      const char* aData, size_t aDataLength) {
     JSStructuredCloneData buf(JS::StructuredCloneScope::DifferentProcess);
     buf.AppendBytes(aData, aDataLength);
     RefPtr<SharedJSAllocatedData> sharedData =
-      new SharedJSAllocatedData(std::move(buf));
+        new SharedJSAllocatedData(std::move(buf));
     return sharedData.forget();
   }
 
-  static already_AddRefed<SharedJSAllocatedData>
-  CreateFromExternalData(const JSStructuredCloneData& aData)
-  {
+  static already_AddRefed<SharedJSAllocatedData> CreateFromExternalData(
+      const JSStructuredCloneData& aData) {
     JSStructuredCloneData buf(aData.scope());
     buf.Append(aData);
     RefPtr<SharedJSAllocatedData> sharedData =
-      new SharedJSAllocatedData(std::move(buf));
+        new SharedJSAllocatedData(std::move(buf));
     return sharedData.forget();
   }
 
@@ -76,8 +72,8 @@ public:
   JSStructuredCloneData& Data() { return mData; }
   size_t DataLength() const { return mData.Size(); }
 
-private:
-  ~SharedJSAllocatedData() { }
+ private:
+  ~SharedJSAllocatedData() {}
 
   JSStructuredCloneData mData;
 };
@@ -145,9 +141,8 @@ private:
  *    there's no reason you can't wait to BuildClonedMessageDataFor* until you
  *    need to make the IPC Send* call.
  */
-class StructuredCloneData : public StructuredCloneHolder
-{
-public:
+class StructuredCloneData : public StructuredCloneHolder {
+ public:
   StructuredCloneData();
 
   StructuredCloneData(const StructuredCloneData&) = delete;
@@ -156,46 +151,31 @@ public:
 
   ~StructuredCloneData();
 
-  StructuredCloneData&
-  operator=(const StructuredCloneData& aOther) = delete;
+  StructuredCloneData& operator=(const StructuredCloneData& aOther) = delete;
 
-  StructuredCloneData&
-  operator=(StructuredCloneData&& aOther);
+  StructuredCloneData& operator=(StructuredCloneData&& aOther);
 
-  const nsTArray<RefPtr<BlobImpl>>& BlobImpls() const
-  {
-    return mBlobImplArray;
-  }
+  const nsTArray<RefPtr<BlobImpl>>& BlobImpls() const { return mBlobImplArray; }
 
-  nsTArray<RefPtr<BlobImpl>>& BlobImpls()
-  {
-    return mBlobImplArray;
-  }
+  nsTArray<RefPtr<BlobImpl>>& BlobImpls() { return mBlobImplArray; }
 
-  const nsTArray<nsCOMPtr<nsIInputStream>>& InputStreams() const
-  {
+  const nsTArray<nsCOMPtr<nsIInputStream>>& InputStreams() const {
     return mInputStreamArray;
   }
 
-  nsTArray<nsCOMPtr<nsIInputStream>>& InputStreams()
-  {
+  nsTArray<nsCOMPtr<nsIInputStream>>& InputStreams() {
     return mInputStreamArray;
   }
 
   bool Copy(const StructuredCloneData& aData);
 
-  void Read(JSContext* aCx,
-            JS::MutableHandle<JS::Value> aValue,
-            ErrorResult &aRv);
+  void Read(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+            ErrorResult& aRv);
 
-  void Write(JSContext* aCx,
-             JS::Handle<JS::Value> aValue,
-             ErrorResult &aRv);
+  void Write(JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-  void Write(JSContext* aCx,
-             JS::Handle<JS::Value> aValue,
-             JS::Handle<JS::Value> aTransfers,
-             ErrorResult &aRv);
+  void Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
+             JS::Handle<JS::Value> aTransfers, ErrorResult& aRv);
 
   // Actor-varying methods to convert the structured clone stored in this holder
   // by a previous call to Write() into ClonedMessageData IPC representation.
@@ -205,35 +185,41 @@ public:
                                        ClonedMessageData& aClonedData);
   bool BuildClonedMessageDataForChild(nsIContentChild* aChild,
                                       ClonedMessageData& aClonedData);
-  bool BuildClonedMessageDataForBackgroundParent(mozilla::ipc::PBackgroundParent* aParent,
-                                                 ClonedMessageData& aClonedData);
-  bool BuildClonedMessageDataForBackgroundChild(mozilla::ipc::PBackgroundChild* aChild,
-                                                ClonedMessageData& aClonedData);
+  bool BuildClonedMessageDataForBackgroundParent(
+      mozilla::ipc::PBackgroundParent* aParent, ClonedMessageData& aClonedData);
+  bool BuildClonedMessageDataForBackgroundChild(
+      mozilla::ipc::PBackgroundChild* aChild, ClonedMessageData& aClonedData);
 
   // Actor-varying and memory-management-strategy-varying methods to initialize
   // this holder from a ClonedMessageData representation.
-  void BorrowFromClonedMessageDataForParent(const ClonedMessageData& aClonedData);
-  void BorrowFromClonedMessageDataForChild(const ClonedMessageData& aClonedData);
-  void BorrowFromClonedMessageDataForBackgroundParent(const ClonedMessageData& aClonedData);
-  void BorrowFromClonedMessageDataForBackgroundChild(const ClonedMessageData& aClonedData);
+  void BorrowFromClonedMessageDataForParent(
+      const ClonedMessageData& aClonedData);
+  void BorrowFromClonedMessageDataForChild(
+      const ClonedMessageData& aClonedData);
+  void BorrowFromClonedMessageDataForBackgroundParent(
+      const ClonedMessageData& aClonedData);
+  void BorrowFromClonedMessageDataForBackgroundChild(
+      const ClonedMessageData& aClonedData);
 
   void CopyFromClonedMessageDataForParent(const ClonedMessageData& aClonedData);
   void CopyFromClonedMessageDataForChild(const ClonedMessageData& aClonedData);
-  void CopyFromClonedMessageDataForBackgroundParent(const ClonedMessageData& aClonedData);
-  void CopyFromClonedMessageDataForBackgroundChild(const ClonedMessageData& aClonedData);
+  void CopyFromClonedMessageDataForBackgroundParent(
+      const ClonedMessageData& aClonedData);
+  void CopyFromClonedMessageDataForBackgroundChild(
+      const ClonedMessageData& aClonedData);
 
   // The steal variants of course take a non-const ClonedMessageData.
   void StealFromClonedMessageDataForParent(ClonedMessageData& aClonedData);
   void StealFromClonedMessageDataForChild(ClonedMessageData& aClonedData);
-  void StealFromClonedMessageDataForBackgroundParent(ClonedMessageData& aClonedData);
-  void StealFromClonedMessageDataForBackgroundChild(ClonedMessageData& aClonedData);
-
+  void StealFromClonedMessageDataForBackgroundParent(
+      ClonedMessageData& aClonedData);
+  void StealFromClonedMessageDataForBackgroundChild(
+      ClonedMessageData& aClonedData);
 
   // Initialize this instance, borrowing the contents of the given
   // JSStructuredCloneData.  You are responsible for ensuring that this
   // StructuredCloneData instance is destroyed before aData is destroyed.
-  bool UseExternalData(const JSStructuredCloneData& aData)
-  {
+  bool UseExternalData(const JSStructuredCloneData& aData) {
     auto iter = aData.Start();
     bool success = false;
     mExternalData = aData.Borrow(iter, aData.Size(), &success);
@@ -255,38 +241,25 @@ public:
   // provided by IPC to Recv calls.
   bool StealExternalData(JSStructuredCloneData& aData);
 
-  JSStructuredCloneData& Data()
-  {
+  JSStructuredCloneData& Data() {
     return mSharedData ? mSharedData->Data() : mExternalData;
   }
 
-  const JSStructuredCloneData& Data() const
-  {
+  const JSStructuredCloneData& Data() const {
     return mSharedData ? mSharedData->Data() : mExternalData;
   }
 
-  void InitScope(JS::StructuredCloneScope aScope)
-  {
-    Data().initScope(aScope);
-  }
+  void InitScope(JS::StructuredCloneScope aScope) { Data().initScope(aScope); }
 
-  size_t DataLength() const
-  {
+  size_t DataLength() const {
     return mSharedData ? mSharedData->DataLength() : mExternalData.Size();
   }
 
-  SharedJSAllocatedData* SharedData() const
-  {
-    return mSharedData;
-  }
+  SharedJSAllocatedData* SharedData() const { return mSharedData; }
 
-  bool SupportsTransferring()
-  {
-    return mSupportsTransferring;
-  }
+  bool SupportsTransferring() { return mSupportsTransferring; }
 
-  FallibleTArray<mozilla::ipc::AutoIPCStream>& IPCStreams()
-  {
+  FallibleTArray<mozilla::ipc::AutoIPCStream>& IPCStreams() {
     return mIPCStreams;
   }
 
@@ -294,13 +267,12 @@ public:
   void WriteIPCParams(IPC::Message* aMessage) const;
   bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
 
-protected:
+ protected:
   explicit StructuredCloneData(TransferringSupport aSupportsTransferring);
 
-  already_AddRefed<SharedJSAllocatedData>
-  TakeSharedData();
+  already_AddRefed<SharedJSAllocatedData> TakeSharedData();
 
-private:
+ private:
   JSStructuredCloneData mExternalData;
   RefPtr<SharedJSAllocatedData> mSharedData;
 
@@ -313,16 +285,14 @@ private:
 /**
  * For use when transferring should not be supported.
  */
-class StructuredCloneDataNoTransfers : public StructuredCloneData
-{
-public:
+class StructuredCloneDataNoTransfers : public StructuredCloneData {
+ public:
   StructuredCloneDataNoTransfers()
-    : StructuredCloneData(StructuredCloneHolder::TransferringNotSupported)
-  {}
+      : StructuredCloneData(StructuredCloneHolder::TransferringNotSupported) {}
 };
 
-} // namespace ipc
-} // namespace dom
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ipc_StructuredCloneData_h
+#endif  // mozilla_dom_ipc_StructuredCloneData_h

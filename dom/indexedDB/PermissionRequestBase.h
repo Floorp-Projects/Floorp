@@ -24,14 +24,12 @@ class Element;
 
 namespace indexedDB {
 
-class PermissionRequestBase
-  : public nsIObserver
-  , public nsIIDBPermissionsRequest
-{
+class PermissionRequestBase : public nsIObserver,
+                              public nsIIDBPermissionsRequest {
   nsCOMPtr<Element> mOwnerElement;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
-public:
+ public:
   enum PermissionValue {
     kPermissionAllowed = nsIPermissionManager::ALLOW_ACTION,
     kPermissionDenied = nsIPermissionManager::DENY_ACTION,
@@ -43,39 +41,32 @@ public:
   // This function will not actually prompt. It will never return
   // kPermissionDefault but will instead translate the permission manager value
   // into the correct value for the given type.
-  static nsresult
-  GetCurrentPermission(nsIPrincipal* aPrincipal,
-                       PermissionValue* aCurrentValue);
+  static nsresult GetCurrentPermission(nsIPrincipal* aPrincipal,
+                                       PermissionValue* aCurrentValue);
 
-  static PermissionValue
-  PermissionValueForIntPermission(uint32_t aIntPermission);
+  static PermissionValue PermissionValueForIntPermission(
+      uint32_t aIntPermission);
 
   // This function will prompt if needed. It may only be called once.
-  nsresult
-  PromptIfNeeded(PermissionValue* aCurrentValue);
+  nsresult PromptIfNeeded(PermissionValue* aCurrentValue);
 
-protected:
-  PermissionRequestBase(Element* aOwnerElement,
-                        nsIPrincipal* aPrincipal);
+ protected:
+  PermissionRequestBase(Element* aOwnerElement, nsIPrincipal* aPrincipal);
 
   // Reference counted.
-  virtual
-  ~PermissionRequestBase();
+  virtual ~PermissionRequestBase();
 
-  virtual void
-  OnPromptComplete(PermissionValue aPermissionValue) = 0;
+  virtual void OnPromptComplete(PermissionValue aPermissionValue) = 0;
 
-private:
-  void
-  SetExplicitPermission(nsIPrincipal* aPrincipal,
-                        uint32_t aIntPermission);
+ private:
+  void SetExplicitPermission(nsIPrincipal* aPrincipal, uint32_t aIntPermission);
 
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIIDBPERMISSIONSREQUEST
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_permissionrequestbase_h__
+#endif  // mozilla_dom_indexeddb_permissionrequestbase_h__

@@ -7,14 +7,14 @@
 #ifndef mozilla_layers_opengl_FPSCounter_h_
 #define mozilla_layers_opengl_FPSCounter_h_
 
-#include <algorithm>                    // for min
-#include <stddef.h>                     // for size_t
-#include <map>                          // for std::map
-#include "GLDefs.h"                     // for GLuint
-#include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
-#include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
-#include "nsTArray.h"                   // for AutoTArray, nsTArray_Impl, etc
-#include "prio.h"                       // for NSPR file i/o
+#include <algorithm>            // for min
+#include <stddef.h>             // for size_t
+#include <map>                  // for std::map
+#include "GLDefs.h"             // for GLuint
+#include "mozilla/RefPtr.h"     // for already_AddRefed, RefCounted
+#include "mozilla/TimeStamp.h"  // for TimeStamp, TimeDuration
+#include "nsTArray.h"           // for AutoTArray, nsTArray_Impl, etc
+#include "prio.h"               // for NSPR file i/o
 
 namespace mozilla {
 namespace layers {
@@ -55,7 +55,7 @@ const int kMaxFrames = 2400;
  * backwards in time. This abstracts away the mechanics of reading the data.
  */
 class FPSCounter {
-public:
+ public:
   explicit FPSCounter(const char* aName);
   ~FPSCounter();
 
@@ -63,25 +63,25 @@ public:
   double AddFrameAndGetFps(TimeStamp aTimestamp);
   double GetFPS(TimeStamp aTimestamp);
 
-private:
-  void      Init();
-  bool      CapturedFullInterval(TimeStamp aTimestamp);
+ private:
+  void Init();
+  bool CapturedFullInterval(TimeStamp aTimestamp);
 
   // Used while iterating backwards over the data
-  void      ResetReverseIterator();
-  bool      HasNext(TimeStamp aTimestamp, double aDuration = kFpsDumpInterval);
+  void ResetReverseIterator();
+  bool HasNext(TimeStamp aTimestamp, double aDuration = kFpsDumpInterval);
   TimeStamp GetNextTimeStamp();
-  int       GetLatestReadIndex();
+  int GetLatestReadIndex();
   TimeStamp GetLatestTimeStamp();
-  void      WriteFrameTimeStamps(PRFileDesc* fd);
-  bool      IteratedFullInterval(TimeStamp aTimestamp, double aDuration);
+  void WriteFrameTimeStamps(PRFileDesc* fd);
+  bool IteratedFullInterval(TimeStamp aTimestamp, double aDuration);
 
-  void      PrintFPS();
-  int       BuildHistogram(std::map<int, int>& aHistogram);
-  void      PrintHistogram(std::map<int, int>& aHistogram);
-  double    GetMean(std::map<int,int> aHistogram);
-  double    GetStdDev(std::map<int, int> aHistogram);
-  nsresult  WriteFrameTimeStamps();
+  void PrintFPS();
+  int BuildHistogram(std::map<int, int>& aHistogram);
+  void PrintHistogram(std::map<int, int>& aHistogram);
+  double GetMean(std::map<int, int> aHistogram);
+  double GetStdDev(std::map<int, int> aHistogram);
+  nsresult WriteFrameTimeStamps();
 
   /***
    * mFrameTimestamps is a psuedo circular buffer
@@ -90,13 +90,13 @@ private:
    * we don't need an explicit read pointer.
    */
   AutoTArray<TimeStamp, kMaxFrames> mFrameTimestamps;
-  int mWriteIndex;      // points to next open write slot
-  int mIteratorIndex;   // used only when iterating
+  int mWriteIndex;     // points to next open write slot
+  int mIteratorIndex;  // used only when iterating
   const char* mFPSName;
   TimeStamp mLastInterval;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_opengl_FPSCounter_h_
+#endif  // mozilla_layers_opengl_FPSCounter_h_

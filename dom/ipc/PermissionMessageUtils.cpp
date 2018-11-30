@@ -10,9 +10,7 @@
 
 namespace IPC {
 
-void
-ParamTraits<nsIPrincipal>::Write(Message* aMsg, nsIPrincipal* aParam)
-{
+void ParamTraits<nsIPrincipal>::Write(Message* aMsg, nsIPrincipal* aParam) {
   bool isNull = !aParam;
   WriteParam(aMsg, isNull);
   if (isNull) {
@@ -29,11 +27,8 @@ ParamTraits<nsIPrincipal>::Write(Message* aMsg, nsIPrincipal* aParam)
   WriteParam(aMsg, principalString);
 }
 
-bool
-ParamTraits<nsIPrincipal>::Read(const Message* aMsg,
-                                PickleIterator* aIter,
-                                RefPtr<nsIPrincipal>* aResult)
-{
+bool ParamTraits<nsIPrincipal>::Read(const Message* aMsg, PickleIterator* aIter,
+                                     RefPtr<nsIPrincipal>* aResult) {
   bool isNull;
   if (!ReadParam(aMsg, aIter, &isNull)) {
     return false;
@@ -50,7 +45,8 @@ ParamTraits<nsIPrincipal>::Read(const Message* aMsg,
   }
 
   nsCOMPtr<nsISupports> iSupports;
-  nsresult rv = NS_DeserializeObject(principalString, getter_AddRefs(iSupports));
+  nsresult rv =
+      NS_DeserializeObject(principalString, getter_AddRefs(iSupports));
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(iSupports);
@@ -60,5 +56,4 @@ ParamTraits<nsIPrincipal>::Read(const Message* aMsg,
   return true;
 }
 
-} // namespace IPC
-
+}  // namespace IPC

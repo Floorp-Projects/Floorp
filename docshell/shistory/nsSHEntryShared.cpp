@@ -26,29 +26,23 @@ namespace {
 
 uint64_t gSHEntrySharedID = 0;
 
-} // namespace
+}  // namespace
 
-void
-nsSHEntryShared::Shutdown()
-{
-}
+void nsSHEntryShared::Shutdown() {}
 
 nsSHEntryShared::nsSHEntryShared()
-  : mDocShellID({0})
-  , mCacheKey(0)
-  , mLastTouched(0)
-  , mID(gSHEntrySharedID++)
-  , mViewerBounds(0, 0, 0, 0)
-  , mIsFrameNavigation(false)
-  , mSaveLayoutState(true)
-  , mSticky(true)
-  , mDynamicallyCreated(false)
-  , mExpired(false)
-{
-}
+    : mDocShellID({0}),
+      mCacheKey(0),
+      mLastTouched(0),
+      mID(gSHEntrySharedID++),
+      mViewerBounds(0, 0, 0, 0),
+      mIsFrameNavigation(false),
+      mSaveLayoutState(true),
+      mSticky(true),
+      mDynamicallyCreated(false),
+      mExpired(false) {}
 
-nsSHEntryShared::~nsSHEntryShared()
-{
+nsSHEntryShared::~nsSHEntryShared() {
   // The destruction can be caused by either the entry is removed from session
   // history and no one holds the reference, or the whole session history is on
   // destruction. We want to ensure that we invoke
@@ -68,9 +62,8 @@ nsSHEntryShared::~nsSHEntryShared()
 
 NS_IMPL_ISUPPORTS(nsSHEntryShared, nsIBFCacheEntry, nsIMutationObserver)
 
-already_AddRefed<nsSHEntryShared>
-nsSHEntryShared::Duplicate(nsSHEntryShared* aEntry)
-{
+already_AddRefed<nsSHEntryShared> nsSHEntryShared::Duplicate(
+    nsSHEntryShared* aEntry) {
   RefPtr<nsSHEntryShared> newEntry = new nsSHEntryShared();
 
   newEntry->mDocShellID = aEntry->mDocShellID;
@@ -88,18 +81,14 @@ nsSHEntryShared::Duplicate(nsSHEntryShared* aEntry)
   return newEntry.forget();
 }
 
-void
-nsSHEntryShared::RemoveFromExpirationTracker()
-{
+void nsSHEntryShared::RemoveFromExpirationTracker() {
   nsCOMPtr<nsISHistory> shistory = do_QueryReferent(mSHistory);
   if (shistory && GetExpirationState()->IsTracked()) {
     shistory->RemoveFromExpirationTracker(this);
   }
 }
 
-void
-nsSHEntryShared::SyncPresentationState()
-{
+void nsSHEntryShared::SyncPresentationState() {
   if (mContentViewer && mWindowState) {
     // If we have a content viewer and a window state, we should be ok.
     return;
@@ -108,9 +97,7 @@ nsSHEntryShared::SyncPresentationState()
   DropPresentationState();
 }
 
-void
-nsSHEntryShared::DropPresentationState()
-{
+void nsSHEntryShared::DropPresentationState() {
   RefPtr<nsSHEntryShared> kungFuDeathGrip = this;
 
   if (mDocument) {
@@ -132,9 +119,7 @@ nsSHEntryShared::DropPresentationState()
   mEditorData = nullptr;
 }
 
-nsresult
-nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer)
-{
+nsresult nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer) {
   MOZ_ASSERT(!aViewer || !mContentViewer,
              "SHEntryShared already contains viewer");
 
@@ -168,9 +153,7 @@ nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer)
   return NS_OK;
 }
 
-nsresult
-nsSHEntryShared::RemoveFromBFCacheSync()
-{
+nsresult nsSHEntryShared::RemoveFromBFCacheSync() {
   MOZ_ASSERT(mContentViewer && mDocument, "we're not in the bfcache!");
 
   // The call to DropPresentationState could drop the last reference, so hold
@@ -195,9 +178,7 @@ nsSHEntryShared::RemoveFromBFCacheSync()
   return NS_OK;
 }
 
-nsresult
-nsSHEntryShared::RemoveFromBFCacheAsync()
-{
+nsresult nsSHEntryShared::RemoveFromBFCacheAsync() {
   MOZ_ASSERT(mContentViewer && mDocument, "we're not in the bfcache!");
 
   // Check it again to play safe in release builds.
@@ -211,18 +192,20 @@ nsSHEntryShared::RemoveFromBFCacheAsync()
   nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
   nsCOMPtr<nsIDocument> document = mDocument;
   RefPtr<nsSHEntryShared> self = this;
-  nsresult rv = mDocument->Dispatch(mozilla::TaskCategory::Other,
-    NS_NewRunnableFunction("nsSHEntryShared::RemoveFromBFCacheAsync",
-    [self, viewer, document]() {
-      if (viewer) {
-        viewer->Destroy();
-      }
+  nsresult rv = mDocument->Dispatch(
+      mozilla::TaskCategory::Other,
+      NS_NewRunnableFunction(
+          "nsSHEntryShared::RemoveFromBFCacheAsync",
+          [self, viewer, document]() {
+            if (viewer) {
+              viewer->Destroy();
+            }
 
-      nsCOMPtr<nsISHistory> shistory = do_QueryReferent(self->mSHistory);
-      if (shistory) {
-        shistory->RemoveDynEntriesForBFCacheEntry(self);
-      }
-    }));
+            nsCOMPtr<nsISHistory> shistory = do_QueryReferent(self->mSHistory);
+            if (shistory) {
+              shistory->RemoveDynEntriesForBFCacheEntry(self);
+            }
+          }));
 
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch RemoveFromBFCacheAsync runnable.");
@@ -236,45 +219,32 @@ nsSHEntryShared::RemoveFromBFCacheAsync()
   return NS_OK;
 }
 
-nsresult
-nsSHEntryShared::GetID(uint64_t* aID)
-{
+nsresult nsSHEntryShared::GetID(uint64_t* aID) {
   *aID = mID;
   return NS_OK;
 }
 
-void
-nsSHEntryShared::CharacterDataChanged(nsIContent* aContent,
-                                      const CharacterDataChangeInfo&)
-{
+void nsSHEntryShared::CharacterDataChanged(nsIContent* aContent,
+                                           const CharacterDataChangeInfo&) {
   RemoveFromBFCacheAsync();
 }
 
-void
-nsSHEntryShared::AttributeChanged(dom::Element* aElement,
-                                  int32_t aNameSpaceID,
-                                  nsAtom* aAttribute,
-                                  int32_t aModType,
-                                  const nsAttrValue* aOldValue)
-{
+void nsSHEntryShared::AttributeChanged(dom::Element* aElement,
+                                       int32_t aNameSpaceID, nsAtom* aAttribute,
+                                       int32_t aModType,
+                                       const nsAttrValue* aOldValue) {
   RemoveFromBFCacheAsync();
 }
 
-void
-nsSHEntryShared::ContentAppended(nsIContent* aFirstNewContent)
-{
+void nsSHEntryShared::ContentAppended(nsIContent* aFirstNewContent) {
   RemoveFromBFCacheAsync();
 }
 
-void
-nsSHEntryShared::ContentInserted(nsIContent* aChild)
-{
+void nsSHEntryShared::ContentInserted(nsIContent* aChild) {
   RemoveFromBFCacheAsync();
 }
 
-void
-nsSHEntryShared::ContentRemoved(nsIContent* aChild,
-                                nsIContent* aPreviousSibling)
-{
+void nsSHEntryShared::ContentRemoved(nsIContent* aChild,
+                                     nsIContent* aPreviousSibling) {
   RemoveFromBFCacheAsync();
 }

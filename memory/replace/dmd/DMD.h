@@ -23,8 +23,7 @@ class JSONWriteFunc;
 
 namespace dmd {
 
-struct Sizes
-{
+struct Sizes {
   size_t mStackTracesUsed;
   size_t mStackTracesUnused;
   size_t mStackTraceTable;
@@ -38,8 +37,7 @@ struct Sizes
 // See further below for a description of each method. The DMDFuncs class
 // should contain a virtual method for each of them (except IsRunning,
 // which can be inferred from the DMDFuncs singleton existing).
-struct DMDFuncs
-{
+struct DMDFuncs {
   virtual void Report(const void*);
 
   virtual void ReportOnAlloc(const void*);
@@ -70,29 +68,29 @@ struct DMDFuncs
   // and a simple value check becomes a function call.
   static DMDFuncs* Get() { return sSingleton.Get(); }
 
-private:
+ private:
   // Wrapper class keeping a pointer to the DMD functions. It is statically
   // initialized because it needs to be set early enough.
   // Debug builds also check that it's never accessed before the static
   // initialization actually occured, which could be the case if some other
   // static initializer ended up calling into DMD.
-  class Singleton
-  {
-  public:
+  class Singleton {
+   public:
     Singleton()
-      : mValue(ReplaceMalloc::GetDMDFuncs())
+        : mValue(ReplaceMalloc::GetDMDFuncs())
 #ifdef DEBUG
-      , mInitialized(true)
+          ,
+          mInitialized(true)
 #endif
-    {}
-
-    DMDFuncs* Get()
     {
+    }
+
+    DMDFuncs* Get() {
       MOZ_ASSERT(mInitialized);
       return mValue;
     }
 
-  private:
+   private:
     DMDFuncs* mValue;
 #ifdef DEBUG
     bool mInitialized;
@@ -101,15 +99,13 @@ private:
 
   // This singleton pointer must be defined on the program side. In Gecko,
   // this is done in xpcom/base/nsMemoryInfoDumper.cpp.
-  static /* DMDFuncs:: */Singleton sSingleton;
+  static /* DMDFuncs:: */ Singleton sSingleton;
 #endif
 };
 
 #ifndef REPLACE_MALLOC_IMPL
 // Mark a heap block as reported by a memory reporter.
-inline void
-Report(const void* aPtr)
-{
+inline void Report(const void* aPtr) {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
     funcs->Report(aPtr);
@@ -117,9 +113,7 @@ Report(const void* aPtr)
 }
 
 // Mark a heap block as reported immediately on allocation.
-inline void
-ReportOnAlloc(const void* aPtr)
-{
+inline void ReportOnAlloc(const void* aPtr) {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
     funcs->ReportOnAlloc(aPtr);
@@ -132,9 +126,7 @@ ReportOnAlloc(const void* aPtr)
 // - run the memory reporters
 // - Analyze()
 // This sequence avoids spurious twice-reported warnings.
-inline void
-ClearReports()
-{
+inline void ClearReports() {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
     funcs->ClearReports();
@@ -251,9 +243,7 @@ ClearReports()
 // -Werror for various reasons.
 //
 template <typename JSONWriteFunc>
-inline void
-Analyze(UniquePtr<JSONWriteFunc> aWriteFunc)
-{
+inline void Analyze(UniquePtr<JSONWriteFunc> aWriteFunc) {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
     funcs->Analyze(std::move(aWriteFunc));
@@ -262,9 +252,7 @@ Analyze(UniquePtr<JSONWriteFunc> aWriteFunc)
 
 // Gets the size of various data structures.  Used to implement a memory
 // reporter for DMD.
-inline void
-SizeOf(Sizes* aSizes)
-{
+inline void SizeOf(Sizes* aSizes) {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
     funcs->SizeOf(aSizes);
@@ -273,9 +261,7 @@ SizeOf(Sizes* aSizes)
 
 // Prints a status message prefixed with "DMD[<pid>]". Use sparingly.
 MOZ_FORMAT_PRINTF(1, 2)
-inline void
-StatusMsg(const char* aFmt, ...)
-{
+inline void StatusMsg(const char* aFmt, ...) {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
     va_list ap;
@@ -286,18 +272,12 @@ StatusMsg(const char* aFmt, ...)
 }
 
 // Indicates whether or not DMD is running.
-inline bool
-IsRunning()
-{
-  return !!DMDFuncs::Get();
-}
+inline bool IsRunning() { return !!DMDFuncs::Get(); }
 
 // Resets all DMD options and then sets new ones according to those specified
 // in |aOptions|. Also clears all recorded data about allocations. Only used
 // for testing purposes.
-inline void
-ResetEverything(const char* aOptions)
-{
+inline void ResetEverything(const char* aOptions) {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
     funcs->ResetEverything(aOptions);
@@ -305,7 +285,7 @@ ResetEverything(const char* aOptions)
 }
 #endif
 
-} // namespace dmd
-} // namespace mozilla
+}  // namespace dmd
+}  // namespace mozilla
 
 #endif /* DMD_h___ */

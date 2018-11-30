@@ -19,8 +19,7 @@ namespace fuzzing {
  * data type.
  */
 template <typename T>
-T RandomNumericLimit()
-{
+T RandomNumericLimit() {
   static_assert(mozilla::IsArithmetic<T>::value == true,
                 "T must be an arithmetic type");
   return random() % 2 == 0 ? std::numeric_limits<T>::min()
@@ -31,8 +30,7 @@ T RandomNumericLimit()
  * RandomInteger generates negative and positive integers in 2**n increments.
  */
 template <typename T>
-T RandomInteger()
-{
+T RandomInteger() {
   static_assert(mozilla::IsIntegral<T>::value == true,
                 "T must be an integral type");
   double r = static_cast<double>(random() % ((sizeof(T) * CHAR_BIT) + 1));
@@ -47,8 +45,7 @@ T RandomInteger()
  * RandomIntegerRange returns a random integral within a [min, max] range.
  */
 template <typename T>
-T RandomIntegerRange(T min, T max)
-{
+T RandomIntegerRange(T min, T max) {
   static_assert(mozilla::IsIntegral<T>::value == true,
                 "T must be an integral type");
   MOZ_ASSERT(min < max);
@@ -60,8 +57,7 @@ T RandomIntegerRange(T min, T max)
  * [min, max] range.
  */
 template <typename T>
-T RandomFloatingPointRange(T min, T max)
-{
+T RandomFloatingPointRange(T min, T max) {
   static_assert(mozilla::IsFloatingPoint<T>::value == true,
                 "T must be a floating point type");
   MOZ_ASSERT(min < max);
@@ -74,8 +70,7 @@ T RandomFloatingPointRange(T min, T max)
  * increments.
  */
 template <typename T>
-T RandomFloatingPoint()
-{
+T RandomFloatingPoint() {
   static_assert(mozilla::IsFloatingPoint<T>::value == true,
                 "T must be a floating point type");
   int radix = RandomIntegerRange<int>(std::numeric_limits<T>::min_exponent,
@@ -84,9 +79,8 @@ T RandomFloatingPoint()
   return x * RandomFloatingPointRange<T>(-1.0, 1.0);
 }
 
-class FuzzingTraits
-{
-public:
+class FuzzingTraits {
+ public:
   static unsigned int Random(unsigned int aMax);
   static bool Sometimes(unsigned int aProbability);
   /**
@@ -97,7 +91,7 @@ public:
   static size_t Frequency(const size_t aSize, const uint64_t aFactor);
 };
 
-} // namespace fuzzing
-} // namespace mozilla
+}  // namespace fuzzing
+}  // namespace mozilla
 
 #endif

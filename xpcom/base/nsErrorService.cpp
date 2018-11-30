@@ -19,9 +19,7 @@ mozilla::StaticRefPtr<nsErrorService> gSingleton;
 NS_IMPL_ISUPPORTS(nsErrorService, nsIErrorService)
 
 // static
-already_AddRefed<nsIErrorService>
-nsErrorService::GetOrCreate()
-{
+already_AddRefed<nsIErrorService> nsErrorService::GetOrCreate() {
   // Be careful to not recreate the service for a second time if GetOrCreate is
   // called super late during shutdown.
   static bool serviceCreated = false;
@@ -40,22 +38,19 @@ nsErrorService::GetOrCreate()
 
 NS_IMETHODIMP
 nsErrorService::RegisterErrorStringBundle(int16_t aErrorModule,
-                                          const char* aStringBundleURL)
-{
+                                          const char* aStringBundleURL) {
   mErrorStringBundleURLMap.Put(aErrorModule, new nsCString(aStringBundleURL));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsErrorService::UnregisterErrorStringBundle(int16_t aErrorModule)
-{
+nsErrorService::UnregisterErrorStringBundle(int16_t aErrorModule) {
   mErrorStringBundleURLMap.Remove(aErrorModule);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsErrorService::GetErrorStringBundle(int16_t aErrorModule, char** aResult)
-{
+nsErrorService::GetErrorStringBundle(int16_t aErrorModule, char** aResult) {
   nsCString* bundleURL = mErrorStringBundleURLMap.Get(aErrorModule);
   if (!bundleURL) {
     return NS_ERROR_FAILURE;

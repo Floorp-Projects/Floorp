@@ -21,10 +21,8 @@ class Promise;
 class PresentationReceiver;
 class PresentationRequest;
 
-class Presentation final : public nsISupports
-                         , public nsWrapperCache
-{
-public:
+class Presentation final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Presentation)
 
@@ -33,10 +31,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return mWindow;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
   // WebIDL (public APIs)
   void SetDefaultRequest(PresentationRequest* aRequest);
@@ -49,7 +44,7 @@ public:
   void SetStartSessionUnsettled(bool aIsUnsettled);
   bool IsStartSessionUnsettled() const;
 
-private:
+ private:
   explicit Presentation(nsPIDOMWindowInner* aWindow);
 
   virtual ~Presentation();
@@ -64,7 +59,7 @@ private:
   bool mStartSessionUnsettled = false;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Presentation_h
+#endif  // mozilla_dom_Presentation_h

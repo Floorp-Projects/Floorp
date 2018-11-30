@@ -34,25 +34,25 @@ class PromiseInit;
 class PromiseNativeHandler;
 class PromiseDebugging;
 
-#define NS_PROMISE_IID \
-  { 0x1b8d6215, 0x3e67, 0x43ba, \
-    { 0x8a, 0xf9, 0x31, 0x5e, 0x8f, 0xce, 0x75, 0x65 } }
+#define NS_PROMISE_IID                               \
+  {                                                  \
+    0x1b8d6215, 0x3e67, 0x43ba, {                    \
+      0x8a, 0xf9, 0x31, 0x5e, 0x8f, 0xce, 0x75, 0x65 \
+    }                                                \
+  }
 
-class Promise : public nsISupports,
-                public SupportsWeakPtr<Promise>
-{
+class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
   friend class PromiseTask;
   friend class PromiseWorkerProxy;
   friend class PromiseWorkerProxyRunnable;
 
-public:
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROMISE_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Promise)
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Promise)
 
-  enum PropagateUserInteraction
-  {
+  enum PropagateUserInteraction {
     eDontPropagateUserInteraction,
     ePropagateUserInteraction
   };
@@ -64,11 +64,10 @@ public:
   // Pass ePropagateUserInteraction for aPropagateUserInteraction if you want
   // the promise resolve handler to be called as if we were handling user
   // input events in case we are currently handling user input events.
-  static already_AddRefed<Promise>
-  Create(nsIGlobalObject* aGlobal,
-         ErrorResult& aRv,
-         PropagateUserInteraction aPropagateUserInteraction =
-           eDontPropagateUserInteraction);
+  static already_AddRefed<Promise> Create(
+      nsIGlobalObject* aGlobal, ErrorResult& aRv,
+      PropagateUserInteraction aPropagateUserInteraction =
+          eDontPropagateUserInteraction);
 
   // Reports a rejected Promise by sending an error report.
   static void ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise);
@@ -76,10 +75,8 @@ public:
   typedef void (Promise::*MaybeFunc)(JSContext* aCx,
                                      JS::Handle<JS::Value> aValue);
 
-  void MaybeResolve(JSContext* aCx,
-                    JS::Handle<JS::Value> aValue);
-  void MaybeReject(JSContext* aCx,
-                   JS::Handle<JS::Value> aValue);
+  void MaybeResolve(JSContext* aCx, JS::Handle<JS::Value> aValue);
+  void MaybeReject(JSContext* aCx, JS::Handle<JS::Value> aValue);
 
   // Helpers for using Promise from C++.
   // Most DOM objects are handled already.  To add a new type T, add a
@@ -113,17 +110,14 @@ public:
   // every translation unit that includes this header, because that would
   // require use to include DOMException.h either here or in all those
   // translation units.
-  template<typename T>
-  void MaybeRejectBrokenly(const T& aArg); // Not implemented by default; see
-                                           // specializations in the .cpp for
-                                           // the T values we support.
+  template <typename T>
+  void MaybeRejectBrokenly(const T& aArg);  // Not implemented by default; see
+                                            // specializations in the .cpp for
+                                            // the T values we support.
 
   // WebIDL
 
-  nsIGlobalObject* GetParentObject() const
-  {
-    return mGlobal;
-  }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   // Do the equivalent of Promise.resolve in the compartment of aGlobal.  The
   // compartment of aCx is ignored.  Errors are reported on the ErrorResult; if
@@ -131,19 +125,19 @@ public:
   // Pass ePropagateUserInteraction for aPropagateUserInteraction if you want
   // the promise resolve handler to be called as if we were handling user
   // input events in case we are currently handling user input events.
-  static already_AddRefed<Promise>
-  Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
-          JS::Handle<JS::Value> aValue,
-          ErrorResult& aRv,
-          PropagateUserInteraction aPropagateUserInteraction =
-            eDontPropagateUserInteraction);
+  static already_AddRefed<Promise> Resolve(
+      nsIGlobalObject* aGlobal, JSContext* aCx, JS::Handle<JS::Value> aValue,
+      ErrorResult& aRv,
+      PropagateUserInteraction aPropagateUserInteraction =
+          eDontPropagateUserInteraction);
 
   // Do the equivalent of Promise.reject in the compartment of aGlobal.  The
   // compartment of aCx is ignored.  Errors are reported on the ErrorResult; if
   // aRv comes back !Failed(), this function MUST return a non-null value.
-  static already_AddRefed<Promise>
-  Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
-         JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+  static already_AddRefed<Promise> Reject(nsIGlobalObject* aGlobal,
+                                          JSContext* aCx,
+                                          JS::Handle<JS::Value> aValue,
+                                          ErrorResult& aRv);
 
   // Do the equivalent of Promise.all in the current compartment of aCx.  Errors
   // are reported on the ErrorResult; if aRv comes back !Failed(), this function
@@ -151,33 +145,30 @@ public:
   // Pass ePropagateUserInteraction for aPropagateUserInteraction if you want
   // the promise resolve handler to be called as if we were handling user
   // input events in case we are currently handling user input events.
-  static already_AddRefed<Promise>
-  All(JSContext* aCx, const nsTArray<RefPtr<Promise>>& aPromiseList,
+  static already_AddRefed<Promise> All(
+      JSContext* aCx, const nsTArray<RefPtr<Promise>>& aPromiseList,
       ErrorResult& aRv,
       PropagateUserInteraction aPropagateUserInteraction =
-        eDontPropagateUserInteraction);
+          eDontPropagateUserInteraction);
 
-  void
-  Then(JSContext* aCx,
-       // aCalleeGlobal may not be in the compartment of aCx, when called over
-       // Xrays.
-       JS::Handle<JSObject*> aCalleeGlobal,
-       AnyCallback* aResolveCallback, AnyCallback* aRejectCallback,
-       JS::MutableHandle<JS::Value> aRetval,
-       ErrorResult& aRv);
+  void Then(JSContext* aCx,
+            // aCalleeGlobal may not be in the compartment of aCx, when called
+            // over Xrays.
+            JS::Handle<JSObject*> aCalleeGlobal, AnyCallback* aResolveCallback,
+            AnyCallback* aRejectCallback, JS::MutableHandle<JS::Value> aRetval,
+            ErrorResult& aRv);
 
   template <typename Callback, typename... Args>
   using IsHandlerCallback =
       IsSame<already_AddRefed<Promise>,
-             decltype(DeclVal<Callback>()(
-                (JSContext*)(nullptr),
-                DeclVal<JS::Handle<JS::Value>>(),
-                DeclVal<Args>()...))>;
+             decltype(DeclVal<Callback>()((JSContext*)(nullptr),
+                                          DeclVal<JS::Handle<JS::Value>>(),
+                                          DeclVal<Args>()...))>;
 
   template <typename Callback, typename... Args>
-  using ThenResult = typename EnableIf<
-    IsHandlerCallback<Callback, Args...>::value,
-    Result<RefPtr<Promise>, nsresult>>::Type;
+  using ThenResult =
+      typename EnableIf<IsHandlerCallback<Callback, Args...>::value,
+                        Result<RefPtr<Promise>, nsresult>>::Type;
 
   // Similar to the JavaScript Then() function. Accepts a single lambda function
   // argument, which it attaches as a native resolution handler, and returns a
@@ -195,18 +186,14 @@ public:
   //
   // Does not currently support rejection handlers.
   template <typename Callback, typename... Args>
-  ThenResult<Callback, Args...>
-  ThenWithCycleCollectedArgs(Callback&& aOnResolve, Args&&... aArgs);
+  ThenResult<Callback, Args...> ThenWithCycleCollectedArgs(
+      Callback&& aOnResolve, Args&&... aArgs);
 
-  Result<RefPtr<Promise>, nsresult>
-  ThenWithoutCycleCollection(
-    const std::function<already_AddRefed<Promise>(JSContext*,
-                                                  JS::HandleValue)>& aCallback);
+  Result<RefPtr<Promise>, nsresult> ThenWithoutCycleCollection(
+      const std::function<
+          already_AddRefed<Promise>(JSContext*, JS::HandleValue)>& aCallback);
 
-  JSObject* PromiseObj() const
-  {
-    return mPromiseObj;
-  }
+  JSObject* PromiseObj() const { return mPromiseObj; }
 
   void AppendNativeHandler(PromiseNativeHandler* aRunnable);
 
@@ -219,21 +206,16 @@ public:
   // Pass ePropagateUserInteraction for aPropagateUserInteraction if you want
   // the promise resolve handler to be called as if we were handling user
   // input events in case we are currently handling user input events.
-  static already_AddRefed<Promise>
-  CreateFromExisting(nsIGlobalObject* aGlobal,
-                     JS::Handle<JSObject*> aPromiseObj,
-                     PropagateUserInteraction aPropagateUserInteraction =
-                       eDontPropagateUserInteraction);
+  static already_AddRefed<Promise> CreateFromExisting(
+      nsIGlobalObject* aGlobal, JS::Handle<JSObject*> aPromiseObj,
+      PropagateUserInteraction aPropagateUserInteraction =
+          eDontPropagateUserInteraction);
 
-  enum class PromiseState {
-    Pending,
-    Resolved,
-    Rejected
-  };
+  enum class PromiseState { Pending, Resolved, Rejected };
 
   PromiseState State() const;
 
-protected:
+ protected:
   struct PromiseCapability;
 
   // Do NOT call this unless you're Promise::Create or
@@ -248,15 +230,14 @@ protected:
   // Pass ePropagateUserInteraction for aPropagateUserInteraction if you want
   // the promise resolve handler to be called as if we were handling user
   // input events in case we are currently handling user input events.
-  void CreateWrapper(JS::Handle<JSObject*> aDesiredProto,
-                     ErrorResult& aRv,
+  void CreateWrapper(JS::Handle<JSObject*> aDesiredProto, ErrorResult& aRv,
                      PropagateUserInteraction aPropagateUserInteraction =
-                       eDontPropagateUserInteraction);
+                         eDontPropagateUserInteraction);
 
-private:
+ private:
   template <typename T>
   void MaybeSomething(T&& aArgument, MaybeFunc aFunc) {
-    MOZ_ASSERT(PromiseObj()); // It was preserved!
+    MOZ_ASSERT(PromiseObj());  // It was preserved!
 
     AutoEntryScript aes(mGlobal, "Promise resolution or rejection");
     JSContext* cx = aes.cx();
@@ -281,7 +262,7 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Promise, NS_PROMISE_IID)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Promise_h
+#endif  // mozilla_dom_Promise_h

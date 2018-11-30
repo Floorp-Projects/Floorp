@@ -19,24 +19,20 @@ namespace dom {
  ******************************************************************************/
 
 SDBConnectionChild::SDBConnectionChild(SDBConnection* aConnection)
-  : mConnection(aConnection)
-{
+    : mConnection(aConnection) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aConnection);
 
   MOZ_COUNT_CTOR(SDBConnectionChild);
 }
 
-SDBConnectionChild::~SDBConnectionChild()
-{
+SDBConnectionChild::~SDBConnectionChild() {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_DTOR(SDBConnectionChild);
 }
 
-void
-SDBConnectionChild::SendDeleteMeInternal()
-{
+void SDBConnectionChild::SendDeleteMeInternal() {
   AssertIsOnOwningThread();
 
   if (mConnection) {
@@ -47,9 +43,7 @@ SDBConnectionChild::SendDeleteMeInternal()
   }
 }
 
-void
-SDBConnectionChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void SDBConnectionChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   if (mConnection) {
@@ -60,20 +54,17 @@ SDBConnectionChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-PBackgroundSDBRequestChild*
-SDBConnectionChild::AllocPBackgroundSDBRequestChild(
-                                                const SDBRequestParams& aParams)
-{
+PBackgroundSDBRequestChild* SDBConnectionChild::AllocPBackgroundSDBRequestChild(
+    const SDBRequestParams& aParams) {
   AssertIsOnOwningThread();
 
-  MOZ_CRASH("PBackgroundSDBRequestChild actors should be manually "
-            "constructed!");
+  MOZ_CRASH(
+      "PBackgroundSDBRequestChild actors should be manually "
+      "constructed!");
 }
 
-bool
-SDBConnectionChild::DeallocPBackgroundSDBRequestChild(
-                                             PBackgroundSDBRequestChild* aActor)
-{
+bool SDBConnectionChild::DeallocPBackgroundSDBRequestChild(
+    PBackgroundSDBRequestChild* aActor) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
 
@@ -81,9 +72,7 @@ SDBConnectionChild::DeallocPBackgroundSDBRequestChild(
   return true;
 }
 
-mozilla::ipc::IPCResult
-SDBConnectionChild::RecvAllowToClose()
-{
+mozilla::ipc::IPCResult SDBConnectionChild::RecvAllowToClose() {
   AssertIsOnOwningThread();
 
   if (mConnection) {
@@ -93,9 +82,7 @@ SDBConnectionChild::RecvAllowToClose()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-SDBConnectionChild::RecvClosed()
-{
+mozilla::ipc::IPCResult SDBConnectionChild::RecvClosed() {
   AssertIsOnOwningThread();
 
   if (mConnection) {
@@ -110,17 +97,14 @@ SDBConnectionChild::RecvClosed()
  ******************************************************************************/
 
 SDBRequestChild::SDBRequestChild(SDBRequest* aRequest)
-  : mConnection(aRequest->GetConnection())
-  , mRequest(aRequest)
-{
+    : mConnection(aRequest->GetConnection()), mRequest(aRequest) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aRequest);
 
   MOZ_COUNT_CTOR(SDBRequestChild);
 }
 
-SDBRequestChild::~SDBRequestChild()
-{
+SDBRequestChild::~SDBRequestChild() {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_DTOR(SDBRequestChild);
@@ -128,18 +112,14 @@ SDBRequestChild::~SDBRequestChild()
 
 #ifdef DEBUG
 
-void
-SDBRequestChild::AssertIsOnOwningThread() const
-{
+void SDBRequestChild::AssertIsOnOwningThread() const {
   MOZ_ASSERT(mRequest);
   mRequest->AssertIsOnOwningThread();
 }
 
-#endif // DEBUG
+#endif  // DEBUG
 
-void
-SDBRequestChild::HandleResponse(nsresult aResponse)
-{
+void SDBRequestChild::HandleResponse(nsresult aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_FAILED(aResponse));
   MOZ_ASSERT(mRequest);
@@ -147,9 +127,7 @@ SDBRequestChild::HandleResponse(nsresult aResponse)
   mRequest->SetError(aResponse);
 }
 
-void
-SDBRequestChild::HandleResponse()
-{
+void SDBRequestChild::HandleResponse() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
@@ -159,9 +137,7 @@ SDBRequestChild::HandleResponse()
   mRequest->SetResult(variant);
 }
 
-void
-SDBRequestChild::HandleResponse(const nsCString& aResponse)
-{
+void SDBRequestChild::HandleResponse(const nsCString& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
@@ -173,9 +149,7 @@ SDBRequestChild::HandleResponse(const nsCString& aResponse)
   mRequest->SetResult(variant);
 }
 
-void
-SDBRequestChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void SDBRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   if (mConnection) {
@@ -188,9 +162,8 @@ SDBRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-mozilla::ipc::IPCResult
-SDBRequestChild::Recv__delete__(const SDBRequestResponse& aResponse)
-{
+mozilla::ipc::IPCResult SDBRequestChild::Recv__delete__(
+    const SDBRequestResponse& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mConnection);
@@ -239,5 +212,5 @@ SDBRequestChild::Recv__delete__(const SDBRequestResponse& aResponse)
   return IPC_OK();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

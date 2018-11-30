@@ -12,46 +12,36 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(AnimateTransform)
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGAnimateTransformElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGAnimateTransformElement::WrapNode(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimateTransformElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGAnimateTransformElement::SVGAnimateTransformElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGAnimationElement(std::move(aNodeInfo))
-{
-}
+SVGAnimateTransformElement::SVGAnimateTransformElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGAnimationElement(std::move(aNodeInfo)) {}
 
-bool
-SVGAnimateTransformElement::ParseAttribute(int32_t aNamespaceID,
-                                           nsAtom* aAttribute,
-                                           const nsAString& aValue,
-                                           nsIPrincipal* aMaybeScriptedPrincipal,
-                                           nsAttrValue& aResult)
-{
+bool SVGAnimateTransformElement::ParseAttribute(
+    int32_t aNamespaceID, nsAtom* aAttribute, const nsAString& aValue,
+    nsIPrincipal* aMaybeScriptedPrincipal, nsAttrValue& aResult) {
   // 'type' is an <animateTransform>-specific attribute, and we'll handle it
   // specially.
   if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::type) {
     aResult.ParseAtom(aValue);
     nsAtom* atom = aResult.GetAtomValue();
-    if (atom != nsGkAtoms::translate &&
-        atom != nsGkAtoms::scale &&
-        atom != nsGkAtoms::rotate &&
-        atom != nsGkAtoms::skewX &&
+    if (atom != nsGkAtoms::translate && atom != nsGkAtoms::scale &&
+        atom != nsGkAtoms::rotate && atom != nsGkAtoms::skewX &&
         atom != nsGkAtoms::skewY) {
       ReportAttributeParseFailure(OwnerDoc(), aAttribute, aValue);
     }
     return true;
   }
 
-  return SVGAnimationElement::ParseAttribute(aNamespaceID,
-                                             aAttribute, aValue,
-                                             aMaybeScriptedPrincipal,
-                                             aResult);
+  return SVGAnimationElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                             aMaybeScriptedPrincipal, aResult);
 }
 
 //----------------------------------------------------------------------
@@ -61,12 +51,9 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAnimateTransformElement)
 
 //----------------------------------------------------------------------
 
-nsSMILAnimationFunction&
-SVGAnimateTransformElement::AnimationFunction()
-{
+nsSMILAnimationFunction& SVGAnimateTransformElement::AnimationFunction() {
   return mAnimationFunction;
 }
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

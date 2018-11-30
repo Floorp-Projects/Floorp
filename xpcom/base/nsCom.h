@@ -8,5 +8,3 @@
 #define nsCom_h__
 #include "nscore.h"
 #endif
-
-

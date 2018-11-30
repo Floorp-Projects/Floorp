@@ -13,9 +13,8 @@ class nsWindow;
 namespace mozilla {
 namespace widget {
 
-class InProcessGtkCompositorWidget final : public GtkCompositorWidget
-{
-public:
+class InProcessGtkCompositorWidget final : public GtkCompositorWidget {
+ public:
   InProcessGtkCompositorWidget(const GtkCompositorWidgetInitData& aInitData,
                                const layers::CompositorOptions& aOptions,
                                nsWindow* aWindow);
@@ -25,7 +24,7 @@ public:
   void ObserveVsync(VsyncObserver* aObserver) override;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // widget_gtk_InProcessGtkCompositorWidget_h
+#endif  // widget_gtk_InProcessGtkCompositorWidget_h

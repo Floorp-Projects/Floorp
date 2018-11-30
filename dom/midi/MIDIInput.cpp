@@ -15,16 +15,15 @@ namespace mozilla {
 namespace dom {
 
 MIDIInput::MIDIInput(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent)
-  : MIDIPort(aWindow, aMIDIAccessParent)
-{
-}
+    : MIDIPort(aWindow, aMIDIAccessParent) {}
 
-//static
-MIDIInput*
-MIDIInput::Create(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent,
-                  const MIDIPortInfo& aPortInfo, const bool aSysexEnabled)
-{
-  MOZ_ASSERT(static_cast<MIDIPortType>(aPortInfo.type()) == MIDIPortType::Input);
+// static
+MIDIInput* MIDIInput::Create(nsPIDOMWindowInner* aWindow,
+                             MIDIAccess* aMIDIAccessParent,
+                             const MIDIPortInfo& aPortInfo,
+                             const bool aSysexEnabled) {
+  MOZ_ASSERT(static_cast<MIDIPortType>(aPortInfo.type()) ==
+             MIDIPortType::Input);
   auto port = new MIDIInput(aWindow, aMIDIAccessParent);
   if (!port->Initialize(aPortInfo, aSysexEnabled)) {
     return nullptr;
@@ -32,42 +31,34 @@ MIDIInput::Create(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent,
   return port;
 }
 
-JSObject*
-MIDIInput::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MIDIInput::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto) {
   return MIDIInput_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-MIDIInput::Receive(const nsTArray<MIDIMessage>& aMsgs)
-{
+void MIDIInput::Receive(const nsTArray<MIDIMessage>& aMsgs) {
   nsCOMPtr<nsIDocument> doc = GetOwner() ? GetOwner()->GetDoc() : nullptr;
   if (!doc) {
     NS_WARNING("No document available to send MIDIMessageEvent to!");
     return;
   }
-  for (auto& msg:aMsgs) {
+  for (auto& msg : aMsgs) {
     RefPtr<MIDIMessageEvent> event(
-      MIDIMessageEvent::Constructor(this, msg.timestamp(), msg.data()));
+        MIDIMessageEvent::Constructor(this, msg.timestamp(), msg.data()));
     DispatchTrustedEvent(event);
   }
 }
 
-EventHandlerNonNull*
-MIDIInput::GetOnmidimessage()
-{
+EventHandlerNonNull* MIDIInput::GetOnmidimessage() {
   return GetEventHandler(nsGkAtoms::onmidimessage);
 }
 
-void
-MIDIInput::SetOnmidimessage(EventHandlerNonNull* aCallback)
-{
+void MIDIInput::SetOnmidimessage(EventHandlerNonNull* aCallback) {
   SetEventHandler(nsGkAtoms::onmidimessage, aCallback);
   if (mPort->ConnectionState() != MIDIPortConnectionState::Open) {
     mPort->SendOpen();
   }
 }
 
-
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

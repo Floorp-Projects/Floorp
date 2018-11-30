@@ -9,17 +9,15 @@
 
 #include "nsString.h"
 
-class nsSVGFeatures
-{
-public:
+class nsSVGFeatures {
+ public:
   /**
    * Check whether we support the given extension string.
    *
    * @param aExtension the URI of an extension. Known extensions are
    *   "http://www.w3.org/1999/xhtml" and "http://www.w3.org/1998/Math/MathML"
    */
-  static bool
-  HasExtension(const nsAString& aExtension, const bool aIsInChrome);
+  static bool HasExtension(const nsAString& aExtension, const bool aIsInChrome);
 };
 
-#endif // __NS_SVGFEATURES_H__
+#endif  // __NS_SVGFEATURES_H__

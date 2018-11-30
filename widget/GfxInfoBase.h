@@ -26,45 +26,53 @@
 #include "nsWeakReference.h"
 
 namespace mozilla {
-namespace widget {  
+namespace widget {
 
 class GfxInfoBase : public nsIGfxInfo,
                     public nsIObserver,
                     public nsSupportsWeakReference
 #ifdef DEBUG
-                  , public nsIGfxInfoDebug
+    ,
+                    public nsIGfxInfoDebug
 #endif
 {
-public:
+ public:
   GfxInfoBase();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   // We only declare a subset of the nsIGfxInfo interface. It's up to derived
-  // classes to implement the rest of the interface.  
+  // classes to implement the rest of the interface.
   // Derived classes need to use
   // using GfxInfoBase::GetFeatureStatus;
   // using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   // to import the relevant methods into their namespace.
-  NS_IMETHOD GetFeatureStatus(int32_t aFeature, nsACString& aFailureId, int32_t *_retval) override;
-  NS_IMETHOD GetFeatureSuggestedDriverVersion(int32_t aFeature, nsAString & _retval) override;
+  NS_IMETHOD GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
+                              int32_t* _retval) override;
+  NS_IMETHOD GetFeatureSuggestedDriverVersion(int32_t aFeature,
+                                              nsAString& _retval) override;
 
-  NS_IMETHOD GetMonitors(JSContext* cx, JS::MutableHandleValue _retval) override;
-  NS_IMETHOD GetFailures(uint32_t *failureCount, int32_t** indices, char ***failures) override;
-  NS_IMETHOD_(void) LogFailure(const nsACString &failure) override;
+  NS_IMETHOD GetMonitors(JSContext* cx,
+                         JS::MutableHandleValue _retval) override;
+  NS_IMETHOD GetFailures(uint32_t* failureCount, int32_t** indices,
+                         char*** failures) override;
+  NS_IMETHOD_(void) LogFailure(const nsACString& failure) override;
   NS_IMETHOD GetInfo(JSContext*, JS::MutableHandle<JS::Value>) override;
   NS_IMETHOD GetFeatures(JSContext*, JS::MutableHandle<JS::Value>) override;
   NS_IMETHOD GetFeatureLog(JSContext*, JS::MutableHandle<JS::Value>) override;
-  NS_IMETHOD GetActiveCrashGuards(JSContext*, JS::MutableHandle<JS::Value>) override;
-  NS_IMETHOD GetContentBackend(nsAString & aContentBackend) override;
-  NS_IMETHOD GetUsingGPUProcess(bool *aOutValue) override;
+  NS_IMETHOD GetActiveCrashGuards(JSContext*,
+                                  JS::MutableHandle<JS::Value>) override;
+  NS_IMETHOD GetContentBackend(nsAString& aContentBackend) override;
+  NS_IMETHOD GetUsingGPUProcess(bool* aOutValue) override;
   NS_IMETHOD GetWebRenderEnabled(bool* aWebRenderEnabled) override;
   NS_IMETHOD GetIsHeadless(bool* aIsHeadless) override;
   NS_IMETHOD GetUsesTiling(bool* aUsesTiling) override;
   NS_IMETHOD GetContentUsesTiling(bool* aUsesTiling) override;
-  NS_IMETHOD GetOffMainThreadPaintEnabled(bool* aOffMainThreadPaintEnabled) override;
-  NS_IMETHOD GetOffMainThreadPaintWorkerCount(int32_t* aOffMainThreadPaintWorkerCount) override;
+  NS_IMETHOD GetOffMainThreadPaintEnabled(
+      bool* aOffMainThreadPaintEnabled) override;
+  NS_IMETHOD GetOffMainThreadPaintWorkerCount(
+      int32_t* aOffMainThreadPaintWorkerCount) override;
 
   // Initialization function. If you override this, you must call this class's
   // version of Init first.
@@ -74,9 +82,9 @@ public:
   // Ideally, Init() would be void-return, but the rules of
   // NS_GENERIC_FACTORY_CONSTRUCTOR_INIT require it be nsresult return.
   virtual nsresult Init();
-  
+
   // only useful on X11
-  NS_IMETHOD_(void) GetData() override { }
+  NS_IMETHOD_(void) GetData() override {}
 
   static void AddCollector(GfxInfoCollectorBase* collector);
   static void RemoveCollector(GfxInfoCollectorBase* collector);
@@ -102,36 +110,30 @@ public:
   static void SetFeatureStatus(
       const nsTArray<mozilla::dom::GfxInfoFeatureStatus>& aFS);
 
-protected:
-
+ protected:
   virtual ~GfxInfoBase();
 
-  virtual nsresult GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
-                                        nsAString& aSuggestedDriverVersion,
-                                        const nsTArray<GfxDriverInfo>& aDriverInfo,
-                                        nsACString& aFailureId,
-                                        OperatingSystem* aOS = nullptr);
+  virtual nsresult GetFeatureStatusImpl(
+      int32_t aFeature, int32_t* aStatus, nsAString& aSuggestedDriverVersion,
+      const nsTArray<GfxDriverInfo>& aDriverInfo, nsACString& aFailureId,
+      OperatingSystem* aOS = nullptr);
 
   // Gets the driver info table. Used by GfxInfoBase to check for general cases
   // (while subclasses check for more specific ones).
   virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo() = 0;
 
   virtual void DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> obj);
-  bool InitFeatureObject(
-    JSContext* aCx,
-    JS::Handle<JSObject*> aContainer,
-    const char* aName,
-    mozilla::gfx::FeatureStatus& aKnownStatus,
-    JS::MutableHandle<JSObject*> aOutObj);
+  bool InitFeatureObject(JSContext* aCx, JS::Handle<JSObject*> aContainer,
+                         const char* aName,
+                         mozilla::gfx::FeatureStatus& aKnownStatus,
+                         JS::MutableHandle<JSObject*> aOutObj);
 
-  NS_IMETHOD ControlGPUProcessForXPCShell(bool aEnable, bool *_retval) override;
+  NS_IMETHOD ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) override;
 
-private:
-  virtual int32_t FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& aDriverInfo,
-                                              nsAString& aSuggestedVersion,
-                                              int32_t aFeature,
-                                              nsACString &aFailureId,
-                                              OperatingSystem os);
+ private:
+  virtual int32_t FindBlocklistedDeviceInList(
+      const nsTArray<GfxDriverInfo>& aDriverInfo, nsAString& aSuggestedVersion,
+      int32_t aFeature, nsACString& aFailureId, OperatingSystem os);
 
   void EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo);
 
@@ -139,10 +141,9 @@ private:
                             JS::MutableHandle<JS::Value> aOut);
 
   Mutex mMutex;
-
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 #endif /* __mozilla_widget_GfxInfoBase_h__ */

@@ -20,11 +20,9 @@
  * @param Class the class-type being wrapped
  * @see nsInterfaceHashtable, nsClassHashtable
  */
-template<class KeyClass, class T>
-class nsClassHashtable
-  : public nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*>
-{
-public:
+template <class KeyClass, class T>
+class nsClassHashtable : public nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*> {
+ public:
   typedef typename KeyClass::KeyType KeyType;
   typedef T* UserDataType;
   typedef nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*> base_type;
@@ -34,15 +32,13 @@ public:
 
   nsClassHashtable() {}
   explicit nsClassHashtable(uint32_t aInitLength)
-    : nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*>(aInitLength)
-  {
-  }
+      : nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*>(aInitLength) {}
 
   /**
    * Looks up aKey in the hash table. If it doesn't exist a new object of
    * KeyClass will be created (using the arguments provided) and then returned.
    */
-  template<typename... Args>
+  template <typename... Args>
   UserDataType LookupOrAdd(KeyType aKey, Args&&... aConstructionArgs);
 
   /**
@@ -58,20 +54,16 @@ public:
   UserDataType Get(KeyType aKey) const;
 };
 
-template<typename K, typename T>
-inline void
-ImplCycleCollectionUnlink(nsClassHashtable<K, T>& aField)
-{
+template <typename K, typename T>
+inline void ImplCycleCollectionUnlink(nsClassHashtable<K, T>& aField) {
   aField.Clear();
 }
 
-template<typename K, typename T>
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            const nsClassHashtable<K, T>& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
+template <typename K, typename T>
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    const nsClassHashtable<K, T>& aField, const char* aName,
+    uint32_t aFlags = 0) {
   for (auto iter = aField.ConstIter(); !iter.Done(); iter.Next()) {
     ImplCycleCollectionTraverse(aCallback, *iter.UserData(), aName, aFlags);
   }
@@ -81,12 +73,10 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 // nsClassHashtable definitions
 //
 
-template<class KeyClass, class T>
-template<typename... Args>
-T*
-nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
-                                           Args&&... aConstructionArgs)
-{
+template <class KeyClass, class T>
+template <typename... Args>
+T* nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
+                                              Args&&... aConstructionArgs) {
   auto count = this->Count();
   typename base_type::EntryType* ent = this->PutEntry(aKey);
   if (count != this->Count()) {
@@ -95,10 +85,8 @@ nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
   return ent->mData;
 }
 
-template<class KeyClass, class T>
-bool
-nsClassHashtable<KeyClass, T>::Get(KeyType aKey, T** aRetVal) const
-{
+template <class KeyClass, class T>
+bool nsClassHashtable<KeyClass, T>::Get(KeyType aKey, T** aRetVal) const {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
 
   if (ent) {
@@ -116,10 +104,8 @@ nsClassHashtable<KeyClass, T>::Get(KeyType aKey, T** aRetVal) const
   return false;
 }
 
-template<class KeyClass, class T>
-T*
-nsClassHashtable<KeyClass, T>::Get(KeyType aKey) const
-{
+template <class KeyClass, class T>
+T* nsClassHashtable<KeyClass, T>::Get(KeyType aKey) const {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
   if (!ent) {
     return nullptr;
@@ -128,4 +114,4 @@ nsClassHashtable<KeyClass, T>::Get(KeyType aKey) const
   return ent->mData;
 }
 
-#endif // nsClassHashtable_h__
+#endif  // nsClassHashtable_h__

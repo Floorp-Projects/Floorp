@@ -14,9 +14,9 @@ namespace StorageDBUpdater {
 
 nsresult Update(mozIStorageConnection* aWorkerConnection);
 
-} // StorageDBUpdater
+}  // namespace StorageDBUpdater
 
-} // dom
-} // mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_StorageDBUpdater_h
+#endif  // mozilla_dom_StorageDBUpdater_h

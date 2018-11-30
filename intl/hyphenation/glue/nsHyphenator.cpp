@@ -11,9 +11,7 @@
 
 #include "hyphen.h"
 
-nsHyphenator::nsHyphenator(nsIURI *aURI)
-  : mDict(nullptr)
-{
+nsHyphenator::nsHyphenator(nsIURI *aURI) : mDict(nullptr) {
   nsCString uriSpec;
   nsresult rv = aURI->GetSpec(uriSpec);
   if (NS_FAILED(rv)) {
@@ -27,23 +25,17 @@ nsHyphenator::nsHyphenator(nsIURI *aURI)
 #endif
 }
 
-nsHyphenator::~nsHyphenator()
-{
+nsHyphenator::~nsHyphenator() {
   if (mDict != nullptr) {
-    hnj_hyphen_free((HyphenDict*)mDict);
+    hnj_hyphen_free((HyphenDict *)mDict);
     mDict = nullptr;
   }
 }
 
-bool
-nsHyphenator::IsValid()
-{
-  return (mDict != nullptr);
-}
+bool nsHyphenator::IsValid() { return (mDict != nullptr); }
 
-nsresult
-nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
-{
+nsresult nsHyphenator::Hyphenate(const nsAString &aString,
+                                 nsTArray<bool> &aHyphens) {
   if (!aHyphens.SetLength(aString.Length(), mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -57,8 +49,8 @@ nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
     chLen = 1;
 
     if (NS_IS_HIGH_SURROGATE(ch)) {
-      if (i + 1 < aString.Length() && NS_IS_LOW_SURROGATE(aString[i+1])) {
-        ch = SURROGATE_TO_UCS4(ch, aString[i+1]);
+      if (i + 1 < aString.Length() && NS_IS_LOW_SURROGATE(aString[i + 1])) {
+        ch = SURROGATE_TO_UCS4(ch, aString[i + 1]);
         chLen = 2;
       } else {
         NS_WARNING("unpaired surrogate found during hyphenation");
@@ -81,7 +73,7 @@ nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
       // Convert the word to utf-8 for libhyphen, lowercasing it as we go
       // so that it will match the (lowercased) patterns (bug 1105644).
       nsAutoCString utf8;
-      const char16_t* const begin = aString.BeginReading();
+      const char16_t *const begin = aString.BeginReading();
       const char16_t *cur = begin + wordStart;
       const char16_t *end = begin + wordLimit;
       while (cur < end) {
@@ -91,10 +83,10 @@ nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
           if (cur < end && NS_IS_LOW_SURROGATE(*cur)) {
             ch = SURROGATE_TO_UCS4(ch, *cur++);
           } else {
-            ch = 0xfffd; // unpaired surrogate, treat as REPLACEMENT CHAR
+            ch = 0xfffd;  // unpaired surrogate, treat as REPLACEMENT CHAR
           }
         } else if (NS_IS_LOW_SURROGATE(ch)) {
-          ch = 0xfffd; // unpaired surrogate
+          ch = 0xfffd;  // unpaired surrogate
         }
 
         // XXX What about language-specific casing? Consider Turkish I/i...
@@ -102,12 +94,12 @@ nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
         // affected by this, as they treat dotted and undotted i similarly.
         ch = ToLowerCase(ch);
 
-        if (ch < 0x80) { // U+0000 - U+007F
+        if (ch < 0x80) {  // U+0000 - U+007F
           utf8.Append(ch);
-        } else if (ch < 0x0800) { // U+0100 - U+07FF
+        } else if (ch < 0x0800) {  // U+0100 - U+07FF
           utf8.Append(0xC0 | (ch >> 6));
           utf8.Append(0x80 | (0x003F & ch));
-        } else if (ch < 0x10000) { // U+0800 - U+D7FF,U+E000 - U+FFFF
+        } else if (ch < 0x10000) {  // U+0800 - U+D7FF,U+E000 - U+FFFF
           utf8.Append(0xE0 | (ch >> 12));
           utf8.Append(0x80 | (0x003F & (ch >> 6)));
           utf8.Append(0x80 | (0x003F & ch));
@@ -119,15 +111,14 @@ nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
         }
       }
 
-      AutoTArray<char,200> utf8hyphens;
+      AutoTArray<char, 200> utf8hyphens;
       utf8hyphens.SetLength(utf8.Length() + 5);
       char **rep = nullptr;
       int *pos = nullptr;
       int *cut = nullptr;
-      int err = hnj_hyphen_hyphenate2((HyphenDict*)mDict,
-                                      utf8.BeginReading(), utf8.Length(),
-                                      utf8hyphens.Elements(), nullptr,
-                                      &rep, &pos, &cut);
+      int err = hnj_hyphen_hyphenate2((HyphenDict *)mDict, utf8.BeginReading(),
+                                      utf8.Length(), utf8hyphens.Elements(),
+                                      nullptr, &rep, &pos, &cut);
       if (!err) {
         // Surprisingly, hnj_hyphen_hyphenate2 converts the 'hyphens' buffer
         // from utf8 code unit indexing (which would match the utf8 input
@@ -142,8 +133,7 @@ nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
           }
           cur++;
           if (cur < end && NS_IS_LOW_SURROGATE(*cur) &&
-              NS_IS_HIGH_SURROGATE(*(cur-1)))
-          {
+              NS_IS_HIGH_SURROGATE(*(cur - 1))) {
             cur++;
           }
           hyphPtr++;

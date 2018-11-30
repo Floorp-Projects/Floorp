@@ -15,18 +15,14 @@
 
 namespace mozilla {
 
-inline bool
-PolicyHasRegValue(HKEY aKey, LPCWSTR aName, DWORD* aValue)
-{
+inline bool PolicyHasRegValue(HKEY aKey, LPCWSTR aName, DWORD* aValue) {
   DWORD len = sizeof(DWORD);
-  LONG ret = ::RegGetValueW(aKey, L"SOFTWARE\\Policies\\Mozilla\\Firefox", aName,
-                            RRF_RT_DWORD, nullptr, aValue, &len);
+  LONG ret = ::RegGetValueW(aKey, L"SOFTWARE\\Policies\\Mozilla\\Firefox",
+                            aName, RRF_RT_DWORD, nullptr, aValue, &len);
   return ret == ERROR_SUCCESS;
 }
 
-inline bool
-PolicyCheckBoolean(LPCWSTR aPolicyName)
-{
+inline bool PolicyCheckBoolean(LPCWSTR aPolicyName) {
   DWORD value;
   if (PolicyHasRegValue(HKEY_LOCAL_MACHINE, aPolicyName, &value)) {
     return value == 1;
@@ -39,8 +35,8 @@ PolicyCheckBoolean(LPCWSTR aPolicyName)
   return false;
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
-#endif // mozilla_PolicyChecks_h
+#endif  // mozilla_PolicyChecks_h

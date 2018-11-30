@@ -14,17 +14,17 @@ namespace mozilla {
 class OriginAttributes;
 }
 
-class nsOpenURIInFrameParams final : public nsIOpenURIInFrameParams
-{
-public:
+class nsOpenURIInFrameParams final : public nsIOpenURIInFrameParams {
+ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsOpenURIInFrameParams)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOPENURIINFRAMEPARAMS
 
-  explicit nsOpenURIInFrameParams(const mozilla::OriginAttributes& aOriginAttributes,
-                                  nsIFrameLoaderOwner* aOpener);
+  explicit nsOpenURIInFrameParams(
+      const mozilla::OriginAttributes& aOriginAttributes,
+      nsIFrameLoaderOwner* aOpener);
 
-private:
+ private:
   ~nsOpenURIInFrameParams();
 
   mozilla::OriginAttributes mOpenerOriginAttributes;

@@ -36,4 +36,4 @@
 #include "mozilla/storage/StatementCache.h"
 #include "mozilla/storage/Variant.h"
 
-#endif // mozilla_storage_h_
+#endif  // mozilla_storage_h_

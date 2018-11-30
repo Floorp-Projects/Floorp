@@ -16,9 +16,8 @@
 #include "nsServiceManagerUtils.h"
 #include "ProfileJSONWriter.h"
 
-class nsProfiler final : public nsIProfiler, public nsIObserver
-{
-public:
+class nsProfiler final : public nsIProfiler, public nsIObserver {
+ public:
   nsProfiler();
 
   NS_DECL_ISUPPORTS
@@ -27,10 +26,9 @@ public:
 
   nsresult Init();
 
-  static nsProfiler* GetOrCreate()
-  {
+  static nsProfiler* GetOrCreate() {
     nsCOMPtr<nsIProfiler> iprofiler =
-      do_GetService("@mozilla.org/tools/profiler;1");
+        do_GetService("@mozilla.org/tools/profiler;1");
     return static_cast<nsProfiler*>(iprofiler.get());
   }
 
@@ -48,7 +46,8 @@ public:
     nsTArray<uint32_t> mIndex;
     nsTArray<uint8_t> mBuffer;
   };
-private:
+
+ private:
   ~nsProfiler();
 
   typedef mozilla::MozPromise<nsCString, nsresult, false> GatheringPromise;
@@ -60,8 +59,8 @@ private:
 
   void ClearExpiredExitProfiles();
 
-  RefPtr<SymbolTablePromise> GetSymbolTableMozPromise(const nsACString& aDebugPath,
-                                                      const nsACString& aBreakpadID);
+  RefPtr<SymbolTablePromise> GetSymbolTableMozPromise(
+      const nsACString& aDebugPath, const nsACString& aBreakpadID);
 
   bool mLockedForPrivateBrowsing;
 
@@ -79,5 +78,4 @@ private:
   bool mGathering;
 };
 
-#endif // nsProfiler_h
-
+#endif  // nsProfiler_h

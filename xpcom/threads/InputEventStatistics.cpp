@@ -10,9 +10,7 @@
 
 namespace mozilla {
 
-/*static*/ InputEventStatistics&
-InputEventStatistics::Get()
-{
+/*static*/ InputEventStatistics& InputEventStatistics::Get() {
   static UniquePtr<InputEventStatistics> sInstance;
   if (!sInstance) {
     sInstance = MakeUnique<InputEventStatistics>(ConstructorCookie());
@@ -21,44 +19,36 @@ InputEventStatistics::Get()
   return *sInstance;
 }
 
-TimeDuration
-InputEventStatistics::TimeDurationCircularBuffer::GetMean()
-{
+TimeDuration InputEventStatistics::TimeDurationCircularBuffer::GetMean() {
   return mTotal / (int64_t)mSize;
 }
 
 InputEventStatistics::InputEventStatistics(ConstructorCookie&&)
-  : mEnable(false)
-{
+    : mEnable(false) {
   MOZ_ASSERT(Preferences::IsServiceAvailable());
-  uint32_t inputDuration =
-    Preferences::GetUint("input_event_queue.default_duration_per_event",
-                         sDefaultInputDuration);
+  uint32_t inputDuration = Preferences::GetUint(
+      "input_event_queue.default_duration_per_event", sDefaultInputDuration);
 
   TimeDuration defaultDuration = TimeDuration::FromMilliseconds(inputDuration);
 
-  uint32_t count =
-    Preferences::GetUint("input_event_queue.count_for_prediction",
-                         sInputCountForPrediction);
+  uint32_t count = Preferences::GetUint(
+      "input_event_queue.count_for_prediction", sInputCountForPrediction);
 
   mLastInputDurations =
-    MakeUnique<TimeDurationCircularBuffer>(count, defaultDuration);
+      MakeUnique<TimeDurationCircularBuffer>(count, defaultDuration);
 
-  uint32_t maxDuration =
-    Preferences::GetUint("input_event_queue.duration.max",
-                         sMaxReservedTimeForHandlingInput);
+  uint32_t maxDuration = Preferences::GetUint("input_event_queue.duration.max",
+                                              sMaxReservedTimeForHandlingInput);
 
-  uint32_t minDuration =
-    Preferences::GetUint("input_event_queue.duration.min",
-                         sMinReservedTimeForHandlingInput);
+  uint32_t minDuration = Preferences::GetUint("input_event_queue.duration.min",
+                                              sMinReservedTimeForHandlingInput);
 
   mMaxInputDuration = TimeDuration::FromMilliseconds(maxDuration);
   mMinInputDuration = TimeDuration::FromMilliseconds(minDuration);
 }
 
-TimeStamp
-InputEventStatistics::GetInputHandlingStartTime(uint32_t aInputCount)
-{
+TimeStamp InputEventStatistics::GetInputHandlingStartTime(
+    uint32_t aInputCount) {
   MOZ_ASSERT(mEnable);
   Maybe<TimeStamp> nextTickHint = nsRefreshDriver::GetNextTickHint();
 
@@ -67,13 +57,12 @@ InputEventStatistics::GetInputHandlingStartTime(uint32_t aInputCount)
     return TimeStamp::Now() - TimeDuration::FromMilliseconds(1);
   }
   TimeDuration inputCost = mLastInputDurations->GetMean() * aInputCount;
-  inputCost = inputCost > mMaxInputDuration
-              ? mMaxInputDuration
-              : inputCost < mMinInputDuration
-              ? mMinInputDuration
-              : inputCost;
+  inputCost =
+      inputCost > mMaxInputDuration
+          ? mMaxInputDuration
+          : inputCost < mMinInputDuration ? mMinInputDuration : inputCost;
 
   return nextTickHint.value() - inputCost;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

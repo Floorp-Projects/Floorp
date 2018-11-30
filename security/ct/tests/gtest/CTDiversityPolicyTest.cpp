@@ -6,8 +6,10 @@
 
 #include "CTDiversityPolicy.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // TBD, PENDING FINALIZATION OF MOZILLA CT POLICY.
 
-} } // namespace mozilla::ct
+}
+}  // namespace mozilla

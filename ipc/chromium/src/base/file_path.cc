@@ -17,7 +17,7 @@
 
 #if defined(FILE_PATH_USES_WIN_SEPARATORS)
 const FilePath::CharType FilePath::kSeparators[] = FILE_PATH_LITERAL("\\/");
-#else  // FILE_PATH_USES_WIN_SEPARATORS
+#else   // FILE_PATH_USES_WIN_SEPARATORS
 const FilePath::CharType FilePath::kSeparators[] = FILE_PATH_LITERAL("/");
 #endif  // FILE_PATH_USES_WIN_SEPARATORS
 
@@ -25,7 +25,6 @@ const FilePath::CharType FilePath::kCurrentDirectory[] = FILE_PATH_LITERAL(".");
 const FilePath::CharType FilePath::kParentDirectory[] = FILE_PATH_LITERAL("..");
 
 const FilePath::CharType FilePath::kExtensionSeparator = FILE_PATH_LITERAL('.');
-
 
 namespace {
 
@@ -54,12 +53,12 @@ bool IsPathAbsolute(const FilePath::StringType& path) {
   if (letter != FilePath::StringType::npos) {
     // Look for a separator right after the drive specification.
     return path.length() > letter + 1 &&
-        FilePath::IsSeparator(path[letter + 1]);
+           FilePath::IsSeparator(path[letter + 1]);
   }
   // Look for a pair of leading separators.
-  return path.length() > 1 &&
-      FilePath::IsSeparator(path[0]) && FilePath::IsSeparator(path[1]);
-#else  // FILE_PATH_USES_DRIVE_LETTERS
+  return path.length() > 1 && FilePath::IsSeparator(path[0]) &&
+         FilePath::IsSeparator(path[1]);
+#else   // FILE_PATH_USES_DRIVE_LETTERS
   // Look for a separator in the first position.
   return path.length() > 0 && FilePath::IsSeparator(path[0]);
 #endif  // FILE_PATH_USES_DRIVE_LETTERS
@@ -91,9 +90,8 @@ FilePath FilePath::DirName() const {
   // resizes below using letter will still be valid.
   StringType::size_type letter = FindDriveLetter(new_path.path_);
 
-  StringType::size_type last_separator =
-      new_path.path_.find_last_of(kSeparators, StringType::npos,
-                                  arraysize(kSeparators) - 1);
+  StringType::size_type last_separator = new_path.path_.find_last_of(
+      kSeparators, StringType::npos, arraysize(kSeparators) - 1);
   if (last_separator == StringType::npos) {
     // path_ is in the current directory.
     new_path.path_.resize(letter + 1);
@@ -111,8 +109,7 @@ FilePath FilePath::DirName() const {
   }
 
   new_path.StripTrailingSeparatorsInternal();
-  if (!new_path.path_.length())
-    new_path.path_ = kCurrentDirectory;
+  if (!new_path.path_.length()) new_path.path_ = kCurrentDirectory;
 
   return new_path;
 }
@@ -129,9 +126,8 @@ FilePath FilePath::BaseName() const {
 
   // Keep everything after the final separator, but if the pathname is only
   // one character and it's a separator, leave it alone.
-  StringType::size_type last_separator =
-      new_path.path_.find_last_of(kSeparators, StringType::npos,
-                                  arraysize(kSeparators) - 1);
+  StringType::size_type last_separator = new_path.path_.find_last_of(
+      kSeparators, StringType::npos, arraysize(kSeparators) - 1);
   if (last_separator != StringType::npos &&
       last_separator < new_path.path_.length() - 1) {
     new_path.path_.erase(0, last_separator + 1);
@@ -149,8 +145,7 @@ FilePath::StringType FilePath::Extension() const {
     return StringType();
 
   const StringType::size_type last_dot = base.rfind(kExtensionSeparator);
-  if (last_dot == StringType::npos)
-    return StringType();
+  if (last_dot == StringType::npos) return StringType();
   return StringType(base, last_dot);
 }
 
@@ -158,8 +153,7 @@ FilePath FilePath::RemoveExtension() const {
   StringType ext = Extension();
   // It's important to check Extension() since that verifies that the
   // kExtensionSeparator actually appeared in the last path component.
-  if (ext.empty())
-    return FilePath(path_);
+  if (ext.empty()) return FilePath(path_);
   // Since Extension() verified that the extension is in fact in the last path
   // component, this substr will effectively strip trailing separators.
   const StringType::size_type last_dot = path_.rfind(kExtensionSeparator);
@@ -167,15 +161,12 @@ FilePath FilePath::RemoveExtension() const {
 }
 
 FilePath FilePath::InsertBeforeExtension(const StringType& suffix) const {
-  if (suffix.empty())
-    return FilePath(path_);
+  if (suffix.empty()) return FilePath(path_);
 
-  if (path_.empty())
-    return FilePath();
+  if (path_.empty()) return FilePath();
 
   StringType base = BaseName().value();
-  if (base.empty())
-    return FilePath();
+  if (base.empty()) return FilePath();
   if (*(base.end() - 1) == kExtensionSeparator) {
     // Special case "." and ".."
     if (base == kCurrentDirectory || base == kParentDirectory) {
@@ -191,12 +182,10 @@ FilePath FilePath::InsertBeforeExtension(const StringType& suffix) const {
 }
 
 FilePath FilePath::ReplaceExtension(const StringType& extension) const {
-  if (path_.empty())
-    return FilePath();
+  if (path_.empty()) return FilePath();
 
   StringType base = BaseName().value();
-  if (base.empty())
-    return FilePath();
+  if (base.empty()) return FilePath();
   if (*(base.end() - 1) == kExtensionSeparator) {
     // Special case "." and ".."
     if (base == kCurrentDirectory || base == kParentDirectory) {
@@ -210,8 +199,7 @@ FilePath FilePath::ReplaceExtension(const StringType& extension) const {
     return no_ext;
 
   StringType str = no_ext.value();
-  if (extension[0] != kExtensionSeparator)
-    str.append(1, kExtensionSeparator);
+  if (extension[0] != kExtensionSeparator) str.append(1, kExtensionSeparator);
   str.append(extension);
   return FilePath(str);
 }
@@ -236,11 +224,9 @@ FilePath FilePath::Append(const StringType& component) const {
   // directory) or if the path component is empty (indicating nothing to
   // append).
   if (component.length() > 0 && new_path.path_.length() > 0) {
-
     // Don't append a separator if the path still ends with a trailing
     // separator after stripping (indicating the root directory).
     if (!IsSeparator(new_path.path_[new_path.path_.length() - 1])) {
-
       // Don't append a separator if the path is just a drive letter.
       if (FindDriveLetter(new_path.path_) + 1 != new_path.path_.length()) {
         new_path.path_.append(1, kSeparators[0]);
@@ -265,9 +251,7 @@ FilePath FilePath::AppendASCII(const std::string& component) const {
 #endif
 }
 
-bool FilePath::IsAbsolute() const {
-  return IsPathAbsolute(path_);
-}
+bool FilePath::IsAbsolute() const { return IsPathAbsolute(path_); }
 
 #if defined(OS_POSIX)
 // See file_path.h for a discussion of the encoding of paths on POSIX
@@ -287,19 +271,17 @@ std::wstring FilePath::ToWStringHack() const {
 FilePath FilePath::FromWStringHack(const std::wstring& wstring) {
   return FilePath(wstring);
 }
-std::wstring FilePath::ToWStringHack() const {
-  return path_;
-}
+std::wstring FilePath::ToWStringHack() const { return path_; }
 #endif
 
 void FilePath::OpenInputStream(std::ifstream& stream) const {
   stream.open(
 #ifndef __MINGW32__
-              path_.c_str(),
+      path_.c_str(),
 #else
-              base::SysWideToNativeMB(path_).c_str(),
+      base::SysWideToNativeMB(path_).c_str(),
 #endif
-              std::ios::in | std::ios::binary);
+      std::ios::in | std::ios::binary);
 }
 
 FilePath FilePath::StripTrailingSeparators() const {
@@ -319,8 +301,7 @@ void FilePath::StripTrailingSeparatorsInternal() {
 
   StringType::size_type last_stripped = StringType::npos;
   for (StringType::size_type pos = path_.length();
-       pos > start && IsSeparator(path_[pos - 1]);
-       --pos) {
+       pos > start && IsSeparator(path_[pos - 1]); --pos) {
     // If the string only has two separators and they're at the beginning,
     // don't strip them, unless the string began with more than two separators.
     if (pos != start + 1 || last_stripped == start + 2 ||

@@ -28,7 +28,7 @@ typedef MozPromise<nsString, ErrorCode, false> U2FPromise;
 
 NS_NAMED_LITERAL_STRING(kRequiredU2FVersion, "U2F_V2");
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_U2FAuthenticator_h
+#endif  // mozilla_dom_U2FAuthenticator_h

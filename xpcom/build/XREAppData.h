@@ -22,7 +22,7 @@ namespace mozilla {
 namespace sandboxing {
 class PermissionsService;
 }
-}
+}  // namespace mozilla
 #endif
 
 namespace mozilla {
@@ -32,20 +32,13 @@ struct StaticXREAppData;
 /**
  * Application-specific data needed to start the apprunner.
  */
-class XREAppData
-{
-public:
-  XREAppData() { }
-  ~XREAppData() { }
-  XREAppData(const XREAppData& aOther)
-  {
-    *this = aOther;
-  }
+class XREAppData {
+ public:
+  XREAppData() {}
+  ~XREAppData() {}
+  XREAppData(const XREAppData& aOther) { *this = aOther; }
 
-  explicit XREAppData(const StaticXREAppData& aOther)
-  {
-    *this = aOther;
-  }
+  explicit XREAppData(const StaticXREAppData& aOther) { *this = aOther; }
 
   XREAppData& operator=(const StaticXREAppData& aOther);
   XREAppData& operator=(const XREAppData& aOther);
@@ -53,19 +46,14 @@ public:
 
   // Lots of code reads these fields directly like a struct, so rather
   // than using UniquePtr directly, use an auto-converting wrapper.
-  class CharPtr
-  {
-  public:
+  class CharPtr {
+   public:
     explicit CharPtr() = default;
-    explicit CharPtr(const char* v)
-    {
-      *this = v;
-    }
+    explicit CharPtr(const char* v) { *this = v; }
     CharPtr(CharPtr&&) = default;
     ~CharPtr() = default;
 
-    CharPtr& operator=(const char* v)
-    {
+    CharPtr& operator=(const char* v) {
       if (v) {
         mValue.reset(NS_xstrdup(v));
       } else {
@@ -73,17 +61,14 @@ public:
       }
       return *this;
     }
-    CharPtr& operator=(const CharPtr& v)
-    {
-      *this = (const char*) v;
+    CharPtr& operator=(const CharPtr& v) {
+      *this = (const char*)v;
       return *this;
     }
 
-    operator const char*() const {
-      return mValue.get();
-    }
+    operator const char*() const { return mValue.get(); }
 
-  private:
+   private:
     UniqueFreePtr<const char> mValue;
   };
 
@@ -219,8 +204,7 @@ public:
  *
  * This structure is initialized into and matches nsXREAppData
  */
-struct StaticXREAppData
-{
+struct StaticXREAppData {
   const char* vendor;
   const char* name;
   const char* remotingName;
@@ -237,6 +221,6 @@ struct StaticXREAppData
   const char* sourceURL;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // XREAppData_h
+#endif  // XREAppData_h

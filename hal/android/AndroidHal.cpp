@@ -20,9 +20,7 @@ namespace java = mozilla::java;
 namespace mozilla {
 namespace hal_impl {
 
-void
-Vibrate(const nsTArray<uint32_t> &pattern, const WindowIdentifier &)
-{
+void Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier&) {
   // Ignore the WindowIdentifier parameter; it's here only because hal::Vibrate,
   // hal_sandbox::Vibrate, and hal_impl::Vibrate all must have the same
   // signature.
@@ -51,65 +49,45 @@ Vibrate(const nsTArray<uint32_t> &pattern, const WindowIdentifier &)
   b->Vibrate(pattern);
 }
 
-void
-CancelVibrate(const WindowIdentifier &)
-{
+void CancelVibrate(const WindowIdentifier&) {
   // Ignore WindowIdentifier parameter.
 
   java::GeckoAppShell::CancelVibrate();
 }
 
-void
-EnableBatteryNotifications()
-{
+void EnableBatteryNotifications() {
   java::GeckoAppShell::EnableBatteryNotifications();
 }
 
-void
-DisableBatteryNotifications()
-{
+void DisableBatteryNotifications() {
   java::GeckoAppShell::DisableBatteryNotifications();
 }
 
-void
-GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
-{
+void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo) {
   AndroidBridge::Bridge()->GetCurrentBatteryInformation(aBatteryInfo);
 }
 
-void
-EnableNetworkNotifications()
-{
+void EnableNetworkNotifications() {
   java::GeckoAppShell::EnableNetworkNotifications();
 }
 
-void
-DisableNetworkNotifications()
-{
+void DisableNetworkNotifications() {
   java::GeckoAppShell::DisableNetworkNotifications();
 }
 
-void
-GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
-{
+void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo) {
   AndroidBridge::Bridge()->GetCurrentNetworkInformation(aNetworkInfo);
 }
 
-void
-EnableScreenConfigurationNotifications()
-{
+void EnableScreenConfigurationNotifications() {
   java::GeckoAppShell::EnableScreenOrientationNotifications();
 }
 
-void
-DisableScreenConfigurationNotifications()
-{
+void DisableScreenConfigurationNotifications() {
   java::GeckoAppShell::DisableScreenOrientationNotifications();
 }
 
-void
-GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
-{
+void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
   AndroidBridge* bridge = AndroidBridge::Bridge();
   if (!bridge) {
     return;
@@ -117,7 +95,7 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 
   nsresult rv;
   nsCOMPtr<nsIScreenManager> screenMgr =
-    do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
+      do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
   if (NS_FAILED(rv)) {
     NS_ERROR("Can't find nsIScreenManager!");
     return;
@@ -139,26 +117,26 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
   angle = bridge->GetScreenAngle();
 
   *aScreenConfiguration =
-    hal::ScreenConfiguration(nsIntRect(rectX, rectY, rectWidth, rectHeight),
-                             orientation, angle, colorDepth, pixelDepth);
+      hal::ScreenConfiguration(nsIntRect(rectX, rectY, rectWidth, rectHeight),
+                               orientation, angle, colorDepth, pixelDepth);
 }
 
-bool
-LockScreenOrientation(const ScreenOrientation& aOrientation)
-{
+bool LockScreenOrientation(const ScreenOrientation& aOrientation) {
   // Force the default orientation to be portrait-primary.
-  ScreenOrientation orientation =
-    aOrientation == eScreenOrientation_Default ? eScreenOrientation_PortraitPrimary
-                                               : aOrientation;
+  ScreenOrientation orientation = aOrientation == eScreenOrientation_Default
+                                      ? eScreenOrientation_PortraitPrimary
+                                      : aOrientation;
 
   switch (orientation) {
     // The Android backend only supports these orientations.
     case eScreenOrientation_PortraitPrimary:
     case eScreenOrientation_PortraitSecondary:
-    case eScreenOrientation_PortraitPrimary | eScreenOrientation_PortraitSecondary:
+    case eScreenOrientation_PortraitPrimary |
+        eScreenOrientation_PortraitSecondary:
     case eScreenOrientation_LandscapePrimary:
     case eScreenOrientation_LandscapeSecondary:
-    case eScreenOrientation_LandscapePrimary | eScreenOrientation_LandscapeSecondary:
+    case eScreenOrientation_LandscapePrimary |
+        eScreenOrientation_LandscapeSecondary:
     case eScreenOrientation_Default:
       java::GeckoAppShell::LockScreenOrientation(orientation);
       return true;
@@ -167,12 +145,9 @@ LockScreenOrientation(const ScreenOrientation& aOrientation)
   }
 }
 
-void
-UnlockScreenOrientation()
-{
+void UnlockScreenOrientation() {
   java::GeckoAppShell::UnlockScreenOrientation();
 }
 
-} // hal_impl
-} // mozilla
-
+}  // namespace hal_impl
+}  // namespace mozilla

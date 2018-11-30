@@ -59,72 +59,57 @@ using namespace mozilla::dom;
 
 namespace {
 
-class DumpMemoryInfoToTempDirRunnable : public Runnable
-{
-public:
-  DumpMemoryInfoToTempDirRunnable(const nsAString& aIdentifier,
-                                  bool aAnonymize,
+class DumpMemoryInfoToTempDirRunnable : public Runnable {
+ public:
+  DumpMemoryInfoToTempDirRunnable(const nsAString& aIdentifier, bool aAnonymize,
                                   bool aMinimizeMemoryUsage)
-    : mozilla::Runnable("DumpMemoryInfoToTempDirRunnable")
-    , mIdentifier(aIdentifier)
-    , mAnonymize(aAnonymize)
-    , mMinimizeMemoryUsage(aMinimizeMemoryUsage)
-  {
-  }
+      : mozilla::Runnable("DumpMemoryInfoToTempDirRunnable"),
+        mIdentifier(aIdentifier),
+        mAnonymize(aAnonymize),
+        mMinimizeMemoryUsage(aMinimizeMemoryUsage) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     nsCOMPtr<nsIMemoryInfoDumper> dumper =
-      do_GetService("@mozilla.org/memory-info-dumper;1");
+        do_GetService("@mozilla.org/memory-info-dumper;1");
     dumper->DumpMemoryInfoToTempDir(mIdentifier, mAnonymize,
                                     mMinimizeMemoryUsage);
     return NS_OK;
   }
 
-private:
+ private:
   const nsString mIdentifier;
   const bool mAnonymize;
   const bool mMinimizeMemoryUsage;
 };
 
-class GCAndCCLogDumpRunnable final
-  : public Runnable
-  , public nsIDumpGCAndCCLogsCallback
-{
-public:
+class GCAndCCLogDumpRunnable final : public Runnable,
+                                     public nsIDumpGCAndCCLogsCallback {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  GCAndCCLogDumpRunnable(const nsAString& aIdentifier,
-                         bool aDumpAllTraces,
+  GCAndCCLogDumpRunnable(const nsAString& aIdentifier, bool aDumpAllTraces,
                          bool aDumpChildProcesses)
-    : mozilla::Runnable("GCAndCCLogDumpRunnable")
-    , mIdentifier(aIdentifier)
-    , mDumpAllTraces(aDumpAllTraces)
-    , mDumpChildProcesses(aDumpChildProcesses)
-  {
-  }
+      : mozilla::Runnable("GCAndCCLogDumpRunnable"),
+        mIdentifier(aIdentifier),
+        mDumpAllTraces(aDumpAllTraces),
+        mDumpChildProcesses(aDumpChildProcesses) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     nsCOMPtr<nsIMemoryInfoDumper> dumper =
-      do_GetService("@mozilla.org/memory-info-dumper;1");
+        do_GetService("@mozilla.org/memory-info-dumper;1");
 
     dumper->DumpGCAndCCLogsToFile(mIdentifier, mDumpAllTraces,
                                   mDumpChildProcesses, this);
     return NS_OK;
   }
 
-  NS_IMETHOD OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent) override
-  {
+  NS_IMETHOD OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent) override {
     return NS_OK;
   }
 
-  NS_IMETHOD OnFinish() override
-  {
-    return NS_OK;
-  }
+  NS_IMETHOD OnFinish() override { return NS_OK; }
 
-private:
+ private:
   ~GCAndCCLogDumpRunnable() {}
 
   const nsString mIdentifier;
@@ -135,9 +120,9 @@ private:
 NS_IMPL_ISUPPORTS_INHERITED(GCAndCCLogDumpRunnable, Runnable,
                             nsIDumpGCAndCCLogsCallback)
 
-} // namespace
+}  // namespace
 
-#if defined(MOZ_SUPPORTS_RT_SIGNALS) // {
+#if defined(MOZ_SUPPORTS_RT_SIGNALS)  // {
 namespace {
 
 /*
@@ -166,67 +151,57 @@ namespace {
 
 // It turns out that at least on some systems, SIGRTMIN is not a compile-time
 // constant, so these have to be set at runtime.
-static uint8_t sDumpAboutMemorySignum;         // SIGRTMIN
-static uint8_t sDumpAboutMemoryAfterMMUSignum; // SIGRTMIN + 1
-static uint8_t sGCAndCCDumpSignum;             // SIGRTMIN + 2
+static uint8_t sDumpAboutMemorySignum;          // SIGRTMIN
+static uint8_t sDumpAboutMemoryAfterMMUSignum;  // SIGRTMIN + 1
+static uint8_t sGCAndCCDumpSignum;              // SIGRTMIN + 2
 
-void doMemoryReport(const uint8_t aRecvSig)
-{
+void doMemoryReport(const uint8_t aRecvSig) {
   // Dump our memory reports (but run this on the main thread!).
   bool minimize = aRecvSig == sDumpAboutMemoryAfterMMUSignum;
   LOG("SignalWatcher(sig %d) dispatching memory report runnable.", aRecvSig);
   RefPtr<DumpMemoryInfoToTempDirRunnable> runnable =
-    new DumpMemoryInfoToTempDirRunnable(/* identifier = */ EmptyString(),
-                                        /* anonymize = */ false,
-                                        minimize);
+      new DumpMemoryInfoToTempDirRunnable(/* identifier = */ EmptyString(),
+                                          /* anonymize = */ false, minimize);
   NS_DispatchToMainThread(runnable);
 }
 
-void doGCCCDump(const uint8_t aRecvSig)
-{
+void doGCCCDump(const uint8_t aRecvSig) {
   LOG("SignalWatcher(sig %d) dispatching GC/CC log runnable.", aRecvSig);
   // Dump GC and CC logs (from the main thread).
   RefPtr<GCAndCCLogDumpRunnable> runnable =
-    new GCAndCCLogDumpRunnable(/* identifier = */ EmptyString(),
-                               /* allTraces = */ true,
-                               /* dumpChildProcesses = */ true);
+      new GCAndCCLogDumpRunnable(/* identifier = */ EmptyString(),
+                                 /* allTraces = */ true,
+                                 /* dumpChildProcesses = */ true);
   NS_DispatchToMainThread(runnable);
 }
 
-} // namespace
-#endif // MOZ_SUPPORTS_RT_SIGNALS }
+}  // namespace
+#endif  // MOZ_SUPPORTS_RT_SIGNALS }
 
-#if defined(MOZ_SUPPORTS_FIFO) // {
+#if defined(MOZ_SUPPORTS_FIFO)  // {
 namespace {
 
-void
-doMemoryReport(const nsCString& aInputStr)
-{
+void doMemoryReport(const nsCString& aInputStr) {
   bool minimize = aInputStr.EqualsLiteral("minimize memory report");
   LOG("FifoWatcher(command:%s) dispatching memory report runnable.",
       aInputStr.get());
   RefPtr<DumpMemoryInfoToTempDirRunnable> runnable =
-    new DumpMemoryInfoToTempDirRunnable(/* identifier = */ EmptyString(),
-                                        /* anonymize = */ false,
-                                        minimize);
+      new DumpMemoryInfoToTempDirRunnable(/* identifier = */ EmptyString(),
+                                          /* anonymize = */ false, minimize);
   NS_DispatchToMainThread(runnable);
 }
 
-void
-doGCCCDump(const nsCString& aInputStr)
-{
+void doGCCCDump(const nsCString& aInputStr) {
   bool doAllTracesGCCCDump = aInputStr.EqualsLiteral("gc log");
-  LOG("FifoWatcher(command:%s) dispatching GC/CC log runnable.", aInputStr.get());
-  RefPtr<GCAndCCLogDumpRunnable> runnable =
-    new GCAndCCLogDumpRunnable(/* identifier = */ EmptyString(),
-                               doAllTracesGCCCDump,
-                               /* dumpChildProcesses = */ true);
+  LOG("FifoWatcher(command:%s) dispatching GC/CC log runnable.",
+      aInputStr.get());
+  RefPtr<GCAndCCLogDumpRunnable> runnable = new GCAndCCLogDumpRunnable(
+      /* identifier = */ EmptyString(), doAllTracesGCCCDump,
+      /* dumpChildProcesses = */ true);
   NS_DispatchToMainThread(runnable);
 }
 
-bool
-SetupFifo()
-{
+bool SetupFifo() {
 #ifdef DEBUG
   static bool fifoCallbacksRegistered = false;
 #endif
@@ -240,15 +215,12 @@ SetupFifo()
 
   FifoWatcher* fw = FifoWatcher::GetSingleton();
   // Dump our memory reports (but run this on the main thread!).
-  fw->RegisterCallback(NS_LITERAL_CSTRING("memory report"),
-                       doMemoryReport);
+  fw->RegisterCallback(NS_LITERAL_CSTRING("memory report"), doMemoryReport);
   fw->RegisterCallback(NS_LITERAL_CSTRING("minimize memory report"),
                        doMemoryReport);
   // Dump GC and CC logs (from the main thread).
-  fw->RegisterCallback(NS_LITERAL_CSTRING("gc log"),
-                       doGCCCDump);
-  fw->RegisterCallback(NS_LITERAL_CSTRING("abbreviated gc log"),
-                       doGCCCDump);
+  fw->RegisterCallback(NS_LITERAL_CSTRING("gc log"), doGCCCDump);
+  fw->RegisterCallback(NS_LITERAL_CSTRING("abbreviated gc log"), doGCCCDump);
 
 #ifdef DEBUG
   fifoCallbacksRegistered = true;
@@ -256,9 +228,7 @@ SetupFifo()
   return true;
 }
 
-void
-OnFifoEnabledChange(const char* /*unused*/, void* /*unused*/)
-{
+void OnFifoEnabledChange(const char* /*unused*/, void* /*unused*/) {
   LOG("%s changed", FifoWatcher::kPrefName);
   if (SetupFifo()) {
     Preferences::UnregisterCallback(OnFifoEnabledChange,
@@ -266,22 +236,16 @@ OnFifoEnabledChange(const char* /*unused*/, void* /*unused*/)
   }
 }
 
-} // namespace
-#endif // MOZ_SUPPORTS_FIFO }
+}  // namespace
+#endif  // MOZ_SUPPORTS_FIFO }
 
 NS_IMPL_ISUPPORTS(nsMemoryInfoDumper, nsIMemoryInfoDumper)
 
-nsMemoryInfoDumper::nsMemoryInfoDumper()
-{
-}
+nsMemoryInfoDumper::nsMemoryInfoDumper() {}
 
-nsMemoryInfoDumper::~nsMemoryInfoDumper()
-{
-}
+nsMemoryInfoDumper::~nsMemoryInfoDumper() {}
 
-/* static */ void
-nsMemoryInfoDumper::Initialize()
-{
+/* static */ void nsMemoryInfoDumper::Initialize() {
 #if defined(MOZ_SUPPORTS_RT_SIGNALS)
   SignalPipeWatcher* sw = SignalPipeWatcher::GetSingleton();
 
@@ -302,15 +266,12 @@ nsMemoryInfoDumper::Initialize()
     //     set to enable the fifo watcher that has not been loaded yet. Register
     //     to attempt to initialize if the fifo watcher becomes enabled by
     //     a user pref.
-    Preferences::RegisterCallback(OnFifoEnabledChange,
-                                  FifoWatcher::kPrefName);
+    Preferences::RegisterCallback(OnFifoEnabledChange, FifoWatcher::kPrefName);
   }
 #endif
 }
 
-static void
-EnsureNonEmptyIdentifier(nsAString& aIdentifier)
-{
+static void EnsureNonEmptyIdentifier(nsAString& aIdentifier) {
   if (!aIdentifier.IsEmpty()) {
     return;
   }
@@ -326,31 +287,22 @@ EnsureNonEmptyIdentifier(nsAString& aIdentifier)
 // (remote dump actors or the |DumpGCAndCCLogsToFile| activation itself)
 // have gone away.
 class nsDumpGCAndCCLogsCallbackHolder final
-  : public nsIDumpGCAndCCLogsCallback
-{
-public:
+    : public nsIDumpGCAndCCLogsCallback {
+ public:
   NS_DECL_ISUPPORTS
 
-  explicit nsDumpGCAndCCLogsCallbackHolder(nsIDumpGCAndCCLogsCallback* aCallback)
-    : mCallback(aCallback)
-  {
-  }
+  explicit nsDumpGCAndCCLogsCallbackHolder(
+      nsIDumpGCAndCCLogsCallback* aCallback)
+      : mCallback(aCallback) {}
 
-  NS_IMETHOD OnFinish() override
-  {
-    return NS_ERROR_UNEXPECTED;
-  }
+  NS_IMETHOD OnFinish() override { return NS_ERROR_UNEXPECTED; }
 
-  NS_IMETHOD OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent) override
-  {
+  NS_IMETHOD OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent) override {
     return mCallback->OnDump(aGCLog, aCCLog, aIsParent);
   }
 
-private:
-  ~nsDumpGCAndCCLogsCallbackHolder()
-  {
-    Unused << mCallback->OnFinish();
-  }
+ private:
+  ~nsDumpGCAndCCLogsCallbackHolder() { Unused << mCallback->OnFinish(); }
 
   nsCOMPtr<nsIDumpGCAndCCLogsCallback> mCallback;
 };
@@ -358,15 +310,13 @@ private:
 NS_IMPL_ISUPPORTS(nsDumpGCAndCCLogsCallbackHolder, nsIDumpGCAndCCLogsCallback)
 
 NS_IMETHODIMP
-nsMemoryInfoDumper::DumpGCAndCCLogsToFile(const nsAString& aIdentifier,
-                                          bool aDumpAllTraces,
-                                          bool aDumpChildProcesses,
-                                          nsIDumpGCAndCCLogsCallback* aCallback)
-{
+nsMemoryInfoDumper::DumpGCAndCCLogsToFile(
+    const nsAString& aIdentifier, bool aDumpAllTraces, bool aDumpChildProcesses,
+    nsIDumpGCAndCCLogsCallback* aCallback) {
   nsString identifier(aIdentifier);
   EnsureNonEmptyIdentifier(identifier);
   nsCOMPtr<nsIDumpGCAndCCLogsCallback> callbackHolder =
-    new nsDumpGCAndCCLogsCallbackHolder(aCallback);
+      new nsDumpGCAndCCLogsCallbackHolder(aCallback);
 
   if (aDumpChildProcesses) {
     nsTArray<ContentParent*> children;
@@ -374,7 +324,7 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToFile(const nsAString& aIdentifier,
     for (uint32_t i = 0; i < children.Length(); i++) {
       ContentParent* cp = children[i];
       nsCOMPtr<nsICycleCollectorLogSink> logSink =
-        nsCycleCollector_createLogSink();
+          nsCycleCollector_createLogSink();
 
       logSink->SetFilenameIdentifier(identifier);
       logSink->SetProcessIdentifier(cp->Pid());
@@ -409,8 +359,7 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToFile(const nsAString& aIdentifier,
 
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpGCAndCCLogsToSink(bool aDumpAllTraces,
-                                          nsICycleCollectorLogSink* aSink)
-{
+                                          nsICycleCollectorLogSink* aSink) {
   nsCOMPtr<nsICycleCollectorListener> logger = nsCycleCollector_createLogger();
 
   if (aDumpAllTraces) {
@@ -426,29 +375,22 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToSink(bool aDumpAllTraces,
   return NS_OK;
 }
 
-static void
-MakeFilename(const char* aPrefix, const nsAString& aIdentifier,
-             int aPid, const char* aSuffix, nsACString& aResult)
-{
-  aResult = nsPrintfCString("%s-%s-%d.%s",
-                            aPrefix,
-                            NS_ConvertUTF16toUTF8(aIdentifier).get(),
-                            aPid, aSuffix);
+static void MakeFilename(const char* aPrefix, const nsAString& aIdentifier,
+                         int aPid, const char* aSuffix, nsACString& aResult) {
+  aResult =
+      nsPrintfCString("%s-%s-%d.%s", aPrefix,
+                      NS_ConvertUTF16toUTF8(aIdentifier).get(), aPid, aSuffix);
 }
 
 // This class wraps GZFileWriter so it can be used with JSONWriter, overcoming
 // the following two problems:
 // - It provides a JSONWriterFunc::Write() that calls nsGZFileWriter::Write().
 // - It can be stored as a UniquePtr, whereas nsGZFileWriter is refcounted.
-class GZWriterWrapper : public JSONWriteFunc
-{
-public:
-  explicit GZWriterWrapper(nsGZFileWriter* aGZWriter)
-    : mGZWriter(aGZWriter)
-  {}
+class GZWriterWrapper : public JSONWriteFunc {
+ public:
+  explicit GZWriterWrapper(nsGZFileWriter* aGZWriter) : mGZWriter(aGZWriter) {}
 
-  void Write(const char* aStr) override
-  {
+  void Write(const char* aStr) override {
     // Ignore any failure because JSONWriteFunc doesn't have a mechanism for
     // handling errors.
     Unused << mGZWriter->Write(aStr);
@@ -456,7 +398,7 @@ public:
 
   nsresult Finish() { return mGZWriter->Finish(); }
 
-private:
+ private:
   RefPtr<nsGZFileWriter> mGZWriter;
 };
 
@@ -464,26 +406,23 @@ private:
 // the end of reporting. Both the callbacks need access to the same JSONWriter,
 // so we implement both of them in this one class.
 class HandleReportAndFinishReportingCallbacks final
-  : public nsIHandleReportCallback, public nsIFinishReportingCallback
-{
-public:
+    : public nsIHandleReportCallback,
+      public nsIFinishReportingCallback {
+ public:
   NS_DECL_ISUPPORTS
 
-  HandleReportAndFinishReportingCallbacks(UniquePtr<JSONWriter> aWriter,
-                                          nsIFinishDumpingCallback* aFinishDumping,
-                                          nsISupports* aFinishDumpingData)
-    : mWriter(std::move(aWriter))
-    , mFinishDumping(aFinishDumping)
-    , mFinishDumpingData(aFinishDumpingData)
-  {
-  }
+  HandleReportAndFinishReportingCallbacks(
+      UniquePtr<JSONWriter> aWriter, nsIFinishDumpingCallback* aFinishDumping,
+      nsISupports* aFinishDumpingData)
+      : mWriter(std::move(aWriter)),
+        mFinishDumping(aFinishDumping),
+        mFinishDumpingData(aFinishDumpingData) {}
 
   // This is the callback for nsIHandleReportCallback.
   NS_IMETHOD Callback(const nsACString& aProcess, const nsACString& aPath,
                       int32_t aKind, int32_t aUnits, int64_t aAmount,
                       const nsACString& aDescription,
-                      nsISupports* aData) override
-  {
+                      nsISupports* aData) override {
     nsAutoCString process;
     if (aProcess.IsEmpty()) {
       // If the process is empty, the report originated with the process doing
@@ -522,8 +461,7 @@ public:
   }
 
   // This is the callback for nsIFinishReportingCallback.
-  NS_IMETHOD Callback(nsISupports* aData) override
-  {
+  NS_IMETHOD Callback(nsISupports* aData) override {
     mWriter->EndArray();  // end of "reports" array
     mWriter->End();
 
@@ -542,7 +480,7 @@ public:
     return mFinishDumping->Callback(mFinishDumpingData);
   }
 
-private:
+ private:
   ~HandleReportAndFinishReportingCallbacks() {}
 
   UniquePtr<JSONWriter> mWriter;
@@ -553,20 +491,16 @@ private:
 NS_IMPL_ISUPPORTS(HandleReportAndFinishReportingCallbacks,
                   nsIHandleReportCallback, nsIFinishReportingCallback)
 
-class TempDirFinishCallback final : public nsIFinishDumpingCallback
-{
-public:
+class TempDirFinishCallback final : public nsIFinishDumpingCallback {
+ public:
   NS_DECL_ISUPPORTS
 
   TempDirFinishCallback(nsIFile* aReportsTmpFile,
                         const nsCString& aReportsFinalFilename)
-    : mReportsTmpFile(aReportsTmpFile)
-    , mReportsFilename(aReportsFinalFilename)
-  {
-  }
+      : mReportsTmpFile(aReportsTmpFile),
+        mReportsFilename(aReportsFinalFilename) {}
 
-  NS_IMETHOD Callback(nsISupports* aData) override
-  {
+  NS_IMETHOD Callback(nsISupports* aData) override {
     // Rename the memory reports file, now that we're done writing all the
     // files. Its final name is "memory-report<-identifier>-<pid>.json.gz".
 
@@ -577,12 +511,12 @@ public:
       return rv;
     }
 
-  #ifdef ANDROID
+#ifdef ANDROID
     rv = reportsFinalFile->AppendNative(NS_LITERAL_CSTRING("memory-reports"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  #endif
+#endif
 
     rv = reportsFinalFile->AppendNative(mReportsFilename);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -600,8 +534,7 @@ public:
       return rv;
     }
 
-    rv = mReportsTmpFile->MoveTo(/* directory */ nullptr,
-                                 reportsFinalFilename);
+    rv = mReportsTmpFile->MoveTo(/* directory */ nullptr, reportsFinalFilename);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -609,7 +542,7 @@ public:
     // Write a message to the console.
 
     nsCOMPtr<nsIConsoleService> cs =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -625,7 +558,7 @@ public:
     return cs->LogStringMessage(msg.get());
   }
 
-private:
+ private:
   ~TempDirFinishCallback() {}
 
   nsCOMPtr<nsIFile> mReportsTmpFile;
@@ -634,25 +567,21 @@ private:
 
 NS_IMPL_ISUPPORTS(TempDirFinishCallback, nsIFinishDumpingCallback)
 
-static nsresult
-DumpMemoryInfoToFile(
-  nsIFile* aReportsFile,
-  nsIFinishDumpingCallback* aFinishDumping,
-  nsISupports* aFinishDumpingData,
-  bool aAnonymize,
-  bool aMinimizeMemoryUsage,
-  nsAString& aDMDIdentifier)
-{
+static nsresult DumpMemoryInfoToFile(nsIFile* aReportsFile,
+                                     nsIFinishDumpingCallback* aFinishDumping,
+                                     nsISupports* aFinishDumpingData,
+                                     bool aAnonymize, bool aMinimizeMemoryUsage,
+                                     nsAString& aDMDIdentifier) {
   RefPtr<nsGZFileWriter> gzWriter = new nsGZFileWriter();
   nsresult rv = gzWriter->Init(aReportsFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   auto jsonWriter =
-    MakeUnique<JSONWriter>(MakeUnique<GZWriterWrapper>(gzWriter));
+      MakeUnique<JSONWriter>(MakeUnique<GZWriterWrapper>(gzWriter));
 
   nsCOMPtr<nsIMemoryReporterManager> mgr =
-    do_GetService("@mozilla.org/memory-reporter-manager;1");
+      do_GetService("@mozilla.org/memory-reporter-manager;1");
 
   // This is the first write to the file, and it causes |aWriter| to allocate
   // over 200 KiB of memory.
@@ -666,25 +595,19 @@ DumpMemoryInfoToFile(
   }
 
   RefPtr<HandleReportAndFinishReportingCallbacks>
-    handleReportAndFinishReporting =
-      new HandleReportAndFinishReportingCallbacks(std::move(jsonWriter),
-                                                  aFinishDumping,
-                                                  aFinishDumpingData);
-  rv = mgr->GetReportsExtended(handleReportAndFinishReporting, nullptr,
-                               handleReportAndFinishReporting, nullptr,
-                               aAnonymize,
-                               aMinimizeMemoryUsage,
-                               aDMDIdentifier);
+      handleReportAndFinishReporting =
+          new HandleReportAndFinishReportingCallbacks(
+              std::move(jsonWriter), aFinishDumping, aFinishDumpingData);
+  rv = mgr->GetReportsExtended(
+      handleReportAndFinishReporting, nullptr, handleReportAndFinishReporting,
+      nullptr, aAnonymize, aMinimizeMemoryUsage, aDMDIdentifier);
   return rv;
 }
 
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
-  const nsAString& aFilename,
-  nsIFinishDumpingCallback* aFinishDumping,
-  nsISupports* aFinishDumpingData,
-  bool aAnonymize)
-{
+    const nsAString& aFilename, nsIFinishDumpingCallback* aFinishDumping,
+    nsISupports* aFinishDumpingData, bool aAnonymize) {
   MOZ_ASSERT(!aFilename.IsEmpty());
 
   // Create the file.
@@ -722,8 +645,7 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
                                             bool aAnonymize,
-                                            bool aMinimizeMemoryUsage)
-{
+                                            bool aMinimizeMemoryUsage) {
   nsString identifier(aIdentifier);
   EnsureNonEmptyIdentifier(identifier);
 
@@ -752,16 +674,15 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
   // In Android case, this function will open a file named aFilename under
   // specific folder (/data/local/tmp/memory-reports). Otherwise, it will
   // open a file named aFilename under "NS_OS_TEMP_DIR".
-  rv = nsDumpUtils::OpenTempFile(NS_LITERAL_CSTRING("incomplete-") +
-                                 reportsFinalFilename,
-                                 getter_AddRefs(reportsTmpFile),
-                                 NS_LITERAL_CSTRING("memory-reports"));
+  rv = nsDumpUtils::OpenTempFile(
+      NS_LITERAL_CSTRING("incomplete-") + reportsFinalFilename,
+      getter_AddRefs(reportsTmpFile), NS_LITERAL_CSTRING("memory-reports"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   RefPtr<TempDirFinishCallback> finishDumping =
-    new TempDirFinishCallback(reportsTmpFile, reportsFinalFilename);
+      new TempDirFinishCallback(reportsTmpFile, reportsFinalFilename);
 
   return DumpMemoryInfoToFile(reportsTmpFile, finishDumping, nullptr,
                               aAnonymize, aMinimizeMemoryUsage, identifier);
@@ -770,10 +691,8 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
 #ifdef MOZ_DMD
 dmd::DMDFuncs::Singleton dmd::DMDFuncs::sSingleton;
 
-nsresult
-nsMemoryInfoDumper::OpenDMDFile(const nsAString& aIdentifier, int aPid,
-                                FILE** aOutFile)
-{
+nsresult nsMemoryInfoDumper::OpenDMDFile(const nsAString& aIdentifier, int aPid,
+                                         FILE** aOutFile) {
   if (!dmd::IsRunning()) {
     *aOutFile = nullptr;
     return NS_OK;
@@ -791,8 +710,7 @@ nsMemoryInfoDumper::OpenDMDFile(const nsAString& aIdentifier, int aPid,
 
   nsresult rv;
   nsCOMPtr<nsIFile> dmdFile;
-  rv = nsDumpUtils::OpenTempFile(dmdFilename,
-                                 getter_AddRefs(dmdFile),
+  rv = nsDumpUtils::OpenTempFile(dmdFilename, getter_AddRefs(dmdFile),
                                  NS_LITERAL_CSTRING("memory-reports"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -801,15 +719,12 @@ nsMemoryInfoDumper::OpenDMDFile(const nsAString& aIdentifier, int aPid,
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "OpenANSIFileDesc failed");
 
   // Print the path, because on some platforms (e.g. Mac) it's not obvious.
-  dmd::StatusMsg("opened %s for writing\n",
-                 dmdFile->HumanReadablePath().get());
+  dmd::StatusMsg("opened %s for writing\n", dmdFile->HumanReadablePath().get());
 
   return rv;
 }
 
-nsresult
-nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
-{
+nsresult nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile) {
   RefPtr<nsGZFileWriter> gzWriter = new nsGZFileWriter();
   nsresult rv = gzWriter->InitANSIFileDesc(aFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -824,4 +739,3 @@ nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
   return rv;
 }
 #endif  // MOZ_DMD
-

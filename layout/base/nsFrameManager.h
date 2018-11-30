@@ -29,15 +29,12 @@ class nsWindowSizes;
  * FIXME(emilio): The comment above doesn't make any sense, there's no "frame
  * model lock" of any sort afaict.
  */
-class nsFrameManager
-{
+class nsFrameManager {
   typedef mozilla::layout::FrameChildListID ChildListID;
 
-public:
+ public:
   explicit nsFrameManager(nsIPresShell* aPresShell)
-    : mPresShell(aPresShell)
-    , mRootFrame(nullptr)
-  {
+      : mPresShell(aPresShell), mRootFrame(nullptr) {
     MOZ_ASSERT(mPresShell, "need a pres shell");
   }
   ~nsFrameManager();
@@ -48,8 +45,7 @@ public:
    * destroyed, it destroys the entire frame hierarchy.
    */
   nsIFrame* GetRootFrame() const { return mRootFrame; }
-  void SetRootFrame(nsIFrame* aRootFrame)
-  {
+  void SetRootFrame(nsIFrame* aRootFrame) {
     NS_ASSERTION(!mRootFrame, "already have a root frame");
     mRootFrame = aRootFrame;
   }
@@ -62,14 +58,11 @@ public:
   void Destroy();
 
   // Functions for manipulating the frame model
-  void AppendFrames(nsContainerFrame* aParentFrame,
-                    ChildListID aListID,
+  void AppendFrames(nsContainerFrame* aParentFrame, ChildListID aListID,
                     nsFrameList& aFrameList);
 
-  void InsertFrames(nsContainerFrame* aParentFrame,
-                    ChildListID aListID,
-                    nsIFrame* aPrevFrame,
-                    nsFrameList& aFrameList);
+  void InsertFrames(nsContainerFrame* aParentFrame, ChildListID aListID,
+                    nsIFrame* aPrevFrame, nsFrameList& aFrameList);
 
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame);
 
@@ -95,7 +88,7 @@ public:
 
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
-protected:
+ protected:
   // weak link, because the pres shell owns us
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
   nsIFrame* mRootFrame;

@@ -19,19 +19,13 @@ namespace widget {
 
 NS_IMPL_ISUPPORTS(ScreenManager, nsIScreenManager)
 
-ScreenManager::ScreenManager()
-{
-}
+ScreenManager::ScreenManager() {}
 
-ScreenManager::~ScreenManager()
-{
-}
+ScreenManager::~ScreenManager() {}
 
 static StaticRefPtr<ScreenManager> sSingleton;
 
-ScreenManager&
-ScreenManager::GetSingleton()
-{
+ScreenManager& ScreenManager::GetSingleton() {
   if (!sSingleton) {
     sSingleton = new ScreenManager();
     ClearOnShutdown(&sSingleton);
@@ -39,22 +33,16 @@ ScreenManager::GetSingleton()
   return *sSingleton;
 }
 
-already_AddRefed<ScreenManager>
-ScreenManager::GetAddRefedSingleton()
-{
+already_AddRefed<ScreenManager> ScreenManager::GetAddRefedSingleton() {
   RefPtr<ScreenManager> sm = &GetSingleton();
   return sm.forget();
 }
 
-void
-ScreenManager::SetHelper(UniquePtr<Helper> aHelper)
-{
+void ScreenManager::SetHelper(UniquePtr<Helper> aHelper) {
   mHelper = std::move(aHelper);
 }
 
-void
-ScreenManager::Refresh(nsTArray<RefPtr<Screen>>&& aScreens)
-{
+void ScreenManager::Refresh(nsTArray<RefPtr<Screen>>&& aScreens) {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refresh screens"));
 
   mScreenList = std::move(aScreens);
@@ -62,9 +50,7 @@ ScreenManager::Refresh(nsTArray<RefPtr<Screen>>&& aScreens)
   CopyScreensToAllRemotesIfIsParent();
 }
 
-void
-ScreenManager::Refresh(nsTArray<mozilla::dom::ScreenDetails>&& aScreens)
-{
+void ScreenManager::Refresh(nsTArray<mozilla::dom::ScreenDetails>&& aScreens) {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refresh screens from IPC"));
 
   mScreenList.Clear();
@@ -75,16 +61,15 @@ ScreenManager::Refresh(nsTArray<mozilla::dom::ScreenDetails>&& aScreens)
   CopyScreensToAllRemotesIfIsParent();
 }
 
-template<class Range>
-void
-ScreenManager::CopyScreensToRemoteRange(Range aRemoteRange)
-{
+template <class Range>
+void ScreenManager::CopyScreensToRemoteRange(Range aRemoteRange) {
   AutoTArray<dom::ScreenDetails, 4> screens;
   for (auto& screen : mScreenList) {
     screens.AppendElement(screen->ToScreenDetails());
   }
   for (auto cp : aRemoteRange) {
-    MOZ_LOG(sScreenLog, LogLevel::Debug, ("Send screens to [Pid %d]", cp->Pid()));
+    MOZ_LOG(sScreenLog, LogLevel::Debug,
+            ("Send screens to [Pid %d]", cp->Pid()));
     if (!cp->SendRefreshScreens(screens)) {
       MOZ_LOG(sScreenLog, LogLevel::Error,
               ("SendRefreshScreens to [Pid %d] failed", cp->Pid()));
@@ -92,26 +77,23 @@ ScreenManager::CopyScreensToRemoteRange(Range aRemoteRange)
   }
 }
 
-void
-ScreenManager::CopyScreensToRemote(dom::ContentParent* aContentParent)
-{
+void ScreenManager::CopyScreensToRemote(dom::ContentParent* aContentParent) {
   MOZ_ASSERT(aContentParent);
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  auto range = { aContentParent };
+  auto range = {aContentParent};
   CopyScreensToRemoteRange(range);
 }
 
-void
-ScreenManager::CopyScreensToAllRemotesIfIsParent()
-{
+void ScreenManager::CopyScreensToAllRemotesIfIsParent() {
   if (XRE_IsContentProcess()) {
     return;
   }
 
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refreshing all ContentParents"));
 
-  CopyScreensToRemoteRange(dom::ContentParent::AllProcesses(dom::ContentParent::eLive));
+  CopyScreensToRemoteRange(
+      dom::ContentParent::AllProcesses(dom::ContentParent::eLive));
 }
 
 // Returns the screen that contains the rectangle. If the rect overlaps
@@ -120,18 +102,14 @@ ScreenManager::CopyScreensToAllRemotesIfIsParent()
 // The coordinates are in desktop pixels.
 //
 NS_IMETHODIMP
-ScreenManager::ScreenForRect(int32_t aX, int32_t aY,
-                             int32_t aWidth, int32_t aHeight,
-                             nsIScreen** aOutScreen)
-{
+ScreenManager::ScreenForRect(int32_t aX, int32_t aY, int32_t aWidth,
+                             int32_t aHeight, nsIScreen** aOutScreen) {
   if (mScreenList.IsEmpty()) {
     MOZ_LOG(sScreenLog, LogLevel::Warning,
             ("No screen available. This can happen in xpcshell."));
-    RefPtr<Screen> ret = new Screen(LayoutDeviceIntRect(), LayoutDeviceIntRect(),
-                                    0, 0,
-                                    DesktopToLayoutDeviceScale(),
-                                    CSSToLayoutDeviceScale(),
-                                    96 /* dpi */);
+    RefPtr<Screen> ret = new Screen(
+        LayoutDeviceIntRect(), LayoutDeviceIntRect(), 0, 0,
+        DesktopToLayoutDeviceScale(), CSSToLayoutDeviceScale(), 96 /* dpi */);
     ret.forget(aOutScreen);
     return NS_OK;
   }
@@ -150,7 +128,7 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY,
   uint32_t area = 0;
   DesktopIntRect windowRect(aX, aY, aWidth, aHeight);
   for (auto& screen : mScreenList) {
-    int32_t  x, y, width, height;
+    int32_t x, y, width, height;
     x = y = width = height = 0;
     screen->GetRectDisplayPix(&x, &y, &width, &height);
     // calculate the surface area
@@ -175,7 +153,7 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY,
   // a screen that is nearest to the rect.
   uint32_t distance = UINT32_MAX;
   for (auto& screen : mScreenList) {
-    int32_t  x, y, width, height;
+    int32_t x, y, width, height;
     x = y = width = height = 0;
     screen->GetRectDisplayPix(&x, &y, &width, &height);
 
@@ -212,16 +190,13 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY,
 // often.
 //
 NS_IMETHODIMP
-ScreenManager::GetPrimaryScreen(nsIScreen** aPrimaryScreen)
-{
+ScreenManager::GetPrimaryScreen(nsIScreen** aPrimaryScreen) {
   if (mScreenList.IsEmpty()) {
     MOZ_LOG(sScreenLog, LogLevel::Warning,
             ("No screen available. This can happen in xpcshell."));
-    RefPtr<Screen> ret = new Screen(LayoutDeviceIntRect(), LayoutDeviceIntRect(),
-                                    0, 0,
-                                    DesktopToLayoutDeviceScale(),
-                                    CSSToLayoutDeviceScale(),
-                                    96 /* dpi */);
+    RefPtr<Screen> ret = new Screen(
+        LayoutDeviceIntRect(), LayoutDeviceIntRect(), 0, 0,
+        DesktopToLayoutDeviceScale(), CSSToLayoutDeviceScale(), 96 /* dpi */);
     ret.forget(aPrimaryScreen);
     return NS_OK;
   }
@@ -231,5 +206,5 @@ ScreenManager::GetPrimaryScreen(nsIScreen** aPrimaryScreen)
   return NS_OK;
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

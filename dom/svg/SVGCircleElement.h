@@ -10,30 +10,33 @@
 #include "SVGGeometryElement.h"
 #include "nsSVGLength2.h"
 
-nsresult NS_NewSVGCircleElement(nsIContent **aResult,
-                                already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGCircleElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
 typedef SVGGeometryElement SVGCircleElementBase;
 
-class SVGCircleElement final : public SVGCircleElementBase
-{
-protected:
-  explicit SVGCircleElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
-  friend nsresult (::NS_NewSVGCircleElement(nsIContent **aResult,
-                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+class SVGCircleElement final : public SVGCircleElementBase {
+ protected:
+  explicit SVGCircleElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  virtual JSObject* WrapNode(JSContext* cx,
+                             JS::Handle<JSObject*> aGivenProto) override;
+  friend nsresult(::NS_NewSVGCircleElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-public:
+ public:
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
   // SVGGeometryElement methods:
-  virtual bool GetGeometryBounds(Rect* aBounds, const StrokeOptions& aStrokeOptions,
-                                 const Matrix& aToBoundsSpace,
-                                 const Matrix* aToNonScalingStrokeSpace = nullptr) override;
+  virtual bool GetGeometryBounds(
+      Rect* aBounds, const StrokeOptions& aStrokeOptions,
+      const Matrix& aToBoundsSpace,
+      const Matrix* aToNonScalingStrokeSpace = nullptr) override;
   virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
@@ -43,8 +46,7 @@ public:
   already_AddRefed<SVGAnimatedLength> Cy();
   already_AddRefed<SVGAnimatedLength> R();
 
-protected:
-
+ protected:
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_CX, ATTR_CY, ATTR_R };
@@ -52,7 +54,7 @@ protected:
   static LengthInfo sLengthInfo[3];
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGCircleElement_h
+#endif  // mozilla_dom_SVGCircleElement_h

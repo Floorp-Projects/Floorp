@@ -28,53 +28,46 @@ enum nsFrameState : nsFrameState_size_t {
 #undef FRAME_STATE_BIT
 };
 
-inline nsFrameState operator|(nsFrameState aLeft, nsFrameState aRight)
-{
+inline nsFrameState operator|(nsFrameState aLeft, nsFrameState aRight) {
   return nsFrameState(nsFrameState_size_t(aLeft) | nsFrameState_size_t(aRight));
 }
 
-inline nsFrameState operator&(nsFrameState aLeft, nsFrameState aRight)
-{
+inline nsFrameState operator&(nsFrameState aLeft, nsFrameState aRight) {
   return nsFrameState(nsFrameState_size_t(aLeft) & nsFrameState_size_t(aRight));
 }
 
-inline nsFrameState& operator|=(nsFrameState& aLeft, nsFrameState aRight)
-{
+inline nsFrameState& operator|=(nsFrameState& aLeft, nsFrameState aRight) {
   aLeft = aLeft | aRight;
   return aLeft;
 }
 
-inline nsFrameState& operator&=(nsFrameState& aLeft, nsFrameState aRight)
-{
+inline nsFrameState& operator&=(nsFrameState& aLeft, nsFrameState aRight) {
   aLeft = aLeft & aRight;
   return aLeft;
 }
 
-inline nsFrameState operator~(nsFrameState aRight)
-{
+inline nsFrameState operator~(nsFrameState aRight) {
   return nsFrameState(~nsFrameState_size_t(aRight));
 }
 
-inline nsFrameState operator^(nsFrameState aLeft, nsFrameState aRight)
-{
+inline nsFrameState operator^(nsFrameState aLeft, nsFrameState aRight) {
   return nsFrameState(nsFrameState_size_t(aLeft) ^ nsFrameState_size_t(aRight));
 }
 
-inline nsFrameState& operator^=(nsFrameState& aLeft, nsFrameState aRight)
-{
+inline nsFrameState& operator^=(nsFrameState& aLeft, nsFrameState aRight) {
   aLeft = aLeft ^ aRight;
   return aLeft;
 }
 
 // Bits 20-31 and 60-63 of the frame state are reserved for implementations.
-#define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xF0000000FFF00000)
-#define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
+#define NS_FRAME_IMPL_RESERVED nsFrameState(0xF0000000FFF00000)
+#define NS_FRAME_RESERVED ~NS_FRAME_IMPL_RESERVED
 
 namespace mozilla {
 #ifdef DEBUG
 nsCString GetFrameState(nsIFrame* aFrame);
 void PrintFrameState(nsIFrame* aFrame);
 #endif
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* nsFrameState_h_ */

@@ -12,8 +12,7 @@
 // Public methods
 
 nsSMILValue::nsSMILValue(const nsISMILType* aType)
-  : mType(nsSMILNullType::Singleton())
-{
+    : mType(nsSMILNullType::Singleton()) {
   mU.mBool = false;
   if (!aType) {
     NS_ERROR("Trying to construct nsSMILValue with null mType pointer");
@@ -24,17 +23,13 @@ nsSMILValue::nsSMILValue(const nsISMILType* aType)
 }
 
 nsSMILValue::nsSMILValue(const nsSMILValue& aVal)
-  : mType(nsSMILNullType::Singleton())
-{
+    : mType(nsSMILNullType::Singleton()) {
   InitAndCheckPostcondition(aVal.mType);
   mType->Assign(*this, aVal);
 }
 
-const nsSMILValue&
-nsSMILValue::operator=(const nsSMILValue& aVal)
-{
-  if (&aVal == this)
-    return *this;
+const nsSMILValue& nsSMILValue::operator=(const nsSMILValue& aVal) {
+  if (&aVal == this) return *this;
 
   if (mType != aVal.mType) {
     DestroyAndReinit(aVal.mType);
@@ -47,17 +42,15 @@ nsSMILValue::operator=(const nsSMILValue& aVal)
 
 // Move constructor / reassignment operator:
 nsSMILValue::nsSMILValue(nsSMILValue&& aVal)
-  : mU(aVal.mU), // Copying union is only OK because we clear aVal.mType below.
-    mType(aVal.mType)
-{
+    : mU(aVal.mU),  // Copying union is only OK because we clear aVal.mType
+                    // below.
+      mType(aVal.mType) {
   // Leave aVal with a null type, so that it's safely destructible (and won't
   // mess with anything referenced by its union, which we've copied).
   aVal.mType = nsSMILNullType::Singleton();
 }
 
-nsSMILValue&
-nsSMILValue::operator=(nsSMILValue&& aVal)
-{
+nsSMILValue& nsSMILValue::operator=(nsSMILValue&& aVal) {
   if (!IsNull()) {
     // Clean up any data we're currently tracking.
     DestroyAndCheckPostcondition();
@@ -74,18 +67,13 @@ nsSMILValue::operator=(nsSMILValue&& aVal)
   return *this;
 }
 
-bool
-nsSMILValue::operator==(const nsSMILValue& aVal) const
-{
-  if (&aVal == this)
-    return true;
+bool nsSMILValue::operator==(const nsSMILValue& aVal) const {
+  if (&aVal == this) return true;
 
   return mType == aVal.mType && mType->IsEqual(*this, aVal);
 }
 
-nsresult
-nsSMILValue::Add(const nsSMILValue& aValueToAdd, uint32_t aCount)
-{
+nsresult nsSMILValue::Add(const nsSMILValue& aValueToAdd, uint32_t aCount) {
   if (aValueToAdd.mType != mType) {
     NS_ERROR("Trying to add incompatible types");
     return NS_ERROR_FAILURE;
@@ -94,9 +82,7 @@ nsSMILValue::Add(const nsSMILValue& aValueToAdd, uint32_t aCount)
   return mType->Add(*this, aValueToAdd, aCount);
 }
 
-nsresult
-nsSMILValue::SandwichAdd(const nsSMILValue& aValueToAdd)
-{
+nsresult nsSMILValue::SandwichAdd(const nsSMILValue& aValueToAdd) {
   if (aValueToAdd.mType != mType) {
     NS_ERROR("Trying to add incompatible types");
     return NS_ERROR_FAILURE;
@@ -105,9 +91,8 @@ nsSMILValue::SandwichAdd(const nsSMILValue& aValueToAdd)
   return mType->SandwichAdd(*this, aValueToAdd);
 }
 
-nsresult
-nsSMILValue::ComputeDistance(const nsSMILValue& aTo, double& aDistance) const
-{
+nsresult nsSMILValue::ComputeDistance(const nsSMILValue& aTo,
+                                      double& aDistance) const {
   if (aTo.mType != mType) {
     NS_ERROR("Trying to calculate distance between incompatible types");
     return NS_ERROR_FAILURE;
@@ -116,11 +101,9 @@ nsSMILValue::ComputeDistance(const nsSMILValue& aTo, double& aDistance) const
   return mType->ComputeDistance(*this, aTo, aDistance);
 }
 
-nsresult
-nsSMILValue::Interpolate(const nsSMILValue& aEndVal,
-                         double aUnitDistance,
-                         nsSMILValue& aResult) const
-{
+nsresult nsSMILValue::Interpolate(const nsSMILValue& aEndVal,
+                                  double aUnitDistance,
+                                  nsSMILValue& aResult) const {
   if (aEndVal.mType != mType) {
     NS_ERROR("Trying to interpolate between incompatible types");
     return NS_ERROR_FAILURE;
@@ -138,26 +121,20 @@ nsSMILValue::Interpolate(const nsSMILValue& aEndVal,
 // Helper methods
 
 // Wrappers for nsISMILType::Init & ::Destroy that verify their postconditions
-void
-nsSMILValue::InitAndCheckPostcondition(const nsISMILType* aNewType)
-{
+void nsSMILValue::InitAndCheckPostcondition(const nsISMILType* aNewType) {
   aNewType->Init(*this);
   MOZ_ASSERT(mType == aNewType,
              "Post-condition of Init failed. nsSMILValue is invalid");
 }
 
-void
-nsSMILValue::DestroyAndCheckPostcondition()
-{
+void nsSMILValue::DestroyAndCheckPostcondition() {
   mType->Destroy(*this);
   MOZ_ASSERT(IsNull(),
              "Post-condition of Destroy failed. "
              "nsSMILValue not null after destroying");
 }
 
-void
-nsSMILValue::DestroyAndReinit(const nsISMILType* aNewType)
-{
+void nsSMILValue::DestroyAndReinit(const nsISMILType* aNewType) {
   DestroyAndCheckPostcondition();
   InitAndCheckPostcondition(aNewType);
 }

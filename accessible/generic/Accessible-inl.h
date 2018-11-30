@@ -18,9 +18,7 @@
 namespace mozilla {
 namespace a11y {
 
-inline mozilla::a11y::role
-Accessible::Role() const
-{
+inline mozilla::a11y::role Accessible::Role() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole)
     return ARIATransformRole(NativeRole());
@@ -28,35 +26,25 @@ Accessible::Role() const
   return ARIATransformRole(roleMapEntry->role);
 }
 
-inline bool
-Accessible::HasARIARole() const
-{
+inline bool Accessible::HasARIARole() const {
   return mRoleMapEntryIndex != aria::NO_ROLE_MAP_ENTRY_INDEX;
 }
 
-inline bool
-Accessible::IsARIARole(nsAtom* aARIARole) const
-{
+inline bool Accessible::IsARIARole(nsAtom* aARIARole) const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return roleMapEntry && roleMapEntry->Is(aARIARole);
 }
 
-inline bool
-Accessible::HasStrongARIARole() const
-{
+inline bool Accessible::HasStrongARIARole() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return roleMapEntry && roleMapEntry->roleRule == kUseMapRole;
 }
 
-inline const nsRoleMapEntry*
-Accessible::ARIARoleMap() const
-{
+inline const nsRoleMapEntry* Accessible::ARIARoleMap() const {
   return aria::GetRoleMapFromIndex(mRoleMapEntryIndex);
 }
 
-inline mozilla::a11y::role
-Accessible::ARIARole()
-{
+inline mozilla::a11y::role Accessible::ARIARole() {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole)
     return mozilla::a11y::roles::NOTHING;
@@ -64,39 +52,29 @@ Accessible::ARIARole()
   return ARIATransformRole(roleMapEntry->role);
 }
 
-inline void
-Accessible::SetRoleMapEntry(const nsRoleMapEntry* aRoleMapEntry)
-{
+inline void Accessible::SetRoleMapEntry(const nsRoleMapEntry* aRoleMapEntry) {
   mRoleMapEntryIndex = aria::GetIndexFromRoleMap(aRoleMapEntry);
 }
 
-inline bool
-Accessible::IsSearchbox() const
-{
+inline bool Accessible::IsSearchbox() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return (roleMapEntry && roleMapEntry->Is(nsGkAtoms::searchbox)) ||
-    (mContent->IsHTMLElement(nsGkAtoms::input) &&
-     mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                        nsGkAtoms::search, eCaseMatters));
+         (mContent->IsHTMLElement(nsGkAtoms::input) &&
+          mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                             nsGkAtoms::search, eCaseMatters));
 }
 
-inline bool
-Accessible::HasGenericType(AccGenericType aType) const
-{
+inline bool Accessible::HasGenericType(AccGenericType aType) const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return (mGenericTypes & aType) ||
-    (roleMapEntry && roleMapEntry->IsOfType(aType));
+         (roleMapEntry && roleMapEntry->IsOfType(aType));
 }
 
-inline bool
-Accessible::HasNumericValue() const
-{
-  if (mStateFlags & eHasNumericValue)
-    return true;
+inline bool Accessible::HasNumericValue() const {
+  if (mStateFlags & eHasNumericValue) return true;
 
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (!roleMapEntry || roleMapEntry->valueRule == eNoValue)
-    return false;
+  if (!roleMapEntry || roleMapEntry->valueRule == eNoValue) return false;
 
   if (roleMapEntry->valueRule == eHasValueMinMaxIfFocusable)
     return InteractiveState() & states::FOCUSABLE;
@@ -104,32 +82,26 @@ Accessible::HasNumericValue() const
   return true;
 }
 
-inline bool
-Accessible::IsDefunct() const
-{
+inline bool Accessible::IsDefunct() const {
   MOZ_ASSERT(mStateFlags & eIsDefunct || IsApplication() || IsDoc() ||
-             mStateFlags & eSharedNode || mContent,
+                 mStateFlags & eSharedNode || mContent,
              "No content");
   return mStateFlags & eIsDefunct;
 }
 
-inline void
-Accessible::ScrollTo(uint32_t aHow) const
-{
-  if (mContent)
-    nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aHow);
+inline void Accessible::ScrollTo(uint32_t aHow) const {
+  if (mContent) nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aHow);
 }
 
-inline bool
-Accessible::InsertAfter(Accessible* aNewChild, Accessible* aRefChild)
-{
+inline bool Accessible::InsertAfter(Accessible* aNewChild,
+                                    Accessible* aRefChild) {
   MOZ_ASSERT(aNewChild, "No new child to insert");
 
   if (aRefChild && aRefChild->Parent() != this) {
 #ifdef A11Y_LOG
-    logging::TreeInfo("broken accessible tree", 0,
-                      "parent", this, "prev sibling parent",
-                      aRefChild->Parent(), "child", aNewChild, nullptr);
+    logging::TreeInfo("broken accessible tree", 0, "parent", this,
+                      "prev sibling parent", aRefChild->Parent(), "child",
+                      aNewChild, nullptr);
     if (logging::IsEnabled(logging::eVerbose)) {
       logging::Tree("TREE", "Document tree", mDoc);
       logging::DOMTree("TREE", "DOM document tree", mDoc);
@@ -144,7 +116,7 @@ Accessible::InsertAfter(Accessible* aNewChild, Accessible* aRefChild)
                        aNewChild);
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

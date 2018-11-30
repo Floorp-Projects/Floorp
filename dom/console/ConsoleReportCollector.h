@@ -13,60 +13,53 @@
 
 namespace mozilla {
 
-class ConsoleReportCollector final : public nsIConsoleReportCollector
-{
-public:
+class ConsoleReportCollector final : public nsIConsoleReportCollector {
+ public:
   ConsoleReportCollector();
 
-  void
-  AddConsoleReport(uint32_t aErrorFlags, const nsACString& aCategory,
-                   nsContentUtils::PropertiesFile aPropertiesFile,
-                   const nsACString& aSourceFileURI,
-                   uint32_t aLineNumber, uint32_t aColumnNumber,
-                   const nsACString& aMessageName,
-                   const nsTArray<nsString>& aStringParams) override;
+  void AddConsoleReport(uint32_t aErrorFlags, const nsACString& aCategory,
+                        nsContentUtils::PropertiesFile aPropertiesFile,
+                        const nsACString& aSourceFileURI, uint32_t aLineNumber,
+                        uint32_t aColumnNumber, const nsACString& aMessageName,
+                        const nsTArray<nsString>& aStringParams) override;
 
-  void
-  FlushReportsToConsole(uint64_t aInnerWindowID,
-                        ReportAction aAction = ReportAction::Forget) override;
+  void FlushReportsToConsole(
+      uint64_t aInnerWindowID,
+      ReportAction aAction = ReportAction::Forget) override;
 
-  void
-  FlushReportsToConsoleForServiceWorkerScope(const nsACString& aScope,
-                                             ReportAction aAction = ReportAction::Forget) override;
+  void FlushReportsToConsoleForServiceWorkerScope(
+      const nsACString& aScope,
+      ReportAction aAction = ReportAction::Forget) override;
 
-  void
-  FlushConsoleReports(nsIDocument* aDocument,
-                      ReportAction aAction = ReportAction::Forget) override;
+  void FlushConsoleReports(
+      nsIDocument* aDocument,
+      ReportAction aAction = ReportAction::Forget) override;
 
-  void
-  FlushConsoleReports(nsILoadGroup* aLoadGroup,
-                      ReportAction aAction = ReportAction::Forget) override;
+  void FlushConsoleReports(
+      nsILoadGroup* aLoadGroup,
+      ReportAction aAction = ReportAction::Forget) override;
 
-  void
-  FlushConsoleReports(nsIConsoleReportCollector* aCollector) override;
+  void FlushConsoleReports(nsIConsoleReportCollector* aCollector) override;
 
-  void
-  ClearConsoleReports() override;
+  void ClearConsoleReports() override;
 
-private:
+ private:
   ~ConsoleReportCollector();
 
-  struct PendingReport
-  {
+  struct PendingReport {
     PendingReport(uint32_t aErrorFlags, const nsACString& aCategory,
-               nsContentUtils::PropertiesFile aPropertiesFile,
-               const nsACString& aSourceFileURI, uint32_t aLineNumber,
-               uint32_t aColumnNumber, const nsACString& aMessageName,
-               const nsTArray<nsString>& aStringParams)
-      : mErrorFlags(aErrorFlags)
-      , mCategory(aCategory)
-      , mPropertiesFile(aPropertiesFile)
-      , mSourceFileURI(aSourceFileURI)
-      , mLineNumber(aLineNumber)
-      , mColumnNumber(aColumnNumber)
-      , mMessageName(aMessageName)
-      , mStringParams(aStringParams)
-    { }
+                  nsContentUtils::PropertiesFile aPropertiesFile,
+                  const nsACString& aSourceFileURI, uint32_t aLineNumber,
+                  uint32_t aColumnNumber, const nsACString& aMessageName,
+                  const nsTArray<nsString>& aStringParams)
+        : mErrorFlags(aErrorFlags),
+          mCategory(aCategory),
+          mPropertiesFile(aPropertiesFile),
+          mSourceFileURI(aSourceFileURI),
+          mLineNumber(aLineNumber),
+          mColumnNumber(aColumnNumber),
+          mMessageName(aMessageName),
+          mStringParams(aStringParams) {}
 
     const uint32_t mErrorFlags;
     const nsCString mCategory;
@@ -83,10 +76,10 @@ private:
   // protected by mMutex
   nsTArray<PendingReport> mPendingReports;
 
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ConsoleReportCollector_h
+#endif  // mozilla_ConsoleReportCollector_h

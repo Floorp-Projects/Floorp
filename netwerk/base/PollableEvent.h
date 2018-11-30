@@ -14,9 +14,8 @@ namespace mozilla {
 namespace net {
 
 // class must be called locked
-class PollableEvent
-{
-public:
+class PollableEvent {
+ public:
   PollableEvent();
   ~PollableEvent();
 
@@ -40,27 +39,27 @@ public:
   // - PR_Write has failed
   // - no out_flags were signalled on the socket pair for too long after
   //   the earliest Signal()
-  bool IsSignallingAlive(TimeDuration const& timeout);
+  bool IsSignallingAlive(TimeDuration const &timeout);
 
   PRFileDesc *PollableFD() { return mReadFD; }
 
-private:
+ private:
   PRFileDesc *mWriteFD;
   PRFileDesc *mReadFD;
-  bool        mSignaled;
+  bool mSignaled;
   // true when PR_Write to the socket pair has failed (status < 1)
-  bool        mWriteFailed;
+  bool mWriteFailed;
   // Set true after AdjustFirstSignalTimestamp() was called
   // Set false after Clear() was called
   // Ensures shifting the timestamp before entering poll() only once
   // between Clear()'ings.
-  bool        mSignalTimestampAdjusted;
+  bool mSignalTimestampAdjusted;
   // Timestamp of the first call to Signal() (or time we enter poll())
   // that happened after the last Clear() call
-  TimeStamp   mFirstSignalAfterClear;
+  TimeStamp mFirstSignalAfterClear;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

@@ -12,29 +12,25 @@
 
 // utility class for converting between different line breaks.
 
-class nsLinebreakConverter
-{
-public:
-
+class nsLinebreakConverter {
+ public:
   // Note: enum must match char* array in GetLinebreakString
   typedef enum {
-    eLinebreakAny,          // any kind of linebreak (i.e. "don't care" source)
+    eLinebreakAny,  // any kind of linebreak (i.e. "don't care" source)
 
-    eLinebreakPlatform,     // platform linebreak
-    eLinebreakContent,      // Content model linebreak (LF)
-    eLinebreakNet,          // Form submission linebreak (CRLF)
+    eLinebreakPlatform,  // platform linebreak
+    eLinebreakContent,   // Content model linebreak (LF)
+    eLinebreakNet,       // Form submission linebreak (CRLF)
 
-    eLinebreakMac,          // CR
-    eLinebreakUnix,         // LF
-    eLinebreakWindows,      // CRLF
+    eLinebreakMac,      // CR
+    eLinebreakUnix,     // LF
+    eLinebreakWindows,  // CRLF
 
-    eLinebreakSpace         // space characters. Only valid as destination type
+    eLinebreakSpace  // space characters. Only valid as destination type
 
   } ELinebreakType;
 
-  enum {
-    kIgnoreLen = -1
-  };
+  enum { kIgnoreLen = -1 };
 
   /* ConvertLineBreaks
    * Convert line breaks in the supplied string, allocating and returning
@@ -51,10 +47,10 @@ public:
    * @param aOutLen: used to return character length of returned buffer, if not
    *              null.
    */
-  static char* ConvertLineBreaks(const char* aSrc,
-                                 ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                                 int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
-
+  static char* ConvertLineBreaks(const char* aSrc, ELinebreakType aSrcBreaks,
+                                 ELinebreakType aDestBreaks,
+                                 int32_t aSrcLen = kIgnoreLen,
+                                 int32_t* aOutLen = nullptr);
 
   /* ConvertUnicharLineBreaks
    * Convert line breaks in the supplied string, allocating and returning
@@ -72,12 +68,14 @@ public:
    *              null.
    */
   static char16_t* ConvertUnicharLineBreaks(const char16_t* aSrc,
-                                            ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                                            int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
-
+                                            ELinebreakType aSrcBreaks,
+                                            ELinebreakType aDestBreaks,
+                                            int32_t aSrcLen = kIgnoreLen,
+                                            int32_t* aOutLen = nullptr);
 
   /* ConvertStringLineBreaks
-   * Convert line breaks in the supplied string, changing the string buffer (i.e. in-place conversion)
+   * Convert line breaks in the supplied string, changing the string buffer
+   * (i.e. in-place conversion)
    * @param ioString: the string to be converted.
    * @param aSrcBreaks: the line breaks in the source. If unknown, pass
    *              eLinebreakAny.  If known, pass the known value, as this may
@@ -89,7 +87,6 @@ public:
   static nsresult ConvertStringLineBreaks(nsString& aIoString,
                                           ELinebreakType aSrcBreaks,
                                           ELinebreakType aDestBreaks);
-
 
   /* ConvertLineBreaksInSitu
    * Convert line breaks in place if possible. NOTE: THIS MAY REALLOCATE THE
@@ -116,7 +113,6 @@ public:
                                           int32_t aSrcLen = kIgnoreLen,
                                           int32_t* aOutLen = nullptr);
 
-
   /* ConvertUnicharLineBreaksInSitu
    * Convert line breaks in place if possible. NOTE: THIS MAY REALLOCATE THE
    * BUFFER, BUT IT WON'T FREE THE OLD BUFFER (because it doesn't know how). So
@@ -140,7 +136,6 @@ public:
                                                  ELinebreakType aDestBreaks,
                                                  int32_t aSrcLen = kIgnoreLen,
                                                  int32_t* aOutLen = nullptr);
-
 };
 
-#endif // nsLinebreakConverter_h_
+#endif  // nsLinebreakConverter_h_

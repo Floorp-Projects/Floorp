@@ -54,13 +54,15 @@ namespace net {
 #ifdef MOZ_USE_WIFI_TICKLER
 
 // 8f769ed6-207c-4af9-9f7e-9e832da3754e
-#define NS_TICKLER_IID \
-{ 0x8f769ed6, 0x207c, 0x4af9, \
-  { 0x9f, 0x7e, 0x9e, 0x83, 0x2d, 0xa3, 0x75, 0x4e } }
+#define NS_TICKLER_IID                               \
+  {                                                  \
+    0x8f769ed6, 0x207c, 0x4af9, {                    \
+      0x9f, 0x7e, 0x9e, 0x83, 0x2d, 0xa3, 0x75, 0x4e \
+    }                                                \
+  }
 
-class Tickler final : public nsSupportsWeakReference
-{
-public:
+class Tickler final : public nsSupportsWeakReference {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TICKLER_IID)
 
@@ -75,7 +77,7 @@ public:
   // May call from any thread
   void Tickle();
 
-private:
+ private:
   ~Tickler();
 
   friend class TicklerTimer;
@@ -107,25 +109,25 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Tickler, NS_TICKLER_IID)
 
-#else // not defined MOZ_USE_WIFI_TICKLER
+#else  // not defined MOZ_USE_WIFI_TICKLER
 
-class Tickler final : public nsISupports
-{
+class Tickler final : public nsISupports {
   ~Tickler() = default;
-public:
+
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   Tickler() = default;
   nsresult Init() { return NS_ERROR_NOT_IMPLEMENTED; }
-  void Cancel() { }
-  void SetIPV4Address(uint32_t) { };
-  void SetIPV4Port(uint16_t) { }
-  void Tickle() { }
+  void Cancel() {}
+  void SetIPV4Address(uint32_t){};
+  void SetIPV4Port(uint16_t) {}
+  void Tickle() {}
 };
 
-#endif // defined MOZ_USE_WIFI_TICKLER
+#endif  // defined MOZ_USE_WIFI_TICKLER
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_Tickler_h
+#endif  // mozilla_net_Tickler_h

@@ -18,4 +18,4 @@
 #include "HalInternal.h"
 #undef MOZ_HAL_NAMESPACE
 
-#endif // mozilla_HalImpl_h
+#endif  // mozilla_HalImpl_h

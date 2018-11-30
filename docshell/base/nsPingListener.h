@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 class DocGroup;
 }
-}
+}  // namespace mozilla
 
 class nsIContent;
 class nsIDocShell;
@@ -23,29 +23,23 @@ class nsILoadGroup;
 class nsITimer;
 class nsIURI;
 
-class nsPingListener final : public nsIStreamListener
-{
-public:
+class nsPingListener final : public nsIStreamListener {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsPingListener()
-  {
-  }
+  nsPingListener() {}
 
-  void SetLoadGroup(nsILoadGroup* aLoadGroup) {
-    mLoadGroup = aLoadGroup;
-  }
+  void SetLoadGroup(nsILoadGroup* aLoadGroup) { mLoadGroup = aLoadGroup; }
 
   nsresult StartTimeout(mozilla::dom::DocGroup* aDocGroup);
 
-  static void DispatchPings(nsIDocShell* aDocShell,
-              nsIContent* aContent,
-              nsIURI* aTarget,
-              nsIURI* aReferrer,
-              uint32_t aReferrerPolicy);
-private:
+  static void DispatchPings(nsIDocShell* aDocShell, nsIContent* aContent,
+                            nsIURI* aTarget, nsIURI* aReferrer,
+                            uint32_t aReferrerPolicy);
+
+ private:
   ~nsPingListener();
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;

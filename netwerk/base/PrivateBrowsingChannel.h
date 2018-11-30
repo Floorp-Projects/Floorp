@@ -20,113 +20,102 @@ namespace mozilla {
 namespace net {
 
 template <class Channel>
-class PrivateBrowsingChannel : public nsIPrivateBrowsingChannel
-{
-public:
-  PrivateBrowsingChannel() :
-    mPrivateBrowsingOverriden(false),
-    mPrivateBrowsing(false)
-  {
+class PrivateBrowsingChannel : public nsIPrivateBrowsingChannel {
+ public:
+  PrivateBrowsingChannel()
+      : mPrivateBrowsingOverriden(false), mPrivateBrowsing(false) {}
+
+  NS_IMETHOD SetPrivate(bool aPrivate) override {
+    // Make sure that we don't have a load context
+    // This is a fatal error in debug builds, and a runtime error in release
+    // builds.
+    nsCOMPtr<nsILoadContext> loadContext;
+    NS_QueryNotificationCallbacks(static_cast<Channel*>(this), loadContext);
+    MOZ_ASSERT(!loadContext);
+    if (loadContext) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mPrivateBrowsingOverriden = true;
+    mPrivateBrowsing = aPrivate;
+    return NS_OK;
   }
 
-  NS_IMETHOD SetPrivate(bool aPrivate) override
-  {
-      // Make sure that we don't have a load context
-      // This is a fatal error in debug builds, and a runtime error in release
-      // builds.
-      nsCOMPtr<nsILoadContext> loadContext;
-      NS_QueryNotificationCallbacks(static_cast<Channel*>(this), loadContext);
-      MOZ_ASSERT(!loadContext);
-      if (loadContext) {
-          return NS_ERROR_FAILURE;
-      }
-
-      mPrivateBrowsingOverriden = true;
-      mPrivateBrowsing = aPrivate;
-      return NS_OK;
+  NS_IMETHOD GetIsChannelPrivate(bool* aResult) override {
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = mPrivateBrowsing;
+    return NS_OK;
   }
 
-  NS_IMETHOD GetIsChannelPrivate(bool *aResult) override
-  {
-      NS_ENSURE_ARG_POINTER(aResult);
-      *aResult = mPrivateBrowsing;
-      return NS_OK;
-  }
-
-  NS_IMETHOD IsPrivateModeOverriden(bool* aValue, bool *aResult) override
-  {
-      NS_ENSURE_ARG_POINTER(aValue);
-      NS_ENSURE_ARG_POINTER(aResult);
-      *aResult = mPrivateBrowsingOverriden;
-      if (mPrivateBrowsingOverriden) {
-          *aValue = mPrivateBrowsing;
-      }
-      return NS_OK;
+  NS_IMETHOD IsPrivateModeOverriden(bool* aValue, bool* aResult) override {
+    NS_ENSURE_ARG_POINTER(aValue);
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = mPrivateBrowsingOverriden;
+    if (mPrivateBrowsingOverriden) {
+      *aValue = mPrivateBrowsing;
+    }
+    return NS_OK;
   }
 
   // Must be called every time the channel's callbacks or loadGroup is updated
-  void UpdatePrivateBrowsing()
-  {
-      // once marked as private we never go un-private
-      if (mPrivateBrowsing) {
-          return;
-      }
+  void UpdatePrivateBrowsing() {
+    // once marked as private we never go un-private
+    if (mPrivateBrowsing) {
+      return;
+    }
 
-      auto channel = static_cast<Channel*>(this);
+    auto channel = static_cast<Channel*>(this);
 
-      nsCOMPtr<nsILoadContext> loadContext;
-      NS_QueryNotificationCallbacks(channel, loadContext);
-      if (loadContext) {
-          mPrivateBrowsing = loadContext->UsePrivateBrowsing();
-          return;
-      }
+    nsCOMPtr<nsILoadContext> loadContext;
+    NS_QueryNotificationCallbacks(channel, loadContext);
+    if (loadContext) {
+      mPrivateBrowsing = loadContext->UsePrivateBrowsing();
+      return;
+    }
 
-      nsCOMPtr<nsILoadInfo> loadInfo;
-      Unused << channel->GetLoadInfo(getter_AddRefs(loadInfo));
-      if (loadInfo) {
-          OriginAttributes attrs = loadInfo->GetOriginAttributes();
-          mPrivateBrowsing = attrs.mPrivateBrowsingId > 0;
-      }
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    Unused << channel->GetLoadInfo(getter_AddRefs(loadInfo));
+    if (loadInfo) {
+      OriginAttributes attrs = loadInfo->GetOriginAttributes();
+      mPrivateBrowsing = attrs.mPrivateBrowsingId > 0;
+    }
   }
 
-  bool CanSetCallbacks(nsIInterfaceRequestor* aCallbacks) const
-  {
-      // Make sure that the private bit override flag is not set.
-      // This is a fatal error in debug builds, and a runtime error in release
-      // builds.
-      if (!aCallbacks) {
-          return true;
-      }
-      nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(aCallbacks);
-      if (!loadContext) {
-          return true;
-      }
-      MOZ_ASSERT(!mPrivateBrowsingOverriden);
-      return !mPrivateBrowsingOverriden;
+  bool CanSetCallbacks(nsIInterfaceRequestor* aCallbacks) const {
+    // Make sure that the private bit override flag is not set.
+    // This is a fatal error in debug builds, and a runtime error in release
+    // builds.
+    if (!aCallbacks) {
+      return true;
+    }
+    nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(aCallbacks);
+    if (!loadContext) {
+      return true;
+    }
+    MOZ_ASSERT(!mPrivateBrowsingOverriden);
+    return !mPrivateBrowsingOverriden;
   }
 
-  bool CanSetLoadGroup(nsILoadGroup* aLoadGroup) const
-  {
-      // Make sure that the private bit override flag is not set.
-      // This is a fatal error in debug builds, and a runtime error in release
-      // builds.
-      if (!aLoadGroup) {
-          return true;
-      }
-      nsCOMPtr<nsIInterfaceRequestor> callbacks;
-      aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
-      // From this point on, we just hand off the work to CanSetCallbacks,
-      // because the logic is exactly the same.
-      return CanSetCallbacks(callbacks);
+  bool CanSetLoadGroup(nsILoadGroup* aLoadGroup) const {
+    // Make sure that the private bit override flag is not set.
+    // This is a fatal error in debug builds, and a runtime error in release
+    // builds.
+    if (!aLoadGroup) {
+      return true;
+    }
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    // From this point on, we just hand off the work to CanSetCallbacks,
+    // because the logic is exactly the same.
+    return CanSetCallbacks(callbacks);
   }
 
-protected:
+ protected:
   bool mPrivateBrowsingOverriden;
   bool mPrivateBrowsing;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif
-

@@ -20,7 +20,7 @@ namespace mozilla {
 
 namespace dom {
 class SVGAnimationElement;
-} // namespace dom
+}  // namespace dom
 
 /**
  * Class SVGAnimatedLengthList
@@ -36,13 +36,12 @@ class SVGAnimationElement;
  * DOMSVGAnimatedLengthList::InternalBaseValListWillChangeTo) so that their
  * consumers don't need to concern themselves with that.
  */
-class SVGAnimatedLengthList
-{
+class SVGAnimatedLengthList {
   // friends so that they can get write access to mBaseVal
   friend class DOMSVGLength;
   friend class DOMSVGLengthList;
 
-public:
+ public:
   SVGAnimatedLengthList() {}
 
   /**
@@ -52,9 +51,7 @@ public:
    * returns a const reference. Only our friend classes may get mutable
    * references to mBaseVal.
    */
-  const SVGLengthList& GetBaseValue() const {
-    return mBaseVal;
-  }
+  const SVGLengthList& GetBaseValue() const { return mBaseVal; }
 
   nsresult SetBaseValueString(const nsAString& aValue);
 
@@ -64,23 +61,18 @@ public:
     return mAnimVal ? *mAnimVal : mBaseVal;
   }
 
-  nsresult SetAnimValue(const SVGLengthList& aValue,
-                        nsSVGElement *aElement,
+  nsresult SetAnimValue(const SVGLengthList& aValue, nsSVGElement* aElement,
                         uint32_t aAttrEnum);
 
-  void ClearAnimValue(nsSVGElement *aElement,
-                      uint32_t aAttrEnum);
+  void ClearAnimValue(nsSVGElement* aElement, uint32_t aAttrEnum);
 
-  bool IsAnimating() const {
-    return !!mAnimVal;
-  }
+  bool IsAnimating() const { return !!mAnimVal; }
 
   UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement,
                                     uint8_t aAttrEnum, uint8_t aAxis,
                                     bool aCanZeroPadList);
 
-private:
-
+ private:
   // mAnimVal is a pointer to allow us to determine if we're being animated or
   // not. Making it a non-pointer member and using mAnimVal.IsEmpty() to check
   // if we're animating is not an option, since that would break animation *to*
@@ -89,20 +81,16 @@ private:
   SVGLengthList mBaseVal;
   nsAutoPtr<SVGLengthList> mAnimVal;
 
-  struct SMILAnimatedLengthList : public nsISMILAttr
-  {
-  public:
+  struct SMILAnimatedLengthList : public nsISMILAttr {
+   public:
     SMILAnimatedLengthList(SVGAnimatedLengthList* aVal,
-                           nsSVGElement* aSVGElement,
-                           uint8_t aAttrEnum,
-                           uint8_t aAxis,
-                           bool aCanZeroPadList)
-      : mVal(aVal)
-      , mElement(aSVGElement)
-      , mAttrEnum(aAttrEnum)
-      , mAxis(aAxis)
-      , mCanZeroPadList(aCanZeroPadList)
-    {}
+                           nsSVGElement* aSVGElement, uint8_t aAttrEnum,
+                           uint8_t aAxis, bool aCanZeroPadList)
+        : mVal(aVal),
+          mElement(aSVGElement),
+          mAttrEnum(aAttrEnum),
+          mAxis(aAxis),
+          mCanZeroPadList(aCanZeroPadList) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
@@ -111,19 +99,18 @@ private:
     nsSVGElement* mElement;
     uint8_t mAttrEnum;
     uint8_t mAxis;
-    bool mCanZeroPadList; // See SVGLengthListAndInfo::CanZeroPadList
+    bool mCanZeroPadList;  // See SVGLengthListAndInfo::CanZeroPadList
 
     // nsISMILAttr methods
-    virtual nsresult ValueFromString(const nsAString& aStr,
-                                     const dom::SVGAnimationElement* aSrcElement,
-                                     nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsresult ValueFromString(
+        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
+        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual nsSMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_SVGANIMATEDLENGTHLIST_H__
+#endif  // MOZILLA_SVGANIMATEDLENGTHLIST_H__

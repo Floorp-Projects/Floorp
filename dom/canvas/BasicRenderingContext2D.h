@@ -10,16 +10,16 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap;
+class
+    HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap;
 typedef HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap
-  CanvasImageSource;
+    CanvasImageSource;
 
 /*
  * BasicRenderingContext2D
  */
-class BasicRenderingContext2D
-{
-public:
+class BasicRenderingContext2D {
+ public:
   //
   // CanvasState
   //
@@ -31,22 +31,13 @@ public:
   //
   virtual void Scale(double aX, double aY, mozilla::ErrorResult& aError) = 0;
   virtual void Rotate(double aAngle, mozilla::ErrorResult& aError) = 0;
-  virtual void Translate(double aX,
-                         double aY,
+  virtual void Translate(double aX, double aY,
                          mozilla::ErrorResult& aError) = 0;
-  virtual void Transform(double aM11,
-                         double aM12,
-                         double aM21,
-                         double aM22,
-                         double aDx,
-                         double aDy,
+  virtual void Transform(double aM11, double aM12, double aM21, double aM22,
+                         double aDx, double aDy,
                          mozilla::ErrorResult& aError) = 0;
-  virtual void SetTransform(double aM11,
-                            double aM12,
-                            double aM21,
-                            double aM22,
-                            double aDx,
-                            double aDy,
+  virtual void SetTransform(double aM11, double aM12, double aM21, double aM22,
+                            double aDx, double aDy,
                             mozilla::ErrorResult& aError) = 0;
   virtual void ResetTransform(mozilla::ErrorResult& aError) = 0;
 
@@ -70,29 +61,23 @@ public:
   // CanvasFillStrokeStyles
   //
   virtual void GetStrokeStyle(
-    OwningStringOrCanvasGradientOrCanvasPattern& aValue) = 0;
+      OwningStringOrCanvasGradientOrCanvasPattern& aValue) = 0;
   virtual void SetStrokeStyle(
-    const StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
+      const StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
   virtual void GetFillStyle(
-    OwningStringOrCanvasGradientOrCanvasPattern& aValue) = 0;
+      OwningStringOrCanvasGradientOrCanvasPattern& aValue) = 0;
   virtual void SetFillStyle(
-    const StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
+      const StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
   virtual already_AddRefed<CanvasGradient> CreateLinearGradient(double aX0,
                                                                 double aY0,
                                                                 double aX1,
                                                                 double aY1) = 0;
   virtual already_AddRefed<CanvasGradient> CreateRadialGradient(
-    double aX0,
-    double aY0,
-    double aR0,
-    double aX1,
-    double aY1,
-    double aR1,
-    ErrorResult& aError) = 0;
+      double aX0, double aY0, double aR0, double aX1, double aY1, double aR1,
+      ErrorResult& aError) = 0;
   virtual already_AddRefed<CanvasPattern> CreatePattern(
-    const CanvasImageSource& aElement,
-    const nsAString& aRepeat,
-    ErrorResult& aError) = 0;
+      const CanvasImageSource& aElement, const nsAString& aRepeat,
+      ErrorResult& aError) = 0;
   //
   // CanvasShadowStyles
   //
@@ -115,25 +100,14 @@ public:
   //
   // CanvasDrawImage
   //
-  virtual void DrawImage(const CanvasImageSource& aImage,
-                         double aDx,
-                         double aDy,
+  virtual void DrawImage(const CanvasImageSource& aImage, double aDx,
+                         double aDy, mozilla::ErrorResult& aError) = 0;
+  virtual void DrawImage(const CanvasImageSource& aImage, double aDx,
+                         double aDy, double aDw, double aDh,
                          mozilla::ErrorResult& aError) = 0;
-  virtual void DrawImage(const CanvasImageSource& aImage,
-                         double aDx,
-                         double aDy,
-                         double aDw,
-                         double aDh,
-                         mozilla::ErrorResult& aError) = 0;
-  virtual void DrawImage(const CanvasImageSource& aImage,
-                         double aSx,
-                         double aSy,
-                         double aSw,
-                         double aSh,
-                         double aDx,
-                         double aDy,
-                         double aDw,
-                         double aDh,
+  virtual void DrawImage(const CanvasImageSource& aImage, double aSx,
+                         double aSy, double aSw, double aSh, double aDx,
+                         double aDy, double aDw, double aDh,
                          mozilla::ErrorResult& aError) = 0;
 
   //
@@ -160,42 +134,22 @@ public:
   virtual void ClosePath() = 0;
   virtual void MoveTo(double aX, double aY) = 0;
   virtual void LineTo(double aX, double aY) = 0;
-  virtual void QuadraticCurveTo(double aCpx,
-                                double aCpy,
-                                double aX,
+  virtual void QuadraticCurveTo(double aCpx, double aCpy, double aX,
                                 double aY) = 0;
-  virtual void BezierCurveTo(double aCp1x,
-                             double aCp1y,
-                             double aCp2x,
-                             double aCp2y,
-                             double aX,
-                             double aY) = 0;
-  virtual void ArcTo(double aX1,
-                     double aY1,
-                     double aX2,
-                     double aY2,
-                     double aRadius,
-                     mozilla::ErrorResult& aError) = 0;
+  virtual void BezierCurveTo(double aCp1x, double aCp1y, double aCp2x,
+                             double aCp2y, double aX, double aY) = 0;
+  virtual void ArcTo(double aX1, double aY1, double aX2, double aY2,
+                     double aRadius, mozilla::ErrorResult& aError) = 0;
   virtual void Rect(double aX, double aY, double aW, double aH) = 0;
-  virtual void Arc(double aX,
-                   double aY,
-                   double aRadius,
-                   double aStartAngle,
-                   double aEndAngle,
-                   bool aAnticlockwise,
+  virtual void Arc(double aX, double aY, double aRadius, double aStartAngle,
+                   double aEndAngle, bool aAnticlockwise,
                    mozilla::ErrorResult& aError) = 0;
-  virtual void Ellipse(double aX,
-                       double aY,
-                       double aRadiusX,
-                       double aRadiusY,
-                       double aRotation,
-                       double aStartAngle,
-                       double aEndAngle,
-                       bool aAnticlockwise,
-                       ErrorResult& aError) = 0;
+  virtual void Ellipse(double aX, double aY, double aRadiusX, double aRadiusY,
+                       double aRotation, double aStartAngle, double aEndAngle,
+                       bool aAnticlockwise, ErrorResult& aError) = 0;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* BasicRenderingContext2D_h */

@@ -17,69 +17,58 @@ class DOMEventTargetHelper;
 namespace dom {
 
 class ErrorData;
-class WorkerErrorBase
-{
-public:
+class WorkerErrorBase {
+ public:
   nsString mMessage;
   nsString mFilename;
   uint32_t mLineNumber;
   uint32_t mColumnNumber;
   uint32_t mErrorNumber;
 
-  WorkerErrorBase()
-  : mLineNumber(0),
-    mColumnNumber(0),
-    mErrorNumber(0)
-  { }
+  WorkerErrorBase() : mLineNumber(0), mColumnNumber(0), mErrorNumber(0) {}
 
   void AssignErrorBase(JSErrorBase* aReport);
 };
 
-class WorkerErrorNote : public WorkerErrorBase
-{
-public:
+class WorkerErrorNote : public WorkerErrorBase {
+ public:
   void AssignErrorNote(JSErrorNotes::Note* aNote);
 };
 
 class WorkerPrivate;
 
-class WorkerErrorReport : public WorkerErrorBase
-{
-public:
+class WorkerErrorReport : public WorkerErrorBase {
+ public:
   nsString mLine;
   uint32_t mFlags;
   JSExnType mExnType;
   bool mMutedError;
   nsTArray<WorkerErrorNote> mNotes;
 
-  WorkerErrorReport()
-  : mFlags(0),
-    mExnType(JSEXN_ERR),
-    mMutedError(false)
-  { }
+  WorkerErrorReport() : mFlags(0), mExnType(JSEXN_ERR), mMutedError(false) {}
 
   void AssignErrorReport(JSErrorReport* aReport);
 
   // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
   // aTarget is the worker object that we are going to fire an error at
   // (if any).
-  static void
-  ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-              bool aFireAtScope, DOMEventTargetHelper* aTarget,
-              const WorkerErrorReport& aReport, uint64_t aInnerWindowId,
-              JS::Handle<JS::Value> aException = JS::NullHandleValue);
+  static void ReportError(
+      JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aFireAtScope,
+      DOMEventTargetHelper* aTarget, const WorkerErrorReport& aReport,
+      uint64_t aInnerWindowId,
+      JS::Handle<JS::Value> aException = JS::NullHandleValue);
 
-  static void
-  LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId);
+  static void LogErrorToConsole(const WorkerErrorReport& aReport,
+                                uint64_t aInnerWindowId);
 
-  static void
-  LogErrorToConsole(const mozilla::dom::ErrorData& aReport, uint64_t aInnerWindowId);
+  static void LogErrorToConsole(const mozilla::dom::ErrorData& aReport,
+                                uint64_t aInnerWindowId);
 
-  static void
-  CreateAndDispatchGenericErrorRunnableToParent(WorkerPrivate* aWorkerPrivate);
+  static void CreateAndDispatchGenericErrorRunnableToParent(
+      WorkerPrivate* aWorkerPrivate);
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_workers_WorkerError_h
+#endif  // mozilla_dom_workers_WorkerError_h

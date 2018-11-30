@@ -9,13 +9,10 @@
 namespace mozilla {
 namespace dom {
 
-SessionStorageCache::SessionStorageCache()
-  : mSessionDataSetActive(false)
-{}
+SessionStorageCache::SessionStorageCache() : mSessionDataSetActive(false) {}
 
-SessionStorageCache::DataSet*
-SessionStorageCache::Set(DataSetType aDataSetType)
-{
+SessionStorageCache::DataSet* SessionStorageCache::Set(
+    DataSetType aDataSetType) {
   if (aDataSetType == eDefaultSetType) {
     return &mDefaultSet;
   }
@@ -35,22 +32,16 @@ SessionStorageCache::Set(DataSetType aDataSetType)
   return &mSessionSet;
 }
 
-int64_t
-SessionStorageCache::GetOriginQuotaUsage(DataSetType aDataSetType)
-{
+int64_t SessionStorageCache::GetOriginQuotaUsage(DataSetType aDataSetType) {
   return Set(aDataSetType)->mOriginQuotaUsage;
 }
 
-uint32_t
-SessionStorageCache::Length(DataSetType aDataSetType)
-{
+uint32_t SessionStorageCache::Length(DataSetType aDataSetType) {
   return Set(aDataSetType)->mKeys.Count();
 }
 
-void
-SessionStorageCache::Key(DataSetType aDataSetType, uint32_t aIndex,
-                         nsAString& aResult)
-{
+void SessionStorageCache::Key(DataSetType aDataSetType, uint32_t aIndex,
+                              nsAString& aResult) {
   aResult.SetIsVoid(true);
   for (auto iter = Set(aDataSetType)->mKeys.Iter(); !iter.Done(); iter.Next()) {
     if (aIndex == 0) {
@@ -61,10 +52,8 @@ SessionStorageCache::Key(DataSetType aDataSetType, uint32_t aIndex,
   }
 }
 
-void
-SessionStorageCache::GetItem(DataSetType aDataSetType, const nsAString& aKey,
-                             nsAString& aResult)
-{
+void SessionStorageCache::GetItem(DataSetType aDataSetType,
+                                  const nsAString& aKey, nsAString& aResult) {
   // not using AutoString since we don't want to copy buffer to result
   nsString value;
   if (!Set(aDataSetType)->mKeys.Get(aKey, &value)) {
@@ -73,18 +62,17 @@ SessionStorageCache::GetItem(DataSetType aDataSetType, const nsAString& aKey,
   aResult = value;
 }
 
-void
-SessionStorageCache::GetKeys(DataSetType aDataSetType, nsTArray<nsString>& aKeys)
-{
+void SessionStorageCache::GetKeys(DataSetType aDataSetType,
+                                  nsTArray<nsString>& aKeys) {
   for (auto iter = Set(aDataSetType)->mKeys.Iter(); !iter.Done(); iter.Next()) {
     aKeys.AppendElement(iter.Key());
   }
 }
 
-nsresult
-SessionStorageCache::SetItem(DataSetType aDataSetType, const nsAString& aKey,
-                             const nsAString& aValue, nsString& aOldValue)
-{
+nsresult SessionStorageCache::SetItem(DataSetType aDataSetType,
+                                      const nsAString& aKey,
+                                      const nsAString& aValue,
+                                      nsString& aOldValue) {
   int64_t delta = 0;
   DataSet* dataSet = Set(aDataSetType);
 
@@ -111,10 +99,9 @@ SessionStorageCache::SetItem(DataSetType aDataSetType, const nsAString& aKey,
   return NS_OK;
 }
 
-nsresult
-SessionStorageCache::RemoveItem(DataSetType aDataSetType, const nsAString& aKey,
-                                nsString& aOldValue)
-{
+nsresult SessionStorageCache::RemoveItem(DataSetType aDataSetType,
+                                         const nsAString& aKey,
+                                         nsString& aOldValue) {
   DataSet* dataSet = Set(aDataSetType);
 
   if (!dataSet->mKeys.Get(aKey, &aOldValue)) {
@@ -129,9 +116,8 @@ SessionStorageCache::RemoveItem(DataSetType aDataSetType, const nsAString& aKey,
   return NS_OK;
 }
 
-void
-SessionStorageCache::Clear(DataSetType aDataSetType, bool aByUserInteraction)
-{
+void SessionStorageCache::Clear(DataSetType aDataSetType,
+                                bool aByUserInteraction) {
   DataSet* dataSet = Set(aDataSetType);
   dataSet->ProcessUsageDelta(-dataSet->mOriginQuotaUsage);
   dataSet->mKeys.Clear();
@@ -141,9 +127,7 @@ SessionStorageCache::Clear(DataSetType aDataSetType, bool aByUserInteraction)
   }
 }
 
-already_AddRefed<SessionStorageCache>
-SessionStorageCache::Clone() const
-{
+already_AddRefed<SessionStorageCache> SessionStorageCache::Clone() const {
   RefPtr<SessionStorageCache> cache = new SessionStorageCache();
 
   cache->mSessionDataSetActive = mSessionDataSetActive;
@@ -161,9 +145,7 @@ SessionStorageCache::Clone() const
   return cache.forget();
 }
 
-bool
-SessionStorageCache::DataSet::ProcessUsageDelta(int64_t aDelta)
-{
+bool SessionStorageCache::DataSet::ProcessUsageDelta(int64_t aDelta) {
   // Check limit per this origin
   uint64_t newOriginUsage = mOriginQuotaUsage + aDelta;
   if (aDelta > 0 && newOriginUsage > LocalStorageManager::GetQuota()) {
@@ -175,5 +157,5 @@ SessionStorageCache::DataSet::ProcessUsageDelta(int64_t aDelta)
   return true;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

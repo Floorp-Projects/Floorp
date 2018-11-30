@@ -26,113 +26,107 @@ class nsINode;
 namespace mozilla {
 namespace dom {
 class DocumentFragment;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 class txTransformNotifier final : public nsIScriptLoaderObserver,
-                                  public nsICSSLoaderObserver
-{
-public:
-    txTransformNotifier();
+                                  public nsICSSLoaderObserver {
+ public:
+  txTransformNotifier();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISCRIPTLOADEROBSERVER
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISCRIPTLOADEROBSERVER
 
-    // nsICSSLoaderObserver
-    NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,
-                                bool aWasAlternate,
-                                nsresult aStatus) override;
+  // nsICSSLoaderObserver
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasAlternate,
+                              nsresult aStatus) override;
 
-    void Init(nsITransformObserver* aObserver);
-    nsresult AddScriptElement(nsIScriptElement* aElement);
-    void AddPendingStylesheet();
-    void OnTransformEnd(nsresult aResult = NS_OK);
-    void OnTransformStart();
-    nsresult SetOutputDocument(nsIDocument* aDocument);
+  void Init(nsITransformObserver* aObserver);
+  nsresult AddScriptElement(nsIScriptElement* aElement);
+  void AddPendingStylesheet();
+  void OnTransformEnd(nsresult aResult = NS_OK);
+  void OnTransformStart();
+  nsresult SetOutputDocument(nsIDocument* aDocument);
 
-private:
-    ~txTransformNotifier();
-    void SignalTransformEnd(nsresult aResult = NS_OK);
+ private:
+  ~txTransformNotifier();
+  void SignalTransformEnd(nsresult aResult = NS_OK);
 
-    nsCOMPtr<nsIDocument> mDocument;
-    nsCOMPtr<nsITransformObserver> mObserver;
-    nsCOMArray<nsIScriptElement> mScriptElements;
-    uint32_t mPendingStylesheetCount;
-    bool mInTransform;
+  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsITransformObserver> mObserver;
+  nsCOMArray<nsIScriptElement> mScriptElements;
+  uint32_t mPendingStylesheetCount;
+  bool mInTransform;
 };
 
-class txMozillaXMLOutput : public txAOutputXMLEventHandler
-{
-public:
-    txMozillaXMLOutput(txOutputFormat* aFormat,
-                       nsITransformObserver* aObserver);
-    txMozillaXMLOutput(txOutputFormat* aFormat,
-                       mozilla::dom::DocumentFragment* aFragment,
-                       bool aNoFixup);
-    ~txMozillaXMLOutput();
+class txMozillaXMLOutput : public txAOutputXMLEventHandler {
+ public:
+  txMozillaXMLOutput(txOutputFormat* aFormat, nsITransformObserver* aObserver);
+  txMozillaXMLOutput(txOutputFormat* aFormat,
+                     mozilla::dom::DocumentFragment* aFragment, bool aNoFixup);
+  ~txMozillaXMLOutput();
 
-    TX_DECL_TXAXMLEVENTHANDLER
-    TX_DECL_TXAOUTPUTXMLEVENTHANDLER
+  TX_DECL_TXAXMLEVENTHANDLER
+  TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
-    nsresult closePrevious(bool aFlushText);
+  nsresult closePrevious(bool aFlushText);
 
-    nsresult createResultDocument(const nsAString& aName, int32_t aNsID,
-                                  nsIDocument* aSourceDocument,
-                                  bool aLoadedAsData);
+  nsresult createResultDocument(const nsAString& aName, int32_t aNsID,
+                                nsIDocument* aSourceDocument,
+                                bool aLoadedAsData);
 
-private:
-    nsresult createTxWrapper();
-    nsresult startHTMLElement(nsIContent* aElement, bool aXHTML);
-    nsresult endHTMLElement(nsIContent* aElement);
-    void processHTTPEquiv(nsAtom* aHeader, const nsString& aValue);
-    nsresult createHTMLElement(nsAtom* aName,
-                               mozilla::dom::Element** aResult);
+ private:
+  nsresult createTxWrapper();
+  nsresult startHTMLElement(nsIContent* aElement, bool aXHTML);
+  nsresult endHTMLElement(nsIContent* aElement);
+  void processHTTPEquiv(nsAtom* aHeader, const nsString& aValue);
+  nsresult createHTMLElement(nsAtom* aName, mozilla::dom::Element** aResult);
 
-    nsresult attributeInternal(nsAtom* aPrefix, nsAtom* aLocalName,
-                               int32_t aNsID, const nsString& aValue);
-    nsresult startElementInternal(nsAtom* aPrefix, nsAtom* aLocalName,
-                                  int32_t aNsID);
+  nsresult attributeInternal(nsAtom* aPrefix, nsAtom* aLocalName, int32_t aNsID,
+                             const nsString& aValue);
+  nsresult startElementInternal(nsAtom* aPrefix, nsAtom* aLocalName,
+                                int32_t aNsID);
 
-    nsCOMPtr<nsIDocument> mDocument;
-    nsCOMPtr<nsINode> mCurrentNode;     // This is updated once an element is
-                                        // 'closed' (i.e. once we're done
-                                        // adding attributes to it).
-                                        // until then the opened element is
-                                        // kept in mOpenedElement
-    nsCOMPtr<mozilla::dom::Element> mOpenedElement;
-    RefPtr<nsNodeInfoManager> mNodeInfoManager;
+  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsINode> mCurrentNode;  // This is updated once an element is
+                                   // 'closed' (i.e. once we're done
+                                   // adding attributes to it).
+                                   // until then the opened element is
+                                   // kept in mOpenedElement
+  nsCOMPtr<mozilla::dom::Element> mOpenedElement;
+  RefPtr<nsNodeInfoManager> mNodeInfoManager;
 
-    nsCOMArray<nsINode> mCurrentNodeStack;
+  nsCOMArray<nsINode> mCurrentNodeStack;
 
-    nsCOMPtr<nsIContent> mNonAddedNode;
+  nsCOMPtr<nsIContent> mNonAddedNode;
 
-    RefPtr<txTransformNotifier> mNotifier;
+  RefPtr<txTransformNotifier> mNotifier;
 
-    uint32_t mTreeDepth, mBadChildLevel;
-    nsCString mRefreshString;
+  uint32_t mTreeDepth, mBadChildLevel;
+  nsCString mRefreshString;
 
-    txStack mTableStateStack;
-    enum TableState {
-        NORMAL,      // An element needing no special treatment
-        TABLE,       // A HTML table element
-        ADDED_TBODY  // An inserted tbody not coming from the stylesheet
-    };
-    TableState mTableState;
+  txStack mTableStateStack;
+  enum TableState {
+    NORMAL,      // An element needing no special treatment
+    TABLE,       // A HTML table element
+    ADDED_TBODY  // An inserted tbody not coming from the stylesheet
+  };
+  TableState mTableState;
 
-    nsAutoString mText;
+  nsAutoString mText;
 
-    txOutputFormat mOutputFormat;
+  txOutputFormat mOutputFormat;
 
-    bool mCreatingNewDocument;
+  bool mCreatingNewDocument;
 
-    bool mOpenedElementIsHTML;
+  bool mOpenedElementIsHTML;
 
-    // Set to true when we know there's a root content in our document.
-    bool mRootContentCreated;
+  // Set to true when we know there's a root content in our document.
+  bool mRootContentCreated;
 
-    bool mNoFixup;
+  bool mNoFixup;
 
-    enum txAction { eCloseElement = 1, eFlushText = 2 };
+  enum txAction { eCloseElement = 1, eFlushText = 2 };
 };
 
 #endif

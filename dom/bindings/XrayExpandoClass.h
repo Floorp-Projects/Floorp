@@ -21,21 +21,19 @@
  * extraSlots_ should be how many extra slots to give the class, in addition to
  * the ones Xray expandos want.
  */
-#define DEFINE_XRAY_EXPANDO_CLASS(maybeStatic_, name_, extraSlots_)	\
-  maybeStatic_ const JSClass name_ = {					\
-    "XrayExpandoObject",						\
-    JSCLASS_HAS_RESERVED_SLOTS(xpc::JSSLOT_EXPANDO_COUNT +		\
-			       (extraSlots_)) |				\
-    JSCLASS_FOREGROUND_FINALIZE,					\
-    &xpc::XrayExpandoObjectClassOps					\
-  }
+#define DEFINE_XRAY_EXPANDO_CLASS(maybeStatic_, name_, extraSlots_)           \
+  maybeStatic_ const JSClass name_ = {                                        \
+      "XrayExpandoObject",                                                    \
+      JSCLASS_HAS_RESERVED_SLOTS(xpc::JSSLOT_EXPANDO_COUNT + (extraSlots_)) | \
+          JSCLASS_FOREGROUND_FINALIZE,                                        \
+      &xpc::XrayExpandoObjectClassOps}
 
 namespace mozilla {
 namespace dom {
 
 extern const JSClass DefaultXrayExpandoObjectClass;
 
-} // namespace mozilla
-} // namespace dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_XrayExpandoClass_h */

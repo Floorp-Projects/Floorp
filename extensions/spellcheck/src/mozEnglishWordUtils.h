@@ -12,9 +12,8 @@
 #include "mozITXTToHTMLConv.h"
 #include "nsCycleCollectionParticipant.h"
 
-class mozEnglishWordUtils final
-{
-public:
+class mozEnglishWordUtils final {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(mozEnglishWordUtils)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(mozEnglishWordUtils)
 
@@ -25,15 +24,16 @@ public:
    * next word. begin and end are -1 if there are no words remaining in the
    * string. This should really be folded into the Line/WordBreaker.
    */
-  nsresult FindNextWord(const char16_t* word, uint32_t length,
-                        uint32_t offset, int32_t* begin, int32_t* end);
+  nsresult FindNextWord(const char16_t* word, uint32_t length, uint32_t offset,
+                        int32_t* begin, int32_t* end);
 
-protected:
+ protected:
   virtual ~mozEnglishWordUtils();
 
   static bool ucIsAlpha(char16_t aChar);
 
-  nsCOMPtr<mozITXTToHTMLConv> mURLDetector; // used to detect urls so the spell checker can skip them.
+  nsCOMPtr<mozITXTToHTMLConv>
+      mURLDetector;  // used to detect urls so the spell checker can skip them.
 };
 
 #endif

@@ -16,7 +16,8 @@
 #include "nsPKCS11Slot.h"
 #include "nsServiceManagerUtils.h"
 
-namespace mozilla { namespace psm {
+namespace mozilla {
+namespace psm {
 
 NS_IMPL_ISUPPORTS(PKCS11ModuleDB, nsIPKCS11ModuleDB)
 
@@ -24,12 +25,11 @@ NS_IMPL_ISUPPORTS(PKCS11ModuleDB, nsIPKCS11ModuleDB)
 // internal representation. For most modules this just involves converting from
 // UTF16 to UTF8. For the builtin root module, it also involves mapping from the
 // localized name to the internal, non-localized name.
-static nsresult
-NormalizeModuleNameIn(const nsAString& moduleNameIn, nsCString& moduleNameOut)
-{
+static nsresult NormalizeModuleNameIn(const nsAString& moduleNameIn,
+                                      nsCString& moduleNameOut) {
   nsAutoString localizedRootModuleName;
-  nsresult rv = GetPIPNSSBundleString("RootCertModuleName",
-                                      localizedRootModuleName);
+  nsresult rv =
+      GetPIPNSSBundleString("RootCertModuleName", localizedRootModuleName);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -43,8 +43,7 @@ NormalizeModuleNameIn(const nsAString& moduleNameIn, nsCString& moduleNameOut)
 
 // Delete a PKCS11 module from the user's profile.
 NS_IMETHODIMP
-PKCS11ModuleDB::DeleteModule(const nsAString& aModuleName)
-{
+PKCS11ModuleDB::DeleteModule(const nsAString& aModuleName) {
   if (aModuleName.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -73,10 +72,8 @@ PKCS11ModuleDB::DeleteModule(const nsAString& aModuleName)
 // exceeds this limit. (Note that unfortunately telemetry doesn't expose a way
 // to programmatically query the scalar key length limit, so we have to
 // hard-code the value here.)
-void
-GetModuleNameForTelemetry(/*in*/ const SECMODModule* module,
-                          /*out*/nsString& result)
-{
+void GetModuleNameForTelemetry(/*in*/ const SECMODModule* module,
+                               /*out*/ nsString& result) {
   result.Truncate();
   if (module->dllName) {
     result.AssignASCII(module->dllName);
@@ -96,9 +93,7 @@ GetModuleNameForTelemetry(/*in*/ const SECMODModule* module,
 NS_IMETHODIMP
 PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
                           const nsAString& aLibraryFullPath,
-                          int32_t aCryptoMechanismFlags,
-                          int32_t aCipherFlags)
-{
+                          int32_t aCryptoMechanismFlags, int32_t aCipherFlags) {
   if (aModuleName.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -157,8 +152,7 @@ PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
 }
 
 NS_IMETHODIMP
-PKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
-{
+PKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsresult rv = BlockUntilLoadableRootsLoaded();
@@ -196,18 +190,15 @@ PKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
 }
 
 NS_IMETHODIMP
-PKCS11ModuleDB::GetCanToggleFIPS(bool* aCanToggleFIPS)
-{
+PKCS11ModuleDB::GetCanToggleFIPS(bool* aCanToggleFIPS) {
   NS_ENSURE_ARG_POINTER(aCanToggleFIPS);
 
   *aCanToggleFIPS = SECMOD_CanDeleteInternalModule();
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-PKCS11ModuleDB::ToggleFIPSMode()
-{
+PKCS11ModuleDB::ToggleFIPSMode() {
   // The way to toggle FIPS mode in NSS is extremely obscure. Basically, we
   // delete the internal module, and it gets replaced with the opposite module
   // (i.e. if it was FIPS before, then it becomes non-FIPS next).
@@ -231,12 +222,12 @@ PKCS11ModuleDB::ToggleFIPSMode()
 }
 
 NS_IMETHODIMP
-PKCS11ModuleDB::GetIsFIPSEnabled(bool* aIsFIPSEnabled)
-{
+PKCS11ModuleDB::GetIsFIPSEnabled(bool* aIsFIPSEnabled) {
   NS_ENSURE_ARG_POINTER(aIsFIPSEnabled);
 
   *aIsFIPSEnabled = PK11_IsFIPS();
   return NS_OK;
 }
 
-} } // namespace mozilla::psm
+}  // namespace psm
+}  // namespace mozilla

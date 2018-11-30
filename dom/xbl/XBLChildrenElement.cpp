@@ -12,23 +12,20 @@
 namespace mozilla {
 namespace dom {
 
-XBLChildrenElement::~XBLChildrenElement()
-{
-}
+XBLChildrenElement::~XBLChildrenElement() {}
 
 NS_IMPL_ELEMENT_CLONE(XBLChildrenElement)
 
-nsresult
-XBLChildrenElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                  const nsAttrValueOrString* aValue,
-                                  bool aNotify)
-{
+nsresult XBLChildrenElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                           const nsAttrValueOrString* aValue,
+                                           bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::includes) {
       mIncludes.Clear();
       if (aValue) {
-        nsCharSeparatedTokenizer tok(aValue->String(), '|',
-                                     nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+        nsCharSeparatedTokenizer tok(
+            aValue->String(), '|',
+            nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
         while (tok.hasMoreTokens()) {
           mIncludes.AppendElement(NS_Atomize(tok.nextToken()));
         }
@@ -39,9 +36,7 @@ XBLChildrenElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
   return nsXMLElement::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
 }
 
-void
-XBLChildrenElement::DoRemoveDefaultContent(bool aNotify)
-{
+void XBLChildrenElement::DoRemoveDefaultContent(bool aNotify) {
   // Default content is going away, need to tell layout about it first.
   MOZ_ASSERT(HasChildren(), "Why bothering?");
   MOZ_ASSERT(GetParentElement());
@@ -57,8 +52,7 @@ XBLChildrenElement::DoRemoveDefaultContent(bool aNotify)
     }
   }
 
-  for (nsIContent* child = static_cast<nsINode*>(this)->GetFirstChild();
-       child;
+  for (nsIContent* child = static_cast<nsINode*>(this)->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     MOZ_ASSERT(!child->GetPrimaryFrame());
     MOZ_ASSERT(!child->IsElement() || !child->AsElement()->HasServoData());
@@ -66,8 +60,8 @@ XBLChildrenElement::DoRemoveDefaultContent(bool aNotify)
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla::dom;
 
@@ -82,27 +76,22 @@ NS_INTERFACE_TABLE_HEAD(nsAnonymousContentList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsAnonymousContentList)
 NS_INTERFACE_MAP_END
 
-uint32_t
-nsAnonymousContentList::Length()
-{
+uint32_t nsAnonymousContentList::Length() {
   if (!mParent) {
     return 0;
   }
 
   uint32_t count = 0;
-  for (nsIContent* child = mParent->GetFirstChild();
-       child;
+  for (nsIContent* child = mParent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
       XBLChildrenElement* point = static_cast<XBLChildrenElement*>(child);
       if (point->HasInsertedChildren()) {
         count += point->InsertedChildrenLength();
-      }
-      else {
+      } else {
         count += point->GetChildCount();
       }
-    }
-    else {
+    } else {
       ++count;
     }
   }
@@ -110,16 +99,13 @@ nsAnonymousContentList::Length()
   return count;
 }
 
-nsIContent*
-nsAnonymousContentList::Item(uint32_t aIndex)
-{
+nsIContent* nsAnonymousContentList::Item(uint32_t aIndex) {
   if (!mParent) {
     return nullptr;
   }
 
   uint32_t remIndex = aIndex;
-  for (nsIContent* child = mParent->GetFirstChild();
-       child;
+  for (nsIContent* child = mParent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
       XBLChildrenElement* point = static_cast<XBLChildrenElement*>(child);
@@ -128,15 +114,13 @@ nsAnonymousContentList::Item(uint32_t aIndex)
           return point->InsertedChild(remIndex);
         }
         remIndex -= point->InsertedChildrenLength();
-      }
-      else {
+      } else {
         if (remIndex < point->GetChildCount()) {
           return point->GetChildAt_Deprecated(remIndex);
         }
         remIndex -= point->GetChildCount();
       }
-    }
-    else {
+    } else {
       if (remIndex == 0) {
         return child;
       }
@@ -147,20 +131,17 @@ nsAnonymousContentList::Item(uint32_t aIndex)
   return nullptr;
 }
 
-int32_t
-nsAnonymousContentList::IndexOf(nsIContent* aContent)
-{
-  NS_ASSERTION(!aContent->NodeInfo()->Equals(nsGkAtoms::children,
-                                             kNameSpaceID_XBL),
-               "Looking for insertion point");
+int32_t nsAnonymousContentList::IndexOf(nsIContent* aContent) {
+  NS_ASSERTION(
+      !aContent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL),
+      "Looking for insertion point");
 
   if (!mParent) {
     return -1;
   }
 
   int32_t index = 0;
-  for (nsIContent* child = mParent->GetFirstChild();
-       child;
+  for (nsIContent* child = mParent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
       XBLChildrenElement* point = static_cast<XBLChildrenElement*>(child);
@@ -170,16 +151,14 @@ nsAnonymousContentList::IndexOf(nsIContent* aContent)
           return index + insIndex;
         }
         index += point->InsertedChildrenLength();
-      }
-      else {
+      } else {
         int32_t insIndex = point->ComputeIndexOf(aContent);
         if (insIndex != -1) {
           return index + insIndex;
         }
         index += point->GetChildCount();
       }
-    }
-    else {
+    } else {
       if (child == aContent) {
         return index;
       }
@@ -190,8 +169,7 @@ nsAnonymousContentList::IndexOf(nsIContent* aContent)
   return -1;
 }
 
-JSObject*
-nsAnonymousContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* nsAnonymousContentList::WrapObject(
+    JSContext* cx, JS::Handle<JSObject*> aGivenProto) {
   return mozilla::dom::NodeList_Binding::Wrap(cx, this, aGivenProto);
 }

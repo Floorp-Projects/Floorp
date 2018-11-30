@@ -21,14 +21,13 @@ class nsIURI;
 
 namespace mozilla {
 namespace dom {
-  class Promise;
+class Promise;
 }
 
 class StyleSheet;
 
-class PreloadedStyleSheet : public nsIPreloadedStyleSheet
-{
-public:
+class PreloadedStyleSheet : public nsIPreloadedStyleSheet {
+ public:
   // *aResult is addrefed.
   static nsresult Create(nsIURI* aURI, css::SheetParsingMode aParsingMode,
                          PreloadedStyleSheet** aResult);
@@ -43,31 +42,27 @@ public:
   nsresult Preload();
   nsresult PreloadAsync(NotNull<dom::Promise*> aPromise);
 
-protected:
+ protected:
   virtual ~PreloadedStyleSheet() {}
 
-private:
+ private:
   PreloadedStyleSheet(nsIURI* aURI, css::SheetParsingMode aParsingMode);
 
-  class StylesheetPreloadObserver final : public nsICSSLoaderObserver
-  {
-  public:
+  class StylesheetPreloadObserver final : public nsICSSLoaderObserver {
+   public:
     NS_DECL_ISUPPORTS
 
     explicit StylesheetPreloadObserver(NotNull<dom::Promise*> aPromise,
                                        PreloadedStyleSheet* aSheet)
-      : mPromise(aPromise)
-      , mPreloadedSheet(aSheet)
-    {}
+        : mPromise(aPromise), mPreloadedSheet(aSheet) {}
 
-    NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet,
-                                bool aWasAlternate,
+    NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                                 nsresult aStatus) override;
 
-  protected:
+   protected:
     virtual ~StylesheetPreloadObserver() {}
 
-  private:
+   private:
     RefPtr<dom::Promise> mPromise;
     RefPtr<PreloadedStyleSheet> mPreloadedSheet;
   };
@@ -79,6 +74,6 @@ private:
   css::SheetParsingMode mParsingMode;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_PreloadedStyleSheet_h
+#endif  // mozilla_PreloadedStyleSheet_h

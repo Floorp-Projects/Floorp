@@ -14,4 +14,4 @@
 // nsLayoutModule is used.
 void nsLayoutModuleInitialize();
 
-#endif // nsLayoutModule_h
+#endif  // nsLayoutModule_h

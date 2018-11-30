@@ -20,17 +20,14 @@ class mozEnglishWordUtils;
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
 class TextServicesDocument;
-} // namespace mozilla
+}  // namespace mozilla
 
-class mozSpellChecker final
-{
-public:
+class mozSpellChecker final {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(mozSpellChecker)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(mozSpellChecker)
 
-  static already_AddRefed<mozSpellChecker>
-  Create()
-  {
+  static already_AddRefed<mozSpellChecker> Create() {
     RefPtr<mozSpellChecker> spellChecker = new mozSpellChecker();
     nsresult rv = spellChecker->Init();
     NS_ENSURE_SUCCESS(rv, nullptr);
@@ -133,16 +130,14 @@ public:
    * Tells the spellchecker to use a specific dictionary from list.
    * @param aList  a preferred dictionary list
    */
-  RefPtr<mozilla::GenericPromise>
-  SetCurrentDictionaryFromList(const nsTArray<nsString>& aList);
+  RefPtr<mozilla::GenericPromise> SetCurrentDictionaryFromList(
+      const nsTArray<nsString>& aList);
 
-  void DeleteRemoteEngine() {
-    mEngine = nullptr;
-  }
+  void DeleteRemoteEngine() { mEngine = nullptr; }
 
   mozilla::TextServicesDocument* GetTextServicesDocument();
 
-protected:
+ protected:
   mozSpellChecker();
   virtual ~mozSpellChecker();
 
@@ -152,21 +147,21 @@ protected:
   RefPtr<mozilla::TextServicesDocument> mTextServicesDocument;
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
 
-  nsCOMPtr<mozISpellCheckingEngine>  mSpellCheckingEngine;
+  nsCOMPtr<mozISpellCheckingEngine> mSpellCheckingEngine;
   bool mFromStart;
 
   nsString mCurrentDictionary;
 
-  nsresult SetupDoc(int32_t *outBlockOffset);
+  nsresult SetupDoc(int32_t* outBlockOffset);
 
   nsresult GetCurrentBlockIndex(
-             mozilla::TextServicesDocument* aTextServicesDocument,
-             int32_t* aOutBlockIndex);
+      mozilla::TextServicesDocument* aTextServicesDocument,
+      int32_t* aOutBlockIndex);
 
-  nsresult GetEngineList(nsCOMArray<mozISpellCheckingEngine> *aDictionaryList);
+  nsresult GetEngineList(nsCOMArray<mozISpellCheckingEngine>* aDictionaryList);
 
-  mozilla::RemoteSpellcheckEngineChild *mEngine;
+  mozilla::RemoteSpellcheckEngineChild* mEngine;
 
   friend class mozilla::RemoteSpellcheckEngineChild;
 };
-#endif // mozSpellChecker_h__
+#endif  // mozSpellChecker_h__

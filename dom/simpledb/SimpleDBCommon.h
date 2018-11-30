@@ -12,7 +12,7 @@ namespace dom {
 
 extern const char* kPrefSimpleDBEnabled;
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_simpledb_SimpledbCommon_h
+#endif  // mozilla_dom_simpledb_SimpledbCommon_h

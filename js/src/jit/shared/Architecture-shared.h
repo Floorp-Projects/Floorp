@@ -10,15 +10,9 @@
 namespace js {
 namespace jit {
 
-enum class RegTypeName {
-    GPR,
-    Float32,
-    Float64,
-    Vector128,
-    Any
-};
+enum class RegTypeName { GPR, Float32, Float64, Vector128, Any };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_shared_Architecture_shared_h */

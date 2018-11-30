@@ -14,10 +14,10 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLTemplateElement final : public nsGenericHTMLElement
-{
-public:
-  explicit HTMLTemplateElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+class HTMLTemplateElement final : public nsGenericHTMLElement {
+ public:
+  explicit HTMLTemplateElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -27,21 +27,18 @@ public:
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  DocumentFragment* Content()
-  {
-    return mContent;
-  }
+  DocumentFragment* Content() { return mContent; }
 
-protected:
+ protected:
   virtual ~HTMLTemplateElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   RefPtr<DocumentFragment> mContent;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLTemplateElement_h
-
+#endif  // mozilla_dom_HTMLTemplateElement_h

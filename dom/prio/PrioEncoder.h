@@ -17,39 +17,32 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
-class PrioEncoder
-{
-public:
+class PrioEncoder {
+ public:
   NS_INLINE_DECL_REFCOUNTING(PrioEncoder)
 
-  static
-  void Encode(GlobalObject& aGlobal,
-              const nsCString& aBatchID,
-              const PrioParams& aPrioParams,
-              RootedDictionary<PrioEncodedData>& aData,
-              ErrorResult& aRv);
+  static void Encode(GlobalObject& aGlobal, const nsCString& aBatchID,
+                     const PrioParams& aPrioParams,
+                     RootedDictionary<PrioEncodedData>& aData,
+                     ErrorResult& aRv);
 
   // maximum number of booleans that can be prio-encoded in a single batch.
   const static uint32_t gNumBooleans = 2046;
 
-private:
+ private:
   PrioEncoder();
   ~PrioEncoder();
 
-  static PublicKey
-  sPublicKeyA;
+  static PublicKey sPublicKeyA;
 
-  static PublicKey
-  sPublicKeyB;
+  static PublicKey sPublicKeyB;
 
-  static StaticRefPtr<PrioEncoder>
-  sSingleton;
+  static StaticRefPtr<PrioEncoder> sSingleton;
 
-  static bool
-  IsValidHexPublicKey(mozilla::Span<const char>);
+  static bool IsValidHexPublicKey(mozilla::Span<const char>);
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PrioEncoder_h
+#endif  // mozilla_dom_PrioEncoder_h

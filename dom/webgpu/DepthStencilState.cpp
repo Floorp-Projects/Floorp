@@ -15,5 +15,5 @@ DepthStencilState::~DepthStencilState() = default;
 
 WEBGPU_IMPL_GOOP_0(DepthStencilState)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

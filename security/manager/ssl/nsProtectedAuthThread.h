@@ -14,43 +14,41 @@
 
 class nsIRunnable;
 
-class nsProtectedAuthThread : public nsIProtectedAuthThread
-{
-private:
-    mozilla::Mutex mMutex;
+class nsProtectedAuthThread : public nsIProtectedAuthThread {
+ private:
+  mozilla::Mutex mMutex;
 
-    nsCOMPtr<nsIRunnable> mNotifyObserver;
+  nsCOMPtr<nsIRunnable> mNotifyObserver;
 
-    bool        mIAmRunning;
-    bool        mLoginReady;
+  bool mIAmRunning;
+  bool mLoginReady;
 
-    PRThread    *mThreadHandle;
+  PRThread *mThreadHandle;
 
-    // Slot to do authentication on
-    PK11SlotInfo*   mSlot;
+  // Slot to do authentication on
+  PK11SlotInfo *mSlot;
 
-    // Result of the authentication
-    SECStatus       mLoginResult;
+  // Result of the authentication
+  SECStatus mLoginResult;
 
-public:
+ public:
+  nsProtectedAuthThread();
 
-    nsProtectedAuthThread();
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIPROTECTEDAUTHTHREAD
 
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIPROTECTEDAUTHTHREAD
+  // Sets parameters for the thread
+  void SetParams(PK11SlotInfo *slot);
 
-    // Sets parameters for the thread
-    void SetParams(PK11SlotInfo *slot);
+  // Gets result of the protected authentication operation
+  SECStatus GetResult();
 
-    // Gets result of the protected authentication operation
-    SECStatus GetResult();
+  void Join(void);
 
-    void Join(void);
+  void Run(void);
 
-    void Run(void);
-
-protected:
-    virtual ~nsProtectedAuthThread();
+ protected:
+  virtual ~nsProtectedAuthThread();
 };
 
-#endif // NSPROTECTEDAUTHTHREAD_H_
+#endif  // NSPROTECTEDAUTHTHREAD_H_

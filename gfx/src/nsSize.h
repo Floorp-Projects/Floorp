@@ -22,8 +22,8 @@ struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
   nsSize() : Super() {}
   nsSize(nscoord aWidth, nscoord aHeight) : Super(aWidth, aHeight) {}
 
-  inline mozilla::gfx::IntSize ScaleToNearestPixels(float aXScale, float aYScale,
-                                        nscoord aAppUnitsPerPixel) const;
+  inline mozilla::gfx::IntSize ScaleToNearestPixels(
+      float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
   inline mozilla::gfx::IntSize ToNearestPixels(nscoord aAppUnitsPerPixel) const;
 
   /**
@@ -31,27 +31,26 @@ struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
    * @param aFromAPP the APP to scale from
    * @param aToAPP the APP to scale to
    */
-  MOZ_MUST_USE inline nsSize
-    ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
+  MOZ_MUST_USE inline nsSize ScaleToOtherAppUnits(int32_t aFromAPP,
+                                                  int32_t aToAPP) const;
 };
 
-inline mozilla::gfx::IntSize
-nsSize::ScaleToNearestPixels(float aXScale, float aYScale,
-                             nscoord aAppUnitsPerPixel) const
-{
+inline mozilla::gfx::IntSize nsSize::ScaleToNearestPixels(
+    float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const {
   return mozilla::gfx::IntSize(
-      NSToIntRoundUp(NSAppUnitsToDoublePixels(width, aAppUnitsPerPixel) * aXScale),
-      NSToIntRoundUp(NSAppUnitsToDoublePixels(height, aAppUnitsPerPixel) * aYScale));
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(width, aAppUnitsPerPixel) *
+                     aXScale),
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(height, aAppUnitsPerPixel) *
+                     aYScale));
 }
 
-inline mozilla::gfx::IntSize
-nsSize::ToNearestPixels(nscoord aAppUnitsPerPixel) const
-{
+inline mozilla::gfx::IntSize nsSize::ToNearestPixels(
+    nscoord aAppUnitsPerPixel) const {
   return ScaleToNearestPixels(1.0f, 1.0f, aAppUnitsPerPixel);
 }
 
-inline nsSize
-nsSize::ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const {
+inline nsSize nsSize::ScaleToOtherAppUnits(int32_t aFromAPP,
+                                           int32_t aToAPP) const {
   if (aFromAPP != aToAPP) {
     nsSize size;
     size.width = NSToCoordRound(NSCoordScale(width, aFromAPP, aToAPP));
@@ -61,9 +60,8 @@ nsSize::ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const {
   return *this;
 }
 
-inline nsSize
-IntSizeToAppUnits(mozilla::gfx::IntSize aSize, nscoord aAppUnitsPerPixel)
-{
+inline nsSize IntSizeToAppUnits(mozilla::gfx::IntSize aSize,
+                                nscoord aAppUnitsPerPixel) {
   return nsSize(NSIntPixelsToAppUnits(aSize.width, aAppUnitsPerPixel),
                 NSIntPixelsToAppUnits(aSize.height, aAppUnitsPerPixel));
 }

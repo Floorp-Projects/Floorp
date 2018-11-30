@@ -22,18 +22,16 @@ using mozilla::Vector;
 
 class nsILoadGroup;
 
-char*
-PK11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void* arg);
+char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg);
 
-void HandshakeCallback(PRFileDesc *fd, void *client_data);
+void HandshakeCallback(PRFileDesc* fd, void* client_data);
 SECStatus CanFalseStartCallback(PRFileDesc* fd, void* client_data,
-                                PRBool *canFalseStart);
+                                PRBool* canFalseStart);
 
-mozilla::pkix::Result
-DoOCSPRequest(const nsCString& aiaLocation,
-              const OriginAttributes& originAttributes,
-              Vector<uint8_t>&& ocspRequest,
-              TimeDuration timeout,
-              /*out*/ Vector<uint8_t>& result);
+mozilla::pkix::Result DoOCSPRequest(const nsCString& aiaLocation,
+                                    const OriginAttributes& originAttributes,
+                                    Vector<uint8_t>&& ocspRequest,
+                                    TimeDuration timeout,
+                                    /*out*/ Vector<uint8_t>& result);
 
-#endif // nsNSSCallbacks_h
+#endif  // nsNSSCallbacks_h

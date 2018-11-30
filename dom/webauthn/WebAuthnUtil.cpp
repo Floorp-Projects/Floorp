@@ -14,17 +14,16 @@ namespace dom {
 
 // Bug #1436078 - Permit Google Accounts. Remove in Bug #1436085 in Jan 2023.
 NS_NAMED_LITERAL_STRING(kGoogleAccountsAppId1,
-  "https://www.gstatic.com/securitykey/origins.json");
-NS_NAMED_LITERAL_STRING(kGoogleAccountsAppId2,
-  "https://www.gstatic.com/securitykey/a/google.com/origins.json");
+                        "https://www.gstatic.com/securitykey/origins.json");
+NS_NAMED_LITERAL_STRING(
+    kGoogleAccountsAppId2,
+    "https://www.gstatic.com/securitykey/a/google.com/origins.json");
 
-const uint8_t FLAG_TUP = 0x01; // Test of User Presence required
-const uint8_t FLAG_AT = 0x40; // Authenticator Data is provided
+const uint8_t FLAG_TUP = 0x01;  // Test of User Presence required
+const uint8_t FLAG_AT = 0x40;   // Authenticator Data is provided
 
-bool
-EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
-              const U2FOperation& aOp, /* in/out */ nsString& aAppId)
-{
+bool EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
+                   const U2FOperation& aOp, /* in/out */ nsString& aAppId) {
   // Facet is the specification's way of referring to the web origin.
   nsAutoCString facetString = NS_ConvertUTF16toUTF8(aOrigin);
   nsCOMPtr<nsIURI> facetUri;
@@ -86,7 +85,7 @@ EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
   // Use the base domain as the facet for evaluation. This lets this algorithm
   // relax the whole eTLD+1.
   nsCOMPtr<nsIEffectiveTLDService> tldService =
-    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   if (!tldService) {
     return false;
   }
@@ -96,13 +95,14 @@ EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
     return false;
   }
 
-  if (html->IsRegistrableDomainSuffixOfOrEqualTo(NS_ConvertUTF8toUTF16(lowestFacetHost),
-                                                 appIdHost)) {
+  if (html->IsRegistrableDomainSuffixOfOrEqualTo(
+          NS_ConvertUTF8toUTF16(lowestFacetHost), appIdHost)) {
     return true;
   }
 
   // Bug #1436078 - Permit Google Accounts. Remove in Bug #1436085 in Jan 2023.
-  if (aOp == U2FOperation::Sign && lowestFacetHost.EqualsLiteral("google.com") &&
+  if (aOp == U2FOperation::Sign &&
+      lowestFacetHost.EqualsLiteral("google.com") &&
       (aAppId.Equals(kGoogleAccountsAppId1) ||
        aAppId.Equals(kGoogleAccountsAppId2))) {
     return true;
@@ -111,11 +111,8 @@ EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
   return false;
 }
 
-
-nsresult
-ReadToCryptoBuffer(pkix::Reader& aSrc, /* out */ CryptoBuffer& aDest,
-                   uint32_t aLen)
-{
+nsresult ReadToCryptoBuffer(pkix::Reader& aSrc, /* out */ CryptoBuffer& aDest,
+                            uint32_t aLen) {
   if (aSrc.EnsureLength(aLen) != pkix::Success) {
     return NS_ERROR_DOM_UNKNOWN_ERR;
   }
@@ -143,15 +140,13 @@ ReadToCryptoBuffer(pkix::Reader& aSrc, /* out */ CryptoBuffer& aDest,
 // 4 bytes: sign counter
 // variable: attestation data struct
 // variable: CBOR-format extension auth data (optional, not flagged)
-nsresult
-AssembleAuthenticatorData(const CryptoBuffer& rpIdHashBuf,
-                          const uint8_t flags,
-                          const CryptoBuffer& counterBuf,
-                          const CryptoBuffer& attestationDataBuf,
-                          /* out */ CryptoBuffer& authDataBuf)
-{
-  if (NS_WARN_IF(!authDataBuf.SetCapacity(32 + 1 + 4 + attestationDataBuf.Length(),
-                                          mozilla::fallible))) {
+nsresult AssembleAuthenticatorData(const CryptoBuffer& rpIdHashBuf,
+                                   const uint8_t flags,
+                                   const CryptoBuffer& counterBuf,
+                                   const CryptoBuffer& attestationDataBuf,
+                                   /* out */ CryptoBuffer& authDataBuf) {
+  if (NS_WARN_IF(!authDataBuf.SetCapacity(
+          32 + 1 + 4 + attestationDataBuf.Length(), mozilla::fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   if (rpIdHashBuf.Length() != 32 || counterBuf.Length() != 4) {
@@ -170,16 +165,13 @@ AssembleAuthenticatorData(const CryptoBuffer& rpIdHashBuf,
 // - 2 bytes: Length of Credential ID
 // - L bytes: Credential ID
 // - variable: CBOR-format public key
-nsresult
-AssembleAttestationData(const CryptoBuffer& aaguidBuf,
-                        const CryptoBuffer& keyHandleBuf,
-                        const CryptoBuffer& pubKeyObj,
-                        /* out */ CryptoBuffer& attestationDataBuf)
-{
-  if (NS_WARN_IF(!attestationDataBuf.SetCapacity(aaguidBuf.Length() + 2 +
-                                                 keyHandleBuf.Length() +
-                                                 pubKeyObj.Length(),
-                                                 mozilla::fallible))) {
+nsresult AssembleAttestationData(const CryptoBuffer& aaguidBuf,
+                                 const CryptoBuffer& keyHandleBuf,
+                                 const CryptoBuffer& pubKeyObj,
+                                 /* out */ CryptoBuffer& attestationDataBuf) {
+  if (NS_WARN_IF(!attestationDataBuf.SetCapacity(
+          aaguidBuf.Length() + 2 + keyHandleBuf.Length() + pubKeyObj.Length(),
+          mozilla::fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   if (keyHandleBuf.Length() > 0xFFFF) {
@@ -196,15 +188,13 @@ AssembleAttestationData(const CryptoBuffer& aaguidBuf,
   return NS_OK;
 }
 
-nsresult
-AssembleAttestationObject(const CryptoBuffer& aRpIdHash,
-                          const CryptoBuffer& aPubKeyBuf,
-                          const CryptoBuffer& aKeyHandleBuf,
-                          const CryptoBuffer& aAttestationCertBuf,
-                          const CryptoBuffer& aSignatureBuf,
-                          bool aForceNoneAttestation,
-                          /* out */ CryptoBuffer& aAttestationObjBuf)
-{
+nsresult AssembleAttestationObject(const CryptoBuffer& aRpIdHash,
+                                   const CryptoBuffer& aPubKeyBuf,
+                                   const CryptoBuffer& aKeyHandleBuf,
+                                   const CryptoBuffer& aAttestationCertBuf,
+                                   const CryptoBuffer& aSignatureBuf,
+                                   bool aForceNoneAttestation,
+                                   /* out */ CryptoBuffer& aAttestationObjBuf) {
   // Construct the public key object
   CryptoBuffer pubKeyObj;
   nsresult rv = CBOREncodePublicKeyObj(aPubKeyBuf, pubKeyObj);
@@ -219,7 +209,7 @@ AssembleAttestationObject(const CryptoBuffer& aRpIdHash,
 
   // FIDO U2F devices have no AAGUIDs, so they'll be all zeros until we add
   // support for CTAP2 devices.
-  for (int i=0; i<16; i++) {
+  for (int i = 0; i < 16; i++) {
     aaguidBuf.AppendElement(0x00, mozilla::fallible);
   }
 
@@ -264,12 +254,10 @@ AssembleAttestationObject(const CryptoBuffer& aRpIdHash,
   return rv;
 }
 
-nsresult
-U2FDecomposeSignResponse(const CryptoBuffer& aResponse,
-                         /* out */ uint8_t& aFlags,
-                         /* out */ CryptoBuffer& aCounterBuf,
-                         /* out */ CryptoBuffer& aSignatureBuf)
-{
+nsresult U2FDecomposeSignResponse(const CryptoBuffer& aResponse,
+                                  /* out */ uint8_t& aFlags,
+                                  /* out */ CryptoBuffer& aCounterBuf,
+                                  /* out */ CryptoBuffer& aSignatureBuf) {
   if (aResponse.Length() < 5) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -282,21 +270,20 @@ U2FDecomposeSignResponse(const CryptoBuffer& aResponse,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (NS_WARN_IF(!aSignatureBuf.AppendElements(rspView.From(5),
-                                               mozilla::fallible))) {
+  if (NS_WARN_IF(
+          !aSignatureBuf.AppendElements(rspView.From(5), mozilla::fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return NS_OK;
 }
 
-nsresult
-U2FDecomposeRegistrationResponse(const CryptoBuffer& aResponse,
-                                 /* out */ CryptoBuffer& aPubKeyBuf,
-                                 /* out */ CryptoBuffer& aKeyHandleBuf,
-                                 /* out */ CryptoBuffer& aAttestationCertBuf,
-                                 /* out */ CryptoBuffer& aSignatureBuf)
-{
+nsresult U2FDecomposeRegistrationResponse(
+    const CryptoBuffer& aResponse,
+    /* out */ CryptoBuffer& aPubKeyBuf,
+    /* out */ CryptoBuffer& aKeyHandleBuf,
+    /* out */ CryptoBuffer& aAttestationCertBuf,
+    /* out */ CryptoBuffer& aSignatureBuf) {
   // U2F v1.1 Format via
   // http://fidoalliance.org/specs/fido-u2f-v1.1-id-20160915/fido-u2f-raw-message-formats-v1.1-id-20160915.html
   //
@@ -339,8 +326,8 @@ U2FDecomposeRegistrationResponse(const CryptoBuffer& aResponse,
   // We have to parse the ASN.1 SEQUENCE on the outside to determine the cert's
   // length.
   pkix::Input cert;
-  if (pkix::der::ExpectTagAndGetTLV(input, pkix::der::SEQUENCE, cert)
-      != pkix::Success) {
+  if (pkix::der::ExpectTagAndGetTLV(input, pkix::der::SEQUENCE, cert) !=
+      pkix::Success) {
     return NS_ERROR_DOM_UNKNOWN_ERR;
   }
 
@@ -363,11 +350,9 @@ U2FDecomposeRegistrationResponse(const CryptoBuffer& aResponse,
   return NS_OK;
 }
 
-nsresult
-U2FDecomposeECKey(const CryptoBuffer& aPubKeyBuf,
-                  /* out */ CryptoBuffer& aXcoord,
-                  /* out */ CryptoBuffer& aYcoord)
-{
+nsresult U2FDecomposeECKey(const CryptoBuffer& aPubKeyBuf,
+                           /* out */ CryptoBuffer& aXcoord,
+                           /* out */ CryptoBuffer& aYcoord) {
   pkix::Input pubKey;
   pubKey.Init(aPubKeyBuf.Elements(), aPubKeyBuf.Length());
 
@@ -394,11 +379,8 @@ U2FDecomposeECKey(const CryptoBuffer& aPubKeyBuf,
   return NS_OK;
 }
 
-static nsresult
-HashCString(nsICryptoHash* aHashService,
-            const nsACString& aIn,
-            /* out */ CryptoBuffer& aOut)
-{
+static nsresult HashCString(nsICryptoHash* aHashService, const nsACString& aIn,
+                            /* out */ CryptoBuffer& aOut) {
   MOZ_ASSERT(aHashService);
 
   nsresult rv = aHashService->Init(nsICryptoHash::SHA256);
@@ -407,7 +389,7 @@ HashCString(nsICryptoHash* aHashService,
   }
 
   rv = aHashService->Update(
-    reinterpret_cast<const uint8_t*>(aIn.BeginReading()), aIn.Length());
+      reinterpret_cast<const uint8_t*>(aIn.BeginReading()), aIn.Length());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -427,12 +409,10 @@ HashCString(nsICryptoHash* aHashService,
   return NS_OK;
 }
 
-nsresult
-HashCString(const nsACString& aIn, /* out */ CryptoBuffer& aOut)
-{
+nsresult HashCString(const nsACString& aIn, /* out */ CryptoBuffer& aOut) {
   nsresult srv;
   nsCOMPtr<nsICryptoHash> hashService =
-    do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &srv);
+      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &srv);
   if (NS_FAILED(srv)) {
     return srv;
   }
@@ -445,15 +425,13 @@ HashCString(const nsACString& aIn, /* out */ CryptoBuffer& aOut)
   return NS_OK;
 }
 
-nsresult
-BuildTransactionHashes(const nsCString& aRpId,
-                       const nsCString& aClientDataJSON,
-                       /* out */ CryptoBuffer& aRpIdHash,
-                       /* out */ CryptoBuffer& aClientDataHash)
-{
+nsresult BuildTransactionHashes(const nsCString& aRpId,
+                                const nsCString& aClientDataJSON,
+                                /* out */ CryptoBuffer& aRpIdHash,
+                                /* out */ CryptoBuffer& aClientDataHash) {
   nsresult srv;
   nsCOMPtr<nsICryptoHash> hashService =
-    do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &srv);
+      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &srv);
   if (NS_FAILED(srv)) {
     return srv;
   }
@@ -477,6 +455,5 @@ BuildTransactionHashes(const nsCString& aRpId,
   return NS_OK;
 }
 
-
-}
-}
+}  // namespace dom
+}  // namespace mozilla

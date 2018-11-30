@@ -17,9 +17,7 @@ using namespace mozilla::a11y;
 
 extern "C" {
 
-static gboolean
-doActionCB(AtkAction *aAction, gint aActionIndex)
-{
+static gboolean doActionCB(AtkAction* aAction, gint aActionIndex) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
   if (accWrap) {
     return accWrap->DoAction(aActionIndex);
@@ -29,9 +27,7 @@ doActionCB(AtkAction *aAction, gint aActionIndex)
   return proxy && proxy->DoAction(aActionIndex);
 }
 
-static gint
-getActionCountCB(AtkAction *aAction)
-{
+static gint getActionCountCB(AtkAction* aAction) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
   if (accWrap) {
     return accWrap->ActionCount();
@@ -41,9 +37,8 @@ getActionCountCB(AtkAction *aAction)
   return proxy ? proxy->ActionCount() : 0;
 }
 
-static const gchar*
-getActionDescriptionCB(AtkAction *aAction, gint aActionIndex)
-{
+static const gchar* getActionDescriptionCB(AtkAction* aAction,
+                                           gint aActionIndex) {
   nsAutoString description;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
   if (accWrap) {
@@ -57,9 +52,7 @@ getActionDescriptionCB(AtkAction *aAction, gint aActionIndex)
   return AccessibleWrap::ReturnString(description);
 }
 
-static const gchar*
-getActionNameCB(AtkAction *aAction, gint aActionIndex)
-{
+static const gchar* getActionNameCB(AtkAction* aAction, gint aActionIndex) {
   nsAutoString autoStr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
   if (accWrap) {
@@ -73,9 +66,7 @@ getActionNameCB(AtkAction *aAction, gint aActionIndex)
   return AccessibleWrap::ReturnString(autoStr);
 }
 
-static const gchar*
-getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
-{
+static const gchar* getKeyBindingCB(AtkAction* aAction, gint aActionIndex) {
   nsAutoString keyBindingsStr;
   AccessibleWrap* acc = GetAccessibleWrap(ATK_OBJECT(aAction));
   if (acc) {
@@ -90,12 +81,9 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
 }
 }
 
-void
-actionInterfaceInitCB(AtkActionIface* aIface)
-{
+void actionInterfaceInitCB(AtkActionIface* aIface) {
   NS_ASSERTION(aIface, "Invalid aIface");
-  if (MOZ_UNLIKELY(!aIface))
-    return;
+  if (MOZ_UNLIKELY(!aIface)) return;
 
   aIface->do_action = doActionCB;
   aIface->get_n_actions = getActionCountCB;

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #ifndef NSCATEGORYMANAGER_H
 #define NSCATEGORYMANAGER_H
 
@@ -19,12 +18,15 @@
 
 class nsIMemoryReporter;
 
-typedef mozilla::ArenaAllocator<1024*8, 8> CategoryAllocator;
+typedef mozilla::ArenaAllocator<1024 * 8, 8> CategoryAllocator;
 
 /* 16d222a6-1dd2-11b2-b693-f38b02c021b2 */
-#define NS_CATEGORYMANAGER_CID \
-{ 0x16d222a6, 0x1dd2, 0x11b2, \
-  {0xb6, 0x93, 0xf3, 0x8b, 0x02, 0xc0, 0x21, 0xb2} }
+#define NS_CATEGORYMANAGER_CID                       \
+  {                                                  \
+    0x16d222a6, 0x1dd2, 0x11b2, {                    \
+      0xb6, 0x93, 0xf3, 0x8b, 0x02, 0xc0, 0x21, 0xb2 \
+    }                                                \
+  }
 
 /**
  * a "leaf-node", managed by the nsCategoryNode hashtable.
@@ -34,41 +36,34 @@ typedef mozilla::ArenaAllocator<1024*8, 8> CategoryAllocator;
  * the same, except when aPersist==false. The strings are permanently arena-
  * allocated, and will never go away.
  */
-class CategoryLeaf : public nsDepCharHashKey
-{
-public:
-  explicit CategoryLeaf(const char* aKey) : nsDepCharHashKey(aKey), value(nullptr) {}
+class CategoryLeaf : public nsDepCharHashKey {
+ public:
+  explicit CategoryLeaf(const char* aKey)
+      : nsDepCharHashKey(aKey), value(nullptr) {}
   const char* value;
 };
-
 
 /**
  * CategoryNode keeps a hashtable of its entries.
  * the CategoryNode itself is permanently allocated in
  * the arena.
  */
-class CategoryNode
-{
-public:
-  nsresult GetLeaf(const nsACString& aEntryName,
-                   nsACString& aResult);
+class CategoryNode {
+ public:
+  nsresult GetLeaf(const nsACString& aEntryName, nsACString& aResult);
 
-  nsresult AddLeaf(const nsACString& aEntryName,
-                   const nsACString& aValue,
-                   bool aReplace,
-                   nsACString& aResult,
+  nsresult AddLeaf(const nsACString& aEntryName, const nsACString& aValue,
+                   bool aReplace, nsACString& aResult,
                    CategoryAllocator* aArena);
 
   void DeleteLeaf(const nsACString& aEntryName);
 
-  void Clear()
-  {
+  void Clear() {
     mozilla::MutexAutoLock lock(mLock);
     mTable.Clear();
   }
 
-  uint32_t Count()
-  {
+  uint32_t Count() {
     mozilla::MutexAutoLock lock(mLock);
     uint32_t tCount = mTable.Count();
     return tCount;
@@ -83,7 +78,7 @@ public:
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
-private:
+ private:
   CategoryNode() : mLock("CategoryLeaf") {}
 
   void* operator new(size_t aSize, CategoryAllocator* aArena);
@@ -92,17 +87,14 @@ private:
   mozilla::Mutex mLock;
 };
 
-
 /**
  * The main implementation of nsICategoryManager.
  *
  * This implementation is thread-safe.
  */
-class nsCategoryManager final
-  : public nsICategoryManager
-  , public nsIMemoryReporter
-{
-public:
+class nsCategoryManager final : public nsICategoryManager,
+                                public nsIMemoryReporter {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICATEGORYMANAGER
   NS_DECL_NSIMEMORYREPORTER
@@ -114,17 +106,12 @@ public:
    */
   nsresult SuppressNotifications(bool aSuppress);
 
-  void AddCategoryEntry(const nsACString& aCategory,
-                        const nsACString& aKey,
-                        const nsACString& aValue,
-                        bool aReplace,
+  void AddCategoryEntry(const nsACString& aCategory, const nsACString& aKey,
+                        const nsACString& aValue, bool aReplace,
                         nsACString& aOldValue);
 
-  void AddCategoryEntry(const nsACString& aCategory,
-                        const nsACString& aKey,
-                        const nsACString& aValue,
-                        bool aReplace = true)
-  {
+  void AddCategoryEntry(const nsACString& aCategory, const nsACString& aKey,
+                        const nsACString& aValue, bool aReplace = true) {
     nsCString oldValue;
     return AddCategoryEntry(aCategory, aKey, aValue, aReplace, oldValue);
   }
@@ -135,7 +122,7 @@ public:
   static nsCategoryManager* GetSingleton();
   static void Destroy();
 
-private:
+ private:
   static nsCategoryManager* gCategoryManager;
 
   nsCategoryManager();
@@ -144,9 +131,10 @@ private:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   CategoryNode* get_category(const nsACString& aName);
-  void NotifyObservers(const char* aTopic,
-                       const nsACString& aCategoryName, // must be a static string
-                       const nsACString& aEntryName);
+  void NotifyObservers(
+      const char* aTopic,
+      const nsACString& aCategoryName,  // must be a static string
+      const nsACString& aEntryName);
 
   CategoryAllocator mArena;
   nsClassHashtable<nsDepCharHashKey, CategoryNode> mTable;

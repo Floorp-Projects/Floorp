@@ -14,25 +14,20 @@ namespace dom {
 TransitionEvent::TransitionEvent(EventTarget* aOwner,
                                  nsPresContext* aPresContext,
                                  InternalTransitionEvent* aEvent)
-  : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalTransitionEvent(false, eVoidEvent))
-{
+    : Event(aOwner, aPresContext,
+            aEvent ? aEvent : new InternalTransitionEvent(false, eVoidEvent)) {
   if (aEvent) {
     mEventIsInternal = false;
-  }
-  else {
+  } else {
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
   }
 }
 
 // static
-already_AddRefed<TransitionEvent>
-TransitionEvent::Constructor(const GlobalObject& aGlobal,
-                             const nsAString& aType,
-                             const TransitionEventInit& aParam,
-                             ErrorResult& aRv)
-{
+already_AddRefed<TransitionEvent> TransitionEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const TransitionEventInit& aParam, ErrorResult& aRv) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<TransitionEvent> e = new TransitionEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
@@ -49,36 +44,28 @@ TransitionEvent::Constructor(const GlobalObject& aGlobal,
   return e.forget();
 }
 
-void
-TransitionEvent::GetPropertyName(nsAString& aPropertyName) const
-{
+void TransitionEvent::GetPropertyName(nsAString& aPropertyName) const {
   aPropertyName = mEvent->AsTransitionEvent()->mPropertyName;
 }
 
-float
-TransitionEvent::ElapsedTime()
-{
+float TransitionEvent::ElapsedTime() {
   return mEvent->AsTransitionEvent()->mElapsedTime;
 }
 
-void
-TransitionEvent::GetPseudoElement(nsAString& aPseudoElement) const
-{
+void TransitionEvent::GetPseudoElement(nsAString& aPseudoElement) const {
   aPseudoElement = mEvent->AsTransitionEvent()->mPseudoElement;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-already_AddRefed<TransitionEvent>
-NS_NewDOMTransitionEvent(EventTarget* aOwner,
-                         nsPresContext* aPresContext,
-                         InternalTransitionEvent* aEvent)
-{
+already_AddRefed<TransitionEvent> NS_NewDOMTransitionEvent(
+    EventTarget* aOwner, nsPresContext* aPresContext,
+    InternalTransitionEvent* aEvent) {
   RefPtr<TransitionEvent> it =
-    new TransitionEvent(aOwner, aPresContext, aEvent);
+      new TransitionEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

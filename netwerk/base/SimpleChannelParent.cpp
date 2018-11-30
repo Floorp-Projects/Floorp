@@ -14,47 +14,40 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(SimpleChannelParent, nsIParentChannel, nsIStreamListener)
 
-bool
-SimpleChannelParent::Init(const uint32_t &channelId)
-{
+bool SimpleChannelParent::Init(const uint32_t& channelId) {
   nsCOMPtr<nsIChannel> channel;
   MOZ_ALWAYS_SUCCEEDS(
-    NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel)));
+      NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel)));
 
   return true;
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::SetParentListener(HttpChannelParentListener* aListener)
-{
+SimpleChannelParent::SetParentListener(HttpChannelParentListener* aListener) {
   // Nothing to do.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::NotifyTrackingProtectionDisabled()
-{
+SimpleChannelParent::NotifyTrackingProtectionDisabled() {
   // Nothing to do.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::NotifyCookieAllowed()
-{
+SimpleChannelParent::NotifyCookieAllowed() {
   // Nothing to do.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason)
-{
+SimpleChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason) {
   // Nothing to do.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::NotifyTrackingResource(bool aIsThirdParty)
-{
+SimpleChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
   // Nothing to do.
   return NS_OK;
 }
@@ -62,28 +55,22 @@ SimpleChannelParent::NotifyTrackingResource(bool aIsThirdParty)
 NS_IMETHODIMP
 SimpleChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                               const nsACString& aProvider,
-                                              const nsACString& aPrefix)
-{
+                                              const nsACString& aPrefix) {
   // nothing to do
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::Delete()
-{
+SimpleChannelParent::Delete() {
   // Nothing to do.
   return NS_OK;
 }
 
-void
-SimpleChannelParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-}
+void SimpleChannelParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
 NS_IMETHODIMP
 SimpleChannelParent::OnStartRequest(nsIRequest* aRequest,
-                                    nsISupports* aContext)
-{
+                                    nsISupports* aContext) {
   // We don't have a way to prevent nsBaseChannel from calling AsyncOpen on
   // the created nsSimpleChannel. We don't have anywhere to send the data in the
   // parent, so abort the binding.
@@ -91,10 +78,8 @@ SimpleChannelParent::OnStartRequest(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::OnStopRequest(nsIRequest* aRequest,
-                                   nsISupports* aContext,
-                                   nsresult aStatusCode)
-{
+SimpleChannelParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                                   nsresult aStatusCode) {
   // See above.
   MOZ_ASSERT(NS_FAILED(aStatusCode));
   return NS_OK;
@@ -104,12 +89,10 @@ NS_IMETHODIMP
 SimpleChannelParent::OnDataAvailable(nsIRequest* aRequest,
                                      nsISupports* aContext,
                                      nsIInputStream* aInputStream,
-                                     uint64_t aOffset,
-                                     uint32_t aCount)
-{
+                                     uint64_t aOffset, uint32_t aCount) {
   // See above.
   MOZ_CRASH("Should never be called");
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

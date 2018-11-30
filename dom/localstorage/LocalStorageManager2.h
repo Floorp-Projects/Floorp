@@ -30,18 +30,16 @@ class Promise;
  * Note that testing methods are now also directly exposed on the Storage WebIDL
  * interface for simplicity/sanity.
  */
-class LocalStorageManager2 final
-  : public nsIDOMStorageManager
-  , public nsILocalStorageManager
-{
-public:
+class LocalStorageManager2 final : public nsIDOMStorageManager,
+                                   public nsILocalStorageManager {
+ public:
   LocalStorageManager2();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMSTORAGEMANAGER
   NS_DECL_NSILOCALSTORAGEMANAGER
 
-private:
+ private:
   ~LocalStorageManager2();
 
   /**
@@ -50,20 +48,17 @@ private:
    * mechanism is normally used synchronously from content, but here it's
    * exposed asynchronously.
    */
-  nsresult
-  StartRequest(Promise* aPromise,
-               const LSRequestParams& aParams);
+  nsresult StartRequest(Promise* aPromise, const LSRequestParams& aParams);
 
   /**
    * Helper to trigger an LSSimpleRequst and resolve/reject the provided promise
    * when the result comes in.
    */
-  nsresult
-  StartSimpleRequest(Promise* aPromise,
-                     const LSSimpleRequestParams& aParams);
+  nsresult StartSimpleRequest(Promise* aPromise,
+                              const LSSimpleRequestParams& aParams);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_localstorage_LocalStorageManager2_h
+#endif  // mozilla_dom_localstorage_LocalStorageManager2_h

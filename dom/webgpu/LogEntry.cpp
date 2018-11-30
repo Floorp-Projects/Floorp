@@ -13,25 +13,15 @@ namespace webgpu {
 
 LogEntry::~LogEntry() = default;
 
-dom::WebGPULogEntryType
-LogEntry::Type() const
-{
-    MOZ_CRASH("todo");
+dom::WebGPULogEntryType LogEntry::Type() const { MOZ_CRASH("todo"); }
+
+void LogEntry::GetObj(JSContext* cx, JS::MutableHandleValue out) const {
+  MOZ_CRASH("todo");
 }
 
-void
-LogEntry::GetObj(JSContext* cx, JS::MutableHandleValue out) const
-{
-    MOZ_CRASH("todo");
-}
-
-void
-LogEntry::GetReason(nsString& out) const
-{
-    MOZ_CRASH("todo");
-}
+void LogEntry::GetReason(nsString& out) const { MOZ_CRASH("todo"); }
 
 WEBGPU_IMPL_GOOP_0(LogEntry)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

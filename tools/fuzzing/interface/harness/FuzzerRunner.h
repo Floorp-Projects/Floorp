@@ -8,17 +8,17 @@
 namespace mozilla {
 
 class FuzzerRunner {
-public:
+ public:
   int Run(int* argc, char*** argv);
 
 #ifdef LIBFUZZER
   void setParams(LibFuzzerDriver aDriver);
 
-private:
+ private:
   LibFuzzerDriver mFuzzerDriver;
 #endif
 };
 
 extern FuzzerRunner* fuzzerRunner;
 
-} // namespace mozilla
+}  // namespace mozilla

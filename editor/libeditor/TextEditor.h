@@ -26,16 +26,14 @@ enum class EditSubAction : int32_t;
 namespace dom {
 class DragEvent;
 class Selection;
-} // namespace dom
+}  // namespace dom
 
 /**
  * The text editor implementation.
  * Use to edit text document represented as a DOM tree.
  */
-class TextEditor : public EditorBase
-                 , public nsIPlaintextEditor
-{
-public:
+class TextEditor : public EditorBase, public nsIPlaintextEditor {
+ public:
   /****************************************************************************
    * NOTE: DO NOT MAKE YOUR NEW METHODS PUBLIC IF they are called by other
    *       classes under libeditor except EditorEventListener and
@@ -77,15 +75,14 @@ public:
   NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
 
-  NS_IMETHOD OutputToString(const nsAString& aFormatType,
-                            uint32_t aFlags,
+  NS_IMETHOD OutputToString(const nsAString& aFormatType, uint32_t aFlags,
                             nsAString& aOutputString) override;
 
   /** Can we paste |aTransferable| or, if |aTransferable| is null, will a call
-    * to pasteTransferable later possibly succeed if given an instance of
-    * nsITransferable then? True if the doc is modifiable, and, if
-    * |aTransfeable| is non-null, we have pasteable data in |aTransfeable|.
-    */
+   * to pasteTransferable later possibly succeed if given an instance of
+   * nsITransferable then? True if the doc is modifiable, and, if
+   * |aTransfeable| is non-null, we have pasteable data in |aTransfeable|.
+   */
   virtual bool CanPasteTransferable(nsITransferable* aTransferable);
 
   // Overrides of EditorBase
@@ -99,17 +96,16 @@ public:
    * other nodes like <br>, returns false.
    */
   nsresult IsEmpty(bool* aIsEmpty) const;
-  bool IsEmpty() const
-  {
+  bool IsEmpty() const {
     bool isEmpty = false;
     nsresult rv = IsEmpty(&isEmpty);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-      "Checking whether the editor is empty failed");
+                         "Checking whether the editor is empty failed");
     return NS_SUCCEEDED(rv) && isEmpty;
   }
 
   virtual nsresult HandleKeyPressEvent(
-                     WidgetKeyboardEvent* aKeyboardEvent) override;
+      WidgetKeyboardEvent* aKeyboardEvent) override;
 
   virtual dom::EventTarget* GetDOMEventTarget() override;
 
@@ -123,8 +119,7 @@ public:
    * @param aDispatchPasteEvent true if this should dispatch ePaste event
    *                            before pasting.  Otherwise, false.
    */
-  nsresult PasteAsAction(int32_t aClipboardType,
-                         bool aDispatchPasteEvent);
+  nsresult PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent);
 
   /**
    * InsertTextAsAction() inserts aStringToInsert at selection.
@@ -163,9 +158,9 @@ public:
                                    EStripWrappers aStripWrappers);
 
   /**
-    * The maximum number of characters allowed.
-    *   default: -1 (unlimited).
-    */
+   * The maximum number of characters allowed.
+   *   default: -1 (unlimited).
+   */
   int32_t MaxTextLength() const { return mMaxTextLength; }
   void SetMaxTextLength(int32_t aLength) { mMaxTextLength = aLength; }
 
@@ -208,8 +203,7 @@ public:
    *                                    be handled in this editor.
    */
   MOZ_CAN_RUN_SCRIPT
-  nsresult
-  OnCompositionChange(WidgetCompositionEvent& aCompositionChangeEvent);
+  nsresult OnCompositionChange(WidgetCompositionEvent& aCompositionChangeEvent);
 
   /**
    * OnCompositionEnd() is called when editor receives an eCompositionChange
@@ -234,8 +228,7 @@ public:
    * @param aCharset                Encoding of the document.
    */
   nsresult ComputeTextValue(uint32_t aDocumentEncoderFlags,
-                            nsAString& aOutputString) const
-  {
+                            nsAString& aOutputString) const {
     AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return NS_ERROR_NOT_INITIALIZED;
@@ -244,7 +237,7 @@ public:
                                 aDocumentEncoderFlags, aOutputString);
   }
 
-protected: // May be called by friends.
+ protected:  // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
    * part of handling edit actions are allowed to call the following protected
@@ -256,9 +249,8 @@ protected: // May be called by friends.
 
   // Overrides of EditorBase
   virtual nsresult RemoveAttributeOrEquivalent(
-                     Element* aElement,
-                     nsAtom* aAttribute,
-                     bool aSuppressTransaction) override;
+      Element* aElement, nsAtom* aAttribute,
+      bool aSuppressTransaction) override;
   virtual nsresult SetAttributeOrEquivalent(Element* aElement,
                                             nsAtom* aAttribute,
                                             const nsAString& aValue,
@@ -294,9 +286,8 @@ protected: // May be called by friends.
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
-  virtual nsresult
-  DeleteSelectionWithTransaction(EDirection aAction,
-                                 EStripWrappers aStripWrappers);
+  virtual nsresult DeleteSelectionWithTransaction(
+      EDirection aAction, EStripWrappers aStripWrappers);
 
   /**
    * Replace existed string with aString.  Caller must guarantee that there
@@ -328,11 +319,10 @@ protected: // May be called by friends.
    * @return                    The new <br> node.  If failed to create new
    *                            <br> node, returns nullptr.
    */
-  template<typename PT, typename CT>
-  already_AddRefed<Element>
-  InsertBrElementWithTransaction(
-    const EditorDOMPointBase<PT, CT>& aPointToInsert,
-    EDirection aSelect = eNone);
+  template <typename PT, typename CT>
+  already_AddRefed<Element> InsertBrElementWithTransaction(
+      const EditorDOMPointBase<PT, CT>& aPointToInsert,
+      EDirection aSelect = eNone);
 
   /**
    * Extends the selection for given deletion operation
@@ -352,17 +342,15 @@ protected: // May be called by friends.
   static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
                                     int32_t& aCaretStyle);
 
-protected: // Called by helper classes.
-
-  virtual void
-  OnStartToHandleTopLevelEditSubAction(
-    EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
+ protected:  // Called by helper classes.
+  virtual void OnStartToHandleTopLevelEditSubAction(
+      EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
   virtual void OnEndHandlingTopLevelEditSubAction() override;
 
   void BeginEditorInit();
   nsresult EndEditorInit();
 
-protected: // Shouldn't be used by friend classes
+ protected:  // Shouldn't be used by friend classes
   virtual ~TextEditor();
 
   int32_t WrapWidth() const { return mWrapColumn; }
@@ -459,10 +447,9 @@ protected: // Shouldn't be used by friend classes
    * @param aDocumentEncoderFlags   Flags of nsIDocumentEncoder.
    * @param aCharset                Encoding of the document.
    */
-  already_AddRefed<nsIDocumentEncoder>
-  GetAndInitDocEncoder(const nsAString& aFormatType,
-                       uint32_t aDocumentEncoderFlags,
-                       const nsACString& aCharset) const;
+  already_AddRefed<nsIDocumentEncoder> GetAndInitDocEncoder(
+      const nsAString& aFormatType, uint32_t aDocumentEncoderFlags,
+      const nsACString& aCharset) const;
 
   /**
    * ComputeValueInternal() computes string value of this editor for given
@@ -509,14 +496,9 @@ protected: // Shouldn't be used by friend classes
   nsresult SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
                               nsAString& aResult);
 
-  enum PasswordFieldAllowed
-  {
-    ePasswordFieldAllowed,
-    ePasswordFieldNotAllowed
-  };
+  enum PasswordFieldAllowed { ePasswordFieldAllowed, ePasswordFieldNotAllowed };
   bool CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed);
-  bool FireClipboardEvent(EventMessage aEventMessage,
-                          int32_t aSelectionType,
+  bool FireClipboardEvent(EventMessage aEventMessage, int32_t aSelectionType,
                           bool* aActionTaken = nullptr);
 
   bool UpdateMetaCharset(nsIDocument& aDocument,
@@ -536,7 +518,7 @@ protected: // Shouldn't be used by friend classes
 
   virtual already_AddRefed<Element> GetInputEventTargetElement() override;
 
-protected:
+ protected:
   mutable nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;
   mutable nsString mCachedDocumentEncoderType;
   int32_t mWrapColumn;
@@ -549,18 +531,14 @@ protected:
   friend class TextEditRules;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-mozilla::TextEditor*
-nsIEditor::AsTextEditor()
-{
+mozilla::TextEditor* nsIEditor::AsTextEditor() {
   return static_cast<mozilla::TextEditor*>(this);
 }
 
-const mozilla::TextEditor*
-nsIEditor::AsTextEditor() const
-{
+const mozilla::TextEditor* nsIEditor::AsTextEditor() const {
   return static_cast<const mozilla::TextEditor*>(this);
 }
 
-#endif // #ifndef mozilla_TextEditor_h
+#endif  // #ifndef mozilla_TextEditor_h

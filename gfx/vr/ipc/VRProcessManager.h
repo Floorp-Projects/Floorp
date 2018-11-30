@@ -6,7 +6,6 @@
 #ifndef GFX_VR_PROCESS_MANAGER_H
 #define GFX_VR_PROCESS_MANAGER_H
 
-
 namespace mozilla {
 namespace gfx {
 
@@ -17,9 +16,8 @@ class VRChild;
 
 // The VRProcessManager is a singleton responsible for creating VR-bound
 // objects that may live in another process.
-class VRProcessManager final
-{
-public:
+class VRProcessManager final {
+ public:
   static VRProcessManager* Get();
   static void Initialize();
   static void Shutdown();
@@ -35,13 +33,13 @@ public:
 
   VRChild* GetVRChild();
 
-private:
+ private:
   VRProcessManager();
 
   DISALLOW_COPY_AND_ASSIGN(VRProcessManager);
 
   bool CreateGPUVRManager(base::ProcessId aOtherProcess,
-                              mozilla::ipc::Endpoint<PVRGPUChild>* aOutEndpoint);
+                          mozilla::ipc::Endpoint<PVRGPUChild>* aOutEndpoint);
   void OnXPCOMShutdown();
   void CleanShutdown();
 
@@ -49,12 +47,12 @@ private:
   void DisableVRProcess(const char* aMessage);
 
   class Observer final : public nsIObserver {
-  public:
+   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
     explicit Observer(VRProcessManager* aManager);
 
-  protected:
+   protected:
     ~Observer() {}
 
     VRProcessManager* mManager;
@@ -65,7 +63,7 @@ private:
   VRProcessParent* mProcess;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // GFX_VR_PROCESS_MANAGER_H
+#endif  // GFX_VR_PROCESS_MANAGER_H

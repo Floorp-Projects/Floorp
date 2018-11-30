@@ -14,75 +14,64 @@ NS_IMPL_ISUPPORTS(WebBrowserPersistResourcesParent,
                   nsIWebBrowserPersistDocumentReceiver)
 
 WebBrowserPersistResourcesParent::WebBrowserPersistResourcesParent(
-        nsIWebBrowserPersistDocument* aDocument,
-        nsIWebBrowserPersistResourceVisitor* aVisitor)
-: mDocument(aDocument)
-, mVisitor(aVisitor)
-{
-    MOZ_ASSERT(aDocument);
-    MOZ_ASSERT(aVisitor);
+    nsIWebBrowserPersistDocument* aDocument,
+    nsIWebBrowserPersistResourceVisitor* aVisitor)
+    : mDocument(aDocument), mVisitor(aVisitor) {
+  MOZ_ASSERT(aDocument);
+  MOZ_ASSERT(aVisitor);
 }
 
 WebBrowserPersistResourcesParent::~WebBrowserPersistResourcesParent() = default;
 
-void
-WebBrowserPersistResourcesParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-    if (aWhy != Deletion && mVisitor) {
-        // See comment in WebBrowserPersistDocumentParent::ActorDestroy
-        // (or bug 1202887) for why this is deferred.
-        nsCOMPtr<nsIRunnable> errorLater =
-          NewRunnableMethod<nsCOMPtr<nsIWebBrowserPersistDocument>, nsresult>(
-            "nsIWebBrowserPersistResourceVisitor::EndVisit",
-            mVisitor,
-            &nsIWebBrowserPersistResourceVisitor::EndVisit,
-            mDocument,
+void WebBrowserPersistResourcesParent::ActorDestroy(ActorDestroyReason aWhy) {
+  if (aWhy != Deletion && mVisitor) {
+    // See comment in WebBrowserPersistDocumentParent::ActorDestroy
+    // (or bug 1202887) for why this is deferred.
+    nsCOMPtr<nsIRunnable> errorLater =
+        NewRunnableMethod<nsCOMPtr<nsIWebBrowserPersistDocument>, nsresult>(
+            "nsIWebBrowserPersistResourceVisitor::EndVisit", mVisitor,
+            &nsIWebBrowserPersistResourceVisitor::EndVisit, mDocument,
             NS_ERROR_FAILURE);
-        NS_DispatchToCurrentThread(errorLater);
-    }
-    mVisitor = nullptr;
+    NS_DispatchToCurrentThread(errorLater);
+  }
+  mVisitor = nullptr;
 }
 
-mozilla::ipc::IPCResult
-WebBrowserPersistResourcesParent::Recv__delete__(const nsresult& aStatus)
-{
-    mVisitor->EndVisit(mDocument, aStatus);
-    mVisitor = nullptr;
-    return IPC_OK();
+mozilla::ipc::IPCResult WebBrowserPersistResourcesParent::Recv__delete__(
+    const nsresult& aStatus) {
+  mVisitor->EndVisit(mDocument, aStatus);
+  mVisitor = nullptr;
+  return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebBrowserPersistResourcesParent::RecvVisitResource(const nsCString& aURI, const nsContentPolicyType& aContentPolicyType)
-{
-    mVisitor->VisitResource(mDocument, aURI, aContentPolicyType);
-    return IPC_OK();
+mozilla::ipc::IPCResult WebBrowserPersistResourcesParent::RecvVisitResource(
+    const nsCString& aURI, const nsContentPolicyType& aContentPolicyType) {
+  mVisitor->VisitResource(mDocument, aURI, aContentPolicyType);
+  return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebBrowserPersistResourcesParent::RecvVisitDocument(PWebBrowserPersistDocumentParent* aSubDocument)
-{
-    // Don't expose the subdocument to the visitor until it's ready
-    // (until the actor isn't in START state).
-    static_cast<WebBrowserPersistDocumentParent*>(aSubDocument)
-        ->SetOnReady(this);
-    return IPC_OK();
+mozilla::ipc::IPCResult WebBrowserPersistResourcesParent::RecvVisitDocument(
+    PWebBrowserPersistDocumentParent* aSubDocument) {
+  // Don't expose the subdocument to the visitor until it's ready
+  // (until the actor isn't in START state).
+  static_cast<WebBrowserPersistDocumentParent*>(aSubDocument)->SetOnReady(this);
+  return IPC_OK();
 }
 
 NS_IMETHODIMP
-WebBrowserPersistResourcesParent::OnDocumentReady(nsIWebBrowserPersistDocument* aSubDocument)
-{
-    if (!mVisitor) {
-        return NS_ERROR_FAILURE;
-    }
-    mVisitor->VisitDocument(mDocument, aSubDocument);
-    return NS_OK;
+WebBrowserPersistResourcesParent::OnDocumentReady(
+    nsIWebBrowserPersistDocument* aSubDocument) {
+  if (!mVisitor) {
+    return NS_ERROR_FAILURE;
+  }
+  mVisitor->VisitDocument(mDocument, aSubDocument);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-WebBrowserPersistResourcesParent::OnError(nsresult aFailure)
-{
-    // Nothing useful to do but ignore the failed document.
-    return NS_OK;
+WebBrowserPersistResourcesParent::OnError(nsresult aFailure) {
+  // Nothing useful to do but ignore the failed document.
+  return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

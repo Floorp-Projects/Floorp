@@ -19,15 +19,15 @@ class MIDIMessage;
  * MIDIMessageQueue is responsible for making sure all MIDI messages are
  * scheduled and sent in order.
  */
-class MIDIMessageQueue
-{
-public:
+class MIDIMessageQueue {
+ public:
   MIDIMessageQueue();
   ~MIDIMessageQueue() = default;
   // Adds an array of possibly out-of-order messages to our queue.
   void Add(nsTArray<MIDIMessage>& aMsg);
   // Retrieve all pending messages before the time specified.
-  void GetMessagesBefore(TimeStamp aTimestamp, nsTArray<MIDIMessage>& aMsgArray);
+  void GetMessagesBefore(TimeStamp aTimestamp,
+                         nsTArray<MIDIMessage>& aMsgArray);
   // Get all pending messages.
   void GetMessages(nsTArray<MIDIMessage>& aMsgArray);
   // Erase all pending messages.
@@ -36,14 +36,15 @@ public:
   // when ports are closed, as we must send all messages with timestamps in the
   // past.
   void ClearAfterNow();
-private:
+
+ private:
   // Array of messages to be sent.
   nsTArray<MIDIMessage> mMessageQueue;
   // Mutex for coordinating cross thread array access.
   Mutex mMutex;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MIDIMessageQueue_h
+#endif  // mozilla_dom_MIDIMessageQueue_h

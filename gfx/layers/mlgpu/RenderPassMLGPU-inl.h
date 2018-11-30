@@ -11,11 +11,9 @@ namespace mozilla {
 namespace layers {
 
 template <typename Traits>
-static inline bool
-AddShaderTriangles(VertexStagingBuffer* aBuffer,
-                   const Traits& aTraits,
-                   const gfx::Polygon* aGeometry = nullptr)
-{
+static inline bool AddShaderTriangles(VertexStagingBuffer* aBuffer,
+                                      const Traits& aTraits,
+                                      const gfx::Polygon* aGeometry = nullptr) {
   typedef typename Traits::TriangleVertices TriangleVertices;
   typedef typename Traits::FirstTriangle FirstTriangle;
   typedef typename Traits::SecondTriangle SecondTriangle;
@@ -25,7 +23,8 @@ AddShaderTriangles(VertexStagingBuffer* aBuffer,
     TriangleVertices base2 = aTraits.MakeVertex(SecondTriangle());
     auto data1 = aTraits.MakeVertexData(FirstTriangle());
     auto data2 = aTraits.MakeVertexData(SecondTriangle());
-    return aBuffer->PrependItem(base1, data1) && aBuffer->PrependItem(base2, data2);
+    return aBuffer->PrependItem(base1, data1) &&
+           aBuffer->PrependItem(base2, data2);
   }
 
   auto triangles = aTraits.GenerateTriangles(*aGeometry);
@@ -40,9 +39,7 @@ AddShaderTriangles(VertexStagingBuffer* aBuffer,
 }
 
 template <typename Traits>
-inline bool
-BatchRenderPass<Traits>::Txn::AddImpl(const Traits& aTraits)
-{
+inline bool BatchRenderPass<Traits>::Txn::AddImpl(const Traits& aTraits) {
   VertexStagingBuffer* instances = mPass->GetInstances();
 
   if (mPass->mGeometry == GeometryMode::Polygon) {
@@ -64,7 +61,7 @@ BatchRenderPass<Traits>::Txn::AddImpl(const Traits& aTraits)
   return instances->AddItem(base, data);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_mlgpu_RenderPassMLGPU_inl_h
+#endif  // mozilla_gfx_layers_mlgpu_RenderPassMLGPU_inl_h

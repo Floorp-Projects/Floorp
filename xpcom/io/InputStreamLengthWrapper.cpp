@@ -20,8 +20,9 @@ NS_INTERFACE_MAP_BEGIN(InputStreamLengthWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
                                      mWeakCloneableInputStream || !mInputStream)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
-                                     mWeakIPCSerializableInputStream || !mInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(
+      nsIIPCSerializableInputStream,
+      mWeakIPCSerializableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream,
                                      mWeakSeekableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITellableStream,
@@ -35,9 +36,8 @@ NS_INTERFACE_MAP_BEGIN(InputStreamLengthWrapper)
 NS_INTERFACE_MAP_END
 
 /* static */ already_AddRefed<nsIInputStream>
-InputStreamLengthWrapper::MaybeWrap(already_AddRefed<nsIInputStream> aInputStream,
-                                    int64_t aLength)
-{
+InputStreamLengthWrapper::MaybeWrap(
+    already_AddRefed<nsIInputStream> aInputStream, int64_t aLength) {
   nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   MOZ_ASSERT(inputStream);
 
@@ -46,7 +46,8 @@ InputStreamLengthWrapper::MaybeWrap(already_AddRefed<nsIInputStream> aInputStrea
     return inputStream.forget();
   }
 
-  nsCOMPtr<nsIAsyncInputStreamLength> asyncLength = do_QueryInterface(inputStream);
+  nsCOMPtr<nsIAsyncInputStreamLength> asyncLength =
+      do_QueryInterface(inputStream);
   if (asyncLength) {
     return inputStream.forget();
   }
@@ -60,17 +61,16 @@ InputStreamLengthWrapper::MaybeWrap(already_AddRefed<nsIInputStream> aInputStrea
   return inputStream.forget();
 }
 
-InputStreamLengthWrapper::InputStreamLengthWrapper(already_AddRefed<nsIInputStream> aInputStream,
-                                                   int64_t aLength)
-  : mWeakCloneableInputStream(nullptr)
-  , mWeakIPCSerializableInputStream(nullptr)
-  , mWeakSeekableInputStream(nullptr)
-  , mWeakTellableInputStream(nullptr)
-  , mWeakAsyncInputStream(nullptr)
-  , mLength(aLength)
-  , mConsumed(false)
-  , mMutex("InputStreamLengthWrapper::mMutex")
-{
+InputStreamLengthWrapper::InputStreamLengthWrapper(
+    already_AddRefed<nsIInputStream> aInputStream, int64_t aLength)
+    : mWeakCloneableInputStream(nullptr),
+      mWeakIPCSerializableInputStream(nullptr),
+      mWeakSeekableInputStream(nullptr),
+      mWeakTellableInputStream(nullptr),
+      mWeakAsyncInputStream(nullptr),
+      mLength(aLength),
+      mConsumed(false),
+      mMutex("InputStreamLengthWrapper::mMutex") {
   MOZ_ASSERT(mLength >= 0);
 
   nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
@@ -78,52 +78,47 @@ InputStreamLengthWrapper::InputStreamLengthWrapper(already_AddRefed<nsIInputStre
 }
 
 InputStreamLengthWrapper::InputStreamLengthWrapper()
-  : mWeakCloneableInputStream(nullptr)
-  , mWeakIPCSerializableInputStream(nullptr)
-  , mWeakSeekableInputStream(nullptr)
-  , mWeakTellableInputStream(nullptr)
-  , mWeakAsyncInputStream(nullptr)
-  , mLength(-1)
-  , mConsumed(false)
-  , mMutex("InputStreamLengthWrapper::mMutex")
-{}
+    : mWeakCloneableInputStream(nullptr),
+      mWeakIPCSerializableInputStream(nullptr),
+      mWeakSeekableInputStream(nullptr),
+      mWeakTellableInputStream(nullptr),
+      mWeakAsyncInputStream(nullptr),
+      mLength(-1),
+      mConsumed(false),
+      mMutex("InputStreamLengthWrapper::mMutex") {}
 
 InputStreamLengthWrapper::~InputStreamLengthWrapper() = default;
 
-void
-InputStreamLengthWrapper::SetSourceStream(already_AddRefed<nsIInputStream> aInputStream)
-{
+void InputStreamLengthWrapper::SetSourceStream(
+    already_AddRefed<nsIInputStream> aInputStream) {
   MOZ_ASSERT(!mInputStream);
 
   mInputStream = std::move(aInputStream);
 
   nsCOMPtr<nsICloneableInputStream> cloneableStream =
-    do_QueryInterface(mInputStream);
+      do_QueryInterface(mInputStream);
   if (cloneableStream && SameCOMIdentity(mInputStream, cloneableStream)) {
     mWeakCloneableInputStream = cloneableStream;
   }
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializableStream =
-    do_QueryInterface(mInputStream);
-  if (serializableStream &&
-      SameCOMIdentity(mInputStream, serializableStream)) {
+      do_QueryInterface(mInputStream);
+  if (serializableStream && SameCOMIdentity(mInputStream, serializableStream)) {
     mWeakIPCSerializableInputStream = serializableStream;
   }
 
-  nsCOMPtr<nsISeekableStream> seekableStream =
-    do_QueryInterface(mInputStream);
+  nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(mInputStream);
   if (seekableStream && SameCOMIdentity(mInputStream, seekableStream)) {
     mWeakSeekableInputStream = seekableStream;
   }
 
-  nsCOMPtr<nsITellableStream> tellableStream =
-    do_QueryInterface(mInputStream);
+  nsCOMPtr<nsITellableStream> tellableStream = do_QueryInterface(mInputStream);
   if (tellableStream && SameCOMIdentity(mInputStream, tellableStream)) {
     mWeakTellableInputStream = tellableStream;
   }
 
   nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
-    do_QueryInterface(mInputStream);
+      do_QueryInterface(mInputStream);
   if (asyncInputStream && SameCOMIdentity(mInputStream, asyncInputStream)) {
     mWeakAsyncInputStream = asyncInputStream;
   }
@@ -132,37 +127,34 @@ InputStreamLengthWrapper::SetSourceStream(already_AddRefed<nsIInputStream> aInpu
 // nsIInputStream interface
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::Close()
-{
+InputStreamLengthWrapper::Close() {
   NS_ENSURE_STATE(mInputStream);
   return mInputStream->Close();
 }
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::Available(uint64_t* aLength)
-{
+InputStreamLengthWrapper::Available(uint64_t* aLength) {
   NS_ENSURE_STATE(mInputStream);
   return mInputStream->Available(aLength);
 }
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount)
-{
+InputStreamLengthWrapper::Read(char* aBuffer, uint32_t aCount,
+                               uint32_t* aReadCount) {
   NS_ENSURE_STATE(mInputStream);
   mConsumed = true;
   return mInputStream->Read(aBuffer, aCount, aReadCount);
 }
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-                                       uint32_t aCount, uint32_t *aResult)
-{
+InputStreamLengthWrapper::ReadSegments(nsWriteSegmentFun aWriter,
+                                       void* aClosure, uint32_t aCount,
+                                       uint32_t* aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::IsNonBlocking(bool* aNonBlocking)
-{
+InputStreamLengthWrapper::IsNonBlocking(bool* aNonBlocking) {
   NS_ENSURE_STATE(mInputStream);
   return mInputStream->IsNonBlocking(aNonBlocking);
 }
@@ -170,8 +162,7 @@ InputStreamLengthWrapper::IsNonBlocking(bool* aNonBlocking)
 // nsICloneableInputStream interface
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::GetCloneable(bool* aCloneable)
-{
+InputStreamLengthWrapper::GetCloneable(bool* aCloneable) {
   NS_ENSURE_STATE(mInputStream);
   NS_ENSURE_STATE(mWeakCloneableInputStream);
   mWeakCloneableInputStream->GetCloneable(aCloneable);
@@ -179,8 +170,7 @@ InputStreamLengthWrapper::GetCloneable(bool* aCloneable)
 }
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::Clone(nsIInputStream** aResult)
-{
+InputStreamLengthWrapper::Clone(nsIInputStream** aResult) {
   NS_ENSURE_STATE(mInputStream);
   NS_ENSURE_STATE(mWeakCloneableInputStream);
 
@@ -191,7 +181,7 @@ InputStreamLengthWrapper::Clone(nsIInputStream** aResult)
   }
 
   nsCOMPtr<nsIInputStream> stream =
-    new InputStreamLengthWrapper(clonedStream.forget(), mLength);
+      new InputStreamLengthWrapper(clonedStream.forget(), mLength);
 
   stream.forget(aResult);
   return NS_OK;
@@ -200,8 +190,7 @@ InputStreamLengthWrapper::Clone(nsIInputStream** aResult)
 // nsIAsyncInputStream interface
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::CloseWithStatus(nsresult aStatus)
-{
+InputStreamLengthWrapper::CloseWithStatus(nsresult aStatus) {
   NS_ENSURE_STATE(mInputStream);
   NS_ENSURE_STATE(mWeakAsyncInputStream);
 
@@ -211,10 +200,8 @@ InputStreamLengthWrapper::CloseWithStatus(nsresult aStatus)
 
 NS_IMETHODIMP
 InputStreamLengthWrapper::AsyncWait(nsIInputStreamCallback* aCallback,
-                                    uint32_t aFlags,
-                                    uint32_t aRequestedCount,
-                                    nsIEventTarget* aEventTarget)
-{
+                                    uint32_t aFlags, uint32_t aRequestedCount,
+                                    nsIEventTarget* aEventTarget) {
   NS_ENSURE_STATE(mInputStream);
   NS_ENSURE_STATE(mWeakAsyncInputStream);
 
@@ -247,8 +234,7 @@ InputStreamLengthWrapper::AsyncWait(nsIInputStreamCallback* aCallback,
 // nsIInputStreamCallback
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::OnInputStreamReady(nsIAsyncInputStream* aStream)
-{
+InputStreamLengthWrapper::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   MOZ_ASSERT(mInputStream);
   MOZ_ASSERT(mWeakAsyncInputStream);
   MOZ_ASSERT(mWeakAsyncInputStream == aStream);
@@ -270,10 +256,9 @@ InputStreamLengthWrapper::OnInputStreamReady(nsIAsyncInputStream* aStream)
 
 // nsIIPCSerializableInputStream
 
-void
-InputStreamLengthWrapper::Serialize(mozilla::ipc::InputStreamParams& aParams,
-                                    FileDescriptorArray& aFileDescriptors)
-{
+void InputStreamLengthWrapper::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors) {
   MOZ_ASSERT(mInputStream);
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
 
@@ -286,25 +271,22 @@ InputStreamLengthWrapper::Serialize(mozilla::ipc::InputStreamParams& aParams,
   aParams = params;
 }
 
-bool
-InputStreamLengthWrapper::Deserialize(const mozilla::ipc::InputStreamParams& aParams,
-                                      const FileDescriptorArray& aFileDescriptors)
-{
+bool InputStreamLengthWrapper::Deserialize(
+    const mozilla::ipc::InputStreamParams& aParams,
+    const FileDescriptorArray& aFileDescriptors) {
   MOZ_ASSERT(!mInputStream);
   MOZ_ASSERT(!mWeakIPCSerializableInputStream);
 
-  if (aParams.type() !=
-      InputStreamParams::TInputStreamLengthWrapperParams) {
+  if (aParams.type() != InputStreamParams::TInputStreamLengthWrapperParams) {
     NS_ERROR("Received unknown parameters from the other process!");
     return false;
   }
 
   const InputStreamLengthWrapperParams& params =
-    aParams.get_InputStreamLengthWrapperParams();
+      aParams.get_InputStreamLengthWrapperParams();
 
-  nsCOMPtr<nsIInputStream> stream =
-    InputStreamHelper::DeserializeInputStream(params.stream(),
-                                              aFileDescriptors);
+  nsCOMPtr<nsIInputStream> stream = InputStreamHelper::DeserializeInputStream(
+      params.stream(), aFileDescriptors);
   if (!stream) {
     NS_WARNING("Deserialize failed!");
     return false;
@@ -318,9 +300,7 @@ InputStreamLengthWrapper::Deserialize(const mozilla::ipc::InputStreamParams& aPa
   return true;
 }
 
-mozilla::Maybe<uint64_t>
-InputStreamLengthWrapper::ExpectedSerializedLength()
-{
+mozilla::Maybe<uint64_t> InputStreamLengthWrapper::ExpectedSerializedLength() {
   if (!mInputStream || !mWeakIPCSerializableInputStream) {
     return mozilla::Nothing();
   }
@@ -331,8 +311,7 @@ InputStreamLengthWrapper::ExpectedSerializedLength()
 // nsISeekableStream
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::Seek(int32_t aWhence, int64_t aOffset)
-{
+InputStreamLengthWrapper::Seek(int32_t aWhence, int64_t aOffset) {
   NS_ENSURE_STATE(mInputStream);
   NS_ENSURE_STATE(mWeakSeekableInputStream);
 
@@ -341,8 +320,7 @@ InputStreamLengthWrapper::Seek(int32_t aWhence, int64_t aOffset)
 }
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::SetEOF()
-{
+InputStreamLengthWrapper::SetEOF() {
   NS_ENSURE_STATE(mInputStream);
   NS_ENSURE_STATE(mWeakSeekableInputStream);
 
@@ -353,8 +331,7 @@ InputStreamLengthWrapper::SetEOF()
 // nsITellableStream
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::Tell(int64_t *aResult)
-{
+InputStreamLengthWrapper::Tell(int64_t* aResult) {
   NS_ENSURE_STATE(mInputStream);
   NS_ENSURE_STATE(mWeakTellableInputStream);
 
@@ -364,11 +341,10 @@ InputStreamLengthWrapper::Tell(int64_t *aResult)
 // nsIInputStreamLength
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::Length(int64_t* aLength)
-{
+InputStreamLengthWrapper::Length(int64_t* aLength) {
   NS_ENSURE_STATE(mInputStream);
   *aLength = mLength;
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

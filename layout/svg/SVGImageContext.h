@@ -23,9 +23,8 @@ class ComputedStyle;
 //  - viewport information from CSS, and
 //  - overridden attributes from an SVG <image> element
 // to the image's internal SVG document when it's drawn.
-class SVGImageContext
-{
-public:
+class SVGImageContext {
+ public:
   SVGImageContext() {}
 
   /**
@@ -44,11 +43,11 @@ public:
    * point we need to clean this code up, make our abstractions clear, create
    * that utility and stop using Maybe for this parameter.
    */
-  explicit SVGImageContext(const Maybe<CSSIntSize>& aViewportSize,
-                           const Maybe<SVGPreserveAspectRatio>& aPreserveAspectRatio  = Nothing())
-    : mViewportSize(aViewportSize)
-    , mPreserveAspectRatio(aPreserveAspectRatio)
-  { }
+  explicit SVGImageContext(
+      const Maybe<CSSIntSize>& aViewportSize,
+      const Maybe<SVGPreserveAspectRatio>& aPreserveAspectRatio = Nothing())
+      : mViewportSize(aViewportSize),
+        mPreserveAspectRatio(aPreserveAspectRatio) {}
 
   static void MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
                                      nsIFrame* aFromFrame,
@@ -58,9 +57,7 @@ public:
                                      ComputedStyle* aFromComputedStyle,
                                      imgIContainer* aImgContainer);
 
-  const Maybe<CSSIntSize>& GetViewportSize() const {
-    return mViewportSize;
-  }
+  const Maybe<CSSIntSize>& GetViewportSize() const { return mViewportSize; }
 
   void SetViewportSize(const Maybe<CSSIntSize>& aSize) {
     mViewportSize = aSize;
@@ -78,20 +75,17 @@ public:
     return mContextPaint.get();
   }
 
-  void ClearContextPaint() {
-    mContextPaint = nullptr;
-  }
+  void ClearContextPaint() { mContextPaint = nullptr; }
 
   bool operator==(const SVGImageContext& aOther) const {
     bool contextPaintIsEqual =
-      // neither have context paint, or they have the same object:
-      (mContextPaint == aOther.mContextPaint) ||
-      // or both have context paint that are different but equivalent objects:
-      (mContextPaint && aOther.mContextPaint &&
-       *mContextPaint == *aOther.mContextPaint);
+        // neither have context paint, or they have the same object:
+        (mContextPaint == aOther.mContextPaint) ||
+        // or both have context paint that are different but equivalent objects:
+        (mContextPaint && aOther.mContextPaint &&
+         *mContextPaint == *aOther.mContextPaint);
 
-    return contextPaintIsEqual &&
-           mViewportSize == aOther.mViewportSize &&
+    return contextPaintIsEqual && mViewportSize == aOther.mViewportSize &&
            mPreserveAspectRatio == aOther.mPreserveAspectRatio;
   }
 
@@ -104,12 +98,11 @@ public:
     if (mContextPaint) {
       hash = HashGeneric(hash, mContextPaint->Hash());
     }
-    return HashGeneric(hash,
-                       mViewportSize.map(HashSize).valueOr(0),
+    return HashGeneric(hash, mViewportSize.map(HashSize).valueOr(0),
                        mPreserveAspectRatio.map(HashPAR).valueOr(0));
   }
 
-private:
+ private:
   static PLDHashNumber HashSize(const CSSIntSize& aSize) {
     return HashGeneric(aSize.width, aSize.height);
   }
@@ -119,10 +112,10 @@ private:
 
   // NOTE: When adding new member-vars, remember to update Hash() & operator==.
   RefPtr<SVGEmbeddingContextPaint> mContextPaint;
-  Maybe<CSSIntSize>             mViewportSize;
+  Maybe<CSSIntSize> mViewportSize;
   Maybe<SVGPreserveAspectRatio> mPreserveAspectRatio;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_SVGCONTEXT_H_
+#endif  // MOZILLA_SVGCONTEXT_H_

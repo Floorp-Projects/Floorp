@@ -25,10 +25,10 @@
 
 class nsIStackFrame;
 
-nsresult
-NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, nsACString& aName,
-                                   nsACString& aMessage,
-                                   uint16_t* aCode = nullptr);
+nsresult NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult,
+                                            nsACString& aName,
+                                            nsACString& aMessage,
+                                            uint16_t* aCode = nullptr);
 
 namespace mozilla {
 class ErrorResult;
@@ -37,14 +37,15 @@ namespace dom {
 
 class GlobalObject;
 
-#define MOZILLA_EXCEPTION_IID \
-{ 0x55eda557, 0xeba0, 0x4fe3, \
-  { 0xae, 0x2e, 0xf3, 0x94, 0x49, 0x23, 0x62, 0xd6 } }
+#define MOZILLA_EXCEPTION_IID                        \
+  {                                                  \
+    0x55eda557, 0xeba0, 0x4fe3, {                    \
+      0xae, 0x2e, 0xf3, 0x94, 0x49, 0x23, 0x62, 0xd6 \
+    }                                                \
+  }
 
-class Exception : public nsIException,
-                  public nsWrapperCache
-{
-public:
+class Exception : public nsIException, public nsWrapperCache {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_EXCEPTION_IID)
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Exception)
@@ -52,17 +53,10 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIEXCEPTION
 
-  const nsCString& GetMessageMoz() const
-  {
-    return mMessage;
-  }
-  nsresult GetResult() const
-  {
-    return mResult;
-  }
+  const nsCString& GetMessageMoz() const { return mMessage; }
+  nsresult GetResult() const { return mResult; }
   // DOMException wants different ToString behavior, so allow it to override.
   virtual void ToString(JSContext* aCx, nsACString& aReturn);
-
 
   // Cruft used by XPConnect for exceptions originating in JS implemented
   // components.
@@ -70,8 +64,8 @@ public:
   void StowJSVal(JS::Value& aVp);
 
   // WebIDL API
-  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
-    override;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() const { return nullptr; }
 
@@ -81,8 +75,7 @@ public:
 
   void GetName(nsAString& retval);
 
-  virtual void GetErrorMessage(nsAString& aRetVal)
-  {
+  virtual void GetErrorMessage(nsAString& aRetVal) {
     // Since GetName is non non-virtual and deals with different
     // member variables in Exception vs. DOMException, have a virtual
     // method to ensure the right error message creation.
@@ -105,17 +98,14 @@ public:
 
   void Stringify(JSContext* aCx, nsString& retval);
 
-  Exception(const nsACString& aMessage,
-            nsresult aResult,
-            const nsACString& aName,
-            nsIStackFrame *aLocation,
-            nsISupports *aData);
+  Exception(const nsACString& aMessage, nsresult aResult,
+            const nsACString& aName, nsIStackFrame* aLocation,
+            nsISupports* aData);
 
-protected:
+ protected:
   virtual ~Exception();
 
-  void CreateErrorMessage(const nsAString& aName, nsAString& aRetVal)
-  {
+  void CreateErrorMessage(const nsAString& aName, nsAString& aRetVal) {
     // Create similar error message as what ErrorReport::init does in jsexn.cpp.
     if (!aName.IsEmpty() && !mMessage.IsEmpty()) {
       aRetVal.Assign(aName);
@@ -130,9 +120,9 @@ protected:
     }
   }
 
-  nsCString       mMessage;
-  nsresult        mResult;
-  nsCString       mName;
+  nsCString mMessage;
+  nsresult mResult;
+  nsCString mName;
   nsCOMPtr<nsIStackFrame> mLocation;
   nsCOMPtr<nsISupports> mData;
 
@@ -142,27 +132,22 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Exception, MOZILLA_EXCEPTION_IID)
 
-class DOMException : public Exception
-{
-public:
+class DOMException : public Exception {
+ public:
   DOMException(nsresult aRv, const nsACString& aMessage,
                const nsACString& aName, uint16_t aCode);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(DOMException, Exception)
 
   // nsWrapperCache overrides
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-    override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<DOMException>
-  Constructor(GlobalObject& /* unused */,
-              const nsAString& aMessage,
-              const Optional<nsAString>& aName,
-              ErrorResult& aError);
+  static already_AddRefed<DOMException> Constructor(
+      GlobalObject& /* unused */, const nsAString& aMessage,
+      const Optional<nsAString>& aName, ErrorResult& aError);
 
-  uint16_t Code() const {
-    return mCode;
-  }
+  uint16_t Code() const { return mCode; }
 
   // Intentionally shadow the Exception version.
   void GetName(nsString& retval);
@@ -170,29 +155,26 @@ public:
   // Exception overrides
   void ToString(JSContext* aCx, nsACString& aReturn) override;
 
-  virtual void GetErrorMessage(nsAString& aRetVal) override
-  {
+  virtual void GetErrorMessage(nsAString& aRetVal) override {
     // See the comment in Exception::GetErrorMessage.
     nsAutoString name;
     GetName(name);
     CreateErrorMessage(name, aRetVal);
   }
 
-  static already_AddRefed<DOMException>
-  Create(nsresult aRv);
+  static already_AddRefed<DOMException> Create(nsresult aRv);
 
-  static already_AddRefed<DOMException>
-  Create(nsresult aRv, const nsACString& aMessage);
+  static already_AddRefed<DOMException> Create(nsresult aRv,
+                                               const nsACString& aMessage);
 
-protected:
-
+ protected:
   virtual ~DOMException() {}
 
   uint16_t mCode;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop

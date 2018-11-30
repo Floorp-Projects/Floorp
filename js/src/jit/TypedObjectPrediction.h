@@ -36,168 +36,152 @@ namespace jit {
 // |kind()| of the data (struct, array, etc) and from there make more
 // specific queries.
 class TypedObjectPrediction {
-  public:
-    enum PredictionKind {
-        // No data.
-        Empty,
+ public:
+  enum PredictionKind {
+    // No data.
+    Empty,
 
-        // Inconsistent data.
-        Inconsistent,
+    // Inconsistent data.
+    Inconsistent,
 
-        // Multiple different struct types flow into the same location,
-        // but they share fields in common. Prefix indicates that the first
-        // N fields of some struct type are known to be valid. This occurs
-        // in a subtyping scenario.
-        Prefix,
+    // Multiple different struct types flow into the same location,
+    // but they share fields in common. Prefix indicates that the first
+    // N fields of some struct type are known to be valid. This occurs
+    // in a subtyping scenario.
+    Prefix,
 
-        // The TypeDescr of the value is known. This is the most specific
-        // possible value and includes precise array bounds.
-        Descr
-    };
+    // The TypeDescr of the value is known. This is the most specific
+    // possible value and includes precise array bounds.
+    Descr
+  };
 
-    struct PrefixData {
-        const StructTypeDescr* descr;
-        size_t fields;
-    };
+  struct PrefixData {
+    const StructTypeDescr* descr;
+    size_t fields;
+  };
 
-    union Data {
-        const TypeDescr* descr;
-        PrefixData prefix;
-    };
+  union Data {
+    const TypeDescr* descr;
+    PrefixData prefix;
+  };
 
-  private:
-    PredictionKind kind_;
-    Data data_;
+ private:
+  PredictionKind kind_;
+  Data data_;
 
-    PredictionKind predictionKind() const {
-        return kind_;
-    }
+  PredictionKind predictionKind() const { return kind_; }
 
-    void markInconsistent() {
-        kind_ = Inconsistent;
-    }
+  void markInconsistent() { kind_ = Inconsistent; }
 
-    const TypeDescr& descr() const {
-        MOZ_ASSERT(predictionKind() == Descr);
-        return *data_.descr;
-    }
+  const TypeDescr& descr() const {
+    MOZ_ASSERT(predictionKind() == Descr);
+    return *data_.descr;
+  }
 
-    const PrefixData& prefix() const {
-        MOZ_ASSERT(predictionKind() == Prefix);
-        return data_.prefix;
-    }
+  const PrefixData& prefix() const {
+    MOZ_ASSERT(predictionKind() == Prefix);
+    return data_.prefix;
+  }
 
-    void setDescr(const TypeDescr& descr) {
-        kind_ = Descr;
-        data_.descr = &descr;
-    }
+  void setDescr(const TypeDescr& descr) {
+    kind_ = Descr;
+    data_.descr = &descr;
+  }
 
-    void setPrefix(const StructTypeDescr& descr, size_t fields) {
-        kind_ = Prefix;
-        data_.prefix.descr = &descr;
-        data_.prefix.fields = fields;
-    }
+  void setPrefix(const StructTypeDescr& descr, size_t fields) {
+    kind_ = Prefix;
+    data_.prefix.descr = &descr;
+    data_.prefix.fields = fields;
+  }
 
-    void markAsCommonPrefix(const StructTypeDescr& descrA,
-                            const StructTypeDescr& descrB,
-                            size_t max);
+  void markAsCommonPrefix(const StructTypeDescr& descrA,
+                          const StructTypeDescr& descrB, size_t max);
 
-    template<typename T>
-    typename T::Type extractType() const;
+  template <typename T>
+  typename T::Type extractType() const;
 
-    bool hasFieldNamedPrefix(const StructTypeDescr& descr,
-                             size_t fieldCount,
-                             jsid id,
-                             size_t* fieldOffset,
-                             TypedObjectPrediction* out,
-                             size_t* index,
-                             bool* isMutable) const;
+  bool hasFieldNamedPrefix(const StructTypeDescr& descr, size_t fieldCount,
+                           jsid id, size_t* fieldOffset,
+                           TypedObjectPrediction* out, size_t* index,
+                           bool* isMutable) const;
 
-  public:
+ public:
+  ///////////////////////////////////////////////////////////////////////////
+  // Constructing a prediction. Generally, you start with an empty
+  // prediction and invoke addDescr() repeatedly.
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructing a prediction. Generally, you start with an empty
-    // prediction and invoke addDescr() repeatedly.
+  TypedObjectPrediction() : data_() { kind_ = Empty; }
 
-    TypedObjectPrediction()
-      : data_() {
-        kind_ = Empty;
-    }
+  explicit TypedObjectPrediction(const TypeDescr& descr) { setDescr(descr); }
 
-    explicit TypedObjectPrediction(const TypeDescr& descr) {
-        setDescr(descr);
-    }
+  TypedObjectPrediction(const StructTypeDescr& descr, size_t fields) {
+    setPrefix(descr, fields);
+  }
 
-    TypedObjectPrediction(const StructTypeDescr& descr, size_t fields) {
-        setPrefix(descr, fields);
-    }
+  void addDescr(const TypeDescr& descr);
 
-    void addDescr(const TypeDescr& descr);
+  ///////////////////////////////////////////////////////////////////////////
+  // Queries that are always valid.
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Queries that are always valid.
+  bool isUseless() const {
+    return predictionKind() == Empty || predictionKind() == Inconsistent;
+  }
 
-    bool isUseless() const {
-        return predictionKind() == Empty || predictionKind() == Inconsistent;
-    }
+  // Determines whether we can predict the prototype for the typed
+  // object instance. Returns null if we cannot or if the typed
+  // object is of scalar/reference kind, in which case instances are
+  // not objects and hence do not have a (publicly available)
+  // prototype.
+  const TypedProto* getKnownPrototype() const;
 
-    // Determines whether we can predict the prototype for the typed
-    // object instance. Returns null if we cannot or if the typed
-    // object is of scalar/reference kind, in which case instances are
-    // not objects and hence do not have a (publicly available)
-    // prototype.
-    const TypedProto* getKnownPrototype() const;
+  ///////////////////////////////////////////////////////////////////////////
+  // Queries that are valid if not useless.
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Queries that are valid if not useless.
+  type::Kind kind() const;
 
-    type::Kind kind() const;
+  bool ofArrayKind() const;
 
-    bool ofArrayKind() const;
+  // Returns true if the size of this typed object is statically
+  // known and sets |*out| to that size. Otherwise returns false.
+  //
+  // The size may not be statically known if (1) the object is
+  // an array whose dimensions are unknown or (2) only a prefix
+  // of its type is known.
+  bool hasKnownSize(uint32_t* out) const;
 
-    // Returns true if the size of this typed object is statically
-    // known and sets |*out| to that size. Otherwise returns false.
-    //
-    // The size may not be statically known if (1) the object is
-    // an array whose dimensions are unknown or (2) only a prefix
-    // of its type is known.
-    bool hasKnownSize(uint32_t* out) const;
+  //////////////////////////////////////////////////////////////////////
+  // Simple operations
+  //
+  // Only valid when |kind()| is Scalar or Reference.
 
-    //////////////////////////////////////////////////////////////////////
-    // Simple operations
-    //
-    // Only valid when |kind()| is Scalar or Reference.
+  Scalar::Type scalarType() const;
+  ReferenceType referenceType() const;
 
-    Scalar::Type scalarType() const;
-    ReferenceType referenceType() const;
+  ///////////////////////////////////////////////////////////////////////////
+  // Queries valid only for arrays.
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Queries valid only for arrays.
+  // Returns true if the length of the array is statically known,
+  // and sets |*length| appropriately. Otherwise returns false.
+  bool hasKnownArrayLength(int32_t* length) const;
 
-    // Returns true if the length of the array is statically known,
-    // and sets |*length| appropriately. Otherwise returns false.
-    bool hasKnownArrayLength(int32_t* length) const;
+  // Returns a prediction for the array element type, if any.
+  TypedObjectPrediction arrayElementType() const;
 
-    // Returns a prediction for the array element type, if any.
-    TypedObjectPrediction arrayElementType() const;
+  //////////////////////////////////////////////////////////////////////
+  // Struct operations
+  //
+  // Only valid when |kind() == TypeDescr::Struct|
 
-    //////////////////////////////////////////////////////////////////////
-    // Struct operations
-    //
-    // Only valid when |kind() == TypeDescr::Struct|
-
-    // Returns true if the predicted type includes a field named |id|
-    // and sets |*fieldOffset|, |*fieldType|, and |*fieldIndex| with
-    // the offset (in bytes), type, and index of the field
-    // respectively.  Otherwise returns false.
-    bool hasFieldNamed(jsid id,
-                       size_t* fieldOffset,
-                       TypedObjectPrediction* fieldType,
-                       size_t* fieldIndex,
-                       bool* fieldMutable) const;
+  // Returns true if the predicted type includes a field named |id|
+  // and sets |*fieldOffset|, |*fieldType|, and |*fieldIndex| with
+  // the offset (in bytes), type, and index of the field
+  // respectively.  Otherwise returns false.
+  bool hasFieldNamed(jsid id, size_t* fieldOffset,
+                     TypedObjectPrediction* fieldType, size_t* fieldIndex,
+                     bool* fieldMutable) const;
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif

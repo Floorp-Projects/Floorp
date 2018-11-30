@@ -22,9 +22,8 @@
 
 using namespace mozilla::a11y;
 
-ApplicationAccessible::ApplicationAccessible() :
-  AccessibleWrap(nullptr, nullptr)
-{
+ApplicationAccessible::ApplicationAccessible()
+    : AccessibleWrap(nullptr, nullptr) {
   mType = eApplicationType;
   mAppInfo = do_GetService("@mozilla.org/xre/app-info;1");
   MOZ_ASSERT(mAppInfo, "no application info");
@@ -33,23 +32,19 @@ ApplicationAccessible::ApplicationAccessible() :
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-ENameValueFlag
-ApplicationAccessible::Name(nsString& aName) const
-{
+ENameValueFlag ApplicationAccessible::Name(nsString& aName) const {
   aName.Truncate();
 
   nsCOMPtr<nsIStringBundleService> bundleService =
-    mozilla::services::GetStringBundleService();
+      mozilla::services::GetStringBundleService();
 
   NS_ASSERTION(bundleService, "String bundle service must be present!");
-  if (!bundleService)
-    return eNameOK;
+  if (!bundleService) return eNameOK;
 
   nsCOMPtr<nsIStringBundle> bundle;
-  nsresult rv = bundleService->CreateBundle("chrome://branding/locale/brand.properties",
-                                            getter_AddRefs(bundle));
-  if (NS_FAILED(rv))
-    return eNameOK;
+  nsresult rv = bundleService->CreateBundle(
+      "chrome://branding/locale/brand.properties", getter_AddRefs(bundle));
+  if (NS_FAILED(rv)) return eNameOK;
 
   nsAutoString appName;
   rv = bundle->GetStringFromName("brandShortName", appName);
@@ -62,106 +57,58 @@ ApplicationAccessible::Name(nsString& aName) const
   return eNameOK;
 }
 
-void
-ApplicationAccessible::Description(nsString& aDescription)
-{
+void ApplicationAccessible::Description(nsString& aDescription) {
   aDescription.Truncate();
 }
 
-void
-ApplicationAccessible::Value(nsString& aValue) const
-{
-  aValue.Truncate();
-}
+void ApplicationAccessible::Value(nsString& aValue) const { aValue.Truncate(); }
 
-uint64_t
-ApplicationAccessible::State()
-{
+uint64_t ApplicationAccessible::State() {
   return IsDefunct() ? states::DEFUNCT : 0;
 }
 
 already_AddRefed<nsIPersistentProperties>
-ApplicationAccessible::NativeAttributes()
-{
+ApplicationAccessible::NativeAttributes() {
   return nullptr;
 }
 
-GroupPos
-ApplicationAccessible::GroupPosition()
-{
-  return GroupPos();
-}
+GroupPos ApplicationAccessible::GroupPosition() { return GroupPos(); }
 
-Accessible*
-ApplicationAccessible::ChildAtPoint(int32_t aX, int32_t aY,
-                                    EWhichChildAtPoint aWhichChild)
-{
+Accessible* ApplicationAccessible::ChildAtPoint(
+    int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   return nullptr;
 }
 
-Accessible*
-ApplicationAccessible::FocusedChild()
-{
+Accessible* ApplicationAccessible::FocusedChild() {
   Accessible* focus = FocusMgr()->FocusedAccessible();
-  if (focus && focus->Parent() == this)
-    return focus;
+  if (focus && focus->Parent() == this) return focus;
 
   return nullptr;
 }
 
-Relation
-ApplicationAccessible::RelationByType(RelationType aRelationType) const
-{
+Relation ApplicationAccessible::RelationByType(
+    RelationType aRelationType) const {
   return Relation();
 }
 
-nsIntRect
-ApplicationAccessible::Bounds() const
-{
-  return nsIntRect();
-}
+nsIntRect ApplicationAccessible::Bounds() const { return nsIntRect(); }
 
-nsRect
-ApplicationAccessible::BoundsInAppUnits() const
-{
-  return nsRect();
-}
+nsRect ApplicationAccessible::BoundsInAppUnits() const { return nsRect(); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible public methods
 
-void
-ApplicationAccessible::Shutdown()
-{
-  mAppInfo = nullptr;
-}
+void ApplicationAccessible::Shutdown() { mAppInfo = nullptr; }
 
-void
-ApplicationAccessible::ApplyARIAState(uint64_t* aState) const
-{
-}
+void ApplicationAccessible::ApplyARIAState(uint64_t* aState) const {}
 
-role
-ApplicationAccessible::NativeRole() const
-{
-  return roles::APP_ROOT;
-}
+role ApplicationAccessible::NativeRole() const { return roles::APP_ROOT; }
 
-uint64_t
-ApplicationAccessible::NativeState() const
-{
-  return 0;
-}
+uint64_t ApplicationAccessible::NativeState() const { return 0; }
 
-KeyBinding
-ApplicationAccessible::AccessKey() const
-{
-  return KeyBinding();
-}
+KeyBinding ApplicationAccessible::AccessKey() const { return KeyBinding(); }
 
-void
-ApplicationAccessible::Init()
-{
+void ApplicationAccessible::Init() {
   // Basically children are kept updated by Append/RemoveChild method calls.
   // However if there are open windows before accessibility was started
   // then we need to make sure root accessibles for open windows are created so
@@ -169,7 +116,7 @@ ApplicationAccessible::Init()
   // array.
 
   nsGlobalWindowOuter::OuterWindowByIdTable* windowsById =
-    nsGlobalWindowOuter::GetWindowsTable();
+      nsGlobalWindowOuter::GetWindowsTable();
 
   if (!windowsById) {
     return;
@@ -187,12 +134,9 @@ ApplicationAccessible::Init()
   }
 }
 
-Accessible*
-ApplicationAccessible::GetSiblingAtOffset(int32_t aOffset,
-                                          nsresult* aError) const
-{
-  if (aError)
-    *aError = NS_OK; // fail peacefully
+Accessible* ApplicationAccessible::GetSiblingAtOffset(int32_t aOffset,
+                                                      nsresult* aError) const {
+  if (aError) *aError = NS_OK;  // fail peacefully
 
   return nullptr;
 }

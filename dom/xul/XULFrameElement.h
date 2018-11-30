@@ -21,14 +21,10 @@ class nsFrameLoader;
 namespace mozilla {
 namespace dom {
 
-class XULFrameElement final : public nsXULElement,
-                              public nsIFrameLoaderOwner
-{
-public:
+class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
+ public:
   explicit XULFrameElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsXULElement(std::move(aNodeInfo))
-  {
-  }
+      : nsXULElement(std::move(aNodeInfo)) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULFrameElement, nsXULElement)
@@ -40,18 +36,16 @@ public:
   nsIDocument* GetContentDocument();
 
   // nsIFrameLoaderOwner / MozFrameLoaderOwner
-  NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() override
-  {
+  NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() override {
     return do_AddRef(mFrameLoader);
   }
 
-  NS_IMETHOD_(void) InternalSetFrameLoader(nsFrameLoader* aFrameLoader) override
-  {
+  NS_IMETHOD_(void)
+  InternalSetFrameLoader(nsFrameLoader* aFrameLoader) override {
     mFrameLoader = aFrameLoader;
   }
 
-  void PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv)
-  {
+  void PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv) {
     mOpener = do_QueryInterface(aWindow);
   }
 
@@ -68,27 +62,25 @@ public:
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
   virtual void DestroyContent() override;
 
-
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
                                 nsIPrincipal* aSubjectPrincipal,
                                 bool aNotify) override;
 
-protected:
-  virtual ~XULFrameElement()
-  {
-  }
+ protected:
+  virtual ~XULFrameElement() {}
 
   RefPtr<nsFrameLoader> mFrameLoader;
   nsCOMPtr<nsPIDOMWindowOuter> mOpener;
 
-  JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
   void LoadSrc();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // XULFrameElement_h
+#endif  // XULFrameElement_h

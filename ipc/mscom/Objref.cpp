@@ -24,97 +24,68 @@ typedef uint64_t OID;
 typedef uint64_t OXID;
 typedef GUID IPID;
 
-struct STDOBJREF
-{
-  uint32_t      mFlags;
-  uint32_t      mPublicRefs;
-  OXID          mOxid;
-  OID           mOid;
-  IPID          mIpid;
+struct STDOBJREF {
+  uint32_t mFlags;
+  uint32_t mPublicRefs;
+  OXID mOxid;
+  OID mOid;
+  IPID mIpid;
 };
 
-enum STDOBJREF_FLAGS
-{
-  SORF_PING = 0,
-  SORF_NOPING = 0x1000
-};
+enum STDOBJREF_FLAGS { SORF_PING = 0, SORF_NOPING = 0x1000 };
 
-struct DUALSTRINGARRAY
-{
-  static size_t SizeFromNumEntries(const uint16_t aNumEntries)
-  {
+struct DUALSTRINGARRAY {
+  static size_t SizeFromNumEntries(const uint16_t aNumEntries) {
     return sizeof(mNumEntries) + sizeof(mSecurityOffset) +
            aNumEntries * sizeof(uint16_t);
   }
 
-  size_t SizeOf() const
-  {
-    return SizeFromNumEntries(mNumEntries);
-  }
+  size_t SizeOf() const { return SizeFromNumEntries(mNumEntries); }
 
-  uint16_t  mNumEntries;
-  uint16_t  mSecurityOffset;
-  uint16_t  mStringArray[1]; // Length is mNumEntries
+  uint16_t mNumEntries;
+  uint16_t mSecurityOffset;
+  uint16_t mStringArray[1];  // Length is mNumEntries
 };
 
-struct OBJREF_STANDARD
-{
-  static size_t SizeOfFixedLenHeader()
-  {
-    return sizeof(mStd);
-  }
+struct OBJREF_STANDARD {
+  static size_t SizeOfFixedLenHeader() { return sizeof(mStd); }
 
-  size_t SizeOf() const
-  {
-    return SizeOfFixedLenHeader() + mResAddr.SizeOf();
-  }
+  size_t SizeOf() const { return SizeOfFixedLenHeader() + mResAddr.SizeOf(); }
 
-  STDOBJREF       mStd;
+  STDOBJREF mStd;
   DUALSTRINGARRAY mResAddr;
 };
 
-struct OBJREF_HANDLER
-{
-  static size_t SizeOfFixedLenHeader()
-  {
-    return sizeof(mStd) + sizeof(mClsid);
-  }
+struct OBJREF_HANDLER {
+  static size_t SizeOfFixedLenHeader() { return sizeof(mStd) + sizeof(mClsid); }
 
-  size_t SizeOf() const
-  {
-    return SizeOfFixedLenHeader() + mResAddr.SizeOf();
-  }
+  size_t SizeOf() const { return SizeOfFixedLenHeader() + mResAddr.SizeOf(); }
 
-  STDOBJREF       mStd;
-  CLSID           mClsid;
+  STDOBJREF mStd;
+  CLSID mClsid;
   DUALSTRINGARRAY mResAddr;
 };
 
-struct OBJREF_CUSTOM
-{
-  static size_t SizeOfFixedLenHeader()
-  {
+struct OBJREF_CUSTOM {
+  static size_t SizeOfFixedLenHeader() {
     return sizeof(mClsid) + sizeof(mCbExtension) + sizeof(mReserved);
   }
 
-  CLSID           mClsid;
-  uint32_t        mCbExtension;
-  uint32_t        mReserved;
-  uint8_t         mPayload[1];
+  CLSID mClsid;
+  uint32_t mCbExtension;
+  uint32_t mReserved;
+  uint8_t mPayload[1];
 };
 
-enum OBJREF_FLAGS
-{
+enum OBJREF_FLAGS {
   OBJREF_TYPE_STANDARD = 0x00000001UL,
   OBJREF_TYPE_HANDLER = 0x00000002UL,
   OBJREF_TYPE_CUSTOM = 0x00000004UL,
   OBJREF_TYPE_EXTENDED = 0x00000008UL,
 };
 
-struct OBJREF
-{
-  static size_t SizeOfFixedLenHeader(OBJREF_FLAGS aFlags)
-  {
+struct OBJREF {
+  static size_t SizeOfFixedLenHeader(OBJREF_FLAGS aFlags) {
     size_t size = sizeof(mSignature) + sizeof(mFlags) + sizeof(mIid);
 
     switch (aFlags) {
@@ -135,8 +106,7 @@ struct OBJREF
     return size;
   }
 
-  size_t SizeOf() const
-  {
+  size_t SizeOf() const {
     size_t size = sizeof(mSignature) + sizeof(mFlags) + sizeof(mIid);
 
     switch (mFlags) {
@@ -154,44 +124,35 @@ struct OBJREF
     return size;
   }
 
-  uint32_t  mSignature;
-  uint32_t  mFlags;
-  IID       mIid;
+  uint32_t mSignature;
+  uint32_t mFlags;
+  IID mIid;
   union {
     OBJREF_STANDARD mObjRefStd;
-    OBJREF_HANDLER  mObjRefHandler;
-    OBJREF_CUSTOM   mObjRefCustom;
+    OBJREF_HANDLER mObjRefHandler;
+    OBJREF_CUSTOM mObjRefCustom;
     // There are others but we're not supporting them here
   };
 };
 
-enum OBJREF_SIGNATURES
-{
-  OBJREF_SIGNATURE = 0x574F454DUL
-};
+enum OBJREF_SIGNATURES { OBJREF_SIGNATURE = 0x574F454DUL };
 
 #pragma pack(pop)
 
-struct ByteArrayDeleter
-{
-  void operator()(void* aPtr)
-  {
-    delete[] reinterpret_cast<uint8_t*>(aPtr);
-  }
+struct ByteArrayDeleter {
+  void operator()(void* aPtr) { delete[] reinterpret_cast<uint8_t*>(aPtr); }
 };
 
 template <typename T>
 using VarStructUniquePtr = mozilla::UniquePtr<T, ByteArrayDeleter>;
 
-} // anonymous namespace
+}  // anonymous namespace
 
 namespace mozilla {
 namespace mscom {
 
-bool
-StripHandlerFromOBJREF(NotNull<IStream*> aStream, const uint64_t aStartPos,
-                       const uint64_t aEndPos)
-{
+bool StripHandlerFromOBJREF(NotNull<IStream*> aStream, const uint64_t aStartPos,
+                            const uint64_t aEndPos) {
   // Ensure that the current stream position is set to the beginning
   LARGE_INTEGER seekTo;
   seekTo.QuadPart = aStartPos;
@@ -313,9 +274,7 @@ StripHandlerFromOBJREF(NotNull<IStream*> aStream, const uint64_t aStartPos,
   return SUCCEEDED(aStream->Seek(seekTo, STREAM_SEEK_SET, nullptr));
 }
 
-uint32_t
-GetOBJREFSize(NotNull<IStream*> aStream)
-{
+uint32_t GetOBJREFSize(NotNull<IStream*> aStream) {
   // Make a clone so that we don't manipulate aStream's seek pointer
   RefPtr<IStream> cloned;
   HRESULT hr = aStream->Clone(getter_AddRefs(cloned));
@@ -369,8 +328,8 @@ GetOBJREFSize(NotNull<IStream*> aStream)
 
     accumulatedSize += bytesRead;
 
-    seekTo.QuadPart = sizeof(OBJREF_CUSTOM::mCbExtension) +
-                      sizeof(OBJREF_CUSTOM::mReserved);
+    seekTo.QuadPart =
+        sizeof(OBJREF_CUSTOM::mCbExtension) + sizeof(OBJREF_CUSTOM::mReserved);
     hr = cloned->Seek(seekTo, STREAM_SEEK_CUR, nullptr);
     if (FAILED(hr)) {
       return 0;
@@ -415,9 +374,7 @@ GetOBJREFSize(NotNull<IStream*> aStream)
   return accumulatedSize;
 }
 
-bool
-SetIID(NotNull<IStream*> aStream, const uint64_t aStart, REFIID aNewIid)
-{
+bool SetIID(NotNull<IStream*> aStream, const uint64_t aStart, REFIID aNewIid) {
   ULARGE_INTEGER initialStreamPos;
 
   LARGE_INTEGER seekTo;
@@ -433,7 +390,8 @@ SetIID(NotNull<IStream*> aStream, const uint64_t aStart, REFIID aNewIid)
     MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr));
   });
 
-  seekTo.QuadPart = aStart + sizeof(OBJREF::mSignature) + sizeof(OBJREF::mFlags);
+  seekTo.QuadPart =
+      aStart + sizeof(OBJREF::mSignature) + sizeof(OBJREF::mFlags);
   hr = aStream->Seek(seekTo, STREAM_SEEK_SET, nullptr);
   if (FAILED(hr)) {
     return false;
@@ -444,5 +402,5 @@ SetIID(NotNull<IStream*> aStream, const uint64_t aStart, REFIID aNewIid)
   return SUCCEEDED(hr) && bytesWritten == sizeof(IID);
 }
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla

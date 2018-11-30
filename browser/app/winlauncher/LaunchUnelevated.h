@@ -14,19 +14,17 @@
 
 namespace mozilla {
 
-enum class ElevationState
-{
+enum class ElevationState {
   eNormalUser = 0,
   eElevated = (1 << 0),
   eHighIntegrityNoUAC = (1 << 1),
 };
 
-LauncherResult<ElevationState>
-GetElevationState(LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken);
+LauncherResult<ElevationState> GetElevationState(
+    LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken);
 
 LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_LaunchUnelevated_h
-
+#endif  // mozilla_LaunchUnelevated_h

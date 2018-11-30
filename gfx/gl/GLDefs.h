@@ -12,10 +12,10 @@ namespace mozilla {
 namespace gl {
 class GLContext;
 bool CheckContextLost(const GLContext* gl);
-}
-}
+}  // namespace gl
+}  // namespace mozilla
 
-#define MOZ_GL_ASSERT(glContext,expr) \
+#define MOZ_GL_ASSERT(glContext, expr) \
   MOZ_ASSERT((expr) || mozilla::gl::CheckContextLost(glContext))
 
 // -

@@ -41,78 +41,81 @@ typedef AlignedTArray<float> AlignedAudioFloatArray;
 typedef nsTArray<float> AudioFloatArray;
 
 class PeriodicWave {
-public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebCore::PeriodicWave);
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebCore::PeriodicWave);
 
-    static already_AddRefed<PeriodicWave> createSine(float sampleRate);
-    static already_AddRefed<PeriodicWave> createSquare(float sampleRate);
-    static already_AddRefed<PeriodicWave> createSawtooth(float sampleRate);
-    static already_AddRefed<PeriodicWave> createTriangle(float sampleRate);
+  static already_AddRefed<PeriodicWave> createSine(float sampleRate);
+  static already_AddRefed<PeriodicWave> createSquare(float sampleRate);
+  static already_AddRefed<PeriodicWave> createSawtooth(float sampleRate);
+  static already_AddRefed<PeriodicWave> createTriangle(float sampleRate);
 
-    // Creates an arbitrary periodic wave given the frequency components
-    // (Fourier coefficients).
-    static already_AddRefed<PeriodicWave> create(float sampleRate,
-                                                 const float* real,
-                                                 const float* imag,
-                                                 size_t numberOfComponents,
-                                                 bool disableNormalization);
+  // Creates an arbitrary periodic wave given the frequency components
+  // (Fourier coefficients).
+  static already_AddRefed<PeriodicWave> create(float sampleRate,
+                                               const float* real,
+                                               const float* imag,
+                                               size_t numberOfComponents,
+                                               bool disableNormalization);
 
-    // Returns pointers to the lower and higher wave data for the pitch range
-    // containing the given fundamental frequency. These two tables are in
-    // adjacent "pitch" ranges where the higher table will have the maximum
-    // number of partials which won't alias when played back at this
-    // fundamental frequency. The lower wave is the next range containing fewer
-    // partials than the higher wave. Interpolation between these two tables
-    // can be made according to tableInterpolationFactor. Where values
-    // from 0 -> 1 interpolate between lower -> higher.
-    void waveDataForFundamentalFrequency(float, float* &lowerWaveData, float* &higherWaveData, float& tableInterpolationFactor);
+  // Returns pointers to the lower and higher wave data for the pitch range
+  // containing the given fundamental frequency. These two tables are in
+  // adjacent "pitch" ranges where the higher table will have the maximum
+  // number of partials which won't alias when played back at this
+  // fundamental frequency. The lower wave is the next range containing fewer
+  // partials than the higher wave. Interpolation between these two tables
+  // can be made according to tableInterpolationFactor. Where values
+  // from 0 -> 1 interpolate between lower -> higher.
+  void waveDataForFundamentalFrequency(float, float*& lowerWaveData,
+                                       float*& higherWaveData,
+                                       float& tableInterpolationFactor);
 
-    // Returns the scalar multiplier to the oscillator frequency to calculate
-    // wave buffer phase increment.
-    float rateScale() const { return m_rateScale; }
+  // Returns the scalar multiplier to the oscillator frequency to calculate
+  // wave buffer phase increment.
+  float rateScale() const { return m_rateScale; }
 
-    unsigned periodicWaveSize() const { return m_periodicWaveSize; }
-    float sampleRate() const { return m_sampleRate; }
+  unsigned periodicWaveSize() const { return m_periodicWaveSize; }
+  float sampleRate() const { return m_sampleRate; }
 
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
-    explicit PeriodicWave(float sampleRate, size_t numberOfComponents, bool disableNormalization);
-    ~PeriodicWave() {}
+ private:
+  explicit PeriodicWave(float sampleRate, size_t numberOfComponents,
+                        bool disableNormalization);
+  ~PeriodicWave() {}
 
-    void generateBasicWaveform(mozilla::dom::OscillatorType);
+  void generateBasicWaveform(mozilla::dom::OscillatorType);
 
-    float m_sampleRate;
-    unsigned m_periodicWaveSize;
-    unsigned m_numberOfRanges;
-    float m_centsPerRange;
-    unsigned m_numberOfComponents;
-    nsAutoPtr<AudioFloatArray> m_realComponents;
-    nsAutoPtr<AudioFloatArray> m_imagComponents;
+  float m_sampleRate;
+  unsigned m_periodicWaveSize;
+  unsigned m_numberOfRanges;
+  float m_centsPerRange;
+  unsigned m_numberOfComponents;
+  nsAutoPtr<AudioFloatArray> m_realComponents;
+  nsAutoPtr<AudioFloatArray> m_imagComponents;
 
-    // The lowest frequency (in Hertz) where playback will include all of the
-    // partials.  Playing back lower than this frequency will gradually lose
-    // more high-frequency information.
-    // This frequency is quite low (~10Hz @ // 44.1KHz)
-    float m_lowestFundamentalFrequency;
+  // The lowest frequency (in Hertz) where playback will include all of the
+  // partials.  Playing back lower than this frequency will gradually lose
+  // more high-frequency information.
+  // This frequency is quite low (~10Hz @ // 44.1KHz)
+  float m_lowestFundamentalFrequency;
 
-    float m_rateScale;
+  float m_rateScale;
 
-    unsigned numberOfRanges() const { return m_numberOfRanges; }
+  unsigned numberOfRanges() const { return m_numberOfRanges; }
 
-    // Maximum possible number of partials (before culling).
-    unsigned maxNumberOfPartials() const;
+  // Maximum possible number of partials (before culling).
+  unsigned maxNumberOfPartials() const;
 
-    unsigned numberOfPartialsForRange(unsigned rangeIndex) const;
+  unsigned numberOfPartialsForRange(unsigned rangeIndex) const;
 
-    // Creates table for specified index based on fundamental frequency.
-    void createBandLimitedTables(float fundamentalFrequency, unsigned rangeIndex);
-    unsigned m_maxPartialsInBandLimitedTable;
-    float m_normalizationScale;
-    bool m_disableNormalization;
-    nsTArray<nsAutoPtr<AlignedAudioFloatArray> > m_bandLimitedTables;
+  // Creates table for specified index based on fundamental frequency.
+  void createBandLimitedTables(float fundamentalFrequency, unsigned rangeIndex);
+  unsigned m_maxPartialsInBandLimitedTable;
+  float m_normalizationScale;
+  bool m_disableNormalization;
+  nsTArray<nsAutoPtr<AlignedAudioFloatArray> > m_bandLimitedTables;
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
-#endif // PeriodicWave_h
+#endif  // PeriodicWave_h

@@ -15,9 +15,7 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedBoolean, mSVGElement)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedBoolean, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedBoolean, Release)
 
-JSObject*
-SVGAnimatedBoolean::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGAnimatedBoolean::WrapObject(JSContext* aCx,
+                                         JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedBoolean_Binding::Wrap(aCx, this, aGivenProto);
 }
-

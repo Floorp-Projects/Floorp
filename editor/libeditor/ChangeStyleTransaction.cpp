@@ -5,42 +5,36 @@
 
 #include "mozilla/ChangeStyleTransaction.h"
 
-#include "mozilla/dom/Element.h"        // for Element
-#include "nsAString.h"                  // for nsAString::Append, etc.
-#include "nsCRT.h"                      // for nsCRT::IsAsciiSpace
-#include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc.
-#include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc.
-#include "nsGkAtoms.h"                  // for nsGkAtoms, etc.
-#include "nsICSSDeclaration.h"          // for nsICSSDeclaration.
-#include "nsLiteralString.h"            // for NS_LITERAL_STRING, etc.
-#include "nsReadableUtils.h"            // for ToNewUnicode
-#include "nsString.h"                   // for nsAutoString, nsString, etc.
-#include "nsStyledElement.h"            // for nsStyledElement.
-#include "nsUnicharUtils.h"             // for nsCaseInsensitiveStringComparator
+#include "mozilla/dom/Element.h"  // for Element
+#include "nsAString.h"            // for nsAString::Append, etc.
+#include "nsCRT.h"                // for nsCRT::IsAsciiSpace
+#include "nsDebug.h"              // for NS_ENSURE_SUCCESS, etc.
+#include "nsError.h"              // for NS_ERROR_NULL_POINTER, etc.
+#include "nsGkAtoms.h"            // for nsGkAtoms, etc.
+#include "nsICSSDeclaration.h"    // for nsICSSDeclaration.
+#include "nsLiteralString.h"      // for NS_LITERAL_STRING, etc.
+#include "nsReadableUtils.h"      // for ToNewUnicode
+#include "nsString.h"             // for nsAutoString, nsString, etc.
+#include "nsStyledElement.h"      // for nsStyledElement.
+#include "nsUnicharUtils.h"       // for nsCaseInsensitiveStringComparator
 
 namespace mozilla {
 
 using namespace dom;
 
 // static
-already_AddRefed<ChangeStyleTransaction>
-ChangeStyleTransaction::Create(Element& aElement,
-                               nsAtom& aProperty,
-                               const nsAString& aValue)
-{
+already_AddRefed<ChangeStyleTransaction> ChangeStyleTransaction::Create(
+    Element& aElement, nsAtom& aProperty, const nsAString& aValue) {
   RefPtr<ChangeStyleTransaction> transaction =
-    new ChangeStyleTransaction(aElement, aProperty, aValue, false);
+      new ChangeStyleTransaction(aElement, aProperty, aValue, false);
   return transaction.forget();
 }
 
 // static
-already_AddRefed<ChangeStyleTransaction>
-ChangeStyleTransaction::CreateToRemove(Element& aElement,
-                                       nsAtom& aProperty,
-                                       const nsAString& aValue)
-{
+already_AddRefed<ChangeStyleTransaction> ChangeStyleTransaction::CreateToRemove(
+    Element& aElement, nsAtom& aProperty, const nsAString& aValue) {
   RefPtr<ChangeStyleTransaction> transaction =
-    new ChangeStyleTransaction(aElement, aProperty, aValue, true);
+      new ChangeStyleTransaction(aElement, aProperty, aValue, true);
   return transaction.forget();
 }
 
@@ -48,17 +42,15 @@ ChangeStyleTransaction::ChangeStyleTransaction(Element& aElement,
                                                nsAtom& aProperty,
                                                const nsAString& aValue,
                                                bool aRemove)
-  : EditTransactionBase()
-  , mElement(&aElement)
-  , mProperty(&aProperty)
-  , mValue(aValue)
-  , mRemoveProperty(aRemove)
-  , mUndoValue()
-  , mRedoValue()
-  , mUndoAttributeWasSet(false)
-  , mRedoAttributeWasSet(false)
-{
-}
+    : EditTransactionBase(),
+      mElement(&aElement),
+      mProperty(&aProperty),
+      mValue(aValue),
+      mRemoveProperty(aRemove),
+      mUndoValue(),
+      mRedoValue(),
+      mUndoAttributeWasSet(false),
+      mRedoAttributeWasSet(false) {}
 
 #define kNullCh (char16_t('\0'))
 
@@ -71,16 +63,12 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMPL_ADDREF_INHERITED(ChangeStyleTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(ChangeStyleTransaction, EditTransactionBase)
 
-ChangeStyleTransaction::~ChangeStyleTransaction()
-{
-}
+ChangeStyleTransaction::~ChangeStyleTransaction() {}
 
 // Answers true if aValue is in the string list of white-space separated values
 // aValueList.
-bool
-ChangeStyleTransaction::ValueIncludes(const nsAString& aValueList,
-                                      const nsAString& aValue)
-{
+bool ChangeStyleTransaction::ValueIncludes(const nsAString& aValueList,
+                                           const nsAString& aValue) {
   nsAutoString valueList(aValueList);
   bool result = false;
 
@@ -106,8 +94,8 @@ ChangeStyleTransaction::ValueIncludes(const nsAString& aValueList,
     *end = kNullCh;
 
     if (start < end) {
-      if (nsDependentString(value).Equals(nsDependentString(start),
-            nsCaseInsensitiveStringComparator())) {
+      if (nsDependentString(value).Equals(
+              nsDependentString(start), nsCaseInsensitiveStringComparator())) {
         result = true;
         break;
       }
@@ -120,11 +108,8 @@ ChangeStyleTransaction::ValueIncludes(const nsAString& aValueList,
 
 // Removes the value aRemoveValue from the string list of white-space separated
 // values aValueList
-void
-ChangeStyleTransaction::RemoveValueFromListOfValues(
-                          nsAString& aValues,
-                          const nsAString& aRemoveValue)
-{
+void ChangeStyleTransaction::RemoveValueFromListOfValues(
+    nsAString& aValues, const nsAString& aRemoveValue) {
   nsAutoString classStr(aValues);
   nsAutoString outString;
   // put an extra null at the end
@@ -158,18 +143,16 @@ ChangeStyleTransaction::RemoveValueFromListOfValues(
 }
 
 NS_IMETHODIMP
-ChangeStyleTransaction::DoTransaction()
-{
+ChangeStyleTransaction::DoTransaction() {
   nsCOMPtr<nsStyledElement> inlineStyles = do_QueryInterface(mElement);
   NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsICSSDeclaration> cssDecl = inlineStyles->Style();
- 
+
   nsAutoString propertyNameString;
   mProperty->ToString(propertyNameString);
 
-  mUndoAttributeWasSet = mElement->HasAttr(kNameSpaceID_None,
-                                           nsGkAtoms::style);
+  mUndoAttributeWasSet = mElement->HasAttr(kNameSpaceID_None, nsGkAtoms::style);
 
   nsAutoString values;
   nsresult rv = cssDecl->GetPropertyValue(propertyNameString, values);
@@ -223,10 +206,8 @@ ChangeStyleTransaction::DoTransaction()
   return cssDecl->GetPropertyValue(propertyNameString, mRedoValue);
 }
 
-nsresult
-ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
-                                 nsAString& aValue)
-{
+nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
+                                          nsAString& aValue) {
   if (aAttributeWasSet) {
     // The style attribute was not empty, let's recreate the declaration
     nsAutoString propertyNameString;
@@ -250,29 +231,23 @@ ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
 }
 
 NS_IMETHODIMP
-ChangeStyleTransaction::UndoTransaction()
-{
+ChangeStyleTransaction::UndoTransaction() {
   return SetStyle(mUndoAttributeWasSet, mUndoValue);
 }
 
 NS_IMETHODIMP
-ChangeStyleTransaction::RedoTransaction()
-{
+ChangeStyleTransaction::RedoTransaction() {
   return SetStyle(mRedoAttributeWasSet, mRedoValue);
 }
 
 // True if the CSS property accepts more than one value
-bool
-ChangeStyleTransaction::AcceptsMoreThanOneValue(nsAtom& aCSSProperty)
-{
+bool ChangeStyleTransaction::AcceptsMoreThanOneValue(nsAtom& aCSSProperty) {
   return &aCSSProperty == nsGkAtoms::text_decoration;
 }
 
 // Adds the value aNewValue to the list of white-space separated values aValues
-void
-ChangeStyleTransaction::AddValueToMultivalueProperty(nsAString& aValues,
-                                                     const nsAString& aNewValue)
-{
+void ChangeStyleTransaction::AddValueToMultivalueProperty(
+    nsAString& aValues, const nsAString& aNewValue) {
   if (aValues.IsEmpty() || aValues.LowerCaseEqualsLiteral("none")) {
     aValues.Assign(aNewValue);
   } else if (!ValueIncludes(aValues, aNewValue)) {
@@ -282,4 +257,4 @@ ChangeStyleTransaction::AddValueToMultivalueProperty(nsAString& aValues,
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

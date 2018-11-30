@@ -2,7 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 void swap(int* a, int* b) {
-  int t = *a; *a = *b; *b = t;
+  int t = *a;
+  *a = *b;
+  *b = t;
 }
 
 int fib(int n) {

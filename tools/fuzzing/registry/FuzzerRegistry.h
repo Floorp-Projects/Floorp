@@ -14,30 +14,31 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
-typedef int(*FuzzerInitFunc)(int*, char***);
-typedef int(*FuzzerTestingFunc)(const uint8_t*, size_t);
+typedef int (*FuzzerInitFunc)(int*, char***);
+typedef int (*FuzzerTestingFunc)(const uint8_t*, size_t);
 
-typedef int(*LibFuzzerDriver)(int*, char***, FuzzerTestingFunc);
+typedef int (*LibFuzzerDriver)(int*, char***, FuzzerTestingFunc);
 
 namespace mozilla {
 
 typedef std::pair<FuzzerInitFunc, FuzzerTestingFunc> FuzzerFunctions;
 
 class FuzzerRegistry {
-    public:
-        MOZ_EXPORT static FuzzerRegistry& getInstance();
-        MOZ_EXPORT void registerModule(std::string moduleName, FuzzerInitFunc initFunc, FuzzerTestingFunc testingFunc);
-        MOZ_EXPORT FuzzerFunctions getModuleFunctions(std::string& moduleName);
+ public:
+  MOZ_EXPORT static FuzzerRegistry& getInstance();
+  MOZ_EXPORT void registerModule(std::string moduleName,
+                                 FuzzerInitFunc initFunc,
+                                 FuzzerTestingFunc testingFunc);
+  MOZ_EXPORT FuzzerFunctions getModuleFunctions(std::string& moduleName);
 
-        FuzzerRegistry(FuzzerRegistry const&) = delete;
-        void operator=(FuzzerRegistry const&) = delete;
+  FuzzerRegistry(FuzzerRegistry const&) = delete;
+  void operator=(FuzzerRegistry const&) = delete;
 
-    private:
-        FuzzerRegistry() {};
-        std::map<std::string, FuzzerFunctions> moduleMap;
+ private:
+  FuzzerRegistry(){};
+  std::map<std::string, FuzzerFunctions> moduleMap;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-
-#endif // _FuzzerRegistry_h__
+#endif  // _FuzzerRegistry_h__

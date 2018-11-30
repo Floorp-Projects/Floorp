@@ -15,8 +15,7 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(nsDNSServiceInfo, nsIDNSServiceInfo)
 
-nsDNSServiceInfo::nsDNSServiceInfo(nsIDNSServiceInfo* aServiceInfo)
-{
+nsDNSServiceInfo::nsDNSServiceInfo(nsIDNSServiceInfo* aServiceInfo) {
   if (NS_WARN_IF(!aServiceInfo)) {
     return;
   }
@@ -43,10 +42,11 @@ nsDNSServiceInfo::nsDNSServiceInfo(nsIDNSServiceInfo* aServiceInfo)
     Unused << NS_WARN_IF(NS_FAILED(SetDomainName(str)));
   }
 
-  nsCOMPtr<nsIPropertyBag2> attributes; // deep copy
+  nsCOMPtr<nsIPropertyBag2> attributes;  // deep copy
   if (NS_SUCCEEDED(aServiceInfo->GetAttributes(getter_AddRefs(attributes)))) {
     nsCOMPtr<nsISimpleEnumerator> enumerator;
-    if (NS_WARN_IF(NS_FAILED(attributes->GetEnumerator(getter_AddRefs(enumerator))))) {
+    if (NS_WARN_IF(
+            NS_FAILED(attributes->GetEnumerator(getter_AddRefs(enumerator))))) {
       return;
     }
 
@@ -56,19 +56,21 @@ nsDNSServiceInfo::nsDNSServiceInfo(nsIDNSServiceInfo* aServiceInfo)
     while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) &&
            hasMoreElements) {
       nsCOMPtr<nsISupports> element;
-      Unused <<
-        NS_WARN_IF(NS_FAILED(enumerator->GetNext(getter_AddRefs(element))));
+      Unused << NS_WARN_IF(
+          NS_FAILED(enumerator->GetNext(getter_AddRefs(element))));
       nsCOMPtr<nsIProperty> property = do_QueryInterface(element);
       MOZ_ASSERT(property);
 
       nsAutoString name;
       nsCOMPtr<nsIVariant> value;
       Unused << NS_WARN_IF(NS_FAILED(property->GetName(name)));
-      Unused << NS_WARN_IF(NS_FAILED(property->GetValue(getter_AddRefs(value))));
+      Unused << NS_WARN_IF(
+          NS_FAILED(property->GetValue(getter_AddRefs(value))));
       nsAutoCString valueStr;
       Unused << NS_WARN_IF(NS_FAILED(value->GetAsACString(valueStr)));
 
-      Unused << NS_WARN_IF(NS_FAILED(newAttributes->SetPropertyAsACString(name, valueStr)));
+      Unused << NS_WARN_IF(
+          NS_FAILED(newAttributes->SetPropertyAsACString(name, valueStr)));
     }
 
     Unused << NS_WARN_IF(NS_FAILED(SetAttributes(newAttributes)));
@@ -76,8 +78,7 @@ nsDNSServiceInfo::nsDNSServiceInfo(nsIDNSServiceInfo* aServiceInfo)
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::GetHost(nsACString& aHost)
-{
+nsDNSServiceInfo::GetHost(nsACString& aHost) {
   if (!mIsHostSet) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -86,16 +87,14 @@ nsDNSServiceInfo::GetHost(nsACString& aHost)
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::SetHost(const nsACString& aHost)
-{
+nsDNSServiceInfo::SetHost(const nsACString& aHost) {
   mHost = aHost;
   mIsHostSet = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::GetAddress(nsACString& aAddress)
-{
+nsDNSServiceInfo::GetAddress(nsACString& aAddress) {
   if (!mIsAddressSet) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -104,16 +103,14 @@ nsDNSServiceInfo::GetAddress(nsACString& aAddress)
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::SetAddress(const nsACString& aAddress)
-{
+nsDNSServiceInfo::SetAddress(const nsACString& aAddress) {
   mAddress = aAddress;
   mIsAddressSet = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::GetPort(uint16_t* aPort)
-{
+nsDNSServiceInfo::GetPort(uint16_t* aPort) {
   if (NS_WARN_IF(!aPort)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -125,16 +122,14 @@ nsDNSServiceInfo::GetPort(uint16_t* aPort)
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::SetPort(uint16_t aPort)
-{
+nsDNSServiceInfo::SetPort(uint16_t aPort) {
   mPort = aPort;
   mIsPortSet = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::GetServiceName(nsACString& aServiceName)
-{
+nsDNSServiceInfo::GetServiceName(nsACString& aServiceName) {
   if (!mIsServiceNameSet) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -143,16 +138,14 @@ nsDNSServiceInfo::GetServiceName(nsACString& aServiceName)
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::SetServiceName(const nsACString& aServiceName)
-{
+nsDNSServiceInfo::SetServiceName(const nsACString& aServiceName) {
   mServiceName = aServiceName;
   mIsServiceNameSet = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::GetServiceType(nsACString& aServiceType)
-{
+nsDNSServiceInfo::GetServiceType(nsACString& aServiceType) {
   if (!mIsServiceTypeSet) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -161,16 +154,14 @@ nsDNSServiceInfo::GetServiceType(nsACString& aServiceType)
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::SetServiceType(const nsACString& aServiceType)
-{
+nsDNSServiceInfo::SetServiceType(const nsACString& aServiceType) {
   mServiceType = aServiceType;
   mIsServiceTypeSet = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::GetDomainName(nsACString& aDomainName)
-{
+nsDNSServiceInfo::GetDomainName(nsACString& aDomainName) {
   if (!mIsDomainNameSet) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -179,16 +170,14 @@ nsDNSServiceInfo::GetDomainName(nsACString& aDomainName)
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::SetDomainName(const nsACString& aDomainName)
-{
+nsDNSServiceInfo::SetDomainName(const nsACString& aDomainName) {
   mDomainName = aDomainName;
   mIsDomainNameSet = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::GetAttributes(nsIPropertyBag2** aAttributes)
-{
+nsDNSServiceInfo::GetAttributes(nsIPropertyBag2** aAttributes) {
   if (!mIsAttributesSet) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -198,12 +187,11 @@ nsDNSServiceInfo::GetAttributes(nsIPropertyBag2** aAttributes)
 }
 
 NS_IMETHODIMP
-nsDNSServiceInfo::SetAttributes(nsIPropertyBag2* aAttributes)
-{
+nsDNSServiceInfo::SetAttributes(nsIPropertyBag2* aAttributes) {
   mAttributes = aAttributes;
   mIsAttributesSet = aAttributes ? true : false;
   return NS_OK;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

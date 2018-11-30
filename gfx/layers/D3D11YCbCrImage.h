@@ -22,52 +22,45 @@ class ImageContainer;
 class DXGIYCbCrTextureClient;
 class DXGIYCbCrTextureData;
 
-class DXGIYCbCrTextureAllocationHelper : public ITextureClientAllocationHelper
-{
-public:
+class DXGIYCbCrTextureAllocationHelper : public ITextureClientAllocationHelper {
+ public:
   DXGIYCbCrTextureAllocationHelper(const PlanarYCbCrData& aData,
                                    TextureFlags aTextureFlags,
                                    ID3D11Device* aDevice);
 
   bool IsCompatible(TextureClient* aTextureClient) override;
 
-  already_AddRefed<TextureClient> Allocate(KnowsCompositor* aAllocator) override;
+  already_AddRefed<TextureClient> Allocate(
+      KnowsCompositor* aAllocator) override;
 
-protected:
+ protected:
   const PlanarYCbCrData& mData;
   RefPtr<ID3D11Device> mDevice;
 };
 
-class D3D11YCbCrRecycleAllocator : public TextureClientRecycleAllocator
-{
-public:
+class D3D11YCbCrRecycleAllocator : public TextureClientRecycleAllocator {
+ public:
   explicit D3D11YCbCrRecycleAllocator(KnowsCompositor* aAllocator)
-    : TextureClientRecycleAllocator(aAllocator)
-  {
-  }
+      : TextureClientRecycleAllocator(aAllocator) {}
 
   KnowsCompositor* GetAllocator() const { return mSurfaceAllocator; }
 
-protected:
-  already_AddRefed<TextureClient>
-  Allocate(gfx::SurfaceFormat aFormat,
-           gfx::IntSize aSize,
-           BackendSelector aSelector,
-           TextureFlags aTextureFlags,
-           TextureAllocationFlags aAllocFlags) override;
+ protected:
+  already_AddRefed<TextureClient> Allocate(
+      gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
+      TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) override;
 };
 
-class D3D11YCbCrImage : public Image
-{
+class D3D11YCbCrImage : public Image {
   friend class gl::GLBlitHelper;
-public:
+
+ public:
   D3D11YCbCrImage();
   virtual ~D3D11YCbCrImage();
 
   // Copies the surface into a sharable texture's surface, and initializes
   // the image.
-  bool SetData(KnowsCompositor* aAllocator,
-               ImageContainer* aContainer,
+  bool SetData(KnowsCompositor* aAllocator, ImageContainer* aContainer,
                const PlanarYCbCrData& aData);
 
   gfx::IntSize GetSize() const override;
@@ -78,7 +71,7 @@ public:
 
   gfx::IntRect GetPictureRect() const override { return mPictureRect; }
 
-private:
+ private:
   const DXGIYCbCrTextureData* GetData() const;
 
   gfx::IntSize mYSize;
@@ -89,7 +82,7 @@ private:
   RefPtr<TextureClient> mTextureClient;
 };
 
-} // namepace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // GFX_D3D11_YCBCR_IMAGE_H
+#endif  // GFX_D3D11_YCBCR_IMAGE_H

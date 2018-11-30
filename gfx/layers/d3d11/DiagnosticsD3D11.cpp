@@ -11,15 +11,11 @@
 namespace mozilla {
 namespace layers {
 
-DiagnosticsD3D11::DiagnosticsD3D11(ID3D11Device* aDevice, ID3D11DeviceContext* aContext)
- : mDevice(aDevice),
-   mContext(aContext)
-{
-}
+DiagnosticsD3D11::DiagnosticsD3D11(ID3D11Device* aDevice,
+                                   ID3D11DeviceContext* aContext)
+    : mDevice(aDevice), mContext(aContext) {}
 
-void
-DiagnosticsD3D11::Start(uint32_t aPixelsPerFrame)
-{
+void DiagnosticsD3D11::Start(uint32_t aPixelsPerFrame) {
   mPrevFrame = mCurrentFrame;
   mCurrentFrame = FrameQueries();
 
@@ -43,9 +39,7 @@ DiagnosticsD3D11::Start(uint32_t aPixelsPerFrame)
   }
 }
 
-void
-DiagnosticsD3D11::End()
-{
+void DiagnosticsD3D11::End() {
   if (mCurrentFrame.stats) {
     mContext->End(mCurrentFrame.stats);
   }
@@ -61,15 +55,9 @@ DiagnosticsD3D11::End()
   }
 }
 
-void
-DiagnosticsD3D11::Cancel()
-{
-  mCurrentFrame = FrameQueries();
-}
+void DiagnosticsD3D11::Cancel() { mCurrentFrame = FrameQueries(); }
 
-void
-DiagnosticsD3D11::Query(GPUStats* aStats)
-{
+void DiagnosticsD3D11::Query(GPUStats* aStats) {
   // Collect pixel shader stats.
   if (mPrevFrame.stats) {
     D3D11_QUERY_DATA_PIPELINE_STATISTICS stats;
@@ -84,14 +72,12 @@ DiagnosticsD3D11::Query(GPUStats* aStats)
     if (WaitForGPUQuery(mDevice, mContext, mPrevFrame.timing, &timing) &&
         !timing.Disjoint &&
         WaitForGPUQuery(mDevice, mContext, mPrevFrame.frameBegin, &begin) &&
-        WaitForGPUQuery(mDevice, mContext, mPrevFrame.frameEnd, &end))
-    {
+        WaitForGPUQuery(mDevice, mContext, mPrevFrame.frameEnd, &end)) {
       float timeMs = float(end - begin) / float(timing.Frequency) * 1000.0f;
       aStats->mDrawTime = Some(timeMs);
     }
   }
 }
 
-} // namespace layers
-} // namespace mozilla
-
+}  // namespace layers
+}  // namespace mozilla

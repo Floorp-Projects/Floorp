@@ -16,26 +16,20 @@ class nsSVGAngle;
 namespace mozilla {
 namespace dom {
 
-class SVGAngle final : public nsWrapperCache
-{
-public:
-  typedef enum {
-    BaseValue,
-    AnimValue,
-    CreatedValue
-  } AngleType;
+class SVGAngle final : public nsWrapperCache {
+ public:
+  typedef enum { BaseValue, AnimValue, CreatedValue } AngleType;
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAngle)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAngle)
 
-  SVGAngle(nsSVGAngle* aVal, nsSVGElement *aSVGElement, AngleType aType)
-    : mVal(aVal), mSVGElement(aSVGElement), mType(aType)
-  {
-  }
+  SVGAngle(nsSVGAngle* aVal, nsSVGElement* aSVGElement, AngleType aType)
+      : mVal(aVal), mSVGElement(aSVGElement), mType(aType) {}
 
   // WebIDL
   nsSVGElement* GetParentObject() { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
   uint16_t UnitType() const;
   float Value() const;
   void GetValueAsString(nsAString& aValue);
@@ -46,15 +40,16 @@ public:
   void NewValueSpecifiedUnits(uint16_t unitType, float value, ErrorResult& rv);
   void ConvertToSpecifiedUnits(uint16_t unitType, ErrorResult& rv);
 
-protected:
+ protected:
   ~SVGAngle();
 
-  nsSVGAngle* mVal; // if mType is CreatedValue, we own the angle.  Otherwise, the element does.
+  nsSVGAngle* mVal;  // if mType is CreatedValue, we own the angle.  Otherwise,
+                     // the element does.
   RefPtr<nsSVGElement> mSVGElement;
   AngleType mType;
 };
 
-} //namespace dom
-} //namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGAngle_h
+#endif  // mozilla_dom_SVGAngle_h

@@ -18,17 +18,16 @@
 
 namespace mozilla {
 namespace dom {
-class PrecompiledScript : public nsISupports
-                        , public nsWrapperCache
-{
+class PrecompiledScript : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(PrecompiledScript)
 
-  explicit PrecompiledScript(nsISupports* aParent, JS::Handle<JSScript*> aScript, JS::ReadOnlyCompileOptions& aOptions);
+  explicit PrecompiledScript(nsISupports* aParent,
+                             JS::Handle<JSScript*> aScript,
+                             JS::ReadOnlyCompileOptions& aOptions);
 
   void ExecuteInGlobal(JSContext* aCx, JS::HandleObject aGlobal,
-                       JS::MutableHandleValue aRval,
-                       ErrorResult& aRv);
+                       JS::MutableHandleValue aRval, ErrorResult& aRv);
 
   void GetUrl(nsAString& aUrl);
 
@@ -39,10 +38,10 @@ class PrecompiledScript : public nsISupports
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-protected:
+ protected:
   virtual ~PrecompiledScript();
 
-private:
+ private:
   bool IsBlackForCC(bool aTracingNeeded);
 
   nsCOMPtr<nsISupports> mParent;
@@ -52,7 +51,7 @@ private:
   const bool mHasReturnValue;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PrecompiledScript_h
+#endif  // mozilla_dom_PrecompiledScript_h

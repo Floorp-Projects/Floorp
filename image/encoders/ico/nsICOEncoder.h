@@ -13,21 +13,20 @@
 #include "nsCOMPtr.h"
 #include "ICOFileHeaders.h"
 
-#define NS_ICOENCODER_CID \
-{ /*92AE3AB2-8968-41B1-8709-B6123BCEAF21 */          \
-     0x92ae3ab2,                                     \
-     0x8968,                                         \
-     0x41b1,                                         \
-    {0x87, 0x09, 0xb6, 0x12, 0x3b, 0Xce, 0xaf, 0x21} \
-}
+#define NS_ICOENCODER_CID                            \
+  { /*92AE3AB2-8968-41B1-8709-B6123BCEAF21 */        \
+    0x92ae3ab2, 0x8968, 0x41b1, {                    \
+      0x87, 0x09, 0xb6, 0x12, 0x3b, 0Xce, 0xaf, 0x21 \
+    }                                                \
+  }
 
 // Provides ICO encoding functionality. Use InitFromData() to do the
 // encoding. See that function definition for encoding options.
 
-class nsICOEncoder final : public imgIEncoder
-{
+class nsICOEncoder final : public imgIEncoder {
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
-public:
+
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_IMGIENCODER
   NS_DECL_NSIINPUTSTREAM
@@ -36,18 +35,16 @@ public:
   nsICOEncoder();
 
   // Obtains the width of the icon directory entry
-  uint32_t GetRealWidth() const
-  {
+  uint32_t GetRealWidth() const {
     return mICODirEntry.mWidth == 0 ? 256 : mICODirEntry.mWidth;
   }
 
   // Obtains the height of the icon directory entry
-  uint32_t GetRealHeight() const
-  {
+  uint32_t GetRealHeight() const {
     return mICODirEntry.mHeight == 0 ? 256 : mICODirEntry.mHeight;
   }
 
-protected:
+ protected:
   ~nsICOEncoder();
 
   nsresult ParseOptions(const nsAString& aOptions, uint16_t& aBppOut,
@@ -63,8 +60,7 @@ protected:
   // Encodes the icon directory info header mICODirEntry
   void EncodeInfoHeader();
   // Obtains the current offset filled up to for the image buffer
-  inline int32_t GetCurrentImageBufferOffset()
-  {
+  inline int32_t GetCurrentImageBufferOffset() {
     return static_cast<int32_t>(mImageBufferCurr - mImageBufferStart);
   }
 
@@ -96,4 +92,4 @@ protected:
   uint32_t mNotifyThreshold;
 };
 
-#endif // mozilla_image_encoders_ico_nsICOEncoder_h
+#endif  // mozilla_image_encoders_ico_nsICOEncoder_h

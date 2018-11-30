@@ -28,16 +28,14 @@ namespace mozilla {
  *
  * The DOM wrapper class for this class is DOMSVGLengthList.
  */
-class SVGLengthList
-{
+class SVGLengthList {
   friend class SVGAnimatedLengthList;
   friend class DOMSVGLengthList;
   friend class DOMSVGLength;
 
-public:
-
-  SVGLengthList(){}
-  ~SVGLengthList(){}
+ public:
+  SVGLengthList() {}
+  ~SVGLengthList() {}
 
   // Only methods that don't make/permit modification to this list are public.
   // Only our friend classes can access methods that may change us.
@@ -45,13 +43,9 @@ public:
   /// This may return an incomplete string on OOM, but that's acceptable.
   void GetValueAsString(nsAString& aValue) const;
 
-  bool IsEmpty() const {
-    return mLengths.IsEmpty();
-  }
+  bool IsEmpty() const { return mLengths.IsEmpty(); }
 
-  uint32_t Length() const {
-    return mLengths.Length();
-  }
+  uint32_t Length() const { return mLengths.Length(); }
 
   const SVGLength& operator[](uint32_t aIndex) const {
     return mLengths[aIndex];
@@ -63,9 +57,7 @@ public:
     return mLengths.SetCapacity(size, fallible);
   }
 
-  void Compact() {
-    mLengths.Compact();
-  }
+  void Compact() { mLengths.Compact(); }
 
   // Access to methods that can modify objects of this type is deliberately
   // limited. This is to reduce the chances of someone modifying objects of
@@ -74,17 +66,14 @@ public:
   // SVGAnimatedLengthList and having that class act as an intermediary so it
   // can take care of keeping DOM wrappers in sync.
 
-protected:
-
+ protected:
   /**
    * This may fail on OOM if the internal capacity needs to be increased, in
    * which case the list will be left unmodified.
    */
   nsresult CopyFrom(const SVGLengthList& rhs);
 
-  SVGLength& operator[](uint32_t aIndex) {
-    return mLengths[aIndex];
-  }
+  SVGLength& operator[](uint32_t aIndex) { return mLengths[aIndex]; }
 
   /**
    * This may fail (return false) on OOM if the internal capacity is being
@@ -94,24 +83,21 @@ protected:
     return mLengths.SetLength(aNumberOfItems, fallible);
   }
 
-private:
-
+ private:
   // Marking the following private only serves to show which methods are only
   // used by our friend classes (as opposed to our subclasses) - it doesn't
   // really provide additional safety.
 
   nsresult SetValueFromString(const nsAString& aValue);
 
-  void Clear() {
-    mLengths.Clear();
-  }
+  void Clear() { mLengths.Clear(); }
 
-  bool InsertItem(uint32_t aIndex, const SVGLength &aLength) {
+  bool InsertItem(uint32_t aIndex, const SVGLength& aLength) {
     if (aIndex >= mLengths.Length()) aIndex = mLengths.Length();
     return !!mLengths.InsertElementAt(aIndex, aLength, fallible);
   }
 
-  void ReplaceItem(uint32_t aIndex, const SVGLength &aLength) {
+  void ReplaceItem(uint32_t aIndex, const SVGLength& aLength) {
     MOZ_ASSERT(aIndex < mLengths.Length(),
                "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mLengths[aIndex] = aLength;
@@ -127,8 +113,7 @@ private:
     return !!mLengths.AppendElement(aLength, fallible);
   }
 
-protected:
-
+ protected:
   /* Rationale for using nsTArray<SVGLength> and not nsTArray<SVGLength, 1>:
    *
    * It might seem like we should use AutoTArray<SVGLength, 1> instead of
@@ -165,29 +150,23 @@ protected:
   FallibleTArray<SVGLength> mLengths;
 };
 
-
 /**
  * This SVGLengthList subclass is for SVGLengthListSMILType which needs to know
  * which element and attribute a length list belongs to so that it can convert
  * between unit types if necessary.
  */
-class SVGLengthListAndInfo : public SVGLengthList
-{
-public:
-
+class SVGLengthListAndInfo : public SVGLengthList {
+ public:
   SVGLengthListAndInfo()
-    : mElement(nullptr)
-    , mAxis(0)
-    , mCanZeroPadList(false)
-  {}
+      : mElement(nullptr), mAxis(0), mCanZeroPadList(false) {}
 
-  SVGLengthListAndInfo(nsSVGElement *aElement, uint8_t aAxis, bool aCanZeroPadList)
-    : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement)))
-    , mAxis(aAxis)
-    , mCanZeroPadList(aCanZeroPadList)
-  {}
+  SVGLengthListAndInfo(nsSVGElement* aElement, uint8_t aAxis,
+                       bool aCanZeroPadList)
+      : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement))),
+        mAxis(aAxis),
+        mCanZeroPadList(aCanZeroPadList) {}
 
-  void SetInfo(nsSVGElement *aElement, uint8_t aAxis, bool aCanZeroPadList) {
+  void SetInfo(nsSVGElement* aElement, uint8_t aAxis, bool aCanZeroPadList) {
     mElement = do_GetWeakReference(static_cast<nsINode*>(aElement));
     mAxis = aAxis;
     mCanZeroPadList = aCanZeroPadList;
@@ -242,7 +221,7 @@ public:
    * https://bugzilla.mozilla.org/show_bug.cgi?id=573431
    */
   bool CanZeroPadList() const {
-    //NS_ASSERTION(mElement, "CanZeroPadList() isn't valid");
+    // NS_ASSERTION(mElement, "CanZeroPadList() isn't valid");
     return mCanZeroPadList;
   }
 
@@ -280,7 +259,7 @@ public:
     return SVGLengthList::SetLength(aNumberOfItems);
   }
 
-private:
+ private:
   // We must keep a weak reference to our element because we may belong to a
   // cached baseVal nsSMILValue. See the comments starting at:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=515116#c15
@@ -289,7 +268,6 @@ private:
   uint8_t mAxis;
   bool mCanZeroPadList;
 };
-
 
 /**
  * This class wraps SVGLengthList objects to allow frame consumers to process
@@ -305,33 +283,21 @@ private:
  * could still overflow. In that case the value returned will be
  * numeric_limits<float>::quiet_NaN().
  */
-class MOZ_STACK_CLASS SVGUserUnitList
-{
-public:
+class MOZ_STACK_CLASS SVGUserUnitList {
+ public:
+  SVGUserUnitList() : mList(nullptr), mElement(nullptr), mAxis(0) {}
 
-  SVGUserUnitList()
-    : mList(nullptr)
-    , mElement(nullptr)
-    , mAxis(0)
-  {}
-
-  void Init(const SVGLengthList *aList, nsSVGElement *aElement, uint8_t aAxis) {
+  void Init(const SVGLengthList* aList, nsSVGElement* aElement, uint8_t aAxis) {
     mList = aList;
     mElement = aElement;
     mAxis = aAxis;
   }
 
-  void Clear() {
-    mList = nullptr;
-  }
+  void Clear() { mList = nullptr; }
 
-  bool IsEmpty() const {
-    return !mList || mList->IsEmpty();
-  }
+  bool IsEmpty() const { return !mList || mList->IsEmpty(); }
 
-  uint32_t Length() const {
-    return mList ? mList->Length() : 0;
-  }
+  uint32_t Length() const { return mList ? mList->Length() : 0; }
 
   /// This may return a non-finite value
   float operator[](uint32_t aIndex) const {
@@ -340,15 +306,16 @@ public:
 
   bool HasPercentageValueAt(uint32_t aIndex) const {
     const SVGLength& length = (*mList)[aIndex];
-    return length.GetUnit() == dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
+    return length.GetUnit() ==
+           dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
   }
 
-private:
-  const SVGLengthList *mList;
-  nsSVGElement *mElement;
+ private:
+  const SVGLengthList* mList;
+  nsSVGElement* mElement;
   uint8_t mAxis;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_SVGLENGTHLIST_H__
+#endif  // MOZILLA_SVGLENGTHLIST_H__

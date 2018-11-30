@@ -14,12 +14,12 @@ namespace dom {
 
 class ImageData;
 
-JSObject*
-ReadStructuredCloneImageData(JSContext* aCx, JSStructuredCloneReader* aReader);
+JSObject* ReadStructuredCloneImageData(JSContext* aCx,
+                                       JSStructuredCloneReader* aReader);
 
-bool
-WriteStructuredCloneImageData(JSContext* aCx, JSStructuredCloneWriter* aWriter,
-                              ImageData* aImageData);
+bool WriteStructuredCloneImageData(JSContext* aCx,
+                                   JSStructuredCloneWriter* aWriter,
+                                   ImageData* aImageData);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -17,11 +17,10 @@
 namespace mozilla {
 namespace net {
 
-class MDNSResponderOperator
-{
+class MDNSResponderOperator {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MDNSResponderOperator)
 
-public:
+ public:
   MDNSResponderOperator();
 
   virtual nsresult Start();
@@ -29,91 +28,77 @@ public:
   void Cancel() { mIsCancelled = true; }
   nsIThread* GetThread() const { return mThread; }
 
-protected:
+ protected:
   virtual ~MDNSResponderOperator();
 
   bool IsServing() const { return mService; }
   nsresult ResetService(DNSServiceRef aService);
 
-private:
+ private:
   class ServiceWatcher;
 
   DNSServiceRef mService;
   RefPtr<ServiceWatcher> mWatcher;
-  nsCOMPtr<nsIThread> mThread; // remember caller thread for callback
+  nsCOMPtr<nsIThread> mThread;  // remember caller thread for callback
   Atomic<bool> mIsCancelled;
 };
 
-class BrowseOperator final : public MDNSResponderOperator
-{
-public:
+class BrowseOperator final : public MDNSResponderOperator {
+ public:
   BrowseOperator(const nsACString& aServiceType,
                  nsIDNSServiceDiscoveryListener* aListener);
 
   nsresult Start() override;
   nsresult Stop() override;
 
-  void Reply(DNSServiceRef aSdRef,
-             DNSServiceFlags aFlags,
-             uint32_t aInterfaceIndex,
-             DNSServiceErrorType aErrorCode,
-             const nsACString& aServiceName,
-             const nsACString& aRegType,
+  void Reply(DNSServiceRef aSdRef, DNSServiceFlags aFlags,
+             uint32_t aInterfaceIndex, DNSServiceErrorType aErrorCode,
+             const nsACString& aServiceName, const nsACString& aRegType,
              const nsACString& aReplyDomain);
 
-private:
+ private:
   ~BrowseOperator() = default;
 
   nsCString mServiceType;
   nsCOMPtr<nsIDNSServiceDiscoveryListener> mListener;
 };
 
-class RegisterOperator final : public MDNSResponderOperator
-{
+class RegisterOperator final : public MDNSResponderOperator {
   enum { TXT_BUFFER_SIZE = 256 };
 
-public:
+ public:
   RegisterOperator(nsIDNSServiceInfo* aServiceInfo,
                    nsIDNSRegistrationListener* aListener);
 
   nsresult Start() override;
   nsresult Stop() override;
 
-  void Reply(DNSServiceRef aSdRef,
-             DNSServiceFlags aFlags,
-             DNSServiceErrorType aErrorCode,
-             const nsACString& aName,
-             const nsACString& aRegType,
-             const nsACString& aDomain);
+  void Reply(DNSServiceRef aSdRef, DNSServiceFlags aFlags,
+             DNSServiceErrorType aErrorCode, const nsACString& aName,
+             const nsACString& aRegType, const nsACString& aDomain);
 
-private:
+ private:
   ~RegisterOperator() = default;
 
   nsCOMPtr<nsIDNSServiceInfo> mServiceInfo;
   nsCOMPtr<nsIDNSRegistrationListener> mListener;
 };
 
-class ResolveOperator final : public MDNSResponderOperator
-{
+class ResolveOperator final : public MDNSResponderOperator {
   enum { TXT_BUFFER_SIZE = 256 };
 
-public:
+ public:
   ResolveOperator(nsIDNSServiceInfo* aServiceInfo,
                   nsIDNSServiceResolveListener* aListener);
 
   nsresult Start() override;
 
-  void Reply(DNSServiceRef aSdRef,
-             DNSServiceFlags aFlags,
-             uint32_t aInterfaceIndex,
-             DNSServiceErrorType aErrorCode,
-             const nsACString& aFullName,
-             const nsACString& aHostTarget,
-             uint16_t aPort,
-             uint16_t aTxtLen,
-             const unsigned char* aTxtRecord);
+  void Reply(DNSServiceRef aSdRef, DNSServiceFlags aFlags,
+             uint32_t aInterfaceIndex, DNSServiceErrorType aErrorCode,
+             const nsACString& aFullName, const nsACString& aHostTarget,
+             uint16_t aPort, uint16_t aTxtLen, const unsigned char* aTxtRecord);
 
-private:
+ private:
   ~ResolveOperator() = default;
   void GetAddrInfor(nsIDNSServiceInfo* aServiceInfo);
 
@@ -123,30 +108,26 @@ private:
 
 union NetAddr;
 
-class GetAddrInfoOperator final : public MDNSResponderOperator
-{
-public:
+class GetAddrInfoOperator final : public MDNSResponderOperator {
+ public:
   GetAddrInfoOperator(nsIDNSServiceInfo* aServiceInfo,
                       nsIDNSServiceResolveListener* aListener);
 
   nsresult Start() override;
 
-  void Reply(DNSServiceRef aSdRef,
-             DNSServiceFlags aFlags,
-             uint32_t aInterfaceIndex,
-             DNSServiceErrorType aErrorCode,
-             const nsACString& aHostName,
-             const NetAddr& aAddress,
+  void Reply(DNSServiceRef aSdRef, DNSServiceFlags aFlags,
+             uint32_t aInterfaceIndex, DNSServiceErrorType aErrorCode,
+             const nsACString& aHostName, const NetAddr& aAddress,
              uint32_t aTTL);
 
-private:
+ private:
   ~GetAddrInfoOperator() = default;
 
   nsCOMPtr<nsIDNSServiceInfo> mServiceInfo;
   nsCOMPtr<nsIDNSServiceResolveListener> mListener;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_netwerk_dns_mdns_libmdns_MDNSResponderOperator_h
+#endif  // mozilla_netwerk_dns_mdns_libmdns_MDNSResponderOperator_h

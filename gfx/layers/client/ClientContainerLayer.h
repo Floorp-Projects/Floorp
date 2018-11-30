@@ -7,14 +7,14 @@
 #ifndef GFX_CLIENTCONTAINERLAYER_H
 #define GFX_CLIENTCONTAINERLAYER_H
 
-#include <stdint.h>                     // for uint32_t
-#include "ClientLayerManager.h"         // for ClientLayerManager, etc
-#include "Layers.h"                     // for Layer, ContainerLayer, etc
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
-#include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsTArray.h"                   // for AutoTArray
+#include <stdint.h>              // for uint32_t
+#include "ClientLayerManager.h"  // for ClientLayerManager, etc
+#include "Layers.h"              // for Layer, ContainerLayer, etc
+#include "nsDebug.h"             // for NS_ASSERTION
+#include "nsISupportsImpl.h"     // for MOZ_COUNT_CTOR, etc
+#include "nsISupportsUtils.h"    // for NS_ADDREF, NS_RELEASE
+#include "nsRegion.h"            // for nsIntRegion
+#include "nsTArray.h"            // for AutoTArray
 #include "ReadbackProcessor.h"
 #include "ClientPaintedLayer.h"
 
@@ -23,27 +23,22 @@ namespace layers {
 
 class ShadowableLayer;
 
-class ClientContainerLayer : public ContainerLayer,
-                             public ClientLayer
-{
-public:
-  explicit ClientContainerLayer(ClientLayerManager* aManager) :
-    ContainerLayer(aManager, static_cast<ClientLayer*>(this))
-  {
+class ClientContainerLayer : public ContainerLayer, public ClientLayer {
+ public:
+  explicit ClientContainerLayer(ClientLayerManager* aManager)
+      : ContainerLayer(aManager, static_cast<ClientLayer*>(this)) {
     MOZ_COUNT_CTOR(ClientContainerLayer);
     mSupportsComponentAlphaChildren = true;
   }
 
-protected:
-  virtual ~ClientContainerLayer()
-  {
+ protected:
+  virtual ~ClientContainerLayer() {
     ContainerLayer::RemoveAllChildren();
     MOZ_COUNT_DTOR(ClientContainerLayer);
   }
 
-public:
-  virtual void RenderLayer() override
-  {
+ public:
+  virtual void RenderLayer() override {
     RenderMaskLayers(this);
 
     DefaultComputeSupportsComponentAlphaChildren();
@@ -64,15 +59,13 @@ public:
     }
   }
 
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override
-  {
+  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ContainerLayer::SetVisibleRegion(aRegion);
   }
-  virtual bool InsertAfter(Layer* aChild, Layer* aAfter) override
-  {
-    if(!ClientManager()->InConstruction()) {
+  virtual bool InsertAfter(Layer* aChild, Layer* aAfter) override {
+    if (!ClientManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
       return false;
     }
@@ -81,29 +74,28 @@ public:
       return false;
     }
 
-    ClientManager()->AsShadowForwarder()->InsertAfter(ClientManager()->Hold(this),
-                                                      ClientManager()->Hold(aChild),
-                                                      aAfter ? ClientManager()->Hold(aAfter) : nullptr);
+    ClientManager()->AsShadowForwarder()->InsertAfter(
+        ClientManager()->Hold(this), ClientManager()->Hold(aChild),
+        aAfter ? ClientManager()->Hold(aAfter) : nullptr);
     return true;
   }
 
-  virtual bool RemoveChild(Layer* aChild) override
-  {
+  virtual bool RemoveChild(Layer* aChild) override {
     if (!ClientManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
       return false;
     }
     // hold on to aChild before we remove it!
-    ShadowableLayer *heldChild = ClientManager()->Hold(aChild);
+    ShadowableLayer* heldChild = ClientManager()->Hold(aChild);
     if (!ContainerLayer::RemoveChild(aChild)) {
       return false;
     }
-    ClientManager()->AsShadowForwarder()->RemoveChild(ClientManager()->Hold(this), heldChild);
+    ClientManager()->AsShadowForwarder()->RemoveChild(
+        ClientManager()->Hold(this), heldChild);
     return true;
   }
 
-  virtual bool RepositionChild(Layer* aChild, Layer* aAfter) override
-  {
+  virtual bool RepositionChild(Layer* aChild, Layer* aAfter) override {
     if (!ClientManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
       return false;
@@ -111,65 +103,60 @@ public:
     if (!ContainerLayer::RepositionChild(aChild, aAfter)) {
       return false;
     }
-    ClientManager()->AsShadowForwarder()->RepositionChild(ClientManager()->Hold(this),
-                                                          ClientManager()->Hold(aChild),
-                                                          aAfter ? ClientManager()->Hold(aAfter) : nullptr);
+    ClientManager()->AsShadowForwarder()->RepositionChild(
+        ClientManager()->Hold(this), ClientManager()->Hold(aChild),
+        aAfter ? ClientManager()->Hold(aAfter) : nullptr);
     return true;
   }
 
   virtual Layer* AsLayer() override { return this; }
   virtual ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
-  {
+  virtual void ComputeEffectiveTransforms(
+      const gfx::Matrix4x4& aTransformToSurface) override {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
 
   void ForceIntermediateSurface() { mUseIntermediateSurface = true; }
 
-  void SetSupportsComponentAlphaChildren(bool aSupports) { mSupportsComponentAlphaChildren = aSupports; }
+  void SetSupportsComponentAlphaChildren(bool aSupports) {
+    mSupportsComponentAlphaChildren = aSupports;
+  }
 
-protected:
-  ClientLayerManager* ClientManager()
-  {
+ protected:
+  ClientLayerManager* ClientManager() {
     return static_cast<ClientLayerManager*>(mManager);
   }
 };
 
-class ClientRefLayer : public RefLayer,
-                       public ClientLayer {
-public:
-  explicit ClientRefLayer(ClientLayerManager* aManager) :
-    RefLayer(aManager, static_cast<ClientLayer*>(this))
-  {
+class ClientRefLayer : public RefLayer, public ClientLayer {
+ public:
+  explicit ClientRefLayer(ClientLayerManager* aManager)
+      : RefLayer(aManager, static_cast<ClientLayer*>(this)) {
     MOZ_COUNT_CTOR(ClientRefLayer);
   }
 
-protected:
-  virtual ~ClientRefLayer()
-  {
-    MOZ_COUNT_DTOR(ClientRefLayer);
-  }
+ protected:
+  virtual ~ClientRefLayer() { MOZ_COUNT_DTOR(ClientRefLayer); }
 
-public:
+ public:
   virtual Layer* AsLayer() override { return this; }
   virtual ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void RenderLayer() override { }
+  virtual void RenderLayer() override {}
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
-  {
+  virtual void ComputeEffectiveTransforms(
+      const gfx::Matrix4x4& aTransformToSurface) override {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
 
-private:
-  ClientLayerManager* ClientManager()
-  {
+ private:
+  ClientLayerManager* ClientManager() {
     return static_cast<ClientLayerManager*>(mManager);
   }
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

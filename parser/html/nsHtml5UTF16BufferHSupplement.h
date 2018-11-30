@@ -9,11 +9,9 @@ nsHtml5UTF16Buffer(char16_t* aBuffer, int32_t aEnd);
 /**
  * For working around the privacy of |buffer| in the generated code.
  */
-void
-DeleteBuffer();
+void DeleteBuffer();
 
 /**
  * For working around the privacy of |buffer| in the generated code.
  */
-void
-Swap(nsHtml5UTF16Buffer* aOther);
+void Swap(nsHtml5UTF16Buffer* aOther);

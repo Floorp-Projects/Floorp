@@ -15,103 +15,78 @@
 namespace mozilla {
 namespace dom {
 
-class MultipartBlobImpl final : public BaseBlobImpl
-{
-public:
+class MultipartBlobImpl final : public BaseBlobImpl {
+ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(MultipartBlobImpl, BaseBlobImpl)
 
   // Create as a file
-  static already_AddRefed<MultipartBlobImpl>
-  Create(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
-         const nsAString& aName,
-         const nsAString& aContentType,
-         ErrorResult& aRv);
+  static already_AddRefed<MultipartBlobImpl> Create(
+      nsTArray<RefPtr<BlobImpl>>&& aBlobImpls, const nsAString& aName,
+      const nsAString& aContentType, ErrorResult& aRv);
 
   // Create as a blob
-  static already_AddRefed<MultipartBlobImpl>
-  Create(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
-         const nsAString& aContentType,
-         ErrorResult& aRv);
+  static already_AddRefed<MultipartBlobImpl> Create(
+      nsTArray<RefPtr<BlobImpl>>&& aBlobImpls, const nsAString& aContentType,
+      ErrorResult& aRv);
 
   // Create as a file to be later initialized
   explicit MultipartBlobImpl(const nsAString& aName)
-    : BaseBlobImpl(aName, EmptyString(), UINT64_MAX),
-      mIsFromNsIFile(false)
-  {
-  }
+      : BaseBlobImpl(aName, EmptyString(), UINT64_MAX), mIsFromNsIFile(false) {}
 
   // Create as a blob to be later initialized
   MultipartBlobImpl()
-    : BaseBlobImpl(EmptyString(), UINT64_MAX),
-      mIsFromNsIFile(false)
-  {
-  }
+      : BaseBlobImpl(EmptyString(), UINT64_MAX), mIsFromNsIFile(false) {}
 
   void InitializeBlob(ErrorResult& aRv);
 
   void InitializeBlob(const Sequence<Blob::BlobPart>& aData,
-                      const nsAString& aContentType,
-                      bool aNativeEOL,
+                      const nsAString& aContentType, bool aNativeEOL,
                       ErrorResult& aRv);
 
-  nsresult InitializeChromeFile(nsIFile* aData,
-                                const nsAString& aType,
+  nsresult InitializeChromeFile(nsIFile* aData, const nsAString& aType,
                                 const nsAString& aName,
-                                bool aLastModifiedPassed,
-                                int64_t aLastModified,
+                                bool aLastModifiedPassed, int64_t aLastModified,
                                 bool aIsFromNsIFile);
 
-  virtual already_AddRefed<BlobImpl>
-  CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType,
-              ErrorResult& aRv) override;
+  virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
+                                                 uint64_t aLength,
+                                                 const nsAString& aContentType,
+                                                 ErrorResult& aRv) override;
 
-  virtual uint64_t GetSize(ErrorResult& aRv) override
-  {
-    return mLength;
-  }
+  virtual uint64_t GetSize(ErrorResult& aRv) override { return mLength; }
 
   virtual void CreateInputStream(nsIInputStream** aInputStream,
                                  ErrorResult& aRv) override;
 
-  virtual const nsTArray<RefPtr<BlobImpl>>* GetSubBlobImpls() const override
-  {
+  virtual const nsTArray<RefPtr<BlobImpl>>* GetSubBlobImpls() const override {
     return mBlobImpls.Length() ? &mBlobImpls : nullptr;
   }
 
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
                                       ErrorResult& aRv) const override;
 
-  virtual nsresult
-  SetMutable(bool aMutable) override;
+  virtual nsresult SetMutable(bool aMutable) override;
 
-  void SetName(const nsAString& aName)
-  {
-    mName = aName;
-  }
+  void SetName(const nsAString& aName) { mName = aName; }
 
   virtual bool MayBeClonedToOtherThreads() const override;
 
   size_t GetAllocationSize() const override;
-  size_t GetAllocationSize(FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override;
+  size_t GetAllocationSize(
+      FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override;
 
-protected:
+ protected:
   MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
-                    const nsAString& aName,
-                    const nsAString& aContentType)
-    : BaseBlobImpl(aName, aContentType, UINT64_MAX),
-      mBlobImpls(std::move(aBlobImpls)),
-      mIsFromNsIFile(false)
-  {
-  }
+                    const nsAString& aName, const nsAString& aContentType)
+      : BaseBlobImpl(aName, aContentType, UINT64_MAX),
+        mBlobImpls(std::move(aBlobImpls)),
+        mIsFromNsIFile(false) {}
 
   MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                     const nsAString& aContentType)
-    : BaseBlobImpl(aContentType, UINT64_MAX),
-      mBlobImpls(std::move(aBlobImpls)),
-      mIsFromNsIFile(false)
-  {
-  }
+      : BaseBlobImpl(aContentType, UINT64_MAX),
+        mBlobImpls(std::move(aBlobImpls)),
+        mIsFromNsIFile(false) {}
 
   virtual ~MultipartBlobImpl() {}
 
@@ -121,7 +96,7 @@ protected:
   bool mIsFromNsIFile;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MultipartBlobImpl_h
+#endif  // mozilla_dom_MultipartBlobImpl_h

@@ -9,171 +9,129 @@
 namespace mozilla {
 namespace widget {
 
-
 #ifdef DEBUG
 NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
-GfxInfo::GfxInfo()
-{
-}
+GfxInfo::GfxInfo() {}
 
-GfxInfo::~GfxInfo()
-{
-}
+GfxInfo::~GfxInfo() {}
 
-nsresult
-GfxInfo::GetD2DEnabled(bool *aEnabled)
-{
-  return NS_ERROR_FAILURE;
-}
+nsresult GfxInfo::GetD2DEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
 
-nsresult
-GfxInfo::GetDWriteEnabled(bool *aEnabled)
-{
+nsresult GfxInfo::GetDWriteEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
+
+NS_IMETHODIMP
+GfxInfo::GetDWriteVersion(nsAString& aDwriteVersion) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)
-{
+GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
-{
+GfxInfo::GetAdapterDescription(nsAString& aAdapterDescription) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
-{
+GfxInfo::GetAdapterDescription2(nsAString& aAdapterDescription) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDescription2(nsAString & aAdapterDescription)
-{
+GfxInfo::GetAdapterRAM(nsAString& aAdapterRAM) { return NS_ERROR_FAILURE; }
+
+NS_IMETHODIMP
+GfxInfo::GetAdapterRAM2(nsAString& aAdapterRAM) { return NS_ERROR_FAILURE; }
+
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriver(nsAString& aAdapterDriver) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
-{
+GfxInfo::GetAdapterDriver2(nsAString& aAdapterDriver) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
-{
+GfxInfo::GetAdapterDriverVersion(nsAString& aAdapterDriverVersion) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
-{
+GfxInfo::GetAdapterDriverVersion2(nsAString& aAdapterDriverVersion) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriver2(nsAString & aAdapterDriver)
-{
+GfxInfo::GetAdapterDriverDate(nsAString& aAdapterDriverDate) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriverVersion(nsAString & aAdapterDriverVersion)
-{
+GfxInfo::GetAdapterDriverDate2(nsAString& aAdapterDriverDate) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion)
-{
+GfxInfo::GetAdapterVendorID(nsAString& aAdapterVendorID) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
-{
+GfxInfo::GetAdapterVendorID2(nsAString& aAdapterVendorID) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID(nsAString & aAdapterVendorID)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID2(nsAString & aAdapterVendorID)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID(nsAString & aAdapterDeviceID)
-{
+GfxInfo::GetAdapterDeviceID(nsAString& aAdapterDeviceID) {
   return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID2(nsAString & aAdapterDeviceID)
-{
+GfxInfo::GetAdapterDeviceID2(nsAString& aAdapterDeviceID) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterSubsysID(nsAString & aAdapterSubsysID)
-{
+GfxInfo::GetAdapterSubsysID(nsAString& aAdapterSubsysID) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterSubsysID2(nsAString & aAdapterSubsysID)
-{
+GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
-{
-  return NS_ERROR_FAILURE;
-}
+GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) { return NS_ERROR_FAILURE; }
 
-const nsTArray<GfxDriverInfo>&
-GfxInfo::GetGfxDriverInfo()
-{
+const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (sDriverInfo->IsEmpty()) {
-    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Ios,
-      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAll), GfxDriverInfo::allDevices,
-      nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_STATUS_OK,
-      DRIVER_COMPARISON_IGNORED, GfxDriverInfo::allDriverVersions );
+    APPEND_TO_DRIVER_BLOCKLIST2(
+        OperatingSystem::Ios,
+        (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAll),
+        GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_OPENGL_LAYERS,
+        nsIGfxInfo::FEATURE_STATUS_OK, DRIVER_COMPARISON_IGNORED,
+        GfxDriverInfo::allDriverVersions);
   }
 
   return *sDriverInfo;
 }
 
-nsresult
-GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
-                              int32_t *aStatus,
-                              nsAString & aSuggestedDriverVersion,
-                              const nsTArray<GfxDriverInfo>& aDriverInfo,
-                              OperatingSystem* aOS /* = nullptr */)
-{
+nsresult GfxInfo::GetFeatureStatusImpl(
+    int32_t aFeature, int32_t* aStatus, nsAString& aSuggestedDriverVersion,
+    const nsTArray<GfxDriverInfo>& aDriverInfo,
+    OperatingSystem* aOS /* = nullptr */) {
   NS_ENSURE_ARG_POINTER(aStatus);
   aSuggestedDriverVersion.SetIsVoid(true);
   *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-  if (aOS)
-    *aOS = OperatingSystem::Ios;
+  if (aOS) *aOS = OperatingSystem::Ios;
 
   if (sShutdownOccurred) {
     return NS_OK;
@@ -189,34 +147,31 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
     return NS_OK;
   }
 
-  return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aOS);
+  return GfxInfoBase::GetFeatureStatusImpl(
+      aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aOS);
 }
 
 #ifdef DEBUG
 
 // Implement nsIGfxInfoDebug
 
-NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString & aVendorID)
-{
+NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString& aVendorID) {
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GfxInfo::SpoofDeviceID(const nsAString & aDeviceID)
-{
+NS_IMETHODIMP GfxInfo::SpoofDeviceID(const nsAString& aDeviceID) {
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
-{
+NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString& aDriverVersion) {
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GfxInfo::SpoofOSVersion(uint32_t aVersion)
-{
+NS_IMETHODIMP GfxInfo::SpoofOSVersion(uint32_t aVersion) {
   return NS_ERROR_FAILURE;
 }
 
 #endif
 
-}
-}
+}  // namespace widget
+}  // namespace mozilla

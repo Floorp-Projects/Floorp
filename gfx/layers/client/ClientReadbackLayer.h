@@ -13,15 +13,11 @@
 namespace mozilla {
 namespace layers {
 
-class ClientReadbackLayer :
-  public ReadbackLayer,
-  public ClientLayer
-{
-public:
-  explicit ClientReadbackLayer(ClientLayerManager *aManager)
-    : ReadbackLayer(aManager, nullptr)
-  {
-      mImplData = static_cast<ClientLayer*>(this);
+class ClientReadbackLayer : public ReadbackLayer, public ClientLayer {
+ public:
+  explicit ClientReadbackLayer(ClientLayerManager* aManager)
+      : ReadbackLayer(aManager, nullptr) {
+    mImplData = static_cast<ClientLayer*>(this);
   }
 
   virtual ShadowableLayer* AsShadowableLayer() override { return this; }
@@ -29,7 +25,7 @@ public:
   virtual void RenderLayer() override {}
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_CLIENTREADBACKLAYER_H */

@@ -25,18 +25,15 @@ namespace mscom {
 namespace detail {
 
 template <typename AsyncInterface>
-class ForgettableAsyncCall : public ISynchronize
-{
-public:
+class ForgettableAsyncCall : public ISynchronize {
+ public:
   explicit ForgettableAsyncCall(ICallFactory* aCallFactory)
-    : mRefCnt(0)
-    , mAsyncCall(nullptr)
-  {
+      : mRefCnt(0), mAsyncCall(nullptr) {
     StabilizedRefCount<Atomic<ULONG>> stabilizer(mRefCnt);
 
     HRESULT hr =
-      aCallFactory->CreateCall(__uuidof(AsyncInterface), this,
-                               IID_IUnknown, getter_AddRefs(mInnerUnk));
+        aCallFactory->CreateCall(__uuidof(AsyncInterface), this, IID_IUnknown,
+                                 getter_AddRefs(mInnerUnk));
     if (FAILED(hr)) {
       return;
     }
@@ -50,14 +47,10 @@ public:
     }
   }
 
-  AsyncInterface* GetInterface() const
-  {
-    return mAsyncCall;
-  }
+  AsyncInterface* GetInterface() const { return mAsyncCall; }
 
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID aIid, void** aOutInterface) override
-  {
+  STDMETHODIMP QueryInterface(REFIID aIid, void** aOutInterface) override {
     if (aIid == IID_IUnknown || aIid == IID_ISynchronize) {
       RefPtr<ISynchronize> ptr(this);
       ptr.forget(aOutInterface);
@@ -67,15 +60,13 @@ public:
     return mInnerUnk->QueryInterface(aIid, aOutInterface);
   }
 
-  STDMETHODIMP_(ULONG) AddRef() override
-  {
+  STDMETHODIMP_(ULONG) AddRef() override {
     ULONG result = ++mRefCnt;
     NS_LOG_ADDREF(this, result, "ForgettableAsyncCall", sizeof(*this));
     return result;
   }
 
-  STDMETHODIMP_(ULONG) Release() override
-  {
+  STDMETHODIMP_(ULONG) Release() override {
     ULONG result = --mRefCnt;
     NS_LOG_RELEASE(this, result, "ForgettableAsyncCall");
     if (!result) {
@@ -85,48 +76,41 @@ public:
   }
 
   // ISynchronize
-  STDMETHODIMP Wait(DWORD aFlags, DWORD aTimeoutMilliseconds) override
-  {
+  STDMETHODIMP Wait(DWORD aFlags, DWORD aTimeoutMilliseconds) override {
     return E_NOTIMPL;
   }
 
-  STDMETHODIMP Signal() override
-  {
+  STDMETHODIMP Signal() override {
     // Even though this function is a no-op, we must return S_OK as opposed to
     // E_NOTIMPL or else COM will consider the async call to have failed.
     return S_OK;
   }
 
-  STDMETHODIMP Reset() override
-  {
+  STDMETHODIMP Reset() override {
     // Even though this function is a no-op, we must return S_OK as opposed to
     // E_NOTIMPL or else COM will consider the async call to have failed.
     return S_OK;
   }
 
-protected:
+ protected:
   virtual ~ForgettableAsyncCall() {}
 
-private:
-  Atomic<ULONG>     mRefCnt;
-  RefPtr<IUnknown>  mInnerUnk;
-  AsyncInterface*   mAsyncCall; // weak reference
+ private:
+  Atomic<ULONG> mRefCnt;
+  RefPtr<IUnknown> mInnerUnk;
+  AsyncInterface* mAsyncCall;  // weak reference
 };
 
 template <typename AsyncInterface>
-class WaitableAsyncCall : public ForgettableAsyncCall<AsyncInterface>
-{
-public:
+class WaitableAsyncCall : public ForgettableAsyncCall<AsyncInterface> {
+ public:
   explicit WaitableAsyncCall(ICallFactory* aCallFactory)
-    : ForgettableAsyncCall(aCallFactory)
-    , mEvent(::CreateEventW(nullptr, FALSE, FALSE, nullptr))
-  {
-  }
+      : ForgettableAsyncCall(aCallFactory),
+        mEvent(::CreateEventW(nullptr, FALSE, FALSE, nullptr)) {}
 
-  STDMETHODIMP Wait(DWORD aFlags, DWORD aTimeoutMilliseconds) override
-  {
-    const DWORD waitStart = aTimeoutMilliseconds == INFINITE ? 0 :
-                            ::GetTickCount();
+  STDMETHODIMP Wait(DWORD aFlags, DWORD aTimeoutMilliseconds) override {
+    const DWORD waitStart =
+        aTimeoutMilliseconds == INFINITE ? 0 : ::GetTickCount();
     DWORD flags = aFlags;
     if (XRE_IsContentProcess() && NS_IsMainThread()) {
       flags |= COWAIT_ALERTABLE;
@@ -159,41 +143,36 @@ public:
     }
   }
 
-  STDMETHODIMP Signal() override
-  {
+  STDMETHODIMP Signal() override {
     if (!::SetEvent(mEvent)) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
     return S_OK;
   }
 
-protected:
-  ~WaitableAsyncCall()
-  {
+ protected:
+  ~WaitableAsyncCall() {
     if (mEvent) {
       ::CloseHandle(mEvent);
     }
   }
 
-private:
+ private:
   HANDLE mEvent;
 };
 
 template <typename AsyncInterface>
-class FireAndForgetInvoker
-{
-protected:
+class FireAndForgetInvoker {
+ protected:
   typedef ForgettableAsyncCall<AsyncInterface> AsyncCallType;
 
   RefPtr<ForgettableAsyncCall<AsyncInterface>> mAsyncCall;
 };
 
 template <typename AsyncInterface>
-class WaitableInvoker
-{
-public:
-  HRESULT Wait(DWORD aTimeout = INFINITE) const
-  {
+class WaitableInvoker {
+ public:
+  HRESULT Wait(DWORD aTimeout = INFINITE) const {
     if (!mAsyncCall) {
       // Nothing to wait for
       return S_OK;
@@ -202,13 +181,13 @@ public:
     return mAsyncCall->Wait(0, aTimeout);
   }
 
-protected:
+ protected:
   typedef WaitableAsyncCall<AsyncInterface> AsyncCallType;
 
   RefPtr<WaitableAsyncCall<AsyncInterface>> mAsyncCall;
 };
 
-} // namespace detail
+}  // namespace detail
 
 /**
  * This class is intended for "fire-and-forget" asynchronous invocations of COM
@@ -252,10 +231,10 @@ protected:
  * avoiding deadlock.
  */
 template <typename SyncInterface, typename AsyncInterface,
-          template <typename Iface> class WaitPolicy = detail::FireAndForgetInvoker>
-class MOZ_RAII AsyncInvoker final : public WaitPolicy<AsyncInterface>
-{
-public:
+          template <typename Iface> class WaitPolicy =
+              detail::FireAndForgetInvoker>
+class MOZ_RAII AsyncInvoker final : public WaitPolicy<AsyncInterface> {
+ public:
   typedef SyncInterface SyncInterfaceT;
   typedef AsyncInterface AsyncInterfaceT;
 
@@ -269,9 +248,9 @@ public:
    *                 whether aSyncObj is a proxy, however there may be a
    *                 performance penalty associated with that.
    */
-  explicit AsyncInvoker(SyncInterface* aSyncObj, const Maybe<bool>& aIsProxy = Nothing())
-    : mSyncObj(ResolveIsProxy(aSyncObj, aIsProxy) ? nullptr : aSyncObj)
-  {
+  explicit AsyncInvoker(SyncInterface* aSyncObj,
+                        const Maybe<bool>& aIsProxy = Nothing())
+      : mSyncObj(ResolveIsProxy(aSyncObj, aIsProxy) ? nullptr : aSyncObj) {
     MOZ_ASSERT(aSyncObj);
 
     if (mSyncObj) {
@@ -300,8 +279,8 @@ public:
    *        the asynchronous interface.
    */
   template <typename SyncMethod, typename AsyncMethod, typename... Args>
-  HRESULT Invoke(SyncMethod aSyncMethod, AsyncMethod aAsyncMethod, Args... aArgs)
-  {
+  HRESULT Invoke(SyncMethod aSyncMethod, AsyncMethod aAsyncMethod,
+                 Args... aArgs) {
     if (mSyncObj) {
       return (mSyncObj->*aSyncMethod)(std::forward<Args>(aArgs)...);
     }
@@ -325,22 +304,23 @@ public:
   AsyncInvoker& operator=(const AsyncInvoker& aOther) = delete;
   AsyncInvoker& operator=(AsyncInvoker&& aOther) = delete;
 
-private:
-  static bool ResolveIsProxy(SyncInterface* aSyncObj, const Maybe<bool>& aIsProxy)
-  {
+ private:
+  static bool ResolveIsProxy(SyncInterface* aSyncObj,
+                             const Maybe<bool>& aIsProxy) {
     MOZ_ASSERT(aSyncObj);
     return aIsProxy.isSome() ? aIsProxy.value() : IsProxy(aSyncObj);
   }
 
-private:
+ private:
   RefPtr<SyncInterface> mSyncObj;
 };
 
 template <typename SyncInterface, typename AsyncInterface>
-using WaitableAsyncInvoker = AsyncInvoker<SyncInterface, AsyncInterface, detail::WaitableInvoker>;
+using WaitableAsyncInvoker =
+    AsyncInvoker<SyncInterface, AsyncInterface, detail::WaitableInvoker>;
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
 #define ASYNC_INVOKER_FOR(SyncIface) \
   mozilla::mscom::AsyncInvoker<SyncIface, Async##SyncIface>
@@ -348,9 +328,10 @@ using WaitableAsyncInvoker = AsyncInvoker<SyncInterface, AsyncInterface, detail:
 #define WAITABLE_ASYNC_INVOKER_FOR(SyncIface) \
   mozilla::mscom::WaitableAsyncInvoker<SyncIface, Async##SyncIface>
 
-#define ASYNC_INVOKE(InvokerObj, SyncMethodName, ...) \
-  InvokerObj.Invoke(&decltype(InvokerObj)::SyncInterfaceT::SyncMethodName, \
-                    &decltype(InvokerObj)::AsyncInterfaceT::Begin_##SyncMethodName, \
-                    __VA_ARGS__)
+#define ASYNC_INVOKE(InvokerObj, SyncMethodName, ...)                 \
+  InvokerObj.Invoke(                                                  \
+      &decltype(InvokerObj)::SyncInterfaceT::SyncMethodName,          \
+      &decltype(InvokerObj)::AsyncInterfaceT::Begin_##SyncMethodName, \
+      __VA_ARGS__)
 
-#endif // mozilla_mscom_AsyncInvoker_h
+#endif  // mozilla_mscom_AsyncInvoker_h

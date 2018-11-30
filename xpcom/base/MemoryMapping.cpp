@@ -15,15 +15,14 @@
 namespace mozilla {
 
 namespace {
-struct VMFlagString
-{
+struct VMFlagString {
   const char* mName;
   const char* mPrettyName;
   VMFlag mFlag;
 };
 
 static const VMFlagString sVMFlagStrings[] = {
-  // clang-format off
+    // clang-format off
   {"ac", "Accountable",   VMFlag::Accountable},
   {"ar", "ArchSpecific",  VMFlag::ArchSpecific},
   {"dc", "NoFork",        VMFlag::NoFork},
@@ -52,16 +51,16 @@ static const VMFlagString sVMFlagStrings[] = {
   {"sh", "Shared",        VMFlag::Shared},
   {"sr", "Sequential",    VMFlag::Sequential},
   {"wr", "Writable",      VMFlag::Writable},
-  // clang-format on
+    // clang-format on
 };
-} // anonymous namespace
+}  // anonymous namespace
 
 constexpr size_t kVMFlags = size_t(-1);
 
 // An array of known field names which may be present in an smaps file, and the
 // offsets of the corresponding fields in a MemoryMapping class.
 const MemoryMapping::Field MemoryMapping::sFields[] = {
-  // clang-format off
+    // clang-format off
   {"AnonHugePages",   offsetof(MemoryMapping, mAnonHugePages)},
   {"Anonymous",       offsetof(MemoryMapping, mAnonymous)},
   {"KernelPageSize",  offsetof(MemoryMapping, mKernelPageSize)},
@@ -86,19 +85,16 @@ const MemoryMapping::Field MemoryMapping::sFields[] = {
   // it in this array to aid in parsing, but give it a separate sentinel value,
   // and treat it specially.
   {"VmFlags",         kVMFlags},
-  // clang-format on
+    // clang-format on
 };
 
 template <typename T, int n>
-const T*
-FindEntry(const char* aName, const T (&aEntries)[n])
-{
+const T* FindEntry(const char* aName, const T (&aEntries)[n]) {
   size_t index;
-  if (BinarySearchIf(aEntries, 0, n,
-                     [&] (const T& aEntry) {
-                       return strcmp(aName, aEntry.mName);
-                     },
-                     &index)) {
+  if (BinarySearchIf(
+          aEntries, 0, n,
+          [&](const T& aEntry) { return strcmp(aName, aEntry.mName); },
+          &index)) {
     return &aEntries[index];
   }
   return nullptr;
@@ -107,9 +103,7 @@ FindEntry(const char* aName, const T (&aEntries)[n])
 using Perm = MemoryMapping::Perm;
 using PermSet = MemoryMapping::PermSet;
 
-nsresult
-GetMemoryMappings(nsTArray<MemoryMapping>& aMappings)
-{
+nsresult GetMemoryMappings(nsTArray<MemoryMapping>& aMappings) {
   std::ifstream stream("/proc/self/smaps");
   if (stream.fail()) {
     return NS_ERROR_FAILURE;
@@ -129,8 +123,8 @@ GetMemoryMappings(nsTArray<MemoryMapping>& aMappings)
     //
     // 1487118a7000-148711a5a000 r-xp 00000000 103:03 54004561                  /usr/lib/libc-2.27.so
     // clang-format on
-    if (sscanf(buffer.c_str(), "%zx-%zx %4c %zx %*u:%*u %*u %511s\n",
-               &start, &end, flags, &offset, name) >= 4) {
+    if (sscanf(buffer.c_str(), "%zx-%zx %4c %zx %*u:%*u %*u %511s\n", &start,
+               &end, flags, &offset, name) >= 4) {
       PermSet perms;
       if (flags[0] == 'r') {
         perms += Perm::Read;
@@ -147,7 +141,8 @@ GetMemoryMappings(nsTArray<MemoryMapping>& aMappings)
         perms += Perm::Shared;
       }
 
-      current = aMappings.AppendElement(MemoryMapping{start, end, perms, offset, name});
+      current = aMappings.AppendElement(
+          MemoryMapping{start, end, perms, offset, name});
       continue;
     }
     if (!current) {
@@ -184,13 +179,9 @@ GetMemoryMappings(nsTArray<MemoryMapping>& aMappings)
   return NS_OK;
 }
 
-void
-MemoryMapping::Dump(nsACString& aOut) const
-{
-  aOut.AppendPrintf("%zx-%zx Size: %zu Offset: %zx %s\n",
-                    mStart, mEnd,
-                    mEnd - mStart,
-                    mOffset, mName.get());
+void MemoryMapping::Dump(nsACString& aOut) const {
+  aOut.AppendPrintf("%zx-%zx Size: %zu Offset: %zx %s\n", mStart, mEnd,
+                    mEnd - mStart, mOffset, mName.get());
 
   for (auto& field : MemoryMapping::sFields) {
     if (field.mOffset < sizeof(*this)) {
@@ -206,4 +197,4 @@ MemoryMapping::Dump(nsACString& aOut) const
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

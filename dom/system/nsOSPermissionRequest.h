@@ -13,8 +13,6 @@
  * The default implementation of nsOSPermissionRequestBase used on platforms
  * that don't have a platform-specific version.
  */
-class nsOSPermissionRequest : public nsOSPermissionRequestBase
-{
-};
+class nsOSPermissionRequest : public nsOSPermissionRequestBase {};
 
 #endif /* nsOSPermissionRequest_h__ */

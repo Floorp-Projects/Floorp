@@ -28,16 +28,15 @@ namespace net {
 // EventTokenBucketCancelable
 ////////////////////////////////////////////
 
-class TokenBucketCancelable : public nsICancelable
-{
-public:
+class TokenBucketCancelable : public nsICancelable {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICANCELABLE
 
   explicit TokenBucketCancelable(class ATokenBucketEvent *event);
   void Fire();
 
-private:
+ private:
   virtual ~TokenBucketCancelable() = default;
 
   friend class EventTokenBucket;
@@ -47,23 +46,17 @@ private:
 NS_IMPL_ISUPPORTS(TokenBucketCancelable, nsICancelable)
 
 TokenBucketCancelable::TokenBucketCancelable(ATokenBucketEvent *event)
-  : mEvent(event)
-{
-}
+    : mEvent(event) {}
 
 NS_IMETHODIMP
-TokenBucketCancelable::Cancel(nsresult reason)
-{
+TokenBucketCancelable::Cancel(nsresult reason) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mEvent = nullptr;
   return NS_OK;
 }
 
-void
-TokenBucketCancelable::Fire()
-{
-  if (!mEvent)
-    return;
+void TokenBucketCancelable::Fire() {
+  if (!mEvent) return;
 
   ATokenBucketEvent *event = mEvent;
   mEvent = nullptr;
@@ -77,17 +70,17 @@ TokenBucketCancelable::Fire()
 NS_IMPL_ISUPPORTS(EventTokenBucket, nsITimerCallback, nsINamed)
 
 // by default 1hz with no burst
-EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond,
-                                   uint32_t burstSize)
-  : mUnitCost(kUsecPerSec)
-  , mMaxCredit(kUsecPerSec)
-  , mCredit(kUsecPerSec)
-  , mPaused(false)
-  , mStopped(false)
-  , mTimerArmed(false)
+EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond, uint32_t burstSize)
+    : mUnitCost(kUsecPerSec),
+      mMaxCredit(kUsecPerSec),
+      mCredit(kUsecPerSec),
+      mPaused(false),
+      mStopped(false),
+      mTimerArmed(false)
 #ifdef XP_WIN
-  , mFineGrainTimerInUse(false)
-  , mFineGrainResetTimerArmed(false)
+      ,
+      mFineGrainTimerInUse(false),
+      mFineGrainResetTimerArmed(false)
 #endif
 {
   mLastUpdate = TimeStamp::Now();
@@ -99,29 +92,25 @@ EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond,
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   if (NS_SUCCEEDED(rv))
     sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv))
-    mTimer = NS_NewTimer(sts);
+  if (NS_SUCCEEDED(rv)) mTimer = NS_NewTimer(sts);
   SetRate(eventsPerSecond, burstSize);
 }
 
-EventTokenBucket::~EventTokenBucket()
-{
-  SOCKET_LOG(("EventTokenBucket::dtor %p events=%zu\n",
-              this, mEvents.GetSize()));
+EventTokenBucket::~EventTokenBucket() {
+  SOCKET_LOG(
+      ("EventTokenBucket::dtor %p events=%zu\n", this, mEvents.GetSize()));
 
   CleanupTimers();
 
   // Complete any queued events to prevent hangs
   while (mEvents.GetSize()) {
     RefPtr<TokenBucketCancelable> cancelable =
-      dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
+        dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
     cancelable->Fire();
   }
 }
 
-void
-EventTokenBucket::CleanupTimers()
-{
+void EventTokenBucket::CleanupTimers() {
   if (mTimer && mTimerArmed) {
     mTimer->Cancel();
   }
@@ -138,12 +127,9 @@ EventTokenBucket::CleanupTimers()
 #endif
 }
 
-void
-EventTokenBucket::SetRate(uint32_t eventsPerSecond,
-                          uint32_t burstSize)
-{
-  SOCKET_LOG(("EventTokenBucket::SetRate %p %u %u\n",
-              this, eventsPerSecond, burstSize));
+void EventTokenBucket::SetRate(uint32_t eventsPerSecond, uint32_t burstSize) {
+  SOCKET_LOG(("EventTokenBucket::SetRate %p %u %u\n", this, eventsPerSecond,
+              burstSize));
 
   if (eventsPerSecond > kMaxHz) {
     eventsPerSecond = kMaxHz;
@@ -165,35 +151,26 @@ EventTokenBucket::SetRate(uint32_t eventsPerSecond,
   mLastUpdate = TimeStamp::Now();
 }
 
-void
-EventTokenBucket::ClearCredits()
-{
+void EventTokenBucket::ClearCredits() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::ClearCredits %p\n", this));
   mCredit = 0;
 }
 
-uint32_t
-EventTokenBucket::BurstEventsAvailable()
-{
+uint32_t EventTokenBucket::BurstEventsAvailable() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   return static_cast<uint32_t>(mCredit / mUnitCost);
 }
 
-uint32_t
-EventTokenBucket::QueuedEvents()
-{
+uint32_t EventTokenBucket::QueuedEvents() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   return mEvents.GetSize();
 }
 
-void
-EventTokenBucket::Pause()
-{
+void EventTokenBucket::Pause() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::Pause %p\n", this));
-  if (mPaused || mStopped)
-    return;
+  if (mPaused || mStopped) return;
 
   mPaused = true;
   if (mTimerArmed) {
@@ -202,22 +179,17 @@ EventTokenBucket::Pause()
   }
 }
 
-void
-EventTokenBucket::UnPause()
-{
+void EventTokenBucket::UnPause() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::UnPause %p\n", this));
-  if (!mPaused || mStopped)
-    return;
+  if (!mPaused || mStopped) return;
 
   mPaused = false;
   DispatchEvents();
   UpdateTimer();
 }
 
-void
-EventTokenBucket::Stop()
-{
+void EventTokenBucket::Stop() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::Stop %p armed=%d\n", this, mTimerArmed));
   mStopped = true;
@@ -226,19 +198,17 @@ EventTokenBucket::Stop()
   // Complete any queued events to prevent hangs
   while (mEvents.GetSize()) {
     RefPtr<TokenBucketCancelable> cancelable =
-      dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
+        dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
     cancelable->Fire();
   }
 }
 
-nsresult
-EventTokenBucket::SubmitEvent(ATokenBucketEvent *event, nsICancelable **cancelable)
-{
+nsresult EventTokenBucket::SubmitEvent(ATokenBucketEvent *event,
+                                       nsICancelable **cancelable) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::SubmitEvent %p\n", this));
 
-  if (mStopped || !mTimer)
-    return NS_ERROR_FAILURE;
+  if (mStopped || !mTimer) return NS_ERROR_FAILURE;
 
   UpdateCredits();
 
@@ -253,60 +223,51 @@ EventTokenBucket::SubmitEvent(ATokenBucketEvent *event, nsICancelable **cancelab
     SOCKET_LOG(("   queued\n"));
     mEvents.Push(cancelEvent.forget().take());
     UpdateTimer();
-  }
-  else {
+  } else {
     SOCKET_LOG(("   dispatched synchronously\n"));
   }
 
   return NS_OK;
 }
 
-bool
-EventTokenBucket::TryImmediateDispatch(TokenBucketCancelable *cancelable)
-{
-  if (mCredit < mUnitCost)
-    return false;
+bool EventTokenBucket::TryImmediateDispatch(TokenBucketCancelable *cancelable) {
+  if (mCredit < mUnitCost) return false;
 
   mCredit -= mUnitCost;
   cancelable->Fire();
   return true;
 }
 
-void
-EventTokenBucket::DispatchEvents()
-{
+void EventTokenBucket::DispatchEvents() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::DispatchEvents %p %d\n", this, mPaused));
-  if (mPaused || mStopped)
-    return;
+  if (mPaused || mStopped) return;
 
   while (mEvents.GetSize() && mUnitCost <= mCredit) {
     RefPtr<TokenBucketCancelable> cancelable =
-      dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
+        dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
     if (cancelable->mEvent) {
-      SOCKET_LOG(("EventTokenBucket::DispachEvents [%p] "
-                  "Dispatching queue token bucket event cost=%" PRIu64 " credit=%" PRIu64 "\n",
-                  this, mUnitCost, mCredit));
+      SOCKET_LOG(
+          ("EventTokenBucket::DispachEvents [%p] "
+           "Dispatching queue token bucket event cost=%" PRIu64
+           " credit=%" PRIu64 "\n",
+           this, mUnitCost, mCredit));
       mCredit -= mUnitCost;
       cancelable->Fire();
     }
   }
 
 #ifdef XP_WIN
-  if (!mEvents.GetSize())
-    WantNormalTimers();
+  if (!mEvents.GetSize()) WantNormalTimers();
 #endif
 }
 
-void
-EventTokenBucket::UpdateTimer()
-{
+void EventTokenBucket::UpdateTimer() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (mTimerArmed || mPaused || mStopped || !mEvents.GetSize() || !mTimer)
     return;
 
-  if (mCredit >= mUnitCost)
-    return;
+  if (mCredit >= mUnitCost) return;
 
   // determine the time needed to wait to accumulate enough credits to admit
   // one more event and set the timer for that point. Always round it
@@ -315,25 +276,24 @@ EventTokenBucket::UpdateTimer()
   uint64_t deficit = mUnitCost - mCredit;
   uint64_t msecWait = (deficit + (kUsecPerMsec - 1)) / kUsecPerMsec;
 
-  if (msecWait < 4) // minimum wait
+  if (msecWait < 4)  // minimum wait
     msecWait = 4;
-  else if (msecWait > 60000) // maximum wait
+  else if (msecWait > 60000)  // maximum wait
     msecWait = 60000;
 
 #ifdef XP_WIN
   FineGrainTimers();
 #endif
 
-  SOCKET_LOG(("EventTokenBucket::UpdateTimer %p for %" PRIu64 "ms\n",
-              this, msecWait));
+  SOCKET_LOG(
+      ("EventTokenBucket::UpdateTimer %p for %" PRIu64 "ms\n", this, msecWait));
   nsresult rv = mTimer->InitWithCallback(this, static_cast<uint32_t>(msecWait),
                                          nsITimer::TYPE_ONE_SHOT);
   mTimerArmed = NS_SUCCEEDED(rv);
 }
 
 NS_IMETHODIMP
-EventTokenBucket::Notify(nsITimer *timer)
-{
+EventTokenBucket::Notify(nsITimer *timer) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
 #ifdef XP_WIN
@@ -345,8 +305,7 @@ EventTokenBucket::Notify(nsITimer *timer)
 
   SOCKET_LOG(("EventTokenBucket::Notify() %p\n", this));
   mTimerArmed = false;
-  if (mStopped)
-    return NS_OK;
+  if (mStopped) return NS_OK;
 
   UpdateCredits();
   DispatchEvents();
@@ -356,15 +315,12 @@ EventTokenBucket::Notify(nsITimer *timer)
 }
 
 NS_IMETHODIMP
-EventTokenBucket::GetName(nsACString& aName)
-{
+EventTokenBucket::GetName(nsACString &aName) {
   aName.AssignLiteral("EventTokenBucket");
   return NS_OK;
 }
 
-void
-EventTokenBucket::UpdateCredits()
-{
+void EventTokenBucket::UpdateCredits() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   TimeStamp now = TimeStamp::Now();
@@ -372,96 +328,83 @@ EventTokenBucket::UpdateCredits()
   mLastUpdate = now;
 
   mCredit += static_cast<uint64_t>(elapsed.ToMicroseconds());
-  if (mCredit > mMaxCredit)
-    mCredit = mMaxCredit;
-  SOCKET_LOG(("EventTokenBucket::UpdateCredits %p to %" PRIu64 " (%" PRIu64 " each.. %3.2f)\n",
+  if (mCredit > mMaxCredit) mCredit = mMaxCredit;
+  SOCKET_LOG(("EventTokenBucket::UpdateCredits %p to %" PRIu64 " (%" PRIu64
+              " each.. %3.2f)\n",
               this, mCredit, mUnitCost, (double)mCredit / mUnitCost));
 }
 
 #ifdef XP_WIN
-void
-EventTokenBucket::FineGrainTimers()
-{
+void EventTokenBucket::FineGrainTimers() {
   SOCKET_LOG(("EventTokenBucket::FineGrainTimers %p mFineGrainTimerInUse=%d\n",
               this, mFineGrainTimerInUse));
 
   mLastFineGrainTimerUse = TimeStamp::Now();
 
-  if (mFineGrainTimerInUse)
-    return;
+  if (mFineGrainTimerInUse) return;
 
-  if (mUnitCost > kCostFineGrainThreshold)
-    return;
+  if (mUnitCost > kCostFineGrainThreshold) return;
 
-  SOCKET_LOG(("EventTokenBucket::FineGrainTimers %p timeBeginPeriod()\n",
-              this));
+  SOCKET_LOG(
+      ("EventTokenBucket::FineGrainTimers %p timeBeginPeriod()\n", this));
 
   mFineGrainTimerInUse = true;
   timeBeginPeriod(1);
 }
 
-void
-EventTokenBucket::NormalTimers()
-{
-  if (!mFineGrainTimerInUse)
-    return;
+void EventTokenBucket::NormalTimers() {
+  if (!mFineGrainTimerInUse) return;
   mFineGrainTimerInUse = false;
 
   SOCKET_LOG(("EventTokenBucket::NormalTimers %p timeEndPeriod()\n", this));
   timeEndPeriod(1);
 }
 
-void
-EventTokenBucket::WantNormalTimers()
-{
-    if (!mFineGrainTimerInUse)
-      return;
-    if (mFineGrainResetTimerArmed)
-      return;
+void EventTokenBucket::WantNormalTimers() {
+  if (!mFineGrainTimerInUse) return;
+  if (mFineGrainResetTimerArmed) return;
 
-    TimeDuration elapsed(TimeStamp::Now() - mLastFineGrainTimerUse);
-    static const TimeDuration fiveSeconds = TimeDuration::FromSeconds(5);
+  TimeDuration elapsed(TimeStamp::Now() - mLastFineGrainTimerUse);
+  static const TimeDuration fiveSeconds = TimeDuration::FromSeconds(5);
 
-    if (elapsed >= fiveSeconds) {
-      NormalTimers();
-      return;
-    }
+  if (elapsed >= fiveSeconds) {
+    NormalTimers();
+    return;
+  }
 
-    if (!mFineGrainResetTimer)
-      mFineGrainResetTimer = NS_NewTimer();
+  if (!mFineGrainResetTimer) mFineGrainResetTimer = NS_NewTimer();
 
-    // if we can't delay the reset, just do it now
-    if (!mFineGrainResetTimer) {
-      NormalTimers();
-      return;
-    }
+  // if we can't delay the reset, just do it now
+  if (!mFineGrainResetTimer) {
+    NormalTimers();
+    return;
+  }
 
-    // pad the callback out 100ms to avoid having to round trip this again if the
-    // timer calls back just a tad early.
-    SOCKET_LOG(("EventTokenBucket::WantNormalTimers %p "
-                "Will reset timer granularity after delay", this));
+  // pad the callback out 100ms to avoid having to round trip this again if the
+  // timer calls back just a tad early.
+  SOCKET_LOG(
+      ("EventTokenBucket::WantNormalTimers %p "
+       "Will reset timer granularity after delay",
+       this));
 
-    mFineGrainResetTimer->InitWithCallback(
+  mFineGrainResetTimer->InitWithCallback(
       this,
       static_cast<uint32_t>((fiveSeconds - elapsed).ToMilliseconds()) + 100,
       nsITimer::TYPE_ONE_SHOT);
-    mFineGrainResetTimerArmed = true;
+  mFineGrainResetTimerArmed = true;
 }
 
-void
-EventTokenBucket::FineGrainResetTimerNotify()
-{
+void EventTokenBucket::FineGrainResetTimerNotify() {
   SOCKET_LOG(("EventTokenBucket::FineGrainResetTimerNotify() events = %d\n",
               this, mEvents.GetSize()));
   mFineGrainResetTimerArmed = false;
 
   // If we are currently processing events then wait for the queue to drain
   // before trying to reset back to normal timers again
-  if (!mEvents.GetSize())
-    WantNormalTimers();
+  if (!mEvents.GetSize()) WantNormalTimers();
 }
 
 #endif
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

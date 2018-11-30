@@ -9,8 +9,7 @@
 
 namespace mozilla {
 
-enum LayerState
-{
+enum LayerState {
   LAYER_NONE,
   LAYER_INACTIVE,
   LAYER_ACTIVE,
@@ -23,6 +22,6 @@ enum LayerState
   LAYER_SVG_EFFECTS
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

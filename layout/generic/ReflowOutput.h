@@ -17,7 +17,7 @@
 
 namespace mozilla {
 struct ReflowInput;
-} // namespace mozilla
+}  // namespace mozilla
 
 /**
  * When we store overflow areas as an array of scrollable and visual
@@ -27,17 +27,21 @@ struct ReflowInput;
  * that 2 is a valid value of nsOverflowType for use in
  * NS_FOR_FRAME_OVERFLOW_TYPES.
  */
-enum nsOverflowType { eVisualOverflow, eScrollableOverflow,
-                      eOverflowType_LENGTH };
+enum nsOverflowType {
+  eVisualOverflow,
+  eScrollableOverflow,
+  eOverflowType_LENGTH
+};
 
-#define NS_FOR_FRAME_OVERFLOW_TYPES(var_)                                     \
-  for (nsOverflowType var_ = nsOverflowType(0); var_ < 2;                     \
+#define NS_FOR_FRAME_OVERFLOW_TYPES(var_)                 \
+  for (nsOverflowType var_ = nsOverflowType(0); var_ < 2; \
        var_ = nsOverflowType(var_ + 1))
 
 struct nsOverflowAreas {
-private:
+ private:
   nsRect mRects[2];
-public:
+
+ public:
   nsRect& Overflow(size_t aIndex) {
     NS_ASSERTION(aIndex < 2, "index out of range");
     return mRects[aIndex];
@@ -51,22 +55,21 @@ public:
   const nsRect& VisualOverflow() const { return mRects[eVisualOverflow]; }
 
   nsRect& ScrollableOverflow() { return mRects[eScrollableOverflow]; }
-  const nsRect& ScrollableOverflow() const { return mRects[eScrollableOverflow]; }
+  const nsRect& ScrollableOverflow() const {
+    return mRects[eScrollableOverflow];
+  }
 
   nsOverflowAreas() {
     // default-initializes to zero due to nsRect's default constructor
   }
 
   nsOverflowAreas(const nsRect& aVisualOverflow,
-                  const nsRect& aScrollableOverflow)
-  {
+                  const nsRect& aScrollableOverflow) {
     mRects[eVisualOverflow] = aVisualOverflow;
     mRects[eScrollableOverflow] = aScrollableOverflow;
   }
 
-  nsOverflowAreas(const nsOverflowAreas& aOther) {
-    *this = aOther;
-  }
+  nsOverflowAreas(const nsOverflowAreas& aOther) { *this = aOther; }
 
   nsOverflowAreas& operator=(const nsOverflowAreas& aOther) {
     mRects[0] = aOther.mRects[0];
@@ -122,72 +125,50 @@ public:
  * negative) negative margin included.
  */
 struct nsCollapsingMargin {
-  private:
-    nscoord mMostPos;  // the largest positive margin included
-    nscoord mMostNeg;  // the smallest negative margin included
+ private:
+  nscoord mMostPos;  // the largest positive margin included
+  nscoord mMostNeg;  // the smallest negative margin included
 
-  public:
-    nsCollapsingMargin()
-        : mMostPos(0),
-          mMostNeg(0)
-      {
-      }
+ public:
+  nsCollapsingMargin() : mMostPos(0), mMostNeg(0) {}
 
-    nsCollapsingMargin(const nsCollapsingMargin& aOther)
-        : mMostPos(aOther.mMostPos),
-          mMostNeg(aOther.mMostNeg)
-      {
-      }
+  nsCollapsingMargin(const nsCollapsingMargin& aOther)
+      : mMostPos(aOther.mMostPos), mMostNeg(aOther.mMostNeg) {}
 
-    bool operator==(const nsCollapsingMargin& aOther)
-      {
-        return mMostPos == aOther.mMostPos &&
-          mMostNeg == aOther.mMostNeg;
-      }
+  bool operator==(const nsCollapsingMargin& aOther) {
+    return mMostPos == aOther.mMostPos && mMostNeg == aOther.mMostNeg;
+  }
 
-    bool operator!=(const nsCollapsingMargin& aOther)
-      {
-        return !(*this == aOther);
-      }
+  bool operator!=(const nsCollapsingMargin& aOther) {
+    return !(*this == aOther);
+  }
 
-    nsCollapsingMargin& operator=(const nsCollapsingMargin& aOther)
-      {
-        mMostPos = aOther.mMostPos;
-        mMostNeg = aOther.mMostNeg;
-        return *this;
-      }
+  nsCollapsingMargin& operator=(const nsCollapsingMargin& aOther) {
+    mMostPos = aOther.mMostPos;
+    mMostNeg = aOther.mMostNeg;
+    return *this;
+  }
 
-    void Include(nscoord aCoord)
-      {
-        if (aCoord > mMostPos)
-          mMostPos = aCoord;
-        else if (aCoord < mMostNeg)
-          mMostNeg = aCoord;
-      }
+  void Include(nscoord aCoord) {
+    if (aCoord > mMostPos)
+      mMostPos = aCoord;
+    else if (aCoord < mMostNeg)
+      mMostNeg = aCoord;
+  }
 
-    void Include(const nsCollapsingMargin& aOther)
-      {
-        if (aOther.mMostPos > mMostPos)
-          mMostPos = aOther.mMostPos;
-        if (aOther.mMostNeg < mMostNeg)
-          mMostNeg = aOther.mMostNeg;
-      }
+  void Include(const nsCollapsingMargin& aOther) {
+    if (aOther.mMostPos > mMostPos) mMostPos = aOther.mMostPos;
+    if (aOther.mMostNeg < mMostNeg) mMostNeg = aOther.mMostNeg;
+  }
 
-    void Zero()
-      {
-        mMostPos = 0;
-        mMostNeg = 0;
-      }
+  void Zero() {
+    mMostPos = 0;
+    mMostNeg = 0;
+  }
 
-    bool IsZero() const
-      {
-        return (mMostPos == 0) && (mMostNeg == 0);
-      }
+  bool IsZero() const { return (mMostPos == 0) && (mMostNeg == 0); }
 
-    nscoord get() const
-      {
-        return mMostPos + mMostNeg;
-      }
+  nscoord get() const { return mMostPos + mMostNeg; }
 };
 
 namespace mozilla {
@@ -199,14 +180,12 @@ namespace mozilla {
  * @see #Reflow()
  */
 class ReflowOutput {
-public:
+ public:
   explicit ReflowOutput(mozilla::WritingMode aWritingMode)
-    : mISize(0)
-    , mBSize(0)
-    , mBlockStartAscent(ASK_FOR_BASELINE)
-    , mWritingMode(aWritingMode)
-  {
-  }
+      : mISize(0),
+        mBSize(0),
+        mBlockStartAscent(ASK_FOR_BASELINE),
+        mWritingMode(aWritingMode) {}
 
   explicit ReflowOutput(const ReflowInput& aReflowInput);
 
@@ -243,18 +222,14 @@ public:
 
   // Set inline and block size from a LogicalSize, converting to our
   // writing mode as necessary.
-  void SetSize(mozilla::WritingMode aWM, mozilla::LogicalSize aSize)
-  {
+  void SetSize(mozilla::WritingMode aWM, mozilla::LogicalSize aSize) {
     mozilla::LogicalSize convertedSize = aSize.ConvertTo(mWritingMode, aWM);
     mBSize = convertedSize.BSize(mWritingMode);
     mISize = convertedSize.ISize(mWritingMode);
   }
 
   // Set both inline and block size to zero -- no need for a writing mode!
-  void ClearSize()
-  {
-    mISize = mBSize = 0;
-  }
+  void ClearSize() { mISize = mBSize = 0; }
 
   // Width and Height are physical dimensions, independent of writing mode.
   // Accessing these is slightly more expensive than accessing the logical
@@ -265,23 +240,16 @@ public:
 
   // It's only meaningful to consider "ascent" on the block-start side of the
   // frame, so no need to pass a writing mode argument
-  nscoord BlockStartAscent() const
-  {
-    return mBlockStartAscent;
-  }
+  nscoord BlockStartAscent() const { return mBlockStartAscent; }
 
   nscoord& Width() { return mWritingMode.IsVertical() ? mBSize : mISize; }
   nscoord& Height() { return mWritingMode.IsVertical() ? mISize : mBSize; }
 
-  nsSize PhysicalSize()
-  {
+  nsSize PhysicalSize() {
     return Size(mWritingMode).GetPhysicalSize(mWritingMode);
   }
 
-  void SetBlockStartAscent(nscoord aAscent)
-  {
-    mBlockStartAscent = aAscent;
-  }
+  void SetBlockStartAscent(nscoord aAscent) { mBlockStartAscent = aAscent; }
 
   enum { ASK_FOR_BASELINE = nscoord_MAX };
 
@@ -302,14 +270,14 @@ public:
   // width, height}.
   nsOverflowAreas mOverflowAreas;
 
-  nsRect& VisualOverflow()
-    { return mOverflowAreas.VisualOverflow(); }
-  const nsRect& VisualOverflow() const
-    { return mOverflowAreas.VisualOverflow(); }
-  nsRect& ScrollableOverflow()
-    { return mOverflowAreas.ScrollableOverflow(); }
-  const nsRect& ScrollableOverflow() const
-    { return mOverflowAreas.ScrollableOverflow(); }
+  nsRect& VisualOverflow() { return mOverflowAreas.VisualOverflow(); }
+  const nsRect& VisualOverflow() const {
+    return mOverflowAreas.VisualOverflow();
+  }
+  nsRect& ScrollableOverflow() { return mOverflowAreas.ScrollableOverflow(); }
+  const nsRect& ScrollableOverflow() const {
+    return mOverflowAreas.ScrollableOverflow();
+  }
 
   // Set all of mOverflowAreas to (0, 0, width, height).
   void SetOverflowAreasToDesiredBounds();
@@ -319,12 +287,13 @@ public:
 
   mozilla::WritingMode GetWritingMode() const { return mWritingMode; }
 
-private:
-  nscoord mISize, mBSize; // [OUT] desired width and height (border-box)
-  nscoord mBlockStartAscent; // [OUT] baseline (in Block direction), or ASK_FOR_BASELINE
+ private:
+  nscoord mISize, mBSize;     // [OUT] desired width and height (border-box)
+  nscoord mBlockStartAscent;  // [OUT] baseline (in Block direction), or
+                              // ASK_FOR_BASELINE
   mozilla::WritingMode mWritingMode;
 };
 
-} // mozilla namespace
+}  // namespace mozilla
 
-#endif // mozilla_ReflowOutput_h
+#endif  // mozilla_ReflowOutput_h

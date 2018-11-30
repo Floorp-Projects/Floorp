@@ -15,10 +15,9 @@
 namespace mozilla {
 
 class ServoElementSnapshotTable
-  : public nsClassHashtable<nsRefPtrHashKey<dom::Element>, ServoElementSnapshot>
-{
-};
+    : public nsClassHashtable<nsRefPtrHashKey<dom::Element>,
+                              ServoElementSnapshot> {};
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

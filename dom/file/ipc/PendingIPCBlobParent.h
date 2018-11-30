@@ -19,26 +19,23 @@ namespace dom {
 
 class BlobImpl;
 
-class PendingIPCBlobParent final : public mozilla::ipc::PPendingIPCBlobParent
-{
-public:
-  static PendingIPCBlobParent*
-  Create(PBackgroundParent* aManager, BlobImpl* aBlobImpl);
+class PendingIPCBlobParent final : public mozilla::ipc::PPendingIPCBlobParent {
+ public:
+  static PendingIPCBlobParent* Create(PBackgroundParent* aManager,
+                                      BlobImpl* aBlobImpl);
 
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override
-  {}
+  void ActorDestroy(ActorDestroyReason aWhy) override {}
 
-  mozilla::ipc::IPCResult
-  Recv__delete__(const PendingIPCBlobData& aData) override;
+  mozilla::ipc::IPCResult Recv__delete__(
+      const PendingIPCBlobData& aData) override;
 
-private:
+ private:
   explicit PendingIPCBlobParent(BlobImpl* aBlobImpl);
 
   RefPtr<BlobImpl> mBlobImpl;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ipc_PendingIPCBlobParent_h
+#endif  // mozilla_dom_ipc_PendingIPCBlobParent_h

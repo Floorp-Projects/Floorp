@@ -22,7 +22,7 @@
 
 namespace js {
 class Debugger;
-} // namespace js
+}  // namespace js
 
 namespace JS {
 namespace dbg {
@@ -124,135 +124,134 @@ namespace dbg {
 class BuilderOrigin;
 
 class Builder {
-    // The Debugger instance whose client we are building a value for. We build
-    // objects in this object's compartment.
-    PersistentRootedObject debuggerObject;
+  // The Debugger instance whose client we are building a value for. We build
+  // objects in this object's compartment.
+  PersistentRootedObject debuggerObject;
 
-    // debuggerObject's Debugger structure, for convenience.
-    js::Debugger* debugger;
+  // debuggerObject's Debugger structure, for convenience.
+  js::Debugger* debugger;
 
-    // Check that |thing| is in the same compartment as our debuggerObject. Used
-    // for assertions when constructing BuiltThings. We can overload this as we
-    // add more instantiations of BuiltThing.
+  // Check that |thing| is in the same compartment as our debuggerObject. Used
+  // for assertions when constructing BuiltThings. We can overload this as we
+  // add more instantiations of BuiltThing.
 #if DEBUG
-    void assertBuilt(JSObject* obj);
+  void assertBuilt(JSObject* obj);
 #else
-    void assertBuilt(JSObject* obj) { }
+  void assertBuilt(JSObject* obj) {}
 #endif
 
-  protected:
-    // A reference to a trusted object or value. At the moment, we only use it
-    // with JSObject*.
-    template<typename T>
-    class BuiltThing {
-        friend class BuilderOrigin;
+ protected:
+  // A reference to a trusted object or value. At the moment, we only use it
+  // with JSObject*.
+  template <typename T>
+  class BuiltThing {
+    friend class BuilderOrigin;
 
-      protected:
-        // The Builder to which this trusted thing belongs.
-        Builder& owner;
+   protected:
+    // The Builder to which this trusted thing belongs.
+    Builder& owner;
 
-        // A rooted reference to our value.
-        PersistentRooted<T> value;
+    // A rooted reference to our value.
+    PersistentRooted<T> value;
 
-        BuiltThing(JSContext* cx, Builder& owner_, T value_ = SafelyInitialized<T>())
-          : owner(owner_), value(cx, value_)
-        {
-            owner.assertBuilt(value_);
-        }
+    BuiltThing(JSContext* cx, Builder& owner_,
+               T value_ = SafelyInitialized<T>())
+        : owner(owner_), value(cx, value_) {
+      owner.assertBuilt(value_);
+    }
 
-        // Forward some things from our owner, for convenience.
-        js::Debugger* debugger() const { return owner.debugger; }
-        JSObject* debuggerObject() const { return owner.debuggerObject; }
+    // Forward some things from our owner, for convenience.
+    js::Debugger* debugger() const { return owner.debugger; }
+    JSObject* debuggerObject() const { return owner.debuggerObject; }
 
-      public:
-        BuiltThing(const BuiltThing& rhs) : owner(rhs.owner), value(rhs.value) { }
-        BuiltThing& operator=(const BuiltThing& rhs) {
-            MOZ_ASSERT(&owner == &rhs.owner);
-            owner.assertBuilt(rhs.value);
-            value = rhs.value;
-            return *this;
-        }
+   public:
+    BuiltThing(const BuiltThing& rhs) : owner(rhs.owner), value(rhs.value) {}
+    BuiltThing& operator=(const BuiltThing& rhs) {
+      MOZ_ASSERT(&owner == &rhs.owner);
+      owner.assertBuilt(rhs.value);
+      value = rhs.value;
+      return *this;
+    }
 
-        explicit operator bool() const {
-            // If we ever instantiate BuiltThing<Value>, this might not suffice.
-            return value;
-        }
+    explicit operator bool() const {
+      // If we ever instantiate BuiltThing<Value>, this might not suffice.
+      return value;
+    }
 
-      private:
-        BuiltThing() = delete;
-    };
+   private:
+    BuiltThing() = delete;
+  };
 
-  public:
-    // A reference to a trusted object, possibly null. Instances of Object are
-    // always properly rooted. They can be copied and assigned, as if they were
-    // pointers.
-    class Object: private BuiltThing<JSObject*> {
-        friend class Builder;           // for construction
-        friend class BuilderOrigin;     // for unwrapping
+ public:
+  // A reference to a trusted object, possibly null. Instances of Object are
+  // always properly rooted. They can be copied and assigned, as if they were
+  // pointers.
+  class Object : private BuiltThing<JSObject*> {
+    friend class Builder;        // for construction
+    friend class BuilderOrigin;  // for unwrapping
 
-        typedef BuiltThing<JSObject*> Base;
+    typedef BuiltThing<JSObject*> Base;
 
-        // This is private, because only Builders can create Objects that
-        // actually point to something (hence the 'friend' declaration).
-        Object(JSContext* cx, Builder& owner_, HandleObject obj) : Base(cx, owner_, obj.get()) { }
+    // This is private, because only Builders can create Objects that
+    // actually point to something (hence the 'friend' declaration).
+    Object(JSContext* cx, Builder& owner_, HandleObject obj)
+        : Base(cx, owner_, obj.get()) {}
 
-        bool definePropertyToTrusted(JSContext* cx, const char* name,
-                                     JS::MutableHandleValue value);
+    bool definePropertyToTrusted(JSContext* cx, const char* name,
+                                 JS::MutableHandleValue value);
 
-      public:
-        Object(JSContext* cx, Builder& owner_) : Base(cx, owner_, nullptr) { }
-        Object(const Object& rhs) : Base(rhs) { }
+   public:
+    Object(JSContext* cx, Builder& owner_) : Base(cx, owner_, nullptr) {}
+    Object(const Object& rhs) : Base(rhs) {}
 
-        // Our automatically-generated assignment operator can see our base
-        // class's assignment operator, so we don't need to write one out here.
+    // Our automatically-generated assignment operator can see our base
+    // class's assignment operator, so we don't need to write one out here.
 
-        // Set the property named |name| on this object to |value|.
-        //
-        // If |value| is a string or primitive, re-wrap it for the debugger's
-        // compartment.
-        //
-        // If |value| is an object, assume it is a debuggee object and make a
-        // Debugger.Object instance referring to it. Set that as the propery's
-        // value.
-        //
-        // If |value| is another trusted object, store it directly as the
-        // property's value.
-        //
-        // On error, report the problem on cx and return false.
-        bool defineProperty(JSContext* cx, const char* name, JS::HandleValue value);
-        bool defineProperty(JSContext* cx, const char* name, JS::HandleObject value);
-        bool defineProperty(JSContext* cx, const char* name, Object& value);
+    // Set the property named |name| on this object to |value|.
+    //
+    // If |value| is a string or primitive, re-wrap it for the debugger's
+    // compartment.
+    //
+    // If |value| is an object, assume it is a debuggee object and make a
+    // Debugger.Object instance referring to it. Set that as the propery's
+    // value.
+    //
+    // If |value| is another trusted object, store it directly as the
+    // property's value.
+    //
+    // On error, report the problem on cx and return false.
+    bool defineProperty(JSContext* cx, const char* name, JS::HandleValue value);
+    bool defineProperty(JSContext* cx, const char* name,
+                        JS::HandleObject value);
+    bool defineProperty(JSContext* cx, const char* name, Object& value);
 
-        using Base::operator bool;
-    };
+    using Base::operator bool;
+  };
 
-    // Build an empty object for direct use by debugger code, owned by this
-    // Builder. If an error occurs, report it on cx and return a false Object.
-    Object newObject(JSContext* cx);
+  // Build an empty object for direct use by debugger code, owned by this
+  // Builder. If an error occurs, report it on cx and return a false Object.
+  Object newObject(JSContext* cx);
 
-  protected:
-    Builder(JSContext* cx, js::Debugger* debugger);
+ protected:
+  Builder(JSContext* cx, js::Debugger* debugger);
 };
 
 // Debugger itself instantiates this subclass of Builder, which can unwrap
 // BuiltThings that belong to it.
 class BuilderOrigin : public Builder {
-    template<typename T>
-    T unwrapAny(const BuiltThing<T>& thing) {
-        MOZ_ASSERT(&thing.owner == this);
-        return thing.value.get();
-    }
+  template <typename T>
+  T unwrapAny(const BuiltThing<T>& thing) {
+    MOZ_ASSERT(&thing.owner == this);
+    return thing.value.get();
+  }
 
-  public:
-    BuilderOrigin(JSContext* cx, js::Debugger* debugger_)
-      : Builder(cx, debugger_)
-    { }
+ public:
+  BuilderOrigin(JSContext* cx, js::Debugger* debugger_)
+      : Builder(cx, debugger_) {}
 
-    JSObject* unwrap(Object& object) { return unwrapAny(object); }
+  JSObject* unwrap(Object& object) { return unwrapAny(object); }
 };
 
-
-
 // Finding the size of blocks allocated with malloc
 // ------------------------------------------------
 //
@@ -263,16 +262,13 @@ class BuilderOrigin : public Builder {
 
 // Tell Debuggers in |cx| to use |mallocSizeOf| to find the size of
 // malloc'd blocks.
-JS_PUBLIC_API void
-SetDebuggerMallocSizeOf(JSContext* cx, mozilla::MallocSizeOf mallocSizeOf);
+JS_PUBLIC_API void SetDebuggerMallocSizeOf(JSContext* cx,
+                                           mozilla::MallocSizeOf mallocSizeOf);
 
 // Get the MallocSizeOf function that the given context is using to find the
 // size of malloc'd blocks.
-JS_PUBLIC_API mozilla::MallocSizeOf
-GetDebuggerMallocSizeOf(JSContext* cx);
+JS_PUBLIC_API mozilla::MallocSizeOf GetDebuggerMallocSizeOf(JSContext* cx);
 
-
-
 // Debugger and Garbage Collection Events
 // --------------------------------------
 //
@@ -286,25 +282,21 @@ GetDebuggerMallocSizeOf(JSContext* cx);
 // Determine whether it's necessary to call FireOnGarbageCollectionHook() after
 // a GC. This is only required if there are debuggers with an
 // onGarbageCollection hook observing a global in the set of collected zones.
-JS_PUBLIC_API bool
-FireOnGarbageCollectionHookRequired(JSContext* cx);
+JS_PUBLIC_API bool FireOnGarbageCollectionHookRequired(JSContext* cx);
 
 // For each Debugger that observed a debuggee involved in the given GC event,
 // call its `onGarbageCollection` hook.
-JS_PUBLIC_API bool
-FireOnGarbageCollectionHook(JSContext* cx, GarbageCollectionEvent::Ptr&& data);
+JS_PUBLIC_API bool FireOnGarbageCollectionHook(
+    JSContext* cx, GarbageCollectionEvent::Ptr&& data);
 
-
 // Return true if the given value is a Debugger object, false otherwise.
-JS_PUBLIC_API bool
-IsDebugger(JSObject& obj);
+JS_PUBLIC_API bool IsDebugger(JSObject& obj);
 
 // Append each of the debuggee global objects observed by the Debugger object
 // |dbgObj| to |vector|. Returns true on success, false on failure.
-JS_PUBLIC_API bool
-GetDebuggeeGlobals(JSContext* cx, JSObject& dbgObj, AutoObjectVector& vector);
+JS_PUBLIC_API bool GetDebuggeeGlobals(JSContext* cx, JSObject& dbgObj,
+                                      AutoObjectVector& vector);
 
-
 // Hooks for reporting where JavaScript execution began.
 //
 // Our performance tools would like to be able to label blocks of JavaScript
@@ -319,44 +311,39 @@ GetDebuggeeGlobals(JSContext* cx, JSObject& dbgObj, AutoObjectVector& vector);
 // execution.
 
 class MOZ_STACK_CLASS JS_PUBLIC_API AutoEntryMonitor {
-    JSContext* cx_;
-    AutoEntryMonitor* savedMonitor_;
+  JSContext* cx_;
+  AutoEntryMonitor* savedMonitor_;
 
-  public:
-    explicit AutoEntryMonitor(JSContext* cx);
-    ~AutoEntryMonitor();
+ public:
+  explicit AutoEntryMonitor(JSContext* cx);
+  ~AutoEntryMonitor();
 
-    // SpiderMonkey reports the JavaScript entry points occuring within this
-    // AutoEntryMonitor's scope to the following member functions, which the
-    // embedding is expected to override.
-    //
-    // It is important to note that |asyncCause| is owned by the caller and its
-    // lifetime must outlive the lifetime of the AutoEntryMonitor object. It is
-    // strongly encouraged that |asyncCause| be a string constant or similar
-    // statically allocated string.
+  // SpiderMonkey reports the JavaScript entry points occuring within this
+  // AutoEntryMonitor's scope to the following member functions, which the
+  // embedding is expected to override.
+  //
+  // It is important to note that |asyncCause| is owned by the caller and its
+  // lifetime must outlive the lifetime of the AutoEntryMonitor object. It is
+  // strongly encouraged that |asyncCause| be a string constant or similar
+  // statically allocated string.
 
-    // We have begun executing |function|. Note that |function| may not be the
-    // actual closure we are running, but only the canonical function object to
-    // which the script refers.
-    virtual void Entry(JSContext* cx, JSFunction* function,
-                       HandleValue asyncStack,
-                       const char* asyncCause) = 0;
+  // We have begun executing |function|. Note that |function| may not be the
+  // actual closure we are running, but only the canonical function object to
+  // which the script refers.
+  virtual void Entry(JSContext* cx, JSFunction* function,
+                     HandleValue asyncStack, const char* asyncCause) = 0;
 
-    // Execution has begun at the entry point of |script|, which is not a
-    // function body. (This is probably being executed by 'eval' or some
-    // JSAPI equivalent.)
-    virtual void Entry(JSContext* cx, JSScript* script,
-                       HandleValue asyncStack,
-                       const char* asyncCause) = 0;
+  // Execution has begun at the entry point of |script|, which is not a
+  // function body. (This is probably being executed by 'eval' or some
+  // JSAPI equivalent.)
+  virtual void Entry(JSContext* cx, JSScript* script, HandleValue asyncStack,
+                     const char* asyncCause) = 0;
 
-    // Execution of the function or script has ended.
-    virtual void Exit(JSContext* cx) { }
+  // Execution of the function or script has ended.
+  virtual void Exit(JSContext* cx) {}
 };
 
-
-
-} // namespace dbg
-} // namespace JS
-
+}  // namespace dbg
+}  // namespace JS
 
 #endif /* js_Debug_h */

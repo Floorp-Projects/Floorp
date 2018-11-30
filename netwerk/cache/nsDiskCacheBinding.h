@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #ifndef _nsDiskCacheBinding_h_
 #define _nsDiskCacheBinding_h_
 
@@ -18,7 +17,6 @@
 #include "nsDiskCacheMap.h"
 #include "nsDiskCacheStreams.h"
 
-
 /******************************************************************************
  *  nsDiskCacheBinding
  *
@@ -31,39 +29,36 @@
 class nsDiskCacheDeviceDeactivateEntryEvent;
 
 class nsDiskCacheBinding : public nsISupports, public PRCList {
-    virtual ~nsDiskCacheBinding();
+  virtual ~nsDiskCacheBinding();
 
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
 
-    nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * record);
+  nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord* record);
 
-    nsresult EnsureStreamIO();
-    bool     IsActive() { return mCacheEntry != nullptr;}
+  nsresult EnsureStreamIO();
+  bool IsActive() { return mCacheEntry != nullptr; }
 
-// XXX make friends
-public:
-    nsCacheEntry*           mCacheEntry;    // back pointer to parent nsCacheEntry
-    nsDiskCacheRecord       mRecord;
-    nsDiskCacheStreamIO*    mStreamIO;      // strong reference
-    bool                    mDoomed;        // record is not stored in cache map
-    uint8_t                 mGeneration;    // possibly just reservation
+  // XXX make friends
+ public:
+  nsCacheEntry* mCacheEntry;  // back pointer to parent nsCacheEntry
+  nsDiskCacheRecord mRecord;
+  nsDiskCacheStreamIO* mStreamIO;  // strong reference
+  bool mDoomed;                    // record is not stored in cache map
+  uint8_t mGeneration;             // possibly just reservation
 
-    // If set, points to a pending event which will deactivate |mCacheEntry|.
-    // If not set then either |mCacheEntry| is not deactivated, or it has been
-    // deactivated but the device returned it from FindEntry() before the event
-    // fired. In both two latter cases this binding is to be considered valid.
-    nsDiskCacheDeviceDeactivateEntryEvent *mDeactivateEvent;
+  // If set, points to a pending event which will deactivate |mCacheEntry|.
+  // If not set then either |mCacheEntry| is not deactivated, or it has been
+  // deactivated but the device returned it from FindEntry() before the event
+  // fired. In both two latter cases this binding is to be considered valid.
+  nsDiskCacheDeviceDeactivateEntryEvent* mDeactivateEvent;
 };
-
 
 /******************************************************************************
  *  Utility Functions
  *****************************************************************************/
 
-nsDiskCacheBinding *   GetCacheEntryBinding(nsCacheEntry * entry);
-
-
+nsDiskCacheBinding* GetCacheEntryBinding(nsCacheEntry* entry);
 
 /******************************************************************************
  *  nsDiskCacheBindery
@@ -95,31 +90,31 @@ nsDiskCacheBinding *   GetCacheEntryBinding(nsCacheEntry * entry);
  *****************************************************************************/
 
 class nsDiskCacheBindery {
-public:
-    nsDiskCacheBindery();
-    ~nsDiskCacheBindery();
+ public:
+  nsDiskCacheBindery();
+  ~nsDiskCacheBindery();
 
-    void                    Init();
-    void                    Reset();
+  void Init();
+  void Reset();
 
-    nsDiskCacheBinding *    CreateBinding(nsCacheEntry *       entry,
-                                          nsDiskCacheRecord *  record);
+  nsDiskCacheBinding* CreateBinding(nsCacheEntry* entry,
+                                    nsDiskCacheRecord* record);
 
-    nsDiskCacheBinding *    FindActiveBinding(uint32_t  hashNumber) const;
-    void                    RemoveBinding(nsDiskCacheBinding * binding);
-    bool                    ActiveBindings();
+  nsDiskCacheBinding* FindActiveBinding(uint32_t hashNumber) const;
+  void RemoveBinding(nsDiskCacheBinding* binding);
+  bool ActiveBindings();
 
-    size_t                 SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
-private:
-    nsresult                AddBinding(nsDiskCacheBinding * binding);
+ private:
+  nsresult AddBinding(nsDiskCacheBinding* binding);
 
-    // member variables
-    static const PLDHashTableOps ops;
-    PLDHashTable           table;
-    bool                   initialized;
+  // member variables
+  static const PLDHashTableOps ops;
+  PLDHashTable table;
+  bool initialized;
 
-    static const uint32_t kInitialTableLength = 0;
+  static const uint32_t kInitialTableLength = 0;
 };
 
 #endif /* _nsDiskCacheBinding_h_ */

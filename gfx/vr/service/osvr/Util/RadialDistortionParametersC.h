@@ -47,14 +47,14 @@ OSVR_EXTERN_C_BEGIN
 */
 
 /** @brief Parameters for a per-color-component radial distortion shader
-*/
+ */
 typedef struct OSVR_RadialDistortionParameters {
-    /** @brief Vector of K1 coefficients for the R, G, B channels*/
-    OSVR_Vec3 k1;
-    /** @brief Center of projection for the radial distortion, relative to the
-        bounds of this surface.
-        */
-    OSVR_Vec2 centerOfProjection;
+  /** @brief Vector of K1 coefficients for the R, G, B channels*/
+  OSVR_Vec3 k1;
+  /** @brief Center of projection for the radial distortion, relative to the
+      bounds of this surface.
+      */
+  OSVR_Vec2 centerOfProjection;
 } OSVR_RadialDistortionParameters;
 
 OSVR_EXTERN_C_END

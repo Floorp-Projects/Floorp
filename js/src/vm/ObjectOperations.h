@@ -9,20 +9,20 @@
 #ifndef vm_ObjectOperations_h
 #define vm_ObjectOperations_h
 
-#include "mozilla/Attributes.h" // MOZ_ALWAYS_INLINE
+#include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
 
-#include <stdint.h> // uint32_t
+#include <stdint.h>  // uint32_t
 
-#include "jsapi.h" // JSPROP_ENUMERATE, JS::PropertyDescriptor
+#include "jsapi.h"  // JSPROP_ENUMERATE, JS::PropertyDescriptor
 
-#include "js/Class.h" // JS::ObjectOpResult
-#include "js/Id.h" // INT_TO_JSID, jsid, JSID_INT_MAX, SYMBOL_TO_JSID
-#include "js/RootingAPI.h" // JS::Handle, JS::MutableHandle, JS::Rooted
-#include "js/Value.h" // JS::Value
-#include "vm/JSContext.h" // JSContext
-#include "vm/JSObject.h" // JSObject
-#include "vm/StringType.h" // js::NameToId
-#include "vm/SymbolType.h" // JS::Symbol
+#include "js/Class.h"       // JS::ObjectOpResult
+#include "js/Id.h"          // INT_TO_JSID, jsid, JSID_INT_MAX, SYMBOL_TO_JSID
+#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle, JS::Rooted
+#include "js/Value.h"       // JS::Value
+#include "vm/JSContext.h"   // JSContext
+#include "vm/JSObject.h"    // JSObject
+#include "vm/StringType.h"  // js::NameToId
+#include "vm/SymbolType.h"  // JS::Symbol
 
 namespace js {
 
@@ -37,8 +37,8 @@ class PropertyName;
  * If obj is definitely not a proxy, the infallible obj->getProto() can be used
  * instead. See the comment on JSObject::getTaggedProto().
  */
-inline bool
-GetPrototype(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> protop);
+inline bool GetPrototype(JSContext* cx, JS::Handle<JSObject*> obj,
+                         JS::MutableHandle<JSObject*> protop);
 
 /*
  * ES6 [[SetPrototypeOf]]. Change obj's prototype to proto.
@@ -47,33 +47,32 @@ GetPrototype(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObjec
  * obj is not extensible, its prototype is fixed. js::SetPrototype will return
  * true, because no exception is thrown for this; but *result will be false.
  */
-extern bool
-SetPrototype(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> proto,
-             JS::ObjectOpResult& result);
+extern bool SetPrototype(JSContext* cx, JS::Handle<JSObject*> obj,
+                         JS::Handle<JSObject*> proto,
+                         JS::ObjectOpResult& result);
 
 /* Convenience function: like the above, but throw on failure. */
-extern bool
-SetPrototype(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> proto);
+extern bool SetPrototype(JSContext* cx, JS::Handle<JSObject*> obj,
+                         JS::Handle<JSObject*> proto);
 
 /*
  * ES6 [[IsExtensible]]. Extensible objects can have new properties defined on
  * them. Inextensible objects can't, and their [[Prototype]] slot is fixed as
  * well.
  */
-inline bool
-IsExtensible(JSContext* cx, JS::Handle<JSObject*> obj, bool* extensible);
+inline bool IsExtensible(JSContext* cx, JS::Handle<JSObject*> obj,
+                         bool* extensible);
 
 /*
  * ES6 [[PreventExtensions]]. Attempt to change the [[Extensible]] bit on |obj|
  * to false.  Indicate success or failure through the |result| outparam, or
  * actual error through the return value.
  */
-extern bool
-PreventExtensions(JSContext* cx, JS::Handle<JSObject*> obj, JS::ObjectOpResult& result);
+extern bool PreventExtensions(JSContext* cx, JS::Handle<JSObject*> obj,
+                              JS::ObjectOpResult& result);
 
 /* Convenience function. As above, but throw on failure. */
-extern bool
-PreventExtensions(JSContext* cx, JS::Handle<JSObject*> obj);
+extern bool PreventExtensions(JSContext* cx, JS::Handle<JSObject*> obj);
 
 /*
  * ES6 [[GetOwnProperty]]. Get a description of one of obj's own properties.
@@ -81,66 +80,69 @@ PreventExtensions(JSContext* cx, JS::Handle<JSObject*> obj);
  * If no such property exists on obj, return true with desc.object() set to
  * null.
  */
-extern bool
-GetOwnPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                         JS::MutableHandle<JS::PropertyDescriptor> desc);
+extern bool GetOwnPropertyDescriptor(
+    JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+    JS::MutableHandle<JS::PropertyDescriptor> desc);
 
 /* ES6 [[DefineOwnProperty]]. Define a property on obj. */
-extern bool
-DefineProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-               Handle<JS::PropertyDescriptor> desc, JS::ObjectOpResult& result);
+extern bool DefineProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                           JS::Handle<jsid> id,
+                           Handle<JS::PropertyDescriptor> desc,
+                           JS::ObjectOpResult& result);
 
 /*
- * When the 'result' out-param is omitted, the behavior is the same as above, except
- * that any failure results in a TypeError.
+ * When the 'result' out-param is omitted, the behavior is the same as above,
+ * except that any failure results in a TypeError.
  */
-extern bool
-DefineProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-               JS::Handle<JS::PropertyDescriptor> desc);
+extern bool DefineProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                           JS::Handle<jsid> id,
+                           JS::Handle<JS::PropertyDescriptor> desc);
 
-extern bool
-DefineAccessorProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                       JS::Handle<JSObject*> getter, JS::Handle<JSObject*> setter, unsigned attrs,
-                       JS::ObjectOpResult& result);
+extern bool DefineAccessorProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                                   JS::Handle<jsid> id,
+                                   JS::Handle<JSObject*> getter,
+                                   JS::Handle<JSObject*> setter, unsigned attrs,
+                                   JS::ObjectOpResult& result);
 
-extern bool
-DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                   JS::Handle<JS::Value> value, unsigned attrs, JS::ObjectOpResult& result);
+extern bool DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                               JS::Handle<jsid> id, JS::Handle<JS::Value> value,
+                               unsigned attrs, JS::ObjectOpResult& result);
 
-extern bool
-DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj, PropertyName* name, JS::Handle<JS::Value> value,
-                   unsigned attrs, JS::ObjectOpResult& result);
+extern bool DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                               PropertyName* name, JS::Handle<JS::Value> value,
+                               unsigned attrs, JS::ObjectOpResult& result);
 
-extern bool
-DefineDataElement(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t index, JS::Handle<JS::Value> value,
-                  unsigned attrs, JS::ObjectOpResult& result);
+extern bool DefineDataElement(JSContext* cx, JS::Handle<JSObject*> obj,
+                              uint32_t index, JS::Handle<JS::Value> value,
+                              unsigned attrs, JS::ObjectOpResult& result);
 
-extern bool
-DefineAccessorProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                       JS::Handle<JSObject*> getter, JS::Handle<JSObject*> setter,
-                       unsigned attrs = JSPROP_ENUMERATE);
+extern bool DefineAccessorProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                                   JS::Handle<jsid> id,
+                                   JS::Handle<JSObject*> getter,
+                                   JS::Handle<JSObject*> setter,
+                                   unsigned attrs = JSPROP_ENUMERATE);
 
-extern bool
-DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::Handle<JS::Value> value,
-                   unsigned attrs = JSPROP_ENUMERATE);
+extern bool DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                               JS::Handle<jsid> id, JS::Handle<JS::Value> value,
+                               unsigned attrs = JSPROP_ENUMERATE);
 
-extern bool
-DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj, PropertyName* name, JS::Handle<JS::Value> value,
-                   unsigned attrs = JSPROP_ENUMERATE);
+extern bool DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                               PropertyName* name, JS::Handle<JS::Value> value,
+                               unsigned attrs = JSPROP_ENUMERATE);
 
-extern bool
-DefineDataElement(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t index, JS::Handle<JS::Value> value,
-                  unsigned attrs = JSPROP_ENUMERATE);
+extern bool DefineDataElement(JSContext* cx, JS::Handle<JSObject*> obj,
+                              uint32_t index, JS::Handle<JS::Value> value,
+                              unsigned attrs = JSPROP_ENUMERATE);
 
 /*
  * ES6 [[Has]]. Set *foundp to true if `id in obj` (that is, if obj has an own
  * or inherited property obj[id]), false otherwise.
  */
-inline bool
-HasProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool* foundp);
+inline bool HasProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        JS::Handle<jsid> id, bool* foundp);
 
-inline bool
-HasProperty(JSContext* cx, JS::Handle<JSObject*> obj, PropertyName* name, bool* foundp);
+inline bool HasProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        PropertyName* name, bool* foundp);
 
 /*
  * ES6 [[Get]]. Get the value of the property `obj[id]`, or undefined if no
@@ -150,53 +152,53 @@ HasProperty(JSContext* cx, JS::Handle<JSObject*> obj, PropertyName* name, bool* 
  * a proxy using GetProperty to finish a property get that started out as
  * `receiver[id]`, and we've already searched the prototype chain up to `obj`.
  */
-inline bool
-GetProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JS::Value> receiver,
-            JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
+inline bool GetProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        JS::Handle<JS::Value> receiver, JS::Handle<jsid> id,
+                        JS::MutableHandle<JS::Value> vp);
 
-inline bool
-GetProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JS::Value> receiver,
-            PropertyName* name, JS::MutableHandle<JS::Value> vp);
+inline bool GetProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        JS::Handle<JS::Value> receiver, PropertyName* name,
+                        JS::MutableHandle<JS::Value> vp);
 
-inline bool
-GetProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> receiver,
-            JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
+inline bool GetProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        JS::Handle<JSObject*> receiver, JS::Handle<jsid> id,
+                        JS::MutableHandle<JS::Value> vp);
 
-inline bool
-GetProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> receiver,
-            PropertyName* name, JS::MutableHandle<JS::Value> vp);
+inline bool GetProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        JS::Handle<JSObject*> receiver, PropertyName* name,
+                        JS::MutableHandle<JS::Value> vp);
 
-inline bool
-GetElement(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JS::Value> receiver,
-           uint32_t index, JS::MutableHandle<JS::Value> vp);
+inline bool GetElement(JSContext* cx, JS::Handle<JSObject*> obj,
+                       JS::Handle<JS::Value> receiver, uint32_t index,
+                       JS::MutableHandle<JS::Value> vp);
 
-inline bool
-GetElement(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> receiver,
-           uint32_t index, JS::MutableHandle<JS::Value> vp);
+inline bool GetElement(JSContext* cx, JS::Handle<JSObject*> obj,
+                       JS::Handle<JSObject*> receiver, uint32_t index,
+                       JS::MutableHandle<JS::Value> vp);
 
-inline bool
-GetPropertyNoGC(JSContext* cx, JSObject* obj, const JS::Value& receiver, jsid id, JS::Value* vp);
+inline bool GetPropertyNoGC(JSContext* cx, JSObject* obj,
+                            const JS::Value& receiver, jsid id, JS::Value* vp);
 
-inline bool
-GetPropertyNoGC(JSContext* cx, JSObject* obj, const JS::Value& receiver, PropertyName* name,
-                JS::Value* vp);
+inline bool GetPropertyNoGC(JSContext* cx, JSObject* obj,
+                            const JS::Value& receiver, PropertyName* name,
+                            JS::Value* vp);
 
-inline bool
-GetElementNoGC(JSContext* cx, JSObject* obj, const JS::Value& receiver, uint32_t index,
-               JS::Value* vp);
+inline bool GetElementNoGC(JSContext* cx, JSObject* obj,
+                           const JS::Value& receiver, uint32_t index,
+                           JS::Value* vp);
 
 // Returns whether |obj| or an object on its proto chain may have an interesting
 // symbol property (see JSObject::hasInterestingSymbolProperty). If it returns
 // true, *holder is set to the object that may have this property.
-MOZ_ALWAYS_INLINE bool
-MaybeHasInterestingSymbolProperty(JSContext* cx, JSObject* obj, JS::Symbol* symbol,
-                                  JSObject** holder = nullptr);
+MOZ_ALWAYS_INLINE bool MaybeHasInterestingSymbolProperty(
+    JSContext* cx, JSObject* obj, JS::Symbol* symbol,
+    JSObject** holder = nullptr);
 
 // Like GetProperty but optimized for interesting symbol properties like
 // @@toStringTag.
-MOZ_ALWAYS_INLINE bool
-GetInterestingSymbolProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Symbol* sym,
-                             JS::MutableHandle<JS::Value> vp);
+MOZ_ALWAYS_INLINE bool GetInterestingSymbolProperty(
+    JSContext* cx, JS::Handle<JSObject*> obj, JS::Symbol* sym,
+    JS::MutableHandle<JS::Value> vp);
 
 /*
  * ES6 [[Set]]. Carry out the assignment `obj[id] = v`.
@@ -211,44 +213,43 @@ GetInterestingSymbolProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Symbo
  * proxy's target, and the proxy is using SetProperty to finish an assignment
  * that started out as `receiver[id] = v`, by delegating it to obj.
  */
-inline bool
-SetProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::Handle<JS::Value> v,
-            JS::Handle<JS::Value> receiver, JS::ObjectOpResult& result);
+inline bool SetProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        JS::Handle<jsid> id, JS::Handle<JS::Value> v,
+                        JS::Handle<JS::Value> receiver,
+                        JS::ObjectOpResult& result);
 
-inline bool
-SetProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-            JS::Handle<JS::Value> v);
+inline bool SetProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        JS::Handle<jsid> id, JS::Handle<JS::Value> v);
 
-inline bool
-SetProperty(JSContext* cx, JS::Handle<JSObject*> obj, PropertyName* name, JS::Handle<JS::Value> v,
-            JS::Handle<JS::Value> receiver, JS::ObjectOpResult& result);
+inline bool SetProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        PropertyName* name, JS::Handle<JS::Value> v,
+                        JS::Handle<JS::Value> receiver,
+                        JS::ObjectOpResult& result);
 
-inline bool
-SetProperty(JSContext* cx, JS::Handle<JSObject*> obj, PropertyName* name, JS::Handle<JS::Value> v);
+inline bool SetProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        PropertyName* name, JS::Handle<JS::Value> v);
 
-inline bool
-SetElement(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t index, JS::Handle<JS::Value> v,
-           JS::Handle<JS::Value> receiver, JS::ObjectOpResult& result);
+inline bool SetElement(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t index,
+                       JS::Handle<JS::Value> v, JS::Handle<JS::Value> receiver,
+                       JS::ObjectOpResult& result);
 
 /*
  * ES6 draft rev 31 (15 Jan 2015) 7.3.3 Put (O, P, V, Throw), except that on
  * success, the spec says this is supposed to return a boolean value, which we
  * don't bother doing.
  */
-inline bool
-PutProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::Handle<JS::Value> v,
-            bool strict);
+inline bool PutProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                        JS::Handle<jsid> id, JS::Handle<JS::Value> v,
+                        bool strict);
 
 /*
  * ES6 [[Delete]]. Equivalent to the JS code `delete obj[id]`.
  */
-inline bool
-DeleteProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-               JS::ObjectOpResult& result);
+inline bool DeleteProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                           JS::Handle<jsid> id, JS::ObjectOpResult& result);
 
-inline bool
-DeleteElement(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t index,
-              JS::ObjectOpResult& result);
+inline bool DeleteElement(JSContext* cx, JS::Handle<JSObject*> obj,
+                          uint32_t index, JS::ObjectOpResult& result);
 
 /*** SpiderMonkey nonstandard internal methods ******************************/
 
@@ -259,9 +260,9 @@ DeleteElement(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t index,
  * in |result|.  Otherwise set |*isOrdinary = false|.  In case of error, both
  * outparams have unspecified value.
  */
-extern bool
-GetPrototypeIfOrdinary(JSContext* cx, JS::Handle<JSObject*> obj, bool* isOrdinary,
-                       JS::MutableHandle<JSObject*> protop);
+extern bool GetPrototypeIfOrdinary(JSContext* cx, JS::Handle<JSObject*> obj,
+                                   bool* isOrdinary,
+                                   JS::MutableHandle<JSObject*> protop);
 
 /*
  * Attempt to make |obj|'s [[Prototype]] immutable, such that subsequently
@@ -269,33 +270,34 @@ GetPrototypeIfOrdinary(JSContext* cx, JS::Handle<JSObject*> obj, bool* isOrdinar
  * returns false.  Otherwise, |*succeeded| is set to true iff |obj|'s
  * [[Prototype]] is now immutable.
  */
-extern bool
-SetImmutablePrototype(JSContext* cx, JS::Handle<JSObject*> obj, bool* succeeded);
+extern bool SetImmutablePrototype(JSContext* cx, JS::Handle<JSObject*> obj,
+                                  bool* succeeded);
 
-extern bool
-GetPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                      MutableHandle<JS::PropertyDescriptor> desc);
+extern bool GetPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> obj,
+                                  JS::Handle<jsid> id,
+                                  MutableHandle<JS::PropertyDescriptor> desc);
 
 /*
  * Deprecated. A version of HasProperty that also returns the object on which
  * the property was found (but that information is unreliable for proxies), and
  * the Shape of the property, if native.
  */
-extern bool
-LookupProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-               JS::MutableHandle<JSObject*> objp, MutableHandle<PropertyResult> propp);
+extern bool LookupProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                           JS::Handle<jsid> id,
+                           JS::MutableHandle<JSObject*> objp,
+                           MutableHandle<PropertyResult> propp);
 
-inline bool
-LookupProperty(JSContext* cx, JS::Handle<JSObject*> obj, PropertyName* name,
-               JS::MutableHandle<JSObject*> objp, MutableHandle<PropertyResult> propp)
-{
-    JS::Rooted<jsid> id(cx, NameToId(name));
-    return LookupProperty(cx, obj, id, objp, propp);
+inline bool LookupProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                           PropertyName* name,
+                           JS::MutableHandle<JSObject*> objp,
+                           MutableHandle<PropertyResult> propp) {
+  JS::Rooted<jsid> id(cx, NameToId(name));
+  return LookupProperty(cx, obj, id, objp, propp);
 }
 
 /* Set *result to tell whether obj has an own property with the given id. */
-extern bool
-HasOwnProperty(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool* result);
+extern bool HasOwnProperty(JSContext* cx, JS::Handle<JSObject*> obj,
+                           JS::Handle<jsid> id, bool* result);
 
 } /* namespace js */
 

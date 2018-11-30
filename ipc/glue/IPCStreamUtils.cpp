@@ -34,16 +34,12 @@ namespace ipc {
 
 namespace {
 
-void
-AssertValidValueToTake(const IPCStream& aVal)
-{
+void AssertValidValueToTake(const IPCStream& aVal) {
   MOZ_ASSERT(aVal.type() == IPCStream::TIPCRemoteStream ||
              aVal.type() == IPCStream::TInputStreamParamsWithFds);
 }
 
-void
-AssertValidValueToTake(const OptionalIPCStream& aVal)
-{
+void AssertValidValueToTake(const OptionalIPCStream& aVal) {
   MOZ_ASSERT(aVal.type() == OptionalIPCStream::Tvoid_t ||
              aVal.type() == OptionalIPCStream::TIPCStream);
   if (aVal.type() == OptionalIPCStream::TIPCStream) {
@@ -55,18 +51,15 @@ AssertValidValueToTake(const OptionalIPCStream& aVal)
 // now, though, keep them private to encourage use of the safer RAII
 // AutoIPCStream class.
 
-template<typename M>
-bool
-SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
-                                 IPCStream& aValue,
-                                 M* aManager)
-{
+template <typename M>
+bool SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
+                                      IPCStream& aValue, M* aManager) {
   MOZ_RELEASE_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
   aValue = InputStreamParamsWithFds();
   InputStreamParamsWithFds& streamWithFds =
-    aValue.get_InputStreamParamsWithFds();
+      aValue.get_InputStreamParamsWithFds();
 
   AutoTArray<FileDescriptor, 4> fds;
   aStream->Serialize(streamWithFds.stream(), fds);
@@ -79,7 +72,7 @@ SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
     streamWithFds.optionalFds() = void_t();
   } else {
     PFileDescriptorSetChild* fdSet =
-      aManager->SendPFileDescriptorSetConstructor(fds[0]);
+        aManager->SendPFileDescriptorSetConstructor(fds[0]);
     for (uint32_t i = 1; i < fds.Length(); ++i) {
       Unused << fdSet->SendAddFileDescriptor(fds[i]);
     }
@@ -90,18 +83,15 @@ SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
   return true;
 }
 
-template<typename M>
-bool
-SerializeInputStreamWithFdsParent(nsIIPCSerializableInputStream* aStream,
-                                  IPCStream& aValue,
-                                  M* aManager)
-{
+template <typename M>
+bool SerializeInputStreamWithFdsParent(nsIIPCSerializableInputStream* aStream,
+                                       IPCStream& aValue, M* aManager) {
   MOZ_RELEASE_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
   aValue = InputStreamParamsWithFds();
   InputStreamParamsWithFds& streamWithFds =
-    aValue.get_InputStreamParamsWithFds();
+      aValue.get_InputStreamParamsWithFds();
 
   AutoTArray<FileDescriptor, 4> fds;
   aStream->Serialize(streamWithFds.stream(), fds);
@@ -113,7 +103,7 @@ SerializeInputStreamWithFdsParent(nsIIPCSerializableInputStream* aStream,
   streamWithFds.optionalFds() = void_t();
   if (!fds.IsEmpty()) {
     PFileDescriptorSetParent* fdSet =
-      aManager->SendPFileDescriptorSetConstructor(fds[0]);
+        aManager->SendPFileDescriptorSetConstructor(fds[0]);
     for (uint32_t i = 1; i < fds.Length(); ++i) {
       if (NS_WARN_IF(!fdSet->SendAddFileDescriptor(fds[i]))) {
         Unused << PFileDescriptorSetParent::Send__delete__(fdSet);
@@ -130,11 +120,9 @@ SerializeInputStreamWithFdsParent(nsIIPCSerializableInputStream* aStream,
   return true;
 }
 
-template<typename M>
-bool
-SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager,
-                     bool aDelayedStart)
-{
+template <typename M>
+bool SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue,
+                          M* aManager, bool aDelayedStart) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
@@ -150,20 +138,16 @@ SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager,
   // actor. For blocking streams, create a nonblocking pipe instead,
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
   if (!asyncStream) {
-    const uint32_t kBufferSize = 32768; // matches IPCStream buffer size.
+    const uint32_t kBufferSize = 32768;  // matches IPCStream buffer size.
     nsCOMPtr<nsIAsyncOutputStream> sink;
-    nsresult rv = NS_NewPipe2(getter_AddRefs(asyncStream),
-                              getter_AddRefs(sink),
-                              true,
-                              false,
-                              kBufferSize,
-                              UINT32_MAX);
+    nsresult rv = NS_NewPipe2(getter_AddRefs(asyncStream), getter_AddRefs(sink),
+                              true, false, kBufferSize, UINT32_MAX);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }
 
     nsCOMPtr<nsIEventTarget> target =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
 
     rv = NS_AsyncCopy(aStream, sink, target, NS_ASYNCCOPY_VIA_READSEGMENTS,
                       kBufferSize);
@@ -183,13 +167,11 @@ SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager,
   return true;
 }
 
-template<typename M>
-bool
-SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
-                          IPCStream* aValue,
-                          OptionalIPCStream* aOptionalValue,
-                          bool aDelayedStart)
-{
+template <typename M>
+bool SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
+                               IPCStream* aValue,
+                               OptionalIPCStream* aOptionalValue,
+                               bool aDelayedStart) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aValue || aOptionalValue);
@@ -198,13 +180,13 @@ SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
   const uint64_t kTooLargeStream = 1024 * 1024;
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
-    do_QueryInterface(aStream);
+      do_QueryInterface(aStream);
 
   // ExpectedSerializedLength() returns the length of the stream if serialized.
   // This is useful to decide if we want to continue using the serialization
   // directly, or if it's better to use IPCStream.
   uint64_t expectedLength =
-    serializable ? serializable->ExpectedSerializedLength().valueOr(0) : 0;
+      serializable ? serializable->ExpectedSerializedLength().valueOr(0) : 0;
   if (serializable && expectedLength < kTooLargeStream) {
     if (aValue) {
       return SerializeInputStreamWithFdsChild(serializable, *aValue, aManager);
@@ -218,16 +200,15 @@ SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
     return SerializeInputStream(aStream, *aValue, aManager, aDelayedStart);
   }
 
-  return SerializeInputStream(aStream, *aOptionalValue, aManager, aDelayedStart);
+  return SerializeInputStream(aStream, *aOptionalValue, aManager,
+                              aDelayedStart);
 }
 
-template<typename M>
-bool
-SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
-                           IPCStream* aValue,
-                           OptionalIPCStream* aOptionalValue,
-                           bool aDelayedStart)
-{
+template <typename M>
+bool SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
+                                IPCStream* aValue,
+                                OptionalIPCStream* aOptionalValue,
+                                bool aDelayedStart) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aValue || aOptionalValue);
@@ -236,9 +217,9 @@ SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
   const uint64_t kTooLargeStream = 1024 * 1024;
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
-    do_QueryInterface(aStream);
+      do_QueryInterface(aStream);
   uint64_t expectedLength =
-    serializable ? serializable->ExpectedSerializedLength().valueOr(0) : 0;
+      serializable ? serializable->ExpectedSerializedLength().valueOr(0) : 0;
 
   if (serializable && expectedLength < kTooLargeStream) {
     if (aValue) {
@@ -253,34 +234,32 @@ SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
     return SerializeInputStream(aStream, *aValue, aManager, aDelayedStart);
   }
 
-  return SerializeInputStream(aStream, *aOptionalValue, aManager, aDelayedStart);
+  return SerializeInputStream(aStream, *aOptionalValue, aManager,
+                              aDelayedStart);
 }
 
-void
-CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC, bool aDelayedStart)
-{
+void CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC,
+                      bool aDelayedStart) {
   if (aValue.type() == IPCStream::T__None) {
     return;
   }
 
   if (aValue.type() == IPCStream::TInputStreamParamsWithFds) {
-
     InputStreamParamsWithFds& streamWithFds =
-      aValue.get_InputStreamParamsWithFds();
+        aValue.get_InputStreamParamsWithFds();
 
     // Cleanup file descriptors if necessary
     if (streamWithFds.optionalFds().type() ==
         OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
-
       AutoTArray<FileDescriptor, 4> fds;
 
       auto fdSetActor = static_cast<FileDescriptorSetChild*>(
-        streamWithFds.optionalFds().get_PFileDescriptorSetChild());
+          streamWithFds.optionalFds().get_PFileDescriptorSetChild());
       MOZ_ASSERT(fdSetActor);
 
       // FileDescriptorSet doesn't clear its fds in its ActorDestroy, so we
-      // unconditionally forget them here.  The fds themselves are auto-closed in
-      // ~FileDescriptor since they originated in this process.
+      // unconditionally forget them here.  The fds themselves are auto-closed
+      // in ~FileDescriptor since they originated in this process.
       fdSetActor->ForgetFileDescriptors(fds);
 
       if (!aConsumedByIPC) {
@@ -289,16 +268,15 @@ CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC, bool aDelayedStart)
 
     } else if (streamWithFds.optionalFds().type() ==
                OptionalFileDescriptorSet::TPFileDescriptorSetParent) {
-
       AutoTArray<FileDescriptor, 4> fds;
 
       auto fdSetActor = static_cast<FileDescriptorSetParent*>(
-        streamWithFds.optionalFds().get_PFileDescriptorSetParent());
+          streamWithFds.optionalFds().get_PFileDescriptorSetParent());
       MOZ_ASSERT(fdSetActor);
 
       // FileDescriptorSet doesn't clear its fds in its ActorDestroy, so we
-      // unconditionally forget them here.  The fds themselves are auto-closed in
-      // ~FileDescriptor since they originated in this process.
+      // unconditionally forget them here.  The fds themselves are auto-closed
+      // in ~FileDescriptor since they originated in this process.
       fdSetActor->ForgetFileDescriptors(fds);
 
       if (!aConsumedByIPC) {
@@ -311,14 +289,18 @@ CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC, bool aDelayedStart)
 
   MOZ_ASSERT(aValue.type() == IPCStream::TIPCRemoteStream);
   IPCRemoteStreamType& remoteInputStream =
-    aValue.get_IPCRemoteStream().stream();
+      aValue.get_IPCRemoteStream().stream();
 
   IPCStreamSource* source = nullptr;
-  if (remoteInputStream.type() == IPCRemoteStreamType::TPChildToParentStreamChild) {
-    source = IPCStreamSource::Cast(remoteInputStream.get_PChildToParentStreamChild());
+  if (remoteInputStream.type() ==
+      IPCRemoteStreamType::TPChildToParentStreamChild) {
+    source = IPCStreamSource::Cast(
+        remoteInputStream.get_PChildToParentStreamChild());
   } else {
-    MOZ_ASSERT(remoteInputStream.type() == IPCRemoteStreamType::TPParentToChildStreamParent);
-    source = IPCStreamSource::Cast(remoteInputStream.get_PParentToChildStreamParent());
+    MOZ_ASSERT(remoteInputStream.type() ==
+               IPCRemoteStreamType::TPParentToChildStreamParent);
+    source = IPCStreamSource::Cast(
+        remoteInputStream.get_PParentToChildStreamParent());
   }
 
   MOZ_ASSERT(source);
@@ -338,9 +320,8 @@ CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC, bool aDelayedStart)
   }
 }
 
-void
-CleanupIPCStream(OptionalIPCStream& aValue, bool aConsumedByIPC, bool aDelayedStart)
-{
+void CleanupIPCStream(OptionalIPCStream& aValue, bool aConsumedByIPC,
+                      bool aDelayedStart) {
   if (aValue.type() == OptionalIPCStream::Tvoid_t) {
     return;
   }
@@ -350,11 +331,8 @@ CleanupIPCStream(OptionalIPCStream& aValue, bool aConsumedByIPC, bool aDelayedSt
 
 // Returns false if the serialization should not proceed. This means that the
 // inputStream is null.
-bool
-NormalizeOptionalValue(nsIInputStream* aStream,
-                       IPCStream* aValue,
-                       OptionalIPCStream* aOptionalValue)
-{
+bool NormalizeOptionalValue(nsIInputStream* aStream, IPCStream* aValue,
+                            OptionalIPCStream* aOptionalValue) {
   if (aValue) {
     // if aStream is null, we will crash when serializing.
     return true;
@@ -369,23 +347,23 @@ NormalizeOptionalValue(nsIInputStream* aStream,
   return true;
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
-already_AddRefed<nsIInputStream>
-DeserializeIPCStream(const IPCStream& aValue)
-{
+already_AddRefed<nsIInputStream> DeserializeIPCStream(const IPCStream& aValue) {
   if (aValue.type() == IPCStream::TIPCRemoteStream) {
     const IPCRemoteStream& remoteStream = aValue.get_IPCRemoteStream();
     const IPCRemoteStreamType& remoteStreamType = remoteStream.stream();
     IPCStreamDestination* destinationStream;
 
-    if (remoteStreamType.type() == IPCRemoteStreamType::TPChildToParentStreamParent) {
-      destinationStream =
-        IPCStreamDestination::Cast(remoteStreamType.get_PChildToParentStreamParent());
+    if (remoteStreamType.type() ==
+        IPCRemoteStreamType::TPChildToParentStreamParent) {
+      destinationStream = IPCStreamDestination::Cast(
+          remoteStreamType.get_PChildToParentStreamParent());
     } else {
-      MOZ_ASSERT(remoteStreamType.type() == IPCRemoteStreamType::TPParentToChildStreamChild);
-      destinationStream =
-        IPCStreamDestination::Cast(remoteStreamType.get_PParentToChildStreamChild());
+      MOZ_ASSERT(remoteStreamType.type() ==
+                 IPCRemoteStreamType::TPParentToChildStreamChild);
+      destinationStream = IPCStreamDestination::Cast(
+          remoteStreamType.get_PParentToChildStreamChild());
     }
 
     destinationStream->SetDelayedStart(remoteStream.delayedStart());
@@ -393,19 +371,19 @@ DeserializeIPCStream(const IPCStream& aValue)
     return destinationStream->TakeReader();
   }
 
-  // Note, we explicitly do not support deserializing the PChildToParentStream actor on
-  // the child side nor the PParentToChildStream actor on the parent side.
+  // Note, we explicitly do not support deserializing the PChildToParentStream
+  // actor on the child side nor the PParentToChildStream actor on the parent
+  // side.
   MOZ_ASSERT(aValue.type() == IPCStream::TInputStreamParamsWithFds);
 
   const InputStreamParamsWithFds& streamWithFds =
-    aValue.get_InputStreamParamsWithFds();
+      aValue.get_InputStreamParamsWithFds();
 
   AutoTArray<FileDescriptor, 4> fds;
   if (streamWithFds.optionalFds().type() ==
       OptionalFileDescriptorSet::TPFileDescriptorSetParent) {
-
     auto fdSetActor = static_cast<FileDescriptorSetParent*>(
-      streamWithFds.optionalFds().get_PFileDescriptorSetParent());
+        streamWithFds.optionalFds().get_PFileDescriptorSetParent());
     MOZ_ASSERT(fdSetActor);
 
     fdSetActor->ForgetFileDescriptors(fds);
@@ -417,9 +395,8 @@ DeserializeIPCStream(const IPCStream& aValue)
     }
   } else if (streamWithFds.optionalFds().type() ==
              OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
-
     auto fdSetActor = static_cast<FileDescriptorSetChild*>(
-      streamWithFds.optionalFds().get_PFileDescriptorSetChild());
+        streamWithFds.optionalFds().get_PFileDescriptorSetChild());
     MOZ_ASSERT(fdSetActor);
 
     fdSetActor->ForgetFileDescriptors(fds);
@@ -431,9 +408,8 @@ DeserializeIPCStream(const IPCStream& aValue)
   return InputStreamHelper::DeserializeInputStream(streamWithFds.stream(), fds);
 }
 
-already_AddRefed<nsIInputStream>
-DeserializeIPCStream(const OptionalIPCStream& aValue)
-{
+already_AddRefed<nsIInputStream> DeserializeIPCStream(
+    const OptionalIPCStream& aValue) {
   if (aValue.type() == OptionalIPCStream::Tvoid_t) {
     return nullptr;
   }
@@ -442,35 +418,29 @@ DeserializeIPCStream(const OptionalIPCStream& aValue)
 }
 
 AutoIPCStream::AutoIPCStream(bool aDelayedStart)
-  : mInlineValue(void_t())
-  , mValue(nullptr)
-  , mOptionalValue(&mInlineValue)
-  , mTaken(false)
-  , mDelayedStart(aDelayedStart)
-{
-}
+    : mInlineValue(void_t()),
+      mValue(nullptr),
+      mOptionalValue(&mInlineValue),
+      mTaken(false),
+      mDelayedStart(aDelayedStart) {}
 
 AutoIPCStream::AutoIPCStream(IPCStream& aTarget, bool aDelayedStart)
-  : mInlineValue(void_t())
-  , mValue(&aTarget)
-  , mOptionalValue(nullptr)
-  , mTaken(false)
-  , mDelayedStart(aDelayedStart)
-{
-}
+    : mInlineValue(void_t()),
+      mValue(&aTarget),
+      mOptionalValue(nullptr),
+      mTaken(false),
+      mDelayedStart(aDelayedStart) {}
 
 AutoIPCStream::AutoIPCStream(OptionalIPCStream& aTarget, bool aDelayedStart)
-  : mInlineValue(void_t())
-  , mValue(nullptr)
-  , mOptionalValue(&aTarget)
-  , mTaken(false)
-  , mDelayedStart(aDelayedStart)
-{
+    : mInlineValue(void_t()),
+      mValue(nullptr),
+      mOptionalValue(&aTarget),
+      mTaken(false),
+      mDelayedStart(aDelayedStart) {
   *mOptionalValue = void_t();
 }
 
-AutoIPCStream::~AutoIPCStream()
-{
+AutoIPCStream::~AutoIPCStream() {
   MOZ_ASSERT(mValue || mOptionalValue);
   if (mValue && IsSet()) {
     CleanupIPCStream(*mValue, mTaken, mDelayedStart);
@@ -479,9 +449,8 @@ AutoIPCStream::~AutoIPCStream()
   }
 }
 
-bool
-AutoIPCStream::Serialize(nsIInputStream* aStream, dom::nsIContentChild* aManager)
-{
+bool AutoIPCStream::Serialize(nsIInputStream* aStream,
+                              dom::nsIContentChild* aManager) {
   MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);
@@ -507,9 +476,8 @@ AutoIPCStream::Serialize(nsIInputStream* aStream, dom::nsIContentChild* aManager
   return true;
 }
 
-bool
-AutoIPCStream::Serialize(nsIInputStream* aStream, PBackgroundChild* aManager)
-{
+bool AutoIPCStream::Serialize(nsIInputStream* aStream,
+                              PBackgroundChild* aManager) {
   MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);
@@ -535,10 +503,8 @@ AutoIPCStream::Serialize(nsIInputStream* aStream, PBackgroundChild* aManager)
   return true;
 }
 
-bool
-AutoIPCStream::Serialize(nsIInputStream* aStream,
-                         dom::nsIContentParent* aManager)
-{
+bool AutoIPCStream::Serialize(nsIInputStream* aStream,
+                              dom::nsIContentParent* aManager) {
   MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);
@@ -564,9 +530,8 @@ AutoIPCStream::Serialize(nsIInputStream* aStream,
   return true;
 }
 
-bool
-AutoIPCStream::Serialize(nsIInputStream* aStream, PBackgroundParent* aManager)
-{
+bool AutoIPCStream::Serialize(nsIInputStream* aStream,
+                              PBackgroundParent* aManager) {
   MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);
@@ -592,9 +557,7 @@ AutoIPCStream::Serialize(nsIInputStream* aStream, PBackgroundParent* aManager)
   return true;
 }
 
-bool
-AutoIPCStream::IsSet() const
-{
+bool AutoIPCStream::IsSet() const {
   MOZ_ASSERT(mValue || mOptionalValue);
   if (mValue) {
     return mValue->type() != IPCStream::T__None;
@@ -604,9 +567,7 @@ AutoIPCStream::IsSet() const
   }
 }
 
-IPCStream&
-AutoIPCStream::TakeValue()
-{
+IPCStream& AutoIPCStream::TakeValue() {
   MOZ_ASSERT(mValue || mOptionalValue);
   MOZ_ASSERT(!mTaken);
   MOZ_ASSERT(IsSet());
@@ -618,16 +579,13 @@ AutoIPCStream::TakeValue()
     return *mValue;
   }
 
-  IPCStream& value =
-    mOptionalValue->get_IPCStream();
+  IPCStream& value = mOptionalValue->get_IPCStream();
 
   AssertValidValueToTake(value);
   return value;
 }
 
-OptionalIPCStream&
-AutoIPCStream::TakeOptionalValue()
-{
+OptionalIPCStream& AutoIPCStream::TakeOptionalValue() {
   MOZ_ASSERT(!mTaken);
   MOZ_ASSERT(!mValue);
   MOZ_ASSERT(mOptionalValue);
@@ -636,11 +594,9 @@ AutoIPCStream::TakeOptionalValue()
   return *mOptionalValue;
 }
 
-void
-IPDLParamTraits<nsIInputStream>::Write(IPC::Message* aMsg,
-                                       IProtocol* aActor,
-                                       nsIInputStream* aParam)
-{
+void IPDLParamTraits<nsIInputStream>::Write(IPC::Message* aMsg,
+                                            IProtocol* aActor,
+                                            nsIInputStream* aParam) {
   mozilla::ipc::AutoIPCStream autoStream;
   bool ok = false;
   bool found = false;
@@ -654,22 +610,22 @@ IPDLParamTraits<nsIInputStream>::Write(IPC::Message* aMsg,
       case PContentMsgStart:
         if (actor->GetSide() == mozilla::ipc::ParentSide) {
           ok = autoStream.Serialize(
-            aParam, static_cast<mozilla::dom::ContentParent*>(actor));
+              aParam, static_cast<mozilla::dom::ContentParent*>(actor));
         } else {
           MOZ_RELEASE_ASSERT(actor->GetSide() == mozilla::ipc::ChildSide);
           ok = autoStream.Serialize(
-            aParam, static_cast<mozilla::dom::ContentChild*>(actor));
+              aParam, static_cast<mozilla::dom::ContentChild*>(actor));
         }
         found = true;
         break;
       case PBackgroundMsgStart:
         if (actor->GetSide() == mozilla::ipc::ParentSide) {
           ok = autoStream.Serialize(
-            aParam, static_cast<mozilla::ipc::PBackgroundParent*>(actor));
+              aParam, static_cast<mozilla::ipc::PBackgroundParent*>(actor));
         } else {
           MOZ_RELEASE_ASSERT(actor->GetSide() == mozilla::ipc::ChildSide);
           ok = autoStream.Serialize(
-            aParam, static_cast<mozilla::ipc::PBackgroundChild*>(actor));
+              aParam, static_cast<mozilla::ipc::PBackgroundChild*>(actor));
         }
         found = true;
         break;
@@ -680,17 +636,18 @@ IPDLParamTraits<nsIInputStream>::Write(IPC::Message* aMsg,
   }
 
   if (!found) {
-    aActor->FatalError("Attempt to send nsIInputStream over an unsupported ipdl protocol");
+    aActor->FatalError(
+        "Attempt to send nsIInputStream over an unsupported ipdl protocol");
   }
   MOZ_RELEASE_ASSERT(ok, "Failed to serialize nsIInputStream");
 
   WriteIPDLParam(aMsg, aActor, autoStream.TakeOptionalValue());
 }
 
-bool
-IPDLParamTraits<nsIInputStream>::Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                                      IProtocol* aActor, RefPtr<nsIInputStream>* aResult)
-{
+bool IPDLParamTraits<nsIInputStream>::Read(const IPC::Message* aMsg,
+                                           PickleIterator* aIter,
+                                           IProtocol* aActor,
+                                           RefPtr<nsIInputStream>* aResult) {
   mozilla::ipc::OptionalIPCStream ipcStream;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &ipcStream)) {
     return false;
@@ -700,5 +657,5 @@ IPDLParamTraits<nsIInputStream>::Read(const IPC::Message* aMsg, PickleIterator* 
   return true;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

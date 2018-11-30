@@ -27,10 +27,9 @@
 #include "content_decryption_module.h"
 #include "WMFH264Decoder.h"
 
-class VideoDecoder : public RefCounted
-{
-public:
-  explicit VideoDecoder(cdm::Host_9 *aHost);
+class VideoDecoder : public RefCounted {
+ public:
+  explicit VideoDecoder(cdm::Host_9* aHost);
 
   cdm::Status InitDecode(const cdm::VideoDecoderConfig_1& aConfig);
 
@@ -43,8 +42,7 @@ public:
 
   bool HasShutdown() { return mHasShutdown; }
 
-private:
-
+ private:
   virtual ~VideoDecoder();
 
   cdm::Status Drain(cdm::VideoFrame* aVideoFrame);
@@ -57,10 +55,8 @@ private:
 
   cdm::Status OutputFrame(cdm::VideoFrame* aVideoFrame);
 
-  HRESULT SampleToVideoFrame(IMFSample* aSample,
-                             int32_t aPictureWidth,
-                             int32_t aPictureHeight,
-                             int32_t aStride,
+  HRESULT SampleToVideoFrame(IMFSample* aSample, int32_t aPictureWidth,
+                             int32_t aPictureHeight, int32_t aStride,
                              int32_t aFrameHeight,
                              cdm::VideoFrame* aVideoFrame);
 
@@ -72,4 +68,4 @@ private:
   bool mHasShutdown;
 };
 
-#endif // __VideoDecoder_h__
+#endif  // __VideoDecoder_h__

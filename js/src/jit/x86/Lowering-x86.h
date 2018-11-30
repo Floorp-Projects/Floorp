@@ -12,58 +12,56 @@
 namespace js {
 namespace jit {
 
-class LIRGeneratorX86 : public LIRGeneratorX86Shared
-{
-  protected:
-    LIRGeneratorX86(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
-      : LIRGeneratorX86Shared(gen, graph, lirGraph)
-    { }
+class LIRGeneratorX86 : public LIRGeneratorX86Shared {
+ protected:
+  LIRGeneratorX86(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
+      : LIRGeneratorX86Shared(gen, graph, lirGraph) {}
 
-    // Returns a box allocation with type set to reg1 and payload set to reg2.
-    LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
-                               bool useAtStart = false);
+  // Returns a box allocation with type set to reg1 and payload set to reg2.
+  LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
+                             bool useAtStart = false);
 
-    // It's a trap! On x86, the 1-byte store can only use one of
-    // {al,bl,cl,dl,ah,bh,ch,dh}. That means if the register allocator
-    // gives us one of {edi,esi,ebp,esp}, we're out of luck. (The formatter
-    // will assert on us.) Ideally, we'd just ask the register allocator to
-    // give us one of {al,bl,cl,dl}. For now, just useFixed(al).
-    LAllocation useByteOpRegister(MDefinition* mir);
-    LAllocation useByteOpRegisterAtStart(MDefinition* mir);
-    LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
-    LDefinition tempByteOpRegister();
+  // It's a trap! On x86, the 1-byte store can only use one of
+  // {al,bl,cl,dl,ah,bh,ch,dh}. That means if the register allocator
+  // gives us one of {edi,esi,ebp,esp}, we're out of luck. (The formatter
+  // will assert on us.) Ideally, we'd just ask the register allocator to
+  // give us one of {al,bl,cl,dl}. For now, just useFixed(al).
+  LAllocation useByteOpRegister(MDefinition* mir);
+  LAllocation useByteOpRegisterAtStart(MDefinition* mir);
+  LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
+  LDefinition tempByteOpRegister();
 
-    inline LDefinition tempToUnbox() {
-        return LDefinition::BogusTemp();
-    }
+  inline LDefinition tempToUnbox() { return LDefinition::BogusTemp(); }
 
-    bool needTempForPostBarrier() { return true; }
+  bool needTempForPostBarrier() { return true; }
 
-    void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
+  void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block,
+                            size_t lirIndex);
 
-    void lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
-    void defineInt64Phi(MPhi* phi, size_t lirIndex);
+  void lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block,
+                          size_t lirIndex);
+  void defineInt64Phi(MPhi* phi, size_t lirIndex);
 
-    void lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
-                          MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
-    void lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs);
+  void lowerForALUInt64(
+      LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
+      MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
+  void lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs,
+                        MDefinition* rhs);
 
-    void lowerDivI64(MDiv* div);
-    void lowerModI64(MMod* mod);
-    void lowerUDivI64(MDiv* div);
-    void lowerUModI64(MMod* mod);
+  void lowerDivI64(MDiv* div);
+  void lowerModI64(MMod* mod);
+  void lowerUDivI64(MDiv* div);
+  void lowerUModI64(MMod* mod);
 
-    void lowerPhi(MPhi* phi);
+  void lowerPhi(MPhi* phi);
 
-  public:
-    static bool allowTypedElementHoleCheck() {
-        return true;
-    }
+ public:
+  static bool allowTypedElementHoleCheck() { return true; }
 };
 
 typedef LIRGeneratorX86 LIRGeneratorSpecific;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_x86_Lowering_x86_h */

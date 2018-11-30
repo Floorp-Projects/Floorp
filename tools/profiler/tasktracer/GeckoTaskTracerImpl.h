@@ -64,20 +64,18 @@ struct TraceInfoLogNode {
   TraceInfoLogNode* mNext;
 };
 
-struct TraceInfo
-{
+struct TraceInfo {
   explicit TraceInfo(uint32_t aThreadId)
-    : mCurTraceSourceId(0)
-    , mCurTaskId(0)
-    , mCurTraceSourceType(Unknown)
-    , mThreadId(aThreadId)
-    , mLastUniqueTaskId(0)
-    , mObsolete(false)
-    , mLogsMutex("TraceInfoMutex")
-    , mLogsHead(nullptr)
-    , mLogsTail(nullptr)
-    , mLogsSize(0)
-  {
+      : mCurTraceSourceId(0),
+        mCurTaskId(0),
+        mCurTraceSourceType(Unknown),
+        mThreadId(aThreadId),
+        mLastUniqueTaskId(0),
+        mObsolete(false),
+        mLogsMutex("TraceInfoMutex"),
+        mLogsHead(nullptr),
+        mLogsTail(nullptr),
+        mLogsSize(0) {
     MOZ_COUNT_CTOR(TraceInfo);
   }
 
@@ -108,10 +106,10 @@ struct TraceInfo
 };
 
 class TraceInfoHolder {
-public:
+ public:
   TraceInfoHolder() : mInfo(nullptr) {}
   explicit TraceInfoHolder(TraceInfo* aInfo) : mInfo(aInfo) {
-    aInfo->mLogsMutex.AssertNotCurrentThreadOwns(); // in case of recursive
+    aInfo->mLogsMutex.AssertNotCurrentThreadOwns();  // in case of recursive
     aInfo->mLogsMutex.Lock();
     MOZ_ASSERT(aInfo);
   }
@@ -122,13 +120,13 @@ public:
     }
     aOther.mInfo = nullptr;
   }
-  ~TraceInfoHolder() { if (mInfo) mInfo->mLogsMutex.Unlock(); }
-  explicit operator bool() const { return !!mInfo; }
-  TraceInfo* operator ->() { return mInfo; }
-  bool operator ==(TraceInfo* aOther) const {
-    return mInfo == aOther;
+  ~TraceInfoHolder() {
+    if (mInfo) mInfo->mLogsMutex.Unlock();
   }
-  bool operator ==(const TraceInfoHolder& aOther) const {
+  explicit operator bool() const { return !!mInfo; }
+  TraceInfo* operator->() { return mInfo; }
+  bool operator==(TraceInfo* aOther) const { return mInfo == aOther; }
+  bool operator==(const TraceInfoHolder& aOther) const {
     return mInfo == aOther.mInfo;
   }
   void Reset() {
@@ -138,7 +136,7 @@ public:
     }
   }
 
-private:
+ private:
   TraceInfo* mInfo;
 };
 
@@ -172,9 +170,10 @@ void LogBegin(uint64_t aTaskId, uint64_t aSourceEventId);
 
 void LogEnd(uint64_t aTaskId, uint64_t aSourceEventId);
 
-void LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr);
+void LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId,
+                        uintptr_t* aVptr);
 
-} // namespace mozilla
-} // namespace tasktracer
+}  // namespace tasktracer
+}  // namespace mozilla
 
 #endif

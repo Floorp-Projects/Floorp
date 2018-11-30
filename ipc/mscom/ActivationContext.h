@@ -13,20 +13,16 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #include "nsString.h"
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #include <windows.h>
 
 namespace mozilla {
 namespace mscom {
 
-class ActivationContext final
-{
-public:
-  ActivationContext()
-    : mActCtx(INVALID_HANDLE_VALUE)
-  {
-  }
+class ActivationContext final {
+ public:
+  ActivationContext() : mActCtx(INVALID_HANDLE_VALUE) {}
 
   explicit ActivationContext(WORD aResourceId);
   explicit ActivationContext(HMODULE aLoadFromModule, WORD aResourceId = 2);
@@ -39,35 +35,29 @@ public:
 
   ~ActivationContext();
 
-  explicit operator bool() const
-  {
-    return mActCtx != INVALID_HANDLE_VALUE;
-  }
+  explicit operator bool() const { return mActCtx != INVALID_HANDLE_VALUE; }
 
 #if defined(MOZILLA_INTERNAL_API)
-  static Result<uintptr_t,HRESULT> GetCurrent();
+  static Result<uintptr_t, HRESULT> GetCurrent();
   static HRESULT GetCurrentManifestPath(nsAString& aOutManifestPath);
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
-private:
+ private:
   void Init(ACTCTX& aActCtx);
   void AddRef();
   void Release();
 
-private:
+ private:
   HANDLE mActCtx;
 
   friend class ActivationContextRegion;
 };
 
-class MOZ_NON_TEMPORARY_CLASS ActivationContextRegion final
-{
-public:
+class MOZ_NON_TEMPORARY_CLASS ActivationContextRegion final {
+ public:
   template <typename... Args>
   explicit ActivationContextRegion(Args... aArgs)
-    : mActCtx(std::forward<Args>(aArgs)...)
-    , mActCookie(0)
-  {
+      : mActCtx(std::forward<Args>(aArgs)...), mActCookie(0) {
     Activate();
   }
 
@@ -84,25 +74,21 @@ public:
 
   ~ActivationContextRegion();
 
-  explicit operator bool() const
-  {
-    return !!mActCookie;
-  }
+  explicit operator bool() const { return !!mActCookie; }
 
   ActivationContextRegion(const ActivationContextRegion&) = delete;
   ActivationContextRegion& operator=(const ActivationContextRegion&) = delete;
 
   bool Deactivate();
 
-private:
+ private:
   void Activate();
 
   ActivationContext mActCtx;
-  ULONG_PTR         mActCookie;
+  ULONG_PTR mActCookie;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_ActivationContext_h
-
+#endif  // mozilla_mscom_ActivationContext_h

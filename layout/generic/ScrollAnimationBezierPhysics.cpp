@@ -9,19 +9,14 @@
 
 using namespace mozilla;
 
-ScrollAnimationBezierPhysics::ScrollAnimationBezierPhysics(const nsPoint& aStartPos,
-                                const ScrollAnimationBezierPhysicsSettings& aSettings)
- : mSettings(aSettings)
- , mStartPos(aStartPos)
- , mIsFirstIteration(true)
-{
-}
+ScrollAnimationBezierPhysics::ScrollAnimationBezierPhysics(
+    const nsPoint& aStartPos,
+    const ScrollAnimationBezierPhysicsSettings& aSettings)
+    : mSettings(aSettings), mStartPos(aStartPos), mIsFirstIteration(true) {}
 
-void
-ScrollAnimationBezierPhysics::Update(const TimeStamp& aTime,
-                                     const nsPoint& aDestination,
-                                     const nsSize& aCurrentVelocity)
-{
+void ScrollAnimationBezierPhysics::Update(const TimeStamp& aTime,
+                                          const nsPoint& aDestination,
+                                          const nsSize& aCurrentVelocity) {
   if (mIsFirstIteration) {
     InitializeHistory(aTime);
   }
@@ -34,8 +29,7 @@ ScrollAnimationBezierPhysics::Update(const TimeStamp& aTime,
     // another minimum duration reset slow things down.  If it would then
     // instead continue with the existing timing function.
     if (aDestination == mDestination &&
-        aTime + duration > mStartTime + mDuration)
-    {
+        aTime + duration > mStartTime + mDuration) {
       return;
     }
 
@@ -53,107 +47,104 @@ ScrollAnimationBezierPhysics::Update(const TimeStamp& aTime,
   mIsFirstIteration = false;
 }
 
-void
-ScrollAnimationBezierPhysics::ApplyContentShift(const CSSPoint& aShiftDelta)
-{
+void ScrollAnimationBezierPhysics::ApplyContentShift(
+    const CSSPoint& aShiftDelta) {
   nsPoint shiftDelta = CSSPoint::ToAppUnits(aShiftDelta);
   mStartPos += shiftDelta;
   mDestination += shiftDelta;
 }
 
-TimeDuration
-ScrollAnimationBezierPhysics::ComputeDuration(const TimeStamp& aTime)
-{
-  // Average last 3 delta durations (rounding errors up to 2ms are negligible for us)
+TimeDuration ScrollAnimationBezierPhysics::ComputeDuration(
+    const TimeStamp& aTime) {
+  // Average last 3 delta durations (rounding errors up to 2ms are negligible
+  // for us)
   int32_t eventsDeltaMs = (aTime - mPrevEventTime[2]).ToMilliseconds() / 3;
   mPrevEventTime[2] = mPrevEventTime[1];
   mPrevEventTime[1] = mPrevEventTime[0];
   mPrevEventTime[0] = aTime;
 
-  // Modulate duration according to events rate (quicker events -> shorter durations).
-  // The desired effect is to use longer duration when scrolling slowly, such that
-  // it's easier to follow, but reduce the duration to make it feel more snappy when
-  // scrolling quickly. To reduce fluctuations of the duration, we average event
-  // intervals using the recent 4 timestamps (now + three prev -> 3 intervals).
+  // Modulate duration according to events rate (quicker events -> shorter
+  // durations). The desired effect is to use longer duration when scrolling
+  // slowly, such that it's easier to follow, but reduce the duration to make it
+  // feel more snappy when scrolling quickly. To reduce fluctuations of the
+  // duration, we average event intervals using the recent 4 timestamps (now +
+  // three prev -> 3 intervals).
   int32_t durationMS =
-    clamped<int32_t>(eventsDeltaMs * mSettings.mIntervalRatio,
-                     mSettings.mMinMS, mSettings.mMaxMS);
+      clamped<int32_t>(eventsDeltaMs * mSettings.mIntervalRatio,
+                       mSettings.mMinMS, mSettings.mMaxMS);
 
   return TimeDuration::FromMilliseconds(durationMS);
 }
 
-void
-ScrollAnimationBezierPhysics::InitializeHistory(const TimeStamp& aTime)
-{
-  // Starting a new scroll (i.e. not when extending an existing scroll animation),
-  // create imaginary prev timestamps with maximum relevant intervals between them.
+void ScrollAnimationBezierPhysics::InitializeHistory(const TimeStamp& aTime) {
+  // Starting a new scroll (i.e. not when extending an existing scroll
+  // animation), create imaginary prev timestamps with maximum relevant
+  // intervals between them.
 
   // Longest relevant interval (which results in maximum duration)
-  TimeDuration maxDelta =
-    TimeDuration::FromMilliseconds(mSettings.mMaxMS / mSettings.mIntervalRatio);
-  mPrevEventTime[0] = aTime              - maxDelta;
-  mPrevEventTime[1] = mPrevEventTime[0]  - maxDelta;
-  mPrevEventTime[2] = mPrevEventTime[1]  - maxDelta;
+  TimeDuration maxDelta = TimeDuration::FromMilliseconds(
+      mSettings.mMaxMS / mSettings.mIntervalRatio);
+  mPrevEventTime[0] = aTime - maxDelta;
+  mPrevEventTime[1] = mPrevEventTime[0] - maxDelta;
+  mPrevEventTime[2] = mPrevEventTime[1] - maxDelta;
 }
 
-void
-ScrollAnimationBezierPhysics::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
-                                                 nscoord aCurrentPos,
-                                                 nscoord aCurrentVelocity,
-                                                 nscoord aDestination)
-{
-  if (aDestination == aCurrentPos || gfxPrefs::SmoothScrollCurrentVelocityWeighting() == 0) {
-    aTimingFunction.Init(0, 0, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
+void ScrollAnimationBezierPhysics::InitTimingFunction(
+    nsSMILKeySpline& aTimingFunction, nscoord aCurrentPos,
+    nscoord aCurrentVelocity, nscoord aDestination) {
+  if (aDestination == aCurrentPos ||
+      gfxPrefs::SmoothScrollCurrentVelocityWeighting() == 0) {
+    aTimingFunction.Init(
+        0, 0, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
     return;
   }
 
   const TimeDuration oneSecond = TimeDuration::FromSeconds(1);
-  double slope = aCurrentVelocity * (mDuration / oneSecond) / (aDestination - aCurrentPos);
+  double slope =
+      aCurrentVelocity * (mDuration / oneSecond) / (aDestination - aCurrentPos);
   double normalization = sqrt(1.0 + slope * slope);
-  double dt = 1.0 / normalization * gfxPrefs::SmoothScrollCurrentVelocityWeighting();
-  double dxy = slope / normalization * gfxPrefs::SmoothScrollCurrentVelocityWeighting();
-  aTimingFunction.Init(dt, dxy, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
+  double dt =
+      1.0 / normalization * gfxPrefs::SmoothScrollCurrentVelocityWeighting();
+  double dxy =
+      slope / normalization * gfxPrefs::SmoothScrollCurrentVelocityWeighting();
+  aTimingFunction.Init(
+      dt, dxy, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
 }
 
-nsPoint
-ScrollAnimationBezierPhysics::PositionAt(const TimeStamp& aTime)
-{
+nsPoint ScrollAnimationBezierPhysics::PositionAt(const TimeStamp& aTime) {
   if (IsFinished(aTime)) {
     return mDestination;
   }
 
   double progressX = mTimingFunctionX.GetSplineValue(ProgressAt(aTime));
   double progressY = mTimingFunctionY.GetSplineValue(ProgressAt(aTime));
-  return nsPoint(NSToCoordRound((1 - progressX) * mStartPos.x + progressX * mDestination.x),
-                 NSToCoordRound((1 - progressY) * mStartPos.y + progressY * mDestination.y));
+  return nsPoint(NSToCoordRound((1 - progressX) * mStartPos.x +
+                                progressX * mDestination.x),
+                 NSToCoordRound((1 - progressY) * mStartPos.y +
+                                progressY * mDestination.y));
 }
 
-nsSize
-ScrollAnimationBezierPhysics::VelocityAt(const TimeStamp& aTime)
-{
+nsSize ScrollAnimationBezierPhysics::VelocityAt(const TimeStamp& aTime) {
   if (IsFinished(aTime)) {
     return nsSize(0, 0);
   }
 
   double timeProgress = ProgressAt(aTime);
-  return nsSize(VelocityComponent(timeProgress, mTimingFunctionX,
-                                  mStartPos.x, mDestination.x),
-                VelocityComponent(timeProgress, mTimingFunctionY,
-                                  mStartPos.y, mDestination.y));
+  return nsSize(VelocityComponent(timeProgress, mTimingFunctionX, mStartPos.x,
+                                  mDestination.x),
+                VelocityComponent(timeProgress, mTimingFunctionY, mStartPos.y,
+                                  mDestination.y));
 }
 
-nscoord
-ScrollAnimationBezierPhysics::VelocityComponent(double aTimeProgress,
-                                                const nsSMILKeySpline& aTimingFunction,
-                                                nscoord aStart,
-                                                nscoord aDestination) const
-{
+nscoord ScrollAnimationBezierPhysics::VelocityComponent(
+    double aTimeProgress, const nsSMILKeySpline& aTimingFunction,
+    nscoord aStart, nscoord aDestination) const {
   double dt, dxy;
   aTimingFunction.GetSplineDerivativeValues(aTimeProgress, dt, dxy);
-  if (dt == 0)
-    return dxy >= 0 ? nscoord_MAX : nscoord_MIN;
+  if (dt == 0) return dxy >= 0 ? nscoord_MAX : nscoord_MIN;
 
   const TimeDuration oneSecond = TimeDuration::FromSeconds(1);
   double slope = dxy / dt;
-  return NSToCoordRound(slope * (aDestination - aStart) / (mDuration / oneSecond));
+  return NSToCoordRound(slope * (aDestination - aStart) /
+                        (mDuration / oneSecond));
 }

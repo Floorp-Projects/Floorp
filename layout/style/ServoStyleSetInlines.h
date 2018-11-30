@@ -12,20 +12,17 @@
 
 namespace mozilla {
 
-nscoord
-ServoStyleSet::EvaluateSourceSizeList(
-  const RawServoSourceSizeList* aSourceSizeList) const
-{
+nscoord ServoStyleSet::EvaluateSourceSizeList(
+    const RawServoSourceSizeList* aSourceSizeList) const {
   return Servo_SourceSizeList_Evaluate(mRawSet.get(), aSourceSizeList);
 }
 
-already_AddRefed<ComputedStyle>
-ServoStyleSet::ResolveServoStyle(const dom::Element& aElement)
-{
+already_AddRefed<ComputedStyle> ServoStyleSet::ResolveServoStyle(
+    const dom::Element& aElement) {
   // TODO(emilio): mRawSet isn't used by this function, remove.
   return Servo_ResolveStyle(&aElement, mRawSet.get()).Consume();
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ServoStyleSetInlines_h
+#endif  // mozilla_ServoStyleSetInlines_h

@@ -18,42 +18,42 @@
 class gfxContext;
 namespace mozilla {
 struct ReflowInput;
-} // namespace mozilla
+}  // namespace mozilla
 
-class nsITableLayoutStrategy
-{
-public:
-    using ReflowInput = mozilla::ReflowInput;
+class nsITableLayoutStrategy {
+ public:
+  using ReflowInput = mozilla::ReflowInput;
 
-    virtual ~nsITableLayoutStrategy() {}
+  virtual ~nsITableLayoutStrategy() {}
 
-    /** Implement nsIFrame::GetMinISize for the table */
-    virtual nscoord GetMinISize(gfxContext* aRenderingContext) = 0;
+  /** Implement nsIFrame::GetMinISize for the table */
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) = 0;
 
-    /** Implement nsIFrame::GetPrefISize for the table */
-    virtual nscoord GetPrefISize(gfxContext* aRenderingContext,
-                                 bool aComputingSize) = 0;
+  /** Implement nsIFrame::GetPrefISize for the table */
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext,
+                               bool aComputingSize) = 0;
 
-    /** Implement nsIFrame::MarkIntrinsicISizesDirty for the table */
-    virtual void MarkIntrinsicISizesDirty() = 0;
+  /** Implement nsIFrame::MarkIntrinsicISizesDirty for the table */
+  virtual void MarkIntrinsicISizesDirty() = 0;
 
-    /**
-     * Compute final column isizes based on the intrinsic isize data and
-     * the available isize.
-     */
-    virtual void ComputeColumnISizes(const ReflowInput& aReflowInput) = 0;
+  /**
+   * Compute final column isizes based on the intrinsic isize data and
+   * the available isize.
+   */
+  virtual void ComputeColumnISizes(const ReflowInput& aReflowInput) = 0;
 
-    /**
-     * Return the type of table layout strategy, without the cost of
-     * a virtual function call
-     */
-    enum Type { Auto, Fixed };
-    Type GetType() const { return mType; }
+  /**
+   * Return the type of table layout strategy, without the cost of
+   * a virtual function call
+   */
+  enum Type { Auto, Fixed };
+  Type GetType() const { return mType; }
 
-protected:
-    explicit nsITableLayoutStrategy(Type aType) : mType(aType) {}
-private:
-    Type mType;
+ protected:
+  explicit nsITableLayoutStrategy(Type aType) : mType(aType) {}
+
+ private:
+  Type mType;
 };
 
 #endif /* !defined(nsITableLayoutStrategy_h_) */

@@ -15,16 +15,15 @@ namespace mozilla {
 namespace dom {
 namespace network {
 
-class ConnectionMainThread final : public Connection
-                                 , public hal::NetworkObserver
-{
-public:
+class ConnectionMainThread final : public Connection,
+                                   public hal::NetworkObserver {
+ public:
   explicit ConnectionMainThread(nsPIDOMWindowInner* aWindow);
 
   // For IObserver
   void Notify(const hal::NetworkInformation& aNetworkInfo) override;
 
-private:
+ private:
   ~ConnectionMainThread();
 
   virtual void ShutdownInternal() override;
@@ -37,8 +36,8 @@ private:
                              bool aNotify);
 };
 
-} // namespace network
-} // namespace dom
-} // namespace mozilla
+}  // namespace network
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_network_ConnectionMainThread_h
+#endif  // mozilla_dom_network_ConnectionMainThread_h

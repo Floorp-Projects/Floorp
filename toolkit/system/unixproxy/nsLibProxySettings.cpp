@@ -17,17 +17,16 @@ extern "C" {
 }
 
 class nsUnixSystemProxySettings : public nsISystemProxySettings {
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISYSTEMPROXYSETTINGS
 
   nsUnixSystemProxySettings() { mProxyFactory = nullptr; }
   nsresult Init();
 
-private:
+ private:
   ~nsUnixSystemProxySettings() {
-    if (mProxyFactory)
-      px_proxy_factory_free(mProxyFactory);
+    if (mProxyFactory) px_proxy_factory_free(mProxyFactory);
   }
 
   pxProxyFactory *mProxyFactory;
@@ -36,33 +35,24 @@ private:
 NS_IMPL_ISUPPORTS(nsUnixSystemProxySettings, nsISystemProxySettings)
 
 NS_IMETHODIMP
-nsUnixSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)
-{
+nsUnixSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly) {
   *aMainThreadOnly = false;
   return NS_OK;
 }
 
-nsresult
-nsUnixSystemProxySettings::Init()
-{
-  return NS_OK;
-}
+nsresult nsUnixSystemProxySettings::Init() { return NS_OK; }
 
-nsresult
-nsUnixSystemProxySettings::GetPACURI(nsACString& aResult)
-{
+nsresult nsUnixSystemProxySettings::GetPACURI(nsACString &aResult) {
   // Make sure we return an empty result.
   aResult.Truncate();
   return NS_OK;
 }
 
-nsresult
-nsUnixSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
-                                          const nsACString & aScheme,
-                                          const nsACString & aHost,
-                                          const int32_t      aPort,
-                                          nsACString & aResult)
-{
+nsresult nsUnixSystemProxySettings::GetProxyForURI(const nsACString &aSpec,
+                                                   const nsACString &aScheme,
+                                                   const nsACString &aHost,
+                                                   const int32_t aPort,
+                                                   nsACString &aResult) {
   nsresult rv;
 
   if (!mProxyFactory) {
@@ -82,7 +72,8 @@ nsUnixSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
   // direct://
   //
   // PAC format: "PROXY proxy1.foo.com:8080; PROXY proxy2.foo.com:8080; DIRECT"
-  // but nsISystemProxySettings allows "PROXY http://proxy.foo.com:8080" as well.
+  // but nsISystemProxySettings allows "PROXY http://proxy.foo.com:8080" as
+  // well.
 
   int c = 0;
   while (proxyArray[c] != nullptr) {
@@ -92,7 +83,7 @@ nsUnixSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
 
     // figure out the scheme, and we can't use nsIIOService::NewURI because
     // this is not the main thread.
-    char *colon = strchr (proxyArray[c], ':');
+    char *colon = strchr(proxyArray[c], ':');
     uint32_t schemelen = colon ? colon - proxyArray[c] : 0;
     if (schemelen < 1) {
       c++;
@@ -101,8 +92,7 @@ nsUnixSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
 
     if (schemelen == 6 && !strncasecmp(proxyArray[c], "direct", 6)) {
       aResult.AppendLiteral("DIRECT");
-    }
-    else {
+    } else {
       aResult.AppendLiteral("PROXY ");
       aResult.Append(proxyArray[c]);
     }
@@ -115,28 +105,26 @@ nsUnixSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
 }
 
 /* 0fa3158c-d5a7-43de-9181-a285e74cf1d4 */
-#define NS_UNIXSYSTEMPROXYSERVICE_CID  \
-     { 0x0fa3158c, 0xd5a7, 0x43de, \
-       {0x91, 0x81, 0xa2, 0x85, 0xe7, 0x4c, 0xf1, 0xd4 } }
+#define NS_UNIXSYSTEMPROXYSERVICE_CID                \
+  {                                                  \
+    0x0fa3158c, 0xd5a7, 0x43de, {                    \
+      0x91, 0x81, 0xa2, 0x85, 0xe7, 0x4c, 0xf1, 0xd4 \
+    }                                                \
+  }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUnixSystemProxySettings, Init)
 NS_DEFINE_NAMED_CID(NS_UNIXSYSTEMPROXYSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kUnixProxyCIDs[] = {
-  { &kNS_UNIXSYSTEMPROXYSERVICE_CID, false, nullptr, nsUnixSystemProxySettingsConstructor },
-  { nullptr }
-};
+    {&kNS_UNIXSYSTEMPROXYSERVICE_CID, false, nullptr,
+     nsUnixSystemProxySettingsConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kUnixProxyContracts[] = {
-  { NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_UNIXSYSTEMPROXYSERVICE_CID },
-  { nullptr }
-};
+    {NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_UNIXSYSTEMPROXYSERVICE_CID},
+    {nullptr}};
 
 static const mozilla::Module kUnixProxyModule = {
-  mozilla::Module::kVersion,
-  kUnixProxyCIDs,
-  kUnixProxyContracts
-};
+    mozilla::Module::kVersion, kUnixProxyCIDs, kUnixProxyContracts};
 
 NSMODULE_DEFN(nsUnixProxyModule) = &kUnixProxyModule;
-

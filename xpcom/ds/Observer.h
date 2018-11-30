@@ -19,10 +19,9 @@ namespace mozilla {
  *
  * @see ObserverList.
  */
-template<class T>
-class Observer
-{
-public:
+template <class T>
+class Observer {
+ public:
   virtual ~Observer() {}
   virtual void Notify(const T& aParam) = 0;
 };
@@ -35,10 +34,9 @@ public:
  *
  * @see Observer.
  */
-template<class T>
-class ObserverList
-{
-public:
+template <class T>
+class ObserverList {
+ public:
   /**
    * Note: When calling AddObserver, it's up to the caller to make sure the
    * object isn't going to be release as long as RemoveObserver hasn't been
@@ -46,8 +44,7 @@ public:
    *
    * @see RemoveObserver()
    */
-  void AddObserver(Observer<T>* aObserver)
-  {
+  void AddObserver(Observer<T>* aObserver) {
     mObservers.AppendElementUnlessExists(aObserver);
   }
 
@@ -55,21 +52,16 @@ public:
    * Remove the observer from the observer list.
    * @return Whether the observer has been found in the list.
    */
-  bool RemoveObserver(Observer<T>* aObserver)
-  {
+  bool RemoveObserver(Observer<T>* aObserver) {
     return mObservers.RemoveElement(aObserver);
   }
 
-  uint32_t Length()
-  {
-    return mObservers.Length();
-  }
+  uint32_t Length() { return mObservers.Length(); }
 
   /**
    * Call Notify() on each item in the list.
    */
-  void Broadcast(const T& aParam)
-  {
+  void Broadcast(const T& aParam) {
     typename nsTObserverArray<Observer<T>*>::ForwardIterator iter(mObservers);
     while (iter.HasMore()) {
       Observer<T>* obs = iter.GetNext();
@@ -77,10 +69,10 @@ public:
     }
   }
 
-protected:
+ protected:
   nsTObserverArray<Observer<T>*> mObservers;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_Observer_h
+#endif  // mozilla_Observer_h

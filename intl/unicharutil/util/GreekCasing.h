@@ -17,7 +17,7 @@ class GreekCasing {
   // diphthongs correctly. For clarity, we define a state for each vowel and
   // each vowel with accent, although a few of these do not actually need any
   // special treatment and could be folded into kStart.
-private:
+ private:
   enum GreekStates {
     kStart,
     kInWord,
@@ -40,37 +40,25 @@ private:
     kDiaeresis
   };
 
-public:
+ public:
   class State {
-  public:
-    State()
-      : mState(kStart)
-    {
-    }
+   public:
+    State() : mState(kStart) {}
 
-    MOZ_IMPLICIT State(const GreekStates& aState)
-      : mState(aState)
-    {
-    }
+    MOZ_IMPLICIT State(const GreekStates& aState) : mState(aState) {}
 
-    void Reset()
-    {
-      mState = kStart;
-    }
+    void Reset() { mState = kStart; }
 
-    operator GreekStates() const
-    {
-      return mState;
-    }
+    operator GreekStates() const { return mState; }
 
-  private:
+   private:
     GreekStates mState;
   };
 
-  static uint32_t UpperCase(uint32_t aCh, State& aState,
-                            bool& aMarkEtaPos, bool& aUpdateMarkedEta);
+  static uint32_t UpperCase(uint32_t aCh, State& aState, bool& aMarkEtaPos,
+                            bool& aUpdateMarkedEta);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

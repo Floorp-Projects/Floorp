@@ -10,38 +10,38 @@
 
 namespace mozilla {
 
-CrossProcessMutex::CrossProcessMutex(const char*)
-{
+CrossProcessMutex::CrossProcessMutex(const char*) {
   MOZ_CRASH("Cross-process mutices not allowed on this platform.");
 }
 
-CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle)
-{
+CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle) {
   MOZ_CRASH("Cross-process mutices not allowed on this platform.");
 }
 
-CrossProcessMutex::~CrossProcessMutex()
-{
-  MOZ_CRASH("Cross-process mutices not allowed on this platform - woah! We should've aborted by now!");
+CrossProcessMutex::~CrossProcessMutex() {
+  MOZ_CRASH(
+      "Cross-process mutices not allowed on this platform - woah! We should've "
+      "aborted by now!");
 }
 
-void
-CrossProcessMutex::Lock()
-{
-  MOZ_CRASH("Cross-process mutices not allowed on this platform - woah! We should've aborted by now!");
+void CrossProcessMutex::Lock() {
+  MOZ_CRASH(
+      "Cross-process mutices not allowed on this platform - woah! We should've "
+      "aborted by now!");
 }
 
-void
-CrossProcessMutex::Unlock()
-{
-  MOZ_CRASH("Cross-process mutices not allowed on this platform - woah! We should've aborted by now!");
+void CrossProcessMutex::Unlock() {
+  MOZ_CRASH(
+      "Cross-process mutices not allowed on this platform - woah! We should've "
+      "aborted by now!");
 }
 
-CrossProcessMutexHandle
-CrossProcessMutex::ShareToProcess(base::ProcessId aTargetPid)
-{
-  MOZ_CRASH("Cross-process mutices not allowed on this platform - woah! We should've aborted by now!");
+CrossProcessMutexHandle CrossProcessMutex::ShareToProcess(
+    base::ProcessId aTargetPid) {
+  MOZ_CRASH(
+      "Cross-process mutices not allowed on this platform - woah! We should've "
+      "aborted by now!");
   return 0;
 }
 
-}
+}  // namespace mozilla

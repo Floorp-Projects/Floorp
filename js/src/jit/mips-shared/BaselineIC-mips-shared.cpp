@@ -13,27 +13,25 @@ using namespace js::jit;
 namespace js {
 namespace jit {
 
-bool
-ICCompare_Double::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure, isNaN;
-    masm.ensureDouble(R0, FloatReg0, &failure);
-    masm.ensureDouble(R1, FloatReg1, &failure);
+bool ICCompare_Double::Compiler::generateStubCode(MacroAssembler& masm) {
+  Label failure, isNaN;
+  masm.ensureDouble(R0, FloatReg0, &failure);
+  masm.ensureDouble(R1, FloatReg1, &failure);
 
-    Register dest = R0.scratchReg();
+  Register dest = R0.scratchReg();
 
-    Assembler::DoubleCondition doubleCond = JSOpToDoubleCondition(op);
+  Assembler::DoubleCondition doubleCond = JSOpToDoubleCondition(op);
 
-    masm.ma_cmp_set_double(dest, FloatReg0, FloatReg1, doubleCond);
+  masm.ma_cmp_set_double(dest, FloatReg0, FloatReg1, doubleCond);
 
-    masm.tagValue(JSVAL_TYPE_BOOLEAN, dest, R0);
-    EmitReturnFromIC(masm);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, dest, R0);
+  EmitReturnFromIC(masm);
 
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
+  // Failure case - jump to next stub
+  masm.bind(&failure);
+  EmitStubGuardFailure(masm);
+  return true;
 }
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js

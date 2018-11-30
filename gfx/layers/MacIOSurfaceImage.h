@@ -16,19 +16,14 @@ namespace mozilla {
 
 namespace layers {
 
-class MacIOSurfaceImage : public Image
-{
-public:
+class MacIOSurfaceImage : public Image {
+ public:
   explicit MacIOSurfaceImage(MacIOSurface* aSurface)
-    : Image(nullptr, ImageFormat::MAC_IOSURFACE)
-    , mSurface(aSurface)
-  {
-  }
+      : Image(nullptr, ImageFormat::MAC_IOSURFACE), mSurface(aSurface) {}
 
   MacIOSurface* GetSurface() { return mSurface; }
 
-  gfx::IntSize GetSize() const override
-  {
+  gfx::IntSize GetSize() const override {
     return gfx::IntSize::Truncate(mSurface->GetDevicePixelWidth(),
                                   mSurface->GetDevicePixelHeight());
   }
@@ -37,17 +32,14 @@ public:
 
   TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 
-  MacIOSurfaceImage* AsMacIOSurfaceImage() override
-  {
-    return this;
-  }
+  MacIOSurfaceImage* AsMacIOSurfaceImage() override { return this; }
 
-private:
+ private:
   RefPtr<MacIOSurface> mSurface;
   RefPtr<TextureClient> mTextureClient;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // GFX_SHAREDTEXTUREIMAGE_H
+#endif  // GFX_SHAREDTEXTUREIMAGE_H

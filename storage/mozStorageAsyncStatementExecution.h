@@ -29,10 +29,9 @@ class Connection;
 class ResultSet;
 class StatementData;
 
-class AsyncExecuteStatements final : public nsIRunnable
-                                   , public mozIStoragePendingStatement
-{
-public:
+class AsyncExecuteStatements final : public nsIRunnable,
+                                     public mozIStoragePendingStatement {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_MOZISTORAGEPENDINGSTATEMENT
@@ -66,8 +65,7 @@ public:
    *        The handle to control the execution of the statements.
    */
   static nsresult execute(StatementDataArray &aStatements,
-                          Connection *aConnection,
-                          sqlite3 *aNativeConnection,
+                          Connection *aConnection, sqlite3 *aNativeConnection,
                           mozIStorageStatementCallback *aCallback,
                           mozIStoragePendingStatement **_stmt);
 
@@ -90,10 +88,9 @@ public:
   nsresult notifyErrorOnCallingThread(mozIStorageError *aError);
   nsresult notifyResultsOnCallingThread(ResultSet *aResultSet);
 
-private:
+ private:
   AsyncExecuteStatements(StatementDataArray &aStatements,
-                         Connection *aConnection,
-                         sqlite3 *aNativeConnection,
+                         Connection *aConnection, sqlite3 *aNativeConnection,
                          mozIStorageStatementCallback *aCallback);
   ~AsyncExecuteStatements();
 
@@ -247,7 +244,7 @@ private:
   TimeStamp mRequestStartDate;
 };
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla
 
-#endif // mozStorageAsyncStatementExecution_h
+#endif  // mozStorageAsyncStatementExecution_h

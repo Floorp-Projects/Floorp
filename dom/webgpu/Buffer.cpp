@@ -11,34 +11,24 @@
 namespace mozilla {
 namespace webgpu {
 
-Buffer::Buffer(Device* const parent)
-    : ChildOf(parent)
-{
-    mozilla::HoldJSObjects(this); // Mimed from PushSubscriptionOptions
+Buffer::Buffer(Device* const parent) : ChildOf(parent) {
+  mozilla::HoldJSObjects(this);  // Mimed from PushSubscriptionOptions
 }
 
-Buffer::~Buffer()
-{
-    mMapping = nullptr;
-    mozilla::DropJSObjects(this);
+Buffer::~Buffer() {
+  mMapping = nullptr;
+  mozilla::DropJSObjects(this);
 }
 
-void
-Buffer::GetMapping(JSContext*, JS::MutableHandle<JSObject*> out) const
-{
-    out.set(mMapping);
+void Buffer::GetMapping(JSContext*, JS::MutableHandle<JSObject*> out) const {
+  out.set(mMapping);
 }
 
-void
-Buffer::Unmap() const
-{
-    MOZ_CRASH("todo");
-}
+void Buffer::Unmap() const { MOZ_CRASH("todo"); }
 
-JSObject*
-webgpu::Buffer::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
-{
-    return dom::WebGPUBuffer_Binding::Wrap(cx, this, givenProto);
+JSObject* webgpu::Buffer::WrapObject(JSContext* cx,
+                                     JS::Handle<JSObject*> givenProto) {
+  return dom::WebGPUBuffer_Binding::Wrap(cx, this, givenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Buffer)
@@ -58,5 +48,5 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Buffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Buffer, Release)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

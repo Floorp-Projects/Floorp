@@ -24,8 +24,7 @@ using namespace mozilla;
   character to be transformed and is used for searching the tables.
   mReplacement represents the mapped mathvariant Unicode character.
 */
-typedef struct
-{
+typedef struct {
   uint32_t mKey;
   uint32_t mReplacement;
 } MathVarMapping;
@@ -42,226 +41,120 @@ typedef struct
   As a replacement, 0 is reserved to indicate no mapping was found.
 */
 static const MathVarMapping gArabicInitialMapTable[] = {
-  { 0x628, 0x1EE21 },
-  { 0x62A, 0x1EE35 },
-  { 0x62B, 0x1EE36 },
-  { 0x62C, 0x1EE22 },
-  { 0x62D, 0x1EE27 },
-  { 0x62E, 0x1EE37 },
-  { 0x633, 0x1EE2E },
-  { 0x634, 0x1EE34 },
-  { 0x635, 0x1EE31 },
-  { 0x636, 0x1EE39 },
-  { 0x639, 0x1EE2F },
-  { 0x63A, 0x1EE3B },
-  { 0x641, 0x1EE30 },
-  { 0x642, 0x1EE32 },
-  { 0x643, 0x1EE2A },
-  { 0x644, 0x1EE2B },
-  { 0x645, 0x1EE2C },
-  { 0x646, 0x1EE2D },
-  { 0x647, 0x1EE24 },
-  { 0x64A, 0x1EE29 }
-};
+    {0x628, 0x1EE21}, {0x62A, 0x1EE35}, {0x62B, 0x1EE36}, {0x62C, 0x1EE22},
+    {0x62D, 0x1EE27}, {0x62E, 0x1EE37}, {0x633, 0x1EE2E}, {0x634, 0x1EE34},
+    {0x635, 0x1EE31}, {0x636, 0x1EE39}, {0x639, 0x1EE2F}, {0x63A, 0x1EE3B},
+    {0x641, 0x1EE30}, {0x642, 0x1EE32}, {0x643, 0x1EE2A}, {0x644, 0x1EE2B},
+    {0x645, 0x1EE2C}, {0x646, 0x1EE2D}, {0x647, 0x1EE24}, {0x64A, 0x1EE29}};
 
 static const MathVarMapping gArabicTailedMapTable[] = {
-  { 0x62C, 0x1EE42 },
-  { 0x62D, 0x1EE47 },
-  { 0x62E, 0x1EE57 },
-  { 0x633, 0x1EE4E },
-  { 0x634, 0x1EE54 },
-  { 0x635, 0x1EE51 },
-  { 0x636, 0x1EE59 },
-  { 0x639, 0x1EE4F },
-  { 0x63A, 0x1EE5B },
-  { 0x642, 0x1EE52 },
-  { 0x644, 0x1EE4B },
-  { 0x646, 0x1EE4D },
-  { 0x64A, 0x1EE49 },
-  { 0x66F, 0x1EE5F },
-  { 0x6BA, 0x1EE5D }
-};
+    {0x62C, 0x1EE42}, {0x62D, 0x1EE47}, {0x62E, 0x1EE57}, {0x633, 0x1EE4E},
+    {0x634, 0x1EE54}, {0x635, 0x1EE51}, {0x636, 0x1EE59}, {0x639, 0x1EE4F},
+    {0x63A, 0x1EE5B}, {0x642, 0x1EE52}, {0x644, 0x1EE4B}, {0x646, 0x1EE4D},
+    {0x64A, 0x1EE49}, {0x66F, 0x1EE5F}, {0x6BA, 0x1EE5D}};
 
 static const MathVarMapping gArabicStretchedMapTable[] = {
-  { 0x628, 0x1EE61 },
-  { 0x62A, 0x1EE75 },
-  { 0x62B, 0x1EE76 },
-  { 0x62C, 0x1EE62 },
-  { 0x62D, 0x1EE67 },
-  { 0x62E, 0x1EE77 },
-  { 0x633, 0x1EE6E },
-  { 0x634, 0x1EE74 },
-  { 0x635, 0x1EE71 },
-  { 0x636, 0x1EE79 },
-  { 0x637, 0x1EE68 },
-  { 0x638, 0x1EE7A },
-  { 0x639, 0x1EE6F },
-  { 0x63A, 0x1EE7B },
-  { 0x641, 0x1EE70 },
-  { 0x642, 0x1EE72 },
-  { 0x643, 0x1EE6A },
-  { 0x645, 0x1EE6C },
-  { 0x646, 0x1EE6D },
-  { 0x647, 0x1EE64 },
-  { 0x64A, 0x1EE69 },
-  { 0x66E, 0x1EE7C },
-  { 0x6A1, 0x1EE7E }
-};
+    {0x628, 0x1EE61}, {0x62A, 0x1EE75}, {0x62B, 0x1EE76}, {0x62C, 0x1EE62},
+    {0x62D, 0x1EE67}, {0x62E, 0x1EE77}, {0x633, 0x1EE6E}, {0x634, 0x1EE74},
+    {0x635, 0x1EE71}, {0x636, 0x1EE79}, {0x637, 0x1EE68}, {0x638, 0x1EE7A},
+    {0x639, 0x1EE6F}, {0x63A, 0x1EE7B}, {0x641, 0x1EE70}, {0x642, 0x1EE72},
+    {0x643, 0x1EE6A}, {0x645, 0x1EE6C}, {0x646, 0x1EE6D}, {0x647, 0x1EE64},
+    {0x64A, 0x1EE69}, {0x66E, 0x1EE7C}, {0x6A1, 0x1EE7E}};
 
 static const MathVarMapping gArabicLoopedMapTable[] = {
-  { 0x627, 0x1EE80 },
-  { 0x628, 0x1EE81 },
-  { 0x62A, 0x1EE95 },
-  { 0x62B, 0x1EE96 },
-  { 0x62C, 0x1EE82 },
-  { 0x62D, 0x1EE87 },
-  { 0x62E, 0x1EE97 },
-  { 0x62F, 0x1EE83 },
-  { 0x630, 0x1EE98 },
-  { 0x631, 0x1EE93 },
-  { 0x632, 0x1EE86 },
-  { 0x633, 0x1EE8E },
-  { 0x634, 0x1EE94 },
-  { 0x635, 0x1EE91 },
-  { 0x636, 0x1EE99 },
-  { 0x637, 0x1EE88 },
-  { 0x638, 0x1EE9A },
-  { 0x639, 0x1EE8F },
-  { 0x63A, 0x1EE9B },
-  { 0x641, 0x1EE90 },
-  { 0x642, 0x1EE92 },
-  { 0x644, 0x1EE8B },
-  { 0x645, 0x1EE8C },
-  { 0x646, 0x1EE8D },
-  { 0x647, 0x1EE84 },
-  { 0x648, 0x1EE85 },
-  { 0x64A, 0x1EE89 }
-};
+    {0x627, 0x1EE80}, {0x628, 0x1EE81}, {0x62A, 0x1EE95}, {0x62B, 0x1EE96},
+    {0x62C, 0x1EE82}, {0x62D, 0x1EE87}, {0x62E, 0x1EE97}, {0x62F, 0x1EE83},
+    {0x630, 0x1EE98}, {0x631, 0x1EE93}, {0x632, 0x1EE86}, {0x633, 0x1EE8E},
+    {0x634, 0x1EE94}, {0x635, 0x1EE91}, {0x636, 0x1EE99}, {0x637, 0x1EE88},
+    {0x638, 0x1EE9A}, {0x639, 0x1EE8F}, {0x63A, 0x1EE9B}, {0x641, 0x1EE90},
+    {0x642, 0x1EE92}, {0x644, 0x1EE8B}, {0x645, 0x1EE8C}, {0x646, 0x1EE8D},
+    {0x647, 0x1EE84}, {0x648, 0x1EE85}, {0x64A, 0x1EE89}};
 
 static const MathVarMapping gArabicDoubleMapTable[] = {
-  { 0x628, 0x1EEA1 },
-  { 0x62A, 0x1EEB5 },
-  { 0x62B, 0x1EEB6 },
-  { 0x62C, 0x1EEA2 },
-  { 0x62D, 0x1EEA7 },
-  { 0x62E, 0x1EEB7 },
-  { 0x62F, 0x1EEA3 },
-  { 0x630, 0x1EEB8 },
-  { 0x631, 0x1EEB3 },
-  { 0x632, 0x1EEA6 },
-  { 0x633, 0x1EEAE },
-  { 0x634, 0x1EEB4 },
-  { 0x635, 0x1EEB1 },
-  { 0x636, 0x1EEB9 },
-  { 0x637, 0x1EEA8 },
-  { 0x638, 0x1EEBA },
-  { 0x639, 0x1EEAF },
-  { 0x63A, 0x1EEBB },
-  { 0x641, 0x1EEB0 },
-  { 0x642, 0x1EEB2 },
-  { 0x644, 0x1EEAB },
-  { 0x645, 0x1EEAC },
-  { 0x646, 0x1EEAD },
-  { 0x648, 0x1EEA5 },
-  { 0x64A, 0x1EEA9 }
-};
+    {0x628, 0x1EEA1}, {0x62A, 0x1EEB5}, {0x62B, 0x1EEB6}, {0x62C, 0x1EEA2},
+    {0x62D, 0x1EEA7}, {0x62E, 0x1EEB7}, {0x62F, 0x1EEA3}, {0x630, 0x1EEB8},
+    {0x631, 0x1EEB3}, {0x632, 0x1EEA6}, {0x633, 0x1EEAE}, {0x634, 0x1EEB4},
+    {0x635, 0x1EEB1}, {0x636, 0x1EEB9}, {0x637, 0x1EEA8}, {0x638, 0x1EEBA},
+    {0x639, 0x1EEAF}, {0x63A, 0x1EEBB}, {0x641, 0x1EEB0}, {0x642, 0x1EEB2},
+    {0x644, 0x1EEAB}, {0x645, 0x1EEAC}, {0x646, 0x1EEAD}, {0x648, 0x1EEA5},
+    {0x64A, 0x1EEA9}};
 
 static const MathVarMapping gLatinExceptionMapTable[] = {
-  { 0x1D455, 0x210E },
-  { 0x1D49D, 0x212C },
-  { 0x1D4A0, 0x2130 },
-  { 0x1D4A1, 0x2131 },
-  { 0x1D4A3, 0x210B },
-  { 0x1D4A4, 0x2110 },
-  { 0x1D4A7, 0x2112 },
-  { 0x1D4A8, 0x2133 },
-  { 0x1D4AD, 0x211B },
-  { 0x1D4BA, 0x212F },
-  { 0x1D4BC, 0x210A },
-  { 0x1D4C4, 0x2134 },
-  { 0x1D506, 0x212D },
-  { 0x1D50B, 0x210C },
-  { 0x1D50C, 0x2111 },
-  { 0x1D515, 0x211C },
-  { 0x1D51D, 0x2128 },
-  { 0x1D53A, 0x2102 },
-  { 0x1D53F, 0x210D },
-  { 0x1D545, 0x2115 },
-  { 0x1D547, 0x2119 },
-  { 0x1D548, 0x211A },
-  { 0x1D549, 0x211D },
-  { 0x1D551, 0x2124 }
-};
+    {0x1D455, 0x210E}, {0x1D49D, 0x212C}, {0x1D4A0, 0x2130}, {0x1D4A1, 0x2131},
+    {0x1D4A3, 0x210B}, {0x1D4A4, 0x2110}, {0x1D4A7, 0x2112}, {0x1D4A8, 0x2133},
+    {0x1D4AD, 0x211B}, {0x1D4BA, 0x212F}, {0x1D4BC, 0x210A}, {0x1D4C4, 0x2134},
+    {0x1D506, 0x212D}, {0x1D50B, 0x210C}, {0x1D50C, 0x2111}, {0x1D515, 0x211C},
+    {0x1D51D, 0x2128}, {0x1D53A, 0x2102}, {0x1D53F, 0x210D}, {0x1D545, 0x2115},
+    {0x1D547, 0x2119}, {0x1D548, 0x211A}, {0x1D549, 0x211D}, {0x1D551, 0x2124}};
 
 namespace {
 
-struct MathVarMappingWrapper
-{
+struct MathVarMappingWrapper {
   const MathVarMapping* const mTable;
-  explicit MathVarMappingWrapper(const MathVarMapping* aTable) : mTable(aTable) {}
-  uint32_t operator[](size_t index) const {
-    return mTable[index].mKey;
-  }
+  explicit MathVarMappingWrapper(const MathVarMapping* aTable)
+      : mTable(aTable) {}
+  uint32_t operator[](size_t index) const { return mTable[index].mKey; }
 };
 
-} // namespace
+}  // namespace
 
 // Finds a MathVarMapping struct with the specified key (aKey) within aTable.
 // aTable must be an array, whose length is specified by aNumElements
-static uint32_t
-MathvarMappingSearch(uint32_t aKey, const MathVarMapping* aTable, uint32_t aNumElements)
-{
+static uint32_t MathvarMappingSearch(uint32_t aKey,
+                                     const MathVarMapping* aTable,
+                                     uint32_t aNumElements) {
   size_t index;
-  if (BinarySearch(MathVarMappingWrapper(aTable), 0, aNumElements, aKey, &index)) {
+  if (BinarySearch(MathVarMappingWrapper(aTable), 0, aNumElements, aKey,
+                   &index)) {
     return aTable[index].mReplacement;
   }
 
   return 0;
 }
 
-#define GREEK_UPPER_THETA               0x03F4
-#define HOLE_GREEK_UPPER_THETA          0x03A2
-#define NABLA                           0x2207
-#define PARTIAL_DIFFERENTIAL            0x2202
-#define GREEK_UPPER_ALPHA               0x0391
-#define GREEK_UPPER_OMEGA               0x03A9
-#define GREEK_LOWER_ALPHA               0x03B1
-#define GREEK_LOWER_OMEGA               0x03C9
-#define GREEK_LUNATE_EPSILON_SYMBOL     0x03F5
-#define GREEK_THETA_SYMBOL              0x03D1
-#define GREEK_KAPPA_SYMBOL              0x03F0
-#define GREEK_PHI_SYMBOL                0x03D5
-#define GREEK_RHO_SYMBOL                0x03F1
-#define GREEK_PI_SYMBOL                 0x03D6
-#define GREEK_LETTER_DIGAMMA            0x03DC
-#define GREEK_SMALL_LETTER_DIGAMMA      0x03DD
-#define MATH_BOLD_CAPITAL_DIGAMMA       0x1D7CA
-#define MATH_BOLD_SMALL_DIGAMMA         0x1D7CB
+#define GREEK_UPPER_THETA 0x03F4
+#define HOLE_GREEK_UPPER_THETA 0x03A2
+#define NABLA 0x2207
+#define PARTIAL_DIFFERENTIAL 0x2202
+#define GREEK_UPPER_ALPHA 0x0391
+#define GREEK_UPPER_OMEGA 0x03A9
+#define GREEK_LOWER_ALPHA 0x03B1
+#define GREEK_LOWER_OMEGA 0x03C9
+#define GREEK_LUNATE_EPSILON_SYMBOL 0x03F5
+#define GREEK_THETA_SYMBOL 0x03D1
+#define GREEK_KAPPA_SYMBOL 0x03F0
+#define GREEK_PHI_SYMBOL 0x03D5
+#define GREEK_RHO_SYMBOL 0x03F1
+#define GREEK_PI_SYMBOL 0x03D6
+#define GREEK_LETTER_DIGAMMA 0x03DC
+#define GREEK_SMALL_LETTER_DIGAMMA 0x03DD
+#define MATH_BOLD_CAPITAL_DIGAMMA 0x1D7CA
+#define MATH_BOLD_SMALL_DIGAMMA 0x1D7CB
 
-#define LATIN_SMALL_LETTER_DOTLESS_I    0x0131
-#define LATIN_SMALL_LETTER_DOTLESS_J    0x0237
+#define LATIN_SMALL_LETTER_DOTLESS_I 0x0131
+#define LATIN_SMALL_LETTER_DOTLESS_J 0x0237
 
-#define MATH_ITALIC_SMALL_DOTLESS_I     0x1D6A4
-#define MATH_ITALIC_SMALL_DOTLESS_J     0x1D6A5
+#define MATH_ITALIC_SMALL_DOTLESS_I 0x1D6A4
+#define MATH_ITALIC_SMALL_DOTLESS_J 0x1D6A5
 
-#define MATH_BOLD_UPPER_A               0x1D400
-#define MATH_ITALIC_UPPER_A             0x1D434
-#define MATH_BOLD_SMALL_A               0x1D41A
-#define MATH_BOLD_UPPER_ALPHA           0x1D6A8
-#define MATH_BOLD_SMALL_ALPHA           0x1D6C2
-#define MATH_ITALIC_UPPER_ALPHA         0x1D6E2
-#define MATH_BOLD_DIGIT_ZERO            0x1D7CE
-#define MATH_DOUBLE_STRUCK_ZERO         0x1D7D8
+#define MATH_BOLD_UPPER_A 0x1D400
+#define MATH_ITALIC_UPPER_A 0x1D434
+#define MATH_BOLD_SMALL_A 0x1D41A
+#define MATH_BOLD_UPPER_ALPHA 0x1D6A8
+#define MATH_BOLD_SMALL_ALPHA 0x1D6C2
+#define MATH_ITALIC_UPPER_ALPHA 0x1D6E2
+#define MATH_BOLD_DIGIT_ZERO 0x1D7CE
+#define MATH_DOUBLE_STRUCK_ZERO 0x1D7D8
 
-#define MATH_BOLD_UPPER_THETA           0x1D6B9
-#define MATH_BOLD_NABLA                 0x1D6C1
-#define MATH_BOLD_PARTIAL_DIFFERENTIAL  0x1D6DB
-#define MATH_BOLD_EPSILON_SYMBOL        0x1D6DC
-#define MATH_BOLD_THETA_SYMBOL          0x1D6DD
-#define MATH_BOLD_KAPPA_SYMBOL          0x1D6DE
-#define MATH_BOLD_PHI_SYMBOL            0x1D6DF
-#define MATH_BOLD_RHO_SYMBOL            0x1D6E0
-#define MATH_BOLD_PI_SYMBOL             0x1D6E1
+#define MATH_BOLD_UPPER_THETA 0x1D6B9
+#define MATH_BOLD_NABLA 0x1D6C1
+#define MATH_BOLD_PARTIAL_DIFFERENTIAL 0x1D6DB
+#define MATH_BOLD_EPSILON_SYMBOL 0x1D6DC
+#define MATH_BOLD_THETA_SYMBOL 0x1D6DD
+#define MATH_BOLD_KAPPA_SYMBOL 0x1D6DE
+#define MATH_BOLD_PHI_SYMBOL 0x1D6DF
+#define MATH_BOLD_RHO_SYMBOL 0x1D6E0
+#define MATH_BOLD_PI_SYMBOL 0x1D6E1
 
 /*
   Performs the character mapping needed to implement MathML's mathvariant
@@ -277,9 +170,7 @@ MathvarMappingSearch(uint32_t aKey, const MathVarMapping* aTable, uint32_t aNumE
   http://lists.w3.org/Archives/Public/www-math/2013Sep/0012.html and
   https://en.wikipedia.org/wiki/Mathematical_Alphanumeric_Symbols
 */
-static uint32_t
-MathVariant(uint32_t aCh, uint8_t aMathVar)
-{
+static uint32_t MathVariant(uint32_t aCh, uint8_t aMathVar) {
   uint32_t baseChar;
   enum CharacterType {
     kIsLatin,
@@ -344,21 +235,21 @@ MathVariant(uint32_t aCh, uint8_t aMathVar)
     // characters in the Unicode mathematical block.  The constant subtraction
     // represents the number of characters between the start of the sequence
     // (capital A) and the first lowercase letter.
-    baseChar = MATH_BOLD_SMALL_A-MATH_BOLD_UPPER_A + aCh - 'a';
+    baseChar = MATH_BOLD_SMALL_A - MATH_BOLD_UPPER_A + aCh - 'a';
     varType = kIsLatin;
   } else if ('0' <= aCh && aCh <= '9') {
     baseChar = aCh - '0';
     varType = kIsNumber;
   } else if (GREEK_UPPER_ALPHA <= aCh && aCh <= GREEK_UPPER_OMEGA) {
-    baseChar = aCh-GREEK_UPPER_ALPHA;
+    baseChar = aCh - GREEK_UPPER_ALPHA;
     varType = kIsGreekish;
   } else if (GREEK_LOWER_ALPHA <= aCh && aCh <= GREEK_LOWER_OMEGA) {
     // Lowercase Greek comes after uppercase Greek.
     // Note in this instance the presence of an additional character (Nabla)
     // between the end of the uppercase Greek characters and the lowercase
     // ones.
-    baseChar =  MATH_BOLD_SMALL_ALPHA - MATH_BOLD_UPPER_ALPHA
-                + aCh-GREEK_LOWER_ALPHA;
+    baseChar =
+        MATH_BOLD_SMALL_ALPHA - MATH_BOLD_UPPER_ALPHA + aCh - GREEK_LOWER_ALPHA;
     varType = kIsGreekish;
   } else if (0x0600 <= aCh && aCh <= 0x06FF) {
     // Arabic characters are defined within this range
@@ -366,10 +257,10 @@ MathVariant(uint32_t aCh, uint8_t aMathVar)
   } else {
     switch (aCh) {
       case GREEK_UPPER_THETA:
-        baseChar = MATH_BOLD_UPPER_THETA-MATH_BOLD_UPPER_ALPHA;
+        baseChar = MATH_BOLD_UPPER_THETA - MATH_BOLD_UPPER_ALPHA;
         break;
       case NABLA:
-        baseChar = MATH_BOLD_NABLA-MATH_BOLD_UPPER_ALPHA;
+        baseChar = MATH_BOLD_NABLA - MATH_BOLD_UPPER_ALPHA;
         break;
       case PARTIAL_DIFFERENTIAL:
         baseChar = MATH_BOLD_PARTIAL_DIFFERENTIAL - MATH_BOLD_UPPER_ALPHA;
@@ -432,8 +323,9 @@ MathVariant(uint32_t aCh, uint8_t aMathVar)
     // within the number mathvariant range.
     // To this the baseChar calculated earlier is added to obtain the final
     // code point.
-    return baseChar+multiplier*(MATH_DOUBLE_STRUCK_ZERO-MATH_BOLD_DIGIT_ZERO)
-             +MATH_BOLD_DIGIT_ZERO;
+    return baseChar +
+           multiplier * (MATH_DOUBLE_STRUCK_ZERO - MATH_BOLD_DIGIT_ZERO) +
+           MATH_BOLD_DIGIT_ZERO;
   } else if (varType == kIsGreekish) {
     switch (aMathVar) {
       case NS_MATHML_MATHVARIANT_BOLD:
@@ -457,7 +349,7 @@ MathVariant(uint32_t aCh, uint8_t aMathVar)
     }
     // See the kIsNumber case for an explanation of the following calculation
     return baseChar + MATH_BOLD_UPPER_ALPHA +
-             multiplier*(MATH_ITALIC_UPPER_ALPHA - MATH_BOLD_UPPER_ALPHA);
+           multiplier * (MATH_ITALIC_UPPER_ALPHA - MATH_BOLD_UPPER_ALPHA);
   }
 
   uint32_t tempChar;
@@ -507,8 +399,8 @@ MathVariant(uint32_t aCh, uint8_t aMathVar)
     // characters are located within their unicode block (less an offset to
     // avoid _NONE and _NORMAL variants)
     // See the kIsNumber case for an explanation of the following calculation
-    tempChar =  baseChar + MATH_BOLD_UPPER_A +
-                multiplier*(MATH_ITALIC_UPPER_A - MATH_BOLD_UPPER_A);
+    tempChar = baseChar + MATH_BOLD_UPPER_A +
+               multiplier * (MATH_ITALIC_UPPER_A - MATH_BOLD_UPPER_A);
     // There are roughly twenty characters that are located outside of the
     // mathematical block, so the spaces where they ought to be are used
     // as keys for a lookup table containing the correct character mappings.
@@ -524,28 +416,25 @@ MathVariant(uint32_t aCh, uint8_t aMathVar)
     // An Arabic character without a corresponding mapping
     return aCh;
   }
-
 }
 
 #define TT_SSTY TRUETYPE_TAG('s', 's', 't', 'y')
 #define TT_DTLS TRUETYPE_TAG('d', 't', 'l', 's')
 
-void
-MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
-                                     mozilla::gfx::DrawTarget* aRefDrawTarget,
-                                     gfxMissingFontRecorder* aMFR)
-{
+void MathMLTextRunFactory::RebuildTextRun(
+    nsTransformedTextRun* aTextRun, mozilla::gfx::DrawTarget* aRefDrawTarget,
+    gfxMissingFontRecorder* aMFR) {
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
 
   nsAutoString convertedString;
-  AutoTArray<bool,50> charsToMergeArray;
-  AutoTArray<bool,50> deletedCharsArray;
-  AutoTArray<RefPtr<nsTransformedCharStyle>,50> styleArray;
-  AutoTArray<uint8_t,50> canBreakBeforeArray;
+  AutoTArray<bool, 50> charsToMergeArray;
+  AutoTArray<bool, 50> deletedCharsArray;
+  AutoTArray<RefPtr<nsTransformedCharStyle>, 50> styleArray;
+  AutoTArray<uint8_t, 50> canBreakBeforeArray;
   bool mergeNeeded = false;
 
-  bool singleCharMI =
-    !!(aTextRun->GetFlags2() & nsTextFrameUtils::Flags::TEXT_IS_SINGLE_CHAR_MI);
+  bool singleCharMI = !!(aTextRun->GetFlags2() &
+                         nsTextFrameUtils::Flags::TEXT_IS_SINGLE_CHAR_MI);
 
   uint32_t length = aTextRun->GetLength();
   const char16_t* str = aTextRun->mString.BeginReading();
@@ -567,20 +456,20 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       }
       if (mSSTYScriptLevel && !foundSSTY) {
         uint8_t sstyLevel = 0;
-        float scriptScaling = pow(styles[0]->mScriptSizeMultiplier,
-                                  mSSTYScriptLevel);
+        float scriptScaling =
+            pow(styles[0]->mScriptSizeMultiplier, mSSTYScriptLevel);
         static_assert(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER < 1,
                       "Shouldn't it make things smaller?");
         /*
           An SSTY level of 2 is set if the scaling factor is less than or equal
           to halfway between that for a scriptlevel of 1 (0.71) and that of a
-          scriptlevel of 2 (0.71^2), assuming the default script size multiplier.
-          An SSTY level of 1 is set if the script scaling factor is less than
-          or equal that for a scriptlevel of 1 assuming the default script size
-          multiplier.
+          scriptlevel of 2 (0.71^2), assuming the default script size
+          multiplier. An SSTY level of 1 is set if the script scaling factor is
+          less than or equal that for a scriptlevel of 1 assuming the default
+          script size multiplier.
 
-          User specified values of script size multiplier will change the scaling
-          factor which mSSTYScriptLevel values correspond to.
+          User specified values of script size multiplier will change the
+          scaling factor which mSSTYScriptLevel values correspond to.
 
           In the event that the script size multiplier actually makes things
           larger, no change is made.
@@ -590,9 +479,10 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         */
         if (scriptScaling <= (NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER +
                               (NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER *
-                               NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER))/2) {
-          // Currently only the first two ssty settings are used, so two is large
-          // as we go
+                               NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER)) /
+                                 2) {
+          // Currently only the first two ssty settings are used, so two is
+          // large as we go
           sstyLevel = 2;
         } else if (scriptScaling <= NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER) {
           sstyLevel = 1;
@@ -660,7 +550,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     if (mathVar == NS_MATHML_MATHVARIANT_BOLD ||
         mathVar == NS_MATHML_MATHVARIANT_BOLD_ITALIC ||
         mathVar == NS_MATHML_MATHVARIANT_ITALIC) {
-      if (ch == ch2  && ch != 0x20 && ch != 0xA0) {
+      if (ch == ch2 && ch != 0x20 && ch != 0xA0) {
         // Don't apply the CSS style if a character cannot be
         // transformed. There is an exception for whitespace as it is both
         // common and innocuous.
@@ -671,8 +561,8 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         // Alphanumeric Symbols. Hence we check whether the transformed
         // character is actually available.
         gfxTextRange::MatchType matchType;
-        RefPtr<gfxFont> mathFont = fontGroup->
-          FindFontForChar(ch2, 0, 0, unicode::Script::COMMON, nullptr, &matchType);
+        RefPtr<gfxFont> mathFont = fontGroup->FindFontForChar(
+            ch2, 0, 0, unicode::Script::COMMON, nullptr, &matchType);
         if (mathFont) {
           // Don't apply the CSS style if there is a math font for at least one
           // of the transformed character in this text run.
@@ -699,8 +589,9 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       convertedString.Append(L_SURROGATE(ch2));
       ++extraChars;
       if (!IS_IN_BMP(ch)) {
-        deletedCharsArray.AppendElement(true); // not exactly deleted, but
-                                          // the trailing surrogate is skipped
+        deletedCharsArray.AppendElement(
+            true);  // not exactly deleted, but
+                    // the trailing surrogate is skipped
         ++i;
       }
     }
@@ -750,7 +641,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     params.userFontSet = pc->GetUserFontSet();
     params.textPerf = pc->GetTextPerfMetrics();
     RefPtr<nsFontMetrics> metrics =
-      pc->DeviceContext()->GetMetricsFor(font, params);
+        pc->DeviceContext()->GetMetricsFor(font, params);
     newFontGroup = metrics->GetThebesFontGroup();
   }
 
@@ -762,18 +653,17 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
   if (mInnerTransformingTextRunFactory) {
     transformedChild = mInnerTransformingTextRunFactory->MakeTextRun(
-        convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, newFontGroup, flags, nsTextFrameUtils::Flags(),
-        std::move(styleArray), false);
+        convertedString.BeginReading(), convertedString.Length(), &innerParams,
+        newFontGroup, flags, nsTextFrameUtils::Flags(), std::move(styleArray),
+        false);
     child = transformedChild.get();
   } else {
     cachedChild = newFontGroup->MakeTextRun(
-        convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, flags, nsTextFrameUtils::Flags(), aMFR);
+        convertedString.BeginReading(), convertedString.Length(), &innerParams,
+        flags, nsTextFrameUtils::Flags(), aMFR);
     child = cachedChild.get();
   }
-  if (!child)
-    return;
+  if (!child) return;
 
   typedef gfxTextRun::Range Range;
 

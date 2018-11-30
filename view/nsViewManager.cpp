@@ -20,7 +20,7 @@
 #include "GeckoProfiler.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/Preferences.h"
-#include "nsContentUtils.h" // for nsAutoScriptBlocker
+#include "nsContentUtils.h"  // for nsAutoScriptBlocker
 #include "nsLayoutUtils.h"
 #include "Layers.h"
 #include "gfxPlatform.h"
@@ -39,14 +39,15 @@
 
    We assume that a widget is z-ordered on top of its parent.
 
-   We do NOT assume anything about the relative z-ordering of sibling widgets. Even though
-   we ask for a specific z-order, we don't assume that widget z-ordering actually works.
+   We do NOT assume anything about the relative z-ordering of sibling widgets.
+   Even though we ask for a specific z-order, we don't assume that widget
+   z-ordering actually works.
 */
 
 using namespace mozilla;
 using namespace mozilla::layers;
 
-#define NSCOORD_NONE      INT32_MIN
+#define NSCOORD_NONE INT32_MIN
 
 #undef DEBUG_MOUSE_LOCATION
 
@@ -55,15 +56,14 @@ nsTArray<nsViewManager*>* nsViewManager::gViewManagers = nullptr;
 uint32_t nsViewManager::gLastUserEventTime = 0;
 
 nsViewManager::nsViewManager()
-  : mPresShell(nullptr)
-  , mDelayedResize(NSCOORD_NONE, NSCOORD_NONE)
-  , mRootView(nullptr)
-  , mRootViewManager(this)
-  , mRefreshDisableCount(0)
-  , mPainting(false)
-  , mRecursiveRefreshPending(false)
-  , mHasPendingWidgetGeometryChanges(false)
-{
+    : mPresShell(nullptr),
+      mDelayedResize(NSCOORD_NONE, NSCOORD_NONE),
+      mRootView(nullptr),
+      mRootViewManager(this),
+      mRefreshDisableCount(0),
+      mPainting(false),
+      mRecursiveRefreshPending(false),
+      mHasPendingWidgetGeometryChanges(false) {
   if (gViewManagers == nullptr) {
     // Create an array to hold a list of view managers
     gViewManagers = new nsTArray<nsViewManager*>;
@@ -72,8 +72,7 @@ nsViewManager::nsViewManager()
   gViewManagers->AppendElement(this);
 }
 
-nsViewManager::~nsViewManager()
-{
+nsViewManager::~nsViewManager() {
   if (mRootView) {
     // Destroy any remaining views
     mRootView->Destroy();
@@ -90,8 +89,10 @@ nsViewManager::~nsViewManager()
 #ifdef DEBUG
   bool removed =
 #endif
-    gViewManagers->RemoveElement(this);
-  NS_ASSERTION(removed, "Viewmanager instance was not in the global list of viewmanagers");
+      gViewManagers->RemoveElement(this);
+  NS_ASSERTION(
+      removed,
+      "Viewmanager instance was not in the global list of viewmanagers");
 
   if (gViewManagers->IsEmpty()) {
     // There aren't any more view managers so
@@ -100,14 +101,14 @@ nsViewManager::~nsViewManager()
     gViewManagers = nullptr;
   }
 
-  MOZ_RELEASE_ASSERT(!mPresShell, "Releasing nsViewManager without having called Destroy on the PresShell!");
+  MOZ_RELEASE_ASSERT(!mPresShell,
+                     "Releasing nsViewManager without having called Destroy on "
+                     "the PresShell!");
 }
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-nsresult
-nsViewManager::Init(nsDeviceContext* aContext)
-{
+nsresult nsViewManager::Init(nsDeviceContext* aContext) {
   MOZ_ASSERT(nullptr != aContext, "null ptr");
 
   if (nullptr == aContext) {
@@ -121,12 +122,9 @@ nsViewManager::Init(nsDeviceContext* aContext)
   return NS_OK;
 }
 
-nsView*
-nsViewManager::CreateView(const nsRect& aBounds,
-                          nsView* aParent,
-                          nsViewVisibility aVisibilityFlag)
-{
-  auto *v = new nsView(this, aVisibilityFlag);
+nsView* nsViewManager::CreateView(const nsRect& aBounds, nsView* aParent,
+                                  nsViewVisibility aVisibilityFlag) {
+  auto* v = new nsView(this, aVisibilityFlag);
   v->SetParent(aParent);
   v->SetPosition(aBounds.X(), aBounds.Y());
   nsRect dim(0, 0, aBounds.Width(), aBounds.Height());
@@ -134,9 +132,7 @@ nsViewManager::CreateView(const nsRect& aBounds,
   return v;
 }
 
-void
-nsViewManager::SetRootView(nsView *aView)
-{
+void nsViewManager::SetRootView(nsView* aView) {
   MOZ_ASSERT(!aView || aView->GetViewManager() == this,
              "Unexpected viewmanager on root view");
 
@@ -159,9 +155,7 @@ nsViewManager::SetRootView(nsView *aView)
   // Else don't touch mRootViewManager
 }
 
-void
-nsViewManager::GetWindowDimensions(nscoord *aWidth, nscoord *aHeight)
-{
+void nsViewManager::GetWindowDimensions(nscoord* aWidth, nscoord* aHeight) {
   if (nullptr != mRootView) {
     if (mDelayedResize == nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
       nsRect dim = mRootView->GetDimensions();
@@ -171,16 +165,13 @@ nsViewManager::GetWindowDimensions(nscoord *aWidth, nscoord *aHeight)
       *aWidth = mDelayedResize.width;
       *aHeight = mDelayedResize.height;
     }
+  } else {
+    *aWidth = 0;
+    *aHeight = 0;
   }
-  else
-    {
-      *aWidth = 0;
-      *aHeight = 0;
-    }
 }
 
-void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
-{
+void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight) {
   nsRect oldDim = mRootView->GetDimensions();
   nsRect newDim(0, 0, aWidth, aHeight);
   // We care about resizes even when one dimension is already zero.
@@ -188,16 +179,15 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
     // Don't resize the widget. It is already being set elsewhere.
     mRootView->SetDimensions(newDim, true, false);
     if (mPresShell)
-      mPresShell->ResizeReflow(aWidth, aHeight, oldDim.Width(), oldDim.Height());
+      mPresShell->ResizeReflow(aWidth, aHeight, oldDim.Width(),
+                               oldDim.Height());
   }
 }
 
-bool
-nsViewManager::ShouldDelayResize() const
-{
+bool nsViewManager::ShouldDelayResize() const {
   MOZ_ASSERT(mRootView);
-  if (!mRootView->IsEffectivelyVisible() ||
-      !mPresShell || !mPresShell->IsVisible()) {
+  if (!mRootView->IsEffectivelyVisible() || !mPresShell ||
+      !mPresShell->IsVisible()) {
     return true;
   }
   if (nsRefreshDriver* rd = mPresShell->GetRefreshDriver()) {
@@ -208,9 +198,8 @@ nsViewManager::ShouldDelayResize() const
   return false;
 }
 
-void
-nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight, bool aDelayResize)
-{
+void nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight,
+                                        bool aDelayResize) {
   if (mRootView) {
     if (!ShouldDelayResize() && !aDelayResize) {
       if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
@@ -235,9 +224,7 @@ nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight, bool aDelayR
   }
 }
 
-void
-nsViewManager::FlushDelayedResize(bool aDoReflow)
-{
+void nsViewManager::FlushDelayedResize(bool aDoReflow) {
   if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
     if (aDoReflow) {
       DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
@@ -254,24 +241,20 @@ nsViewManager::FlushDelayedResize(bool aDoReflow)
 // Convert aIn from being relative to and in appunits of aFromView, to being
 // relative to and in appunits of aToView.
 static nsRegion ConvertRegionBetweenViews(const nsRegion& aIn,
-                                          nsView* aFromView,
-                                          nsView* aToView)
-{
+                                          nsView* aFromView, nsView* aToView) {
   nsRegion out = aIn;
   out.MoveBy(aFromView->GetOffsetTo(aToView));
   out = out.ScaleToOtherAppUnitsRoundOut(
-    aFromView->GetViewManager()->AppUnitsPerDevPixel(),
-    aToView->GetViewManager()->AppUnitsPerDevPixel());
+      aFromView->GetViewManager()->AppUnitsPerDevPixel(),
+      aToView->GetViewManager()->AppUnitsPerDevPixel());
   return out;
 }
 
-nsView* nsViewManager::GetDisplayRootFor(nsView* aView)
-{
-  nsView *displayRoot = aView;
+nsView* nsViewManager::GetDisplayRootFor(nsView* aView) {
+  nsView* displayRoot = aView;
   for (;;) {
-    nsView *displayParent = displayRoot->GetParent();
-    if (!displayParent)
-      return displayRoot;
+    nsView* displayParent = displayRoot->GetParent();
+    if (!displayParent) return displayRoot;
 
     if (displayRoot->GetFloating() && !displayParent->GetFloating())
       return displayRoot;
@@ -283,7 +266,8 @@ nsView* nsViewManager::GetDisplayRootFor(nsView* aView)
     nsIWidget* widget = displayRoot->GetWidget();
     if (widget && widget->WindowType() == eWindowType_popup) {
       NS_ASSERTION(displayRoot->GetFloating() && displayParent->GetFloating(),
-        "this should only happen with floating views that have floating parents");
+                   "this should only happen with floating views that have "
+                   "floating parents");
       return displayRoot;
     }
 
@@ -296,8 +280,8 @@ nsView* nsViewManager::GetDisplayRootFor(nsView* aView)
    aContext may be null, in which case layers should be used for
    rendering.
 */
-void nsViewManager::Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion)
-{
+void nsViewManager::Refresh(nsView* aView,
+                            const LayoutDeviceIntRegion& aRegion) {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
   if (mPresShell && mPresShell->IsNeverPainting()) {
@@ -314,14 +298,16 @@ void nsViewManager::Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion)
 #ifdef DEBUG_roc
     nsRect viewRect = aView->GetDimensions();
     nsRect damageRect = damageRegion.GetBounds();
-    printf_stderr("XXX Damage rectangle (%d,%d,%d,%d) does not intersect the widget's view (%d,%d,%d,%d)!\n",
-           damageRect.x, damageRect.y, damageRect.width, damageRect.height,
-           viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+    printf_stderr(
+        "XXX Damage rectangle (%d,%d,%d,%d) does not intersect the widget's "
+        "view (%d,%d,%d,%d)!\n",
+        damageRect.x, damageRect.y, damageRect.width, damageRect.height,
+        viewRect.x, viewRect.y, viewRect.width, viewRect.height);
 #endif
     return;
   }
 
-  nsIWidget *widget = aView->GetWidget();
+  nsIWidget* widget = aView->GetWidget();
   if (!widget) {
     return;
   }
@@ -346,19 +332,19 @@ void nsViewManager::Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion)
       }
 #endif
       uint32_t paintFlags = nsIPresShell::PAINT_COMPOSITE;
-      LayerManager *manager = widget->GetLayerManager();
+      LayerManager* manager = widget->GetLayerManager();
       if (!manager->NeedsWidgetInvalidation()) {
         manager->FlushRendering();
       } else {
-        mPresShell->Paint(aView, damageRegion,
-                          paintFlags);
+        mPresShell->Paint(aView, damageRegion, paintFlags);
       }
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
         printf_stderr("--ENDCOMPOSITE--\n");
       }
 #endif
-      mozilla::StartupTimeline::RecordOnce(mozilla::StartupTimeline::FIRST_PAINT);
+      mozilla::StartupTimeline::RecordOnce(
+          mozilla::StartupTimeline::FIRST_PAINT);
     }
 
     SetPainting(false);
@@ -370,10 +356,8 @@ void nsViewManager::Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion)
   }
 }
 
-void
-nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
-                                            bool aFlushDirtyRegion)
-{
+void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
+                                                 bool aFlushDirtyRegion) {
   NS_ASSERTION(IsRootVM(), "Updates will be missed");
   if (!aView) {
     return;
@@ -400,7 +384,7 @@ nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
     }
   }
   if (rootShell->GetViewManager() != this) {
-    return; // presentation might have been torn down
+    return;  // presentation might have been torn down
   }
   if (aFlushDirtyRegion) {
     nsAutoScriptBlocker scriptBlocker;
@@ -416,18 +400,16 @@ nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   }
 }
 
-void
-nsViewManager::ProcessPendingUpdatesRecurse(nsView* aView,
-                                            AutoTArray<nsCOMPtr<nsIWidget>, 1>& aWidgets)
-{
+void nsViewManager::ProcessPendingUpdatesRecurse(
+    nsView* aView, AutoTArray<nsCOMPtr<nsIWidget>, 1>& aWidgets) {
   if (mPresShell && mPresShell->IsNeverPainting()) {
     return;
   }
 
   for (nsView* childView = aView->GetFirstChild(); childView;
        childView = childView->GetNextSibling()) {
-    childView->GetViewManager()->
-      ProcessPendingUpdatesRecurse(childView, aWidgets);
+    childView->GetViewManager()->ProcessPendingUpdatesRecurse(childView,
+                                                              aWidgets);
   }
 
   nsIWidget* widget = aView->GetWidget();
@@ -438,19 +420,17 @@ nsViewManager::ProcessPendingUpdatesRecurse(nsView* aView,
   }
 }
 
-void
-nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget)
-{
+void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
   if (aWidget->NeedsPaint()) {
     // If an ancestor widget was hidden and then shown, we could
     // have a delayed resize to handle.
     for (RefPtr<nsViewManager> vm = this; vm;
          vm = vm->mRootView->GetParent()
-           ? vm->mRootView->GetParent()->GetViewManager()
-           : nullptr) {
+                  ? vm->mRootView->GetParent()->GetViewManager()
+                  : nullptr) {
       if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-          vm->mRootView->IsEffectivelyVisible() &&
-          vm->mPresShell && vm->mPresShell->IsVisible()) {
+          vm->mRootView->IsEffectivelyVisible() && vm->mPresShell &&
+          vm->mPresShell->IsVisible()) {
         vm->FlushDelayedResize(true);
       }
     }
@@ -461,10 +441,10 @@ nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget)
       return;
     }
 
-    nsIWidgetListener* previousListener = aWidget->GetPreviouslyAttachedWidgetListener();
+    nsIWidgetListener* previousListener =
+        aWidget->GetPreviouslyAttachedWidgetListener();
 
-    if (previousListener &&
-        previousListener != view &&
+    if (previousListener && previousListener != view &&
         view->IsPrimaryFramePaintSuppressed()) {
       return;
     }
@@ -472,8 +452,9 @@ nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget)
     if (mPresShell) {
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n",
-                      mPresShell, view, aWidget);
+        printf_stderr(
+            "---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n",
+            mPresShell, view, aWidget);
       }
 #endif
 
@@ -490,13 +471,11 @@ nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget)
   FlushDirtyRegionToWidget(nsView::GetViewFor(aWidget));
 }
 
-void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
-{
+void nsViewManager::FlushDirtyRegionToWidget(nsView* aView) {
   NS_ASSERTION(aView->GetViewManager() == this,
                "FlushDirtyRegionToWidget called on view we don't own");
 
-  if (!aView->HasNonEmptyDirtyRegion())
-    return;
+  if (!aView->HasNonEmptyDirtyRegion()) return;
 
   nsRegion* dirtyRegion = aView->GetDirtyRegion();
   nsView* nearestViewWithWidget = aView;
@@ -505,34 +484,27 @@ void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
     nearestViewWithWidget = nearestViewWithWidget->GetParent();
   }
   nsRegion r =
-    ConvertRegionBetweenViews(*dirtyRegion, aView, nearestViewWithWidget);
+      ConvertRegionBetweenViews(*dirtyRegion, aView, nearestViewWithWidget);
 
   nsViewManager* widgetVM = nearestViewWithWidget->GetViewManager();
   widgetVM->InvalidateWidgetArea(nearestViewWithWidget, r);
   dirtyRegion->SetEmpty();
 }
 
-void
-nsViewManager::InvalidateView(nsView *aView)
-{
+void nsViewManager::InvalidateView(nsView* aView) {
   // Mark the entire view as damaged
   InvalidateView(aView, aView->GetDimensions());
 }
 
-static void
-AddDirtyRegion(nsView *aView, const nsRegion &aDamagedRegion)
-{
+static void AddDirtyRegion(nsView* aView, const nsRegion& aDamagedRegion) {
   nsRegion* dirtyRegion = aView->GetDirtyRegion();
-  if (!dirtyRegion)
-    return;
+  if (!dirtyRegion) return;
 
   dirtyRegion->Or(*dirtyRegion, aDamagedRegion);
   dirtyRegion->SimplifyOutward(8);
 }
 
-void
-nsViewManager::PostPendingUpdate()
-{
+void nsViewManager::PostPendingUpdate() {
   nsViewManager* rootVM = RootViewManager();
   rootVM->mHasPendingWidgetGeometryChanges = true;
   if (rootVM->mPresShell) {
@@ -544,10 +516,8 @@ nsViewManager::PostPendingUpdate()
  * @param aDamagedRegion this region, relative to aWidgetView, is invalidated in
  * every widget child of aWidgetView, plus aWidgetView's own widget
  */
-void
-nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
-                                    const nsRegion &aDamagedRegion)
-{
+void nsViewManager::InvalidateWidgetArea(nsView* aWidgetView,
+                                         const nsRegion& aDamagedRegion) {
   NS_ASSERTION(aWidgetView->GetViewManager() == this,
                "InvalidateWidgetArea called on view we don't own");
   nsIWidget* widget = aWidgetView->GetWidget();
@@ -576,8 +546,7 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
   // some subset of that.
   nsRegion children;
   if (widget->GetTransparencyMode() != eTransparencyTransparent) {
-    for (nsIWidget* childWidget = widget->GetFirstChild();
-         childWidget;
+    for (nsIWidget* childWidget = widget->GetFirstChild(); childWidget;
          childWidget = childWidget->GetNextSibling()) {
       nsView* view = nsView::GetViewFor(childWidget);
       NS_ASSERTION(view != aWidgetView, "will recur infinitely");
@@ -598,7 +567,7 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
         childWidget->GetWindowClipRegion(&clipRects);
         for (uint32_t i = 0; i < clipRects.Length(); ++i) {
           nsRect rr = LayoutDeviceIntRect::ToAppUnits(
-            clipRects[i] + bounds.TopLeft(), AppUnitsPerDevPixel());
+              clipRects[i] + bounds.TopLeft(), AppUnitsPerDevPixel());
           children.Or(children, rr - aWidgetView->ViewToWidgetOffset());
           children.SimplifyInward(20);
         }
@@ -618,9 +587,7 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
   }
 }
 
-static bool
-ShouldIgnoreInvalidation(nsViewManager* aVM)
-{
+static bool ShouldIgnoreInvalidation(nsViewManager* aVM) {
   while (aVM) {
     nsIPresShell* shell = aVM->GetPresShell();
     if (!shell || shell->ShouldIgnoreInvalidation()) {
@@ -632,9 +599,7 @@ ShouldIgnoreInvalidation(nsViewManager* aVM)
   return false;
 }
 
-void
-nsViewManager::InvalidateView(nsView *aView, const nsRect &aRect)
-{
+void nsViewManager::InvalidateView(nsView* aView, const nsRect& aRect) {
   // If painting is suppressed in the presshell or an ancestor drop all
   // invalidates, it will invalidate everything when it unsuppresses.
   if (ShouldIgnoreInvalidation(this)) {
@@ -644,10 +609,8 @@ nsViewManager::InvalidateView(nsView *aView, const nsRect &aRect)
   InvalidateViewNoSuppression(aView, aRect);
 }
 
-void
-nsViewManager::InvalidateViewNoSuppression(nsView *aView,
-                                           const nsRect &aRect)
-{
+void nsViewManager::InvalidateViewNoSuppression(nsView* aView,
+                                                const nsRect& aRect) {
   MOZ_ASSERT(nullptr != aView, "null view");
 
   NS_ASSERTION(aView->GetViewManager() == this,
@@ -673,9 +636,7 @@ nsViewManager::InvalidateViewNoSuppression(nsView *aView,
   AddDirtyRegion(displayRoot, nsRegion(damagedRect));
 }
 
-void
-nsViewManager::InvalidateAllViews()
-{
+void nsViewManager::InvalidateAllViews() {
   if (RootViewManager() != this) {
     return RootViewManager()->InvalidateAllViews();
   }
@@ -683,21 +644,19 @@ nsViewManager::InvalidateAllViews()
   InvalidateViews(mRootView);
 }
 
-void nsViewManager::InvalidateViews(nsView *aView)
-{
+void nsViewManager::InvalidateViews(nsView* aView) {
   // Invalidate this view.
   InvalidateView(aView);
 
   // Invalidate all children as well.
   nsView* childView = aView->GetFirstChild();
-  while (nullptr != childView)  {
+  while (nullptr != childView) {
     childView->GetViewManager()->InvalidateViews(childView);
     childView = childView->GetNextSibling();
   }
 }
 
-void nsViewManager::WillPaintWindow(nsIWidget* aWidget)
-{
+void nsViewManager::WillPaintWindow(nsIWidget* aWidget) {
   RefPtr<nsIWidget> widget(aWidget);
   if (widget) {
     nsView* view = nsView::GetViewFor(widget);
@@ -721,13 +680,12 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget)
 }
 
 bool nsViewManager::PaintWindow(nsIWidget* aWidget,
-                                const LayoutDeviceIntRegion& aRegion)
-{
-  if (!aWidget || !mContext)
-    return false;
+                                const LayoutDeviceIntRegion& aRegion) {
+  if (!aWidget || !mContext) return false;
 
-  NS_ASSERTION(IsPaintingAllowed(),
-               "shouldn't be receiving paint events while painting is disallowed!");
+  NS_ASSERTION(
+      IsPaintingAllowed(),
+      "shouldn't be receiving paint events while painting is disallowed!");
 
   // Get the view pointer here since NS_WILL_PAINT might have
   // destroyed it during CallWillPaintOnObservers (bug 378273).
@@ -739,19 +697,15 @@ bool nsViewManager::PaintWindow(nsIWidget* aWidget,
   return true;
 }
 
-void nsViewManager::DidPaintWindow()
-{
+void nsViewManager::DidPaintWindow() {
   nsCOMPtr<nsIPresShell> shell = mPresShell;
   if (shell) {
     shell->DidPaintWindow();
   }
 }
 
-void
-nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
-                             nsView* aView,
-                             nsEventStatus* aStatus)
-{
+void nsViewManager::DispatchEvent(WidgetGUIEvent* aEvent, nsView* aView,
+                                  nsEventStatus* aStatus) {
   AUTO_PROFILER_LABEL("nsViewManager::DispatchEvent", OTHER);
 
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
@@ -763,8 +717,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
        // create and destroy widgets.
        mouseEvent->mMessage != eMouseExitFromWidget &&
        mouseEvent->mMessage != eMouseEnterIntoWidget) ||
-      aEvent->HasKeyEventMessage() ||
-      aEvent->HasIMEEventMessage() ||
+      aEvent->HasKeyEventMessage() || aEvent->HasIMEEventMessage() ||
       aEvent->mMessage == ePluginInputEvent) {
     gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
@@ -780,11 +733,10 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
 
   // If the view has no frame, look for a view that does.
   nsIFrame* frame = view->GetFrame();
-  if (!frame &&
-      (dispatchUsingCoordinates || aEvent->HasKeyEventMessage() ||
-       aEvent->IsIMERelatedEvent() ||
-       aEvent->IsNonRetargetedNativeEventDelivererForPlugin() ||
-       aEvent->HasPluginActivationEventMessage())) {
+  if (!frame && (dispatchUsingCoordinates || aEvent->HasKeyEventMessage() ||
+                 aEvent->IsIMERelatedEvent() ||
+                 aEvent->IsNonRetargetedNativeEventDelivererForPlugin() ||
+                 aEvent->HasPluginActivationEventMessage())) {
     while (view && !view->GetFrame()) {
       view = view->GetParent();
     }
@@ -800,8 +752,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
     // want to cause its destruction in, say, some JavaScript event handler.
     nsCOMPtr<nsIPresShell> shell = view->GetViewManager()->GetPresShell();
     if (shell) {
-      if (aEvent->mMessage == eMouseDown ||
-          aEvent->mMessage == eMouseUp) {
+      if (aEvent->mMessage == eMouseDown || aEvent->mMessage == eMouseUp) {
         AutoWeakFrame weakFrame(frame);
         shell->FlushPendingNotifications(FlushType::Layout);
         if (!weakFrame.IsAlive()) {
@@ -810,7 +761,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
         }
       }
       shell->HandleEvent(frame, aEvent, false, aStatus);
-	  return;
+      return;
     }
   }
 
@@ -819,8 +770,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
 
 // Recursively reparent widgets if necessary
 
-void nsViewManager::ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget)
-{
+void nsViewManager::ReparentChildWidgets(nsView* aView, nsIWidget* aNewWidget) {
   MOZ_ASSERT(aNewWidget, "null widget");
 
   if (aView->HasWidget()) {
@@ -845,15 +795,14 @@ void nsViewManager::ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget)
   // Need to check each of the views children to see
   // if they have a widget and reparent it.
 
-  for (nsView *kid = aView->GetFirstChild(); kid; kid = kid->GetNextSibling()) {
+  for (nsView* kid = aView->GetFirstChild(); kid; kid = kid->GetNextSibling()) {
     ReparentChildWidgets(kid, aNewWidget);
   }
 }
 
 // Reparent a view and its descendant views widgets if necessary
 
-void nsViewManager::ReparentWidgets(nsView* aView, nsView *aParent)
-{
+void nsViewManager::ReparentWidgets(nsView* aView, nsView* aParent) {
   MOZ_ASSERT(aParent, "Must have a parent");
   MOZ_ASSERT(aView, "Must have a view");
 
@@ -874,90 +823,84 @@ void nsViewManager::ReparentWidgets(nsView* aView, nsView *aParent)
   }
 }
 
-void
-nsViewManager::InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
-                           bool aAfter)
-{
+void nsViewManager::InsertChild(nsView* aParent, nsView* aChild,
+                                nsView* aSibling, bool aAfter) {
   MOZ_ASSERT(nullptr != aParent, "null ptr");
   MOZ_ASSERT(nullptr != aChild, "null ptr");
   NS_ASSERTION(aSibling == nullptr || aSibling->GetParent() == aParent,
                "tried to insert view with invalid sibling");
-  NS_ASSERTION(!IsViewInserted(aChild), "tried to insert an already-inserted view");
+  NS_ASSERTION(!IsViewInserted(aChild),
+               "tried to insert an already-inserted view");
 
-  if ((nullptr != aParent) && (nullptr != aChild))
-    {
-      // if aAfter is set, we will insert the child after 'prev' (i.e. after 'kid' in document
-      // order, otherwise after 'kid' (i.e. before 'kid' in document order).
+  if ((nullptr != aParent) && (nullptr != aChild)) {
+    // if aAfter is set, we will insert the child after 'prev' (i.e. after 'kid'
+    // in document order, otherwise after 'kid' (i.e. before 'kid' in document
+    // order).
 
-      if (nullptr == aSibling) {
-        if (aAfter) {
-          // insert at end of document order, i.e., before first view
-          // this is the common case, by far
-          aParent->InsertChild(aChild, nullptr);
-          ReparentWidgets(aChild, aParent);
-        } else {
-          // insert at beginning of document order, i.e., after last view
-          nsView *kid = aParent->GetFirstChild();
-          nsView *prev = nullptr;
-          while (kid) {
-            prev = kid;
-            kid = kid->GetNextSibling();
-          }
-          // prev is last view or null if there are no children
-          aParent->InsertChild(aChild, prev);
-          ReparentWidgets(aChild, aParent);
-        }
+    if (nullptr == aSibling) {
+      if (aAfter) {
+        // insert at end of document order, i.e., before first view
+        // this is the common case, by far
+        aParent->InsertChild(aChild, nullptr);
+        ReparentWidgets(aChild, aParent);
       } else {
-        nsView *kid = aParent->GetFirstChild();
-        nsView *prev = nullptr;
-        while (kid && aSibling != kid) {
-          //get the next sibling view
+        // insert at beginning of document order, i.e., after last view
+        nsView* kid = aParent->GetFirstChild();
+        nsView* prev = nullptr;
+        while (kid) {
           prev = kid;
           kid = kid->GetNextSibling();
         }
-        NS_ASSERTION(kid != nullptr,
-                     "couldn't find sibling in child list");
-        if (aAfter) {
-          // insert after 'kid' in document order, i.e. before in view order
-          aParent->InsertChild(aChild, prev);
-          ReparentWidgets(aChild, aParent);
-        } else {
-          // insert before 'kid' in document order, i.e. after in view order
-          aParent->InsertChild(aChild, kid);
-          ReparentWidgets(aChild, aParent);
-        }
+        // prev is last view or null if there are no children
+        aParent->InsertChild(aChild, prev);
+        ReparentWidgets(aChild, aParent);
       }
-
-      // if the parent view is marked as "floating", make the newly added view float as well.
-      if (aParent->GetFloating())
-        aChild->SetFloating(true);
+    } else {
+      nsView* kid = aParent->GetFirstChild();
+      nsView* prev = nullptr;
+      while (kid && aSibling != kid) {
+        // get the next sibling view
+        prev = kid;
+        kid = kid->GetNextSibling();
+      }
+      NS_ASSERTION(kid != nullptr, "couldn't find sibling in child list");
+      if (aAfter) {
+        // insert after 'kid' in document order, i.e. before in view order
+        aParent->InsertChild(aChild, prev);
+        ReparentWidgets(aChild, aParent);
+      } else {
+        // insert before 'kid' in document order, i.e. after in view order
+        aParent->InsertChild(aChild, kid);
+        ReparentWidgets(aChild, aParent);
+      }
     }
+
+    // if the parent view is marked as "floating", make the newly added view
+    // float as well.
+    if (aParent->GetFloating()) aChild->SetFloating(true);
+  }
 }
 
-void
-nsViewManager::RemoveChild(nsView *aChild)
-{
+void nsViewManager::RemoveChild(nsView* aChild) {
   NS_ASSERTION(aChild, "aChild must not be null");
 
   nsView* parent = aChild->GetParent();
 
   if (nullptr != parent) {
-    NS_ASSERTION(aChild->GetViewManager() == this ||
-                 parent->GetViewManager() == this, "wrong view manager");
+    NS_ASSERTION(
+        aChild->GetViewManager() == this || parent->GetViewManager() == this,
+        "wrong view manager");
     parent->RemoveChild(aChild);
   }
 }
 
-void
-nsViewManager::MoveViewTo(nsView *aView, nscoord aX, nscoord aY)
-{
+void nsViewManager::MoveViewTo(nsView* aView, nscoord aX, nscoord aY) {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
   aView->SetPosition(aX, aY);
 }
 
-void
-nsViewManager::ResizeView(nsView *aView, const nsRect &aRect, bool aRepaintExposedAreaOnly)
-{
+void nsViewManager::ResizeView(nsView* aView, const nsRect& aRect,
+                               bool aRepaintExposedAreaOnly) {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
   nsRect oldDimensions = aView->GetDimensions();
@@ -972,17 +915,14 @@ nsViewManager::ResizeView(nsView *aView, const nsRect &aRect, bool aRepaintExpos
   // because layout will change it back again if necessary.
 }
 
-void
-nsViewManager::SetViewFloating(nsView *aView, bool aFloating)
-{
+void nsViewManager::SetViewFloating(nsView* aView, bool aFloating) {
   NS_ASSERTION(!(nullptr == aView), "no view");
 
   aView->SetFloating(aFloating);
 }
 
-void
-nsViewManager::SetViewVisibility(nsView *aView, nsViewVisibility aVisible)
-{
+void nsViewManager::SetViewVisibility(nsView* aView,
+                                      nsViewVisibility aVisible) {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
   if (aVisible != aView->GetVisibility()) {
@@ -990,8 +930,7 @@ nsViewManager::SetViewVisibility(nsView *aView, nsViewVisibility aVisible)
   }
 }
 
-bool nsViewManager::IsViewInserted(nsView *aView)
-{
+bool nsViewManager::IsViewInserted(nsView* aView) {
   if (mRootView == aView) {
     return true;
   }
@@ -1008,13 +947,13 @@ bool nsViewManager::IsViewInserted(nsView *aView)
   return false;
 }
 
-void
-nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZIndex)
-{
+void nsViewManager::SetViewZIndex(nsView* aView, bool aAutoZIndex,
+                                  int32_t aZIndex) {
   NS_ASSERTION((aView != nullptr), "no view");
 
-  // don't allow the root view's z-index to be changed. It should always be zero.
-  // This could be removed and replaced with a style rule, or just removed altogether, with interesting consequences
+  // don't allow the root view's z-index to be changed. It should always be
+  // zero. This could be removed and replaced with a style rule, or just removed
+  // altogether, with interesting consequences
   if (aView == mRootView) {
     return;
   }
@@ -1026,9 +965,7 @@ nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZIndex)
   aView->SetZIndex(aAutoZIndex, aZIndex);
 }
 
-nsViewManager*
-nsViewManager::IncrementDisableRefreshCount()
-{
+nsViewManager* nsViewManager::IncrementDisableRefreshCount() {
   if (!IsRootVM()) {
     return RootViewManager()->IncrementDisableRefreshCount();
   }
@@ -1038,17 +975,13 @@ nsViewManager::IncrementDisableRefreshCount()
   return this;
 }
 
-void
-nsViewManager::DecrementDisableRefreshCount()
-{
+void nsViewManager::DecrementDisableRefreshCount() {
   NS_ASSERTION(IsRootVM(), "Should only be called on root");
   --mRefreshDisableCount;
   NS_ASSERTION(mRefreshDisableCount >= 0, "Invalid refresh disable count!");
 }
 
-void
-nsViewManager::GetRootWidget(nsIWidget **aWidget)
-{
+void nsViewManager::GetRootWidget(nsIWidget** aWidget) {
   if (!mRootView) {
     *aWidget = nullptr;
     return;
@@ -1065,9 +998,8 @@ nsViewManager::GetRootWidget(nsIWidget **aWidget)
   *aWidget = nullptr;
 }
 
-LayoutDeviceIntRect
-nsViewManager::ViewToWidget(nsView* aView, const nsRect& aRect) const
-{
+LayoutDeviceIntRect nsViewManager::ViewToWidget(nsView* aView,
+                                                const nsRect& aRect) const {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
   // account for the view's origin not lining up with the widget's
@@ -1075,18 +1007,14 @@ nsViewManager::ViewToWidget(nsView* aView, const nsRect& aRect) const
 
   // finally, convert to device coordinates.
   return LayoutDeviceIntRect::FromUnknownRect(
-    rect.ToOutsidePixels(AppUnitsPerDevPixel()));
+      rect.ToOutsidePixels(AppUnitsPerDevPixel()));
 }
 
-void
-nsViewManager::IsPainting(bool& aIsPainting)
-{
+void nsViewManager::IsPainting(bool& aIsPainting) {
   aIsPainting = IsPainting();
 }
 
-void
-nsViewManager::ProcessPendingUpdates()
-{
+void nsViewManager::ProcessPendingUpdates() {
   if (!IsRootVM()) {
     RootViewManager()->ProcessPendingUpdates();
     return;
@@ -1103,9 +1031,7 @@ nsViewManager::ProcessPendingUpdates()
   }
 }
 
-void
-nsViewManager::UpdateWidgetGeometry()
-{
+void nsViewManager::UpdateWidgetGeometry() {
   if (!IsRootVM()) {
     RootViewManager()->UpdateWidgetGeometry();
     return;
@@ -1118,9 +1044,7 @@ nsViewManager::UpdateWidgetGeometry()
   }
 }
 
-void
-nsViewManager::CallWillPaintOnObservers()
-{
+void nsViewManager::CallWillPaintOnObservers() {
   MOZ_ASSERT(IsRootVM(), "Must be root VM for this to be called!");
 
   if (NS_WARN_IF(!gViewManagers)) {
@@ -1142,20 +1066,16 @@ nsViewManager::CallWillPaintOnObservers()
   }
 }
 
-void
-nsViewManager::GetLastUserEventTime(uint32_t& aTime)
-{
+void nsViewManager::GetLastUserEventTime(uint32_t& aTime) {
   aTime = gLastUserEventTime;
 }
 
-void
-nsViewManager::InvalidateHierarchy()
-{
+void nsViewManager::InvalidateHierarchy() {
   if (mRootView) {
     if (!IsRootVM()) {
       NS_RELEASE(mRootViewManager);
     }
-    nsView *parent = mRootView->GetParent();
+    nsView* parent = mRootView->GetParent();
     if (parent) {
       mRootViewManager = parent->GetViewManager()->RootViewManager();
       NS_ADDREF(mRootViewManager);

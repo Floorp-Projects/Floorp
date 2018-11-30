@@ -12,16 +12,14 @@
 namespace mozilla {
 namespace dom {
 
-class SyncMessageSender : public MessageSender
-{
-protected:
+class SyncMessageSender : public MessageSender {
+ protected:
   SyncMessageSender(ipc::MessageManagerCallback* aCallback,
                     MessageManagerFlags aFlags)
-    : MessageSender(aCallback, nullptr, aFlags)
-  {}
+      : MessageSender(aCallback, nullptr, aFlags) {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SyncMessageSender_h
+#endif  // mozilla_dom_SyncMessageSender_h

@@ -28,77 +28,74 @@ class Element;
 }
 
 // ApplicationMenuDelegate is used to receive Cocoa notifications.
-@interface ApplicationMenuDelegate : NSObject<NSMenuDelegate>
-{
-  nsMenuBarX* mApplicationMenu; // weak ref
+@interface ApplicationMenuDelegate : NSObject <NSMenuDelegate> {
+  nsMenuBarX* mApplicationMenu;  // weak ref
 }
 - (id)initWithApplicationMenu:(nsMenuBarX*)aApplicationMenu;
 @end
 
 // The native menu service for creating native menu bars.
-class nsNativeMenuServiceX : public nsINativeMenuService
-{
-public:
+class nsNativeMenuServiceX : public nsINativeMenuService {
+ public:
   NS_DECL_ISUPPORTS
 
   nsNativeMenuServiceX() {}
 
-  NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent,
-                                 mozilla::dom::Element* aMenuBarNode) override;
+  NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent, mozilla::dom::Element* aMenuBarNode) override;
 
-protected:
+ protected:
   virtual ~nsNativeMenuServiceX() {}
 };
 
 // Objective-C class used to allow us to intervene with keyboard event handling.
 // We allow mouse actions to work normally.
-@interface GeckoNSMenu : NSMenu
-{
+@interface GeckoNSMenu : NSMenu {
 }
 - (BOOL)performSuperKeyEquivalent:(NSEvent*)theEvent;
 @end
 
 // Objective-C class used as action target for menu items
-@interface NativeMenuItemTarget : NSObject
-{
+@interface NativeMenuItemTarget : NSObject {
 }
--(IBAction)menuItemHit:(id)sender;
+- (IBAction)menuItemHit:(id)sender;
 @end
 
 // Objective-C class used for menu items on the Services menu to allow Gecko
 // to override their standard behavior in order to stop key equivalents from
 // firing in certain instances.
-@interface GeckoServicesNSMenuItem : NSMenuItem
-{
+@interface GeckoServicesNSMenuItem : NSMenuItem {
 }
-- (id) target;
-- (SEL) action;
-- (void) _doNothing:(id)sender;
+- (id)target;
+- (SEL)action;
+- (void)_doNothing:(id)sender;
 @end
 
 // Objective-C class used as the Services menu so that Gecko can override the
 // standard behavior of the Services menu in order to stop key equivalents
 // from firing in certain instances.
-@interface GeckoServicesNSMenu : NSMenu
-{
+@interface GeckoServicesNSMenu : NSMenu {
 }
-- (void)addItem:(NSMenuItem *)newItem;
-- (NSMenuItem *)addItemWithTitle:(NSString *)aString action:(SEL)aSelector keyEquivalent:(NSString *)keyEquiv;
-- (void)insertItem:(NSMenuItem *)newItem atIndex:(NSInteger)index;
-- (NSMenuItem *)insertItemWithTitle:(NSString *)aString action:(SEL)aSelector  keyEquivalent:(NSString *)keyEquiv atIndex:(NSInteger)index;
-- (void) _overrideClassOfMenuItem:(NSMenuItem *)menuItem;
+- (void)addItem:(NSMenuItem*)newItem;
+- (NSMenuItem*)addItemWithTitle:(NSString*)aString
+                         action:(SEL)aSelector
+                  keyEquivalent:(NSString*)keyEquiv;
+- (void)insertItem:(NSMenuItem*)newItem atIndex:(NSInteger)index;
+- (NSMenuItem*)insertItemWithTitle:(NSString*)aString
+                            action:(SEL)aSelector
+                     keyEquivalent:(NSString*)keyEquiv
+                           atIndex:(NSInteger)index;
+- (void)_overrideClassOfMenuItem:(NSMenuItem*)menuItem;
 @end
 
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
-class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver
-{
-public:
+class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
+ public:
   nsMenuBarX();
   virtual ~nsMenuBarX();
 
   static NativeMenuItemTarget* sNativeEventTarget;
-  static nsMenuBarX*           sLastGeckoMenuBarPainted;
+  static nsMenuBarX* sLastGeckoMenuBarPainted;
 
   // The following content nodes have been removed from the menu system.
   // We save them here for use in command handling.
@@ -110,42 +107,42 @@ public:
   NS_DECL_CHANGEOBSERVER
 
   // nsMenuObjectX
-  void*             NativeData() override {return (void*)mNativeMenu;}
-  nsMenuObjectTypeX MenuObjectType() override {return eMenuBarObjectType;}
+  void* NativeData() override { return (void*)mNativeMenu; }
+  nsMenuObjectTypeX MenuObjectType() override { return eMenuBarObjectType; }
 
   // nsMenuBarX
-  nsresult          Create(nsIWidget* aParent, mozilla::dom::Element* aElement);
-  void              SetParent(nsIWidget* aParent);
-  uint32_t          GetMenuCount();
-  bool              MenuContainsAppMenu();
-  nsMenuX*          GetMenuAt(uint32_t aIndex);
-  nsMenuX*          GetXULHelpMenu();
-  void              SetSystemHelpMenu();
-  nsresult          Paint();
-  void              ForceUpdateNativeMenuAt(const nsAString& indexString);
-  void              ForceNativeMenuReload(); // used for testing
-  static char       GetLocalizedAccelKey(const char *shortcutID);
-  static void       ResetNativeApplicationMenu();
-  void              SetNeedsRebuild();
-  void              ApplicationMenuOpened();
-  bool              PerformKeyEquivalent(NSEvent* theEvent);
+  nsresult Create(nsIWidget* aParent, mozilla::dom::Element* aElement);
+  void SetParent(nsIWidget* aParent);
+  uint32_t GetMenuCount();
+  bool MenuContainsAppMenu();
+  nsMenuX* GetMenuAt(uint32_t aIndex);
+  nsMenuX* GetXULHelpMenu();
+  void SetSystemHelpMenu();
+  nsresult Paint();
+  void ForceUpdateNativeMenuAt(const nsAString& indexString);
+  void ForceNativeMenuReload();  // used for testing
+  static char GetLocalizedAccelKey(const char* shortcutID);
+  static void ResetNativeApplicationMenu();
+  void SetNeedsRebuild();
+  void ApplicationMenuOpened();
+  bool PerformKeyEquivalent(NSEvent* theEvent);
 
-protected:
-  void              ConstructNativeMenus();
-  void              ConstructFallbackNativeMenus();
-  nsresult          InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex);
-  void              RemoveMenuAtIndex(uint32_t aIndex);
-  void              HideItem(nsIDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode);
-  void              AquifyMenuBar();
-  NSMenuItem*       CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString& nodeID, SEL action,
-                                            int tag, NativeMenuItemTarget* target);
-  nsresult          CreateApplicationMenu(nsMenuX* inMenu);
+ protected:
+  void ConstructNativeMenus();
+  void ConstructFallbackNativeMenus();
+  nsresult InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex);
+  void RemoveMenuAtIndex(uint32_t aIndex);
+  void HideItem(nsIDocument* inDoc, const nsAString& inID, nsIContent** outHiddenNode);
+  void AquifyMenuBar();
+  NSMenuItem* CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString& nodeID, SEL action, int tag,
+                                      NativeMenuItemTarget* target);
+  nsresult CreateApplicationMenu(nsMenuX* inMenu);
 
   nsTArray<mozilla::UniquePtr<nsMenuX>> mMenuArray;
-  nsIWidget*         mParentWindow;        // [weak]
-  GeckoNSMenu*       mNativeMenu;            // root menu, representing entire menu bar
-  bool               mNeedsRebuild;
+  nsIWidget* mParentWindow;  // [weak]
+  GeckoNSMenu* mNativeMenu;  // root menu, representing entire menu bar
+  bool mNeedsRebuild;
   ApplicationMenuDelegate* mApplicationMenuDelegate;
 };
 
-#endif // nsMenuBarX_h_
+#endif  // nsMenuBarX_h_

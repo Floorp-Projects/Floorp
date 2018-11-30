@@ -22,110 +22,99 @@
 namespace mozilla {
 namespace net {
 
-class nsSimpleNestedURI : public nsSimpleURI,
-                          public nsINestedURI
-{
-protected:
-    nsSimpleNestedURI() = default;
-    explicit nsSimpleNestedURI(nsIURI* innerURI);
+class nsSimpleNestedURI : public nsSimpleURI, public nsINestedURI {
+ protected:
+  nsSimpleNestedURI() = default;
+  explicit nsSimpleNestedURI(nsIURI* innerURI);
 
-    ~nsSimpleNestedURI() = default;
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSINESTEDURI
+  ~nsSimpleNestedURI() = default;
 
-    // Overrides for various methods nsSimpleURI implements follow.
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSINESTEDURI
 
-    // nsSimpleURI overrides
-    virtual nsresult EqualsInternal(nsIURI* other,
-                                    RefHandlingEnum refHandlingMode,
-                                    bool* result) override;
-    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode,
-                                    const nsACString& newRef) override;
-    NS_IMETHOD Mutate(nsIURIMutator * *_retval) override;
+  // Overrides for various methods nsSimpleURI implements follow.
 
-    // nsISerializable overrides
-    NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
-    NS_IMETHOD Write(nsIObjectOutputStream* aStream) override;
+  // nsSimpleURI overrides
+  virtual nsresult EqualsInternal(nsIURI* other,
+                                  RefHandlingEnum refHandlingMode,
+                                  bool* result) override;
+  virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode,
+                                  const nsACString& newRef) override;
+  NS_IMETHOD Mutate(nsIURIMutator** _retval) override;
 
-    // nsIIPCSerializableURI overrides
-    NS_DECL_NSIIPCSERIALIZABLEURI
+  // nsISerializable overrides
+  NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
+  NS_IMETHOD Write(nsIObjectOutputStream* aStream) override;
 
-    // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
-    // nsISerializable impl works right.
-    NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc) override;
+  // nsIIPCSerializableURI overrides
+  NS_DECL_NSIIPCSERIALIZABLEURI
 
-protected:
-    nsCOMPtr<nsIURI> mInnerURI;
+  // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
+  // nsISerializable impl works right.
+  NS_IMETHOD GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) override;
 
-    nsresult SetPathQueryRef(const nsACString &aPathQueryRef) override;
-    nsresult SetQuery(const nsACString &aQuery) override;
-    nsresult SetRef(const nsACString &aRef) override;
-    bool Deserialize(const mozilla::ipc::URIParams&);
-    nsresult ReadPrivate(nsIObjectInputStream *stream);
+ protected:
+  nsCOMPtr<nsIURI> mInnerURI;
 
-public:
-    class Mutator final
-        : public nsIURIMutator
-        , public BaseURIMutator<nsSimpleNestedURI>
-        , public nsISerializable
-        , public nsINestedURIMutator
-    {
-        NS_DECL_ISUPPORTS
-        NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
+  nsresult SetPathQueryRef(const nsACString& aPathQueryRef) override;
+  nsresult SetQuery(const nsACString& aQuery) override;
+  nsresult SetRef(const nsACString& aRef) override;
+  bool Deserialize(const mozilla::ipc::URIParams&);
+  nsresult ReadPrivate(nsIObjectInputStream* stream);
 
-        explicit Mutator() = default;
-    private:
-        virtual ~Mutator() = default;
+ public:
+  class Mutator final : public nsIURIMutator,
+                        public BaseURIMutator<nsSimpleNestedURI>,
+                        public nsISerializable,
+                        public nsINestedURIMutator {
+    NS_DECL_ISUPPORTS
+    NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
 
-        MOZ_MUST_USE NS_IMETHOD
-        Deserialize(const mozilla::ipc::URIParams& aParams) override
-        {
-            return InitFromIPCParams(aParams);
-        }
+    explicit Mutator() = default;
 
-        NS_IMETHOD
-        Write(nsIObjectOutputStream *aOutputStream) override
-        {
-            return NS_ERROR_NOT_IMPLEMENTED;
-        }
+   private:
+    virtual ~Mutator() = default;
 
-        MOZ_MUST_USE NS_IMETHOD
-        Read(nsIObjectInputStream* aStream) override
-        {
-            return InitFromInputStream(aStream);
-        }
+    MOZ_MUST_USE NS_IMETHOD
+    Deserialize(const mozilla::ipc::URIParams& aParams) override {
+      return InitFromIPCParams(aParams);
+    }
 
-        MOZ_MUST_USE NS_IMETHOD
-        Finalize(nsIURI** aURI) override
-        {
-            mURI.forget(aURI);
-            return NS_OK;
-        }
+    NS_IMETHOD
+    Write(nsIObjectOutputStream* aOutputStream) override {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
-        MOZ_MUST_USE NS_IMETHOD
-        SetSpec(const nsACString& aSpec, nsIURIMutator** aMutator) override
-        {
-            if (aMutator) {
-                NS_ADDREF(*aMutator = this);
-            }
-            return InitFromSpec(aSpec);
-        }
+    MOZ_MUST_USE NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
+      return InitFromInputStream(aStream);
+    }
 
-        MOZ_MUST_USE NS_IMETHOD
-        Init(nsIURI* innerURI) override
-        {
-            mURI = new nsSimpleNestedURI(innerURI);
-            return NS_OK;
-        }
+    MOZ_MUST_USE NS_IMETHOD Finalize(nsIURI** aURI) override {
+      mURI.forget(aURI);
+      return NS_OK;
+    }
 
-        friend class nsSimpleNestedURI;
-    };
+    MOZ_MUST_USE NS_IMETHOD SetSpec(const nsACString& aSpec,
+                                    nsIURIMutator** aMutator) override {
+      if (aMutator) {
+        NS_ADDREF(*aMutator = this);
+      }
+      return InitFromSpec(aSpec);
+    }
 
-    friend BaseURIMutator<nsSimpleNestedURI>;
+    MOZ_MUST_USE NS_IMETHOD Init(nsIURI* innerURI) override {
+      mURI = new nsSimpleNestedURI(innerURI);
+      return NS_OK;
+    }
+
+    friend class nsSimpleNestedURI;
+  };
+
+  friend BaseURIMutator<nsSimpleNestedURI>;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif /* nsSimpleNestedURI_h__ */

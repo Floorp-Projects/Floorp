@@ -24,19 +24,19 @@ class nsIDocument;
 namespace mozilla {
 namespace dom {
 class DocGroup;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 /**
- * Structure used as a key for caching Attrs in nsDOMAttributeMap's mAttributeCache.
+ * Structure used as a key for caching Attrs in nsDOMAttributeMap's
+ * mAttributeCache.
  */
-class nsAttrKey
-{
-public:
+class nsAttrKey {
+ public:
   /**
    * The namespace of the attribute
    */
-  int32_t  mNamespaceID;
+  int32_t mNamespaceID;
 
   /**
    * The atom for attribute, stored as void*, to make sure that we only use it
@@ -45,18 +45,17 @@ public:
   void* mLocalName;
 
   nsAttrKey(int32_t aNs, nsAtom* aName)
-    : mNamespaceID(aNs), mLocalName(aName) {}
+      : mNamespaceID(aNs), mLocalName(aName) {}
 
   nsAttrKey(const nsAttrKey& aAttr)
-    : mNamespaceID(aAttr.mNamespaceID), mLocalName(aAttr.mLocalName) {}
+      : mNamespaceID(aAttr.mNamespaceID), mLocalName(aAttr.mLocalName) {}
 };
 
 /**
  * PLDHashEntryHdr implementation for nsAttrKey.
  */
-class nsAttrHashKey : public PLDHashEntryHdr
-{
-public:
+class nsAttrHashKey : public PLDHashEntryHdr {
+ public:
   typedef const nsAttrKey& KeyType;
   typedef const nsAttrKey* KeyTypePointer;
 
@@ -65,46 +64,38 @@ public:
   ~nsAttrHashKey() {}
 
   KeyType GetKey() const { return mKey; }
-  bool KeyEquals(KeyTypePointer aKey) const
-    {
-      return mKey.mLocalName == aKey->mLocalName &&
-             mKey.mNamespaceID == aKey->mNamespaceID;
-    }
+  bool KeyEquals(KeyTypePointer aKey) const {
+    return mKey.mLocalName == aKey->mLocalName &&
+           mKey.mNamespaceID == aKey->mNamespaceID;
+  }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-    {
-      if (!aKey)
-        return 0;
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    if (!aKey) return 0;
 
-      return mozilla::HashGeneric(aKey->mNamespaceID, aKey->mLocalName);
-    }
+    return mozilla::HashGeneric(aKey->mNamespaceID, aKey->mLocalName);
+  }
   enum { ALLOW_MEMMOVE = true };
 
-private:
+ private:
   nsAttrKey mKey;
 };
 
-class nsDOMAttributeMap final : public nsISupports
-                              , public nsWrapperCache
-{
-public:
+class nsDOMAttributeMap final : public nsISupports, public nsWrapperCache {
+ public:
   typedef mozilla::dom::Attr Attr;
   typedef mozilla::dom::DocGroup DocGroup;
   typedef mozilla::dom::Element Element;
   typedef mozilla::ErrorResult ErrorResult;
 
-  explicit nsDOMAttributeMap(Element *aContent);
+  explicit nsDOMAttributeMap(Element* aContent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMAttributeMap)
 
   void DropReference();
 
-  Element* GetContent()
-  {
-    return mContent;
-  }
+  Element* GetContent() { return mContent; }
 
   /**
    * Called when mContent is moved into a new document.
@@ -129,45 +120,40 @@ public:
 
   typedef nsRefPtrHashtable<nsAttrHashKey, Attr> AttrCache;
 
-  static void BlastSubtreeToPieces(nsINode *aNode);
+  static void BlastSubtreeToPieces(nsINode* aNode);
 
-  Element* GetParentObject() const
-  {
-    return mContent;
-  }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  Element* GetParentObject() const { return mContent; }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
   DocGroup* GetDocGroup() const;
 
   // WebIDL
   Attr* GetNamedItem(const nsAString& aAttrName);
   Attr* NamedGetter(const nsAString& aAttrName, bool& aFound);
-  already_AddRefed<Attr>
-  RemoveNamedItem(mozilla::dom::NodeInfo* aNodeInfo, ErrorResult& aError);
-  already_AddRefed<Attr>
-  RemoveNamedItem(const nsAString& aName, ErrorResult& aError);
+  already_AddRefed<Attr> RemoveNamedItem(mozilla::dom::NodeInfo* aNodeInfo,
+                                         ErrorResult& aError);
+  already_AddRefed<Attr> RemoveNamedItem(const nsAString& aName,
+                                         ErrorResult& aError);
 
   Attr* Item(uint32_t aIndex);
   Attr* IndexedGetter(uint32_t aIndex, bool& aFound);
   uint32_t Length() const;
 
-  Attr*
-  GetNamedItemNS(const nsAString& aNamespaceURI,
-                 const nsAString& aLocalName);
-  already_AddRefed<Attr>
-  SetNamedItemNS(Attr& aNode, ErrorResult& aError);
-  already_AddRefed<Attr>
-  RemoveNamedItemNS(const nsAString& aNamespaceURI, const nsAString& aLocalName,
-                    ErrorResult& aError);
+  Attr* GetNamedItemNS(const nsAString& aNamespaceURI,
+                       const nsAString& aLocalName);
+  already_AddRefed<Attr> SetNamedItemNS(Attr& aNode, ErrorResult& aError);
+  already_AddRefed<Attr> RemoveNamedItemNS(const nsAString& aNamespaceURI,
+                                           const nsAString& aLocalName,
+                                           ErrorResult& aError);
 
-  void
-  GetSupportedNames(nsTArray<nsString>& aNames);
+  void GetSupportedNames(nsTArray<nsString>& aNames);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-protected:
+ protected:
   virtual ~nsDOMAttributeMap();
 
-private:
+ private:
   nsCOMPtr<Element> mContent;
 
   /**
@@ -175,9 +161,8 @@ private:
    */
   AttrCache mAttributeCache;
 
-  already_AddRefed<mozilla::dom::NodeInfo>
-  GetAttrNodeInfo(const nsAString& aNamespaceURI,
-                  const nsAString& aLocalName);
+  already_AddRefed<mozilla::dom::NodeInfo> GetAttrNodeInfo(
+      const nsAString& aNamespaceURI, const nsAString& aLocalName);
 
   Attr* GetAttribute(mozilla::dom::NodeInfo* aNodeInfo);
 };

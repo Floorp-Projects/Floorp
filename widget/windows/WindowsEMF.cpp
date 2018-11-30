@@ -5,33 +5,21 @@
 
 #include "WindowsEMF.h"
 
-
 namespace mozilla {
 namespace widget {
 
-WindowsEMF::WindowsEMF()
-  : mEmf(nullptr)
-  , mDC(nullptr)
-{
-}
+WindowsEMF::WindowsEMF() : mEmf(nullptr), mDC(nullptr) {}
 
-WindowsEMF::~WindowsEMF()
-{
-  ReleaseAllResource();
-}
+WindowsEMF::~WindowsEMF() { ReleaseAllResource(); }
 
-bool
-WindowsEMF::InitForDrawing(const wchar_t* aMetafilePath /* = nullptr */)
-{
+bool WindowsEMF::InitForDrawing(const wchar_t* aMetafilePath /* = nullptr */) {
   ReleaseAllResource();
 
   mDC = ::CreateEnhMetaFile(nullptr, aMetafilePath, nullptr, nullptr);
   return !!mDC;
 }
 
-bool
-WindowsEMF::InitFromFileContents(const wchar_t* aMetafilePath)
-{
+bool WindowsEMF::InitFromFileContents(const wchar_t* aMetafilePath) {
   MOZ_ASSERT(aMetafilePath);
   ReleaseAllResource();
 
@@ -39,9 +27,7 @@ WindowsEMF::InitFromFileContents(const wchar_t* aMetafilePath)
   return !!mEmf;
 }
 
-bool
-WindowsEMF::InitFromFileContents(LPBYTE aBytes, UINT aSize)
-{
+bool WindowsEMF::InitFromFileContents(LPBYTE aBytes, UINT aSize) {
   MOZ_ASSERT(aBytes && aSize != 0);
   ReleaseAllResource();
 
@@ -50,44 +36,34 @@ WindowsEMF::InitFromFileContents(LPBYTE aBytes, UINT aSize)
   return !!mEmf;
 }
 
-bool
-WindowsEMF::FinishDocument()
-{
+bool WindowsEMF::FinishDocument() {
   if (mDC) {
-     mEmf = ::CloseEnhMetaFile(mDC);
-     mDC = nullptr;
+    mEmf = ::CloseEnhMetaFile(mDC);
+    mDC = nullptr;
   }
   return !!mEmf;
 }
 
-void
-WindowsEMF::ReleaseEMFHandle()
-{
+void WindowsEMF::ReleaseEMFHandle() {
   if (mEmf) {
     ::DeleteEnhMetaFile(mEmf);
     mEmf = nullptr;
   }
 }
 
-void
-WindowsEMF::ReleaseAllResource()
-{
+void WindowsEMF::ReleaseAllResource() {
   FinishDocument();
   ReleaseEMFHandle();
 }
 
-bool
-WindowsEMF::Playback(HDC aDeviceContext, const RECT& aRect)
-{
+bool WindowsEMF::Playback(HDC aDeviceContext, const RECT& aRect) {
   DebugOnly<bool> result = FinishDocument();
   MOZ_ASSERT(result, "This function should be used after InitXXX.");
 
   return ::PlayEnhMetaFile(aDeviceContext, mEmf, &aRect) != 0;
 }
 
-bool
-WindowsEMF::SaveToFile()
-{
+bool WindowsEMF::SaveToFile() {
   DebugOnly<bool> result = FinishDocument();
   MOZ_ASSERT(result, "This function should be used after InitXXX.");
 
@@ -95,18 +71,14 @@ WindowsEMF::SaveToFile()
   return true;
 }
 
-UINT
-WindowsEMF::GetEMFContentSize()
-{
+UINT WindowsEMF::GetEMFContentSize() {
   DebugOnly<bool> result = FinishDocument();
   MOZ_ASSERT(result, "This function should be used after InitXXX.");
 
   return GetEnhMetaFileBits(mEmf, 0, NULL);
 }
 
-bool
-WindowsEMF::GetEMFContentBits(LPBYTE aBytes)
-{
+bool WindowsEMF::GetEMFContentBits(LPBYTE aBytes) {
   DebugOnly<bool> result = FinishDocument();
   MOZ_ASSERT(result, "This function should be used after InitXXX.");
 
@@ -118,5 +90,5 @@ WindowsEMF::GetEMFContentBits(LPBYTE aBytes)
   return true;
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

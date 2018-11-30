@@ -33,59 +33,43 @@ namespace mozilla {
 using namespace dom;
 
 template already_AddRefed<CreateElementTransaction>
-CreateElementTransaction::Create(
-                            EditorBase& aEditorBase,
-                            nsAtom& aTag,
-                            const EditorDOMPoint& aPointToInsert);
+CreateElementTransaction::Create(EditorBase& aEditorBase, nsAtom& aTag,
+                                 const EditorDOMPoint& aPointToInsert);
 template already_AddRefed<CreateElementTransaction>
-CreateElementTransaction::Create(
-                            EditorBase& aEditorBase,
-                            nsAtom& aTag,
-                            const EditorRawDOMPoint& aPointToInsert);
+CreateElementTransaction::Create(EditorBase& aEditorBase, nsAtom& aTag,
+                                 const EditorRawDOMPoint& aPointToInsert);
 
-template<typename PT, typename CT>
-already_AddRefed<CreateElementTransaction>
-CreateElementTransaction::Create(
-                            EditorBase& aEditorBase,
-                            nsAtom& aTag,
-                            const EditorDOMPointBase<PT, CT>& aPointToInsert)
-{
+template <typename PT, typename CT>
+already_AddRefed<CreateElementTransaction> CreateElementTransaction::Create(
+    EditorBase& aEditorBase, nsAtom& aTag,
+    const EditorDOMPointBase<PT, CT>& aPointToInsert) {
   RefPtr<CreateElementTransaction> transaction =
-    new CreateElementTransaction(aEditorBase, aTag, aPointToInsert);
+      new CreateElementTransaction(aEditorBase, aTag, aPointToInsert);
   return transaction.forget();
 }
 
-template<typename PT, typename CT>
+template <typename PT, typename CT>
 CreateElementTransaction::CreateElementTransaction(
-                            EditorBase& aEditorBase,
-                            nsAtom& aTag,
-                            const EditorDOMPointBase<PT, CT>& aPointToInsert)
-  : EditTransactionBase()
-  , mEditorBase(&aEditorBase)
-  , mTag(&aTag)
-  , mPointToInsert(aPointToInsert)
-{
-}
+    EditorBase& aEditorBase, nsAtom& aTag,
+    const EditorDOMPointBase<PT, CT>& aPointToInsert)
+    : EditTransactionBase(),
+      mEditorBase(&aEditorBase),
+      mTag(&aTag),
+      mPointToInsert(aPointToInsert) {}
 
-CreateElementTransaction::~CreateElementTransaction()
-{
-}
+CreateElementTransaction::~CreateElementTransaction() {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CreateElementTransaction,
-                                   EditTransactionBase,
-                                   mEditorBase,
-                                   mPointToInsert,
-                                   mNewNode)
+                                   EditTransactionBase, mEditorBase,
+                                   mPointToInsert, mNewNode)
 
 NS_IMPL_ADDREF_INHERITED(CreateElementTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(CreateElementTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CreateElementTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-
 NS_IMETHODIMP
-CreateElementTransaction::DoTransaction()
-{
+CreateElementTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTag) ||
       NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -128,26 +112,22 @@ CreateElementTransaction::DoTransaction()
   return NS_OK;
 }
 
-void
-CreateElementTransaction::InsertNewNode(ErrorResult& aError)
-{
+void CreateElementTransaction::InsertNewNode(ErrorResult& aError) {
   if (mPointToInsert.IsSetAndValid()) {
     if (mPointToInsert.IsEndOfContainer()) {
       mPointToInsert.GetContainer()->AppendChild(*mNewNode, aError);
       NS_WARNING_ASSERTION(!aError.Failed(), "Failed to append the new node");
       return;
     }
-    mPointToInsert.GetContainer()->
-                     InsertBefore(*mNewNode,
-                                  mPointToInsert.GetChild(),
-                                  aError);
+    mPointToInsert.GetContainer()->InsertBefore(
+        *mNewNode, mPointToInsert.GetChild(), aError);
     NS_WARNING_ASSERTION(!aError.Failed(), "Failed to insert the new node");
     return;
   }
 
   if (NS_WARN_IF(mPointToInsert.GetChild() &&
                  mPointToInsert.GetContainer() !=
-                   mPointToInsert.GetChild()->GetParentNode())) {
+                     mPointToInsert.GetChild()->GetParentNode())) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -159,8 +139,7 @@ CreateElementTransaction::InsertNewNode(ErrorResult& aError)
 }
 
 NS_IMETHODIMP
-CreateElementTransaction::UndoTransaction()
-{
+CreateElementTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -174,8 +153,7 @@ CreateElementTransaction::UndoTransaction()
 }
 
 NS_IMETHODIMP
-CreateElementTransaction::RedoTransaction()
-{
+CreateElementTransaction::RedoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -194,10 +172,8 @@ CreateElementTransaction::RedoTransaction()
   return NS_OK;
 }
 
-already_AddRefed<Element>
-CreateElementTransaction::GetNewNode()
-{
+already_AddRefed<Element> CreateElementTransaction::GetNewNode() {
   return nsCOMPtr<Element>(mNewNode).forget();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

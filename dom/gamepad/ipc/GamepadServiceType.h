@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_GamepadServiceType_h_
 #define mozilla_dom_GamepadServiceType_h_
 
-namespace mozilla{
-namespace dom{
+namespace mozilla {
+namespace dom {
 
 // Standard channel is used for managing gamepads that
 // are from GamepadPlatformService. VR channel
@@ -19,7 +19,7 @@ enum class GamepadServiceType : uint16_t {
   NumGamepadServiceType
 };
 
-}// namespace dom
-}// namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_GamepadServiceType_h_
+#endif  // mozilla_dom_GamepadServiceType_h_

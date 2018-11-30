@@ -11,45 +11,44 @@
 #include "nsString.h"
 #include "nsHttpHeaderArray.h"
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
-class nsHttpChunkedDecoder
-{
-public:
-    nsHttpChunkedDecoder() : mTrailers(nullptr)
-                           , mChunkRemaining(0)
-                           , mReachedEOF(false)
-                           , mWaitEOF(false) {}
-   ~nsHttpChunkedDecoder() = default;
+class nsHttpChunkedDecoder {
+ public:
+  nsHttpChunkedDecoder()
+      : mTrailers(nullptr),
+        mChunkRemaining(0),
+        mReachedEOF(false),
+        mWaitEOF(false) {}
+  ~nsHttpChunkedDecoder() = default;
 
-    bool ReachedEOF() { return mReachedEOF; }
+  bool ReachedEOF() { return mReachedEOF; }
 
-    // called by the transaction to handle chunked content.
-    MOZ_MUST_USE nsresult HandleChunkedContent(char *buf,
-                                               uint32_t count,
-                                               uint32_t *contentRead,
-                                               uint32_t *contentRemaining);
+  // called by the transaction to handle chunked content.
+  MOZ_MUST_USE nsresult HandleChunkedContent(char *buf, uint32_t count,
+                                             uint32_t *contentRead,
+                                             uint32_t *contentRemaining);
 
-    nsHttpHeaderArray *Trailers() { return mTrailers.get(); }
+  nsHttpHeaderArray *Trailers() { return mTrailers.get(); }
 
-    nsHttpHeaderArray *TakeTrailers() { return mTrailers.forget(); }
+  nsHttpHeaderArray *TakeTrailers() { return mTrailers.forget(); }
 
-    uint32_t GetChunkRemaining() { return mChunkRemaining; }
+  uint32_t GetChunkRemaining() { return mChunkRemaining; }
 
-private:
-    MOZ_MUST_USE nsresult ParseChunkRemaining(char *buf,
-                                              uint32_t count,
-                                              uint32_t *countRead);
+ private:
+  MOZ_MUST_USE nsresult ParseChunkRemaining(char *buf, uint32_t count,
+                                            uint32_t *countRead);
 
-private:
-    nsAutoPtr<nsHttpHeaderArray>  mTrailers;
-    uint32_t                      mChunkRemaining;
-    nsCString                     mLineBuf; // may hold a partial line
-    bool                          mReachedEOF;
-    bool                          mWaitEOF;
+ private:
+  nsAutoPtr<nsHttpHeaderArray> mTrailers;
+  uint32_t mChunkRemaining;
+  nsCString mLineBuf;  // may hold a partial line
+  bool mReachedEOF;
+  bool mWaitEOF;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

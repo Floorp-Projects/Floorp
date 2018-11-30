@@ -12,25 +12,23 @@
 namespace mozilla {
 namespace dom {
 
-class ClientOpenWindowOpParent final : public PClientOpenWindowOpParent
-{
+class ClientOpenWindowOpParent final : public PClientOpenWindowOpParent {
   RefPtr<ClientOpPromise::Private> mPromise;
 
   // PClientOpenWindowOpParent interface
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-  mozilla::ipc::IPCResult
-  Recv__delete__(const ClientOpResult& aResult) override;
+  mozilla::ipc::IPCResult Recv__delete__(
+      const ClientOpResult& aResult) override;
 
-public:
+ public:
   ClientOpenWindowOpParent(const ClientOpenWindowArgs& aArgs,
                            ClientOpPromise::Private* aPromise);
 
   ~ClientOpenWindowOpParent();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientOpenWindowOpParent_h
+#endif  // _mozilla_dom_ClientOpenWindowOpParent_h

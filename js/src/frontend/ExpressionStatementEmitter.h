@@ -33,54 +33,52 @@ struct BytecodeEmitter;
 //     emit(expr);
 //     ese.emitEnd();
 //
-class MOZ_STACK_CLASS ExpressionStatementEmitter
-{
-    BytecodeEmitter* bce_;
+class MOZ_STACK_CLASS ExpressionStatementEmitter {
+  BytecodeEmitter* bce_;
 
 #ifdef DEBUG
-    // The stack depth before emitting expression.
-    int32_t depth_;
+  // The stack depth before emitting expression.
+  int32_t depth_;
 #endif
 
-    // The usage of the value of the expression.
-    ValueUsage valueUsage_;
+  // The usage of the value of the expression.
+  ValueUsage valueUsage_;
 
 #ifdef DEBUG
-    // The state of this emitter.
-    //
-    // +-------+ prepareForExpr +------+ emitEnd +-----+
-    // | Start |--------------->| Expr |-------->| End |
-    // +-------+                +------+         +-----+
-    enum class State
-    {
-        // The initial state.
-        Start,
+  // The state of this emitter.
+  //
+  // +-------+ prepareForExpr +------+ emitEnd +-----+
+  // | Start |--------------->| Expr |-------->| End |
+  // +-------+                +------+         +-----+
+  enum class State {
+    // The initial state.
+    Start,
 
-        // After calling prepareForExpr.
-        Expr,
+    // After calling prepareForExpr.
+    Expr,
 
-        // After calling emitEnd.
-        End
-    };
-    State state_ = State::Start;
+    // After calling emitEnd.
+    End
+  };
+  State state_ = State::Start;
 #endif
 
-  public:
-    ExpressionStatementEmitter(BytecodeEmitter* bce, ValueUsage valueUsage);
+ public:
+  ExpressionStatementEmitter(BytecodeEmitter* bce, ValueUsage valueUsage);
 
-    // Parameters are the offset in the source code for each character below:
-    //
-    //   expr;
-    //   ^
-    //   |
-    //   beginPos
-    //
-    // Can be Nothing() if not available.
-    MOZ_MUST_USE bool prepareForExpr(const mozilla::Maybe<uint32_t>& beginPos);
-    MOZ_MUST_USE bool emitEnd();
+  // Parameters are the offset in the source code for each character below:
+  //
+  //   expr;
+  //   ^
+  //   |
+  //   beginPos
+  //
+  // Can be Nothing() if not available.
+  MOZ_MUST_USE bool prepareForExpr(const mozilla::Maybe<uint32_t>& beginPos);
+  MOZ_MUST_USE bool emitEnd();
 };
 
-} // namespace frontend
-} // namespace js
+}  // namespace frontend
+}  // namespace js
 
 #endif /* frontend_ExpressionStatementEmitter_h */

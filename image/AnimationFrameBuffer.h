@@ -20,17 +20,15 @@ namespace image {
  * This should be subclassed by the different types of queues, depending on
  * what behaviour is desired.
  */
-class AnimationFrameBuffer
-{
-public:
-  enum class InsertStatus : uint8_t
-  {
-    YIELD, // No more frames required at this time.
-    CONTINUE, // Continue decoding more frames.
-    DISCARD_YIELD, // Crossed threshold, switch to discarding structure
-                   // and stop decoding more frames.
-    DISCARD_CONTINUE // Crossed threshold, switch to discarding structure
-                     // and continue decoding more frames.
+class AnimationFrameBuffer {
+ public:
+  enum class InsertStatus : uint8_t {
+    YIELD,            // No more frames required at this time.
+    CONTINUE,         // Continue decoding more frames.
+    DISCARD_YIELD,    // Crossed threshold, switch to discarding structure
+                      // and stop decoding more frames.
+    DISCARD_CONTINUE  // Crossed threshold, switch to discarding structure
+                      // and continue decoding more frames.
   };
 
   /**
@@ -44,19 +42,18 @@ public:
    *                    discarded, and we had to redecode.
    */
   AnimationFrameBuffer(size_t aBatch, size_t aStartFrame)
-    : mSize(0)
-    , mBatch(aBatch)
-    , mGetIndex(0)
-    , mAdvance(aStartFrame)
-    , mPending(0)
-    , mSizeKnown(false)
-    , mMayDiscard(false)
-    , mRedecodeError(false)
-    , mRecycling(false)
-  {
-    if (mBatch > SIZE_MAX/4) {
+      : mSize(0),
+        mBatch(aBatch),
+        mGetIndex(0),
+        mAdvance(aStartFrame),
+        mPending(0),
+        mSizeKnown(false),
+        mMayDiscard(false),
+        mRedecodeError(false),
+        mRecycling(false) {
+    if (mBatch > SIZE_MAX / 4) {
       // Batch size is so big, we will just end up decoding the whole animation.
-      mBatch = SIZE_MAX/4;
+      mBatch = SIZE_MAX / 4;
     } else if (mBatch < 1) {
       // Never permit a batch size smaller than 1. We always want to be asking
       // for at least one frame to start.
@@ -65,19 +62,17 @@ public:
   }
 
   AnimationFrameBuffer(const AnimationFrameBuffer& aOther)
-    : mSize(aOther.mSize)
-    , mBatch(aOther.mBatch)
-    , mGetIndex(aOther.mGetIndex)
-    , mAdvance(aOther.mAdvance)
-    , mPending(aOther.mPending)
-    , mSizeKnown(aOther.mSizeKnown)
-    , mMayDiscard(aOther.mMayDiscard)
-    , mRedecodeError(aOther.mRedecodeError)
-    , mRecycling(aOther.mRecycling)
-  { }
+      : mSize(aOther.mSize),
+        mBatch(aOther.mBatch),
+        mGetIndex(aOther.mGetIndex),
+        mAdvance(aOther.mAdvance),
+        mPending(aOther.mPending),
+        mSizeKnown(aOther.mSizeKnown),
+        mMayDiscard(aOther.mMayDiscard),
+        mRedecodeError(aOther.mRedecodeError),
+        mRecycling(aOther.mRecycling) {}
 
-  virtual ~AnimationFrameBuffer()
-  { }
+  virtual ~AnimationFrameBuffer() {}
 
   /**
    * @returns True if frames post-advance may be discarded and redecoded on
@@ -89,8 +84,7 @@ public:
    * @returns True if frames post-advance may be reused after displaying, else
    *          false. Implies MayDiscard().
    */
-  bool IsRecycling() const
-  {
+  bool IsRecycling() const {
     MOZ_ASSERT_IF(mRecycling, mMayDiscard);
     return mRecycling;
   }
@@ -141,8 +135,7 @@ public:
    *
    * @returns True if the caller should restart the decoder.
    */
-  bool Reset()
-  {
+  bool Reset() {
     mGetIndex = 0;
     mAdvance = 0;
     return ResetInternal();
@@ -162,8 +155,7 @@ public:
    *
    * @returns True if the caller should restart the decoder.
    */
-  bool AdvanceTo(size_t aExpectedFrame)
-  {
+  bool AdvanceTo(size_t aExpectedFrame) {
     MOZ_ASSERT(mAdvance == 0);
 
     if (++mGetIndex == mSize && mSizeKnown) {
@@ -192,8 +184,7 @@ public:
    *
    * @returns True if the decoder should decode another frame.
    */
-  InsertStatus Insert(RefPtr<imgFrame>&& aFrame)
-  {
+  InsertStatus Insert(RefPtr<imgFrame>&& aFrame) {
     MOZ_ASSERT(mPending > 0);
     MOZ_ASSERT(aFrame);
 
@@ -268,13 +259,12 @@ public:
    *
    * @returns The frame to be recycled, if available.
    */
-  virtual RawAccessFrameRef RecycleFrame(gfx::IntRect& aRecycleRect)
-  {
+  virtual RawAccessFrameRef RecycleFrame(gfx::IntRect& aRecycleRect) {
     MOZ_ASSERT(!mRecycling);
     return RawAccessFrameRef();
   }
 
-protected:
+ protected:
   /**
    * Perform the actual insertion of the given frame into the underlying buffer
    * representation. mGetIndex shall be the index of the frame we are inserting,
@@ -311,7 +301,8 @@ protected:
   // The sequential index of the frame we have advanced to.
   size_t mGetIndex;
 
-  // The number of frames we need to auto-advance to synchronize with the caller.
+  // The number of frames we need to auto-advance to synchronize with the
+  // caller.
   size_t mAdvance;
 
   // The number of frames to decode before we stop.
@@ -335,10 +326,8 @@ protected:
  * it. Once it crosses its maximum number of frames, it will recommend
  * conversion to a discarding queue.
  */
-class AnimationFrameRetainedBuffer final : public AnimationFrameBuffer
-{
-public:
-
+class AnimationFrameRetainedBuffer final : public AnimationFrameBuffer {
+ public:
   /**
    * @param aThreshold  Maximum number of frames that may be stored in the frame
    *                    buffer before it may discard already displayed frames.
@@ -350,7 +339,8 @@ public:
    *
    * @param aStartFrame See AnimationFrameBuffer::AnimationFrameBuffer.
    */
-  AnimationFrameRetainedBuffer(size_t aThreshold, size_t aBatch, size_t aCurrentFrame);
+  AnimationFrameRetainedBuffer(size_t aThreshold, size_t aBatch,
+                               size_t aCurrentFrame);
 
   /**
    * @returns Maximum number of frames before we start discarding previous
@@ -371,7 +361,7 @@ public:
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                               const AddSizeOfCb& aCallback) override;
 
-private:
+ private:
   friend class AnimationFrameDiscardingQueue;
   friend class AnimationFrameRecyclingQueue;
 
@@ -390,9 +380,8 @@ private:
  * An AnimationFrameDiscardingQueue will only retain up to mBatch * 2 frames.
  * When the animation advances, it will discard the old current frame.
  */
-class AnimationFrameDiscardingQueue : public AnimationFrameBuffer
-{
-public:
+class AnimationFrameDiscardingQueue : public AnimationFrameBuffer {
+ public:
   explicit AnimationFrameDiscardingQueue(AnimationFrameRetainedBuffer&& aQueue);
 
   imgFrame* Get(size_t aFrame, bool aForDisplay) final;
@@ -406,7 +395,7 @@ public:
   const imgFrame* FirstFrame() const { return mFirstFrame; }
   size_t PendingInsert() const { return mInsertIndex; }
 
-protected:
+ protected:
   bool InsertInternal(RefPtr<imgFrame>&& aFrame) override;
   void AdvanceInternal() override;
   bool ResetInternal() override;
@@ -430,9 +419,9 @@ protected:
  * so that the buffers are all identically sized and contain the complete frame
  * data.
  */
-class AnimationFrameRecyclingQueue final : public AnimationFrameDiscardingQueue
-{
-public:
+class AnimationFrameRecyclingQueue final
+    : public AnimationFrameDiscardingQueue {
+ public:
   explicit AnimationFrameRecyclingQueue(AnimationFrameRetainedBuffer&& aQueue);
 
   bool MarkComplete(const gfx::IntRect& aFirstFrameRefreshArea) override;
@@ -442,17 +431,13 @@ public:
   RawAccessFrameRef RecycleFrame(gfx::IntRect& aRecycleRect) override;
 
   struct RecycleEntry {
-    explicit RecycleEntry(const gfx::IntRect &aDirtyRect)
-      : mDirtyRect(aDirtyRect)
-    { }
+    explicit RecycleEntry(const gfx::IntRect& aDirtyRect)
+        : mDirtyRect(aDirtyRect) {}
 
     RecycleEntry(RecycleEntry&& aOther)
-      : mFrame(std::move(aOther.mFrame))
-      , mDirtyRect(aOther.mDirtyRect)
-    { }
+        : mFrame(std::move(aOther.mFrame)), mDirtyRect(aOther.mDirtyRect) {}
 
-    RecycleEntry& operator=(RecycleEntry&& aOther)
-    {
+    RecycleEntry& operator=(RecycleEntry&& aOther) {
       mFrame = std::move(aOther.mFrame);
       mDirtyRect = aOther.mDirtyRect;
       return *this;
@@ -461,17 +446,16 @@ public:
     RecycleEntry(const RecycleEntry& aOther) = delete;
     RecycleEntry& operator=(const RecycleEntry& aOther) = delete;
 
-    RefPtr<imgFrame> mFrame;   // The frame containing the buffer to recycle.
-    gfx::IntRect mDirtyRect;   // The dirty rect of the frame itself.
+    RefPtr<imgFrame> mFrame;  // The frame containing the buffer to recycle.
+    gfx::IntRect mDirtyRect;  // The dirty rect of the frame itself.
   };
 
   const std::deque<RecycleEntry>& Recycle() const { return mRecycle; }
-  const gfx::IntRect& FirstFrameRefreshArea() const
-  {
+  const gfx::IntRect& FirstFrameRefreshArea() const {
     return mFirstFrameRefreshArea;
   }
 
-protected:
+ protected:
   void AdvanceInternal() override;
   bool ResetInternal() override;
 
@@ -490,7 +474,7 @@ protected:
   bool mForceUseFirstFrameRefreshArea;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_AnimationFrameBuffer_h
+#endif  // mozilla_image_AnimationFrameBuffer_h

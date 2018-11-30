@@ -20,35 +20,34 @@ using namespace js;
 
 typedef mozilla::SmprintfPolicyPointer<js::SystemAllocPolicy> JSSmprintfPointer;
 
-JS_PUBLIC_API JS::UniqueChars JS_smprintf(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    JSSmprintfPointer result = mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap);
-    va_end(ap);
-    return JS::UniqueChars(result.release());
+JS_PUBLIC_API JS::UniqueChars JS_smprintf(const char* fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  JSSmprintfPointer result = mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap);
+  va_end(ap);
+  return JS::UniqueChars(result.release());
 }
 
-JS_PUBLIC_API JS::UniqueChars JS_sprintf_append(JS::UniqueChars&& last, const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    JSSmprintfPointer lastPtr(last.release());
-    JSSmprintfPointer result =
-        mozilla::VsmprintfAppend<js::SystemAllocPolicy>(std::move(lastPtr), fmt, ap);
-    va_end(ap);
-    return JS::UniqueChars(result.release());
+JS_PUBLIC_API JS::UniqueChars JS_sprintf_append(JS::UniqueChars&& last,
+                                                const char* fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  JSSmprintfPointer lastPtr(last.release());
+  JSSmprintfPointer result = mozilla::VsmprintfAppend<js::SystemAllocPolicy>(
+      std::move(lastPtr), fmt, ap);
+  va_end(ap);
+  return JS::UniqueChars(result.release());
 }
 
-JS_PUBLIC_API JS::UniqueChars JS_vsmprintf(const char* fmt, va_list ap)
-{
-    return JS::UniqueChars(mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap).release());
+JS_PUBLIC_API JS::UniqueChars JS_vsmprintf(const char* fmt, va_list ap) {
+  return JS::UniqueChars(
+      mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap).release());
 }
 
 JS_PUBLIC_API JS::UniqueChars JS_vsprintf_append(JS::UniqueChars&& last,
-                                                 const char* fmt, va_list ap)
-{
-    JSSmprintfPointer lastPtr(last.release());
-    return JS::UniqueChars(mozilla::VsmprintfAppend<js::SystemAllocPolicy>(std::move(lastPtr),
-                                                                           fmt, ap).release());
+                                                 const char* fmt, va_list ap) {
+  JSSmprintfPointer lastPtr(last.release());
+  return JS::UniqueChars(mozilla::VsmprintfAppend<js::SystemAllocPolicy>(
+                             std::move(lastPtr), fmt, ap)
+                             .release());
 }

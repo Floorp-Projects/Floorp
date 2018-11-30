@@ -15,7 +15,7 @@ namespace gfx {
 void BufferUnrotate(uint8_t* aBuffer, int aByteWidth, int aHeight,
                     int aByteStride, int aXByteBoundary, int aYBoundary);
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_BUFFER_UNROTATE_H
+#endif  // MOZILLA_GFX_BUFFER_UNROTATE_H

@@ -35,16 +35,14 @@ class FileDescriptor;
 //
 // See also ../SandboxBrokerClient.h for the corresponding client.
 
-class SandboxBroker final
-  : private SandboxBrokerCommon
-  , public PlatformThread::Delegate
-{
+class SandboxBroker final : private SandboxBrokerCommon,
+                            public PlatformThread::Delegate {
  public:
   enum Perms {
-    MAY_ACCESS    = 1 << 0,
-    MAY_READ      = 1 << 1,
-    MAY_WRITE     = 1 << 2,
-    MAY_CREATE    = 1 << 3,
+    MAY_ACCESS = 1 << 0,
+    MAY_READ = 1 << 1,
+    MAY_WRITE = 1 << 2,
+    MAY_CREATE = 1 << 3,
     // This flag is for testing policy changes -- when the client is
     // used with the seccomp-bpf integration, an access to this file
     // will invoke a crash dump with the context of the syscall.
@@ -52,9 +50,9 @@ class SandboxBroker final
     CRASH_INSTEAD = 1 << 4,
     // Applies to everything below this path, including subdirs created
     // at runtime
-    RECURSIVE     = 1 << 5,
+    RECURSIVE = 1 << 5,
     // Allow Unix-domain socket connections to a path
-    MAY_CONNECT   = 1 << 6,
+    MAY_CONNECT = 1 << 6,
   };
   // Bitwise operations on enum values return ints, so just use int in
   // the hash table type (and below) to avoid cluttering code with casts.
@@ -62,7 +60,8 @@ class SandboxBroker final
 
   class Policy {
     PathPermissionMap mMap;
-  public:
+
+   public:
     Policy();
     Policy(const Policy& aOther);
     ~Policy();
@@ -111,7 +110,8 @@ class SandboxBroker final
     int Lookup(const char* aPath) const {
       return Lookup(nsDependentCString(aPath));
     }
-  private:
+
+   private:
     // ValidatePath checks |path| and returns true if these conditions are met
     // * Greater than 0 length
     // * Is an absolute path
@@ -124,9 +124,9 @@ class SandboxBroker final
   // Constructing a broker involves creating a socketpair and a
   // background thread to handle requests, so it can fail.  If this
   // returns nullptr, do not use the value of aClientFdOut.
-  static UniquePtr<SandboxBroker>
-    Create(UniquePtr<const Policy> aPolicy, int aChildPid,
-           ipc::FileDescriptor& aClientFdOut);
+  static UniquePtr<SandboxBroker> Create(UniquePtr<const Policy> aPolicy,
+                                         int aChildPid,
+                                         ipc::FileDescriptor& aClientFdOut);
   virtual ~SandboxBroker();
 
  private:
@@ -139,8 +139,7 @@ class SandboxBroker final
   typedef nsDataHashtable<nsCStringHashKey, nsCString> PathMap;
   PathMap mSymlinkMap;
 
-  SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
-                int& aClientFd);
+  SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid, int& aClientFd);
   void ThreadMain(void) override;
   void AuditPermissive(int aOp, int aFlags, int aPerms, const char* aPath);
   void AuditDenial(int aOp, int aFlags, int aPerms, const char* aPath);
@@ -161,6 +160,6 @@ class SandboxBroker final
   void operator=(const SandboxBroker&) = delete;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SandboxBroker_h
+#endif  // mozilla_SandboxBroker_h

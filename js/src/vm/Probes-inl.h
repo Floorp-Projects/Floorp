@@ -20,87 +20,80 @@ namespace js {
  * especially important when no backends are enabled.
  */
 
-inline bool
-probes::CallTrackingActive(JSContext* cx)
-{
+inline bool probes::CallTrackingActive(JSContext* cx) {
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED() || JAVASCRIPT_FUNCTION_RETURN_ENABLED()) {
-        return true;
-    }
-#endif
-    return false;
-}
-
-inline bool
-probes::EnterScript(JSContext* cx, JSScript* script, JSFunction* maybeFun,
-                    InterpreterFrame* fp)
-{
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED()) {
-        DTraceEnterJSFun(cx, maybeFun, script);
-    }
-#endif
-
-    JSRuntime* rt = cx->runtime();
-    if (rt->geckoProfiler().enabled()) {
-        if (!cx->geckoProfiler().enter(cx, script, maybeFun)) {
-            return false;
-        }
-        MOZ_ASSERT_IF(!fp->script()->isGenerator() &&
-                      !fp->script()->isAsync(),
-                      !fp->hasPushedGeckoProfilerFrame());
-        fp->setPushedGeckoProfilerFrame();
-    }
-
-    if (script->trackRecordReplayProgress()) {
-        mozilla::recordreplay::AdvanceExecutionProgressCounter();
-    }
-
+  if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED() ||
+      JAVASCRIPT_FUNCTION_RETURN_ENABLED()) {
     return true;
+  }
+#endif
+  return false;
 }
 
-inline void
-probes::ExitScript(JSContext* cx, JSScript* script, JSFunction* maybeFun, bool popProfilerFrame)
-{
+inline bool probes::EnterScript(JSContext* cx, JSScript* script,
+                                JSFunction* maybeFun, InterpreterFrame* fp) {
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_FUNCTION_RETURN_ENABLED()) {
-        DTraceExitJSFun(cx, maybeFun, script);
-    }
+  if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED()) {
+    DTraceEnterJSFun(cx, maybeFun, script);
+  }
 #endif
 
-    if (popProfilerFrame) {
-        cx->geckoProfiler().exit(script, maybeFun);
+  JSRuntime* rt = cx->runtime();
+  if (rt->geckoProfiler().enabled()) {
+    if (!cx->geckoProfiler().enter(cx, script, maybeFun)) {
+      return false;
     }
+    MOZ_ASSERT_IF(!fp->script()->isGenerator() && !fp->script()->isAsync(),
+                  !fp->hasPushedGeckoProfilerFrame());
+    fp->setPushedGeckoProfilerFrame();
+  }
+
+  if (script->trackRecordReplayProgress()) {
+    mozilla::recordreplay::AdvanceExecutionProgressCounter();
+  }
+
+  return true;
 }
 
-inline bool
-probes::StartExecution(JSScript* script)
-{
-    bool ok = true;
-
+inline void probes::ExitScript(JSContext* cx, JSScript* script,
+                               JSFunction* maybeFun, bool popProfilerFrame) {
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_EXECUTE_START_ENABLED()) {
-        JAVASCRIPT_EXECUTE_START((script->filename() ? (char*)script->filename() : nullName),
-                                 script->lineno());
-    }
+  if (JAVASCRIPT_FUNCTION_RETURN_ENABLED()) {
+    DTraceExitJSFun(cx, maybeFun, script);
+  }
 #endif
 
-    return ok;
+  if (popProfilerFrame) {
+    cx->geckoProfiler().exit(script, maybeFun);
+  }
 }
 
-inline bool
-probes::StopExecution(JSScript* script)
-{
-    bool ok = true;
+inline bool probes::StartExecution(JSScript* script) {
+  bool ok = true;
 
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_EXECUTE_DONE_ENABLED()) {
-        JAVASCRIPT_EXECUTE_DONE((script->filename() ? (char*)script->filename() : nullName),
-                                script->lineno());
-    }
+  if (JAVASCRIPT_EXECUTE_START_ENABLED()) {
+    JAVASCRIPT_EXECUTE_START(
+        (script->filename() ? (char*)script->filename() : nullName),
+        script->lineno());
+  }
 #endif
 
-    return ok;
+  return ok;
+}
+
+inline bool probes::StopExecution(JSScript* script) {
+  bool ok = true;
+
+#ifdef INCLUDE_MOZILLA_DTRACE
+  if (JAVASCRIPT_EXECUTE_DONE_ENABLED()) {
+    JAVASCRIPT_EXECUTE_DONE(
+        (script->filename() ? (char*)script->filename() : nullName),
+        script->lineno());
+  }
+#endif
+
+  return ok;
 }
 
 } /* namespace js */

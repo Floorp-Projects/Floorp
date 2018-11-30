@@ -14,9 +14,9 @@
 namespace mozilla {
 namespace dom {
 
-class PresentationTerminateRequest final : public nsIPresentationTerminateRequest
-{
-public:
+class PresentationTerminateRequest final
+    : public nsIPresentationTerminateRequest {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONTERMINATEREQUEST
 
@@ -25,7 +25,7 @@ public:
                                nsIPresentationControlChannel* aControlChannel,
                                bool aIsFromReceiver);
 
-private:
+ private:
   virtual ~PresentationTerminateRequest();
 
   nsString mPresentationId;
@@ -34,8 +34,7 @@ private:
   bool mIsFromReceiver;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_PresentationTerminateRequest_h__ */
-

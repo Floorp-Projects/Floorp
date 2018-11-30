@@ -9,18 +9,14 @@
 
 #include <string>
 
-
-namespace mozilla
-{
+namespace mozilla {
 
 class Sdp;
 class SdpMediaSection;
 class SdpAttributeList;
 
-class ParsingResultComparer
-{
-public:
-
+class ParsingResultComparer {
+ public:
   ParsingResultComparer() = default;
 
   bool Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
@@ -28,18 +24,15 @@ public:
   bool CompareMediaSections(const SdpMediaSection& rustMediaSection,
                             const SdpMediaSection& sipccMediaSection) const;
   bool CompareAttrLists(const SdpAttributeList& rustAttrlist,
-                        const SdpAttributeList& sipccAttrlist,
-                        int level) const;
+                        const SdpAttributeList& sipccAttrlist, int level) const;
   void TrackRustParsingFailed(size_t sipccErrorCount) const;
 
-private:
-
+ private:
   std::string mOriginalSdp;
 
   std::string GetAttributeLines(const std::string& attrType, int level) const;
-
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // _PARSINGRESULTCOMPARER_H_
+#endif  // _PARSINGRESULTCOMPARER_H_

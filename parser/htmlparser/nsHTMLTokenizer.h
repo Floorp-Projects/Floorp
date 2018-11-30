@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /**
  * MODULE NOTES:
  * @update  gess 4/1/98
- * 
+ *
  */
 
 #ifndef __NSHTMLTOKENIZER
@@ -18,18 +17,16 @@
 #include "nsITokenizer.h"
 
 #ifdef _MSC_VER
-#pragma warning( disable : 4275 )
+#pragma warning(disable : 4275)
 #endif
 
 class nsHTMLTokenizer final : public nsITokenizer {
   ~nsHTMLTokenizer() {}
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITOKENIZER
   nsHTMLTokenizer();
 };
 
 #endif
-
-

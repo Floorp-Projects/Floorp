@@ -21,8 +21,7 @@ const Float kKappaFactor = 0.55191497064665766025f;
 // Calculate kappa constant for partial curve. The sign of angle in the
 // tangent will actually ensure this is negative for a counter clockwise
 // sweep, so changing signs later isn't needed.
-inline Float ComputeKappaFactor(Float aAngle)
-{
+inline Float ComputeKappaFactor(Float aAngle) {
   return (4.0f / 3.0f) * tanf(aAngle / 4.0f);
 }
 
@@ -31,16 +30,14 @@ inline Float ComputeKappaFactor(Float aAngle)
  * Assumes that it is continuing from an already specified start point.
  */
 template <typename T>
-inline void PartialArcToBezier(T* aSink,
-                               const Point& aStartOffset, const Point& aEndOffset,
+inline void PartialArcToBezier(T* aSink, const Point& aStartOffset,
+                               const Point& aEndOffset,
                                const Matrix& aTransform,
-                               Float aKappaFactor = kKappaFactor)
-{
+                               Float aKappaFactor = kKappaFactor) {
   Point cp1 =
-    aStartOffset + Point(-aStartOffset.y, aStartOffset.x) * aKappaFactor;
+      aStartOffset + Point(-aStartOffset.y, aStartOffset.x) * aKappaFactor;
 
-  Point cp2 =
-    aEndOffset + Point(aEndOffset.y, -aEndOffset.x) * aKappaFactor;
+  Point cp2 = aEndOffset + Point(aEndOffset.y, -aEndOffset.x) * aKappaFactor;
 
   aSink->BezierTo(aTransform.TransformPoint(cp1),
                   aTransform.TransformPoint(cp2),
@@ -52,20 +49,20 @@ inline void PartialArcToBezier(T* aSink,
  * Specialized version avoiding kappa calculation.
  */
 template <typename T>
-inline void AcuteArcToBezier(T* aSink,
-                             const Point& aOrigin, const Size& aRadius,
-                             const Point& aStartPoint, const Point& aEndPoint,
-                             Float aKappaFactor = kKappaFactor)
-{
+inline void AcuteArcToBezier(T* aSink, const Point& aOrigin,
+                             const Size& aRadius, const Point& aStartPoint,
+                             const Point& aEndPoint,
+                             Float aKappaFactor = kKappaFactor) {
   aSink->LineTo(aStartPoint);
   if (!aRadius.IsEmpty()) {
     Float kappaX = aKappaFactor * aRadius.width / aRadius.height;
     Float kappaY = aKappaFactor * aRadius.height / aRadius.width;
     Point startOffset = aStartPoint - aOrigin;
     Point endOffset = aEndPoint - aOrigin;
-    aSink->BezierTo(aStartPoint + Point(-startOffset.y * kappaX, startOffset.x * kappaY),
-                    aEndPoint + Point(endOffset.y * kappaX, -endOffset.x * kappaY),
-                    aEndPoint);
+    aSink->BezierTo(
+        aStartPoint + Point(-startOffset.y * kappaX, startOffset.x * kappaY),
+        aEndPoint + Point(endOffset.y * kappaX, -endOffset.x * kappaY),
+        aEndPoint);
   } else if (aEndPoint != aStartPoint) {
     aSink->LineTo(aEndPoint);
   }
@@ -75,20 +72,18 @@ inline void AcuteArcToBezier(T* aSink,
  * Draws an acute arc (<= 90 degrees) given exact start and end points.
  */
 template <typename T>
-inline void AcuteArcToBezier(T* aSink,
-                             const Point& aOrigin, const Size& aRadius,
-                             const Point& aStartPoint, const Point& aEndPoint,
-                             Float aStartAngle, Float aEndAngle)
-{
+inline void AcuteArcToBezier(T* aSink, const Point& aOrigin,
+                             const Size& aRadius, const Point& aStartPoint,
+                             const Point& aEndPoint, Float aStartAngle,
+                             Float aEndAngle) {
   AcuteArcToBezier(aSink, aOrigin, aRadius, aStartPoint, aEndPoint,
                    ComputeKappaFactor(aEndAngle - aStartAngle));
 }
 
 template <typename T>
-void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
+void ArcToBezier(T* aSink, const Point& aOrigin, const Size& aRadius,
                  float aStartAngle, float aEndAngle, bool aAntiClockwise,
-                 float aRotation = 0.0f)
-{
+                 float aRotation = 0.0f) {
   Float sweepDirection = aAntiClockwise ? -1.0f : 1.0f;
 
   // Calculate the total arc we're going to sweep.
@@ -117,7 +112,8 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
 
   while (arcSweepLeft > 0) {
     Float currentEndAngle =
-      currentStartAngle + std::min(arcSweepLeft, Float(M_PI / 2.0f)) * sweepDirection;
+        currentStartAngle +
+        std::min(arcSweepLeft, Float(M_PI / 2.0f)) * sweepDirection;
     Point currentEndOffset(cosf(currentEndAngle), sinf(currentEndAngle));
 
     PartialArcToBezier(aSink, currentStartOffset, currentEndOffset, transform,
@@ -132,11 +128,10 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
 }
 
 /* This is basically the ArcToBezier with the parameters for drawing a circle
- * inlined which vastly simplifies it and avoids a bunch of transcedental function
- * calls which should make it faster. */
+ * inlined which vastly simplifies it and avoids a bunch of transcedental
+ * function calls which should make it faster. */
 template <typename T>
-void EllipseToBezier(T* aSink, const Point &aOrigin, const Size &aRadius)
-{
+void EllipseToBezier(T* aSink, const Point& aOrigin, const Size& aRadius) {
   Matrix transform(aRadius.width, 0, 0, aRadius.height, aOrigin.x, aOrigin.y);
   Point currentStartOffset(1, 0);
 
@@ -165,14 +160,12 @@ void EllipseToBezier(T* aSink, const Point &aOrigin, const Size &aRadius)
  *                 start at the right of the top left edge and draw counter-
  *                 clockwise.
  */
-GFX2D_API void AppendRectToPath(PathBuilder* aPathBuilder,
-                                const Rect& aRect,
+GFX2D_API void AppendRectToPath(PathBuilder* aPathBuilder, const Rect& aRect,
                                 bool aDrawClockwise = true);
 
 inline already_AddRefed<Path> MakePathForRect(const DrawTarget& aDrawTarget,
-                                          const Rect& aRect,
-                                          bool aDrawClockwise = true)
-{
+                                              const Rect& aRect,
+                                              bool aDrawClockwise = true) {
   RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
   AppendRectToPath(builder, aRect, aDrawClockwise);
   return builder->Finish();
@@ -195,11 +188,9 @@ GFX2D_API void AppendRoundedRectToPath(PathBuilder* aPathBuilder,
                                        const RectCornerRadii& aRadii,
                                        bool aDrawClockwise = true);
 
-inline already_AddRefed<Path> MakePathForRoundedRect(const DrawTarget& aDrawTarget,
-                                                 const Rect& aRect,
-                                                 const RectCornerRadii& aRadii,
-                                                 bool aDrawClockwise = true)
-{
+inline already_AddRefed<Path> MakePathForRoundedRect(
+    const DrawTarget& aDrawTarget, const Rect& aRect,
+    const RectCornerRadii& aRadii, bool aDrawClockwise = true) {
   RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
   AppendRoundedRectToPath(builder, aRect, aRadii, aDrawClockwise);
   return builder->Finish();
@@ -217,9 +208,8 @@ GFX2D_API void AppendEllipseToPath(PathBuilder* aPathBuilder,
                                    const Size& aDimensions);
 
 inline already_AddRefed<Path> MakePathForEllipse(const DrawTarget& aDrawTarget,
-                                             const Point& aCenter,
-                                             const Size& aDimensions)
-{
+                                                 const Point& aCenter,
+                                                 const Size& aDimensions) {
   RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
   AppendEllipseToPath(builder, aCenter, aDimensions);
   return builder->Finish();
@@ -282,8 +272,7 @@ extern UserDataKey sDisablePixelSnapping;
  */
 inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
                                      bool aAllowScaleOr90DegreeRotate = false,
-                                     bool aAllowEmptySnaps = true)
-{
+                                     bool aAllowEmptySnaps = true) {
   if (aDrawTarget.GetUserData(&sDisablePixelSnapping)) {
     return false;
   }
@@ -291,7 +280,7 @@ inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
   Matrix mat = aDrawTarget.GetTransform();
 
   const Float epsilon = 0.0000001f;
-#define WITHIN_E(a,b) (fabs((a)-(b)) < epsilon)
+#define WITHIN_E(a, b) (fabs((a) - (b)) < epsilon)
   if (!aAllowScaleOr90DegreeRotate &&
       (!WITHIN_E(mat._11, 1.f) || !WITHIN_E(mat._22, 1.f) ||
        !WITHIN_E(mat._12, 0.f) || !WITHIN_E(mat._21, 0.f))) {
@@ -311,23 +300,23 @@ inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
   // We actually only need to check one of p2 and p4, since an affine
   // transform maps parallelograms to parallelograms.
   if (p2 == Point(p1.x, p3.y) || p2 == Point(p3.x, p1.y)) {
-      Point p1r = p1;
-      Point p3r = p3;
-      p1r.Round();
-      p3r.Round();
-      if (aAllowEmptySnaps || p1r.x != p3r.x) {
-          p1.x = p1r.x;
-          p3.x = p3r.x;
-      }
-      if (aAllowEmptySnaps || p1r.y != p3r.y) {
-          p1.y = p1r.y;
-          p3.y = p3r.y;
-      }
+    Point p1r = p1;
+    Point p3r = p3;
+    p1r.Round();
+    p3r.Round();
+    if (aAllowEmptySnaps || p1r.x != p3r.x) {
+      p1.x = p1r.x;
+      p3.x = p3r.x;
+    }
+    if (aAllowEmptySnaps || p1r.y != p3r.y) {
+      p1.y = p1r.y;
+      p3.y = p3r.y;
+    }
 
-      aRect.MoveTo(Point(std::min(p1.x, p3.x), std::min(p1.y, p3.y)));
-      aRect.SizeTo(Size(std::max(p1.x, p3.x) - aRect.X(),
-                        std::max(p1.y, p3.y) - aRect.Y()));
-      return true;
+    aRect.MoveTo(Point(std::min(p1.x, p3.x), std::min(p1.y, p3.y)));
+    aRect.SizeTo(Size(std::max(p1.x, p3.x) - aRect.X(),
+                      std::max(p1.y, p3.y) - aRect.Y()));
+    return true;
   }
 
   return false;
@@ -339,10 +328,9 @@ inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
  */
 inline bool MaybeSnapToDevicePixels(Rect& aRect, const DrawTarget& aDrawTarget,
                                     bool aAllowScaleOr90DegreeRotate = false,
-                                    bool aAllowEmptySnaps = true)
-{
-  if (UserToDevicePixelSnapped(aRect, aDrawTarget,
-                               aAllowScaleOr90DegreeRotate, aAllowEmptySnaps)) {
+                                    bool aAllowEmptySnaps = true) {
+  if (UserToDevicePixelSnapped(aRect, aDrawTarget, aAllowScaleOr90DegreeRotate,
+                               aAllowEmptySnaps)) {
     // Since UserToDevicePixelSnapped returned true we know there is no
     // rotation/skew in 'mat', so we can just use TransformBounds() here.
     Matrix mat = aDrawTarget.GetTransform();
@@ -353,7 +341,7 @@ inline bool MaybeSnapToDevicePixels(Rect& aRect, const DrawTarget& aDrawTarget,
   return false;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_PATHHELPERS_H_ */

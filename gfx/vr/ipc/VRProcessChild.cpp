@@ -9,27 +9,22 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ipc/IOThreadChild.h"
 
-
 using namespace mozilla;
 using namespace mozilla::gfx;
 using mozilla::ipc::IOThreadChild;
 
-
 VRProcessChild::VRProcessChild(ProcessId aParentPid)
-  : ProcessChild(aParentPid)
+    : ProcessChild(aParentPid)
 #if defined(aParentPid)
-  , mVR(nullptr)
+      ,
+      mVR(nullptr)
 #endif
 {
 }
 
-VRProcessChild::~VRProcessChild()
-{
-}
+VRProcessChild::~VRProcessChild() {}
 
-bool
-VRProcessChild::Init(int aArgc, char* aArgv[])
-{
+bool VRProcessChild::Init(int aArgc, char* aArgv[]) {
   BackgroundHangMonitor::Startup();
 
   char* parentBuildID = nullptr;
@@ -39,15 +34,10 @@ VRProcessChild::Init(int aArgc, char* aArgv[])
     }
   }
 
-  mVR.Init(ParentPid(), parentBuildID,
-           IOThreadChild::message_loop(),
+  mVR.Init(ParentPid(), parentBuildID, IOThreadChild::message_loop(),
            IOThreadChild::channel());
 
   return true;
 }
 
-void
-VRProcessChild::CleanUp()
-{
-  NS_ShutdownXPCOM(nullptr);
-}
+void VRProcessChild::CleanUp() { NS_ShutdownXPCOM(nullptr); }

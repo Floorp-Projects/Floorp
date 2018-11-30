@@ -12,14 +12,10 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-CSSNamespaceRule::~CSSNamespaceRule()
-{
-}
+CSSNamespaceRule::~CSSNamespaceRule() {}
 
 #ifdef DEBUG
-void
-CSSNamespaceRule::List(FILE* out, int32_t aIndent) const
-{
+void CSSNamespaceRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -29,29 +25,21 @@ CSSNamespaceRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-nsAtom*
-CSSNamespaceRule::GetPrefix() const
-{
+nsAtom* CSSNamespaceRule::GetPrefix() const {
   return Servo_NamespaceRule_GetPrefix(mRawRule);
 }
 
-void
-CSSNamespaceRule::GetURLSpec(nsString& aURLSpec) const
-{
+void CSSNamespaceRule::GetURLSpec(nsString& aURLSpec) const {
   nsAtom* atom = Servo_NamespaceRule_GetURI(mRawRule);
   atom->ToString(aURLSpec);
 }
 
-void
-CSSNamespaceRule::GetCssText(nsAString& aCssText) const
-{
+void CSSNamespaceRule::GetCssText(nsAString& aCssText) const {
   Servo_NamespaceRule_GetCssText(mRawRule, &aCssText);
 }
 
-size_t
-CSSNamespaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t CSSNamespaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

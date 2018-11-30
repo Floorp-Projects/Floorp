@@ -13,14 +13,11 @@
 namespace js {
 namespace frontend {
 
-inline
-Directives::Directives(ParseContext* parent)
-  : strict_(parent->sc()->strict()),
-    asmJS_(parent->useAsmOrInsideUseAsm())
-{}
+inline Directives::Directives(ParseContext* parent)
+    : strict_(parent->sc()->strict()), asmJS_(parent->useAsmOrInsideUseAsm()) {}
 
-} // namespace frontend
+}  // namespace frontend
 
-} // namespace js
+}  // namespace js
 
-#endif // frontend_SharedContext_inl_h
+#endif  // frontend_SharedContext_inl_h

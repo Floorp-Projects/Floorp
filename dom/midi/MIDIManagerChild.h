@@ -19,21 +19,21 @@ namespace dom {
  * object creation.
  *
  */
-class MIDIManagerChild final : public PMIDIManagerChild
-{
-public:
+class MIDIManagerChild final : public PMIDIManagerChild {
+ public:
   NS_INLINE_DECL_REFCOUNTING(MIDIManagerChild)
 
   MIDIManagerChild();
   mozilla::ipc::IPCResult RecvMIDIPortListUpdate(const MIDIPortList& aPortList);
   void SetActorAlive();
   void Shutdown();
-private:
+
+ private:
   ~MIDIManagerChild() = default;
   bool mShutdown;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MIDIManagerChild_h
+#endif  // mozilla_dom_MIDIManagerChild_h

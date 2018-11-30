@@ -28,35 +28,26 @@ using mozilla::ipc::FileDescriptorSetChild;
 using mozilla::ipc::PFileDescriptorSetChild;
 
 // declared in ActorUtils.h
-PCacheStreamControlChild*
-AllocPCacheStreamControlChild()
-{
+PCacheStreamControlChild* AllocPCacheStreamControlChild() {
   return new CacheStreamControlChild();
 }
 
 // declared in ActorUtils.h
-void
-DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor)
-{
+void DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor) {
   delete aActor;
 }
 
 CacheStreamControlChild::CacheStreamControlChild()
-  : mDestroyStarted(false)
-  , mDestroyDelayed(false)
-{
+    : mDestroyStarted(false), mDestroyDelayed(false) {
   MOZ_COUNT_CTOR(cache::CacheStreamControlChild);
 }
 
-CacheStreamControlChild::~CacheStreamControlChild()
-{
+CacheStreamControlChild::~CacheStreamControlChild() {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   MOZ_COUNT_DTOR(cache::CacheStreamControlChild);
 }
 
-void
-CacheStreamControlChild::StartDestroy()
-{
+void CacheStreamControlChild::StartDestroy() {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   // This can get called twice under some circumstances.  For example, if the
   // actor is added to a CacheWorkerHolder that has already been notified and
@@ -86,30 +77,27 @@ CacheStreamControlChild::StartDestroy()
   RecvCloseAll();
 }
 
-void
-CacheStreamControlChild::SerializeControl(CacheReadStream* aReadStreamOut)
-{
+void CacheStreamControlChild::SerializeControl(
+    CacheReadStream* aReadStreamOut) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
   aReadStreamOut->controlParent() = nullptr;
   aReadStreamOut->controlChild() = this;
 }
 
-void
-CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,
-                                         nsIInputStream* aStream,
-                                         nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList)
-{
+void CacheStreamControlChild::SerializeStream(
+    CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
+    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
-  UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(aReadStreamOut->stream()));
+  UniquePtr<AutoIPCStream> autoStream(
+      new AutoIPCStream(aReadStreamOut->stream()));
   autoStream->Serialize(aStream, Manager());
   aStreamCleanupList.AppendElement(std::move(autoStream));
 }
 
-void
-CacheStreamControlChild::OpenStream(const nsID& aId, InputStreamResolver&& aResolver)
-{
+void CacheStreamControlChild::OpenStream(const nsID& aId,
+                                         InputStreamResolver&& aResolver) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
 
   if (mDestroyStarted) {
@@ -124,17 +112,17 @@ CacheStreamControlChild::OpenStream(const nsID& aId, InputStreamResolver&& aReso
   // worker wants to shut down.
   RefPtr<CacheWorkerHolder> holder = GetWorkerHolder();
 
-  SendOpenStream(aId)->Then(GetCurrentThreadSerialEventTarget(), __func__,
-  [aResolver, holder](const RefPtr<nsIInputStream>& aOptionalStream) {
-    aResolver(nsCOMPtr<nsIInputStream>(aOptionalStream));
-  }, [aResolver, holder](ResponseRejectReason aReason) {
-    aResolver(nullptr);
-  });
+  SendOpenStream(aId)->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [aResolver, holder](const RefPtr<nsIInputStream>& aOptionalStream) {
+        aResolver(nsCOMPtr<nsIInputStream>(aOptionalStream));
+      },
+      [aResolver, holder](ResponseRejectReason aReason) {
+        aResolver(nullptr);
+      });
 }
 
-void
-CacheStreamControlChild::NoteClosedAfterForget(const nsID& aId)
-{
+void CacheStreamControlChild::NoteClosedAfterForget(const nsID& aId) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   Unused << SendNoteClosed(aId);
 
@@ -149,37 +137,29 @@ CacheStreamControlChild::NoteClosedAfterForget(const nsID& aId)
 }
 
 #ifdef DEBUG
-void
-CacheStreamControlChild::AssertOwningThread()
-{
+void CacheStreamControlChild::AssertOwningThread() {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
 }
 #endif
 
-void
-CacheStreamControlChild::ActorDestroy(ActorDestroyReason aReason)
-{
+void CacheStreamControlChild::ActorDestroy(ActorDestroyReason aReason) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   CloseAllReadStreamsWithoutReporting();
   RemoveWorkerHolder();
 }
 
-mozilla::ipc::IPCResult
-CacheStreamControlChild::RecvClose(const nsID& aId)
-{
+mozilla::ipc::IPCResult CacheStreamControlChild::RecvClose(const nsID& aId) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   CloseReadStreams(aId);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CacheStreamControlChild::RecvCloseAll()
-{
+mozilla::ipc::IPCResult CacheStreamControlChild::RecvCloseAll() {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   CloseAllReadStreams();
   return IPC_OK();
 }
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

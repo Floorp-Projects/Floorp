@@ -27,8 +27,7 @@ class Event;
 
 class SharedWorkerChild;
 
-class SharedWorker final : public DOMEventTargetHelper
-{
+class SharedWorker final : public DOMEventTargetHelper {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;
 
@@ -38,68 +37,54 @@ class SharedWorker final : public DOMEventTargetHelper
   nsTArray<RefPtr<Event>> mFrozenEvents;
   bool mFrozen;
 
-public:
-  static already_AddRefed<SharedWorker>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
-              const StringOrWorkerOptions& aOptions, ErrorResult& aRv);
+ public:
+  static already_AddRefed<SharedWorker> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aScriptURL,
+      const StringOrWorkerOptions& aOptions, ErrorResult& aRv);
 
-  MessagePort*
-  Port();
+  MessagePort* Port();
 
-  bool
-  IsFrozen() const
-  {
-    return mFrozen;
-  }
+  bool IsFrozen() const { return mFrozen; }
 
-  void
-  QueueEvent(Event* aEvent);
+  void QueueEvent(Event* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SharedWorker, DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(error)
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
-  void
-  ErrorPropagation(nsresult aError);
+  void ErrorPropagation(nsresult aError);
 
   // Methods called from the window.
 
-  void
-  Close();
+  void Close();
 
-  void
-  Suspend();
+  void Suspend();
 
-  void
-  Resume();
+  void Resume();
 
-  void
-  Freeze();
+  void Freeze();
 
-  void
-  Thaw();
+  void Thaw();
 
-private:
-  SharedWorker(nsPIDOMWindowInner* aWindow,
-               SharedWorkerChild* aActor,
+ private:
+  SharedWorker(nsPIDOMWindowInner* aWindow, SharedWorkerChild* aActor,
                MessagePort* aMessagePort);
 
   // This class is reference-counted and will be destroyed from Release().
   ~SharedWorker();
 
   // Only called by MessagePort.
-  void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_workers_sharedworker_h__
+#endif  // mozilla_dom_workers_sharedworker_h__

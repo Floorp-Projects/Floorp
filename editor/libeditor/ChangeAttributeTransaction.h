@@ -9,9 +9,9 @@
 #include "mozilla/Attributes.h"           // override
 #include "mozilla/EditTransactionBase.h"  // base class
 #include "nsCOMPtr.h"                     // nsCOMPtr members
-#include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED
-#include "nsISupportsImpl.h"              // NS_DECL_ISUPPORTS_INHERITED
-#include "nsString.h"                     // nsString members
+#include "nsCycleCollectionParticipant.h"  // NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED
+#include "nsISupportsImpl.h"               // NS_DECL_ISUPPORTS_INHERITED
+#include "nsString.h"                      // nsString members
 
 class nsAtom;
 
@@ -19,20 +19,18 @@ namespace mozilla {
 
 namespace dom {
 class Element;
-} // namespace dom
+}  // namespace dom
 
 /**
  * A transaction that changes an attribute of a content node.  This transaction
  * covers add, remove, and change attribute.
  */
-class ChangeAttributeTransaction final : public EditTransactionBase
-{
-protected:
-  ChangeAttributeTransaction(dom::Element& aElement,
-                             nsAtom& aAttribute,
+class ChangeAttributeTransaction final : public EditTransactionBase {
+ protected:
+  ChangeAttributeTransaction(dom::Element& aElement, nsAtom& aAttribute,
                              const nsAString* aValue);
 
-public:
+ public:
   /**
    * Creates a change attribute transaction to set an attribute to something.
    * This method never returns nullptr.
@@ -41,10 +39,8 @@ public:
    * @param aAttribute  The name of the attribute to change.
    * @param aValue      The new value for aAttribute.
    */
-  static already_AddRefed<ChangeAttributeTransaction>
-  Create(dom::Element& aElement,
-         nsAtom& aAttribute,
-         const nsAString& aValue);
+  static already_AddRefed<ChangeAttributeTransaction> Create(
+      dom::Element& aElement, nsAtom& aAttribute, const nsAString& aValue);
 
   /**
    * Creates a change attribute transaction to remove an attribute.  This
@@ -53,9 +49,8 @@ public:
    * @param aElement    The element whose attribute will be changed.
    * @param aAttribute  The name of the attribute to remove.
    */
-  static already_AddRefed<ChangeAttributeTransaction>
-  CreateToRemove(dom::Element& aElement,
-                 nsAtom& aAttribute);
+  static already_AddRefed<ChangeAttributeTransaction> CreateToRemove(
+      dom::Element& aElement, nsAtom& aAttribute);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ChangeAttributeTransaction,
@@ -65,7 +60,7 @@ public:
 
   NS_IMETHOD RedoTransaction() override;
 
-private:
+ private:
   virtual ~ChangeAttributeTransaction();
 
   // The element to operate upon
@@ -87,6 +82,6 @@ private:
   bool mAttributeWasSet;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef ChangeAttributeTransaction_h
+#endif  // #ifndef ChangeAttributeTransaction_h

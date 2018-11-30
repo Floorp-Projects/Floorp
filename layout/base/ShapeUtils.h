@@ -22,8 +22,7 @@ class StyleBasicShape;
 // processing basic shapes in the CSS Shapes Module.
 // https://drafts.csswg.org/css-shapes/#basic-shape-functions
 //
-struct ShapeUtils final
-{
+struct ShapeUtils final {
   // Compute the length of a keyword <shape-radius>, i.e. closest-side or
   // farthest-side, for a circle or an ellipse on a single dimension. The
   // caller needs to call for both dimensions and combine the result.
@@ -69,8 +68,7 @@ struct ShapeUtils final
   // are taking here.
   // @param aRefBox the reference box of the inset.
   // @return The inset rect in app units.
-  static nsRect ComputeInsetRect(const StyleBasicShape&,
-                                 const nsRect& aRefBox);
+  static nsRect ComputeInsetRect(const StyleBasicShape&, const nsRect& aRefBox);
 
   // Compute the radii for an inset.
   // @param aRefBox the reference box of the inset.
@@ -78,8 +76,7 @@ struct ShapeUtils final
   // @param aRadii the returned radii in app units.
   // @return true if any of the radii is nonzero; false otherwise.
   static bool ComputeInsetRadii(const StyleBasicShape&,
-                                const nsRect& aInsetRect,
-                                const nsRect& aRefBox,
+                                const nsRect& aInsetRect, const nsRect& aRefBox,
                                 nscoord aRadii[8]);
 
   // Compute the vertices for a polygon.
@@ -90,6 +87,6 @@ struct ShapeUtils final
                                                   const nsRect& aRefBox);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ShapeUtils_h
+#endif  // mozilla_ShapeUtils_h

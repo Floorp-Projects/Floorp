@@ -56,13 +56,12 @@
 
 // Trivial subclasses of nsStaticAtom so that function signatures can require
 // an atom from a specific atom list.
-#define DEFINE_STATIC_ATOM_SUBCLASS(name_)                                     \
-  class name_ : public nsStaticAtom                                            \
-  {                                                                            \
-  public:                                                                      \
-    constexpr name_(uint32_t aLength, uint32_t aHash, uint32_t aOffset,        \
-                    bool aIsAsciiLowercase)                                    \
-      : nsStaticAtom(aLength, aHash, aOffset, aIsAsciiLowercase) {}            \
+#define DEFINE_STATIC_ATOM_SUBCLASS(name_)                              \
+  class name_ : public nsStaticAtom {                                   \
+   public:                                                              \
+    constexpr name_(uint32_t aLength, uint32_t aHash, uint32_t aOffset, \
+                    bool aIsAsciiLowercase)                             \
+        : nsStaticAtom(aLength, aHash, aOffset, aIsAsciiLowercase) {}   \
   };
 
 DEFINE_STATIC_ATOM_SUBCLASS(nsCSSAnonBoxPseudoStaticAtom)
@@ -79,33 +78,31 @@ namespace detail {
 //
 // A `detail` namespace is used because the things within it aren't directly
 // referenced by external users of these static atoms.
-struct GkAtoms
-{
-  // The declaration of each atom's string.
-  //
-  // Expansion of the example GK_ATOM entries from above:
-  //
-  //   const char16_t a_string[sizeof("a")];
-  //   const char16_t bb_string[sizeof("bb")];
-  //   const char16_t Ccc_string[sizeof("Ccc")];
-  //
-  #define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_) \
-    const char16_t name_##_string[sizeof(value_)];
-  #include "nsGkAtomList.h"
-  #undef GK_ATOM
+struct GkAtoms {
+// The declaration of each atom's string.
+//
+// Expansion of the example GK_ATOM entries from above:
+//
+//   const char16_t a_string[sizeof("a")];
+//   const char16_t bb_string[sizeof("bb")];
+//   const char16_t Ccc_string[sizeof("Ccc")];
+//
+#define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_) \
+  const char16_t name_##_string[sizeof(value_)];
+#include "nsGkAtomList.h"
+#undef GK_ATOM
 
   // The enum value for each atom.
   enum class Atoms {
-    // Expansion of the example GK_ATOM entries above:
-    //
-    //   a,
-    //   bb,
-    //   Ccc,
-    //
-    #define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_) \
-      name_,
-    #include "nsGkAtomList.h"
-    #undef GK_ATOM
+// Expansion of the example GK_ATOM entries above:
+//
+//   a,
+//   bb,
+//   Ccc,
+//
+#define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_) name_,
+#include "nsGkAtomList.h"
+#undef GK_ATOM
     AtomsCount
   };
 
@@ -122,13 +119,12 @@ extern NS_EXTERNAL_VIS const GkAtoms gGkAtoms;
 extern const GkAtoms gGkAtoms;
 #endif
 
-} // namespace detail
-} // namespace mozilla
+}  // namespace detail
+}  // namespace mozilla
 
 // This class holds the pointers to the individual atoms.
-class nsGkAtoms
-{
-private:
+class nsGkAtoms {
+ private:
   friend void NS_InitAtomTable();
 
   // This is a useful handle to the array of atoms, used below and also
@@ -137,45 +133,43 @@ private:
 
   // The number of atoms, used below.
   static constexpr size_t sAtomsLen =
-    static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::AtomsCount);
+      static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::AtomsCount);
 
-public:
-  static nsStaticAtom* GetAtomByIndex(size_t aIndex)
-  {
+ public:
+  static nsStaticAtom* GetAtomByIndex(size_t aIndex) {
     MOZ_ASSERT(aIndex < sAtomsLen);
     return const_cast<nsStaticAtom*>(&sAtoms[aIndex]);
   }
 
-  // The definition of the pointer to each static atom.
-  //
-  // These types are not `static constexpr <type>* const` -- even though these
-  // atoms are immutable -- because they are often passed to functions with
-  // `nsAtom*` parameters that can be passed both dynamic and static atoms.
-  //
-  // Expansion of the example GK_ATOM entries above:
-  //
-  //   static constexpr nsStaticAtom* a =
-  //     const_cast<nsStaticAtom*>(
-  //       &mozilla::detail::gGkAtoms.mAtoms[
-  //         static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::a)]);
-  //
-  //   static constexpr nsStaticAtom* bb =
-  //     const_cast<nsStaticAtom*>(
-  //       &mozilla::detail::gGkAtoms.mAtoms[
-  //         static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::bb)]);
-  //
-  //   static constexpr nsStaticAtom* Ccc =
-  //     const_cast<nsStaticAtom*>(
-  //       &mozilla::detail::gGkAtoms.mAtoms[
-  //         static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::Ccc)]);
-  //
-  #define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_)   \
-    static constexpr nsStaticAtom* name_ =                                    \
-      const_cast<nsStaticAtom*>(                                              \
-        &mozilla::detail::gGkAtoms.mAtoms[                                    \
-          static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::name_)]);
-  #include "nsGkAtomList.h"
-  #undef GK_ATOM
+// The definition of the pointer to each static atom.
+//
+// These types are not `static constexpr <type>* const` -- even though these
+// atoms are immutable -- because they are often passed to functions with
+// `nsAtom*` parameters that can be passed both dynamic and static atoms.
+//
+// Expansion of the example GK_ATOM entries above:
+//
+//   static constexpr nsStaticAtom* a =
+//     const_cast<nsStaticAtom*>(
+//       &mozilla::detail::gGkAtoms.mAtoms[
+//         static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::a)]);
+//
+//   static constexpr nsStaticAtom* bb =
+//     const_cast<nsStaticAtom*>(
+//       &mozilla::detail::gGkAtoms.mAtoms[
+//         static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::bb)]);
+//
+//   static constexpr nsStaticAtom* Ccc =
+//     const_cast<nsStaticAtom*>(
+//       &mozilla::detail::gGkAtoms.mAtoms[
+//         static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::Ccc)]);
+//
+#define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_) \
+  static constexpr nsStaticAtom* name_ = const_cast<nsStaticAtom*>(       \
+      &mozilla::detail::gGkAtoms.mAtoms[static_cast<size_t>(              \
+          mozilla::detail::GkAtoms::Atoms::name_)]);
+#include "nsGkAtomList.h"
+#undef GK_ATOM
 };
 
 #endif /* nsGkAtoms_h___ */

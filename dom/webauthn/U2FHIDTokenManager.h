@@ -19,12 +19,11 @@ namespace mozilla {
 namespace dom {
 
 class U2FAppIds {
-public:
-  explicit U2FAppIds(const nsTArray<nsTArray<uint8_t>>& aApplications)
-  {
+ public:
+  explicit U2FAppIds(const nsTArray<nsTArray<uint8_t>>& aApplications) {
     mAppIds = rust_u2f_app_ids_new();
 
-    for (auto& app_id: aApplications) {
+    for (auto& app_id : aApplications) {
       rust_u2f_app_ids_add(mAppIds, app_id.Elements(), app_id.Length());
     }
   }
@@ -33,20 +32,18 @@ public:
 
   ~U2FAppIds() { rust_u2f_app_ids_free(mAppIds); }
 
-private:
+ private:
   rust_u2f_app_ids* mAppIds;
 };
 
 class U2FKeyHandles {
-public:
-  explicit U2FKeyHandles(const nsTArray<WebAuthnScopedCredential>& aCredentials)
-  {
+ public:
+  explicit U2FKeyHandles(
+      const nsTArray<WebAuthnScopedCredential>& aCredentials) {
     mKeyHandles = rust_u2f_khs_new();
 
-    for (auto& cred: aCredentials) {
-      rust_u2f_khs_add(mKeyHandles,
-                       cred.id().Elements(),
-                       cred.id().Length(),
+    for (auto& cred : aCredentials) {
+      rust_u2f_khs_add(mKeyHandles, cred.id().Elements(), cred.id().Length(),
                        cred.transports());
     }
   }
@@ -55,16 +52,14 @@ public:
 
   ~U2FKeyHandles() { rust_u2f_khs_free(mKeyHandles); }
 
-private:
+ private:
   rust_u2f_key_handles* mKeyHandles;
 };
 
 class U2FResult {
-public:
+ public:
   explicit U2FResult(uint64_t aTransactionId, rust_u2f_result* aResult)
-    : mTransactionId(aTransactionId)
-    , mResult(aResult)
-  {
+      : mTransactionId(aTransactionId), mResult(aResult) {
     MOZ_ASSERT(mResult);
   }
 
@@ -90,27 +85,23 @@ public:
     }
   }
 
-  bool CopyRegistration(nsTArray<uint8_t>& aBuffer)
-  {
+  bool CopyRegistration(nsTArray<uint8_t>& aBuffer) {
     return CopyBuffer(U2F_RESBUF_ID_REGISTRATION, aBuffer);
   }
 
-  bool CopyKeyHandle(nsTArray<uint8_t>& aBuffer)
-  {
+  bool CopyKeyHandle(nsTArray<uint8_t>& aBuffer) {
     return CopyBuffer(U2F_RESBUF_ID_KEYHANDLE, aBuffer);
   }
 
-  bool CopySignature(nsTArray<uint8_t>& aBuffer)
-  {
+  bool CopySignature(nsTArray<uint8_t>& aBuffer) {
     return CopyBuffer(U2F_RESBUF_ID_SIGNATURE, aBuffer);
   }
 
-  bool CopyAppId(nsTArray<uint8_t>& aBuffer)
-  {
+  bool CopyAppId(nsTArray<uint8_t>& aBuffer) {
     return CopyBuffer(U2F_RESBUF_ID_APPID, aBuffer);
   }
 
-private:
+ private:
   bool CopyBuffer(uint8_t aResBufID, nsTArray<uint8_t>& aBuffer) {
     size_t len;
     if (!rust_u2f_resbuf_length(mResult, aResBufID, &len)) {
@@ -128,17 +119,14 @@ private:
   rust_u2f_result* mResult;
 };
 
-class U2FHIDTokenManager final : public U2FTokenTransport
-{
-public:
+class U2FHIDTokenManager final : public U2FTokenTransport {
+ public:
   explicit U2FHIDTokenManager();
 
-  RefPtr<U2FRegisterPromise>
-  Register(const WebAuthnMakeCredentialInfo& aInfo,
-           bool aForceNoneAttestation) override;
+  RefPtr<U2FRegisterPromise> Register(const WebAuthnMakeCredentialInfo& aInfo,
+                                      bool aForceNoneAttestation) override;
 
-  RefPtr<U2FSignPromise>
-  Sign(const WebAuthnGetAssertionInfo& aInfo) override;
+  RefPtr<U2FSignPromise> Sign(const WebAuthnGetAssertionInfo& aInfo) override;
 
   void Cancel() override;
   void Drop() override;
@@ -146,26 +134,23 @@ public:
   void HandleRegisterResult(UniquePtr<U2FResult>&& aResult);
   void HandleSignResult(UniquePtr<U2FResult>&& aResult);
 
-private:
-  ~U2FHIDTokenManager() { }
+ private:
+  ~U2FHIDTokenManager() {}
 
   void ClearPromises() {
     mRegisterPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
     mSignPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
   }
 
-  class Transaction
-  {
-  public:
-    Transaction(uint64_t aId,
-                const nsTArray<uint8_t>& aRpIdHash,
+  class Transaction {
+   public:
+    Transaction(uint64_t aId, const nsTArray<uint8_t>& aRpIdHash,
                 const nsCString& aClientDataJSON,
                 bool aForceNoneAttestation = false)
-      : mId(aId)
-      , mRpIdHash(aRpIdHash)
-      , mClientDataJSON(aClientDataJSON)
-      , mForceNoneAttestation(aForceNoneAttestation)
-    { }
+        : mId(aId),
+          mRpIdHash(aRpIdHash),
+          mClientDataJSON(aClientDataJSON),
+          mForceNoneAttestation(aForceNoneAttestation) {}
 
     // The transaction ID.
     uint64_t mId;
@@ -186,7 +171,7 @@ private:
   MozPromiseHolder<U2FSignPromise> mSignPromise;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_U2FHIDTokenManager_h
+#endif  // mozilla_dom_U2FHIDTokenManager_h

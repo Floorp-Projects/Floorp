@@ -23,9 +23,9 @@
 namespace mozilla {
 namespace ipc {
 
-class SharedMemoryBasic final : public SharedMemoryCommon<base::FileDescriptor>
-{
-public:
+class SharedMemoryBasic final
+    : public SharedMemoryCommon<base::FileDescriptor> {
+ public:
   SharedMemoryBasic();
 
   virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) override;
@@ -36,8 +36,7 @@ public:
 
   virtual void CloseHandle() override;
 
-  virtual void* memory() const override
-  {
+  virtual void* memory() const override {
 #ifdef FUZZING
     return SharedMemoryFuzzer::MutateSharedMemory(mMemory, mAllocSize);
 #else
@@ -45,25 +44,18 @@ public:
 #endif
   }
 
-  virtual SharedMemoryType Type() const override
-  {
-    return TYPE_BASIC;
-  }
+  virtual SharedMemoryType Type() const override { return TYPE_BASIC; }
 
-  static Handle NULLHandle()
-  {
-    return Handle();
-  }
+  static Handle NULLHandle() { return Handle(); }
 
-  virtual bool IsHandleValid(const Handle &aHandle) const override
-  {
+  virtual bool IsHandleValid(const Handle& aHandle) const override {
     return aHandle.fd >= 0;
   }
 
   virtual bool ShareToProcess(base::ProcessId aProcessId,
                               Handle* aNewHandle) override;
 
-private:
+ private:
   ~SharedMemoryBasic();
 
   void Unmap();
@@ -71,12 +63,12 @@ private:
   // The /dev/ashmem fd we allocate.
   int mShmFd;
   // Pointer to mapped region, null if unmapped.
-  void *mMemory;
+  void* mMemory;
   // Access rights to map an existing region with.
   OpenRights mOpenRights;
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // ifndef mozilla_ipc_SharedMemoryBasic_android_h
+#endif  // ifndef mozilla_ipc_SharedMemoryBasic_android_h

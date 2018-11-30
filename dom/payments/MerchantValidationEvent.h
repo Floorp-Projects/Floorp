@@ -18,21 +18,16 @@ namespace dom {
 
 class Promise;
 class PaymentRequest;
-class MerchantValidationEvent
-  : public Event
-  , public PromiseNativeHandler
-{
-public:
+class MerchantValidationEvent : public Event, public PromiseNativeHandler {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
-    MerchantValidationEvent,
-    Event)
+      MerchantValidationEvent, Event)
 
   explicit MerchantValidationEvent(EventTarget* aOwner);
 
   virtual JSObject* WrapObjectInternal(
-    JSContext* aCx,
-    JS::Handle<JSObject*> aGivenProto) override;
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual void ResolvedCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue) override;
@@ -40,17 +35,13 @@ public:
                                 JS::Handle<JS::Value> aValue) override;
 
   static already_AddRefed<MerchantValidationEvent> Constructor(
-    EventTarget* aOwner,
-    const nsAString& aType,
-    const MerchantValidationEventInit& aEventInitDict,
-    ErrorResult& aRv);
+      EventTarget* aOwner, const nsAString& aType,
+      const MerchantValidationEventInit& aEventInitDict, ErrorResult& aRv);
 
   // Called by WebIDL constructor
   static already_AddRefed<MerchantValidationEvent> Constructor(
-    const GlobalObject& aGlobal,
-    const nsAString& aType,
-    const MerchantValidationEventInit& aEventInitDict,
-    ErrorResult& aRv);
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const MerchantValidationEventInit& aEventInitDict, ErrorResult& aRv);
 
   void Complete(Promise& aPromise, ErrorResult& aRv);
 
@@ -64,11 +55,12 @@ public:
 
   void SetMethodName(const nsAString& aMethodName);
 
-protected:
-  bool init(const MerchantValidationEventInit& aEventInitDict, ErrorResult& aRv);
+ protected:
+  bool init(const MerchantValidationEventInit& aEventInitDict,
+            ErrorResult& aRv);
   ~MerchantValidationEvent();
 
-private:
+ private:
   // Indicating whether an Complete()-initiated update is currently in progress.
   bool mWaitForUpdate;
   nsString mValidationURL;
@@ -76,7 +68,7 @@ private:
   nsString mMethodName;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MerchantValidationEvent_h
+#endif  // mozilla_dom_MerchantValidationEvent_h

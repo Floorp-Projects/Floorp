@@ -43,37 +43,42 @@ using mozilla::FFTBlock;
 class ReverbAccumulationBuffer;
 class ReverbConvolver;
 
-// A ReverbConvolverStage represents the convolution associated with a sub-section of a large impulse response.
-// It incorporates a delay line to account for the offset of the sub-section within the larger impulse response.
+// A ReverbConvolverStage represents the convolution associated with a
+// sub-section of a large impulse response. It incorporates a delay line to
+// account for the offset of the sub-section within the larger impulse response.
 class ReverbConvolverStage {
-public:
-    // renderPhase is useful to know so that we can manipulate the pre versus post delay so that stages will perform
-    // their heavy work (FFT processing) on different slices to balance the load in a real-time thread.
-    ReverbConvolverStage(const float* impulseResponse, size_t responseLength, size_t reverbTotalLatency, size_t stageOffset, size_t stageLength, size_t fftSize, size_t renderPhase, ReverbAccumulationBuffer*);
+ public:
+  // renderPhase is useful to know so that we can manipulate the pre versus post
+  // delay so that stages will perform their heavy work (FFT processing) on
+  // different slices to balance the load in a real-time thread.
+  ReverbConvolverStage(const float* impulseResponse, size_t responseLength,
+                       size_t reverbTotalLatency, size_t stageOffset,
+                       size_t stageLength, size_t fftSize, size_t renderPhase,
+                       ReverbAccumulationBuffer*);
 
-    // |source| must point to an array of WEBAUDIO_BLOCK_SIZE elements.
-    void process(const float* source);
+  // |source| must point to an array of WEBAUDIO_BLOCK_SIZE elements.
+  void process(const float* source);
 
-    void processInBackground(ReverbConvolver* convolver);
+  void processInBackground(ReverbConvolver* convolver);
 
-    // Useful for background processing
-    int inputReadIndex() const { return m_inputReadIndex; }
+  // Useful for background processing
+  int inputReadIndex() const { return m_inputReadIndex; }
 
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
-    nsAutoPtr<FFTBlock> m_fftKernel;
-    nsAutoPtr<FFTConvolver> m_fftConvolver;
+ private:
+  nsAutoPtr<FFTBlock> m_fftKernel;
+  nsAutoPtr<FFTConvolver> m_fftConvolver;
 
-    ReverbAccumulationBuffer* m_accumulationBuffer;
-    int m_accumulationReadIndex;
-    int m_inputReadIndex;
+  ReverbAccumulationBuffer* m_accumulationBuffer;
+  int m_accumulationReadIndex;
+  int m_inputReadIndex;
 
-    size_t m_postDelayLength;
+  size_t m_postDelayLength;
 
-    nsTArray<float> m_temporaryBuffer;
+  nsTArray<float> m_temporaryBuffer;
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
-#endif // ReverbConvolverStage_h
+#endif  // ReverbConvolverStage_h

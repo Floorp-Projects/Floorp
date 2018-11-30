@@ -18,27 +18,32 @@ class MachReceiveMessage;
 
 namespace mozilla {
 namespace ipc {
-  struct MemoryPorts;
-} // namespace ipc
+struct MemoryPorts;
+}  // namespace ipc
 
 namespace layers {
 
-class TextureSync
-{
-public:
-  static void RegisterTextureSourceProvider(layers::TextureSourceProvider* aTextureSourceProvider);
-  static void UnregisterTextureSourceProvider(layers::TextureSourceProvider* aTextureSourceProvider);
+class TextureSync {
+ public:
+  static void RegisterTextureSourceProvider(
+      layers::TextureSourceProvider* aTextureSourceProvider);
+  static void UnregisterTextureSourceProvider(
+      layers::TextureSourceProvider* aTextureSourceProvider);
   static void DispatchCheckTexturesForUnlock();
-  static void HandleWaitForTexturesMessage(MachReceiveMessage* rmsg, ipc::MemoryPorts* ports);
+  static void HandleWaitForTexturesMessage(MachReceiveMessage* rmsg,
+                                           ipc::MemoryPorts* ports);
   static void UpdateTextureLocks(base::ProcessId aProcessId);
-  static bool WaitForTextures(base::ProcessId aProcessId, const nsTArray<uint64_t>& aTextureIds);
-  static void SetTexturesLocked(base::ProcessId aProcessId, const nsTArray<uint64_t>& aTextureIds);
-  static void SetTexturesUnlocked(base::ProcessId aProcessId, const nsTArray<uint64_t>& aTextureIds);
+  static bool WaitForTextures(base::ProcessId aProcessId,
+                              const nsTArray<uint64_t>& aTextureIds);
+  static void SetTexturesLocked(base::ProcessId aProcessId,
+                                const nsTArray<uint64_t>& aTextureIds);
+  static void SetTexturesUnlocked(base::ProcessId aProcessId,
+                                  const nsTArray<uint64_t>& aTextureIds);
   static void Shutdown();
   static void CleanupForPid(base::ProcessId aProcessId);
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

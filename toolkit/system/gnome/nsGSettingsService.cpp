@@ -24,35 +24,39 @@ typedef struct _GVariantType GVariantType;
 typedef struct _GVariant GVariant;
 
 #ifndef G_VARIANT_TYPE_INT32
-# define G_VARIANT_TYPE_INT32        ((const GVariantType *) "i")
-# define G_VARIANT_TYPE_BOOLEAN      ((const GVariantType *) "b")
-# define G_VARIANT_TYPE_STRING       ((const GVariantType *) "s")
-# define G_VARIANT_TYPE_OBJECT_PATH  ((const GVariantType *) "o")
-# define G_VARIANT_TYPE_SIGNATURE    ((const GVariantType *) "g")
+#define G_VARIANT_TYPE_INT32 ((const GVariantType *)"i")
+#define G_VARIANT_TYPE_BOOLEAN ((const GVariantType *)"b")
+#define G_VARIANT_TYPE_STRING ((const GVariantType *)"s")
+#define G_VARIANT_TYPE_OBJECT_PATH ((const GVariantType *)"o")
+#define G_VARIANT_TYPE_SIGNATURE ((const GVariantType *)"g")
 #endif
 #ifndef G_VARIANT_TYPE_STRING_ARRAY
-# define G_VARIANT_TYPE_STRING_ARRAY ((const GVariantType *) "as")
+#define G_VARIANT_TYPE_STRING_ARRAY ((const GVariantType *)"as")
 #endif
 
-#define GSETTINGS_FUNCTIONS \
-  FUNC(g_settings_new, GSettings *, (const char* schema)) \
-  FUNC(g_settings_list_schemas, const char * const *, (void)) \
-  FUNC(g_settings_list_keys, char **, (GSettings* settings)) \
-  FUNC(g_settings_get_value, GVariant *, (GSettings* settings, const char* key)) \
-  FUNC(g_settings_set_value, gboolean, (GSettings* settings, const char* key, GVariant* value)) \
-  FUNC(g_settings_range_check, gboolean, (GSettings* settings, const char* key, GVariant* value)) \
-  FUNC(g_variant_get_int32, gint32, (GVariant* variant)) \
-  FUNC(g_variant_get_boolean, gboolean, (GVariant* variant)) \
-  FUNC(g_variant_get_string, const char *, (GVariant* value, gsize* length)) \
-  FUNC(g_variant_get_strv, const char **, (GVariant* value, gsize* length)) \
-  FUNC(g_variant_is_of_type, gboolean, (GVariant* value, const GVariantType* type)) \
-  FUNC(g_variant_new_int32, GVariant *, (gint32 value)) \
-  FUNC(g_variant_new_boolean, GVariant *, (gboolean value)) \
-  FUNC(g_variant_new_string, GVariant *, (const char* string)) \
-  FUNC(g_variant_unref, void, (GVariant* value))
+#define GSETTINGS_FUNCTIONS                                                    \
+  FUNC(g_settings_new, GSettings *, (const char *schema))                      \
+  FUNC(g_settings_list_schemas, const char *const *, (void))                   \
+  FUNC(g_settings_list_keys, char **, (GSettings * settings))                  \
+  FUNC(g_settings_get_value, GVariant *,                                       \
+       (GSettings * settings, const char *key))                                \
+  FUNC(g_settings_set_value, gboolean,                                         \
+       (GSettings * settings, const char *key, GVariant *value))               \
+  FUNC(g_settings_range_check, gboolean,                                       \
+       (GSettings * settings, const char *key, GVariant *value))               \
+  FUNC(g_variant_get_int32, gint32, (GVariant * variant))                      \
+  FUNC(g_variant_get_boolean, gboolean, (GVariant * variant))                  \
+  FUNC(g_variant_get_string, const char *, (GVariant * value, gsize * length)) \
+  FUNC(g_variant_get_strv, const char **, (GVariant * value, gsize * length))  \
+  FUNC(g_variant_is_of_type, gboolean,                                         \
+       (GVariant * value, const GVariantType *type))                           \
+  FUNC(g_variant_new_int32, GVariant *, (gint32 value))                        \
+  FUNC(g_variant_new_boolean, GVariant *, (gboolean value))                    \
+  FUNC(g_variant_new_string, GVariant *, (const char *string))                 \
+  FUNC(g_variant_unref, void, (GVariant * value))
 
-#define FUNC(name, type, params) \
-  typedef type (*_##name##_fn) params; \
+#define FUNC(name, type, params)      \
+  typedef type(*_##name##_fn) params; \
   static _##name##_fn _##name;
 
 GSETTINGS_FUNCTIONS
@@ -77,71 +81,58 @@ GSETTINGS_FUNCTIONS
 
 static PRLibrary *gioLib = nullptr;
 
-class nsGSettingsCollection final : public nsIGSettingsCollection
-{
-public:
+class nsGSettingsCollection final : public nsIGSettingsCollection {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGSETTINGSCOLLECTION
 
-  explicit nsGSettingsCollection(GSettings* aSettings) : mSettings(aSettings),
-                                                         mKeys(nullptr) {}
-private:
+  explicit nsGSettingsCollection(GSettings *aSettings)
+      : mSettings(aSettings), mKeys(nullptr) {}
+
+ private:
   ~nsGSettingsCollection();
 
-  bool KeyExists(const nsACString& aKey);
-  bool SetValue(const nsACString& aKey,
-                  GVariant *aValue);
+  bool KeyExists(const nsACString &aKey);
+  bool SetValue(const nsACString &aKey, GVariant *aValue);
 
   GSettings *mSettings;
   char **mKeys;
 };
 
-nsGSettingsCollection::~nsGSettingsCollection()
-{
+nsGSettingsCollection::~nsGSettingsCollection() {
   g_strfreev(mKeys);
   g_object_unref(mSettings);
 }
 
-bool
-nsGSettingsCollection::KeyExists(const nsACString& aKey)
-{
-  if (!mKeys)
-    mKeys = g_settings_list_keys(mSettings);
+bool nsGSettingsCollection::KeyExists(const nsACString &aKey) {
+  if (!mKeys) mKeys = g_settings_list_keys(mSettings);
 
   for (uint32_t i = 0; mKeys[i] != nullptr; i++) {
-    if (aKey.Equals(mKeys[i]))
-      return true;
+    if (aKey.Equals(mKeys[i])) return true;
   }
 
   return false;
 }
 
-bool
-nsGSettingsCollection::SetValue(const nsACString& aKey,
-                                GVariant *aValue)
-{
+bool nsGSettingsCollection::SetValue(const nsACString &aKey, GVariant *aValue) {
   if (!KeyExists(aKey) ||
-      !g_settings_range_check(mSettings,
-                              PromiseFlatCString(aKey).get(),
+      !g_settings_range_check(mSettings, PromiseFlatCString(aKey).get(),
                               aValue)) {
     g_variant_unref(aValue);
     return false;
   }
 
-  return g_settings_set_value(mSettings,
-                              PromiseFlatCString(aKey).get(),
+  return g_settings_set_value(mSettings, PromiseFlatCString(aKey).get(),
                               aValue);
 }
 
 NS_IMPL_ISUPPORTS(nsGSettingsCollection, nsIGSettingsCollection)
 
 NS_IMETHODIMP
-nsGSettingsCollection::SetString(const nsACString& aKey,
-                                 const nsACString& aValue)
-{
+nsGSettingsCollection::SetString(const nsACString &aKey,
+                                 const nsACString &aValue) {
   GVariant *value = g_variant_new_string(PromiseFlatCString(aValue).get());
-  if (!value)
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!value) return NS_ERROR_OUT_OF_MEMORY;
 
   bool res = SetValue(aKey, value);
 
@@ -149,12 +140,9 @@ nsGSettingsCollection::SetString(const nsACString& aKey,
 }
 
 NS_IMETHODIMP
-nsGSettingsCollection::SetBoolean(const nsACString& aKey,
-                                  bool aValue)
-{
+nsGSettingsCollection::SetBoolean(const nsACString &aKey, bool aValue) {
   GVariant *value = g_variant_new_boolean(aValue);
-  if (!value)
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!value) return NS_ERROR_OUT_OF_MEMORY;
 
   bool res = SetValue(aKey, value);
 
@@ -162,12 +150,9 @@ nsGSettingsCollection::SetBoolean(const nsACString& aKey,
 }
 
 NS_IMETHODIMP
-nsGSettingsCollection::SetInt(const nsACString& aKey,
-                              int32_t aValue)
-{
+nsGSettingsCollection::SetInt(const nsACString &aKey, int32_t aValue) {
   GVariant *value = g_variant_new_int32(aValue);
-  if (!value)
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!value) return NS_ERROR_OUT_OF_MEMORY;
 
   bool res = SetValue(aKey, value);
 
@@ -175,14 +160,11 @@ nsGSettingsCollection::SetInt(const nsACString& aKey,
 }
 
 NS_IMETHODIMP
-nsGSettingsCollection::GetString(const nsACString& aKey,
-                                 nsACString& aResult)
-{
-  if (!KeyExists(aKey))
-    return NS_ERROR_INVALID_ARG;
+nsGSettingsCollection::GetString(const nsACString &aKey, nsACString &aResult) {
+  if (!KeyExists(aKey)) return NS_ERROR_INVALID_ARG;
 
-  GVariant *value = g_settings_get_value(mSettings,
-                                         PromiseFlatCString(aKey).get());
+  GVariant *value =
+      g_settings_get_value(mSettings, PromiseFlatCString(aKey).get());
   if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING) &&
       !g_variant_is_of_type(value, G_VARIANT_TYPE_OBJECT_PATH) &&
       !g_variant_is_of_type(value, G_VARIANT_TYPE_SIGNATURE)) {
@@ -197,16 +179,13 @@ nsGSettingsCollection::GetString(const nsACString& aKey,
 }
 
 NS_IMETHODIMP
-nsGSettingsCollection::GetBoolean(const nsACString& aKey,
-                                  bool* aResult)
-{
+nsGSettingsCollection::GetBoolean(const nsACString &aKey, bool *aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  if (!KeyExists(aKey))
-    return NS_ERROR_INVALID_ARG;
+  if (!KeyExists(aKey)) return NS_ERROR_INVALID_ARG;
 
-  GVariant *value = g_settings_get_value(mSettings,
-                                         PromiseFlatCString(aKey).get());
+  GVariant *value =
+      g_settings_get_value(mSettings, PromiseFlatCString(aKey).get());
   if (!g_variant_is_of_type(value, G_VARIANT_TYPE_BOOLEAN)) {
     g_variant_unref(value);
     return NS_ERROR_FAILURE;
@@ -220,16 +199,13 @@ nsGSettingsCollection::GetBoolean(const nsACString& aKey,
 }
 
 NS_IMETHODIMP
-nsGSettingsCollection::GetInt(const nsACString& aKey,
-                              int32_t* aResult)
-{
+nsGSettingsCollection::GetInt(const nsACString &aKey, int32_t *aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  if (!KeyExists(aKey))
-    return NS_ERROR_INVALID_ARG;
+  if (!KeyExists(aKey)) return NS_ERROR_INVALID_ARG;
 
-  GVariant *value = g_settings_get_value(mSettings,
-                                         PromiseFlatCString(aKey).get());
+  GVariant *value =
+      g_settings_get_value(mSettings, PromiseFlatCString(aKey).get());
   if (!g_variant_is_of_type(value, G_VARIANT_TYPE_INT32)) {
     g_variant_unref(value);
     return NS_ERROR_FAILURE;
@@ -251,25 +227,24 @@ struct nsGSettingsDynamicFunction {
 };
 
 NS_IMETHODIMP
-nsGSettingsCollection::GetStringList(const nsACString& aKey, nsIArray** aResult)
-{
-  if (!KeyExists(aKey))
-    return NS_ERROR_INVALID_ARG;
+nsGSettingsCollection::GetStringList(const nsACString &aKey,
+                                     nsIArray **aResult) {
+  if (!KeyExists(aKey)) return NS_ERROR_INVALID_ARG;
 
   nsCOMPtr<nsIMutableArray> items(do_CreateInstance(NS_ARRAY_CONTRACTID));
   if (!items) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  GVariant *value = g_settings_get_value(mSettings,
-                                         PromiseFlatCString(aKey).get());
+  GVariant *value =
+      g_settings_get_value(mSettings, PromiseFlatCString(aKey).get());
 
   if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING_ARRAY)) {
     g_variant_unref(value);
     return NS_ERROR_FAILURE;
   }
 
-  const gchar ** gs_strings = g_variant_get_strv(value, nullptr);
+  const gchar **gs_strings = g_variant_get_strv(value, nullptr);
   if (!gs_strings) {
     // empty array
     items.forget(aResult);
@@ -277,10 +252,10 @@ nsGSettingsCollection::GetStringList(const nsACString& aKey, nsIArray** aResult)
     return NS_OK;
   }
 
-  const gchar** p_gs_strings = gs_strings;
-  while (*p_gs_strings != nullptr)
-  {
-    nsCOMPtr<nsISupportsCString> obj(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
+  const gchar **p_gs_strings = gs_strings;
+  while (*p_gs_strings != nullptr) {
+    nsCOMPtr<nsISupportsCString> obj(
+        do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
     if (obj) {
       obj->SetData(nsDependentCString(*p_gs_strings));
       items->AppendElement(obj);
@@ -293,24 +268,20 @@ nsGSettingsCollection::GetStringList(const nsACString& aKey, nsIArray** aResult)
   return NS_OK;
 }
 
-nsresult
-nsGSettingsService::Init()
-{
-#define FUNC(name, type, params) { #name, (nsGSettingsFunc *)&_##name },
+nsresult nsGSettingsService::Init() {
+#define FUNC(name, type, params) {#name, (nsGSettingsFunc *)&_##name},
   static const nsGSettingsDynamicFunction kGSettingsSymbols[] = {
-    GSETTINGS_FUNCTIONS
-  };
+      GSETTINGS_FUNCTIONS};
 #undef FUNC
 
   if (!gioLib) {
     gioLib = PR_LoadLibrary("libgio-2.0.so.0");
-    if (!gioLib)
-      return NS_ERROR_FAILURE;
+    if (!gioLib) return NS_ERROR_FAILURE;
   }
 
   for (auto GSettingsSymbol : kGSettingsSymbols) {
     *GSettingsSymbol.function =
-      PR_FindFunctionSymbol(gioLib, GSettingsSymbol.functionName);
+        PR_FindFunctionSymbol(gioLib, GSettingsSymbol.functionName);
     if (!*GSettingsSymbol.function) {
       return NS_ERROR_FAILURE;
     }
@@ -321,8 +292,7 @@ nsGSettingsService::Init()
 
 NS_IMPL_ISUPPORTS(nsGSettingsService, nsIGSettingsService)
 
-nsGSettingsService::~nsGSettingsService()
-{
+nsGSettingsService::~nsGSettingsService() {
   if (gioLib) {
     PR_UnloadLibrary(gioLib);
     gioLib = nullptr;
@@ -330,12 +300,11 @@ nsGSettingsService::~nsGSettingsService()
 }
 
 NS_IMETHODIMP
-nsGSettingsService::GetCollectionForSchema(const nsACString& schema,
-                                           nsIGSettingsCollection** collection)
-{
+nsGSettingsService::GetCollectionForSchema(
+    const nsACString &schema, nsIGSettingsCollection **collection) {
   NS_ENSURE_ARG_POINTER(collection);
 
-  const char * const *schemas = g_settings_list_schemas();
+  const char *const *schemas = g_settings_list_schemas();
 
   for (uint32_t i = 0; schemas[i] != nullptr; i++) {
     if (schema.Equals(schemas[i])) {

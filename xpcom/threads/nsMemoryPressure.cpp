@@ -16,16 +16,12 @@ static Atomic<int32_t, Relaxed> sMemoryPressurePending;
 static_assert(MemPressure_None == 0,
               "Bad static initialization with the default constructor.");
 
-MemoryPressureState
-NS_GetPendingMemoryPressure()
-{
+MemoryPressureState NS_GetPendingMemoryPressure() {
   int32_t value = sMemoryPressurePending.exchange(MemPressure_None);
   return MemoryPressureState(value);
 }
 
-void
-NS_DispatchEventualMemoryPressure(MemoryPressureState aState)
-{
+void NS_DispatchEventualMemoryPressure(MemoryPressureState aState) {
   /*
    * A new memory pressure event erases an ongoing (or stop of) memory pressure,
    * but an existing "new" memory pressure event takes precedence over a new
@@ -40,16 +36,14 @@ NS_DispatchEventualMemoryPressure(MemoryPressureState aState)
       break;
     case MemPressure_Ongoing:
     case MemPressure_Stopping:
-      sMemoryPressurePending.compareExchange(MemPressure_None,
-                                             aState);
+      sMemoryPressurePending.compareExchange(MemPressure_None, aState);
       break;
   }
 }
 
-nsresult
-NS_DispatchMemoryPressure(MemoryPressureState aState)
-{
+nsresult NS_DispatchMemoryPressure(MemoryPressureState aState) {
   NS_DispatchEventualMemoryPressure(aState);
-  nsCOMPtr<nsIRunnable> event = new Runnable("NS_DispatchEventualMemoryPressure");
+  nsCOMPtr<nsIRunnable> event =
+      new Runnable("NS_DispatchEventualMemoryPressure");
   return NS_DispatchToMainThread(event);
 }

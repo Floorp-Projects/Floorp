@@ -17,10 +17,8 @@
 namespace mozilla {
 namespace net {
 
-class nsUDPSocket final : public nsASocketHandler
-                        , public nsIUDPSocket
-{
-public:
+class nsUDPSocket final : public nsASocketHandler, public nsIUDPSocket {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKET
 
@@ -36,7 +34,7 @@ public:
 
   nsUDPSocket();
 
-private:
+ private:
   virtual ~nsUDPSocket();
 
   void OnMsgClose();
@@ -57,33 +55,31 @@ private:
 
   // lock protects access to mListener;
   // so mListener is not cleared while being used/locked.
-  Mutex                                mLock;
-  PRFileDesc                          *mFD;
-  NetAddr                              mAddr;
-  OriginAttributes                     mOriginAttributes;
-  nsCOMPtr<nsIUDPSocketListener>       mListener;
-  nsCOMPtr<nsIEventTarget>             mListenerTarget;
-  bool                                 mAttached;
-  RefPtr<nsSocketTransportService>     mSts;
+  Mutex mLock;
+  PRFileDesc* mFD;
+  NetAddr mAddr;
+  OriginAttributes mOriginAttributes;
+  nsCOMPtr<nsIUDPSocketListener> mListener;
+  nsCOMPtr<nsIEventTarget> mListenerTarget;
+  bool mAttached;
+  RefPtr<nsSocketTransportService> mSts;
 
-  uint64_t   mByteReadCount;
-  uint64_t   mByteWriteCount;
+  uint64_t mByteReadCount;
+  uint64_t mByteWriteCount;
 };
 
 //-----------------------------------------------------------------------------
 
-class nsUDPMessage : public nsIUDPMessage
-{
-public:
+class nsUDPMessage : public nsIUDPMessage {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsUDPMessage)
   NS_DECL_NSIUDPMESSAGE
 
-  nsUDPMessage(NetAddr* aAddr,
-               nsIOutputStream* aOutputStream,
+  nsUDPMessage(NetAddr* aAddr, nsIOutputStream* aOutputStream,
                FallibleTArray<uint8_t>& aData);
 
-private:
+ private:
   virtual ~nsUDPMessage();
 
   NetAddr mAddr;
@@ -92,29 +88,26 @@ private:
   JS::Heap<JSObject*> mJsobj;
 };
 
-
 //-----------------------------------------------------------------------------
 
-class nsUDPOutputStream : public nsIOutputStream
-{
-public:
+class nsUDPOutputStream : public nsIOutputStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
 
-  nsUDPOutputStream(nsUDPSocket* aSocket,
-                    PRFileDesc* aFD,
+  nsUDPOutputStream(nsUDPSocket* aSocket, PRFileDesc* aFD,
                     PRNetAddr& aPrClientAddr);
 
-private:
+ private:
   virtual ~nsUDPOutputStream() = default;
 
-  RefPtr<nsUDPSocket>       mSocket;
-  PRFileDesc                  *mFD;
-  PRNetAddr                   mPrClientAddr;
-  bool                        mIsClosed;
+  RefPtr<nsUDPSocket> mSocket;
+  PRFileDesc* mFD;
+  PRNetAddr mPrClientAddr;
+  bool mIsClosed;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // nsUDPSocket_h__
+#endif  // nsUDPSocket_h__

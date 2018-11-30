@@ -13,19 +13,14 @@ namespace webgpu {
 
 Queue::~Queue() = default;
 
-void
-Queue::Submit(const dom::Sequence<OwningNonNull<CommandBuffer>>& buffers) const
-{
-    MOZ_CRASH("todo");
+void Queue::Submit(
+    const dom::Sequence<OwningNonNull<CommandBuffer>>& buffers) const {
+  MOZ_CRASH("todo");
 }
 
-already_AddRefed<Fence>
-Queue::InsertFence() const
-{
-    MOZ_CRASH("todo");
-}
+already_AddRefed<Fence> Queue::InsertFence() const { MOZ_CRASH("todo"); }
 
 WEBGPU_IMPL_GOOP_0(Queue)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

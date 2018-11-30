@@ -19,10 +19,8 @@ class TableAccessible;
 /**
  * Abstract interface implemented by table cell accessibles.
  */
-class TableCellAccessible
-{
-public:
-
+class TableCellAccessible {
+ public:
   /**
    * Return the table this cell is in.
    */
@@ -64,7 +62,7 @@ public:
   virtual bool Selected() = 0;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif // mozilla_a11y_TableCellAccessible_h__
+#endif  // mozilla_a11y_TableCellAccessible_h__

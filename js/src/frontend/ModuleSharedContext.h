@@ -7,42 +7,38 @@
 #ifndef frontend_ModuleSharedContext_h
 #define frontend_ModuleSharedContext_h
 
-#include "mozilla/Assertions.h" // MOZ_ASSERT
-#include "mozilla/Attributes.h" // MOZ_STACK_CLASS
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 
-#include "builtin/ModuleObject.h" // js::Module{Builder,Object}
-#include "frontend/SharedContext.h" // js::frontend::SharedContext
-#include "js/RootingAPI.h" // JS::Handle, JS::Rooted
-#include "vm/Scope.h" // js::{Module,}Scope
+#include "builtin/ModuleObject.h"    // js::Module{Builder,Object}
+#include "frontend/SharedContext.h"  // js::frontend::SharedContext
+#include "js/RootingAPI.h"           // JS::Handle, JS::Rooted
+#include "vm/Scope.h"                // js::{Module,}Scope
 
 namespace js {
 namespace frontend {
 
-class MOZ_STACK_CLASS ModuleSharedContext
-  : public SharedContext
-{
-    JS::Rooted<ModuleObject*> module_;
-    JS::Rooted<Scope*> enclosingScope_;
+class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext {
+  JS::Rooted<ModuleObject*> module_;
+  JS::Rooted<Scope*> enclosingScope_;
 
-  public:
-    JS::Rooted<ModuleScope::Data*> bindings;
-    ModuleBuilder& builder;
+ public:
+  JS::Rooted<ModuleScope::Data*> bindings;
+  ModuleBuilder& builder;
 
-    ModuleSharedContext(JSContext* cx, ModuleObject* module, Scope* enclosingScope,
-                        ModuleBuilder& builder);
+  ModuleSharedContext(JSContext* cx, ModuleObject* module,
+                      Scope* enclosingScope, ModuleBuilder& builder);
 
-    JS::Handle<ModuleObject*> module() const { return module_; }
-    Scope* compilationEnclosingScope() const override { return enclosingScope_; }
+  JS::Handle<ModuleObject*> module() const { return module_; }
+  Scope* compilationEnclosingScope() const override { return enclosingScope_; }
 };
 
-inline ModuleSharedContext*
-SharedContext::asModuleContext()
-{
-    MOZ_ASSERT(isModuleContext());
-    return static_cast<ModuleSharedContext*>(this);
+inline ModuleSharedContext* SharedContext::asModuleContext() {
+  MOZ_ASSERT(isModuleContext());
+  return static_cast<ModuleSharedContext*>(this);
 }
 
-} // namespace frontend
-} // namespace js
+}  // namespace frontend
+}  // namespace js
 
 #endif /* frontend_ModuleSharedContext_h */

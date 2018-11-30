@@ -19,44 +19,46 @@ using mozilla::ipc::MessageChannel;
 
 namespace {
 
-class DeferNPObjectReleaseRunnable : public mozilla::Runnable
-{
-public:
+class DeferNPObjectReleaseRunnable : public mozilla::Runnable {
+ public:
   DeferNPObjectReleaseRunnable(const NPNetscapeFuncs* f, NPObject* o)
-    : Runnable("DeferNPObjectReleaseRunnable")
-    , mFuncs(f)
-    , mObject(o)
-  {
+      : Runnable("DeferNPObjectReleaseRunnable"), mFuncs(f), mObject(o) {
     NS_ASSERTION(o, "no release null objects");
   }
 
   NS_IMETHOD Run() override;
 
-private:
+ private:
   const NPNetscapeFuncs* mFuncs;
   NPObject* mObject;
 };
 
 NS_IMETHODIMP
-DeferNPObjectReleaseRunnable::Run()
-{
+DeferNPObjectReleaseRunnable::Run() {
   mFuncs->releaseobject(mObject);
   return NS_OK;
 }
 
-} // namespace
+}  // namespace
 
 namespace mozilla {
 namespace plugins {
 
-NPRemoteWindow::NPRemoteWindow() :
-  window(0), x(0), y(0), width(0), height(0), type(NPWindowTypeDrawable)
+NPRemoteWindow::NPRemoteWindow()
+    : window(0),
+      x(0),
+      y(0),
+      width(0),
+      height(0),
+      type(NPWindowTypeDrawable)
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
-  , visualID(0)
-  , colormap(0)
+      ,
+      visualID(0),
+      colormap(0)
 #endif /* XP_UNIX */
 #if defined(XP_MACOSX)
-  ,contentsScaleFactor(1.0)
+      ,
+      contentsScaleFactor(1.0)
 #endif
 {
   clipRect.top = 0;
@@ -65,28 +67,25 @@ NPRemoteWindow::NPRemoteWindow() :
   clipRect.right = 0;
 }
 
-ipc::RacyInterruptPolicy
-MediateRace(const MessageChannel::MessageInfo& parent,
-            const MessageChannel::MessageInfo& child)
-{
+ipc::RacyInterruptPolicy MediateRace(const MessageChannel::MessageInfo& parent,
+                                     const MessageChannel::MessageInfo& child) {
   switch (parent.type()) {
-  case PPluginInstance::Msg_Paint__ID:
-  case PPluginInstance::Msg_NPP_SetWindow__ID:
-  case PPluginInstance::Msg_NPP_HandleEvent_Shmem__ID:
-  case PPluginInstance::Msg_NPP_HandleEvent_IOSurface__ID:
-    // our code relies on the frame list not changing during paints and
-    // reflows
-    return ipc::RIPParentWins;
+    case PPluginInstance::Msg_Paint__ID:
+    case PPluginInstance::Msg_NPP_SetWindow__ID:
+    case PPluginInstance::Msg_NPP_HandleEvent_Shmem__ID:
+    case PPluginInstance::Msg_NPP_HandleEvent_IOSurface__ID:
+      // our code relies on the frame list not changing during paints and
+      // reflows
+      return ipc::RIPParentWins;
 
-  default:
-    return ipc::RIPChildWins;
+    default:
+      return ipc::RIPChildWins;
   }
 }
 
 #if defined(OS_LINUX) || defined(OS_SOLARIS)
-static string
-ReplaceAll(const string& haystack, const string& needle, const string& with)
-{
+static string ReplaceAll(const string& haystack, const string& needle,
+                         const string& with) {
   string munged = haystack;
   string::size_type i = 0;
 
@@ -99,9 +98,7 @@ ReplaceAll(const string& haystack, const string& needle, const string& with)
 }
 #endif
 
-string
-MungePluginDsoPath(const string& path)
-{
+string MungePluginDsoPath(const string& path) {
 #if defined(OS_LINUX) || defined(OS_SOLARIS)
   // https://bugzilla.mozilla.org/show_bug.cgi?id=519601
   return ReplaceAll(path, "netscape", "netsc@pe");
@@ -110,9 +107,7 @@ MungePluginDsoPath(const string& path)
 #endif
 }
 
-string
-UnmungePluginDsoPath(const string& munged)
-{
+string UnmungePluginDsoPath(const string& munged) {
 #if defined(OS_LINUX) || defined(OS_SOLARIS)
   return ReplaceAll(munged, "netsc@pe", "netscape");
 #else
@@ -120,19 +115,13 @@ UnmungePluginDsoPath(const string& munged)
 #endif
 }
 
-
-LogModule*
-GetPluginLog()
-{
+LogModule* GetPluginLog() {
   static LazyLogModule sLog("IPCPlugins");
   return sLog;
 }
 
-void
-DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o)
-{
-  if (!o)
-    return;
+void DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o) {
+  if (!o) return;
 
   if (o->referenceCount > 1) {
     f->releaseobject(o);
@@ -142,8 +131,7 @@ DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o)
   NS_DispatchToCurrentThread(new DeferNPObjectReleaseRunnable(f, o));
 }
 
-void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v)
-{
+void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v) {
   if (!NPVARIANT_IS_OBJECT(*v)) {
     f->releasevariantvalue(v);
     return;
@@ -152,5 +140,5 @@ void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v)
   VOID_TO_NPVARIANT(*v);
 }
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla

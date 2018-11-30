@@ -12,8 +12,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsStyleLinkElement.h"
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHtml5DocumentBuilder,
-                                   nsContentSink,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHtml5DocumentBuilder, nsContentSink,
                                    mOwnedElements)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHtml5DocumentBuilder)
@@ -23,44 +22,32 @@ NS_IMPL_ADDREF_INHERITED(nsHtml5DocumentBuilder, nsContentSink)
 NS_IMPL_RELEASE_INHERITED(nsHtml5DocumentBuilder, nsContentSink)
 
 nsHtml5DocumentBuilder::nsHtml5DocumentBuilder(bool aRunsToCompletion)
-  : mBroken(NS_OK)
-  , mFlushState(eHtml5FlushState::eNotFlushing)
-{
+    : mBroken(NS_OK), mFlushState(eHtml5FlushState::eNotFlushing) {
   mRunsToCompletion = aRunsToCompletion;
 }
 
-nsresult
-nsHtml5DocumentBuilder::Init(nsIDocument* aDoc,
-                             nsIURI* aURI,
-                             nsISupports* aContainer,
-                             nsIChannel* aChannel)
-{
+nsresult nsHtml5DocumentBuilder::Init(nsIDocument* aDoc, nsIURI* aURI,
+                                      nsISupports* aContainer,
+                                      nsIChannel* aChannel) {
   return nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
 }
 
 nsHtml5DocumentBuilder::~nsHtml5DocumentBuilder() {}
 
-nsresult
-nsHtml5DocumentBuilder::MarkAsBroken(nsresult aReason)
-{
+nsresult nsHtml5DocumentBuilder::MarkAsBroken(nsresult aReason) {
   mBroken = aReason;
   return aReason;
 }
 
-void
-nsHtml5DocumentBuilder::SetDocumentCharsetAndSource(
-  NotNull<const Encoding*> aEncoding,
-  int32_t aCharsetSource)
-{
+void nsHtml5DocumentBuilder::SetDocumentCharsetAndSource(
+    NotNull<const Encoding*> aEncoding, int32_t aCharsetSource) {
   if (mDocument) {
     mDocument->SetDocumentCharacterSetSource(aCharsetSource);
     mDocument->SetDocumentCharacterSet(aEncoding);
   }
 }
 
-void
-nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement)
-{
+void nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement) {
   nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aElement));
   if (!ssle) {
     MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled,
@@ -80,10 +67,9 @@ nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement)
   ssle->SetEnableUpdates(true);
 
   auto updateOrError =
-    ssle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this);
+      ssle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this);
 
-  if (updateOrError.isOk() &&
-      updateOrError.unwrap().ShouldBlock() &&
+  if (updateOrError.isOk() && updateOrError.unwrap().ShouldBlock() &&
       !mRunsToCompletion) {
     ++mPendingSheetCount;
     mScriptLoader->AddParserBlockingScriptExecutionBlocker();
@@ -93,9 +79,7 @@ nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement)
   BeginDocUpdate();
 }
 
-void
-nsHtml5DocumentBuilder::SetDocumentMode(nsHtml5DocumentMode m)
-{
+void nsHtml5DocumentBuilder::SetDocumentMode(nsHtml5DocumentMode m) {
   nsCompatibility mode = eCompatibility_NavQuirks;
   switch (m) {
     case STANDARDS_MODE:
@@ -115,14 +99,8 @@ nsHtml5DocumentBuilder::SetDocumentMode(nsHtml5DocumentMode m)
 
 // nsContentSink overrides
 
-void
-nsHtml5DocumentBuilder::UpdateChildCounts()
-{
+void nsHtml5DocumentBuilder::UpdateChildCounts() {
   // No-op
 }
 
-nsresult
-nsHtml5DocumentBuilder::FlushTags()
-{
-  return NS_OK;
-}
+nsresult nsHtml5DocumentBuilder::FlushTags() { return NS_OK; }

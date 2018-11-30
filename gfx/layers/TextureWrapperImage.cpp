@@ -10,32 +10,23 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-TextureWrapperImage::TextureWrapperImage(TextureClient* aClient, const IntRect& aPictureRect)
- : Image(nullptr, ImageFormat::TEXTURE_WRAPPER),
-   mPictureRect(aPictureRect),
-   mTextureClient(aClient)
-{
-}
+TextureWrapperImage::TextureWrapperImage(TextureClient* aClient,
+                                         const IntRect& aPictureRect)
+    : Image(nullptr, ImageFormat::TEXTURE_WRAPPER),
+      mPictureRect(aPictureRect),
+      mTextureClient(aClient) {}
 
-TextureWrapperImage::~TextureWrapperImage()
-{
-}
+TextureWrapperImage::~TextureWrapperImage() {}
 
-gfx::IntSize
-TextureWrapperImage::GetSize() const
-{
+gfx::IntSize TextureWrapperImage::GetSize() const {
   return mTextureClient->GetSize();
 }
 
-gfx::IntRect
-TextureWrapperImage::GetPictureRect() const
-{
+gfx::IntRect TextureWrapperImage::GetPictureRect() const {
   return mPictureRect;
 }
 
-already_AddRefed<gfx::SourceSurface>
-TextureWrapperImage::GetAsSourceSurface()
-{
+already_AddRefed<gfx::SourceSurface> TextureWrapperImage::GetAsSourceSurface() {
   TextureClientAutoLock autoLock(mTextureClient, OpenMode::OPEN_READ);
   if (!autoLock.Succeeded()) {
     return nullptr;
@@ -49,11 +40,10 @@ TextureWrapperImage::GetAsSourceSurface()
   return dt->Snapshot();
 }
 
-TextureClient*
-TextureWrapperImage::GetTextureClient(KnowsCompositor* aForwarder)
-{
+TextureClient* TextureWrapperImage::GetTextureClient(
+    KnowsCompositor* aForwarder) {
   return mTextureClient;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

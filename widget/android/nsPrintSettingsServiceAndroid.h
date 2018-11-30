@@ -8,12 +8,11 @@
 #include "nsPrintSettingsService.h"
 #include "nsIPrintSettings.h"
 
-class nsPrintSettingsServiceAndroid final : public nsPrintSettingsService
-{
-public:
+class nsPrintSettingsServiceAndroid final : public nsPrintSettingsService {
+ public:
   nsPrintSettingsServiceAndroid() {}
 
   nsresult _CreatePrintSettings(nsIPrintSettings** _retval) override;
 };
 
-#endif // nsPrintSettingsServiceAndroid_h
+#endif  // nsPrintSettingsServiceAndroid_h

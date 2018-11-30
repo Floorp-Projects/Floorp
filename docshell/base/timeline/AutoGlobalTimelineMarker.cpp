@@ -11,12 +11,10 @@
 
 namespace mozilla {
 
-AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName,
-                                                   MarkerStackRequest aStackRequest /* = STACK */
-                                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : mName(aName)
-  , mStackRequest(aStackRequest)
-{
+AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(
+    const char* aName, MarkerStackRequest aStackRequest /* = STACK */
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : mName(aName), mStackRequest(aStackRequest) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -25,11 +23,11 @@ AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName,
     return;
   }
 
-  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::START, mStackRequest);
+  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::START,
+                                              mStackRequest);
 }
 
-AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker()
-{
+AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker() {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
@@ -37,7 +35,8 @@ AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker()
     return;
   }
 
-  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::END, mStackRequest);
+  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::END,
+                                              mStackRequest);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

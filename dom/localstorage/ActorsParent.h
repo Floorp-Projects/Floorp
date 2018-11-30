@@ -14,7 +14,7 @@ namespace ipc {
 class PBackgroundParent;
 class PrincipalInfo;
 
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
@@ -29,66 +29,53 @@ namespace quota {
 
 class Client;
 
-} // namespace quota
+}  // namespace quota
 
-PBackgroundLSDatabaseParent*
-AllocPBackgroundLSDatabaseParent(
-                              const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                              const uint32_t& aPrivateBrowsingId,
-                              const uint64_t& aDatastoreId);
+PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    const uint32_t& aPrivateBrowsingId, const uint64_t& aDatastoreId);
 
-bool
-RecvPBackgroundLSDatabaseConstructor(
-                              PBackgroundLSDatabaseParent* aActor,
-                              const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                              const uint32_t& aPrivateBrowsingId,
-                              const uint64_t& aDatastoreId);
+bool RecvPBackgroundLSDatabaseConstructor(
+    PBackgroundLSDatabaseParent* aActor,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    const uint32_t& aPrivateBrowsingId, const uint64_t& aDatastoreId);
 
-bool
-DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor);
+bool DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor);
 
-PBackgroundLSObserverParent*
-AllocPBackgroundLSObserverParent(const uint64_t& aObserverId);
+PBackgroundLSObserverParent* AllocPBackgroundLSObserverParent(
+    const uint64_t& aObserverId);
 
-bool
-RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
-                                     const uint64_t& aObservereId);
+bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
+                                          const uint64_t& aObservereId);
 
-bool
-DeallocPBackgroundLSObserverParent(PBackgroundLSObserverParent* aActor);
+bool DeallocPBackgroundLSObserverParent(PBackgroundLSObserverParent* aActor);
 
-PBackgroundLSRequestParent*
-AllocPBackgroundLSRequestParent(
-                              mozilla::ipc::PBackgroundParent* aBackgroundActor,
-                              const LSRequestParams& aParams);
+PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
+    mozilla::ipc::PBackgroundParent* aBackgroundActor,
+    const LSRequestParams& aParams);
 
-bool
-RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
-                                    const LSRequestParams& aParams);
+bool RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
+                                         const LSRequestParams& aParams);
 
-bool
-DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor);
+bool DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor);
 
-PBackgroundLSSimpleRequestParent*
-AllocPBackgroundLSSimpleRequestParent(const LSSimpleRequestParams& aParams);
+PBackgroundLSSimpleRequestParent* AllocPBackgroundLSSimpleRequestParent(
+    const LSSimpleRequestParams& aParams);
 
-bool
-RecvPBackgroundLSSimpleRequestConstructor(
-                                       PBackgroundLSSimpleRequestParent* aActor,
-                                       const LSSimpleRequestParams& aParams);
+bool RecvPBackgroundLSSimpleRequestConstructor(
+    PBackgroundLSSimpleRequestParent* aActor,
+    const LSSimpleRequestParams& aParams);
 
-bool
-DeallocPBackgroundLSSimpleRequestParent(
-                                      PBackgroundLSSimpleRequestParent* aActor);
+bool DeallocPBackgroundLSSimpleRequestParent(
+    PBackgroundLSSimpleRequestParent* aActor);
 
 namespace localstorage {
 
-already_AddRefed<mozilla::dom::quota::Client>
-CreateQuotaClient();
+already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient();
 
-} // namespace localstorage
+}  // namespace localstorage
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_localstorage_ActorsParent_h
+#endif  // mozilla_dom_localstorage_ActorsParent_h

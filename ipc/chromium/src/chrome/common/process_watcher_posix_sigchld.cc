@@ -21,34 +21,26 @@ static const int kMaxWaitMs = 2000;
 
 namespace {
 
-bool
-IsProcessDead(pid_t process)
-{
+bool IsProcessDead(pid_t process) {
   bool exited = false;
   // don't care if the process crashed, just if it exited
   base::DidProcessCrash(&exited, process);
   return exited;
 }
 
-
 class ChildReaper : public base::MessagePumpLibevent::SignalEvent,
-                    public base::MessagePumpLibevent::SignalWatcher
-{
-public:
-  explicit ChildReaper(pid_t process) : process_(process)
-  {
-  } 
+                    public base::MessagePumpLibevent::SignalWatcher {
+ public:
+  explicit ChildReaper(pid_t process) : process_(process) {}
 
-  virtual ~ChildReaper()
-  {
+  virtual ~ChildReaper() {
     // subclasses should have cleaned up |process_| already
     DCHECK(!process_);
 
     // StopCatching() is implicit
   }
 
-  virtual void OnSignal(int sig) override
-  {
+  virtual void OnSignal(int sig) override {
     DCHECK(SIGCHLD == sig);
     DCHECK(process_);
 
@@ -59,49 +51,37 @@ public:
     }
   }
 
-protected:
-  void WaitForChildExit()
-  {
+ protected:
+  void WaitForChildExit() {
     DCHECK(process_);
     HANDLE_EINTR(waitpid(process_, NULL, 0));
   }
 
   pid_t process_;
 
-private:
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(ChildReaper);
 };
 
-
 // Fear the reaper
-class ChildGrimReaper : public ChildReaper,
-                        public mozilla::Runnable
-{
-public:
+class ChildGrimReaper : public ChildReaper, public mozilla::Runnable {
+ public:
   explicit ChildGrimReaper(pid_t process)
-    : ChildReaper(process)
-    , mozilla::Runnable("ChildGrimReaper")
-  {
-  } 
+      : ChildReaper(process), mozilla::Runnable("ChildGrimReaper") {}
 
-  virtual ~ChildGrimReaper()
-  {
-    if (process_)
-      KillProcess();
+  virtual ~ChildGrimReaper() {
+    if (process_) KillProcess();
   }
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     // we may have already been signaled by the time this runs
-    if (process_)
-      KillProcess();
+    if (process_) KillProcess();
 
     return NS_OK;
   }
 
-private:
-  void KillProcess()
-  {
+ private:
+  void KillProcess() {
     DCHECK(process_);
 
     if (IsProcessDead(process_)) {
@@ -114,10 +94,9 @@ private:
       // XXX OS to tear down the process's resources.  might need to
       // XXX rethink this if it proves expensive
       WaitForChildExit();
-    }
-    else {
+    } else {
       CHROMIUM_LOG(ERROR) << "Failed to deliver SIGKILL to " << process_ << "!"
-                          << "("<< errno << ").";
+                          << "(" << errno << ").";
     }
     process_ = 0;
   }
@@ -125,23 +104,17 @@ private:
   DISALLOW_EVIL_CONSTRUCTORS(ChildGrimReaper);
 };
 
-
 class ChildLaxReaper : public ChildReaper,
-                       public MessageLoop::DestructionObserver
-{
-public:
-  explicit ChildLaxReaper(pid_t process) : ChildReaper(process)
-  {
-  } 
+                       public MessageLoop::DestructionObserver {
+ public:
+  explicit ChildLaxReaper(pid_t process) : ChildReaper(process) {}
 
-  virtual ~ChildLaxReaper()
-  {
+  virtual ~ChildLaxReaper() {
     // WillDestroyCurrentMessageLoop() should have reaped process_ already
     DCHECK(!process_);
   }
 
-  virtual void OnSignal(int sig) override
-  {
+  virtual void OnSignal(int sig) override {
     ChildReaper::OnSignal(sig);
 
     if (!process_) {
@@ -150,8 +123,7 @@ public:
     }
   }
 
-  virtual void WillDestroyCurrentMessageLoop() override
-  {
+  virtual void WillDestroyCurrentMessageLoop() override {
     DCHECK(process_);
 
     WaitForChildExit();
@@ -163,12 +135,11 @@ public:
     delete this;
   }
 
-private:
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(ChildLaxReaper);
 };
 
-}  // namespace <anon>
-
+}  // namespace
 
 /**
  * Do everything possible to ensure that |process| has been reaped
@@ -187,15 +158,12 @@ private:
  * responsible for terminating hung processes, e.g. automated test
  * harnesses.
  */
-void
-ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process,
-                                        bool force)
-{
+void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process,
+                                             bool force) {
   DCHECK(process != base::GetCurrentProcId());
   DCHECK(process > 0);
 
-  if (IsProcessDead(process))
-    return;
+  if (IsProcessDead(process)) return;
 
   MessageLoopForIO* loop = MessageLoopForIO::current();
   if (force) {

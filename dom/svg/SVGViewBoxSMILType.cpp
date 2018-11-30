@@ -14,56 +14,48 @@ namespace mozilla {
 
 /*static*/ SVGViewBoxSMILType SVGViewBoxSMILType::sSingleton;
 
-void
-SVGViewBoxSMILType::Init(nsSMILValue& aValue) const
-{
+void SVGViewBoxSMILType::Init(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
 
   aValue.mU.mPtr = new nsSVGViewBoxRect();
   aValue.mType = this;
 }
 
-void
-SVGViewBoxSMILType::Destroy(nsSMILValue& aValue) const
-{
+void SVGViewBoxSMILType::Destroy(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   delete static_cast<nsSVGViewBoxRect*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
   aValue.mType = nsSMILNullType::Singleton();
 }
 
-nsresult
-SVGViewBoxSMILType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
-{
+nsresult SVGViewBoxSMILType::Assign(nsSMILValue& aDest,
+                                    const nsSMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
 
-  const nsSVGViewBoxRect* src = static_cast<const nsSVGViewBoxRect*>(aSrc.mU.mPtr);
+  const nsSVGViewBoxRect* src =
+      static_cast<const nsSVGViewBoxRect*>(aSrc.mU.mPtr);
   nsSVGViewBoxRect* dst = static_cast<nsSVGViewBoxRect*>(aDest.mU.mPtr);
   *dst = *src;
   return NS_OK;
 }
 
-bool
-SVGViewBoxSMILType::IsEqual(const nsSMILValue& aLeft,
-                            const nsSMILValue& aRight) const
-{
+bool SVGViewBoxSMILType::IsEqual(const nsSMILValue& aLeft,
+                                 const nsSMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
   const nsSVGViewBoxRect* leftBox =
-    static_cast<const nsSVGViewBoxRect*>(aLeft.mU.mPtr);
+      static_cast<const nsSVGViewBoxRect*>(aLeft.mU.mPtr);
   const nsSVGViewBoxRect* rightBox =
-    static_cast<nsSVGViewBoxRect*>(aRight.mU.mPtr);
+      static_cast<nsSVGViewBoxRect*>(aRight.mU.mPtr);
   return *leftBox == *rightBox;
 }
 
-nsresult
-SVGViewBoxSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                        uint32_t aCount) const
-{
-  MOZ_ASSERT(aValueToAdd.mType == aDest.mType,
-                  "Trying to add invalid types");
+nsresult SVGViewBoxSMILType::Add(nsSMILValue& aDest,
+                                 const nsSMILValue& aValueToAdd,
+                                 uint32_t aCount) const {
+  MOZ_ASSERT(aValueToAdd.mType == aDest.mType, "Trying to add invalid types");
   MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
 
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=541884#c3 and the two
@@ -73,16 +65,16 @@ SVGViewBoxSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-SVGViewBoxSMILType::ComputeDistance(const nsSMILValue& aFrom,
-                                    const nsSMILValue& aTo,
-                                    double& aDistance) const
-{
-  MOZ_ASSERT(aFrom.mType == aTo.mType,"Trying to compare different types");
+nsresult SVGViewBoxSMILType::ComputeDistance(const nsSMILValue& aFrom,
+                                             const nsSMILValue& aTo,
+                                             double& aDistance) const {
+  MOZ_ASSERT(aFrom.mType == aTo.mType, "Trying to compare different types");
   MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
 
-  const nsSVGViewBoxRect* from = static_cast<const nsSVGViewBoxRect*>(aFrom.mU.mPtr);
-  const nsSVGViewBoxRect* to = static_cast<const nsSVGViewBoxRect*>(aTo.mU.mPtr);
+  const nsSVGViewBoxRect* from =
+      static_cast<const nsSVGViewBoxRect*>(aFrom.mU.mPtr);
+  const nsSVGViewBoxRect* to =
+      static_cast<const nsSVGViewBoxRect*>(aTo.mU.mPtr);
 
   if (from->none || to->none) {
     return NS_ERROR_FAILURE;
@@ -96,27 +88,28 @@ SVGViewBoxSMILType::ComputeDistance(const nsSMILValue& aFrom,
 
   float dLeft = to->x - from->x;
   float dTop = to->y - from->y;
-  float dRight = ( to->x + to->width ) - ( from->x + from->width );
-  float dBottom = ( to->y + to->height ) - ( from->y + from->height );
+  float dRight = (to->x + to->width) - (from->x + from->width);
+  float dBottom = (to->y + to->height) - (from->y + from->height);
 
-  aDistance = sqrt(dLeft*dLeft + dTop*dTop + dRight*dRight + dBottom*dBottom);
+  aDistance =
+      sqrt(dLeft * dLeft + dTop * dTop + dRight * dRight + dBottom * dBottom);
 
   return NS_OK;
 }
 
-nsresult
-SVGViewBoxSMILType::Interpolate(const nsSMILValue& aStartVal,
-                                const nsSMILValue& aEndVal,
-                                double aUnitDistance,
-                                nsSMILValue& aResult) const
-{
+nsresult SVGViewBoxSMILType::Interpolate(const nsSMILValue& aStartVal,
+                                         const nsSMILValue& aEndVal,
+                                         double aUnitDistance,
+                                         nsSMILValue& aResult) const {
   MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
              "Trying to interpolate different types");
   MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");
   MOZ_ASSERT(aResult.mType == this, "Unexpected result type");
 
-  const nsSVGViewBoxRect* start = static_cast<const nsSVGViewBoxRect*>(aStartVal.mU.mPtr);
-  const nsSVGViewBoxRect* end = static_cast<const nsSVGViewBoxRect*>(aEndVal.mU.mPtr);
+  const nsSVGViewBoxRect* start =
+      static_cast<const nsSVGViewBoxRect*>(aStartVal.mU.mPtr);
+  const nsSVGViewBoxRect* end =
+      static_cast<const nsSVGViewBoxRect*>(aEndVal.mU.mPtr);
 
   if (start->none || end->none) {
     return NS_ERROR_FAILURE;
@@ -127,11 +120,12 @@ SVGViewBoxSMILType::Interpolate(const nsSMILValue& aStartVal,
   float x = (start->x + (end->x - start->x) * aUnitDistance);
   float y = (start->y + (end->y - start->y) * aUnitDistance);
   float width = (start->width + (end->width - start->width) * aUnitDistance);
-  float height = (start->height + (end->height - start->height) * aUnitDistance);
+  float height =
+      (start->height + (end->height - start->height) * aUnitDistance);
 
   *current = nsSVGViewBoxRect(x, y, width, height);
 
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

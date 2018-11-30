@@ -22,8 +22,8 @@ struct StackBlock {
   // overflowed.
   StackBlock* mNext;
 
-  StackBlock() : mNext(nullptr) { }
-  ~StackBlock() { }
+  StackBlock() : mNext(nullptr) {}
+  ~StackBlock() {}
 };
 
 static_assert(sizeof(StackBlock) == 4096, "StackBlock must be 4096 bytes");
@@ -40,8 +40,7 @@ struct StackMark {
 
 StackArena* AutoStackArena::gStackArena;
 
-StackArena::StackArena()
-{
+StackArena::StackArena() {
   mMarkLength = 0;
   mMarks = nullptr;
 
@@ -53,10 +52,9 @@ StackArena::StackArena()
   mPos = 0;
 }
 
-StackArena::~StackArena()
-{
+StackArena::~StackArena() {
   // Free up our data.
-  delete [] mMarks;
+  delete[] mMarks;
   while (mBlocks) {
     StackBlock* toDelete = mBlocks;
     mBlocks = mBlocks->mNext;
@@ -64,11 +62,10 @@ StackArena::~StackArena()
   }
 }
 
-size_t
-StackArena::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
+size_t StackArena::SizeOfExcludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
   size_t n = 0;
-  StackBlock *block = mBlocks;
+  StackBlock* block = mBlocks;
   while (block) {
     n += aMallocSizeOf(block);
     block = block->mNext;
@@ -79,9 +76,7 @@ StackArena::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 
 static const int STACK_ARENA_MARK_INCREMENT = 50;
 
-void
-StackArena::Push()
-{
+void StackArena::Push() {
   // Resize the mark array if we overrun it.  Failure to allocate the
   // mark array is not fatal; we just won't free to that mark.  This
   // allows callers not to worry about error checking.
@@ -90,7 +85,7 @@ StackArena::Push()
     StackMark* newMarks = new StackMark[newLength];
     if (newMarks) {
       if (mMarkLength) {
-        memcpy(newMarks, mMarks, sizeof(StackMark)*mMarkLength);
+        memcpy(newMarks, mMarks, sizeof(StackMark) * mMarkLength);
       }
       // Fill in any marks that we couldn't allocate during a prior call
       // to Push().
@@ -99,7 +94,7 @@ StackArena::Push()
         newMarks[mMarkLength].mBlock = mCurBlock;
         newMarks[mMarkLength].mPos = mPos;
       }
-      delete [] mMarks;
+      delete[] mMarks;
       mMarks = newMarks;
       mMarkLength = newLength;
     }
@@ -115,9 +110,7 @@ StackArena::Push()
   mStackTop++;
 }
 
-void*
-StackArena::Allocate(size_t aSize)
-{
+void* StackArena::Allocate(size_t aSize) {
   NS_ASSERTION(mStackTop > 0, "Allocate called without Push");
 
   // Align to a multiple of 8.
@@ -136,15 +129,13 @@ StackArena::Allocate(size_t aSize)
   }
 
   // Return the chunk they need.
-  void *result = mCurBlock->mBlock + mPos;
+  void* result = mCurBlock->mBlock + mPos;
   mPos += aSize;
 
   return result;
 }
 
-void
-StackArena::Pop()
-{
+void StackArena::Pop() {
   // Pop off the mark.
   NS_ASSERTION(mStackTop > 0, "unmatched pop");
   mStackTop--;
@@ -175,7 +166,7 @@ StackArena::Pop()
 #endif
 
   mCurBlock = mMarks[mStackTop].mBlock;
-  mPos      = mMarks[mStackTop].mPos;
+  mPos = mMarks[mStackTop].mPos;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -21,7 +21,7 @@ namespace mozilla {
 
 namespace dom {
 class SVGMatrix;
-} // namespace dom
+}  // namespace dom
 
 /**
  * Class DOMSVGPoint
@@ -37,21 +37,17 @@ class SVGMatrix;
  * See the architecture comment in DOMSVGLength.h (yes, LENGTH) for an overview
  * of the important points regarding how this specific class works.
  */
-class DOMSVGPoint final : public nsISVGPoint
-{
+class DOMSVGPoint final : public nsISVGPoint {
   friend class AutoChangePointNotifier;
 
   typedef mozilla::gfx::Point Point;
 
-public:
+ public:
   /**
    * Generic ctor for DOMSVGPoint objects that are created for an attribute.
    */
-  DOMSVGPoint(DOMSVGPointList *aList,
-              uint32_t aListIndex,
-              bool aIsAnimValItem)
-    : nsISVGPoint()
-  {
+  DOMSVGPoint(DOMSVGPointList* aList, uint32_t aListIndex, bool aIsAnimValItem)
+      : nsISVGPoint() {
     mList = aList;
     mListIndex = aListIndex;
     mIsAnimValItem = aIsAnimValItem;
@@ -62,52 +58,39 @@ public:
     MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGPoint!");
   }
 
-  explicit DOMSVGPoint(const DOMSVGPoint *aPt = nullptr)
-    : nsISVGPoint()
-  {
+  explicit DOMSVGPoint(const DOMSVGPoint* aPt = nullptr) : nsISVGPoint() {
     if (aPt) {
       mPt = aPt->ToSVGPoint();
     }
   }
 
-  DOMSVGPoint(float aX, float aY)
-    : nsISVGPoint()
-  {
+  DOMSVGPoint(float aX, float aY) : nsISVGPoint() {
     mPt.mX = aX;
     mPt.mY = aY;
   }
 
-  explicit DOMSVGPoint(const Point& aPt)
-    : nsISVGPoint()
-  {
+  explicit DOMSVGPoint(const Point& aPt) : nsISVGPoint() {
     mPt.mX = aPt.x;
     mPt.mY = aPt.y;
     NS_ASSERTION(IsFinite(mPt.mX) && IsFinite(mPt.mY),
                  "DOMSVGPoint coords are not finite");
   }
 
-
   // WebIDL
   virtual float X() override;
   virtual void SetX(float aX, ErrorResult& rv) override;
   virtual float Y() override;
   virtual void SetY(float aY, ErrorResult& rv) override;
-  virtual already_AddRefed<nsISVGPoint> MatrixTransform(dom::SVGMatrix& matrix) override;
-  nsISupports* GetParentObject() override {
-    return mList;
-  }
+  virtual already_AddRefed<nsISVGPoint> MatrixTransform(
+      dom::SVGMatrix& matrix) override;
+  nsISupports* GetParentObject() override { return mList; }
 
-  virtual DOMSVGPoint* Copy() override {
-    return new DOMSVGPoint(this);
-  }
+  virtual DOMSVGPoint* Copy() override { return new DOMSVGPoint(this); }
 
-protected:
-
-  nsSVGElement* Element() {
-    return mList->Element();
-  }
+ protected:
+  nsSVGElement* Element() { return mList->Element(); }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_DOMSVGPOINT_H__
+#endif  // MOZILLA_DOMSVGPOINT_H__

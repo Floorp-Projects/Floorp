@@ -15,29 +15,26 @@
 namespace mozilla {
 namespace net {
 
-bool
-ChannelDiverterParent::Init(const ChannelDiverterArgs& aArgs)
-{
+bool ChannelDiverterParent::Init(const ChannelDiverterArgs& aArgs) {
   switch (aArgs.type()) {
-  case ChannelDiverterArgs::THttpChannelDiverterArgs:
-  {
-    auto httpParent = static_cast<HttpChannelParent*>(
-      aArgs.get_HttpChannelDiverterArgs().mChannelParent());
-    httpParent->SetApplyConversion(aArgs.get_HttpChannelDiverterArgs().mApplyConversion());
+    case ChannelDiverterArgs::THttpChannelDiverterArgs: {
+      auto httpParent = static_cast<HttpChannelParent*>(
+          aArgs.get_HttpChannelDiverterArgs().mChannelParent());
+      httpParent->SetApplyConversion(
+          aArgs.get_HttpChannelDiverterArgs().mApplyConversion());
 
-    mDivertableChannelParent =
-      static_cast<ADivertableParentChannel*>(httpParent);
-    break;
-  }
-  case ChannelDiverterArgs::TPFTPChannelParent:
-  {
-    mDivertableChannelParent = static_cast<ADivertableParentChannel*>(
-      static_cast<FTPChannelParent*>(aArgs.get_PFTPChannelParent()));
-    break;
-  }
-  default:
-    MOZ_ASSERT_UNREACHABLE("unknown ChannelDiverterArgs type");
-    return false;
+      mDivertableChannelParent =
+          static_cast<ADivertableParentChannel*>(httpParent);
+      break;
+    }
+    case ChannelDiverterArgs::TPFTPChannelParent: {
+      mDivertableChannelParent = static_cast<ADivertableParentChannel*>(
+          static_cast<FTPChannelParent*>(aArgs.get_PFTPChannelParent()));
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown ChannelDiverterArgs type");
+      return false;
   }
   MOZ_ASSERT(mDivertableChannelParent);
 
@@ -48,20 +45,16 @@ ChannelDiverterParent::Init(const ChannelDiverterArgs& aArgs)
   return true;
 }
 
-void
-ChannelDiverterParent::DivertTo(nsIStreamListener* newListener)
-{
+void ChannelDiverterParent::DivertTo(nsIStreamListener* newListener) {
   MOZ_ASSERT(newListener);
   MOZ_ASSERT(mDivertableChannelParent);
 
   mDivertableChannelParent->DivertTo(newListener);
 }
 
-void
-ChannelDiverterParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void ChannelDiverterParent::ActorDestroy(ActorDestroyReason aWhy) {
   // Implement me! Bug 1005179
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

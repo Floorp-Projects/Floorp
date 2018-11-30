@@ -17,7 +17,7 @@ class CancelableRunnable;
 namespace dom {
 class Element;
 class EventTarget;
-} // namespace dom
+}  // namespace dom
 
 namespace layers {
 
@@ -27,7 +27,8 @@ namespace layers {
  */
 class ActiveElementManager {
   ~ActiveElementManager();
-public:
+
+ public:
   NS_INLINE_DECL_REFCOUNTING(ActiveElementManager)
 
   ActiveElementManager();
@@ -60,7 +61,8 @@ public:
    * delayed until after touch listeners have responded to the APZ.
    */
   void HandleTouchEnd();
-private:
+
+ private:
   /**
    * The target of the first touch point in the current touch block.
    */
@@ -89,7 +91,7 @@ private:
   void CancelTask();
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* mozilla_layers_ActiveElementManager_h */

@@ -25,17 +25,17 @@ namespace gfx {
  * Convenience macros for dispatching to various format combinations.
  */
 
-// Hash the formats to a relatively dense value to optimize jump table generation.
-// The first 6 formats in SurfaceFormat are the 32-bit BGRA variants and are the most
-// common formats dispatched here. Room is reserved in the lowish bits for up to
-// these 6 destination formats. If a destination format is >= 6, the 6th bit is set
-// to avoid collisions.
+// Hash the formats to a relatively dense value to optimize jump table
+// generation. The first 6 formats in SurfaceFormat are the 32-bit BGRA variants
+// and are the most common formats dispatched here. Room is reserved in the
+// lowish bits for up to these 6 destination formats. If a destination format is
+// >= 6, the 6th bit is set to avoid collisions.
 #define FORMAT_KEY(aSrcFormat, aDstFormat) \
   (int(aSrcFormat) * 6 + int(aDstFormat) + (int(int(aDstFormat) >= 6) << 6))
 
 #define FORMAT_CASE_EXPR(aSrcFormat, aDstFormat, ...) \
-  case FORMAT_KEY(aSrcFormat, aDstFormat): \
-    __VA_ARGS__; \
+  case FORMAT_KEY(aSrcFormat, aDstFormat):            \
+    __VA_ARGS__;                                      \
     return true;
 
 #define FORMAT_CASE(aSrcFormat, aDstFormat, ...) \
@@ -46,44 +46,35 @@ namespace gfx {
  */
 
 // Whether B comes before R in pixel memory layout.
-static constexpr bool
-IsBGRFormat(SurfaceFormat aFormat)
-{
+static constexpr bool IsBGRFormat(SurfaceFormat aFormat) {
   return aFormat == SurfaceFormat::B8G8R8A8 ||
 #if MOZ_LITTLE_ENDIAN
          aFormat == SurfaceFormat::R5G6B5_UINT16 ||
 #endif
-         aFormat == SurfaceFormat::B8G8R8X8 ||
-         aFormat == SurfaceFormat::B8G8R8;
+         aFormat == SurfaceFormat::B8G8R8X8 || aFormat == SurfaceFormat::B8G8R8;
 }
 
 // Whether the order of B and R need to be swapped to map from src to dst.
-static constexpr bool
-ShouldSwapRB(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat)
-{
+static constexpr bool ShouldSwapRB(SurfaceFormat aSrcFormat,
+                                   SurfaceFormat aDstFormat) {
   return IsBGRFormat(aSrcFormat) != IsBGRFormat(aDstFormat);
 }
 
 // The starting byte of the RGB components in pixel memory.
-static constexpr uint32_t
-RGBByteIndex(SurfaceFormat aFormat)
-{
+static constexpr uint32_t RGBByteIndex(SurfaceFormat aFormat) {
   return aFormat == SurfaceFormat::A8R8G8B8 ||
-         aFormat == SurfaceFormat::X8R8G8B8
-           ? 1 : 0;
+                 aFormat == SurfaceFormat::X8R8G8B8
+             ? 1
+             : 0;
 }
 
 // The byte of the alpha component, which just comes after RGB.
-static constexpr uint32_t
-AlphaByteIndex(SurfaceFormat aFormat)
-{
+static constexpr uint32_t AlphaByteIndex(SurfaceFormat aFormat) {
   return (RGBByteIndex(aFormat) + 3) % 4;
 }
 
 // The endian-dependent bit shift to access RGB of a UINT32 pixel.
-static constexpr uint32_t
-RGBBitShift(SurfaceFormat aFormat)
-{
+static constexpr uint32_t RGBBitShift(SurfaceFormat aFormat) {
 #if MOZ_LITTLE_ENDIAN
   return 8 * RGBByteIndex(aFormat);
 #else
@@ -92,25 +83,21 @@ RGBBitShift(SurfaceFormat aFormat)
 }
 
 // The endian-dependent bit shift to access alpha of a UINT32 pixel.
-static constexpr uint32_t
-AlphaBitShift(SurfaceFormat aFormat)
-{
+static constexpr uint32_t AlphaBitShift(SurfaceFormat aFormat) {
   return (RGBBitShift(aFormat) + 24) % 32;
 }
 
-// Whether the pixel format should ignore the value of the alpha channel and treat it as opaque.
-static constexpr bool
-IgnoreAlpha(SurfaceFormat aFormat)
-{
+// Whether the pixel format should ignore the value of the alpha channel and
+// treat it as opaque.
+static constexpr bool IgnoreAlpha(SurfaceFormat aFormat) {
   return aFormat == SurfaceFormat::B8G8R8X8 ||
          aFormat == SurfaceFormat::R8G8B8X8 ||
          aFormat == SurfaceFormat::X8R8G8B8;
 }
 
 // Whether to force alpha to opaque to map from src to dst.
-static constexpr bool
-ShouldForceOpaque(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat)
-{
+static constexpr bool ShouldForceOpaque(SurfaceFormat aSrcFormat,
+                                        SurfaceFormat aDstFormat) {
   return IgnoreAlpha(aSrcFormat) != IgnoreAlpha(aDstFormat);
 }
 
@@ -119,30 +106,28 @@ ShouldForceOpaque(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat)
  * SSE2 optimizations
  */
 
-template<bool aSwapRB, bool aOpaqueAlpha>
+template <bool aSwapRB, bool aOpaqueAlpha>
 void Premultiply_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define PREMULTIPLY_SSE2(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    Premultiply_SSE2 \
-      <ShouldSwapRB(aSrcFormat, aDstFormat), \
-       ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+#define PREMULTIPLY_SSE2(aSrcFormat, aDstFormat)                     \
+  FORMAT_CASE(aSrcFormat, aDstFormat,                                \
+              Premultiply_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat), \
+                               ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
-template<bool aSwapRB>
+template <bool aSwapRB>
 void Unpremultiply_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
 #define UNPREMULTIPLY_SSE2(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    Unpremultiply_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat)>)
+  FORMAT_CASE(aSrcFormat, aDstFormat,              \
+              Unpremultiply_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat)>)
 
-template<bool aSwapRB, bool aOpaqueAlpha>
+template <bool aSwapRB, bool aOpaqueAlpha>
 void Swizzle_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define SWIZZLE_SSE2(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    Swizzle_SSE2 \
-      <ShouldSwapRB(aSrcFormat, aDstFormat), \
-       ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+#define SWIZZLE_SSE2(aSrcFormat, aDstFormat)                     \
+  FORMAT_CASE(aSrcFormat, aDstFormat,                            \
+              Swizzle_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat), \
+                           ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
 #endif
 
@@ -151,30 +136,28 @@ void Swizzle_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
  * ARM NEON optimizations
  */
 
-template<bool aSwapRB, bool aOpaqueAlpha>
+template <bool aSwapRB, bool aOpaqueAlpha>
 void Premultiply_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define PREMULTIPLY_NEON(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    Premultiply_NEON \
-      <ShouldSwapRB(aSrcFormat, aDstFormat), \
-       ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+#define PREMULTIPLY_NEON(aSrcFormat, aDstFormat)                     \
+  FORMAT_CASE(aSrcFormat, aDstFormat,                                \
+              Premultiply_NEON<ShouldSwapRB(aSrcFormat, aDstFormat), \
+                               ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
-template<bool aSwapRB>
+template <bool aSwapRB>
 void Unpremultiply_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
 #define UNPREMULTIPLY_NEON(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    Unpremultiply_NEON<ShouldSwapRB(aSrcFormat, aDstFormat)>)
+  FORMAT_CASE(aSrcFormat, aDstFormat,              \
+              Unpremultiply_NEON<ShouldSwapRB(aSrcFormat, aDstFormat)>)
 
-template<bool aSwapRB, bool aOpaqueAlpha>
+template <bool aSwapRB, bool aOpaqueAlpha>
 void Swizzle_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define SWIZZLE_NEON(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    Swizzle_NEON \
-      <ShouldSwapRB(aSrcFormat, aDstFormat), \
-       ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+#define SWIZZLE_NEON(aSrcFormat, aDstFormat)                     \
+  FORMAT_CASE(aSrcFormat, aDstFormat,                            \
+              Swizzle_NEON<ShouldSwapRB(aSrcFormat, aDstFormat), \
+                           ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
 #endif
 
@@ -182,19 +165,16 @@ void Swizzle_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
  * Premultiplying
  */
 
-// Fallback premultiply implementation that uses splayed pixel math to reduce the
-// multiplications used. That is, the R and B components are isolated from the G and A
-// components, which then can be multiplied as if they were two 2-component vectors.
-// Otherwise, an approximation if divide-by-255 is used which is faster than an actual
-// division. These optimizations are also used for the SSE2 and NEON implementations.
-template<bool aSwapRB, bool aOpaqueAlpha,
-         uint32_t aSrcRGBShift, uint32_t aSrcAShift,
-         uint32_t aDstRGBShift, uint32_t aDstAShift>
-static void
-PremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
-                    uint8_t* aDst, int32_t aDstGap,
-                    IntSize aSize)
-{
+// Fallback premultiply implementation that uses splayed pixel math to reduce
+// the multiplications used. That is, the R and B components are isolated from
+// the G and A components, which then can be multiplied as if they were two
+// 2-component vectors. Otherwise, an approximation if divide-by-255 is used
+// which is faster than an actual division. These optimizations are also used
+// for the SSE2 and NEON implementations.
+template <bool aSwapRB, bool aOpaqueAlpha, uint32_t aSrcRGBShift,
+          uint32_t aSrcAShift, uint32_t aDstRGBShift, uint32_t aDstAShift>
+static void PremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
+                                uint8_t* aDst, int32_t aDstGap, IntSize aSize) {
   for (int32_t height = aSize.height; height > 0; height--) {
     const uint8_t* end = aSrc + 4 * aSize.width;
     do {
@@ -214,13 +194,13 @@ PremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
       // c = c*a + 255; c = (c + (c >> 8)) >> 8;
       // However, we omit the final >> 8 to fold it with the final shift into
       // place depending on desired output format.
-      rb = rb*a + 0x00FF00FF;
+      rb = rb * a + 0x00FF00FF;
       rb = (rb + ((rb >> 8) & 0x00FF00FF)) & 0xFF00FF00;
 
       // Use same approximation as above, but G is shifted 8 bits left.
       // Alpha is left out and handled separately.
       uint32_t g = color & (0xFF00 << aSrcRGBShift);
-      g = g*a + (0xFF00 << aSrcRGBShift);
+      g = g * a + (0xFF00 << aSrcRGBShift);
       g = (g + (g >> 8)) & (0xFF0000 << aSrcRGBShift);
 
       // The above math leaves RGB shifted left by 8 bits.
@@ -228,9 +208,9 @@ PremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
       // then combine them back together to produce output pixel.
       // Add the alpha back on if the output format is not opaque.
       *reinterpret_cast<uint32_t*>(aDst) =
-         (rb >> (8 - aDstRGBShift)) |
-         (g >> (8 + aSrcRGBShift - aDstRGBShift)) |
-         (aOpaqueAlpha ? 0xFF << aDstAShift : a << aDstAShift);
+          (rb >> (8 - aDstRGBShift)) |
+          (g >> (8 + aSrcRGBShift - aDstRGBShift)) |
+          (aOpaqueAlpha ? 0xFF << aDstAShift : a << aDstAShift);
 
       aSrc += 4;
       aDst += 4;
@@ -241,15 +221,15 @@ PremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
   }
 }
 
-#define PREMULTIPLY_FALLBACK_CASE(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    PremultiplyFallback \
-      <ShouldSwapRB(aSrcFormat, aDstFormat), \
-       ShouldForceOpaque(aSrcFormat, aDstFormat), \
-       RGBBitShift(aSrcFormat), AlphaBitShift(aSrcFormat), \
-       RGBBitShift(aDstFormat), AlphaBitShift(aDstFormat)>)
+#define PREMULTIPLY_FALLBACK_CASE(aSrcFormat, aDstFormat)                     \
+  FORMAT_CASE(                                                                \
+      aSrcFormat, aDstFormat,                                                 \
+      PremultiplyFallback<ShouldSwapRB(aSrcFormat, aDstFormat),               \
+                          ShouldForceOpaque(aSrcFormat, aDstFormat),          \
+                          RGBBitShift(aSrcFormat), AlphaBitShift(aSrcFormat), \
+                          RGBBitShift(aDstFormat), AlphaBitShift(aDstFormat)>)
 
-#define PREMULTIPLY_FALLBACK(aSrcFormat) \
+#define PREMULTIPLY_FALLBACK(aSrcFormat)                         \
   PREMULTIPLY_FALLBACK_CASE(aSrcFormat, SurfaceFormat::B8G8R8A8) \
   PREMULTIPLY_FALLBACK_CASE(aSrcFormat, SurfaceFormat::B8G8R8X8) \
   PREMULTIPLY_FALLBACK_CASE(aSrcFormat, SurfaceFormat::R8G8B8A8) \
@@ -260,11 +240,9 @@ PremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
 // If rows are tightly packed, and the size of the total area will fit within
 // the precision range of a single row, then process all the data as if it was
 // a single row.
-static inline IntSize
-CollapseSize(const IntSize& aSize, int32_t aSrcStride, int32_t aDstStride)
-{
-  if (aSrcStride == aDstStride &&
-      (aSrcStride & 3) == 0 &&
+static inline IntSize CollapseSize(const IntSize& aSize, int32_t aSrcStride,
+                                   int32_t aDstStride) {
+  if (aSrcStride == aDstStride && (aSrcStride & 3) == 0 &&
       aSrcStride / 4 == aSize.width) {
     CheckedInt32 area = CheckedInt32(aSize.width) * CheckedInt32(aSize.height);
     if (area.isValid()) {
@@ -274,9 +252,8 @@ CollapseSize(const IntSize& aSize, int32_t aSrcStride, int32_t aDstStride)
   return aSize;
 }
 
-static inline int32_t
-GetStrideGap(int32_t aWidth, SurfaceFormat aFormat, int32_t aStride)
-{
+static inline int32_t GetStrideGap(int32_t aWidth, SurfaceFormat aFormat,
+                                   int32_t aStride) {
   CheckedInt32 used = CheckedInt32(aWidth) * BytesPerPixel(aFormat);
   if (!used.isValid() || used.value() < 0) {
     return -1;
@@ -284,11 +261,10 @@ GetStrideGap(int32_t aWidth, SurfaceFormat aFormat, int32_t aStride)
   return aStride - used.value();
 }
 
-bool
-PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
-                uint8_t* aDst, int32_t aDstStride, SurfaceFormat aDstFormat,
-                const IntSize& aSize)
-{
+bool PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride,
+                     SurfaceFormat aSrcFormat, uint8_t* aDst,
+                     int32_t aDstStride, SurfaceFormat aDstFormat,
+                     const IntSize& aSize) {
   if (aSize.IsEmpty()) {
     return true;
   }
@@ -305,37 +281,40 @@ PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcForma
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
-  PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
-  PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
-  PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
-  PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
-  PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
-  PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8)
-  PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
-  PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
-  default: break;
-  }
+      PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
+      PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
+      PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+      PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
+      PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
+      PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8)
+      PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+      PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
+      default:
+        break;
+    }
 #endif
 
 #ifdef BUILD_ARM_NEON
   if (mozilla::supports_neon()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
-  PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
-  PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
-  PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
-  PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
-  PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
-  PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8)
-  PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
-  PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
-  default: break;
-  }
+      PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
+      PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
+      PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+      PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
+      PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
+      PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8)
+      PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+      PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
+      default:
+        break;
+    }
 #endif
 
   switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
-  PREMULTIPLY_FALLBACK(SurfaceFormat::B8G8R8A8)
-  PREMULTIPLY_FALLBACK(SurfaceFormat::R8G8B8A8)
-  PREMULTIPLY_FALLBACK(SurfaceFormat::A8R8G8B8)
-  default: break;
+    PREMULTIPLY_FALLBACK(SurfaceFormat::B8G8R8A8)
+    PREMULTIPLY_FALLBACK(SurfaceFormat::R8G8B8A8)
+    PREMULTIPLY_FALLBACK(SurfaceFormat::A8R8G8B8)
+    default:
+      break;
   }
 
 #undef FORMAT_CASE_CALL
@@ -355,27 +334,31 @@ PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcForma
 #define UNPREMULQ_8(x) UNPREMULQ_4(x), UNPREMULQ_4((x) + 4)
 #define UNPREMULQ_16(x) UNPREMULQ_8(x), UNPREMULQ_8((x) + 8)
 #define UNPREMULQ_32(x) UNPREMULQ_16(x), UNPREMULQ_16((x) + 16)
-static const uint32_t sUnpremultiplyTable[256] =
-{
-  0, UNPREMULQ(1), UNPREMULQ_2(2), UNPREMULQ_4(4),
-  UNPREMULQ_8(8), UNPREMULQ_16(16), UNPREMULQ_32(32),
-  UNPREMULQ_32(64), UNPREMULQ_32(96), UNPREMULQ_32(128),
-  UNPREMULQ_32(160), UNPREMULQ_32(192), UNPREMULQ_32(224)
-};
+static const uint32_t sUnpremultiplyTable[256] = {0,
+                                                  UNPREMULQ(1),
+                                                  UNPREMULQ_2(2),
+                                                  UNPREMULQ_4(4),
+                                                  UNPREMULQ_8(8),
+                                                  UNPREMULQ_16(16),
+                                                  UNPREMULQ_32(32),
+                                                  UNPREMULQ_32(64),
+                                                  UNPREMULQ_32(96),
+                                                  UNPREMULQ_32(128),
+                                                  UNPREMULQ_32(160),
+                                                  UNPREMULQ_32(192),
+                                                  UNPREMULQ_32(224)};
 
-// Fallback unpremultiply implementation that uses 8.16 fixed-point reciprocal math
-// to eliminate any division by the alpha component. This optimization is used for the
-// SSE2 and NEON implementations, with some adaptations. This implementation also accesses
-// color components using individual byte accesses as this profiles faster than accessing
-// the pixel as a uint32_t and shifting/masking to access components.
-template<bool aSwapRB,
-         uint32_t aSrcRGBIndex, uint32_t aSrcAIndex,
-         uint32_t aDstRGBIndex, uint32_t aDstAIndex>
-static void
-UnpremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
-                      uint8_t* aDst, int32_t aDstGap,
-                      IntSize aSize)
-{
+// Fallback unpremultiply implementation that uses 8.16 fixed-point reciprocal
+// math to eliminate any division by the alpha component. This optimization is
+// used for the SSE2 and NEON implementations, with some adaptations. This
+// implementation also accesses color components using individual byte accesses
+// as this profiles faster than accessing the pixel as a uint32_t and
+// shifting/masking to access components.
+template <bool aSwapRB, uint32_t aSrcRGBIndex, uint32_t aSrcAIndex,
+          uint32_t aDstRGBIndex, uint32_t aDstAIndex>
+static void UnpremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
+                                  uint8_t* aDst, int32_t aDstGap,
+                                  IntSize aSize) {
   for (int32_t height = aSize.height; height > 0; height--) {
     const uint8_t* end = aSrc + 4 * aSize.width;
     do {
@@ -384,8 +367,9 @@ UnpremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
       uint8_t b = aSrc[aSrcRGBIndex + (aSwapRB ? 0 : 2)];
       uint8_t a = aSrc[aSrcAIndex];
 
-      // Access the 8.16 reciprocal from the table based on alpha. Multiply by the
-      // reciprocal and shift off the fraction bits to approximate the division by alpha.
+      // Access the 8.16 reciprocal from the table based on alpha. Multiply by
+      // the reciprocal and shift off the fraction bits to approximate the
+      // division by alpha.
       uint32_t q = sUnpremultiplyTable[a];
       aDst[aDstRGBIndex + 0] = (r * q) >> 16;
       aDst[aDstRGBIndex + 1] = (g * q) >> 16;
@@ -401,23 +385,22 @@ UnpremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
   }
 }
 
-#define UNPREMULTIPLY_FALLBACK_CASE(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    UnpremultiplyFallback \
-      <ShouldSwapRB(aSrcFormat, aDstFormat), \
-       RGBByteIndex(aSrcFormat), AlphaByteIndex(aSrcFormat), \
-       RGBByteIndex(aDstFormat), AlphaByteIndex(aDstFormat)>)
+#define UNPREMULTIPLY_FALLBACK_CASE(aSrcFormat, aDstFormat)             \
+  FORMAT_CASE(aSrcFormat, aDstFormat,                                   \
+              UnpremultiplyFallback<                                    \
+                  ShouldSwapRB(aSrcFormat, aDstFormat),                 \
+                  RGBByteIndex(aSrcFormat), AlphaByteIndex(aSrcFormat), \
+                  RGBByteIndex(aDstFormat), AlphaByteIndex(aDstFormat)>)
 
-#define UNPREMULTIPLY_FALLBACK(aSrcFormat) \
+#define UNPREMULTIPLY_FALLBACK(aSrcFormat)                         \
   UNPREMULTIPLY_FALLBACK_CASE(aSrcFormat, SurfaceFormat::B8G8R8A8) \
   UNPREMULTIPLY_FALLBACK_CASE(aSrcFormat, SurfaceFormat::R8G8B8A8) \
   UNPREMULTIPLY_FALLBACK_CASE(aSrcFormat, SurfaceFormat::A8R8G8B8)
 
-bool
-UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
-                  uint8_t* aDst, int32_t aDstStride, SurfaceFormat aDstFormat,
-                  const IntSize& aSize)
-{
+bool UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride,
+                       SurfaceFormat aSrcFormat, uint8_t* aDst,
+                       int32_t aDstStride, SurfaceFormat aDstFormat,
+                       const IntSize& aSize) {
   if (aSize.IsEmpty()) {
     return true;
   }
@@ -434,29 +417,32 @@ UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFor
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
-  UNPREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
-  UNPREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
-  UNPREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
-  UNPREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
-  default: break;
-  }
+      UNPREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
+      UNPREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+      UNPREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
+      UNPREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+      default:
+        break;
+    }
 #endif
 
 #ifdef BUILD_ARM_NEON
   if (mozilla::supports_neon()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
-  UNPREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
-  UNPREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
-  UNPREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
-  UNPREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
-  default: break;
-  }
+      UNPREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
+      UNPREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+      UNPREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
+      UNPREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+      default:
+        break;
+    }
 #endif
 
   switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
-  UNPREMULTIPLY_FALLBACK(SurfaceFormat::B8G8R8A8)
-  UNPREMULTIPLY_FALLBACK(SurfaceFormat::R8G8B8A8)
-  UNPREMULTIPLY_FALLBACK(SurfaceFormat::A8R8G8B8)
-  default: break;
+    UNPREMULTIPLY_FALLBACK(SurfaceFormat::B8G8R8A8)
+    UNPREMULTIPLY_FALLBACK(SurfaceFormat::R8G8B8A8)
+    UNPREMULTIPLY_FALLBACK(SurfaceFormat::A8R8G8B8)
+    default:
+      break;
   }
 
 #undef FORMAT_CASE_CALL
@@ -469,15 +455,12 @@ UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFor
  * Swizzling
  */
 
-// Fallback swizzle implementation that uses shifting and masking to reorder pixels.
-template<bool aSwapRB, bool aOpaqueAlpha,
-         uint32_t aSrcRGBShift, uint32_t aSrcAShift,
-         uint32_t aDstRGBShift, uint32_t aDstAShift>
-static void
-SwizzleFallback(const uint8_t* aSrc, int32_t aSrcGap,
-                uint8_t* aDst, int32_t aDstGap,
-                IntSize aSize)
-{
+// Fallback swizzle implementation that uses shifting and masking to reorder
+// pixels.
+template <bool aSwapRB, bool aOpaqueAlpha, uint32_t aSrcRGBShift,
+          uint32_t aSrcAShift, uint32_t aDstRGBShift, uint32_t aDstAShift>
+static void SwizzleFallback(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                            int32_t aDstGap, IntSize aSize) {
   for (int32_t height = aSize.height; height > 0; height--) {
     const uint8_t* end = aSrc + 4 * aSize.width;
     do {
@@ -485,13 +468,14 @@ SwizzleFallback(const uint8_t* aSrc, int32_t aSrcGap,
 
       if (aSwapRB) {
         // Handle R and B swaps by exchanging words and masking.
-        uint32_t rb = ((rgba << 16) | (rgba >> 16)) & (0x00FF00FF << aSrcRGBShift);
+        uint32_t rb =
+            ((rgba << 16) | (rgba >> 16)) & (0x00FF00FF << aSrcRGBShift);
         uint32_t ga = rgba & ((0xFF << aSrcAShift) | (0xFF00 << aSrcRGBShift));
         rgba = rb | ga;
       }
 
-      // If src and dst shifts differ, rotate left or right to move RGB into place,
-      // i.e. ARGB -> RGBA or ARGB -> RGBA.
+      // If src and dst shifts differ, rotate left or right to move RGB into
+      // place, i.e. ARGB -> RGBA or ARGB -> RGBA.
       if (aDstRGBShift > aSrcRGBShift) {
         rgba = (rgba << 8) | (aOpaqueAlpha ? 0x000000FF : rgba >> 24);
       } else if (aSrcRGBShift > aDstRGBShift) {
@@ -511,20 +495,17 @@ SwizzleFallback(const uint8_t* aSrc, int32_t aSrcGap,
   }
 }
 
-#define SWIZZLE_FALLBACK(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    SwizzleFallback \
-      <ShouldSwapRB(aSrcFormat, aDstFormat), \
-       ShouldForceOpaque(aSrcFormat, aDstFormat), \
-       RGBBitShift(aSrcFormat), AlphaBitShift(aSrcFormat), \
-       RGBBitShift(aDstFormat), AlphaBitShift(aDstFormat)>)
+#define SWIZZLE_FALLBACK(aSrcFormat, aDstFormat)                          \
+  FORMAT_CASE(                                                            \
+      aSrcFormat, aDstFormat,                                             \
+      SwizzleFallback<ShouldSwapRB(aSrcFormat, aDstFormat),               \
+                      ShouldForceOpaque(aSrcFormat, aDstFormat),          \
+                      RGBBitShift(aSrcFormat), AlphaBitShift(aSrcFormat), \
+                      RGBBitShift(aDstFormat), AlphaBitShift(aDstFormat)>)
 
 // Fast-path for matching formats.
-static void
-SwizzleCopy(const uint8_t* aSrc, int32_t aSrcGap,
-            uint8_t* aDst, int32_t aDstGap,
-            IntSize aSize, int32_t aBPP)
-{
+static void SwizzleCopy(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                        int32_t aDstGap, IntSize aSize, int32_t aBPP) {
   if (aSrc != aDst) {
     int32_t rowLength = aBPP * aSize.width;
     for (int32_t height = aSize.height; height > 0; height--) {
@@ -536,12 +517,9 @@ SwizzleCopy(const uint8_t* aSrc, int32_t aSrcGap,
 }
 
 // Fast-path for conversions that swap all bytes.
-template<bool aOpaqueAlpha, uint32_t aSrcAShift, uint32_t aDstAShift>
-static void
-SwizzleSwap(const uint8_t* aSrc, int32_t aSrcGap,
-            uint8_t* aDst, int32_t aDstGap,
-            IntSize aSize)
-{
+template <bool aOpaqueAlpha, uint32_t aSrcAShift, uint32_t aDstAShift>
+static void SwizzleSwap(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                        int32_t aDstGap, IntSize aSize) {
   for (int32_t height = aSize.height; height > 0; height--) {
     const uint8_t* end = aSrc + 4 * aSize.width;
     do {
@@ -564,19 +542,16 @@ SwizzleSwap(const uint8_t* aSrc, int32_t aSrcGap,
   }
 }
 
-#define SWIZZLE_SWAP(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    SwizzleSwap \
-      <ShouldForceOpaque(aSrcFormat, aDstFormat), \
-       AlphaBitShift(aSrcFormat), AlphaBitShift(aDstFormat)>)
+#define SWIZZLE_SWAP(aSrcFormat, aDstFormat)                 \
+  FORMAT_CASE(                                               \
+      aSrcFormat, aDstFormat,                                \
+      SwizzleSwap<ShouldForceOpaque(aSrcFormat, aDstFormat), \
+                  AlphaBitShift(aSrcFormat), AlphaBitShift(aDstFormat)>)
 
 // Fast-path for conversions that force alpha to opaque.
-template<uint32_t aDstAShift>
-static void
-SwizzleOpaque(const uint8_t* aSrc, int32_t aSrcGap,
-              uint8_t* aDst, int32_t aDstGap,
-              IntSize aSize)
-{
+template <uint32_t aDstAShift>
+static void SwizzleOpaque(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                          int32_t aDstGap, IntSize aSize) {
   if (aSrc == aDst) {
     // Modifying in-place, so just write out the alpha.
     for (int32_t height = aSize.height; height > 0; height--) {
@@ -608,22 +583,19 @@ SwizzleOpaque(const uint8_t* aSrc, int32_t aSrcGap,
 }
 
 #define SWIZZLE_OPAQUE(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    SwizzleOpaque<AlphaBitShift(aDstFormat)>)
+  FORMAT_CASE(aSrcFormat, aDstFormat, SwizzleOpaque<AlphaBitShift(aDstFormat)>)
 
 // Packing of 32-bit formats to RGB565.
-template<bool aSwapRB, uint32_t aSrcRGBShift, uint32_t aSrcRGBIndex>
-static void
-PackToRGB565(const uint8_t* aSrc, int32_t aSrcGap,
-             uint8_t* aDst, int32_t aDstGap,
-             IntSize aSize)
-{
+template <bool aSwapRB, uint32_t aSrcRGBShift, uint32_t aSrcRGBIndex>
+static void PackToRGB565(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                         int32_t aDstGap, IntSize aSize) {
   for (int32_t height = aSize.height; height > 0; height--) {
     const uint8_t* end = aSrc + 4 * aSize.width;
     do {
       uint32_t rgba = *reinterpret_cast<const uint32_t*>(aSrc);
 
-      // Isolate the R, G, and B components and shift to final endian-dependent locations.
+      // Isolate the R, G, and B components and shift to final endian-dependent
+      // locations.
       uint16_t rgb565;
       if (aSwapRB) {
         rgb565 = ((rgba & (0xF8 << aSrcRGBShift)) << (8 - aSrcRGBShift)) |
@@ -647,12 +619,9 @@ PackToRGB565(const uint8_t* aSrc, int32_t aSrcGap,
 }
 
 // Packing of 32-bit formats to 24-bit formats.
-template<bool aSwapRB, uint32_t aSrcRGBShift, uint32_t aSrcRGBIndex>
-static void
-PackToRGB24(const uint8_t* aSrc, int32_t aSrcGap,
-            uint8_t* aDst, int32_t aDstGap,
-            IntSize aSize)
-{
+template <bool aSwapRB, uint32_t aSrcRGBShift, uint32_t aSrcRGBIndex>
+static void PackToRGB24(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                        int32_t aDstGap, IntSize aSize) {
   for (int32_t height = aSize.height; height > 0; height--) {
     const uint8_t* end = aSrc + 4 * aSize.width;
     do {
@@ -673,13 +642,12 @@ PackToRGB24(const uint8_t* aSrc, int32_t aSrcGap,
   }
 }
 
-#define PACK_RGB_CASE(aSrcFormat, aDstFormat, aPackFunc) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    aPackFunc \
-      <ShouldSwapRB(aSrcFormat, aDstFormat), \
-       RGBBitShift(aSrcFormat), RGBByteIndex(aSrcFormat)>)
+#define PACK_RGB_CASE(aSrcFormat, aDstFormat, aPackFunc)      \
+  FORMAT_CASE(aSrcFormat, aDstFormat,                         \
+              aPackFunc<ShouldSwapRB(aSrcFormat, aDstFormat), \
+                        RGBBitShift(aSrcFormat), RGBByteIndex(aSrcFormat)>)
 
-#define PACK_RGB(aDstFormat, aPackFunc) \
+#define PACK_RGB(aDstFormat, aPackFunc)                         \
   PACK_RGB_CASE(SurfaceFormat::B8G8R8A8, aDstFormat, aPackFunc) \
   PACK_RGB_CASE(SurfaceFormat::B8G8R8X8, aDstFormat, aPackFunc) \
   PACK_RGB_CASE(SurfaceFormat::R8G8B8A8, aDstFormat, aPackFunc) \
@@ -688,12 +656,9 @@ PackToRGB24(const uint8_t* aSrc, int32_t aSrcGap,
   PACK_RGB_CASE(SurfaceFormat::X8R8G8B8, aDstFormat, aPackFunc)
 
 // Packing of 32-bit formats to A8.
-template<uint32_t aSrcAIndex>
-static void
-PackToA8(const uint8_t* aSrc, int32_t aSrcGap,
-         uint8_t* aDst, int32_t aDstGap,
-         IntSize aSize)
-{
+template <uint32_t aSrcAIndex>
+static void PackToA8(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                     int32_t aDstGap, IntSize aSize) {
   for (int32_t height = aSize.height; height > 0; height--) {
     const uint8_t* end = aSrc + 4 * aSize.width;
     do {
@@ -706,19 +671,16 @@ PackToA8(const uint8_t* aSrc, int32_t aSrcGap,
 }
 
 #define PACK_ALPHA_CASE(aSrcFormat, aDstFormat, aPackFunc) \
-  FORMAT_CASE(aSrcFormat, aDstFormat, \
-    aPackFunc<AlphaByteIndex(aSrcFormat)>)
+  FORMAT_CASE(aSrcFormat, aDstFormat, aPackFunc<AlphaByteIndex(aSrcFormat)>)
 
-#define PACK_ALPHA(aDstFormat, aPackFunc) \
+#define PACK_ALPHA(aDstFormat, aPackFunc)                         \
   PACK_ALPHA_CASE(SurfaceFormat::B8G8R8A8, aDstFormat, aPackFunc) \
   PACK_ALPHA_CASE(SurfaceFormat::R8G8B8A8, aDstFormat, aPackFunc) \
   PACK_ALPHA_CASE(SurfaceFormat::A8R8G8B8, aDstFormat, aPackFunc)
 
-bool
-SwizzleData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
-            uint8_t* aDst, int32_t aDstStride, SurfaceFormat aDstFormat,
-            const IntSize& aSize)
-{
+bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride,
+                 SurfaceFormat aSrcFormat, uint8_t* aDst, int32_t aDstStride,
+                 SurfaceFormat aDstFormat, const IntSize& aSize) {
   if (aSize.IsEmpty()) {
     return true;
   }
@@ -735,73 +697,75 @@ SwizzleData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
-  SWIZZLE_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
-  SWIZZLE_SSE2(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
-  SWIZZLE_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
-  SWIZZLE_SSE2(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8A8)
-  SWIZZLE_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
-  SWIZZLE_SSE2(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
-  SWIZZLE_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
-  SWIZZLE_SSE2(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
-  default: break;
-  }
+      SWIZZLE_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+      SWIZZLE_SSE2(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
+      SWIZZLE_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
+      SWIZZLE_SSE2(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8A8)
+      SWIZZLE_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+      SWIZZLE_SSE2(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
+      SWIZZLE_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
+      SWIZZLE_SSE2(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
+      default:
+        break;
+    }
 #endif
 
 #ifdef BUILD_ARM_NEON
   if (mozilla::supports_neon()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
-  SWIZZLE_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
-  SWIZZLE_NEON(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
-  SWIZZLE_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
-  SWIZZLE_NEON(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8A8)
-  SWIZZLE_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
-  SWIZZLE_NEON(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
-  SWIZZLE_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
-  SWIZZLE_NEON(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
-  default: break;
-  }
+      SWIZZLE_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+      SWIZZLE_NEON(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
+      SWIZZLE_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
+      SWIZZLE_NEON(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8A8)
+      SWIZZLE_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+      SWIZZLE_NEON(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
+      SWIZZLE_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
+      SWIZZLE_NEON(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
+      default:
+        break;
+    }
 #endif
 
   switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+    SWIZZLE_FALLBACK(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+    SWIZZLE_FALLBACK(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
+    SWIZZLE_FALLBACK(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
+    SWIZZLE_FALLBACK(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8A8)
 
-  SWIZZLE_FALLBACK(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
-  SWIZZLE_FALLBACK(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
-  SWIZZLE_FALLBACK(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
-  SWIZZLE_FALLBACK(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8A8)
+    SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+    SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
+    SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
+    SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
+    SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8A8, SurfaceFormat::A8R8G8B8)
+    SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8X8, SurfaceFormat::X8R8G8B8)
 
-  SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
-  SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
-  SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
-  SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
-  SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8A8, SurfaceFormat::A8R8G8B8)
-  SWIZZLE_FALLBACK(SurfaceFormat::R8G8B8X8, SurfaceFormat::X8R8G8B8)
+    SWIZZLE_FALLBACK(SurfaceFormat::A8R8G8B8, SurfaceFormat::R8G8B8A8)
+    SWIZZLE_FALLBACK(SurfaceFormat::X8R8G8B8, SurfaceFormat::R8G8B8X8)
+    SWIZZLE_FALLBACK(SurfaceFormat::A8R8G8B8, SurfaceFormat::R8G8B8X8)
+    SWIZZLE_FALLBACK(SurfaceFormat::X8R8G8B8, SurfaceFormat::R8G8B8A8)
 
-  SWIZZLE_FALLBACK(SurfaceFormat::A8R8G8B8, SurfaceFormat::R8G8B8A8)
-  SWIZZLE_FALLBACK(SurfaceFormat::X8R8G8B8, SurfaceFormat::R8G8B8X8)
-  SWIZZLE_FALLBACK(SurfaceFormat::A8R8G8B8, SurfaceFormat::R8G8B8X8)
-  SWIZZLE_FALLBACK(SurfaceFormat::X8R8G8B8, SurfaceFormat::R8G8B8A8)
+    SWIZZLE_SWAP(SurfaceFormat::B8G8R8A8, SurfaceFormat::A8R8G8B8)
+    SWIZZLE_SWAP(SurfaceFormat::B8G8R8A8, SurfaceFormat::X8R8G8B8)
+    SWIZZLE_SWAP(SurfaceFormat::B8G8R8X8, SurfaceFormat::X8R8G8B8)
+    SWIZZLE_SWAP(SurfaceFormat::B8G8R8X8, SurfaceFormat::A8R8G8B8)
+    SWIZZLE_SWAP(SurfaceFormat::A8R8G8B8, SurfaceFormat::B8G8R8A8)
+    SWIZZLE_SWAP(SurfaceFormat::A8R8G8B8, SurfaceFormat::B8G8R8X8)
+    SWIZZLE_SWAP(SurfaceFormat::X8R8G8B8, SurfaceFormat::B8G8R8X8)
+    SWIZZLE_SWAP(SurfaceFormat::X8R8G8B8, SurfaceFormat::B8G8R8A8)
 
-  SWIZZLE_SWAP(SurfaceFormat::B8G8R8A8, SurfaceFormat::A8R8G8B8)
-  SWIZZLE_SWAP(SurfaceFormat::B8G8R8A8, SurfaceFormat::X8R8G8B8)
-  SWIZZLE_SWAP(SurfaceFormat::B8G8R8X8, SurfaceFormat::X8R8G8B8)
-  SWIZZLE_SWAP(SurfaceFormat::B8G8R8X8, SurfaceFormat::A8R8G8B8)
-  SWIZZLE_SWAP(SurfaceFormat::A8R8G8B8, SurfaceFormat::B8G8R8A8)
-  SWIZZLE_SWAP(SurfaceFormat::A8R8G8B8, SurfaceFormat::B8G8R8X8)
-  SWIZZLE_SWAP(SurfaceFormat::X8R8G8B8, SurfaceFormat::B8G8R8X8)
-  SWIZZLE_SWAP(SurfaceFormat::X8R8G8B8, SurfaceFormat::B8G8R8A8)
+    SWIZZLE_OPAQUE(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
+    SWIZZLE_OPAQUE(SurfaceFormat::B8G8R8X8, SurfaceFormat::B8G8R8A8)
+    SWIZZLE_OPAQUE(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8)
+    SWIZZLE_OPAQUE(SurfaceFormat::R8G8B8X8, SurfaceFormat::R8G8B8A8)
+    SWIZZLE_OPAQUE(SurfaceFormat::A8R8G8B8, SurfaceFormat::X8R8G8B8)
+    SWIZZLE_OPAQUE(SurfaceFormat::X8R8G8B8, SurfaceFormat::A8R8G8B8)
 
-  SWIZZLE_OPAQUE(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
-  SWIZZLE_OPAQUE(SurfaceFormat::B8G8R8X8, SurfaceFormat::B8G8R8A8)
-  SWIZZLE_OPAQUE(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8)
-  SWIZZLE_OPAQUE(SurfaceFormat::R8G8B8X8, SurfaceFormat::R8G8B8A8)
-  SWIZZLE_OPAQUE(SurfaceFormat::A8R8G8B8, SurfaceFormat::X8R8G8B8)
-  SWIZZLE_OPAQUE(SurfaceFormat::X8R8G8B8, SurfaceFormat::A8R8G8B8)
+    PACK_RGB(SurfaceFormat::R5G6B5_UINT16, PackToRGB565)
+    PACK_RGB(SurfaceFormat::B8G8R8, PackToRGB24)
+    PACK_RGB(SurfaceFormat::R8G8B8, PackToRGB24)
+    PACK_ALPHA(SurfaceFormat::A8, PackToA8)
 
-  PACK_RGB(SurfaceFormat::R5G6B5_UINT16, PackToRGB565)
-  PACK_RGB(SurfaceFormat::B8G8R8, PackToRGB24)
-  PACK_RGB(SurfaceFormat::R8G8B8, PackToRGB24)
-  PACK_ALPHA(SurfaceFormat::A8, PackToA8)
-
-  default: break;
+    default:
+      break;
   }
 
   if (aSrcFormat == aDstFormat) {
@@ -816,5 +780,5 @@ SwizzleData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
   return false;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

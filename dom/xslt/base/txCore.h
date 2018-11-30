@@ -11,40 +11,32 @@
 #include "nsISupportsImpl.h"
 #include "nsStringFwd.h"
 
-class txObject
-{
-public:
-    txObject()
-    {
-        MOZ_COUNT_CTOR(txObject);
-    }
+class txObject {
+ public:
+  txObject() { MOZ_COUNT_CTOR(txObject); }
 
-    /**
-     * Deletes this txObject
-     */
-    virtual ~txObject()
-    {
-        MOZ_COUNT_DTOR(txObject);
-    }
+  /**
+   * Deletes this txObject
+   */
+  virtual ~txObject() { MOZ_COUNT_DTOR(txObject); }
 };
 
 /**
  * Utility class for doubles
  */
-class txDouble
-{
-public:
-    /**
-     * Converts the value of the given double to a string, and appends
-     * the result to the destination string.
-     */
-    static void toString(double aValue, nsAString& aDest);
+class txDouble {
+ public:
+  /**
+   * Converts the value of the given double to a string, and appends
+   * the result to the destination string.
+   */
+  static void toString(double aValue, nsAString& aDest);
 
-    /**
-     * Converts the given String to a double, if the string value does not
-     * represent a double, NaN will be returned.
-     */
-    static double toDouble(const nsAString& aStr);
+  /**
+   * Converts the given String to a double, if the string value does not
+   * represent a double, NaN will be returned.
+   */
+  static double toDouble(const nsAString& aStr);
 };
 
 #endif

@@ -15,7 +15,7 @@
 #include "nsIURL.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
-#include "nsCharsetSource.h" // kCharsetFrom* macro definition
+#include "nsCharsetSource.h"  // kCharsetFrom* macro definition
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 #include "nsDocElementCreatedNotificationRunner.h"
@@ -28,36 +28,29 @@
 namespace mozilla {
 namespace dom {
 
-MediaDocumentStreamListener::MediaDocumentStreamListener(MediaDocument *aDocument)
-  : mDocument(aDocument)
-{
-}
+MediaDocumentStreamListener::MediaDocumentStreamListener(
+    MediaDocument* aDocument)
+    : mDocument(aDocument) {}
 
-MediaDocumentStreamListener::~MediaDocumentStreamListener()
-{
+MediaDocumentStreamListener::~MediaDocumentStreamListener() {
   if (mDocument && !NS_IsMainThread()) {
     nsCOMPtr<nsIEventTarget> mainTarget(do_GetMainThread());
-    NS_ProxyRelease("MediaDocumentStreamListener::mDocument",
-                    mainTarget, mDocument.forget());
+    NS_ProxyRelease("MediaDocumentStreamListener::mDocument", mainTarget,
+                    mDocument.forget());
   }
 }
 
+NS_IMPL_ISUPPORTS(MediaDocumentStreamListener, nsIRequestObserver,
+                  nsIStreamListener, nsIThreadRetargetableStreamListener)
 
-NS_IMPL_ISUPPORTS(MediaDocumentStreamListener,
-                  nsIRequestObserver,
-                  nsIStreamListener,
-                  nsIThreadRetargetableStreamListener)
-
-
-void
-MediaDocumentStreamListener::SetStreamListener(nsIStreamListener *aListener)
-{
+void MediaDocumentStreamListener::SetStreamListener(
+    nsIStreamListener* aListener) {
   mNextStream = aListener;
 }
 
 NS_IMETHODIMP
-MediaDocumentStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
-{
+MediaDocumentStreamListener::OnStartRequest(nsIRequest* request,
+                                            nsISupports* ctxt) {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
   mDocument->StartLayout();
@@ -71,15 +64,14 @@ MediaDocumentStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ct
 
 NS_IMETHODIMP
 MediaDocumentStreamListener::OnStopRequest(nsIRequest* request,
-                                           nsISupports *ctxt,
-                                           nsresult status)
-{
+                                           nsISupports* ctxt, nsresult status) {
   nsresult rv = NS_OK;
   if (mNextStream) {
     rv = mNextStream->OnStopRequest(request, ctxt, status);
   }
 
-  // Don't release mDocument here if we're in the middle of a multipart response.
+  // Don't release mDocument here if we're in the middle of a multipart
+  // response.
   bool lastPart = true;
   nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(request));
   if (mpchan) {
@@ -94,23 +86,22 @@ MediaDocumentStreamListener::OnStopRequest(nsIRequest* request,
 
 NS_IMETHODIMP
 MediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
-                                             nsISupports *ctxt,
-                                             nsIInputStream *inStr,
+                                             nsISupports* ctxt,
+                                             nsIInputStream* inStr,
                                              uint64_t sourceOffset,
-                                             uint32_t count)
-{
+                                             uint32_t count) {
   if (mNextStream) {
-    return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
+    return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset,
+                                        count);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MediaDocumentStreamListener::CheckListenerChain()
-{
+MediaDocumentStreamListener::CheckListenerChain() {
   nsCOMPtr<nsIThreadRetargetableStreamListener> retargetable =
-    do_QueryInterface(mNextStream);
+      do_QueryInterface(mNextStream);
   if (retargetable) {
     return retargetable->CheckListenerChain();
   }
@@ -118,32 +109,24 @@ MediaDocumentStreamListener::CheckListenerChain()
 }
 
 // default format names for MediaDocument.
-const char* const MediaDocument::sFormatNames[4] =
-{
-  "MediaTitleWithNoInfo",    // eWithNoInfo
-  "MediaTitleWithFile",      // eWithFile
-  "",                        // eWithDim
-  ""                         // eWithDimAndFile
+const char* const MediaDocument::sFormatNames[4] = {
+    "MediaTitleWithNoInfo",  // eWithNoInfo
+    "MediaTitleWithFile",    // eWithFile
+    "",                      // eWithDim
+    ""                       // eWithDimAndFile
 };
 
 MediaDocument::MediaDocument()
-    : nsHTMLDocument(),
-      mDidInitialDocumentSetup(false)
-{
-}
-MediaDocument::~MediaDocument()
-{
-}
+    : nsHTMLDocument(), mDidInitialDocumentSetup(false) {}
+MediaDocument::~MediaDocument() {}
 
-nsresult
-MediaDocument::Init()
-{
+nsresult MediaDocument::Init() {
   nsresult rv = nsHTMLDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create a bundle for the localization
   nsCOMPtr<nsIStringBundleService> stringService =
-    mozilla::services::GetStringBundleService();
+      mozilla::services::GetStringBundleService();
   if (stringService) {
     stringService->CreateBundle(NSMEDIADOCUMENT_PROPERTIES_URI,
                                 getter_AddRefs(mStringBundle));
@@ -154,18 +137,14 @@ MediaDocument::Init()
   return NS_OK;
 }
 
-nsresult
-MediaDocument::StartDocumentLoad(const char*         aCommand,
-                                 nsIChannel*         aChannel,
-                                 nsILoadGroup*       aLoadGroup,
-                                 nsISupports*        aContainer,
-                                 nsIStreamListener** aDocListener,
-                                 bool                aReset,
-                                 nsIContentSink*     aSink)
-{
-  nsresult rv = nsDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
-                                              aContainer, aDocListener, aReset,
-                                              aSink);
+nsresult MediaDocument::StartDocumentLoad(const char* aCommand,
+                                          nsIChannel* aChannel,
+                                          nsILoadGroup* aLoadGroup,
+                                          nsISupports* aContainer,
+                                          nsIStreamListener** aDocListener,
+                                          bool aReset, nsIContentSink* aSink) {
+  nsresult rv = nsDocument::StartDocumentLoad(
+      aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -204,29 +183,24 @@ MediaDocument::StartDocumentLoad(const char*         aCommand,
   return NS_OK;
 }
 
-void
-MediaDocument::InitialSetupDone()
-{
+void MediaDocument::InitialSetupDone() {
   MOZ_ASSERT(GetReadyStateEnum() == nsIDocument::READYSTATE_LOADING,
              "Bad readyState: we should still be doing our initial load");
   mDidInitialDocumentSetup = true;
   nsContentUtils::AddScriptRunner(
-    new nsDocElementCreatedNotificationRunner(this));
+      new nsDocElementCreatedNotificationRunner(this));
   SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
 }
 
-nsresult
-MediaDocument::CreateSyntheticDocument()
-{
+nsresult MediaDocument::CreateSyntheticDocument() {
   MOZ_ASSERT(!InitialSetupHasBeenDone());
 
   // Synthesize an empty html document
   nsresult rv;
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nullptr,
-                                           kNameSpaceID_XHTML,
-                                           nsINode::ELEMENT_NODE);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(
+      nsGkAtoms::html, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
   RefPtr<nsGenericHTMLElement> root = NS_NewHTMLHtmlElement(nodeInfo.forget());
   NS_ENSURE_TRUE(root, NS_ERROR_OUT_OF_MEMORY);
@@ -235,34 +209,31 @@ MediaDocument::CreateSyntheticDocument()
   rv = AppendChildTo(root, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head, nullptr,
-                                           kNameSpaceID_XHTML,
-                                           nsINode::ELEMENT_NODE);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(
+      nsGkAtoms::head, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
   // Create a <head> so our title has somewhere to live
   RefPtr<nsGenericHTMLElement> head = NS_NewHTMLHeadElement(nodeInfo.forget());
   NS_ENSURE_TRUE(head, NS_ERROR_OUT_OF_MEMORY);
 
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::meta, nullptr,
-                                           kNameSpaceID_XHTML,
-                                           nsINode::ELEMENT_NODE);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(
+      nsGkAtoms::meta, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
-  RefPtr<nsGenericHTMLElement> metaContent = NS_NewHTMLMetaElement(nodeInfo.forget());
+  RefPtr<nsGenericHTMLElement> metaContent =
+      NS_NewHTMLMetaElement(nodeInfo.forget());
   NS_ENSURE_TRUE(metaContent, NS_ERROR_OUT_OF_MEMORY);
   metaContent->SetAttr(kNameSpaceID_None, nsGkAtoms::name,
-                       NS_LITERAL_STRING("viewport"),
-                       true);
+                       NS_LITERAL_STRING("viewport"), true);
 
-  metaContent->SetAttr(kNameSpaceID_None, nsGkAtoms::content,
-                       NS_LITERAL_STRING("width=device-width; height=device-height;"),
-                       true);
+  metaContent->SetAttr(
+      kNameSpaceID_None, nsGkAtoms::content,
+      NS_LITERAL_STRING("width=device-width; height=device-height;"), true);
   head->AppendChildTo(metaContent, false);
 
   root->AppendChildTo(head, false);
 
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::body, nullptr,
-                                           kNameSpaceID_XHTML,
-                                           nsINode::ELEMENT_NODE);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(
+      nsGkAtoms::body, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
   RefPtr<nsGenericHTMLElement> body = NS_NewHTMLBodyElement(nodeInfo.forget());
   NS_ENSURE_TRUE(body, NS_ERROR_OUT_OF_MEMORY);
@@ -272,9 +243,7 @@ MediaDocument::CreateSyntheticDocument()
   return NS_OK;
 }
 
-nsresult
-MediaDocument::StartLayout()
-{
+nsresult MediaDocument::StartLayout() {
   mMayStartLayout = true;
   nsCOMPtr<nsIPresShell> shell = GetShell();
   // Don't mess with the presshell if someone has already handled
@@ -287,25 +256,20 @@ MediaDocument::StartLayout()
   return NS_OK;
 }
 
-void
-MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel)
-{
+void MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel) {
   aResult.Truncate();
 
   if (aChannel) {
     aChannel->GetContentDispositionFilename(aResult);
-    if (!aResult.IsEmpty())
-      return;
+    if (!aResult.IsEmpty()) return;
   }
 
   nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURI);
-  if (!url)
-    return;
+  if (!url) return;
 
   nsAutoCString fileName;
   url->GetFileName(fileName);
-  if (fileName.IsEmpty())
-    return;
+  if (fileName.IsEmpty()) return;
 
   nsAutoCString docCharset;
   // Now that the charset is set in |StartDocumentLoad| to the charset of
@@ -322,7 +286,7 @@ MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel)
 
   nsresult rv;
   nsCOMPtr<nsITextToSubURI> textToSubURI =
-    do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+      do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     // UnEscapeURIForUI always succeeds
     textToSubURI->UnEscapeURIForUI(docCharset, fileName, aResult);
@@ -331,13 +295,10 @@ MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel)
   }
 }
 
-nsresult
-MediaDocument::LinkStylesheet(const nsAString& aStylesheet)
-{
+nsresult MediaDocument::LinkStylesheet(const nsAString& aStylesheet) {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nullptr,
-                                           kNameSpaceID_XHTML,
-                                           nsINode::ELEMENT_NODE);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(
+      nsGkAtoms::link, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
   RefPtr<nsGenericHTMLElement> link = NS_NewHTMLLinkElement(nodeInfo.forget());
   NS_ENSURE_TRUE(link, NS_ERROR_OUT_OF_MEMORY);
@@ -351,15 +312,13 @@ MediaDocument::LinkStylesheet(const nsAString& aStylesheet)
   return head->AppendChildTo(link, false);
 }
 
-nsresult
-MediaDocument::LinkScript(const nsAString& aScript)
-{
+nsresult MediaDocument::LinkScript(const nsAString& aScript) {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::script, nullptr,
-                                           kNameSpaceID_XHTML,
-                                           nsINode::ELEMENT_NODE);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(
+      nsGkAtoms::script, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
-  RefPtr<nsGenericHTMLElement> script = NS_NewHTMLScriptElement(nodeInfo.forget());
+  RefPtr<nsGenericHTMLElement> script =
+      NS_NewHTMLScriptElement(nodeInfo.forget());
   NS_ENSURE_TRUE(script, NS_ERROR_OUT_OF_MEMORY);
 
   script->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
@@ -371,13 +330,11 @@ MediaDocument::LinkScript(const nsAString& aScript)
   return head->AppendChildTo(script, false);
 }
 
-void
-MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
-                                     nsIChannel* aChannel,
-                                     const char* const* aFormatNames,
-                                     int32_t aWidth, int32_t aHeight,
-                                     const nsAString& aStatus)
-{
+void MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
+                                          nsIChannel* aChannel,
+                                          const char* const* aFormatNames,
+                                          int32_t aWidth, int32_t aHeight,
+                                          const nsAString& aStatus) {
   nsAutoString fileStr;
   GetFileName(fileStr, aChannel);
 
@@ -393,27 +350,24 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
       heightStr.AppendInt(aHeight);
       // If we got a filename, display it
       if (!fileStr.IsEmpty()) {
-        const char16_t *formatStrings[4]  = {fileStr.get(), typeStr.get(),
-          widthStr.get(), heightStr.get()};
+        const char16_t* formatStrings[4] = {fileStr.get(), typeStr.get(),
+                                            widthStr.get(), heightStr.get()};
         mStringBundle->FormatStringFromName(aFormatNames[eWithDimAndFile],
                                             formatStrings, 4, title);
-      }
-      else {
-        const char16_t *formatStrings[3]  = {typeStr.get(), widthStr.get(),
-          heightStr.get()};
+      } else {
+        const char16_t* formatStrings[3] = {typeStr.get(), widthStr.get(),
+                                            heightStr.get()};
         mStringBundle->FormatStringFromName(aFormatNames[eWithDim],
                                             formatStrings, 3, title);
       }
-    }
-    else {
-    // If we got a filename, display it
+    } else {
+      // If we got a filename, display it
       if (!fileStr.IsEmpty()) {
-        const char16_t *formatStrings[2] = {fileStr.get(), typeStr.get()};
+        const char16_t* formatStrings[2] = {fileStr.get(), typeStr.get()};
         mStringBundle->FormatStringFromName(aFormatNames[eWithFile],
                                             formatStrings, 2, title);
-      }
-      else {
-        const char16_t *formatStrings[1] = {typeStr.get()};
+      } else {
+        const char16_t* formatStrings[1] = {typeStr.get()};
         mStringBundle->FormatStringFromName(aFormatNames[eWithNoInfo],
                                             formatStrings, 1, title);
       }
@@ -424,17 +378,16 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
   if (aStatus.IsEmpty()) {
     IgnoredErrorResult ignored;
     SetTitle(title, ignored);
-  }
-  else {
+  } else {
     nsAutoString titleWithStatus;
     const nsPromiseFlatString& status = PromiseFlatString(aStatus);
-    const char16_t *formatStrings[2] = {title.get(), status.get()};
-    mStringBundle->FormatStringFromName("TitleWithStatus", formatStrings,
-                                        2, titleWithStatus);
+    const char16_t* formatStrings[2] = {title.get(), status.get()};
+    mStringBundle->FormatStringFromName("TitleWithStatus", formatStrings, 2,
+                                        titleWithStatus);
     IgnoredErrorResult ignored;
     SetTitle(titleWithStatus, ignored);
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

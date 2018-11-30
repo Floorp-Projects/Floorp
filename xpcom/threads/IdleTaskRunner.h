@@ -19,9 +19,8 @@ namespace mozilla {
 // one has to either explicitly Cancel() the runner or have
 // MayContinueProcessing() callback return false to completely remove
 // the runner.
-class IdleTaskRunner final : public IdleRunnable
-{
-public:
+class IdleTaskRunner final : public IdleRunnable {
+ public:
   // Return true if some meaningful work was done.
   using CallbackType = std::function<bool(TimeStamp aDeadline)>;
 
@@ -30,13 +29,12 @@ public:
   // work together in different way.
   using MayStopProcessingCallbackType = std::function<bool()>;
 
-public:
-  static already_AddRefed<IdleTaskRunner>
-  Create(const CallbackType& aCallback,
-         const char* aRunnableName, uint32_t aDelay,
-         int64_t aBudget, bool aRepeating,
-         const MayStopProcessingCallbackType& aMayStopProcessing,
-         TaskCategory aTaskCategory = TaskCategory::Count);
+ public:
+  static already_AddRefed<IdleTaskRunner> Create(
+      const CallbackType& aCallback, const char* aRunnableName, uint32_t aDelay,
+      int64_t aBudget, bool aRepeating,
+      const MayStopProcessingCallbackType& aMayStopProcessing,
+      TaskCategory aTaskCategory = TaskCategory::Count);
 
   NS_IMETHOD Run() override;
 
@@ -46,13 +44,12 @@ public:
   nsresult Cancel() override;
   void Schedule(bool aAllowIdleDispatch);
 
-private:
-  explicit IdleTaskRunner(const CallbackType& aCallback,
-                          const char* aRunnableName,
-                          uint32_t aDelay, int64_t aBudget,
-                          bool aRepeating,
-                          const MayStopProcessingCallbackType& aMayStopProcessing,
-                          TaskCategory aTaskCategory);
+ private:
+  explicit IdleTaskRunner(
+      const CallbackType& aCallback, const char* aRunnableName, uint32_t aDelay,
+      int64_t aBudget, bool aRepeating,
+      const MayStopProcessingCallbackType& aMayStopProcessing,
+      TaskCategory aTaskCategory);
   ~IdleTaskRunner();
   void CancelTimer();
   void SetTimerInternal(uint32_t aDelay);
@@ -70,6 +67,6 @@ private:
   const char* mName;
 };
 
-} // end of namespace mozilla.
+}  // end of namespace mozilla.
 
 #endif

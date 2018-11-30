@@ -10,75 +10,61 @@
 #include "nsString.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
-
 /**
  * Cache Service Utility Functions
  */
 
 mozilla::LazyLogModule gCacheLog("cache");
 
-void
-CacheLogPrintPath(mozilla::LogLevel level, const char * format, nsIFile * item)
-{
-    MOZ_LOG(gCacheLog, level, (format, item->HumanReadablePath().get()));
+void CacheLogPrintPath(mozilla::LogLevel level, const char* format,
+                       nsIFile* item) {
+  MOZ_LOG(gCacheLog, level, (format, item->HumanReadablePath().get()));
 }
 
-
-uint32_t
-SecondsFromPRTime(PRTime prTime)
-{
-  int64_t  microSecondsPerSecond = PR_USEC_PER_SEC;
+uint32_t SecondsFromPRTime(PRTime prTime) {
+  int64_t microSecondsPerSecond = PR_USEC_PER_SEC;
   return uint32_t(prTime / microSecondsPerSecond);
 }
 
-
-PRTime
-PRTimeFromSeconds(uint32_t seconds)
-{
+PRTime PRTimeFromSeconds(uint32_t seconds) {
   int64_t intermediateResult = seconds;
   PRTime prTime = intermediateResult * PR_USEC_PER_SEC;
   return prTime;
 }
 
+nsresult ClientIDFromCacheKey(const nsACString& key, nsACString& result) {
+  nsReadingIterator<char> colon;
+  key.BeginReading(colon);
 
-nsresult
-ClientIDFromCacheKey(const nsACString& key, nsACString& result)
-{
-    nsReadingIterator<char> colon;
-    key.BeginReading(colon);
+  nsReadingIterator<char> start;
+  key.BeginReading(start);
 
-    nsReadingIterator<char> start;
-    key.BeginReading(start);
+  nsReadingIterator<char> end;
+  key.EndReading(end);
 
-    nsReadingIterator<char> end;
-    key.EndReading(end);
+  if (FindCharInReadable(':', colon, end)) {
+    result.Assign(Substring(start, colon));
+    return NS_OK;
+  }
 
-    if (FindCharInReadable(':', colon, end)) {
-        result.Assign(Substring(start, colon));
-        return NS_OK;
-    }
-
-    NS_ASSERTION(false, "FindCharInRead failed to find ':'");
-    return NS_ERROR_UNEXPECTED;
+  NS_ASSERTION(false, "FindCharInRead failed to find ':'");
+  return NS_ERROR_UNEXPECTED;
 }
 
+nsresult ClientKeyFromCacheKey(const nsCString& key, nsACString& result) {
+  nsReadingIterator<char> start;
+  key.BeginReading(start);
 
-nsresult
-ClientKeyFromCacheKey(const nsCString& key, nsACString &result)
-{
-    nsReadingIterator<char> start;
-    key.BeginReading(start);
+  nsReadingIterator<char> end;
+  key.EndReading(end);
 
-    nsReadingIterator<char> end;
-    key.EndReading(end);
+  if (FindCharInReadable(':', start, end)) {
+    ++start;  // advance past clientID ':' delimiter
+    result.Assign(Substring(start, end));
+    return NS_OK;
+  }
 
-    if (FindCharInReadable(':', start, end)) {
-        ++start;  // advance past clientID ':' delimiter
-        result.Assign(Substring(start, end));
-        return NS_OK;
-    }
-
-    NS_ASSERTION(false, "FindCharInRead failed to find ':'");
-    result.Truncate(0);
-    return NS_ERROR_UNEXPECTED;
+  NS_ASSERTION(false, "FindCharInRead failed to find ':'");
+  result.Truncate(0);
+  return NS_ERROR_UNEXPECTED;
 }

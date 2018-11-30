@@ -11,11 +11,9 @@
 // Find out, in a platform-dependent way, where the code modules got
 // mapped in the process' virtual address space, and get |aLUL| to
 // load unwind info for them.
-void
-read_procmaps(lul::LUL* aLUL);
+void read_procmaps(lul::LUL* aLUL);
 
 // LUL needs a callback for its logging sink.
-void
-logging_sink_for_LUL(const char* str);
+void logging_sink_for_LUL(const char* str);
 
 #endif /* ndef MOZ_PLATFORM_LINUX_LUL_H */

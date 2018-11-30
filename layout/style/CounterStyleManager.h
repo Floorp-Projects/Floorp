@@ -31,19 +31,15 @@ class AnonymousCounterStyle;
 struct NegativeType;
 struct PadType;
 
-class CounterStyle
-{
-protected:
-  explicit constexpr CounterStyle(int32_t aStyle)
-    : mStyle(aStyle)
-  {
-  }
+class CounterStyle {
+ protected:
+  explicit constexpr CounterStyle(int32_t aStyle) : mStyle(aStyle) {}
 
-private:
+ private:
   CounterStyle(const CounterStyle& aOther) = delete;
   void operator=(const CounterStyle& other) = delete;
 
-public:
+ public:
   constexpr int32_t GetStyle() const { return mStyle; }
   bool IsNone() const { return mStyle == NS_STYLE_LIST_STYLE_NONE; }
   bool IsCustomStyle() const { return mStyle == NS_STYLE_LIST_STYLE_CUSTOM; }
@@ -55,14 +51,11 @@ public:
   virtual nsAtom* GetStyleName() const = 0;
   virtual void GetPrefix(nsAString& aResult) = 0;
   virtual void GetSuffix(nsAString& aResult) = 0;
-  void GetCounterText(CounterValue aOrdinal,
-                      WritingMode aWritingMode,
-                      nsAString& aResult,
-                      bool& aIsRTL);
+  void GetCounterText(CounterValue aOrdinal, WritingMode aWritingMode,
+                      nsAString& aResult, bool& aIsRTL);
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
                                     WritingMode aWritingMode,
-                                    nsAString& aResult,
-                                    bool& aIsBullet);
+                                    nsAString& aResult, bool& aIsBullet);
 
   // XXX This method could be removed once ::-moz-list-bullet and
   //     ::-moz-list-number are completely merged into ::marker.
@@ -87,23 +80,20 @@ public:
   virtual bool UseNegativeSign() = 0;
 
   virtual void CallFallbackStyle(CounterValue aOrdinal,
-                                 WritingMode aWritingMode,
-                                 nsAString& aResult,
+                                 WritingMode aWritingMode, nsAString& aResult,
                                  bool& aIsRTL);
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
                                      WritingMode aWritingMode,
-                                     nsAString& aResult,
-                                     bool& aIsRTL) = 0;
+                                     nsAString& aResult, bool& aIsRTL) = 0;
 
   virtual AnonymousCounterStyle* AsAnonymous() { return nullptr; }
 
-protected:
+ protected:
   const int32_t mStyle;
 };
 
-class AnonymousCounterStyle final : public CounterStyle
-{
-public:
+class AnonymousCounterStyle final : public CounterStyle {
+ public:
   explicit AnonymousCounterStyle(const nsAString& aContent);
   AnonymousCounterStyle(uint8_t aSystem, nsTArray<nsString> aSymbols);
   explicit AnonymousCounterStyle(const nsCSSValue::Array* aValue);
@@ -123,8 +113,7 @@ public:
 
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
                                      WritingMode aWritingMode,
-                                     nsAString& aResult,
-                                     bool& aIsRTL) override;
+                                     nsAString& aResult, bool& aIsRTL) override;
 
   virtual AnonymousCounterStyle* AsAnonymous() override { return this; }
 
@@ -134,7 +123,7 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnonymousCounterStyle)
 
-private:
+ private:
   ~AnonymousCounterStyle() {}
 
   bool mSingleString;
@@ -145,13 +134,10 @@ private:
 // A smart pointer to CounterStyle. It either owns a reference to an
 // anonymous counter style, or weakly refers to a named counter style
 // managed by counter style manager.
-class CounterStylePtr
-{
-public:
+class CounterStylePtr {
+ public:
   CounterStylePtr() : mRaw(0) {}
-  CounterStylePtr(const CounterStylePtr& aOther)
-    : mRaw(aOther.mRaw)
-  {
+  CounterStylePtr(const CounterStylePtr& aOther) : mRaw(aOther.mRaw) {
     switch (GetType()) {
       case eCounterStyle:
         break;
@@ -166,23 +152,19 @@ public:
         break;
     }
   }
-  CounterStylePtr(CounterStylePtr&& aOther)
-    : mRaw(aOther.mRaw)
-  {
+  CounterStylePtr(CounterStylePtr&& aOther) : mRaw(aOther.mRaw) {
     aOther.mRaw = 0;
   }
   ~CounterStylePtr() { Reset(); }
 
-  CounterStylePtr& operator=(const CounterStylePtr& aOther)
-  {
+  CounterStylePtr& operator=(const CounterStylePtr& aOther) {
     if (this != &aOther) {
       Reset();
       new (this) CounterStylePtr(aOther);
     }
     return *this;
   }
-  CounterStylePtr& operator=(CounterStylePtr&& aOther)
-  {
+  CounterStylePtr& operator=(CounterStylePtr&& aOther) {
     if (this != &aOther) {
       Reset();
       mRaw = aOther.mRaw;
@@ -190,13 +172,11 @@ public:
     }
     return *this;
   }
-  CounterStylePtr& operator=(decltype(nullptr))
-  {
+  CounterStylePtr& operator=(decltype(nullptr)) {
     Reset();
     return *this;
   }
-  CounterStylePtr& operator=(already_AddRefed<nsAtom> aAtom)
-  {
+  CounterStylePtr& operator=(already_AddRefed<nsAtom> aAtom) {
     Reset();
     if (nsAtom* raw = aAtom.take()) {
       AssertPointerAligned(raw);
@@ -204,8 +184,7 @@ public:
     }
     return *this;
   }
-  CounterStylePtr& operator=(AnonymousCounterStyle* aCounterStyle)
-  {
+  CounterStylePtr& operator=(AnonymousCounterStyle* aCounterStyle) {
     Reset();
     if (aCounterStyle) {
       CounterStyle* raw = do_AddRef(aCounterStyle).take();
@@ -214,8 +193,7 @@ public:
     }
     return *this;
   }
-  CounterStylePtr& operator=(CounterStyle* aCounterStyle)
-  {
+  CounterStylePtr& operator=(CounterStyle* aCounterStyle) {
     Reset();
     if (aCounterStyle) {
       MOZ_ASSERT(!aCounterStyle->AsAnonymous());
@@ -225,40 +203,38 @@ public:
     return *this;
   }
 
-  operator CounterStyle*() const & { return Get(); }
-  operator CounterStyle*() const && = delete;
+  operator CounterStyle*() const& { return Get(); }
+  operator CounterStyle*() const&& = delete;
   CounterStyle* operator->() const { return Get(); }
   explicit operator bool() const { return !!mRaw; }
   bool operator!() const { return !mRaw; }
-  bool operator==(const CounterStylePtr& aOther) const
-    { return mRaw == aOther.mRaw; }
-  bool operator!=(const CounterStylePtr& aOther) const
-    { return mRaw != aOther.mRaw; }
+  bool operator==(const CounterStylePtr& aOther) const {
+    return mRaw == aOther.mRaw;
+  }
+  bool operator!=(const CounterStylePtr& aOther) const {
+    return mRaw != aOther.mRaw;
+  }
 
   bool IsResolved() const { return !IsUnresolved(); }
   inline void Resolve(CounterStyleManager* aManager);
 
-  nsAtom* AsAtom() const
-  {
+  nsAtom* AsAtom() const {
     MOZ_ASSERT(IsUnresolved());
     return reinterpret_cast<nsAtom*>(mRaw & ~eMask);
   }
-  AnonymousCounterStyle* AsAnonymous() const
-  {
+  AnonymousCounterStyle* AsAnonymous() const {
     MOZ_ASSERT(IsAnonymous());
     return static_cast<AnonymousCounterStyle*>(
-      reinterpret_cast<CounterStyle*>(mRaw & ~eMask));
+        reinterpret_cast<CounterStyle*>(mRaw & ~eMask));
   }
 
-private:
-  CounterStyle* Get() const
-  {
+ private:
+  CounterStyle* Get() const {
     MOZ_ASSERT(IsResolved());
     return reinterpret_cast<CounterStyle*>(mRaw & ~eMask);
   }
-  template<typename T>
-  void AssertPointerAligned(T* aPointer)
-  {
+  template <typename T>
+  void AssertPointerAligned(T* aPointer) {
     // This can be checked at compile time via
     // > static_assert(alignof(CounterStyle) >= 4);
     // > static_assert(alignof(nsAtom) >= 4);
@@ -279,8 +255,7 @@ private:
   bool IsUnresolved() const { return GetType() == eUnresolvedAtom; }
   bool IsAnonymous() const { return GetType() == eAnonymousCounterStyle; }
 
-  void Reset()
-  {
+  void Reset() {
     switch (GetType()) {
       case eCounterStyle:
         break;
@@ -308,17 +283,16 @@ private:
   uintptr_t mRaw;
 };
 
-class CounterStyleManager final
-{
-private:
+class CounterStyleManager final {
+ private:
   ~CounterStyleManager();
-public:
+
+ public:
   explicit CounterStyleManager(nsPresContext* aPresContext);
 
   void Disconnect();
 
-  bool IsInitial() const
-  {
+  bool IsInitial() const {
     // only 'none', 'decimal', and 'disc'
     return mStyles.Count() == 3;
   }
@@ -333,16 +307,13 @@ public:
   CounterStyle* BuildCounterStyle(nsAtom* aName);
 
   static CounterStyle* GetBuiltinStyle(int32_t aStyle);
-  static CounterStyle* GetNoneStyle()
-  {
+  static CounterStyle* GetNoneStyle() {
     return GetBuiltinStyle(NS_STYLE_LIST_STYLE_NONE);
   }
-  static CounterStyle* GetDecimalStyle()
-  {
+  static CounterStyle* GetDecimalStyle() {
     return GetBuiltinStyle(NS_STYLE_LIST_STYLE_DECIMAL);
   }
-  static CounterStyle* GetDiscStyle()
-  {
+  static CounterStyle* GetDiscStyle() {
     return GetBuiltinStyle(NS_STYLE_LIST_STYLE_DISC);
   }
 
@@ -362,7 +333,7 @@ public:
 
   NS_INLINE_DECL_REFCOUNTING(CounterStyleManager)
 
-private:
+ private:
   void DestroyCounterStyle(CounterStyle* aCounterStyle);
 
   nsPresContext* mPresContext;
@@ -370,14 +341,12 @@ private:
   nsTArray<CounterStyle*> mRetiredStyles;
 };
 
-void
-CounterStylePtr::Resolve(CounterStyleManager* aManager)
-{
+void CounterStylePtr::Resolve(CounterStyleManager* aManager) {
   if (IsUnresolved()) {
     *this = aManager->BuildCounterStyle(AsAtom());
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* !defined(mozilla_CounterStyleManager_h_) */

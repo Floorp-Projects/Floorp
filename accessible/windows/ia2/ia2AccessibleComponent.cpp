@@ -20,10 +20,8 @@ using namespace mozilla::a11y;
 // IUnknown
 
 STDMETHODIMP
-ia2AccessibleComponent::QueryInterface(REFIID iid, void** ppv)
-{
-  if (!ppv)
-    return E_INVALIDARG;
+ia2AccessibleComponent::QueryInterface(REFIID iid, void** ppv) {
+  if (!ppv) return E_INVALIDARG;
 
   *ppv = nullptr;
 
@@ -39,22 +37,18 @@ ia2AccessibleComponent::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleComponent
 
 STDMETHODIMP
-ia2AccessibleComponent::get_locationInParent(long* aX, long* aY)
-{
-  if (!aX || !aY)
-    return E_INVALIDARG;
+ia2AccessibleComponent::get_locationInParent(long* aX, long* aY) {
+  if (!aX || !aY) return E_INVALIDARG;
 
   *aX = 0;
   *aY = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   // If the object is not on any screen the returned position is (0,0).
   uint64_t state = acc->State();
-  if (state & states::INVISIBLE)
-    return S_OK;
+  if (state & states::INVISIBLE) return S_OK;
 
   nsIntRect rect = acc->Bounds();
 
@@ -76,35 +70,28 @@ ia2AccessibleComponent::get_locationInParent(long* aX, long* aY)
 }
 
 STDMETHODIMP
-ia2AccessibleComponent::get_foreground(IA2Color* aForeground)
-{
-  if (!aForeground)
-    return E_INVALIDARG;
+ia2AccessibleComponent::get_foreground(IA2Color* aForeground) {
+  if (!aForeground) return E_INVALIDARG;
 
   *aForeground = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsIFrame* frame = acc->GetFrame();
-  if (frame)
-    *aForeground = frame->StyleColor()->mColor;
+  if (frame) *aForeground = frame->StyleColor()->mColor;
 
   return S_OK;
 }
 
 STDMETHODIMP
-ia2AccessibleComponent::get_background(IA2Color* aBackground)
-{
-  if (!aBackground)
-    return E_INVALIDARG;
+ia2AccessibleComponent::get_background(IA2Color* aBackground) {
+  if (!aBackground) return E_INVALIDARG;
 
   *aBackground = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsIFrame* frame = acc->GetFrame();
   if (frame) {
@@ -113,4 +100,3 @@ ia2AccessibleComponent::get_background(IA2Color* aBackground)
 
   return S_OK;
 }
-

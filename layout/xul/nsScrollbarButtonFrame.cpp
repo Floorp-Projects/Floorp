@@ -32,19 +32,16 @@ using namespace mozilla;
 //
 // Creates a new Toolbar frame and returns it
 //
-nsIFrame*
-NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell,
+                                     ComputedStyle* aStyle) {
   return new (aPresShell) nsScrollbarButtonFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsScrollbarButtonFrame)
 
-nsresult
-nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
-                                    WidgetGUIEvent* aEvent,
-                                    nsEventStatus* aEventStatus)
-{
+nsresult nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
+                                             WidgetGUIEvent* aEvent,
+                                             nsEventStatus* aEventStatus) {
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
   // If a web page calls event.preventDefault() we still want to
@@ -70,7 +67,7 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
       break;
     case eMouseMove: {
       nsPoint cursor =
-        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+          nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
       nsRect frameRect(nsPoint(0, 0), GetSize());
       mCursorOnThis = frameRect.Contains(cursor);
       break;
@@ -82,11 +79,9 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
   return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-bool
-nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
-                                          WidgetGUIEvent* aEvent,
-                                          nsEventStatus* aEventStatus)
-{
+bool nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
+                                               WidgetGUIEvent* aEvent,
+                                               nsEventStatus* aEventStatus) {
   // Get the desired action for the scrollbar button.
   LookAndFeel::IntID tmpAction;
   uint16_t button = aEvent->AsMouseEvent()->button;
@@ -110,15 +105,12 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   nsIFrame* scrollbar;
   GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
 
-  if (scrollbar == nullptr)
-    return false;
+  if (scrollbar == nullptr) return false;
 
-  static Element::AttrValuesArray strings[] = { nsGkAtoms::increment,
-                                                nsGkAtoms::decrement,
-                                                nullptr };
-  int32_t index = mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                                         nsGkAtoms::type,
-                                                         strings, eCaseMatters);
+  static Element::AttrValuesArray strings[] = {nsGkAtoms::increment,
+                                               nsGkAtoms::decrement, nullptr};
+  int32_t index = mContent->AsElement()->FindAttrValueIn(
+      kNameSpaceID_None, nsGkAtoms::type, strings, eCaseMatters);
   int32_t direction;
   if (index == 0)
     direction = 1;
@@ -143,29 +135,29 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   if (sb) {
     nsIScrollbarMediator* m = sb->GetScrollbarMediator();
     switch (pressedButtonAction) {
-    case 0:
-      sb->SetIncrementToLine(direction);
-      if (m) {
-        m->ScrollByLine(sb, direction, nsIScrollbarMediator::ENABLE_SNAP);
-      }
-      break;
-    case 1:
-      sb->SetIncrementToPage(direction);
-      if (m) {
-        m->ScrollByPage(sb, direction, nsIScrollbarMediator::ENABLE_SNAP);
-      }
-      break;
-    case 2:
-      sb->SetIncrementToWhole(direction);
-      if (m) {
-        m->ScrollByWhole(sb, direction, nsIScrollbarMediator::ENABLE_SNAP);
-      }
-      break;
-    case 3:
-    default:
-      // We were told to ignore this click, or someone assigned a non-standard
-      // value to the button's action.
-      return false;
+      case 0:
+        sb->SetIncrementToLine(direction);
+        if (m) {
+          m->ScrollByLine(sb, direction, nsIScrollbarMediator::ENABLE_SNAP);
+        }
+        break;
+      case 1:
+        sb->SetIncrementToPage(direction);
+        if (m) {
+          m->ScrollByPage(sb, direction, nsIScrollbarMediator::ENABLE_SNAP);
+        }
+        break;
+      case 2:
+        sb->SetIncrementToWhole(direction);
+        if (m) {
+          m->ScrollByWhole(sb, direction, nsIScrollbarMediator::ENABLE_SNAP);
+        }
+        break;
+      case 3:
+      default:
+        // We were told to ignore this click, or someone assigned a non-standard
+        // value to the button's action.
+        return false;
     }
     if (!weakFrame.IsAlive()) {
       return false;
@@ -187,8 +179,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       WidgetGUIEvent* aEvent,
-                                      nsEventStatus* aEventStatus)
-{
+                                      nsEventStatus* aEventStatus) {
   nsIPresShell::SetCapturingContent(nullptr, 0);
   // we're not active anymore
   mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
@@ -205,11 +196,10 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-void nsScrollbarButtonFrame::Notify()
-{
+void nsScrollbarButtonFrame::Notify() {
   if (mCursorOnThis ||
-      LookAndFeel::GetInt(
-        LookAndFeel::eIntID_ScrollbarButtonAutoRepeatBehavior, 0)) {
+      LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollbarButtonAutoRepeatBehavior,
+                          0)) {
     // get the scrollbar control
     nsIFrame* scrollbar;
     GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
@@ -225,64 +215,56 @@ void nsScrollbarButtonFrame::Notify()
   }
 }
 
-nsresult
-nsScrollbarButtonFrame::GetChildWithTag(nsAtom* atom, nsIFrame* start,
-                                        nsIFrame*& result)
-{
+nsresult nsScrollbarButtonFrame::GetChildWithTag(nsAtom* atom, nsIFrame* start,
+                                                 nsIFrame*& result) {
   // recursively search our children
-  for (nsIFrame* childFrame : start->PrincipalChildList())
-  {
+  for (nsIFrame* childFrame : start->PrincipalChildList()) {
     // get the content node
     nsIContent* child = childFrame->GetContent();
 
     if (child) {
       // see if it is the child
-       if (child->IsXULElement(atom))
-       {
-         result = childFrame;
+      if (child->IsXULElement(atom)) {
+        result = childFrame;
 
-         return NS_OK;
-       }
+        return NS_OK;
+      }
     }
 
-     // recursive search the child
-     GetChildWithTag(atom, childFrame, result);
-     if (result != nullptr)
-       return NS_OK;
+    // recursive search the child
+    GetChildWithTag(atom, childFrame, result);
+    if (result != nullptr) return NS_OK;
   }
 
   result = nullptr;
   return NS_OK;
 }
 
-nsresult
-nsScrollbarButtonFrame::GetParentWithTag(nsAtom* toFind, nsIFrame* start,
-                                         nsIFrame*& result)
-{
-   while (start)
-   {
-      start = start->GetParent();
+nsresult nsScrollbarButtonFrame::GetParentWithTag(nsAtom* toFind,
+                                                  nsIFrame* start,
+                                                  nsIFrame*& result) {
+  while (start) {
+    start = start->GetParent();
 
-      if (start) {
-        // get the content node
-        nsIContent* child = start->GetContent();
+    if (start) {
+      // get the content node
+      nsIContent* child = start->GetContent();
 
-        if (child && child->IsXULElement(toFind)) {
-          result = start;
-          return NS_OK;
-        }
+      if (child && child->IsXULElement(toFind)) {
+        result = start;
+        return NS_OK;
       }
-   }
+    }
+  }
 
-   result = nullptr;
-   return NS_OK;
+  result = nullptr;
+  return NS_OK;
 }
 
-void
-nsScrollbarButtonFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
-{
-  // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
-  // from under you while you're in the process of scrolling.
+void nsScrollbarButtonFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                         PostDestroyData& aPostDestroyData) {
+  // Ensure our repeat service isn't going... it's possible that a scrollbar can
+  // disappear out from under you while you're in the process of scrolling.
   StopRepeat();
   nsButtonBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }

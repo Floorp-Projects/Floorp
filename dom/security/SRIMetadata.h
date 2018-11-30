@@ -14,11 +14,10 @@
 namespace mozilla {
 namespace dom {
 
-class SRIMetadata final
-{
+class SRIMetadata final {
   friend class SRICheck;
 
-public:
+ public:
   static const uint32_t MAX_ALTERNATE_HASHES = 256;
   static const int8_t UNKNOWN_ALGORITHM = -1;
 
@@ -56,7 +55,9 @@ public:
 
   bool IsEmpty() const { return mEmpty; }
   bool IsMalformed() const { return mHashes.IsEmpty() || mAlgorithm.IsEmpty(); }
-  bool IsAlgorithmSupported() const { return mAlgorithmType != UNKNOWN_ALGORITHM; }
+  bool IsAlgorithmSupported() const {
+    return mAlgorithmType != UNKNOWN_ALGORITHM;
+  }
   bool IsValid() const { return !IsMalformed() && IsAlgorithmSupported(); }
 
   uint32_t HashCount() const { return mHashes.Length(); }
@@ -64,12 +65,9 @@ public:
   void GetAlgorithm(nsCString* outAlg) const { *outAlg = mAlgorithm; }
   void GetHashType(int8_t* outType, uint32_t* outLength) const;
 
-  const nsString& GetIntegrityString() const
-  {
-    return mIntegrityString;
-  }
+  const nsString& GetIntegrityString() const { return mIntegrityString; }
 
-private:
+ private:
   nsTArray<nsCString> mHashes;
   nsString mIntegrityString;
   nsCString mAlgorithm;
@@ -77,7 +75,7 @@ private:
   bool mEmpty;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SRIMetadata_h
+#endif  // mozilla_dom_SRIMetadata_h

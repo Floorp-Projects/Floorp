@@ -16,28 +16,23 @@ namespace mozilla {
 namespace layers {
 
 DXGID3D9TextureData::DXGID3D9TextureData(gfx::SurfaceFormat aFormat,
-                                         IDirect3DTexture9* aTexture, HANDLE aHandle,
+                                         IDirect3DTexture9* aTexture,
+                                         HANDLE aHandle,
                                          IDirect3DDevice9* aDevice)
-: mDevice(aDevice)
-, mTexture(aTexture)
-, mFormat(aFormat)
-, mHandle(aHandle)
-{
+    : mDevice(aDevice), mTexture(aTexture), mFormat(aFormat), mHandle(aHandle) {
   MOZ_COUNT_CTOR(DXGID3D9TextureData);
 }
 
-DXGID3D9TextureData::~DXGID3D9TextureData()
-{
+DXGID3D9TextureData::~DXGID3D9TextureData() {
   gfxWindowsPlatform::sD3D9SharedTextures -= mDesc.Width * mDesc.Height * 4;
   MOZ_COUNT_DTOR(DXGID3D9TextureData);
 }
 
 // static
-DXGID3D9TextureData*
-DXGID3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                            TextureFlags aFlags,
-                            IDirect3DDevice9* aDevice)
-{
+DXGID3D9TextureData* DXGID3D9TextureData::Create(gfx::IntSize aSize,
+                                                 gfx::SurfaceFormat aFormat,
+                                                 TextureFlags aFlags,
+                                                 IDirect3DDevice9* aDevice) {
   AUTO_PROFILER_LABEL("DXGID3D9TextureData::Create", GRAPHICS);
   MOZ_ASSERT(aFormat == gfx::SurfaceFormat::B8G8R8A8);
   if (aFormat != gfx::SurfaceFormat::B8G8R8A8) {
@@ -46,13 +41,9 @@ DXGID3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 
   RefPtr<IDirect3DTexture9> texture;
   HANDLE shareHandle = nullptr;
-  HRESULT hr = aDevice->CreateTexture(aSize.width, aSize.height,
-                                      1,
-                                      D3DUSAGE_RENDERTARGET,
-                                      D3DFMT_A8R8G8B8,
-                                      D3DPOOL_DEFAULT,
-                                      getter_AddRefs(texture),
-                                      &shareHandle);
+  HRESULT hr = aDevice->CreateTexture(
+      aSize.width, aSize.height, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
+      D3DPOOL_DEFAULT, getter_AddRefs(texture), &shareHandle);
   if (FAILED(hr) || !shareHandle) {
     return nullptr;
   }
@@ -62,16 +53,15 @@ DXGID3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   if (FAILED(hr)) {
     return nullptr;
   }
-  DXGID3D9TextureData* data = new DXGID3D9TextureData(aFormat, texture, shareHandle, aDevice);
+  DXGID3D9TextureData* data =
+      new DXGID3D9TextureData(aFormat, texture, shareHandle, aDevice);
   data->mDesc = surfaceDesc;
 
   gfxWindowsPlatform::sD3D9SharedTextures += aSize.width * aSize.height * 4;
   return data;
 }
 
-void
-DXGID3D9TextureData::FillInfo(TextureData::Info& aInfo) const
-{
+void DXGID3D9TextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = GetSize();
   aInfo.format = mFormat;
   aInfo.supportsMoz2D = false;
@@ -80,9 +70,8 @@ DXGID3D9TextureData::FillInfo(TextureData::Info& aInfo) const
   aInfo.hasSynchronization = false;
 }
 
-already_AddRefed<IDirect3DSurface9>
-DXGID3D9TextureData::GetD3D9Surface() const
-{
+already_AddRefed<IDirect3DSurface9> DXGID3D9TextureData::GetD3D9Surface()
+    const {
   RefPtr<IDirect3DSurface9> textureSurface;
   HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(textureSurface));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
@@ -90,29 +79,24 @@ DXGID3D9TextureData::GetD3D9Surface() const
   return textureSurface.forget();
 }
 
-bool
-DXGID3D9TextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
-{
-  aOutDescriptor = SurfaceDescriptorD3D10((WindowsHandle)(mHandle), mFormat, GetSize());
+bool DXGID3D9TextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
+  aOutDescriptor =
+      SurfaceDescriptorD3D10((WindowsHandle)(mHandle), mFormat, GetSize());
   return true;
 }
 
 D3D9SurfaceImage::D3D9SurfaceImage()
-  : Image(nullptr, ImageFormat::D3D9_RGB32_TEXTURE)
-  , mSize(0, 0)
-  , mShareHandle(0)
-  , mValid(true)
-{}
+    : Image(nullptr, ImageFormat::D3D9_RGB32_TEXTURE),
+      mSize(0, 0),
+      mShareHandle(0),
+      mValid(true) {}
 
-D3D9SurfaceImage::~D3D9SurfaceImage()
-{
-}
+D3D9SurfaceImage::~D3D9SurfaceImage() {}
 
 HRESULT
 D3D9SurfaceImage::AllocateAndCopy(D3D9RecycleAllocator* aAllocator,
                                   IDirect3DSurface9* aSurface,
-                                  const gfx::IntRect& aRegion)
-{
+                                  const gfx::IntRect& aRegion) {
   NS_ENSURE_TRUE(aSurface, E_POINTER);
   HRESULT hr;
   RefPtr<IDirect3DSurface9> surface = aSurface;
@@ -129,34 +113,29 @@ D3D9SurfaceImage::AllocateAndCopy(D3D9RecycleAllocator* aAllocator,
   surface->GetDesc(&desc);
   // Ensure we can convert the textures format to RGB conversion
   // in StretchRect. Fail if we can't.
-  hr = d3d9->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT,
-                                         D3DDEVTYPE_HAL,
-                                         desc.Format,
-                                         D3DFMT_A8R8G8B8);
+  hr = d3d9->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
+                                         desc.Format, D3DFMT_A8R8G8B8);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   // DXVA surfaces aren't created sharable, so we need to copy the surface
   // to a sharable texture to that it's accessible to the layer manager's
   // device.
   if (aAllocator) {
-    mTextureClient =
-      aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, aRegion.Size());
+    mTextureClient = aAllocator->CreateOrRecycleClient(
+        gfx::SurfaceFormat::B8G8R8A8, aRegion.Size());
     if (!mTextureClient) {
       return E_FAIL;
     }
 
     DXGID3D9TextureData* texData =
-      static_cast<DXGID3D9TextureData*>(mTextureClient->GetInternalData());
+        static_cast<DXGID3D9TextureData*>(mTextureClient->GetInternalData());
     mTexture = texData->GetD3D9Texture();
     mShareHandle = texData->GetShareHandle();
     mDesc = texData->GetDesc();
   } else {
-    hr = device->CreateTexture(aRegion.Size().width, aRegion.Size().height,
-                               1,
-                               D3DUSAGE_RENDERTARGET,
-                               D3DFMT_A8R8G8B8,
-                               D3DPOOL_DEFAULT,
-                               getter_AddRefs(mTexture),
+    hr = device->CreateTexture(aRegion.Size().width, aRegion.Size().height, 1,
+                               D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
+                               D3DPOOL_DEFAULT, getter_AddRefs(mTexture),
                                &mShareHandle);
     if (FAILED(hr) || !mShareHandle) {
       return E_FAIL;
@@ -168,64 +147,52 @@ D3D9SurfaceImage::AllocateAndCopy(D3D9RecycleAllocator* aAllocator,
     }
   }
 
-  // Copy the image onto the texture, preforming YUV -> RGB conversion if necessary.
+  // Copy the image onto the texture, preforming YUV -> RGB conversion if
+  // necessary.
   RefPtr<IDirect3DSurface9> textureSurface = GetD3D9Surface();
   if (!textureSurface) {
     return E_FAIL;
   }
 
-  RECT src = { aRegion.X(), aRegion.Y(), aRegion.XMost(), aRegion.YMost() };
-  hr = device->StretchRect(surface, &src, textureSurface, nullptr, D3DTEXF_NONE);
+  RECT src = {aRegion.X(), aRegion.Y(), aRegion.XMost(), aRegion.YMost()};
+  hr =
+      device->StretchRect(surface, &src, textureSurface, nullptr, D3DTEXF_NONE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   mSize = aRegion.Size();
   return S_OK;
 }
 
-already_AddRefed<IDirect3DSurface9>
-D3D9SurfaceImage::GetD3D9Surface() const
-{
+already_AddRefed<IDirect3DSurface9> D3D9SurfaceImage::GetD3D9Surface() const {
   RefPtr<IDirect3DSurface9> textureSurface;
   HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(textureSurface));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
   return textureSurface.forget();
 }
 
-const D3DSURFACE_DESC&
-D3D9SurfaceImage::GetDesc() const
-{
-  return mDesc;
-}
+const D3DSURFACE_DESC& D3D9SurfaceImage::GetDesc() const { return mDesc; }
 
 HANDLE
-D3D9SurfaceImage::GetShareHandle() const
-{
-  return mShareHandle;
-}
+D3D9SurfaceImage::GetShareHandle() const { return mShareHandle; }
 
-gfx::IntSize
-D3D9SurfaceImage::GetSize() const
-{
-  return mSize;
-}
+gfx::IntSize D3D9SurfaceImage::GetSize() const { return mSize; }
 
-TextureClient*
-D3D9SurfaceImage::GetTextureClient(KnowsCompositor* aForwarder)
-{
+TextureClient* D3D9SurfaceImage::GetTextureClient(KnowsCompositor* aForwarder) {
   MOZ_ASSERT(mTextureClient);
-  MOZ_ASSERT(mTextureClient->GetAllocator() == aForwarder->GetTextureForwarder());
+  MOZ_ASSERT(mTextureClient->GetAllocator() ==
+             aForwarder->GetTextureForwarder());
   return mTextureClient;
 }
 
-already_AddRefed<gfx::SourceSurface>
-D3D9SurfaceImage::GetAsSourceSurface()
-{
+already_AddRefed<gfx::SourceSurface> D3D9SurfaceImage::GetAsSourceSurface() {
   if (!mTexture) {
     return nullptr;
   }
 
   HRESULT hr;
-  RefPtr<gfx::DataSourceSurface> surface = gfx::Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8X8);
+  RefPtr<gfx::DataSourceSurface> surface =
+      gfx::Factory::CreateDataSourceSurface(mSize,
+                                            gfx::SurfaceFormat::B8G8R8X8);
   if (NS_WARN_IF(!surface)) {
     return nullptr;
   }
@@ -242,12 +209,9 @@ D3D9SurfaceImage::GetAsSourceSurface()
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   RefPtr<IDirect3DSurface9> systemMemorySurface;
-  hr = device->CreateOffscreenPlainSurface(mSize.width,
-                                           mSize.height,
-                                           D3DFMT_A8R8G8B8,
-                                           D3DPOOL_SYSTEMMEM,
-                                           getter_AddRefs(systemMemorySurface),
-                                           0);
+  hr = device->CreateOffscreenPlainSurface(
+      mSize.width, mSize.height, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM,
+      getter_AddRefs(systemMemorySurface), 0);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   hr = device->GetRenderTargetData(textureSurface, systemMemorySurface);
@@ -267,8 +231,7 @@ D3D9SurfaceImage::GetAsSourceSurface()
   const unsigned srcPitch = rect.Pitch;
   for (int y = 0; y < mSize.height; y++) {
     memcpy(mappedSurface.mData + mappedSurface.mStride * y,
-           (unsigned char*)(src) + srcPitch * y,
-           mSize.width * 4);
+           (unsigned char*)(src) + srcPitch * y, mSize.width * 4);
   }
 
   systemMemorySurface->UnlockRect();
@@ -277,14 +240,11 @@ D3D9SurfaceImage::GetAsSourceSurface()
   return surface.forget();
 }
 
-already_AddRefed<TextureClient>
-D3D9RecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
-                               gfx::IntSize aSize,
-                               BackendSelector aSelector,
-                               TextureFlags aTextureFlags,
-                               TextureAllocationFlags aAllocFlags)
-{
-  TextureData* data = DXGID3D9TextureData::Create(aSize, aFormat, aTextureFlags, mDevice);
+already_AddRefed<TextureClient> D3D9RecycleAllocator::Allocate(
+    gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
+    TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) {
+  TextureData* data =
+      DXGID3D9TextureData::Create(aSize, aFormat, aTextureFlags, mDevice);
   if (!data) {
     return nullptr;
   }
@@ -293,13 +253,11 @@ D3D9RecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
                                       mSurfaceAllocator->GetTextureForwarder());
 }
 
-already_AddRefed<TextureClient>
-D3D9RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
-                                            const gfx::IntSize& aSize)
-{
+already_AddRefed<TextureClient> D3D9RecycleAllocator::CreateOrRecycleClient(
+    gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize) {
   return CreateOrRecycle(aFormat, aSize, BackendSelector::Content,
                          TextureFlags::DEFAULT);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

@@ -17,8 +17,7 @@ typedef nsCString _Prefix;
 typedef nsTArray<_Prefix> _PrefixArray;
 
 // Create fullhash by appending random characters.
-static nsCString* CreateFullHash(const nsACString& in)
-{
+static nsCString* CreateFullHash(const nsACString& in) {
   nsCString* out = new nsCString(in);
   out->SetLength(32);
   for (size_t i = in.Length(); i < 32; i++) {
@@ -30,8 +29,8 @@ static nsCString* CreateFullHash(const nsACString& in)
 
 // This function generate N prefixes with size between MIN and MAX.
 // The output array will not be cleared, random result will append to it
-static void RandomPrefixes(uint32_t N, uint32_t MIN, uint32_t MAX, _PrefixArray& array)
-{
+static void RandomPrefixes(uint32_t N, uint32_t MIN, uint32_t MAX,
+                           _PrefixArray& array) {
   array.SetCapacity(array.Length() + N);
 
   uint32_t range = (MAX - MIN + 1);
@@ -42,7 +41,7 @@ static void RandomPrefixes(uint32_t N, uint32_t MIN, uint32_t MAX, _PrefixArray&
     prefix.SetLength(prefixSize);
 
     bool added = false;
-    while(!added) {
+    while (!added) {
       char* dst = prefix.BeginWriting();
       for (uint32_t j = 0; j < prefixSize; j++) {
         dst[j] = rand() % 256;
@@ -57,8 +56,7 @@ static void RandomPrefixes(uint32_t N, uint32_t MIN, uint32_t MAX, _PrefixArray&
 }
 
 static void CheckContent(VariableLengthPrefixSet* pset,
-                         PrefixStringMap& expected)
-{
+                         PrefixStringMap& expected) {
   PrefixStringMap vlPSetMap;
   pset->GetPrefixes(vlPSetMap);
 
@@ -74,8 +72,7 @@ static void CheckContent(VariableLengthPrefixSet* pset,
 // fullhash by appending random characters, each converted fullhash
 // should at least match its original length in the prefixSet.
 static void DoExpectedLookup(VariableLengthPrefixSet* pset,
-                             _PrefixArray& array)
-{
+                             _PrefixArray& array) {
   uint32_t matchLength = 0;
   for (uint32_t i = 0; i < array.Length(); i++) {
     const nsCString& prefix = array[i];
@@ -96,8 +93,7 @@ static void DoExpectedLookup(VariableLengthPrefixSet* pset,
           continue;
         }
 
-        if (0 == memcmp(fullhash->BeginReading(),
-                        array[j].BeginReading(),
+        if (0 == memcmp(fullhash->BeginReading(), array[j].BeginReading(),
                         matchLength)) {
           found = true;
           break;
@@ -108,10 +104,8 @@ static void DoExpectedLookup(VariableLengthPrefixSet* pset,
   }
 }
 
-static void DoRandomLookup(VariableLengthPrefixSet* pset,
-                           uint32_t N,
-                           _PrefixArray& array)
-{
+static void DoRandomLookup(VariableLengthPrefixSet* pset, uint32_t N,
+                           _PrefixArray& array) {
   for (uint32_t i = 0; i < N; i++) {
     // Random 32-bytes test fullhash
     char buf[32];
@@ -131,13 +125,12 @@ static void DoRandomLookup(VariableLengthPrefixSet* pset,
     uint32_t matchLength = 0;
     pset->Matches(nsDependentCSubstring(buf, 32), &matchLength);
 
-    ASSERT_TRUE(expected.IsEmpty() ? !matchLength : expected.Contains(matchLength));
+    ASSERT_TRUE(expected.IsEmpty() ? !matchLength
+                                   : expected.Contains(matchLength));
   }
 }
 
-static void SetupPrefixMap(const _PrefixArray& array,
-                             PrefixStringMap& map)
-{
+static void SetupPrefixMap(const _PrefixArray& array, PrefixStringMap& map) {
   map.Clear();
 
   // Buckets are keyed by prefix length and contain an array of
@@ -175,19 +168,18 @@ static void SetupPrefixMap(const _PrefixArray& array,
   }
 }
 
-
 // Test setting prefix set with only 4-bytes prefixes
-TEST(UrlClassifierVLPrefixSet, FixedLengthSet)
-{
+TEST(UrlClassifierVLPrefixSet, FixedLengthSet) {
   srand(time(nullptr));
 
   RefPtr<VariableLengthPrefixSet> pset = new VariableLengthPrefixSet;
   pset->Init(NS_LITERAL_CSTRING("test"));
 
   PrefixStringMap map;
-  _PrefixArray array = { _Prefix("alph"), _Prefix("brav"), _Prefix("char"),
-                         _Prefix("delt"), _Prefix("echo"), _Prefix("foxt"),
-                       };
+  _PrefixArray array = {
+      _Prefix("alph"), _Prefix("brav"), _Prefix("char"),
+      _Prefix("delt"), _Prefix("echo"), _Prefix("foxt"),
+  };
 
   SetupPrefixMap(array, map);
   pset->SetPrefixes(map);
@@ -215,21 +207,20 @@ TEST(UrlClassifierVLPrefixSet, FixedLengthSet)
 }
 
 // Test setting prefix set with only 5~32 bytes prefixes
-TEST(UrlClassifierVLPrefixSet, VariableLengthSet)
-{
+TEST(UrlClassifierVLPrefixSet, VariableLengthSet) {
   RefPtr<VariableLengthPrefixSet> pset = new VariableLengthPrefixSet;
   pset->Init(NS_LITERAL_CSTRING("test"));
 
   PrefixStringMap map;
-  _PrefixArray array = { _Prefix("bravo"), _Prefix("charlie"), _Prefix("delta"),
-                         _Prefix("EchoEchoEchoEchoEcho"), _Prefix("foxtrot"),
-                         _Prefix("GolfGolfGolfGolfGolfGolfGolfGolf"),
-                         _Prefix("hotel"), _Prefix("november"),
-                         _Prefix("oscar"), _Prefix("quebec"), _Prefix("romeo"),
-                         _Prefix("sierrasierrasierrasierrasierra"),
-                         _Prefix("Tango"), _Prefix("whiskey"), _Prefix("yankee"),
-                         _Prefix("ZuluZuluZuluZulu")
-                       };
+  _PrefixArray array = {
+      _Prefix("bravo"),   _Prefix("charlie"),
+      _Prefix("delta"),   _Prefix("EchoEchoEchoEchoEcho"),
+      _Prefix("foxtrot"), _Prefix("GolfGolfGolfGolfGolfGolfGolfGolf"),
+      _Prefix("hotel"),   _Prefix("november"),
+      _Prefix("oscar"),   _Prefix("quebec"),
+      _Prefix("romeo"),   _Prefix("sierrasierrasierrasierrasierra"),
+      _Prefix("Tango"),   _Prefix("whiskey"),
+      _Prefix("yankee"),  _Prefix("ZuluZuluZuluZulu")};
 
   SetupPrefixMap(array, map);
   pset->SetPrefixes(map);
@@ -254,25 +245,32 @@ TEST(UrlClassifierVLPrefixSet, VariableLengthSet)
   DoRandomLookup(pset, 1000, array);
 
   CheckContent(pset, map);
-
 }
 
 // Test setting prefix set with both 4-bytes prefixes and 5~32 bytes prefixes
-TEST(UrlClassifierVLPrefixSet, MixedPrefixSet)
-{
+TEST(UrlClassifierVLPrefixSet, MixedPrefixSet) {
   RefPtr<VariableLengthPrefixSet> pset = new VariableLengthPrefixSet;
   pset->Init(NS_LITERAL_CSTRING("test"));
 
   PrefixStringMap map;
-  _PrefixArray array = { _Prefix("enus"), _Prefix("apollo"), _Prefix("mars"),
-                         _Prefix("Hecatonchires cyclopes"),
-                         _Prefix("vesta"), _Prefix("neptunus"), _Prefix("jupiter"),
-                         _Prefix("diana"), _Prefix("minerva"), _Prefix("ceres"),
-                         _Prefix("Aidos,Adephagia,Adikia,Aletheia"),
-                         _Prefix("hecatonchires"), _Prefix("alcyoneus"), _Prefix("hades"),
-                         _Prefix("vulcanus"), _Prefix("juno"), _Prefix("mercury"),
-                         _Prefix("Stheno, Euryale and Medusa")
-                       };
+  _PrefixArray array = {_Prefix("enus"),
+                        _Prefix("apollo"),
+                        _Prefix("mars"),
+                        _Prefix("Hecatonchires cyclopes"),
+                        _Prefix("vesta"),
+                        _Prefix("neptunus"),
+                        _Prefix("jupiter"),
+                        _Prefix("diana"),
+                        _Prefix("minerva"),
+                        _Prefix("ceres"),
+                        _Prefix("Aidos,Adephagia,Adikia,Aletheia"),
+                        _Prefix("hecatonchires"),
+                        _Prefix("alcyoneus"),
+                        _Prefix("hades"),
+                        _Prefix("vulcanus"),
+                        _Prefix("juno"),
+                        _Prefix("mercury"),
+                        _Prefix("Stheno, Euryale and Medusa")};
 
   SetupPrefixMap(array, map);
   pset->SetPrefixes(map);
@@ -300,17 +298,17 @@ TEST(UrlClassifierVLPrefixSet, MixedPrefixSet)
 }
 
 // Test resetting prefix set
-TEST(UrlClassifierVLPrefixSet, ResetPrefix)
-{
+TEST(UrlClassifierVLPrefixSet, ResetPrefix) {
   RefPtr<VariableLengthPrefixSet> pset = new VariableLengthPrefixSet;
   pset->Init(NS_LITERAL_CSTRING("test"));
 
   // First prefix set
-  _PrefixArray array1 = { _Prefix("Iceland"), _Prefix("Peru"), _Prefix("Mexico"),
-                          _Prefix("Australia"), _Prefix("Japan"), _Prefix("Egypt"),
-                          _Prefix("America"), _Prefix("Finland"), _Prefix("Germany"),
-                          _Prefix("Italy"), _Prefix("France"), _Prefix("Taiwan"),
-                        };
+  _PrefixArray array1 = {
+      _Prefix("Iceland"),   _Prefix("Peru"),    _Prefix("Mexico"),
+      _Prefix("Australia"), _Prefix("Japan"),   _Prefix("Egypt"),
+      _Prefix("America"),   _Prefix("Finland"), _Prefix("Germany"),
+      _Prefix("Italy"),     _Prefix("France"),  _Prefix("Taiwan"),
+  };
   {
     PrefixStringMap map;
 
@@ -321,11 +319,12 @@ TEST(UrlClassifierVLPrefixSet, ResetPrefix)
   }
 
   // Second
-  _PrefixArray array2 = { _Prefix("Pikachu"), _Prefix("Bulbasaur"), _Prefix("Charmander"),
-                          _Prefix("Blastoise"), _Prefix("Pidgey"), _Prefix("Mewtwo"),
-                          _Prefix("Jigglypuff"), _Prefix("Persian"), _Prefix("Tentacool"),
-                          _Prefix("Onix"), _Prefix("Eevee"), _Prefix("Jynx"),
-                        };
+  _PrefixArray array2 = {
+      _Prefix("Pikachu"),    _Prefix("Bulbasaur"), _Prefix("Charmander"),
+      _Prefix("Blastoise"),  _Prefix("Pidgey"),    _Prefix("Mewtwo"),
+      _Prefix("Jigglypuff"), _Prefix("Persian"),   _Prefix("Tentacool"),
+      _Prefix("Onix"),       _Prefix("Eevee"),     _Prefix("Jynx"),
+  };
   {
     PrefixStringMap map;
 
@@ -346,15 +345,15 @@ TEST(UrlClassifierVLPrefixSet, ResetPrefix)
 }
 
 // Test only set one 4-bytes prefix and one full-length prefix
-TEST(UrlClassifierVLPrefixSet, TinyPrefixSet)
-{
+TEST(UrlClassifierVLPrefixSet, TinyPrefixSet) {
   RefPtr<VariableLengthPrefixSet> pset = new VariableLengthPrefixSet;
   pset->Init(NS_LITERAL_CSTRING("test"));
 
   PrefixStringMap map;
-  _PrefixArray array = { _Prefix("AAAA"),
-                         _Prefix("11112222333344445555666677778888"),
-                       };
+  _PrefixArray array = {
+      _Prefix("AAAA"),
+      _Prefix("11112222333344445555666677778888"),
+  };
 
   SetupPrefixMap(array, map);
   pset->SetPrefixes(map);
@@ -367,8 +366,7 @@ TEST(UrlClassifierVLPrefixSet, TinyPrefixSet)
 }
 
 // Test empty prefix set and IsEmpty function
-TEST(UrlClassifierVLPrefixSet, EmptyPrefixSet)
-{
+TEST(UrlClassifierVLPrefixSet, EmptyPrefixSet) {
   RefPtr<VariableLengthPrefixSet> pset = new VariableLengthPrefixSet;
   pset->Init(NS_LITERAL_CSTRING("test"));
 
@@ -383,14 +381,14 @@ TEST(UrlClassifierVLPrefixSet, EmptyPrefixSet)
   DoRandomLookup(pset, 100, array1);
 
   // Insert an 4-bytes prefix, then IsEmpty should return false
-  _PrefixArray array2 = { _Prefix("test") };
+  _PrefixArray array2 = {_Prefix("test")};
   SetupPrefixMap(array2, map);
   pset->SetPrefixes(map);
 
   pset->IsEmpty(&empty);
   ASSERT_TRUE(!empty);
 
-  _PrefixArray array3 = { _Prefix("test variable length") };
+  _PrefixArray array3 = {_Prefix("test variable length")};
 
   // Insert an 5~32 bytes prefix, then IsEmpty should return false
   SetupPrefixMap(array3, map);
@@ -401,16 +399,14 @@ TEST(UrlClassifierVLPrefixSet, EmptyPrefixSet)
 }
 
 // Test prefix size should only between 4~32 bytes
-TEST(UrlClassifierVLPrefixSet, MinMaxPrefixSet)
-{
+TEST(UrlClassifierVLPrefixSet, MinMaxPrefixSet) {
   RefPtr<VariableLengthPrefixSet> pset = new VariableLengthPrefixSet;
   pset->Init(NS_LITERAL_CSTRING("test"));
 
   PrefixStringMap map;
   {
-    _PrefixArray array = { _Prefix("1234"),
-                           _Prefix("ABCDEFGHIJKKMNOP"),
-                           _Prefix("1aaa2bbb3ccc4ddd5eee6fff7ggg8hhh") };
+    _PrefixArray array = {_Prefix("1234"), _Prefix("ABCDEFGHIJKKMNOP"),
+                          _Prefix("1aaa2bbb3ccc4ddd5eee6fff7ggg8hhh")};
 
     SetupPrefixMap(array, map);
     nsresult rv = pset->SetPrefixes(map);
@@ -419,7 +415,7 @@ TEST(UrlClassifierVLPrefixSet, MinMaxPrefixSet)
 
   // Prefix size less than 4-bytes should fail
   {
-    _PrefixArray array = { _Prefix("123") };
+    _PrefixArray array = {_Prefix("123")};
 
     SetupPrefixMap(array, map);
     nsresult rv = pset->SetPrefixes(map);
@@ -428,7 +424,7 @@ TEST(UrlClassifierVLPrefixSet, MinMaxPrefixSet)
 
   // Prefix size greater than 32-bytes should fail
   {
-    _PrefixArray array = { _Prefix("1aaa2bbb3ccc4ddd5eee6fff7ggg8hhh9") };
+    _PrefixArray array = {_Prefix("1aaa2bbb3ccc4ddd5eee6fff7ggg8hhh9")};
 
     SetupPrefixMap(array, map);
     nsresult rv = pset->SetPrefixes(map);
@@ -437,8 +433,7 @@ TEST(UrlClassifierVLPrefixSet, MinMaxPrefixSet)
 }
 
 // Test save then load prefix set with only 4-bytes prefixes
-TEST(UrlClassifierVLPrefixSet, LoadSaveFixedLengthPrefixSet)
-{
+TEST(UrlClassifierVLPrefixSet, LoadSaveFixedLengthPrefixSet) {
   RefPtr<VariableLengthPrefixSet> save = new VariableLengthPrefixSet;
   save->Init(NS_LITERAL_CSTRING("test-save"));
 
@@ -456,8 +451,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveFixedLengthPrefixSet)
   CheckContent(save, map);
 
   nsCOMPtr<nsIFile> file;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                         getter_AddRefs(file));
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
   file->Append(NS_LITERAL_STRING("test.vlpset"));
 
   save->StoreToFile(file);
@@ -477,8 +471,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveFixedLengthPrefixSet)
 }
 
 // Test save then load prefix set with only 5~32 bytes prefixes
-TEST(UrlClassifierVLPrefixSet, LoadSaveVariableLengthPrefixSet)
-{
+TEST(UrlClassifierVLPrefixSet, LoadSaveVariableLengthPrefixSet) {
   RefPtr<VariableLengthPrefixSet> save = new VariableLengthPrefixSet;
   save->Init(NS_LITERAL_CSTRING("test-save"));
 
@@ -496,8 +489,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveVariableLengthPrefixSet)
   CheckContent(save, map);
 
   nsCOMPtr<nsIFile> file;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                         getter_AddRefs(file));
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
   file->Append(NS_LITERAL_STRING("test.vlpset"));
 
   save->StoreToFile(file);
@@ -517,8 +509,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveVariableLengthPrefixSet)
 }
 
 // Test save then load prefix with both 4 bytes prefixes and 5~32 bytes prefixes
-TEST(UrlClassifierVLPrefixSet, LoadSavePrefixSet)
-{
+TEST(UrlClassifierVLPrefixSet, LoadSavePrefixSet) {
   RefPtr<VariableLengthPrefixSet> save = new VariableLengthPrefixSet;
   save->Init(NS_LITERAL_CSTRING("test-save"));
 
@@ -538,8 +529,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSavePrefixSet)
   CheckContent(save, map);
 
   nsCOMPtr<nsIFile> file;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                         getter_AddRefs(file));
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
   file->Append(NS_LITERAL_STRING("test.vlpset"));
 
   save->StoreToFile(file);

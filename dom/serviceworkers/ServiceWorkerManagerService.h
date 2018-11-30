@@ -18,7 +18,7 @@ class OriginAttributes;
 
 namespace ipc {
 class PrincipalInfo;
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
@@ -26,9 +26,8 @@ class ServiceWorkerManagerParent;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerUpdaterParent;
 
-class ServiceWorkerManagerService final
-{
-public:
+class ServiceWorkerManagerService final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerManagerService)
 
   static already_AddRefed<ServiceWorkerManagerService> Get();
@@ -54,19 +53,17 @@ public:
 
   void ProcessUpdaterActor(ServiceWorkerUpdaterParent* aActor,
                            const OriginAttributes& aOriginAttributes,
-                           const nsACString& aScope,
-                           uint64_t aParentID);
+                           const nsACString& aScope, uint64_t aParentID);
 
   void UpdaterActorDestroyed(ServiceWorkerUpdaterParent* aActor);
 
-private:
+ private:
   ServiceWorkerManagerService();
   ~ServiceWorkerManagerService();
 
   nsTHashtable<nsPtrHashKey<ServiceWorkerManagerParent>> mAgents;
 
-  struct PendingUpdaterActor
-  {
+  struct PendingUpdaterActor {
     nsCString mScope;
     ServiceWorkerUpdaterParent* mActor;
     uint64_t mParentId;
@@ -75,7 +72,7 @@ private:
   nsTArray<PendingUpdaterActor> mPendingUpdaterActors;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ServiceWorkerManagerService_h
+#endif  // mozilla_dom_ServiceWorkerManagerService_h

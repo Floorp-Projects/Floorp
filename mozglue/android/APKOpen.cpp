@@ -54,10 +54,7 @@
  * Using a constructor so that it is re-enabled as soon as libmozglue.so
  * is loaded.
  */
-__attribute__((constructor))
-void make_dumpable() {
-  prctl(PR_SET_DUMPABLE, 1);
-}
+__attribute__((constructor)) void make_dumpable() { prctl(PR_SET_DUMPABLE, 1); }
 #endif
 
 typedef int mozglueresult;
@@ -74,107 +71,102 @@ using namespace mozilla;
 static const int MAX_MAPPING_INFO = 32;
 static mapping_info lib_mapping[MAX_MAPPING_INFO];
 
-APKOPEN_EXPORT const struct mapping_info *
-getLibraryMapping()
-{
+APKOPEN_EXPORT const struct mapping_info* getLibraryMapping() {
   return lib_mapping;
 }
 
-void
-JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg)
-{
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Throw\n");
-    jclass cls = jenv->FindClass(classname);
-    if (cls == nullptr) {
-        __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't find exception class (or exception pending) %s\n", classname);
-        exit(FAILURE);
-    }
-    int rc = jenv->ThrowNew(cls, msg);
-    if (rc < 0) {
-        __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Error throwing exception %s\n", msg);
-        exit(FAILURE);
-    }
-    jenv->DeleteLocalRef(cls);
+void JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg) {
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Throw\n");
+  jclass cls = jenv->FindClass(classname);
+  if (cls == nullptr) {
+    __android_log_print(
+        ANDROID_LOG_ERROR, "GeckoLibLoad",
+        "Couldn't find exception class (or exception pending) %s\n", classname);
+    exit(FAILURE);
+  }
+  int rc = jenv->ThrowNew(cls, msg);
+  if (rc < 0) {
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad",
+                        "Error throwing exception %s\n", msg);
+    exit(FAILURE);
+  }
+  jenv->DeleteLocalRef(cls);
 }
 
 namespace {
-    JavaVM* sJavaVM;
+JavaVM* sJavaVM;
 }
 
-void
-abortThroughJava(const char* msg)
-{
-    struct sigaction sigact = {};
-    if (SEGVHandler::__wrap_sigaction(SIGSEGV, nullptr, &sigact)) {
-        return; // sigaction call failed.
-    }
+void abortThroughJava(const char* msg) {
+  struct sigaction sigact = {};
+  if (SEGVHandler::__wrap_sigaction(SIGSEGV, nullptr, &sigact)) {
+    return;  // sigaction call failed.
+  }
 
-    Dl_info info = {};
-    if ((sigact.sa_flags & SA_SIGINFO) &&
-        __wrap_dladdr(reinterpret_cast<void*>(sigact.sa_sigaction), &info) &&
-        info.dli_fname && strstr(info.dli_fname, "libxul.so")) {
+  Dl_info info = {};
+  if ((sigact.sa_flags & SA_SIGINFO) &&
+      __wrap_dladdr(reinterpret_cast<void*>(sigact.sa_sigaction), &info) &&
+      info.dli_fname && strstr(info.dli_fname, "libxul.so")) {
+    return;  // Existing signal handler is in libxul (i.e. we have crash
+             // reporter).
+  }
 
-        return; // Existing signal handler is in libxul (i.e. we have crash reporter).
-    }
+  JNIEnv* env = nullptr;
+  if (!sJavaVM ||
+      sJavaVM->AttachCurrentThreadAsDaemon(&env, nullptr) != JNI_OK) {
+    return;
+  }
 
-    JNIEnv* env = nullptr;
-    if (!sJavaVM || sJavaVM->AttachCurrentThreadAsDaemon(&env, nullptr) != JNI_OK) {
-        return;
-    }
+  if (!env || env->PushLocalFrame(2) != JNI_OK) {
+    return;
+  }
 
-    if (!env || env->PushLocalFrame(2) != JNI_OK) {
-        return;
-    }
+  jclass loader = env->FindClass("org/mozilla/gecko/mozglue/GeckoLoader");
+  if (!loader) {
+    return;
+  }
 
-    jclass loader = env->FindClass("org/mozilla/gecko/mozglue/GeckoLoader");
-    if (!loader) {
-        return;
-    }
+  jmethodID method =
+      env->GetStaticMethodID(loader, "abort", "(Ljava/lang/String;)V");
+  jstring str = env->NewStringUTF(msg);
 
-    jmethodID method = env->GetStaticMethodID(loader, "abort", "(Ljava/lang/String;)V");
-    jstring str = env->NewStringUTF(msg);
+  if (method && str) {
+    env->CallStaticVoidMethod(loader, method, str);
+  }
 
-    if (method && str) {
-        env->CallStaticVoidMethod(loader, method, str);
-    }
-
-    env->PopLocalFrame(nullptr);
+  env->PopLocalFrame(nullptr);
 }
 
 Bootstrap::UniquePtr gBootstrap;
 #ifndef MOZ_FOLD_LIBS
-static void * sqlite_handle = nullptr;
-static void * nspr_handle = nullptr;
-static void * plc_handle = nullptr;
+static void* sqlite_handle = nullptr;
+static void* nspr_handle = nullptr;
+static void* plc_handle = nullptr;
 #else
 #define sqlite_handle nss_handle
 #define nspr_handle nss_handle
 #define plc_handle nss_handle
 #endif
-static void * nss_handle = nullptr;
+static void* nss_handle = nullptr;
 
 static int mapping_count = 0;
 
-extern "C" void
-report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
-{
-  if (mapping_count >= MAX_MAPPING_INFO)
-    return;
+extern "C" void report_mapping(char* name, void* base, uint32_t len,
+                               uint32_t offset) {
+  if (mapping_count >= MAX_MAPPING_INFO) return;
 
-  struct mapping_info *info = &lib_mapping[mapping_count++];
+  struct mapping_info* info = &lib_mapping[mapping_count++];
   info->name = strdup(name);
   info->base = (uintptr_t)base;
   info->len = len;
   info->offset = offset;
 }
 
-extern "C" void
-delete_mapping(const char *name)
-{
+extern "C" void delete_mapping(const char* name) {
   for (int pos = 0; pos < mapping_count; ++pos) {
-    struct mapping_info *info = &lib_mapping[pos];
+    struct mapping_info* info = &lib_mapping[pos];
     if (!strcmp(info->name, name)) {
-      struct mapping_info *last = &lib_mapping[mapping_count - 1];
+      struct mapping_info* last = &lib_mapping[mapping_count - 1];
       free(info->name);
       *info = *last;
       --mapping_count;
@@ -183,26 +175,22 @@ delete_mapping(const char *name)
   }
 }
 
-static UniquePtr<char[]>
-getUnpackedLibraryName(const char* libraryName)
-{
-  static const char *libdir = getenv("MOZ_ANDROID_LIBDIR");
+static UniquePtr<char[]> getUnpackedLibraryName(const char* libraryName) {
+  static const char* libdir = getenv("MOZ_ANDROID_LIBDIR");
 
-  size_t len = strlen(libdir) + 1 /* path separator */ + strlen(libraryName) + 1; /* null terminator */
+  size_t len = strlen(libdir) + 1 /* path separator */ + strlen(libraryName) +
+               1; /* null terminator */
   auto file = MakeUnique<char[]>(len);
   snprintf(file.get(), len, "%s/%s", libdir, libraryName);
   return file;
 }
 
-static void*
-dlopenLibrary(const char* libraryName)
-{
-  return __wrap_dlopen(getUnpackedLibraryName(libraryName).get(), RTLD_GLOBAL | RTLD_LAZY);
+static void* dlopenLibrary(const char* libraryName) {
+  return __wrap_dlopen(getUnpackedLibraryName(libraryName).get(),
+                       RTLD_GLOBAL | RTLD_LAZY);
 }
 
-static mozglueresult
-loadGeckoLibs()
-{
+static mozglueresult loadGeckoLibs() {
   TimeStamp t0 = TimeStamp::Now();
   struct rusage usage1_thread, usage1;
   getrusage(RUSAGE_THREAD, &usage1_thread);
@@ -210,7 +198,8 @@ loadGeckoLibs()
 
   gBootstrap = GetBootstrap(getUnpackedLibraryName("libxul.so").get());
   if (!gBootstrap) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libxul!");
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad",
+                        "Couldn't get a handle to libxul!");
     return FAILURE;
   }
 
@@ -219,11 +208,13 @@ loadGeckoLibs()
   getrusage(RUSAGE_THREAD, &usage2_thread);
   getrusage(RUSAGE_SELF, &usage2);
 
-#define RUSAGE_TIMEDIFF(u1, u2, field) \
-  ((u2.ru_ ## field.tv_sec - u1.ru_ ## field.tv_sec) * 1000 + \
-   (u2.ru_ ## field.tv_usec - u1.ru_ ## field.tv_usec) / 1000)
+#define RUSAGE_TIMEDIFF(u1, u2, field)                    \
+  ((u2.ru_##field.tv_sec - u1.ru_##field.tv_sec) * 1000 + \
+   (u2.ru_##field.tv_usec - u1.ru_##field.tv_usec) / 1000)
 
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %fms total, %ldms(%ldms) user, %ldms(%ldms) system, %ld(%ld) faults",
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad",
+                      "Loaded libs in %fms total, %ldms(%ldms) user, "
+                      "%ldms(%ldms) system, %ld(%ld) faults",
                       (t1 - t0).ToMilliseconds(),
                       RUSAGE_TIMEDIFF(usage1_thread, usage2_thread, utime),
                       RUSAGE_TIMEDIFF(usage1, usage2, utime),
@@ -239,20 +230,17 @@ loadGeckoLibs()
 
 static mozglueresult loadNSSLibs();
 
-static mozglueresult
-loadSQLiteLibs()
-{
-  if (sqlite_handle)
-    return SUCCESS;
+static mozglueresult loadSQLiteLibs() {
+  if (sqlite_handle) return SUCCESS;
 
 #ifdef MOZ_FOLD_LIBS
-  if (loadNSSLibs() != SUCCESS)
-    return FAILURE;
+  if (loadNSSLibs() != SUCCESS) return FAILURE;
 #else
 
   sqlite_handle = dlopenLibrary("libmozsqlite3.so");
   if (!sqlite_handle) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libmozsqlite3!");
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad",
+                        "Couldn't get a handle to libmozsqlite3!");
     return FAILURE;
   }
 #endif
@@ -261,11 +249,8 @@ loadSQLiteLibs()
   return SUCCESS;
 }
 
-static mozglueresult
-loadNSSLibs()
-{
-  if (nss_handle && nspr_handle && plc_handle)
-    return SUCCESS;
+static mozglueresult loadNSSLibs() {
+  if (nss_handle && nspr_handle && plc_handle) return SUCCESS;
 
   nss_handle = dlopenLibrary("libnss3.so");
 
@@ -276,18 +261,21 @@ loadNSSLibs()
 #endif
 
   if (!nss_handle) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libnss3!");
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad",
+                        "Couldn't get a handle to libnss3!");
     return FAILURE;
   }
 
 #ifndef MOZ_FOLD_LIBS
   if (!nspr_handle) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libnspr4!");
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad",
+                        "Couldn't get a handle to libnspr4!");
     return FAILURE;
   }
 
   if (!plc_handle) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libplc4!");
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad",
+                        "Couldn't get a handle to libplc4!");
     return FAILURE;
   }
 #endif
@@ -296,8 +284,8 @@ loadNSSLibs()
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass)
-{
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(
+    JNIEnv* jenv, jclass jGeckoAppShellClass) {
   jenv->GetJavaVM(&sJavaVM);
 
   int res = loadGeckoLibs();
@@ -307,17 +295,19 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jcl
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass) {
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(
+    JNIEnv* jenv, jclass jGeckoAppShellClass) {
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load sqlite start\n");
   mozglueresult rv = loadSQLiteLibs();
   if (rv != SUCCESS) {
-      JNI_Throw(jenv, "java/lang/Exception", "Error loading sqlite libraries");
+    JNI_Throw(jenv, "java/lang/Exception", "Error loading sqlite libraries");
   }
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load sqlite done\n");
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass) {
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(
+    JNIEnv* jenv, jclass jGeckoAppShellClass) {
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load nss start\n");
   mozglueresult rv = loadNSSLibs();
   if (rv != SUCCESS) {
@@ -326,9 +316,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclas
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load nss done\n");
 }
 
-static char**
-CreateArgvFromObjectArray(JNIEnv *jenv, jobjectArray jargs, int* length)
-{
+static char** CreateArgvFromObjectArray(JNIEnv* jenv, jobjectArray jargs,
+                                        int* length) {
   size_t stringCount = jenv->GetArrayLength(jargs);
 
   if (length) {
@@ -344,7 +333,7 @@ CreateArgvFromObjectArray(JNIEnv *jenv, jobjectArray jargs, int* length)
   argv[stringCount] = nullptr;
 
   for (size_t ix = 0; ix < stringCount; ix++) {
-    jstring string = (jstring) (jenv->GetObjectArrayElement(jargs, ix));
+    jstring string = (jstring)(jenv->GetObjectArrayElement(jargs, ix));
     const char* rawString = jenv->GetStringUTFChars(string, nullptr);
     const int strLength = jenv->GetStringUTFLength(string);
     argv[ix] = strndup(rawString, strLength);
@@ -355,10 +344,8 @@ CreateArgvFromObjectArray(JNIEnv *jenv, jobjectArray jargs, int* length)
   return argv;
 }
 
-static void
-FreeArgv(char** argv, int argc)
-{
-  for (int ix=0; ix < argc; ix++) {
+static void FreeArgv(char** argv, int argc) {
+  for (int ix = 0; ix < argc; ix++) {
     // String was allocated with strndup, so need to use free to deallocate.
     free(argv[ix]);
   }
@@ -366,8 +353,11 @@ FreeArgv(char** argv, int argc)
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jobjectArray jargs, int prefsFd, int prefMapFd, int ipcFd, int crashFd, int crashAnnotationFd)
-{
+Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv* jenv, jclass jc,
+                                                     jobjectArray jargs,
+                                                     int prefsFd, int prefMapFd,
+                                                     int ipcFd, int crashFd,
+                                                     int crashAnnotationFd) {
   int argc = 0;
   char** argv = CreateArgvFromObjectArray(jenv, jargs, &argc);
 
@@ -381,7 +371,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jo
     gBootstrap->GeckoStart(jenv, argv, argc, sAppData);
     ElfLoader::Singleton.ExpectShutdown(true);
   } else {
-    gBootstrap->XRE_SetAndroidChildFds(jenv, { prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd });
+    gBootstrap->XRE_SetAndroidChildFds(
+        jenv, {prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd});
     gBootstrap->XRE_SetProcessType(argv[argc - 1]);
 
     XREChildData childData;
@@ -392,9 +383,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jo
   FreeArgv(argv, argc);
 }
 
-extern "C" APKOPEN_EXPORT mozglueresult
-ChildProcessInit(int argc, char* argv[])
-{
+extern "C" APKOPEN_EXPORT mozglueresult ChildProcessInit(int argc,
+                                                         char* argv[]) {
   if (loadNSSLibs() != SUCCESS) {
     return FAILURE;
   }
@@ -412,19 +402,17 @@ ChildProcessInit(int argc, char* argv[])
 }
 
 extern "C" APKOPEN_EXPORT jboolean MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_neonCompatible(JNIEnv *jenv, jclass jc)
-{
+Java_org_mozilla_gecko_mozglue_GeckoLoader_neonCompatible(JNIEnv* jenv,
+                                                          jclass jc) {
 #ifdef __ARM_EABI__
   return mozilla::supports_neon();
 #else
   return true;
-#endif // __ARM_EABI__
+#endif  // __ARM_EABI__
 }
 
 // Does current process name end with ':media'?
-static bool
-IsMediaProcess()
-{
+static bool IsMediaProcess() {
   pid_t pid = getpid();
   char str[256];
   SprintfLiteral(str, "/proc/%d/cmdline", pid);
@@ -475,9 +463,7 @@ IsMediaProcess()
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-static void
-CatchFatalSignals(int num, siginfo_t *info, void *context)
-{
+static void CatchFatalSignals(int num, siginfo_t* info, void* context) {
   // It's possible somebody cleared the SA_SIGINFO flag, which would mean
   // our "info" arg holds an undefined value.
   struct sigaction action = {};
@@ -517,19 +503,22 @@ CatchFatalSignals(int num, siginfo_t *info, void *context)
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_suppressCrashDialog(JNIEnv *jenv, jclass jc)
-{
-  MOZ_RELEASE_ASSERT(IsMediaProcess(), "Suppress crash dialog only for media process");
+Java_org_mozilla_gecko_mozglue_GeckoLoader_suppressCrashDialog(JNIEnv* jenv,
+                                                               jclass jc) {
+  MOZ_RELEASE_ASSERT(IsMediaProcess(),
+                     "Suppress crash dialog only for media process");
   // Restoring to SIG_DFL will crash on x86/Android M devices (see bug 1374556)
-  // so copy Android code (http://androidxref.com/7.1.1_r6/xref/bionic/linker/debugger.cpp#302).
-  // See comments above CatchFatalSignals() for copyright notice.
+  // so copy Android code
+  // (http://androidxref.com/7.1.1_r6/xref/bionic/linker/debugger.cpp#302). See
+  // comments above CatchFatalSignals() for copyright notice.
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   sigemptyset(&action.sa_mask);
   action.sa_sigaction = &CatchFatalSignals;
   action.sa_flags = SA_RESTART | SA_SIGINFO;
 
-  // Use the alternate signal stack if available so we can catch stack overflows.
+  // Use the alternate signal stack if available so we can catch stack
+  // overflows.
   action.sa_flags |= SA_ONSTACK;
 
   sigaction(SIGABRT, &action, nullptr);

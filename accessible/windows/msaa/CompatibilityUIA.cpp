@@ -22,25 +22,21 @@
 
 #if defined(UIA_LOGGING)
 
-#define LOG_ERROR(FuncName) \
-  { \
-    DWORD err = ::GetLastError(); \
+#define LOG_ERROR(FuncName)                                       \
+  {                                                               \
+    DWORD err = ::GetLastError();                                 \
     nsPrintfCString msg(#FuncName " failed with code %u\n", err); \
-    ::OutputDebugStringA(msg.get()); \
+    ::OutputDebugStringA(msg.get());                              \
   }
 
 #else
 
 #define LOG_ERROR(FuncName)
 
-#endif // defined(UIA_LOGGING)
+#endif  // defined(UIA_LOGGING)
 
-struct ByteArrayDeleter
-{
-  void operator()(void* aBuf)
-  {
-    delete[] reinterpret_cast<char*>(aBuf);
-  }
+struct ByteArrayDeleter {
+  void operator()(void* aBuf) { delete[] reinterpret_cast<char*>(aBuf); }
 };
 
 typedef UniquePtr<OBJECT_DIRECTORY_INFORMATION, ByteArrayDeleter> ObjDirInfoPtr;
@@ -48,9 +44,7 @@ typedef UniquePtr<OBJECT_DIRECTORY_INFORMATION, ByteArrayDeleter> ObjDirInfoPtr;
 // ComparatorFnT returns true to continue searching, or else false to indicate
 // search completion.
 template <typename ComparatorFnT>
-static bool
-FindNamedObject(const ComparatorFnT& aComparator)
-{
+static bool FindNamedObject(const ComparatorFnT& aComparator) {
   // We want to enumerate every named kernel object in our session. We do this
   // by opening a directory object using a path constructed using the session
   // id under which our process resides.
@@ -66,13 +60,12 @@ FindNamedObject(const ComparatorFnT& aComparator)
   ::RtlInitUnicodeString(&baseNamedObjectsName, path.get());
 
   OBJECT_ATTRIBUTES attributes;
-  InitializeObjectAttributes(&attributes, &baseNamedObjectsName, 0,
-                             nullptr, nullptr);
+  InitializeObjectAttributes(&attributes, &baseNamedObjectsName, 0, nullptr,
+                             nullptr);
 
   HANDLE rawBaseNamedObjects;
-  NTSTATUS ntStatus = ::NtOpenDirectoryObject(&rawBaseNamedObjects,
-                                              DIRECTORY_QUERY | DIRECTORY_TRAVERSE,
-                                              &attributes);
+  NTSTATUS ntStatus = ::NtOpenDirectoryObject(
+      &rawBaseNamedObjects, DIRECTORY_QUERY | DIRECTORY_TRAVERSE, &attributes);
   if (!NT_SUCCESS(ntStatus)) {
     return false;
   }
@@ -82,8 +75,8 @@ FindNamedObject(const ComparatorFnT& aComparator)
   ULONG context = 0, returnedLen;
 
   ULONG objDirInfoBufLen = 1024 * sizeof(OBJECT_DIRECTORY_INFORMATION);
-  ObjDirInfoPtr objDirInfo(
-    reinterpret_cast<OBJECT_DIRECTORY_INFORMATION*>(new char[objDirInfoBufLen]));
+  ObjDirInfoPtr objDirInfo(reinterpret_cast<OBJECT_DIRECTORY_INFORMATION*>(
+      new char[objDirInfoBufLen]));
 
   // Now query that directory object for every named object that it contains.
 
@@ -101,7 +94,8 @@ FindNamedObject(const ComparatorFnT& aComparator)
     if (ntStatus == STATUS_BUFFER_TOO_SMALL) {
       // This case only occurs on 32-bit builds running atop WOW64.
       // (See https://bugzilla.mozilla.org/show_bug.cgi?id=1423999#c3)
-      objDirInfo.reset(reinterpret_cast<OBJECT_DIRECTORY_INFORMATION*>(new char[returnedLen]));
+      objDirInfo.reset(reinterpret_cast<OBJECT_DIRECTORY_INFORMATION*>(
+          new char[returnedLen]));
       objDirInfoBufLen = returnedLen;
       continue;
     } else if (!NT_SUCCESS(ntStatus)) {
@@ -133,13 +127,9 @@ FindNamedObject(const ComparatorFnT& aComparator)
   return false;
 }
 
-static const char* gBlockedUiaClients[] = {
-  "osk.exe"
-};
+static const char* gBlockedUiaClients[] = {"osk.exe"};
 
-static bool
-ShouldBlockUIAClient(nsIFile* aClientExe)
-{
+static bool ShouldBlockUIAClient(nsIFile* aClientExe) {
   if (PR_GetEnv("MOZ_DISABLE_ACCESSIBLE_BLOCKLIST")) {
     return false;
   }
@@ -165,12 +155,8 @@ namespace a11y {
 
 Maybe<DWORD> Compatibility::sUiaRemotePid;
 
-Maybe<bool>
-Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
-{
-  auto clearUiaRemotePid = MakeScopeExit([]() {
-    sUiaRemotePid = Nothing();
-  });
+Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
+  auto clearUiaRemotePid = MakeScopeExit([]() { sUiaRemotePid = Nothing(); });
 
   Telemetry::AutoTimer<Telemetry::A11Y_UIA_DETECTION_TIMING_MS> timer;
 
@@ -222,8 +208,8 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
     }
 
     ntStatus = ::NtQuerySystemInformation(
-                 (SYSTEM_INFORMATION_CLASS) SystemExtendedHandleInformation,
-                 handleInfoBuf.get(), handleInfoBufLen, &handleInfoBufLen);
+        (SYSTEM_INFORMATION_CLASS)SystemExtendedHandleInformation,
+        handleInfoBuf.get(), handleInfoBufLen, &handleInfoBufLen);
     if (ntStatus == STATUS_INFO_LENGTH_MISMATCH) {
       continue;
     }
@@ -241,7 +227,8 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
   nsTHashtable<nsUint32HashKey> nonSectionObjTypes;
   nsDataHashtable<nsVoidPtrHashKey, DWORD> objMap;
 
-  auto handleInfo = reinterpret_cast<SYSTEM_HANDLE_INFORMATION_EX*>(handleInfoBuf.get());
+  auto handleInfo =
+      reinterpret_cast<SYSTEM_HANDLE_INFORMATION_EX*>(handleInfoBuf.get());
 
   for (ULONG index = 0; index < handleInfo->mHandleCount; ++index) {
     SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX& curHandle = handleInfo->mHandles[index];
@@ -258,8 +245,8 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
         // Not a section
         continue;
       }
-    } else if (nonSectionObjTypes.Contains(static_cast<uint32_t>(
-                                             curHandle.mObjectTypeIndex))) {
+    } else if (nonSectionObjTypes.Contains(
+                   static_cast<uint32_t>(curHandle.mObjectTypeIndex))) {
       // Otherwise we check whether or not the object type is definitely _not_
       // a Section...
       continue;
@@ -267,27 +254,29 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
       // Otherwise we need to issue some system calls to find out the object
       // type corresponding to the current handle's type index.
       ULONG objTypeBufLen;
-      ntStatus = ::NtQueryObject(handle, ObjectTypeInformation,
-                                 nullptr, 0, &objTypeBufLen);
+      ntStatus = ::NtQueryObject(handle, ObjectTypeInformation, nullptr, 0,
+                                 &objTypeBufLen);
       if (ntStatus != STATUS_INFO_LENGTH_MISMATCH) {
         continue;
       }
 
       auto objTypeBuf = MakeUnique<char[]>(objTypeBufLen);
-      ntStatus = ::NtQueryObject(handle, ObjectTypeInformation, objTypeBuf.get(),
-                                 objTypeBufLen, &objTypeBufLen);
+      ntStatus =
+          ::NtQueryObject(handle, ObjectTypeInformation, objTypeBuf.get(),
+                          objTypeBufLen, &objTypeBufLen);
       if (!NT_SUCCESS(ntStatus)) {
         continue;
       }
 
       auto objType =
-        reinterpret_cast<PUBLIC_OBJECT_TYPE_INFORMATION*>(objTypeBuf.get());
+          reinterpret_cast<PUBLIC_OBJECT_TYPE_INFORMATION*>(objTypeBuf.get());
 
       // Now we check whether the object's type name matches "Section"
-      nsDependentSubstring objTypeName(objType->TypeName.Buffer,
-                                       objType->TypeName.Length / sizeof(wchar_t));
+      nsDependentSubstring objTypeName(
+          objType->TypeName.Buffer, objType->TypeName.Length / sizeof(wchar_t));
       if (!objTypeName.Equals(NS_LITERAL_STRING("Section"))) {
-        nonSectionObjTypes.PutEntry(static_cast<uint32_t>(curHandle.mObjectTypeIndex));
+        nonSectionObjTypes.PutEntry(
+            static_cast<uint32_t>(curHandle.mObjectTypeIndex));
         continue;
       }
 
@@ -343,5 +332,5 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
   return Some(true);
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla

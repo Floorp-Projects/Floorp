@@ -19,54 +19,42 @@
 namespace mozilla {
 namespace gfx {
 
-class UnscaledFontMac final : public UnscaledFont
-{
-public:
+class UnscaledFontMac final : public UnscaledFont {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFontMac, override)
-  explicit UnscaledFontMac(CGFontRef aFont,
-                           bool aIsDataFont = false,
+  explicit UnscaledFontMac(CGFontRef aFont, bool aIsDataFont = false,
                            bool aNeedsCairo = false)
-    : mFont(aFont)
-    , mIsDataFont(aIsDataFont)
-    , mNeedsCairo(aNeedsCairo)
-  {
+      : mFont(aFont), mIsDataFont(aIsDataFont), mNeedsCairo(aNeedsCairo) {
     CFRetain(mFont);
   }
-  ~UnscaledFontMac()
-  {
-    CFRelease(mFont);
-  }
+  ~UnscaledFontMac() { CFRelease(mFont); }
 
   FontType GetType() const override { return FontType::MAC; }
 
   CGFontRef GetFont() const { return mFont; }
 
-  bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton) override;
+  bool GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton) override;
 
   bool IsDataFont() const { return mIsDataFont; }
 
-  already_AddRefed<ScaledFont>
-    CreateScaledFont(Float aGlyphSize,
-                     const uint8_t* aInstanceData,
-                     uint32_t aInstanceDataLength,
-                     const FontVariation* aVariations,
-                     uint32_t aNumVariations) override;
+  already_AddRefed<ScaledFont> CreateScaledFont(
+      Float aGlyphSize, const uint8_t* aInstanceData,
+      uint32_t aInstanceDataLength, const FontVariation* aVariations,
+      uint32_t aNumVariations) override;
 
-  static CGFontRef
-    CreateCGFontWithVariations(CGFontRef aFont,
-                               uint32_t aVariationCount,
-                               const FontVariation* aVariations);
+  static CGFontRef CreateCGFontWithVariations(CGFontRef aFont,
+                                              uint32_t aVariationCount,
+                                              const FontVariation* aVariations);
 
   bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
 
-private:
+ private:
   CGFontRef mFont;
   bool mIsDataFont;
   bool mNeedsCairo;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_UNSCALEDFONTMAC_H_ */
-

@@ -5,13 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ScrollStyles.h"
-#include "nsStyleStruct.h" // for nsStyleDisplay and nsStyleBackground::Position
+#include "nsStyleStruct.h"  // for nsStyleDisplay and nsStyleBackground::Position
 
 namespace mozilla {
 
-  ScrollStyles::ScrollStyles(uint8_t aH, uint8_t aV,
-                             const nsStyleDisplay* aDisplay)
-    : mHorizontal(aH), mVertical(aV),
+ScrollStyles::ScrollStyles(uint8_t aH, uint8_t aV,
+                           const nsStyleDisplay* aDisplay)
+    : mHorizontal(aH),
+      mVertical(aV),
       mScrollBehavior(aDisplay->mScrollBehavior),
       mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
       mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY),
@@ -22,8 +23,9 @@ namespace mozilla {
       mScrollSnapDestinationX(aDisplay->mScrollSnapDestination.mXPosition),
       mScrollSnapDestinationY(aDisplay->mScrollSnapDestination.mYPosition) {}
 
-  ScrollStyles::ScrollStyles(const nsStyleDisplay* aDisplay)
-    : mHorizontal(aDisplay->mOverflowX), mVertical(aDisplay->mOverflowY),
+ScrollStyles::ScrollStyles(const nsStyleDisplay* aDisplay)
+    : mHorizontal(aDisplay->mOverflowX),
+      mVertical(aDisplay->mOverflowY),
       mScrollBehavior(aDisplay->mScrollBehavior),
       mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
       mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY),
@@ -34,4 +36,4 @@ namespace mozilla {
       mScrollSnapDestinationX(aDisplay->mScrollSnapDestination.mXPosition),
       mScrollSnapDestinationY(aDisplay->mScrollSnapDestination.mYPosition) {}
 
-} // namespace mozilla
+}  // namespace mozilla

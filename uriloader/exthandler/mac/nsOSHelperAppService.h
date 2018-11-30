@@ -7,48 +7,54 @@
 #ifndef nsOSHelperAppService_h__
 #define nsOSHelperAppService_h__
 
-// The OS helper app service is a subclass of nsExternalHelperAppService and is implemented on each
-// platform. It contains platform specific code for finding helper applications for a given mime type
-// in addition to launching those applications. This is the Mac version.
+// The OS helper app service is a subclass of nsExternalHelperAppService and is
+// implemented on each platform. It contains platform specific code for finding
+// helper applications for a given mime type in addition to launching those
+// applications. This is the Mac version.
 
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsMIMEInfoImpl.h"
 #include "nsCOMPtr.h"
 
-class nsOSHelperAppService : public nsExternalHelperAppService
-{
-public:
+class nsOSHelperAppService : public nsExternalHelperAppService {
+ public:
   nsOSHelperAppService();
   virtual ~nsOSHelperAppService();
 
   // override nsIExternalProtocolService methods
-  NS_IMETHOD GetApplicationDescription(const nsACString& aScheme, nsAString& _retval) override;
+  NS_IMETHOD GetApplicationDescription(const nsACString& aScheme,
+                                       nsAString& _retval) override;
 
   // method overrides --> used to hook the mime service into internet config....
-  NS_IMETHOD GetFromTypeAndExtension(const nsACString& aType, const nsACString& aFileExt, nsIMIMEInfo ** aMIMEInfo) override;
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, bool * aFound) override;
-  NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
-                                          bool *found,
-                                          nsIHandlerInfo **_retval) override;
+  NS_IMETHOD GetFromTypeAndExtension(const nsACString& aType,
+                                     const nsACString& aFileExt,
+                                     nsIMIMEInfo** aMIMEInfo) override;
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType,
+                                                  const nsACString& aFileExt,
+                                                  bool* aFound) override;
+  NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString& aScheme,
+                                          bool* found,
+                                          nsIHandlerInfo** _retval) override;
 
   // override so we can have a child process sandbox-friendly implementation
   bool GetMIMETypeFromOSForExtension(const nsACString& aExtension,
                                      nsACString& aMIMEType) override;
 
-  // GetFileTokenForPath must be implemented by each platform. 
+  // GetFileTokenForPath must be implemented by each platform.
   // platformAppPath --> a platform specific path to an application that we got
   //                     out of the rdf data source. This can be a mac file
   //                     spec, a unix path or a windows path depending on the
   //                     platform
   // aFile --> an nsIFile representation of that platform application path.
-  virtual MOZ_MUST_USE nsresult GetFileTokenForPath(const char16_t * platformAppPath, nsIFile ** aFile) override;
+  virtual MOZ_MUST_USE nsresult GetFileTokenForPath(
+      const char16_t* platformAppPath, nsIFile** aFile) override;
 
-  MOZ_MUST_USE nsresult OSProtocolHandlerExists(const char * aScheme,
-                                                bool * aHandlerExists) override;
+  MOZ_MUST_USE nsresult OSProtocolHandlerExists(const char* aScheme,
+                                                bool* aHandlerExists) override;
 
-private:
+ private:
   uint32_t mPermissions;
 };
 
-#endif // nsOSHelperAppService_h__
+#endif  // nsOSHelperAppService_h__

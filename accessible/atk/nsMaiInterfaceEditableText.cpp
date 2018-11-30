@@ -16,9 +16,7 @@
 using namespace mozilla::a11y;
 
 extern "C" {
-static void
-setTextContentsCB(AtkEditableText *aText, const gchar *aString)
-{
+static void setTextContentsCB(AtkEditableText* aText, const gchar* aString) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (accWrap) {
     HyperTextAccessible* text = accWrap->AsHyperText();
@@ -34,10 +32,8 @@ setTextContentsCB(AtkEditableText *aText, const gchar *aString)
   }
 }
 
-static void
-insertTextCB(AtkEditableText *aText,
-             const gchar *aString, gint aLength, gint *aPosition)
-{
+static void insertTextCB(AtkEditableText* aText, const gchar* aString,
+                         gint aLength, gint* aPosition) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (accWrap) {
     HyperTextAccessible* text = accWrap->AsHyperText();
@@ -53,9 +49,7 @@ insertTextCB(AtkEditableText *aText,
   }
 }
 
-static void
-copyTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
-{
+static void copyTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (accWrap) {
     HyperTextAccessible* text = accWrap->AsHyperText();
@@ -69,9 +63,7 @@ copyTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
   }
 }
 
-static void
-cutTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
-{
+static void cutTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (accWrap) {
     HyperTextAccessible* text = accWrap->AsHyperText();
@@ -85,9 +77,7 @@ cutTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
   }
 }
 
-static void
-deleteTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
-{
+static void deleteTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (accWrap) {
     HyperTextAccessible* text = accWrap->AsHyperText();
@@ -101,9 +91,7 @@ deleteTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
   }
 }
 
-static void
-pasteTextCB(AtkEditableText *aText, gint aPosition)
-{
+static void pasteTextCB(AtkEditableText* aText, gint aPosition) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (accWrap) {
     HyperTextAccessible* text = accWrap->AsHyperText();
@@ -118,12 +106,9 @@ pasteTextCB(AtkEditableText *aText, gint aPosition)
 }
 }
 
-void
-editableTextInterfaceInitCB(AtkEditableTextIface* aIface)
-{
+void editableTextInterfaceInitCB(AtkEditableTextIface* aIface) {
   NS_ASSERTION(aIface, "Invalid aIface");
-  if (MOZ_UNLIKELY(!aIface))
-    return;
+  if (MOZ_UNLIKELY(!aIface)) return;
 
   aIface->set_text_contents = setTextContentsCB;
   aIface->insert_text = insertTextCB;

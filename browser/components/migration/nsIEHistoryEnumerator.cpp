@@ -19,44 +19,30 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIEHistoryEnumerator
 
-nsIEHistoryEnumerator::nsIEHistoryEnumerator()
-{
-  ::CoInitialize(nullptr);
-}
+nsIEHistoryEnumerator::nsIEHistoryEnumerator() { ::CoInitialize(nullptr); }
 
-nsIEHistoryEnumerator::~nsIEHistoryEnumerator()
-{
-  ::CoUninitialize();
-}
+nsIEHistoryEnumerator::~nsIEHistoryEnumerator() { ::CoUninitialize(); }
 
-void
-nsIEHistoryEnumerator::EnsureInitialized()
-{
-  if (mURLEnumerator)
-    return;
+void nsIEHistoryEnumerator::EnsureInitialized() {
+  if (mURLEnumerator) return;
 
-  HRESULT hr = ::CoCreateInstance(CLSID_CUrlHistory,
-                                  nullptr,
-                                  CLSCTX_INPROC_SERVER,
-                                  IID_IUrlHistoryStg2,
-                                  getter_AddRefs(mIEHistory));
-  if (FAILED(hr))
-    return;
+  HRESULT hr =
+      ::CoCreateInstance(CLSID_CUrlHistory, nullptr, CLSCTX_INPROC_SERVER,
+                         IID_IUrlHistoryStg2, getter_AddRefs(mIEHistory));
+  if (FAILED(hr)) return;
 
   hr = mIEHistory->EnumUrls(getter_AddRefs(mURLEnumerator));
-  if (FAILED(hr))
-    return;
+  if (FAILED(hr)) return;
 }
 
 NS_IMETHODIMP
-nsIEHistoryEnumerator::HasMoreElements(bool* _retval)
-{
+nsIEHistoryEnumerator::HasMoreElements(bool* _retval) {
   *_retval = false;
 
   EnsureInitialized();
-  MOZ_ASSERT(mURLEnumerator, "Should have instanced an IE History URLEnumerator");
-  if (!mURLEnumerator)
-    return NS_OK;
+  MOZ_ASSERT(mURLEnumerator,
+             "Should have instanced an IE History URLEnumerator");
+  if (!mURLEnumerator) return NS_OK;
 
   STATURL statURL;
   ULONG fetched;
@@ -82,7 +68,8 @@ nsIEHistoryEnumerator::HasMoreElements(bool* _retval)
   nsDependentString title(statURL.pwcsTitle ? statURL.pwcsTitle : L"");
 
   bool lastVisitTimeIsValid;
-  PRTime lastVisited = WinMigrationFileTimeToPRTime(&(statURL.ftLastVisited), &lastVisitTimeIsValid);
+  PRTime lastVisited = WinMigrationFileTimeToPRTime(&(statURL.ftLastVisited),
+                                                    &lastVisitTimeIsValid);
 
   mCachedNextEntry = do_CreateInstance("@mozilla.org/hash-property-bag;1");
   MOZ_ASSERT(mCachedNextEntry, "Should have instanced a new property bag");
@@ -90,25 +77,23 @@ nsIEHistoryEnumerator::HasMoreElements(bool* _retval)
     mCachedNextEntry->SetPropertyAsInterface(NS_LITERAL_STRING("uri"), uri);
     mCachedNextEntry->SetPropertyAsAString(NS_LITERAL_STRING("title"), title);
     if (lastVisitTimeIsValid) {
-      mCachedNextEntry->SetPropertyAsInt64(NS_LITERAL_STRING("time"), lastVisited);
+      mCachedNextEntry->SetPropertyAsInt64(NS_LITERAL_STRING("time"),
+                                           lastVisited);
     }
 
     *_retval = true;
   }
 
-  if (statURL.pwcsTitle)
-    ::CoTaskMemFree(statURL.pwcsTitle);
+  if (statURL.pwcsTitle) ::CoTaskMemFree(statURL.pwcsTitle);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIEHistoryEnumerator::GetNext(nsISupports** _retval)
-{
+nsIEHistoryEnumerator::GetNext(nsISupports** _retval) {
   *_retval = nullptr;
 
-  if (!mCachedNextEntry)
-    return NS_ERROR_FAILURE;
+  if (!mCachedNextEntry) return NS_ERROR_FAILURE;
 
   NS_ADDREF(*_retval = mCachedNextEntry);
   // Release the cached entry, so it can't be returned twice.

@@ -16,65 +16,55 @@ namespace net {
 NS_IMPL_ISUPPORTS_INHERITED(DataChannelChild, nsDataChannel, nsIChildChannel)
 
 DataChannelChild::DataChannelChild(nsIURI* aURI)
-    : nsDataChannel(aURI)
-    , mIPCOpen(false)
-{
+    : nsDataChannel(aURI), mIPCOpen(false) {}
+
+NS_IMETHODIMP
+DataChannelChild::ConnectParent(uint32_t aId) {
+  mozilla::dom::ContentChild* cc =
+      static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
+  if (cc->IsShuttingDown()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!gNeckoChild->SendPDataChannelConstructor(this, aId)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // IPC now has a ref to us.
+  AddIPDLReference();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-DataChannelChild::ConnectParent(uint32_t aId)
-{
-    mozilla::dom::ContentChild* cc =
-        static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
-    if (cc->IsShuttingDown()) {
-        return NS_ERROR_FAILURE;
-    }
+DataChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
+                                        nsISupports* aContext) {
+  nsresult rv;
+  if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
+    MOZ_ASSERT(!aContext, "aContext should be null!");
+    rv = AsyncOpen2(aListener);
+  } else {
+    rv = AsyncOpen(aListener, aContext);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-    if (!gNeckoChild->SendPDataChannelConstructor(this, aId)) {
-        return NS_ERROR_FAILURE;
-    }
-
-    // IPC now has a ref to us.
-    AddIPDLReference();
-    return NS_OK;
+  if (mIPCOpen) {
+    Unused << Send__delete__(this);
+  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-DataChannelChild::CompleteRedirectSetup(nsIStreamListener *aListener,
-                                        nsISupports *aContext)
-{
-    nsresult rv;
-    if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
-        MOZ_ASSERT(!aContext, "aContext should be null!");
-        rv = AsyncOpen2(aListener);
-    }
-    else {
-        rv = AsyncOpen(aListener, aContext);
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-    }
-
-    if (mIPCOpen) {
-        Unused << Send__delete__(this);
-    }
-    return NS_OK;
+void DataChannelChild::AddIPDLReference() {
+  AddRef();
+  mIPCOpen = true;
 }
 
-void
-DataChannelChild::AddIPDLReference()
-{
-    AddRef();
-    mIPCOpen = true;
+void DataChannelChild::ActorDestroy(ActorDestroyReason why) {
+  MOZ_ASSERT(mIPCOpen);
+  mIPCOpen = false;
+  Release();
 }
 
-void
-DataChannelChild::ActorDestroy(ActorDestroyReason why)
-{
-    MOZ_ASSERT(mIPCOpen);
-    mIPCOpen = false;
-    Release();
-}
-
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

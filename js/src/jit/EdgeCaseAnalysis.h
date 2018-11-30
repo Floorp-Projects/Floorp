@@ -14,18 +14,16 @@ namespace jit {
 
 class MIRGraph;
 
-class EdgeCaseAnalysis
-{
-    MIRGenerator* mir;
-    MIRGraph& graph;
+class EdgeCaseAnalysis {
+  MIRGenerator* mir;
+  MIRGraph& graph;
 
-  public:
-    EdgeCaseAnalysis(MIRGenerator* mir, MIRGraph& graph);
-    MOZ_MUST_USE bool analyzeLate();
+ public:
+  EdgeCaseAnalysis(MIRGenerator* mir, MIRGraph& graph);
+  MOZ_MUST_USE bool analyzeLate();
 };
 
-
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_EdgeCaseAnalysis_h */

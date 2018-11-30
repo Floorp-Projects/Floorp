@@ -14,29 +14,24 @@ class ServiceWorkerRegistrationDescriptor;
 
 // Used by ServiceWorkerManager to notify ServiceWorkerRegistrations of
 // updatefound event and invalidating ServiceWorker instances.
-class ServiceWorkerRegistrationListener
-{
-public:
+class ServiceWorkerRegistrationListener {
+ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void
-  UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor) = 0;
+  virtual void UpdateState(
+      const ServiceWorkerRegistrationDescriptor& aDescriptor) = 0;
 
-  virtual void
-  FireUpdateFound() = 0;
+  virtual void FireUpdateFound() = 0;
 
-  virtual void
-  RegistrationRemoved() = 0;
+  virtual void RegistrationRemoved() = 0;
 
-  virtual void
-  GetScope(nsAString& aScope) const = 0;
+  virtual void GetScope(nsAString& aScope) const = 0;
 
-  virtual bool
-  MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) = 0;
+  virtual bool MatchesDescriptor(
+      const ServiceWorkerRegistrationDescriptor& aDescriptor) = 0;
 };
 
-
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_ServiceWorkerRegistrationListener_h */

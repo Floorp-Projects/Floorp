@@ -21,36 +21,31 @@ class Layer;
 
 // Compute compositor information for copying the backdrop for a mix-blend
 // operation.
-gfx::IntRect
-ComputeBackdropCopyRect(const gfx::Rect& aRect,
-                        const gfx::IntRect& aClipRect,
-                        const gfx::Matrix4x4& aTransform,
-                        const gfx::IntRect& aRenderTargetRect,
-                        gfx::Matrix4x4* aOutTransform,
-                        gfx::Rect* aOutLayerQuad = nullptr);
+gfx::IntRect ComputeBackdropCopyRect(const gfx::Rect& aRect,
+                                     const gfx::IntRect& aClipRect,
+                                     const gfx::Matrix4x4& aTransform,
+                                     const gfx::IntRect& aRenderTargetRect,
+                                     gfx::Matrix4x4* aOutTransform,
+                                     gfx::Rect* aOutLayerQuad = nullptr);
 
 // Compute uv-coordinates for a rect inside a texture.
 template <typename T>
-static inline gfx::Rect
-TextureRectToCoords(const T& aRect, const gfx::IntSize& aSize)
-{
+static inline gfx::Rect TextureRectToCoords(const T& aRect,
+                                            const gfx::IntSize& aSize) {
   return gfx::Rect(
-    float(aRect.X()) / aSize.width,
-    float(aRect.Y()) / aSize.height,
-    float(aRect.Width()) / aSize.width,
-    float(aRect.Height()) / aSize.height);
+      float(aRect.X()) / aSize.width, float(aRect.Y()) / aSize.height,
+      float(aRect.Width()) / aSize.width, float(aRect.Height()) / aSize.height);
 }
 
 // This is defined in Compositor.cpp.
-nsTArray<gfx::TexturedTriangle>
-GenerateTexturedTriangles(const gfx::Polygon& aPolygon,
-                          const gfx::Rect& aRect,
-                          const gfx::Rect& aTexRect);
+nsTArray<gfx::TexturedTriangle> GenerateTexturedTriangles(
+    const gfx::Polygon& aPolygon, const gfx::Rect& aRect,
+    const gfx::Rect& aTexRect);
 
 // This is defined in ContainerLayerComposite.cpp.
 void TransformLayerGeometry(Layer* aLayer, Maybe<gfx::Polygon>& aGeometry);
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_LayersHelpers_h
+#endif  // mozilla_gfx_layers_LayersHelpers_h

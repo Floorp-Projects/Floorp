@@ -19,22 +19,18 @@
 // template <class T> class nsAutoPtrGetterTransfers;
 
 template <class T>
-class nsAutoPtr
-{
-private:
-  static_assert(!mozilla::IsScalar<T>::value, "If you are using "
+class nsAutoPtr {
+ private:
+  static_assert(!mozilla::IsScalar<T>::value,
+                "If you are using "
                 "nsAutoPtr to hold an array, use UniquePtr<T[]> instead");
 
-  void**
-  begin_assignment()
-  {
+  void** begin_assignment() {
     assign(0);
     return reinterpret_cast<void**>(&mRawPtr);
   }
 
-  void
-  assign(T* aNewPtr)
-  {
+  void assign(T* aNewPtr) {
     T* oldPtr = mRawPtr;
 
     if (aNewPtr && aNewPtr == oldPtr) {
@@ -50,80 +46,63 @@ private:
   // because two implicit conversions in a row aren't allowed.
   // It still allows assignment from T* through implicit conversion
   // from |T*| to |nsAutoPtr<T>::Ptr|
-  class Ptr
-  {
-  public:
-    MOZ_IMPLICIT Ptr(T* aPtr)
-      : mPtr(aPtr)
-    {
-    }
+  class Ptr {
+   public:
+    MOZ_IMPLICIT Ptr(T* aPtr) : mPtr(aPtr) {}
 
-    operator T*() const
-    {
-      return mPtr;
-    }
+    operator T*() const { return mPtr; }
 
-  private:
+   private:
     T* MOZ_NON_OWNING_REF mPtr;
   };
 
-private:
+ private:
   T* MOZ_OWNING_REF mRawPtr;
 
-public:
+ public:
   typedef T element_type;
 
-  ~nsAutoPtr()
-  {
-    delete mRawPtr;
-  }
+  ~nsAutoPtr() { delete mRawPtr; }
 
   // Constructors
 
   nsAutoPtr()
-    : mRawPtr(0)
-    // default constructor
-  {
-  }
+      : mRawPtr(0)
+  // default constructor
+  {}
 
   MOZ_IMPLICIT nsAutoPtr(Ptr aRawPtr)
-    : mRawPtr(aRawPtr)
-    // construct from a raw pointer (of the right type)
-  {
-  }
+      : mRawPtr(aRawPtr)
+  // construct from a raw pointer (of the right type)
+  {}
 
   // This constructor shouldn't exist; we should just use the &&
   // constructor.
   nsAutoPtr(nsAutoPtr<T>& aSmartPtr)
-    : mRawPtr(aSmartPtr.forget())
-    // Construct by transferring ownership from another smart pointer.
-  {
-  }
+      : mRawPtr(aSmartPtr.forget())
+  // Construct by transferring ownership from another smart pointer.
+  {}
 
   template <typename I>
   MOZ_IMPLICIT nsAutoPtr(nsAutoPtr<I>& aSmartPtr)
-    : mRawPtr(aSmartPtr.forget())
-    // Construct by transferring ownership from another smart pointer.
-  {
-  }
+      : mRawPtr(aSmartPtr.forget())
+  // Construct by transferring ownership from another smart pointer.
+  {}
 
   nsAutoPtr(nsAutoPtr<T>&& aSmartPtr)
-    : mRawPtr(aSmartPtr.forget())
-    // Construct by transferring ownership from another smart pointer.
-  {
-  }
+      : mRawPtr(aSmartPtr.forget())
+  // Construct by transferring ownership from another smart pointer.
+  {}
 
   template <typename I>
   MOZ_IMPLICIT nsAutoPtr(nsAutoPtr<I>&& aSmartPtr)
-    : mRawPtr(aSmartPtr.forget())
-    // Construct by transferring ownership from another smart pointer.
-  {
-  }
+      : mRawPtr(aSmartPtr.forget())
+  // Construct by transferring ownership from another smart pointer.
+  {}
 
   // Assignment operators
 
-  nsAutoPtr<T>&
-  operator=(T* aRhs)
+  nsAutoPtr<T>& operator=(T* aRhs)
   // assign from a raw pointer (of the right type)
   {
     assign(aRhs);
@@ -145,23 +124,20 @@ public:
     return *this;
   }
 
-  nsAutoPtr<T>& operator=(nsAutoPtr<T>&& aRhs)
-  {
+  nsAutoPtr<T>& operator=(nsAutoPtr<T>&& aRhs) {
     assign(aRhs.forget());
     return *this;
   }
 
   template <typename I>
-  nsAutoPtr<T>& operator=(nsAutoPtr<I>&& aRhs)
-  {
+  nsAutoPtr<T>& operator=(nsAutoPtr<I>&& aRhs) {
     assign(aRhs.forget());
     return *this;
   }
 
   // Other pointer operators
 
-  T*
-  get() const
+  T* get() const
   /*
     Prefer the implicit conversion provided automatically by
     |operator T*() const|.  Use |get()| _only_ to resolve
@@ -185,77 +161,62 @@ public:
     return get();
   }
 
-  T*
-  forget()
-  {
+  T* forget() {
     T* temp = mRawPtr;
     mRawPtr = 0;
     return temp;
   }
 
-  T*
-  operator->() const
-  {
+  T* operator->() const {
     MOZ_ASSERT(mRawPtr != 0,
                "You can't dereference a NULL nsAutoPtr with operator->().");
     return get();
   }
 
   template <typename R, typename... Args>
-  class Proxy
-  {
+  class Proxy {
     typedef R (T::*member_function)(Args...);
     T* mRawPtr;
     member_function mFunction;
-  public:
+
+   public:
     Proxy(T* aRawPtr, member_function aFunction)
-      : mRawPtr(aRawPtr),
-        mFunction(aFunction)
-    {
-    }
-    template<typename... ActualArgs>
-    R operator()(ActualArgs&&... aArgs)
-    {
+        : mRawPtr(aRawPtr), mFunction(aFunction) {}
+    template <typename... ActualArgs>
+    R operator()(ActualArgs&&... aArgs) {
       return ((*mRawPtr).*mFunction)(std::forward<ActualArgs>(aArgs)...);
     }
   };
 
   template <typename R, typename C, typename... Args>
-  Proxy<R, Args...> operator->*(R (C::*aFptr)(Args...)) const
-  {
+  Proxy<R, Args...> operator->*(R (C::*aFptr)(Args...)) const {
     MOZ_ASSERT(mRawPtr != 0,
                "You can't dereference a NULL nsAutoPtr with operator->*().");
     return Proxy<R, Args...>(get(), aFptr);
   }
 
-  nsAutoPtr<T>*
-  get_address()
+  nsAutoPtr<T>* get_address()
   // This is not intended to be used by clients.  See |address_of|
   // below.
   {
     return this;
   }
 
-  const nsAutoPtr<T>*
-  get_address() const
+  const nsAutoPtr<T>* get_address() const
   // This is not intended to be used by clients.  See |address_of|
   // below.
   {
     return this;
   }
 
-public:
-  T&
-  operator*() const
-  {
+ public:
+  T& operator*() const {
     MOZ_ASSERT(mRawPtr != 0,
                "You can't dereference a NULL nsAutoPtr with operator*().");
     return *get();
   }
 
-  T**
-  StartAssignment()
-  {
+  T** StartAssignment() {
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
     return reinterpret_cast<T**>(begin_assignment());
 #else
@@ -266,16 +227,12 @@ public:
 };
 
 template <class T>
-inline nsAutoPtr<T>*
-address_of(nsAutoPtr<T>& aPtr)
-{
+inline nsAutoPtr<T>* address_of(nsAutoPtr<T>& aPtr) {
   return aPtr.get_address();
 }
 
 template <class T>
-inline const nsAutoPtr<T>*
-address_of(const nsAutoPtr<T>& aPtr)
-{
+inline const nsAutoPtr<T>* address_of(const nsAutoPtr<T>& aPtr) {
   return aPtr.get_address();
 }
 
@@ -299,37 +256,26 @@ class nsAutoPtrGetterTransfers
   This type should be a nested class inside |nsAutoPtr<T>|.
 */
 {
-public:
-  explicit
-  nsAutoPtrGetterTransfers(nsAutoPtr<T>& aSmartPtr)
-    : mTargetSmartPtr(aSmartPtr)
-  {
+ public:
+  explicit nsAutoPtrGetterTransfers(nsAutoPtr<T>& aSmartPtr)
+      : mTargetSmartPtr(aSmartPtr) {
     // nothing else to do
   }
 
-  operator void**()
-  {
+  operator void**() {
     return reinterpret_cast<void**>(mTargetSmartPtr.StartAssignment());
   }
 
-  operator T**()
-  {
-    return mTargetSmartPtr.StartAssignment();
-  }
+  operator T**() { return mTargetSmartPtr.StartAssignment(); }
 
-  T*&
-  operator*()
-  {
-    return *(mTargetSmartPtr.StartAssignment());
-  }
+  T*& operator*() { return *(mTargetSmartPtr.StartAssignment()); }
 
-private:
+ private:
   nsAutoPtr<T>& mTargetSmartPtr;
 };
 
 template <class T>
-inline nsAutoPtrGetterTransfers<T>
-getter_Transfers(nsAutoPtr<T>& aSmartPtr)
+inline nsAutoPtrGetterTransfers<T> getter_Transfers(nsAutoPtr<T>& aSmartPtr)
 /*
   Used around a |nsAutoPtr| when
   ...makes the class |nsAutoPtrGetterTransfers<T>| invisible.
@@ -338,117 +284,82 @@ getter_Transfers(nsAutoPtr<T>& aSmartPtr)
   return nsAutoPtrGetterTransfers<T>(aSmartPtr);
 }
 
-
-
 // Comparing two |nsAutoPtr|s
 
 template <class T, class U>
-inline bool
-operator==(const nsAutoPtr<T>& aLhs, const nsAutoPtr<U>& aRhs)
-{
+inline bool operator==(const nsAutoPtr<T>& aLhs, const nsAutoPtr<U>& aRhs) {
   return static_cast<const T*>(aLhs.get()) == static_cast<const U*>(aRhs.get());
 }
 
-
 template <class T, class U>
-inline bool
-operator!=(const nsAutoPtr<T>& aLhs, const nsAutoPtr<U>& aRhs)
-{
+inline bool operator!=(const nsAutoPtr<T>& aLhs, const nsAutoPtr<U>& aRhs) {
   return static_cast<const T*>(aLhs.get()) != static_cast<const U*>(aRhs.get());
 }
-
 
 // Comparing an |nsAutoPtr| to a raw pointer
 
 template <class T, class U>
-inline bool
-operator==(const nsAutoPtr<T>& aLhs, const U* aRhs)
-{
+inline bool operator==(const nsAutoPtr<T>& aLhs, const U* aRhs) {
   return static_cast<const T*>(aLhs.get()) == static_cast<const U*>(aRhs);
 }
 
 template <class T, class U>
-inline bool
-operator==(const U* aLhs, const nsAutoPtr<T>& aRhs)
-{
+inline bool operator==(const U* aLhs, const nsAutoPtr<T>& aRhs) {
   return static_cast<const U*>(aLhs) == static_cast<const T*>(aRhs.get());
 }
 
 template <class T, class U>
-inline bool
-operator!=(const nsAutoPtr<T>& aLhs, const U* aRhs)
-{
+inline bool operator!=(const nsAutoPtr<T>& aLhs, const U* aRhs) {
   return static_cast<const T*>(aLhs.get()) != static_cast<const U*>(aRhs);
 }
 
 template <class T, class U>
-inline bool
-operator!=(const U* aLhs, const nsAutoPtr<T>& aRhs)
-{
+inline bool operator!=(const U* aLhs, const nsAutoPtr<T>& aRhs) {
   return static_cast<const U*>(aLhs) != static_cast<const T*>(aRhs.get());
 }
 
 template <class T, class U>
-inline bool
-operator==(const nsAutoPtr<T>& aLhs, U* aRhs)
-{
+inline bool operator==(const nsAutoPtr<T>& aLhs, U* aRhs) {
   return static_cast<const T*>(aLhs.get()) == const_cast<const U*>(aRhs);
 }
 
 template <class T, class U>
-inline bool
-operator==(U* aLhs, const nsAutoPtr<T>& aRhs)
-{
+inline bool operator==(U* aLhs, const nsAutoPtr<T>& aRhs) {
   return const_cast<const U*>(aLhs) == static_cast<const T*>(aRhs.get());
 }
 
 template <class T, class U>
-inline bool
-operator!=(const nsAutoPtr<T>& aLhs, U* aRhs)
-{
+inline bool operator!=(const nsAutoPtr<T>& aLhs, U* aRhs) {
   return static_cast<const T*>(aLhs.get()) != const_cast<const U*>(aRhs);
 }
 
 template <class T, class U>
-inline bool
-operator!=(U* aLhs, const nsAutoPtr<T>& aRhs)
-{
+inline bool operator!=(U* aLhs, const nsAutoPtr<T>& aRhs) {
   return const_cast<const U*>(aLhs) != static_cast<const T*>(aRhs.get());
 }
-
-
 
 // Comparing an |nsAutoPtr| to |nullptr|
 
 template <class T>
-inline bool
-operator==(const nsAutoPtr<T>& aLhs, decltype(nullptr))
-{
+inline bool operator==(const nsAutoPtr<T>& aLhs, decltype(nullptr)) {
   return aLhs.get() == nullptr;
 }
 
 template <class T>
-inline bool
-operator==(decltype(nullptr), const nsAutoPtr<T>& aRhs)
-{
+inline bool operator==(decltype(nullptr), const nsAutoPtr<T>& aRhs) {
   return nullptr == aRhs.get();
 }
 
 template <class T>
-inline bool
-operator!=(const nsAutoPtr<T>& aLhs, decltype(nullptr))
-{
+inline bool operator!=(const nsAutoPtr<T>& aLhs, decltype(nullptr)) {
   return aLhs.get() != nullptr;
 }
 
 template <class T>
-inline bool
-operator!=(decltype(nullptr), const nsAutoPtr<T>& aRhs)
-{
+inline bool operator!=(decltype(nullptr), const nsAutoPtr<T>& aRhs) {
   return nullptr != aRhs.get();
 }
 
-
 /*****************************************************************************/
 
-#endif // !defined(nsAutoPtr_h)
+#endif  // !defined(nsAutoPtr_h)

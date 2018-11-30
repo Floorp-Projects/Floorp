@@ -5,30 +5,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageLayers.h"
-#include "ImageContainer.h"             // for ImageContainer
-#include "gfxRect.h"                    // for gfxRect
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsISupportsImpl.h"            // for ImageContainer::Release, etc
+#include "ImageContainer.h"   // for ImageContainer
+#include "gfxRect.h"          // for gfxRect
+#include "nsDebug.h"          // for NS_ASSERTION
+#include "nsISupportsImpl.h"  // for ImageContainer::Release, etc
 #include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace layers {
 
 ImageLayer::ImageLayer(LayerManager* aManager, void* aImplData)
-: Layer(aManager, aImplData), mSamplingFilter(gfx::SamplingFilter::GOOD)
-, mScaleMode(ScaleMode::SCALE_NONE)
-{}
+    : Layer(aManager, aImplData),
+      mSamplingFilter(gfx::SamplingFilter::GOOD),
+      mScaleMode(ScaleMode::SCALE_NONE) {}
 
-ImageLayer::~ImageLayer()
-{}
+ImageLayer::~ImageLayer() {}
 
-void ImageLayer::SetContainer(ImageContainer* aContainer) 
-{
+void ImageLayer::SetContainer(ImageContainer* aContainer) {
   mContainer = aContainer;
 }
 
-void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
-{
+void ImageLayer::ComputeEffectiveTransforms(
+    const gfx::Matrix4x4& aTransformToSurface) {
   gfx::Matrix4x4 local = GetLocalTransform();
 
   // Snap image edges to pixel boundaries
@@ -40,9 +38,8 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSu
   // This makes our snapping equivalent to what would happen if our content
   // was drawn into a PaintedLayer (gfxContext would snap using the local
   // transform, then we'd snap again when compositing the PaintedLayer).
-  mEffectiveTransform =
-      SnapTransform(local, sourceRect, nullptr) *
-      SnapTransformTranslation(aTransformToSurface, nullptr);
+  mEffectiveTransform = SnapTransform(local, sourceRect, nullptr) *
+                        SnapTransformTranslation(aTransformToSurface, nullptr);
 
   if (mScaleMode != ScaleMode::SCALE_NONE && !sourceRect.IsZeroArea()) {
     NS_ASSERTION(mScaleMode == ScaleMode::STRETCH,
@@ -60,5 +57,5 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSu
   ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

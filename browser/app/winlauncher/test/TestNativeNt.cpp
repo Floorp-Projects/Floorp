@@ -22,25 +22,23 @@ const wchar_t kHex13[] = L"Foo.ABCDEF0123456.dll";
 const wchar_t kHex11[] = L"Foo.ABCDEF01234.dll";
 const wchar_t kPrefixedHex16[] = L"Pabcdef0123456789.dll";
 
-const char kFailFmt[] = "TEST-FAILED | NativeNt | %s(%s) should have returned %s but did not\n";
+const char kFailFmt[] =
+    "TEST-FAILED | NativeNt | %s(%s) should have returned %s but did not\n";
 
-#define RUN_TEST(fn, varName, expected) \
-  if (fn(varName) == !expected) { \
+#define RUN_TEST(fn, varName, expected)         \
+  if (fn(varName) == !expected) {               \
     printf(kFailFmt, #fn, #varName, #expected); \
-    return 1; \
+    return 1;                                   \
   }
 
-#define EXPECT_FAIL(fn, varName) \
-  RUN_TEST(fn, varName, false) \
+#define EXPECT_FAIL(fn, varName) RUN_TEST(fn, varName, false)
 
-#define EXPECT_SUCCESS(fn, varName) \
-  RUN_TEST(fn, varName, true)
+#define EXPECT_SUCCESS(fn, varName) RUN_TEST(fn, varName, true)
 
 using namespace mozilla;
 using namespace mozilla::nt;
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   UNICODE_STRING normal;
   ::RtlInitUnicodeString(&normal, kNormal);
 
@@ -98,50 +96,60 @@ int main(int argc, char* argv[])
   const wchar_t kKernel32[] = L"kernel32.dll";
   DWORD verInfoSize = ::GetFileVersionInfoSizeW(kKernel32, nullptr);
   if (!verInfoSize) {
-    printf("TEST-FAILED | NativeNt | Call to GetFileVersionInfoSizeW failed with code %lu\n",
-           ::GetLastError());
+    printf(
+        "TEST-FAILED | NativeNt | Call to GetFileVersionInfoSizeW failed with "
+        "code %lu\n",
+        ::GetLastError());
     return 1;
   }
 
   auto verInfoBuf = MakeUnique<char[]>(verInfoSize);
 
   if (!::GetFileVersionInfoW(kKernel32, 0, verInfoSize, verInfoBuf.get())) {
-    printf("TEST-FAILED | NativeNt | Call to GetFileVersionInfoW failed with code %lu\n",
-           ::GetLastError());
+    printf(
+        "TEST-FAILED | NativeNt | Call to GetFileVersionInfoW failed with code "
+        "%lu\n",
+        ::GetLastError());
     return 1;
   }
 
   UINT len;
   VS_FIXEDFILEINFO* fixedFileInfo = nullptr;
-  if (!::VerQueryValueW(verInfoBuf.get(), L"\\", (LPVOID*)&fixedFileInfo, &len)) {
-    printf("TEST-FAILED | NativeNt | Call to VerQueryValueW failed with code %lu\n",
-           ::GetLastError());
+  if (!::VerQueryValueW(verInfoBuf.get(), L"\\", (LPVOID*)&fixedFileInfo,
+                        &len)) {
+    printf(
+        "TEST-FAILED | NativeNt | Call to VerQueryValueW failed with code "
+        "%lu\n",
+        ::GetLastError());
     return 1;
   }
 
   const uint64_t expectedVersion =
-    (static_cast<uint64_t>(fixedFileInfo->dwFileVersionMS) << 32) |
-    static_cast<uint64_t>(fixedFileInfo->dwFileVersionLS);
+      (static_cast<uint64_t>(fixedFileInfo->dwFileVersionMS) << 32) |
+      static_cast<uint64_t>(fixedFileInfo->dwFileVersionLS);
 
   PEHeaders k32headers(::GetModuleHandleW(kKernel32));
   if (!k32headers) {
-    printf("TEST-FAILED | NativeNt | Failed parsing kernel32.dll's PE headers\n");
+    printf(
+        "TEST-FAILED | NativeNt | Failed parsing kernel32.dll's PE headers\n");
     return 1;
   }
 
   uint64_t version;
   if (!k32headers.GetVersionInfo(version)) {
-    printf("TEST-FAILED | NativeNt | Unable to obtain version information from kernel32.dll\n");
+    printf(
+        "TEST-FAILED | NativeNt | Unable to obtain version information from "
+        "kernel32.dll\n");
     return 1;
   }
 
   if (version != expectedVersion) {
-    printf("TEST-FAILED | NativeNt | kernel32.dll's detected version "
-           "(0x%016llX) does not match expected version (0x%016llX)\n",
-           version, expectedVersion);
+    printf(
+        "TEST-FAILED | NativeNt | kernel32.dll's detected version "
+        "(0x%016llX) does not match expected version (0x%016llX)\n",
+        version, expectedVersion);
     return 1;
   }
 
   return 0;
 }
-

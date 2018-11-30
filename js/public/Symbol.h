@@ -8,12 +8,12 @@
 #ifndef js_Symbol_h
 #define js_Symbol_h
 
-#include <stddef.h> // size_t
-#include <stdint.h> // uintptr_t, uint32_t
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uintptr_t, uint32_t
 
-#include "jstypes.h" // JS_PUBLIC_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/RootingAPI.h" // JS::Handle
+#include "js/RootingAPI.h"  // JS::Handle
 
 struct JSContext;
 class JSString;
@@ -29,18 +29,17 @@ class Symbol;
  * If description is null, the new Symbol's [[Description]] attribute is
  * undefined.
  */
-extern JS_PUBLIC_API Symbol*
-NewSymbol(JSContext* cx, Handle<JSString*> description);
+extern JS_PUBLIC_API Symbol* NewSymbol(JSContext* cx,
+                                       Handle<JSString*> description);
 
 /**
  * Symbol.for as specified in ES6.
  *
- * Get a Symbol with the description 'key' from the Runtime-wide symbol registry.
- * If there is not already a Symbol with that description in the registry, a new
- * Symbol is created and registered. 'key' must not be null.
+ * Get a Symbol with the description 'key' from the Runtime-wide symbol
+ * registry. If there is not already a Symbol with that description in the
+ * registry, a new Symbol is created and registered. 'key' must not be null.
  */
-extern JS_PUBLIC_API Symbol*
-GetSymbolFor(JSContext* cx, Handle<JSString*> key);
+extern JS_PUBLIC_API Symbol* GetSymbolFor(JSContext* cx, Handle<JSString*> key);
 
 /**
  * Get the [[Description]] attribute of the given symbol.
@@ -48,34 +47,36 @@ GetSymbolFor(JSContext* cx, Handle<JSString*> key);
  * This function is infallible. If it returns null, that means the symbol's
  * [[Description]] is undefined.
  */
-extern JS_PUBLIC_API JSString*
-GetSymbolDescription(Handle<Symbol*> symbol);
+extern JS_PUBLIC_API JSString* GetSymbolDescription(Handle<Symbol*> symbol);
 
 /* Well-known symbols. */
 #define JS_FOR_EACH_WELL_KNOWN_SYMBOL(MACRO) \
-    MACRO(isConcatSpreadable) \
-    MACRO(iterator) \
-    MACRO(match) \
-    MACRO(replace) \
-    MACRO(search) \
-    MACRO(species) \
-    MACRO(hasInstance) \
-    MACRO(split) \
-    MACRO(toPrimitive) \
-    MACRO(toStringTag) \
-    MACRO(unscopables) \
-    MACRO(asyncIterator)
+  MACRO(isConcatSpreadable)                  \
+  MACRO(iterator)                            \
+  MACRO(match)                               \
+  MACRO(replace)                             \
+  MACRO(search)                              \
+  MACRO(species)                             \
+  MACRO(hasInstance)                         \
+  MACRO(split)                               \
+  MACRO(toPrimitive)                         \
+  MACRO(toStringTag)                         \
+  MACRO(unscopables)                         \
+  MACRO(asyncIterator)
 
-enum class SymbolCode : uint32_t
-{
-    // There is one SymbolCode for each well-known symbol.
+enum class SymbolCode : uint32_t {
+// There is one SymbolCode for each well-known symbol.
 #define JS_DEFINE_SYMBOL_ENUM(name) name,
-    JS_FOR_EACH_WELL_KNOWN_SYMBOL(JS_DEFINE_SYMBOL_ENUM)  // SymbolCode::iterator, etc.
+  JS_FOR_EACH_WELL_KNOWN_SYMBOL(
+      JS_DEFINE_SYMBOL_ENUM)  // SymbolCode::iterator, etc.
 #undef JS_DEFINE_SYMBOL_ENUM
-    Limit,
-    WellKnownAPILimit = 0x80000000, // matches JS::shadow::Symbol::WellKnownAPILimit for inline use
-    InSymbolRegistry = 0xfffffffe,  // created by Symbol.for() or JS::GetSymbolFor()
-    UniqueSymbol = 0xffffffff       // created by Symbol() or JS::NewSymbol()
+  Limit,
+  WellKnownAPILimit =
+      0x80000000,  // matches JS::shadow::Symbol::WellKnownAPILimit for inline
+                   // use
+  InSymbolRegistry =
+      0xfffffffe,            // created by Symbol.for() or JS::GetSymbolFor()
+  UniqueSymbol = 0xffffffff  // created by Symbol() or JS::NewSymbol()
 };
 
 /* For use in loops that iterate over the well-known symbols. */
@@ -86,8 +87,7 @@ const size_t WellKnownSymbolLimit = size_t(SymbolCode::Limit);
  *
  * A symbol's SymbolCode never changes once it is created.
  */
-extern JS_PUBLIC_API SymbolCode
-GetSymbolCode(Handle<Symbol*> symbol);
+extern JS_PUBLIC_API SymbolCode GetSymbolCode(Handle<Symbol*> symbol);
 
 /**
  * Get one of the well-known symbols defined by ES6. A single set of well-known
@@ -95,20 +95,18 @@ GetSymbolCode(Handle<Symbol*> symbol);
  *
  * `which` must be in the range [0, WellKnownSymbolLimit).
  */
-extern JS_PUBLIC_API Symbol*
-GetWellKnownSymbol(JSContext* cx, SymbolCode which);
+extern JS_PUBLIC_API Symbol* GetWellKnownSymbol(JSContext* cx,
+                                                SymbolCode which);
 
 /**
  * Return true if the given JSPropertySpec::name or JSFunctionSpec::name value
  * is actually a symbol code and not a string. See JS_SYM_FN.
  */
-inline bool
-PropertySpecNameIsSymbol(const char* name)
-{
-    uintptr_t u = reinterpret_cast<uintptr_t>(name);
-    return u != 0 && u - 1 < WellKnownSymbolLimit;
+inline bool PropertySpecNameIsSymbol(const char* name) {
+  uintptr_t u = reinterpret_cast<uintptr_t>(name);
+  return u != 0 && u - 1 < WellKnownSymbolLimit;
 }
 
-} // namespace JS
+}  // namespace JS
 
 #endif /* js_Symbol_h */

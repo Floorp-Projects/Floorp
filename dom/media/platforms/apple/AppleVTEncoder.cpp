@@ -52,9 +52,8 @@ static void FrameCallback(void* aEncoder, void* aFrameParams, OSStatus aStatus,
   static_cast<AppleVTEncoder*>(aEncoder)->OutputFrame(aSampleBuffer);
 }
 
-static bool SetProfileLevel(
-    VTCompressionSessionRef& aSession,
-    AppleVTEncoder::H264Specific::ProfileLevel aValue) {
+static bool SetProfileLevel(VTCompressionSessionRef& aSession,
+                            AppleVTEncoder::H264Specific::ProfileLevel aValue) {
   CFStringRef profileLevel = nullptr;
   switch (aValue) {
     case AppleVTEncoder::H264Specific::ProfileLevel::BaselineAutoLevel:
@@ -123,8 +122,7 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
                                        __func__);
 }
 
-static Maybe<OSType> MapPixelFormat(
-    MediaDataEncoder::PixelFormat aFormat) {
+static Maybe<OSType> MapPixelFormat(MediaDataEncoder::PixelFormat aFormat) {
   switch (aFormat) {
     case MediaDataEncoder::PixelFormat::RGBA32:
     case MediaDataEncoder::PixelFormat::BGRA32:
@@ -197,8 +195,8 @@ static size_t GetNumParamSets(CMFormatDescriptionRef aDescription) {
 
 static const uint8_t kNALUStart[4] = {0, 0, 0, 1};
 
-static size_t GetParamSet(CMFormatDescriptionRef aDescription,
-                                 size_t aIndex, const uint8_t** aDataPtr) {
+static size_t GetParamSet(CMFormatDescriptionRef aDescription, size_t aIndex,
+                          const uint8_t** aDataPtr) {
   size_t length = 0;
   int headerSize = 0;
   if (CMVideoFormatDescriptionGetH264ParameterSetAtIndex(
@@ -423,8 +421,7 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessEncode(
   return EncodePromise::CreateAndResolve(std::move(mEncodedData), __func__);
 }
 
-static size_t NumberOfPlanes(
-    MediaDataEncoder::PixelFormat aPixelFormat) {
+static size_t NumberOfPlanes(MediaDataEncoder::PixelFormat aPixelFormat) {
   switch (aPixelFormat) {
     case MediaDataEncoder::PixelFormat::RGBA32:
     case MediaDataEncoder::PixelFormat::BGRA32:

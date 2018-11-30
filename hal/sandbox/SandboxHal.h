@@ -17,7 +17,7 @@ PHalChild* CreateHalChild();
 
 PHalParent* CreateHalParent();
 
-} // namespace hal_sandbox
-} // namespace mozilla
+}  // namespace hal_sandbox
+}  // namespace mozilla
 
 #endif  // mozilla_SandboxHal_h

@@ -13,13 +13,9 @@
 //// variantToSQLiteT Implementation
 
 template <typename T>
-int
-variantToSQLiteT(T aObj,
-                 nsIVariant *aValue)
-{
+int variantToSQLiteT(T aObj, nsIVariant *aValue) {
   // Allow to return nullptr not wrapped to nsIVariant for speed.
-  if (!aValue)
-    return sqlite3_T_null(aObj);
+  if (!aValue) return sqlite3_T_null(aObj);
 
   uint16_t valueType = aValue->GetDataType();
   switch (valueType) {
@@ -27,33 +23,29 @@ variantToSQLiteT(T aObj,
     case nsIDataType::VTYPE_INT16:
     case nsIDataType::VTYPE_INT32:
     case nsIDataType::VTYPE_UINT8:
-    case nsIDataType::VTYPE_UINT16:
-    {
+    case nsIDataType::VTYPE_UINT16: {
       int32_t value;
       nsresult rv = aValue->GetAsInt32(&value);
       NS_ENSURE_SUCCESS(rv, SQLITE_MISMATCH);
       return sqlite3_T_int(aObj, value);
     }
-    case nsIDataType::VTYPE_UINT32: // Try to preserve full range
+    case nsIDataType::VTYPE_UINT32:  // Try to preserve full range
     case nsIDataType::VTYPE_INT64:
     // Data loss possible, but there is no unsigned types in SQLite
-    case nsIDataType::VTYPE_UINT64:
-    {
+    case nsIDataType::VTYPE_UINT64: {
       int64_t value;
       nsresult rv = aValue->GetAsInt64(&value);
       NS_ENSURE_SUCCESS(rv, SQLITE_MISMATCH);
       return sqlite3_T_int64(aObj, value);
     }
     case nsIDataType::VTYPE_FLOAT:
-    case nsIDataType::VTYPE_DOUBLE:
-    {
+    case nsIDataType::VTYPE_DOUBLE: {
       double value;
       nsresult rv = aValue->GetAsDouble(&value);
       NS_ENSURE_SUCCESS(rv, SQLITE_MISMATCH);
       return sqlite3_T_double(aObj, value);
     }
-    case nsIDataType::VTYPE_BOOL:
-    {
+    case nsIDataType::VTYPE_BOOL: {
       bool value;
       nsresult rv = aValue->GetAsBool(&value);
       NS_ENSURE_SUCCESS(rv, SQLITE_MISMATCH);
@@ -63,8 +55,7 @@ variantToSQLiteT(T aObj,
     case nsIDataType::VTYPE_CHAR_STR:
     case nsIDataType::VTYPE_STRING_SIZE_IS:
     case nsIDataType::VTYPE_UTF8STRING:
-    case nsIDataType::VTYPE_CSTRING:
-    {
+    case nsIDataType::VTYPE_CSTRING: {
       nsAutoCString value;
       // GetAsAUTF8String should never perform conversion when coming from
       // 8-bit string types, and thus can accept strings with arbitrary encoding
@@ -76,8 +67,7 @@ variantToSQLiteT(T aObj,
     case nsIDataType::VTYPE_WCHAR:
     case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-    case nsIDataType::VTYPE_ASTRING:
-    {
+    case nsIDataType::VTYPE_ASTRING: {
       nsAutoString value;
       // GetAsAString does proper conversion to UCS2 from all string-like types.
       // It can be used universally without problems (unless someone implements
@@ -90,8 +80,7 @@ variantToSQLiteT(T aObj,
     case nsIDataType::VTYPE_EMPTY:
     case nsIDataType::VTYPE_EMPTY_ARRAY:
       return sqlite3_T_null(aObj);
-    case nsIDataType::VTYPE_ARRAY:
-    {
+    case nsIDataType::VTYPE_ARRAY: {
       uint16_t arrayType;
       nsIID iid;
       uint32_t count;

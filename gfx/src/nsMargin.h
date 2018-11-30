@@ -19,7 +19,7 @@ struct nsMargin : public mozilla::gfx::BaseMargin<nscoord, nsMargin> {
   nsMargin() : Super() {}
   nsMargin(const nsMargin& aMargin) : Super(aMargin) {}
   nsMargin(nscoord aTop, nscoord aRight, nscoord aBottom, nscoord aLeft)
-    : Super(aTop, aRight, aBottom, aLeft) {}
+      : Super(aTop, aRight, aBottom, aLeft) {}
 };
 
 typedef mozilla::gfx::IntMargin nsIntMargin;

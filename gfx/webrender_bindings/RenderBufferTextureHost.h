@@ -12,38 +12,29 @@
 namespace mozilla {
 namespace wr {
 
-class RenderBufferTextureHost final : public RenderTextureHost
-{
-public:
+class RenderBufferTextureHost final : public RenderTextureHost {
+ public:
   RenderBufferTextureHost(uint8_t* aBuffer,
                           const layers::BufferDescriptor& aDescriptor);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex,
-                           gl::GLContext* aGL,
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
 
-  class RenderBufferData
-  {
-  public:
+  class RenderBufferData {
+   public:
     RenderBufferData(uint8_t* aData, size_t aBufferSize)
-      : mData(aData)
-      , mBufferSize(aBufferSize)
-    {
-    }
+        : mData(aData), mBufferSize(aBufferSize) {}
     const uint8_t* mData;
     size_t mBufferSize;
   };
 
   RenderBufferData GetBufferDataForRender(uint8_t aChannelIndex);
 
-private:
+ private:
   virtual ~RenderBufferTextureHost();
 
-  uint8_t* GetBuffer() const
-  {
-    return mBuffer;
-  }
+  uint8_t* GetBuffer() const { return mBuffer; }
 
   uint8_t* mBuffer;
   layers::BufferDescriptor mDescriptor;
@@ -63,7 +54,7 @@ private:
   bool mLocked;
 };
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_RENDERBUFFERTEXTUREHOST_H
+#endif  // MOZILLA_GFX_RENDERBUFFERTEXTUREHOST_H

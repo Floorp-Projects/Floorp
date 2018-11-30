@@ -13,10 +13,10 @@ namespace mozilla {
 
 namespace wr {
 
-class RenderCompositorOGL : public RenderCompositor
-{
-public:
-  static UniquePtr<RenderCompositor> Create(RefPtr<widget::CompositorWidget>&& aWidget);
+class RenderCompositorOGL : public RenderCompositor {
+ public:
+  static UniquePtr<RenderCompositor> Create(
+      RefPtr<widget::CompositorWidget>&& aWidget);
 
   RenderCompositorOGL(RefPtr<gl::GLContext>&& aGL,
                       RefPtr<widget::CompositorWidget>&& aWidget);
@@ -34,11 +34,11 @@ public:
 
   LayoutDeviceIntSize GetBufferSize() override;
 
-protected:
+ protected:
   RefPtr<gl::GLContext> mGL;
 };
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla
 
 #endif

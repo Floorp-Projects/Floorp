@@ -22,25 +22,16 @@ NS_IMPL_RELEASE_INHERITED(PartitionedLocalStorage, Storage)
 
 PartitionedLocalStorage::PartitionedLocalStorage(nsPIDOMWindowInner* aWindow,
                                                  nsIPrincipal* aPrincipal)
-  : Storage(aWindow, aPrincipal)
-  , mCache(new SessionStorageCache())
-{
-}
+    : Storage(aWindow, aPrincipal), mCache(new SessionStorageCache()) {}
 
-PartitionedLocalStorage::~PartitionedLocalStorage()
-{
-}
+PartitionedLocalStorage::~PartitionedLocalStorage() {}
 
-int64_t
-PartitionedLocalStorage::GetOriginQuotaUsage() const
-{
+int64_t PartitionedLocalStorage::GetOriginQuotaUsage() const {
   return mCache->GetOriginQuotaUsage(SessionStorageCache::eSessionSetType);
 }
 
-uint32_t
-PartitionedLocalStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
-                                   ErrorResult& aRv)
-{
+uint32_t PartitionedLocalStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
+                                            ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return 0;
@@ -49,11 +40,9 @@ PartitionedLocalStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
   return mCache->Length(SessionStorageCache::eSessionSetType);
 }
 
-void
-PartitionedLocalStorage::Key(uint32_t aIndex, nsAString& aResult,
-                             nsIPrincipal& aSubjectPrincipal,
-                             ErrorResult& aRv)
-{
+void PartitionedLocalStorage::Key(uint32_t aIndex, nsAString& aResult,
+                                  nsIPrincipal& aSubjectPrincipal,
+                                  ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -62,11 +51,9 @@ PartitionedLocalStorage::Key(uint32_t aIndex, nsAString& aResult,
   mCache->Key(SessionStorageCache::eSessionSetType, aIndex, aResult);
 }
 
-void
-PartitionedLocalStorage::GetItem(const nsAString& aKey, nsAString& aResult,
-                                 nsIPrincipal& aSubjectPrincipal,
-                                 ErrorResult& aRv)
-{
+void PartitionedLocalStorage::GetItem(const nsAString& aKey, nsAString& aResult,
+                                      nsIPrincipal& aSubjectPrincipal,
+                                      ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -75,9 +62,7 @@ PartitionedLocalStorage::GetItem(const nsAString& aKey, nsAString& aResult,
   mCache->GetItem(SessionStorageCache::eSessionSetType, aKey, aResult);
 }
 
-void
-PartitionedLocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys)
-{
+void PartitionedLocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys) {
   if (!CanUseStorage(*nsContentUtils::SubjectPrincipal())) {
     // return just an empty array
     aKeys.Clear();
@@ -87,11 +72,10 @@ PartitionedLocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys)
   mCache->GetKeys(SessionStorageCache::eSessionSetType, aKeys);
 }
 
-void
-PartitionedLocalStorage::SetItem(const nsAString& aKey, const nsAString& aValue,
-                                 nsIPrincipal& aSubjectPrincipal,
-                                 ErrorResult& aRv)
-{
+void PartitionedLocalStorage::SetItem(const nsAString& aKey,
+                                      const nsAString& aValue,
+                                      nsIPrincipal& aSubjectPrincipal,
+                                      ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -110,19 +94,17 @@ PartitionedLocalStorage::SetItem(const nsAString& aKey, const nsAString& aValue,
   }
 }
 
-void
-PartitionedLocalStorage::RemoveItem(const nsAString& aKey,
-                                    nsIPrincipal& aSubjectPrincipal,
-                                    ErrorResult& aRv)
-{
+void PartitionedLocalStorage::RemoveItem(const nsAString& aKey,
+                                         nsIPrincipal& aSubjectPrincipal,
+                                         ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
 
   nsString oldValue;
-  nsresult rv = mCache->RemoveItem(SessionStorageCache::eSessionSetType, aKey,
-                                   oldValue);
+  nsresult rv =
+      mCache->RemoveItem(SessionStorageCache::eSessionSetType, aKey, oldValue);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
@@ -130,10 +112,8 @@ PartitionedLocalStorage::RemoveItem(const nsAString& aKey,
   }
 }
 
-void
-PartitionedLocalStorage::Clear(nsIPrincipal& aSubjectPrincipal,
-                               ErrorResult& aRv)
-{
+void PartitionedLocalStorage::Clear(nsIPrincipal& aSubjectPrincipal,
+                                    ErrorResult& aRv) {
   uint32_t length = GetLength(aSubjectPrincipal, aRv);
   if (!length) {
     return;
@@ -142,9 +122,7 @@ PartitionedLocalStorage::Clear(nsIPrincipal& aSubjectPrincipal,
   mCache->Clear(SessionStorageCache::eSessionSetType);
 }
 
-bool
-PartitionedLocalStorage::IsForkOf(const Storage* aOther) const
-{
+bool PartitionedLocalStorage::IsForkOf(const Storage* aOther) const {
   MOZ_ASSERT(aOther);
   if (aOther->Type() != eLocalStorage) {
     return false;
@@ -153,5 +131,5 @@ PartitionedLocalStorage::IsForkOf(const Storage* aOther) const
   return mCache == static_cast<const PartitionedLocalStorage*>(aOther)->mCache;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

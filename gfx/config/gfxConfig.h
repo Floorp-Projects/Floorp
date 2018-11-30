@@ -21,14 +21,14 @@ class FeatureChange;
 // is:
 //   - A default value, set by all.js, gfxPrefs, or gfxPlatform.
 //   - A user value, set by an external value or user pref.
-//   - An environment value, determined by system/hardware factors or nsIGfxInfo.
+//   - An environment value, determined by system/hardware factors or
+//   nsIGfxInfo.
 //   - A runtime value, determined by any failures encountered after enabling
 //     the feature.
 //
 // Each state change for a feature is recorded in this class.
-class gfxConfig
-{
-public:
+class gfxConfig {
+ public:
   // Return the full state history of a feature.
   static FeatureState& GetFeature(Feature aFeature);
 
@@ -66,12 +66,10 @@ public:
   static void Reset(Feature aFeature);
 
   // Initialize the base value of a parameter. The return value is aEnable.
-  static bool SetDefault(Feature aFeature,
-                         bool aEnable,
+  static bool SetDefault(Feature aFeature, bool aEnable,
                          FeatureStatus aDisableStatus,
                          const char* aDisableMessage);
-  static void DisableByDefault(Feature aFeature,
-                               FeatureStatus aDisableStatus,
+  static void DisableByDefault(Feature aFeature, FeatureStatus aDisableStatus,
                                const char* aDisableMessage,
                                const nsACString& aFailureId = EmptyCString());
   static void EnableByDefault(Feature aFeature);
@@ -84,44 +82,36 @@ public:
   // or hardware problems that can be determined up-front. The only
   // status that can override this decision is the user force-enabling
   // the feature.
-  static void Disable(Feature aFeature,
-                      FeatureStatus aStatus,
+  static void Disable(Feature aFeature, FeatureStatus aStatus,
                       const char* aMessage,
                       const nsACString& aFailureId = EmptyCString());
 
   // Given a preference name, infer the default value and whether or not the
   // user has changed it. |aIsEnablePref| specifies whether or not the pref
   // is intended to enable a feature (true), or disable it (false).
-  static void SetDefaultFromPref(Feature aFeature,
-                                 const char* aPrefName,
-                                 bool aIsEnablePref,
-                                 bool aDefaultValue);
+  static void SetDefaultFromPref(Feature aFeature, const char* aPrefName,
+                                 bool aIsEnablePref, bool aDefaultValue);
 
   // Disable a parameter based on a runtime decision. This permanently
   // disables the feature, since runtime decisions override all other
   // decisions.
-  static void SetFailed(Feature aFeature,
-                        FeatureStatus aStatus,
+  static void SetFailed(Feature aFeature, FeatureStatus aStatus,
                         const char* aMessage,
                         const nsACString& aFailureId = EmptyCString());
 
   // Force a feature to be disabled permanently. This is the same as
   // SetFailed(), but the name may be clearer depending on the context.
-  static void ForceDisable(Feature aFeature,
-                           FeatureStatus aStatus,
+  static void ForceDisable(Feature aFeature, FeatureStatus aStatus,
                            const char* aMessage,
-                           const nsACString& aFailureId = EmptyCString())
-  {
+                           const nsACString& aFailureId = EmptyCString()) {
     SetFailed(aFeature, aStatus, aMessage, aFailureId);
   }
 
   // Convenience helpers for SetFailed().
-  static bool MaybeSetFailed(Feature aFeature,
-                             bool aEnable,
+  static bool MaybeSetFailed(Feature aFeature, bool aEnable,
                              FeatureStatus aDisableStatus,
                              const char* aDisableMessage,
-                             const nsACString& aFailureId = EmptyCString())
-  {
+                             const nsACString& aFailureId = EmptyCString()) {
     if (!aEnable) {
       SetFailed(aFeature, aDisableStatus, aDisableMessage, aFailureId);
       return false;
@@ -130,17 +120,13 @@ public:
   }
 
   // Convenience helper for SetFailed().
-  static bool MaybeSetFailed(Feature aFeature,
-                             FeatureStatus aStatus,
+  static bool MaybeSetFailed(Feature aFeature, FeatureStatus aStatus,
                              const char* aDisableMessage,
-                             const nsACString& aFailureId = EmptyCString())
-  {
-    return MaybeSetFailed(
-      aFeature,
-      (aStatus != FeatureStatus::Available &&
-       aStatus != FeatureStatus::ForceEnabled),
-      aStatus,
-      aDisableMessage, aFailureId);
+                             const nsACString& aFailureId = EmptyCString()) {
+    return MaybeSetFailed(aFeature,
+                          (aStatus != FeatureStatus::Available &&
+                           aStatus != FeatureStatus::ForceEnabled),
+                          aStatus, aDisableMessage, aFailureId);
   }
 
   // Re-enables a feature that was previously disabled, by attaching it to a
@@ -153,8 +139,7 @@ public:
   // set, the new value will be set as a runtime value. This is useful for
   // when the base value can change (for example, via an update from the
   // parent process).
-  static bool InitOrUpdate(Feature aFeature,
-                           bool aEnable,
+  static bool InitOrUpdate(Feature aFeature, bool aEnable,
                            FeatureStatus aDisableStatus,
                            const char* aDisableMessage);
 
@@ -162,7 +147,8 @@ public:
   // of a parameter.
   static void UserEnable(Feature aFeature, const char* aMessage);
   static void UserForceEnable(Feature aFeature, const char* aMessage);
-  static void UserDisable(Feature aFeature, const char* aMessage, const nsACString& aFailureId = EmptyCString());
+  static void UserDisable(Feature aFeature, const char* aMessage,
+                          const nsACString& aFailureId = EmptyCString());
 
   // Query whether a fallback has been toggled.
   static bool UseFallback(Fallback aFallback);
@@ -172,14 +158,14 @@ public:
   static void EnableFallback(Fallback aFallback, const char* aMessage);
 
   // Run a callback for each initialized FeatureState.
-  typedef std::function<void(const char* aName,
-                             const char* aDescription,
-                             FeatureState& aFeature)> FeatureIterCallback;
+  typedef std::function<void(const char* aName, const char* aDescription,
+                             FeatureState& aFeature)>
+      FeatureIterCallback;
   static void ForEachFeature(const FeatureIterCallback& aCallback);
 
   // Run a callback for each enabled fallback.
-  typedef std::function<void(const char* aName, const char* aMsg)> 
-    FallbackIterCallback;
+  typedef std::function<void(const char* aName, const char* aMsg)>
+      FallbackIterCallback;
   static void ForEachFallback(const FallbackIterCallback& aCallback);
 
   // Get the most descriptive failure id message for this feature.
@@ -190,10 +176,10 @@ public:
   static void Init();
   static void Shutdown();
 
-private:
+ private:
   void ForEachFallbackImpl(const FallbackIterCallback& aCallback);
 
-private:
+ private:
   FeatureState& GetState(Feature aFeature) {
     MOZ_ASSERT(size_t(aFeature) < kNumFeatures);
     return mFeatures[size_t(aFeature)];
@@ -206,15 +192,15 @@ private:
   bool UseFallbackImpl(Fallback aFallback) const;
   void EnableFallbackImpl(Fallback aFallback, const char* aMessage);
 
-private:
+ private:
   static const size_t kNumFeatures = size_t(Feature::NumValues);
   static const size_t kNumFallbacks = size_t(Fallback::NumValues);
 
-private:
+ private:
   FeatureState mFeatures[kNumFeatures];
   uint64_t mFallbackBits;
 
-private:
+ private:
   struct FallbackLogEntry {
     Fallback mFallback;
     char mMessage[80];
@@ -224,7 +210,7 @@ private:
   size_t mNumFallbackLogEntries;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // mozilla_gfx_config_gfxConfig_h
+#endif  // mozilla_gfx_config_gfxConfig_h

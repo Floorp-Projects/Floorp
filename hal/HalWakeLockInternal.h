@@ -11,7 +11,7 @@ namespace hal {
 
 void WakeLockInit();
 
-} // namespace hal
-} // namespace mozilla
+}  // namespace hal
+}  // namespace mozilla
 
 #endif /* __HAL_WAKELOCK_INTERNAL_H_ */

@@ -53,4 +53,3 @@ GECKO_BORROWED_TYPE_MUT(nsTArray<nsFontFaceRuleContainer>, RawGeckoFontFaceRuleL
 GECKO_BORROWED_TYPE_MUT(nsTArray<RefPtr<RawServoAnimationValue>>, RawGeckoServoAnimationValueList)
 GECKO_BORROWED_TYPE_MUT(nsTimingFunction, nsTimingFunction)
 // clang-format on
-

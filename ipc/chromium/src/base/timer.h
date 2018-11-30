@@ -65,14 +65,10 @@ namespace base {
 class BaseTimer_Helper {
  public:
   // Stops the timer.
-  ~BaseTimer_Helper() {
-    OrphanDelayedTask();
-  }
+  ~BaseTimer_Helper() { OrphanDelayedTask(); }
 
   // Returns true if the timer is running (i.e., not stopped).
-  bool IsRunning() const {
-    return !!delayed_task_;
-  }
+  bool IsRunning() const { return !!delayed_task_; }
 
   // Returns the current delay for this timer.  May only call this method when
   // the timer is running!
@@ -87,11 +83,10 @@ class BaseTimer_Helper {
   // We have access to the timer_ member so we can orphan this task.
   class TimerTask : public mozilla::Runnable {
    public:
-     explicit TimerTask(TimeDelta delay)
-       : mozilla::Runnable("base::BaseTimer_Helper::TimerTask")
-       , delay_(delay)
-     {
-       // timer_ is set in InitiateDelayedTask.
+    explicit TimerTask(TimeDelta delay)
+        : mozilla::Runnable("base::BaseTimer_Helper::TimerTask"),
+          delay_(delay) {
+      // timer_ is set in InitiateDelayedTask.
     }
     virtual ~TimerTask() {}
     BaseTimer_Helper* timer_;
@@ -127,9 +122,7 @@ class BaseTimer : public BaseTimer_Helper {
 
   // Call this method to stop the timer.  It is a no-op if the timer is not
   // running.
-  void Stop() {
-    OrphanDelayedTask();
-  }
+  void Stop() { OrphanDelayedTask(); }
 
   // Call this method to reset the timer delay of an already running timer.
   void Reset() {
@@ -145,8 +138,7 @@ class BaseTimer : public BaseTimer_Helper {
     TimerTask(TimeDelta delay, Receiver* receiver, ReceiverMethod method)
         : BaseTimer_Helper::TimerTask(delay),
           receiver_(receiver),
-          method_(method) {
-    }
+          method_(method) {}
 
     virtual ~TimerTask() {
       // This task may be getting cleared because the MessageLoop has been
@@ -178,8 +170,7 @@ class BaseTimer : public BaseTimer_Helper {
         // It is possible that the Timer has already been reset, and that this
         // Task is old.  So, if the Timer points to a different task, assume
         // that the Timer has already taken care of properly setting the task.
-        if (self->delayed_task_ == this)
-          self->delayed_task_ = nullptr;
+        if (self->delayed_task_ == this) self->delayed_task_ = nullptr;
         // By now the delayed_task_ in the Timer does not point to us anymore.
         // We should reset our own timer_ because the Timer can not do this
         // for us in its destructor.
@@ -227,14 +218,9 @@ class DelayTimer {
   typedef void (Receiver::*ReceiverMethod)();
 
   DelayTimer(TimeDelta delay, Receiver* receiver, ReceiverMethod method)
-      : receiver_(receiver),
-        method_(method),
-        delay_(delay) {
-  }
+      : receiver_(receiver), method_(method), delay_(delay) {}
 
-  void Reset() {
-    DelayFor(delay_);
-  }
+  void Reset() { DelayFor(delay_); }
 
  private:
   void DelayFor(TimeDelta delay) {
@@ -242,8 +228,7 @@ class DelayTimer {
 
     // If we already have a timer that will expire at or before the given delay,
     // then we have nothing more to do now.
-    if (timer_.IsRunning() && timer_.GetCurrentDelay() <= delay)
-      return;
+    if (timer_.IsRunning() && timer_.GetCurrentDelay() <= delay) return;
 
     // The timer isn't running, or will expire too late, so restart it.
     timer_.Stop();
@@ -251,8 +236,7 @@ class DelayTimer {
   }
 
   void Check() {
-    if (trigger_time_.is_null())
-      return;
+    if (trigger_time_.is_null()) return;
 
     // If we have not waited long enough, then wait some more.
     const Time now = Time::Now();
@@ -264,7 +248,7 @@ class DelayTimer {
     (receiver_->*method_)();
   }
 
-  Receiver *const receiver_;
+  Receiver* const receiver_;
   const ReceiverMethod method_;
   const TimeDelta delay_;
 

@@ -40,30 +40,26 @@ using places::History;
 #endif
 
 Link::Link(Element *aElement)
-  : mElement(aElement)
-  , mLinkState(eLinkState_NotLink)
-  , mNeedsRegistration(false)
-  , mRegistered(false)
-  , mHasPendingLinkUpdate(false)
-  , mInDNSPrefetch(false)
-  , mHistory(true)
-{
+    : mElement(aElement),
+      mLinkState(eLinkState_NotLink),
+      mNeedsRegistration(false),
+      mRegistered(false),
+      mHasPendingLinkUpdate(false),
+      mInDNSPrefetch(false),
+      mHistory(true) {
   MOZ_ASSERT(mElement, "Must have an element");
 }
 
 Link::Link()
-  : mElement(nullptr)
-  , mLinkState(eLinkState_NotLink)
-  , mNeedsRegistration(false)
-  , mRegistered(false)
-  , mHasPendingLinkUpdate(false)
-  , mInDNSPrefetch(false)
-  , mHistory(false)
-{
-}
+    : mElement(nullptr),
+      mLinkState(eLinkState_NotLink),
+      mNeedsRegistration(false),
+      mRegistered(false),
+      mHasPendingLinkUpdate(false),
+      mInDNSPrefetch(false),
+      mHistory(false) {}
 
-Link::~Link()
-{
+Link::~Link() {
   // !mElement is for mock_Link.
   MOZ_ASSERT(!mElement || !mElement->IsInComposedDoc());
   if (IsInDNSPrefetch()) {
@@ -72,27 +68,21 @@ Link::~Link()
   UnregisterFromHistory();
 }
 
-bool
-Link::ElementHasHref() const
-{
+bool Link::ElementHasHref() const {
   return mElement->HasAttr(kNameSpaceID_None, nsGkAtoms::href) ||
          (!mElement->IsHTMLElement() &&
           mElement->HasAttr(kNameSpaceID_XLink, nsGkAtoms::href));
 }
 
-void
-Link::TryDNSPrefetch()
-{
+void Link::TryDNSPrefetch() {
   MOZ_ASSERT(mElement->IsInComposedDoc());
   if (ElementHasHref() && nsHTMLDNSPrefetch::IsAllowed(mElement->OwnerDoc())) {
     nsHTMLDNSPrefetch::PrefetchLow(this);
   }
 }
 
-void
-Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
-                        nsWrapperCache::FlagsType aRequestedFlag)
-{
+void Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
+                             nsWrapperCache::FlagsType aRequestedFlag) {
   // If prefetch was deferred, clear flag and move on
   if (mElement->HasFlag(aDeferredFlag)) {
     mElement->UnsetFlags(aDeferredFlag);
@@ -105,12 +95,10 @@ Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
   }
 }
 
-void
-Link::GetContentPolicyMimeTypeMedia(nsAttrValue& aAsAttr,
-                                    nsContentPolicyType& aPolicyType,
-                                    nsString& aMimeType,
-                                    nsAString& aMedia)
-{
+void Link::GetContentPolicyMimeTypeMedia(nsAttrValue &aAsAttr,
+                                         nsContentPolicyType &aPolicyType,
+                                         nsString &aMimeType,
+                                         nsAString &aMedia) {
   nsAutoString as;
   mElement->GetAttr(kNameSpaceID_None, nsGkAtoms::as, as);
   Link::ParseAsValue(as, aAsAttr);
@@ -124,9 +112,7 @@ Link::GetContentPolicyMimeTypeMedia(nsAttrValue& aAsAttr,
   mElement->GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
 }
 
-void
-Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
-{
+void Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender() {
   MOZ_ASSERT(mElement->IsInComposedDoc());
   if (!ElementHasHref()) {
     return;
@@ -137,7 +123,8 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
     return;
   }
 
-  if (!nsContentUtils::PrefetchPreloadEnabled(mElement->OwnerDoc()->GetDocShell())) {
+  if (!nsContentUtils::PrefetchPreloadEnabled(
+          mElement->OwnerDoc()->GetDocShell())) {
     return;
   }
 
@@ -145,8 +132,9 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
 
   if ((linkTypes & nsStyleLinkElement::ePREFETCH) ||
       (linkTypes & nsStyleLinkElement::eNEXT) ||
-      (linkTypes & nsStyleLinkElement::ePRELOAD)){
-    nsCOMPtr<nsIPrefetchService> prefetchService(do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
+      (linkTypes & nsStyleLinkElement::ePRELOAD)) {
+    nsCOMPtr<nsIPrefetchService> prefetchService(
+        do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
     if (prefetchService) {
       nsCOMPtr<nsIURI> uri(GetURI());
       if (uri) {
@@ -171,9 +159,9 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
                                       mElement->OwnerDoc()->GetDocumentURI(),
                                       mElement, policyType);
         } else {
-          prefetchService->PrefetchURI(uri,
-                                       mElement->OwnerDoc()->GetDocumentURI(),
-                                       mElement, linkTypes & nsStyleLinkElement::ePREFETCH);
+          prefetchService->PrefetchURI(
+              uri, mElement->OwnerDoc()->GetDocumentURI(), mElement,
+              linkTypes & nsStyleLinkElement::ePREFETCH);
         }
         return;
       }
@@ -183,8 +171,9 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
   if (linkTypes & nsStyleLinkElement::ePRECONNECT) {
     nsCOMPtr<nsIURI> uri(GetURI());
     if (uri && mElement->OwnerDoc()) {
-      mElement->OwnerDoc()->MaybePreconnect(uri,
-        Element::AttrValueToCORSMode(mElement->GetParsedAttr(nsGkAtoms::crossorigin)));
+      mElement->OwnerDoc()->MaybePreconnect(
+          uri, Element::AttrValueToCORSMode(
+                   mElement->GetParsedAttr(nsGkAtoms::crossorigin)));
       return;
     }
   }
@@ -196,14 +185,12 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
   }
 }
 
-void
-Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
-                    const nsAttrValue* aOldValue)
-{
+void Link::UpdatePreload(nsAtom *aName, const nsAttrValue *aValue,
+                         const nsAttrValue *aOldValue) {
   MOZ_ASSERT(mElement->IsInComposedDoc());
 
   if (!ElementHasHref()) {
-     return;
+    return;
   }
 
   nsAutoString rel;
@@ -211,7 +198,8 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     return;
   }
 
-  if (!nsContentUtils::PrefetchPreloadEnabled(mElement->OwnerDoc()->GetDocShell())) {
+  if (!nsContentUtils::PrefetchPreloadEnabled(
+          mElement->OwnerDoc()->GetDocShell())) {
     return;
   }
 
@@ -221,7 +209,8 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     return;
   }
 
-  nsCOMPtr<nsIPrefetchService> prefetchService(do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
+  nsCOMPtr<nsIPrefetchService> prefetchService(
+      do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (!prefetchService) {
     return;
   }
@@ -308,7 +297,6 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
   if ((policyType != oldPolicyType) &&
       (oldPolicyType != nsIContentPolicy::TYPE_INVALID)) {
     prefetchService->CancelPrefetchPreloadURI(uri, mElement);
-
   }
 
   // Trigger a new preload if the policy type has changed.
@@ -321,10 +309,9 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
   }
 }
 
-void
-Link::CancelPrefetchOrPreload()
-{
-  nsCOMPtr<nsIPrefetchService> prefetchService(do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
+void Link::CancelPrefetchOrPreload() {
+  nsCOMPtr<nsIPrefetchService> prefetchService(
+      do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (prefetchService) {
     nsCOMPtr<nsIURI> uri(GetURI());
     if (uri) {
@@ -333,11 +320,8 @@ Link::CancelPrefetchOrPreload()
   }
 }
 
-void
-Link::SetLinkState(nsLinkState aState)
-{
-  NS_ASSERTION(mRegistered,
-               "Setting the link state of an unregistered Link!");
+void Link::SetLinkState(nsLinkState aState) {
+  NS_ASSERTION(mRegistered, "Setting the link state of an unregistered Link!");
   NS_ASSERTION(mLinkState != aState,
                "Setting state to the currently set state!");
 
@@ -348,16 +332,14 @@ Link::SetLinkState(nsLinkState aState)
   mRegistered = false;
 
   MOZ_ASSERT(LinkState() == NS_EVENT_STATE_VISITED ||
-             LinkState() == NS_EVENT_STATE_UNVISITED,
+                 LinkState() == NS_EVENT_STATE_UNVISITED,
              "Unexpected state obtained from LinkState()!");
 
   // Tell the element to update its visited state
   mElement->UpdateState(true);
 }
 
-EventStates
-Link::LinkState() const
-{
+EventStates Link::LinkState() const {
   // We are a constant method, but we are just lazily doing things and have to
   // track that state.  Cast away that constness!
   Link *self = const_cast<Link *>(this);
@@ -382,7 +364,7 @@ Link::LinkState() const
 #ifdef ANDROID
       nsCOMPtr<IHistory> history = services::GetHistoryService();
 #elif defined(MOZ_PLACES)
-      History* history = History::GetService();
+      History *history = History::GetService();
 #else
       nsCOMPtr<IHistory> history;
 #endif
@@ -410,9 +392,7 @@ Link::LinkState() const
   return EventStates();
 }
 
-nsIURI*
-Link::GetURI() const
-{
+nsIURI *Link::GetURI() const {
   // If we have this URI cached, use it.
   if (mCachedURI) {
     return mCachedURI;
@@ -426,9 +406,7 @@ Link::GetURI() const
   return mCachedURI;
 }
 
-void
-Link::SetProtocol(const nsAString &aProtocol)
-{
+void Link::SetProtocol(const nsAString &aProtocol) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -441,8 +419,8 @@ Link::SetProtocol(const nsAString &aProtocol)
   nsAString::const_iterator iter(start);
   (void)FindCharInReadable(':', iter, end);
   nsresult rv = NS_MutateURI(uri)
-                  .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
-                  .Finalize(uri);
+                    .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                    .Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -450,9 +428,7 @@ Link::SetProtocol(const nsAString &aProtocol)
   SetHrefAttribute(uri);
 }
 
-void
-Link::SetPassword(const nsAString &aPassword)
-{
+void Link::SetPassword(const nsAString &aPassword) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -460,16 +436,14 @@ Link::SetPassword(const nsAString &aPassword)
   }
 
   nsresult rv = NS_MutateURI(uri)
-                  .SetPassword(NS_ConvertUTF16toUTF8(aPassword))
-                  .Finalize(uri);
+                    .SetPassword(NS_ConvertUTF16toUTF8(aPassword))
+                    .Finalize(uri);
   if (NS_SUCCEEDED(rv)) {
     SetHrefAttribute(uri);
   }
 }
 
-void
-Link::SetUsername(const nsAString &aUsername)
-{
+void Link::SetUsername(const nsAString &aUsername) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -477,52 +451,44 @@ Link::SetUsername(const nsAString &aUsername)
   }
 
   nsresult rv = NS_MutateURI(uri)
-                  .SetUsername(NS_ConvertUTF16toUTF8(aUsername))
-                  .Finalize(uri);
+                    .SetUsername(NS_ConvertUTF16toUTF8(aUsername))
+                    .Finalize(uri);
   if (NS_SUCCEEDED(rv)) {
     SetHrefAttribute(uri);
   }
 }
 
-void
-Link::SetHost(const nsAString &aHost)
-{
+void Link::SetHost(const nsAString &aHost) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv = NS_MutateURI(uri)
-                  .SetHostPort(NS_ConvertUTF16toUTF8(aHost))
-                  .Finalize(uri);
+  nsresult rv =
+      NS_MutateURI(uri).SetHostPort(NS_ConvertUTF16toUTF8(aHost)).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
   SetHrefAttribute(uri);
 }
 
-void
-Link::SetHostname(const nsAString &aHostname)
-{
+void Link::SetHostname(const nsAString &aHostname) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv = NS_MutateURI(uri)
-                  .SetHost(NS_ConvertUTF16toUTF8(aHostname))
-                  .Finalize(uri);
+  nsresult rv =
+      NS_MutateURI(uri).SetHost(NS_ConvertUTF16toUTF8(aHostname)).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
   SetHrefAttribute(uri);
 }
 
-void
-Link::SetPathname(const nsAString &aPathname)
-{
+void Link::SetPathname(const nsAString &aPathname) {
   nsCOMPtr<nsIURI> uri(GetURI());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (!url) {
@@ -531,17 +497,15 @@ Link::SetPathname(const nsAString &aPathname)
   }
 
   nsresult rv = NS_MutateURI(uri)
-                  .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
-                  .Finalize(uri);
+                    .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
+                    .Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
   SetHrefAttribute(uri);
 }
 
-void
-Link::SetSearch(const nsAString& aSearch)
-{
+void Link::SetSearch(const nsAString &aSearch) {
   nsCOMPtr<nsIURI> uri(GetURI());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (!url) {
@@ -550,18 +514,17 @@ Link::SetSearch(const nsAString& aSearch)
   }
 
   auto encoding = mElement->OwnerDoc()->GetDocumentCharacterSet();
-  nsresult rv = NS_MutateURI(uri)
-                  .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch), encoding)
-                  .Finalize(uri);
+  nsresult rv =
+      NS_MutateURI(uri)
+          .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch), encoding)
+          .Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
   SetHrefAttribute(uri);
 }
 
-void
-Link::SetPort(const nsAString &aPort)
-{
+void Link::SetPort(const nsAString &aPort) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -580,27 +543,22 @@ Link::SetPort(const nsAString &aPort)
     }
   }
 
-  rv = NS_MutateURI(uri)
-         .SetPort(port)
-         .Finalize(uri);
+  rv = NS_MutateURI(uri).SetPort(port).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
   SetHrefAttribute(uri);
 }
 
-void
-Link::SetHash(const nsAString &aHash)
-{
+void Link::SetHash(const nsAString &aHash) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv = NS_MutateURI(uri)
-                  .SetRef(NS_ConvertUTF16toUTF8(aHash))
-                  .Finalize(uri);
+  nsresult rv =
+      NS_MutateURI(uri).SetRef(NS_ConvertUTF16toUTF8(aHash)).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -608,9 +566,7 @@ Link::SetHash(const nsAString &aHash)
   SetHrefAttribute(uri);
 }
 
-void
-Link::GetOrigin(nsAString &aOrigin)
-{
+void Link::GetOrigin(nsAString &aOrigin) {
   aOrigin.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -623,14 +579,11 @@ Link::GetOrigin(nsAString &aOrigin)
   aOrigin.Assign(origin);
 }
 
-void
-Link::GetProtocol(nsAString &_protocol)
-{
+void Link::GetProtocol(nsAString &_protocol) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     _protocol.AssignLiteral("http");
-  }
-  else {
+  } else {
     nsAutoCString scheme;
     (void)uri->GetScheme(scheme);
     CopyASCIItoUTF16(scheme, _protocol);
@@ -638,9 +591,7 @@ Link::GetProtocol(nsAString &_protocol)
   _protocol.Append(char16_t(':'));
 }
 
-void
-Link::GetUsername(nsAString& aUsername)
-{
+void Link::GetUsername(nsAString &aUsername) {
   aUsername.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -653,9 +604,7 @@ Link::GetUsername(nsAString& aUsername)
   CopyASCIItoUTF16(username, aUsername);
 }
 
-void
-Link::GetPassword(nsAString &aPassword)
-{
+void Link::GetPassword(nsAString &aPassword) {
   aPassword.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -668,9 +617,7 @@ Link::GetPassword(nsAString &aPassword)
   CopyASCIItoUTF16(password, aPassword);
 }
 
-void
-Link::GetHost(nsAString &_host)
-{
+void Link::GetHost(nsAString &_host) {
   _host.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -686,9 +633,7 @@ Link::GetHost(nsAString &_host)
   }
 }
 
-void
-Link::GetHostname(nsAString &_hostname)
-{
+void Link::GetHostname(nsAString &_hostname) {
   _hostname.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -700,9 +645,7 @@ Link::GetHostname(nsAString &_hostname)
   nsContentUtils::GetHostOrIPv6WithBrackets(uri, _hostname);
 }
 
-void
-Link::GetPathname(nsAString &_pathname)
-{
+void Link::GetPathname(nsAString &_pathname) {
   _pathname.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -720,9 +663,7 @@ Link::GetPathname(nsAString &_pathname)
   }
 }
 
-void
-Link::GetSearch(nsAString &_search)
-{
+void Link::GetSearch(nsAString &_search) {
   _search.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -741,9 +682,7 @@ Link::GetSearch(nsAString &_search)
   }
 }
 
-void
-Link::GetPort(nsAString &_port)
-{
+void Link::GetPort(nsAString &_port) {
   _port.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -763,9 +702,7 @@ Link::GetPort(nsAString &_port)
   }
 }
 
-void
-Link::GetHash(nsAString &_hash)
-{
+void Link::GetHash(nsAString &_hash) {
   _hash.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -783,9 +720,7 @@ Link::GetHash(nsAString &_hash)
   }
 }
 
-void
-Link::ResetLinkState(bool aNotify, bool aHasHref)
-{
+void Link::ResetLinkState(bool aNotify, bool aHasHref) {
   nsLinkState defaultState;
 
   // The default state for links with an href is unvisited.
@@ -836,9 +771,7 @@ Link::ResetLinkState(bool aNotify, bool aHasHref)
   }
 }
 
-void
-Link::UnregisterFromHistory()
-{
+void Link::UnregisterFromHistory() {
   // If we are not registered, we have nothing to do.
   if (!mRegistered) {
     return;
@@ -849,13 +782,14 @@ Link::UnregisterFromHistory()
 #ifdef ANDROID
     nsCOMPtr<IHistory> history = services::GetHistoryService();
 #elif defined(MOZ_PLACES)
-    History* history = History::GetService();
+    History *history = History::GetService();
 #else
     nsCOMPtr<IHistory> history;
 #endif
     if (history) {
       nsresult rv = history->UnregisterVisitedCallback(mCachedURI, this);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "This should only fail if we misuse the API!");
+      NS_ASSERTION(NS_SUCCEEDED(rv),
+                   "This should only fail if we misuse the API!");
       if (NS_SUCCEEDED(rv)) {
         mRegistered = false;
       }
@@ -863,9 +797,7 @@ Link::UnregisterFromHistory()
   }
 }
 
-void
-Link::SetHrefAttribute(nsIURI *aURI)
-{
+void Link::SetHrefAttribute(nsIURI *aURI) {
   NS_ASSERTION(aURI, "Null URI is illegal!");
 
   // if we change this code to not reserialize we need to do something smarter
@@ -877,9 +809,7 @@ Link::SetHrefAttribute(nsIURI *aURI)
                           NS_ConvertUTF8toUTF16(href), true);
 }
 
-size_t
-Link::SizeOfExcludingThis(mozilla::SizeOfState& aState) const
-{
+size_t Link::SizeOfExcludingThis(mozilla::SizeOfState &aState) const {
   size_t n = 0;
 
   if (mCachedURI) {
@@ -896,57 +826,47 @@ Link::SizeOfExcludingThis(mozilla::SizeOfState& aState) const
 }
 
 static const nsAttrValue::EnumTable kAsAttributeTable[] = {
-  { "",              DESTINATION_INVALID       },
-  { "audio",         DESTINATION_AUDIO         },
-  { "font",          DESTINATION_FONT          },
-  { "image",         DESTINATION_IMAGE         },
-  { "script",        DESTINATION_SCRIPT        },
-  { "style",         DESTINATION_STYLE         },
-  { "track",         DESTINATION_TRACK         },
-  { "video",         DESTINATION_VIDEO         },
-  { "fetch",         DESTINATION_FETCH         },
-  { nullptr,         0 }
-};
+    {"", DESTINATION_INVALID},      {"audio", DESTINATION_AUDIO},
+    {"font", DESTINATION_FONT},     {"image", DESTINATION_IMAGE},
+    {"script", DESTINATION_SCRIPT}, {"style", DESTINATION_STYLE},
+    {"track", DESTINATION_TRACK},   {"video", DESTINATION_VIDEO},
+    {"fetch", DESTINATION_FETCH},   {nullptr, 0}};
 
-
-/* static */ void
-Link::ParseAsValue(const nsAString& aValue,
-                   nsAttrValue& aResult)
-{
+/* static */ void Link::ParseAsValue(const nsAString &aValue,
+                                     nsAttrValue &aResult) {
   DebugOnly<bool> success =
-  aResult.ParseEnumValue(aValue, kAsAttributeTable, false,
-                         // default value is a empty string
-                         // if aValue is not a value we
-                         // understand
-                         &kAsAttributeTable[0]);
+      aResult.ParseEnumValue(aValue, kAsAttributeTable, false,
+                             // default value is a empty string
+                             // if aValue is not a value we
+                             // understand
+                             &kAsAttributeTable[0]);
   MOZ_ASSERT(success);
 }
 
-/* static */ nsContentPolicyType
-Link::AsValueToContentPolicy(const nsAttrValue& aValue)
-{
-  switch(aValue.GetEnumValue()) {
-  case DESTINATION_INVALID:
-    return nsIContentPolicy::TYPE_INVALID;
-  case DESTINATION_AUDIO:
-    return nsIContentPolicy::TYPE_INTERNAL_AUDIO;
-  case DESTINATION_TRACK:
-    return nsIContentPolicy::TYPE_INTERNAL_TRACK;
-  case DESTINATION_VIDEO:
-    return nsIContentPolicy::TYPE_INTERNAL_VIDEO;
-  case DESTINATION_FONT:
-    return nsIContentPolicy::TYPE_FONT;
-  case DESTINATION_IMAGE:
-    return nsIContentPolicy::TYPE_IMAGE;
-  case DESTINATION_SCRIPT:
-    return nsIContentPolicy::TYPE_SCRIPT;
-  case DESTINATION_STYLE:
-    return nsIContentPolicy::TYPE_STYLESHEET;
-  case DESTINATION_FETCH:
-    return nsIContentPolicy::TYPE_OTHER;
+/* static */ nsContentPolicyType Link::AsValueToContentPolicy(
+    const nsAttrValue &aValue) {
+  switch (aValue.GetEnumValue()) {
+    case DESTINATION_INVALID:
+      return nsIContentPolicy::TYPE_INVALID;
+    case DESTINATION_AUDIO:
+      return nsIContentPolicy::TYPE_INTERNAL_AUDIO;
+    case DESTINATION_TRACK:
+      return nsIContentPolicy::TYPE_INTERNAL_TRACK;
+    case DESTINATION_VIDEO:
+      return nsIContentPolicy::TYPE_INTERNAL_VIDEO;
+    case DESTINATION_FONT:
+      return nsIContentPolicy::TYPE_FONT;
+    case DESTINATION_IMAGE:
+      return nsIContentPolicy::TYPE_IMAGE;
+    case DESTINATION_SCRIPT:
+      return nsIContentPolicy::TYPE_SCRIPT;
+    case DESTINATION_STYLE:
+      return nsIContentPolicy::TYPE_STYLESHEET;
+    case DESTINATION_FETCH:
+      return nsIContentPolicy::TYPE_OTHER;
   }
   return nsIContentPolicy::TYPE_INVALID;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

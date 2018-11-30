@@ -20,33 +20,27 @@ namespace dom {
 // ChromeBrowsingContext is a BrowsingContext living in the parent
 // process, with whatever extra data that a BrowsingContext in the
 // parent needs.
-class ChromeBrowsingContext final
-  : public BrowsingContext
-{
-public:
+class ChromeBrowsingContext final : public BrowsingContext {
+ public:
   static void CleanupContexts(uint64_t aProcessId);
   static already_AddRefed<ChromeBrowsingContext> Get(uint64_t aId);
   static ChromeBrowsingContext* Cast(BrowsingContext* aContext);
   static const ChromeBrowsingContext* Cast(const BrowsingContext* aContext);
 
-  bool IsOwnedByProcess(uint64_t aProcessId) const
-  {
+  bool IsOwnedByProcess(uint64_t aProcessId) const {
     return mProcessId == aProcessId;
   }
 
-protected:
+ protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb) {}
   void Unlink() {}
 
   using Type = BrowsingContext::Type;
-  ChromeBrowsingContext(BrowsingContext* aParent,
-                        BrowsingContext* aOpener,
-                        const nsAString& aName,
-                        uint64_t aBrowsingContextId,
-                        uint64_t aProcessId,
-                        Type aType = Type::Chrome);
+  ChromeBrowsingContext(BrowsingContext* aParent, BrowsingContext* aOpener,
+                        const nsAString& aName, uint64_t aBrowsingContextId,
+                        uint64_t aProcessId, Type aType = Type::Chrome);
 
-private:
+ private:
   friend class BrowsingContext;
 
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
@@ -54,6 +48,6 @@ private:
   uint64_t mProcessId;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 #endif

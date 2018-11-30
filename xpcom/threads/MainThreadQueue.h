@@ -16,27 +16,28 @@
 
 namespace mozilla {
 
-template<typename SynchronizedQueueT, typename InnerQueueT>
-inline already_AddRefed<nsThread>
-CreateMainThread(nsIIdlePeriod* aIdlePeriod, SynchronizedQueueT** aSynchronizedQueue = nullptr)
-{
+template <typename SynchronizedQueueT, typename InnerQueueT>
+inline already_AddRefed<nsThread> CreateMainThread(
+    nsIIdlePeriod* aIdlePeriod,
+    SynchronizedQueueT** aSynchronizedQueue = nullptr) {
   using MainThreadQueueT = PrioritizedEventQueue<InnerQueueT>;
 
   auto queue = MakeUnique<MainThreadQueueT>(
-    MakeUnique<InnerQueueT>(EventPriority::High),
-    MakeUnique<InnerQueueT>(EventPriority::Input),
-    MakeUnique<InnerQueueT>(EventPriority::Normal),
-    MakeUnique<InnerQueueT>(EventPriority::Idle),
-    do_AddRef(aIdlePeriod));
+      MakeUnique<InnerQueueT>(EventPriority::High),
+      MakeUnique<InnerQueueT>(EventPriority::Input),
+      MakeUnique<InnerQueueT>(EventPriority::Normal),
+      MakeUnique<InnerQueueT>(EventPriority::Idle), do_AddRef(aIdlePeriod));
 
   MainThreadQueueT* prioritized = queue.get();
 
-  RefPtr<SynchronizedQueueT> synchronizedQueue = new SynchronizedQueueT(std::move(queue));
+  RefPtr<SynchronizedQueueT> synchronizedQueue =
+      new SynchronizedQueueT(std::move(queue));
 
   prioritized->SetMutexRef(synchronizedQueue->MutexRef());
 
   // Setup "main" thread
-  RefPtr<nsThread> mainThread = new nsThread(WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD, 0);
+  RefPtr<nsThread> mainThread =
+      new nsThread(WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD, 0);
 
 #ifndef RELEASE_OR_BETA
   prioritized->SetNextIdleDeadlineRef(mainThread->NextIdleDeadlineRef());
@@ -48,6 +49,6 @@ CreateMainThread(nsIIdlePeriod* aIdlePeriod, SynchronizedQueueT** aSynchronizedQ
   return mainThread.forget();
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_MainThreadQueue_h
+#endif  // mozilla_MainThreadQueue_h

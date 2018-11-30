@@ -24,30 +24,23 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 using mozilla::dom::Selection;
 
-struct mozilla::a11y::SelData final
-{
-  SelData(Selection* aSel, int32_t aReason) :
-    mSel(aSel), mReason(aReason) {}
+struct mozilla::a11y::SelData final {
+  SelData(Selection* aSel, int32_t aReason) : mSel(aSel), mReason(aReason) {}
 
   RefPtr<Selection> mSel;
   int16_t mReason;
 
   NS_INLINE_DECL_REFCOUNTING(SelData)
 
-private:
+ private:
   // Private destructor, to discourage deletion outside of Release():
   ~SelData() {}
 };
 
-SelectionManager::SelectionManager() :
-  mCaretOffset(-1), mAccWithCaret(nullptr)
-{
+SelectionManager::SelectionManager()
+    : mCaretOffset(-1), mAccWithCaret(nullptr) {}
 
-}
-
-void
-SelectionManager::ClearControlSelectionListener()
-{
+void SelectionManager::ClearControlSelectionListener() {
   // Remove 'this' registered as selection listener for the normal selection.
   if (mCurrCtrlNormalSel) {
     mCurrCtrlNormalSel->RemoveSelectionListener(this);
@@ -62,22 +55,18 @@ SelectionManager::ClearControlSelectionListener()
   }
 }
 
-void
-SelectionManager::SetControlSelectionListener(dom::Element* aFocusedElm)
-{
+void SelectionManager::SetControlSelectionListener(dom::Element* aFocusedElm) {
   // When focus moves such that the caret is part of a new frame selection
   // this removes the old selection listener and attaches a new one for
   // the current focus.
   ClearControlSelectionListener();
 
   nsIFrame* controlFrame = aFocusedElm->GetPrimaryFrame();
-  if (!controlFrame)
-    return;
+  if (!controlFrame) return;
 
   const nsFrameSelection* frameSel = controlFrame->GetConstFrameSelection();
   NS_ASSERTION(frameSel, "No frame selection for focused element!");
-  if (!frameSel)
-    return;
+  if (!frameSel) return;
 
   // Register 'this' as selection listener for the normal selection.
   Selection* normalSel = frameSel->GetSelection(SelectionType::eNormal);
@@ -90,9 +79,7 @@ SelectionManager::SetControlSelectionListener(dom::Element* aFocusedElm)
   mCurrCtrlSpellSel = spellSel;
 }
 
-void
-SelectionManager::AddDocSelectionListener(nsIPresShell* aPresShell)
-{
+void SelectionManager::AddDocSelectionListener(nsIPresShell* aPresShell) {
   const nsFrameSelection* frameSel = aPresShell->ConstFrameSelection();
 
   // Register 'this' as selection listener for the normal selection.
@@ -104,9 +91,7 @@ SelectionManager::AddDocSelectionListener(nsIPresShell* aPresShell)
   spellSel->AddSelectionListener(this);
 }
 
-void
-SelectionManager::RemoveDocSelectionListener(nsIPresShell* aPresShell)
-{
+void SelectionManager::RemoveDocSelectionListener(nsIPresShell* aPresShell) {
   const nsFrameSelection* frameSel = aPresShell->ConstFrameSelection();
 
   // Remove 'this' registered as selection listener for the normal selection.
@@ -119,41 +104,35 @@ SelectionManager::RemoveDocSelectionListener(nsIPresShell* aPresShell)
   spellSel->RemoveSelectionListener(this);
 }
 
-void
-SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent)
-{
+void SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent) {
   // Fire selection change event if it's not pure caret-move selection change,
   // i.e. the accessible has or had not collapsed selection.
   AccTextSelChangeEvent* event = downcast_accEvent(aEvent);
-  if (!event->IsCaretMoveOnly())
-    nsEventShell::FireEvent(aEvent);
+  if (!event->IsCaretMoveOnly()) nsEventShell::FireEvent(aEvent);
 
   // Fire caret move event if there's a caret in the selection.
-  nsINode* caretCntrNode =
-    nsCoreUtils::GetDOMNodeFromDOMPoint(event->mSel->GetFocusNode(),
-                                        event->mSel->FocusOffset());
-  if (!caretCntrNode)
-    return;
+  nsINode* caretCntrNode = nsCoreUtils::GetDOMNodeFromDOMPoint(
+      event->mSel->GetFocusNode(), event->mSel->FocusOffset());
+  if (!caretCntrNode) return;
 
   HyperTextAccessible* caretCntr = nsAccUtils::GetTextContainer(caretCntrNode);
-  NS_ASSERTION(caretCntr,
-               "No text container for focus while there's one for common ancestor?!");
-  if (!caretCntr)
-    return;
+  NS_ASSERTION(
+      caretCntr,
+      "No text container for focus while there's one for common ancestor?!");
+  if (!caretCntr) return;
 
   Selection* selection = caretCntr->DOMSelection();
 
   // XXX Sometimes we can't get a selection for caretCntr, in that case assume
   // event->mSel is correct.
-  if (!selection)
-    selection = event->mSel;
+  if (!selection) selection = event->mSel;
 
   mCaretOffset = caretCntr->DOMPointToOffset(selection->GetFocusNode(),
                                              selection->FocusOffset());
   mAccWithCaret = caretCntr;
   if (mCaretOffset != -1) {
     RefPtr<AccCaretMoveEvent> caretMoveEvent =
-      new AccCaretMoveEvent(caretCntr, mCaretOffset, aEvent->FromUserInput());
+        new AccCaretMoveEvent(caretCntr, mCaretOffset, aEvent->FromUserInput());
     nsEventShell::FireEvent(caretMoveEvent);
   }
 }
@@ -161,8 +140,7 @@ SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent)
 NS_IMETHODIMP
 SelectionManager::NotifySelectionChanged(nsIDocument* aDocument,
                                          Selection* aSelection,
-                                         int16_t aReason)
-{
+                                         int16_t aReason) {
   if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -179,30 +157,27 @@ SelectionManager::NotifySelectionChanged(nsIDocument* aDocument,
     // so that we are guaranteed that the notification is processed before
     // the selection manager is destroyed.
     RefPtr<SelData> selData = new SelData(aSelection, aReason);
-    document->HandleNotification<SelectionManager, SelData>
-      (this, &SelectionManager::ProcessSelectionChanged, selData);
+    document->HandleNotification<SelectionManager, SelData>(
+        this, &SelectionManager::ProcessSelectionChanged, selData);
   }
 
   return NS_OK;
 }
 
-void
-SelectionManager::ProcessSelectionChanged(SelData* aSelData)
-{
+void SelectionManager::ProcessSelectionChanged(SelData* aSelData) {
   Selection* selection = aSelData->mSel;
-  if (!selection->GetPresShell())
-    return;
+  if (!selection->GetPresShell()) return;
 
   const nsRange* range = selection->GetAnchorFocusRange();
   nsINode* cntrNode = nullptr;
-  if (range)
-    cntrNode = range->GetCommonAncestor();
+  if (range) cntrNode = range->GetCommonAncestor();
 
   if (!cntrNode) {
     cntrNode = selection->GetFrameSelection()->GetAncestorLimiter();
     if (!cntrNode) {
       cntrNode = selection->GetPresShell()->GetDocument();
-      NS_ASSERTION(aSelData->mSel->GetPresShell()->ConstFrameSelection() == selection->GetFrameSelection(),
+      NS_ASSERTION(aSelData->mSel->GetPresShell()->ConstFrameSelection() ==
+                       selection->GetFrameSelection(),
                    "Wrong selection container was used!");
     }
   }
@@ -216,13 +191,13 @@ SelectionManager::ProcessSelectionChanged(SelData* aSelData)
 
   if (selection->GetType() == SelectionType::eNormal) {
     RefPtr<AccEvent> event =
-      new AccTextSelChangeEvent(text, selection, aSelData->mReason);
+        new AccTextSelChangeEvent(text, selection, aSelData->mReason);
     text->Document()->FireDelayedEvent(event);
 
   } else if (selection->GetType() == SelectionType::eSpellCheck) {
     // XXX: fire an event for container accessible of the focus/anchor range
     // of the spelcheck selection.
-    text->Document()->FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED,
-                                       text);
+    text->Document()->FireDelayedEvent(
+        nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED, text);
   }
 }

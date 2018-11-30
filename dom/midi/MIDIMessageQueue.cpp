@@ -9,36 +9,27 @@
 namespace mozilla {
 namespace dom {
 
-MIDIMessageQueue::MIDIMessageQueue()
-  : mMutex("MIDIMessageQueue::mMutex")
-{
-}
+MIDIMessageQueue::MIDIMessageQueue() : mMutex("MIDIMessageQueue::mMutex") {}
 
-class MIDIMessageTimestampComparator
-{
-public:
-  bool Equals(const MIDIMessage& a, const MIDIMessage& b) const
-  {
+class MIDIMessageTimestampComparator {
+ public:
+  bool Equals(const MIDIMessage& a, const MIDIMessage& b) const {
     return a.timestamp() == b.timestamp();
   }
-  bool LessThan(const MIDIMessage& a, const MIDIMessage& b) const
-  {
+  bool LessThan(const MIDIMessage& a, const MIDIMessage& b) const {
     return a.timestamp() < b.timestamp();
   }
 };
 
-void
-MIDIMessageQueue::Add(nsTArray<MIDIMessage>& aMsg)
-{
+void MIDIMessageQueue::Add(nsTArray<MIDIMessage>& aMsg) {
   MutexAutoLock lock(mMutex);
   for (auto msg : aMsg) {
     mMessageQueue.InsertElementSorted(msg, MIDIMessageTimestampComparator());
   }
 }
 
-void
-MIDIMessageQueue::GetMessagesBefore(TimeStamp aTimestamp, nsTArray<MIDIMessage>& aMsgQueue)
-{
+void MIDIMessageQueue::GetMessagesBefore(TimeStamp aTimestamp,
+                                         nsTArray<MIDIMessage>& aMsgQueue) {
   MutexAutoLock lock(mMutex);
   int i = 0;
   for (auto msg : mMessageQueue) {
@@ -53,24 +44,18 @@ MIDIMessageQueue::GetMessagesBefore(TimeStamp aTimestamp, nsTArray<MIDIMessage>&
   }
 }
 
-void
-MIDIMessageQueue::GetMessages(nsTArray<MIDIMessage>& aMsgQueue)
-{
+void MIDIMessageQueue::GetMessages(nsTArray<MIDIMessage>& aMsgQueue) {
   MutexAutoLock lock(mMutex);
   aMsgQueue.AppendElements(mMessageQueue);
   mMessageQueue.Clear();
 }
 
-void
-MIDIMessageQueue::Clear()
-{
+void MIDIMessageQueue::Clear() {
   MutexAutoLock lock(mMutex);
   mMessageQueue.Clear();
 }
 
-void
-MIDIMessageQueue::ClearAfterNow()
-{
+void MIDIMessageQueue::ClearAfterNow() {
   MutexAutoLock lock(mMutex);
   TimeStamp now = TimeStamp::Now();
   int i = 0;
@@ -85,5 +70,5 @@ MIDIMessageQueue::ClearAfterNow()
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

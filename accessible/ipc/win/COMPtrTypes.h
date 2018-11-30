@@ -19,65 +19,59 @@
 namespace mozilla {
 namespace a11y {
 
-class MOZ_RAII IAccessibleEnvironment : public mscom::ProxyStream::Environment
-{
-public:
+class MOZ_RAII IAccessibleEnvironment : public mscom::ProxyStream::Environment {
+ public:
   IAccessibleEnvironment() = default;
 
-  bool Push() override
-  {
+  bool Push() override {
     mActCtxRgn = GetActCtx();
     return !!mActCtxRgn;
   }
 
-  bool Pop() override
-  {
-    return mActCtxRgn.Deactivate();
-  }
+  bool Pop() override { return mActCtxRgn.Deactivate(); }
 
-private:
-  static const mscom::ActivationContext& GetActCtx()
-  {
-    static const mscom::ActivationContext
-      sActCtx(Compatibility::GetActCtxResourceId());
+ private:
+  static const mscom::ActivationContext& GetActCtx() {
+    static const mscom::ActivationContext sActCtx(
+        Compatibility::GetActCtxResourceId());
     MOZ_DIAGNOSTIC_ASSERT(sActCtx);
     return sActCtx;
   }
 
-private:
+ private:
   mscom::ActivationContextRegion mActCtxRgn;
 };
 
-} // namespace a11y
+}  // namespace a11y
 
 namespace mscom {
 namespace detail {
 
-template<>
-struct EnvironmentSelector<IAccessible>
-{
+template <>
+struct EnvironmentSelector<IAccessible> {
   typedef a11y::IAccessibleEnvironment Type;
 };
 
-} // namespace detail
-} // namespace mscom
+}  // namespace detail
+}  // namespace mscom
 
 namespace a11y {
 
-typedef mozilla::mscom::COMPtrHolder<IAccessible, IID_IAccessible> IAccessibleHolder;
+typedef mozilla::mscom::COMPtrHolder<IAccessible, IID_IAccessible>
+    IAccessibleHolder;
 typedef mozilla::mscom::COMPtrHolder<IDispatch, IID_IDispatch> IDispatchHolder;
 
 class Accessible;
 
-IAccessibleHolder
-CreateHolderFromAccessible(NotNull<Accessible*> aAccToWrap);
+IAccessibleHolder CreateHolderFromAccessible(NotNull<Accessible*> aAccToWrap);
 
-typedef mozilla::mscom::COMPtrHolder<IHandlerControl, IID_IHandlerControl> IHandlerControlHolder;
+typedef mozilla::mscom::COMPtrHolder<IHandlerControl, IID_IHandlerControl>
+    IHandlerControlHolder;
 
-IHandlerControlHolder
-CreateHolderFromHandlerControl(mscom::ProxyUniquePtr<IHandlerControl> aHandlerControl);
+IHandlerControlHolder CreateHolderFromHandlerControl(
+    mscom::ProxyUniquePtr<IHandlerControl> aHandlerControl);
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif // mozilla_a11y_COMPtrTypes_h
+#endif  // mozilla_a11y_COMPtrTypes_h

@@ -166,8 +166,8 @@ namespace mozilla {
  *   collapses to 'Y&'. Because the arguments are declared as rvalue references
  *   to template arguments, the lvalue-ness "shines through" where present.
  *
- * Then, the 'std::forward<T>' function --- you must invoke 'Forward' with its type
- * argument --- returns an lvalue reference or an rvalue reference to its
+ * Then, the 'std::forward<T>' function --- you must invoke 'Forward' with its
+ * type argument --- returns an lvalue reference or an rvalue reference to its
  * argument, depending on what T is. In our unified constructor definition, that
  * means that we'll invoke either the copy or move constructors for x and y,
  * depending on what we gave C's constructor. In our call, we'll move 'foo()'
@@ -196,15 +196,13 @@ namespace mozilla {
  */
 
 /** Swap |aX| and |aY| using move-construction if possible. */
-template<typename T>
-inline void
-Swap(T& aX, T& aY)
-{
+template <typename T>
+inline void Swap(T& aX, T& aY) {
   T tmp(std::move(aX));
   aX = std::move(aY);
   aY = std::move(tmp);
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_Move_h */

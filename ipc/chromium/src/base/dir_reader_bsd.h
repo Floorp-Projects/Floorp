@@ -43,9 +43,7 @@ class DirReaderBSD {
     }
   }
 
-  bool IsValid() const {
-    return fd_ >= 0;
-  }
+  bool IsValid() const { return fd_ >= 0; }
 
   // Move to the next entry returning false if the iteration is complete.
   bool Next() {
@@ -58,12 +56,10 @@ class DirReaderBSD {
 #endif
     }
 
-    if (offset_ != size_)
-      return true;
+    if (offset_ != size_) return true;
 
     const int r = getdents(fd_, buf_, sizeof(buf_));
-    if (r == 0)
-      return false;
+    if (r == 0) return false;
     if (r == -1) {
       DLOG(ERROR) << "getdents returned an error: " << errno;
       return false;
@@ -74,21 +70,16 @@ class DirReaderBSD {
   }
 
   const char* name() const {
-    if (!size_)
-      return NULL;
+    if (!size_) return NULL;
 
     const struct dirent* dirent =
         reinterpret_cast<const struct dirent*>(&buf_[offset_]);
     return dirent->d_name;
   }
 
-  int fd() const {
-    return fd_;
-  }
+  int fd() const { return fd_; }
 
-  static bool IsFallback() {
-    return false;
-  }
+  static bool IsFallback() { return false; }
 
  private:
   const int fd_;
@@ -100,4 +91,4 @@ class DirReaderBSD {
 
 }  // namespace base
 
-#endif // BASE_DIR_READER_BSD_H_
+#endif  // BASE_DIR_READER_BSD_H_

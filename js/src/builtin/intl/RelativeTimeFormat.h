@@ -19,27 +19,27 @@ namespace js {
 
 class FreeOp;
 
-class RelativeTimeFormatObject : public NativeObject
-{
-  public:
-    static const Class class_;
+class RelativeTimeFormatObject : public NativeObject {
+ public:
+  static const Class class_;
 
-    static constexpr uint32_t INTERNALS_SLOT = 0;
-    static constexpr uint32_t URELATIVE_TIME_FORMAT_SLOT = 1;
-    static constexpr uint32_t SLOT_COUNT = 2;
+  static constexpr uint32_t INTERNALS_SLOT = 0;
+  static constexpr uint32_t URELATIVE_TIME_FORMAT_SLOT = 1;
+  static constexpr uint32_t SLOT_COUNT = 2;
 
-    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
-                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
+  static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                "INTERNALS_SLOT must match self-hosting define for internals "
+                "object slot");
 
-  private:
-    static const ClassOps classOps_;
+ private:
+  static const ClassOps classOps_;
 
-    static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
 };
 
-extern JSObject*
-CreateRelativeTimeFormatPrototype(JSContext* cx, JS::Handle<JSObject*> Intl,
-                                  JS::Handle<GlobalObject*> global);
+extern JSObject* CreateRelativeTimeFormatPrototype(
+    JSContext* cx, JS::Handle<JSObject*> Intl,
+    JS::Handle<GlobalObject*> global);
 
 /**
  * Returns an object indicating the supported locales for relative time format
@@ -49,8 +49,8 @@ CreateRelativeTimeFormatPrototype(JSContext* cx, JS::Handle<JSObject*> Intl,
  *
  * Usage: availableLocales = intl_RelativeTimeFormat_availableLocales()
  */
-extern MOZ_MUST_USE bool
-intl_RelativeTimeFormat_availableLocales(JSContext* cx, unsigned argc, JS::Value* vp);
+extern MOZ_MUST_USE bool intl_RelativeTimeFormat_availableLocales(
+    JSContext* cx, unsigned argc, JS::Value* vp);
 
 /**
  * Returns a relative time as a string formatted according to the effective
@@ -64,9 +64,9 @@ intl_RelativeTimeFormat_availableLocales(JSContext* cx, unsigned argc, JS::Value
  * Usage: formatted = intl_FormatRelativeTime(relativeTimeFormat, t,
  *                                            unit, numeric)
  */
-extern MOZ_MUST_USE bool
-intl_FormatRelativeTime(JSContext* cx, unsigned argc, JS::Value* vp);
+extern MOZ_MUST_USE bool intl_FormatRelativeTime(JSContext* cx, unsigned argc,
+                                                 JS::Value* vp);
 
-} // namespace js
+}  // namespace js
 
 #endif /* builtin_intl_RelativeTimeFormat_h */

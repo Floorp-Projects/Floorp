@@ -45,14 +45,13 @@ class nsSMILValue;
 // +---------------------+---------------+-------------+------------------+
 //
 
-class nsISMILType
-{
+class nsISMILType {
   /**
    * Only give the nsSMILValue class access to this interface.
    */
   friend class nsSMILValue;
 
-protected:
+ protected:
   /**
    * Initialises aValue and sets it to some identity value such that adding
    * aValue to another value of the same type has no effect.
@@ -105,7 +104,7 @@ protected:
    * @pre aDest.mType == aSrc.mType == this
    */
   virtual bool IsEqual(const nsSMILValue& aLeft,
-                         const nsSMILValue& aRight) const = 0;
+                       const nsSMILValue& aRight) const = 0;
 
   /**
    * Adds two values.
@@ -140,8 +139,7 @@ protected:
    *
    * @pre aValueToAdd.mType == aDest.mType == this
    */
-  virtual nsresult Add(nsSMILValue& aDest,
-                       const nsSMILValue& aValueToAdd,
+  virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                        uint32_t aCount) const = 0;
 
   /**
@@ -163,8 +161,7 @@ protected:
    * @pre aValueToAdd.mType == aDest.mType == this
    */
   virtual nsresult SandwichAdd(nsSMILValue& aDest,
-                               const nsSMILValue& aValueToAdd) const
-  {
+                               const nsSMILValue& aValueToAdd) const {
     return Add(aDest, aValueToAdd, 1);
   }
 
@@ -206,9 +203,8 @@ protected:
    * @pre aStartVal.mType == aEndVal.mType == aResult.mType == this
    */
   virtual nsresult Interpolate(const nsSMILValue& aStartVal,
-                               const nsSMILValue& aEndVal,
-                               double aUnitDistance,
+                               const nsSMILValue& aEndVal, double aUnitDistance,
                                nsSMILValue& aResult) const = 0;
 };
 
-#endif // NS_ISMILTYPE_H_
+#endif  // NS_ISMILTYPE_H_

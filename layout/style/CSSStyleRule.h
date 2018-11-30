@@ -21,29 +21,28 @@ namespace dom {
 class DocGroup;
 class CSSStyleRule;
 
-class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration
-{
-public:
+class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   css::Rule* GetParentRule() final;
   nsINode* GetParentObject() final;
 
-protected:
+ protected:
   mozilla::DeclarationBlock* GetOrCreateCSSDeclaration(
-    Operation aOperation, mozilla::DeclarationBlock** aCreated) final;
+      Operation aOperation, mozilla::DeclarationBlock** aCreated) final;
   nsresult SetCSSDeclaration(DeclarationBlock* aDecl,
                              MutationClosureData* aClosureData) final;
   nsIDocument* DocToUpdate() final;
-  ParsingEnvironment
-  GetParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+  ParsingEnvironment GetParsingEnvironment(
+      nsIPrincipal* aSubjectPrincipal) const final;
 
-private:
+ private:
   // For accessing the constructor.
   friend class CSSStyleRule;
 
   explicit CSSStyleRuleDeclaration(
-    already_AddRefed<RawServoDeclarationBlock> aDecls);
+      already_AddRefed<RawServoDeclarationBlock> aDecls);
   ~CSSStyleRuleDeclaration();
 
   inline CSSStyleRule* Rule();
@@ -52,15 +51,11 @@ private:
   RefPtr<DeclarationBlock> mDecls;
 };
 
-class CSSStyleRule final : public BindingStyleRule
-                         , public SupportsWeakPtr<CSSStyleRule>
-{
-public:
-  CSSStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
-               StyleSheet* aSheet,
-               css::Rule* aParentRule,
-               uint32_t aLine,
-               uint32_t aColumn);
+class CSSStyleRule final : public BindingStyleRule,
+                           public SupportsWeakPtr<CSSStyleRule> {
+ public:
+  CSSStyleRule(already_AddRefed<RawServoStyleRule> aRawRule, StyleSheet* aSheet,
+               css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CSSStyleRule,
@@ -70,8 +65,7 @@ public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(CSSStyleRule)
 
   uint32_t GetSelectorCount() override;
-  nsresult GetSelectorText(uint32_t aSelectorIndex,
-                           nsAString& aText) override;
+  nsresult GetSelectorText(uint32_t aSelectorIndex, nsAString& aText) override;
   nsresult GetSpecificity(uint32_t aSelectorIndex,
                           uint64_t* aSpecificity) override;
   nsresult SelectorMatchesElement(dom::Element* aElement,
@@ -95,7 +89,7 @@ public:
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-private:
+ private:
   ~CSSStyleRule() {}
 
   // For computing the offset of mDecls.
@@ -105,21 +99,17 @@ private:
   CSSStyleRuleDeclaration mDecls;
 };
 
-CSSStyleRule*
-CSSStyleRuleDeclaration::Rule()
-{
-  return reinterpret_cast<CSSStyleRule*>(
-    reinterpret_cast<uint8_t*>(this) - offsetof(CSSStyleRule, mDecls));
+CSSStyleRule* CSSStyleRuleDeclaration::Rule() {
+  return reinterpret_cast<CSSStyleRule*>(reinterpret_cast<uint8_t*>(this) -
+                                         offsetof(CSSStyleRule, mDecls));
 }
 
-const CSSStyleRule*
-CSSStyleRuleDeclaration::Rule() const
-{
+const CSSStyleRule* CSSStyleRuleDeclaration::Rule() const {
   return reinterpret_cast<const CSSStyleRule*>(
-    reinterpret_cast<const uint8_t*>(this) - offsetof(CSSStyleRule, mDecls));
+      reinterpret_cast<const uint8_t*>(this) - offsetof(CSSStyleRule, mDecls));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_CSSStyleRule_h
+#endif  // mozilla_CSSStyleRule_h

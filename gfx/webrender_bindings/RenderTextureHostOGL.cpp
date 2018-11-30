@@ -9,15 +9,13 @@
 namespace mozilla {
 namespace wr {
 
-RenderTextureHostOGL::RenderTextureHostOGL()
-{
+RenderTextureHostOGL::RenderTextureHostOGL() {
   MOZ_COUNT_CTOR_INHERITED(RenderTextureHostOGL, RenderTextureHost);
 }
 
-RenderTextureHostOGL::~RenderTextureHostOGL()
-{
+RenderTextureHostOGL::~RenderTextureHostOGL() {
   MOZ_COUNT_DTOR_INHERITED(RenderTextureHostOGL, RenderTextureHost);
 }
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla

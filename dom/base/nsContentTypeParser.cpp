@@ -11,20 +11,14 @@
 using namespace mozilla;
 
 nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
-  : mString(aString)
-{
-}
+    : mString(aString) {}
 
-nsresult
-nsContentTypeParser::GetParameter(const char* aParameterName,
-                                  nsAString& aResult) const
-{
+nsresult nsContentTypeParser::GetParameter(const char* aParameterName,
+                                           nsAString& aResult) const {
   return net::GetParameterHTTP(mString, aParameterName, aResult);
 }
 
-nsresult
-nsContentTypeParser::GetType(nsAString& aResult) const
-{
+nsresult nsContentTypeParser::GetType(nsAString& aResult) const {
   nsresult rv = GetParameter(nullptr, aResult);
   if (NS_FAILED(rv)) {
     return rv;

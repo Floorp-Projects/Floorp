@@ -64,12 +64,10 @@ namespace dom {
 
 class FeaturePolicyUtils;
 
-class FeaturePolicy final : public nsISupports
-                          , public nsWrapperCache
-{
+class FeaturePolicy final : public nsISupports, public nsWrapperCache {
   friend class FeaturePolicyUtils;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FeaturePolicy)
 
@@ -78,85 +76,63 @@ public:
   // A FeaturePolicy must have a default origin.
   // This method must be called before any other exposed WebIDL method or before
   // checking if a feature is allowed.
-  void
-  SetDefaultOrigin(nsIPrincipal* aPrincipal)
-  {
+  void SetDefaultOrigin(nsIPrincipal* aPrincipal) {
     mDefaultOrigin = aPrincipal;
   }
 
-  nsIPrincipal* DefaultOrigin() const
-  {
-    return mDefaultOrigin;
-  }
+  nsIPrincipal* DefaultOrigin() const { return mDefaultOrigin; }
 
   // Inherits the policy from the 'parent' context if it exists.
-  void
-  InheritPolicy(FeaturePolicy* aParentFeaturePolicy);
+  void InheritPolicy(FeaturePolicy* aParentFeaturePolicy);
 
   // Sets the declarative part of the policy. This can be from the HTTP header
   // or for the 'allow' HTML attribute.
-  void
-  SetDeclaredPolicy(nsIDocument* aDocument,
-                    const nsAString& aPolicyString,
-                    nsIPrincipal* aSelfOrigin,
-                    nsIPrincipal* aSrcOrigin);
+  void SetDeclaredPolicy(nsIDocument* aDocument, const nsAString& aPolicyString,
+                         nsIPrincipal* aSelfOrigin, nsIPrincipal* aSrcOrigin);
 
   // This method creates a policy for aFeatureName allowing it to '*' if it
   // doesn't exist yet. It's used by HTMLIFrameElement to enable features by
   // attributes.
-  void
-  MaybeSetAllowedPolicy(const nsAString& aFeatureName);
+  void MaybeSetAllowedPolicy(const nsAString& aFeatureName);
 
   // Clears all the declarative policy directives. This is needed when the
   // 'allow' attribute or the 'src' attribute change for HTMLIFrameElement's
   // policy.
-  void
-  ResetDeclaredPolicy();
+  void ResetDeclaredPolicy();
 
   // WebIDL internal methods.
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  nsINode*
-  GetParentObject() const
-  {
-    return mParentNode;
-  }
+  nsINode* GetParentObject() const { return mParentNode; }
 
   // WebIDL explosed methods.
 
-  bool
-  AllowsFeature(const nsAString& aFeatureName,
-                const Optional<nsAString>& aOrigin) const;
+  bool AllowsFeature(const nsAString& aFeatureName,
+                     const Optional<nsAString>& aOrigin) const;
 
-  void
-  AllowedFeatures(nsTArray<nsString>& aAllowedFeatures);
+  void AllowedFeatures(nsTArray<nsString>& aAllowedFeatures);
 
-  void
-  GetAllowlistForFeature(const nsAString& aFeatureName,
-                         nsTArray<nsString>& aList) const;
+  void GetAllowlistForFeature(const nsAString& aFeatureName,
+                              nsTArray<nsString>& aList) const;
 
-private:
+ private:
   ~FeaturePolicy() = default;
 
   // This method returns true if the aFeatureName is allowed for aOrigin,
   // following the feature-policy directives. See the comment at the top of this
   // file.
-  bool
-  AllowsFeatureInternal(const nsAString& aFeatureName,
-                        nsIPrincipal* aOrigin) const;
+  bool AllowsFeatureInternal(const nsAString& aFeatureName,
+                             nsIPrincipal* aOrigin) const;
 
   // Inherits a single denied feature from the parent context.
-  void
-  SetInheritedDeniedFeature(const nsAString& aFeatureName);
+  void SetInheritedDeniedFeature(const nsAString& aFeatureName);
 
-  bool
-  HasInheritedDeniedFeature(const nsAString& aFeatureName) const;
+  bool HasInheritedDeniedFeature(const nsAString& aFeatureName) const;
 
   // This returns true if we have a declared feature policy for aFeatureName.
-  bool
-  HasDeclaredFeature(const nsAString& aFeatureName) const;
+  bool HasDeclaredFeature(const nsAString& aFeatureName) const;
 
   nsCOMPtr<nsINode> mParentNode;
 
@@ -170,7 +146,7 @@ private:
   nsCOMPtr<nsIPrincipal> mDefaultOrigin;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FeaturePolicy_h
+#endif  // mozilla_dom_FeaturePolicy_h

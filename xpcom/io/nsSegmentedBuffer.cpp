@@ -7,15 +7,13 @@
 #include "nsSegmentedBuffer.h"
 #include "nsMemory.h"
 
-nsresult
-nsSegmentedBuffer::Init(uint32_t aSegmentSize, uint32_t aMaxSize)
-{
+nsresult nsSegmentedBuffer::Init(uint32_t aSegmentSize, uint32_t aMaxSize) {
   if (mSegmentArrayCount != 0) {
     return NS_ERROR_FAILURE;  // initialized more than once
   }
   mSegmentSize = aSegmentSize;
   mMaxSize = aMaxSize;
-#if 0 // testing...
+#if 0  // testing...
   mSegmentArrayCount = 2;
 #else
   mSegmentArrayCount = NS_SEGMENTARRAY_INITIAL_COUNT;
@@ -23,9 +21,7 @@ nsSegmentedBuffer::Init(uint32_t aSegmentSize, uint32_t aMaxSize)
   return NS_OK;
 }
 
-char*
-nsSegmentedBuffer::AppendNewSegment()
-{
+char* nsSegmentedBuffer::AppendNewSegment() {
   if (GetSize() >= mMaxSize) {
     return nullptr;
   }
@@ -43,8 +39,7 @@ nsSegmentedBuffer::AppendNewSegment()
     // copy wrapped content to new extension
     if (mFirstSegmentIndex > mLastSegmentIndex) {
       // deal with wrap around case
-      memcpy(&mSegmentArray[mSegmentArrayCount],
-             mSegmentArray,
+      memcpy(&mSegmentArray[mSegmentArrayCount], mSegmentArray,
              mLastSegmentIndex * sizeof(char*));
       memset(mSegmentArray, 0, mLastSegmentIndex * sizeof(char*));
       mLastSegmentIndex += mSegmentArrayCount;
@@ -66,10 +61,9 @@ nsSegmentedBuffer::AppendNewSegment()
   return seg;
 }
 
-bool
-nsSegmentedBuffer::DeleteFirstSegment()
-{
-  NS_ASSERTION(mSegmentArray[mFirstSegmentIndex] != nullptr, "deleting bad segment");
+bool nsSegmentedBuffer::DeleteFirstSegment() {
+  NS_ASSERTION(mSegmentArray[mFirstSegmentIndex] != nullptr,
+               "deleting bad segment");
   free(mSegmentArray[mFirstSegmentIndex]);
   mSegmentArray[mFirstSegmentIndex] = nullptr;
   int32_t last = ModSegArraySize(mLastSegmentIndex - 1);
@@ -82,9 +76,7 @@ nsSegmentedBuffer::DeleteFirstSegment()
   }
 }
 
-bool
-nsSegmentedBuffer::DeleteLastSegment()
-{
+bool nsSegmentedBuffer::DeleteLastSegment() {
   int32_t last = ModSegArraySize(mLastSegmentIndex - 1);
   NS_ASSERTION(mSegmentArray[last] != nullptr, "deleting bad segment");
   free(mSegmentArray[last]);
@@ -93,9 +85,7 @@ nsSegmentedBuffer::DeleteLastSegment()
   return (bool)(mLastSegmentIndex == mFirstSegmentIndex);
 }
 
-bool
-nsSegmentedBuffer::ReallocLastSegment(size_t aNewSize)
-{
+bool nsSegmentedBuffer::ReallocLastSegment(size_t aNewSize) {
   int32_t last = ModSegArraySize(mLastSegmentIndex - 1);
   NS_ASSERTION(mSegmentArray[last] != nullptr, "realloc'ing bad segment");
   char* newSegment = (char*)realloc(mSegmentArray[last], aNewSize);
@@ -106,9 +96,7 @@ nsSegmentedBuffer::ReallocLastSegment(size_t aNewSize)
   return false;
 }
 
-void
-nsSegmentedBuffer::Empty()
-{
+void nsSegmentedBuffer::Empty() {
   if (mSegmentArray) {
     for (uint32_t i = 0; i < mSegmentArrayCount; i++) {
       if (mSegmentArray[i]) {

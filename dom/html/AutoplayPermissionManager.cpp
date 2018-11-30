@@ -14,22 +14,21 @@
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
 
-#define PLAY_REQUEST_LOG(msg, ...)                                             \
+#define PLAY_REQUEST_LOG(msg, ...) \
   MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 namespace mozilla {
 
-RefPtr<GenericPromise>
-AutoplayPermissionManager::RequestWithPrompt()
-{
+RefPtr<GenericPromise> AutoplayPermissionManager::RequestWithPrompt() {
   // If we've already requested permission, we'll just return the promise,
   // as we don't want to show multiple permission requests at once.
   // The promise is non-exclusive, so if the request has already completed,
   // the ThenValue will run immediately.
   if (mRequestDispatched) {
-    PLAY_REQUEST_LOG("AutoplayPermissionManager %p RequestWithPrompt() request "
-                     "already dispatched",
-                     this);
+    PLAY_REQUEST_LOG(
+        "AutoplayPermissionManager %p RequestWithPrompt() request "
+        "already dispatched",
+        this);
     return mPromiseHolder.Ensure(__func__);
   }
 
@@ -39,37 +38,34 @@ AutoplayPermissionManager::RequestWithPrompt()
                                            __func__);
   }
 
-  RefPtr<AutoplayPermissionRequest> request =
-    AutoplayPermissionRequest::Create(nsGlobalWindowInner::Cast(window), this);
+  RefPtr<AutoplayPermissionRequest> request = AutoplayPermissionRequest::Create(
+      nsGlobalWindowInner::Cast(window), this);
   if (!request) {
     return GenericPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR,
                                            __func__);
   }
 
   // Dispatch the request.
-  request->RequestDelayedTask(window->EventTargetFor(TaskCategory::Other),
-                              AutoplayPermissionRequest::DelayedTaskType::Request);
+  request->RequestDelayedTask(
+      window->EventTargetFor(TaskCategory::Other),
+      AutoplayPermissionRequest::DelayedTaskType::Request);
 
   mRequestDispatched = true;
   return mPromiseHolder.Ensure(__func__);
 }
 
 AutoplayPermissionManager::AutoplayPermissionManager(
-  nsGlobalWindowInner* aWindow)
-  : mWindow(do_GetWeakReference(aWindow))
-{
+    nsGlobalWindowInner* aWindow)
+    : mWindow(do_GetWeakReference(aWindow)) {
   PLAY_REQUEST_LOG("AutoplayPermissionManager %p Create()", this);
 }
 
-AutoplayPermissionManager::~AutoplayPermissionManager()
-{
+AutoplayPermissionManager::~AutoplayPermissionManager() {
   // If we made a request, it should have been resolved.
   MOZ_ASSERT(!mRequestDispatched);
 }
 
-void
-AutoplayPermissionManager::DenyPlayRequestIfExists()
-{
+void AutoplayPermissionManager::DenyPlayRequestIfExists() {
   if (mRequestDispatched) {
     PLAY_REQUEST_LOG("AutoplayPermissionManager %p DenyPlayRequest()", this);
     mRequestDispatched = false;
@@ -77,9 +73,7 @@ AutoplayPermissionManager::DenyPlayRequestIfExists()
   }
 }
 
-void
-AutoplayPermissionManager::ApprovePlayRequestIfExists()
-{
+void AutoplayPermissionManager::ApprovePlayRequestIfExists() {
   if (mRequestDispatched) {
     PLAY_REQUEST_LOG("AutoplayPermissionManager %p ApprovePlayRequest()", this);
     mRequestDispatched = false;
@@ -87,4 +81,4 @@ AutoplayPermissionManager::ApprovePlayRequestIfExists()
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

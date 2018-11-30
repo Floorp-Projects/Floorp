@@ -125,7 +125,7 @@ NS_EVENT_MESSAGE(eFormInvalid)
 NS_EVENT_MESSAGE(eFormCheckboxStateChange)
 NS_EVENT_MESSAGE(eFormRadioStateChange)
 
-//Need separate focus/blur notifications for non-native widgets
+// Need separate focus/blur notifications for non-native widgets
 NS_EVENT_MESSAGE(eFocus)
 NS_EVENT_MESSAGE(eBlur)
 NS_EVENT_MESSAGE(eFocusIn)
@@ -164,8 +164,8 @@ NS_EVENT_MESSAGE(eLegacyNodeRemovedFromDocument)
 NS_EVENT_MESSAGE(eLegacyNodeInsertedIntoDocument)
 NS_EVENT_MESSAGE(eLegacyAttrModified)
 NS_EVENT_MESSAGE(eLegacyCharacterDataModified)
-NS_EVENT_MESSAGE_FIRST_LAST(eLegacyMutationEvent,
-  eLegacySubtreeModified, eLegacyCharacterDataModified)
+NS_EVENT_MESSAGE_FIRST_LAST(eLegacyMutationEvent, eLegacySubtreeModified,
+                            eLegacyCharacterDataModified)
 
 NS_EVENT_MESSAGE(eUnidentifiedEvent)
 
@@ -428,7 +428,7 @@ NS_EVENT_MESSAGE(eWheelOperationStart)
 // corresponding native event.
 NS_EVENT_MESSAGE(eWheelOperationEnd)
 
-//System time is changed
+// System time is changed
 NS_EVENT_MESSAGE(eTimeChange)
 
 // Network packet events.
@@ -446,8 +446,8 @@ NS_EVENT_MESSAGE(eGamepadButtonUp)
 NS_EVENT_MESSAGE(eGamepadAxisMove)
 NS_EVENT_MESSAGE(eGamepadConnected)
 NS_EVENT_MESSAGE(eGamepadDisconnected)
-NS_EVENT_MESSAGE_FIRST_LAST(eGamepadEvent,
-                            eGamepadButtonDown, eGamepadDisconnected)
+NS_EVENT_MESSAGE_FIRST_LAST(eGamepadEvent, eGamepadButtonDown,
+                            eGamepadDisconnected)
 
 // input and beforeinput events.
 NS_EVENT_MESSAGE(eEditorInput)

@@ -9,9 +9,8 @@
 // Moz headers (alphabetical)
 
 // System headers (alphabetical)
-#include <windows.h>   // HINSTANCE, HANDLE
-#include <wlanapi.h>   // Wlan* functions
-
+#include <windows.h>  // HINSTANCE, HANDLE
+#include <wlanapi.h>  // Wlan* functions
 
 class WinWLANLibrary {
  public:
@@ -43,19 +42,13 @@ class WinWLANLibrary {
 };
 
 class ScopedWLANObject {
-public:
- ScopedWLANObject(WinWLANLibrary* library, void* object)
-   : mLibrary(library)
-   , mObject(object)
-  {
-  }
+ public:
+  ScopedWLANObject(WinWLANLibrary* library, void* object)
+      : mLibrary(library), mObject(object) {}
 
-  ~ScopedWLANObject()
-  {
-    (*(mLibrary->GetWlanFreeMemoryPtr()))(mObject);
-  }
+  ~ScopedWLANObject() { (*(mLibrary->GetWlanFreeMemoryPtr()))(mObject); }
 
  private:
-  WinWLANLibrary *mLibrary;
-  void *mObject;
+  WinWLANLibrary* mLibrary;
+  void* mObject;
 };

@@ -10,11 +10,10 @@
 
 #include <d3d10_1.h>
 
-class TestDrawTargetD2D : public TestDrawTargetBase
-{
-public:
+class TestDrawTargetD2D : public TestDrawTargetBase {
+ public:
   TestDrawTargetD2D();
 
-private:
+ private:
   RefPtr<ID3D10Device1> mDevice;
 };

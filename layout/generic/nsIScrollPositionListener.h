@@ -10,14 +10,13 @@
 #include "nsCoord.h"
 
 /**
- * Provides a way to learn about scroll position changes of nsIScrollableFrame's.
+ * Provides a way to learn about scroll position changes of
+ * nsIScrollableFrame's.
  */
 class nsIScrollPositionListener {
-public:
-
-	virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) = 0;
-	virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) = 0;
+ public:
+  virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) = 0;
+  virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) = 0;
 };
 
 #endif /* nsIScrollPositionListener_h___ */
-

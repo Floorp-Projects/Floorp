@@ -24,7 +24,7 @@
 // This header is available in the June 2010 SDK and in the Win8 SDK
 #include <d3dcommon.h>
 // Win 8.0 SDK types we'll need when building using older sdks.
-#if !defined(D3D_FEATURE_LEVEL_11_1) // defined in the 8.0 SDK only
+#if !defined(D3D_FEATURE_LEVEL_11_1)  // defined in the 8.0 SDK only
 #define D3D_FEATURE_LEVEL_11_1 static_cast<D3D_FEATURE_LEVEL>(0xb100)
 #define D3D_FL9_1_REQ_TEXTURE2D_U_OR_V_DIMENSION 2048
 #define D3D_FL9_3_REQ_TEXTURE2D_U_OR_V_DIMENSION 4096
@@ -39,22 +39,19 @@ class ScopedGfxFeatureReporter;
 namespace layers {
 class DeviceAttachmentsD3D11;
 class MLGDevice;
-} // namespace layers
+}  // namespace layers
 
 namespace gfx {
 class FeatureState;
 
-class DeviceManagerDx final
-{
-public:
+class DeviceManagerDx final {
+ public:
   static void Init();
   static void Shutdown();
 
   DeviceManagerDx();
 
-  static DeviceManagerDx* Get() {
-    return sInstance;
-  }
+  static DeviceManagerDx* Get() { return sInstance; }
 
   RefPtr<ID3D11Device> GetCompositorDevice();
   RefPtr<ID3D11Device> GetContentDevice();
@@ -88,8 +85,9 @@ public:
   void CreateContentDevices();
   void CreateDirectCompositionDevice();
 
-  void GetCompositorDevices(RefPtr<ID3D11Device>* aOutDevice,
-                            RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments);
+  void GetCompositorDevices(
+      RefPtr<ID3D11Device>* aOutDevice,
+      RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments);
 
   void ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus);
   void ExportDeviceInfo(D3D11DeviceStatus* aOut);
@@ -113,21 +111,20 @@ public:
   // on the next frame.
   void ForceDeviceReset(ForcedDeviceResetReason aReason);
 
-private:
-  // Pre-load any compositor resources that are expensive, and are needed when we
-  // attempt to create a compositor.
+ private:
+  // Pre-load any compositor resources that are expensive, and are needed when
+  // we attempt to create a compositor.
   static void PreloadAttachmentsOnCompositorThread();
 
-  IDXGIAdapter1 *GetDXGIAdapter();
+  IDXGIAdapter1* GetDXGIAdapter();
 
   void DisableD3D11AfterCrash();
 
   void CreateCompositorDevice(mozilla::gfx::FeatureState& d3d11);
-  bool CreateCompositorDeviceHelper(
-      mozilla::gfx::FeatureState& aD3d11,
-      IDXGIAdapter1* aAdapter,
-      bool aAttemptVideoSupport,
-      RefPtr<ID3D11Device>& aOutDevice);
+  bool CreateCompositorDeviceHelper(mozilla::gfx::FeatureState& aD3d11,
+                                    IDXGIAdapter1* aAdapter,
+                                    bool aAttemptVideoSupport,
+                                    RefPtr<ID3D11Device>& aOutDevice);
 
   void CreateWARPCompositorDevice();
   void CreateMLGDevice();
@@ -135,10 +132,8 @@ private:
 
   mozilla::gfx::FeatureStatus CreateContentDevice();
 
-  bool CreateDevice(IDXGIAdapter* aAdapter,
-                    D3D_DRIVER_TYPE aDriverType,
-                    UINT aFlags,
-                    HRESULT& aResOut,
+  bool CreateDevice(IDXGIAdapter* aAdapter, D3D_DRIVER_TYPE aDriverType,
+                    UINT aFlags, HRESULT& aResOut,
                     RefPtr<ID3D11Device>& aOutDevice);
 
   bool ContentAdapterIsParentAdapter(ID3D11Device* device);
@@ -151,7 +146,7 @@ private:
   // a failure.
   bool GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason);
 
-private:
+ private:
   static StaticAutoPtr<DeviceManagerDx> sInstance;
 
   // This is assigned during device creation. Afterwards, it is released if
@@ -183,7 +178,7 @@ private:
   Maybe<DeviceResetReason> mDeviceResetReason;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // mozilla_gfx_thebes_DeviceManagerDx_h
+#endif  // mozilla_gfx_thebes_DeviceManagerDx_h

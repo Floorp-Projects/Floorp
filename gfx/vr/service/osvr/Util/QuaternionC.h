@@ -45,21 +45,21 @@ OSVR_EXTERN_C_BEGIN
 */
 /** @brief A structure defining a quaternion, often a unit quaternion
  * representing 3D rotation.
-*/
+ */
 typedef struct OSVR_Quaternion {
-    /** @brief Internal data - direct access not recommended */
-    double data[4];
+  /** @brief Internal data - direct access not recommended */
+  double data[4];
 } OSVR_Quaternion;
 
-#define OSVR_QUAT_MEMBER(COMPONENT, INDEX)                                     \
-    /** @brief Accessor for quaternion component COMPONENT */                  \
-    OSVR_INLINE double osvrQuatGet##COMPONENT(OSVR_Quaternion const *q) {      \
-        return q->data[INDEX];                                                 \
-    }                                                                          \
-    /** @brief Setter for quaternion component COMPONENT */                    \
-    OSVR_INLINE void osvrQuatSet##COMPONENT(OSVR_Quaternion *q, double val) {  \
-        q->data[INDEX] = val;                                                  \
-    }
+#define OSVR_QUAT_MEMBER(COMPONENT, INDEX)                                  \
+  /** @brief Accessor for quaternion component COMPONENT */                 \
+  OSVR_INLINE double osvrQuatGet##COMPONENT(OSVR_Quaternion const *q) {     \
+    return q->data[INDEX];                                                  \
+  }                                                                         \
+  /** @brief Setter for quaternion component COMPONENT */                   \
+  OSVR_INLINE void osvrQuatSet##COMPONENT(OSVR_Quaternion *q, double val) { \
+    q->data[INDEX] = val;                                                   \
+  }
 
 OSVR_QUAT_MEMBER(W, 0)
 OSVR_QUAT_MEMBER(X, 1)
@@ -70,10 +70,10 @@ OSVR_QUAT_MEMBER(Z, 3)
 
 /** @brief Set a quaternion to the identity rotation */
 OSVR_INLINE void osvrQuatSetIdentity(OSVR_Quaternion *q) {
-    osvrQuatSetW(q, 1);
-    osvrQuatSetX(q, 0);
-    osvrQuatSetY(q, 0);
-    osvrQuatSetZ(q, 0);
+  osvrQuatSetW(q, 1);
+  osvrQuatSetX(q, 0);
+  osvrQuatSetY(q, 0);
+  osvrQuatSetZ(q, 0);
 }
 
 /** @} */
@@ -83,9 +83,9 @@ OSVR_EXTERN_C_END
 #ifdef __cplusplus
 template <typename StreamType>
 inline StreamType &operator<<(StreamType &os, OSVR_Quaternion const &quat) {
-    os << "(" << osvrQuatGetW(&quat) << ", (" << osvrQuatGetX(&quat) << ", "
-       << osvrQuatGetY(&quat) << ", " << osvrQuatGetZ(&quat) << "))";
-    return os;
+  os << "(" << osvrQuatGetW(&quat) << ", (" << osvrQuatGetX(&quat) << ", "
+     << osvrQuatGetY(&quat) << ", " << osvrQuatGetZ(&quat) << "))";
+  return os;
 }
 #endif
 

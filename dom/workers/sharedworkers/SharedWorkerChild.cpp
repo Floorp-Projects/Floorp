@@ -15,23 +15,15 @@ using namespace ipc;
 
 namespace dom {
 
-SharedWorkerChild::SharedWorkerChild()
-  : mParent(nullptr)
-  , mActive(true)
-{
-}
+SharedWorkerChild::SharedWorkerChild() : mParent(nullptr), mActive(true) {}
 
 SharedWorkerChild::~SharedWorkerChild() = default;
 
-void
-SharedWorkerChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void SharedWorkerChild::ActorDestroy(ActorDestroyReason aWhy) {
   mActive = false;
 }
 
-void
-SharedWorkerChild::SendClose()
-{
+void SharedWorkerChild::SendClose() {
   if (mActive) {
     // This is the last message.
     mActive = false;
@@ -39,41 +31,31 @@ SharedWorkerChild::SendClose()
   }
 }
 
-void
-SharedWorkerChild::SendSuspend()
-{
+void SharedWorkerChild::SendSuspend() {
   if (mActive) {
     PSharedWorkerChild::SendSuspend();
   }
 }
 
-void
-SharedWorkerChild::SendResume()
-{
+void SharedWorkerChild::SendResume() {
   if (mActive) {
     PSharedWorkerChild::SendResume();
   }
 }
 
-void
-SharedWorkerChild::SendFreeze()
-{
+void SharedWorkerChild::SendFreeze() {
   if (mActive) {
     PSharedWorkerChild::SendFreeze();
   }
 }
 
-void
-SharedWorkerChild::SendThaw()
-{
+void SharedWorkerChild::SendThaw() {
   if (mActive) {
     PSharedWorkerChild::SendThaw();
   }
 }
 
-IPCResult
-SharedWorkerChild::RecvError(const ErrorValue& aValue)
-{
+IPCResult SharedWorkerChild::RecvError(const ErrorValue& aValue) {
   if (!mParent) {
     return IPC_OK();
   }
@@ -109,11 +91,11 @@ SharedWorkerChild::RecvError(const ErrorValue& aValue)
     errorInit.mLineno = errorData.lineNumber();
     errorInit.mColno = errorData.columnNumber();
 
-    event = ErrorEvent::Constructor(mParent, NS_LITERAL_STRING("error"),
-                                    errorInit);
+    event =
+        ErrorEvent::Constructor(mParent, NS_LITERAL_STRING("error"), errorInit);
   } else {
-    event = Event::Constructor(mParent, NS_LITERAL_STRING("error"),
-                               EventInit());
+    event =
+        Event::Constructor(mParent, NS_LITERAL_STRING("error"), EventInit());
   }
 
   if (!event) {
@@ -125,15 +107,15 @@ SharedWorkerChild::RecvError(const ErrorValue& aValue)
 
   ErrorResult res;
   bool defaultActionEnabled =
-    mParent->DispatchEvent(*event, CallerType::System, res);
+      mParent->DispatchEvent(*event, CallerType::System, res);
   if (res.Failed()) {
     ThrowAndReport(window, res.StealNSResult());
     return IPC_OK();
   }
 
   if (aValue.type() != ErrorValue::TErrorData) {
-     MOZ_ASSERT(aValue.type() == ErrorValue::Tvoid_t);
-     return IPC_OK();
+    MOZ_ASSERT(aValue.type() == ErrorValue::Tvoid_t);
+    return IPC_OK();
   }
 
   if (!defaultActionEnabled) {
@@ -174,9 +156,7 @@ SharedWorkerChild::RecvError(const ErrorValue& aValue)
   return IPC_OK();
 }
 
-IPCResult
-SharedWorkerChild::RecvTerminate()
-{
+IPCResult SharedWorkerChild::RecvTerminate() {
   if (mParent) {
     mParent->Close();
   }
@@ -184,5 +164,5 @@ SharedWorkerChild::RecvTerminate()
   return IPC_OK();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -15,25 +15,22 @@ namespace dom {
 // The register job.  This implements the steps in the spec Register algorithm,
 // but then uses ServiceWorkerUpdateJob to implement the Update and Install
 // spec algorithms.
-class ServiceWorkerRegisterJob final : public ServiceWorkerUpdateJob
-{
-public:
-  ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal,
-                           const nsACString& aScope,
+class ServiceWorkerRegisterJob final : public ServiceWorkerUpdateJob {
+ public:
+  ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal, const nsACString& aScope,
                            const nsACString& aScriptSpec,
                            nsILoadGroup* aLoadGroup,
                            ServiceWorkerUpdateViaCache aUpdateViaCache);
 
-private:
+ private:
   // Implement the Register algorithm steps and then call the parent class
   // Update() to complete the job execution.
-  virtual void
-  AsyncExecute() override;
+  virtual void AsyncExecute() override;
 
   virtual ~ServiceWorkerRegisterJob();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_serviceworkerregisterjob_h
+#endif  // mozilla_dom_serviceworkerregisterjob_h

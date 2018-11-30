@@ -14,31 +14,23 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(HR)
 namespace mozilla {
 namespace dom {
 
-HTMLHRElement::HTMLHRElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : nsGenericHTMLElement(std::move(aNodeInfo))
-{
-}
+HTMLHRElement::HTMLHRElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-HTMLHRElement::~HTMLHRElement()
-{
-}
+HTMLHRElement::~HTMLHRElement() {}
 
 NS_IMPL_ELEMENT_CLONE(HTMLHRElement)
 
-
-bool
-HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
-                              nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult)
-{
+bool HTMLHRElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                   const nsAString& aValue,
+                                   nsIPrincipal* aMaybeScriptedPrincipal,
+                                   nsAttrValue& aResult) {
   static const nsAttrValue::EnumTable kAlignTable[] = {
-    { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-    { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-    { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-    { nullptr, 0 }
-  };
+      {"left", NS_STYLE_TEXT_ALIGN_LEFT},
+      {"right", NS_STYLE_TEXT_ALIGN_RIGHT},
+      {"center", NS_STYLE_TEXT_ALIGN_CENTER},
+      {nullptr, 0}};
 
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width) {
@@ -59,10 +51,8 @@ HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-void
-HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                     MappedDeclarations& aDecls)
-{
+void HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                          MappedDeclarations& aDecls) {
   bool noshade = false;
 
   const nsAttrValue* colorValue = aAttributes->GetAttr(nsGkAtoms::color);
@@ -80,18 +70,18 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   if (value && value->Type() == nsAttrValue::eEnum) {
     // Map align attribute into auto side margins
     switch (value->GetEnumValue()) {
-    case NS_STYLE_TEXT_ALIGN_LEFT:
-      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left, 0.0f);
-      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
-      break;
-    case NS_STYLE_TEXT_ALIGN_RIGHT:
-      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
-      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right, 0.0f);
-      break;
-    case NS_STYLE_TEXT_ALIGN_CENTER:
-      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
-      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
-      break;
+      case NS_STYLE_TEXT_ALIGN_LEFT:
+        aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left, 0.0f);
+        aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
+        break;
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
+        aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right, 0.0f);
+        break;
+      case NS_STYLE_TEXT_ALIGN_CENTER:
+        aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
+        aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
+        break;
     }
   }
   if (!aDecls.PropertyIsSet(eCSSProperty_height)) {
@@ -106,8 +96,9 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // removing all but the top border.
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
       if (value && value->Type() == nsAttrValue::eInteger) {
-        aDecls.SetPixelValue(eCSSProperty_height, (float)value->GetIntegerValue());
-      } // else use default value from html.css
+        aDecls.SetPixelValue(eCSSProperty_height,
+                             (float)value->GetIntegerValue());
+      }  // else use default value from html.css
     }
   }
 
@@ -128,12 +119,13 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         allSides = false;
       }
     } else {
-      sizePerSide = 1.0f; // default to a 2px high line
+      sizePerSide = 1.0f;  // default to a 2px high line
     }
     aDecls.SetPixelValueIfUnset(eCSSProperty_border_top_width, sizePerSide);
     if (allSides) {
       aDecls.SetPixelValueIfUnset(eCSSProperty_border_right_width, sizePerSide);
-      aDecls.SetPixelValueIfUnset(eCSSProperty_border_bottom_width, sizePerSide);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_border_bottom_width,
+                                  sizePerSide);
       aDecls.SetPixelValueIfUnset(eCSSProperty_border_left_width, sizePerSide);
     }
 
@@ -153,7 +145,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // circular ends.  This assumes the <hr> isn't larger than
       // that in *both* dimensions.
       for (const nsCSSPropertyID* props =
-            nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_radius);
+               nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_radius);
            *props != eCSSProperty_UNKNOWN; ++props) {
         aDecls.SetPixelValueIfUnset(*props, 10000.0f);
       }
@@ -170,37 +162,28 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLHRElement::IsAttributeMapped(const nsAtom* aAttribute) const
-{
+HTMLHRElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   static const MappedAttributeEntry attributes[] = {
-    { nsGkAtoms::align },
-    { nsGkAtoms::width },
-    { nsGkAtoms::size },
-    { nsGkAtoms::color },
-    { nsGkAtoms::noshade },
-    { nullptr },
+      {nsGkAtoms::align}, {nsGkAtoms::width},   {nsGkAtoms::size},
+      {nsGkAtoms::color}, {nsGkAtoms::noshade}, {nullptr},
   };
 
   static const MappedAttributeEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap,
+      attributes,
+      sCommonAttributeMap,
   };
 
   return FindAttributeDependence(aAttribute, map);
 }
 
-
-nsMapRuleToAttributesFunc
-HTMLHRElement::GetAttributeMappingFunction() const
-{
+nsMapRuleToAttributesFunc HTMLHRElement::GetAttributeMappingFunction() const {
   return &MapAttributesIntoRule;
 }
 
-JSObject*
-HTMLHRElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLHRElement::WrapNode(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto) {
   return HTMLHRElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -18,7 +18,8 @@ using namespace mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////
 // SVGAnimatedPreserveAspectRatio class
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedPreserveAspectRatio, mSVGElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(
+    DOMSVGAnimatedPreserveAspectRatio, mSVGElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedPreserveAspectRatio)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedPreserveAspectRatio)
@@ -28,26 +29,27 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedPreserveAspectRatio)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-JSObject*
-DOMSVGAnimatedPreserveAspectRatio::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DOMSVGAnimatedPreserveAspectRatio::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedPreserveAspectRatio_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /* Implementation */
 
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio, DOMSVGAnimatedPreserveAspectRatio>
-  sSVGAnimatedPAspectRatioTearoffTable;
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio, DOMSVGPreserveAspectRatio>
-  sBaseSVGPAspectRatioTearoffTable;
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio, DOMSVGPreserveAspectRatio>
-  sAnimSVGPAspectRatioTearoffTable;
+static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
+                             DOMSVGAnimatedPreserveAspectRatio>
+    sSVGAnimatedPAspectRatioTearoffTable;
+static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
+                             DOMSVGPreserveAspectRatio>
+    sBaseSVGPAspectRatioTearoffTable;
+static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
+                             DOMSVGPreserveAspectRatio>
+    sAnimSVGPAspectRatioTearoffTable;
 
 already_AddRefed<DOMSVGPreserveAspectRatio>
-DOMSVGAnimatedPreserveAspectRatio::BaseVal()
-{
+DOMSVGAnimatedPreserveAspectRatio::BaseVal() {
   RefPtr<DOMSVGPreserveAspectRatio> domBaseVal =
-    sBaseSVGPAspectRatioTearoffTable.GetTearoff(mVal);
+      sBaseSVGPAspectRatioTearoffTable.GetTearoff(mVal);
   if (!domBaseVal) {
     domBaseVal = new DOMSVGPreserveAspectRatio(mVal, mSVGElement, true);
     sBaseSVGPAspectRatioTearoffTable.AddTearoff(mVal, domBaseVal);
@@ -56,8 +58,7 @@ DOMSVGAnimatedPreserveAspectRatio::BaseVal()
   return domBaseVal.forget();
 }
 
-DOMSVGPreserveAspectRatio::~DOMSVGPreserveAspectRatio()
-{
+DOMSVGPreserveAspectRatio::~DOMSVGPreserveAspectRatio() {
   if (mIsBaseValue) {
     sBaseSVGPAspectRatioTearoffTable.RemoveTearoff(mVal);
   } else {
@@ -66,10 +67,9 @@ DOMSVGPreserveAspectRatio::~DOMSVGPreserveAspectRatio()
 }
 
 already_AddRefed<DOMSVGPreserveAspectRatio>
-DOMSVGAnimatedPreserveAspectRatio::AnimVal()
-{
+DOMSVGAnimatedPreserveAspectRatio::AnimVal() {
   RefPtr<DOMSVGPreserveAspectRatio> domAnimVal =
-    sAnimSVGPAspectRatioTearoffTable.GetTearoff(mVal);
+      sAnimSVGPAspectRatioTearoffTable.GetTearoff(mVal);
   if (!domAnimVal) {
     domAnimVal = new DOMSVGPreserveAspectRatio(mVal, mSVGElement, false);
     sAnimSVGPAspectRatioTearoffTable.AddTearoff(mVal, domAnimVal);
@@ -78,10 +78,9 @@ DOMSVGAnimatedPreserveAspectRatio::AnimVal()
   return domAnimVal.forget();
 }
 
-nsresult
-SVGAnimatedPreserveAspectRatio::SetBaseValueString(
-  const nsAString &aValueAsString, nsSVGElement *aSVGElement, bool aDoSetAttr)
-{
+nsresult SVGAnimatedPreserveAspectRatio::SetBaseValueString(
+    const nsAString& aValueAsString, nsSVGElement* aSVGElement,
+    bool aDoSetAttr) {
   SVGPreserveAspectRatio val;
   nsresult res = SVGPreserveAspectRatio::FromString(aValueAsString, &val);
   if (NS_FAILED(res)) {
@@ -108,17 +107,13 @@ SVGAnimatedPreserveAspectRatio::SetBaseValueString(
   return NS_OK;
 }
 
-void
-SVGAnimatedPreserveAspectRatio::GetBaseValueString(
-  nsAString& aValueAsString) const
-{
+void SVGAnimatedPreserveAspectRatio::GetBaseValueString(
+    nsAString& aValueAsString) const {
   mBaseVal.ToString(aValueAsString);
 }
 
-void
-SVGAnimatedPreserveAspectRatio::SetBaseValue(const SVGPreserveAspectRatio &aValue,
-                                             nsSVGElement *aSVGElement)
-{
+void SVGAnimatedPreserveAspectRatio::SetBaseValue(
+    const SVGPreserveAspectRatio& aValue, nsSVGElement* aSVGElement) {
   if (mIsBaseSet && mBaseVal == aValue) {
     return;
   }
@@ -136,9 +131,7 @@ SVGAnimatedPreserveAspectRatio::SetBaseValue(const SVGPreserveAspectRatio &aValu
   }
 }
 
-static uint64_t
-PackPreserveAspectRatio(const SVGPreserveAspectRatio& par)
-{
+static uint64_t PackPreserveAspectRatio(const SVGPreserveAspectRatio& par) {
   // All preserveAspectRatio values are enum values (do not interpolate), so we
   // can safely collate them and treat them as a single enum as for SMIL.
   uint64_t packed = 0;
@@ -147,10 +140,8 @@ PackPreserveAspectRatio(const SVGPreserveAspectRatio& par)
   return packed;
 }
 
-void
-SVGAnimatedPreserveAspectRatio::SetAnimValue(uint64_t aPackedValue,
-                                             nsSVGElement *aSVGElement)
-{
+void SVGAnimatedPreserveAspectRatio::SetAnimValue(uint64_t aPackedValue,
+                                                  nsSVGElement* aSVGElement) {
   if (mIsAnimated && PackPreserveAspectRatio(mAnimVal) == aPackedValue) {
     return;
   }
@@ -162,38 +153,34 @@ SVGAnimatedPreserveAspectRatio::SetAnimValue(uint64_t aPackedValue,
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
 SVGAnimatedPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
-  nsSVGElement *aSVGElement)
-{
+    nsSVGElement* aSVGElement) {
   RefPtr<DOMSVGAnimatedPreserveAspectRatio> domAnimatedPAspectRatio =
-    sSVGAnimatedPAspectRatioTearoffTable.GetTearoff(this);
+      sSVGAnimatedPAspectRatioTearoffTable.GetTearoff(this);
   if (!domAnimatedPAspectRatio) {
-    domAnimatedPAspectRatio = new DOMSVGAnimatedPreserveAspectRatio(this, aSVGElement);
-    sSVGAnimatedPAspectRatioTearoffTable.AddTearoff(this, domAnimatedPAspectRatio);
+    domAnimatedPAspectRatio =
+        new DOMSVGAnimatedPreserveAspectRatio(this, aSVGElement);
+    sSVGAnimatedPAspectRatioTearoffTable.AddTearoff(this,
+                                                    domAnimatedPAspectRatio);
   }
   return domAnimatedPAspectRatio.forget();
 }
 
-DOMSVGAnimatedPreserveAspectRatio::~DOMSVGAnimatedPreserveAspectRatio()
-{
+DOMSVGAnimatedPreserveAspectRatio::~DOMSVGAnimatedPreserveAspectRatio() {
   sSVGAnimatedPAspectRatioTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr>
-SVGAnimatedPreserveAspectRatio::ToSMILAttr(nsSVGElement *aSVGElement)
-{
+UniquePtr<nsISMILAttr> SVGAnimatedPreserveAspectRatio::ToSMILAttr(
+    nsSVGElement* aSVGElement) {
   return MakeUnique<SMILPreserveAspectRatio>(this, aSVGElement);
 }
 
 // typedef for inner class, to make function signatures shorter below:
 typedef SVGAnimatedPreserveAspectRatio::SMILPreserveAspectRatio
-  SMILPreserveAspectRatio;
+    SMILPreserveAspectRatio;
 
-nsresult
-SMILPreserveAspectRatio::ValueFromString(const nsAString& aStr,
-                                         const SVGAnimationElement* /*aSrcElement*/,
-                                         nsSMILValue& aValue,
-                                         bool& aPreventCachingOfSandwich) const
-{
+nsresult SMILPreserveAspectRatio::ValueFromString(
+    const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
+    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   SVGPreserveAspectRatio par;
   nsresult res = SVGPreserveAspectRatio::FromString(aStr, &par);
   NS_ENSURE_SUCCESS(res, res);
@@ -205,17 +192,13 @@ SMILPreserveAspectRatio::ValueFromString(const nsAString& aStr,
   return NS_OK;
 }
 
-nsSMILValue
-SMILPreserveAspectRatio::GetBaseValue() const
-{
+nsSMILValue SMILPreserveAspectRatio::GetBaseValue() const {
   nsSMILValue val(SMILEnumType::Singleton());
   val.mU.mUint = PackPreserveAspectRatio(mVal->GetBaseValue());
   return val;
 }
 
-void
-SMILPreserveAspectRatio::ClearAnimValue()
-{
+void SMILPreserveAspectRatio::ClearAnimValue() {
   if (mVal->mIsAnimated) {
     mVal->mIsAnimated = false;
     mVal->mAnimVal = mVal->mBaseVal;
@@ -223,9 +206,7 @@ SMILPreserveAspectRatio::ClearAnimValue()
   }
 }
 
-nsresult
-SMILPreserveAspectRatio::SetAnimValue(const nsSMILValue& aValue)
-{
+nsresult SMILPreserveAspectRatio::SetAnimValue(const nsSMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILEnumType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILEnumType::Singleton()) {

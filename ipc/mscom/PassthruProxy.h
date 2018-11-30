@@ -13,7 +13,7 @@
 #include "mozilla/NotNull.h"
 #if defined(MOZ_CONTENT_SANDBOX)
 #include "mozilla/SandboxSettings.h"
-#endif // defined(MOZ_CONTENT_SANDBOX)
+#endif  // defined(MOZ_CONTENT_SANDBOX)
 
 #include <objbase.h>
 
@@ -25,22 +25,16 @@ template <typename Iface>
 struct VTableSizer;
 
 template <>
-struct VTableSizer<IDispatch>
-{
-  enum {
-    Size = 7
-  };
+struct VTableSizer<IDispatch> {
+  enum { Size = 7 };
 };
 
-} // namespace detail
+}  // namespace detail
 
-class PassthruProxy final : public IMarshal
-                          , public IClientSecurity
-{
-public:
+class PassthruProxy final : public IMarshal, public IClientSecurity {
+ public:
   template <typename Iface>
-  static RefPtr<Iface> Wrap(NotNull<Iface*> aIn)
-  {
+  static RefPtr<Iface> Wrap(NotNull<Iface*> aIn) {
     static_assert(detail::VTableSizer<Iface>::Size >= 3, "VTable too small");
 
 #if defined(MOZ_CONTENT_SANDBOX)
@@ -51,9 +45,8 @@ public:
 
     typename detail::EnvironmentSelector<Iface>::Type env;
 
-    RefPtr<PassthruProxy> passthru(new PassthruProxy(&env, __uuidof(Iface),
-                                                     detail::VTableSizer<Iface>::Size,
-                                                     aIn));
+    RefPtr<PassthruProxy> passthru(new PassthruProxy(
+        &env, __uuidof(Iface), detail::VTableSizer<Iface>::Size, aIn));
 
     RefPtr<Iface> result;
     if (FAILED(passthru->QueryProxyInterface(getter_AddRefs(result)))) {
@@ -64,7 +57,7 @@ public:
 #else
     // No wrapping required
     return aIn.get();
-#endif // defined(MOZ_CONTENT_SANDBOX)
+#endif  // defined(MOZ_CONTENT_SANDBOX)
   }
 
   static HRESULT Register();
@@ -96,18 +89,22 @@ public:
   STDMETHODIMP QueryBlanket(IUnknown* aProxy, DWORD* aAuthnSvc,
                             DWORD* aAuthzSvc, OLECHAR** aSrvPrincName,
                             DWORD* aAuthnLevel, DWORD* aImpLevel,
-                            void** aAuthInfo, DWORD* aCapabilities) override
-  { return E_NOTIMPL; }
+                            void** aAuthInfo, DWORD* aCapabilities) override {
+    return E_NOTIMPL;
+  }
 
   STDMETHODIMP SetBlanket(IUnknown* aProxy, DWORD aAuthnSvc, DWORD aAuthzSvc,
                           OLECHAR* aSrvPrincName, DWORD aAuthnLevel,
-                          DWORD aImpLevel, void* aAuthInfo, DWORD aCapabilities) override
-  { return E_NOTIMPL; }
+                          DWORD aImpLevel, void* aAuthInfo,
+                          DWORD aCapabilities) override {
+    return E_NOTIMPL;
+  }
 
-  STDMETHODIMP CopyProxy(IUnknown* aProxy, IUnknown** aOutCopy) override
-  { return E_NOTIMPL; }
+  STDMETHODIMP CopyProxy(IUnknown* aProxy, IUnknown** aOutCopy) override {
+    return E_NOTIMPL;
+  }
 
-private:
+ private:
   PassthruProxy(ProxyStream::Environment* aEnv, REFIID aIidToWrap,
                 uint32_t aVTableSize, NotNull<IUnknown*> aObjToWrap);
   ~PassthruProxy();
@@ -115,16 +112,16 @@ private:
   bool IsInitialMarshal() const { return !mStream; }
   HRESULT QueryProxyInterface(void** aOutInterface);
 
-  Atomic<ULONG>     mRefCnt;
-  IID               mWrappedIid;
-  PreservedStreamPtr  mPreservedStream;
-  RefPtr<IStream>   mStream;
-  uint32_t          mVTableSize;
-  IUnknown*         mVTable;
-  bool              mForgetPreservedStream;
+  Atomic<ULONG> mRefCnt;
+  IID mWrappedIid;
+  PreservedStreamPtr mPreservedStream;
+  RefPtr<IStream> mStream;
+  uint32_t mVTableSize;
+  IUnknown* mVTable;
+  bool mForgetPreservedStream;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_PassthruProxy_h
+#endif  // mozilla_mscom_PassthruProxy_h

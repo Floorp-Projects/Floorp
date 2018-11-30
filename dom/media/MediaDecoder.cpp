@@ -119,8 +119,7 @@ class MediaMemoryTracker : public nsIMemoryReporter {
     }
   }
 
-  static RefPtr<MediaMemoryPromise> GetSizes()
-  {
+  static RefPtr<MediaMemoryPromise> GetSizes() {
     MOZ_ASSERT(NS_IsMainThread());
     DecodersArray& decoders = Decoders();
 
@@ -132,7 +131,7 @@ class MediaMemoryTracker : public nsIMemoryReporter {
     }
 
     RefPtr<MediaDecoder::ResourceSizes> resourceSizes =
-      new MediaDecoder::ResourceSizes(MediaMemoryTracker::MallocSizeOf);
+        new MediaDecoder::ResourceSizes(MediaMemoryTracker::MallocSizeOf);
 
     size_t videoSize = 0;
     size_t audioSize = 0;
@@ -144,15 +143,15 @@ class MediaMemoryTracker : public nsIMemoryReporter {
     }
 
     return resourceSizes->Promise()->Then(
-      SystemGroup::AbstractMainThreadFor(TaskCategory::Performance),
-      __func__,
-      [videoSize, audioSize](size_t resourceSize) {
-        return MediaMemoryPromise::CreateAndResolve(
-          MediaMemoryInfo(videoSize, audioSize, resourceSize), __func__);
-      },
-      [](size_t) {
-        return MediaMemoryPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-      });
+        SystemGroup::AbstractMainThreadFor(TaskCategory::Performance), __func__,
+        [videoSize, audioSize](size_t resourceSize) {
+          return MediaMemoryPromise::CreateAndResolve(
+              MediaMemoryInfo(videoSize, audioSize, resourceSize), __func__);
+        },
+        [](size_t) {
+          return MediaMemoryPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                     __func__);
+        });
   }
 };
 
@@ -187,9 +186,7 @@ class MOZ_RAII SeekEventsGuard {
 
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
-RefPtr<MediaMemoryPromise>
-GetMediaMemorySizes()
-{
+RefPtr<MediaMemoryPromise> GetMediaMemorySizes() {
   return MediaMemoryTracker::GetSizes();
 }
 

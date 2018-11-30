@@ -14,16 +14,13 @@ namespace dom {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 
-ServiceWorkerProxy::~ServiceWorkerProxy()
-{
+ServiceWorkerProxy::~ServiceWorkerProxy() {
   // Any thread
   MOZ_DIAGNOSTIC_ASSERT(!mActor);
   MOZ_DIAGNOSTIC_ASSERT(!mInfo);
 }
 
-void
-ServiceWorkerProxy::MaybeShutdownOnBGThread()
-{
+void ServiceWorkerProxy::MaybeShutdownOnBGThread() {
   AssertIsOnBackgroundThread();
   if (!mActor) {
     return;
@@ -31,20 +28,16 @@ ServiceWorkerProxy::MaybeShutdownOnBGThread()
   mActor->MaybeSendDelete();
 }
 
-void
-ServiceWorkerProxy::InitOnMainThread()
-{
+void ServiceWorkerProxy::InitOnMainThread() {
   AssertIsOnMainThread();
 
-  auto scopeExit = MakeScopeExit([&] {
-    MaybeShutdownOnMainThread();
-  });
+  auto scopeExit = MakeScopeExit([&] { MaybeShutdownOnMainThread(); });
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   NS_ENSURE_TRUE_VOID(swm);
 
   RefPtr<ServiceWorkerRegistrationInfo> reg =
-    swm->GetRegistration(mDescriptor.PrincipalInfo(), mDescriptor.Scope());
+      swm->GetRegistration(mDescriptor.PrincipalInfo(), mDescriptor.Scope());
   NS_ENSURE_TRUE_VOID(reg);
 
   RefPtr<ServiceWorkerInfo> info = reg->GetByDescriptor(mDescriptor);
@@ -52,39 +45,31 @@ ServiceWorkerProxy::InitOnMainThread()
 
   scopeExit.release();
 
-  mInfo = new nsMainThreadPtrHolder<ServiceWorkerInfo>("ServiceWorkerProxy::mInfo",
-                                                       info);
+  mInfo = new nsMainThreadPtrHolder<ServiceWorkerInfo>(
+      "ServiceWorkerProxy::mInfo", info);
 }
 
-void
-ServiceWorkerProxy::MaybeShutdownOnMainThread()
-{
+void ServiceWorkerProxy::MaybeShutdownOnMainThread() {
   AssertIsOnMainThread();
 
-  nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(__func__, this,
-                      &ServiceWorkerProxy::MaybeShutdownOnBGThread);
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
+      __func__, this, &ServiceWorkerProxy::MaybeShutdownOnBGThread);
 
   MOZ_ALWAYS_SUCCEEDS(mEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL));
 }
 
-void
-ServiceWorkerProxy::StopListeningOnMainThread()
-{
+void ServiceWorkerProxy::StopListeningOnMainThread() {
   AssertIsOnMainThread();
   mInfo = nullptr;
 }
 
-ServiceWorkerProxy::ServiceWorkerProxy(const ServiceWorkerDescriptor& aDescriptor)
-  : mActor(nullptr)
-  , mEventTarget(GetCurrentThreadSerialEventTarget())
-  , mDescriptor(aDescriptor)
-{
-}
+ServiceWorkerProxy::ServiceWorkerProxy(
+    const ServiceWorkerDescriptor& aDescriptor)
+    : mActor(nullptr),
+      mEventTarget(GetCurrentThreadSerialEventTarget()),
+      mDescriptor(aDescriptor) {}
 
-void
-ServiceWorkerProxy::Init(ServiceWorkerParent* aActor)
-{
+void ServiceWorkerProxy::Init(ServiceWorkerParent* aActor) {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(aActor);
   MOZ_DIAGNOSTIC_ASSERT(!mActor);
@@ -96,41 +81,37 @@ ServiceWorkerProxy::Init(ServiceWorkerParent* aActor)
   // the constructor.  If done from the constructor the runnable can
   // execute, complete, and release its reference before the constructor
   // returns.
-  nsCOMPtr<nsIRunnable> r = NewRunnableMethod("ServiceWorkerProxy::Init", this,
-                                              &ServiceWorkerProxy::InitOnMainThread);
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
+      "ServiceWorkerProxy::Init", this, &ServiceWorkerProxy::InitOnMainThread);
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
-void
-ServiceWorkerProxy::RevokeActor(ServiceWorkerParent* aActor)
-{
+void ServiceWorkerProxy::RevokeActor(ServiceWorkerParent* aActor) {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(mActor);
   MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
   mActor = nullptr;
 
-  nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(__func__, this,
-                      &ServiceWorkerProxy::StopListeningOnMainThread);
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
+      __func__, this, &ServiceWorkerProxy::StopListeningOnMainThread);
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
-void
-ServiceWorkerProxy::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
-                                const ClientInfo& aClientInfo,
-                                const ClientState& aClientState)
-{
+void ServiceWorkerProxy::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
+                                     const ClientInfo& aClientInfo,
+                                     const ClientState& aClientState) {
   AssertIsOnBackgroundThread();
   RefPtr<ServiceWorkerProxy> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__,
-    [self, data = std::move(aData), aClientInfo, aClientState] () mutable {
-      if (!self->mInfo) {
-        return;
-      }
-      self->mInfo->PostMessage(std::move(data), aClientInfo, aClientState);
-    });
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      __func__,
+      [self, data = std::move(aData), aClientInfo, aClientState]() mutable {
+        if (!self->mInfo) {
+          return;
+        }
+        self->mInfo->PostMessage(std::move(data), aClientInfo, aClientState);
+      });
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

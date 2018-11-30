@@ -7,19 +7,19 @@
 #ifndef GFX_LAYERS_BLOBSURFACE_H
 #define GFX_LAYERS_BLOBSURFACE_H
 
-#include <stdint.h>                     // for uint8_t, uint32_t
-#include "mozilla/Attributes.h"         // for MOZ_STACK_CLASS
-#include "mozilla/RefPtr.h"             // for already_AddRefed
-#include "mozilla/gfx/Point.h"          // for IntSize
-#include "mozilla/gfx/Types.h"          // for SurfaceFormat
+#include <stdint.h>                         // for uint8_t, uint32_t
+#include "mozilla/Attributes.h"             // for MOZ_STACK_CLASS
+#include "mozilla/RefPtr.h"                 // for already_AddRefed
+#include "mozilla/gfx/Point.h"              // for IntSize
+#include "mozilla/gfx/Types.h"              // for SurfaceFormat
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 
 namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
 class DrawTarget;
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 namespace mozilla {
 namespace layers {
@@ -34,40 +34,40 @@ int32_t GetRGBStride(const RGBDescriptor& aDescriptor);
 
 uint32_t ComputeRGBBufferSize(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
-
 // YCbCr
 
-///This function is meant as a helper to know how much shared memory we need
-///to allocate in a shmem in order to place a shared YCbCr image blob of
-///given dimensions.
-uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize,
-                                int32_t aYStride,
+/// This function is meant as a helper to know how much shared memory we need
+/// to allocate in a shmem in order to place a shared YCbCr image blob of
+/// given dimensions.
+uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize, int32_t aYStride,
                                 const gfx::IntSize& aCbCrSize,
                                 int32_t aCbCrStride);
-uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize,
-                                int32_t aYStride,
+uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize, int32_t aYStride,
                                 const gfx::IntSize& aCbCrSize,
-                                int32_t aCbCrStride,
-                                uint32_t aYOffset,
-                                uint32_t aCbOffset,
-                                uint32_t aCrOffset);
+                                int32_t aCbCrStride, uint32_t aYOffset,
+                                uint32_t aCbOffset, uint32_t aCrOffset);
 uint32_t ComputeYCbCrBufferSize(uint32_t aBufferSize);
 
-void ComputeYCbCrOffsets(int32_t yStride, int32_t yHeight,
-                         int32_t cbCrStride, int32_t cbCrHeight,
-                         uint32_t& outYOffset, uint32_t& outCbOffset, uint32_t& outCrOffset);
+void ComputeYCbCrOffsets(int32_t yStride, int32_t yHeight, int32_t cbCrStride,
+                         int32_t cbCrHeight, uint32_t& outYOffset,
+                         uint32_t& outCbOffset, uint32_t& outCrOffset);
 
-gfx::SurfaceFormat FormatFromBufferDescriptor(const BufferDescriptor& aDescriptor);
+gfx::SurfaceFormat FormatFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor);
 
 gfx::IntSize SizeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 
-Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
+Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor);
 
-Maybe<YUVColorSpace> YUVColorSpaceFromBufferDescriptor(const BufferDescriptor& aDescriptor);
+Maybe<YUVColorSpace> YUVColorSpaceFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor);
 
-Maybe<gfx::ColorDepth> ColorDepthFromBufferDescriptor(const BufferDescriptor& aDescriptor);
+Maybe<gfx::ColorDepth> ColorDepthFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor);
 
-Maybe<StereoMode> StereoModeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
+Maybe<StereoMode> StereoModeFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor);
 
 uint8_t* GetYChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
 
@@ -75,8 +75,9 @@ uint8_t* GetCbChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
 
 uint8_t* GetCrChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
 
-already_AddRefed<gfx::DataSourceSurface>
-DataSourceSurfaceFromYCbCrDescriptor(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor, gfx::DataSourceSurface* aSurface = nullptr);
+already_AddRefed<gfx::DataSourceSurface> DataSourceSurfaceFromYCbCrDescriptor(
+    uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor,
+    gfx::DataSourceSurface* aSurface = nullptr);
 
 void ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
                                         const YCbCrDescriptor& aDescriptor,
@@ -85,9 +86,9 @@ void ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
                                         unsigned char* aDestBuffer,
                                         int32_t aStride);
 
-} // ImageDataSerializer
+}  // namespace ImageDataSerializer
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

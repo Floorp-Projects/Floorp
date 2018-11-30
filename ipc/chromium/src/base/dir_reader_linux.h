@@ -22,11 +22,11 @@
 namespace base {
 
 struct linux_dirent {
-  uint64_t        d_ino;
-  int64_t         d_off;
-  unsigned short  d_reclen;
-  unsigned char   d_type;
-  char            d_name[0];
+  uint64_t d_ino;
+  int64_t d_off;
+  unsigned short d_reclen;
+  unsigned char d_type;
+  char d_name[0];
 };
 
 class DirReaderLinux {
@@ -45,9 +45,7 @@ class DirReaderLinux {
     }
   }
 
-  bool IsValid() const {
-    return fd_ >= 0;
-  }
+  bool IsValid() const { return fd_ >= 0; }
 
   // Move to the next entry returning false if the iteration is complete.
   bool Next() {
@@ -56,12 +54,10 @@ class DirReaderLinux {
       offset_ += dirent->d_reclen;
     }
 
-    if (offset_ != size_)
-      return true;
+    if (offset_ != size_) return true;
 
     const int r = syscall(__NR_getdents64, fd_, buf_, sizeof(buf_));
-    if (r == 0)
-      return false;
+    if (r == 0) return false;
     if (r == -1) {
       DLOG(ERROR) << "getdents64 returned an error: " << errno;
       return false;
@@ -72,21 +68,16 @@ class DirReaderLinux {
   }
 
   const char* name() const {
-    if (!size_)
-      return NULL;
+    if (!size_) return NULL;
 
     const linux_dirent* dirent =
         reinterpret_cast<const linux_dirent*>(&buf_[offset_]);
     return dirent->d_name;
   }
 
-  int fd() const {
-    return fd_;
-  }
+  int fd() const { return fd_; }
 
-  static bool IsFallback() {
-    return false;
-  }
+  static bool IsFallback() { return false; }
 
  private:
   const int fd_;
@@ -101,4 +92,4 @@ class DirReaderLinux {
 
 }  // namespace base
 
-#endif // BASE_DIR_READER_LINUX_H_
+#endif  // BASE_DIR_READER_LINUX_H_

@@ -30,9 +30,8 @@ namespace dom {
  *
  * See bug 512260.
  */
-class ImageTracker
-{
-public:
+class ImageTracker {
+ public:
   ImageTracker();
   ImageTracker(const ImageTracker&) = delete;
   ImageTracker& operator=(const ImageTracker&) = delete;
@@ -55,7 +54,7 @@ public:
 
   void RequestDiscardAll();
 
-private:
+ private:
   ~ImageTracker();
 
   nsDataHashtable<nsPtrHashKey<imgIRequest>, uint32_t> mImages;
@@ -63,7 +62,7 @@ private:
   bool mAnimating;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ImageTracker
+#endif  // mozilla_dom_ImageTracker

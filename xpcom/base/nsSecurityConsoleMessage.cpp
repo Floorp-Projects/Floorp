@@ -8,38 +8,30 @@
 
 NS_IMPL_ISUPPORTS(nsSecurityConsoleMessage, nsISecurityConsoleMessage)
 
-nsSecurityConsoleMessage::nsSecurityConsoleMessage()
-{
-}
+nsSecurityConsoleMessage::nsSecurityConsoleMessage() {}
 
-nsSecurityConsoleMessage::~nsSecurityConsoleMessage()
-{
-}
+nsSecurityConsoleMessage::~nsSecurityConsoleMessage() {}
 
 NS_IMETHODIMP
-nsSecurityConsoleMessage::GetTag(nsAString& aTag)
-{
+nsSecurityConsoleMessage::GetTag(nsAString& aTag) {
   aTag = mTag;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSecurityConsoleMessage::SetTag(const nsAString& aTag)
-{
+nsSecurityConsoleMessage::SetTag(const nsAString& aTag) {
   mTag = aTag;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSecurityConsoleMessage::GetCategory(nsAString& aCategory)
-{
+nsSecurityConsoleMessage::GetCategory(nsAString& aCategory) {
   aCategory = mCategory;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSecurityConsoleMessage::SetCategory(const nsAString& aCategory)
-{
+nsSecurityConsoleMessage::SetCategory(const nsAString& aCategory) {
   mCategory = aCategory;
   return NS_OK;
 }

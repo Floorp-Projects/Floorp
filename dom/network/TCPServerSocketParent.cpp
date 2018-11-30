@@ -23,17 +23,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPServerSocketParent)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-void
-TCPServerSocketParent::ReleaseIPDLReference()
-{
+void TCPServerSocketParent::ReleaseIPDLReference() {
   MOZ_ASSERT(mIPCOpen);
   mIPCOpen = false;
   this->Release();
 }
 
-void
-TCPServerSocketParent::AddIPDLReference()
-{
+void TCPServerSocketParent::AddIPDLReference() {
   MOZ_ASSERT(!mIPCOpen);
   mIPCOpen = true;
   this->AddRef();
@@ -43,26 +39,19 @@ TCPServerSocketParent::TCPServerSocketParent(PNeckoParent* neckoParent,
                                              uint16_t aLocalPort,
                                              uint16_t aBacklog,
                                              bool aUseArrayBuffers)
-: mNeckoParent(neckoParent)
-, mIPCOpen(false)
-{
-  mServerSocket = new TCPServerSocket(nullptr, aLocalPort, aUseArrayBuffers, aBacklog);
+    : mNeckoParent(neckoParent), mIPCOpen(false) {
+  mServerSocket =
+      new TCPServerSocket(nullptr, aLocalPort, aUseArrayBuffers, aBacklog);
   mServerSocket->SetServerBridgeParent(this);
 }
 
-TCPServerSocketParent::~TCPServerSocketParent()
-{
-}
+TCPServerSocketParent::~TCPServerSocketParent() {}
 
-void
-TCPServerSocketParent::Init()
-{
+void TCPServerSocketParent::Init() {
   NS_ENSURE_SUCCESS_VOID(mServerSocket->Init());
 }
 
-nsresult
-TCPServerSocketParent::SendCallbackAccept(TCPSocketParent *socket)
-{
+nsresult TCPServerSocketParent::SendCallbackAccept(TCPSocketParent* socket) {
   socket->AddIPDLReference();
 
   nsresult rv;
@@ -84,28 +73,22 @@ TCPServerSocketParent::SendCallbackAccept(TCPSocketParent *socket)
   if (mNeckoParent) {
     if (mNeckoParent->SendPTCPSocketConstructor(socket, host, port)) {
       mozilla::Unused << PTCPServerSocketParent::SendCallbackAccept(socket);
-    }
-    else {
+    } else {
       NS_ERROR("Sending data from PTCPSocketParent was failed.");
     }
-  }
-  else {
+  } else {
     NS_ERROR("The member value for NeckoParent is wrong.");
   }
   return NS_OK;
 }
 
-mozilla::ipc::IPCResult
-TCPServerSocketParent::RecvClose()
-{
+mozilla::ipc::IPCResult TCPServerSocketParent::RecvClose() {
   NS_ENSURE_TRUE(mServerSocket, IPC_OK());
   mServerSocket->Close();
   return IPC_OK();
 }
 
-void
-TCPServerSocketParent::ActorDestroy(ActorDestroyReason why)
-{
+void TCPServerSocketParent::ActorDestroy(ActorDestroyReason why) {
   if (mServerSocket) {
     mServerSocket->Close();
     mServerSocket = nullptr;
@@ -113,16 +96,12 @@ TCPServerSocketParent::ActorDestroy(ActorDestroyReason why)
   mNeckoParent = nullptr;
 }
 
-mozilla::ipc::IPCResult
-TCPServerSocketParent::RecvRequestDelete()
-{
+mozilla::ipc::IPCResult TCPServerSocketParent::RecvRequestDelete() {
   mozilla::Unused << Send__delete__(this);
   return IPC_OK();
 }
 
-void
-TCPServerSocketParent::OnConnect(TCPServerSocketEvent* event)
-{
+void TCPServerSocketParent::OnConnect(TCPServerSocketEvent* event) {
   RefPtr<TCPSocket> socket = event->Socket();
 
   RefPtr<TCPSocketParent> socketParent = new TCPSocketParent();
@@ -133,5 +112,5 @@ TCPServerSocketParent::OnConnect(TCPServerSocketEvent* event)
   SendCallbackAccept(socketParent);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

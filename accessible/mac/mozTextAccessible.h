@@ -6,12 +6,10 @@
 
 #import "HyperTextAccessible.h"
 
-@interface mozTextAccessible : mozAccessible
-{
+@interface mozTextAccessible : mozAccessible {
 }
 @end
 
-@interface mozTextLeafAccessible : mozAccessible
-{
+@interface mozTextLeafAccessible : mozAccessible {
 }
 @end

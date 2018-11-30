@@ -17,7 +17,7 @@ static const gfx::Color sAndroidCheckColor(gfx::Color(0.19f, 0.21f, 0.23f));
 static const gfx::Color sAndroidDisabledColor(gfx::Color(0.88f, 0.88f, 0.88f));
 static const gfx::Color sAndroidActiveColor(gfx::Color(0.94f, 0.94f, 0.94f));
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // mozilla_widget_AndroidColors_h
+#endif  // mozilla_widget_AndroidColors_h

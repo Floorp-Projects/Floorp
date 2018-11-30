@@ -11,15 +11,13 @@
 namespace mozilla {
 namespace a11y {
 
-class DocAccessibleWrap : public DocAccessible
-{
-public:
+class DocAccessibleWrap : public DocAccessible {
+ public:
   DocAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell);
   virtual ~DocAccessibleWrap();
-
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

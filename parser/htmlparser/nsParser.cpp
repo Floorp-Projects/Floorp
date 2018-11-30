@@ -43,10 +43,10 @@
 
 using namespace mozilla;
 
-#define NS_PARSER_FLAG_OBSERVERS_ENABLED      0x00000004
+#define NS_PARSER_FLAG_OBSERVERS_ENABLED 0x00000004
 #define NS_PARSER_FLAG_PENDING_CONTINUE_EVENT 0x00000008
-#define NS_PARSER_FLAG_FLUSH_TOKENS           0x00000020
-#define NS_PARSER_FLAG_CAN_TOKENIZE           0x00000040
+#define NS_PARSER_FLAG_FLUSH_TOKENS 0x00000020
+#define NS_PARSER_FLAG_CAN_TOKENIZE 0x00000040
 
 //-------------- Begin ParseContinue Event Definition ------------------------
 /*
@@ -103,19 +103,14 @@ document.write.
 For more details @see bugzilla bug 76722
 */
 
-
-class nsParserContinueEvent : public Runnable
-{
-public:
+class nsParserContinueEvent : public Runnable {
+ public:
   RefPtr<nsParser> mParser;
 
   explicit nsParserContinueEvent(nsParser* aParser)
-    : mozilla::Runnable("nsParserContinueEvent")
-    , mParser(aParser)
-  {}
+      : mozilla::Runnable("nsParserContinueEvent"), mParser(aParser) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     mParser->HandleParserContinueEvent(this);
     return NS_OK;
   }
@@ -127,25 +122,17 @@ public:
  *  default constructor
  */
 nsParser::nsParser()
-  : mParserContext(nullptr)
-  , mCharset(WINDOWS_1252_ENCODING)
-{
+    : mParserContext(nullptr), mCharset(WINDOWS_1252_ENCODING) {
   Initialize(true);
 }
 
-nsParser::~nsParser()
-{
-  Cleanup();
-}
+nsParser::~nsParser() { Cleanup(); }
 
-void
-nsParser::Initialize(bool aConstructor)
-{
+void nsParser::Initialize(bool aConstructor) {
   if (aConstructor) {
     // Raw pointer
     mParserContext = 0;
-  }
-  else {
+  } else {
     // nsCOMPtrs
     mObserver = nullptr;
     mUnusedInput.Truncate();
@@ -158,16 +145,13 @@ nsParser::Initialize(bool aConstructor)
   mStreamStatus = NS_OK;
   mCommand = eViewNormal;
   mBlocked = 0;
-  mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED |
-           NS_PARSER_FLAG_CAN_TOKENIZE;
+  mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED | NS_PARSER_FLAG_CAN_TOKENIZE;
 
   mProcessingNetworkData = false;
   mIsAboutBlank = false;
 }
 
-void
-nsParser::Cleanup()
-{
+void nsParser::Cleanup() {
 #ifdef DEBUG
   if (mParserContext && mParserContext->mPrevContext) {
     NS_WARNING("Extra parser contexts still on the parser stack");
@@ -175,7 +159,7 @@ nsParser::Cleanup()
 #endif
 
   while (mParserContext) {
-    CParserContext *pc = mParserContext->mPrevContext;
+    CParserContext* pc = mParserContext->mPrevContext;
     delete mParserContext;
     mParserContext = pc;
   }
@@ -198,7 +182,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsParser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDTD)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSink)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObserver)
-  CParserContext *pc = tmp->mParserContext;
+  CParserContext* pc = tmp->mParserContext;
   while (pc) {
     cb.NoteXPCOMChild(pc->mTokenizer);
     pc = pc->mPrevContext;
@@ -220,9 +204,7 @@ NS_INTERFACE_MAP_END
 // and the parser has been interrupted by the content sink
 // because the processing of tokens took too long.
 
-nsresult
-nsParser::PostContinueEvent()
-{
+nsresult nsParser::PostContinueEvent() {
   if (!(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT)) {
     // If this flag isn't set, then there shouldn't be a live continue event!
     NS_ASSERTION(!mContinueEvent, "bad");
@@ -231,20 +213,17 @@ nsParser::PostContinueEvent()
     // broken when the event fires.
     nsCOMPtr<nsIRunnable> event = new nsParserContinueEvent(this);
     if (NS_FAILED(NS_DispatchToCurrentThread(event))) {
-        NS_WARNING("failed to dispatch parser continuation event");
+      NS_WARNING("failed to dispatch parser continuation event");
     } else {
-        mFlags |= NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
-        mContinueEvent = event;
+      mFlags |= NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
+      mContinueEvent = event;
     }
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP_(void)
-nsParser::GetCommand(nsCString& aCommand)
-{
-  aCommand = mCommandStr;
-}
+nsParser::GetCommand(nsCString& aCommand) { aCommand = mCommandStr; }
 
 /**
  *  Call this method once you've created a parser, and want to instruct it
@@ -254,8 +233,7 @@ nsParser::GetCommand(nsCString& aCommand)
  *  @param   aCommand the command string to set
  */
 NS_IMETHODIMP_(void)
-nsParser::SetCommand(const char* aCommand)
-{
+nsParser::SetCommand(const char* aCommand) {
   mCommandStr.Assign(aCommand);
   if (mCommandStr.EqualsLiteral("view-source")) {
     mCommand = eViewSource;
@@ -274,8 +252,7 @@ nsParser::SetCommand(const char* aCommand)
  *  @param   aParserCommand the command to set
  */
 NS_IMETHODIMP_(void)
-nsParser::SetCommand(eParserCommands aParserCommand)
-{
+nsParser::SetCommand(eParserCommands aParserCommand) {
   mCommand = aParserCommand;
 }
 
@@ -286,20 +263,16 @@ nsParser::SetCommand(eParserCommands aParserCommand)
  *  @param   aCharset- the charset of a document
  *  @param   aCharsetSource- the source of the charset
  */
-void
-nsParser::SetDocumentCharset(NotNull<const Encoding*> aCharset,
-                             int32_t aCharsetSource)
-{
+void nsParser::SetDocumentCharset(NotNull<const Encoding*> aCharset,
+                                  int32_t aCharsetSource) {
   mCharset = aCharset;
   mCharsetSource = aCharsetSource;
   if (mParserContext && mParserContext->mScanner) {
-     mParserContext->mScanner->SetDocumentCharset(aCharset, aCharsetSource);
+    mParserContext->mScanner->SetDocumentCharset(aCharset, aCharsetSource);
   }
 }
 
-void
-nsParser::SetSinkCharset(NotNull<const Encoding*> aCharset)
-{
+void nsParser::SetSinkCharset(NotNull<const Encoding*> aCharset) {
   if (mSink) {
     mSink->SetDocumentCharset(aCharset);
   }
@@ -312,8 +285,7 @@ nsParser::SetSinkCharset(NotNull<const Encoding*> aCharset)
  *  @param   nsIContentSink interface for node receiver
  */
 NS_IMETHODIMP_(void)
-nsParser::SetContentSink(nsIContentSink* aSink)
-{
+nsParser::SetContentSink(nsIContentSink* aSink) {
   MOZ_ASSERT(aSink, "sink cannot be null!");
   mSink = aSink;
 
@@ -331,14 +303,9 @@ nsParser::SetContentSink(nsIContentSink* aSink)
  * @return  current sink
  */
 NS_IMETHODIMP_(nsIContentSink*)
-nsParser::GetContentSink()
-{
-  return mSink;
-}
+nsParser::GetContentSink() { return mSink; }
 
-static nsIDTD*
-FindSuitableDTD(CParserContext& aParserContext)
-{
+static nsIDTD* FindSuitableDTD(CParserContext& aParserContext) {
   // We always find a DTD.
   aParserContext.mAutoDetectStatus = ePrimaryDetect;
 
@@ -354,13 +321,13 @@ FindSuitableDTD(CParserContext& aParserContext)
   }
 
   // If we're here, then we'd better be parsing XML.
-  NS_ASSERTION(aParserContext.mDocType == eXML, "What are you trying to send me, here?");
+  NS_ASSERTION(aParserContext.mDocType == eXML,
+               "What are you trying to send me, here?");
   return new nsExpatDriver();
 }
 
 NS_IMETHODIMP
-nsParser::CancelParsingEvents()
-{
+nsParser::CancelParsingEvents() {
   if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
     NS_ASSERTION(mContinueEvent, "mContinueEvent is null");
     // Revoke the pending continue parsing event
@@ -416,13 +383,14 @@ nsParser::CancelParsingEvents()
  * to mWhatever, nsCaller wants to guarantee that mWhatever->DoThatThing() will
  * be called regardless of how nsSomething::DoThatThing behaves, &c.
  */
-#define PREFER_LATTER_ERROR_CODE(EXPR1, EXPR2, RV) {                          \
-  nsresult RV##__temp = EXPR1;                                                \
-  RV = EXPR2;                                                                 \
-  if (NS_FAILED(RV)) {                                                        \
-    RV = RV##__temp;                                                          \
-  }                                                                           \
-}
+#define PREFER_LATTER_ERROR_CODE(EXPR1, EXPR2, RV) \
+  {                                                \
+    nsresult RV##__temp = EXPR1;                   \
+    RV = EXPR2;                                    \
+    if (NS_FAILED(RV)) {                           \
+      RV = RV##__temp;                             \
+    }                                              \
+  }
 
 /**
  * This gets called just prior to the model actually
@@ -431,14 +399,10 @@ nsParser::CancelParsingEvents()
  * can delay until the last moment the resolution of
  * which DTD to use (unless of course we're assigned one).
  */
-nsresult
-nsParser::WillBuildModel(nsString& aFilename)
-{
-  if (!mParserContext)
-    return NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT;
+nsresult nsParser::WillBuildModel(nsString& aFilename) {
+  if (!mParserContext) return NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT;
 
-  if (eUnknownDetect != mParserContext->mAutoDetectStatus)
-    return NS_OK;
+  if (eUnknownDetect != mParserContext->mAutoDetectStatus) return NS_OK;
 
   if (eDTDMode_unknown == mParserContext->mDTDMode ||
       eDTDMode_autodetect == mParserContext->mDTDMode) {
@@ -449,7 +413,7 @@ nsParser::WillBuildModel(nsString& aFilename)
       mParserContext->mDTDMode = eDTDMode_full_standards;
       mParserContext->mDocType = eXML;
     }
-  } // else XML fragment with nested parser context
+  }  // else XML fragment with nested parser context
 
   NS_ASSERTION(!mDTD || !mParserContext->mPrevContext,
                "Clobbering DTD for non-root parser context!");
@@ -477,9 +441,7 @@ nsParser::WillBuildModel(nsString& aFilename)
  * Note that the parser may have been called recursively, so we
  * have to check for a prev. context before closing out the DTD/sink.
  */
-nsresult
-nsParser::DidBuildModel(nsresult anErrorCode)
-{
+nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
   nsresult result = anErrorCode;
 
   if (IsComplete()) {
@@ -488,8 +450,8 @@ nsParser::DidBuildModel(nsresult anErrorCode)
       // In that case we don't want it to run deferred scripts.
       bool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
       if (mDTD && mSink) {
-        nsresult dtdResult =  mDTD->DidBuildModel(anErrorCode),
-                sinkResult = mSink->DidBuildModel(terminated);
+        nsresult dtdResult = mDTD->DidBuildModel(anErrorCode),
+                 sinkResult = mSink->DidBuildModel(terminated);
         // nsIDTD::DidBuildModel used to be responsible for calling
         // nsIContentSink::DidBuildModel, but that obligation isn't expressible
         // in the nsIDTD interface itself, so it's sounder and simpler to give
@@ -500,7 +462,7 @@ nsParser::DidBuildModel(nsresult anErrorCode)
         result = NS_FAILED(sinkResult) ? sinkResult : dtdResult;
       }
 
-      //Ref. to bug 61462.
+      // Ref. to bug 61462.
       mParserContext->mRequest = nullptr;
     }
   }
@@ -514,9 +476,7 @@ nsParser::DidBuildModel(nsresult anErrorCode)
  *
  * @param   ptr to new context
  */
-void
-nsParser::PushContext(CParserContext& aContext)
-{
+void nsParser::PushContext(CParserContext& aContext) {
   NS_ASSERTION(aContext.mPrevContext == mParserContext,
                "Trying to push a context whose previous context differs from "
                "the current parser context.");
@@ -530,16 +490,15 @@ nsParser::PushContext(CParserContext& aContext)
  * @update	gess7/22/98
  * @return  prev. context
  */
-CParserContext*
-nsParser::PopContext()
-{
+CParserContext* nsParser::PopContext() {
   CParserContext* oldContext = mParserContext;
   if (oldContext) {
     mParserContext = oldContext->mPrevContext;
     if (mParserContext) {
       // If the old context was blocked, propagate the blocked state
       // back to the new one. Also, propagate the stream listener state
-      // but don't override onStop state to guarantee the call to DidBuildModel().
+      // but don't override onStop state to guarantee the call to
+      // DidBuildModel().
       if (mParserContext->mStreamListenerState != eOnStop) {
         mParserContext->mStreamListenerState = oldContext->mStreamListenerState;
       }
@@ -556,11 +515,7 @@ nsParser::PopContext()
  *  @param   aState determines whether we parse/tokenize or just cache.
  *  @return  current state
  */
-void
-nsParser::SetUnusedInput(nsString& aBuffer)
-{
-  mUnusedInput = aBuffer;
-}
+void nsParser::SetUnusedInput(nsString& aBuffer) { mUnusedInput = aBuffer; }
 
 /**
  *  Call this when you want to *force* the parser to terminate the
@@ -568,8 +523,7 @@ nsParser::SetUnusedInput(nsString& aBuffer)
  *  you can't resume without restarting altogether.
  */
 NS_IMETHODIMP
-nsParser::Terminate(void)
-{
+nsParser::Terminate(void) {
   // We should only call DidBuildModel once, so don't do anything if this is
   // the second time that Terminate has been called.
   if (mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING) {
@@ -586,7 +540,8 @@ nsParser::Terminate(void)
   // @see bug 108049
   // If NS_PARSER_FLAG_PENDING_CONTINUE_EVENT is set then CancelParsingEvents
   // will reset it so DidBuildModel will call DidBuildModel on the DTD. Note:
-  // The IsComplete() call inside of DidBuildModel looks at the pendingContinueEvents flag.
+  // The IsComplete() call inside of DidBuildModel looks at the
+  // pendingContinueEvents flag.
   CancelParsingEvents();
 
   // If we got interrupted in the middle of a document.write, then we might
@@ -595,7 +550,7 @@ nsParser::Terminate(void)
   // our sink's DidBuildModel and break the reference cycle, causing a leak.
   // Since we're getting terminated, we manually clean up our context stack.
   while (mParserContext && mParserContext->mPrevContext) {
-    CParserContext *prev = mParserContext->mPrevContext;
+    CParserContext* prev = mParserContext->mPrevContext;
     delete mParserContext;
     mParserContext = prev;
   }
@@ -614,8 +569,7 @@ nsParser::Terminate(void)
 }
 
 NS_IMETHODIMP
-nsParser::ContinueInterruptedParsing()
-{
+nsParser::ContinueInterruptedParsing() {
   // If there are scripts executing, then the content sink is jumping the gun
   // (probably due to a synchronous XMLHttpRequest) and will re-enable us
   // later, see bug 460706.
@@ -627,7 +581,7 @@ nsParser::ContinueInterruptedParsing()
   // that we might start closing things down when the parser
   // is reenabled. To make sure that we're not deleted across
   // the reenabling process, hold a reference to ourselves.
-  nsresult result=NS_OK;
+  nsresult result = NS_OK;
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
   nsCOMPtr<nsIContentSink> sinkDeathGrip(mSink);
 
@@ -637,18 +591,18 @@ nsParser::ContinueInterruptedParsing()
   }
 #endif
 
-  bool isFinalChunk = mParserContext &&
-                        mParserContext->mStreamListenerState == eOnStop;
+  bool isFinalChunk =
+      mParserContext && mParserContext->mStreamListenerState == eOnStop;
 
   mProcessingNetworkData = true;
   if (sinkDeathGrip) {
     sinkDeathGrip->WillParse();
   }
-  result = ResumeParse(true, isFinalChunk); // Ref. bug 57999
+  result = ResumeParse(true, isFinalChunk);  // Ref. bug 57999
   mProcessingNetworkData = false;
 
   if (result != NS_OK) {
-    result=mInternalState;
+    result = mInternalState;
   }
 
   return result;
@@ -661,10 +615,7 @@ nsParser::ContinueInterruptedParsing()
  *  page, or any number of extension content scripts).
  */
 NS_IMETHODIMP_(void)
-nsParser::BlockParser()
-{
-  mBlocked++;
-}
+nsParser::BlockParser() { mBlocked++; }
 
 /**
  *  Open up the parser for tokenization, building up content
@@ -673,8 +624,7 @@ nsParser::BlockParser()
  *  the parsing engine.
  */
 NS_IMETHODIMP_(void)
-nsParser::UnblockParser()
-{
+nsParser::UnblockParser() {
   MOZ_DIAGNOSTIC_ASSERT(mBlocked > 0);
   if (MOZ_LIKELY(mBlocked > 0)) {
     mBlocked--;
@@ -682,8 +632,7 @@ nsParser::UnblockParser()
 }
 
 NS_IMETHODIMP_(void)
-nsParser::ContinueInterruptedParsingAsync()
-{
+nsParser::ContinueInterruptedParsingAsync() {
   MOZ_ASSERT(mSink);
   if (MOZ_LIKELY(mSink)) {
     mSink->ContinueInterruptedParsingAsync();
@@ -694,26 +643,19 @@ nsParser::ContinueInterruptedParsingAsync()
  * Call this to query whether the parser is enabled or not.
  */
 NS_IMETHODIMP_(bool)
-nsParser::IsParserEnabled()
-{
-  return !mBlocked;
-}
+nsParser::IsParserEnabled() { return !mBlocked; }
 
 /**
  * Call this to query whether the parser thinks it's done with parsing.
  */
 NS_IMETHODIMP_(bool)
-nsParser::IsComplete()
-{
+nsParser::IsComplete() {
   return !(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT);
 }
 
-
-void nsParser::HandleParserContinueEvent(nsParserContinueEvent *ev)
-{
+void nsParser::HandleParserContinueEvent(nsParserContinueEvent* ev) {
   // Ignore any revoked continue events...
-  if (mContinueEvent != ev)
-    return;
+  if (mContinueEvent != ev) return;
 
   mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
   mContinueEvent = nullptr;
@@ -723,32 +665,15 @@ void nsParser::HandleParserContinueEvent(nsParserContinueEvent *ev)
   ContinueInterruptedParsing();
 }
 
-bool
-nsParser::IsInsertionPointDefined()
-{
-  return false;
-}
+bool nsParser::IsInsertionPointDefined() { return false; }
 
-void
-nsParser::PushDefinedInsertionPoint()
-{
-}
+void nsParser::PushDefinedInsertionPoint() {}
 
-void
-nsParser::PopDefinedInsertionPoint()
-{
-}
+void nsParser::PopDefinedInsertionPoint() {}
 
-void
-nsParser::MarkAsNotScriptCreated(const char* aCommand)
-{
-}
+void nsParser::MarkAsNotScriptCreated(const char* aCommand) {}
 
-bool
-nsParser::IsScriptCreated()
-{
-  return false;
-}
+bool nsParser::IsScriptCreated() { return false; }
 
 /**
  *  This is the main controlling routine in the parsing process.
@@ -758,12 +683,8 @@ nsParser::IsScriptCreated()
  *  of this method.
  */
 NS_IMETHODIMP
-nsParser::Parse(nsIURI* aURL,
-                nsIRequestObserver* aListener,
-                void* aKey,
-                nsDTDMode aMode)
-{
-
+nsParser::Parse(nsIURI* aURL, nsIRequestObserver* aListener, void* aKey,
+                nsDTDMode aMode) {
   MOZ_ASSERT(aURL, "Error: Null URL given");
 
   nsresult result = NS_ERROR_HTMLPARSER_BADURL;
@@ -799,11 +720,8 @@ nsParser::Parse(nsIURI* aURL,
  *
  * @param   aSourceBuffer contains a string-full of real content
  */
-nsresult
-nsParser::Parse(const nsAString& aSourceBuffer,
-                void* aKey,
-                bool aLastCall)
-{
+nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
+                         bool aLastCall) {
   nsresult result = NS_OK;
 
   // Don't bother if we're never going to parse this.
@@ -853,13 +771,13 @@ nsParser::Parse(const nsAString& aSourceBuffer,
         }
       }
 
-      pc = new CParserContext(mParserContext, theScanner, aKey, mCommand,
-                              0, theStatus, aLastCall);
+      pc = new CParserContext(mParserContext, theScanner, aKey, mCommand, 0,
+                              theStatus, aLastCall);
       NS_ENSURE_TRUE(pc, NS_ERROR_OUT_OF_MEMORY);
 
       PushContext(*pc);
 
-      pc->mMultipart = !aLastCall; // By default
+      pc->mMultipart = !aLastCall;  // By default
       if (pc->mPrevContext) {
         pc->mMultipart |= pc->mPrevContext->mMultipart;
       }
@@ -878,7 +796,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
       }
       // end fix for 40143
 
-      pc->mContextType=CParserContext::eCTString;
+      pc->mContextType = CParserContext::eCTString;
       pc->SetMimeType(NS_LITERAL_CSTRING("application/xml"));
       pc->mDTDMode = eDTDMode_full_standards;
 
@@ -890,8 +808,8 @@ nsParser::Parse(const nsAString& aSourceBuffer,
     } else {
       pc->mScanner->Append(aSourceBuffer);
       if (!pc->mPrevContext) {
-        // Set stream listener state to eOnStop, on the final context - Fix 68160,
-        // to guarantee DidBuildModel() call - Fix 36148
+        // Set stream listener state to eOnStop, on the final context - Fix
+        // 68160, to guarantee DidBuildModel() call - Fix 36148
         if (aLastCall) {
           pc->mStreamListenerState = eOnStop;
           pc->mScanner->SetIncremental(false);
@@ -912,10 +830,9 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 
 NS_IMETHODIMP
 nsParser::ParseFragment(const nsAString& aSourceBuffer,
-                        nsTArray<nsString>& aTagStack)
-{
+                        nsTArray<nsString>& aTagStack) {
   nsresult result = NS_OK;
-  nsAutoString  theContext;
+  nsAutoString theContext;
   uint32_t theCount = aTagStack.Length();
   uint32_t theIndex = 0;
 
@@ -936,9 +853,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
 
   // First, parse the context to build up the DTD's tag stack. Note that we
   // pass false for the aLastCall parameter.
-  result = Parse(theContext,
-                 (void*)&theContext,
-                 false);
+  result = Parse(theContext, (void*)&theContext, false);
   if (NS_FAILED(result)) {
     mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
     return result;
@@ -958,22 +873,18 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   // the end tags.  However, if tagStack is empty, it's the last call
   // for XML as well.
   if (theCount == 0) {
-    result = Parse(aSourceBuffer,
-                   &theContext,
-                   true);
+    result = Parse(aSourceBuffer, &theContext, true);
     fragSink->DidBuildContent();
   } else {
     // Add an end tag chunk, so expat will read the whole source buffer,
     // and not worry about ']]' etc.
-    result = Parse(aSourceBuffer + NS_LITERAL_STRING("</"),
-                   &theContext,
-                   false);
+    result = Parse(aSourceBuffer + NS_LITERAL_STRING("</"), &theContext, false);
     fragSink->DidBuildContent();
 
     if (NS_SUCCEEDED(result)) {
       nsAutoString endContext;
       for (theIndex = 0; theIndex < theCount; theIndex++) {
-         // we already added an end tag chunk above
+        // we already added an end tag chunk above
         if (theIndex > 0) {
           endContext.AppendLiteral("</");
         }
@@ -984,15 +895,13 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
         if (endOfTag == -1) {
           endContext.Append(thisTag);
         } else {
-          endContext.Append(Substring(thisTag,0,endOfTag));
+          endContext.Append(Substring(thisTag, 0, endOfTag));
         }
 
         endContext.Append('>');
       }
 
-      result = Parse(endContext,
-                     &theContext,
-                     true);
+      result = Parse(endContext, &theContext, true);
     }
   }
 
@@ -1023,14 +932,11 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
  *  @param   aIsFinalChunk : tells us when the last chunk of data is provided.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult
-nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
-                      bool aCanInterrupt)
-{
+nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
+                               bool aCanInterrupt) {
   nsresult result = NS_OK;
 
   if (!mBlocked && mInternalState != NS_ERROR_HTMLPARSER_STOPPARSING) {
-
     result = WillBuildModel(mParserContext->mScanner->GetFilename());
     if (NS_FAILED(result)) {
       mFlags &= ~NS_PARSER_FLAG_CAN_TOKENIZE;
@@ -1054,8 +960,8 @@ nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
         // Only allow parsing to be interrupted in the subsequent call to
         // build model.
         nsresult theTokenizerResult = (mFlags & NS_PARSER_FLAG_CAN_TOKENIZE)
-                                      ? Tokenize(aIsFinalChunk)
-                                      : NS_OK;
+                                          ? Tokenize(aIsFinalChunk)
+                                          : NS_OK;
         result = BuildModel();
 
         if (result == NS_ERROR_HTMLPARSER_INTERRUPTED && aIsFinalChunk) {
@@ -1093,7 +999,7 @@ nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
              theTokenizerResult == NS_ERROR_HTMLPARSER_EOF) ||
             result == NS_ERROR_HTMLPARSER_INTERRUPTED) {
           bool theContextIsStringBased =
-            CParserContext::eCTString == mParserContext->mContextType;
+              CParserContext::eCTString == mParserContext->mContextType;
 
           if (mParserContext->mStreamListenerState == eOnStop ||
               !mParserContext->mMultipart || theContextIsStringBased) {
@@ -1141,9 +1047,7 @@ nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
  *  This is where we loop over the tokens created in the
  *  tokenization phase, and try to make sense out of them.
  */
-nsresult
-nsParser::BuildModel()
-{
+nsresult nsParser::BuildModel() {
   nsITokenizer* theTokenizer = nullptr;
 
   nsresult result = NS_OK;
@@ -1165,9 +1069,7 @@ nsParser::BuildModel()
   These methods are used to talk to the netlib system...
  *******************************************************************/
 
-nsresult
-nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
-{
+nsresult nsParser::OnStartRequest(nsIRequest* request, nsISupports* aContext) {
   MOZ_ASSERT(eNone == mParserContext->mStreamListenerState,
              "Parser's nsIStreamListener API was not setup "
              "correctly in constructor.");
@@ -1198,26 +1100,20 @@ nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
   return rv;
 }
 
-static bool
-ExtractCharsetFromXmlDeclaration(const unsigned char* aBytes, int32_t aLen,
-                                 nsCString& oCharset)
-{
+static bool ExtractCharsetFromXmlDeclaration(const unsigned char* aBytes,
+                                             int32_t aLen,
+                                             nsCString& oCharset) {
   // This code is rather pointless to have. Might as well reuse expat as
   // seen in nsHtml5StreamParser. -- hsivonen
   oCharset.Truncate();
-  if ((aLen >= 5) &&
-      ('<' == aBytes[0]) &&
-      ('?' == aBytes[1]) &&
-      ('x' == aBytes[2]) &&
-      ('m' == aBytes[3]) &&
-      ('l' == aBytes[4])) {
+  if ((aLen >= 5) && ('<' == aBytes[0]) && ('?' == aBytes[1]) &&
+      ('x' == aBytes[2]) && ('m' == aBytes[3]) && ('l' == aBytes[4])) {
     int32_t i;
     bool versionFound = false, encodingFound = false;
     for (i = 6; i < aLen && !encodingFound; ++i) {
       // end of XML declaration?
-      if ((((char*) aBytes)[i] == '?') &&
-          ((i + 1) < aLen) &&
-          (((char*) aBytes)[i + 1] == '>')) {
+      if ((((char*)aBytes)[i] == '?') && ((i + 1) < aLen) &&
+          (((char*)aBytes)[i + 1] == '>')) {
         break;
       }
       // Version is required.
@@ -1227,13 +1123,12 @@ ExtractCharsetFromXmlDeclaration(const unsigned char* aBytes, int32_t aLen,
         // foolproof, but fast.
         // The shortest string allowed before this is  (strlen==13):
         // <?xml version
-        if ((((char*) aBytes)[i] == 'n') &&
-            (i >= 12) &&
-            (0 == PL_strncmp("versio", (char*) (aBytes + i - 6), 6))) {
+        if ((((char*)aBytes)[i] == 'n') && (i >= 12) &&
+            (0 == PL_strncmp("versio", (char*)(aBytes + i - 6), 6))) {
           // Fast forward through version
           char q = 0;
           for (++i; i < aLen; ++i) {
-            char qi = ((char*) aBytes)[i];
+            char qi = ((char*)aBytes)[i];
             if (qi == '\'' || qi == '"') {
               if (q && q == qi) {
                 //  ending quote
@@ -1253,19 +1148,20 @@ ExtractCharsetFromXmlDeclaration(const unsigned char* aBytes, int32_t aLen,
         // foolproof, but fast.
         // The shortest allowed string before this (strlen==26):
         // <?xml version="1" encoding
-        if ((((char*) aBytes)[i] == 'g') && (i >= 25) && (0 == PL_strncmp(
-            "encodin", (char*) (aBytes + i - 7), 7))) {
+        if ((((char*)aBytes)[i] == 'g') && (i >= 25) &&
+            (0 == PL_strncmp("encodin", (char*)(aBytes + i - 7), 7))) {
           int32_t encStart = 0;
           char q = 0;
           for (++i; i < aLen; ++i) {
-            char qi = ((char*) aBytes)[i];
+            char qi = ((char*)aBytes)[i];
             if (qi == '\'' || qi == '"') {
               if (q && q == qi) {
                 int32_t count = i - encStart;
                 // encoding value is invalid if it is UTF-16
-                if (count > 0 && PL_strncasecmp("UTF-16",
-                    (char*) (aBytes + encStart), count)) {
-                  oCharset.Assign((char*) (aBytes + encStart), count);
+                if (count > 0 &&
+                    PL_strncasecmp("UTF-16", (char*)(aBytes + encStart),
+                                   count)) {
+                  oCharset.Assign((char*)(aBytes + encStart), count);
                 }
                 encodingFound = true;
                 break;
@@ -1276,28 +1172,22 @@ ExtractCharsetFromXmlDeclaration(const unsigned char* aBytes, int32_t aLen,
             }
           }
         }
-      } // if (!versionFound)
-    } // for
+      }  // if (!versionFound)
+    }    // for
   }
   return !oCharset.IsEmpty();
 }
 
-inline char
-GetNextChar(nsACString::const_iterator& aStart,
-            nsACString::const_iterator& aEnd)
-{
+inline char GetNextChar(nsACString::const_iterator& aStart,
+                        nsACString::const_iterator& aEnd) {
   NS_ASSERTION(aStart != aEnd, "end of buffer");
   return (++aStart != aEnd) ? *aStart : '\0';
 }
 
-static nsresult
-NoOpParserWriteFunc(nsIInputStream* in,
-                void* closure,
-                const char* fromRawSegment,
-                uint32_t toOffset,
-                uint32_t count,
-                uint32_t *writeCount)
-{
+static nsresult NoOpParserWriteFunc(nsIInputStream* in, void* closure,
+                                    const char* fromRawSegment,
+                                    uint32_t toOffset, uint32_t count,
+                                    uint32_t* writeCount) {
   *writeCount = count;
   return NS_OK;
 }
@@ -1315,18 +1205,13 @@ typedef struct {
  * of data in the underlying stream or pipe. Using ReadSegments
  * allows us to avoid copying data to read out of the stream.
  */
-static nsresult
-ParserWriteFunc(nsIInputStream* in,
-                void* closure,
-                const char* fromRawSegment,
-                uint32_t toOffset,
-                uint32_t count,
-                uint32_t *writeCount)
-{
+static nsresult ParserWriteFunc(nsIInputStream* in, void* closure,
+                                const char* fromRawSegment, uint32_t toOffset,
+                                uint32_t count, uint32_t* writeCount) {
   nsresult result;
   ParserWriteStruct* pws = static_cast<ParserWriteStruct*>(closure);
   const unsigned char* buf =
-    reinterpret_cast<const unsigned char*> (fromRawSegment);
+      reinterpret_cast<const unsigned char*>(fromRawSegment);
   uint32_t theNumRead = count;
 
   if (!pws) {
@@ -1364,7 +1249,6 @@ ParserWriteFunc(nsIInputStream* in,
 
     pws->mParser->SetDocumentCharset(preferred, source);
     pws->mParser->SetSinkCharset(preferred);
-
   }
 
   result = pws->mScanner->Append(fromRawSegment, theNumRead);
@@ -1375,14 +1259,12 @@ ParserWriteFunc(nsIInputStream* in,
   return result;
 }
 
-nsresult
-nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
-                          nsIInputStream *pIStream, uint64_t sourceOffset,
-                          uint32_t aLength)
-{
+nsresult nsParser::OnDataAvailable(nsIRequest* request, nsISupports* aContext,
+                                   nsIInputStream* pIStream,
+                                   uint64_t sourceOffset, uint32_t aLength) {
   MOZ_ASSERT((eOnStart == mParserContext->mStreamListenerState ||
-                   eOnDataAvail == mParserContext->mStreamListenerState),
-            "Error: OnStartRequest() must be called before OnDataAvailable()");
+              eOnDataAvail == mParserContext->mStreamListenerState),
+             "Error: OnStartRequest() must be called before OnDataAvailable()");
   MOZ_ASSERT(NS_InputStreamIsBuffered(pIStream),
              "Must have a buffered input stream");
 
@@ -1393,14 +1275,12 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
     // ... but if an extension tries to feed us data for about:blank in a
     // release build, silently ignore the data.
     uint32_t totalRead;
-    rv = pIStream->ReadSegments(NoOpParserWriteFunc,
-                                nullptr,
-                                aLength,
+    rv = pIStream->ReadSegments(NoOpParserWriteFunc, nullptr, aLength,
                                 &totalRead);
     return rv;
   }
 
-  CParserContext *theContext = mParserContext;
+  CParserContext* theContext = mParserContext;
 
   while (theContext && theContext->mRequest != request) {
     theContext = theContext->mPrevContext;
@@ -1450,13 +1330,11 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
  *  This is called by the networking library once the last block of data
  *  has been collected from the net.
  */
-nsresult
-nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
-                        nsresult status)
-{
+nsresult nsParser::OnStopRequest(nsIRequest* request, nsISupports* aContext,
+                                 nsresult status) {
   nsresult rv = NS_OK;
 
-  CParserContext *pc = mParserContext;
+  CParserContext* pc = mParserContext;
   while (pc) {
     if (pc->mRequest == request) {
       pc->mStreamListenerState = eOnStop;
@@ -1481,7 +1359,6 @@ nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.
 
-
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
   if (mObserver) {
@@ -1491,20 +1368,16 @@ nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
   return rv;
 }
 
-
 /*******************************************************************
   Here come the tokenization methods...
  *******************************************************************/
-
 
 /**
  *  Part of the code sandwich, this gets called right before
  *  the tokenization process begins. The main reason for
  *  this call is to allow the delegate to do initialization.
  */
-bool
-nsParser::WillTokenize(bool aIsFinalChunk)
-{
+bool nsParser::WillTokenize(bool aIsFinalChunk) {
   if (!mParserContext) {
     return true;
   }
@@ -1515,14 +1388,12 @@ nsParser::WillTokenize(bool aIsFinalChunk)
   return NS_SUCCEEDED(theTokenizer->WillTokenize(aIsFinalChunk));
 }
 
-
 /**
  * This is the primary control routine to consume tokens.
  * It iteratively consumes tokens until an error occurs or
  * you run out of data.
  */
-nsresult nsParser::Tokenize(bool aIsFinalChunk)
-{
+nsresult nsParser::Tokenize(bool aIsFinalChunk) {
   nsITokenizer* theTokenizer;
 
   nsresult result = NS_ERROR_NOT_AVAILABLE;
@@ -1538,8 +1409,8 @@ nsresult nsParser::Tokenize(bool aIsFinalChunk)
     WillTokenize(aIsFinalChunk);
     while (NS_SUCCEEDED(result)) {
       mParserContext->mScanner->Mark();
-      result = theTokenizer->ConsumeToken(*mParserContext->mScanner,
-                                          flushTokens);
+      result =
+          theTokenizer->ConsumeToken(*mParserContext->mScanner, flushTokens);
       if (NS_FAILED(result)) {
         mParserContext->mScanner->RewindToMark();
         if (NS_ERROR_HTMLPARSER_EOF == result) {
@@ -1551,8 +1422,8 @@ nsresult nsParser::Tokenize(bool aIsFinalChunk)
           break;
         }
       } else if (flushTokens && (mFlags & NS_PARSER_FLAG_OBSERVERS_ENABLED)) {
-        // I added the extra test of NS_PARSER_FLAG_OBSERVERS_ENABLED to fix Bug# 23931.
-        // Flush tokens on seeing </SCRIPT> -- Ref: Bug# 22485 --
+        // I added the extra test of NS_PARSER_FLAG_OBSERVERS_ENABLED to fix
+        // Bug# 23931. Flush tokens on seeing </SCRIPT> -- Ref: Bug# 22485 --
         // Also remember to update the marked position.
         mFlags |= NS_PARSER_FLAG_FLUSH_TOKENS;
         mParserContext->mScanner->Mark();
@@ -1577,8 +1448,7 @@ nsresult nsParser::Tokenize(bool aIsFinalChunk)
  * @return NS_OK if successful
  */
 NS_IMETHODIMP
-nsParser::GetChannel(nsIChannel** aChannel)
-{
+nsParser::GetChannel(nsIChannel** aChannel) {
   nsresult result = NS_ERROR_NOT_AVAILABLE;
   if (mParserContext && mParserContext->mRequest) {
     result = CallQueryInterface(mParserContext->mRequest, aChannel);
@@ -1590,8 +1460,7 @@ nsParser::GetChannel(nsIChannel** aChannel)
  * Get the DTD associated with this parser
  */
 NS_IMETHODIMP
-nsParser::GetDTD(nsIDTD** aDTD)
-{
+nsParser::GetDTD(nsIDTD** aDTD) {
   if (mParserContext) {
     NS_IF_ADDREF(*aDTD = mDTD);
   }
@@ -1602,8 +1471,4 @@ nsParser::GetDTD(nsIDTD** aDTD)
 /**
  * Get this as nsIStreamListener
  */
-nsIStreamListener*
-nsParser::GetStreamListener()
-{
-  return this;
-}
+nsIStreamListener* nsParser::GetStreamListener() { return this; }

@@ -17,45 +17,33 @@ namespace mozilla {
 class ArrayIterElem;
 class PropertyIterElem;
 
-
 /*****************************************************************************
  * Object iterator base classes
  *****************************************************************************/
 
-template<class T, class PropertyType>
+template <class T, class PropertyType>
 class MOZ_STACK_CLASS BaseIter {
-public:
+ public:
   typedef T SelfType;
 
-  PropertyType begin() const
-  {
+  PropertyType begin() const {
     PropertyType elem(Self());
     return std::move(elem);
   }
 
-  PropertyType end() const
-  {
+  PropertyType end() const {
     PropertyType elem(Self());
     return elem.End();
   }
 
   void* Context() const { return mContext; }
 
-protected:
+ protected:
   BaseIter(JSContext* cx, JS::HandleObject object, void* context = nullptr)
-    : mCx(cx)
-    , mObject(object)
-    , mContext(context)
-  {}
+      : mCx(cx), mObject(object), mContext(context) {}
 
-  const SelfType& Self() const
-  {
-    return *static_cast<const SelfType*>(this);
-  }
-  SelfType& Self()
-  {
-    return *static_cast<SelfType*>(this);
-  }
+  const SelfType& Self() const { return *static_cast<const SelfType*>(this); }
+  SelfType& Self() { return *static_cast<SelfType*>(this); }
 
   JSContext* mCx;
 
@@ -64,23 +52,17 @@ protected:
   void* mContext;
 };
 
-template<class T, class IterType>
+template <class T, class IterType>
 class MOZ_STACK_CLASS BaseIterElem {
-public:
+ public:
   typedef T SelfType;
 
   explicit BaseIterElem(const IterType& iter, uint32_t index = 0)
-    : mIter(iter)
-    , mIndex(index)
-  {}
+      : mIter(iter), mIndex(index) {}
 
-  uint32_t Length() const
-  {
-    return mIter.Length();
-  }
+  uint32_t Length() const { return mIter.Length(); }
 
-  JS::Value Value()
-  {
+  JS::Value Value() {
     JS::RootedValue value(mIter.mCx, JS::UndefinedValue());
 
     auto& self = Self();
@@ -93,21 +75,17 @@ public:
 
   SelfType& operator*() { return Self(); }
 
-  SelfType& operator++()
-  {
+  SelfType& operator++() {
     MOZ_ASSERT(mIndex < Length());
     mIndex++;
     return Self();
   }
 
-  bool operator!=(const SelfType& other) const
-  {
+  bool operator!=(const SelfType& other) const {
     return &mIter != &other.mIter || mIndex != other.mIndex;
   }
 
-
-  SelfType End() const
-  {
+  SelfType End() const {
     SelfType end(mIter);
     end.mIndex = Length();
     return std::move(end);
@@ -115,47 +93,36 @@ public:
 
   void* Context() const { return mIter.Context(); }
 
-protected:
-  const SelfType& Self() const
-  {
-    return *static_cast<const SelfType*>(this);
-  }
-  SelfType& Self() {
-    return *static_cast<SelfType*>(this);
-  }
+ protected:
+  const SelfType& Self() const { return *static_cast<const SelfType*>(this); }
+  SelfType& Self() { return *static_cast<SelfType*>(this); }
 
   const IterType& mIter;
 
   uint32_t mIndex;
 };
 
-
 /*****************************************************************************
  * Property iteration
  *****************************************************************************/
 
 class MOZ_STACK_CLASS PropertyIter
-  : public BaseIter<PropertyIter, PropertyIterElem>
-{
+    : public BaseIter<PropertyIter, PropertyIterElem> {
   friend class PropertyIterElem;
   friend class BaseIterElem<PropertyIterElem, PropertyIter>;
 
-public:
+ public:
   PropertyIter(JSContext* cx, JS::HandleObject object, void* context = nullptr)
-    : BaseIter(cx, object, context)
-    , mIds(cx, JS::IdVector(cx))
-  {
+      : BaseIter(cx, object, context), mIds(cx, JS::IdVector(cx)) {
     if (!JS_Enumerate(cx, object, &mIds)) {
       JS_ClearPendingException(cx);
     }
   }
 
   PropertyIter(const PropertyIter& other)
-    : PropertyIter(other.mCx, other.mObject, other.mContext)
-  {}
+      : PropertyIter(other.mCx, other.mObject, other.mContext) {}
 
-  PropertyIter& operator=(const PropertyIter& other)
-  {
+  PropertyIter& operator=(const PropertyIter& other) {
     MOZ_ASSERT(other.mObject == mObject);
     mCx = other.mCx;
     mContext = other.mContext;
@@ -167,37 +134,30 @@ public:
     return *this;
   }
 
-  int32_t Length() const
-  {
-    return mIds.length();
-  }
+  int32_t Length() const { return mIds.length(); }
 
-protected:
+ protected:
   JS::Rooted<JS::IdVector> mIds;
 };
 
 class MOZ_STACK_CLASS PropertyIterElem
-  : public BaseIterElem<PropertyIterElem, PropertyIter>
-{
+    : public BaseIterElem<PropertyIterElem, PropertyIter> {
   friend class BaseIterElem<PropertyIterElem, PropertyIter>;
 
-public:
+ public:
   using BaseIterElem::BaseIterElem;
 
   PropertyIterElem(const PropertyIterElem& other)
-    : BaseIterElem(other.mIter, other.mIndex)
-  {}
+      : BaseIterElem(other.mIter, other.mIndex) {}
 
-  jsid Id()
-  {
+  jsid Id() {
     MOZ_ASSERT(mIndex < mIter.mIds.length());
 
     return mIter.mIds[mIndex];
   }
 
-  const nsAString& Name()
-  {
-    if(mName.isNothing()) {
+  const nsAString& Name() {
+    if (mName.isNothing()) {
       mName.emplace();
       mName.ref().init(mIter.mCx, Id());
     }
@@ -206,35 +166,29 @@ public:
 
   JSContext* Cx() { return mIter.mCx; }
 
-protected:
-  bool GetValue(JS::MutableHandleValue value)
-  {
+ protected:
+  bool GetValue(JS::MutableHandleValue value) {
     MOZ_ASSERT(mIndex < Length());
     JS::Rooted<jsid> id(mIter.mCx, Id());
 
     return JS_GetPropertyById(mIter.mCx, mIter.mObject, id, value);
   }
 
-private:
+ private:
   Maybe<nsAutoJSString> mName;
 };
-
 
 /*****************************************************************************
  * Array iteration
  *****************************************************************************/
 
-class MOZ_STACK_CLASS ArrayIter
-  : public BaseIter<ArrayIter, ArrayIterElem>
-{
+class MOZ_STACK_CLASS ArrayIter : public BaseIter<ArrayIter, ArrayIterElem> {
   friend class ArrayIterElem;
   friend class BaseIterElem<ArrayIterElem, ArrayIter>;
 
-public:
+ public:
   ArrayIter(JSContext* cx, JS::HandleObject object)
-    : BaseIter(cx, object)
-    , mLength(0)
-  {
+      : BaseIter(cx, object), mLength(0) {
     bool isArray;
     if (!JS_IsArrayObject(cx, object, &isArray) || !isArray) {
       JS_ClearPendingException(cx);
@@ -246,36 +200,29 @@ public:
     }
   }
 
-  uint32_t Length() const
-  {
-    return mLength;
-  }
+  uint32_t Length() const { return mLength; }
 
-private:
+ private:
   uint32_t mLength;
 };
 
 class MOZ_STACK_CLASS ArrayIterElem
-  : public BaseIterElem<ArrayIterElem, ArrayIter>
-{
+    : public BaseIterElem<ArrayIterElem, ArrayIter> {
   friend class BaseIterElem<ArrayIterElem, ArrayIter>;
 
-public:
+ public:
   using BaseIterElem::BaseIterElem;
 
   ArrayIterElem(const ArrayIterElem& other)
-    : BaseIterElem(other.mIter, other.mIndex)
-  {}
+      : BaseIterElem(other.mIter, other.mIndex) {}
 
-protected:
-  bool
-  GetValue(JS::MutableHandleValue value)
-  {
+ protected:
+  bool GetValue(JS::MutableHandleValue value) {
     MOZ_ASSERT(mIndex < Length());
     return JS_GetElement(mIter.mCx, mIter.mObject, mIndex, value);
   }
 };
 
-}
+}  // namespace mozilla
 
-#endif // AddonManagerStartup_inlines_h
+#endif  // AddonManagerStartup_inlines_h

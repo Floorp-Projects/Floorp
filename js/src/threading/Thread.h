@@ -23,33 +23,31 @@
 #include "vm/MutexIDs.h"
 
 #ifdef XP_WIN
-# define THREAD_RETURN_TYPE unsigned int
-# define THREAD_CALL_API __stdcall
+#define THREAD_RETURN_TYPE unsigned int
+#define THREAD_CALL_API __stdcall
 #else
-# define THREAD_RETURN_TYPE void*
-# define THREAD_CALL_API
+#define THREAD_RETURN_TYPE void*
+#define THREAD_CALL_API
 #endif
 
 namespace js {
 namespace detail {
 template <typename F, typename... Args>
 class ThreadTrampoline;
-} // namespace detail
+}  // namespace detail
 
 // Execute the given functor concurrent with the currently executing instruction
 // stream and within the current address space. Use with care.
-class Thread
-{
-public:
+class Thread {
+ public:
   struct Hasher;
 
-  class Id
-  {
+  class Id {
     friend struct Hasher;
     class PlatformData;
     void* platformData_[2];
 
-  public:
+   public:
     Id();
 
     Id(const Id&) = default;
@@ -65,20 +63,21 @@ public:
   };
 
   // Provides optional parameters to a Thread.
-  class Options
-  {
+  class Options {
     size_t stackSize_;
 
-  public:
+   public:
     Options() : stackSize_(0) {}
 
-    Options& setStackSize(size_t sz) { stackSize_ = sz; return *this; }
+    Options& setStackSize(size_t sz) {
+      stackSize_ = sz;
+      return *this;
+    }
     size_t stackSize() const { return stackSize_; }
   };
 
   // A js::HashTable hash policy for keying hash tables by js::Thread::Id.
-  struct Hasher
-  {
+  struct Hasher {
     typedef Id Lookup;
 
     static HashNumber hash(const Lookup& l);
@@ -91,18 +90,18 @@ public:
   // Create a Thread in an initially unjoinable state. A thread of execution can
   // be created for this Thread by calling |init|. Some of the thread's
   // properties may be controlled by passing options to this constructor.
-  template <typename O = Options,
-            // SFINAE to make sure we don't try and treat functors for the other
-            // constructor as an Options and vice versa.
-            typename NonConstO = typename mozilla::RemoveConst<O>::Type,
-            typename DerefO = typename mozilla::RemoveReference<NonConstO>::Type,
-            typename = typename mozilla::EnableIf<mozilla::IsSame<DerefO, Options>::value,
-                                                  void*>::Type>
+  template <
+      typename O = Options,
+      // SFINAE to make sure we don't try and treat functors for the other
+      // constructor as an Options and vice versa.
+      typename NonConstO = typename mozilla::RemoveConst<O>::Type,
+      typename DerefO = typename mozilla::RemoveReference<NonConstO>::Type,
+      typename = typename mozilla::EnableIf<
+          mozilla::IsSame<DerefO, Options>::value, void*>::Type>
   explicit Thread(O&& options = Options())
-    : idMutex_(mutexid::ThreadId)
-    , id_(Id())
-    , options_(std::forward<O>(options))
-  {
+      : idMutex_(mutexid::ThreadId),
+        id_(Id()),
+        options_(std::forward<O>(options)) {
     MOZ_ASSERT(js::IsInitialized());
   }
 
@@ -117,8 +116,8 @@ public:
     MOZ_RELEASE_ASSERT(id_ == Id());
     using Trampoline = detail::ThreadTrampoline<F, Args...>;
     AutoEnterOOMUnsafeRegion oom;
-    auto trampoline = js_new<Trampoline>(std::forward<F>(f),
-                                         std::forward<Args>(args)...);
+    auto trampoline =
+        js_new<Trampoline>(std::forward<F>(f), std::forward<Args>(args)...);
     if (!trampoline) {
       oom.crash("js::Thread::init");
     }
@@ -156,7 +155,7 @@ public:
   Thread(Thread&& aOther);
   Thread& operator=(Thread&& aOther);
 
-private:
+ private:
   // Disallow copy as that's not sensible for unique resources.
   Thread(const Thread&) = delete;
   void operator=(const Thread&) = delete;
@@ -173,7 +172,8 @@ private:
   Options options_;
 
   // Dispatch to per-platform implementation of thread creation.
-  MOZ_MUST_USE bool create(THREAD_RETURN_TYPE (THREAD_CALL_API *aMain)(void*), void* aArg);
+  MOZ_MUST_USE bool create(THREAD_RETURN_TYPE(THREAD_CALL_API* aMain)(void*),
+                           void* aArg);
 };
 
 namespace ThisThread {
@@ -192,7 +192,7 @@ void SetName(const char* name);
 // 'nameBuffer', including the terminating NUL.
 void GetName(char* nameBuffer, size_t len);
 
-} // namespace ThisThread
+}  // namespace ThisThread
 
 namespace detail {
 
@@ -200,8 +200,7 @@ namespace detail {
 // thread. This class is responsible for safely ferrying the arg pack and
 // functor across that void* membrane and running it in the other thread.
 template <typename F, typename... Args>
-class ThreadTrampoline
-{
+class ThreadTrampoline {
   // The functor to call.
   F f;
 
@@ -219,17 +218,14 @@ class ThreadTrampoline
   // impossible to pass references between threads.
   mozilla::Tuple<typename mozilla::Decay<Args>::Type...> args;
 
-public:
+ public:
   // Note that this template instatiation duplicates and is identical to the
   // class template instantiation. It is required for perfect forwarding of
   // rvalue references, which is only enabled for calls to a function template,
   // even if the class template arguments are correct.
   template <typename G, typename... ArgsT>
   explicit ThreadTrampoline(G&& aG, ArgsT&&... aArgsT)
-    : f(std::forward<F>(aG)),
-      args(std::forward<Args>(aArgsT)...)
-  {
-  }
+      : f(std::forward<F>(aG)), args(std::forward<Args>(aArgsT)...) {}
 
   static THREAD_RETURN_TYPE THREAD_CALL_API Start(void* aPack) {
     auto* pack = static_cast<ThreadTrampoline<F, Args...>*>(aPack);
@@ -238,15 +234,15 @@ public:
     return 0;
   }
 
-  template<size_t ...Indices>
+  template <size_t... Indices>
   void callMain(std::index_sequence<Indices...>) {
     f(mozilla::Get<Indices>(args)...);
   }
 };
 
-} // namespace detail
-} // namespace js
+}  // namespace detail
+}  // namespace js
 
 #undef THREAD_RETURN_TYPE
 
-#endif // threading_Thread_h
+#endif  // threading_Thread_h

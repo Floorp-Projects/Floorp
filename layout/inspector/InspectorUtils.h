@@ -18,13 +18,13 @@ namespace mozilla {
 class StyleSheet;
 namespace css {
 class Rule;
-} // namespace css
+}  // namespace css
 namespace dom {
 class CharacterData;
 class Element;
 class InspectorFontFace;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 namespace mozilla {
 namespace dom {
@@ -32,15 +32,12 @@ namespace dom {
 /**
  * A collection of utility methods for use by devtools.
  */
-class InspectorUtils
-{
-public:
-  static void GetAllStyleSheets(GlobalObject& aGlobal,
-                                nsIDocument& aDocument,
+class InspectorUtils {
+ public:
+  static void GetAllStyleSheets(GlobalObject& aGlobal, nsIDocument& aDocument,
                                 bool aDocumentOnly,
                                 nsTArray<RefPtr<StyleSheet>>& aResult);
-  static void GetCSSStyleRules(GlobalObject& aGlobal,
-                               Element& aElement,
+  static void GetCSSStyleRules(GlobalObject& aGlobal, Element& aElement,
                                const nsAString& aPseudo,
                                nsTArray<RefPtr<css::Rule>>& aResult);
 
@@ -70,7 +67,8 @@ public:
    */
   static uint32_t GetRelativeRuleLine(GlobalObject& aGlobal, css::Rule& aRule);
 
-  static bool HasRulesModifiedByCSSOM(GlobalObject& aGlobal, StyleSheet& aSheet);
+  static bool HasRulesModifiedByCSSOM(GlobalObject& aGlobal,
+                                      StyleSheet& aSheet);
 
   // Utilities for working with selectors.  We don't have a JS OM representation
   // of a single selector or a selector list yet, but given a rule we can index
@@ -82,19 +80,14 @@ public:
                                    BindingStyleRule& aRule);
 
   // For all three functions below, aSelectorIndex is 0-based
-  static void GetSelectorText(GlobalObject& aGlobal,
-                              BindingStyleRule& aRule,
-                              uint32_t aSelectorIndex,
-                              nsString& aText,
+  static void GetSelectorText(GlobalObject& aGlobal, BindingStyleRule& aRule,
+                              uint32_t aSelectorIndex, nsString& aText,
                               ErrorResult& aRv);
-  static uint64_t GetSpecificity(GlobalObject& aGlobal,
-                                 BindingStyleRule& aRule,
-                                 uint32_t aSelectorIndex,
-                                 ErrorResult& aRv);
+  static uint64_t GetSpecificity(GlobalObject& aGlobal, BindingStyleRule& aRule,
+                                 uint32_t aSelectorIndex, ErrorResult& aRv);
   // Note: This does not handle scoped selectors correctly, because it has no
   // idea what the right scope is.
-  static bool SelectorMatchesElement(GlobalObject& aGlobal,
-                                     Element& aElement,
+  static bool SelectorMatchesElement(GlobalObject& aGlobal, Element& aElement,
                                      BindingStyleRule& aRule,
                                      uint32_t aSelectorIndex,
                                      const nsAString& aPseudo,
@@ -124,18 +117,15 @@ public:
                                       ErrorResult& aRv);
 
   // Utilities for working with CSS colors
-  static void RgbToColorName(GlobalObject& aGlobal,
-                             uint8_t aR, uint8_t aG, uint8_t aB,
-                             nsAString& aResult,
-                             ErrorResult& aRv);
+  static void RgbToColorName(GlobalObject& aGlobal, uint8_t aR, uint8_t aG,
+                             uint8_t aB, nsAString& aResult, ErrorResult& aRv);
 
   // Convert a given CSS color string to rgba. Returns null on failure or an
   // InspectorRGBATuple on success.
   //
   // NOTE: Converting a color to RGBA may be lossy when converting from some
   // formats e.g. CMYK.
-  static void ColorToRGBA(GlobalObject& aGlobal,
-                          const nsAString& aColorString,
+  static void ColorToRGBA(GlobalObject& aGlobal, const nsAString& aColorString,
                           Nullable<InspectorRGBATuple>& aResult);
 
   // Check whether a given color is a valid CSS color.
@@ -164,12 +154,10 @@ public:
   // unknown types.
   static bool CssPropertySupportsType(GlobalObject& aGlobal,
                                       const nsAString& aProperty,
-                                      uint32_t aType,
-                                      ErrorResult& aRv);
+                                      uint32_t aType, ErrorResult& aRv);
 
   static bool IsIgnorableWhitespace(GlobalObject& aGlobalObject,
-                                    CharacterData& aDataNode)
-  {
+                                    CharacterData& aDataNode) {
     return IsIgnorableWhitespace(aDataNode);
   }
   static bool IsIgnorableWhitespace(CharacterData& aDataNode);
@@ -179,26 +167,20 @@ public:
   // whether we are showing anonymous content.
   static nsINode* GetParentForNode(nsINode& aNode,
                                    bool aShowingAnonymousContent);
-  static nsINode* GetParentForNode(GlobalObject& aGlobalObject,
-                                   nsINode& aNode,
-                                   bool aShowingAnonymousContent)
-  {
+  static nsINode* GetParentForNode(GlobalObject& aGlobalObject, nsINode& aNode,
+                                   bool aShowingAnonymousContent) {
     return GetParentForNode(aNode, aShowingAnonymousContent);
   }
 
   static already_AddRefed<nsINodeList> GetChildrenForNode(
-      GlobalObject& aGlobalObject,
-      nsINode& aNode,
-      bool aShowingAnonymousContent)
-  {
+      GlobalObject& aGlobalObject, nsINode& aNode,
+      bool aShowingAnonymousContent) {
     return GetChildrenForNode(aNode, aShowingAnonymousContent);
   }
   static already_AddRefed<nsINodeList> GetChildrenForNode(
-      nsINode& aNode,
-      bool aShowingAnonymousContent);
+      nsINode& aNode, bool aShowingAnonymousContent);
 
-  static void GetBindingURLs(GlobalObject& aGlobal,
-                             Element& aElement,
+  static void GetBindingURLs(GlobalObject& aGlobal, Element& aElement,
                              nsTArray<nsString>& aResult);
 
   /**
@@ -213,21 +195,16 @@ public:
    * @return Returns true if the state was set successfully. See more details
    * in EventStateManager.h SetContentState.
    */
-  static bool SetContentState(GlobalObject& aGlobal,
-                              Element& aElement,
-                              uint64_t aState,
-                              ErrorResult& aRv);
-  static bool RemoveContentState(GlobalObject& aGlobal,
-                                 Element& aElement,
-                                 uint64_t aState,
-                                 bool aClearActiveDocument,
+  static bool SetContentState(GlobalObject& aGlobal, Element& aElement,
+                              uint64_t aState, ErrorResult& aRv);
+  static bool RemoveContentState(GlobalObject& aGlobal, Element& aElement,
+                                 uint64_t aState, bool aClearActiveDocument,
                                  ErrorResult& aRv);
   static uint64_t GetContentState(GlobalObject& aGlobal, Element& aElement);
 
-  static void GetUsedFontFaces(GlobalObject& aGlobal,
-                               nsRange& aRange,
-                               uint32_t aMaxRanges, // max number of ranges to
-                                                    // record for each face
+  static void GetUsedFontFaces(GlobalObject& aGlobal, nsRange& aRange,
+                               uint32_t aMaxRanges,  // max number of ranges to
+                                                     // record for each face
                                bool aSkipCollapsedWhitespace,
                                nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
                                ErrorResult& aRv);
@@ -240,19 +217,15 @@ public:
   static void GetCSSPseudoElementNames(GlobalObject& aGlobal,
                                        nsTArray<nsString>& aResult);
 
-  // pseudo-class style locking methods. aPseudoClass must be a valid pseudo-class
-  // selector string, e.g. ":hover". ":any-link" and non-event-state
-  // pseudo-classes are ignored. aEnabled sets whether the psuedo-class
-  // should be locked to on or off.
-  static void AddPseudoClassLock(GlobalObject& aGlobal,
-                                 Element& aElement,
-                                 const nsAString& aPseudoClass,
-                                 bool aEnabled);
-  static void RemovePseudoClassLock(GlobalObject& aGlobal,
-                                    Element& aElement,
+  // pseudo-class style locking methods. aPseudoClass must be a valid
+  // pseudo-class selector string, e.g. ":hover". ":any-link" and
+  // non-event-state pseudo-classes are ignored. aEnabled sets whether the
+  // psuedo-class should be locked to on or off.
+  static void AddPseudoClassLock(GlobalObject& aGlobal, Element& aElement,
+                                 const nsAString& aPseudoClass, bool aEnabled);
+  static void RemovePseudoClassLock(GlobalObject& aGlobal, Element& aElement,
                                     const nsAString& aPseudoClass);
-  static bool HasPseudoClassLock(GlobalObject& aGlobal,
-                                 Element& aElement,
+  static bool HasPseudoClassLock(GlobalObject& aGlobal, Element& aElement,
                                  const nsAString& aPseudoClass);
   static void ClearPseudoClassLocks(GlobalObject& aGlobal, Element& aElement);
 
@@ -263,10 +236,8 @@ public:
    * @param DOMString aInput
    *        The new source string for the style sheet.
    */
-  static void ParseStyleSheet(GlobalObject& aGlobal,
-                              StyleSheet& aSheet,
-                              const nsAString& aInput,
-                              ErrorResult& aRv);
+  static void ParseStyleSheet(GlobalObject& aGlobal, StyleSheet& aSheet,
+                              const nsAString& aInput, ErrorResult& aRv);
 
   /**
    * Scroll an element completely into view, if possible.
@@ -277,16 +248,15 @@ public:
   /**
    * Check if the provided name can be custom element name.
    */
-  static bool IsCustomElementName(GlobalObject&,
-                                  const nsAString& aName,
+  static bool IsCustomElementName(GlobalObject&, const nsAString& aName,
                                   const nsAString& aNamespaceURI);
 
-private:
-  static already_AddRefed<ComputedStyle>
-    GetCleanComputedStyleForElement(Element* aElement, nsAtom* aPseudo);
+ private:
+  static already_AddRefed<ComputedStyle> GetCleanComputedStyleForElement(
+      Element* aElement, nsAtom* aPseudo);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_InspectorUtils_h
+#endif  // mozilla_dom_InspectorUtils_h

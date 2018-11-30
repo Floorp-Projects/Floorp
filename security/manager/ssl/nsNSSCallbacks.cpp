@@ -61,16 +61,13 @@ const uint32_t POSSIBLE_VERSION_DOWNGRADE = 4;
 const uint32_t POSSIBLE_CIPHER_SUITE_DOWNGRADE = 2;
 const uint32_t KEA_NOT_SUPPORTED = 1;
 
-} // namespace
+}  // namespace
 
-class OCSPRequest final : public nsIStreamLoaderObserver
-                        , public nsIRunnable
-{
-public:
+class OCSPRequest final : public nsIStreamLoaderObserver, public nsIRunnable {
+ public:
   OCSPRequest(const nsCString& aiaLocation,
               const OriginAttributes& originAttributes,
-              Vector<uint8_t>&& ocspRequest,
-              TimeDuration timeout);
+              Vector<uint8_t>&& ocspRequest, TimeDuration timeout);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
@@ -79,7 +76,7 @@ public:
   nsresult DispatchToMainThreadAndWait();
   nsresult GetResponse(/*out*/ Vector<uint8_t>& response);
 
-private:
+ private:
   ~OCSPRequest() = default;
 
   static void OnTimeout(nsITimer* timer, void* closure);
@@ -119,25 +116,20 @@ NS_IMPL_ISUPPORTS(OCSPRequest, nsIStreamLoaderObserver, nsIRunnable)
 
 OCSPRequest::OCSPRequest(const nsCString& aiaLocation,
                          const OriginAttributes& originAttributes,
-                         Vector<uint8_t>&& ocspRequest,
-                         TimeDuration timeout)
-  : mMonitor("OCSPRequest.mMonitor")
-  , mNotifiedDone(false)
-  , mLoader(nullptr)
-  , mAIALocation(aiaLocation)
-  , mOriginAttributes(originAttributes)
-  , mPOSTData(std::move(ocspRequest))
-  , mTimeout(timeout)
-  , mTimeoutTimer(nullptr)
-  , mStartTime()
-  , mResponseResult(NS_ERROR_FAILURE)
-  , mResponseBytes()
-{
-}
+                         Vector<uint8_t>&& ocspRequest, TimeDuration timeout)
+    : mMonitor("OCSPRequest.mMonitor"),
+      mNotifiedDone(false),
+      mLoader(nullptr),
+      mAIALocation(aiaLocation),
+      mOriginAttributes(originAttributes),
+      mPOSTData(std::move(ocspRequest)),
+      mTimeout(timeout),
+      mTimeoutTimer(nullptr),
+      mStartTime(),
+      mResponseResult(NS_ERROR_FAILURE),
+      mResponseBytes() {}
 
-nsresult
-OCSPRequest::DispatchToMainThreadAndWait()
-{
+nsresult OCSPRequest::DispatchToMainThreadAndWait() {
   MOZ_ASSERT(!NS_IsMainThread());
   if (NS_IsMainThread()) {
     return NS_ERROR_FAILURE;
@@ -165,25 +157,23 @@ OCSPRequest::DispatchToMainThreadAndWait()
   } else if (mResponseResult == NS_ERROR_NET_TIMEOUT) {
     Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 0);
     Telemetry::AccumulateTimeDelta(
-      Telemetry::CERT_VALIDATION_HTTP_REQUEST_CANCELED_TIME,
-      mStartTime, endTime);
+        Telemetry::CERT_VALIDATION_HTTP_REQUEST_CANCELED_TIME, mStartTime,
+        endTime);
   } else if (NS_SUCCEEDED(mResponseResult)) {
     Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 1);
     Telemetry::AccumulateTimeDelta(
-      Telemetry::CERT_VALIDATION_HTTP_REQUEST_SUCCEEDED_TIME,
-      mStartTime, endTime);
+        Telemetry::CERT_VALIDATION_HTTP_REQUEST_SUCCEEDED_TIME, mStartTime,
+        endTime);
   } else {
     Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 2);
     Telemetry::AccumulateTimeDelta(
-      Telemetry::CERT_VALIDATION_HTTP_REQUEST_FAILED_TIME,
-      mStartTime, endTime);
+        Telemetry::CERT_VALIDATION_HTTP_REQUEST_FAILED_TIME, mStartTime,
+        endTime);
   }
   return rv;
 }
 
-nsresult
-OCSPRequest::GetResponse(/*out*/ Vector<uint8_t>& response)
-{
+nsresult OCSPRequest::GetResponse(/*out*/ Vector<uint8_t>& response) {
   MOZ_ASSERT(!NS_IsMainThread());
   if (NS_IsMainThread()) {
     return NS_ERROR_FAILURE;
@@ -208,8 +198,7 @@ static NS_NAMED_LITERAL_CSTRING(OCSP_REQUEST_MIME_TYPE,
 static NS_NAMED_LITERAL_CSTRING(OCSP_REQUEST_METHOD, "POST");
 
 NS_IMETHODIMP
-OCSPRequest::Run()
-{
+OCSPRequest::Run() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
     return NS_ERROR_FAILURE;
@@ -223,8 +212,8 @@ OCSPRequest::Run()
   }
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), mAIALocation, nullptr, nullptr,
-                          ios);
+  nsresult rv =
+      NS_NewURI(getter_AddRefs(uri), mAIALocation, nullptr, nullptr, ios);
   if (NS_FAILED(rv)) {
     return NotifyDone(NS_ERROR_MALFORMED_URI, lock);
   }
@@ -240,7 +229,7 @@ OCSPRequest::Run()
   // See bug 1219935.
   // We should not send OCSP request if the PAC is still loading.
   nsCOMPtr<nsIProtocolProxyService> pps =
-    do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }
@@ -250,15 +239,12 @@ OCSPRequest::Run()
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = ios->NewChannel2(mAIALocation,
-                        nullptr,
-                        nullptr,
-                        nullptr, // aLoadingNode
+  rv = ios->NewChannel2(mAIALocation, nullptr, nullptr,
+                        nullptr,  // aLoadingNode
                         nsContentUtils::GetSystemPrincipal(),
-                        nullptr, // aTriggeringPrincipal
+                        nullptr,  // aTriggeringPrincipal
                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                        nsIContentPolicy::TYPE_OTHER,
-                        getter_AddRefs(channel));
+                        nsIContentPolicy::TYPE_OTHER, getter_AddRefs(channel));
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }
@@ -340,12 +326,9 @@ OCSPRequest::Run()
     return NotifyDone(rv, lock);
   }
 
-  rv = NS_NewTimerWithFuncCallback(getter_AddRefs(mTimeoutTimer),
-                                   OCSPRequest::OnTimeout,
-                                   this,
-                                   mTimeout.ToMilliseconds(),
-                                   nsITimer::TYPE_ONE_SHOT,
-                                   "OCSPRequest::Run");
+  rv = NS_NewTimerWithFuncCallback(
+      getter_AddRefs(mTimeoutTimer), OCSPRequest::OnTimeout, this,
+      mTimeout.ToMilliseconds(), nsITimer::TYPE_ONE_SHOT, "OCSPRequest::Run");
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }
@@ -357,9 +340,7 @@ OCSPRequest::Run()
   return NS_OK;
 }
 
-nsresult
-OCSPRequest::NotifyDone(nsresult rv, MonitorAutoLock& lock)
-{
+nsresult OCSPRequest::NotifyDone(nsresult rv, MonitorAutoLock& lock) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
     return NS_ERROR_FAILURE;
@@ -379,12 +360,9 @@ OCSPRequest::NotifyDone(nsresult rv, MonitorAutoLock& lock)
 }
 
 NS_IMETHODIMP
-OCSPRequest::OnStreamComplete(nsIStreamLoader* aLoader,
-                              nsISupports* aContext,
-                              nsresult aStatus,
-                              uint32_t responseLen,
-                              const uint8_t* responseBytes)
-{
+OCSPRequest::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
+                              nsresult aStatus, uint32_t responseLen,
+                              const uint8_t* responseBytes) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
     return NS_ERROR_FAILURE;
@@ -434,9 +412,7 @@ OCSPRequest::OnStreamComplete(nsIStreamLoader* aLoader,
   return NotifyDone(NS_OK, lock);
 }
 
-void
-OCSPRequest::OnTimeout(nsITimer* timer, void* closure)
-{
+void OCSPRequest::OnTimeout(nsITimer* timer, void* closure) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
     return;
@@ -451,13 +427,11 @@ OCSPRequest::OnTimeout(nsITimer* timer, void* closure)
   self->NotifyDone(NS_ERROR_NET_TIMEOUT, lock);
 }
 
-mozilla::pkix::Result
-DoOCSPRequest(const nsCString& aiaLocation,
-              const OriginAttributes& originAttributes,
-              Vector<uint8_t>&& ocspRequest,
-              TimeDuration timeout,
-              /*out*/ Vector<uint8_t>& result)
-{
+mozilla::pkix::Result DoOCSPRequest(const nsCString& aiaLocation,
+                                    const OriginAttributes& originAttributes,
+                                    Vector<uint8_t>&& ocspRequest,
+                                    TimeDuration timeout,
+                                    /*out*/ Vector<uint8_t>& result) {
   MOZ_ASSERT(!NS_IsMainThread());
   if (NS_IsMainThread()) {
     return mozilla::pkix::Result::ERROR_OCSP_UNKNOWN_CERT;
@@ -467,8 +441,8 @@ DoOCSPRequest(const nsCString& aiaLocation,
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("DoOCSPRequest to '%s'", aiaLocation.get()));
 
-  nsCOMPtr<nsIEventTarget> sts = do_GetService(
-    NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
+  nsCOMPtr<nsIEventTarget> sts =
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(sts);
   if (!sts) {
     return mozilla::pkix::Result::FATAL_ERROR_INVALID_STATE;
@@ -499,9 +473,8 @@ DoOCSPRequest(const nsCString& aiaLocation,
   return Success;
 }
 
-static char*
-ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
-{
+static char* ShowProtectedAuthPrompt(PK11SlotInfo* slot,
+                                     nsIInterfaceRequestor* ir) {
   if (!NS_IsMainThread()) {
     NS_ERROR("ShowProtectedAuthPrompt called off the main thread");
     return nullptr;
@@ -511,12 +484,12 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
 
   // Get protected auth dialogs
   nsCOMPtr<nsITokenDialogs> dialogs;
-  nsresult nsrv = getNSSDialogs(getter_AddRefs(dialogs),
-                                NS_GET_IID(nsITokenDialogs),
-                                NS_TOKENDIALOGS_CONTRACTID);
-  if (NS_SUCCEEDED(nsrv))
-  {
-    RefPtr<nsProtectedAuthThread> protectedAuthRunnable = new nsProtectedAuthThread();
+  nsresult nsrv =
+      getNSSDialogs(getter_AddRefs(dialogs), NS_GET_IID(nsITokenDialogs),
+                    NS_TOKENDIALOGS_CONTRACTID);
+  if (NS_SUCCEEDED(nsrv)) {
+    RefPtr<nsProtectedAuthThread> protectedAuthRunnable =
+        new nsProtectedAuthThread();
     protectedAuthRunnable->SetParams(slot);
 
     nsrv = dialogs->DisplayProtectedAuth(ir, protectedAuthRunnable);
@@ -529,7 +502,8 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
       SECStatus rv = protectedAuthRunnable->GetResult();
       switch (rv) {
         case SECSuccess:
-          protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_AUTHENTICATED));
+          protAuthRetVal =
+              ToNewCString(nsDependentCString(PK11_PW_AUTHENTICATED));
           break;
         case SECWouldBlock:
           protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_RETRY));
@@ -544,28 +518,21 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
   return protAuthRetVal;
 }
 
-class PK11PasswordPromptRunnable : public SyncRunnableBase
-{
-public:
-  PK11PasswordPromptRunnable(PK11SlotInfo* slot,
-                             nsIInterfaceRequestor* ir)
-    : mResult(nullptr),
-      mSlot(slot),
-      mIR(ir)
-  {
-  }
+class PK11PasswordPromptRunnable : public SyncRunnableBase {
+ public:
+  PK11PasswordPromptRunnable(PK11SlotInfo* slot, nsIInterfaceRequestor* ir)
+      : mResult(nullptr), mSlot(slot), mIR(ir) {}
   virtual ~PK11PasswordPromptRunnable() = default;
 
-  char * mResult; // out
+  char* mResult;  // out
   virtual void RunOnTargetThread() override;
-private:
-  PK11SlotInfo* const mSlot; // in
-  nsIInterfaceRequestor* const mIR; // in
+
+ private:
+  PK11SlotInfo* const mSlot;         // in
+  nsIInterfaceRequestor* const mIR;  // in
 };
 
-void
-PK11PasswordPromptRunnable::RunOnTargetThread()
-{
+void PK11PasswordPromptRunnable::RunOnTargetThread() {
   nsresult rv;
   nsCOMPtr<nsIPrompt> prompt;
   if (!mIR) {
@@ -593,11 +560,11 @@ PK11PasswordPromptRunnable::RunOnTargetThread()
   } else {
     NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(mSlot));
     const char16_t* formatStrings[] = {
-      tokenName.get(),
+        tokenName.get(),
     };
-    rv = PIPBundleFormatStringFromName("CertPassPrompt", formatStrings,
-                                       ArrayLength(formatStrings),
-                                       promptString);
+    rv =
+        PIPBundleFormatStringFromName("CertPassPrompt", formatStrings,
+                                      ArrayLength(formatStrings), promptString);
   }
   if (NS_FAILED(rv)) {
     return;
@@ -618,19 +585,14 @@ PK11PasswordPromptRunnable::RunOnTargetThread()
   mResult = ToNewUTF8String(password);
 }
 
-char*
-PK11PasswordPrompt(PK11SlotInfo* slot, PRBool /*retry*/, void* arg)
-{
-  RefPtr<PK11PasswordPromptRunnable> runnable(
-    new PK11PasswordPromptRunnable(slot,
-                                   static_cast<nsIInterfaceRequestor*>(arg)));
+char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool /*retry*/, void* arg) {
+  RefPtr<PK11PasswordPromptRunnable> runnable(new PK11PasswordPromptRunnable(
+      slot, static_cast<nsIInterfaceRequestor*>(arg)));
   runnable->DispatchToMainThreadAndWait();
   return runnable->mResult;
 }
 
-static nsCString
-getKeaGroupName(uint32_t aKeaGroup)
-{
+static nsCString getKeaGroupName(uint32_t aKeaGroup) {
   nsCString groupName;
   switch (aKeaGroup) {
     case ssl_grp_ec_secp256r1:
@@ -667,9 +629,7 @@ getKeaGroupName(uint32_t aKeaGroup)
   return groupName;
 }
 
-static nsCString
-getSignatureName(uint32_t aSignatureScheme)
-{
+static nsCString getSignatureName(uint32_t aSignatureScheme) {
   nsCString signatureName;
   switch (aSignatureScheme) {
     case ssl_sig_none:
@@ -684,7 +644,7 @@ getSignatureName(uint32_t aSignatureScheme)
     case ssl_sig_rsa_pkcs1_sha384:
       signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA384");
       break;
-    case  ssl_sig_rsa_pkcs1_sha512:
+    case ssl_sig_rsa_pkcs1_sha512:
       signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA512");
       break;
     case ssl_sig_ecdsa_secp256r1_sha256:
@@ -722,12 +682,9 @@ getSignatureName(uint32_t aSignatureScheme)
 }
 
 // call with shutdown prevention lock held
-static void
-PreliminaryHandshakeDone(PRFileDesc* fd)
-{
-  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
-  if (!infoObject)
-    return;
+static void PreliminaryHandshakeDone(PRFileDesc* fd) {
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
+  if (!infoObject) return;
 
   SSLChannelInfo channelInfo;
   if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) == SECSuccess) {
@@ -743,7 +700,7 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
       infoObject->mProtocolVersion = channelInfo.protocolVersion & 0xFF;
       infoObject->mKeaGroup.Assign(getKeaGroupName(channelInfo.keaGroup));
       infoObject->mSignatureSchemeName.Assign(
-        getSignatureName(channelInfo.signatureScheme));
+          getSignatureName(channelInfo.signatureScheme));
       infoObject->SetKEAUsed(channelInfo.keaType);
       infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
       infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
@@ -761,8 +718,8 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
   unsigned int npnlen;
 
   if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen,
-                       AssertedCast<unsigned int>(ArrayLength(npnbuf)))
-        == SECSuccess) {
+                       AssertedCast<unsigned int>(ArrayLength(npnbuf))) ==
+      SECSuccess) {
     if (state == SSL_NEXT_PROTO_NEGOTIATED ||
         state == SSL_NEXT_PROTO_SELECTED) {
       infoObject->SetNegotiatedNPN(BitwiseCast<char*, unsigned char*>(npnbuf),
@@ -778,12 +735,11 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
   infoObject->SetPreliminaryHandshakeDone();
 }
 
-SECStatus
-CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
-{
+SECStatus CanFalseStartCallback(PRFileDesc* fd, void* client_data,
+                                PRBool* canFalseStart) {
   *canFalseStart = false;
 
-  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
   if (!infoObject) {
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
     return SECFailure;
@@ -802,27 +758,30 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
 
   SSLCipherSuiteInfo cipherInfo;
   if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
-                             sizeof (cipherInfo)) != SECSuccess) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] failed - "
-                                      " KEA %d\n", fd,
-                                      static_cast<int32_t>(channelInfo.keaType)));
+                             sizeof(cipherInfo)) != SECSuccess) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("CanFalseStartCallback [%p] failed - "
+             " KEA %d\n",
+             fd, static_cast<int32_t>(channelInfo.keaType)));
     return SECSuccess;
   }
 
   // Prevent version downgrade attacks from TLS 1.2, and avoid False Start for
   // TLS 1.3 and later. See Bug 861310 for all the details as to why.
   if (channelInfo.protocolVersion != SSL_LIBRARY_VERSION_TLS_1_2) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] failed - "
-                                      "SSL Version must be TLS 1.2, was %x\n", fd,
-                                      static_cast<int32_t>(channelInfo.protocolVersion)));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("CanFalseStartCallback [%p] failed - "
+             "SSL Version must be TLS 1.2, was %x\n",
+             fd, static_cast<int32_t>(channelInfo.protocolVersion)));
     reasonsForNotFalseStarting |= POSSIBLE_VERSION_DOWNGRADE;
   }
 
   // See bug 952863 for why ECDHE is allowed, but DHE (and RSA) are not.
   if (channelInfo.keaType != ssl_kea_ecdh) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] failed - "
-                                      "unsupported KEA %d\n", fd,
-                                      static_cast<int32_t>(channelInfo.keaType)));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("CanFalseStartCallback [%p] failed - "
+             "unsupported KEA %d\n",
+             fd, static_cast<int32_t>(channelInfo.keaType)));
     reasonsForNotFalseStarting |= KEA_NOT_SUPPORTED;
   }
 
@@ -831,9 +790,9 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   // design. See bug 1109766 for more details.
   if (cipherInfo.macAlgorithm != ssl_mac_aead) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("CanFalseStartCallback [%p] failed - non-AEAD cipher used, %d, "
-            "is not supported with False Start.\n", fd,
-            static_cast<int32_t>(cipherInfo.symCipher)));
+            ("CanFalseStartCallback [%p] failed - non-AEAD cipher used, %d, "
+             "is not supported with False Start.\n",
+             fd, static_cast<int32_t>(cipherInfo.symCipher)));
     reasonsForNotFalseStarting |= POSSIBLE_CIPHER_SUITE_DOWNGRADE;
   }
 
@@ -850,26 +809,57 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     *canFalseStart = PR_TRUE;
     infoObject->SetFalseStarted();
     infoObject->NoteTimeUntilReady();
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] ok\n", fd));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("CanFalseStartCallback [%p] ok\n", fd));
   }
 
   return SECSuccess;
 }
 
-static void
-AccumulateNonECCKeySize(Telemetry::HistogramID probe, uint32_t bits)
-{
-  unsigned int value = bits <   512 ?  1 : bits ==   512 ?  2
-                     : bits <   768 ?  3 : bits ==   768 ?  4
-                     : bits <  1024 ?  5 : bits ==  1024 ?  6
-                     : bits <  1280 ?  7 : bits ==  1280 ?  8
-                     : bits <  1536 ?  9 : bits ==  1536 ? 10
-                     : bits <  2048 ? 11 : bits ==  2048 ? 12
-                     : bits <  3072 ? 13 : bits ==  3072 ? 14
-                     : bits <  4096 ? 15 : bits ==  4096 ? 16
-                     : bits <  8192 ? 17 : bits ==  8192 ? 18
-                     : bits < 16384 ? 19 : bits == 16384 ? 20
-                     : 0;
+static void AccumulateNonECCKeySize(Telemetry::HistogramID probe,
+                                    uint32_t bits) {
+  unsigned int value =
+      bits < 512
+          ? 1
+          : bits == 512
+                ? 2
+                : bits < 768
+                      ? 3
+                      : bits == 768
+                            ? 4
+                            : bits < 1024
+                                  ? 5
+                                  : bits == 1024
+                                        ? 6
+                                        : bits < 1280
+                                              ? 7
+                                              : bits == 1280
+                                                    ? 8
+                                                    : bits < 1536
+                                                          ? 9
+                                                          : bits == 1536
+                                                                ? 10
+                                                                : bits < 2048
+                                                                      ? 11
+                                                                      : bits == 2048
+                                                                            ? 12
+                                                                            : bits < 3072
+                                                                                  ? 13
+                                                                                  : bits == 3072
+                                                                                        ? 14
+                                                                                        : bits < 4096
+                                                                                              ? 15
+                                                                                              : bits == 4096
+                                                                                                    ? 16
+                                                                                                    : bits < 8192
+                                                                                                          ? 17
+                                                                                                          : bits == 8192
+                                                                                                                ? 18
+                                                                                                                : bits < 16384
+                                                                                                                      ? 19
+                                                                                                                      : bits == 16384
+                                                                                                                            ? 20
+                                                                                                                            : 0;
   Telemetry::Accumulate(probe, value);
 }
 
@@ -879,64 +869,137 @@ AccumulateNonECCKeySize(Telemetry::HistogramID probe, uint32_t bits)
 // available, the mapping would be ambiguous since there could be multiple
 // named curves for a given size (e.g. secp256k1 vs. secp256r1). We punt on
 // that for now. See also NSS bug 323674.
-static void
-AccumulateECCCurve(Telemetry::HistogramID probe, uint32_t bits)
-{
-  unsigned int value = bits == 256 ? 23 // P-256
-                     : bits == 384 ? 24 // P-384
-                     : bits == 521 ? 25 // P-521
-                     : 0; // Unknown
+static void AccumulateECCCurve(Telemetry::HistogramID probe, uint32_t bits) {
+  unsigned int value = bits == 256 ? 23                              // P-256
+                                   : bits == 384 ? 24                // P-384
+                                                 : bits == 521 ? 25  // P-521
+                                                               : 0;  // Unknown
   Telemetry::Accumulate(probe, value);
 }
 
-static void
-AccumulateCipherSuite(Telemetry::HistogramID probe, const SSLChannelInfo& channelInfo)
-{
+static void AccumulateCipherSuite(Telemetry::HistogramID probe,
+                                  const SSLChannelInfo& channelInfo) {
   uint32_t value;
   switch (channelInfo.cipherSuite) {
     // ECDHE key exchange
-    case TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256: value = 1; break;
-    case TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256: value = 2; break;
-    case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA: value = 3; break;
-    case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA: value = 4; break;
-    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA: value = 5; break;
-    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA: value = 6; break;
-    case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA: value = 7; break;
-    case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA: value = 10; break;
-    case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256: value = 11; break;
-    case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256: value = 12; break;
-    case TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384: value = 13; break;
-    case TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384: value = 14; break;
+    case TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:
+      value = 1;
+      break;
+    case TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
+      value = 2;
+      break;
+    case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:
+      value = 3;
+      break;
+    case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:
+      value = 4;
+      break;
+    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:
+      value = 5;
+      break;
+    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:
+      value = 6;
+      break;
+    case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA:
+      value = 7;
+      break;
+    case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA:
+      value = 10;
+      break;
+    case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:
+      value = 11;
+      break;
+    case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
+      value = 12;
+      break;
+    case TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:
+      value = 13;
+      break;
+    case TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:
+      value = 14;
+      break;
     // DHE key exchange
-    case TLS_DHE_RSA_WITH_AES_128_CBC_SHA: value = 21; break;
-    case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA: value = 22; break;
-    case TLS_DHE_RSA_WITH_AES_256_CBC_SHA: value = 23; break;
-    case TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA: value = 24; break;
-    case TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA: value = 25; break;
-    case TLS_DHE_DSS_WITH_AES_128_CBC_SHA: value = 26; break;
-    case TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA: value = 27; break;
-    case TLS_DHE_DSS_WITH_AES_256_CBC_SHA: value = 28; break;
-    case TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA: value = 29; break;
-    case TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA: value = 30; break;
+    case TLS_DHE_RSA_WITH_AES_128_CBC_SHA:
+      value = 21;
+      break;
+    case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA:
+      value = 22;
+      break;
+    case TLS_DHE_RSA_WITH_AES_256_CBC_SHA:
+      value = 23;
+      break;
+    case TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA:
+      value = 24;
+      break;
+    case TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA:
+      value = 25;
+      break;
+    case TLS_DHE_DSS_WITH_AES_128_CBC_SHA:
+      value = 26;
+      break;
+    case TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA:
+      value = 27;
+      break;
+    case TLS_DHE_DSS_WITH_AES_256_CBC_SHA:
+      value = 28;
+      break;
+    case TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA:
+      value = 29;
+      break;
+    case TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA:
+      value = 30;
+      break;
     // ECDH key exchange
-    case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA: value = 41; break;
-    case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA: value = 42; break;
-    case TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA: value = 43; break;
-    case TLS_ECDH_RSA_WITH_AES_256_CBC_SHA: value = 44; break;
-    case TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA: value = 45; break;
-    case TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA: value = 46; break;
+    case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA:
+      value = 41;
+      break;
+    case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA:
+      value = 42;
+      break;
+    case TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA:
+      value = 43;
+      break;
+    case TLS_ECDH_RSA_WITH_AES_256_CBC_SHA:
+      value = 44;
+      break;
+    case TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA:
+      value = 45;
+      break;
+    case TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA:
+      value = 46;
+      break;
     // RSA key exchange
-    case TLS_RSA_WITH_AES_128_CBC_SHA: value = 61; break;
-    case TLS_RSA_WITH_CAMELLIA_128_CBC_SHA: value = 62; break;
-    case TLS_RSA_WITH_AES_256_CBC_SHA: value = 63; break;
-    case TLS_RSA_WITH_CAMELLIA_256_CBC_SHA: value = 64; break;
-    case SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA: value = 65; break;
-    case TLS_RSA_WITH_3DES_EDE_CBC_SHA: value = 66; break;
-    case TLS_RSA_WITH_SEED_CBC_SHA: value = 67; break;
+    case TLS_RSA_WITH_AES_128_CBC_SHA:
+      value = 61;
+      break;
+    case TLS_RSA_WITH_CAMELLIA_128_CBC_SHA:
+      value = 62;
+      break;
+    case TLS_RSA_WITH_AES_256_CBC_SHA:
+      value = 63;
+      break;
+    case TLS_RSA_WITH_CAMELLIA_256_CBC_SHA:
+      value = 64;
+      break;
+    case SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA:
+      value = 65;
+      break;
+    case TLS_RSA_WITH_3DES_EDE_CBC_SHA:
+      value = 66;
+      break;
+    case TLS_RSA_WITH_SEED_CBC_SHA:
+      value = 67;
+      break;
     // TLS 1.3 PSK resumption
-    case TLS_AES_128_GCM_SHA256: value = 70; break;
-    case TLS_CHACHA20_POLY1305_SHA256: value = 71; break;
-    case TLS_AES_256_GCM_SHA384: value = 72; break;
+    case TLS_AES_128_GCM_SHA256:
+      value = 70;
+      break;
+    case TLS_CHACHA20_POLY1305_SHA256:
+      value = 71;
+      break;
+    case TLS_AES_256_GCM_SHA384:
+      value = 72;
+      break;
     // unknown
     default:
       value = 0;
@@ -955,10 +1018,8 @@ AccumulateCipherSuite(Telemetry::HistogramID probe, const SSLChannelInfo& channe
 // OCSP responses, SCTs, the hostname, the first party domain, etc.). Note that
 // because we are on the socket thread, this must not cause any network
 // requests, hence the use of FLAG_LOCAL_ONLY.
-static void
-RebuildVerifiedCertificateInformation(PRFileDesc* fd,
-                                      nsNSSSocketInfo* infoObject)
-{
+static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
+                                                  nsNSSSocketInfo* infoObject) {
   MOZ_ASSERT(fd);
   MOZ_ASSERT(infoObject);
 
@@ -1005,22 +1066,14 @@ RebuildVerifiedCertificateInformation(PRFileDesc* fd,
   UniqueCERTCertList builtChain;
   const bool saveIntermediates = false;
   mozilla::pkix::Result rv = certVerifier->VerifySSLServerCert(
-    cert,
-    stapledOCSPResponse,
-    sctsFromTLSExtension,
-    mozilla::pkix::Now(),
-    infoObject,
-    infoObject->GetHostName(),
-    builtChain,
-    saveIntermediates,
-    flags,
-    infoObject->GetOriginAttributes(),
-    &evOidPolicy,
-    nullptr, // OCSP stapling telemetry
-    nullptr, // key size telemetry
-    nullptr, // SHA-1 telemetry
-    nullptr, // pinning telemetry
-    &certificateTransparencyInfo);
+      cert, stapledOCSPResponse, sctsFromTLSExtension, mozilla::pkix::Now(),
+      infoObject, infoObject->GetHostName(), builtChain, saveIntermediates,
+      flags, infoObject->GetOriginAttributes(), &evOidPolicy,
+      nullptr,  // OCSP stapling telemetry
+      nullptr,  // key size telemetry
+      nullptr,  // SHA-1 telemetry
+      nullptr,  // pinning telemetry
+      &certificateTransparencyInfo);
 
   if (rv != Success) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
@@ -1045,9 +1098,8 @@ RebuildVerifiedCertificateInformation(PRFileDesc* fd,
   }
 }
 
-static nsresult
-IsCertificateDistrustImminent(nsIX509CertList* aCertList,
-                              /* out */ bool& isDistrusted) {
+static nsresult IsCertificateDistrustImminent(nsIX509CertList* aCertList,
+                                              /* out */ bool& isDistrusted) {
   if (!aCertList) {
     return NS_ERROR_INVALID_POINTER;
   }
@@ -1071,8 +1123,8 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
   if (!nssEECert) {
     return NS_ERROR_FAILURE;
   }
-  isDistrusted = CertDNIsInList(nssEECert.get(),
-                                TestImminentDistrustEndEntityDNs);
+  isDistrusted =
+      CertDNIsInList(nssEECert.get(), TestImminentDistrustEndEntityDNs);
   if (isDistrusted) {
     // Exit early
     return NS_OK;
@@ -1101,27 +1153,27 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   SECStatus rv;
 
-  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
 
   // Do the bookkeeping that needs to be done after the
-  // server's ServerHello...ServerHelloDone have been processed, but that doesn't
-  // need the handshake to be completed.
+  // server's ServerHello...ServerHelloDone have been processed, but that
+  // doesn't need the handshake to be completed.
   PreliminaryHandshakeDone(fd);
 
-  nsSSLIOLayerHelpers& ioLayerHelpers
-    = infoObject->SharedState().IOLayerHelpers();
+  nsSSLIOLayerHelpers& ioLayerHelpers =
+      infoObject->SharedState().IOLayerHelpers();
 
   SSLVersionRange versions(infoObject->GetTLSVersionRange());
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-         ("[%p] HandshakeCallback: succeeded using TLS version range (0x%04x,0x%04x)\n",
-          fd, static_cast<unsigned int>(versions.min),
-              static_cast<unsigned int>(versions.max)));
+          ("[%p] HandshakeCallback: succeeded using TLS version range "
+           "(0x%04x,0x%04x)\n",
+           fd, static_cast<unsigned int>(versions.min),
+           static_cast<unsigned int>(versions.max)));
 
   // If the handshake completed, then we know the site is TLS tolerant
   ioLayerHelpers.rememberTolerantAtVersion(infoObject->GetHostName(),
-                                           infoObject->GetPort(),
-                                           versions.max);
+                                           infoObject->GetPort(), versions.max);
 
   SSLChannelInfo channelInfo;
   rv = SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo));
@@ -1132,10 +1184,10 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
     MOZ_ASSERT(versionEnum > 0);
     Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
-    AccumulateCipherSuite(
-      infoObject->IsFullHandshake() ? Telemetry::SSL_CIPHER_SUITE_FULL
-                                    : Telemetry::SSL_CIPHER_SUITE_RESUMED,
-      channelInfo);
+    AccumulateCipherSuite(infoObject->IsFullHandshake()
+                              ? Telemetry::SSL_CIPHER_SUITE_FULL
+                              : Telemetry::SSL_CIPHER_SUITE_RESUMED,
+                          channelInfo);
 
     SSLCipherSuiteInfo cipherInfo;
     rv = SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
@@ -1143,11 +1195,10 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     MOZ_ASSERT(rv == SECSuccess);
     if (rv == SECSuccess) {
       // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
-      Telemetry::Accumulate(
-        infoObject->IsFullHandshake()
-          ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
-          : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
-        channelInfo.keaType);
+      Telemetry::Accumulate(infoObject->IsFullHandshake()
+                                ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
+                                : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
+                            channelInfo.keaType);
 
       MOZ_ASSERT(infoObject->GetKEAUsed() == channelInfo.keaType);
 
@@ -1192,11 +1243,10 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
         }
       }
 
-      Telemetry::Accumulate(
-          infoObject->IsFullHandshake()
-            ? Telemetry::SSL_SYMMETRIC_CIPHER_FULL
-            : Telemetry::SSL_SYMMETRIC_CIPHER_RESUMED,
-          cipherInfo.symCipher);
+      Telemetry::Accumulate(infoObject->IsFullHandshake()
+                                ? Telemetry::SSL_SYMMETRIC_CIPHER_FULL
+                                : Telemetry::SSL_SYMMETRIC_CIPHER_RESUMED,
+                            cipherInfo.symCipher);
     }
   }
 
@@ -1214,7 +1264,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   }
   bool renegotiationUnsafe = !siteSupportsSafeRenego &&
                              ioLayerHelpers.treatUnsafeNegotiationAsBroken();
-
 
   RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject);
 
@@ -1235,7 +1284,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
   if (infoObject->HasServerCert()) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("HandshakeCallback KEEPING existing cert\n"));
+            ("HandshakeCallback KEEPING existing cert\n"));
   } else {
     RebuildVerifiedCertificateInformation(fd, infoObject);
   }
@@ -1245,10 +1294,10 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   // best-effort check for now. Bug 731478 will reduce the incidence of empty
   // succeeded cert chains through better caching.
   Unused << infoObject->GetSucceededCertChain(
-                          getter_AddRefs(succeededCertChain));
+      getter_AddRefs(succeededCertChain));
   bool distrustImminent;
-  nsresult srv = IsCertificateDistrustImminent(succeededCertChain,
-                                               distrustImminent);
+  nsresult srv =
+      IsCertificateDistrustImminent(succeededCertChain, distrustImminent);
   if (NS_SUCCEEDED(srv) && distrustImminent) {
     state |= nsIWebProgressListener::STATE_CERT_DISTRUST_IMMINENT;
   }
@@ -1277,8 +1326,8 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     NS_ConvertASCIItoUTF16 msg(infoObject->GetHostName());
     msg.AppendLiteral(" : server does not support RFC 5746, see CVE-2009-3555");
 
-    nsContentUtils::LogSimpleConsoleError(msg, "SSL",
-                                          !!infoObject->GetOriginAttributes().mPrivateBrowsingId);
+    nsContentUtils::LogSimpleConsoleError(
+        msg, "SSL", !!infoObject->GetOriginAttributes().mPrivateBrowsingId);
   }
 
   infoObject->NoteTimeUntilReady();

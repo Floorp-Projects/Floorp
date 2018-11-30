@@ -19,7 +19,7 @@ class ChildReaper : public mozilla::Runnable,
                     public MessageLoop::DestructionObserver {
  public:
   explicit ChildReaper(base::ProcessHandle process, bool force)
-    : mozilla::Runnable("ChildReaper"), process_(process), force_(force) {
+      : mozilla::Runnable("ChildReaper"), process_(process), force_(force) {
     watcher_.StartWatching(process_, this);
   }
 
@@ -32,8 +32,7 @@ class ChildReaper : public mozilla::Runnable,
 
   // MessageLoop::DestructionObserver -----------------------------------------
 
-  virtual void WillDestroyCurrentMessageLoop()
-  {
+  virtual void WillDestroyCurrentMessageLoop() {
     MOZ_ASSERT(!force_);
     if (process_) {
       WaitForSingleObject(process_, INFINITE);
@@ -98,7 +97,8 @@ class ChildReaper : public mozilla::Runnable,
 }  // namespace
 
 // static
-void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process, bool force) {
+void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process,
+                                             bool force) {
   DCHECK(process != GetCurrentProcess());
 
   // If already signaled, then we are done!

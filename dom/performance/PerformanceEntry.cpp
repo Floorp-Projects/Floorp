@@ -21,34 +21,24 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceEntry)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-PerformanceEntry::PerformanceEntry(nsISupports* aParent,
-                                   const nsAString& aName,
+PerformanceEntry::PerformanceEntry(nsISupports* aParent, const nsAString& aName,
                                    const nsAString& aEntryType)
-: mParent(aParent),
-  mName(aName),
-  mEntryType(aEntryType)
-{
-}
+    : mParent(aParent), mName(aName), mEntryType(aEntryType) {}
 
-PerformanceEntry::~PerformanceEntry()
-{
-}
+PerformanceEntry::~PerformanceEntry() {}
 
-JSObject*
-PerformanceEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PerformanceEntry::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return mozilla::dom::PerformanceEntry_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-size_t
-PerformanceEntry::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
+size_t PerformanceEntry::SizeOfExcludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
   return mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
          mEntryType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
-size_t
-PerformanceEntry::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
+size_t PerformanceEntry::SizeOfIncludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }

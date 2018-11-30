@@ -26,46 +26,42 @@ namespace mozilla {
 namespace net {
 
 extern LazyLogModule gHttpLog;
-#define LOG(args) MOZ_LOG(mozilla::net::gHttpLog, mozilla::LogLevel::Debug, args)
+#define LOG(args) \
+  MOZ_LOG(mozilla::net::gHttpLog, mozilla::LogLevel::Debug, args)
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS(nsHTTPCompressConv,
-                  nsIStreamConverter,
-                  nsIStreamListener,
-                  nsIRequestObserver,
-                  nsICompressConvStats,
+NS_IMPL_ISUPPORTS(nsHTTPCompressConv, nsIStreamConverter, nsIStreamListener,
+                  nsIRequestObserver, nsICompressConvStats,
                   nsIThreadRetargetableStreamListener)
 
 // nsFTPDirListingConv methods
 nsHTTPCompressConv::nsHTTPCompressConv()
-  : mMode(HTTP_COMPRESS_IDENTITY)
-  , mOutBuffer(nullptr)
-  , mInpBuffer(nullptr)
-  , mOutBufferLen(0)
-  , mInpBufferLen(0)
-  , mCheckHeaderDone(false)
-  , mStreamEnded(false)
-  , mStreamInitialized(false)
-  , mDummyStreamInitialised(false)
-  , d_stream{}
-  , mLen(0)
-  , hMode(0)
-  , mSkipCount(0)
-  , mFlags(0)
-  , mDecodedDataLength(0)
-  , mMutex("nsHTTPCompressConv")
-{
+    : mMode(HTTP_COMPRESS_IDENTITY),
+      mOutBuffer(nullptr),
+      mInpBuffer(nullptr),
+      mOutBufferLen(0),
+      mInpBufferLen(0),
+      mCheckHeaderDone(false),
+      mStreamEnded(false),
+      mStreamInitialized(false),
+      mDummyStreamInitialised(false),
+      d_stream{},
+      mLen(0),
+      hMode(0),
+      mSkipCount(0),
+      mFlags(0),
+      mDecodedDataLength(0),
+      mMutex("nsHTTPCompressConv") {
   LOG(("nsHttpCompresssConv %p ctor\n", this));
   if (NS_IsMainThread()) {
     mFailUncleanStops =
-      Preferences::GetBool("network.http.enforce-framing.http", false);
+        Preferences::GetBool("network.http.enforce-framing.http", false);
   } else {
     mFailUncleanStops = false;
   }
 }
 
-nsHTTPCompressConv::~nsHTTPCompressConv()
-{
+nsHTTPCompressConv::~nsHTTPCompressConv() {
   LOG(("nsHttpCompresssConv %p dtor\n", this));
   if (mInpBuffer) {
     free(mInpBuffer);
@@ -78,36 +74,39 @@ nsHTTPCompressConv::~nsHTTPCompressConv()
   // For some reason we are not getting Z_STREAM_END.  But this was also seen
   //    for mozilla bug 198133.  Need to handle this case.
   if (mStreamInitialized && !mStreamEnded) {
-    inflateEnd (&d_stream);
+    inflateEnd(&d_stream);
   }
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::GetDecodedDataLength(uint64_t *aDecodedDataLength)
-{
-    *aDecodedDataLength = mDecodedDataLength;
-    return NS_OK;
+nsHTTPCompressConv::GetDecodedDataLength(uint64_t *aDecodedDataLength) {
+  *aDecodedDataLength = mDecodedDataLength;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::AsyncConvertData(const char *aFromType,
-                                     const char *aToType,
+nsHTTPCompressConv::AsyncConvertData(const char *aFromType, const char *aToType,
                                      nsIStreamListener *aListener,
-                                     nsISupports *aCtxt)
-{
-  if (!PL_strncasecmp(aFromType, HTTP_COMPRESS_TYPE, sizeof(HTTP_COMPRESS_TYPE)-1) ||
-      !PL_strncasecmp(aFromType, HTTP_X_COMPRESS_TYPE, sizeof(HTTP_X_COMPRESS_TYPE)-1)) {
+                                     nsISupports *aCtxt) {
+  if (!PL_strncasecmp(aFromType, HTTP_COMPRESS_TYPE,
+                      sizeof(HTTP_COMPRESS_TYPE) - 1) ||
+      !PL_strncasecmp(aFromType, HTTP_X_COMPRESS_TYPE,
+                      sizeof(HTTP_X_COMPRESS_TYPE) - 1)) {
     mMode = HTTP_COMPRESS_COMPRESS;
-  } else if (!PL_strncasecmp(aFromType, HTTP_GZIP_TYPE, sizeof(HTTP_GZIP_TYPE)-1) ||
-             !PL_strncasecmp(aFromType, HTTP_X_GZIP_TYPE, sizeof(HTTP_X_GZIP_TYPE)-1)) {
+  } else if (!PL_strncasecmp(aFromType, HTTP_GZIP_TYPE,
+                             sizeof(HTTP_GZIP_TYPE) - 1) ||
+             !PL_strncasecmp(aFromType, HTTP_X_GZIP_TYPE,
+                             sizeof(HTTP_X_GZIP_TYPE) - 1)) {
     mMode = HTTP_COMPRESS_GZIP;
-  } else if (!PL_strncasecmp(aFromType, HTTP_DEFLATE_TYPE, sizeof(HTTP_DEFLATE_TYPE)-1)) {
+  } else if (!PL_strncasecmp(aFromType, HTTP_DEFLATE_TYPE,
+                             sizeof(HTTP_DEFLATE_TYPE) - 1)) {
     mMode = HTTP_COMPRESS_DEFLATE;
-  } else if (!PL_strncasecmp(aFromType, HTTP_BROTLI_TYPE, sizeof(HTTP_BROTLI_TYPE)-1)) {
+  } else if (!PL_strncasecmp(aFromType, HTTP_BROTLI_TYPE,
+                             sizeof(HTTP_BROTLI_TYPE) - 1)) {
     mMode = HTTP_COMPRESS_BROTLI;
   }
-  LOG(("nsHttpCompresssConv %p AsyncConvertData %s %s mode %d\n",
-       this, aFromType, aToType, (CompressMode)mMode));
+  LOG(("nsHttpCompresssConv %p AsyncConvertData %s %s mode %d\n", this,
+       aFromType, aToType, (CompressMode)mMode));
 
   MutexAutoLock lock(mMutex);
   // hook ourself up with the receiving listener.
@@ -117,8 +116,7 @@ nsHTTPCompressConv::AsyncConvertData(const char *aFromType,
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnStartRequest(nsIRequest* request, nsISupports *aContext)
-{
+nsHTTPCompressConv::OnStartRequest(nsIRequest *request, nsISupports *aContext) {
   LOG(("nsHttpCompresssConv %p onstart\n", this));
   nsCOMPtr<nsIStreamListener> listener;
   {
@@ -129,17 +127,17 @@ nsHTTPCompressConv::OnStartRequest(nsIRequest* request, nsISupports *aContext)
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
-                                  nsresult aStatus)
-{
+nsHTTPCompressConv::OnStopRequest(nsIRequest *request, nsISupports *aContext,
+                                  nsresult aStatus) {
   nsresult status = aStatus;
-  LOG(("nsHttpCompresssConv %p onstop %" PRIx32 "\n", this, static_cast<uint32_t>(aStatus)));
+  LOG(("nsHttpCompresssConv %p onstop %" PRIx32 "\n", this,
+       static_cast<uint32_t>(aStatus)));
 
   // Framing integrity is enforced for content-encoding: gzip, but not for
   // content-encoding: deflate. Note that gzip vs deflate is NOT determined
   // by content sniffing but only via header.
   if (!mStreamEnded && NS_SUCCEEDED(status) &&
-      (mFailUncleanStops && (mMode == HTTP_COMPRESS_GZIP)) ) {
+      (mFailUncleanStops && (mMode == HTTP_COMPRESS_GZIP))) {
     // This is not a clean end of gzip stream: the transfer is incomplete.
     status = NS_ERROR_NET_PARTIAL_TRANSFER;
     LOG(("nsHttpCompresssConv %p onstop partial gzip\n", this));
@@ -153,11 +151,12 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     if (fpChannel && !isPending) {
       fpChannel->ForcePending(true);
     }
-    if (mBrotli && (mBrotli->mTotalOut == 0) && !mBrotli->mBrotliStateIsStreamEnd) {
+    if (mBrotli && (mBrotli->mTotalOut == 0) &&
+        !mBrotli->mBrotliStateIsStreamEnd) {
       status = NS_ERROR_INVALID_CONTENT_ENCODING;
     }
-    LOG(("nsHttpCompresssConv %p onstop brotlihandler rv %" PRIx32 "\n",
-         this, static_cast<uint32_t>(status)));
+    LOG(("nsHttpCompresssConv %p onstop brotlihandler rv %" PRIx32 "\n", this,
+         static_cast<uint32_t>(status)));
     if (fpChannel && !isPending) {
       fpChannel->ForcePending(false);
     }
@@ -171,16 +170,14 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
   return listener->OnStopRequest(request, aContext, status);
 }
 
-
-/* static */ nsresult
-nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const char *dataIn,
-                                  uint32_t, uint32_t aAvail, uint32_t *countRead)
-{
+/* static */ nsresult nsHTTPCompressConv::BrotliHandler(
+    nsIInputStream *stream, void *closure, const char *dataIn, uint32_t,
+    uint32_t aAvail, uint32_t *countRead) {
   MOZ_ASSERT(stream);
   nsHTTPCompressConv *self = static_cast<nsHTTPCompressConv *>(closure);
   *countRead = 0;
 
-  const size_t kOutSize = 128 * 1024; // just a chunk size, we call in a loop
+  const size_t kOutSize = 128 * 1024;  // just a chunk size, we call in a loop
   uint8_t *outPtr;
   size_t outSize;
   size_t avail = aAvail;
@@ -205,13 +202,15 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
     LOG(("nsHttpCompresssConv %p brotlihandler decompress %zu\n", self, avail));
     size_t totalOut = self->mBrotli->mTotalOut;
     res = ::BrotliDecoderDecompressStream(
-      &self->mBrotli->mState,
-      &avail, reinterpret_cast<const unsigned char **>(&dataIn),
-      &outSize, &outPtr, &totalOut);
+        &self->mBrotli->mState, &avail,
+        reinterpret_cast<const unsigned char **>(&dataIn), &outSize, &outPtr,
+        &totalOut);
     outSize = kOutSize - outSize;
     self->mBrotli->mTotalOut = totalOut;
-    self->mBrotli->mBrotliStateIsStreamEnd = BrotliDecoderIsFinished(&self->mBrotli->mState);
-    LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%" PRIx32 " out=%zu\n",
+    self->mBrotli->mBrotliStateIsStreamEnd =
+        BrotliDecoderIsFinished(&self->mBrotli->mState);
+    LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%" PRIx32
+         " out=%zu\n",
          self, static_cast<uint32_t>(res), outSize));
 
     if (res == BROTLI_DECODER_RESULT_ERROR) {
@@ -231,12 +230,12 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
       }
     }
     if (outSize > 0) {
-      nsresult rv = self->do_OnDataAvailable(self->mBrotli->mRequest,
-                                             self->mBrotli->mContext,
-                                             self->mBrotli->mSourceOffset,
-                                             reinterpret_cast<const char *>(outBuffer.get()),
-                                             outSize);
-      LOG(("nsHttpCompressConv %p BrotliHandler ODA rv=%" PRIx32, self, static_cast<uint32_t>(rv)));
+      nsresult rv = self->do_OnDataAvailable(
+          self->mBrotli->mRequest, self->mBrotli->mContext,
+          self->mBrotli->mSourceOffset,
+          reinterpret_cast<const char *>(outBuffer.get()), outSize);
+      LOG(("nsHttpCompressConv %p BrotliHandler ODA rv=%" PRIx32, self,
+           static_cast<uint32_t>(rv)));
       if (NS_FAILED(rv)) {
         self->mBrotli->mStatus = rv;
         return self->mBrotli->mStatus;
@@ -248,7 +247,7 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
       *countRead = aAvail;
       return NS_OK;
     }
-    MOZ_ASSERT (res == BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT);
+    MOZ_ASSERT(res == BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT);
   } while (res == BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT);
 
   self->mBrotli->mStatus = NS_ERROR_UNEXPECTED;
@@ -256,12 +255,9 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
-                                    nsISupports *aContext,
+nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
                                     nsIInputStream *iStr,
-                                    uint64_t aSourceOffset,
-                                    uint32_t aCount)
-{
+                                    uint64_t aSourceOffset, uint32_t aCount) {
   nsresult rv = NS_ERROR_INVALID_CONTENT_ENCODING;
   uint32_t streamLen = aCount;
   LOG(("nsHttpCompressConv %p OnDataAvailable %d", this, aCount));
@@ -280,217 +276,225 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
   }
 
   switch (mMode) {
-  case HTTP_COMPRESS_GZIP:
-    streamLen = check_header(iStr, streamLen, &rv);
+    case HTTP_COMPRESS_GZIP:
+      streamLen = check_header(iStr, streamLen, &rv);
 
-    if (rv != NS_OK) {
-      return rv;
-    }
-
-    if (streamLen == 0) {
-      return NS_OK;
-    }
-
-    MOZ_FALLTHROUGH;
-
-  case HTTP_COMPRESS_DEFLATE:
-
-    if (mInpBuffer != nullptr && streamLen > mInpBufferLen) {
-      unsigned char* originalInpBuffer = mInpBuffer;
-      if (!(mInpBuffer = (unsigned char *) realloc(originalInpBuffer, mInpBufferLen = streamLen))) {
-        free(originalInpBuffer);
+      if (rv != NS_OK) {
+        return rv;
       }
 
-      if (mOutBufferLen < streamLen * 2) {
-        unsigned char* originalOutBuffer = mOutBuffer;
-        if (!(mOutBuffer = (unsigned char *) realloc(mOutBuffer, mOutBufferLen = streamLen * 3))) {
-          free(originalOutBuffer);
+      if (streamLen == 0) {
+        return NS_OK;
+      }
+
+      MOZ_FALLTHROUGH;
+
+    case HTTP_COMPRESS_DEFLATE:
+
+      if (mInpBuffer != nullptr && streamLen > mInpBufferLen) {
+        unsigned char *originalInpBuffer = mInpBuffer;
+        if (!(mInpBuffer = (unsigned char *)realloc(
+                  originalInpBuffer, mInpBufferLen = streamLen))) {
+          free(originalInpBuffer);
         }
+
+        if (mOutBufferLen < streamLen * 2) {
+          unsigned char *originalOutBuffer = mOutBuffer;
+          if (!(mOutBuffer = (unsigned char *)realloc(
+                    mOutBuffer, mOutBufferLen = streamLen * 3))) {
+            free(originalOutBuffer);
+          }
+        }
+
+        if (mInpBuffer == nullptr || mOutBuffer == nullptr) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+
+      if (mInpBuffer == nullptr) {
+        mInpBuffer = (unsigned char *)malloc(mInpBufferLen = streamLen);
+      }
+
+      if (mOutBuffer == nullptr) {
+        mOutBuffer = (unsigned char *)malloc(mOutBufferLen = streamLen * 3);
       }
 
       if (mInpBuffer == nullptr || mOutBuffer == nullptr) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-    }
 
-    if (mInpBuffer == nullptr) {
-      mInpBuffer = (unsigned char *) malloc(mInpBufferLen = streamLen);
-    }
+      uint32_t unused;
+      iStr->Read((char *)mInpBuffer, streamLen, &unused);
 
-    if (mOutBuffer == nullptr) {
-      mOutBuffer = (unsigned char *) malloc(mOutBufferLen = streamLen * 3);
-    }
+      if (mMode == HTTP_COMPRESS_DEFLATE) {
+        if (!mStreamInitialized) {
+          memset(&d_stream, 0, sizeof(d_stream));
 
-    if (mInpBuffer == nullptr || mOutBuffer == nullptr) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    uint32_t unused;
-    iStr->Read((char *)mInpBuffer, streamLen, &unused);
-
-    if (mMode == HTTP_COMPRESS_DEFLATE) {
-      if (!mStreamInitialized) {
-        memset(&d_stream, 0, sizeof (d_stream));
-
-        if (inflateInit(&d_stream) != Z_OK) {
-          return NS_ERROR_FAILURE;
-        }
-
-        mStreamInitialized = true;
-      }
-      d_stream.next_in = mInpBuffer;
-      d_stream.avail_in = (uInt)streamLen;
-
-      mDummyStreamInitialised = false;
-      for (;;) {
-        d_stream.next_out = mOutBuffer;
-        d_stream.avail_out = (uInt)mOutBufferLen;
-
-        int code = inflate(&d_stream, Z_NO_FLUSH);
-        unsigned bytesWritten = (uInt)mOutBufferLen - d_stream.avail_out;
-
-        if (code == Z_STREAM_END) {
-          if (bytesWritten) {
-            rv = do_OnDataAvailable(request, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
-            if (NS_FAILED (rv)) {
-              return rv;
-            }
-          }
-
-          inflateEnd(&d_stream);
-          mStreamEnded = true;
-          break;
-        } else if (code == Z_OK) {
-          if (bytesWritten) {
-            rv = do_OnDataAvailable(request, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
-            if (NS_FAILED (rv)) {
-              return rv;
-            }
-          }
-        } else if (code == Z_BUF_ERROR) {
-          if (bytesWritten) {
-            rv = do_OnDataAvailable(request, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
-            if (NS_FAILED (rv)) {
-              return rv;
-            }
-          }
-          break;
-        } else if (code == Z_DATA_ERROR) {
-          // some servers (notably Apache with mod_deflate) don't generate zlib headers
-          // insert a dummy header and try again
-          static char dummy_head[2] =
-            {
-              0x8 + 0x7 * 0x10,
-              (((0x8 + 0x7 * 0x10) * 0x100 + 30) / 31 * 31) & 0xFF,
-            };
-          inflateReset(&d_stream);
-          d_stream.next_in = (Bytef*) dummy_head;
-          d_stream.avail_in = sizeof(dummy_head);
-
-          code = inflate(&d_stream, Z_NO_FLUSH);
-          if (code != Z_OK) {
+          if (inflateInit(&d_stream) != Z_OK) {
             return NS_ERROR_FAILURE;
           }
 
-          // stop an endless loop caused by non-deflate data being labelled as deflate
-          if (mDummyStreamInitialised) {
-            NS_WARNING("endless loop detected"
-                       " - invalid deflate");
+          mStreamInitialized = true;
+        }
+        d_stream.next_in = mInpBuffer;
+        d_stream.avail_in = (uInt)streamLen;
+
+        mDummyStreamInitialised = false;
+        for (;;) {
+          d_stream.next_out = mOutBuffer;
+          d_stream.avail_out = (uInt)mOutBufferLen;
+
+          int code = inflate(&d_stream, Z_NO_FLUSH);
+          unsigned bytesWritten = (uInt)mOutBufferLen - d_stream.avail_out;
+
+          if (code == Z_STREAM_END) {
+            if (bytesWritten) {
+              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+                                      (char *)mOutBuffer, bytesWritten);
+              if (NS_FAILED(rv)) {
+                return rv;
+              }
+            }
+
+            inflateEnd(&d_stream);
+            mStreamEnded = true;
+            break;
+          } else if (code == Z_OK) {
+            if (bytesWritten) {
+              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+                                      (char *)mOutBuffer, bytesWritten);
+              if (NS_FAILED(rv)) {
+                return rv;
+              }
+            }
+          } else if (code == Z_BUF_ERROR) {
+            if (bytesWritten) {
+              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+                                      (char *)mOutBuffer, bytesWritten);
+              if (NS_FAILED(rv)) {
+                return rv;
+              }
+            }
+            break;
+          } else if (code == Z_DATA_ERROR) {
+            // some servers (notably Apache with mod_deflate) don't generate
+            // zlib headers insert a dummy header and try again
+            static char dummy_head[2] = {
+                0x8 + 0x7 * 0x10,
+                (((0x8 + 0x7 * 0x10) * 0x100 + 30) / 31 * 31) & 0xFF,
+            };
+            inflateReset(&d_stream);
+            d_stream.next_in = (Bytef *)dummy_head;
+            d_stream.avail_in = sizeof(dummy_head);
+
+            code = inflate(&d_stream, Z_NO_FLUSH);
+            if (code != Z_OK) {
+              return NS_ERROR_FAILURE;
+            }
+
+            // stop an endless loop caused by non-deflate data being labelled as
+            // deflate
+            if (mDummyStreamInitialised) {
+              NS_WARNING(
+                  "endless loop detected"
+                  " - invalid deflate");
+              return NS_ERROR_INVALID_CONTENT_ENCODING;
+            }
+            mDummyStreamInitialised = true;
+            // reset stream pointers to our original data
+            d_stream.next_in = mInpBuffer;
+            d_stream.avail_in = (uInt)streamLen;
+          } else {
             return NS_ERROR_INVALID_CONTENT_ENCODING;
           }
-          mDummyStreamInitialised = true;
-          // reset stream pointers to our original data
-          d_stream.next_in = mInpBuffer;
-          d_stream.avail_in = (uInt)streamLen;
-        } else {
-          return NS_ERROR_INVALID_CONTENT_ENCODING;
-        }
-      } /* for */
-    } else {
-      if (!mStreamInitialized) {
-        memset(&d_stream, 0, sizeof (d_stream));
+        } /* for */
+      } else {
+        if (!mStreamInitialized) {
+          memset(&d_stream, 0, sizeof(d_stream));
 
-        if (inflateInit2(&d_stream, -MAX_WBITS) != Z_OK) {
-          return NS_ERROR_FAILURE;
+          if (inflateInit2(&d_stream, -MAX_WBITS) != Z_OK) {
+            return NS_ERROR_FAILURE;
+          }
+
+          mStreamInitialized = true;
         }
 
-        mStreamInitialized = true;
+        d_stream.next_in = mInpBuffer;
+        d_stream.avail_in = (uInt)streamLen;
+
+        for (;;) {
+          d_stream.next_out = mOutBuffer;
+          d_stream.avail_out = (uInt)mOutBufferLen;
+
+          int code = inflate(&d_stream, Z_NO_FLUSH);
+          unsigned bytesWritten = (uInt)mOutBufferLen - d_stream.avail_out;
+
+          if (code == Z_STREAM_END) {
+            if (bytesWritten) {
+              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+                                      (char *)mOutBuffer, bytesWritten);
+              if (NS_FAILED(rv)) {
+                return rv;
+              }
+            }
+
+            inflateEnd(&d_stream);
+            mStreamEnded = true;
+            break;
+          } else if (code == Z_OK) {
+            if (bytesWritten) {
+              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+                                      (char *)mOutBuffer, bytesWritten);
+              if (NS_FAILED(rv)) {
+                return rv;
+              }
+            }
+          } else if (code == Z_BUF_ERROR) {
+            if (bytesWritten) {
+              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+                                      (char *)mOutBuffer, bytesWritten);
+              if (NS_FAILED(rv)) {
+                return rv;
+              }
+            }
+            break;
+          } else {
+            return NS_ERROR_INVALID_CONTENT_ENCODING;
+          }
+        } /* for */
+      }   /* gzip */
+      break;
+
+    case HTTP_COMPRESS_BROTLI: {
+      if (!mBrotli) {
+        mBrotli = new BrotliWrapper();
       }
 
-      d_stream.next_in  = mInpBuffer;
-      d_stream.avail_in = (uInt)streamLen;
+      mBrotli->mRequest = request;
+      mBrotli->mContext = aContext;
+      mBrotli->mSourceOffset = aSourceOffset;
 
-      for (;;) {
-        d_stream.next_out  = mOutBuffer;
-        d_stream.avail_out = (uInt)mOutBufferLen;
+      uint32_t countRead;
+      rv = iStr->ReadSegments(BrotliHandler, this, streamLen, &countRead);
+      if (NS_SUCCEEDED(rv)) {
+        rv = mBrotli->mStatus;
+      }
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    } break;
 
-        int code = inflate (&d_stream, Z_NO_FLUSH);
-        unsigned bytesWritten = (uInt)mOutBufferLen - d_stream.avail_out;
-
-        if (code == Z_STREAM_END) {
-          if (bytesWritten) {
-            rv = do_OnDataAvailable(request, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
-            if (NS_FAILED (rv)) {
-              return rv;
-            }
-          }
-
-          inflateEnd(&d_stream);
-          mStreamEnded = true;
-          break;
-        } else if (code == Z_OK) {
-          if (bytesWritten) {
-            rv = do_OnDataAvailable(request, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
-            if (NS_FAILED (rv)) {
-              return rv;
-            }
-          }
-        } else if (code == Z_BUF_ERROR) {
-          if (bytesWritten) {
-            rv = do_OnDataAvailable(request, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
-            if (NS_FAILED (rv)) {
-              return rv;
-            }
-          }
-          break;
-        } else {
-          return NS_ERROR_INVALID_CONTENT_ENCODING;
-        }
-      } /* for */
-    } /* gzip */
-    break;
-
-  case HTTP_COMPRESS_BROTLI:
-  {
-    if (!mBrotli) {
-      mBrotli = new BrotliWrapper();
-    }
-
-    mBrotli->mRequest = request;
-    mBrotli->mContext = aContext;
-    mBrotli->mSourceOffset = aSourceOffset;
-
-    uint32_t countRead;
-    rv = iStr->ReadSegments(BrotliHandler, this, streamLen, &countRead);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mBrotli->mStatus;
-    }
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-    break;
-
-  default:
-    nsCOMPtr<nsIStreamListener> listener;
-    {
-      MutexAutoLock lock(mMutex);
-      listener = mListener;
-    }
-    rv = listener->OnDataAvailable(request, aContext, iStr, aSourceOffset, aCount);
-    if (NS_FAILED (rv)) {
-      return rv;
-    }
+    default:
+      nsCOMPtr<nsIStreamListener> listener;
+      {
+        MutexAutoLock lock(mMutex);
+        listener = mListener;
+      }
+      rv = listener->OnDataAvailable(request, aContext, iStr, aSourceOffset,
+                                     aCount);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
   } /* switch */
 
   return NS_OK;
@@ -499,20 +503,17 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
 // XXX/ruslan: need to implement this too
 
 NS_IMETHODIMP
-nsHTTPCompressConv::Convert(nsIInputStream *aFromStream,
-                            const char *aFromType,
-                            const char *aToType,
-                            nsISupports *aCtxt,
-                            nsIInputStream **_retval)
-{
+nsHTTPCompressConv::Convert(nsIInputStream *aFromStream, const char *aFromType,
+                            const char *aToType, nsISupports *aCtxt,
+                            nsIInputStream **_retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
-                                       nsISupports *context, uint64_t offset,
-                                       const char *buffer, uint32_t count)
-{
+nsresult nsHTTPCompressConv::do_OnDataAvailable(nsIRequest *request,
+                                                nsISupports *context,
+                                                uint64_t offset,
+                                                const char *buffer,
+                                                uint32_t count) {
   if (!mStream) {
     mStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID);
     NS_ENSURE_STATE(mStream);
@@ -525,8 +526,8 @@ nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
     MutexAutoLock lock(mMutex);
     listener = mListener;
   }
-  nsresult rv = listener->OnDataAvailable(request, context, mStream,
-                                          offset, count);
+  nsresult rv =
+      listener->OnDataAvailable(request, context, mStream, offset, count);
 
   // Make sure the stream no longer references |buffer| in case our listener
   // is crazy enough to try to read from |mStream| after ODA.
@@ -536,19 +537,27 @@ nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
   return rv;
 }
 
-#define ASCII_FLAG   0x01 /* bit 0 set: file probably ascii text */
-#define HEAD_CRC     0x02 /* bit 1 set: header CRC present */
-#define EXTRA_FIELD  0x04 /* bit 2 set: extra field present */
-#define ORIG_NAME    0x08 /* bit 3 set: original file name present */
-#define COMMENT      0x10 /* bit 4 set: file comment present */
-#define RESERVED     0xE0 /* bits 5..7: reserved */
+#define ASCII_FLAG 0x01  /* bit 0 set: file probably ascii text */
+#define HEAD_CRC 0x02    /* bit 1 set: header CRC present */
+#define EXTRA_FIELD 0x04 /* bit 2 set: extra field present */
+#define ORIG_NAME 0x08   /* bit 3 set: original file name present */
+#define COMMENT 0x10     /* bit 4 set: file comment present */
+#define RESERVED 0xE0    /* bits 5..7: reserved */
 
 static unsigned gz_magic[2] = {0x1f, 0x8b}; /* gzip magic header */
 
-uint32_t
-nsHTTPCompressConv::check_header(nsIInputStream *iStr, uint32_t streamLen, nsresult *rs)
-{
-  enum  { GZIP_INIT = 0, GZIP_OS, GZIP_EXTRA0, GZIP_EXTRA1, GZIP_EXTRA2, GZIP_ORIG, GZIP_COMMENT, GZIP_CRC };
+uint32_t nsHTTPCompressConv::check_header(nsIInputStream *iStr,
+                                          uint32_t streamLen, nsresult *rs) {
+  enum {
+    GZIP_INIT = 0,
+    GZIP_OS,
+    GZIP_EXTRA0,
+    GZIP_EXTRA1,
+    GZIP_EXTRA2,
+    GZIP_ORIG,
+    GZIP_COMMENT,
+    GZIP_CRC
+  };
   char c;
 
   *rs = NS_OK;
@@ -559,124 +568,122 @@ nsHTTPCompressConv::check_header(nsIInputStream *iStr, uint32_t streamLen, nsres
 
   while (streamLen) {
     switch (hMode) {
-    case GZIP_INIT:
-      uint32_t unused;
-      iStr->Read(&c, 1, &unused);
-      streamLen--;
+      case GZIP_INIT:
+        uint32_t unused;
+        iStr->Read(&c, 1, &unused);
+        streamLen--;
 
-      if (mSkipCount == 0 && ((unsigned)c & 0377) != gz_magic[0]) {
-        *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
-        return 0;
-      }
-
-      if (mSkipCount == 1 && ((unsigned)c & 0377) != gz_magic[1]) {
-        *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
-        return 0;
-      }
-
-      if (mSkipCount == 2 && ((unsigned)c & 0377) != Z_DEFLATED) {
-        *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
-        return 0;
-      }
-
-      mSkipCount++;
-      if (mSkipCount == 4) {
-        mFlags = (unsigned) c & 0377;
-        if (mFlags & RESERVED) {
+        if (mSkipCount == 0 && ((unsigned)c & 0377) != gz_magic[0]) {
           *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
           return 0;
         }
-        hMode = GZIP_OS;
-        mSkipCount = 0;
-      }
-      break;
 
-    case GZIP_OS:
-      iStr->Read(&c, 1, &unused);
-      streamLen--;
-      mSkipCount++;
+        if (mSkipCount == 1 && ((unsigned)c & 0377) != gz_magic[1]) {
+          *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
+          return 0;
+        }
 
-      if (mSkipCount == 6) {
-        hMode = GZIP_EXTRA0;
-      }
-      break;
+        if (mSkipCount == 2 && ((unsigned)c & 0377) != Z_DEFLATED) {
+          *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
+          return 0;
+        }
 
-    case GZIP_EXTRA0:
-      if (mFlags & EXTRA_FIELD) {
-        iStr->Read(&c, 1, &unused);
-        streamLen--;
-        mLen = (uInt) c & 0377;
-        hMode = GZIP_EXTRA1;
-      } else {
-        hMode = GZIP_ORIG;
-      }
-      break;
+        mSkipCount++;
+        if (mSkipCount == 4) {
+          mFlags = (unsigned)c & 0377;
+          if (mFlags & RESERVED) {
+            *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
+            return 0;
+          }
+          hMode = GZIP_OS;
+          mSkipCount = 0;
+        }
+        break;
 
-    case GZIP_EXTRA1:
-      iStr->Read(&c, 1, &unused);
-      streamLen--;
-      mLen |= ((uInt) c & 0377) << 8;
-      mSkipCount = 0;
-      hMode = GZIP_EXTRA2;
-      break;
-
-    case GZIP_EXTRA2:
-      if (mSkipCount == mLen) {
-        hMode = GZIP_ORIG;
-      } else {
+      case GZIP_OS:
         iStr->Read(&c, 1, &unused);
         streamLen--;
         mSkipCount++;
-      }
-      break;
 
-    case GZIP_ORIG:
-      if (mFlags & ORIG_NAME) {
+        if (mSkipCount == 6) {
+          hMode = GZIP_EXTRA0;
+        }
+        break;
+
+      case GZIP_EXTRA0:
+        if (mFlags & EXTRA_FIELD) {
+          iStr->Read(&c, 1, &unused);
+          streamLen--;
+          mLen = (uInt)c & 0377;
+          hMode = GZIP_EXTRA1;
+        } else {
+          hMode = GZIP_ORIG;
+        }
+        break;
+
+      case GZIP_EXTRA1:
         iStr->Read(&c, 1, &unused);
         streamLen--;
-        if (c == 0)
+        mLen |= ((uInt)c & 0377) << 8;
+        mSkipCount = 0;
+        hMode = GZIP_EXTRA2;
+        break;
+
+      case GZIP_EXTRA2:
+        if (mSkipCount == mLen) {
+          hMode = GZIP_ORIG;
+        } else {
+          iStr->Read(&c, 1, &unused);
+          streamLen--;
+          mSkipCount++;
+        }
+        break;
+
+      case GZIP_ORIG:
+        if (mFlags & ORIG_NAME) {
+          iStr->Read(&c, 1, &unused);
+          streamLen--;
+          if (c == 0) hMode = GZIP_COMMENT;
+        } else {
           hMode = GZIP_COMMENT;
-      } else {
-        hMode = GZIP_COMMENT;
-      }
-      break;
+        }
+        break;
 
-    case GZIP_COMMENT:
-      if (mFlags & COMMENT) {
-        iStr->Read(&c, 1, &unused);
-        streamLen--;
-        if (c == 0) {
+      case GZIP_COMMENT:
+        if (mFlags & COMMENT) {
+          iStr->Read(&c, 1, &unused);
+          streamLen--;
+          if (c == 0) {
+            hMode = GZIP_CRC;
+            mSkipCount = 0;
+          }
+        } else {
           hMode = GZIP_CRC;
           mSkipCount = 0;
         }
-      } else {
-        hMode = GZIP_CRC;
-        mSkipCount = 0;
-      }
-      break;
+        break;
 
-    case GZIP_CRC:
-      if (mFlags & HEAD_CRC) {
-        iStr->Read(&c, 1, &unused);
-        streamLen--;
-        mSkipCount++;
-        if (mSkipCount == 2) {
+      case GZIP_CRC:
+        if (mFlags & HEAD_CRC) {
+          iStr->Read(&c, 1, &unused);
+          streamLen--;
+          mSkipCount++;
+          if (mSkipCount == 2) {
+            mCheckHeaderDone = true;
+            return streamLen;
+          }
+        } else {
           mCheckHeaderDone = true;
           return streamLen;
         }
-      } else {
-        mCheckHeaderDone = true;
-        return streamLen;
-      }
-      break;
+        break;
     }
   }
   return streamLen;
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::CheckListenerChain()
-{
+nsHTTPCompressConv::CheckListenerChain() {
   nsCOMPtr<nsIThreadRetargetableStreamListener> listener;
   {
     MutexAutoLock lock(mMutex);
@@ -690,19 +697,18 @@ nsHTTPCompressConv::CheckListenerChain()
   return listener->CheckListenerChain();
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-nsresult
-NS_NewHTTPCompressConv(mozilla::net::nsHTTPCompressConv **aHTTPCompressConv)
-{
+nsresult NS_NewHTTPCompressConv(
+    mozilla::net::nsHTTPCompressConv **aHTTPCompressConv) {
   MOZ_ASSERT(aHTTPCompressConv != nullptr, "null ptr");
   if (!aHTTPCompressConv) {
     return NS_ERROR_NULL_POINTER;
   }
 
   RefPtr<mozilla::net::nsHTTPCompressConv> outVal =
-    new mozilla::net::nsHTTPCompressConv();
+      new mozilla::net::nsHTTPCompressConv();
   if (!outVal) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

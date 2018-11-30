@@ -19,14 +19,13 @@
 /**
  * Native Win32 Application shell wrapper
  */
-class nsAppShell : public nsBaseAppShell
-{
-public:
-  nsAppShell() :
-    mEventWnd(nullptr),
-    mNativeCallbackPending(false),
-    mLastNativeEventScheduledMutex("nsAppShell::mLastNativeEventScheduledMutex")
-  {}
+class nsAppShell : public nsBaseAppShell {
+ public:
+  nsAppShell()
+      : mEventWnd(nullptr),
+        mNativeCallbackPending(false),
+        mLastNativeEventScheduledMutex(
+            "nsAppShell::mLastNativeEventScheduledMutex") {}
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::Mutex Mutex;
 
@@ -38,14 +37,14 @@ public:
   NS_IMETHOD AfterProcessNextEvent(nsIThreadInternal* thread,
                                    bool eventWasProcessed) final;
 
-protected:
+ protected:
   NS_IMETHOD Run() override;
   NS_IMETHOD Exit() override;
 
 #if defined(ACCESSIBILITY)
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override;
-#endif // defined(ACCESSIBILITY)
+#endif  // defined(ACCESSIBILITY)
 
   virtual void ScheduleNativeEventCallback();
   virtual bool ProcessNextNativeEvent(bool mayWait);
@@ -53,7 +52,7 @@ protected:
 
   static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
 
-protected:
+ protected:
   HWND mEventWnd;
   bool mNativeCallbackPending;
 
@@ -62,4 +61,4 @@ protected:
   std::vector<MSG> mMsgsToRepost;
 };
 
-#endif // nsAppShell_h__
+#endif  // nsAppShell_h__

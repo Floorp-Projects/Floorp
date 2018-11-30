@@ -17,274 +17,255 @@
 
 using namespace js;
 
-/* static */ MOZ_ALWAYS_INLINE bool
-WeakMapObject::is(HandleValue v)
-{
-    return v.isObject() && v.toObject().is<WeakMapObject>();
+/* static */ MOZ_ALWAYS_INLINE bool WeakMapObject::is(HandleValue v) {
+  return v.isObject() && v.toObject().is<WeakMapObject>();
 }
 
-/* static */ MOZ_ALWAYS_INLINE bool
-WeakMapObject::has_impl(JSContext* cx, const CallArgs& args)
-{
-    MOZ_ASSERT(is(args.thisv()));
+/* static */ MOZ_ALWAYS_INLINE bool WeakMapObject::has_impl(
+    JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(is(args.thisv()));
 
-    if (!args.get(0).isObject()) {
-        args.rval().setBoolean(false);
-        return true;
-    }
-
-    if (ObjectValueMap* map = args.thisv().toObject().as<WeakMapObject>().getMap()) {
-        JSObject* key = &args[0].toObject();
-        if (map->has(key)) {
-            args.rval().setBoolean(true);
-            return true;
-        }
-    }
-
+  if (!args.get(0).isObject()) {
     args.rval().setBoolean(false);
     return true;
+  }
+
+  if (ObjectValueMap* map =
+          args.thisv().toObject().as<WeakMapObject>().getMap()) {
+    JSObject* key = &args[0].toObject();
+    if (map->has(key)) {
+      args.rval().setBoolean(true);
+      return true;
+    }
+  }
+
+  args.rval().setBoolean(false);
+  return true;
 }
 
-/* static */ bool
-WeakMapObject::has(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::has_impl>(cx, args);
+/* static */ bool WeakMapObject::has(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::has_impl>(cx,
+                                                                          args);
 }
 
-/* static */ MOZ_ALWAYS_INLINE bool
-WeakMapObject::get_impl(JSContext* cx, const CallArgs& args)
-{
-    MOZ_ASSERT(WeakMapObject::is(args.thisv()));
+/* static */ MOZ_ALWAYS_INLINE bool WeakMapObject::get_impl(
+    JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
-    if (!args.get(0).isObject()) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    if (ObjectValueMap* map = args.thisv().toObject().as<WeakMapObject>().getMap()) {
-        JSObject* key = &args[0].toObject();
-        if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
-            args.rval().set(ptr->value());
-            return true;
-        }
-    }
-
+  if (!args.get(0).isObject()) {
     args.rval().setUndefined();
     return true;
+  }
+
+  if (ObjectValueMap* map =
+          args.thisv().toObject().as<WeakMapObject>().getMap()) {
+    JSObject* key = &args[0].toObject();
+    if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
+      args.rval().set(ptr->value());
+      return true;
+    }
+  }
+
+  args.rval().setUndefined();
+  return true;
 }
 
-/* static */ bool
-WeakMapObject::get(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::get_impl>(cx, args);
+/* static */ bool WeakMapObject::get(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::get_impl>(cx,
+                                                                          args);
 }
 
-/* static */ MOZ_ALWAYS_INLINE bool
-WeakMapObject::delete_impl(JSContext* cx, const CallArgs& args)
-{
-    MOZ_ASSERT(WeakMapObject::is(args.thisv()));
+/* static */ MOZ_ALWAYS_INLINE bool WeakMapObject::delete_impl(
+    JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
-    if (!args.get(0).isObject()) {
-        args.rval().setBoolean(false);
-        return true;
-    }
-
-    if (ObjectValueMap* map = args.thisv().toObject().as<WeakMapObject>().getMap()) {
-        JSObject* key = &args[0].toObject();
-        if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
-            map->remove(ptr);
-            args.rval().setBoolean(true);
-            return true;
-        }
-    }
-
+  if (!args.get(0).isObject()) {
     args.rval().setBoolean(false);
     return true;
-}
+  }
 
-/* static */ bool
-WeakMapObject::delete_(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::delete_impl>(cx, args);
-}
-
-/* static */ MOZ_ALWAYS_INLINE bool
-WeakMapObject::set_impl(JSContext* cx, const CallArgs& args)
-{
-    MOZ_ASSERT(WeakMapObject::is(args.thisv()));
-
-    if (!args.get(0).isObject()) {
-        ReportNotObjectWithName(cx, "WeakMap key", args.get(0));
-        return false;
-    }
-
-    RootedObject key(cx, &args[0].toObject());
-    Rooted<WeakMapObject*> map(cx, &args.thisv().toObject().as<WeakMapObject>());
-
-    if (!WeakCollectionPutEntryInternal(cx, map, key, args.get(1))) {
-        return false;
-    }
-    args.rval().set(args.thisv());
-    return true;
-}
-
-/* static */ bool
-WeakMapObject::set(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::set_impl>(cx, args);
-}
-
-bool
-WeakCollectionObject::nondeterministicGetKeys(JSContext* cx, Handle<WeakCollectionObject*> obj,
-                                              MutableHandleObject ret)
-{
-    RootedObject arr(cx, NewDenseEmptyArray(cx));
-    if (!arr) {
-        return false;
-    }
-    if (ObjectValueMap* map = obj->getMap()) {
-        // Prevent GC from mutating the weakmap while iterating.
-        gc::AutoSuppressGC suppress(cx);
-        for (ObjectValueMap::Base::Range r = map->all(); !r.empty(); r.popFront()) {
-            JS::ExposeObjectToActiveJS(r.front().key());
-            RootedObject key(cx, r.front().key());
-            if (!cx->compartment()->wrap(cx, &key)) {
-                return false;
-            }
-            if (!NewbornArrayPush(cx, arr, ObjectValue(*key))) {
-                return false;
-            }
-        }
-    }
-    ret.set(arr);
-    return true;
-}
-
-JS_FRIEND_API bool
-JS_NondeterministicGetWeakMapKeys(JSContext* cx, HandleObject objArg, MutableHandleObject ret)
-{
-    RootedObject obj(cx, UncheckedUnwrap(objArg));
-    if (!obj || !obj->is<WeakMapObject>()) {
-        ret.set(nullptr);
-        return true;
-    }
-    return WeakCollectionObject::nondeterministicGetKeys(cx, obj.as<WeakCollectionObject>(), ret);
-}
-
-static void
-WeakCollection_trace(JSTracer* trc, JSObject* obj)
-{
-    if (ObjectValueMap* map = obj->as<WeakCollectionObject>().getMap()) {
-        map->trace(trc);
-    }
-}
-
-static void
-WeakCollection_finalize(FreeOp* fop, JSObject* obj)
-{
-    MOZ_ASSERT(fop->maybeOnHelperThread());
-    if (ObjectValueMap* map = obj->as<WeakCollectionObject>().getMap()) {
-        fop->delete_(map);
-    }
-}
-
-JS_PUBLIC_API JSObject*
-JS::NewWeakMapObject(JSContext* cx)
-{
-    return NewBuiltinClassInstance<WeakMapObject>(cx);
-}
-
-JS_PUBLIC_API bool
-JS::IsWeakMapObject(JSObject* obj)
-{
-    return obj->is<WeakMapObject>();
-}
-
-JS_PUBLIC_API bool
-JS::GetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
-                    MutableHandleValue rval)
-{
-    CHECK_THREAD(cx);
-    cx->check(key);
-    rval.setUndefined();
-    ObjectValueMap* map = mapObj->as<WeakMapObject>().getMap();
-    if (!map) {
-        return true;
-    }
+  if (ObjectValueMap* map =
+          args.thisv().toObject().as<WeakMapObject>().getMap()) {
+    JSObject* key = &args[0].toObject();
     if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
-        // Read barrier to prevent an incorrectly gray value from escaping the
-        // weak map. See the comment before UnmarkGrayChildren in gc/Marking.cpp
-        ExposeValueToActiveJS(ptr->value().get());
-        rval.set(ptr->value());
+      map->remove(ptr);
+      args.rval().setBoolean(true);
+      return true;
     }
+  }
+
+  args.rval().setBoolean(false);
+  return true;
+}
+
+/* static */ bool WeakMapObject::delete_(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::delete_impl>(
+      cx, args);
+}
+
+/* static */ MOZ_ALWAYS_INLINE bool WeakMapObject::set_impl(
+    JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(WeakMapObject::is(args.thisv()));
+
+  if (!args.get(0).isObject()) {
+    ReportNotObjectWithName(cx, "WeakMap key", args.get(0));
+    return false;
+  }
+
+  RootedObject key(cx, &args[0].toObject());
+  Rooted<WeakMapObject*> map(cx, &args.thisv().toObject().as<WeakMapObject>());
+
+  if (!WeakCollectionPutEntryInternal(cx, map, key, args.get(1))) {
+    return false;
+  }
+  args.rval().set(args.thisv());
+  return true;
+}
+
+/* static */ bool WeakMapObject::set(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::set_impl>(cx,
+                                                                          args);
+}
+
+bool WeakCollectionObject::nondeterministicGetKeys(
+    JSContext* cx, Handle<WeakCollectionObject*> obj, MutableHandleObject ret) {
+  RootedObject arr(cx, NewDenseEmptyArray(cx));
+  if (!arr) {
+    return false;
+  }
+  if (ObjectValueMap* map = obj->getMap()) {
+    // Prevent GC from mutating the weakmap while iterating.
+    gc::AutoSuppressGC suppress(cx);
+    for (ObjectValueMap::Base::Range r = map->all(); !r.empty(); r.popFront()) {
+      JS::ExposeObjectToActiveJS(r.front().key());
+      RootedObject key(cx, r.front().key());
+      if (!cx->compartment()->wrap(cx, &key)) {
+        return false;
+      }
+      if (!NewbornArrayPush(cx, arr, ObjectValue(*key))) {
+        return false;
+      }
+    }
+  }
+  ret.set(arr);
+  return true;
+}
+
+JS_FRIEND_API bool JS_NondeterministicGetWeakMapKeys(JSContext* cx,
+                                                     HandleObject objArg,
+                                                     MutableHandleObject ret) {
+  RootedObject obj(cx, UncheckedUnwrap(objArg));
+  if (!obj || !obj->is<WeakMapObject>()) {
+    ret.set(nullptr);
     return true;
+  }
+  return WeakCollectionObject::nondeterministicGetKeys(
+      cx, obj.as<WeakCollectionObject>(), ret);
 }
 
-JS_PUBLIC_API bool
-JS::SetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
-                    HandleValue val)
-{
-    CHECK_THREAD(cx);
-    cx->check(key, val);
-    Handle<WeakMapObject*> rootedMap = mapObj.as<WeakMapObject>();
-    return WeakCollectionPutEntryInternal(cx, rootedMap, key, val);
+static void WeakCollection_trace(JSTracer* trc, JSObject* obj) {
+  if (ObjectValueMap* map = obj->as<WeakCollectionObject>().getMap()) {
+    map->trace(trc);
+  }
 }
 
-/* static */ bool
-WeakMapObject::construct(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
+static void WeakCollection_finalize(FreeOp* fop, JSObject* obj) {
+  MOZ_ASSERT(fop->maybeOnHelperThread());
+  if (ObjectValueMap* map = obj->as<WeakCollectionObject>().getMap()) {
+    fop->delete_(map);
+  }
+}
 
-    // ES6 draft rev 31 (15 Jan 2015) 23.3.1.1 step 1.
-    if (!ThrowIfNotConstructing(cx, args, "WeakMap")) {
-        return false;
-    }
+JS_PUBLIC_API JSObject* JS::NewWeakMapObject(JSContext* cx) {
+  return NewBuiltinClassInstance<WeakMapObject>(cx);
+}
 
-    RootedObject proto(cx);
-    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
-        return false;
-    }
+JS_PUBLIC_API bool JS::IsWeakMapObject(JSObject* obj) {
+  return obj->is<WeakMapObject>();
+}
 
-    RootedObject obj(cx, NewObjectWithClassProto<WeakMapObject>(cx, proto));
-    if (!obj) {
-        return false;
-    }
-
-    // Steps 5-6, 11.
-    if (!args.get(0).isNullOrUndefined()) {
-        FixedInvokeArgs<1> args2(cx);
-        args2[0].set(args[0]);
-
-        RootedValue thisv(cx, ObjectValue(*obj));
-        if (!CallSelfHostedFunction(cx, cx->names().WeakMapConstructorInit, thisv, args2, args2.rval())) {
-            return false;
-        }
-    }
-
-    args.rval().setObject(*obj);
+JS_PUBLIC_API bool JS::GetWeakMapEntry(JSContext* cx, HandleObject mapObj,
+                                       HandleObject key,
+                                       MutableHandleValue rval) {
+  CHECK_THREAD(cx);
+  cx->check(key);
+  rval.setUndefined();
+  ObjectValueMap* map = mapObj->as<WeakMapObject>().getMap();
+  if (!map) {
     return true;
+  }
+  if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
+    // Read barrier to prevent an incorrectly gray value from escaping the
+    // weak map. See the comment before UnmarkGrayChildren in gc/Marking.cpp
+    ExposeValueToActiveJS(ptr->value().get());
+    rval.set(ptr->value());
+  }
+  return true;
 }
 
-const ClassOps WeakCollectionObject::classOps_ = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    WeakCollection_finalize,
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    WeakCollection_trace
-};
+JS_PUBLIC_API bool JS::SetWeakMapEntry(JSContext* cx, HandleObject mapObj,
+                                       HandleObject key, HandleValue val) {
+  CHECK_THREAD(cx);
+  cx->check(key, val);
+  Handle<WeakMapObject*> rootedMap = mapObj.as<WeakMapObject>();
+  return WeakCollectionPutEntryInternal(cx, rootedMap, key, val);
+}
+
+/* static */ bool WeakMapObject::construct(JSContext* cx, unsigned argc,
+                                           Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // ES6 draft rev 31 (15 Jan 2015) 23.3.1.1 step 1.
+  if (!ThrowIfNotConstructing(cx, args, "WeakMap")) {
+    return false;
+  }
+
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+    return false;
+  }
+
+  RootedObject obj(cx, NewObjectWithClassProto<WeakMapObject>(cx, proto));
+  if (!obj) {
+    return false;
+  }
+
+  // Steps 5-6, 11.
+  if (!args.get(0).isNullOrUndefined()) {
+    FixedInvokeArgs<1> args2(cx);
+    args2[0].set(args[0]);
+
+    RootedValue thisv(cx, ObjectValue(*obj));
+    if (!CallSelfHostedFunction(cx, cx->names().WeakMapConstructorInit, thisv,
+                                args2, args2.rval())) {
+      return false;
+    }
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+const ClassOps WeakCollectionObject::classOps_ = {nullptr, /* addProperty */
+                                                  nullptr, /* delProperty */
+                                                  nullptr, /* enumerate */
+                                                  nullptr, /* newEnumerate */
+                                                  nullptr, /* resolve */
+                                                  nullptr, /* mayResolve */
+                                                  WeakCollection_finalize,
+                                                  nullptr, /* call */
+                                                  nullptr, /* hasInstance */
+                                                  nullptr, /* construct */
+                                                  WeakCollection_trace};
 
 const ClassSpec WeakMapObject::classSpec_ = {
-    GenericCreateConstructor<WeakMapObject::construct, 0, gc::AllocKind::FUNCTION>,
+    GenericCreateConstructor<WeakMapObject::construct, 0,
+                             gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<WeakMapObject>,
     nullptr,
     nullptr,
@@ -294,29 +275,17 @@ const ClassSpec WeakMapObject::classSpec_ = {
 
 const Class WeakMapObject::class_ = {
     "WeakMap",
-    JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap) |
-    JSCLASS_BACKGROUND_FINALIZE,
-    &WeakCollectionObject::classOps_,
-    &WeakMapObject::classSpec_
-};
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap) |
+        JSCLASS_BACKGROUND_FINALIZE,
+    &WeakCollectionObject::classOps_, &WeakMapObject::classSpec_};
 
 const Class WeakMapObject::protoClass_ = {
-    js_Object_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap),
-    JS_NULL_CLASS_OPS,
-    &WeakMapObject::classSpec_
-};
+    js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap), JS_NULL_CLASS_OPS,
+    &WeakMapObject::classSpec_};
 
 const JSPropertySpec WeakMapObject::properties[] = {
-    JS_STRING_SYM_PS(toStringTag, "WeakMap", JSPROP_READONLY),
-    JS_PS_END
-};
+    JS_STRING_SYM_PS(toStringTag, "WeakMap", JSPROP_READONLY), JS_PS_END};
 
 const JSFunctionSpec WeakMapObject::methods[] = {
-    JS_FN("has", has, 1, 0),
-    JS_FN("get", get, 1, 0),
-    JS_FN("delete", delete_, 1, 0),
-    JS_FN("set", set, 2, 0),
-    JS_FS_END
-};
+    JS_FN("has", has, 1, 0), JS_FN("get", get, 1, 0),
+    JS_FN("delete", delete_, 1, 0), JS_FN("set", set, 2, 0), JS_FS_END};

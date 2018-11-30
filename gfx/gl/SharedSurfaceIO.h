@@ -14,86 +14,80 @@ class MacIOSurface;
 namespace mozilla {
 namespace gl {
 
-class SharedSurface_IOSurface : public SharedSurface
-{
-private:
-    const RefPtr<MacIOSurface> mIOSurf;
-    GLuint mProdTex;
+class SharedSurface_IOSurface : public SharedSurface {
+ private:
+  const RefPtr<MacIOSurface> mIOSurf;
+  GLuint mProdTex;
 
-public:
-    static UniquePtr<SharedSurface_IOSurface> Create(const RefPtr<MacIOSurface>& ioSurf,
-                                                     GLContext* gl,
-                                                     bool hasAlpha);
+ public:
+  static UniquePtr<SharedSurface_IOSurface> Create(
+      const RefPtr<MacIOSurface>& ioSurf, GLContext* gl, bool hasAlpha);
 
-private:
-    SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioSurf,
-                            GLContext* gl, const gfx::IntSize& size,
-                            bool hasAlpha);
+ private:
+  SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioSurf, GLContext* gl,
+                          const gfx::IntSize& size, bool hasAlpha);
 
-public:
-    ~SharedSurface_IOSurface();
+ public:
+  ~SharedSurface_IOSurface();
 
-    virtual void LockProdImpl() override { }
-    virtual void UnlockProdImpl() override { }
+  virtual void LockProdImpl() override {}
+  virtual void UnlockProdImpl() override {}
 
-    virtual void ProducerAcquireImpl() override {}
-    virtual void ProducerReleaseImpl() override;
+  virtual void ProducerAcquireImpl() override {}
+  virtual void ProducerReleaseImpl() override;
 
-    virtual bool CopyTexImage2D(GLenum target, GLint level, GLenum internalformat,
-                                GLint x, GLint y, GLsizei width, GLsizei height,
-                                GLint border) override;
-    virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                            GLenum format, GLenum type, GLvoid* pixels) override;
+  virtual bool CopyTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                              GLint x, GLint y, GLsizei width, GLsizei height,
+                              GLint border) override;
+  virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                          GLenum format, GLenum type, GLvoid* pixels) override;
 
-    virtual GLuint ProdTexture() override {
-        return mProdTex;
-    }
+  virtual GLuint ProdTexture() override { return mProdTex; }
 
-    virtual GLenum ProdTextureTarget() const override {
-        return LOCAL_GL_TEXTURE_RECTANGLE_ARB;
-    }
+  virtual GLenum ProdTextureTarget() const override {
+    return LOCAL_GL_TEXTURE_RECTANGLE_ARB;
+  }
 
-    static SharedSurface_IOSurface* Cast(SharedSurface* surf) {
-        MOZ_ASSERT(surf->mType == SharedSurfaceType::IOSurface);
-        return static_cast<SharedSurface_IOSurface*>(surf);
-    }
+  static SharedSurface_IOSurface* Cast(SharedSurface* surf) {
+    MOZ_ASSERT(surf->mType == SharedSurfaceType::IOSurface);
+    return static_cast<SharedSurface_IOSurface*>(surf);
+  }
 
-    MacIOSurface* GetIOSurface() const {
-        return mIOSurf;
-    }
+  MacIOSurface* GetIOSurface() const { return mIOSurf; }
 
-    virtual bool NeedsIndirectReads() const override {
-        return true;
-    }
+  virtual bool NeedsIndirectReads() const override { return true; }
 
-    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
+  virtual bool ToSurfaceDescriptor(
+      layers::SurfaceDescriptor* const out_descriptor) override;
 
-    virtual bool ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface) override;
+  virtual bool ReadbackBySharedHandle(
+      gfx::DataSourceSurface* out_surface) override;
 };
 
-class SurfaceFactory_IOSurface : public SurfaceFactory
-{
-public:
-    // Infallible.
-    static UniquePtr<SurfaceFactory_IOSurface> Create(GLContext* gl,
-                                                      const SurfaceCaps& caps,
-                                                      const RefPtr<layers::LayersIPCChannel>& allocator,
-                                                      const layers::TextureFlags& flags);
-protected:
-    const gfx::IntSize mMaxDims;
+class SurfaceFactory_IOSurface : public SurfaceFactory {
+ public:
+  // Infallible.
+  static UniquePtr<SurfaceFactory_IOSurface> Create(
+      GLContext* gl, const SurfaceCaps& caps,
+      const RefPtr<layers::LayersIPCChannel>& allocator,
+      const layers::TextureFlags& flags);
 
-    SurfaceFactory_IOSurface(GLContext* gl, const SurfaceCaps& caps,
-                             const RefPtr<layers::LayersIPCChannel>& allocator,
-                             const layers::TextureFlags& flags,
-                             const gfx::IntSize& maxDims)
-        : SurfaceFactory(SharedSurfaceType::IOSurface, gl, caps, allocator, flags)
-        , mMaxDims(maxDims)
-    { }
+ protected:
+  const gfx::IntSize mMaxDims;
 
-    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override;
+  SurfaceFactory_IOSurface(GLContext* gl, const SurfaceCaps& caps,
+                           const RefPtr<layers::LayersIPCChannel>& allocator,
+                           const layers::TextureFlags& flags,
+                           const gfx::IntSize& maxDims)
+      : SurfaceFactory(SharedSurfaceType::IOSurface, gl, caps, allocator,
+                       flags),
+        mMaxDims(maxDims) {}
+
+  virtual UniquePtr<SharedSurface> CreateShared(
+      const gfx::IntSize& size) override;
 };
 
-} // namespace gl
+}  // namespace gl
 
 } /* namespace mozilla */
 

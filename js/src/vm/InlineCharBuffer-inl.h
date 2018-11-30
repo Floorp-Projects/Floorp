@@ -11,14 +11,17 @@
 
 namespace js {
 
-template <typename CharT> struct MaximumInlineLength;
+template <typename CharT>
+struct MaximumInlineLength;
 
-template<> struct MaximumInlineLength<Latin1Char> {
-    static constexpr size_t value = JSFatInlineString::MAX_LENGTH_LATIN1;
+template <>
+struct MaximumInlineLength<Latin1Char> {
+  static constexpr size_t value = JSFatInlineString::MAX_LENGTH_LATIN1;
 };
 
-template<> struct MaximumInlineLength<char16_t> {
-    static constexpr size_t value = JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+template <>
+struct MaximumInlineLength<char16_t> {
+  static constexpr size_t value = JSFatInlineString::MAX_LENGTH_TWO_BYTE;
 };
 
 // Character buffer class used for ToLowerCase and ToUpperCase operations, as
@@ -39,115 +42,111 @@ template<> struct MaximumInlineLength<char16_t> {
 // fine-grained control to avoid over-allocation when (re)allocating for exact
 // buffer sizes. This led to visible performance regressions in µ-benchmarks.
 template <typename CharT>
-class MOZ_NON_PARAM InlineCharBuffer
-{
-    static constexpr size_t InlineCapacity = MaximumInlineLength<CharT>::value;
+class MOZ_NON_PARAM InlineCharBuffer {
+  static constexpr size_t InlineCapacity = MaximumInlineLength<CharT>::value;
 
-    CharT inlineStorage[InlineCapacity];
-    UniquePtr<CharT[], JS::FreePolicy> heapStorage;
+  CharT inlineStorage[InlineCapacity];
+  UniquePtr<CharT[], JS::FreePolicy> heapStorage;
 
 #ifdef DEBUG
-    // In debug mode, we keep track of the requested string lengths to ensure
-    // all character buffer methods are called in the correct order and with
-    // the expected argument values.
-    size_t lastRequestedLength = 0;
+  // In debug mode, we keep track of the requested string lengths to ensure
+  // all character buffer methods are called in the correct order and with
+  // the expected argument values.
+  size_t lastRequestedLength = 0;
 
-    void assertValidRequest(size_t expectedLastLength, size_t length) {
-        MOZ_ASSERT(length >= expectedLastLength, "cannot shrink requested length");
-        MOZ_ASSERT(lastRequestedLength == expectedLastLength);
-        lastRequestedLength = length;
-    }
+  void assertValidRequest(size_t expectedLastLength, size_t length) {
+    MOZ_ASSERT(length >= expectedLastLength, "cannot shrink requested length");
+    MOZ_ASSERT(lastRequestedLength == expectedLastLength);
+    lastRequestedLength = length;
+  }
 #else
-    void assertValidRequest(size_t expectedLastLength, size_t length) {}
+  void assertValidRequest(size_t expectedLastLength, size_t length) {}
 #endif
 
-  public:
-    CharT* get()
-    {
-        return heapStorage ? heapStorage.get() : inlineStorage;
+ public:
+  CharT* get() { return heapStorage ? heapStorage.get() : inlineStorage; }
+
+  bool maybeAlloc(JSContext* cx, size_t length) {
+    assertValidRequest(0, length);
+
+    if (length <= InlineCapacity) {
+      return true;
     }
 
-    bool maybeAlloc(JSContext* cx, size_t length)
-    {
-        assertValidRequest(0, length);
+    MOZ_ASSERT(!heapStorage, "heap storage already allocated");
+    heapStorage = cx->make_pod_array<CharT>(length + 1);
+    return !!heapStorage;
+  }
 
-        if (length <= InlineCapacity) {
-            return true;
-        }
+  bool maybeRealloc(JSContext* cx, size_t oldLength, size_t newLength) {
+    assertValidRequest(oldLength, newLength);
 
-        MOZ_ASSERT(!heapStorage, "heap storage already allocated");
-        heapStorage = cx->make_pod_array<CharT>(length + 1);
-        return !!heapStorage;
+    if (newLength <= InlineCapacity) {
+      return true;
     }
 
-    bool maybeRealloc(JSContext* cx, size_t oldLength, size_t newLength)
-    {
-        assertValidRequest(oldLength, newLength);
+    if (!heapStorage) {
+      heapStorage = cx->make_pod_array<CharT>(newLength + 1);
+      if (!heapStorage) {
+        return false;
+      }
 
-        if (newLength <= InlineCapacity) {
-            return true;
-        }
-
-        if (!heapStorage) {
-            heapStorage = cx->make_pod_array<CharT>(newLength + 1);
-            if (!heapStorage) {
-                return false;
-            }
-
-            MOZ_ASSERT(oldLength <= InlineCapacity);
-            mozilla::PodCopy(heapStorage.get(), inlineStorage, oldLength);
-            return true;
-        }
-
-        CharT* oldChars = heapStorage.release();
-        CharT* newChars = cx->pod_realloc(oldChars, oldLength + 1, newLength + 1);
-        if (!newChars) {
-            js_free(oldChars);
-            return false;
-        }
-
-        heapStorage.reset(newChars);
-        return true;
+      MOZ_ASSERT(oldLength <= InlineCapacity);
+      mozilla::PodCopy(heapStorage.get(), inlineStorage, oldLength);
+      return true;
     }
 
-    JSString* toStringDontDeflate(JSContext* cx, size_t length)
-    {
-        MOZ_ASSERT(length == lastRequestedLength);
-
-        if (JSInlineString::lengthFits<CharT>(length)) {
-            MOZ_ASSERT(!heapStorage,
-                       "expected only inline storage when length fits in inline string");
-
-            if (JSString* str = TryEmptyOrStaticString(cx, inlineStorage, length)) {
-                return str;
-            }
-
-            mozilla::Range<const CharT> range(inlineStorage, length);
-            return NewInlineString<CanGC>(cx, range);
-        }
-
-        MOZ_ASSERT(heapStorage, "heap storage was not allocated for non-inline string");
-
-        heapStorage.get()[length] = '\0'; // Null-terminate
-        return NewStringDontDeflate<CanGC>(cx, std::move(heapStorage), length);
+    CharT* oldChars = heapStorage.release();
+    CharT* newChars = cx->pod_realloc(oldChars, oldLength + 1, newLength + 1);
+    if (!newChars) {
+      js_free(oldChars);
+      return false;
     }
 
-    JSString* toString(JSContext* cx, size_t length)
-    {
-        MOZ_ASSERT(length == lastRequestedLength);
+    heapStorage.reset(newChars);
+    return true;
+  }
 
-        if (JSInlineString::lengthFits<CharT>(length)) {
-            MOZ_ASSERT(!heapStorage,
-                       "expected only inline storage when length fits in inline string");
+  JSString* toStringDontDeflate(JSContext* cx, size_t length) {
+    MOZ_ASSERT(length == lastRequestedLength);
 
-            return NewStringCopyN<CanGC>(cx, inlineStorage, length);
-        }
+    if (JSInlineString::lengthFits<CharT>(length)) {
+      MOZ_ASSERT(
+          !heapStorage,
+          "expected only inline storage when length fits in inline string");
 
-        MOZ_ASSERT(heapStorage, "heap storage was not allocated for non-inline string");
+      if (JSString* str = TryEmptyOrStaticString(cx, inlineStorage, length)) {
+        return str;
+      }
 
-        heapStorage.get()[length] = '\0'; // Null-terminate
-        return NewString<CanGC>(cx, std::move(heapStorage), length);
+      mozilla::Range<const CharT> range(inlineStorage, length);
+      return NewInlineString<CanGC>(cx, range);
     }
+
+    MOZ_ASSERT(heapStorage,
+               "heap storage was not allocated for non-inline string");
+
+    heapStorage.get()[length] = '\0';  // Null-terminate
+    return NewStringDontDeflate<CanGC>(cx, std::move(heapStorage), length);
+  }
+
+  JSString* toString(JSContext* cx, size_t length) {
+    MOZ_ASSERT(length == lastRequestedLength);
+
+    if (JSInlineString::lengthFits<CharT>(length)) {
+      MOZ_ASSERT(
+          !heapStorage,
+          "expected only inline storage when length fits in inline string");
+
+      return NewStringCopyN<CanGC>(cx, inlineStorage, length);
+    }
+
+    MOZ_ASSERT(heapStorage,
+               "heap storage was not allocated for non-inline string");
+
+    heapStorage.get()[length] = '\0';  // Null-terminate
+    return NewString<CanGC>(cx, std::move(heapStorage), length);
+  }
 };
 
 } /* namespace js */

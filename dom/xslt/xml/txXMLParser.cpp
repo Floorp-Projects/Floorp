@@ -13,49 +13,44 @@
 #include "nsIURI.h"
 #include "nsIPrincipal.h"
 
-nsresult
-txParseDocumentFromURI(const nsAString& aHref,
-                       const txXPathNode& aLoader,
-                       nsAString& aErrMsg,
-                       txXPathNode** aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = nullptr;
-    nsCOMPtr<nsIURI> documentURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(documentURI), aHref);
-    NS_ENSURE_SUCCESS(rv, rv);
+nsresult txParseDocumentFromURI(const nsAString& aHref,
+                                const txXPathNode& aLoader, nsAString& aErrMsg,
+                                txXPathNode** aResult) {
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nullptr;
+  nsCOMPtr<nsIURI> documentURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(documentURI), aHref);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsIDocument* loaderDocument = txXPathNativeNode::getDocument(aLoader);
+  nsIDocument* loaderDocument = txXPathNativeNode::getDocument(aLoader);
 
-    nsCOMPtr<nsILoadGroup> loadGroup = loaderDocument->GetDocumentLoadGroup();
+  nsCOMPtr<nsILoadGroup> loadGroup = loaderDocument->GetDocumentLoadGroup();
 
-    // For the system principal loaderUri will be null here, which is good
-    // since that means that chrome documents can load any uri.
+  // For the system principal loaderUri will be null here, which is good
+  // since that means that chrome documents can load any uri.
 
-    // Raw pointer, we want the resulting txXPathNode to hold a reference to
-    // the document.
-    nsIDocument* theDocument = nullptr;
-    nsAutoSyncOperation sync(loaderDocument);
-    rv = nsSyncLoadService::LoadDocument(documentURI,
-                                         nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                                         loaderDocument->NodePrincipal(),
-                                         nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
-                                         loadGroup, true,
-                                         loaderDocument->GetReferrerPolicy(),
-                                         &theDocument);
+  // Raw pointer, we want the resulting txXPathNode to hold a reference to
+  // the document.
+  nsIDocument* theDocument = nullptr;
+  nsAutoSyncOperation sync(loaderDocument);
+  rv = nsSyncLoadService::LoadDocument(
+      documentURI, nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
+      loaderDocument->NodePrincipal(),
+      nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS, loadGroup, true,
+      loaderDocument->GetReferrerPolicy(), &theDocument);
 
-    if (NS_FAILED(rv)) {
-        aErrMsg.AppendLiteral("Document load of ");
-        aErrMsg.Append(aHref);
-        aErrMsg.AppendLiteral(" failed.");
-        return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
-    }
+  if (NS_FAILED(rv)) {
+    aErrMsg.AppendLiteral("Document load of ");
+    aErrMsg.Append(aHref);
+    aErrMsg.AppendLiteral(" failed.");
+    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+  }
 
-    *aResult = txXPathNativeNode::createXPathNode(theDocument);
-    if (!*aResult) {
-        NS_RELEASE(theDocument);
-        return NS_ERROR_FAILURE;
-    }
+  *aResult = txXPathNativeNode::createXPathNode(theDocument);
+  if (!*aResult) {
+    NS_RELEASE(theDocument);
+    return NS_ERROR_FAILURE;
+  }
 
-    return NS_OK;
+  return NS_OK;
 }

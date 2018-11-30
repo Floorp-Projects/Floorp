@@ -19,35 +19,31 @@
 namespace mozilla {
 namespace gfx {
 
-typedef void (*CGContextSetFontSmoothingBackgroundColorFunc) (CGContextRef cgContext, CGColorRef color);
+typedef void (*CGContextSetFontSmoothingBackgroundColorFunc)(CGContextRef cgContext,
+                                                             CGColorRef color);
 
 static CGContextSetFontSmoothingBackgroundColorFunc
-GetCGContextSetFontSmoothingBackgroundColorFunc()
-{
+GetCGContextSetFontSmoothingBackgroundColorFunc() {
   static CGContextSetFontSmoothingBackgroundColorFunc func = nullptr;
   static bool lookedUpFunc = false;
   if (!lookedUpFunc) {
     func = (CGContextSetFontSmoothingBackgroundColorFunc)dlsym(
-      RTLD_DEFAULT, "CGContextSetFontSmoothingBackgroundColor");
+        RTLD_DEFAULT, "CGContextSetFontSmoothingBackgroundColor");
     lookedUpFunc = true;
   }
   return func;
 }
 
-static CGColorRef
-ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColor)
-{
+static CGColorRef ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColor) {
   CGFloat components[4] = {aColor.r, aColor.g, aColor.b, aColor.a};
   return CGColorCreate(aColorSpace, components);
 }
 
-static bool
-SetFontSmoothingBackgroundColor(CGContextRef aCGContext, CGColorSpaceRef aColorSpace,
-                                const Color& aFontSmoothingBackgroundColor)
-{
+static bool SetFontSmoothingBackgroundColor(CGContextRef aCGContext, CGColorSpaceRef aColorSpace,
+                                            const Color& aFontSmoothingBackgroundColor) {
   if (aFontSmoothingBackgroundColor.a > 0) {
     CGContextSetFontSmoothingBackgroundColorFunc setFontSmoothingBGColorFunc =
-      GetCGContextSetFontSmoothingBackgroundColorFunc();
+        GetCGContextSetFontSmoothingBackgroundColorFunc();
     if (setFontSmoothingBGColorFunc) {
       CGColorRef color = ColorToCGColor(aColorSpace, aFontSmoothingBackgroundColor);
       setFontSmoothingBGColorFunc(aCGContext, color);
@@ -72,24 +68,22 @@ SetFontSmoothingBackgroundColor(CGContextRef aCGContext, CGColorSpaceRef aColorS
 // RGB components, you can trick OVER compositing into doing a simplified
 // form of component alpha compositing. (You just need to make sure to
 // clamp the components of the result pixel to [0,255] afterwards.)
-static void
-EnsureValidPremultipliedData(CGContextRef aContext,
-                             CGRect aTextBounds = CGRectInfinite)
-{
+static void EnsureValidPremultipliedData(CGContextRef aContext,
+                                         CGRect aTextBounds = CGRectInfinite) {
   if (CGBitmapContextGetBitsPerPixel(aContext) != 32 ||
       CGBitmapContextGetAlphaInfo(aContext) != kCGImageAlphaPremultipliedFirst) {
     return;
   }
 
   uint8_t* bitmapData = (uint8_t*)CGBitmapContextGetData(aContext);
-  CGRect bitmapBounds = CGRectMake(0, 0, CGBitmapContextGetWidth(aContext), CGBitmapContextGetHeight(aContext));
+  CGRect bitmapBounds =
+      CGRectMake(0, 0, CGBitmapContextGetWidth(aContext), CGBitmapContextGetHeight(aContext));
   int stride = CGBitmapContextGetBytesPerRow(aContext);
 
   CGRect bounds = CGRectIntersection(bitmapBounds, aTextBounds);
   int startX = bounds.origin.x;
   int endX = startX + bounds.size.width;
   MOZ_ASSERT(endX <= bitmapBounds.size.width);
-
 
   // CGRect assume that our origin is the bottom left.
   // The data assumes that the origin is the top left.
@@ -103,38 +97,35 @@ EnsureValidPremultipliedData(CGContextRef aContext,
       int i = y * stride + x * 4;
       uint8_t a = bitmapData[i + 3];
 
-      bitmapData[i + 0] = std::min(a, bitmapData[i+0]);
-      bitmapData[i + 1] = std::min(a, bitmapData[i+1]);
-      bitmapData[i + 2] = std::min(a, bitmapData[i+2]);
+      bitmapData[i + 0] = std::min(a, bitmapData[i + 0]);
+      bitmapData[i + 1] = std::min(a, bitmapData[i + 1]);
+      bitmapData[i + 2] = std::min(a, bitmapData[i + 2]);
     }
   }
 }
 
-static CGRect
-ComputeGlyphsExtents(CGRect *bboxes, CGPoint *positions, CFIndex count, float scale)
-{
+static CGRect ComputeGlyphsExtents(CGRect* bboxes, CGPoint* positions, CFIndex count, float scale) {
   CGFloat x1, x2, y1, y2;
-  if (count < 1)
-    return CGRectZero;
+  if (count < 1) return CGRectZero;
 
   x1 = bboxes[0].origin.x + positions[0].x;
-  x2 = bboxes[0].origin.x + positions[0].x + scale*bboxes[0].size.width;
+  x2 = bboxes[0].origin.x + positions[0].x + scale * bboxes[0].size.width;
   y1 = bboxes[0].origin.y + positions[0].y;
-  y2 = bboxes[0].origin.y + positions[0].y + scale*bboxes[0].size.height;
+  y2 = bboxes[0].origin.y + positions[0].y + scale * bboxes[0].size.height;
 
   // accumulate max and minimum coordinates
   for (int i = 1; i < count; i++) {
     x1 = std::min(x1, bboxes[i].origin.x + positions[i].x);
     y1 = std::min(y1, bboxes[i].origin.y + positions[i].y);
-    x2 = std::max(x2, bboxes[i].origin.x + positions[i].x + scale*bboxes[i].size.width);
-    y2 = std::max(y2, bboxes[i].origin.y + positions[i].y + scale*bboxes[i].size.height);
+    x2 = std::max(x2, bboxes[i].origin.x + positions[i].x + scale * bboxes[i].size.width);
+    y2 = std::max(y2, bboxes[i].origin.y + positions[i].y + scale * bboxes[i].size.height);
   }
 
-  CGRect extents = {{x1, y1}, {x2-x1, y2-y1}};
+  CGRect extents = {{x1, y1}, {x2 - x1, y2 - y1}};
   return extents;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

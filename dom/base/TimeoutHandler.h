@@ -19,9 +19,8 @@ namespace dom {
 /**
  * Utility class for implementing nsITimeoutHandlers, designed to be subclassed.
  */
-class TimeoutHandler : public nsITimeoutHandler
-{
-public:
+class TimeoutHandler : public nsITimeoutHandler {
+ public:
   // TimeoutHandler doesn't actually contain cycles, but subclasses
   // probably will.
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -31,12 +30,14 @@ public:
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
                            uint32_t* aColumn) override;
   virtual void MarkForCC() override {}
-protected:
+
+ protected:
   TimeoutHandler() : mFileName(""), mLineNo(0), mColumn(0) {}
-  explicit TimeoutHandler(JSContext *aCx);
+  explicit TimeoutHandler(JSContext* aCx);
 
   virtual ~TimeoutHandler() {}
-private:
+
+ private:
   TimeoutHandler(const TimeoutHandler&) = delete;
   TimeoutHandler& operator=(const TimeoutHandler&) = delete;
   TimeoutHandler& operator=(const TimeoutHandler&&) = delete;
@@ -46,7 +47,7 @@ private:
   uint32_t mColumn;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_timeout_handler_h
+#endif  // mozilla_dom_timeout_handler_h

@@ -40,7 +40,7 @@ LoadLibraryWithFlags(const char* aPath, PRUint32 aFlags = 0)
   return PR_LoadLibraryWithFlags(libSpec, aFlags);
 }
 
-}  /* namespace mozilla */
+} /* namespace mozilla */
 
 #endif /* MOZILLA_INTERNAL_API */
 

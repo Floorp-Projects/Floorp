@@ -14,15 +14,12 @@ namespace dom {
 using mozilla::ipc::IPCResult;
 using mozilla::ipc::ResponseRejectReason;
 
-RemoteServiceWorkerRegistrationImpl::~RemoteServiceWorkerRegistrationImpl()
-{
+RemoteServiceWorkerRegistrationImpl::~RemoteServiceWorkerRegistrationImpl() {
   MOZ_DIAGNOSTIC_ASSERT(!mOuter);
   Shutdown();
 }
 
-void
-RemoteServiceWorkerRegistrationImpl::Shutdown()
-{
+void RemoteServiceWorkerRegistrationImpl::Shutdown() {
   if (mShutdown) {
     return;
   }
@@ -35,83 +32,83 @@ RemoteServiceWorkerRegistrationImpl::Shutdown()
   }
 }
 
-void
-RemoteServiceWorkerRegistrationImpl::SetServiceWorkerRegistration(ServiceWorkerRegistration* aReg)
-{
+void RemoteServiceWorkerRegistrationImpl::SetServiceWorkerRegistration(
+    ServiceWorkerRegistration* aReg) {
   NS_ASSERT_OWNINGTHREAD(RemoteServiceWorkerRegistrationImpl);
   MOZ_DIAGNOSTIC_ASSERT(!mOuter);
   MOZ_DIAGNOSTIC_ASSERT(aReg);
   mOuter = aReg;
 }
 
-void
-RemoteServiceWorkerRegistrationImpl::ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg)
-{
+void RemoteServiceWorkerRegistrationImpl::ClearServiceWorkerRegistration(
+    ServiceWorkerRegistration* aReg) {
   NS_ASSERT_OWNINGTHREAD(RemoteServiceWorkerRegistrationImpl);
   MOZ_DIAGNOSTIC_ASSERT(mOuter);
   MOZ_DIAGNOSTIC_ASSERT(aReg == mOuter);
   mOuter = nullptr;
 }
 
-void
-RemoteServiceWorkerRegistrationImpl::Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
-                                            ServiceWorkerFailureCallback&& aFailureCB)
-{
+void RemoteServiceWorkerRegistrationImpl::Update(
+    ServiceWorkerRegistrationCallback&& aSuccessCB,
+    ServiceWorkerFailureCallback&& aFailureCB) {
   if (!mActor) {
     aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
     return;
   }
 
   mActor->SendUpdate(
-    [successCB = std::move(aSuccessCB), aFailureCB]
-    (const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult& aResult) {
-      if (aResult.type() == IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult::TCopyableErrorResult) {
-        // application layer error
-        auto& rv = aResult.get_CopyableErrorResult();
-        MOZ_DIAGNOSTIC_ASSERT(rv.Failed());
-        aFailureCB(CopyableErrorResult(rv));
-        return;
-      }
-      // success
-      auto& ipcDesc = aResult.get_IPCServiceWorkerRegistrationDescriptor();
-      successCB(ServiceWorkerRegistrationDescriptor(ipcDesc));
-    }, [aFailureCB] (ResponseRejectReason aReason) {
-      // IPC layer error
-      aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
-    });
+      [successCB = std::move(aSuccessCB), aFailureCB](
+          const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult&
+              aResult) {
+        if (aResult.type() ==
+            IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult::
+                TCopyableErrorResult) {
+          // application layer error
+          auto& rv = aResult.get_CopyableErrorResult();
+          MOZ_DIAGNOSTIC_ASSERT(rv.Failed());
+          aFailureCB(CopyableErrorResult(rv));
+          return;
+        }
+        // success
+        auto& ipcDesc = aResult.get_IPCServiceWorkerRegistrationDescriptor();
+        successCB(ServiceWorkerRegistrationDescriptor(ipcDesc));
+      },
+      [aFailureCB](ResponseRejectReason aReason) {
+        // IPC layer error
+        aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+      });
 }
 
-void
-RemoteServiceWorkerRegistrationImpl::Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
-                                                ServiceWorkerFailureCallback&& aFailureCB)
-{
+void RemoteServiceWorkerRegistrationImpl::Unregister(
+    ServiceWorkerBoolCallback&& aSuccessCB,
+    ServiceWorkerFailureCallback&& aFailureCB) {
   if (!mActor) {
     aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
     return;
   }
 
   mActor->SendUnregister(
-    [successCB = std::move(aSuccessCB), aFailureCB]
-    (Tuple<bool, CopyableErrorResult>&& aResult) {
-    if (Get<1>(aResult).Failed()) {
-      // application layer error
-      aFailureCB(Get<1>(aResult));
-      return;
-    }
-    // success
-    successCB(Get<0>(aResult));
-  }, [aFailureCB] (ResponseRejectReason aReason) {
-    // IPC layer error
-    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
-  });
+      [successCB = std::move(aSuccessCB),
+       aFailureCB](Tuple<bool, CopyableErrorResult>&& aResult) {
+        if (Get<1>(aResult).Failed()) {
+          // application layer error
+          aFailureCB(Get<1>(aResult));
+          return;
+        }
+        // success
+        successCB(Get<0>(aResult));
+      },
+      [aFailureCB](ResponseRejectReason aReason) {
+        // IPC layer error
+        aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+      });
 }
 
-RemoteServiceWorkerRegistrationImpl::RemoteServiceWorkerRegistrationImpl(const ServiceWorkerRegistrationDescriptor& aDescriptor)
-  : mActor(nullptr)
-  , mOuter(nullptr)
-  , mShutdown(false)
-{
-  PBackgroundChild* parentActor = BackgroundChild::GetOrCreateForCurrentThread();
+RemoteServiceWorkerRegistrationImpl::RemoteServiceWorkerRegistrationImpl(
+    const ServiceWorkerRegistrationDescriptor& aDescriptor)
+    : mActor(nullptr), mOuter(nullptr), mShutdown(false) {
+  PBackgroundChild* parentActor =
+      BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!parentActor)) {
     Shutdown();
     return;
@@ -122,9 +119,8 @@ RemoteServiceWorkerRegistrationImpl::RemoteServiceWorkerRegistrationImpl(const S
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
 
-    workerHolderToken =
-      WorkerHolderToken::Create(workerPrivate, Canceling,
-                                WorkerHolderToken::AllowIdleShutdownStart);
+    workerHolderToken = WorkerHolderToken::Create(
+        workerPrivate, Canceling, WorkerHolderToken::AllowIdleShutdownStart);
 
     if (NS_WARN_IF(!workerHolderToken)) {
       Shutdown();
@@ -133,9 +129,10 @@ RemoteServiceWorkerRegistrationImpl::RemoteServiceWorkerRegistrationImpl(const S
   }
 
   ServiceWorkerRegistrationChild* actor =
-    new ServiceWorkerRegistrationChild(workerHolderToken);
+      new ServiceWorkerRegistrationChild(workerHolderToken);
   PServiceWorkerRegistrationChild* sentActor =
-    parentActor->SendPServiceWorkerRegistrationConstructor(actor, aDescriptor.ToIPC());
+      parentActor->SendPServiceWorkerRegistrationConstructor(
+          actor, aDescriptor.ToIPC());
   if (NS_WARN_IF(!sentActor)) {
     Shutdown();
     return;
@@ -146,9 +143,8 @@ RemoteServiceWorkerRegistrationImpl::RemoteServiceWorkerRegistrationImpl(const S
   mActor->SetOwner(this);
 }
 
-void
-RemoteServiceWorkerRegistrationImpl::RevokeActor(ServiceWorkerRegistrationChild* aActor)
-{
+void RemoteServiceWorkerRegistrationImpl::RevokeActor(
+    ServiceWorkerRegistrationChild* aActor) {
   MOZ_DIAGNOSTIC_ASSERT(mActor);
   MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
   mActor->RevokeOwner(this);
@@ -161,21 +157,18 @@ RemoteServiceWorkerRegistrationImpl::RevokeActor(ServiceWorkerRegistrationChild*
   }
 }
 
-void
-RemoteServiceWorkerRegistrationImpl::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
-{
+void RemoteServiceWorkerRegistrationImpl::UpdateState(
+    const ServiceWorkerRegistrationDescriptor& aDescriptor) {
   if (mOuter) {
     mOuter->UpdateState(aDescriptor);
   }
 }
 
-void
-RemoteServiceWorkerRegistrationImpl::FireUpdateFound()
-{
+void RemoteServiceWorkerRegistrationImpl::FireUpdateFound() {
   if (mOuter) {
     mOuter->MaybeDispatchUpdateFoundRunnable();
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

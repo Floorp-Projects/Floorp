@@ -11,9 +11,9 @@
 #ifndef js_SavedFrameAPI_h
 #define js_SavedFrameAPI_h
 
-#include "jstypes.h" // JS_FRIEND_API, JS_PUBLIC_API
+#include "jstypes.h"  // JS_FRIEND_API, JS_PUBLIC_API
 
-#include "js/RootingAPI.h" // JS::Handle, JS::MutableHandle
+#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
 
 struct JSContext;
 class JSObject;
@@ -52,94 +52,88 @@ namespace JS {
  * See also `js/src/doc/SavedFrame/SavedFrame.md`.
  */
 
-enum class SavedFrameResult {
-    Ok,
-    AccessDenied
-};
+enum class SavedFrameResult { Ok, AccessDenied };
 
-enum class SavedFrameSelfHosted {
-    Include,
-    Exclude
-};
+enum class SavedFrameSelfHosted { Include, Exclude };
 
 /**
  * Given a SavedFrame JSObject, get its source property. Defaults to the empty
  * string.
  */
-extern JS_PUBLIC_API SavedFrameResult
-GetSavedFrameSource(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
-                    MutableHandle<JSString*> sourcep,
-                    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
+extern JS_PUBLIC_API SavedFrameResult GetSavedFrameSource(
+    JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
+    MutableHandle<JSString*> sourcep,
+    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its line property. Defaults to 0.
  */
-extern JS_PUBLIC_API SavedFrameResult
-GetSavedFrameLine(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
-                  uint32_t* linep,
-                  SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
+extern JS_PUBLIC_API SavedFrameResult GetSavedFrameLine(
+    JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
+    uint32_t* linep,
+    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its column property. Defaults to 0.
  */
-extern JS_PUBLIC_API SavedFrameResult
-GetSavedFrameColumn(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
-                    uint32_t* columnp,
-                    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
+extern JS_PUBLIC_API SavedFrameResult GetSavedFrameColumn(
+    JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
+    uint32_t* columnp,
+    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its functionDisplayName string, or nullptr
  * if SpiderMonkey was unable to infer a name for the captured frame's
  * function. Defaults to nullptr.
  */
-extern JS_PUBLIC_API SavedFrameResult
-GetSavedFrameFunctionDisplayName(JSContext* cx, JSPrincipals* principals,
-                                 Handle<JSObject*> savedFrame,
-                                 MutableHandle<JSString*> namep,
-                                 SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
+extern JS_PUBLIC_API SavedFrameResult GetSavedFrameFunctionDisplayName(
+    JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
+    MutableHandle<JSString*> namep,
+    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its asyncCause string. Defaults to nullptr.
  */
-extern JS_PUBLIC_API SavedFrameResult
-GetSavedFrameAsyncCause(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
-                        MutableHandle<JSString*> asyncCausep,
-                        SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
+extern JS_PUBLIC_API SavedFrameResult GetSavedFrameAsyncCause(
+    JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
+    MutableHandle<JSString*> asyncCausep,
+    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its asyncParent SavedFrame object or nullptr
  * if there is no asyncParent. The `asyncParentp` out parameter is _NOT_
  * guaranteed to be in the cx's compartment. Defaults to nullptr.
  */
-extern JS_PUBLIC_API SavedFrameResult
-GetSavedFrameAsyncParent(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
-                         MutableHandle<JSObject*> asyncParentp,
-                         SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
+extern JS_PUBLIC_API SavedFrameResult GetSavedFrameAsyncParent(
+    JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
+    MutableHandle<JSObject*> asyncParentp,
+    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its parent SavedFrame object or nullptr if
  * it is the oldest frame in the stack. The `parentp` out parameter is _NOT_
  * guaranteed to be in the cx's compartment. Defaults to nullptr.
  */
-extern JS_PUBLIC_API SavedFrameResult
-GetSavedFrameParent(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
-                    MutableHandle<JSObject*> parentp,
-                    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
+extern JS_PUBLIC_API SavedFrameResult GetSavedFrameParent(
+    JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
+    MutableHandle<JSObject*> parentp,
+    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
-} // namespace JS
+}  // namespace JS
 
 namespace js {
 
 /**
  * Get the first SavedFrame object in this SavedFrame stack whose principals are
- * subsumed by the given |principals|. If there is no such frame, return nullptr.
+ * subsumed by the given |principals|. If there is no such frame, return
+ * nullptr.
  *
  * Do NOT pass a non-SavedFrame object here.
  */
-extern JS_FRIEND_API JSObject*
-GetFirstSubsumedSavedFrame(JSContext* cx, JSPrincipals* principals,
-                           JS::Handle<JSObject*> savedFrame, JS::SavedFrameSelfHosted selfHosted);
+extern JS_FRIEND_API JSObject* GetFirstSubsumedSavedFrame(
+    JSContext* cx, JSPrincipals* principals, JS::Handle<JSObject*> savedFrame,
+    JS::SavedFrameSelfHosted selfHosted);
 
-} // namespace js
+}  // namespace js
 
 #endif /* js_SavedFrameAPI_h */

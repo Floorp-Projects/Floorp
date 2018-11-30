@@ -27,9 +27,9 @@ class AutoplayPermissionManager;
 // AutoplayPermissionRequest's destructor calls the AutoplayPermissionManager
 // back with a cancel operation. Thus the AutoplayPermissionManager can
 // guarantee to always approve or cancel requests to play.
-class AutoplayPermissionRequest final : public dom::ContentPermissionRequestBase
-{
-public:
+class AutoplayPermissionRequest final
+    : public dom::ContentPermissionRequestBase {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AutoplayPermissionRequest,
                                            ContentPermissionRequestBase)
@@ -39,10 +39,9 @@ public:
   NS_IMETHOD Allow(JS::HandleValue choices) override;
 
   static already_AddRefed<AutoplayPermissionRequest> Create(
-    nsGlobalWindowInner* aWindow,
-    AutoplayPermissionManager* aManager);
+      nsGlobalWindowInner* aWindow, AutoplayPermissionManager* aManager);
 
-private:
+ private:
   AutoplayPermissionRequest(AutoplayPermissionManager* aManager,
                             nsGlobalWindowInner* aWindow,
                             nsIPrincipal* aNodePrincipal);
@@ -51,6 +50,6 @@ private:
   WeakPtr<AutoplayPermissionManager> mManager;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // AutoplayPermissionRequest_h_
+#endif  // AutoplayPermissionRequest_h_

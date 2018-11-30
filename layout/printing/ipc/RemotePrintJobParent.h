@@ -25,9 +25,8 @@ namespace layout {
 
 class PrintTranslator;
 
-class RemotePrintJobParent final : public PRemotePrintJobParent
-{
-public:
+class RemotePrintJobParent final : public PRemotePrintJobParent {
+ public:
   explicit RemotePrintJobParent(nsIPrintSettings* aPrintSettings);
 
   void ActorDestroy(ActorDestroyReason aWhy) final;
@@ -46,26 +45,25 @@ public:
   mozilla::ipc::IPCResult RecvStateChange(const long& aStateFlags,
                                           const nsresult& aStatus) final;
 
-  mozilla::ipc::IPCResult RecvProgressChange(const long& aCurSelfProgress,
-                                             const long& aMaxSelfProgress,
-                                             const long& aCurTotalProgress,
-                                             const long& aMaxTotalProgress) final;
+  mozilla::ipc::IPCResult RecvProgressChange(
+      const long& aCurSelfProgress, const long& aMaxSelfProgress,
+      const long& aCurTotalProgress, const long& aMaxTotalProgress) final;
 
   mozilla::ipc::IPCResult RecvStatusChange(const nsresult& aStatus) final;
 
   /**
-    * Register a progress listener to receive print progress updates.
-    *
-    * @param aListener the progress listener to register. Must not be null.
-    */
+   * Register a progress listener to receive print progress updates.
+   *
+   * @param aListener the progress listener to register. Must not be null.
+   */
   void RegisterListener(nsIWebProgressListener* aListener);
 
   /**
-    * @return the print settings for this remote print job.
-    */
+   * @return the print settings for this remote print job.
+   */
   already_AddRefed<nsIPrintSettings> GetPrintSettings();
 
-private:
+ private:
   ~RemotePrintJobParent() final;
 
   nsresult InitializePrintDevice(const nsString& aDocumentTitle,
@@ -91,7 +89,7 @@ private:
   bool mIsDoingPrinting;
 };
 
-} // namespace layout
-} // namespace mozilla
+}  // namespace layout
+}  // namespace mozilla
 
-#endif // mozilla_layout_RemotePrintJobParent_h
+#endif  // mozilla_layout_RemotePrintJobParent_h

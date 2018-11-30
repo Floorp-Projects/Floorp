@@ -14,40 +14,45 @@ extern "C" {
 #include <gtk/gtkunixprint.h>
 }
 
-#define NS_PRINTSETTINGSGTK_IID \
-{ 0x758df520, 0xc7c3, 0x11dc, { 0x95, 0xff, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
-
+#define NS_PRINTSETTINGSGTK_IID                      \
+  {                                                  \
+    0x758df520, 0xc7c3, 0x11dc, {                    \
+      0x95, 0xff, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 \
+    }                                                \
+  }
 
 //*****************************************************************************
 //***    nsPrintSettingsGTK
 //*****************************************************************************
 
-class nsPrintSettingsGTK : public nsPrintSettings
-{
-public:
+class nsPrintSettingsGTK : public nsPrintSettings {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PRINTSETTINGSGTK_IID)
 
   nsPrintSettingsGTK();
 
-  // We're overriding these methods because we want to read/write with GTK objects,
-  // not local variables. This allows a simpler settings implementation between
-  // Gecko and GTK.
+  // We're overriding these methods because we want to read/write with GTK
+  // objects, not local variables. This allows a simpler settings implementation
+  // between Gecko and GTK.
 
-  GtkPageSetup* GetGtkPageSetup() { return mPageSetup; };
+  GtkPageSetup *GetGtkPageSetup() { return mPageSetup; };
   void SetGtkPageSetup(GtkPageSetup *aPageSetup);
 
-  GtkPrintSettings* GetGtkPrintSettings() { return mPrintSettings; };
+  GtkPrintSettings *GetGtkPrintSettings() { return mPrintSettings; };
   void SetGtkPrintSettings(GtkPrintSettings *aPrintSettings);
 
-  GtkPrinter* GetGtkPrinter() { return mGTKPrinter; };
+  GtkPrinter *GetGtkPrinter() { return mGTKPrinter; };
   void SetGtkPrinter(GtkPrinter *aPrinter);
 
   bool GetForcePrintSelectionOnly() { return mPrintSelectionOnly; };
-  void SetForcePrintSelectionOnly(bool aPrintSelectionOnly) { mPrintSelectionOnly = aPrintSelectionOnly; };
+  void SetForcePrintSelectionOnly(bool aPrintSelectionOnly) {
+    mPrintSelectionOnly = aPrintSelectionOnly;
+  };
 
-  // If not printing the selection, this is stored in the GtkPrintSettings. Printing the
-  // selection is stored as a protected boolean (mPrintSelectionOnly).
+  // If not printing the selection, this is stored in the GtkPrintSettings.
+  // Printing the selection is stored as a protected boolean
+  // (mPrintSelectionOnly).
   NS_IMETHOD GetPrintRange(int16_t *aPrintRange) override;
   NS_IMETHOD SetPrintRange(int16_t aPrintRange) override;
 
@@ -57,8 +62,9 @@ public:
   NS_IMETHOD GetEndPageRange(int32_t *aEndPageRange) override;
   NS_IMETHOD SetEndPageRange(int32_t aEndPageRange) override;
 
-  // Reversed, color, orientation and file name are all stored in the GtkPrintSettings.
-  // Orientation is also stored in the GtkPageSetup and its setting takes priority when getting the orientation.
+  // Reversed, color, orientation and file name are all stored in the
+  // GtkPrintSettings. Orientation is also stored in the GtkPageSetup and its
+  // setting takes priority when getting the orientation.
   NS_IMETHOD GetPrintReversed(bool *aPrintReversed) override;
   NS_IMETHOD SetPrintReversed(bool aPrintReversed) override;
 
@@ -68,13 +74,14 @@ public:
   NS_IMETHOD GetOrientation(int32_t *aOrientation) override;
   NS_IMETHOD SetOrientation(int32_t aOrientation) override;
 
-  NS_IMETHOD GetToFileName(nsAString& aToFileName) override;
-  NS_IMETHOD SetToFileName(const nsAString& aToFileName) override;
+  NS_IMETHOD GetToFileName(nsAString &aToFileName) override;
+  NS_IMETHOD SetToFileName(const nsAString &aToFileName) override;
 
-  // Gets/Sets the printer name in the GtkPrintSettings. If no printer name is specified there,
-  // you will get back the name of the current internal GtkPrinter.
-  NS_IMETHOD GetPrinterName(nsAString& Printer) override;
-  NS_IMETHOD SetPrinterName(const nsAString& aPrinter) override;
+  // Gets/Sets the printer name in the GtkPrintSettings. If no printer name is
+  // specified there, you will get back the name of the current internal
+  // GtkPrinter.
+  NS_IMETHOD GetPrinterName(nsAString &Printer) override;
+  NS_IMETHOD SetPrinterName(const nsAString &aPrinter) override;
 
   // Number of copies is stored/gotten from the GtkPrintSettings.
   NS_IMETHOD GetNumCopies(int32_t *aNumCopies) override;
@@ -83,14 +90,17 @@ public:
   NS_IMETHOD GetScaling(double *aScaling) override;
   NS_IMETHOD SetScaling(double aScaling) override;
 
-  // A name recognised by GTK is strongly advised here, as this is used to create a GtkPaperSize.
-  NS_IMETHOD GetPaperName(nsAString& aPaperName) override;
-  NS_IMETHOD SetPaperName(const nsAString& aPaperName) override;
+  // A name recognised by GTK is strongly advised here, as this is used to
+  // create a GtkPaperSize.
+  NS_IMETHOD GetPaperName(nsAString &aPaperName) override;
+  NS_IMETHOD SetPaperName(const nsAString &aPaperName) override;
 
-  NS_IMETHOD SetUnwriteableMarginInTwips(nsIntMargin& aUnwriteableMargin) override;
+  NS_IMETHOD SetUnwriteableMarginInTwips(
+      nsIntMargin &aUnwriteableMargin) override;
   NS_IMETHOD SetUnwriteableMarginTop(double aUnwriteableMarginTop) override;
   NS_IMETHOD SetUnwriteableMarginLeft(double aUnwriteableMarginLeft) override;
-  NS_IMETHOD SetUnwriteableMarginBottom(double aUnwriteableMarginBottom) override;
+  NS_IMETHOD SetUnwriteableMarginBottom(
+      double aUnwriteableMarginBottom) override;
   NS_IMETHOD SetUnwriteableMarginRight(double aUnwriteableMarginRight) override;
 
   NS_IMETHOD GetPaperWidth(double *aPaperWidth) override;
@@ -115,11 +125,11 @@ public:
 
   NS_IMETHOD GetOutputFormat(int16_t *aOutputFormat) override;
 
-protected:
+ protected:
   virtual ~nsPrintSettingsGTK();
 
-  nsPrintSettingsGTK(const nsPrintSettingsGTK& src);
-  nsPrintSettingsGTK& operator=(const nsPrintSettingsGTK& rhs);
+  nsPrintSettingsGTK(const nsPrintSettingsGTK &src);
+  nsPrintSettingsGTK &operator=(const nsPrintSettingsGTK &rhs);
 
   virtual nsresult _Clone(nsIPrintSettings **_retval) override;
   virtual nsresult _Assign(nsIPrintSettings *aPS) override;
@@ -140,14 +150,13 @@ protected:
    * - mGTKPrinter is nullptr!!! Remember to be careful when accessing this
    *   property.
    */
-  GtkPageSetup* mPageSetup;
-  GtkPrintSettings* mPrintSettings;
-  GtkPrinter* mGTKPrinter;
+  GtkPageSetup *mPageSetup;
+  GtkPrintSettings *mPrintSettings;
+  GtkPrinter *mGTKPrinter;
 
   bool mPrintSelectionOnly;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPrintSettingsGTK, NS_PRINTSETTINGSGTK_IID)
 
-
-#endif // nsPrintSettingsGTK_h_
+#endif  // nsPrintSettingsGTK_h_

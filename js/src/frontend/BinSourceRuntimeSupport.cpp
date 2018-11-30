@@ -13,32 +13,31 @@
 namespace js {
 namespace frontend {
 
-/* static */ BinASTSourceMetadata*
-BinASTSourceMetadata::Create(const Vector<BinKind>& binKinds, uint32_t numStrings)
-{
-    uint32_t numBinKinds = binKinds.length();
+/* static */ BinASTSourceMetadata* BinASTSourceMetadata::Create(
+    const Vector<BinKind>& binKinds, uint32_t numStrings) {
+  uint32_t numBinKinds = binKinds.length();
 
-    BinASTSourceMetadata* data = static_cast<BinASTSourceMetadata*>(js_malloc(BinASTSourceMetadata::totalSize(numBinKinds, numStrings)));
-    if (!data) {
-        return nullptr;
-    }
+  BinASTSourceMetadata* data = static_cast<BinASTSourceMetadata*>(
+      js_malloc(BinASTSourceMetadata::totalSize(numBinKinds, numStrings)));
+  if (!data) {
+    return nullptr;
+  }
 
-    new (data) BinASTSourceMetadata(numBinKinds, numStrings);
-    memcpy(data->binKindBase(), binKinds.begin(), binKinds.length() * sizeof(BinKind));
+  new (data) BinASTSourceMetadata(numBinKinds, numStrings);
+  memcpy(data->binKindBase(), binKinds.begin(),
+         binKinds.length() * sizeof(BinKind));
 
-    return data;
+  return data;
 }
 
-void
-BinASTSourceMetadata::trace(JSTracer* tracer)
-{
-    JSAtom** base = atomsBase();
-    for (uint32_t i = 0; i < numStrings_; i++) {
-        if (base[i]) {
-            TraceManuallyBarrieredEdge(tracer, &base[i], "BinAST Strings");
-        }
+void BinASTSourceMetadata::trace(JSTracer* tracer) {
+  JSAtom** base = atomsBase();
+  for (uint32_t i = 0; i < numStrings_; i++) {
+    if (base[i]) {
+      TraceManuallyBarrieredEdge(tracer, &base[i], "BinAST Strings");
     }
+  }
 }
 
-} // namespace frontend
-} // namespace js
+}  // namespace frontend
+}  // namespace js

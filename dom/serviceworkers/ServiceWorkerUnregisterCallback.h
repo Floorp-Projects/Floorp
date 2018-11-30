@@ -14,24 +14,22 @@
 namespace mozilla {
 namespace dom {
 
-class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback
-{
+class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback {
  public:
-   NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-   UnregisterCallback();
+  UnregisterCallback();
 
-   explicit UnregisterCallback(GenericPromise::Private* aPromise);
+  explicit UnregisterCallback(GenericPromise::Private* aPromise);
 
-   // nsIServiceWorkerUnregisterCallback implementation
-   NS_IMETHOD
-   UnregisterSucceeded(bool aState) override;
+  // nsIServiceWorkerUnregisterCallback implementation
+  NS_IMETHOD
+  UnregisterSucceeded(bool aState) override;
 
-   NS_IMETHOD
-   UnregisterFailed() override;
+  NS_IMETHOD
+  UnregisterFailed() override;
 
-   RefPtr<GenericPromise>
-   Promise() const;
+  RefPtr<GenericPromise> Promise() const;
 
  private:
   ~UnregisterCallback() = default;
@@ -39,7 +37,7 @@ class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback
   RefPtr<GenericPromise::Private> mPromise;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ServiceWorkerUnregisterCallback_h
+#endif  // mozilla_dom_ServiceWorkerUnregisterCallback_h

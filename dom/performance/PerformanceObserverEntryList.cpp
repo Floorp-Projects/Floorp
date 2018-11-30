@@ -14,8 +14,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PerformanceObserverEntryList,
-                                      mOwner,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PerformanceObserverEntryList, mOwner,
                                       mEntries)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PerformanceObserverEntryList)
@@ -26,26 +25,21 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceObserverEntryList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-PerformanceObserverEntryList::~PerformanceObserverEntryList()
-{
-}
+PerformanceObserverEntryList::~PerformanceObserverEntryList() {}
 
-JSObject*
-PerformanceObserverEntryList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PerformanceObserverEntryList::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return PerformanceObserverEntryList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-PerformanceObserverEntryList::GetEntries(
-  const PerformanceEntryFilterOptions& aFilter,
-  nsTArray<RefPtr<PerformanceEntry>>& aRetval)
-{
+void PerformanceObserverEntryList::GetEntries(
+    const PerformanceEntryFilterOptions& aFilter,
+    nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   aRetval.Clear();
   for (const RefPtr<PerformanceEntry>& entry : mEntries) {
     if (aFilter.mInitiatorType.WasPassed()) {
       const PerformanceResourceTiming* resourceEntry =
-        entry->ToResourceTiming();
+          entry->ToResourceTiming();
       if (!resourceEntry) {
         continue;
       }
@@ -69,11 +63,8 @@ PerformanceObserverEntryList::GetEntries(
   aRetval.Sort(PerformanceEntryComparator());
 }
 
-void
-PerformanceObserverEntryList::GetEntriesByType(
-  const nsAString& aEntryType,
-  nsTArray<RefPtr<PerformanceEntry>>& aRetval)
-{
+void PerformanceObserverEntryList::GetEntriesByType(
+    const nsAString& aEntryType, nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   aRetval.Clear();
   for (const RefPtr<PerformanceEntry>& entry : mEntries) {
     if (entry->GetEntryType().Equals(aEntryType)) {
@@ -83,12 +74,9 @@ PerformanceObserverEntryList::GetEntriesByType(
   aRetval.Sort(PerformanceEntryComparator());
 }
 
-void
-PerformanceObserverEntryList::GetEntriesByName(
-  const nsAString& aName,
-  const Optional<nsAString>& aEntryType,
-  nsTArray<RefPtr<PerformanceEntry>>& aRetval)
-{
+void PerformanceObserverEntryList::GetEntriesByName(
+    const nsAString& aName, const Optional<nsAString>& aEntryType,
+    nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   aRetval.Clear();
   const bool typePassed = aEntryType.WasPassed();
   for (const RefPtr<PerformanceEntry>& entry : mEntries) {
@@ -96,8 +84,7 @@ PerformanceObserverEntryList::GetEntriesByName(
       continue;
     }
 
-    if (typePassed &&
-        !entry->GetEntryType().Equals(aEntryType.Value())) {
+    if (typePassed && !entry->GetEntryType().Equals(aEntryType.Value())) {
       continue;
     }
 

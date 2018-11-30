@@ -20,15 +20,11 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Summary)
 namespace mozilla {
 namespace dom {
 
-HTMLSummaryElement::~HTMLSummaryElement()
-{
-}
+HTMLSummaryElement::~HTMLSummaryElement() {}
 
 NS_IMPL_ELEMENT_CLONE(HTMLSummaryElement)
 
-nsresult
-HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
-{
+nsresult HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   nsresult rv = NS_OK;
   if (!aVisitor.mPresContext) {
     return rv;
@@ -60,7 +56,7 @@ HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       return NS_OK;
     }
-  } // event->HasMouseEventMessage()
+  }  // event->HasMouseEventMessage()
 
   if (event->HasKeyEventMessage()) {
     WidgetKeyboardEvent* keyboardEvent = event->AsKeyboardEvent();
@@ -91,17 +87,15 @@ HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       }
     }
-  } // event->HasKeyEventMessage()
+  }  // event->HasKeyEventMessage()
 
   return rv;
 }
 
-bool
-HTMLSummaryElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                                    int32_t* aTabIndex)
-{
-  bool disallowOverridingFocusability =
-    nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex);
+bool HTMLSummaryElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                                         int32_t* aTabIndex) {
+  bool disallowOverridingFocusability = nsGenericHTMLElement::IsHTMLFocusable(
+      aWithMouse, aIsFocusable, aTabIndex);
 
   if (disallowOverridingFocusability || !IsMainSummary()) {
     return disallowOverridingFocusability;
@@ -121,17 +115,13 @@ HTMLSummaryElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   return false;
 }
 
-int32_t
-HTMLSummaryElement::TabIndexDefault()
-{
+int32_t HTMLSummaryElement::TabIndexDefault() {
   // Make the main summary be able to navigate via tab, and be focusable.
   // See nsGenericHTMLElement::IsHTMLFocusable().
   return IsMainSummary() ? 0 : nsGenericHTMLElement::TabIndexDefault();
 }
 
-bool
-HTMLSummaryElement::IsMainSummary() const
-{
+bool HTMLSummaryElement::IsMainSummary() const {
   HTMLDetailsElement* details = GetDetails();
   if (!details) {
     return false;
@@ -140,17 +130,14 @@ HTMLSummaryElement::IsMainSummary() const
   return details->GetFirstSummary() == this || IsRootOfNativeAnonymousSubtree();
 }
 
-HTMLDetailsElement*
-HTMLSummaryElement::GetDetails() const
-{
+HTMLDetailsElement* HTMLSummaryElement::GetDetails() const {
   return HTMLDetailsElement::FromNodeOrNull(GetParent());
 }
 
-JSObject*
-HTMLSummaryElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLSummaryElement::WrapNode(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return HTMLElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

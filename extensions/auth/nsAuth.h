@@ -6,11 +6,7 @@
 #define nsAuth_h__
 
 /* types of packages */
-enum pType {
-     PACKAGE_TYPE_KERBEROS,
-     PACKAGE_TYPE_NEGOTIATE,
-     PACKAGE_TYPE_NTLM
-};
+enum pType { PACKAGE_TYPE_KERBEROS, PACKAGE_TYPE_NEGOTIATE, PACKAGE_TYPE_NTLM };
 
 #include "mozilla/Logging.h"
 

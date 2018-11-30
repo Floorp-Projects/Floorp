@@ -21,12 +21,9 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet()
-{
-}
+nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet() {}
 
-nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
-{
+nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet() {
   // We may go away before all of our cached style attributes do,
   // so clean up any that are left.
   for (auto iter = mCachedStyleAttrs.Iter(); !iter.Done(); iter.Next()) {
@@ -46,18 +43,13 @@ nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
   }
 }
 
-
-void
-nsHTMLCSSStyleSheet::CacheStyleAttr(const nsAString& aSerialized,
-                                    MiscContainer* aValue)
-{
+void nsHTMLCSSStyleSheet::CacheStyleAttr(const nsAString& aSerialized,
+                                         MiscContainer* aValue) {
   mCachedStyleAttrs.Put(aSerialized, aValue);
 }
 
-void
-nsHTMLCSSStyleSheet::EvictStyleAttr(const nsAString& aSerialized,
-                                    MiscContainer* aValue)
-{
+void nsHTMLCSSStyleSheet::EvictStyleAttr(const nsAString& aSerialized,
+                                         MiscContainer* aValue) {
 #ifdef DEBUG
   {
     NS_ASSERTION(aValue == mCachedStyleAttrs.Get(aSerialized),
@@ -67,8 +59,7 @@ nsHTMLCSSStyleSheet::EvictStyleAttr(const nsAString& aSerialized,
   mCachedStyleAttrs.Remove(aSerialized);
 }
 
-MiscContainer*
-nsHTMLCSSStyleSheet::LookupStyleAttr(const nsAString& aSerialized)
-{
+MiscContainer* nsHTMLCSSStyleSheet::LookupStyleAttr(
+    const nsAString& aSerialized) {
   return mCachedStyleAttrs.Get(aSerialized);
 }

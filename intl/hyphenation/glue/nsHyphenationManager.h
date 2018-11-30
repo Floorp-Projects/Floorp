@@ -16,9 +16,8 @@ class nsHyphenator;
 class nsAtom;
 class nsIURI;
 
-class nsHyphenationManager
-{
-public:
+class nsHyphenationManager {
+ public:
   nsHyphenationManager();
 
   already_AddRefed<nsHyphenator> GetHyphenator(nsAtom *aLocale);
@@ -27,17 +26,16 @@ public:
 
   static void Shutdown();
 
-private:
+ private:
   ~nsHyphenationManager();
 
-protected:
-  class MemoryPressureObserver final : public nsIObserver
-  {
-      ~MemoryPressureObserver() {}
+ protected:
+  class MemoryPressureObserver final : public nsIObserver {
+    ~MemoryPressureObserver() {}
 
-  public:
-      NS_DECL_ISUPPORTS
-      NS_DECL_NSIOBSERVER
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
   };
 
   void LoadPatternList();
@@ -52,4 +50,4 @@ protected:
   static nsHyphenationManager *sInstance;
 };
 
-#endif // nsHyphenationManager_h__
+#endif  // nsHyphenationManager_h__

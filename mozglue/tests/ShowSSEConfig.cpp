@@ -6,15 +6,14 @@
 #include "mozilla/SSE.h"
 #include <stdio.h>
 
-int main()
-{
+int main() {
   printf("CPUID detection present: %s\n",
 #ifdef MOZILLA_SSE_HAVE_CPUID_DETECTION
          "yes"
 #else
          "no"
 #endif
-        );
+  );
 
 #ifdef MOZILLA_COMPILE_WITH_MMX
 #define COMPILE_MMX_STRING "Y"
@@ -105,11 +104,9 @@ int main()
 #endif
 
   printf("Feature Presume Compile Support  Use\n");
-#define SHOW_INFO(featurelc_, featureuc_)                                     \
-  printf(    "%7s    %1s       %1s       %1s\n",                              \
-         #featurelc_,                                                         \
-         PRESUME_##featureuc_##_STRING,                                       \
-         COMPILE_##featureuc_##_STRING,                                       \
+#define SHOW_INFO(featurelc_, featureuc_)                              \
+  printf("%7s    %1s       %1s       %1s\n", #featurelc_,              \
+         PRESUME_##featureuc_##_STRING, COMPILE_##featureuc_##_STRING, \
          (mozilla::supports_##featurelc_() ? "Y" : "-"));
   SHOW_INFO(mmx, MMX)
   SHOW_INFO(sse, SSE)

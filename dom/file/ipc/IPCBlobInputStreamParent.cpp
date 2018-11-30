@@ -13,11 +13,11 @@
 namespace mozilla {
 namespace dom {
 
-template<typename M>
+template <typename M>
 /* static */ already_AddRefed<IPCBlobInputStreamParent>
 IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
-                                 uint64_t aChildID, nsresult* aRv, M* aManager)
-{
+                                 uint64_t aChildID, nsresult* aRv,
+                                 M* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aRv);
 
@@ -27,19 +27,19 @@ IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
     return nullptr;
   }
 
-  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id, aSize, aChildID);
+  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id, aSize,
+                                              aChildID);
 
   RefPtr<IPCBlobInputStreamParent> parent =
-    new IPCBlobInputStreamParent(id, aSize, aManager);
+      new IPCBlobInputStreamParent(id, aSize, aManager);
   return parent.forget();
 }
 
 /* static */ already_AddRefed<IPCBlobInputStreamParent>
 IPCBlobInputStreamParent::Create(const nsID& aID, uint64_t aSize,
-                                 PBackgroundParent* aManager)
-{
+                                 PBackgroundParent* aManager) {
   RefPtr<IPCBlobInputStreamParent> actor =
-    new IPCBlobInputStreamParent(aID, aSize, aManager);
+      new IPCBlobInputStreamParent(aID, aSize, aManager);
 
   actor->mCallback = IPCBlobInputStreamStorage::Get()->TakeCallback(aID);
 
@@ -49,26 +49,23 @@ IPCBlobInputStreamParent::Create(const nsID& aID, uint64_t aSize,
 IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
                                                    uint64_t aSize,
                                                    nsIContentParent* aManager)
-  : mID(aID)
-  , mSize(aSize)
-  , mContentManager(aManager)
-  , mPBackgroundManager(nullptr)
-  , mMigrating(false)
-{}
+    : mID(aID),
+      mSize(aSize),
+      mContentManager(aManager),
+      mPBackgroundManager(nullptr),
+      mMigrating(false) {}
 
 IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
                                                    uint64_t aSize,
                                                    PBackgroundParent* aManager)
-  : mID(aID)
-  , mSize(aSize)
-  , mContentManager(nullptr)
-  , mPBackgroundManager(aManager)
-  , mMigrating(false)
-{}
+    : mID(aID),
+      mSize(aSize),
+      mContentManager(nullptr),
+      mPBackgroundManager(aManager),
+      mMigrating(false) {}
 
-void
-IPCBlobInputStreamParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
-{
+void IPCBlobInputStreamParent::ActorDestroy(
+    IProtocol::ActorDestroyReason aReason) {
   MOZ_ASSERT(mContentManager || mPBackgroundManager);
 
   mContentManager = nullptr;
@@ -96,23 +93,20 @@ IPCBlobInputStreamParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
   }
 }
 
-void
-IPCBlobInputStreamParent::SetCallback(
-                                    IPCBlobInputStreamParentCallback* aCallback)
-{
+void IPCBlobInputStreamParent::SetCallback(
+    IPCBlobInputStreamParentCallback* aCallback) {
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(!mCallback);
 
   mCallback = aCallback;
 }
 
-mozilla::ipc::IPCResult
-IPCBlobInputStreamParent::RecvStreamNeeded()
-{
+mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvStreamNeeded() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager);
 
   nsCOMPtr<nsIInputStream> stream;
-  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize, getter_AddRefs(stream));
+  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize,
+                                              getter_AddRefs(stream));
   if (!stream) {
     if (!SendStreamReady(void_t())) {
       return IPC_FAIL(this, "SendStreamReady failed");
@@ -143,13 +137,12 @@ IPCBlobInputStreamParent::RecvStreamNeeded()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-IPCBlobInputStreamParent::RecvLengthNeeded()
-{
+mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvLengthNeeded() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager);
 
   nsCOMPtr<nsIInputStream> stream;
-  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize, getter_AddRefs(stream));
+  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize,
+                                              getter_AddRefs(stream));
   if (!stream) {
     if (!SendLengthReady(-1)) {
       return IPC_FAIL(this, "SendLengthReady failed");
@@ -174,30 +167,25 @@ IPCBlobInputStreamParent::RecvLengthNeeded()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-IPCBlobInputStreamParent::RecvClose()
-{
+mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvClose() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager);
 
   Unused << Send__delete__(this);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-IPCBlobInputStreamParent::Recv__delete__()
-{
+mozilla::ipc::IPCResult IPCBlobInputStreamParent::Recv__delete__() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager);
   mMigrating = true;
   return IPC_OK();
 }
 
-bool
-IPCBlobInputStreamParent::HasValidStream() const
-{
+bool IPCBlobInputStreamParent::HasValidStream() const {
   nsCOMPtr<nsIInputStream> stream;
-  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize, getter_AddRefs(stream));
+  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize,
+                                              getter_AddRefs(stream));
   return !!stream;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

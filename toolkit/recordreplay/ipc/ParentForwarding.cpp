@@ -18,9 +18,8 @@ namespace mozilla {
 namespace recordreplay {
 namespace parent {
 
-static bool
-HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
-{
+static bool HandleMessageInMiddleman(ipc::Side aSide,
+                                     const IPC::Message& aMessage) {
   IPC::Message::msgid_t type = aMessage.type();
 
   if (aSide == ipc::ParentSide) {
@@ -29,7 +28,7 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
 
   // Handle messages that should be sent to both the middleman and the
   // child process.
-  if (// Initialization that must be performed in both processes.
+  if (  // Initialization that must be performed in both processes.
       type == dom::PContent::Msg_PBrowserConstructor__ID ||
       type == dom::PContent::Msg_RegisterChrome__ID ||
       type == dom::PContent::Msg_SetXPCOMProcessAttributes__ID ||
@@ -51,7 +50,8 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
       type == dom::PBrowser::Msg_Destroy__ID) {
     dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
 
-    if (type >= dom::PBrowser::PBrowserStart && type <= dom::PBrowser::PBrowserEnd) {
+    if (type >= dom::PBrowser::PBrowserStart &&
+        type <= dom::PBrowser::PBrowserEnd) {
       // Ignore messages sent from the parent to browsers that do not have an
       // actor in the middleman process. PBrowser may be allocated on either
       // side of the IPDL channel, and when allocated by the recording child
@@ -70,7 +70,8 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
       }
     }
 
-    ipc::IProtocol::Result r = contentChild->PContentChild::OnMessageReceived(aMessage);
+    ipc::IProtocol::Result r =
+        contentChild->PContentChild::OnMessageReceived(aMessage);
     MOZ_RELEASE_ASSERT(r == ipc::IProtocol::MsgProcessed);
     if (type == dom::PContent::Msg_SetXPCOMProcessAttributes__ID) {
       // Preferences are initialized via the SetXPCOMProcessAttributes message.
@@ -80,21 +81,26 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
   }
 
   // Handle messages that should only be sent to the middleman.
-  if (// Initialization that should only happen in the middleman.
+  if (  // Initialization that should only happen in the middleman.
       type == dom::PContent::Msg_InitRendering__ID ||
       // Record/replay specific messages.
       type == dom::PContent::Msg_SaveRecording__ID ||
       // Teardown that should only happen in the middleman.
       type == dom::PContent::Msg_Shutdown__ID) {
-    ipc::IProtocol::Result r = dom::ContentChild::GetSingleton()->PContentChild::OnMessageReceived(aMessage);
+    ipc::IProtocol::Result r =
+        dom::ContentChild::GetSingleton()->PContentChild::OnMessageReceived(
+            aMessage);
     MOZ_RELEASE_ASSERT(r == ipc::IProtocol::MsgProcessed);
     return true;
   }
 
   // Send input events to the middleman when the active child is replaying,
   // so that UI elements such as the replay overlay can be interacted with.
-  if (!ActiveChildIsRecording() && nsContentUtils::IsMessageInputEvent(aMessage)) {
-    ipc::IProtocol::Result r = dom::ContentChild::GetSingleton()->PContentChild::OnMessageReceived(aMessage);
+  if (!ActiveChildIsRecording() &&
+      nsContentUtils::IsMessageInputEvent(aMessage)) {
+    ipc::IProtocol::Result r =
+        dom::ContentChild::GetSingleton()->PContentChild::OnMessageReceived(
+            aMessage);
     MOZ_RELEASE_ASSERT(r == ipc::IProtocol::MsgProcessed);
     return true;
   }
@@ -103,7 +109,8 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
   // the UI process should only be handled in the middleman.
   if (type >= layers::PCompositorBridge::PCompositorBridgeStart &&
       type <= layers::PCompositorBridge::PCompositorBridgeEnd) {
-    layers::CompositorBridgeChild* compositorChild = layers::CompositorBridgeChild::Get();
+    layers::CompositorBridgeChild* compositorChild =
+        layers::CompositorBridgeChild::Get();
     ipc::IProtocol::Result r = compositorChild->OnMessageReceived(aMessage);
     MOZ_RELEASE_ASSERT(r == ipc::IProtocol::MsgProcessed);
     return true;
@@ -114,9 +121,7 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
 
 // Return whether a message should be sent to the recording child, even if it
 // is not currently active.
-static bool
-AlwaysForwardMessage(const IPC::Message& aMessage)
-{
+static bool AlwaysForwardMessage(const IPC::Message& aMessage) {
   // Always forward messages in repaint stress mode, as the active child is
   // almost always a replaying child and lost messages make it hard to load
   // pages completely.
@@ -133,17 +138,14 @@ AlwaysForwardMessage(const IPC::Message& aMessage)
 
 static bool gMainThreadIsWaitingForIPDLReply = false;
 
-bool
-MainThreadIsWaitingForIPDLReply()
-{
+bool MainThreadIsWaitingForIPDLReply() {
   return gMainThreadIsWaitingForIPDLReply;
 }
 
 // Helper for places where the main thread will block while waiting on a
 // synchronous IPDL reply from a child process. Incoming messages from the
 // child must be handled immediately.
-struct MOZ_RAII AutoMarkMainThreadWaitingForIPDLReply
-{
+struct MOZ_RAII AutoMarkMainThreadWaitingForIPDLReply {
   AutoMarkMainThreadWaitingForIPDLReply() {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     MOZ_RELEASE_ASSERT(!gMainThreadIsWaitingForIPDLReply);
@@ -156,39 +158,36 @@ struct MOZ_RAII AutoMarkMainThreadWaitingForIPDLReply
   }
 };
 
-static void
-BeginShutdown()
-{
+static void BeginShutdown() {
   // If there is a channel error or anything that could result from the child
   // crashing, cleanly shutdown this process so that we don't generate a
   // separate minidump which masks the initial failure.
   MainThreadMessageLoop()->PostTask(NewRunnableFunction("Shutdown", Shutdown));
 }
 
-class MiddlemanProtocol : public ipc::IToplevelProtocol
-{
-public:
+class MiddlemanProtocol : public ipc::IToplevelProtocol {
+ public:
   ipc::Side mSide;
   MiddlemanProtocol* mOpposite;
   MessageLoop* mOppositeMessageLoop;
 
   explicit MiddlemanProtocol(ipc::Side aSide)
-    : ipc::IToplevelProtocol("MiddlemanProtocol", PContentMsgStart, aSide)
-    , mSide(aSide)
-    , mOpposite(nullptr)
-    , mOppositeMessageLoop(nullptr)
-  {}
+      : ipc::IToplevelProtocol("MiddlemanProtocol", PContentMsgStart, aSide),
+        mSide(aSide),
+        mOpposite(nullptr),
+        mOppositeMessageLoop(nullptr) {}
 
   virtual void RemoveManagee(int32_t, IProtocol*) override {
     MOZ_CRASH("MiddlemanProtocol::RemoveManagee");
   }
 
-  static void ForwardMessageAsync(MiddlemanProtocol* aProtocol, Message* aMessage) {
+  static void ForwardMessageAsync(MiddlemanProtocol* aProtocol,
+                                  Message* aMessage) {
     if (ActiveChildIsRecording() || AlwaysForwardMessage(*aMessage)) {
       PrintSpew("ForwardAsyncMsg %s %s %d\n",
                 (aProtocol->mSide == ipc::ChildSide) ? "Child" : "Parent",
                 IPC::StringFromIPCMessageType(aMessage->type()),
-                (int) aMessage->routing_id());
+                (int)aMessage->routing_id());
       if (!aProtocol->GetIPCChannel()->Send(aMessage)) {
         MOZ_RELEASE_ASSERT(aProtocol->mSide == ipc::ParentSide);
         BeginShutdown();
@@ -217,13 +216,15 @@ public:
       return MsgProcessed;
     }
 
-    mOppositeMessageLoop->PostTask(NewRunnableFunction("ForwardMessageAsync", ForwardMessageAsync,
-                                                       mOpposite, nMessage));
+    mOppositeMessageLoop->PostTask(NewRunnableFunction(
+        "ForwardMessageAsync", ForwardMessageAsync, mOpposite, nMessage));
     return MsgProcessed;
   }
 
-  static void ForwardMessageSync(MiddlemanProtocol* aProtocol, Message* aMessage, Message** aReply) {
-    PrintSpew("ForwardSyncMsg %s\n", IPC::StringFromIPCMessageType(aMessage->type()));
+  static void ForwardMessageSync(MiddlemanProtocol* aProtocol,
+                                 Message* aMessage, Message** aReply) {
+    PrintSpew("ForwardSyncMsg %s\n",
+              IPC::StringFromIPCMessageType(aMessage->type()));
 
     MOZ_RELEASE_ASSERT(!*aReply);
     Message* nReply = new Message();
@@ -237,13 +238,15 @@ public:
     gMonitor->Notify();
   }
 
-  virtual Result OnMessageReceived(const Message& aMessage, Message*& aReply) override {
+  virtual Result OnMessageReceived(const Message& aMessage,
+                                   Message*& aReply) override {
     MOZ_RELEASE_ASSERT(mOppositeMessageLoop);
 
     Message* nMessage = new Message();
     nMessage->CopyFrom(aMessage);
-    mOppositeMessageLoop->PostTask(NewRunnableFunction("ForwardMessageSync", ForwardMessageSync,
-                                                       mOpposite, nMessage, &aReply));
+    mOppositeMessageLoop->PostTask(
+        NewRunnableFunction("ForwardMessageSync", ForwardMessageSync, mOpposite,
+                            nMessage, &aReply));
 
     if (mSide == ipc::ChildSide) {
       AutoMarkMainThreadWaitingForIPDLReply blocked;
@@ -259,8 +262,10 @@ public:
     return MsgProcessed;
   }
 
-  static void ForwardCallMessage(MiddlemanProtocol* aProtocol, Message* aMessage, Message** aReply) {
-    PrintSpew("ForwardSyncCall %s\n", IPC::StringFromIPCMessageType(aMessage->type()));
+  static void ForwardCallMessage(MiddlemanProtocol* aProtocol,
+                                 Message* aMessage, Message** aReply) {
+    PrintSpew("ForwardSyncCall %s\n",
+              IPC::StringFromIPCMessageType(aMessage->type()));
 
     MOZ_RELEASE_ASSERT(!*aReply);
     Message* nReply = new Message();
@@ -274,13 +279,15 @@ public:
     gMonitor->Notify();
   }
 
-  virtual Result OnCallReceived(const Message& aMessage, Message*& aReply) override {
+  virtual Result OnCallReceived(const Message& aMessage,
+                                Message*& aReply) override {
     MOZ_RELEASE_ASSERT(mOppositeMessageLoop);
 
     Message* nMessage = new Message();
     nMessage->CopyFrom(aMessage);
-    mOppositeMessageLoop->PostTask(NewRunnableFunction("ForwardCallMessage", ForwardCallMessage,
-                                                       mOpposite, nMessage, &aReply));
+    mOppositeMessageLoop->PostTask(
+        NewRunnableFunction("ForwardCallMessage", ForwardCallMessage, mOpposite,
+                            nMessage, &aReply));
 
     if (mSide == ipc::ChildSide) {
       AutoMarkMainThreadWaitingForIPDLReply blocked;
@@ -305,17 +312,13 @@ public:
     BeginShutdown();
   }
 
-  virtual void OnChannelError() override {
-    BeginShutdown();
-  }
+  virtual void OnChannelError() override { BeginShutdown(); }
 };
 
 static MiddlemanProtocol* gChildProtocol;
 static MiddlemanProtocol* gParentProtocol;
 
-ipc::MessageChannel*
-ChannelToUIProcess()
-{
+ipc::MessageChannel* ChannelToUIProcess() {
   return gChildProtocol->GetIPCChannel();
 }
 
@@ -326,9 +329,7 @@ static MessageLoop* gForwardingMessageLoop;
 static bool gParentProtocolOpened = false;
 
 // Main routine for the forwarding message loop thread.
-static void
-ForwardingMessageLoopMain(void*)
-{
+static void ForwardingMessageLoopMain(void*) {
   MOZ_RELEASE_ASSERT(ActiveChildIsRecording());
 
   MessageLoop messageLoop;
@@ -336,8 +337,9 @@ ForwardingMessageLoopMain(void*)
 
   gChildProtocol->mOppositeMessageLoop = gForwardingMessageLoop;
 
-  gParentProtocol->Open(gRecordingProcess->GetChannel(),
-                        base::GetProcId(gRecordingProcess->GetChildProcessHandle()));
+  gParentProtocol->Open(
+      gRecordingProcess->GetChannel(),
+      base::GetProcId(gRecordingProcess->GetChildProcessHandle()));
 
   // Notify the main thread that we have finished initialization.
   {
@@ -349,9 +351,7 @@ ForwardingMessageLoopMain(void*)
   messageLoop.Run();
 }
 
-void
-InitializeForwarding()
-{
+void InitializeForwarding() {
   gChildProtocol = new MiddlemanProtocol(ipc::ChildSide);
 
   if (gProcessKind == ProcessKind::MiddlemanRecording) {
@@ -362,7 +362,8 @@ InitializeForwarding()
     gParentProtocol->mOppositeMessageLoop = MainThreadMessageLoop();
 
     if (!PR_CreateThread(PR_USER_THREAD, ForwardingMessageLoopMain, nullptr,
-                         PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0)) {
+                         PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+                         PR_JOINABLE_THREAD, 0)) {
       MOZ_CRASH("parent::Initialize");
     }
 
@@ -374,6 +375,6 @@ InitializeForwarding()
   }
 }
 
-} // namespace parent
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace parent
+}  // namespace recordreplay
+}  // namespace mozilla

@@ -16,60 +16,49 @@
 namespace mozilla {
 namespace dom {
 
-enum class U2FOperation
-{
-  Register,
-  Sign
-};
+enum class U2FOperation { Register, Sign };
 
-bool
-EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
-              const U2FOperation& aOp, /* in/out */ nsString& aAppId);
+bool EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
+                   const U2FOperation& aOp, /* in/out */ nsString& aAppId);
 
-nsresult
-AssembleAuthenticatorData(const CryptoBuffer& rpIdHashBuf,
-                          const uint8_t flags,
-                          const CryptoBuffer& counterBuf,
-                          const CryptoBuffer& attestationDataBuf,
-                          /* out */ CryptoBuffer& authDataBuf);
+nsresult AssembleAuthenticatorData(const CryptoBuffer& rpIdHashBuf,
+                                   const uint8_t flags,
+                                   const CryptoBuffer& counterBuf,
+                                   const CryptoBuffer& attestationDataBuf,
+                                   /* out */ CryptoBuffer& authDataBuf);
 
-nsresult
-AssembleAttestationObject(const CryptoBuffer& aRpIdHash,
-                          const CryptoBuffer& aPubKeyBuf,
-                          const CryptoBuffer& aKeyHandleBuf,
-                          const CryptoBuffer& aAttestationCertBuf,
-                          const CryptoBuffer& aSignatureBuf,
-                          bool aForceNoneAttestation,
-                          /* out */ CryptoBuffer& aAttestationObjBuf);
+nsresult AssembleAttestationObject(const CryptoBuffer& aRpIdHash,
+                                   const CryptoBuffer& aPubKeyBuf,
+                                   const CryptoBuffer& aKeyHandleBuf,
+                                   const CryptoBuffer& aAttestationCertBuf,
+                                   const CryptoBuffer& aSignatureBuf,
+                                   bool aForceNoneAttestation,
+                                   /* out */ CryptoBuffer& aAttestationObjBuf);
 
-nsresult
-U2FDecomposeSignResponse(const CryptoBuffer& aResponse,
-                         /* out */ uint8_t& aFlags,
-                         /* out */ CryptoBuffer& aCounterBuf,
-                         /* out */ CryptoBuffer& aSignatureBuf);
+nsresult U2FDecomposeSignResponse(const CryptoBuffer& aResponse,
+                                  /* out */ uint8_t& aFlags,
+                                  /* out */ CryptoBuffer& aCounterBuf,
+                                  /* out */ CryptoBuffer& aSignatureBuf);
 
-nsresult
-U2FDecomposeRegistrationResponse(const CryptoBuffer& aResponse,
-                                 /* out */ CryptoBuffer& aPubKeyBuf,
-                                 /* out */ CryptoBuffer& aKeyHandleBuf,
-                                 /* out */ CryptoBuffer& aAttestationCertBuf,
-                                 /* out */ CryptoBuffer& aSignatureBuf);
+nsresult U2FDecomposeRegistrationResponse(
+    const CryptoBuffer& aResponse,
+    /* out */ CryptoBuffer& aPubKeyBuf,
+    /* out */ CryptoBuffer& aKeyHandleBuf,
+    /* out */ CryptoBuffer& aAttestationCertBuf,
+    /* out */ CryptoBuffer& aSignatureBuf);
 
-nsresult
-U2FDecomposeECKey(const CryptoBuffer& aPubKeyBuf,
-                  /* out */ CryptoBuffer& aXcoord,
-                  /* out */ CryptoBuffer& aYcoord);
+nsresult U2FDecomposeECKey(const CryptoBuffer& aPubKeyBuf,
+                           /* out */ CryptoBuffer& aXcoord,
+                           /* out */ CryptoBuffer& aYcoord);
 
-nsresult
-HashCString(const nsACString& aIn, /* out */ CryptoBuffer& aOut);
+nsresult HashCString(const nsACString& aIn, /* out */ CryptoBuffer& aOut);
 
-nsresult
-BuildTransactionHashes(const nsCString& aRpId,
-                       const nsCString& aClientDataJSON,
-                       /* out */ CryptoBuffer& aRpIdHash,
-                       /* out */ CryptoBuffer& aClientDataHash);
+nsresult BuildTransactionHashes(const nsCString& aRpId,
+                                const nsCString& aClientDataJSON,
+                                /* out */ CryptoBuffer& aRpIdHash,
+                                /* out */ CryptoBuffer& aClientDataHash);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WebAuthnUtil_h
+#endif  // mozilla_dom_WebAuthnUtil_h

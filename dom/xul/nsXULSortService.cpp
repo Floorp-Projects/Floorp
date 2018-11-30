@@ -35,8 +35,7 @@ enum nsSortState_direction {
 };
 
 // the sort state holds info about the current sort
-struct MOZ_STACK_CLASS nsSortState final
-{
+struct MOZ_STACK_CLASS nsSortState final {
   bool initialized;
   MOZ_INIT_OUTSIDE_CTOR bool invertSort;
 
@@ -49,19 +48,14 @@ struct MOZ_STACK_CLASS nsSortState final
   nsCOMPtr<nsIContent> lastContainer;
   MOZ_INIT_OUTSIDE_CTOR bool lastWasFirst, lastWasLast;
 
-  nsSortState()
-    : initialized(false),
-      sortHints(0)
-  {
-  }
+  nsSortState() : initialized(false), sortHints(0) {}
 };
 
 // information about a particular item to be sorted
 struct contentSortInfo {
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIContent> parent;
-  void swap(contentSortInfo& other)
-  {
+  void swap(contentSortInfo& other) {
     content.swap(other.content);
     parent.swap(other.parent);
   }
@@ -73,15 +67,12 @@ struct contentSortInfo {
  * matches the sort key. The sort attributes are removed from the other
  * columns.
  */
-static void
-SetSortColumnHints(nsIContent *content,
-                   const nsAString &sortResource,
-                   const nsAString &sortDirection)
-{
+static void SetSortColumnHints(nsIContent* content,
+                               const nsAString& sortResource,
+                               const nsAString& sortDirection) {
   // set sort info on current column. This ensures that the
   // column header sort indicator is updated properly.
-  for (nsIContent* child = content->GetFirstChild();
-       child;
+  for (nsIContent* child = content->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (child->IsXULElement(nsGkAtoms::treecols)) {
       SetSortColumnHints(child, sortResource, sortDirection);
@@ -109,20 +100,17 @@ SetSortColumnHints(nsIContent *content,
 /**
  * Set sort and sortDirection attributes when a sort is done.
  */
-static void
-SetSortHints(Element* aElement, nsSortState* aSortState)
-{
+static void SetSortHints(Element* aElement, nsSortState* aSortState) {
   // set sort and sortDirection attributes when is sort is done
-  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sort,
-                    aSortState->sort, true);
+  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sort, aSortState->sort, true);
 
   nsAutoString direction;
   if (aSortState->direction == nsSortState_descending)
     direction.AssignLiteral("descending");
   else if (aSortState->direction == nsSortState_ascending)
     direction.AssignLiteral("ascending");
-  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                    direction, true);
+  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, direction,
+                    true);
 
   // for trees, also set the sort info on the currently sorted column
   if (aElement->IsXULElement(nsGkAtoms::tree)) {
@@ -142,31 +130,24 @@ SetSortHints(Element* aElement, nsSortState* aSortState)
  *   - otherwise, for trees, get the child treeitems
  *   - otherwise, get the direct children
  */
-static nsresult
-GetItemsToSort(nsIContent *aContainer,
-               nsSortState* aSortState,
-               nsTArray<contentSortInfo>& aSortItems)
-{
+static nsresult GetItemsToSort(nsIContent* aContainer, nsSortState* aSortState,
+                               nsTArray<contentSortInfo>& aSortItems) {
   // Get the children. For trees, get the treechildren element and
   // use that as the parent
   RefPtr<Element> treechildren;
   if (aContainer->IsXULElement(nsGkAtoms::tree)) {
-    nsXULContentUtils::FindChildByTag(aContainer,
-                                      kNameSpaceID_XUL,
+    nsXULContentUtils::FindChildByTag(aContainer, kNameSpaceID_XUL,
                                       nsGkAtoms::treechildren,
                                       getter_AddRefs(treechildren));
-    if (!treechildren)
-      return NS_OK;
+    if (!treechildren) return NS_OK;
 
     aContainer = treechildren;
   }
 
-  for (nsIContent* child = aContainer->GetFirstChild();
-       child;
+  for (nsIContent* child = aContainer->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     contentSortInfo* cinfo = aSortItems.AppendElement();
-    if (!cinfo)
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (!cinfo) return NS_ERROR_OUT_OF_MEMORY;
 
     cinfo->content = child;
   }
@@ -178,11 +159,8 @@ GetItemsToSort(nsIContent *aContainer,
  * Compares aLeft and aRight and returns < 0, 0, or > 0. The sort
  * hints are checked for case matching and integer sorting.
  */
-static int32_t
-CompareValues(const nsAString& aLeft,
-              const nsAString& aRight,
-              uint32_t aSortHints)
-{
+static int32_t CompareValues(const nsAString& aLeft, const nsAString& aRight,
+                             uint32_t aSortHints) {
   if (aSortHints & SORT_INTEGER) {
     nsresult err;
     int32_t leftint = PromiseFlatString(aLeft).ToInteger(&err);
@@ -202,21 +180,20 @@ CompareValues(const nsAString& aLeft,
   nsICollation* collation = nsXULContentUtils::GetCollation();
   if (collation) {
     int32_t result;
-    collation->CompareString(nsICollation::kCollationCaseInSensitive,
-                             aLeft, aRight, &result);
+    collation->CompareString(nsICollation::kCollationCaseInSensitive, aLeft,
+                             aRight, &result);
     return result;
   }
 
   return ::Compare(aLeft, aRight, nsCaseInsensitiveStringComparator());
 }
 
-static int
-testSortCallback(const void *data1, const void *data2, void *privateData)
-{
+static int testSortCallback(const void* data1, const void* data2,
+                            void* privateData) {
   /// Note: testSortCallback is a small C callback stub for NS_QuickSort
-  contentSortInfo *left = (contentSortInfo *)data1;
-  contentSortInfo *right = (contentSortInfo *)data2;
-  nsSortState* sortState = (nsSortState *)privateData;
+  contentSortInfo* left = (contentSortInfo*)data1;
+  contentSortInfo* right = (contentSortInfo*)data2;
+  nsSortState* sortState = (nsSortState*)privateData;
 
   int32_t sortOrder = 0;
 
@@ -226,8 +203,7 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
     nsAutoString leftstr, rightstr;
     if (left->content->IsElement()) {
       left->content->AsElement()->GetAttr(kNameSpaceID_None,
-                                          sortState->sortKeys[t],
-                                          leftstr);
+                                          sortState->sortKeys[t], leftstr);
     }
     if (right->content->IsElement()) {
       right->content->AsElement()->GetAttr(kNameSpaceID_None,
@@ -237,8 +213,7 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
     sortOrder = CompareValues(leftstr, rightstr, sortState->sortHints);
   }
 
-  if (sortState->direction == nsSortState_descending)
-    sortOrder = -sortOrder;
+  if (sortState->direction == nsSortState_descending) sortOrder = -sortOrder;
 
   return sortOrder;
 }
@@ -247,10 +222,8 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
  * Given a list of sortable items, reverse the list. This is done
  * when simply changing the sort direction for the same key.
  */
-static nsresult
-InvertSortInfo(nsTArray<contentSortInfo>& aData,
-               int32_t aStart, int32_t aNumItems)
-{
+static nsresult InvertSortInfo(nsTArray<contentSortInfo>& aData, int32_t aStart,
+                               int32_t aNumItems) {
   if (aNumItems > 1) {
     // reverse the items in the array starting from aStart
     int32_t upPoint = (aNumItems + 1) / 2 + aStart;
@@ -266,16 +239,13 @@ InvertSortInfo(nsTArray<contentSortInfo>& aData,
 /**
  * Sort a container using the supplied sort state details.
  */
-static nsresult
-SortContainer(nsIContent *aContainer, nsSortState* aSortState)
-{
+static nsresult SortContainer(nsIContent* aContainer, nsSortState* aSortState) {
   nsTArray<contentSortInfo> items;
   nsresult rv = GetItemsToSort(aContainer, aSortState, items);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t numResults = items.Length();
-  if (!numResults)
-    return NS_OK;
+  if (!numResults) return NS_OK;
 
   uint32_t i;
 
@@ -284,8 +254,8 @@ SortContainer(nsIContent *aContainer, nsSortState* aSortState)
   if (aSortState->invertSort)
     InvertSortInfo(items, 0, numResults);
   else
-    NS_QuickSort((void *)items.Elements(), numResults,
-                 sizeof(contentSortInfo), testSortCallback, (void*)aSortState);
+    NS_QuickSort((void*)items.Elements(), numResults, sizeof(contentSortInfo),
+                 testSortCallback, (void*)aSortState);
 
   // first remove the items from the old positions
   for (i = 0; i < numResults; i++) {
@@ -302,8 +272,7 @@ SortContainer(nsIContent *aContainer, nsSortState* aSortState)
   }
 
   // now add the items back in sorted order
-  for (i = 0; i < numResults; i++)
-  {
+  for (i = 0; i < numResults; i++) {
     nsIContent* child = items[i].content;
     nsIContent* parent = items[i].parent;
     if (parent) {
@@ -311,17 +280,15 @@ SortContainer(nsIContent *aContainer, nsSortState* aSortState)
 
       // if it's a container in a tree or menu, find its children,
       // and sort those also
-      if (!child->IsElement() ||
-          !child->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::container,
-                                           nsGkAtoms::_true, eCaseMatters))
+      if (!child->IsElement() || !child->AsElement()->AttrValueIs(
+                                     kNameSpaceID_None, nsGkAtoms::container,
+                                     nsGkAtoms::_true, eCaseMatters))
         continue;
 
-      for (nsIContent* grandchild = child->GetFirstChild();
-           grandchild;
+      for (nsIContent* grandchild = child->GetFirstChild(); grandchild;
            grandchild = grandchild->GetNextSibling()) {
-        mozilla::dom::NodeInfo *ni = grandchild->NodeInfo();
-        nsAtom *localName = ni->NameAtom();
+        mozilla::dom::NodeInfo* ni = grandchild->NodeInfo();
+        nsAtom* localName = ni->NameAtom();
         if (ni->NamespaceID() == kNameSpaceID_XUL &&
             (localName == nsGkAtoms::treechildren ||
              localName == nsGkAtoms::menupopup)) {
@@ -344,13 +311,10 @@ SortContainer(nsIContent *aContainer, nsSortState* aSortState)
  * @param aSortDirection direction to sort in
  * @param aSortState structure filled in with sort data
  */
-static nsresult
-InitializeSortState(Element* aRootElement,
-                    Element* aContainer,
-                    const nsAString& aSortKey,
-                    const nsAString& aSortHints,
-                    nsSortState* aSortState)
-{
+static nsresult InitializeSortState(Element* aRootElement, Element* aContainer,
+                                    const nsAString& aSortKey,
+                                    const nsAString& aSortHints,
+                                    nsSortState* aSortState) {
   // used as an optimization for the content builder
   if (aContainer != aSortState->lastContainer.get()) {
     aSortState->lastContainer = aContainer;
@@ -399,16 +363,16 @@ InitializeSortState(Element* aRootElement,
   nsAutoString existingsort;
   aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, existingsort);
   nsAutoString existingsortDirection;
-  aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, existingsortDirection);
+  aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
+                        existingsortDirection);
 
   // if just switching direction, set the invertSort flag
   if (sort.Equals(existingsort)) {
     if (aSortState->direction == nsSortState_descending) {
       if (existingsortDirection.EqualsLiteral("ascending"))
         aSortState->invertSort = true;
-    }
-    else if (aSortState->direction == nsSortState_ascending &&
-             existingsortDirection.EqualsLiteral("descending")) {
+    } else if (aSortState->direction == nsSortState_ascending &&
+               existingsortDirection.EqualsLiteral("descending")) {
       aSortState->invertSort = true;
     }
   }
@@ -418,14 +382,11 @@ InitializeSortState(Element* aRootElement,
   return NS_OK;
 }
 
-nsresult
-mozilla::XULWidgetSort(Element* aNode,
-                       const nsAString& aSortKey,
-                       const nsAString& aSortHints)
-{
+nsresult mozilla::XULWidgetSort(Element* aNode, const nsAString& aSortKey,
+                                const nsAString& aSortHints) {
   nsSortState sortState;
-  nsresult rv = InitializeSortState(aNode, aNode,
-                                    aSortKey, aSortHints, &sortState);
+  nsresult rv =
+      InitializeSortState(aNode, aNode, aSortKey, aSortHints, &sortState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // store sort info in attributes on content

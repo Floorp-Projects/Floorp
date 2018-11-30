@@ -19,40 +19,33 @@ namespace dom {
 #undef GetLocaleInfo
 #endif
 
-class IntlUtils final : public nsISupports
-                      , public nsWrapperCache
-{
-public:
+class IntlUtils final : public nsISupports, public nsWrapperCache {
+ public:
   explicit IntlUtils(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IntlUtils)
 
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return mWindow;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  GetDisplayNames(const Sequence<nsString>& aLocales,
-                  const mozilla::dom::DisplayNameOptions& aOptions,
-                  mozilla::dom::DisplayNameResult& aResult,
-                  mozilla::ErrorResult& aError);
+  void GetDisplayNames(const Sequence<nsString>& aLocales,
+                       const mozilla::dom::DisplayNameOptions& aOptions,
+                       mozilla::dom::DisplayNameResult& aResult,
+                       mozilla::ErrorResult& aError);
 
-  void
-  GetLocaleInfo(const Sequence<nsString>& aLocales,
-                mozilla::dom::LocaleInfo& aResult,
-                mozilla::ErrorResult& aError);
+  void GetLocaleInfo(const Sequence<nsString>& aLocales,
+                     mozilla::dom::LocaleInfo& aResult,
+                     mozilla::ErrorResult& aError);
 
-private:
+ private:
   ~IntlUtils();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 #endif

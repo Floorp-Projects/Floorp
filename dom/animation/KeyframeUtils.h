@@ -7,10 +7,10 @@
 #ifndef mozilla_KeyframeUtils_h
 #define mozilla_KeyframeUtils_h
 
-#include "mozilla/KeyframeEffectParams.h" // For CompositeOperation
+#include "mozilla/KeyframeEffectParams.h"  // For CompositeOperation
 #include "nsCSSPropertyID.h"
-#include "nsTArrayForwardDeclare.h" // For nsTArray
-#include "js/RootingAPI.h" // For JS::Handle
+#include "nsTArrayForwardDeclare.h"  // For nsTArray
+#include "js/RootingAPI.h"           // For JS::Handle
 
 struct JSContext;
 class JSObject;
@@ -27,9 +27,8 @@ struct PropertyStyleAnimationValuePair;
 
 namespace dom {
 class Element;
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla
 
 namespace mozilla {
 
@@ -40,9 +39,8 @@ using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 /**
  * Utility methods for processing keyframes.
  */
-class KeyframeUtils
-{
-public:
+class KeyframeUtils {
+ public:
   /**
    * Converts a JS value representing a property-indexed keyframe or a sequence
    * of keyframes to an array of Keyframe objects.
@@ -57,17 +55,16 @@ public:
    *   filled-in with the appropriate error code and an empty array will be
    *   returned.
    */
-  static nsTArray<Keyframe>
-  GetKeyframesFromObject(JSContext* aCx,
-                         nsIDocument* aDocument,
-                         JS::Handle<JSObject*> aFrames,
-                         ErrorResult& aRv);
+  static nsTArray<Keyframe> GetKeyframesFromObject(
+      JSContext* aCx, nsIDocument* aDocument, JS::Handle<JSObject*> aFrames,
+      ErrorResult& aRv);
 
   /**
    * Calculate the computed offset of keyframes by evenly distributing keyframes
    * with a missing offset.
    *
-   * @see https://drafts.csswg.org/web-animations/#calculating-computed-keyframes
+   * @see
+   * https://drafts.csswg.org/web-animations/#calculating-computed-keyframes
    *
    * @param aKeyframes The set of keyframes to adjust.
    */
@@ -89,10 +86,8 @@ public:
    *   array will be empty.
    */
   static nsTArray<AnimationProperty> GetAnimationPropertiesFromKeyframes(
-    const nsTArray<Keyframe>& aKeyframes,
-    dom::Element* aElement,
-    const ComputedStyle* aStyle,
-    dom::CompositeOperation aEffectComposite);
+      const nsTArray<Keyframe>& aKeyframes, dom::Element* aElement,
+      const ComputedStyle* aStyle, dom::CompositeOperation aEffectComposite);
 
   /**
    * Check if the property or, for shorthands, one or more of
@@ -106,6 +101,6 @@ public:
   static bool IsAnimatableProperty(nsCSSPropertyID aProperty);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_KeyframeUtils_h
+#endif  // mozilla_KeyframeUtils_h

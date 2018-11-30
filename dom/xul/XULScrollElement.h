@@ -13,25 +13,23 @@
 namespace mozilla {
 namespace dom {
 
-
-class XULScrollElement final : public nsXULElement
-{
-public:
-  explicit XULScrollElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsXULElement(std::move(aNodeInfo))
-  {
-  }
+class XULScrollElement final : public nsXULElement {
+ public:
+  explicit XULScrollElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : nsXULElement(std::move(aNodeInfo)) {}
 
   MOZ_CAN_RUN_SCRIPT void ScrollByIndex(int32_t aIndex, ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT void EnsureElementIsVisible(Element& aChild, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void EnsureElementIsVisible(Element& aChild,
+                                                 ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void ScrollToElement(Element& child, ErrorResult& aRv);
 
-protected:
+ protected:
   virtual ~XULScrollElement() {}
-  JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // XULScrollElement_h
+#endif  // XULScrollElement_h

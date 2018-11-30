@@ -18,7 +18,6 @@
 #include <string>
 #include <memory>
 
-
 #include "api/video/video_frame.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/video_capture/video_capture_config.h"
@@ -37,11 +36,11 @@ namespace webrtc {
 
 class VideoCaptureEncodeInterface;
 
-
-//simulate deviceInfo interface for video engine, bridge screen/application and real screen/application device info
+// simulate deviceInfo interface for video engine, bridge screen/application and
+// real screen/application device info
 
 class ScreenDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
-public:
+ public:
   ScreenDeviceInfoImpl(const int32_t id);
   virtual ~ScreenDeviceInfoImpl(void);
 
@@ -49,38 +48,34 @@ public:
   int32_t Refresh();
 
   virtual uint32_t NumberOfDevices();
-  virtual int32_t GetDeviceName(uint32_t deviceNumber,
-                                char* deviceNameUTF8,
+  virtual int32_t GetDeviceName(uint32_t deviceNumber, char* deviceNameUTF8,
                                 uint32_t deviceNameLength,
                                 char* deviceUniqueIdUTF8,
                                 uint32_t deviceUniqueIdUTF8Length,
                                 char* productUniqueIdUTF8,
-                                uint32_t productUniqueIdUTF8Length,
-                                pid_t* pid);
+                                uint32_t productUniqueIdUTF8Length, pid_t* pid);
 
-  virtual int32_t DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
-                                                  const char* dialogTitleUTF8,
-                                                  void* parentWindow,
-                                                  uint32_t positionX,
-                                                  uint32_t positionY);
+  virtual int32_t DisplayCaptureSettingsDialogBox(
+      const char* deviceUniqueIdUTF8, const char* dialogTitleUTF8,
+      void* parentWindow, uint32_t positionX, uint32_t positionY);
   virtual int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8);
   virtual int32_t GetCapability(const char* deviceUniqueIdUTF8,
                                 const uint32_t deviceCapabilityNumber,
                                 VideoCaptureCapability& capability);
 
-  virtual int32_t GetBestMatchedCapability(const char* deviceUniqueIdUTF8,
-                                           const VideoCaptureCapability& requested,
-                                           VideoCaptureCapability& resulting);
+  virtual int32_t GetBestMatchedCapability(
+      const char* deviceUniqueIdUTF8, const VideoCaptureCapability& requested,
+      VideoCaptureCapability& resulting);
   virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
                                  VideoRotation& orientation);
-protected:
+
+ protected:
   int32_t _id;
   std::unique_ptr<DesktopDeviceInfo> desktop_device_info_;
-
 };
 
 class AppDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
-public:
+ public:
   AppDeviceInfoImpl(const int32_t id);
   virtual ~AppDeviceInfoImpl(void);
 
@@ -88,91 +83,87 @@ public:
   int32_t Refresh();
 
   virtual uint32_t NumberOfDevices();
-  virtual int32_t GetDeviceName(uint32_t deviceNumber,
-                                char* deviceNameUTF8,
+  virtual int32_t GetDeviceName(uint32_t deviceNumber, char* deviceNameUTF8,
                                 uint32_t deviceNameLength,
                                 char* deviceUniqueIdUTF8,
                                 uint32_t deviceUniqueIdUTF8Length,
                                 char* productUniqueIdUTF8,
-                                uint32_t productUniqueIdUTF8Length,
-                                pid_t* pid);
+                                uint32_t productUniqueIdUTF8Length, pid_t* pid);
 
-  virtual int32_t DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
-                                                  const char* dialogTitleUTF8,
-                                                  void* parentWindow,
-                                                  uint32_t positionX,
-                                                  uint32_t positionY);
+  virtual int32_t DisplayCaptureSettingsDialogBox(
+      const char* deviceUniqueIdUTF8, const char* dialogTitleUTF8,
+      void* parentWindow, uint32_t positionX, uint32_t positionY);
   virtual int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8);
   virtual int32_t GetCapability(const char* deviceUniqueIdUTF8,
                                 const uint32_t deviceCapabilityNumber,
                                 VideoCaptureCapability& capability);
 
-  virtual int32_t GetBestMatchedCapability(const char* deviceUniqueIdUTF8,
-                                           const VideoCaptureCapability& requested,
-                                           VideoCaptureCapability& resulting);
+  virtual int32_t GetBestMatchedCapability(
+      const char* deviceUniqueIdUTF8, const VideoCaptureCapability& requested,
+      VideoCaptureCapability& resulting);
   virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
                                  VideoRotation& orientation);
-protected:
+
+ protected:
   int32_t _id;
   std::unique_ptr<DesktopDeviceInfo> desktop_device_info_;
 };
 
 class WindowDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
-public:
-  WindowDeviceInfoImpl(const int32_t id) : _id(id) {};
-  virtual ~WindowDeviceInfoImpl(void) {};
+ public:
+  WindowDeviceInfoImpl(const int32_t id) : _id(id){};
+  virtual ~WindowDeviceInfoImpl(void){};
 
   int32_t Init();
   int32_t Refresh();
 
   virtual uint32_t NumberOfDevices();
-  virtual int32_t GetDeviceName(uint32_t deviceNumber,
-                                char* deviceNameUTF8,
+  virtual int32_t GetDeviceName(uint32_t deviceNumber, char* deviceNameUTF8,
                                 uint32_t deviceNameLength,
                                 char* deviceUniqueIdUTF8,
                                 uint32_t deviceUniqueIdUTF8Length,
                                 char* productUniqueIdUTF8,
-                                uint32_t productUniqueIdUTF8Length,
-                                pid_t* pid);
+                                uint32_t productUniqueIdUTF8Length, pid_t* pid);
 
-  virtual int32_t DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
-                                                  const char* dialogTitleUTF8,
-                                                  void* parentWindow,
-                                                  uint32_t positionX,
-                                                  uint32_t positionY);
+  virtual int32_t DisplayCaptureSettingsDialogBox(
+      const char* deviceUniqueIdUTF8, const char* dialogTitleUTF8,
+      void* parentWindow, uint32_t positionX, uint32_t positionY);
   virtual int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8);
   virtual int32_t GetCapability(const char* deviceUniqueIdUTF8,
                                 const uint32_t deviceCapabilityNumber,
                                 VideoCaptureCapability& capability);
 
-  virtual int32_t GetBestMatchedCapability(const char* deviceUniqueIdUTF8,
-                                           const VideoCaptureCapability& requested,
-                                           VideoCaptureCapability& resulting);
+  virtual int32_t GetBestMatchedCapability(
+      const char* deviceUniqueIdUTF8, const VideoCaptureCapability& requested,
+      VideoCaptureCapability& resulting);
   virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
                                  VideoRotation& orientation);
-protected:
+
+ protected:
   int32_t _id;
   std::unique_ptr<DesktopDeviceInfo> desktop_device_info_;
-
 };
 
 // Reuses the video engine pipeline for screen sharing.
 // As with video, DesktopCaptureImpl is a proxy for screen sharing
 // and follows the video pipeline design
-class DesktopCaptureImpl: public DesktopCapturer::Callback,
-                          public VideoCaptureModule,
-                          public VideoCaptureExternal
-{
-public:
+class DesktopCaptureImpl : public DesktopCapturer::Callback,
+                           public VideoCaptureModule,
+                           public VideoCaptureExternal {
+ public:
   /* Create a screen capture modules object
    */
-  static VideoCaptureModule* Create(const int32_t id, const char* uniqueId, const CaptureDeviceType type);
-  static VideoCaptureModule::DeviceInfo* CreateDeviceInfo(const int32_t id, const CaptureDeviceType type);
+  static VideoCaptureModule* Create(const int32_t id, const char* uniqueId,
+                                    const CaptureDeviceType type);
+  static VideoCaptureModule::DeviceInfo* CreateDeviceInfo(
+      const int32_t id, const CaptureDeviceType type);
 
   int32_t Init(const char* uniqueId, const CaptureDeviceType type);
-  //Call backs
-  void RegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback) override;
-  void DeRegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback) override;
+  // Call backs
+  void RegisterCaptureDataCallback(
+      rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
+  void DeRegisterCaptureDataCallback(
+      rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
   int32_t StopCaptureIfAllClientsClose() override;
 
   int32_t SetCaptureRotation(VideoRotation rotation) override;
@@ -183,8 +174,7 @@ public:
 
   // Implement VideoCaptureExternal
   // |capture_time| must be specified in the NTP time format in milliseconds.
-  int32_t IncomingFrame(uint8_t* videoFrame,
-                        size_t videoFrameLength,
+  int32_t IncomingFrame(uint8_t* videoFrame, size_t videoFrameLength,
                         const VideoCaptureCapability& frameInfo,
                         int64_t captureTime = 0) override;
 
@@ -195,20 +185,23 @@ public:
   bool CaptureStarted() override;
   int32_t CaptureSettings(VideoCaptureCapability& settings) override;
 
-protected:
+ protected:
   DesktopCaptureImpl(const int32_t id);
   virtual ~DesktopCaptureImpl();
   int32_t DeliverCapturedFrame(webrtc::VideoFrame& captureFrame,
                                int64_t capture_time);
 
-  static const uint32_t kMaxDesktopCaptureCpuUsage = 50; // maximum CPU usage in %
+  static const uint32_t kMaxDesktopCaptureCpuUsage =
+      50;  // maximum CPU usage in %
 
-  int32_t _id; // Module ID
-  std::string _deviceUniqueId; // current Device unique name;
+  int32_t _id;                  // Module ID
+  std::string _deviceUniqueId;  // current Device unique name;
   rtc::CriticalSection _apiCs;
-  VideoCaptureCapability _requestedCapability; // Should be set by platform dependent code in StartCapture.
+  VideoCaptureCapability
+      _requestedCapability;  // Should be set by platform dependent code in
+                             // StartCapture.
 
-private:
+ private:
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
 
@@ -216,8 +209,10 @@ private:
 
   std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks;
 
-  int64_t _incomingFrameTimesNanos[kFrameRateCountHistorySize];// timestamp for local captured frames
-  VideoRotation _rotateFrame; //Set if the frame should be rotated by the capture module.
+  int64_t _incomingFrameTimesNanos
+      [kFrameRateCountHistorySize];  // timestamp for local captured frames
+  VideoRotation _rotateFrame;  // Set if the frame should be rotated by the
+                               // capture module.
 
   // Used to make sure incoming timestamp is increasing for every frame.
   int64_t last_capture_time_;
@@ -229,14 +224,14 @@ private:
   void OnCaptureResult(DesktopCapturer::Result result,
                        std::unique_ptr<DesktopFrame> frame) override;
 
-public:
-  static bool Run(void*obj) {
+ public:
+  static bool Run(void* obj) {
     static_cast<DesktopCaptureImpl*>(obj)->process();
     return true;
   };
   void process();
 
-private:
+ private:
   std::unique_ptr<DesktopAndCursorComposer> desktop_capturer_cursor_composer_;
   std::unique_ptr<EventWrapper> time_event_;
 #if defined(_WIN32)

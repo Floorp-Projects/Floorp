@@ -10,34 +10,29 @@
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 
-class txNamespaceMap
-{
-public:
-    txNamespaceMap();
-    txNamespaceMap(const txNamespaceMap& aOther);
+class txNamespaceMap {
+ public:
+  txNamespaceMap();
+  txNamespaceMap(const txNamespaceMap& aOther);
 
-    nsrefcnt AddRef()
-    {
-        return ++mRefCnt;
+  nsrefcnt AddRef() { return ++mRefCnt; }
+  nsrefcnt Release() {
+    if (--mRefCnt == 0) {
+      mRefCnt = 1;  // stabilize
+      delete this;
+      return 0;
     }
-    nsrefcnt Release()
-    {
-        if (--mRefCnt == 0) {
-            mRefCnt = 1; //stabilize
-            delete this;
-            return 0;
-        }
-        return mRefCnt;
-    }
+    return mRefCnt;
+  }
 
-    nsresult mapNamespace(nsAtom* aPrefix, const nsAString& aNamespaceURI);
-    int32_t lookupNamespace(nsAtom* aPrefix);
-    int32_t lookupNamespaceWithDefault(const nsAString& aPrefix);
+  nsresult mapNamespace(nsAtom* aPrefix, const nsAString& aNamespaceURI);
+  int32_t lookupNamespace(nsAtom* aPrefix);
+  int32_t lookupNamespaceWithDefault(const nsAString& aPrefix);
 
-private:
-    nsAutoRefCnt mRefCnt;
-    nsTArray<RefPtr<nsAtom>> mPrefixes;
-    nsTArray<int32_t> mNamespaces;
+ private:
+  nsAutoRefCnt mRefCnt;
+  nsTArray<RefPtr<nsAtom>> mPrefixes;
+  nsTArray<int32_t> mNamespaces;
 };
 
-#endif //TRANSFRMX_TXNAMESPACEMAP_H
+#endif  // TRANSFRMX_TXNAMESPACEMAP_H

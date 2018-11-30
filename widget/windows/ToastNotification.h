@@ -19,9 +19,8 @@ class ToastNotificationHandler;
 
 class ToastNotification final : public nsIAlertsService,
                                 public nsIObserver,
-                                public nsSupportsWeakReference
-{
-public:
+                                public nsSupportsWeakReference {
+ public:
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS
@@ -37,7 +36,7 @@ public:
 
   nsresult BackgroundDispatch(nsIRunnable* runnable);
 
-protected:
+ protected:
   virtual ~ToastNotification();
 
   nsRefPtrHashtable<nsStringHashKey, ToastNotificationHandler> mActiveHandlers;
@@ -45,7 +44,7 @@ protected:
   nsCOMPtr<nsIThread> mBackgroundThread;
 };
 
-} // widget
-} // mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 #endif

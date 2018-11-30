@@ -32,16 +32,14 @@ class CodeSegment;
 // the given pc, if any exist in the process. These methods do not take a lock,
 // and thus are safe to use in a profiling context.
 
-const CodeSegment*
-LookupCodeSegment(const void* pc, const CodeRange** codeRange = nullptr);
+const CodeSegment* LookupCodeSegment(const void* pc,
+                                     const CodeRange** codeRange = nullptr);
 
-const Code*
-LookupCode(const void* pc, const CodeRange** codeRange = nullptr);
+const Code* LookupCode(const void* pc, const CodeRange** codeRange = nullptr);
 
 // Return whether the given PC is in any type of wasm code (module or builtin).
 
-bool
-InCompiledCode(void* pc);
+bool InCompiledCode(void* pc);
 
 // A bool member that can be used as a very fast lookup to know if there is any
 // code segment at all.
@@ -51,22 +49,18 @@ extern mozilla::Atomic<bool> CodeExists;
 // These methods allow to (un)register CodeSegments so they can be looked up
 // via pc in the methods described above.
 
-bool
-RegisterCodeSegment(const CodeSegment* cs);
+bool RegisterCodeSegment(const CodeSegment* cs);
 
-void
-UnregisterCodeSegment(const CodeSegment* cs);
+void UnregisterCodeSegment(const CodeSegment* cs);
 
 // Called once before/after the last VM execution which could execute or compile
 // wasm.
 
-bool
-Init();
+bool Init();
 
-void
-ShutDown();
+void ShutDown();
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
-#endif // wasm_process_h
+#endif  // wasm_process_h

@@ -28,17 +28,16 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-template<typename String> static void EscapeAttributeChars(String& aStr);
+template <typename String>
+static void EscapeAttributeChars(String& aStr);
 
 ////////////////////////////////////////////////////////////////////////////////
 // ia2Accessible
 ////////////////////////////////////////////////////////////////////////////////
 
 STDMETHODIMP
-ia2Accessible::QueryInterface(REFIID iid, void** ppv)
-{
-  if (!ppv)
-    return E_INVALIDARG;
+ia2Accessible::QueryInterface(REFIID iid, void** ppv) {
+  if (!ppv) return E_INVALIDARG;
 
   *ppv = nullptr;
 
@@ -65,52 +64,43 @@ ia2Accessible::QueryInterface(REFIID iid, void** ppv)
 // IAccessible2
 
 STDMETHODIMP
-ia2Accessible::get_nRelations(long* aNRelations)
-{
-  if (!aNRelations)
-    return E_INVALIDARG;
+ia2Accessible::get_nRelations(long* aNRelations) {
+  if (!aNRelations) return E_INVALIDARG;
   *aNRelations = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
 
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
-    if (sRelationTypePairs[idx].second == IA2_RELATION_NULL)
-      continue;
+    if (sRelationTypePairs[idx].second == IA2_RELATION_NULL) continue;
 
     Relation rel = acc->RelationByType(sRelationTypePairs[idx].first);
-    if (rel.Next())
-      (*aNRelations)++;
+    if (rel.Next()) (*aNRelations)++;
   }
   return S_OK;
 }
 
 STDMETHODIMP
 ia2Accessible::get_relation(long aRelationIndex,
-                            IAccessibleRelation** aRelation)
-{
-  if (!aRelation || aRelationIndex < 0)
-    return E_INVALIDARG;
+                            IAccessibleRelation** aRelation) {
+  if (!aRelation || aRelationIndex < 0) return E_INVALIDARG;
   *aRelation = nullptr;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
 
   long relIdx = 0;
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
-    if (sRelationTypePairs[idx].second == IA2_RELATION_NULL)
-      continue;
+    if (sRelationTypePairs[idx].second == IA2_RELATION_NULL) continue;
 
     RelationType relationType = sRelationTypePairs[idx].first;
     Relation rel = acc->RelationByType(relationType);
     RefPtr<ia2AccessibleRelation> ia2Relation =
-      new ia2AccessibleRelation(relationType, &rel);
+        new ia2AccessibleRelation(relationType, &rel);
     if (ia2Relation->HasTargets()) {
       if (relIdx == aRelationIndex) {
         ia2Relation.forget(aRelation);
@@ -127,27 +117,24 @@ ia2Accessible::get_relation(long aRelationIndex,
 STDMETHODIMP
 ia2Accessible::get_relations(long aMaxRelations,
                              IAccessibleRelation** aRelation,
-                             long *aNRelations)
-{
-  if (!aRelation || !aNRelations || aMaxRelations <= 0)
-    return E_INVALIDARG;
+                             long* aNRelations) {
+  if (!aRelation || !aNRelations || aMaxRelations <= 0) return E_INVALIDARG;
   *aNRelations = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
 
-  for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs) &&
-       *aNRelations < aMaxRelations; idx++) {
-    if (sRelationTypePairs[idx].second == IA2_RELATION_NULL)
-      continue;
+  for (uint32_t idx = 0;
+       idx < ArrayLength(sRelationTypePairs) && *aNRelations < aMaxRelations;
+       idx++) {
+    if (sRelationTypePairs[idx].second == IA2_RELATION_NULL) continue;
 
     RelationType relationType = sRelationTypePairs[idx].first;
     Relation rel = acc->RelationByType(relationType);
     RefPtr<ia2AccessibleRelation> ia2Rel =
-      new ia2AccessibleRelation(relationType, &rel);
+        new ia2AccessibleRelation(relationType, &rel);
     if (ia2Rel->HasTargets()) {
       ia2Rel.forget(aRelation + (*aNRelations));
       (*aNRelations)++;
@@ -157,20 +144,17 @@ ia2Accessible::get_relations(long aMaxRelations,
 }
 
 STDMETHODIMP
-ia2Accessible::role(long* aRole)
-{
-  if (!aRole)
-    return E_INVALIDARG;
+ia2Accessible::role(long* aRole) {
+  if (!aRole) return E_INVALIDARG;
   *aRole = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-#define ROLE(_geckoRole, stringRole, atkRole, macRole, \
-             msaaRole, ia2Role, androidClass, nameRule) \
-  case roles::_geckoRole: \
-    *aRole = ia2Role; \
+#define ROLE(_geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, \
+             androidClass, nameRule)                                      \
+  case roles::_geckoRole:                                                 \
+    *aRole = ia2Role;                                                     \
     break;
 
   a11y::role geckoRole;
@@ -197,11 +181,9 @@ ia2Accessible::role(long* aRole)
 }
 
 STDMETHODIMP
-ia2Accessible::scrollTo(enum IA2ScrollType aScrollType)
-{
+ia2Accessible::scrollTo(enum IA2ScrollType aScrollType) {
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
   nsCoreUtils::ScrollTo(acc->Document()->PresShell(), acc->GetContent(),
@@ -211,16 +193,15 @@ ia2Accessible::scrollTo(enum IA2ScrollType aScrollType)
 }
 
 STDMETHODIMP
-ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType,
-                              long aX, long aY)
-{
+ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType, long aX,
+                             long aY) {
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  uint32_t geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
-    nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
-    nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
+  uint32_t geckoCoordType =
+      (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE)
+          ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
+          : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
   MOZ_ASSERT(!acc->IsProxy());
   acc->ScrollToPoint(geckoCoordType, aX, aY);
@@ -229,10 +210,8 @@ ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType,
 }
 
 STDMETHODIMP
-ia2Accessible::get_groupPosition(long* aGroupLevel,
-                                 long* aSimilarItemsInGroup,
-                                 long* aPositionInGroup)
-{
+ia2Accessible::get_groupPosition(long* aGroupLevel, long* aSimilarItemsInGroup,
+                                 long* aPositionInGroup) {
   if (!aGroupLevel || !aSimilarItemsInGroup || !aPositionInGroup)
     return E_INVALIDARG;
 
@@ -241,16 +220,14 @@ ia2Accessible::get_groupPosition(long* aGroupLevel,
   *aPositionInGroup = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   GroupPos groupPos = acc->GroupPosition();
 
   // Group information for accessibles having level only (like html headings
   // elements) isn't exposed by this method. AT should look for 'level' object
   // attribute.
-  if (!groupPos.setSize && !groupPos.posInSet)
-    return S_FALSE;
+  if (!groupPos.setSize && !groupPos.posInSet) return S_FALSE;
 
   *aGroupLevel = groupPos.level;
   *aSimilarItemsInGroup = groupPos.setSize;
@@ -260,10 +237,8 @@ ia2Accessible::get_groupPosition(long* aGroupLevel,
 }
 
 STDMETHODIMP
-ia2Accessible::get_states(AccessibleStates* aStates)
-{
-  if (!aStates)
-    return E_INVALIDARG;
+ia2Accessible::get_states(AccessibleStates* aStates) {
+  if (!aStates) return E_INVALIDARG;
   *aStates = 0;
 
   // XXX: bug 344674 should come with better approach that we have here.
@@ -278,10 +253,8 @@ ia2Accessible::get_states(AccessibleStates* aStates)
   MOZ_ASSERT(!acc->IsProxy());
   state = acc->State();
 
-  if (state & states::INVALID)
-    *aStates |= IA2_STATE_INVALID_ENTRY;
-  if (state & states::REQUIRED)
-    *aStates |= IA2_STATE_REQUIRED;
+  if (state & states::INVALID) *aStates |= IA2_STATE_INVALID_ENTRY;
+  if (state & states::REQUIRED) *aStates |= IA2_STATE_REQUIRED;
 
   // The following IA2 states are not supported by Gecko
   // IA2_STATE_ARMED
@@ -289,65 +262,45 @@ ia2Accessible::get_states(AccessibleStates* aStates)
   // IA2_STATE_ICONIFIED
   // IA2_STATE_INVALID // This is not a state, it is the absence of a state
 
-  if (state & states::ACTIVE)
-    *aStates |= IA2_STATE_ACTIVE;
-  if (state & states::DEFUNCT)
-    *aStates |= IA2_STATE_DEFUNCT;
-  if (state & states::EDITABLE)
-    *aStates |= IA2_STATE_EDITABLE;
-  if (state & states::HORIZONTAL)
-    *aStates |= IA2_STATE_HORIZONTAL;
-  if (state & states::MODAL)
-    *aStates |= IA2_STATE_MODAL;
-  if (state & states::MULTI_LINE)
-    *aStates |= IA2_STATE_MULTI_LINE;
-  if (state & states::OPAQUE1)
-    *aStates |= IA2_STATE_OPAQUE;
-  if (state & states::SELECTABLE_TEXT)
-    *aStates |= IA2_STATE_SELECTABLE_TEXT;
-  if (state & states::SINGLE_LINE)
-    *aStates |= IA2_STATE_SINGLE_LINE;
-  if (state & states::STALE)
-    *aStates |= IA2_STATE_STALE;
+  if (state & states::ACTIVE) *aStates |= IA2_STATE_ACTIVE;
+  if (state & states::DEFUNCT) *aStates |= IA2_STATE_DEFUNCT;
+  if (state & states::EDITABLE) *aStates |= IA2_STATE_EDITABLE;
+  if (state & states::HORIZONTAL) *aStates |= IA2_STATE_HORIZONTAL;
+  if (state & states::MODAL) *aStates |= IA2_STATE_MODAL;
+  if (state & states::MULTI_LINE) *aStates |= IA2_STATE_MULTI_LINE;
+  if (state & states::OPAQUE1) *aStates |= IA2_STATE_OPAQUE;
+  if (state & states::SELECTABLE_TEXT) *aStates |= IA2_STATE_SELECTABLE_TEXT;
+  if (state & states::SINGLE_LINE) *aStates |= IA2_STATE_SINGLE_LINE;
+  if (state & states::STALE) *aStates |= IA2_STATE_STALE;
   if (state & states::SUPPORTS_AUTOCOMPLETION)
     *aStates |= IA2_STATE_SUPPORTS_AUTOCOMPLETION;
-  if (state & states::TRANSIENT)
-    *aStates |= IA2_STATE_TRANSIENT;
-  if (state & states::VERTICAL)
-    *aStates |= IA2_STATE_VERTICAL;
-  if (state & states::CHECKED)
-    *aStates |= IA2_STATE_CHECKABLE;
-  if (state & states::PINNED)
-    *aStates |= IA2_STATE_PINNED;
+  if (state & states::TRANSIENT) *aStates |= IA2_STATE_TRANSIENT;
+  if (state & states::VERTICAL) *aStates |= IA2_STATE_VERTICAL;
+  if (state & states::CHECKED) *aStates |= IA2_STATE_CHECKABLE;
+  if (state & states::PINNED) *aStates |= IA2_STATE_PINNED;
 
   return S_OK;
 }
 
 STDMETHODIMP
-ia2Accessible::get_extendedRole(BSTR* aExtendedRole)
-{
-  if (!aExtendedRole)
-    return E_INVALIDARG;
+ia2Accessible::get_extendedRole(BSTR* aExtendedRole) {
+  if (!aExtendedRole) return E_INVALIDARG;
 
   *aExtendedRole = nullptr;
   return E_NOTIMPL;
 }
 
 STDMETHODIMP
-ia2Accessible::get_localizedExtendedRole(BSTR* aLocalizedExtendedRole)
-{
-  if (!aLocalizedExtendedRole)
-    return E_INVALIDARG;
+ia2Accessible::get_localizedExtendedRole(BSTR* aLocalizedExtendedRole) {
+  if (!aLocalizedExtendedRole) return E_INVALIDARG;
 
   *aLocalizedExtendedRole = nullptr;
   return E_NOTIMPL;
 }
 
 STDMETHODIMP
-ia2Accessible::get_nExtendedStates(long* aNExtendedStates)
-{
-  if (!aNExtendedStates)
-    return E_INVALIDARG;
+ia2Accessible::get_nExtendedStates(long* aNExtendedStates) {
+  if (!aNExtendedStates) return E_INVALIDARG;
 
   *aNExtendedStates = 0;
   return E_NOTIMPL;
@@ -356,10 +309,8 @@ ia2Accessible::get_nExtendedStates(long* aNExtendedStates)
 STDMETHODIMP
 ia2Accessible::get_extendedStates(long aMaxExtendedStates,
                                   BSTR** aExtendedStates,
-                                  long* aNExtendedStates)
-{
-  if (!aExtendedStates || !aNExtendedStates)
-    return E_INVALIDARG;
+                                  long* aNExtendedStates) {
+  if (!aExtendedStates || !aNExtendedStates) return E_INVALIDARG;
 
   *aExtendedStates = nullptr;
   *aNExtendedStates = 0;
@@ -369,8 +320,7 @@ ia2Accessible::get_extendedStates(long aMaxExtendedStates,
 STDMETHODIMP
 ia2Accessible::get_localizedExtendedStates(long aMaxLocalizedExtendedStates,
                                            BSTR** aLocalizedExtendedStates,
-                                           long* aNLocalizedExtendedStates)
-{
+                                           long* aNLocalizedExtendedStates) {
   if (!aLocalizedExtendedStates || !aNLocalizedExtendedStates)
     return E_INVALIDARG;
 
@@ -380,10 +330,8 @@ ia2Accessible::get_localizedExtendedStates(long aMaxLocalizedExtendedStates,
 }
 
 STDMETHODIMP
-ia2Accessible::get_uniqueID(long* aUniqueID)
-{
-  if (!aUniqueID)
-    return E_INVALIDARG;
+ia2Accessible::get_uniqueID(long* aUniqueID) {
+  if (!aUniqueID) return E_INVALIDARG;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   *aUniqueID = AccessibleWrap::GetChildIDFor(acc);
@@ -391,45 +339,36 @@ ia2Accessible::get_uniqueID(long* aUniqueID)
 }
 
 STDMETHODIMP
-ia2Accessible::get_windowHandle(HWND* aWindowHandle)
-{
-  if (!aWindowHandle)
-    return E_INVALIDARG;
+ia2Accessible::get_windowHandle(HWND* aWindowHandle) {
+  if (!aWindowHandle) return E_INVALIDARG;
   *aWindowHandle = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   *aWindowHandle = AccessibleWrap::GetHWNDFor(acc);
   return S_OK;
 }
 
 STDMETHODIMP
-ia2Accessible::get_indexInParent(long* aIndexInParent)
-{
-  if (!aIndexInParent)
-    return E_INVALIDARG;
+ia2Accessible::get_indexInParent(long* aIndexInParent) {
+  if (!aIndexInParent) return E_INVALIDARG;
   *aIndexInParent = -1;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
   *aIndexInParent = acc->IndexInParent();
 
-  if (*aIndexInParent == -1)
-    return S_FALSE;
+  if (*aIndexInParent == -1) return S_FALSE;
 
   return S_OK;
 }
 
 STDMETHODIMP
-ia2Accessible::get_locale(IA2Locale* aLocale)
-{
-  if (!aLocale)
-    return E_INVALIDARG;
+ia2Accessible::get_locale(IA2Locale* aLocale) {
+  if (!aLocale) return E_INVALIDARG;
 
   // Language codes consist of a primary code and a possibly empty series of
   // subcodes: language-code = primary-code ( "-" subcode )*
@@ -437,8 +376,7 @@ ia2Accessible::get_locale(IA2Locale* aLocale)
   // Any two-letter subcode is understood to be a [ISO3166] country code.
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString lang;
   acc->Language(lang);
@@ -473,15 +411,12 @@ ia2Accessible::get_locale(IA2Locale* aLocale)
 }
 
 STDMETHODIMP
-ia2Accessible::get_attributes(BSTR* aAttributes)
-{
-  if (!aAttributes)
-    return E_INVALIDARG;
+ia2Accessible::get_attributes(BSTR* aAttributes) {
+  if (!aAttributes) return E_INVALIDARG;
   *aAttributes = nullptr;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
@@ -498,27 +433,22 @@ ia2Accessible::get_attributes(BSTR* aAttributes)
 // IAccessible2_2
 
 STDMETHODIMP
-ia2Accessible::get_attribute(BSTR name, VARIANT* aAttribute)
-{
-  if (!aAttribute)
-    return E_INVALIDARG;
+ia2Accessible::get_attribute(BSTR name, VARIANT* aAttribute) {
+  if (!aAttribute) return E_INVALIDARG;
 
   return E_NOTIMPL;
 }
 
 STDMETHODIMP
 ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
-                                       long* aCaretOffset)
-{
-  if (!aAccessible || !aCaretOffset)
-    return E_INVALIDARG;
+                                       long* aCaretOffset) {
+  if (!aAccessible || !aCaretOffset) return E_INVALIDARG;
 
   *aAccessible = nullptr;
   *aCaretOffset = -1;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   int32_t caretOffset = -1;
   Accessible* accWithCaret = SelectionMgr()->AccessibleWithCaret(&caretOffset);
@@ -526,27 +456,22 @@ ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
     return S_FALSE;
 
   Accessible* child = accWithCaret;
-  while (!child->IsDoc() && child != acc)
-    child = child->Parent();
+  while (!child->IsDoc() && child != acc) child = child->Parent();
 
-  if (child != acc)
-    return S_FALSE;
+  if (child != acc) return S_FALSE;
 
-  *aAccessible =  static_cast<IAccessible2*>(
-    static_cast<AccessibleWrap*>(accWithCaret));
+  *aAccessible =
+      static_cast<IAccessible2*>(static_cast<AccessibleWrap*>(accWithCaret));
   (*aAccessible)->AddRef();
   *aCaretOffset = caretOffset;
   return S_OK;
 }
 
 STDMETHODIMP
-ia2Accessible::get_relationTargetsOfType(BSTR aType,
-                                         long aMaxTargets,
+ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
                                          IUnknown*** aTargets,
-                                         long* aNTargets)
-{
-  if (!aTargets || !aNTargets || aMaxTargets < 0)
-    return E_INVALIDARG;
+                                         long* aNTargets) {
+  if (!aTargets || !aNTargets || aMaxTargets < 0) return E_INVALIDARG;
   *aNTargets = 0;
 
   Maybe<RelationType> relationType;
@@ -556,12 +481,10 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
       break;
     }
   }
-  if (!relationType)
-    return E_INVALIDARG;
+  if (!relationType) return E_INVALIDARG;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsTArray<Accessible*> targets;
   MOZ_ASSERT(!acc->IsProxy());
@@ -573,13 +496,12 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
   }
 
   *aNTargets = targets.Length();
-  *aTargets = static_cast<IUnknown**>(
-    ::CoTaskMemAlloc(sizeof(IUnknown*) * *aNTargets));
-  if (!*aTargets)
-    return E_OUTOFMEMORY;
+  *aTargets =
+      static_cast<IUnknown**>(::CoTaskMemAlloc(sizeof(IUnknown*) * *aNTargets));
+  if (!*aTargets) return E_OUTOFMEMORY;
 
   for (int32_t i = 0; i < *aNTargets; i++) {
-    AccessibleWrap* target= static_cast<AccessibleWrap*>(targets[i]);
+    AccessibleWrap* target = static_cast<AccessibleWrap*>(targets[i]);
     (*aTargets)[i] = static_cast<IAccessible2*>(target);
     (*aTargets)[i]->AddRef();
   }
@@ -588,17 +510,13 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
 }
 
 STDMETHODIMP
-ia2Accessible::get_selectionRanges(IA2Range** aRanges,
-                                   long *aNRanges)
-{
-  if (!aRanges || !aNRanges)
-    return E_INVALIDARG;
+ia2Accessible::get_selectionRanges(IA2Range** aRanges, long* aNRanges) {
+  if (!aRanges || !aNRanges) return E_INVALIDARG;
 
   *aNRanges = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   AutoTArray<TextRange, 1> ranges;
   acc->Document()->SelectionRanges(&ranges);
@@ -610,21 +528,20 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges,
   }
 
   *aNRanges = ranges.Length();
-  *aRanges = static_cast<IA2Range*>(
-    ::CoTaskMemAlloc(sizeof(IA2Range) * *aNRanges));
-  if (!*aRanges)
-    return E_OUTOFMEMORY;
+  *aRanges =
+      static_cast<IA2Range*>(::CoTaskMemAlloc(sizeof(IA2Range) * *aNRanges));
+  if (!*aRanges) return E_OUTOFMEMORY;
 
   for (uint32_t idx = 0; idx < static_cast<uint32_t>(*aNRanges); idx++) {
     AccessibleWrap* anchor =
-      static_cast<AccessibleWrap*>(ranges[idx].StartContainer());
+        static_cast<AccessibleWrap*>(ranges[idx].StartContainer());
     (*aRanges)[idx].anchor = static_cast<IAccessible2*>(anchor);
     anchor->AddRef();
 
     (*aRanges)[idx].anchorOffset = ranges[idx].StartOffset();
 
     AccessibleWrap* active =
-      static_cast<AccessibleWrap*>(ranges[idx].EndContainer());
+        static_cast<AccessibleWrap*>(ranges[idx].EndContainer());
     (*aRanges)[idx].active = static_cast<IAccessible2*>(active);
     active->AddRef();
 
@@ -634,14 +551,11 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges,
   return S_OK;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers
 
-template<typename String>
-static inline void
-EscapeAttributeChars(String& aStr)
-{
+template <typename String>
+static inline void EscapeAttributeChars(String& aStr) {
   int32_t offset = 0;
   static const char kCharsToEscape[] = ":;=,\\";
   while ((offset = aStr.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
@@ -652,8 +566,7 @@ EscapeAttributeChars(String& aStr)
 
 HRESULT
 ia2Accessible::ConvertToIA2Attributes(nsTArray<Attribute>* aAttributes,
-                                      BSTR* aIA2Attributes)
-{
+                                      BSTR* aIA2Attributes) {
   nsString attrStr;
   size_t attrCount = aAttributes->Length();
   for (size_t i = 0; i < attrCount; i++) {
@@ -665,8 +578,7 @@ ia2Accessible::ConvertToIA2Attributes(nsTArray<Attribute>* aAttributes,
     attrStr.Append(';');
   }
 
-  if (attrStr.IsEmpty())
-    return S_FALSE;
+  if (attrStr.IsEmpty()) return S_FALSE;
 
   *aIA2Attributes = ::SysAllocStringLen(attrStr.get(), attrStr.Length());
   return *aIA2Attributes ? S_OK : E_OUTOFMEMORY;
@@ -674,20 +586,17 @@ ia2Accessible::ConvertToIA2Attributes(nsTArray<Attribute>* aAttributes,
 
 HRESULT
 ia2Accessible::ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,
-                                      BSTR* aIA2Attributes)
-{
+                                      BSTR* aIA2Attributes) {
   *aIA2Attributes = nullptr;
 
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
 
-  if (!aAttributes)
-    return S_FALSE;
+  if (!aAttributes) return S_FALSE;
 
   nsCOMPtr<nsISimpleEnumerator> propEnum;
   aAttributes->Enumerate(getter_AddRefs(propEnum));
-  if (!propEnum)
-    return E_FAIL;
+  if (!propEnum) return E_FAIL;
 
   nsAutoString strAttrs;
 
@@ -697,18 +606,15 @@ ia2Accessible::ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,
     propEnum->GetNext(getter_AddRefs(propSupports));
 
     nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(propSupports));
-    if (!propElem)
-      return E_FAIL;
+    if (!propElem) return E_FAIL;
 
     nsAutoCString name;
-    if (NS_FAILED(propElem->GetKey(name)))
-      return E_FAIL;
+    if (NS_FAILED(propElem->GetKey(name))) return E_FAIL;
 
     EscapeAttributeChars(name);
 
     nsAutoString value;
-    if (NS_FAILED(propElem->GetValue(value)))
-      return E_FAIL;
+    if (NS_FAILED(propElem->GetValue(value))) return E_FAIL;
 
     EscapeAttributeChars(value);
 
@@ -718,8 +624,7 @@ ia2Accessible::ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,
     strAttrs.Append(';');
   }
 
-  if (strAttrs.IsEmpty())
-    return S_FALSE;
+  if (strAttrs.IsEmpty()) return S_FALSE;
 
   *aIA2Attributes = ::SysAllocStringLen(strAttrs.get(), strAttrs.Length());
   return *aIA2Attributes ? S_OK : E_OUTOFMEMORY;

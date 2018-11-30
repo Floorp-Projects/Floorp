@@ -25,81 +25,63 @@ class ClientInfoAndState;
 struct PostMessageOptions;
 class Promise;
 
-template <typename t> class Sequence;
+template <typename t>
+class Sequence;
 
-class Client final : public nsISupports
-                   , public nsWrapperCache
-{
+class Client final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
   UniquePtr<ClientInfoAndState> mData;
   RefPtr<ClientHandle> mHandle;
 
   ~Client() = default;
 
-  void
-  EnsureHandle();
+  void EnsureHandle();
 
-public:
+ public:
   Client(nsIGlobalObject* aGlobal, const ClientInfoAndState& aData);
 
-  TimeStamp
-  CreationTime() const;
+  TimeStamp CreationTime() const;
 
-  TimeStamp
-  LastFocusTime() const;
+  TimeStamp LastFocusTime() const;
 
-  nsContentUtils::StorageAccess
-  GetStorageAccess() const;
+  nsContentUtils::StorageAccess GetStorageAccess() const;
 
   // nsWrapperCache interface methods
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   // DOM bindings methods
-  nsIGlobalObject*
-  GetParentObject() const;
+  nsIGlobalObject* GetParentObject() const;
 
   // Client Bindings
-  void
-  GetUrl(nsAString& aUrlOut) const;
+  void GetUrl(nsAString& aUrlOut) const;
 
-  void
-  GetId(nsAString& aIdOut) const;
+  void GetId(nsAString& aIdOut) const;
 
-  ClientType
-  Type() const;
+  ClientType Type() const;
 
-  FrameType
-  GetFrameType() const;
+  FrameType GetFrameType() const;
 
   // WindowClient bindings
-  VisibilityState
-  GetVisibilityState() const;
+  VisibilityState GetVisibilityState() const;
 
-  bool
-  Focused() const;
+  bool Focused() const;
 
-  already_AddRefed<Promise>
-  Focus(ErrorResult& aRv);
+  already_AddRefed<Promise> Focus(ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  Navigate(const nsAString& aURL, ErrorResult& aRv);
+  already_AddRefed<Promise> Navigate(const nsAString& aURL, ErrorResult& aRv);
 
-  void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Sequence<JSObject*>& aTransferrable,
-              ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const Sequence<JSObject*>& aTransferrable, ErrorResult& aRv);
 
-  void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const PostMessageOptions& aOptions,
-              ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const PostMessageOptions& aOptions, ErrorResult& aRv);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(mozilla::dom::Client)
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_Client_h
+#endif  // _mozilla_dom_Client_h

@@ -24,10 +24,11 @@ namespace mozilla {
 class Encoding;
 class Decoder;
 class Encoder;
-}; // namespace mozilla
+};  // namespace mozilla
 
 #define ENCODING_RS_ENCODING mozilla::Encoding
-#define ENCODING_RS_NOT_NULL_CONST_ENCODING_PTR mozilla::NotNull<const mozilla::Encoding*>
+#define ENCODING_RS_NOT_NULL_CONST_ENCODING_PTR \
+  mozilla::NotNull<const mozilla::Encoding*>
 #define ENCODING_RS_ENCODER mozilla::Encoder
 #define ENCODING_RS_DECODER mozilla::Decoder
 
@@ -35,76 +36,48 @@ class Encoder;
 
 extern "C" {
 
-nsresult
-mozilla_encoding_decode_to_nsstring(mozilla::Encoding const** encoding,
-                                    uint8_t const* src,
-                                    size_t src_len,
-                                    nsAString* dst);
+nsresult mozilla_encoding_decode_to_nsstring(mozilla::Encoding const** encoding,
+                                             uint8_t const* src, size_t src_len,
+                                             nsAString* dst);
 
-nsresult
-mozilla_encoding_decode_to_nsstring_with_bom_removal(
-  mozilla::Encoding const* encoding,
-  uint8_t const* src,
-  size_t src_len,
-  nsAString* dst);
+nsresult mozilla_encoding_decode_to_nsstring_with_bom_removal(
+    mozilla::Encoding const* encoding, uint8_t const* src, size_t src_len,
+    nsAString* dst);
 
-nsresult
-mozilla_encoding_decode_to_nsstring_without_bom_handling(
-  mozilla::Encoding const* encoding,
-  uint8_t const* src,
-  size_t src_len,
-  nsAString* dst);
+nsresult mozilla_encoding_decode_to_nsstring_without_bom_handling(
+    mozilla::Encoding const* encoding, uint8_t const* src, size_t src_len,
+    nsAString* dst);
 
 nsresult
 mozilla_encoding_decode_to_nsstring_without_bom_handling_and_without_replacement(
-  mozilla::Encoding const* encoding,
-  uint8_t const* src,
-  size_t src_len,
-  nsAString* dst);
+    mozilla::Encoding const* encoding, uint8_t const* src, size_t src_len,
+    nsAString* dst);
 
-nsresult
-mozilla_encoding_encode_from_utf16(mozilla::Encoding const** encoding,
-                                   char16_t const* src,
-                                   size_t src_len,
-                                   nsACString* dst);
+nsresult mozilla_encoding_encode_from_utf16(mozilla::Encoding const** encoding,
+                                            char16_t const* src, size_t src_len,
+                                            nsACString* dst);
 
-nsresult
-mozilla_encoding_decode_to_nscstring(mozilla::Encoding const** encoding,
-                                     nsACString const* src,
-                                     nsACString* dst);
+nsresult mozilla_encoding_decode_to_nscstring(
+    mozilla::Encoding const** encoding, nsACString const* src, nsACString* dst);
 
-nsresult
-mozilla_encoding_decode_to_nscstring_with_bom_removal(
-  mozilla::Encoding const* encoding,
-  nsACString const* src,
-  nsACString* dst);
+nsresult mozilla_encoding_decode_to_nscstring_with_bom_removal(
+    mozilla::Encoding const* encoding, nsACString const* src, nsACString* dst);
 
-nsresult
-mozilla_encoding_decode_to_nscstring_without_bom_handling(
-  mozilla::Encoding const* encoding,
-  nsACString const* src,
-  nsACString* dst);
+nsresult mozilla_encoding_decode_to_nscstring_without_bom_handling(
+    mozilla::Encoding const* encoding, nsACString const* src, nsACString* dst);
 
-nsresult
-mozilla_encoding_decode_from_slice_to_nscstring_without_bom_handling(
-  mozilla::Encoding const* encoding,
-  uint8_t const* src,
-  size_t src_len,
-  nsACString* dst,
-  size_t already_validated);
+nsresult mozilla_encoding_decode_from_slice_to_nscstring_without_bom_handling(
+    mozilla::Encoding const* encoding, uint8_t const* src, size_t src_len,
+    nsACString* dst, size_t already_validated);
 
 nsresult
 mozilla_encoding_decode_to_nscstring_without_bom_handling_and_without_replacement(
-  mozilla::Encoding const* encoding,
-  nsACString const* src,
-  nsACString* dst);
+    mozilla::Encoding const* encoding, nsACString const* src, nsACString* dst);
 
-nsresult
-mozilla_encoding_encode_from_nscstring(mozilla::Encoding const** encoding,
-                                       nsACString const* src,
-                                       nsACString* dst);
+nsresult mozilla_encoding_encode_from_nscstring(
+    mozilla::Encoding const** encoding, nsACString const* src, nsACString* dst);
 
-} // extern "C"
+}  // extern "C"
 
 namespace mozilla {
 
@@ -176,9 +149,8 @@ const uint32_t kOutputFull = OUTPUT_FULL;
  * `const mozilla::Encoding*` in the C signature and
  * `*const encoding_rs::Encoding` is the corresponding Rust signature.
  */
-class Encoding final
-{
-public:
+class Encoding final {
+ public:
   /**
    * Implements the _get an encoding_ algorithm
    * (https://encoding.spec.whatwg.org/#concept-encoding-get).
@@ -193,18 +165,16 @@ public:
    * instead. When the action upon the method returning `nullptr` is not to
    * proceed with a fallback but to refuse processing,
    * `ForLabelNoReplacement()` is more appropriate.
-  */
-  static inline const Encoding* ForLabel(Span<const char> aLabel)
-  {
+   */
+  static inline const Encoding* ForLabel(Span<const char> aLabel) {
     return encoding_for_label(
-      reinterpret_cast<const uint8_t*>(aLabel.Elements()), aLabel.Length());
+        reinterpret_cast<const uint8_t*>(aLabel.Elements()), aLabel.Length());
   }
 
   /**
    * `nsAString` argument version. See above for docs.
    */
-  static inline const Encoding* ForLabel(const nsAString& aLabel)
-  {
+  static inline const Encoding* ForLabel(const nsAString& aLabel) {
     return Encoding::ForLabel(NS_ConvertUTF16toUTF8(aLabel));
   }
 
@@ -219,20 +189,19 @@ public:
    *
    * It is not OK to use this method when the action upon the method returning
    * `nullptr` is to use a fallback encoding (e.g. `WINDOWS_1252_ENCODING`). In
-   * such a case, the `ForLabel()` method should be used instead in order to avoid
-   * unsafe fallback for labels that `ForLabel()` maps to `REPLACEMENT_ENCODING`.
+   * such a case, the `ForLabel()` method should be used instead in order to
+   * avoid unsafe fallback for labels that `ForLabel()` maps to
+   * `REPLACEMENT_ENCODING`.
    */
-  static inline const Encoding* ForLabelNoReplacement(Span<const char> aLabel)
-  {
+  static inline const Encoding* ForLabelNoReplacement(Span<const char> aLabel) {
     return encoding_for_label_no_replacement(
-      reinterpret_cast<const uint8_t*>(aLabel.Elements()), aLabel.Length());
+        reinterpret_cast<const uint8_t*>(aLabel.Elements()), aLabel.Length());
   }
 
   /**
    * `nsAString` argument version. See above for docs.
    */
-  static inline const Encoding* ForLabelNoReplacement(const nsAString& aLabel)
-  {
+  static inline const Encoding* ForLabelNoReplacement(const nsAString& aLabel) {
     return Encoding::ForLabelNoReplacement(NS_ConvertUTF16toUTF8(aLabel));
   }
 
@@ -248,8 +217,7 @@ public:
    * UTF-8, UTF-16LE or UTF-16BE BOM or `MakeTuple(nullptr, 0)` otherwise.
    */
   static inline Tuple<const Encoding*, size_t> ForBOM(
-    Span<const uint8_t> aBuffer)
-  {
+      Span<const uint8_t> aBuffer) {
     size_t len = aBuffer.Length();
     const Encoding* encoding = encoding_for_bom(aBuffer.Elements(), &len);
     return MakeTuple(encoding, len);
@@ -261,20 +229,18 @@ public:
    * This name is appropriate to return as-is from the DOM
    * `document.characterSet` property.
    */
-  inline void Name(nsACString& aName) const
-  {
+  inline void Name(nsACString& aName) const {
     aName.SetLength(ENCODING_NAME_MAX_LENGTH);
     size_t length =
-      encoding_name(this, reinterpret_cast<uint8_t*>(aName.BeginWriting()));
-    aName.SetLength(length); // truncation is the 64-bit case is OK
+        encoding_name(this, reinterpret_cast<uint8_t*>(aName.BeginWriting()));
+    aName.SetLength(length);  // truncation is the 64-bit case is OK
   }
 
   /**
    * Checks whether the _output encoding_ of this encoding can encode every
    * Unicode code point. (Only true if the output encoding is UTF-8.)
    */
-  inline bool CanEncodeEverything() const
-  {
+  inline bool CanEncodeEverything() const {
     return encoding_can_encode_everything(this);
   }
 
@@ -282,8 +248,7 @@ public:
    * Checks whether the bytes 0x00...0x7F map exclusively to the characters
    * U+0000...U+007F and vice versa.
    */
-  inline bool IsAsciiCompatible() const
-  {
+  inline bool IsAsciiCompatible() const {
     return encoding_is_ascii_compatible(this);
   }
 
@@ -291,8 +256,7 @@ public:
    * Returns the _output encoding_ of this encoding. This is UTF-8 for
    * UTF-16BE, UTF-16LE and replacement and the encoding itself otherwise.
    */
-  inline NotNull<const mozilla::Encoding*> OutputEncoding() const
-  {
+  inline NotNull<const mozilla::Encoding*> OutputEncoding() const {
     return WrapNotNull(encoding_output_encoding(this));
   }
 
@@ -325,9 +289,7 @@ public:
    * when decoding segmented input.
    */
   inline Tuple<nsresult, NotNull<const mozilla::Encoding*>> Decode(
-    const nsACString& aBytes,
-    nsACString& aOut) const
-  {
+      const nsACString& aBytes, nsACString& aOut) const {
     const Encoding* encoding = this;
     const nsACString* bytes = &aBytes;
     nsACString* out = &aOut;
@@ -363,12 +325,10 @@ public:
    * when decoding segmented input.
    */
   inline Tuple<nsresult, NotNull<const mozilla::Encoding*>> Decode(
-    Span<const uint8_t> aBytes,
-    nsAString& aOut) const
-  {
+      Span<const uint8_t> aBytes, nsAString& aOut) const {
     const Encoding* encoding = this;
     nsresult rv = mozilla_encoding_decode_to_nsstring(
-      &encoding, aBytes.Elements(), aBytes.Length(), &aOut);
+        &encoding, aBytes.Elements(), aBytes.Length(), &aOut);
     return MakeTuple(rv, WrapNotNull(encoding));
   }
 
@@ -398,17 +358,16 @@ public:
    * `NewDecoderWithBOMRemoval()` when decoding segmented input.
    */
   inline nsresult DecodeWithBOMRemoval(const nsACString& aBytes,
-                                       nsACString& aOut) const
-  {
+                                       nsACString& aOut) const {
     const nsACString* bytes = &aBytes;
     nsACString* out = &aOut;
     if (bytes == out) {
       nsAutoCString temp(aBytes);
-      return mozilla_encoding_decode_to_nscstring_with_bom_removal(
-        this, &temp, out);
+      return mozilla_encoding_decode_to_nscstring_with_bom_removal(this, &temp,
+                                                                   out);
     }
-    return mozilla_encoding_decode_to_nscstring_with_bom_removal(
-      this, bytes, out);
+    return mozilla_encoding_decode_to_nscstring_with_bom_removal(this, bytes,
+                                                                 out);
   }
 
   /**
@@ -430,10 +389,9 @@ public:
    * `NewDecoderWithBOMRemoval()` when decoding segmented input.
    */
   inline nsresult DecodeWithBOMRemoval(Span<const uint8_t> aBytes,
-                                       nsAString& aOut) const
-  {
+                                       nsAString& aOut) const {
     return mozilla_encoding_decode_to_nsstring_with_bom_removal(
-      this, aBytes.Elements(), aBytes.Length(), &aOut);
+        this, aBytes.Elements(), aBytes.Length(), &aOut);
   }
 
   /**
@@ -462,17 +420,16 @@ public:
    * `NewDecoderWithoutBOMHandling()` when decoding segmented input.
    */
   inline nsresult DecodeWithoutBOMHandling(const nsACString& aBytes,
-                                           nsACString& aOut) const
-  {
+                                           nsACString& aOut) const {
     const nsACString* bytes = &aBytes;
     nsACString* out = &aOut;
     if (bytes == out) {
       nsAutoCString temp(aBytes);
       return mozilla_encoding_decode_to_nscstring_without_bom_handling(
-        this, &temp, out);
+          this, &temp, out);
     }
     return mozilla_encoding_decode_to_nscstring_without_bom_handling(
-      this, bytes, out);
+        this, bytes, out);
   }
 
   /**
@@ -494,10 +451,9 @@ public:
    * `NewDecoderWithoutBOMHandling()` when decoding segmented input.
    */
   inline nsresult DecodeWithoutBOMHandling(Span<const uint8_t> aBytes,
-                                           nsAString& aOut) const
-  {
+                                           nsAString& aOut) const {
     return mozilla_encoding_decode_to_nsstring_without_bom_handling(
-      this, aBytes.Elements(), aBytes.Length(), &aOut);
+        this, aBytes.Elements(), aBytes.Length(), &aOut);
   }
 
   /**
@@ -526,18 +482,16 @@ public:
    * `NewDecoderWithoutBOMHandling()` when decoding segmented input.
    */
   inline nsresult DecodeWithoutBOMHandlingAndWithoutReplacement(
-    const nsACString& aBytes,
-    nsACString& aOut) const
-  {
+      const nsACString& aBytes, nsACString& aOut) const {
     const nsACString* bytes = &aBytes;
     nsACString* out = &aOut;
     if (bytes == out) {
       nsAutoCString temp(aBytes);
       return mozilla_encoding_decode_to_nscstring_without_bom_handling_and_without_replacement(
-        this, &temp, out);
+          this, &temp, out);
     }
     return mozilla_encoding_decode_to_nscstring_without_bom_handling_and_without_replacement(
-      this, bytes, out);
+        this, bytes, out);
   }
 
   /**
@@ -569,10 +523,9 @@ public:
    */
   inline nsresult DecodeWithoutBOMHandling(Span<const uint8_t> aBytes,
                                            nsACString& aOut,
-                                           size_t aAlreadyValidated) const
-  {
+                                           size_t aAlreadyValidated) const {
     return mozilla_encoding_decode_from_slice_to_nscstring_without_bom_handling(
-      this, aBytes.Elements(), aBytes.Length(), &aOut, aAlreadyValidated);
+        this, aBytes.Elements(), aBytes.Length(), &aOut, aAlreadyValidated);
   }
 
   /**
@@ -594,11 +547,9 @@ public:
    * `NewDecoderWithoutBOMHandling()` when decoding segmented input.
    */
   inline nsresult DecodeWithoutBOMHandlingAndWithoutReplacement(
-    Span<const uint8_t> aBytes,
-    nsAString& aOut) const
-  {
+      Span<const uint8_t> aBytes, nsAString& aOut) const {
     return mozilla_encoding_decode_to_nsstring_without_bom_handling_and_without_replacement(
-      this, aBytes.Elements(), aBytes.Length(), &aOut);
+        this, aBytes.Elements(), aBytes.Length(), &aOut);
   }
 
   /**
@@ -631,9 +582,7 @@ public:
    * when encoding segmented output.
    */
   inline Tuple<nsresult, NotNull<const mozilla::Encoding*>> Encode(
-    const nsACString& aString,
-    nsACString& aOut) const
-  {
+      const nsACString& aString, nsACString& aOut) const {
     const Encoding* encoding = this;
     const nsACString* string = &aString;
     nsACString* out = &aOut;
@@ -669,12 +618,10 @@ public:
    * when encoding segmented output.
    */
   inline Tuple<nsresult, NotNull<const mozilla::Encoding*>> Encode(
-    Span<const char16_t> aString,
-    nsACString& aOut) const
-  {
+      Span<const char16_t> aString, nsACString& aOut) const {
     const Encoding* encoding = this;
     nsresult rv = mozilla_encoding_encode_from_utf16(
-      &encoding, aString.Elements(), aString.Length(), &aOut);
+        &encoding, aString.Elements(), aString.Length(), &aOut);
     return MakeTuple(rv, WrapNotNull(encoding));
   }
 
@@ -684,8 +631,7 @@ public:
    * BOM sniffing may cause the returned decoder to morph into a decoder
    * for UTF-8, UTF-16LE or UTF-16BE instead of this encoding.
    */
-  inline UniquePtr<Decoder> NewDecoder() const
-  {
+  inline UniquePtr<Decoder> NewDecoder() const {
     UniquePtr<Decoder> decoder(encoding_new_decoder(this));
     return decoder;
   }
@@ -697,8 +643,7 @@ public:
    * BOM sniffing may cause the returned decoder to morph into a decoder
    * for UTF-8, UTF-16LE or UTF-16BE instead of this encoding.
    */
-  inline void NewDecoderInto(Decoder& aDecoder) const
-  {
+  inline void NewDecoderInto(Decoder& aDecoder) const {
     encoding_new_decoder_into(this, &aDecoder);
   }
 
@@ -711,8 +656,7 @@ public:
    * (potentially malformed) input to the decoding algorithm for this
    * encoding.
    */
-  inline UniquePtr<Decoder> NewDecoderWithBOMRemoval() const
-  {
+  inline UniquePtr<Decoder> NewDecoderWithBOMRemoval() const {
     UniquePtr<Decoder> decoder(encoding_new_decoder_with_bom_removal(this));
     return decoder;
   }
@@ -727,8 +671,7 @@ public:
    * (potentially malformed) input to the decoding algorithm for this
    * encoding.
    */
-  inline void NewDecoderWithBOMRemovalInto(Decoder& aDecoder) const
-  {
+  inline void NewDecoderWithBOMRemovalInto(Decoder& aDecoder) const {
     encoding_new_decoder_with_bom_removal_into(this, &aDecoder);
   }
 
@@ -743,8 +686,7 @@ public:
    * removed the BOM, the caller should use `NewDecoderWithBOMRemoval()`
    * instead of this method to cause the BOM to be removed.
    */
-  inline UniquePtr<Decoder> NewDecoderWithoutBOMHandling() const
-  {
+  inline UniquePtr<Decoder> NewDecoderWithoutBOMHandling() const {
     UniquePtr<Decoder> decoder(encoding_new_decoder_without_bom_handling(this));
     return decoder;
   }
@@ -761,16 +703,14 @@ public:
    * removed the BOM, the caller should use `NewDecoderWithBOMRemovalInto()`
    * instead of this method to cause the BOM to be removed.
    */
-  inline void NewDecoderWithoutBOMHandlingInto(Decoder& aDecoder) const
-  {
+  inline void NewDecoderWithoutBOMHandlingInto(Decoder& aDecoder) const {
     encoding_new_decoder_without_bom_handling_into(this, &aDecoder);
   }
 
   /**
    * Instantiates a new encoder for the output encoding of this encoding.
    */
-  inline UniquePtr<Encoder> NewEncoder() const
-  {
+  inline UniquePtr<Encoder> NewEncoder() const {
     UniquePtr<Encoder> encoder(encoding_new_encoder(this));
     return encoder;
   }
@@ -779,8 +719,7 @@ public:
    * Instantiates a new encoder for the output encoding of this encoding
    * into memory occupied by a previously-instantiated encoder.
    */
-  inline void NewEncoderInto(Encoder& aEncoder) const
-  {
+  inline void NewEncoderInto(Encoder& aEncoder) const {
     encoding_new_encoder_into(this, &aEncoder);
   }
 
@@ -790,8 +729,7 @@ public:
    * Returns the index of the first byte that makes the input malformed as
    * UTF-8 or the length of the input if the input is entirely valid.
    */
-  static inline size_t UTF8ValidUpTo(Span<const uint8_t> aBuffer)
-  {
+  static inline size_t UTF8ValidUpTo(Span<const uint8_t> aBuffer) {
     return encoding_utf8_valid_up_to(aBuffer.Elements(), aBuffer.Length());
   }
 
@@ -801,8 +739,7 @@ public:
    * Returns the index of the first byte that makes the input malformed as
    * ASCII or the length of the input if the input is entirely valid.
    */
-  static inline size_t ASCIIValidUpTo(Span<const uint8_t> aBuffer)
-  {
+  static inline size_t ASCIIValidUpTo(Span<const uint8_t> aBuffer) {
     return encoding_ascii_valid_up_to(aBuffer.Elements(), aBuffer.Length());
   }
 
@@ -814,18 +751,16 @@ public:
    * input if the input is entirely representable in the ASCII state of
    * ISO-2022-JP.
    */
-  static inline size_t ISO2022JPASCIIValidUpTo(Span<const uint8_t> aBuffer)
-  {
+  static inline size_t ISO2022JPASCIIValidUpTo(Span<const uint8_t> aBuffer) {
     return encoding_iso_2022_jp_ascii_valid_up_to(aBuffer.Elements(),
                                                   aBuffer.Length());
   }
 
-private:
+ private:
   Encoding() = delete;
   Encoding(const Encoding&) = delete;
   Encoding& operator=(const Encoding&) = delete;
   ~Encoding() = delete;
-
 };
 
 /**
@@ -923,12 +858,10 @@ private:
  * converting with a fixed-size output buffer, it generally makes sense to
  * make the buffer fairly large (e.g. couple of kilobytes).
  */
-class Decoder final
-{
-public:
+class Decoder final {
+ public:
   ~Decoder() {}
-  static void operator delete(void* aDecoder)
-  {
+  static void operator delete(void* aDecoder) {
     decoder_free(reinterpret_cast<Decoder*>(aDecoder));
   }
 
@@ -938,8 +871,7 @@ public:
    * BOM sniffing can change the return value of this method during the life
    * of the decoder.
    */
-  inline NotNull<const mozilla::Encoding*> Encoding() const
-  {
+  inline NotNull<const mozilla::Encoding*> Encoding() const {
     return WrapNotNull(decoder_encoding(this));
   }
 
@@ -952,8 +884,7 @@ public:
    * errors handled by outputting a REPLACEMENT CHARACTER for each malformed
    * sequence.
    */
-  inline CheckedInt<size_t> MaxUTF8BufferLength(size_t aByteLength) const
-  {
+  inline CheckedInt<size_t> MaxUTF8BufferLength(size_t aByteLength) const {
     CheckedInt<size_t> max(decoder_max_utf8_buffer_length(this, aByteLength));
     if (max.value() == MaxValue<size_t>::value) {
       // Mark invalid by overflowing
@@ -975,10 +906,9 @@ public:
    * Use `MaxUTF8BufferLength()` for that case.
    */
   inline CheckedInt<size_t> MaxUTF8BufferLengthWithoutReplacement(
-    size_t aByteLength) const
-  {
+      size_t aByteLength) const {
     CheckedInt<size_t> max(
-      decoder_max_utf8_buffer_length_without_replacement(this, aByteLength));
+        decoder_max_utf8_buffer_length_without_replacement(this, aByteLength));
     if (max.value() == MaxValue<size_t>::value) {
       // Mark invalid by overflowing
       max++;
@@ -994,19 +924,14 @@ public:
    * See the documentation of the class for documentation for `Decode*`
    * methods collectively.
    */
-  inline Tuple<uint32_t, size_t, size_t, bool>
-  DecodeToUTF8(Span<const uint8_t> aSrc, Span<uint8_t> aDst, bool aLast)
-  {
+  inline Tuple<uint32_t, size_t, size_t, bool> DecodeToUTF8(
+      Span<const uint8_t> aSrc, Span<uint8_t> aDst, bool aLast) {
     size_t srcRead = aSrc.Length();
     size_t dstWritten = aDst.Length();
     bool hadReplacements;
-    uint32_t result = decoder_decode_to_utf8(this,
-                                             aSrc.Elements(),
-                                             &srcRead,
-                                             aDst.Elements(),
-                                             &dstWritten,
-                                             aLast,
-                                             &hadReplacements);
+    uint32_t result =
+        decoder_decode_to_utf8(this, aSrc.Elements(), &srcRead, aDst.Elements(),
+                               &dstWritten, aLast, &hadReplacements);
     return MakeTuple(result, srcRead, dstWritten, hadReplacements);
   }
 
@@ -1017,14 +942,11 @@ public:
    * methods collectively.
    */
   inline Tuple<uint32_t, size_t, size_t> DecodeToUTF8WithoutReplacement(
-    Span<const uint8_t> aSrc,
-    Span<uint8_t> aDst,
-    bool aLast)
-  {
+      Span<const uint8_t> aSrc, Span<uint8_t> aDst, bool aLast) {
     size_t srcRead = aSrc.Length();
     size_t dstWritten = aDst.Length();
     uint32_t result = decoder_decode_to_utf8_without_replacement(
-      this, aSrc.Elements(), &srcRead, aDst.Elements(), &dstWritten, aLast);
+        this, aSrc.Elements(), &srcRead, aDst.Elements(), &dstWritten, aLast);
     return MakeTuple(result, srcRead, dstWritten);
   }
 
@@ -1039,8 +961,7 @@ public:
    * return value of this method applies also in the
    * `_without_replacement` case.
    */
-  inline CheckedInt<size_t> MaxUTF16BufferLength(size_t aU16Length) const
-  {
+  inline CheckedInt<size_t> MaxUTF16BufferLength(size_t aU16Length) const {
     CheckedInt<size_t> max(decoder_max_utf16_buffer_length(this, aU16Length));
     if (max.value() == MaxValue<size_t>::value) {
       // Mark invalid by overflowing
@@ -1057,19 +978,14 @@ public:
    * See the documentation of the class for documentation for `Decode*`
    * methods collectively.
    */
-  inline Tuple<uint32_t, size_t, size_t, bool>
-  DecodeToUTF16(Span<const uint8_t> aSrc, Span<char16_t> aDst, bool aLast)
-  {
+  inline Tuple<uint32_t, size_t, size_t, bool> DecodeToUTF16(
+      Span<const uint8_t> aSrc, Span<char16_t> aDst, bool aLast) {
     size_t srcRead = aSrc.Length();
     size_t dstWritten = aDst.Length();
     bool hadReplacements;
-    uint32_t result = decoder_decode_to_utf16(this,
-                                              aSrc.Elements(),
-                                              &srcRead,
-                                              aDst.Elements(),
-                                              &dstWritten,
-                                              aLast,
-                                              &hadReplacements);
+    uint32_t result = decoder_decode_to_utf16(this, aSrc.Elements(), &srcRead,
+                                              aDst.Elements(), &dstWritten,
+                                              aLast, &hadReplacements);
     return MakeTuple(result, srcRead, dstWritten, hadReplacements);
   }
 
@@ -1080,18 +996,15 @@ public:
    * methods collectively.
    */
   inline Tuple<uint32_t, size_t, size_t> DecodeToUTF16WithoutReplacement(
-    Span<const uint8_t> aSrc,
-    Span<char16_t> aDst,
-    bool aLast)
-  {
+      Span<const uint8_t> aSrc, Span<char16_t> aDst, bool aLast) {
     size_t srcRead = aSrc.Length();
     size_t dstWritten = aDst.Length();
     uint32_t result = decoder_decode_to_utf16_without_replacement(
-      this, aSrc.Elements(), &srcRead, aDst.Elements(), &dstWritten, aLast);
+        this, aSrc.Elements(), &srcRead, aDst.Elements(), &dstWritten, aLast);
     return MakeTuple(result, srcRead, dstWritten);
   }
 
-private:
+ private:
   Decoder() = delete;
   Decoder(const Decoder&) = delete;
   Decoder& operator=(const Decoder&) = delete;
@@ -1201,21 +1114,18 @@ private:
  * converting with a fixed-size output buffer, it generally makes sense to
  * make the buffer fairly large (e.g. couple of kilobytes).
  */
-class Encoder final
-{
-public:
+class Encoder final {
+ public:
   ~Encoder() {}
 
-  static void operator delete(void* aEncoder)
-  {
+  static void operator delete(void* aEncoder) {
     encoder_free(reinterpret_cast<Encoder*>(aEncoder));
   }
 
   /**
    * The `Encoding` this `Encoder` is for.
    */
-  inline NotNull<const mozilla::Encoding*> Encoding() const
-  {
+  inline NotNull<const mozilla::Encoding*> Encoding() const {
     return WrapNotNull(encoder_encoding(this));
   }
 
@@ -1223,8 +1133,7 @@ public:
    * Returns `true` if this is an ISO-2022-JP encoder that's not in the
    * ASCII state and `false` otherwise.
    */
-  inline bool HasPendingState() const
-  {
+  inline bool HasPendingState() const {
     return encoder_has_pending_state(this);
   }
 
@@ -1238,10 +1147,10 @@ public:
    * the input.
    */
   inline CheckedInt<size_t> MaxBufferLengthFromUTF8IfNoUnmappables(
-    size_t aByteLength) const
-  {
+      size_t aByteLength) const {
     CheckedInt<size_t> max(
-      encoder_max_buffer_length_from_utf8_if_no_unmappables(this, aByteLength));
+        encoder_max_buffer_length_from_utf8_if_no_unmappables(this,
+                                                              aByteLength));
     if (max.value() == MaxValue<size_t>::value) {
       // Mark invalid by overflowing
       max++;
@@ -1259,11 +1168,10 @@ public:
    * additional input code units.
    */
   inline CheckedInt<size_t> MaxBufferLengthFromUTF8WithoutReplacement(
-    size_t aByteLength) const
-  {
+      size_t aByteLength) const {
     CheckedInt<size_t> max(
-      encoder_max_buffer_length_from_utf8_without_replacement(this,
-                                                              aByteLength));
+        encoder_max_buffer_length_from_utf8_without_replacement(this,
+                                                                aByteLength));
     if (max.value() == MaxValue<size_t>::value) {
       // Mark invalid by overflowing
       max++;
@@ -1283,19 +1191,14 @@ public:
    * The input ***MUST*** be valid UTF-8 or bad things happen! Unless
    * absolutely sure, use `Encoding::UTF8ValidUpTo()` to check.
    */
-  inline Tuple<uint32_t, size_t, size_t, bool>
-  EncodeFromUTF8(Span<const uint8_t> aSrc, Span<uint8_t> aDst, bool aLast)
-  {
+  inline Tuple<uint32_t, size_t, size_t, bool> EncodeFromUTF8(
+      Span<const uint8_t> aSrc, Span<uint8_t> aDst, bool aLast) {
     size_t srcRead = aSrc.Length();
     size_t dstWritten = aDst.Length();
     bool hadReplacements;
-    uint32_t result = encoder_encode_from_utf8(this,
-                                               aSrc.Elements(),
-                                               &srcRead,
-                                               aDst.Elements(),
-                                               &dstWritten,
-                                               aLast,
-                                               &hadReplacements);
+    uint32_t result = encoder_encode_from_utf8(this, aSrc.Elements(), &srcRead,
+                                               aDst.Elements(), &dstWritten,
+                                               aLast, &hadReplacements);
     return MakeTuple(result, srcRead, dstWritten, hadReplacements);
   }
 
@@ -1310,14 +1213,11 @@ public:
    * absolutely sure, use `Encoding::UTF8ValidUpTo()` to check.
    */
   inline Tuple<uint32_t, size_t, size_t> EncodeFromUTF8WithoutReplacement(
-    Span<const uint8_t> aSrc,
-    Span<uint8_t> aDst,
-    bool aLast)
-  {
+      Span<const uint8_t> aSrc, Span<uint8_t> aDst, bool aLast) {
     size_t srcRead = aSrc.Length();
     size_t dstWritten = aDst.Length();
     uint32_t result = encoder_encode_from_utf8_without_replacement(
-      this, aSrc.Elements(), &srcRead, aDst.Elements(), &dstWritten, aLast);
+        this, aSrc.Elements(), &srcRead, aDst.Elements(), &dstWritten, aLast);
     return MakeTuple(result, srcRead, dstWritten);
   }
 
@@ -1331,10 +1231,10 @@ public:
    * the input.
    */
   inline CheckedInt<size_t> MaxBufferLengthFromUTF16IfNoUnmappables(
-    size_t aU16Length) const
-  {
+      size_t aU16Length) const {
     CheckedInt<size_t> max(
-      encoder_max_buffer_length_from_utf16_if_no_unmappables(this, aU16Length));
+        encoder_max_buffer_length_from_utf16_if_no_unmappables(this,
+                                                               aU16Length));
     if (max.value() == MaxValue<size_t>::value) {
       // Mark invalid by overflowing
       max++;
@@ -1352,11 +1252,10 @@ public:
    * additional input code units.
    */
   inline CheckedInt<size_t> MaxBufferLengthFromUTF16WithoutReplacement(
-    size_t aU16Length) const
-  {
+      size_t aU16Length) const {
     CheckedInt<size_t> max(
-      encoder_max_buffer_length_from_utf16_without_replacement(this,
-                                                               aU16Length));
+        encoder_max_buffer_length_from_utf16_without_replacement(this,
+                                                                 aU16Length));
     if (max.value() == MaxValue<size_t>::value) {
       // Mark invalid by overflowing
       max++;
@@ -1372,19 +1271,14 @@ public:
    * See the documentation of the class for documentation for `Encode*`
    * methods collectively.
    */
-  inline Tuple<uint32_t, size_t, size_t, bool>
-  EncodeFromUTF16(Span<const char16_t> aSrc, Span<uint8_t> aDst, bool aLast)
-  {
+  inline Tuple<uint32_t, size_t, size_t, bool> EncodeFromUTF16(
+      Span<const char16_t> aSrc, Span<uint8_t> aDst, bool aLast) {
     size_t srcRead = aSrc.Length();
     size_t dstWritten = aDst.Length();
     bool hadReplacements;
-    uint32_t result = encoder_encode_from_utf16(this,
-                                                aSrc.Elements(),
-                                                &srcRead,
-                                                aDst.Elements(),
-                                                &dstWritten,
-                                                aLast,
-                                                &hadReplacements);
+    uint32_t result = encoder_encode_from_utf16(this, aSrc.Elements(), &srcRead,
+                                                aDst.Elements(), &dstWritten,
+                                                aLast, &hadReplacements);
     return MakeTuple(result, srcRead, dstWritten, hadReplacements);
   }
 
@@ -1395,23 +1289,20 @@ public:
    * methods collectively.
    */
   inline Tuple<uint32_t, size_t, size_t> EncodeFromUTF16WithoutReplacement(
-    Span<const char16_t> aSrc,
-    Span<uint8_t> aDst,
-    bool aLast)
-  {
+      Span<const char16_t> aSrc, Span<uint8_t> aDst, bool aLast) {
     size_t srcRead = aSrc.Length();
     size_t dstWritten = aDst.Length();
     uint32_t result = encoder_encode_from_utf16_without_replacement(
-      this, aSrc.Elements(), &srcRead, aDst.Elements(), &dstWritten, aLast);
+        this, aSrc.Elements(), &srcRead, aDst.Elements(), &dstWritten, aLast);
     return MakeTuple(result, srcRead, dstWritten);
   }
 
-private:
+ private:
   Encoder() = delete;
   Encoder(const Encoder&) = delete;
   Encoder& operator=(const Encoder&) = delete;
 };
 
-}; // namespace mozilla
+};  // namespace mozilla
 
-#endif // mozilla_Encoding_h
+#endif  // mozilla_Encoding_h

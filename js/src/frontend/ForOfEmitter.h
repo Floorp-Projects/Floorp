@@ -38,83 +38,83 @@ class EmitterScope;
 //     emit(body);
 //     forOf.emitEnd(Some(offset_of_iterated));
 //
-class MOZ_STACK_CLASS ForOfEmitter
-{
-    BytecodeEmitter* bce_;
+class MOZ_STACK_CLASS ForOfEmitter {
+  BytecodeEmitter* bce_;
 
-    // The source note index for SRC_FOR_OF.
-    unsigned noteIndex_ = 0;
-
-#ifdef DEBUG
-    // The stack depth before emitting IteratorNext code inside loop.
-    int32_t loopDepth_ = 0;
-#endif
-
-    bool allowSelfHostedIter_;
-    IteratorKind iterKind_;
-
-    // Jump from into JSOP_LOOPENTRY.
-    JumpList initialJump_;
-
-    mozilla::Maybe<ForOfLoopControl> loopInfo_;
-
-    // The lexical scope to be freshened for each iteration.
-    // See the comment in `emitBody` for more details.
-    const EmitterScope* headLexicalEmitterScope_;
-
-    // Cache for the iterated value.
-    // (The cache for the iteration body is inside `loopInfo_`)
-    mozilla::Maybe<TDZCheckCache> tdzCacheForIteratedValue_;
+  // The source note index for SRC_FOR_OF.
+  unsigned noteIndex_ = 0;
 
 #ifdef DEBUG
-    // The state of this emitter.
-    //
-    // +-------+ emitIterated +----------+ emitInitialize +------------+
-    // | Start |------------->| Iterated |--------------->| Initialize |-+
-    // +-------+              +----------+                +------------+ |
-    //                                                                   |
-    //                                +----------------------------------+
-    //                                |
-    //                                | emitBody +------+ emitEnd  +-----+
-    //                                +----------| Body |--------->| End |
-    //                                           +------+          +-----+
-    enum class State {
-        // The initial state.
-        Start,
-
-        // After calling emitIterated.
-        Iterated,
-
-        // After calling emitInitialize.
-        Initialize,
-
-        // After calling emitBody.
-        Body,
-
-        // After calling emitEnd.
-        End
-    };
-    State state_ = State::Start;
+  // The stack depth before emitting IteratorNext code inside loop.
+  int32_t loopDepth_ = 0;
 #endif
 
-  public:
-    ForOfEmitter(BytecodeEmitter* bce, const EmitterScope* headLexicalEmitterScope,
-                 bool allowSelfHostedIter, IteratorKind iterKind);
+  bool allowSelfHostedIter_;
+  IteratorKind iterKind_;
 
-    // The offset in the source code for each character below:
-    //
-    //   for ( var x of obj ) { ... }
-    //   ^              ^
-    //   |              |
-    //   |              iteratedPos
-    //   |
-    //   forPos
-    //
-    // Can be Nothing() if not available.
-    MOZ_MUST_USE bool emitIterated();
-    MOZ_MUST_USE bool emitInitialize(const mozilla::Maybe<uint32_t>& forPos);
-    MOZ_MUST_USE bool emitBody();
-    MOZ_MUST_USE bool emitEnd(const mozilla::Maybe<uint32_t>& iteratedPos);
+  // Jump from into JSOP_LOOPENTRY.
+  JumpList initialJump_;
+
+  mozilla::Maybe<ForOfLoopControl> loopInfo_;
+
+  // The lexical scope to be freshened for each iteration.
+  // See the comment in `emitBody` for more details.
+  const EmitterScope* headLexicalEmitterScope_;
+
+  // Cache for the iterated value.
+  // (The cache for the iteration body is inside `loopInfo_`)
+  mozilla::Maybe<TDZCheckCache> tdzCacheForIteratedValue_;
+
+#ifdef DEBUG
+  // The state of this emitter.
+  //
+  // +-------+ emitIterated +----------+ emitInitialize +------------+
+  // | Start |------------->| Iterated |--------------->| Initialize |-+
+  // +-------+              +----------+                +------------+ |
+  //                                                                   |
+  //                                +----------------------------------+
+  //                                |
+  //                                | emitBody +------+ emitEnd  +-----+
+  //                                +----------| Body |--------->| End |
+  //                                           +------+          +-----+
+  enum class State {
+    // The initial state.
+    Start,
+
+    // After calling emitIterated.
+    Iterated,
+
+    // After calling emitInitialize.
+    Initialize,
+
+    // After calling emitBody.
+    Body,
+
+    // After calling emitEnd.
+    End
+  };
+  State state_ = State::Start;
+#endif
+
+ public:
+  ForOfEmitter(BytecodeEmitter* bce,
+               const EmitterScope* headLexicalEmitterScope,
+               bool allowSelfHostedIter, IteratorKind iterKind);
+
+  // The offset in the source code for each character below:
+  //
+  //   for ( var x of obj ) { ... }
+  //   ^              ^
+  //   |              |
+  //   |              iteratedPos
+  //   |
+  //   forPos
+  //
+  // Can be Nothing() if not available.
+  MOZ_MUST_USE bool emitIterated();
+  MOZ_MUST_USE bool emitInitialize(const mozilla::Maybe<uint32_t>& forPos);
+  MOZ_MUST_USE bool emitBody();
+  MOZ_MUST_USE bool emitEnd(const mozilla::Maybe<uint32_t>& iteratedPos);
 };
 
 } /* namespace frontend */

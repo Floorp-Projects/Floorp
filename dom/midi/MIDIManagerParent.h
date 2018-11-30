@@ -18,19 +18,19 @@ namespace dom {
  * to shut down services when all MIDIManagers are gone.
  *
  */
-class MIDIManagerParent final : public PMIDIManagerParent
-{
-public:
+class MIDIManagerParent final : public PMIDIManagerParent {
+ public:
   NS_INLINE_DECL_REFCOUNTING(MIDIManagerParent);
   MIDIManagerParent() = default;
   mozilla::ipc::IPCResult RecvShutdown() override;
   void Teardown();
   void ActorDestroy(ActorDestroyReason aWhy) override;
-private:
+
+ private:
   ~MIDIManagerParent() = default;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MIDIManagerParent_h
+#endif  // mozilla_dom_MIDIManagerParent_h

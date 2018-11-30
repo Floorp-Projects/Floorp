@@ -29,20 +29,16 @@ class nsHTMLStyleSheet;
 class nsRuleWalker;
 class nsMappedAttributeElement;
 
-class AttrArray
-{
+class AttrArray {
   typedef mozilla::dom::BorrowedAttrInfo BorrowedAttrInfo;
-public:
+
+ public:
   AttrArray() = default;
   ~AttrArray() = default;
 
-  bool HasAttrs() const
-  {
-    return NonMappedAttrCount() || MappedAttrCount();
-  }
+  bool HasAttrs() const { return NonMappedAttrCount() || MappedAttrCount(); }
 
-  uint32_t AttrCount() const
-  {
+  uint32_t AttrCount() const {
     return NonMappedAttrCount() + MappedAttrCount();
   }
 
@@ -79,7 +75,8 @@ public:
   const nsAttrName* GetSafeAttrNameAt(uint32_t aPos) const;
 
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
-  int32_t IndexOfAttr(const nsAtom* aLocalName, int32_t aNamespaceID = kNameSpaceID_None) const;
+  int32_t IndexOfAttr(const nsAtom* aLocalName,
+                      int32_t aNamespaceID = kNameSpaceID_None) const;
 
   // SetAndSwapMappedAttr swaps the current attribute value with aValue.
   // If the attribute was unset, an empty value will be swapped into aValue
@@ -87,8 +84,7 @@ public:
   // true.
   nsresult SetAndSwapMappedAttr(nsAtom* aLocalName, nsAttrValue& aValue,
                                 nsMappedAttributeElement* aContent,
-                                nsHTMLStyleSheet* aSheet,
-                                bool* aHadValue);
+                                nsHTMLStyleSheet* aSheet, bool* aHadValue);
   nsresult SetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet) {
     if (!mImpl || !mImpl->mMappedAttrs) {
       return NS_OK;
@@ -99,8 +95,7 @@ public:
   // Update the rule mapping function on our mapped attributes, if we have any.
   // We take a nsMappedAttributeElement, not a nsMapRuleToAttributesFunc,
   // because the latter is defined in a header we can't include here.
-  nsresult UpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement)
-  {
+  nsresult UpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement) {
     if (!mImpl || !mImpl->mMappedAttrs) {
       return NS_OK;
     }
@@ -110,14 +105,12 @@ public:
   void Compact();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-  bool HasMappedAttrs() const
-  {
-    return MappedAttrCount();
-  }
+  bool HasMappedAttrs() const { return MappedAttrCount(); }
   const nsMappedAttributes* GetMapped() const;
 
   // Force this to have mapped attributes, even if those attributes are empty.
-  nsresult ForceMapped(nsMappedAttributeElement* aContent, nsIDocument* aDocument);
+  nsresult ForceMapped(nsMappedAttributeElement* aContent,
+                       nsIDocument* aDocument);
 
   // Clear the servo declaration block on the mapped attributes, if any
   // Will assert off main thread
@@ -127,34 +120,28 @@ public:
   // unmapped attributes of |aOther|.
   nsresult EnsureCapacityToClone(const AttrArray& aOther);
 
-  struct InternalAttr
-  {
+  struct InternalAttr {
     nsAttrName mName;
     nsAttrValue mValue;
   };
 
-private:
+ private:
   AttrArray(const AttrArray& aOther) = delete;
   AttrArray& operator=(const AttrArray& aOther) = delete;
 
-  uint32_t NonMappedAttrCount() const
-  {
-    return mImpl ? mImpl->mAttrCount : 0;
-  }
+  uint32_t NonMappedAttrCount() const { return mImpl ? mImpl->mAttrCount : 0; }
 
-  uint32_t MappedAttrCount() const
-  {
+  uint32_t MappedAttrCount() const {
     return mImpl && mImpl->mMappedAttrs ? DoGetMappedAttrCount() : 0;
   }
 
   uint32_t DoGetMappedAttrCount() const;
 
   // Returns a non-null zero-refcount object.
-  nsMappedAttributes*
-  GetModifiableMapped(nsMappedAttributeElement* aContent,
-                      nsHTMLStyleSheet* aSheet,
-                      bool aWillAddAttr,
-                      int32_t aAttrCount = 1);
+  nsMappedAttributes* GetModifiableMapped(nsMappedAttributeElement* aContent,
+                                          nsHTMLStyleSheet* aSheet,
+                                          bool aWillAddAttr,
+                                          int32_t aAttrCount = 1);
   nsresult MakeMappedUnique(nsMappedAttributes* aAttributes);
 
   bool GrowBy(uint32_t aGrowSize);
@@ -166,7 +153,7 @@ private:
   //
   // `Name` can be anything you construct a `nsAttrName` with (either an atom or
   // a NodeInfo pointer).
-  template<typename Name>
+  template <typename Name>
   nsresult AddNewAttribute(Name*, nsAttrValue&);
 
   /**
@@ -180,26 +167,23 @@ private:
   nsresult DoUpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement);
 
 #ifdef _MSC_VER
-// Disable MSVC warning 'nonstandard extension used: zero-sized array in struct/union'
+// Disable MSVC warning 'nonstandard extension used: zero-sized array in
+// struct/union'
 #pragma warning(push)
-#pragma warning(disable:4200)
+#pragma warning(disable : 4200)
 #endif
-  class Impl
-  {
-  public:
-
-    constexpr static size_t AllocationSizeForAttributes(uint32_t aAttrCount)
-    {
+  class Impl {
+   public:
+    constexpr static size_t AllocationSizeForAttributes(uint32_t aAttrCount) {
       return sizeof(Impl) + aAttrCount * sizeof(InternalAttr);
     }
 
-    mozilla::Span<const InternalAttr> NonMappedAttrs() const
-    {
-      return mozilla::MakeSpan(static_cast<const InternalAttr*>(mBuffer), mAttrCount);
+    mozilla::Span<const InternalAttr> NonMappedAttrs() const {
+      return mozilla::MakeSpan(static_cast<const InternalAttr*>(mBuffer),
+                               mAttrCount);
     }
 
-    mozilla::Span<InternalAttr> NonMappedAttrs()
-    {
+    mozilla::Span<InternalAttr> NonMappedAttrs() {
       return mozilla::MakeSpan(static_cast<InternalAttr*>(mBuffer), mAttrCount);
     }
 
@@ -208,7 +192,7 @@ private:
     ~Impl();
 
     uint32_t mAttrCount;
-    uint32_t mCapacity; // In number of InternalAttrs
+    uint32_t mCapacity;  // In number of InternalAttrs
 
     // Manually refcounted.
     nsMappedAttributes* mMappedAttrs;
@@ -220,15 +204,13 @@ private:
 #pragma warning(pop)
 #endif
 
-
-  mozilla::Span<InternalAttr> NonMappedAttrs()
-  {
+  mozilla::Span<InternalAttr> NonMappedAttrs() {
     return mImpl ? mImpl->NonMappedAttrs() : mozilla::Span<InternalAttr>();
   }
 
-  mozilla::Span<const InternalAttr> NonMappedAttrs() const
-  {
-    return mImpl ? mImpl->NonMappedAttrs() : mozilla::Span<const InternalAttr>();
+  mozilla::Span<const InternalAttr> NonMappedAttrs() const {
+    return mImpl ? mImpl->NonMappedAttrs()
+                 : mozilla::Span<const InternalAttr>();
   }
 
   mozilla::UniquePtr<Impl> mImpl;

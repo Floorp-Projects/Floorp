@@ -30,9 +30,8 @@ class OSXNotificationInfo;
 
 class OSXNotificationCenter : public nsIAlertsService,
                               public nsIAlertsIconData,
-                              public nsIAlertNotificationImageListener
-{
-public:
+                              public nsIAlertNotificationImageListener {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_NSIALERTSICONDATA
@@ -46,15 +45,15 @@ public:
                   unsigned long long aAdditionalActionIndex);
   void ShowPendingNotification(OSXNotificationInfo *osxni);
 
-protected:
+ protected:
   virtual ~OSXNotificationCenter();
 
-private:
+ private:
   mozNotificationCenterDelegate *mDelegate;
   nsTArray<RefPtr<OSXNotificationInfo> > mActiveAlerts;
   nsTArray<RefPtr<OSXNotificationInfo> > mPendingAlerts;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // OSXNotificationCenter_h
+#endif  // OSXNotificationCenter_h

@@ -20,17 +20,13 @@ static bool sDllWasBlocked = false;
 static bool sDllWasLoaded = false;
 static const char16_t* sDllName;
 
-static nsDependentSubstring
-MakeString(PUNICODE_STRING aOther)
-{
+static nsDependentSubstring MakeString(PUNICODE_STRING aOther) {
   size_t numChars = aOther->Length / sizeof(WCHAR);
-  return nsDependentSubstring((const char16_t *)aOther->Buffer, numChars);
+  return nsDependentSubstring((const char16_t*)aOther->Buffer, numChars);
 }
 
-static void
-DllLoadHook(bool aDllLoaded, NTSTATUS aStatus, HANDLE aDllBase,
-            PUNICODE_STRING aDllName)
-{
+static void DllLoadHook(bool aDllLoaded, NTSTATUS aStatus, HANDLE aDllBase,
+                        PUNICODE_STRING aDllName) {
   nsDependentSubstring str = MakeString(aDllName);
   if (StringEndsWith(str, nsDependentString(sDllName),
                      nsCaseInsensitiveStringComparator())) {
@@ -42,11 +38,10 @@ DllLoadHook(bool aDllLoaded, NTSTATUS aStatus, HANDLE aDllBase,
   }
 }
 
-static nsString
-GetFullPath(const char16_t* leaf)
-{
+static nsString GetFullPath(const char16_t* leaf) {
   nsCOMPtr<nsIFile> f;
-  EXPECT_TRUE(NS_SUCCEEDED(NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(f))));
+  EXPECT_TRUE(NS_SUCCEEDED(
+      NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(f))));
   EXPECT_TRUE(NS_SUCCEEDED(f->Append(nsDependentString(leaf))));
 
   bool exists;
@@ -58,14 +53,12 @@ GetFullPath(const char16_t* leaf)
   return ret;
 }
 
-TEST(TestDllBlocklist, BlockDllByName)
-{
+TEST(TestDllBlocklist, BlockDllByName) {
   sDllWasBlocked = false;
   sDllWasLoaded = false;
   DllBlocklist_SetDllLoadHook(DllLoadHook);
-  auto undoHooks = mozilla::MakeScopeExit([&](){
-    DllBlocklist_SetDllLoadHook(nullptr);
-  });
+  auto undoHooks =
+      mozilla::MakeScopeExit([&]() { DllBlocklist_SetDllLoadHook(nullptr); });
 
   // The DLL name has capital letters, so this also tests that the comparison
   // is case-insensitive.
@@ -85,14 +78,12 @@ TEST(TestDllBlocklist, BlockDllByName)
   }
 }
 
-TEST(TestDllBlocklist, BlockDllByVersion)
-{
+TEST(TestDllBlocklist, BlockDllByVersion) {
   sDllWasBlocked = false;
   sDllWasLoaded = false;
   DllBlocklist_SetDllLoadHook(DllLoadHook);
-  auto undoHooks = mozilla::MakeScopeExit([&](){
-    DllBlocklist_SetDllLoadHook(nullptr);
-  });
+  auto undoHooks =
+      mozilla::MakeScopeExit([&]() { DllBlocklist_SetDllLoadHook(nullptr); });
 
   sDllName = u"TestDllBlocklist_MatchByVersion.dll";
   nsString dllPath = GetFullPath(sDllName);
@@ -110,14 +101,12 @@ TEST(TestDllBlocklist, BlockDllByVersion)
   }
 }
 
-TEST(TestDllBlocklist, AllowDllByVersion)
-{
+TEST(TestDllBlocklist, AllowDllByVersion) {
   sDllWasBlocked = false;
   sDllWasLoaded = false;
   DllBlocklist_SetDllLoadHook(DllLoadHook);
-  auto undoHooks = mozilla::MakeScopeExit([&](){
-    DllBlocklist_SetDllLoadHook(nullptr);
-  });
+  auto undoHooks =
+      mozilla::MakeScopeExit([&]() { DllBlocklist_SetDllLoadHook(nullptr); });
 
   sDllName = u"TestDllBlocklist_AllowByVersion.dll";
   nsString dllPath = GetFullPath(sDllName);
@@ -135,8 +124,7 @@ TEST(TestDllBlocklist, AllowDllByVersion)
   }
 }
 
-TEST(TestDllBlocklist, BlocklistIntegrity)
-{
+TEST(TestDllBlocklist, BlocklistIntegrity) {
   auto msg = DllBlocklist_TestBlocklistIntegrity();
   EXPECT_FALSE(msg) << msg;
 }

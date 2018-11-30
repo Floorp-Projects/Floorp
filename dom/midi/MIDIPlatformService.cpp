@@ -14,21 +14,14 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+MIDIPlatformService::MIDIPlatformService()
+    : mHasSentPortList(false),
+      mMessageQueueMutex("MIDIPlatformServce::mMessageQueueMutex") {}
 
-MIDIPlatformService::MIDIPlatformService() :
-  mHasSentPortList(false),
-  mMessageQueueMutex("MIDIPlatformServce::mMessageQueueMutex")
-{
-}
+MIDIPlatformService::~MIDIPlatformService() {}
 
-MIDIPlatformService::~MIDIPlatformService()
-{
-}
-
-void
-MIDIPlatformService::CheckAndReceive(const nsAString& aPortId,
-                                     const nsTArray<MIDIMessage>& aMsgs)
-{
+void MIDIPlatformService::CheckAndReceive(const nsAString& aPortId,
+                                          const nsTArray<MIDIMessage>& aMsgs) {
   AssertIsOnBackgroundThread();
   for (auto& port : mPorts) {
     // TODO Clean this up when we split input/output port arrays
@@ -51,17 +44,13 @@ MIDIPlatformService::CheckAndReceive(const nsAString& aPortId,
   }
 }
 
-void
-MIDIPlatformService::AddPort(MIDIPortParent* aPort)
-{
+void MIDIPlatformService::AddPort(MIDIPortParent* aPort) {
   MOZ_ASSERT(aPort);
   AssertIsOnBackgroundThread();
   mPorts.AppendElement(aPort);
 }
 
-void
-MIDIPlatformService::RemovePort(MIDIPortParent* aPort)
-{
+void MIDIPlatformService::RemovePort(MIDIPortParent* aPort) {
   // This should only be called from the background thread, when a MIDIPort
   // actor has been destroyed.
   AssertIsOnBackgroundThread();
@@ -70,10 +59,8 @@ MIDIPlatformService::RemovePort(MIDIPortParent* aPort)
   MaybeStop();
 }
 
-void
-MIDIPlatformService::BroadcastState(const MIDIPortInfo& aPortInfo,
-                                    const MIDIPortDeviceState& aState)
-{
+void MIDIPlatformService::BroadcastState(const MIDIPortInfo& aPortInfo,
+                                         const MIDIPortDeviceState& aState) {
   AssertIsOnBackgroundThread();
   for (auto& p : mPorts) {
     if (p->MIDIPortInterface::Id() == aPortInfo.id() &&
@@ -83,9 +70,8 @@ MIDIPlatformService::BroadcastState(const MIDIPortInfo& aPortInfo,
   }
 }
 
-void
-MIDIPlatformService::QueueMessages(const nsAString& aId, nsTArray<MIDIMessage>& aMsgs)
-{
+void MIDIPlatformService::QueueMessages(const nsAString& aId,
+                                        nsTArray<MIDIMessage>& aMsgs) {
   AssertIsOnBackgroundThread();
   {
     MutexAutoLock lock(mMessageQueueMutex);
@@ -95,9 +81,7 @@ MIDIPlatformService::QueueMessages(const nsAString& aId, nsTArray<MIDIMessage>& 
   }
 }
 
-void
-MIDIPlatformService::SendPortList()
-{
+void MIDIPlatformService::SendPortList() {
   AssertIsOnBackgroundThread();
   mHasSentPortList = true;
   MIDIPortList l;
@@ -109,23 +93,20 @@ MIDIPlatformService::SendPortList()
   }
 }
 
-void
-MIDIPlatformService::Clear(MIDIPortParent* aPort)
-{
+void MIDIPlatformService::Clear(MIDIPortParent* aPort) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aPort);
   {
     MutexAutoLock lock(mMessageQueueMutex);
-    MIDIMessageQueue* msgQueue = mMessageQueues.Get(aPort->MIDIPortInterface::Id());
+    MIDIMessageQueue* msgQueue =
+        mMessageQueues.Get(aPort->MIDIPortInterface::Id());
     if (msgQueue) {
       msgQueue->Clear();
     }
   }
 }
 
-void
-MIDIPlatformService::AddPortInfo(MIDIPortInfo& aPortInfo)
-{
+void MIDIPlatformService::AddPortInfo(MIDIPortInfo& aPortInfo) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -138,10 +119,10 @@ MIDIPlatformService::AddPortInfo(MIDIPortInfo& aPortInfo)
   // objects. We need to send connection updates to all living ports first, THEN
   // we can send port list updates to all of the live MIDIAccess objects. We
   // have to go in this order because if a port object is still held live but is
-  // disconnected, it needs to readd itself to its originating MIDIAccess object.
-  // Running SendPortList first would cause MIDIAccess to create a new MIDIPort
-  // object, which would conflict (i.e. old disconnected object != new object in
-  // port map, which is against spec).
+  // disconnected, it needs to readd itself to its originating MIDIAccess
+  // object. Running SendPortList first would cause MIDIAccess to create a new
+  // MIDIPort object, which would conflict (i.e. old disconnected object != new
+  // object in port map, which is against spec).
   for (auto& port : mPorts) {
     if (port->MIDIPortInterface::Id() == aPortInfo.id()) {
       port->SendUpdateStatus(MIDIPortDeviceState::Connected,
@@ -153,9 +134,7 @@ MIDIPlatformService::AddPortInfo(MIDIPortInfo& aPortInfo)
   }
 }
 
-void
-MIDIPlatformService::RemovePortInfo(MIDIPortInfo& aPortInfo)
-{
+void MIDIPlatformService::RemovePortInfo(MIDIPortInfo& aPortInfo) {
   AssertIsOnBackgroundThread();
   mPortInfo.RemoveElement(aPortInfo);
   BroadcastState(aPortInfo, MIDIPortDeviceState::Disconnected);
@@ -166,20 +145,17 @@ MIDIPlatformService::RemovePortInfo(MIDIPortInfo& aPortInfo)
 
 StaticRefPtr<MIDIPlatformService> gMIDIPlatformService;
 
-//static
-bool
-MIDIPlatformService::IsRunning()
-{
+// static
+bool MIDIPlatformService::IsRunning() {
   return gMIDIPlatformService != nullptr;
 }
 
-void
-MIDIPlatformService::Close(mozilla::dom::MIDIPortParent *aPort)
-{
+void MIDIPlatformService::Close(mozilla::dom::MIDIPortParent* aPort) {
   AssertIsOnBackgroundThread();
   {
     MutexAutoLock lock(mMessageQueueMutex);
-    MIDIMessageQueue* msgQueue = mMessageQueues.Get(aPort->MIDIPortInterface::Id());
+    MIDIMessageQueue* msgQueue =
+        mMessageQueues.Get(aPort->MIDIPortInterface::Id());
     if (msgQueue) {
       msgQueue->ClearAfterNow();
     }
@@ -190,10 +166,8 @@ MIDIPlatformService::Close(mozilla::dom::MIDIPortParent *aPort)
   ScheduleClose(aPort);
 }
 
-//static
-MIDIPlatformService*
-MIDIPlatformService::Get()
-{
+// static
+MIDIPlatformService* MIDIPlatformService::Get() {
   // We should never touch the platform service in a child process.
   MOZ_ASSERT(XRE_IsParentProcess());
   AssertIsOnBackgroundThread();
@@ -202,57 +176,49 @@ MIDIPlatformService::Get()
     // Uncomment once we have an actual platform library to test.
     //
     // bool useTestService = false;
-    // rv = Preferences::GetRootBranch()->GetBoolPref("midi.testing", &useTestService);
+    // rv = Preferences::GetRootBranch()->GetBoolPref("midi.testing",
+    // &useTestService);
     gMIDIPlatformService = new TestMIDIPlatformService();
     gMIDIPlatformService->Init();
   }
   return gMIDIPlatformService;
 }
 
-void
-MIDIPlatformService::MaybeStop()
-{
+void MIDIPlatformService::MaybeStop() {
   AssertIsOnBackgroundThread();
   if (!IsRunning()) {
     // Service already stopped or never started. Exit.
     return;
   }
   // If we have any ports or managers left, we should still be alive.
-  if (!mPorts.IsEmpty() ||
-      !mManagers.IsEmpty()) {
+  if (!mPorts.IsEmpty() || !mManagers.IsEmpty()) {
     return;
   }
   Stop();
   gMIDIPlatformService = nullptr;
 }
 
-void
-MIDIPlatformService::AddManager(MIDIManagerParent* aManager)
-{
+void MIDIPlatformService::AddManager(MIDIManagerParent* aManager) {
   AssertIsOnBackgroundThread();
   mManagers.AppendElement(aManager);
-  // Managers add themselves during construction. We have to wait for the protocol
-  // construction to finish before we send them a port list. The runnable calls
-  // SendPortList, which iterates through the live manager list, so this saves
-  // us from having to worry about Manager pointer validity at time of runnable
-  // execution.
+  // Managers add themselves during construction. We have to wait for the
+  // protocol construction to finish before we send them a port list. The
+  // runnable calls SendPortList, which iterates through the live manager list,
+  // so this saves us from having to worry about Manager pointer validity at
+  // time of runnable execution.
   nsCOMPtr<nsIRunnable> r(new SendPortListRunnable());
   NS_DispatchToCurrentThread(r);
 }
 
-void
-MIDIPlatformService::RemoveManager(MIDIManagerParent* aManager)
-{
+void MIDIPlatformService::RemoveManager(MIDIManagerParent* aManager) {
   AssertIsOnBackgroundThread();
   mManagers.RemoveElement(aManager);
   MaybeStop();
 }
 
-void
-MIDIPlatformService::UpdateStatus(const nsAString& aPortId,
-                                  const MIDIPortDeviceState& aDeviceState,
-                                  const MIDIPortConnectionState& aConnectionState)
-{
+void MIDIPlatformService::UpdateStatus(
+    const nsAString& aPortId, const MIDIPortDeviceState& aDeviceState,
+    const MIDIPortConnectionState& aConnectionState) {
   AssertIsOnBackgroundThread();
   for (auto port : mPorts) {
     if (port->MIDIPortInterface::Id() == aPortId) {
@@ -261,10 +227,8 @@ MIDIPlatformService::UpdateStatus(const nsAString& aPortId,
   }
 }
 
-void
-MIDIPlatformService::GetMessages(const nsAString& aPortId,
-                                 nsTArray<MIDIMessage>& aMsgs)
-{
+void MIDIPlatformService::GetMessages(const nsAString& aPortId,
+                                      nsTArray<MIDIMessage>& aMsgs) {
   // Can run on either background thread or platform specific IO Thread.
   {
     MutexAutoLock lock(mMessageQueueMutex);
@@ -276,11 +240,9 @@ MIDIPlatformService::GetMessages(const nsAString& aPortId,
   }
 }
 
-void
-MIDIPlatformService::GetMessagesBefore(const nsAString& aPortId,
-                                       const TimeStamp& aTimeStamp,
-                                       nsTArray<MIDIMessage>& aMsgs)
-{
+void MIDIPlatformService::GetMessagesBefore(const nsAString& aPortId,
+                                            const TimeStamp& aTimeStamp,
+                                            nsTArray<MIDIMessage>& aMsgs) {
   // Can run on either background thread or platform specific IO Thread.
   {
     MutexAutoLock lock(mMessageQueueMutex);

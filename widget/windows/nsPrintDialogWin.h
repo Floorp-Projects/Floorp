@@ -14,26 +14,23 @@
 class nsIPrintSettings;
 class nsIDialogParamBlock;
 
-class nsPrintDialogServiceWin : public nsIPrintDialogService
-{
+class nsPrintDialogServiceWin : public nsIPrintDialogService {
   virtual ~nsPrintDialogServiceWin();
 
-public:
+ public:
   nsPrintDialogServiceWin();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init() override;
-  NS_IMETHOD Show(nsPIDOMWindowOuter* aParent,
-                  nsIPrintSettings* aSettings,
+  NS_IMETHOD Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings,
                   nsIWebBrowserPrint* aWebBrowserPrint) override;
   NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter* aParent,
                            nsIPrintSettings* aSettings) override;
 
-private:
+ private:
   nsresult DoDialog(mozIDOMWindowProxy* aParent,
-                    nsIDialogParamBlock* aParamBlock,
-                    nsIPrintSettings* aPS,
+                    nsIDialogParamBlock* aParamBlock, nsIPrintSettings* aPS,
                     const char* aChromeURL);
 
   HWND GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow);

@@ -13,23 +13,20 @@
 namespace mozilla {
 namespace dom {
 
-class ConstructibleEventTarget : public DOMEventTargetHelper
-{
-public:
+class ConstructibleEventTarget : public DOMEventTargetHelper {
+ public:
   // Not worrying about isupports and cycle collection here.  This does mean
   // ConstructibleEventTarget will show up in CC and refcount logs as a
   // DOMEventTargetHelper, but that's probably OK.
 
   explicit ConstructibleEventTarget(nsIGlobalObject* aGlobalObject)
-    : DOMEventTargetHelper(aGlobalObject)
-  {
-  }
+      : DOMEventTargetHelper(aGlobalObject) {}
 
   virtual JSObject* WrapObject(JSContext* cx,
-			       JS::Handle<JSObject*> aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ConstructibleEventTarget_h_
+#endif  // mozilla_dom_ConstructibleEventTarget_h_

@@ -37,7 +37,7 @@
 #define PREF_VACUUM_BRANCH "storage.vacuum.last."
 
 // Time between subsequent vacuum calls for a certain database.
-#define VACUUM_INTERVAL_SECONDS 30 * 86400 // 30 days.
+#define VACUUM_INTERVAL_SECONDS 30 * 86400  // 30 days.
 
 extern mozilla::LazyLogModule gStorageLog;
 
@@ -49,19 +49,18 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 //// BaseCallback
 
-class BaseCallback : public mozIStorageStatementCallback
-{
-public:
+class BaseCallback : public mozIStorageStatementCallback {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGESTATEMENTCALLBACK
   BaseCallback() {}
-protected:
+
+ protected:
   virtual ~BaseCallback() {}
 };
 
 NS_IMETHODIMP
-BaseCallback::HandleError(mozIStorageError *aError)
-{
+BaseCallback::HandleError(mozIStorageError *aError) {
 #ifdef DEBUG
   int32_t result;
   nsresult rv = aError->GetResult(&result);
@@ -81,30 +80,24 @@ BaseCallback::HandleError(mozIStorageError *aError)
 }
 
 NS_IMETHODIMP
-BaseCallback::HandleResult(mozIStorageResultSet *aResultSet)
-{
+BaseCallback::HandleResult(mozIStorageResultSet *aResultSet) {
   // We could get results from PRAGMA statements, but we don't mind them.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BaseCallback::HandleCompletion(uint16_t aReason)
-{
+BaseCallback::HandleCompletion(uint16_t aReason) {
   // By default BaseCallback will just be silent on completion.
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(
-  BaseCallback
-, mozIStorageStatementCallback
-)
+NS_IMPL_ISUPPORTS(BaseCallback, mozIStorageStatementCallback)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Vacuumer declaration.
 
-class Vacuumer : public BaseCallback
-{
-public:
+class Vacuumer : public BaseCallback {
+ public:
   NS_DECL_MOZISTORAGESTATEMENTCALLBACK
 
   explicit Vacuumer(mozIStorageVacuumParticipant *aParticipant);
@@ -112,7 +105,7 @@ public:
   bool execute();
   nsresult notifyCompletion(bool aSucceeded);
 
-private:
+ private:
   nsCOMPtr<mozIStorageVacuumParticipant> mParticipant;
   nsCString mDBFilename;
   nsCOMPtr<mozIStorageConnection> mDBConn;
@@ -122,13 +115,9 @@ private:
 //// Vacuumer implementation.
 
 Vacuumer::Vacuumer(mozIStorageVacuumParticipant *aParticipant)
-  : mParticipant(aParticipant)
-{
-}
+    : mParticipant(aParticipant) {}
 
-bool
-Vacuumer::execute()
-{
+bool Vacuumer::execute() {
   MOZ_ASSERT(NS_IsMainThread(), "Must be running on the main thread!");
 
   // Get the connection and check its validity.
@@ -189,9 +178,8 @@ Vacuumer::execute()
   // Notify a heavy IO task is about to start.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    rv =
-      os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
-                          OBSERVER_DATA_VACUUM_BEGIN);
+    rv = os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
+                             OBSERVER_DATA_VACUUM_BEGIN);
     MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to notify");
   }
 
@@ -210,9 +198,8 @@ Vacuumer::execute()
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "VACUUM"
-  ), getter_AddRefs(stmt));
+  rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING("VACUUM"),
+                                     getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, false);
   rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, false);
@@ -224,8 +211,7 @@ Vacuumer::execute()
 //// mozIStorageStatementCallback
 
 NS_IMETHODIMP
-Vacuumer::HandleError(mozIStorageError *aError)
-{
+Vacuumer::HandleError(mozIStorageError *aError) {
   int32_t result;
   nsresult rv;
   nsAutoCString message;
@@ -252,22 +238,20 @@ Vacuumer::HandleError(mozIStorageError *aError)
     rv = aError->GetMessage(message);
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_LOG(gStorageLog, LogLevel::Error,
-           ("Vacuum failed with error: %d '%s'. Database was: '%s'",
-            result, message.get(), mDBFilename.get()));
+            ("Vacuum failed with error: %d '%s'. Database was: '%s'", result,
+             message.get(), mDBFilename.get()));
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Vacuumer::HandleResult(mozIStorageResultSet *aResultSet)
-{
+Vacuumer::HandleResult(mozIStorageResultSet *aResultSet) {
   MOZ_ASSERT_UNREACHABLE("Got a resultset from a vacuum?");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Vacuumer::HandleCompletion(uint16_t aReason)
-{
+Vacuumer::HandleCompletion(uint16_t aReason) {
   if (aReason == REASON_FINISHED) {
     // Update last vacuum time.
     int32_t now = static_cast<int32_t>(PR_Now() / PR_USEC_PER_SEC);
@@ -283,9 +267,7 @@ Vacuumer::HandleCompletion(uint16_t aReason)
   return NS_OK;
 }
 
-nsresult
-Vacuumer::notifyCompletion(bool aSucceeded)
-{
+nsresult Vacuumer::notifyCompletion(bool aSucceeded) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
@@ -298,23 +280,17 @@ Vacuumer::notifyCompletion(bool aSucceeded)
   return NS_OK;
 }
 
-} // namespace
+}  // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// VacuumManager
 
-NS_IMPL_ISUPPORTS(
-  VacuumManager
-, nsIObserver
-)
+NS_IMPL_ISUPPORTS(VacuumManager, nsIObserver)
 
-VacuumManager *
-VacuumManager::gVacuumManager = nullptr;
+VacuumManager *VacuumManager::gVacuumManager = nullptr;
 
-already_AddRefed<VacuumManager>
-VacuumManager::getSingleton()
-{
-  //Don't allocate it in the child Process.
+already_AddRefed<VacuumManager> VacuumManager::getSingleton() {
+  // Don't allocate it in the child Process.
   if (!XRE_IsParentProcess()) {
     return nullptr;
   }
@@ -327,16 +303,13 @@ VacuumManager::getSingleton()
   return do_AddRef(gVacuumManager);
 }
 
-VacuumManager::VacuumManager()
-  : mParticipants("vacuum-participant")
-{
+VacuumManager::VacuumManager() : mParticipants("vacuum-participant") {
   MOZ_ASSERT(!gVacuumManager,
              "Attempting to create two instances of the service!");
   gVacuumManager = this;
 }
 
-VacuumManager::~VacuumManager()
-{
+VacuumManager::~VacuumManager() {
   // Remove the static reference to the service.  Check to make sure its us
   // in case somebody creates an extra instance of the service.
   MOZ_ASSERT(gVacuumManager == this,
@@ -350,10 +323,8 @@ VacuumManager::~VacuumManager()
 //// nsIObserver
 
 NS_IMETHODIMP
-VacuumManager::Observe(nsISupports *aSubject,
-                       const char *aTopic,
-                       const char16_t *aData)
-{
+VacuumManager::Observe(nsISupports *aSubject, const char *aTopic,
+                       const char16_t *aData) {
   if (strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY) == 0) {
     // Try to run vacuum on all registered entries.  Will stop at the first
     // successful one.
@@ -361,7 +332,7 @@ VacuumManager::Observe(nsISupports *aSubject,
     mParticipants.GetEntries(entries);
     // If there are more entries than what a month can contain, we could end up
     // skipping some, since we run daily.  So we use a starting index.
-    static const char* kPrefName = PREF_VACUUM_BRANCH "index";
+    static const char *kPrefName = PREF_VACUUM_BRANCH "index";
     int32_t startIndex = Preferences::GetInt(kPrefName, 0);
     if (startIndex >= entries.Count()) {
       startIndex = 0;
@@ -381,5 +352,5 @@ VacuumManager::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla

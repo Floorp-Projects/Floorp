@@ -21,7 +21,7 @@ namespace dom {
 namespace {
 StaticMutex gMutex;
 StaticRefPtr<IPCBlobInputStreamStorage> gStorage;
-}
+}  // namespace
 
 NS_INTERFACE_MAP_BEGIN(IPCBlobInputStreamStorage)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
@@ -31,21 +31,15 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(IPCBlobInputStreamStorage)
 NS_IMPL_RELEASE(IPCBlobInputStreamStorage)
 
-IPCBlobInputStreamStorage::IPCBlobInputStreamStorage()
-{}
+IPCBlobInputStreamStorage::IPCBlobInputStreamStorage() {}
 
-IPCBlobInputStreamStorage::~IPCBlobInputStreamStorage()
-{}
+IPCBlobInputStreamStorage::~IPCBlobInputStreamStorage() {}
 
-/* static */ IPCBlobInputStreamStorage*
-IPCBlobInputStreamStorage::Get()
-{
+/* static */ IPCBlobInputStreamStorage* IPCBlobInputStreamStorage::Get() {
   return gStorage;
 }
 
-/* static */ void
-IPCBlobInputStreamStorage::Initialize()
-{
+/* static */ void IPCBlobInputStreamStorage::Initialize() {
   MOZ_ASSERT(!gStorage);
 
   gStorage = new IPCBlobInputStreamStorage();
@@ -59,8 +53,7 @@ IPCBlobInputStreamStorage::Initialize()
 
 NS_IMETHODIMP
 IPCBlobInputStreamStorage::Observe(nsISupports* aSubject, const char* aTopic,
-                                   const char16_t* aData)
-{
+                                   const char16_t* aData) {
   if (!strcmp(aTopic, "xpcom-shutdown")) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
@@ -96,12 +89,9 @@ IPCBlobInputStreamStorage::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-void
-IPCBlobInputStreamStorage::AddStream(nsIInputStream* aInputStream,
-                                     const nsID& aID,
-                                     uint64_t aSize,
-                                     uint64_t aChildID)
-{
+void IPCBlobInputStreamStorage::AddStream(nsIInputStream* aInputStream,
+                                          const nsID& aID, uint64_t aSize,
+                                          uint64_t aChildID) {
   MOZ_ASSERT(aInputStream);
 
   StreamData* data = new StreamData();
@@ -113,18 +103,14 @@ IPCBlobInputStreamStorage::AddStream(nsIInputStream* aInputStream,
   mStorage.Put(aID, data);
 }
 
-void
-IPCBlobInputStreamStorage::ForgetStream(const nsID& aID)
-{
+void IPCBlobInputStreamStorage::ForgetStream(const nsID& aID) {
   mozilla::StaticMutexAutoLock lock(gMutex);
   mStorage.Remove(aID);
 }
 
-void
-IPCBlobInputStreamStorage::GetStream(const nsID& aID,
-                                     uint64_t aStart, uint64_t aLength,
-                                     nsIInputStream** aInputStream)
-{
+void IPCBlobInputStreamStorage::GetStream(const nsID& aID, uint64_t aStart,
+                                          uint64_t aLength,
+                                          nsIInputStream** aInputStream) {
   *aInputStream = nullptr;
 
   nsCOMPtr<nsIInputStream> inputStream;
@@ -152,9 +138,8 @@ IPCBlobInputStreamStorage::GetStream(const nsID& aID,
   nsCOMPtr<nsIInputStream> clonedStream;
   nsCOMPtr<nsIInputStream> replacementStream;
 
-  nsresult rv =
-    NS_CloneInputStream(inputStream, getter_AddRefs(clonedStream),
-                        getter_AddRefs(replacementStream));
+  nsresult rv = NS_CloneInputStream(inputStream, getter_AddRefs(clonedStream),
+                                    getter_AddRefs(replacementStream));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -173,16 +158,14 @@ IPCBlobInputStreamStorage::GetStream(const nsID& aID,
   // Now it's the right time to apply a slice if needed.
   if (aStart > 0 || aLength < size) {
     clonedStream =
-      new SlicedInputStream(clonedStream.forget(), aStart, aLength);
+        new SlicedInputStream(clonedStream.forget(), aStart, aLength);
   }
 
   clonedStream.forget(aInputStream);
 }
 
-void
-IPCBlobInputStreamStorage::StoreCallback(const nsID& aID,
-                                         IPCBlobInputStreamParentCallback* aCallback)
-{
+void IPCBlobInputStreamStorage::StoreCallback(
+    const nsID& aID, IPCBlobInputStreamParentCallback* aCallback) {
   MOZ_ASSERT(aCallback);
 
   mozilla::StaticMutexAutoLock lock(gMutex);
@@ -194,8 +177,7 @@ IPCBlobInputStreamStorage::StoreCallback(const nsID& aID,
 }
 
 already_AddRefed<IPCBlobInputStreamParentCallback>
-IPCBlobInputStreamStorage::TakeCallback(const nsID& aID)
-{
+IPCBlobInputStreamStorage::TakeCallback(const nsID& aID) {
   mozilla::StaticMutexAutoLock lock(gMutex);
   StreamData* data = mStorage.Get(aID);
   if (!data) {
@@ -207,5 +189,5 @@ IPCBlobInputStreamStorage::TakeCallback(const nsID& aID)
   return callback.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

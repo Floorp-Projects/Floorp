@@ -50,9 +50,9 @@ class NSCursor;
 
 typedef short Bits16[16];
 struct Cursor {
-  Bits16  data;
-  Bits16  mask;
-  Point   hotSpot;
+  Bits16 data;
+  Bits16 mask;
+  Point hotSpot;
 };
 typedef struct Cursor Cursor;
 
@@ -62,18 +62,18 @@ namespace mac_plugin_interposing {
 
 // Class used to serialize NSCursor objects over IPC between processes.
 class NSCursorInfo {
-public:
+ public:
   enum Type {
     TypeCustom,
     TypeArrow,
     TypeClosedHand,
-    TypeContextualMenu,   // Only supported on OS X 10.6 and up
+    TypeContextualMenu,  // Only supported on OS X 10.6 and up
     TypeCrosshair,
     TypeDisappearingItem,
-    TypeDragCopy,         // Only supported on OS X 10.6 and up
-    TypeDragLink,         // Only supported on OS X 10.6 and up
+    TypeDragCopy,  // Only supported on OS X 10.6 and up
+    TypeDragLink,  // Only supported on OS X 10.6 and up
     TypeIBeam,
-    TypeNotAllowed,       // Only supported on OS X 10.6 and up
+    TypeNotAllowed,  // Only supported on OS X 10.6 and up
     TypeOpenHand,
     TypePointingHand,
     TypeResizeDown,
@@ -82,7 +82,7 @@ public:
     TypeResizeRight,
     TypeResizeUp,
     TypeResizeUpDown,
-    TypeTransparent       // Special type
+    TypeTransparent  // Special type
   };
 
   NSCursorInfo();
@@ -103,7 +103,7 @@ public:
 
   static bool GetNativeCursorsSupported();
 
-private:
+ private:
   NSCursor* GetTransparentCursor() const;
 
   Type mType;
@@ -124,14 +124,14 @@ void OnShowCursor(bool show);
 void OnPushCursor(const NSCursorInfo& cursorInfo);
 void OnPopCursor();
 
-} // namespace parent
+}  // namespace parent
 
 namespace child {
 
 void SetUpCocoaInterposing();
 
-} // namespace child
+}  // namespace child
 
-} // namespace mac_plugin_interposing
+}  // namespace mac_plugin_interposing
 
 #endif /* DOM_PLUGINS_IPC_PLUGININTERPOSEOSX_H */

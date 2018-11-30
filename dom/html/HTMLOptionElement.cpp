@@ -32,32 +32,26 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Option)
 namespace mozilla {
 namespace dom {
 
-HTMLOptionElement::HTMLOptionElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : nsGenericHTMLElement(std::move(aNodeInfo)),
-    mSelectedChanged(false),
-    mIsSelected(false),
-    mIsInSetDefaultSelected(false)
-{
+HTMLOptionElement::HTMLOptionElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)),
+      mSelectedChanged(false),
+      mIsSelected(false),
+      mIsInSetDefaultSelected(false) {
   // We start off enabled
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
 
-HTMLOptionElement::~HTMLOptionElement()
-{
-}
+HTMLOptionElement::~HTMLOptionElement() {}
 
 NS_IMPL_ELEMENT_CLONE(HTMLOptionElement)
 
-mozilla::dom::HTMLFormElement*
-HTMLOptionElement::GetForm()
-{
+mozilla::dom::HTMLFormElement* HTMLOptionElement::GetForm() {
   HTMLSelectElement* selectControl = GetSelect();
   return selectControl ? selectControl->GetForm() : nullptr;
 }
 
-void
-HTMLOptionElement::SetSelectedInternal(bool aValue, bool aNotify)
-{
+void HTMLOptionElement::SetSelectedInternal(bool aValue, bool aNotify) {
   mSelectedChanged = true;
   mIsSelected = aValue;
 
@@ -68,15 +62,11 @@ HTMLOptionElement::SetSelectedInternal(bool aValue, bool aNotify)
   }
 }
 
-void
-HTMLOptionElement::OptGroupDisabledChanged(bool aNotify)
-{
+void HTMLOptionElement::OptGroupDisabledChanged(bool aNotify) {
   UpdateDisabledState(aNotify);
 }
 
-void
-HTMLOptionElement::UpdateDisabledState(bool aNotify)
-{
+void HTMLOptionElement::UpdateDisabledState(bool aNotify) {
   bool isDisabled = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
 
   if (!isDisabled) {
@@ -101,9 +91,7 @@ HTMLOptionElement::UpdateDisabledState(bool aNotify)
   }
 }
 
-void
-HTMLOptionElement::SetSelected(bool aValue)
-{
+void HTMLOptionElement::SetSelected(bool aValue) {
   // Note: The select content obj maintains all the PresState
   // so defer to it to get the answer
   HTMLSelectElement* selectInt = GetSelect();
@@ -121,9 +109,7 @@ HTMLOptionElement::SetSelected(bool aValue)
   }
 }
 
-int32_t
-HTMLOptionElement::Index()
-{
+int32_t HTMLOptionElement::Index() {
   static int32_t defaultIndex = 0;
 
   // Only select elements can contain a list of options.
@@ -142,27 +128,22 @@ HTMLOptionElement::Index()
   return index;
 }
 
-nsChangeHint
-HTMLOptionElement::GetAttributeChangeHint(const nsAtom* aAttribute,
-                                          int32_t aModType) const
-{
+nsChangeHint HTMLOptionElement::GetAttributeChangeHint(const nsAtom* aAttribute,
+                                                       int32_t aModType) const {
   nsChangeHint retval =
       nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
 
-  if (aAttribute == nsGkAtoms::label ||
-      aAttribute == nsGkAtoms::text) {
+  if (aAttribute == nsGkAtoms::label || aAttribute == nsGkAtoms::text) {
     retval |= NS_STYLE_HINT_REFLOW;
   }
   return retval;
 }
 
-nsresult
-HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify)
-{
-  nsresult rv = nsGenericHTMLElement::BeforeSetAttr(aNamespaceID, aName,
-                                                    aValue, aNotify);
+nsresult HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                          const nsAttrValueOrString* aValue,
+                                          bool aNotify) {
+  nsresult rv =
+      nsGenericHTMLElement::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNamespaceID != kNameSpaceID_None || aName != nsGkAtoms::selected ||
@@ -212,13 +193,11 @@ HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
   return NS_OK;
 }
 
-nsresult
-HTMLOptionElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify)
-{
+nsresult HTMLOptionElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                         const nsAttrValue* aValue,
+                                         const nsAttrValue* aOldValue,
+                                         nsIPrincipal* aSubjectPrincipal,
+                                         bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::disabled) {
       UpdateDisabledState(aNotify);
@@ -235,13 +214,11 @@ HTMLOptionElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   }
 
-  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName,
-                                            aValue, aOldValue, aSubjectPrincipal, aNotify);
+  return nsGenericHTMLElement::AfterSetAttr(
+      aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-void
-HTMLOptionElement::GetText(nsAString& aText)
-{
+void HTMLOptionElement::GetText(nsAString& aText) {
   nsAutoString text;
 
   nsIContent* child = nsINode::GetFirstChild();
@@ -262,18 +239,15 @@ HTMLOptionElement::GetText(nsAString& aText)
   aText = text;
 }
 
-void
-HTMLOptionElement::SetText(const nsAString& aText, ErrorResult& aRv)
-{
+void HTMLOptionElement::SetText(const nsAString& aText, ErrorResult& aRv) {
   aRv = nsContentUtils::SetNodeTextContent(this, aText, true);
 }
 
-nsresult
-HTMLOptionElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent)
-{
-  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
-                                                 aBindingParent);
+nsresult HTMLOptionElement::BindToTree(nsIDocument* aDocument,
+                                       nsIContent* aParent,
+                                       nsIContent* aBindingParent) {
+  nsresult rv =
+      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Our new parent might change :disabled/:enabled state.
@@ -282,18 +256,14 @@ HTMLOptionElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void
-HTMLOptionElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
+void HTMLOptionElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 
   // Our previous parent could have been involved in :disabled/:enabled state.
   UpdateDisabledState(false);
 }
 
-EventStates
-HTMLOptionElement::IntrinsicState() const
-{
+EventStates HTMLOptionElement::IntrinsicState() const {
   EventStates state = nsGenericHTMLElement::IntrinsicState();
   if (Selected()) {
     state |= NS_EVENT_STATE_CHECKED;
@@ -306,9 +276,7 @@ HTMLOptionElement::IntrinsicState() const
 }
 
 // Get the select content element that contains this option
-HTMLSelectElement*
-HTMLOptionElement::GetSelect()
-{
+HTMLSelectElement* HTMLOptionElement::GetSelect() {
   nsIContent* parent = GetParent();
   if (!parent) {
     return nullptr;
@@ -326,14 +294,10 @@ HTMLOptionElement::GetSelect()
   return HTMLSelectElement::FromNodeOrNull(parent->GetParent());
 }
 
-already_AddRefed<HTMLOptionElement>
-HTMLOptionElement::Option(const GlobalObject& aGlobal,
-                          const nsAString& aText,
-                          const Optional<nsAString>& aValue,
-                          bool aDefaultSelected,
-                          bool aSelected,
-                          ErrorResult& aError)
-{
+already_AddRefed<HTMLOptionElement> HTMLOptionElement::Option(
+    const GlobalObject& aGlobal, const nsAString& aText,
+    const Optional<nsAString>& aValue, bool aDefaultSelected, bool aSelected,
+    ErrorResult& aError) {
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
   nsIDocument* doc;
   if (!win || !(doc = win->GetExtantDoc())) {
@@ -341,17 +305,15 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo =
-    doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nullptr,
-                                        kNameSpaceID_XHTML,
-                                        ELEMENT_NODE);
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo = doc->NodeInfoManager()->GetNodeInfo(
+      nsGkAtoms::option, nullptr, kNameSpaceID_XHTML, ELEMENT_NODE);
 
   RefPtr<HTMLOptionElement> option = new HTMLOptionElement(nodeInfo.forget());
 
   if (!aText.IsEmpty()) {
     // Create a new text node and append it to the option
     RefPtr<nsTextNode> textContent =
-      new nsTextNode(option->NodeInfo()->NodeInfoManager());
+        new nsTextNode(option->NodeInfo()->NodeInfoManager());
 
     textContent->SetText(aText, false);
 
@@ -387,9 +349,7 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
   return option.forget();
 }
 
-nsresult
-HTMLOptionElement::CopyInnerTo(Element* aDest)
-{
+nsresult HTMLOptionElement::CopyInnerTo(Element* aDest) {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -399,11 +359,10 @@ HTMLOptionElement::CopyInnerTo(Element* aDest)
   return NS_OK;
 }
 
-JSObject*
-HTMLOptionElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLOptionElement::WrapNode(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return HTMLOptionElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

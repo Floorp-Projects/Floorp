@@ -43,42 +43,42 @@
  * This depends on xpcom/base/nsISupportsImpl.h.
  */
 
-#define NS_INLINE_DECL_IUNKNOWN_REFCOUNTING(_class)                           \
-public:                                                                       \
-  STDMETHODIMP_(ULONG) AddRef()                                               \
-  {                                                                           \
-    MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                                \
-    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                      \
-    NS_ASSERT_OWNINGTHREAD(_class);                                           \
-    ++mRefCnt;                                                                \
-    NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                     \
-    return static_cast<ULONG>(mRefCnt.get());                                 \
-  }                                                                           \
-  STDMETHODIMP_(ULONG) Release()                                              \
-  {                                                                           \
-    MOZ_ASSERT(int32_t(mRefCnt) > 0,                                          \
-      "Release called on object that has already been released!");            \
-    NS_ASSERT_OWNINGTHREAD(_class);                                           \
-    --mRefCnt;                                                                \
-    NS_LOG_RELEASE(this, mRefCnt, #_class);                                   \
-    if (mRefCnt == 0) {                                                       \
-      NS_ASSERT_OWNINGTHREAD(_class);                                         \
-      mRefCnt = 1; /* stabilize */                                            \
-      delete this;                                                            \
-      return 0;                                                               \
-    }                                                                         \
-    return static_cast<ULONG>(mRefCnt.get());                                 \
-  }                                                                           \
-protected:                                                                    \
-  nsAutoRefCnt mRefCnt;                                                       \
-  NS_DECL_OWNINGTHREAD                                                        \
-public:
+#define NS_INLINE_DECL_IUNKNOWN_REFCOUNTING(_class)                         \
+ public:                                                                    \
+  STDMETHODIMP_(ULONG) AddRef() {                                           \
+    MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                              \
+    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                    \
+    NS_ASSERT_OWNINGTHREAD(_class);                                         \
+    ++mRefCnt;                                                              \
+    NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                   \
+    return static_cast<ULONG>(mRefCnt.get());                               \
+  }                                                                         \
+  STDMETHODIMP_(ULONG) Release() {                                          \
+    MOZ_ASSERT(int32_t(mRefCnt) > 0,                                        \
+               "Release called on object that has already been released!"); \
+    NS_ASSERT_OWNINGTHREAD(_class);                                         \
+    --mRefCnt;                                                              \
+    NS_LOG_RELEASE(this, mRefCnt, #_class);                                 \
+    if (mRefCnt == 0) {                                                     \
+      NS_ASSERT_OWNINGTHREAD(_class);                                       \
+      mRefCnt = 1; /* stabilize */                                          \
+      delete this;                                                          \
+      return 0;                                                             \
+    }                                                                       \
+    return static_cast<ULONG>(mRefCnt.get());                               \
+  }                                                                         \
+                                                                            \
+ protected:                                                                 \
+  nsAutoRefCnt mRefCnt;                                                     \
+  NS_DECL_OWNINGTHREAD                                                      \
+ public:
 
 class nsWindow;
 class nsWindowBase;
 struct KeyPair;
 
-#if !defined(DPI_AWARENESS_CONTEXT_DECLARED) && !defined(DPI_AWARENESS_CONTEXT_UNAWARE)
+#if !defined(DPI_AWARENESS_CONTEXT_DECLARED) && \
+    !defined(DPI_AWARENESS_CONTEXT_UNAWARE)
 
 DECLARE_HANDLE(DPI_AWARENESS_CONTEXT);
 
@@ -89,36 +89,37 @@ typedef enum DPI_AWARENESS {
   DPI_AWARENESS_PER_MONITOR_AWARE = 2
 } DPI_AWARENESS;
 
-#define DPI_AWARENESS_CONTEXT_UNAWARE           ((DPI_AWARENESS_CONTEXT)-1)
-#define DPI_AWARENESS_CONTEXT_SYSTEM_AWARE      ((DPI_AWARENESS_CONTEXT)-2)
+#define DPI_AWARENESS_CONTEXT_UNAWARE ((DPI_AWARENESS_CONTEXT)-1)
+#define DPI_AWARENESS_CONTEXT_SYSTEM_AWARE ((DPI_AWARENESS_CONTEXT)-2)
 #define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE ((DPI_AWARENESS_CONTEXT)-3)
 
 #define DPI_AWARENESS_CONTEXT_DECLARED
-#endif // (DPI_AWARENESS_CONTEXT_DECLARED)
+#endif  // (DPI_AWARENESS_CONTEXT_DECLARED)
 
 #if WINVER < 0x0605
 WINUSERAPI DPI_AWARENESS_CONTEXT WINAPI GetThreadDpiAwarenessContext();
-WINUSERAPI BOOL WINAPI
-AreDpiAwarenessContextsEqual(DPI_AWARENESS_CONTEXT, DPI_AWARENESS_CONTEXT);
+WINUSERAPI BOOL WINAPI AreDpiAwarenessContextsEqual(DPI_AWARENESS_CONTEXT,
+                                                    DPI_AWARENESS_CONTEXT);
 #endif /* WINVER < 0x0605 */
-typedef DPI_AWARENESS_CONTEXT(WINAPI * SetThreadDpiAwarenessContextProc)(DPI_AWARENESS_CONTEXT);
-typedef BOOL(WINAPI * EnableNonClientDpiScalingProc)(HWND);
-typedef int (WINAPI * GetSystemMetricsForDpiProc)(int, UINT);
+typedef DPI_AWARENESS_CONTEXT(WINAPI* SetThreadDpiAwarenessContextProc)(
+    DPI_AWARENESS_CONTEXT);
+typedef BOOL(WINAPI* EnableNonClientDpiScalingProc)(HWND);
+typedef int(WINAPI* GetSystemMetricsForDpiProc)(int, UINT);
 
 namespace mozilla {
 enum class PointerCapabilities : uint8_t;
 #if defined(ACCESSIBILITY)
 namespace a11y {
 class Accessible;
-} // namespace a11y
-#endif // defined(ACCESSIBILITY)
+}  // namespace a11y
+#endif  // defined(ACCESSIBILITY)
 
 namespace widget {
 
 // Windows message debugging data
 typedef struct {
-  const char * mStr;
-  UINT         mId;
+  const char* mStr;
+  UINT mId;
 } EventMsgInfo;
 extern EventMsgInfo gAllEvents[];
 
@@ -130,69 +131,70 @@ extern EventMsgInfo gAllEvents[];
 #endif
 
 #ifndef QS_TOUCH
-#define QS_TOUCH    0x0800
-#define QS_POINTER  0x1000
+#define QS_TOUCH 0x0800
+#define QS_POINTER 0x1000
 #endif
 
-#define MOZ_QS_ALLEVENT (QS_KEY | QS_MOUSEMOVE | QS_MOUSEBUTTON | \
-                         QS_POSTMESSAGE | QS_TIMER | QS_PAINT |   \
-                         QS_SENDMESSAGE | QS_HOTKEY |             \
-                         QS_ALLPOSTMESSAGE | QS_RAWINPUT |        \
-                         QS_TOUCH | QS_POINTER)
+#define MOZ_QS_ALLEVENT                                                      \
+  (QS_KEY | QS_MOUSEMOVE | QS_MOUSEBUTTON | QS_POSTMESSAGE | QS_TIMER |      \
+   QS_PAINT | QS_SENDMESSAGE | QS_HOTKEY | QS_ALLPOSTMESSAGE | QS_RAWINPUT | \
+   QS_TOUCH | QS_POINTER)
 
 // Logging macros
 #define LogFunction() mozilla::widget::WinUtils::Log(__FUNCTION__)
-#define LogThread() mozilla::widget::WinUtils::Log("%s: IsMainThread:%d ThreadId:%X", __FUNCTION__, NS_IsMainThread(), GetCurrentThreadId())
+#define LogThread()                                                 \
+  mozilla::widget::WinUtils::Log("%s: IsMainThread:%d ThreadId:%X", \
+                                 __FUNCTION__, NS_IsMainThread(),   \
+                                 GetCurrentThreadId())
 #define LogThis() mozilla::widget::WinUtils::Log("[%X] %s", this, __FUNCTION__)
-#define LogException(e) mozilla::widget::WinUtils::Log("%s Exception:%s", __FUNCTION__, e->ToString()->Data())
-#define LogHRESULT(hr) mozilla::widget::WinUtils::Log("%s hr=%X", __FUNCTION__, hr)
+#define LogException(e)                                           \
+  mozilla::widget::WinUtils::Log("%s Exception:%s", __FUNCTION__, \
+                                 e->ToString()->Data())
+#define LogHRESULT(hr) \
+  mozilla::widget::WinUtils::Log("%s hr=%X", __FUNCTION__, hr)
 
 #ifdef MOZ_PLACES
-class myDownloadObserver final : public nsIDownloadObserver
-{
+class myDownloadObserver final : public nsIDownloadObserver {
   ~myDownloadObserver() {}
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADOBSERVER
 };
 #endif
 
-class WinUtils
-{
+class WinUtils {
   // Function pointers for APIs that may not be available depending on
   // the Win10 update version -- will be set up in Initialize().
   static SetThreadDpiAwarenessContextProc sSetThreadDpiAwarenessContext;
   static EnableNonClientDpiScalingProc sEnableNonClientDpiScaling;
   static GetSystemMetricsForDpiProc sGetSystemMetricsForDpi;
 
-public:
-  class AutoSystemDpiAware
-  {
-  public:
-    AutoSystemDpiAware()
-    {
+ public:
+  class AutoSystemDpiAware {
+   public:
+    AutoSystemDpiAware() {
       if (sSetThreadDpiAwarenessContext) {
-        mPrevContext = sSetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+        mPrevContext =
+            sSetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
       }
     }
 
-    ~AutoSystemDpiAware()
-    {
+    ~AutoSystemDpiAware() {
       if (sSetThreadDpiAwarenessContext) {
         sSetThreadDpiAwarenessContext(mPrevContext);
       }
     }
 
-  private:
+   private:
     DPI_AWARENESS_CONTEXT mPrevContext;
   };
 
   // Wrapper for DefWindowProc that will enable non-client dpi scaling on the
   // window during creation.
-  static LRESULT WINAPI
-  NonClientDpiScalingDefWindowProcW(HWND hWnd, UINT msg,
-                                    WPARAM wParam, LPARAM lParam);
+  static LRESULT WINAPI NonClientDpiScalingDefWindowProcW(HWND hWnd, UINT msg,
+                                                          WPARAM wParam,
+                                                          LPARAM lParam);
 
   /**
    * Get the system's default logical-to-physical DPI scaling factor,
@@ -236,8 +238,8 @@ public:
    * Logging helpers that dump output to prlog module 'Widget', console, and
    * OutputDebugString. Note these output in both debug and release builds.
    */
-  static void Log(const char *fmt, ...);
-  static void LogW(const wchar_t *fmt, ...);
+  static void Log(const char* fmt, ...);
+  static void LogW(const wchar_t* fmt, ...);
 
   /**
    * PeekMessage() and GetMessage() are wrapper methods for PeekMessageW(),
@@ -277,10 +279,8 @@ public:
    * @param aBufferLength The size of aBuffer, in bytes.
    * @return Whether the value exists and is a string.
    */
-  static bool GetRegistryKey(HKEY aRoot,
-                             char16ptr_t aKeyName,
-                             char16ptr_t aValueName,
-                             wchar_t* aBuffer,
+  static bool GetRegistryKey(HKEY aRoot, char16ptr_t aKeyName,
+                             char16ptr_t aValueName, wchar_t* aBuffer,
                              DWORD aBufferLength);
 
   /**
@@ -291,8 +291,7 @@ public:
    * @param aKeyName The name of the registry key to check.
    * @return TRUE if it exists and is readable.  Otherwise, FALSE.
    */
-  static bool HasRegistryKey(HKEY aRoot,
-                             char16ptr_t aKeyName);
+  static bool HasRegistryKey(HKEY aRoot, char16ptr_t aKeyName);
 
   /**
    * GetTopLevelHWND() returns a window handle of the top level window which
@@ -315,17 +314,15 @@ public:
    * |                 |       |    window like dialog |                       |
    * +-----------------+-------+-----------------------+-----------------------+
    */
-  static HWND GetTopLevelHWND(HWND aWnd,
-                              bool aStopIfNotChild = false,
+  static HWND GetTopLevelHWND(HWND aWnd, bool aStopIfNotChild = false,
                               bool aStopIfNotPopup = true);
 
   /**
    * SetNSWindowBasePtr() associates an nsWindowBase to aWnd.  If aWidget is
    * nullptr, it dissociate any nsBaseWidget pointer from aWnd.
-   * GetNSWindowBasePtr() returns an nsWindowBase pointer which was associated by
-   * SetNSWindowBasePtr().
-   * GetNSWindowPtr() is a legacy api for win32 nsWindow and should be avoided
-   * outside of nsWindow src.
+   * GetNSWindowBasePtr() returns an nsWindowBase pointer which was associated
+   * by SetNSWindowBasePtr(). GetNSWindowPtr() is a legacy api for win32
+   * nsWindow and should be avoided outside of nsWindow src.
    */
   static bool SetNSWindowBasePtr(HWND aWnd, nsWindowBase* aWidget);
   static nsWindowBase* GetNSWindowBasePtr(HWND aWnd);
@@ -371,17 +368,13 @@ public:
    * WM_CHAR and WM_UNICHAR.
    *
    */
-  static WORD GetScanCode(LPARAM aLParam)
-  {
-    return (aLParam >> 16) & 0xFF;
-  }
+  static WORD GetScanCode(LPARAM aLParam) { return (aLParam >> 16) & 0xFF; }
 
   /**
    * IsExtendedScanCode() returns TRUE if the LPARAM indicates the key message
    * is an extended key event.
    */
-  static bool IsExtendedScanCode(LPARAM aLParam)
-  {
+  static bool IsExtendedScanCode(LPARAM aLParam) {
     return (aLParam & 0x1000000) != 0;
   }
 
@@ -407,7 +400,8 @@ public:
 
   /**
    * Windows also fires mouse window messages for pens and touches, so we should
-   * retrieve their pointer ID on receiving mouse events as well. Please refer to
+   * retrieve their pointer ID on receiving mouse events as well. Please refer
+   * to
    * https://msdn.microsoft.com/en-us/library/windows/desktop/ms703320(v=vs.85).aspx
    */
   static uint16_t GetMousePointerID();
@@ -422,8 +416,7 @@ public:
    * aResultString  the resulting string path.
    * returns  true if a path was retreived.
    */
-  static bool GetShellItemPath(IShellItem* aItem,
-                               nsString& aResultString);
+  static bool GetShellItemPath(IShellItem* aItem, nsString& aResultString);
 
   /**
    * ConvertHRGNToRegion converts a Windows HRGN to an LayoutDeviceIntRegion.
@@ -459,24 +452,24 @@ public:
    * nsIWidget::SynthethizeNative*Event().
    */
   static void SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
-                                        uint32_t aModifiers,
-                                        UINT aMessage);
+                                        uint32_t aModifiers, UINT aMessage);
 
   /**
-  * Does device have touch support
-  */
+   * Does device have touch support
+   */
   static uint32_t IsTouchDeviceSupportPresent();
 
   /**
-  * The maximum number of simultaneous touch contacts supported by the device.
-  * In the case of devices with multiple digitizers (e.g. multiple touch screens),
-  * the value will be the maximum of the set of maximum supported contacts by
-  * each individual digitizer.
-  */
+   * The maximum number of simultaneous touch contacts supported by the device.
+   * In the case of devices with multiple digitizers (e.g. multiple touch
+   * screens), the value will be the maximum of the set of maximum supported
+   * contacts by each individual digitizer.
+   */
   static uint32_t GetMaxTouchPoints();
 
   /**
-   * Returns the windows power platform role, which is useful for detecting tablets.
+   * Returns the windows power platform role, which is useful for detecting
+   * tablets.
    */
   static POWER_PLATFORM_ROLE GetPowerPlatformRole();
 
@@ -498,7 +491,6 @@ public:
   static bool ResolveJunctionPointsAndSymLinks(std::wstring& aPath);
   static bool ResolveJunctionPointsAndSymLinks(nsIFile* aPath);
 
-
   /**
    * Returns true if executable's path is on a network drive.
    */
@@ -506,7 +498,8 @@ public:
 
   static void Initialize();
 
-  static nsresult WriteBitmap(nsIFile* aFile, mozilla::gfx::SourceSurface* surface);
+  static nsresult WriteBitmap(nsIFile* aFile,
+                              mozilla::gfx::SourceSurface* surface);
   // This function is a helper, but it cannot be called from the main thread.
   // Use the one above!
   static nsresult WriteBitmap(nsIFile* aFile, imgIContainer* aImage);
@@ -549,8 +542,7 @@ public:
    */
   static bool GetAppInitDLLs(nsAString& aOutput);
 
-  enum class PathTransformFlags : uint32_t
-  {
+  enum class PathTransformFlags : uint32_t {
     Canonicalize = 1,
     Lengthen = 2,
     UnexpandEnvVars = 4,
@@ -569,10 +561,12 @@ public:
    *                performed.
    * @return true on success, false on failure.
    */
-  static bool PreparePathForTelemetry(nsAString& aPath,
+  static bool PreparePathForTelemetry(
+      nsAString& aPath,
       PathTransformFlags aFlags = PathTransformFlags::Default);
 
-  static const nsTArray<Pair<nsString, nsDependentString>>& GetWhitelistedPaths();
+  static const nsTArray<Pair<nsString, nsDependentString>>&
+  GetWhitelistedPaths();
 
 #ifdef ACCESSIBILITY
   static a11y::Accessible* GetRootAccessibleForHWND(HWND aHwnd);
@@ -580,17 +574,16 @@ public:
 };
 
 #ifdef MOZ_PLACES
-class AsyncFaviconDataReady final : public nsIFaviconDataCallback
-{
-public:
+class AsyncFaviconDataReady final : public nsIFaviconDataCallback {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONDATACALLBACK
 
-  AsyncFaviconDataReady(nsIURI *aNewURI,
-                        nsCOMPtr<nsIThread> &aIOThread,
+  AsyncFaviconDataReady(nsIURI* aNewURI, nsCOMPtr<nsIThread>& aIOThread,
                         const bool aURLShortcut);
   nsresult OnFaviconDataNotAvailable(void);
-private:
+
+ private:
   ~AsyncFaviconDataReady() {}
 
   nsCOMPtr<nsIURI> mNewURI;
@@ -600,22 +593,22 @@ private:
 #endif
 
 /**
-  * Asynchronously tries add the list to the build
-  */
-class AsyncEncodeAndWriteIcon : public nsIRunnable
-{
-public:
+ * Asynchronously tries add the list to the build
+ */
+class AsyncEncodeAndWriteIcon : public nsIRunnable {
+ public:
   const bool mURLShortcut;
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  // Warning: AsyncEncodeAndWriteIcon assumes ownership of the aData buffer passed in
-  AsyncEncodeAndWriteIcon(const nsAString &aIconPath,
-                          UniquePtr<uint8_t[]> aData,
-                          uint32_t aStride, uint32_t aWidth, uint32_t aHeight,
+  // Warning: AsyncEncodeAndWriteIcon assumes ownership of the aData buffer
+  // passed in
+  AsyncEncodeAndWriteIcon(const nsAString& aIconPath,
+                          UniquePtr<uint8_t[]> aData, uint32_t aStride,
+                          uint32_t aWidth, uint32_t aHeight,
                           const bool aURLShortcut);
 
-private:
+ private:
   virtual ~AsyncEncodeAndWriteIcon();
 
   nsAutoString mIconPath;
@@ -625,15 +618,14 @@ private:
   uint32_t mHeight;
 };
 
-class AsyncDeleteAllFaviconsFromDisk : public nsIRunnable
-{
-public:
+class AsyncDeleteAllFaviconsFromDisk : public nsIRunnable {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   explicit AsyncDeleteAllFaviconsFromDisk(bool aIgnoreRecent = false);
 
-private:
+ private:
   virtual ~AsyncDeleteAllFaviconsFromDisk();
 
   int32_t mIcoNoDeleteSeconds;
@@ -641,36 +633,32 @@ private:
   nsCOMPtr<nsIFile> mJumpListCacheDir;
 };
 
-class FaviconHelper
-{
-public:
+class FaviconHelper {
+ public:
   static const char kJumpListCacheDir[];
   static const char kShortcutCacheDir[];
   static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
-                                       nsString &aICOFilePath,
-                                       nsCOMPtr<nsIThread> &aIOThread,
+                                       nsString& aICOFilePath,
+                                       nsCOMPtr<nsIThread>& aIOThread,
                                        bool aURLShortcut);
 
-  static nsresult HashURI(nsCOMPtr<nsICryptoHash> &aCryptoHash,
-                          nsIURI *aUri,
+  static nsresult HashURI(nsCOMPtr<nsICryptoHash>& aCryptoHash, nsIURI* aUri,
                           nsACString& aUriHash);
 
   static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
-                                    nsCOMPtr<nsIFile> &aICOFile,
+                                    nsCOMPtr<nsIFile>& aICOFile,
                                     bool aURLShortcut);
 
-  static nsresult
-  CacheIconFileFromFaviconURIAsync(nsCOMPtr<nsIURI> aFaviconPageURI,
-                                   nsCOMPtr<nsIFile> aICOFile,
-                                   nsCOMPtr<nsIThread> &aIOThread,
-                                   bool aURLShortcut);
+  static nsresult CacheIconFileFromFaviconURIAsync(
+      nsCOMPtr<nsIURI> aFaviconPageURI, nsCOMPtr<nsIFile> aICOFile,
+      nsCOMPtr<nsIThread>& aIOThread, bool aURLShortcut);
 
   static int32_t GetICOCacheSecondsTimeout();
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(WinUtils::PathTransformFlags);
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // mozilla_widget_WinUtils_h__
+#endif  // mozilla_widget_WinUtils_h__

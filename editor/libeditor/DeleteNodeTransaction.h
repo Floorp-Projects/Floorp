@@ -21,12 +21,11 @@ class EditorBase;
 /**
  * A transaction that deletes a single element
  */
-class DeleteNodeTransaction final : public EditTransactionBase
-{
-protected:
+class DeleteNodeTransaction final : public EditTransactionBase {
+ protected:
   DeleteNodeTransaction(EditorBase& aEditorBase, nsINode& aNodeToDelete);
 
-public:
+ public:
   /**
    * Creates a delete node transaction instance.  This returns nullptr if
    * it cannot remove the node from its parent.
@@ -34,8 +33,8 @@ public:
    * @param aEditorBase         The editor.
    * @param aNodeToDelete       The node to be removed from the DOM tree.
    */
-  static already_AddRefed<DeleteNodeTransaction>
-  MaybeCreate(EditorBase& aEditorBase, nsINode& aNodeToDelete);
+  static already_AddRefed<DeleteNodeTransaction> MaybeCreate(
+      EditorBase& aEditorBase, nsINode& aNodeToDelete);
 
   /**
    * CanDoIt() returns true if there are enough members and can modify the
@@ -51,7 +50,7 @@ public:
 
   NS_IMETHOD RedoTransaction() override;
 
-protected:
+ protected:
   virtual ~DeleteNodeTransaction();
 
   // The editor for this transaction.
@@ -67,6 +66,6 @@ protected:
   nsCOMPtr<nsIContent> mRefNode;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef DeleteNodeTransaction_h
+#endif  // #ifndef DeleteNodeTransaction_h

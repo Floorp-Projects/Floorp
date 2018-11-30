@@ -14,4 +14,4 @@
  */
 #define XRE_API(type, name, params) type name params;
 
-#endif // xrecore_h__
+#endif  // xrecore_h__

@@ -18,12 +18,12 @@ namespace mozilla {
 
 // Holds the data that telemetry requests, and will be later converted to the
 // telemetry payload.
-class UntrustedModuleLoadTelemetryData
-{
-public:
+class UntrustedModuleLoadTelemetryData {
+ public:
   UntrustedModuleLoadTelemetryData() = default;
   // Moves allowed, no copies.
-  UntrustedModuleLoadTelemetryData(UntrustedModuleLoadTelemetryData&&) = default;
+  UntrustedModuleLoadTelemetryData(UntrustedModuleLoadTelemetryData&&) =
+      default;
   UntrustedModuleLoadTelemetryData(
       const UntrustedModuleLoadTelemetryData& aOther) = delete;
 
@@ -34,9 +34,8 @@ public:
 
 class UntrustedModulesManager;
 
-class DllServices : public mozilla::glue::DllServices
-{
-public:
+class DllServices : public mozilla::glue::DllServices {
+ public:
   static DllServices* Get();
 
   static const char* kTopicDllLoadedMainThread;
@@ -55,18 +54,20 @@ public:
    */
   bool GetUntrustedModuleTelemetryData(UntrustedModuleLoadTelemetryData& aOut);
 
-private:
+ private:
   DllServices();
   ~DllServices() = default;
 
-  void NotifyDllLoad(const bool aIsMainThread, const nsString& aDllName) override;
+  void NotifyDllLoad(const bool aIsMainThread,
+                     const nsString& aDllName) override;
 
   void NotifyUntrustedModuleLoads(
-    const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents) override;
+      const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents)
+      override;
 
   UniquePtr<UntrustedModulesManager> mUntrustedModulesManager;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_WinDllServices_h
+#endif  // mozilla_WinDllServices_h

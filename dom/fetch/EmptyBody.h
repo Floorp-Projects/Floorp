@@ -15,62 +15,39 @@ namespace mozilla {
 
 namespace ipc {
 class PrincipalInfo;
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
-class EmptyBody final : public nsISupports
-                      , public FetchBody<EmptyBody>
-{
+class EmptyBody final : public nsISupports, public FetchBody<EmptyBody> {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(EmptyBody)
 
-public:
-  static already_AddRefed<EmptyBody>
-  Create(nsIGlobalObject* aGlobal,
-         mozilla::ipc::PrincipalInfo* aPrincipalInfo,
-         AbortSignalImpl* aAbortSignalImpl,
-         const nsACString& aMimeType,
-         ErrorResult& aRv);
+ public:
+  static already_AddRefed<EmptyBody> Create(
+      nsIGlobalObject* aGlobal, mozilla::ipc::PrincipalInfo* aPrincipalInfo,
+      AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
+      ErrorResult& aRv);
 
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mOwner;
-  }
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
 
-  AbortSignalImpl*
-  GetSignalImpl() const override
-  {
-    return mAbortSignalImpl;
-  }
+  AbortSignalImpl* GetSignalImpl() const override { return mAbortSignalImpl; }
 
-  const UniquePtr<mozilla::ipc::PrincipalInfo>&
-  GetPrincipalInfo() const
-  {
+  const UniquePtr<mozilla::ipc::PrincipalInfo>& GetPrincipalInfo() const {
     return mPrincipalInfo;
   }
 
-  void
-  GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr);
+  void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr);
 
   using FetchBody::BodyBlobURISpec;
 
-  const nsACString&
-  BodyBlobURISpec() const
-  {
-    return EmptyCString();
-  }
+  const nsACString& BodyBlobURISpec() const { return EmptyCString(); }
 
   using FetchBody::BodyLocalPath;
 
-  const nsAString&
-  BodyLocalPath() const
-  {
-    return EmptyString();
-  }
+  const nsAString& BodyLocalPath() const { return EmptyString(); }
 
-private:
+ private:
   EmptyBody(nsIGlobalObject* aGlobal,
             mozilla::ipc::PrincipalInfo* aPrincipalInfo,
             AbortSignalImpl* aAbortSignalImpl,
@@ -83,7 +60,7 @@ private:
   nsCOMPtr<nsIInputStream> mBodyStream;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_EmptyBody_h
+#endif  // mozilla_dom_EmptyBody_h

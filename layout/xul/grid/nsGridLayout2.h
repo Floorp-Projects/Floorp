@@ -21,37 +21,49 @@ class nsBoxLayoutState;
 /**
  * The nsBoxLayout implementation for a grid.
  */
-class nsGridLayout2 final : public nsStackLayout,
-                            public nsIGridPart
-{
-public:
-
-  friend nsresult NS_NewGridLayout2(nsIPresShell* aPresShell, nsBoxLayout** aNewLayout);
+class nsGridLayout2 final : public nsStackLayout, public nsIGridPart {
+ public:
+  friend nsresult NS_NewGridLayout2(nsIPresShell* aPresShell,
+                                    nsBoxLayout** aNewLayout);
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD XULLayout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
-  virtual void IntrinsicISizesDirty(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  NS_IMETHOD XULLayout(nsIFrame* aBox,
+                       nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void IntrinsicISizesDirty(nsIFrame* aBox,
+                                    nsBoxLayoutState& aBoxLayoutState) override;
 
-  virtual nsGridRowGroupLayout* CastToRowGroupLayout() override { return nullptr; }
-  virtual nsGridLayout2* CastToGridLayout() override { return this; }
-  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr) override;
-  virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) override {
-    MOZ_ASSERT_UNREACHABLE("Should not be called"); return nullptr;
+  virtual nsGridRowGroupLayout* CastToRowGroupLayout() override {
+    return nullptr;
   }
-  virtual nsSize GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
-  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) override { aRowCount++; }
-  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) override { }
+  virtual nsGridLayout2* CastToGridLayout() override { return this; }
+  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex,
+                          nsGridRowLayout* aRequestor = nullptr) override;
+  virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox,
+                                         nsIFrame** aParentBox) override {
+    MOZ_ASSERT_UNREACHABLE("Should not be called");
+    return nullptr;
+  }
+  virtual nsSize GetXULMinSize(nsIFrame* aBox,
+                               nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMaxSize(nsIFrame* aBox,
+                               nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULPrefSize(nsIFrame* aBox,
+                                nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount,
+                                int32_t& aComputedColumnCount) override {
+    aRowCount++;
+  }
+  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) override {}
   virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) override;
   virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal) override;
   virtual Type GetType() override { return eGrid; }
-  virtual void ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,
-                                nsIFrame* aPrevBox,
-                                const nsFrameList::Slice& aNewChildren) override;
-  virtual void ChildrenAppended(nsIFrame* aBox, nsBoxLayoutState& aState,
-                                const nsFrameList::Slice& aNewChildren) override;
+  virtual void ChildrenInserted(
+      nsIFrame* aBox, nsBoxLayoutState& aState, nsIFrame* aPrevBox,
+      const nsFrameList::Slice& aNewChildren) override;
+  virtual void ChildrenAppended(
+      nsIFrame* aBox, nsBoxLayoutState& aState,
+      const nsFrameList::Slice& aNewChildren) override;
   virtual void ChildrenRemoved(nsIFrame* aBox, nsBoxLayoutState& aState,
                                nsIFrame* aChildList) override;
   virtual void ChildrenSet(nsIFrame* aBox, nsBoxLayoutState& aState,
@@ -61,18 +73,14 @@ public:
 
   static void AddOffset(nsIFrame* aChild, nsSize& aSize);
 
-protected:
-
+ protected:
   explicit nsGridLayout2(nsIPresShell* aShell);
   virtual ~nsGridLayout2();
   nsGrid mGrid;
 
-private:
+ private:
   void AddWidth(nsSize& aSize, nscoord aSize2, bool aIsHorizontal);
 
-
-}; // class nsGridLayout2
-
+};  // class nsGridLayout2
 
 #endif
-

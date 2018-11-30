@@ -16,9 +16,8 @@ class nsIFile;
 class nsIThread;
 class nsITimer;
 
-
 class nsDeleteDir {
-public:
+ public:
   nsDeleteDir();
   ~nsDeleteDir();
 
@@ -58,23 +57,23 @@ public:
 
   static void TimerCallback(nsITimer *aTimer, void *arg);
 
-private:
+ private:
   friend class nsBlockOnBackgroundThreadEvent;
   friend class nsDestroyThreadEvent;
 
   nsresult InitThread();
-  void     DestroyThread();
+  void DestroyThread();
   nsresult PostTimer(void *arg, uint32_t delay);
   nsresult RemoveDir(nsIFile *file, bool *stopDeleting);
 
-  static nsDeleteDir * gInstance;
-  mozilla::Mutex       mLock;
-  mozilla::CondVar     mCondVar;
-  bool                 mNotified;
+  static nsDeleteDir *gInstance;
+  mozilla::Mutex mLock;
+  mozilla::CondVar mCondVar;
+  bool mNotified;
   nsCOMArray<nsITimer> mTimers;
-  nsCOMPtr<nsIThread>  mThread;
-  bool                 mShutdownPending;
-  bool                 mStopDeleting;
+  nsCOMPtr<nsIThread> mThread;
+  bool mShutdownPending;
+  bool mStopDeleting;
 };
 
 #endif  // nsDeleteDir_h__

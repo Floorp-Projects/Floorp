@@ -12,25 +12,24 @@
 
 namespace mozilla {
 
-class MessagePortTimelineMarker : public TimelineMarker
-{
-public:
-  MessagePortTimelineMarker(dom::ProfileTimelineMessagePortOperationType aOperationType,
-                            MarkerTracingType aTracingType)
-    : TimelineMarker("MessagePort", aTracingType, MarkerStackRequest::NO_STACK)
-    , mOperationType(aOperationType)
-  {}
+class MessagePortTimelineMarker : public TimelineMarker {
+ public:
+  MessagePortTimelineMarker(
+      dom::ProfileTimelineMessagePortOperationType aOperationType,
+      MarkerTracingType aTracingType)
+      : TimelineMarker("MessagePort", aTracingType,
+                       MarkerStackRequest::NO_STACK),
+        mOperationType(aOperationType) {}
 
-  virtual UniquePtr<AbstractTimelineMarker> Clone() override
-  {
+  virtual UniquePtr<AbstractTimelineMarker> Clone() override {
     MessagePortTimelineMarker* clone =
-      new MessagePortTimelineMarker(mOperationType, GetTracingType());
+        new MessagePortTimelineMarker(mOperationType, GetTracingType());
     clone->SetCustomTime(GetTime());
     return UniquePtr<AbstractTimelineMarker>(clone);
   }
 
-  virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
-  {
+  virtual void AddDetails(JSContext* aCx,
+                          dom::ProfileTimelineMarker& aMarker) override {
     TimelineMarker::AddDetails(aCx, aMarker);
 
     if (GetTracingType() == MarkerTracingType::START) {
@@ -38,10 +37,10 @@ public:
     }
   }
 
-private:
+ private:
   dom::ProfileTimelineMessagePortOperationType mOperationType;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_MessagePortTimelineMarker_h_ */

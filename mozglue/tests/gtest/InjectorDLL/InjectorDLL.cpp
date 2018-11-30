@@ -4,8 +4,4 @@
 
 #include <windows.h>
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD aReason, LPVOID)
-{
-  return TRUE;
-}
-
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD aReason, LPVOID) { return TRUE; }

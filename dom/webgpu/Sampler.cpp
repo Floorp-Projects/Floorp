@@ -15,5 +15,5 @@ Sampler::~Sampler() = default;
 
 WEBGPU_IMPL_GOOP_0(Sampler)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

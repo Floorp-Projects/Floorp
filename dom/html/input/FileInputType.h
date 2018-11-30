@@ -10,12 +10,10 @@
 #include "InputType.h"
 
 // input type=file
-class FileInputType : public ::InputType
-{
-public:
-  static InputType*
-  Create(mozilla::dom::HTMLInputElement* aInputElement, void* aMemory)
-  {
+class FileInputType : public ::InputType {
+ public:
+  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
+                           void* aMemory) {
     return new (aMemory) FileInputType(aInputElement);
   }
 
@@ -23,10 +21,9 @@ public:
 
   nsresult GetValueMissingMessage(nsAString& aMessage) override;
 
-private:
+ private:
   explicit FileInputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : InputType(aInputElement)
-  {}
+      : InputType(aInputElement) {}
 };
 
 #endif /* FileInputType_h__ */

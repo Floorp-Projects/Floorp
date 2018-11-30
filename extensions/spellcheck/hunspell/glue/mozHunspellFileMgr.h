@@ -16,9 +16,8 @@
 
 // Note: This class name and lack of namespacing terrible, but are necessary
 // for Hunspell compatibility.
-class FileMgr final
-{
-public:
+class FileMgr final {
+ public:
   /**
    * aFilename must be a local file/jar URI for the file to load.
    *
@@ -33,7 +32,7 @@ public:
   bool getline(std::string& aLine);
   int getlinenum() const { return mLineNum; }
 
-private:
+ private:
   mozilla::Result<mozilla::Ok, nsresult> Open(const nsACString& aPath);
 
   mozilla::Result<mozilla::Ok, nsresult> ReadLine(nsACString& aLine);
@@ -43,4 +42,4 @@ private:
   nsLineBuffer<char> mLineBuffer;
 };
 
-#endif // mozHunspellFileMgr_h
+#endif  // mozHunspellFileMgr_h

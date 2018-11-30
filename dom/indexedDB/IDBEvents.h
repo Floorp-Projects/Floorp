@@ -13,8 +13,12 @@
 #include "mozilla/dom/Nullable.h"
 #include "nsStringFwd.h"
 
-#define IDBVERSIONCHANGEEVENT_IID \
-  {0x3b65d4c3, 0x73ad, 0x492e, {0xb1, 0x2d, 0x15, 0xf9, 0xda, 0xc2, 0x08, 0x4b}}
+#define IDBVERSIONCHANGEEVENT_IID                    \
+  {                                                  \
+    0x3b65d4c3, 0x73ad, 0x492e, {                    \
+      0xb1, 0x2d, 0x15, 0xf9, 0xda, 0xc2, 0x08, 0x4b \
+    }                                                \
+  }
 
 namespace mozilla {
 
@@ -28,15 +32,9 @@ struct IDBVersionChangeEventInit;
 
 namespace indexedDB {
 
-enum Bubbles {
-  eDoesNotBubble,
-  eDoesBubble
-};
+enum Bubbles { eDoesNotBubble, eDoesBubble };
 
-enum Cancelable {
-  eNotCancelable,
-  eCancelable
-};
+enum Cancelable { eNotCancelable, eCancelable };
 
 extern const char16_t* kAbortEventType;
 extern const char16_t* kBlockedEventType;
@@ -47,85 +45,62 @@ extern const char16_t* kUpgradeNeededEventType;
 extern const char16_t* kVersionChangeEventType;
 extern const char16_t* kCloseEventType;
 
-already_AddRefed<Event>
-CreateGenericEvent(EventTarget* aOwner,
-                   const nsDependentString& aType,
-                   Bubbles aBubbles,
-                   Cancelable aCancelable);
+already_AddRefed<Event> CreateGenericEvent(EventTarget* aOwner,
+                                           const nsDependentString& aType,
+                                           Bubbles aBubbles,
+                                           Cancelable aCancelable);
 
-} // namespace indexedDB
+}  // namespace indexedDB
 
-class IDBVersionChangeEvent final : public Event
-{
+class IDBVersionChangeEvent final : public Event {
   uint64_t mOldVersion;
   Nullable<uint64_t> mNewVersion;
 
-public:
-  static already_AddRefed<IDBVersionChangeEvent>
-  Create(EventTarget* aOwner,
-         const nsDependentString& aName,
-         uint64_t aOldVersion,
-         uint64_t aNewVersion)
-  {
+ public:
+  static already_AddRefed<IDBVersionChangeEvent> Create(
+      EventTarget* aOwner, const nsDependentString& aName, uint64_t aOldVersion,
+      uint64_t aNewVersion) {
     Nullable<uint64_t> newVersion(aNewVersion);
     return CreateInternal(aOwner, aName, aOldVersion, newVersion);
   }
 
-  static already_AddRefed<IDBVersionChangeEvent>
-  Create(EventTarget* aOwner,
-         const nsDependentString& aName,
-         uint64_t aOldVersion)
-  {
+  static already_AddRefed<IDBVersionChangeEvent> Create(
+      EventTarget* aOwner, const nsDependentString& aName,
+      uint64_t aOldVersion) {
     Nullable<uint64_t> newVersion(0);
     newVersion.SetNull();
     return CreateInternal(aOwner, aName, aOldVersion, newVersion);
   }
 
-  static already_AddRefed<IDBVersionChangeEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const IDBVersionChangeEventInit& aOptions,
-              ErrorResult& aRv);
+  static already_AddRefed<IDBVersionChangeEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const IDBVersionChangeEventInit& aOptions, ErrorResult& aRv);
 
-  uint64_t
-  OldVersion() const
-  {
-    return mOldVersion;
-  }
+  uint64_t OldVersion() const { return mOldVersion; }
 
-  Nullable<uint64_t>
-  GetNewVersion() const
-  {
-    return mNewVersion;
-  }
+  Nullable<uint64_t> GetNewVersion() const { return mNewVersion; }
 
   NS_DECLARE_STATIC_IID_ACCESSOR(IDBVERSIONCHANGEEVENT_IID)
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual JSObject*
-  WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   IDBVersionChangeEvent(EventTarget* aOwner, uint64_t aOldVersion)
-    : Event(aOwner, nullptr, nullptr)
-    , mOldVersion(aOldVersion)
-  {
-  }
+      : Event(aOwner, nullptr, nullptr), mOldVersion(aOldVersion) {}
 
-  ~IDBVersionChangeEvent()
-  { }
+  ~IDBVersionChangeEvent() {}
 
-  static already_AddRefed<IDBVersionChangeEvent>
-  CreateInternal(EventTarget* aOwner,
-                 const nsAString& aName,
-                 uint64_t aOldVersion,
-                 const Nullable<uint64_t>& aNewVersion);
+  static already_AddRefed<IDBVersionChangeEvent> CreateInternal(
+      EventTarget* aOwner, const nsAString& aName, uint64_t aOldVersion,
+      const Nullable<uint64_t>& aNewVersion);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IDBVersionChangeEvent, IDBVERSIONCHANGEEVENT_IID)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_idbevents_h__
+#endif  // mozilla_dom_idbevents_h__

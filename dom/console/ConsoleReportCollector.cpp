@@ -18,33 +18,24 @@ using mozilla::dom::ConsoleUtils;
 NS_IMPL_ISUPPORTS(ConsoleReportCollector, nsIConsoleReportCollector)
 
 ConsoleReportCollector::ConsoleReportCollector()
-  : mMutex("mozilla::ConsoleReportCollector")
-{
-}
+    : mMutex("mozilla::ConsoleReportCollector") {}
 
-void
-ConsoleReportCollector::AddConsoleReport(uint32_t aErrorFlags,
-                                         const nsACString& aCategory,
-                                         nsContentUtils::PropertiesFile aPropertiesFile,
-                                         const nsACString& aSourceFileURI,
-                                         uint32_t aLineNumber,
-                                         uint32_t aColumnNumber,
-                                         const nsACString& aMessageName,
-                                         const nsTArray<nsString>& aStringParams)
-{
+void ConsoleReportCollector::AddConsoleReport(
+    uint32_t aErrorFlags, const nsACString& aCategory,
+    nsContentUtils::PropertiesFile aPropertiesFile,
+    const nsACString& aSourceFileURI, uint32_t aLineNumber,
+    uint32_t aColumnNumber, const nsACString& aMessageName,
+    const nsTArray<nsString>& aStringParams) {
   // any thread
   MutexAutoLock lock(mMutex);
 
-  mPendingReports.AppendElement(PendingReport(aErrorFlags, aCategory,
-                                              aPropertiesFile, aSourceFileURI,
-                                              aLineNumber, aColumnNumber,
-                                              aMessageName, aStringParams));
+  mPendingReports.AppendElement(
+      PendingReport(aErrorFlags, aCategory, aPropertiesFile, aSourceFileURI,
+                    aLineNumber, aColumnNumber, aMessageName, aStringParams));
 }
 
-void
-ConsoleReportCollector::FlushReportsToConsole(uint64_t aInnerWindowID,
-                                              ReportAction aAction)
-{
+void ConsoleReportCollector::FlushReportsToConsole(uint64_t aInnerWindowID,
+                                                   ReportAction aAction) {
   nsTArray<PendingReport> reports;
 
   {
@@ -62,14 +53,12 @@ ConsoleReportCollector::FlushReportsToConsole(uint64_t aInnerWindowID,
     nsAutoString errorText;
     nsresult rv;
     if (!report.mStringParams.IsEmpty()) {
-      rv = nsContentUtils::FormatLocalizedString(report.mPropertiesFile,
-                                                 report.mMessageName.get(),
-                                                 report.mStringParams,
-                                                 errorText);
+      rv = nsContentUtils::FormatLocalizedString(
+          report.mPropertiesFile, report.mMessageName.get(),
+          report.mStringParams, errorText);
     } else {
-      rv = nsContentUtils::GetLocalizedString(report.mPropertiesFile,
-                                              report.mMessageName.get(),
-                                              errorText);
+      rv = nsContentUtils::GetLocalizedString(
+          report.mPropertiesFile, report.mMessageName.get(), errorText);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
@@ -86,21 +75,14 @@ ConsoleReportCollector::FlushReportsToConsole(uint64_t aInnerWindowID,
       }
     }
 
-    nsContentUtils::ReportToConsoleByWindowID(errorText,
-                                              report.mErrorFlags,
-                                              report.mCategory,
-                                              aInnerWindowID,
-                                              uri,
-                                              EmptyString(),
-                                              report.mLineNumber,
-                                              report.mColumnNumber);
+    nsContentUtils::ReportToConsoleByWindowID(
+        errorText, report.mErrorFlags, report.mCategory, aInnerWindowID, uri,
+        EmptyString(), report.mLineNumber, report.mColumnNumber);
   }
 }
 
-void
-ConsoleReportCollector::FlushReportsToConsoleForServiceWorkerScope(const nsACString& aScope,
-                                                                   ReportAction aAction)
-{
+void ConsoleReportCollector::FlushReportsToConsoleForServiceWorkerScope(
+    const nsACString& aScope, ReportAction aAction) {
   nsTArray<PendingReport> reports;
 
   {
@@ -118,14 +100,12 @@ ConsoleReportCollector::FlushReportsToConsoleForServiceWorkerScope(const nsACStr
     nsAutoString errorText;
     nsresult rv;
     if (!report.mStringParams.IsEmpty()) {
-      rv = nsContentUtils::FormatLocalizedString(report.mPropertiesFile,
-                                                 report.mMessageName.get(),
-                                                 report.mStringParams,
-                                                 errorText);
+      rv = nsContentUtils::FormatLocalizedString(
+          report.mPropertiesFile, report.mMessageName.get(),
+          report.mStringParams, errorText);
     } else {
-      rv = nsContentUtils::GetLocalizedString(report.mPropertiesFile,
-                                              report.mMessageName.get(),
-                                              errorText);
+      rv = nsContentUtils::GetLocalizedString(
+          report.mPropertiesFile, report.mMessageName.get(), errorText);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
@@ -145,34 +125,27 @@ ConsoleReportCollector::FlushReportsToConsoleForServiceWorkerScope(const nsACStr
         break;
     }
 
-    ConsoleUtils::ReportForServiceWorkerScope(NS_ConvertUTF8toUTF16(aScope),
-                                              errorText,
-                                              NS_ConvertUTF8toUTF16(report.mSourceFileURI),
-                                              report.mLineNumber,
-                                              report.mColumnNumber,
-                                              level);
+    ConsoleUtils::ReportForServiceWorkerScope(
+        NS_ConvertUTF8toUTF16(aScope), errorText,
+        NS_ConvertUTF8toUTF16(report.mSourceFileURI), report.mLineNumber,
+        report.mColumnNumber, level);
   }
 }
 
-void
-ConsoleReportCollector::FlushConsoleReports(nsIDocument* aDocument,
-                                            ReportAction aAction)
-{
+void ConsoleReportCollector::FlushConsoleReports(nsIDocument* aDocument,
+                                                 ReportAction aAction) {
   MOZ_ASSERT(NS_IsMainThread());
 
   FlushReportsToConsole(aDocument ? aDocument->InnerWindowID() : 0, aAction);
 }
 
-void
-ConsoleReportCollector::FlushConsoleReports(nsILoadGroup* aLoadGroup,
-                                            ReportAction aAction)
-{
+void ConsoleReportCollector::FlushConsoleReports(nsILoadGroup* aLoadGroup,
+                                                 ReportAction aAction) {
   FlushReportsToConsole(nsContentUtils::GetInnerWindowID(aLoadGroup), aAction);
 }
 
-void
-ConsoleReportCollector::FlushConsoleReports(nsIConsoleReportCollector* aCollector)
-{
+void ConsoleReportCollector::FlushConsoleReports(
+    nsIConsoleReportCollector* aCollector) {
   MOZ_ASSERT(aCollector);
 
   nsTArray<PendingReport> reports;
@@ -191,16 +164,12 @@ ConsoleReportCollector::FlushConsoleReports(nsIConsoleReportCollector* aCollecto
   }
 }
 
-void
-ConsoleReportCollector::ClearConsoleReports()
-{
+void ConsoleReportCollector::ClearConsoleReports() {
   MutexAutoLock lock(mMutex);
 
   mPendingReports.Clear();
 }
 
-ConsoleReportCollector::~ConsoleReportCollector()
-{
-}
+ConsoleReportCollector::~ConsoleReportCollector() {}
 
-} // namespace mozilla
+}  // namespace mozilla

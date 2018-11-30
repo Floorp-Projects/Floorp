@@ -31,26 +31,20 @@ NS_INTERFACE_MAP_BEGIN(BlobURL)
     // nsSimplURI::QueryInterface and finding something for this CID.
     *aInstancePtr = nullptr;
     return NS_NOINTERFACE;
-  }
-  else
+  } else
 NS_INTERFACE_MAP_END_INHERITING(mozilla::net::nsSimpleURI)
 
-BlobURL::BlobURL()
-  : mRevoked(false)
-{}
+BlobURL::BlobURL() : mRevoked(false) {}
 
 // nsISerializable methods:
 
 NS_IMETHODIMP
-BlobURL::Read(nsIObjectInputStream* aStream)
-{
+BlobURL::Read(nsIObjectInputStream* aStream) {
   MOZ_ASSERT_UNREACHABLE("Use nsIURIMutator.read() instead");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-BlobURL::ReadPrivate(nsIObjectInputStream *aStream)
-{
+nsresult BlobURL::ReadPrivate(nsIObjectInputStream* aStream) {
   nsresult rv = mozilla::net::nsSimpleURI::ReadPrivate(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -61,8 +55,7 @@ BlobURL::ReadPrivate(nsIObjectInputStream *aStream)
 }
 
 NS_IMETHODIMP
-BlobURL::Write(nsIObjectOutputStream* aStream)
-{
+BlobURL::Write(nsIObjectOutputStream* aStream) {
   nsresult rv = mozilla::net::nsSimpleURI::Write(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -73,9 +66,7 @@ BlobURL::Write(nsIObjectOutputStream* aStream)
 }
 
 // nsIIPCSerializableURI methods:
-void
-BlobURL::Serialize(mozilla::ipc::URIParams& aParams)
-{
+void BlobURL::Serialize(mozilla::ipc::URIParams& aParams) {
   using namespace mozilla::ipc;
 
   HostObjectURIParams hostParams;
@@ -89,14 +80,12 @@ BlobURL::Serialize(mozilla::ipc::URIParams& aParams)
   aParams = hostParams;
 }
 
-bool
-BlobURL::Deserialize(const mozilla::ipc::URIParams& aParams)
-{
+bool BlobURL::Deserialize(const mozilla::ipc::URIParams& aParams) {
   using namespace mozilla::ipc;
 
   if (aParams.type() != URIParams::THostObjectURIParams) {
-      NS_ERROR("Received unknown parameters from the other process!");
-      return false;
+    NS_ERROR("Received unknown parameters from the other process!");
+    return false;
   }
 
   const HostObjectURIParams& hostParams = aParams.get_HostObjectURIParams();
@@ -109,23 +98,19 @@ BlobURL::Deserialize(const mozilla::ipc::URIParams& aParams)
   return true;
 }
 
-nsresult
-BlobURL::SetScheme(const nsACString& aScheme)
-{
+nsresult BlobURL::SetScheme(const nsACString& aScheme) {
   // Disallow setting the scheme, since that could cause us to be associated
   // with a different protocol handler.
   return NS_ERROR_FAILURE;
 }
 
 // nsIURI methods:
-nsresult
-BlobURL::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
-                       const nsACString& newRef,
-                       nsIURI** aClone)
-{
+nsresult BlobURL::CloneInternal(
+    mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
+    const nsACString& newRef, nsIURI** aClone) {
   nsCOMPtr<nsIURI> simpleClone;
-  nsresult rv =
-    mozilla::net::nsSimpleURI::CloneInternal(aRefHandlingMode, newRef, getter_AddRefs(simpleClone));
+  nsresult rv = mozilla::net::nsSimpleURI::CloneInternal(
+      aRefHandlingMode, newRef, getter_AddRefs(simpleClone));
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -141,11 +126,9 @@ BlobURL::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMo
   return NS_OK;
 }
 
-/* virtual */ nsresult
-BlobURL::EqualsInternal(nsIURI* aOther,
-                        mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
-                        bool* aResult)
-{
+/* virtual */ nsresult BlobURL::EqualsInternal(
+    nsIURI* aOther, mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
+    bool* aResult) {
   if (!aOther) {
     *aResult = false;
     return NS_OK;
@@ -159,50 +142,44 @@ BlobURL::EqualsInternal(nsIURI* aOther,
   }
 
   // Compare the member data that our base class knows about.
-  *aResult = mozilla::net::nsSimpleURI::EqualsInternal(otherUri,
-                                                       aRefHandlingMode);
+  *aResult =
+      mozilla::net::nsSimpleURI::EqualsInternal(otherUri, aRefHandlingMode);
 
   // We don't want to compare the revoked flag.
   return NS_OK;
 }
 
 // Queries this list of interfaces. If none match, it queries mURI.
-NS_IMPL_NSIURIMUTATOR_ISUPPORTS(BlobURL::Mutator,
-                                nsIURISetters,
-                                nsIURIMutator,
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(BlobURL::Mutator, nsIURISetters, nsIURIMutator,
                                 nsISerializable)
 
 NS_IMETHODIMP
-BlobURL::Mutate(nsIURIMutator** aMutator)
-{
-    RefPtr<BlobURL::Mutator> mutator = new BlobURL::Mutator();
-    nsresult rv = mutator->InitFromURI(this);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-    mutator.forget(aMutator);
-    return NS_OK;
+BlobURL::Mutate(nsIURIMutator** aMutator) {
+  RefPtr<BlobURL::Mutator> mutator = new BlobURL::Mutator();
+  nsresult rv = mutator->InitFromURI(this);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  mutator.forget(aMutator);
+  return NS_OK;
 }
 
 // nsIClassInfo methods:
 NS_IMETHODIMP
-BlobURL::GetInterfaces(uint32_t *count, nsIID * **array)
-{
+BlobURL::GetInterfaces(uint32_t* count, nsIID*** array) {
   *count = 0;
   *array = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BlobURL::GetScriptableHelper(nsIXPCScriptable **_retval)
-{
+BlobURL::GetScriptableHelper(nsIXPCScriptable** _retval) {
   *_retval = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BlobURL::GetContractID(nsACString& aContractID)
-{
+BlobURL::GetContractID(nsACString& aContractID) {
   // Make sure to modify any subclasses as needed if this ever
   // changes.
   aContractID.SetIsVoid(true);
@@ -210,32 +187,28 @@ BlobURL::GetContractID(nsACString& aContractID)
 }
 
 NS_IMETHODIMP
-BlobURL::GetClassDescription(nsACString& aClassDescription)
-{
+BlobURL::GetClassDescription(nsACString& aClassDescription) {
   aClassDescription.SetIsVoid(true);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BlobURL::GetClassID(nsCID * *aClassID)
-{
+BlobURL::GetClassID(nsCID** aClassID) {
   // Make sure to modify any subclasses as needed if this ever
   // changes to not call the virtual GetClassIDNoAlloc.
-  *aClassID = (nsCID*) moz_xmalloc(sizeof(nsCID));
+  *aClassID = (nsCID*)moz_xmalloc(sizeof(nsCID));
 
   return GetClassIDNoAlloc(*aClassID);
 }
 
 NS_IMETHODIMP
-BlobURL::GetFlags(uint32_t *aFlags)
-{
+BlobURL::GetFlags(uint32_t* aFlags) {
   *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BlobURL::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
-{
+BlobURL::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   *aClassIDNoAlloc = kHOSTOBJECTURICID;
   return NS_OK;
 }

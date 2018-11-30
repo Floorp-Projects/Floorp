@@ -14,9 +14,8 @@ class nsISupports;
  * Helper class that uses the window watcher service to open a standard dialog,
  * with or without a parent context.
  */
-class nsNSSDialogHelper
-{
-public:
+class nsNSSDialogHelper {
+ public:
   /**
    * Opens a XUL dialog.
    *
@@ -35,4 +34,4 @@ public:
                              nsISupports* params, bool modal = true);
 };
 
-#endif // nsNSSDialogHelper_h
+#endif  // nsNSSDialogHelper_h

@@ -20,27 +20,19 @@ using mozilla::ipc::PBackgroundParent;
 using mozilla::ipc::PrincipalInfo;
 
 // declared in ActorUtils.h
-PCacheStorageParent*
-AllocPCacheStorageParent(PBackgroundParent* aManagingActor,
-                         Namespace aNamespace,
-                         const mozilla::ipc::PrincipalInfo& aPrincipalInfo)
-{
+PCacheStorageParent* AllocPCacheStorageParent(
+    PBackgroundParent* aManagingActor, Namespace aNamespace,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
   return new CacheStorageParent(aManagingActor, aNamespace, aPrincipalInfo);
 }
 
 // declared in ActorUtils.h
-void
-DeallocPCacheStorageParent(PCacheStorageParent* aActor)
-{
-  delete aActor;
-}
+void DeallocPCacheStorageParent(PCacheStorageParent* aActor) { delete aActor; }
 
 CacheStorageParent::CacheStorageParent(PBackgroundParent* aManagingActor,
                                        Namespace aNamespace,
                                        const PrincipalInfo& aPrincipalInfo)
-  : mNamespace(aNamespace)
-  , mVerifiedStatus(NS_OK)
-{
+    : mNamespace(aNamespace), mVerifiedStatus(NS_OK) {
   MOZ_COUNT_CTOR(cache::CacheStorageParent);
   MOZ_DIAGNOSTIC_ASSERT(aManagingActor);
 
@@ -50,47 +42,38 @@ CacheStorageParent::CacheStorageParent(PBackgroundParent* aManagingActor,
   MOZ_DIAGNOSTIC_ASSERT(mVerifier);
 }
 
-CacheStorageParent::~CacheStorageParent()
-{
+CacheStorageParent::~CacheStorageParent() {
   MOZ_COUNT_DTOR(cache::CacheStorageParent);
   MOZ_DIAGNOSTIC_ASSERT(!mVerifier);
 }
 
-void
-CacheStorageParent::ActorDestroy(ActorDestroyReason aReason)
-{
+void CacheStorageParent::ActorDestroy(ActorDestroyReason aReason) {
   if (mVerifier) {
     mVerifier->RemoveListener(this);
     mVerifier = nullptr;
   }
 }
 
-PCacheOpParent*
-CacheStorageParent::AllocPCacheOpParent(const CacheOpArgs& aOpArgs)
-{
+PCacheOpParent* CacheStorageParent::AllocPCacheOpParent(
+    const CacheOpArgs& aOpArgs) {
   if (aOpArgs.type() != CacheOpArgs::TStorageMatchArgs &&
       aOpArgs.type() != CacheOpArgs::TStorageHasArgs &&
       aOpArgs.type() != CacheOpArgs::TStorageOpenArgs &&
       aOpArgs.type() != CacheOpArgs::TStorageDeleteArgs &&
-      aOpArgs.type() != CacheOpArgs::TStorageKeysArgs)
-  {
+      aOpArgs.type() != CacheOpArgs::TStorageKeysArgs) {
     MOZ_CRASH("Invalid operation sent to CacheStorage actor!");
   }
 
   return new CacheOpParent(Manager(), mNamespace, aOpArgs);
 }
 
-bool
-CacheStorageParent::DeallocPCacheOpParent(PCacheOpParent* aActor)
-{
+bool CacheStorageParent::DeallocPCacheOpParent(PCacheOpParent* aActor) {
   delete aActor;
   return true;
 }
 
-mozilla::ipc::IPCResult
-CacheStorageParent::RecvPCacheOpConstructor(PCacheOpParent* aActor,
-                                            const CacheOpArgs& aOpArgs)
-{
+mozilla::ipc::IPCResult CacheStorageParent::RecvPCacheOpConstructor(
+    PCacheOpParent* aActor, const CacheOpArgs& aOpArgs) {
   auto actor = static_cast<CacheOpParent*>(aActor);
 
   if (mVerifier) {
@@ -111,9 +94,7 @@ CacheStorageParent::RecvPCacheOpConstructor(PCacheOpParent* aActor,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CacheStorageParent::RecvTeardown()
-{
+mozilla::ipc::IPCResult CacheStorageParent::RecvTeardown() {
   if (!Send__delete__(this)) {
     // child process is gone, warn and allow actor to clean up normally
     NS_WARNING("CacheStorage failed to delete actor.");
@@ -121,9 +102,8 @@ CacheStorageParent::RecvTeardown()
   return IPC_OK();
 }
 
-void
-CacheStorageParent::OnPrincipalVerified(nsresult aRv, ManagerId* aManagerId)
-{
+void CacheStorageParent::OnPrincipalVerified(nsresult aRv,
+                                             ManagerId* aManagerId) {
   MOZ_DIAGNOSTIC_ASSERT(mVerifier);
   MOZ_DIAGNOSTIC_ASSERT(!mManagerId);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(mVerifiedStatus));
@@ -137,6 +117,6 @@ CacheStorageParent::OnPrincipalVerified(nsresult aRv, ManagerId* aManagerId)
   mVerifier = nullptr;
 }
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

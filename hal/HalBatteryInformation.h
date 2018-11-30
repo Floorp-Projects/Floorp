@@ -13,8 +13,7 @@ namespace mozilla {
 namespace hal {
 class BatteryInformation;
 typedef Observer<hal::BatteryInformation> BatteryObserver;
-} // namespace hal
-} // namespace mozilla
+}  // namespace hal
+}  // namespace mozilla
 
-#endif // mozilla_HalBatteryInformation_h
-
+#endif  // mozilla_HalBatteryInformation_h

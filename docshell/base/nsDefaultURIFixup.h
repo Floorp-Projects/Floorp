@@ -12,24 +12,22 @@
 class nsDefaultURIFixupInfo;
 
 /* Header file */
-class nsDefaultURIFixup : public nsIURIFixup
-{
-public:
+class nsDefaultURIFixup : public nsIURIFixup {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURIFIXUP
 
   nsDefaultURIFixup();
 
-protected:
+ protected:
   virtual ~nsDefaultURIFixup();
 
-private:
+ private:
   /* additional members */
   nsresult FileURIFixup(const nsACString& aStringURI, nsIURI** aURI);
   nsresult ConvertFileToStringURI(const nsACString& aIn, nsCString& aResult);
   nsresult FixupURIProtocol(const nsACString& aIn,
-                            nsDefaultURIFixupInfo* aFixupInfo,
-                            nsIURI** aURI);
+                            nsDefaultURIFixupInfo* aFixupInfo, nsIURI** aURI);
   nsresult KeywordURIFixup(const nsACString& aStringURI,
                            nsDefaultURIFixupInfo* aFixupInfo,
                            nsIInputStream** aPostData);
@@ -42,9 +40,8 @@ private:
                            const uint32_t aDotLoc);
 };
 
-class nsDefaultURIFixupInfo : public nsIURIFixupInfo
-{
-public:
+class nsDefaultURIFixupInfo : public nsIURIFixupInfo {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURIFIXUPINFO
 
@@ -52,10 +49,10 @@ public:
 
   friend class nsDefaultURIFixup;
 
-protected:
+ protected:
   virtual ~nsDefaultURIFixupInfo();
 
-private:
+ private:
   nsCOMPtr<nsISupports> mConsumer;
   nsCOMPtr<nsIURI> mPreferredURI;
   nsCOMPtr<nsIURI> mFixedURI;

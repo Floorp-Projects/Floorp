@@ -61,15 +61,16 @@ void OpenChannel(base::ProcessId aMiddlemanPid, uint32_t aChannelId,
 
 // Get the command line arguments to use when spawning a recording or replaying
 // child process.
-void GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid, uint32_t aChannelId,
+void GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid,
+                                 uint32_t aChannelId,
                                  const char* aRecordingFile, bool aRecording,
                                  std::vector<std::string>& aExtraArgs);
 
 // Return whether the middleman will be running developer tools server code.
 bool DebuggerRunsInMiddleman();
 
-} // namespace parent
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace parent
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_ParentIPC_h
+#endif  // mozilla_recordreplay_ParentIPC_h

@@ -13,17 +13,14 @@ namespace gfx {
 
 NS_IMETHODIMP
 SkMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                 nsISupports* aData,
-                                 bool aAnonymize)
-{
-  MOZ_COLLECT_REPORT(
-    "explicit/skia-font-cache", KIND_HEAP, UNITS_BYTES,
-    SkGraphics::GetFontCacheUsed(),
-    "Memory used in the skia font cache.");
+                                 nsISupports* aData, bool aAnonymize) {
+  MOZ_COLLECT_REPORT("explicit/skia-font-cache", KIND_HEAP, UNITS_BYTES,
+                     SkGraphics::GetFontCacheUsed(),
+                     "Memory used in the skia font cache.");
   return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(SkMemoryReporter, nsIMemoryReporter);
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

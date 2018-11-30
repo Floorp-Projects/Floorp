@@ -31,19 +31,16 @@ class Promise;
  * While a process/window can have many MIDIAccess objects, there is only one
  * MIDIAccessManager for any one process.
  */
-class MIDIAccessManager final
-{
-public:
+class MIDIAccessManager final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(MIDIAccessManager);
   // Handles requests from Navigator for MIDI permissions and MIDIAccess
   // creation.
-  already_AddRefed<Promise>
-  RequestMIDIAccess(nsPIDOMWindowInner* aWindow,
-                    const MIDIOptions& aOptions,
-                    ErrorResult& aRv);
+  already_AddRefed<Promise> RequestMIDIAccess(nsPIDOMWindowInner* aWindow,
+                                              const MIDIOptions& aOptions,
+                                              ErrorResult& aRv);
   // Creates a new MIDIAccess object
-  void CreateMIDIAccess(nsPIDOMWindowInner* aWindow,
-                        bool aNeedsSysex,
+  void CreateMIDIAccess(nsPIDOMWindowInner* aWindow, bool aNeedsSysex,
                         Promise* aPromise);
   // Getter for manager singleton
   static MIDIAccessManager* Get();
@@ -56,7 +53,7 @@ public:
   // Removes a device update observer (usually a MIDIAccess object)
   void RemoveObserver(Observer<MIDIPortList>* aObserver);
 
-private:
+ private:
   MIDIAccessManager();
   ~MIDIAccessManager();
   // True if object has received a device list from the MIDI platform service.
@@ -73,7 +70,7 @@ private:
   RefPtr<MIDIManagerChild> mChild;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MIDIAccessManager_h
+#endif  // mozilla_dom_MIDIAccessManager_h

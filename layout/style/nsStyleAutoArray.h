@@ -14,10 +14,9 @@
  * An array of objects, similar to AutoTArray<T,1> but which is memmovable. It
  * always has length >= 1.
  */
-template<typename T>
-class nsStyleAutoArray
-{
-public:
+template <typename T>
+class nsStyleAutoArray {
+ public:
   // This constructor places a single element in mFirstElement.
   enum WithSingleInitialElement { WITH_SINGLE_INITIAL_ELEMENT };
   explicit nsStyleAutoArray(WithSingleInitialElement) {}
@@ -44,9 +43,7 @@ public:
     return *this;
   }
 
-  size_t Length() const {
-    return mOtherElements.Length() + 1;
-  }
+  size_t Length() const { return mOtherElements.Length() + 1; }
   const T& operator[](size_t aIndex) const {
     return aIndex == 0 ? mFirstElement : mOtherElements[aIndex - 1];
   }
@@ -71,7 +68,7 @@ public:
     mOtherElements.TruncateLength(aNewLen - 1);
   }
 
-private:
+ private:
   T mFirstElement;
   nsTArray<T> mOtherElements;
 };

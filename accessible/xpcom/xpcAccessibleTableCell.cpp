@@ -21,92 +21,78 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleTableCell,
-                            xpcAccessibleHyperText,
+NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleTableCell, xpcAccessibleHyperText,
                             nsIAccessibleTableCell)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleTableCell
 
 NS_IMETHODIMP
-xpcAccessibleTableCell::GetTable(nsIAccessibleTable** aTable)
-{
+xpcAccessibleTableCell::GetTable(nsIAccessibleTable** aTable) {
   NS_ENSURE_ARG_POINTER(aTable);
   *aTable = nullptr;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   TableAccessible* table = Intl()->Table();
-  if (!table)
-    return NS_ERROR_FAILURE;
+  if (!table) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAccessibleTable> xpcTable =
-    do_QueryInterface(static_cast<nsIAccessible*>(ToXPC(table->AsAccessible())));
+  nsCOMPtr<nsIAccessibleTable> xpcTable = do_QueryInterface(
+      static_cast<nsIAccessible*>(ToXPC(table->AsAccessible())));
   xpcTable.forget(aTable);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleTableCell::GetColumnIndex(int32_t* aColIdx)
-{
+xpcAccessibleTableCell::GetColumnIndex(int32_t* aColIdx) {
   NS_ENSURE_ARG_POINTER(aColIdx);
   *aColIdx = -1;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   *aColIdx = Intl()->ColIdx();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleTableCell::GetRowIndex(int32_t* aRowIdx)
-{
+xpcAccessibleTableCell::GetRowIndex(int32_t* aRowIdx) {
   NS_ENSURE_ARG_POINTER(aRowIdx);
   *aRowIdx = -1;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   *aRowIdx = Intl()->RowIdx();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleTableCell::GetColumnExtent(int32_t* aExtent)
-{
+xpcAccessibleTableCell::GetColumnExtent(int32_t* aExtent) {
   NS_ENSURE_ARG_POINTER(aExtent);
   *aExtent = -1;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   *aExtent = Intl()->ColExtent();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleTableCell::GetRowExtent(int32_t* aExtent)
-{
+xpcAccessibleTableCell::GetRowExtent(int32_t* aExtent) {
   NS_ENSURE_ARG_POINTER(aExtent);
   *aExtent = -1;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   *aExtent = Intl()->RowExtent();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleTableCell::GetColumnHeaderCells(nsIArray** aHeaderCells)
-{
+xpcAccessibleTableCell::GetColumnHeaderCells(nsIArray** aHeaderCells) {
   NS_ENSURE_ARG_POINTER(aHeaderCells);
   *aHeaderCells = nullptr;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   AutoTArray<Accessible*, 10> headerCells;
   Intl()->ColHeaderCells(&headerCells);
@@ -123,13 +109,11 @@ xpcAccessibleTableCell::GetColumnHeaderCells(nsIArray** aHeaderCells)
 }
 
 NS_IMETHODIMP
-xpcAccessibleTableCell::GetRowHeaderCells(nsIArray** aHeaderCells)
-{
+xpcAccessibleTableCell::GetRowHeaderCells(nsIArray** aHeaderCells) {
   NS_ENSURE_ARG_POINTER(aHeaderCells);
   *aHeaderCells = nullptr;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   AutoTArray<Accessible*, 10> headerCells;
   Intl()->RowHeaderCells(&headerCells);
@@ -146,13 +130,11 @@ xpcAccessibleTableCell::GetRowHeaderCells(nsIArray** aHeaderCells)
 }
 
 NS_IMETHODIMP
-xpcAccessibleTableCell::IsSelected(bool* aSelected)
-{
+xpcAccessibleTableCell::IsSelected(bool* aSelected) {
   NS_ENSURE_ARG_POINTER(aSelected);
   *aSelected = false;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   *aSelected = Intl()->Selected();
   return NS_OK;

@@ -22,23 +22,21 @@
 namespace mozilla {
 
 namespace dom {
-  class Promise;
+class Promise;
 }
 
 namespace net {
 
 #define IO_ACTIVITY_ENABLED_PREF "io.activity.enabled"
 
-typedef nsDataHashtable<nsCStringHashKey, dom::IOActivityDataDictionary> Activities;
-
+typedef nsDataHashtable<nsCStringHashKey, dom::IOActivityDataDictionary>
+    Activities;
 
 // IOActivityMonitor has several roles:
 // - maintains an IOActivity per resource and updates it
 // - sends a dump of the activities to a promise via RequestActivities
-class IOActivityMonitor final
-    : public nsINamed
-{
-public:
+class IOActivityMonitor final : public nsINamed {
+ public:
   IOActivityMonitor();
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -52,18 +50,20 @@ public:
   static nsresult Read(const nsACString& location, uint32_t aAmount);
   static nsresult Write(const nsACString& location, uint32_t aAmount);
 
-  static nsresult MonitorFile(PRFileDesc *aFd, const char* aPath);
-  static nsresult MonitorSocket(PRFileDesc *aFd);
-  static nsresult Read(PRFileDesc *fd, uint32_t aAmount);
-  static nsresult Write(PRFileDesc *fd, uint32_t aAmount);
+  static nsresult MonitorFile(PRFileDesc* aFd, const char* aPath);
+  static nsresult MonitorSocket(PRFileDesc* aFd);
+  static nsresult Read(PRFileDesc* fd, uint32_t aAmount);
+  static nsresult Write(PRFileDesc* fd, uint32_t aAmount);
 
   static bool IsActive();
   static void RequestActivities(dom::Promise* aPromise);
-private:
+
+ private:
   ~IOActivityMonitor() = default;
   nsresult InitInternal();
   nsresult ShutdownInternal();
-  bool IncrementActivity(const nsACString& location, uint32_t aRx, uint32_t aTx);
+  bool IncrementActivity(const nsACString& location, uint32_t aRx,
+                         uint32_t aTx);
   nsresult WriteInternal(const nsACString& location, uint32_t aAmount);
   nsresult ReadInternal(const nsACString& location, uint32_t aAmount);
   void RequestActivitiesInternal(dom::Promise* aPromise);
@@ -73,7 +73,7 @@ private:
   Mutex mLock;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif /* IOActivityMonitor_h___ */

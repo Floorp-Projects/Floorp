@@ -25,16 +25,16 @@
 namespace {
 
 using namespace mozilla::dom;
-using mozilla::udev_lib;
 using mozilla::udev_device;
-using mozilla::udev_list_entry;
 using mozilla::udev_enumerate;
+using mozilla::udev_lib;
+using mozilla::udev_list_entry;
 using mozilla::udev_monitor;
 
 static const float kMaxAxisValue = 32767.0;
 static const char kJoystickPath[] = "/dev/input/js";
 
-//TODO: should find a USB identifier for each device so we can
+// TODO: should find a USB identifier for each device so we can
 // provide something that persists across connect/disconnect cycles.
 typedef struct {
   int index;
@@ -46,15 +46,13 @@ typedef struct {
 } Gamepad;
 
 class LinuxGamepadService {
-public:
-  LinuxGamepadService() : mMonitor(nullptr),
-                          mMonitorSourceID(0) {
-  }
+ public:
+  LinuxGamepadService() : mMonitor(nullptr), mMonitorSourceID(0) {}
 
   void Startup();
   void Shutdown();
 
-private:
+ private:
   void AddDevice(struct udev_device* dev);
   void RemoveDevice(struct udev_device* dev);
   void ScanForDevices();
@@ -64,30 +62,26 @@ private:
   void ReadUdevChange();
 
   // handler for data from /dev/input/jsN
-  static gboolean OnGamepadData(GIOChannel *source,
-                                GIOCondition condition,
+  static gboolean OnGamepadData(GIOChannel* source, GIOCondition condition,
                                 gpointer data);
 
   // handler for data from udev monitor
-  static gboolean OnUdevMonitor(GIOChannel *source,
-                                GIOCondition condition,
+  static gboolean OnUdevMonitor(GIOChannel* source, GIOCondition condition,
                                 gpointer data);
 
   udev_lib mUdev;
   struct udev_monitor* mMonitor;
   guint mMonitorSourceID;
   // Information about currently connected gamepads.
-  AutoTArray<Gamepad,4> mGamepads;
+  AutoTArray<Gamepad, 4> mGamepads;
 };
 
 // singleton instance
 LinuxGamepadService* gService = nullptr;
 
-void
-LinuxGamepadService::AddDevice(struct udev_device* dev)
-{
+void LinuxGamepadService::AddDevice(struct udev_device* dev) {
   RefPtr<GamepadPlatformService> service =
-    GamepadPlatformService::GetParentService();
+      GamepadPlatformService::GetParentService();
   if (!service) {
     return;
   }
@@ -120,23 +114,20 @@ LinuxGamepadService::AddDevice(struct udev_device* dev)
     strcpy(name, "unknown");
   }
   const char* vendor_id =
-    mUdev.udev_device_get_property_value(dev, "ID_VENDOR_ID");
+      mUdev.udev_device_get_property_value(dev, "ID_VENDOR_ID");
   const char* model_id =
-    mUdev.udev_device_get_property_value(dev, "ID_MODEL_ID");
+      mUdev.udev_device_get_property_value(dev, "ID_MODEL_ID");
   if (!vendor_id || !model_id) {
     struct udev_device* parent =
-      mUdev.udev_device_get_parent_with_subsystem_devtype(dev,
-                                                          "input",
-                                                          nullptr);
+        mUdev.udev_device_get_parent_with_subsystem_devtype(dev, "input",
+                                                            nullptr);
     if (parent) {
       vendor_id = mUdev.udev_device_get_sysattr_value(parent, "id/vendor");
       model_id = mUdev.udev_device_get_sysattr_value(parent, "id/product");
     }
   }
-  snprintf(gamepad.idstring, sizeof(gamepad.idstring),
-           "%s-%s-%s",
-           vendor_id ? vendor_id : "unknown",
-           model_id ? model_id : "unknown",
+  snprintf(gamepad.idstring, sizeof(gamepad.idstring), "%s-%s-%s",
+           vendor_id ? vendor_id : "unknown", model_id ? model_id : "unknown",
            name);
 
   char numAxes = 0, numButtons = 0;
@@ -145,28 +136,22 @@ LinuxGamepadService::AddDevice(struct udev_device* dev)
   ioctl(fd, JSIOCGBUTTONS, &numButtons);
   gamepad.numButtons = numButtons;
 
-  gamepad.index = service->AddGamepad(gamepad.idstring,
-                                      mozilla::dom::GamepadMappingType::_empty,
-                                      mozilla::dom::GamepadHand::_empty,
-                                      gamepad.numButtons,
-                                      gamepad.numAxes,
-                                      0); // TODO: Bug 680289, implement gamepad haptics for Linux.
+  gamepad.index = service->AddGamepad(
+      gamepad.idstring, mozilla::dom::GamepadMappingType::_empty,
+      mozilla::dom::GamepadHand::_empty, gamepad.numButtons, gamepad.numAxes,
+      0);  // TODO: Bug 680289, implement gamepad haptics for Linux.
 
   gamepad.source_id =
-    g_io_add_watch(channel,
-                   GIOCondition(G_IO_IN | G_IO_ERR | G_IO_HUP),
-                   OnGamepadData,
-                   GINT_TO_POINTER(gamepad.index));
+      g_io_add_watch(channel, GIOCondition(G_IO_IN | G_IO_ERR | G_IO_HUP),
+                     OnGamepadData, GINT_TO_POINTER(gamepad.index));
   g_io_channel_unref(channel);
 
   mGamepads.AppendElement(gamepad);
 }
 
-void
-LinuxGamepadService::RemoveDevice(struct udev_device* dev)
-{
+void LinuxGamepadService::RemoveDevice(struct udev_device* dev) {
   RefPtr<GamepadPlatformService> service =
-    GamepadPlatformService::GetParentService();
+      GamepadPlatformService::GetParentService();
   if (!service) {
     return;
   }
@@ -186,9 +171,7 @@ LinuxGamepadService::RemoveDevice(struct udev_device* dev)
   }
 }
 
-void
-LinuxGamepadService::ScanForDevices()
-{
+void LinuxGamepadService::ScanForDevices() {
   struct udev_enumerate* en = mUdev.udev_enumerate_new(mUdev.udev);
   mUdev.udev_enumerate_add_match_subsystem(en, "input");
   mUdev.udev_enumerate_scan_devices(en);
@@ -198,8 +181,8 @@ LinuxGamepadService::ScanForDevices()
        dev_list_entry != nullptr;
        dev_list_entry = mUdev.udev_list_entry_get_next(dev_list_entry)) {
     const char* path = mUdev.udev_list_entry_get_name(dev_list_entry);
-    struct udev_device* dev = mUdev.udev_device_new_from_syspath(mUdev.udev,
-                                                                 path);
+    struct udev_device* dev =
+        mUdev.udev_device_new_from_syspath(mUdev.udev, path);
     if (is_gamepad(dev)) {
       AddDevice(dev);
     }
@@ -210,35 +193,27 @@ LinuxGamepadService::ScanForDevices()
   mUdev.udev_enumerate_unref(en);
 }
 
-void
-LinuxGamepadService::AddMonitor()
-{
+void LinuxGamepadService::AddMonitor() {
   // Add a monitor to watch for device changes
-  mMonitor =
-    mUdev.udev_monitor_new_from_netlink(mUdev.udev, "udev");
+  mMonitor = mUdev.udev_monitor_new_from_netlink(mUdev.udev, "udev");
   if (!mMonitor) {
     // Not much we can do here.
     return;
   }
-  mUdev.udev_monitor_filter_add_match_subsystem_devtype(mMonitor,
-                                                        "input",
-							nullptr);
+  mUdev.udev_monitor_filter_add_match_subsystem_devtype(mMonitor, "input",
+                                                        nullptr);
 
   int monitor_fd = mUdev.udev_monitor_get_fd(mMonitor);
   GIOChannel* monitor_channel = g_io_channel_unix_new(monitor_fd);
-  mMonitorSourceID =
-    g_io_add_watch(monitor_channel,
-                   GIOCondition(G_IO_IN | G_IO_ERR | G_IO_HUP),
-                   OnUdevMonitor,
-                   nullptr);
+  mMonitorSourceID = g_io_add_watch(monitor_channel,
+                                    GIOCondition(G_IO_IN | G_IO_ERR | G_IO_HUP),
+                                    OnUdevMonitor, nullptr);
   g_io_channel_unref(monitor_channel);
 
   mUdev.udev_monitor_enable_receiving(mMonitor);
 }
 
-void
-LinuxGamepadService::RemoveMonitor()
-{
+void LinuxGamepadService::RemoveMonitor() {
   if (mMonitorSourceID) {
     g_source_remove(mMonitorSourceID);
     mMonitorSourceID = 0;
@@ -249,20 +224,15 @@ LinuxGamepadService::RemoveMonitor()
   }
 }
 
-void
-LinuxGamepadService::Startup()
-{
+void LinuxGamepadService::Startup() {
   // Don't bother starting up if libudev couldn't be loaded or initialized.
-  if (!mUdev)
-    return;
+  if (!mUdev) return;
 
   AddMonitor();
   ScanForDevices();
 }
 
-void
-LinuxGamepadService::Shutdown()
-{
+void LinuxGamepadService::Shutdown() {
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
     g_source_remove(mGamepads[i].source_id);
   }
@@ -270,9 +240,7 @@ LinuxGamepadService::Shutdown()
   RemoveMonitor();
 }
 
-bool
-LinuxGamepadService::is_gamepad(struct udev_device* dev)
-{
+bool LinuxGamepadService::is_gamepad(struct udev_device* dev) {
   if (!mUdev.udev_device_get_property_value(dev, "ID_INPUT_JOYSTICK"))
     return false;
 
@@ -287,11 +255,8 @@ LinuxGamepadService::is_gamepad(struct udev_device* dev)
   return true;
 }
 
-void
-LinuxGamepadService::ReadUdevChange()
-{
-  struct udev_device* dev =
-    mUdev.udev_monitor_receive_device(mMonitor);
+void LinuxGamepadService::ReadUdevChange() {
+  struct udev_device* dev = mUdev.udev_monitor_receive_device(mMonitor);
   const char* action = mUdev.udev_device_get_action(dev);
   if (is_gamepad(dev)) {
     if (strcmp(action, "add") == 0) {
@@ -304,47 +269,41 @@ LinuxGamepadService::ReadUdevChange()
 }
 
 // static
-gboolean
-LinuxGamepadService::OnGamepadData(GIOChannel* source,
-                                   GIOCondition condition,
-                                   gpointer data)
-{
+gboolean LinuxGamepadService::OnGamepadData(GIOChannel* source,
+                                            GIOCondition condition,
+                                            gpointer data) {
   RefPtr<GamepadPlatformService> service =
-    GamepadPlatformService::GetParentService();
+      GamepadPlatformService::GetParentService();
   if (!service) {
     return TRUE;
   }
   int index = GPOINTER_TO_INT(data);
-  //TODO: remove gamepad?
-  if (condition & G_IO_ERR || condition & G_IO_HUP)
-    return FALSE;
+  // TODO: remove gamepad?
+  if (condition & G_IO_ERR || condition & G_IO_HUP) return FALSE;
 
   while (true) {
     struct js_event event;
     gsize count;
     GError* err = nullptr;
-    if (g_io_channel_read_chars(source,
-				(gchar*)&event,
-				sizeof(event),
-				&count,
-				&err) != G_IO_STATUS_NORMAL ||
-	count == 0) {
+    if (g_io_channel_read_chars(source, (gchar*)&event, sizeof(event), &count,
+                                &err) != G_IO_STATUS_NORMAL ||
+        count == 0) {
       break;
     }
 
-    //TODO: store device state?
+    // TODO: store device state?
     if (event.type & JS_EVENT_INIT) {
       continue;
     }
 
     switch (event.type) {
-    case JS_EVENT_BUTTON:
-      service->NewButtonEvent(index, event.number, !!event.value);
-      break;
-    case JS_EVENT_AXIS:
-      service->NewAxisMoveEvent(index, event.number,
-                                ((float)event.value) / kMaxAxisValue);
-      break;
+      case JS_EVENT_BUTTON:
+        service->NewButtonEvent(index, event.number, !!event.value);
+        break;
+      case JS_EVENT_AXIS:
+        service->NewAxisMoveEvent(index, event.number,
+                                  ((float)event.value) / kMaxAxisValue);
+        break;
     }
   }
 
@@ -352,25 +311,21 @@ LinuxGamepadService::OnGamepadData(GIOChannel* source,
 }
 
 // static
-gboolean
-LinuxGamepadService::OnUdevMonitor(GIOChannel* source,
-                                   GIOCondition condition,
-                                   gpointer data)
-{
-  if (condition & G_IO_ERR || condition & G_IO_HUP)
-    return FALSE;
+gboolean LinuxGamepadService::OnUdevMonitor(GIOChannel* source,
+                                            GIOCondition condition,
+                                            gpointer data) {
+  if (condition & G_IO_ERR || condition & G_IO_HUP) return FALSE;
 
   gService->ReadUdevChange();
   return TRUE;
 }
 
-} // namespace
+}  // namespace
 
 namespace mozilla {
 namespace dom {
 
-void StartGamepadMonitoring()
-{
+void StartGamepadMonitoring() {
   if (gService) {
     return;
   }
@@ -378,8 +333,7 @@ void StartGamepadMonitoring()
   gService->Startup();
 }
 
-void StopGamepadMonitoring()
-{
+void StopGamepadMonitoring() {
   if (!gService) {
     return;
   }
@@ -388,5 +342,5 @@ void StopGamepadMonitoring()
   gService = nullptr;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

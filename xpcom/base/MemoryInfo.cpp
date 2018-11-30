@@ -12,9 +12,7 @@
 
 namespace mozilla {
 
-/* static */ MemoryInfo
-MemoryInfo::Get(const void* aPtr, size_t aSize)
-{
+/* static */ MemoryInfo MemoryInfo::Get(const void* aPtr, size_t aSize) {
   MemoryInfo result;
 
   result.mStart = uintptr_t(aPtr);
@@ -30,8 +28,8 @@ MemoryInfo::Get(const void* aPtr, size_t aSize)
     MOZ_ASSERT_IF(base, base == basicInfo.AllocationBase);
     base = basicInfo.AllocationBase;
 
-    size_t regionSize = std::min(size_t(basicInfo.RegionSize),
-                                 size_t(end - ptr));
+    size_t regionSize =
+        std::min(size_t(basicInfo.RegionSize), size_t(end - ptr));
 
     if (basicInfo.State == MEM_COMMIT) {
       result.mCommitted += regionSize;
@@ -102,4 +100,4 @@ MemoryInfo::Get(const void* aPtr, size_t aSize)
   return result;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

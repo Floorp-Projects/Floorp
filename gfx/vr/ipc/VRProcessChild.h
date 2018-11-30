@@ -10,7 +10,6 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "VRParent.h"
 
-
 namespace mozilla {
 namespace gfx {
 
@@ -18,12 +17,11 @@ namespace gfx {
  * Contains the VRChild object that facilitates IPC communication to/from
  * the instance of the VR library that is run in this process.
  */
-class VRProcessChild final : public mozilla::ipc::ProcessChild
-{
-protected:
+class VRProcessChild final : public mozilla::ipc::ProcessChild {
+ protected:
   typedef mozilla::ipc::ProcessChild ProcessChild;
 
-public:
+ public:
   explicit VRProcessChild(ProcessId aParentPid);
   ~VRProcessChild();
 
@@ -31,13 +29,13 @@ public:
   virtual bool Init(int aArgc, char* aArgv[]) override;
   virtual void CleanUp() override;
 
-private:
+ private:
   DISALLOW_COPY_AND_ASSIGN(VRProcessChild);
 
   VRParent mVR;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* GFX_VR_PROCESS_CHILD_H */

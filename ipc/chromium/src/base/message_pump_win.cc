@@ -43,8 +43,8 @@ void MessagePumpWin::DidProcessMessage(const MSG& msg) {
   FOR_EACH_OBSERVER(Observer, observers_, DidProcessMessage(msg));
 }
 
-void MessagePumpWin::RunWithDispatcher(
-    Delegate* delegate, Dispatcher* dispatcher) {
+void MessagePumpWin::RunWithDispatcher(Delegate* delegate,
+                                       Dispatcher* dispatcher) {
   RunState s;
   s.delegate = delegate;
   s.dispatcher = dispatcher;
@@ -68,8 +68,7 @@ void MessagePumpWin::Quit() {
 // MessagePumpWin protected:
 
 int MessagePumpWin::GetCurrentDelay() const {
-  if (delayed_work_time_.is_null())
-    return -1;
+  if (delayed_work_time_.is_null()) return -1;
 
   // Be careful here.  TimeDelta has a precision of microseconds, but we want a
   // value in milliseconds.  If there are 5.5ms left, should the delay be 5 or
@@ -79,8 +78,7 @@ int MessagePumpWin::GetCurrentDelay() const {
 
   // If this value is negative, then we need to run delayed work soon.
   int delay = static_cast<int>(timeout);
-  if (delay < 0)
-    delay = 0;
+  if (delay < 0) delay = 0;
 
   return delay;
 }
@@ -88,9 +86,7 @@ int MessagePumpWin::GetCurrentDelay() const {
 //-----------------------------------------------------------------------------
 // MessagePumpForUI public:
 
-MessagePumpForUI::MessagePumpForUI() {
-  InitMessageWnd();
-}
+MessagePumpForUI::MessagePumpForUI() { InitMessageWnd(); }
 
 MessagePumpForUI::~MessagePumpForUI() {
   DestroyWindow(message_hwnd_);
@@ -134,8 +130,7 @@ void MessagePumpForUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
 
   int delay_msec = GetCurrentDelay();
   DCHECK(delay_msec >= 0);
-  if (delay_msec < USER_TIMER_MINIMUM)
-    delay_msec = USER_TIMER_MINIMUM;
+  if (delay_msec < USER_TIMER_MINIMUM) delay_msec = USER_TIMER_MINIMUM;
 
   // Create a WM_TIMER event that will wake us up to check for any pending
   // timers (in case we are running within a nested, external sub-pump).
@@ -145,8 +140,7 @@ void MessagePumpForUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
 void MessagePumpForUI::PumpOutPendingPaintMessages() {
   // If we are being called outside of the context of Run, then don't try to do
   // any work.
-  if (!state_)
-    return;
+  if (!state_) return;
 
   // Create a mini-message-pump to force immediate processing of only Windows
   // WM_PAINT messages.  Don't provide an infinite loop, but do enough peeking
@@ -156,8 +150,7 @@ void MessagePumpForUI::PumpOutPendingPaintMessages() {
   int peek_count;
   for (peek_count = 0; peek_count < kMaxPeekCount; ++peek_count) {
     MSG msg;
-    if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE | PM_QS_PAINT))
-      break;
+    if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE | PM_QS_PAINT)) break;
     ProcessMessageHelper(msg);
     if (state_->should_quit)  // Handle WM_QUIT.
       break;
@@ -168,8 +161,8 @@ void MessagePumpForUI::PumpOutPendingPaintMessages() {
 // MessagePumpForUI private:
 
 // static
-LRESULT CALLBACK MessagePumpForUI::WndProcThunk(
-    HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
+LRESULT CALLBACK MessagePumpForUI::WndProcThunk(HWND hwnd, UINT message,
+                                                WPARAM wparam, LPARAM lparam) {
   switch (message) {
     case kMsgHaveWork:
       reinterpret_cast<MessagePumpForUI*>(wparam)->HandleWorkMessage();
@@ -205,12 +198,10 @@ void MessagePumpForUI::DoRunLoop() {
     // work.
 
     bool more_work_is_plausible = ProcessNextWindowsMessage();
-    if (state_->should_quit)
-      break;
+    if (state_->should_quit) break;
 
     more_work_is_plausible |= state_->delegate->DoWork();
-    if (state_->should_quit)
-      break;
+    if (state_->should_quit) break;
 
     more_work_is_plausible |=
         state_->delegate->DoDelayedWork(&delayed_work_time_);
@@ -220,18 +211,14 @@ void MessagePumpForUI::DoRunLoop() {
     // if we did do all remaining delayed work, then lets kill the WM_TIMER.
     if (more_work_is_plausible && delayed_work_time_.is_null())
       KillTimer(message_hwnd_, reinterpret_cast<UINT_PTR>(this));
-    if (state_->should_quit)
-      break;
+    if (state_->should_quit) break;
 
-    if (more_work_is_plausible)
-      continue;
+    if (more_work_is_plausible) continue;
 
     more_work_is_plausible = state_->delegate->DoIdleWork();
-    if (state_->should_quit)
-      break;
+    if (state_->should_quit) break;
 
-    if (more_work_is_plausible)
-      continue;
+    if (more_work_is_plausible) continue;
 
     WaitForWork();  // Wait (sleep) until we have work to do again.
   }
@@ -283,8 +270,7 @@ void MessagePumpForUI::HandleWorkMessage() {
 
   // Now give the delegate a chance to do some work.  He'll let us know if he
   // needs to do more work.
-  if (state_->delegate->DoWork())
-    ScheduleWork();
+  if (state_->delegate->DoWork()) ScheduleWork();
 }
 
 void MessagePumpForUI::HandleTimerMessage() {
@@ -293,8 +279,7 @@ void MessagePumpForUI::HandleTimerMessage() {
   // If we are being called outside of the context of Run, then don't do
   // anything.  This could correspond to a MessageBox call or something of
   // that sort.
-  if (!state_)
-    return;
+  if (!state_) return;
 
   state_->delegate->DoDelayedWork(&delayed_work_time_);
   if (!delayed_work_time_.is_null()) {
@@ -310,8 +295,7 @@ bool MessagePumpForUI::ProcessNextWindowsMessage() {
   // MsgWaitForMultipleObjectsEx again.
   bool sent_messages_in_queue = false;
   DWORD queue_status = GetQueueStatus(QS_SENDMESSAGE);
-  if (HIWORD(queue_status) & QS_SENDMESSAGE)
-    sent_messages_in_queue = true;
+  if (HIWORD(queue_status) & QS_SENDMESSAGE) sent_messages_in_queue = true;
 
   MSG msg;
   if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -336,8 +320,7 @@ bool MessagePumpForUI::ProcessMessageHelper(const MSG& msg) {
   WillProcessMessage(msg);
 
   if (state_->dispatcher) {
-    if (!state_->dispatcher->Dispatch(msg))
-      state_->should_quit = true;
+    if (!state_->dispatcher->Dispatch(msg)) state_->should_quit = true;
   } else {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
@@ -378,8 +361,7 @@ bool MessagePumpForUI::ProcessPumpReplacementMessage() {
   DCHECK(old_have_work);
 
   // We don't need a special time slice if we didn't have_message to process.
-  if (!have_message)
-    return false;
+  if (!have_message) return false;
 
   // Guarantee we'll get another time slice in the case where we go into native
   // windows code.   This ScheduleWork() may hurt performance a tiny bit when
@@ -402,9 +384,9 @@ void MessagePumpForIO::ScheduleWork() {
     return;  // Someone else continued the pumping.
 
   // Make sure the MessagePump does some work for us.
-  BOOL ret = PostQueuedCompletionStatus(port_, 0,
-                                        reinterpret_cast<ULONG_PTR>(this),
-                                        reinterpret_cast<OVERLAPPED*>(this));
+  BOOL ret =
+      PostQueuedCompletionStatus(port_, 0, reinterpret_cast<ULONG_PTR>(this),
+                                 reinterpret_cast<OVERLAPPED*>(this));
   DCHECK(ret);
 }
 
@@ -437,27 +419,21 @@ void MessagePumpForIO::DoRunLoop() {
     // more work.
 
     bool more_work_is_plausible = state_->delegate->DoWork();
-    if (state_->should_quit)
-      break;
+    if (state_->should_quit) break;
 
     more_work_is_plausible |= WaitForIOCompletion(0, NULL);
-    if (state_->should_quit)
-      break;
+    if (state_->should_quit) break;
 
     more_work_is_plausible |=
         state_->delegate->DoDelayedWork(&delayed_work_time_);
-    if (state_->should_quit)
-      break;
+    if (state_->should_quit) break;
 
-    if (more_work_is_plausible)
-      continue;
+    if (more_work_is_plausible) continue;
 
     more_work_is_plausible = state_->delegate->DoIdleWork();
-    if (state_->should_quit)
-      break;
+    if (state_->should_quit) break;
 
-    if (more_work_is_plausible)
-      continue;
+    if (more_work_is_plausible) continue;
 
     WaitForWork();  // Wait (sleep) until we have work to do again.
   }
@@ -481,11 +457,9 @@ bool MessagePumpForIO::WaitForIOCompletion(DWORD timeout, IOHandler* filter) {
   IOItem item;
   if (completed_io_.empty() || !MatchCompletedIOItem(filter, &item)) {
     // We have to ask the system for another IO completion.
-    if (!GetIOItem(timeout, &item))
-      return false;
+    if (!GetIOItem(timeout, &item)) return false;
 
-    if (ProcessInternalIOItem(item))
-      return true;
+    if (ProcessInternalIOItem(item)) return true;
   }
 
   if (item.context->handler) {
@@ -511,8 +485,7 @@ bool MessagePumpForIO::GetIOItem(DWORD timeout, IOItem* item) {
   OVERLAPPED* overlapped = NULL;
   if (!GetQueuedCompletionStatus(port_.Get(), &item->bytes_transfered, &key,
                                  &overlapped, timeout)) {
-    if (!overlapped)
-      return false;  // Nothing in the queue.
+    if (!overlapped) return false;  // Nothing in the queue.
     item->error = GetLastError();
     item->bytes_transfered = 0;
   }

@@ -75,21 +75,15 @@ struct ThreadLocalPlatform {
 template <typename Type>
 class ThreadLocalPointer {
  public:
-  ThreadLocalPointer() : slot_() {
-    ThreadLocalPlatform::AllocateSlot(slot_);
-  }
+  ThreadLocalPointer() : slot_() { ThreadLocalPlatform::AllocateSlot(slot_); }
 
-  ~ThreadLocalPointer() {
-    ThreadLocalPlatform::FreeSlot(slot_);
-  }
+  ~ThreadLocalPointer() { ThreadLocalPlatform::FreeSlot(slot_); }
 
   Type* Get() {
     return static_cast<Type*>(ThreadLocalPlatform::GetValueFromSlot(slot_));
   }
 
-  void Set(Type* ptr) {
-    ThreadLocalPlatform::SetValueInSlot(slot_, ptr);
-  }
+  void Set(Type* ptr) { ThreadLocalPlatform::SetValueInSlot(slot_, ptr); }
 
  private:
   typedef ThreadLocalPlatform::SlotType SlotType;
@@ -101,12 +95,10 @@ class ThreadLocalPointer {
 
 class ThreadLocalBoolean {
  public:
-  ThreadLocalBoolean() { }
-  ~ThreadLocalBoolean() { }
+  ThreadLocalBoolean() {}
+  ~ThreadLocalBoolean() {}
 
-  bool Get() {
-    return tlp_.Get() != NULL;
-  }
+  bool Get() { return tlp_.Get() != NULL; }
 
   void Set(bool val) {
     uintptr_t intVal = val ? 1 : 0;

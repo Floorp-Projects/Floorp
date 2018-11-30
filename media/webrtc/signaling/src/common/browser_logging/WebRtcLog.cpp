@@ -25,20 +25,19 @@ using mozilla::LogLevel;
 #if defined(ANDROID)
 static const char *default_tmp_dir = "/dev/null";
 static const char *default_log_name = "nspr";
-#else // Assume a POSIX environment
+#else  // Assume a POSIX environment
 NS_NAMED_LITERAL_CSTRING(default_log_name, "WebRTC.log");
 #endif
 
 static mozilla::LazyLogModule sWebRtcLog("webrtc_trace");
 static mozilla::LazyLogModule sLogAEC("AEC");
 
-class LogSinkImpl : public rtc::LogSink
-{
-public:
+class LogSinkImpl : public rtc::LogSink {
+ public:
   LogSinkImpl() {}
 
-private:
-  void OnLogMessage(const std::string& message) override {
+ private:
+  void OnLogMessage(const std::string &message) override {
     MOZ_LOG(sWebRtcLog, LogLevel::Debug, ("%s", message.data()));
   }
 };
@@ -46,15 +45,12 @@ private:
 // For RTC_LOG()
 static mozilla::StaticAutoPtr<LogSinkImpl> sSink;
 
-void
-GetWebRtcLogPrefs()
-{
-  rtc::LogMessage::set_aec_debug_size(mozilla::Preferences::GetUint("media.webrtc.debug.aec_dump_max_size"));
+void GetWebRtcLogPrefs() {
+  rtc::LogMessage::set_aec_debug_size(
+      mozilla::Preferences::GetUint("media.webrtc.debug.aec_dump_max_size"));
 }
 
-mozilla::LogLevel
-CheckOverrides()
-{
+mozilla::LogLevel CheckOverrides() {
   mozilla::LogModule *log_info = sWebRtcLog;
   mozilla::LogLevel log_level = log_info->Level();
 
@@ -66,8 +62,7 @@ CheckOverrides()
   return log_level;
 }
 
-void ConfigWebRtcLog(mozilla::LogLevel level)
-{
+void ConfigWebRtcLog(mozilla::LogLevel level) {
   rtc::LoggingSeverity log_level;
   switch (level) {
     case mozilla::LogLevel::Verbose:
@@ -104,8 +99,7 @@ void ConfigWebRtcLog(mozilla::LogLevel level)
   }
 }
 
-void StartWebRtcLog(mozilla::LogLevel log_level)
-{
+void StartWebRtcLog(mozilla::LogLevel log_level) {
   if (log_level == mozilla::LogLevel::Disabled) {
     return;
   }
@@ -114,11 +108,9 @@ void StartWebRtcLog(mozilla::LogLevel log_level)
   mozilla::LogLevel level = CheckOverrides();
 
   ConfigWebRtcLog(level);
-
 }
 
-void EnableWebRtcLog()
-{
+void EnableWebRtcLog() {
   GetWebRtcLogPrefs();
   mozilla::LogLevel level = CheckOverrides();
   ConfigWebRtcLog(level);
@@ -126,8 +118,7 @@ void EnableWebRtcLog()
 
 // Called when we destroy the singletons from PeerConnectionCtx or if the
 // user changes logging in about:webrtc
-void StopWebRtcLog()
-{
+void StopWebRtcLog() {
   if (sSink) {
     rtc::LogMessage::RemoveLogToStream(sSink);
     sSink = nullptr;
@@ -160,8 +151,7 @@ nsCString ConfigAecLog() {
   return aecLogDir;
 }
 
-nsCString StartAecLog()
-{
+nsCString StartAecLog() {
   nsCString aecLogDir;
   if (rtc::LogMessage::aec_debug()) {
     return EmptyCString();
@@ -176,7 +166,4 @@ nsCString StartAecLog()
   return aecLogDir;
 }
 
-void StopAecLog()
-{
-  rtc::LogMessage::set_aec_debug(false);
-}
+void StopAecLog() { rtc::LogMessage::set_aec_debug(false); }

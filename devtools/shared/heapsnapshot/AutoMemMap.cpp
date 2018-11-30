@@ -12,8 +12,7 @@
 namespace mozilla {
 namespace devtools {
 
-AutoMemMap::~AutoMemMap()
-{
+AutoMemMap::~AutoMemMap() {
   if (addr) {
     Unused << NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
     addr = nullptr;
@@ -30,9 +29,8 @@ AutoMemMap::~AutoMemMap()
   }
 }
 
-nsresult
-AutoMemMap::init(const char* filePath, int flags, int mode, PRFileMapProtect prot)
-{
+nsresult AutoMemMap::init(const char* filePath, int flags, int mode,
+                          PRFileMapProtect prot) {
   MOZ_ASSERT(!fd);
   MOZ_ASSERT(!fileMap);
   MOZ_ASSERT(!addr);
@@ -41,24 +39,20 @@ AutoMemMap::init(const char* filePath, int flags, int mode, PRFileMapProtect pro
     return NS_ERROR_FILE_NOT_FOUND;
 
   // Check if the file is too big to memmap.
-  if (fileInfo.size > int64_t(UINT32_MAX))
-    return NS_ERROR_INVALID_ARG;
+  if (fileInfo.size > int64_t(UINT32_MAX)) return NS_ERROR_INVALID_ARG;
   auto length = uint32_t(fileInfo.size);
 
   fd = PR_Open(filePath, flags, flags);
-  if (!fd)
-    return NS_ERROR_UNEXPECTED;
+  if (!fd) return NS_ERROR_UNEXPECTED;
 
   fileMap = PR_CreateFileMap(fd, fileInfo.size, prot);
-  if (!fileMap)
-    return NS_ERROR_UNEXPECTED;
+  if (!fileMap) return NS_ERROR_UNEXPECTED;
 
   addr = PR_MemMap(fileMap, 0, length);
-  if (!addr)
-    return NS_ERROR_UNEXPECTED;
+  if (!addr) return NS_ERROR_UNEXPECTED;
 
   return NS_OK;
 }
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla

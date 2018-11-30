@@ -8,7 +8,7 @@
 #define LulMainInt_h
 
 #include "PlatformMacros.h"
-#include "LulMain.h" // for TaggedUWord
+#include "LulMain.h"  // for TaggedUWord
 
 #include <vector>
 
@@ -17,7 +17,6 @@
 // This file is provides internal interface inside LUL.  If you are an
 // end-user of LUL, do not include it in your code.  The end-user
 // interface is in LulMain.h.
-
 
 namespace lul {
 
@@ -37,7 +36,7 @@ enum DW_REG_NUMBER {
   DW_REG_CFA = -1,
 #if defined(GP_ARCH_arm)
   // ARM registers
-  DW_REG_ARM_R7  = 7,
+  DW_REG_ARM_R7 = 7,
   DW_REG_ARM_R11 = 11,
   DW_REG_ARM_R12 = 12,
   DW_REG_ARM_R13 = 13,
@@ -47,7 +46,7 @@ enum DW_REG_NUMBER {
   // aarch64 registers
   DW_REG_AARCH64_X29 = 29,
   DW_REG_AARCH64_X30 = 30,
-  DW_REG_AARCH64_SP  = 31,
+  DW_REG_AARCH64_SP = 31,
 #elif defined(GP_ARCH_amd64)
   // Because the X86 (32 bit) and AMD64 (64 bit) summarisers are
   // combined, a merged set of register constants is needed.
@@ -63,10 +62,9 @@ enum DW_REG_NUMBER {
   DW_REG_MIPS_FP = 30,
   DW_REG_MIPS_PC = 34,
 #else
-# error "Unknown arch"
+#error "Unknown arch"
 #endif
 };
-
 
 ////////////////////////////////////////////////////////////////
 // PfxExpr                                                    //
@@ -89,18 +87,13 @@ enum PfxExprOp {
 
 struct PfxInstr {
   PfxInstr(PfxExprOp opcode, int32_t operand)
-    : mOpcode(opcode)
-    , mOperand(operand)
-  {}
-  explicit PfxInstr(PfxExprOp opcode)
-    : mOpcode(opcode)
-    , mOperand(0)
-  {}
+      : mOpcode(opcode), mOperand(operand) {}
+  explicit PfxInstr(PfxExprOp opcode) : mOpcode(opcode), mOperand(0) {}
   bool operator==(const PfxInstr& other) const {
     return mOpcode == other.mOpcode && mOperand == other.mOperand;
   }
   PfxExprOp mOpcode;
-  int32_t   mOperand;
+  int32_t mOperand;
 };
 
 static_assert(sizeof(PfxInstr) <= 8, "PfxInstr size changed unexpectedly");
@@ -110,11 +103,9 @@ static_assert(sizeof(PfxInstr) <= 8, "PfxInstr size changed unexpectedly");
 // the instruction vector, obviously malformed sequences),
 // return an invalid TaggedUWord.
 // RUNS IN NO-MALLOC CONTEXT
-TaggedUWord EvaluatePfxExpr(int32_t start,
-                            const UnwindRegs* aOldRegs,
+TaggedUWord EvaluatePfxExpr(int32_t start, const UnwindRegs* aOldRegs,
                             TaggedUWord aCFA, const StackImage* aStackImg,
                             const vector<PfxInstr>& aPfxInstrs);
-
 
 ////////////////////////////////////////////////////////////////
 // LExpr                                                      //
@@ -129,64 +120,66 @@ TaggedUWord EvaluatePfxExpr(int32_t start,
 // expressions fit into the bigger picture.
 
 enum LExprHow {
-  UNKNOWN=0, // This LExpr denotes no value.
-  NODEREF,   // Value is  (mReg + mOffset).
-  DEREF,     // Value is *(mReg + mOffset).
-  PFXEXPR    // Value is EvaluatePfxExpr(secMap->mPfxInstrs[mOffset])
+  UNKNOWN = 0,  // This LExpr denotes no value.
+  NODEREF,      // Value is  (mReg + mOffset).
+  DEREF,        // Value is *(mReg + mOffset).
+  PFXEXPR       // Value is EvaluatePfxExpr(secMap->mPfxInstrs[mOffset])
 };
 
 inline static const char* NameOf_LExprHow(LExprHow how) {
   switch (how) {
-    case UNKNOWN: return "UNKNOWN";
-    case NODEREF: return "NODEREF";
-    case DEREF:   return "DEREF";
-    case PFXEXPR: return "PFXEXPR";
-    default:      return "LExpr-??";
+    case UNKNOWN:
+      return "UNKNOWN";
+    case NODEREF:
+      return "NODEREF";
+    case DEREF:
+      return "DEREF";
+    case PFXEXPR:
+      return "PFXEXPR";
+    default:
+      return "LExpr-??";
   }
 }
 
-
 struct LExpr {
   // Denotes an expression with no value.
-  LExpr()
-    : mHow(UNKNOWN)
-    , mReg(0)
-    , mOffset(0)
-  {}
+  LExpr() : mHow(UNKNOWN), mReg(0), mOffset(0) {}
 
   // Denotes any expressible expression.
   LExpr(LExprHow how, int16_t reg, int32_t offset)
-    : mHow(how)
-    , mReg(reg)
-    , mOffset(offset)
-  {
+      : mHow(how), mReg(reg), mOffset(offset) {
     switch (how) {
-      case UNKNOWN: MOZ_ASSERT(reg == 0 && offset == 0); break;
-      case NODEREF: break;
-      case DEREF:   break;
-      case PFXEXPR: MOZ_ASSERT(reg == 0 && offset >= 0); break;
-      default:      MOZ_ASSERT(0, "LExpr::LExpr: invalid how");
+      case UNKNOWN:
+        MOZ_ASSERT(reg == 0 && offset == 0);
+        break;
+      case NODEREF:
+        break;
+      case DEREF:
+        break;
+      case PFXEXPR:
+        MOZ_ASSERT(reg == 0 && offset >= 0);
+        break;
+      default:
+        MOZ_ASSERT(0, "LExpr::LExpr: invalid how");
     }
   }
 
   // Change the offset for an expression that references memory.
-  LExpr add_delta(long delta)
-  {
+  LExpr add_delta(long delta) {
     MOZ_ASSERT(mHow == NODEREF);
     // If this is a non-debug build and the above assertion would have
     // failed, at least return LExpr() so that the machinery that uses
     // the resulting expression fails in a repeatable way.
-    return (mHow == NODEREF) ? LExpr(mHow, mReg, mOffset+delta)
-                             : LExpr(); // Gone bad
+    return (mHow == NODEREF) ? LExpr(mHow, mReg, mOffset + delta)
+                             : LExpr();  // Gone bad
   }
 
   // Dereference an expression that denotes a memory address.
-  LExpr deref()
-  {
+  LExpr deref() {
     MOZ_ASSERT(mHow == NODEREF);
     // Same rationale as for add_delta().
     return (mHow == NODEREF) ? LExpr(DEREF, mReg, mOffset)
-                             : LExpr(); // Gone bad
+                             : LExpr();  // Gone bad
   }
 
   // Print a rule for recovery of |aNewReg| whose recovered value
@@ -200,20 +193,19 @@ struct LExpr {
   // references memory.  |aPfxInstrs| holds the vector of PfxInstrs
   // that will be consulted if this is a PFXEXPR.
   // RUNS IN NO-MALLOC CONTEXT
-  TaggedUWord EvaluateExpr(const UnwindRegs* aOldRegs,
-                           TaggedUWord aCFA, const StackImage* aStackImg,
+  TaggedUWord EvaluateExpr(const UnwindRegs* aOldRegs, TaggedUWord aCFA,
+                           const StackImage* aStackImg,
                            const vector<PfxInstr>* aPfxInstrs) const;
 
   // Representation of expressions.  If |mReg| is DW_REG_CFA (-1) then
   // it denotes the CFA.  All other allowed values for |mReg| are
   // nonnegative and are DW_REG_ values.
-  LExprHow mHow:8;
-  int16_t  mReg;    // A DW_REG_ value
-  int32_t  mOffset; // 32-bit signed offset should be more than enough.
+  LExprHow mHow : 8;
+  int16_t mReg;     // A DW_REG_ value
+  int32_t mOffset;  // 32-bit signed offset should be more than enough.
 };
 
 static_assert(sizeof(LExpr) <= 8, "LExpr size changed unexpectedly");
-
 
 ////////////////////////////////////////////////////////////////
 // RuleSet                                                    //
@@ -260,9 +252,9 @@ static_assert(sizeof(LExpr) <= 8, "LExpr size changed unexpectedly");
 // length would break binary searching in SecMaps and PriMaps.
 
 class RuleSet {
-public:
+ public:
   RuleSet();
-  void   Print(void(*aLog)(const char*)) const;
+  void Print(void (*aLog)(const char*)) const;
 
   // Find the LExpr* for a given DW_REG_ value in this class.
   LExpr* ExprForRegno(DW_REG_NUMBER aRegno);
@@ -270,30 +262,30 @@ public:
   uintptr_t mAddr;
   uintptr_t mLen;
   // How to compute the CFA.
-  LExpr  mCfaExpr;
+  LExpr mCfaExpr;
   // How to compute caller register values.  These may reference the
   // value defined by |mCfaExpr|.
 #if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
-  LExpr  mXipExpr; // return address
-  LExpr  mXspExpr;
-  LExpr  mXbpExpr;
+  LExpr mXipExpr;  // return address
+  LExpr mXspExpr;
+  LExpr mXbpExpr;
 #elif defined(GP_ARCH_arm)
-  LExpr  mR15expr; // return address
-  LExpr  mR14expr;
-  LExpr  mR13expr;
-  LExpr  mR12expr;
-  LExpr  mR11expr;
-  LExpr  mR7expr;
+  LExpr mR15expr;  // return address
+  LExpr mR14expr;
+  LExpr mR13expr;
+  LExpr mR12expr;
+  LExpr mR11expr;
+  LExpr mR7expr;
 #elif defined(GP_ARCH_arm64)
-  LExpr  mX29expr; // frame pointer register
-  LExpr  mX30expr; // link register
-  LExpr  mSPexpr;
+  LExpr mX29expr;  // frame pointer register
+  LExpr mX30expr;  // link register
+  LExpr mSPexpr;
 #elif defined(GP_ARCH_mips64)
-  LExpr  mPCexpr;
-  LExpr  mFPexpr;
-  LExpr  mSPexpr;
+  LExpr mPCexpr;
+  LExpr mFPexpr;
+  LExpr mSPexpr;
 #else
-#   error "Unknown arch"
+#error "Unknown arch"
 #endif
 };
 
@@ -301,27 +293,36 @@ public:
 // of the set of registers that LUL unwinds on this target.
 static inline bool registerIsTracked(DW_REG_NUMBER reg) {
   switch (reg) {
-#   if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
-    case DW_REG_INTEL_XBP: case DW_REG_INTEL_XSP: case DW_REG_INTEL_XIP:
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
+    case DW_REG_INTEL_XBP:
+    case DW_REG_INTEL_XSP:
+    case DW_REG_INTEL_XIP:
       return true;
-#   elif defined(GP_ARCH_arm)
-    case DW_REG_ARM_R7:  case DW_REG_ARM_R11: case DW_REG_ARM_R12:
-    case DW_REG_ARM_R13: case DW_REG_ARM_R14: case DW_REG_ARM_R15:
+#elif defined(GP_ARCH_arm)
+    case DW_REG_ARM_R7:
+    case DW_REG_ARM_R11:
+    case DW_REG_ARM_R12:
+    case DW_REG_ARM_R13:
+    case DW_REG_ARM_R14:
+    case DW_REG_ARM_R15:
       return true;
-#   elif defined(GP_ARCH_arm64)
-    case DW_REG_AARCH64_X29:  case DW_REG_AARCH64_X30: case DW_REG_AARCH64_SP:
+#elif defined(GP_ARCH_arm64)
+    case DW_REG_AARCH64_X29:
+    case DW_REG_AARCH64_X30:
+    case DW_REG_AARCH64_SP:
       return true;
 #elif defined(GP_ARCH_mips64)
-    case DW_REG_MIPS_FP:  case DW_REG_MIPS_SP: case DW_REG_MIPS_PC:
+    case DW_REG_MIPS_FP:
+    case DW_REG_MIPS_SP:
+    case DW_REG_MIPS_PC:
       return true;
-#   else
-#     error "Unknown arch"
-#   endif
+#else
+#error "Unknown arch"
+#endif
     default:
       return false;
   }
 }
-
 
 ////////////////////////////////////////////////////////////////
 // SecMap                                                     //
@@ -333,7 +334,7 @@ static inline bool registerIsTracked(DW_REG_NUMBER reg) {
 // entries, and so that can't be allowed to happen.
 
 class SecMap {
-public:
+ public:
   // These summarise the contained mRuleSets, in that they give
   // exactly the lowest and highest addresses that any of the entries
   // in this SecMap cover.  Hence invariants:
@@ -353,7 +354,7 @@ public:
   // so let's use mSummaryMinAddr == 1 and mSummaryMaxAddr == 0 to denote
   // this case.
 
-  explicit SecMap(void(*aLog)(const char*));
+  explicit SecMap(void (*aLog)(const char*));
   ~SecMap();
 
   // Binary search mRuleSets to find one that brackets |ia|, or nullptr
@@ -388,7 +389,7 @@ public:
   uintptr_t mSummaryMinAddr;
   uintptr_t mSummaryMaxAddr;
 
-private:
+ private:
   // False whilst adding entries; true once it is safe to call FindRuleSet.
   // Transition (false->true) is caused by calling PrepareRuleSets().
   bool mUsable;
@@ -413,6 +414,6 @@ private:
   void (*mLog)(const char*);
 };
 
-} // namespace lul
+}  // namespace lul
 
-#endif // ndef LulMainInt_h
+#endif  // ndef LulMainInt_h

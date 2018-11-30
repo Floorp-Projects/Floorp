@@ -19,7 +19,7 @@
 // Items can be inserted into the container with arbitrary ID, but the caller
 // must ensure they are unique. Inserting IDs and relying on automatically
 // generated ones is not allowed because they can collide.
-template<class T>
+template <class T>
 class IDMap {
  private:
   typedef base::hash_map<int32_t, T> HashTable;
@@ -30,18 +30,11 @@ class IDMap {
   // Note, use iterator->first to get the ID, iterator->second to get the T*
   typedef typename HashTable::const_iterator const_iterator;
 
-  IDMap() : next_id_(1) {
-  }
-  IDMap(const IDMap& other) : next_id_(other.next_id_),
-                                        data_(other.data_) {
-  }
+  IDMap() : next_id_(1) {}
+  IDMap(const IDMap& other) : next_id_(other.next_id_), data_(other.data_) {}
 
-  const_iterator begin() const {
-    return data_.begin();
-  }
-  const_iterator end() const {
-    return data_.end();
-  }
+  const_iterator begin() const { return data_.begin(); }
+  const_iterator end() const { return data_.end(); }
 
   // Adds a view with an automatically generated unique ID. See AddWithID.
   int32_t Add(const T& data) {
@@ -82,32 +75,24 @@ class IDMap {
     data_[id] = data;
   }
 
-  bool IsEmpty() const {
-    return data_.empty();
-  }
+  bool IsEmpty() const { return data_.empty(); }
 
-  void Clear() {
-    data_.clear();
-  }
+  void Clear() { data_.clear(); }
 
   bool HasData(const T& data) const {
     // XXX would like to use <algorithm> here ...
     for (const_iterator it = begin(); it != end(); ++it)
-      if (data == it->second)
-        return true;
+      if (data == it->second) return true;
     return false;
   }
 
   T Lookup(int32_t id) const {
     const_iterator i = data_.find(id);
-    if (i == data_.end())
-      return T();
+    if (i == data_.end()) return T();
     return i->second;
   }
 
-  size_t size() const {
-    return data_.size();
-  }
+  size_t size() const { return data_.size(); }
 
  protected:
   // The next ID that we will return from Add()

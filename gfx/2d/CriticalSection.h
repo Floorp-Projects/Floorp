@@ -20,7 +20,7 @@ namespace gfx {
 #ifdef WIN32
 
 class CriticalSection {
-public:
+ public:
   CriticalSection() { ::InitializeCriticalSection(&mCriticalSection); }
 
   ~CriticalSection() { ::DeleteCriticalSection(&mCriticalSection); }
@@ -29,7 +29,7 @@ public:
 
   void Leave() { ::LeaveCriticalSection(&mCriticalSection); }
 
-protected:
+ protected:
   CRITICAL_SECTION mCriticalSection;
 };
 
@@ -38,7 +38,7 @@ protected:
 
 class PosixCondvar;
 class CriticalSection {
-public:
+ public:
   CriticalSection() {
     DebugOnly<int> err = pthread_mutex_init(&mMutex, nullptr);
     MOZ_ASSERT(!err);
@@ -59,7 +59,7 @@ public:
     MOZ_ASSERT(!err);
   }
 
-protected:
+ protected:
   pthread_mutex_t mMutex;
   friend class PosixCondVar;
 };
@@ -68,14 +68,17 @@ protected:
 
 /// RAII helper.
 struct CriticalSectionAutoEnter {
-    explicit CriticalSectionAutoEnter(CriticalSection* aSection) : mSection(aSection) { mSection->Enter(); }
-    ~CriticalSectionAutoEnter() { mSection->Leave(); }
-protected:
-    CriticalSection* mSection;
+  explicit CriticalSectionAutoEnter(CriticalSection* aSection)
+      : mSection(aSection) {
+    mSection->Enter();
+  }
+  ~CriticalSectionAutoEnter() { mSection->Leave(); }
+
+ protected:
+  CriticalSection* mSection;
 };
 
-
-} // namespace
-} // namespace
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

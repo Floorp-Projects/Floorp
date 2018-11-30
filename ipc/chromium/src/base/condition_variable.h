@@ -80,7 +80,7 @@
 #endif
 
 namespace base {
-  class TimeDelta;
+class TimeDelta;
 }
 
 class ConditionVariable {
@@ -103,7 +103,6 @@ class ConditionVariable {
   void Signal();
 
  private:
-
 #if defined(OS_WIN)
   CONDITION_VARIABLE cv_;
   SRWLOCK* const srwlock_;

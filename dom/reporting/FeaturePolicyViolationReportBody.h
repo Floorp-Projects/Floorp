@@ -13,9 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-class FeaturePolicyViolationReportBody final : public ReportBody
-{
-public:
+class FeaturePolicyViolationReportBody final : public ReportBody {
+ public:
   FeaturePolicyViolationReportBody(nsPIDOMWindowInner* aWindow,
                                    const nsAString& aFeatureId,
                                    const nsAString& aSourceFile,
@@ -23,25 +22,20 @@ public:
                                    const Nullable<int32_t>& aColumnNumber,
                                    const nsAString& aDisposition);
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  GetFeatureId(nsAString& aFeatureId) const;
+  void GetFeatureId(nsAString& aFeatureId) const;
 
-  void
-  GetSourceFile(nsAString& aSourceFile) const;
+  void GetSourceFile(nsAString& aSourceFile) const;
 
-  Nullable<int32_t>
-  GetLineNumber() const;
+  Nullable<int32_t> GetLineNumber() const;
 
-  Nullable<int32_t>
-  GetColumnNumber() const;
+  Nullable<int32_t> GetColumnNumber() const;
 
-  void
-  GetDisposition(nsAString& aDisposition) const;
+  void GetDisposition(nsAString& aDisposition) const;
 
-private:
+ private:
   ~FeaturePolicyViolationReportBody();
 
   const nsString mFeatureId;
@@ -51,7 +45,7 @@ private:
   const nsString mDisposition;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FeaturePolicyViolationReportBody_h
+#endif  // mozilla_dom_FeaturePolicyViolationReportBody_h

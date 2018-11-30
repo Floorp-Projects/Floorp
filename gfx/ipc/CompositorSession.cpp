@@ -17,25 +17,18 @@ namespace layers {
 using namespace gfx;
 using namespace widget;
 
-
 CompositorSession::CompositorSession(CompositorWidgetDelegate* aDelegate,
                                      CompositorBridgeChild* aChild,
                                      const LayersId& aRootLayerTreeId)
- : mCompositorWidgetDelegate(aDelegate),
-   mCompositorBridgeChild(aChild),
-   mRootLayerTreeId(aRootLayerTreeId)
-{
-}
+    : mCompositorWidgetDelegate(aDelegate),
+      mCompositorBridgeChild(aChild),
+      mRootLayerTreeId(aRootLayerTreeId) {}
 
-CompositorSession::~CompositorSession()
-{
-}
+CompositorSession::~CompositorSession() {}
 
-CompositorBridgeChild*
-CompositorSession::GetCompositorBridgeChild()
-{
+CompositorBridgeChild* CompositorSession::GetCompositorBridgeChild() {
   return mCompositorBridgeChild;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

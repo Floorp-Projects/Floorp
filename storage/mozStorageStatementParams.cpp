@@ -30,28 +30,22 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StatementParams)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(StatementParams)
 
-StatementParams::StatementParams(nsPIDOMWindowInner* aWindow, Statement *aStatement)
-: mWindow(aWindow),
-  mStatement(aStatement),
-  mParamCount(0)
-{
+StatementParams::StatementParams(nsPIDOMWindowInner* aWindow,
+                                 Statement* aStatement)
+    : mWindow(aWindow), mStatement(aStatement), mParamCount(0) {
   NS_ASSERTION(mStatement != nullptr, "mStatement is null");
   (void)mStatement->GetParameterCount(&mParamCount);
 }
 
-JSObject*
-StatementParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* StatementParams::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return dom::MozStorageStatementParams_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-StatementParams::NamedGetter(JSContext* aCx,
-                             const nsAString& aName,
-                             bool& aFound,
-                             JS::MutableHandle<JS::Value> aResult,
-                             mozilla::ErrorResult& aRv)
-{
+void StatementParams::NamedGetter(JSContext* aCx, const nsAString& aName,
+                                  bool& aFound,
+                                  JS::MutableHandle<JS::Value> aResult,
+                                  mozilla::ErrorResult& aRv) {
   if (!mStatement) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -61,12 +55,9 @@ StatementParams::NamedGetter(JSContext* aCx,
   aFound = false;
 }
 
-void
-StatementParams::NamedSetter(JSContext* aCx,
-                             const nsAString& aName,
-                             JS::Handle<JS::Value> aValue,
-                             mozilla::ErrorResult& aRv)
-{
+void StatementParams::NamedSetter(JSContext* aCx, const nsAString& aName,
+                                  JS::Handle<JS::Value> aValue,
+                                  mozilla::ErrorResult& aRv) {
   if (!mStatement) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -84,9 +75,7 @@ StatementParams::NamedSetter(JSContext* aCx,
   aRv = mStatement->BindByName(name, variant);
 }
 
-void
-StatementParams::GetSupportedNames(nsTArray<nsString>& aNames)
-{
+void StatementParams::GetSupportedNames(nsTArray<nsString>& aNames) {
   if (!mStatement) {
     return;
   }
@@ -105,13 +94,10 @@ StatementParams::GetSupportedNames(nsTArray<nsString>& aNames)
   }
 }
 
-void
-StatementParams::IndexedGetter(JSContext* aCx,
-                               uint32_t aIndex,
-                               bool& aFound,
-                               JS::MutableHandle<JS::Value> aResult,
-                               mozilla::ErrorResult& aRv)
-{
+void StatementParams::IndexedGetter(JSContext* aCx, uint32_t aIndex,
+                                    bool& aFound,
+                                    JS::MutableHandle<JS::Value> aResult,
+                                    mozilla::ErrorResult& aRv) {
   if (!mStatement) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -121,12 +107,9 @@ StatementParams::IndexedGetter(JSContext* aCx,
   aFound = false;
 }
 
-void
-StatementParams::IndexedSetter(JSContext* aCx,
-                               uint32_t aIndex,
-                               JS::Handle<JS::Value> aValue,
-                               mozilla::ErrorResult& aRv)
-{
+void StatementParams::IndexedSetter(JSContext* aCx, uint32_t aIndex,
+                                    JS::Handle<JS::Value> aValue,
+                                    mozilla::ErrorResult& aRv) {
   if (!mStatement) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -141,5 +124,5 @@ StatementParams::IndexedSetter(JSContext* aCx,
   aRv = mStatement->BindByIndex(aIndex, variant);
 }
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla

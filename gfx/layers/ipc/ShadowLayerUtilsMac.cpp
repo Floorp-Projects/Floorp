@@ -18,22 +18,13 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
-/*static*/ void
-ShadowLayerForwarder::PlatformSyncBeforeUpdate()
-{
-}
+/*static*/ void ShadowLayerForwarder::PlatformSyncBeforeUpdate() {}
 
-/*static*/ void
-LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
-{
-}
+/*static*/ void LayerManagerComposite::PlatformSyncBeforeReplyUpdate() {}
 
-/*static*/ bool
-LayerManagerComposite::SupportsDirectTexturing()
-{
+/*static*/ bool LayerManagerComposite::SupportsDirectTexturing() {
   return false;
 }
 
-
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

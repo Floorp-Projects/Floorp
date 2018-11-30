@@ -9,30 +9,30 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/SynchronizedEventQueue.h" // for ThreadTargetSink
+#include "mozilla/SynchronizedEventQueue.h"  // for ThreadTargetSink
 #include "nsISerialEventTarget.h"
 
 namespace mozilla {
 
 // ThreadEventTarget handles the details of posting an event to a thread. It can
 // be used with any ThreadTargetSink implementation.
-class ThreadEventTarget final : public nsISerialEventTarget
-{
-public:
-  ThreadEventTarget(ThreadTargetSink* aSink,
-                    bool aIsMainThread);
+class ThreadEventTarget final : public nsISerialEventTarget {
+ public:
+  ThreadEventTarget(ThreadTargetSink* aSink, bool aIsMainThread);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
 
   // Disconnects the target so that it can no longer post events.
-  void Disconnect(const MutexAutoLock& aProofOfLock) { mSink->Disconnect(aProofOfLock); }
+  void Disconnect(const MutexAutoLock& aProofOfLock) {
+    mSink->Disconnect(aProofOfLock);
+  }
 
-  // Sets the thread for which IsOnCurrentThread returns true to the current thread.
+  // Sets the thread for which IsOnCurrentThread returns true to the current
+  // thread.
   void SetCurrentThread();
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     size_t n = 0;
     if (mSink) {
       n += mSink->SizeOfIncludingThis(aMallocSizeOf);
@@ -40,13 +40,13 @@ public:
     return aMallocSizeOf(this) + n;
   }
 
-private:
+ private:
   ~ThreadEventTarget() {}
 
   RefPtr<ThreadTargetSink> mSink;
   bool mIsMainThread;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ThreadEventTarget_h
+#endif  // mozilla_ThreadEventTarget_h

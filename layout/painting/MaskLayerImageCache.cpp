@@ -13,18 +13,14 @@ using namespace mozilla::layers;
 
 namespace mozilla {
 
-MaskLayerImageCache::MaskLayerImageCache()
-{
+MaskLayerImageCache::MaskLayerImageCache() {
   MOZ_COUNT_CTOR(MaskLayerImageCache);
 }
-MaskLayerImageCache::~MaskLayerImageCache()
-{
+MaskLayerImageCache::~MaskLayerImageCache() {
   MOZ_COUNT_DTOR(MaskLayerImageCache);
 }
 
-void
-MaskLayerImageCache::Sweep()
-{
+void MaskLayerImageCache::Sweep() {
   for (auto iter = mMaskImageContainers.Iter(); !iter.Done(); iter.Next()) {
     const MaskLayerImageCache::MaskLayerImageKey* key = iter.Get()->mKey;
     if (key->HasZeroLayerCount()) {
@@ -33,9 +29,8 @@ MaskLayerImageCache::Sweep()
   }
 }
 
-ImageContainer*
-MaskLayerImageCache::FindImageFor(const MaskLayerImageKey** aKey)
-{
+ImageContainer* MaskLayerImageCache::FindImageFor(
+    const MaskLayerImageKey** aKey) {
   if (MaskLayerImageEntry* entry = mMaskImageContainers.GetEntry(**aKey)) {
     *aKey = entry->mKey.get();
     return entry->mContainer;
@@ -44,32 +39,25 @@ MaskLayerImageCache::FindImageFor(const MaskLayerImageKey** aKey)
   return nullptr;
 }
 
-void
-MaskLayerImageCache::PutImage(const MaskLayerImageKey* aKey,
-                              ImageContainer* aContainer)
-{
+void MaskLayerImageCache::PutImage(const MaskLayerImageKey* aKey,
+                                   ImageContainer* aContainer) {
   MaskLayerImageEntry* entry = mMaskImageContainers.PutEntry(*aKey);
   entry->mContainer = aContainer;
 }
 
 MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey()
-  : mRoundedClipRects()
-  , mLayerCount(0)
-{
+    : mRoundedClipRects(), mLayerCount(0) {
   MOZ_COUNT_CTOR(MaskLayerImageKey);
 }
 
 MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey(
-  const MaskLayerImageKey& aKey)
-  : mRoundedClipRects(aKey.mRoundedClipRects)
-  , mLayerCount(aKey.mLayerCount)
-{
+    const MaskLayerImageKey& aKey)
+    : mRoundedClipRects(aKey.mRoundedClipRects), mLayerCount(aKey.mLayerCount) {
   MOZ_COUNT_CTOR(MaskLayerImageKey);
 }
 
-MaskLayerImageCache::MaskLayerImageKey::~MaskLayerImageKey()
-{
+MaskLayerImageCache::MaskLayerImageKey::~MaskLayerImageKey() {
   MOZ_COUNT_DTOR(MaskLayerImageKey);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -20,32 +20,30 @@ class nsIRedirectHistoryEntry;
 namespace IPC {
 
 namespace detail {
-template<class ParamType>
-struct OriginAttributesParamTraits
-{
+template <class ParamType>
+struct OriginAttributesParamTraits {
   typedef ParamType paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     nsAutoCString suffix;
     aParam.CreateSuffix(suffix);
     WriteParam(aMsg, suffix);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     nsAutoCString suffix;
     return ReadParam(aMsg, aIter, &suffix) &&
            aResult->PopulateFromSuffix(suffix);
   }
 };
-} // namespace detail
+}  // namespace detail
 
-template<>
+template <>
 struct ParamTraits<mozilla::OriginAttributes>
-  : public detail::OriginAttributesParamTraits<mozilla::OriginAttributes> {};
+    : public detail::OriginAttributesParamTraits<mozilla::OriginAttributes> {};
 
-} // namespace IPC
+}  // namespace IPC
 
 namespace mozilla {
 namespace net {
@@ -53,7 +51,7 @@ class ChildLoadInfoForwarderArgs;
 class OptionalLoadInfoArgs;
 class ParentLoadInfoForwarderArgs;
 class RedirectHistoryEntryInfo;
-} // namespace net
+}  // namespace net
 
 namespace ipc {
 
@@ -64,87 +62,85 @@ class PrincipalInfo;
  *
  * MUST be called on the main thread only.
  */
-already_AddRefed<nsIPrincipal>
-PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
-                         nsresult* aOptionalResult = nullptr);
+already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
+    const PrincipalInfo& aPrincipalInfo, nsresult* aOptionalResult = nullptr);
 
 /**
  * Convert an nsIPrincipal to a PrincipalInfo.
  *
  * MUST be called on the main thread only.
  */
-nsresult
-PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
-                         PrincipalInfo* aPrincipalInfo);
+nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
+                                  PrincipalInfo* aPrincipalInfo);
 
 /**
  * Return true if this PrincipalInfo is a content principal and it has
  * a privateBrowsing id in its OriginAttributes
  */
-bool
-IsPincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo);
+bool IsPincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo);
 
 /**
  * Convert an RedirectHistoryEntryInfo to a nsIRedirectHistoryEntry.
  */
 
-already_AddRefed<nsIRedirectHistoryEntry>
-RHEntryInfoToRHEntry(const mozilla::net::RedirectHistoryEntryInfo& aRHEntryInfo);
+already_AddRefed<nsIRedirectHistoryEntry> RHEntryInfoToRHEntry(
+    const mozilla::net::RedirectHistoryEntryInfo& aRHEntryInfo);
 
 /**
  * Convert an nsIRedirectHistoryEntry to a RedirectHistoryEntryInfo.
  */
 
-nsresult
-RHEntryToRHEntryInfo(nsIRedirectHistoryEntry* aRHEntry,
-                     mozilla::net::RedirectHistoryEntryInfo* aRHEntryInfo);
+nsresult RHEntryToRHEntryInfo(
+    nsIRedirectHistoryEntry* aRHEntry,
+    mozilla::net::RedirectHistoryEntryInfo* aRHEntryInfo);
 
 /**
  * Convert a LoadInfo to LoadInfoArgs struct.
  */
-nsresult
-LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
-                       mozilla::net::OptionalLoadInfoArgs* outOptionalLoadInfoArgs);
+nsresult LoadInfoToLoadInfoArgs(
+    nsILoadInfo* aLoadInfo,
+    mozilla::net::OptionalLoadInfoArgs* outOptionalLoadInfoArgs);
 
 /**
  * Convert LoadInfoArgs to a LoadInfo.
  */
-nsresult
-LoadInfoArgsToLoadInfo(const mozilla::net::OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
-                       nsILoadInfo** outLoadInfo);
+nsresult LoadInfoArgsToLoadInfo(
+    const mozilla::net::OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
+    nsILoadInfo** outLoadInfo);
 
 /**
- * Fills ParentLoadInfoForwarderArgs with properties we want to carry to child processes.
+ * Fills ParentLoadInfoForwarderArgs with properties we want to carry to child
+ * processes.
  */
-void
-LoadInfoToParentLoadInfoForwarder(nsILoadInfo *aLoadInfo,
-                                  mozilla::net::ParentLoadInfoForwarderArgs* aForwarderArgsOut);
+void LoadInfoToParentLoadInfoForwarder(
+    nsILoadInfo* aLoadInfo,
+    mozilla::net::ParentLoadInfoForwarderArgs* aForwarderArgsOut);
 
 /**
  * Merges (replaces) properties of an existing LoadInfo on a child process
  * with properties carried down through ParentLoadInfoForwarderArgs.
  */
-nsresult
-MergeParentLoadInfoForwarder(mozilla::net::ParentLoadInfoForwarderArgs const& aForwarderArgs,
-                             nsILoadInfo *aLoadInfo);
+nsresult MergeParentLoadInfoForwarder(
+    mozilla::net::ParentLoadInfoForwarderArgs const& aForwarderArgs,
+    nsILoadInfo* aLoadInfo);
 
 /**
  * Fills ChildLoadInfoForwarderArgs with properties we want to carry to the
  * parent process after the initial channel creation.
  */
-void
-LoadInfoToChildLoadInfoForwarder(nsILoadInfo* aLoadInfo,
-                                 mozilla::net::ChildLoadInfoForwarderArgs* aForwarderArgsOut);
+void LoadInfoToChildLoadInfoForwarder(
+    nsILoadInfo* aLoadInfo,
+    mozilla::net::ChildLoadInfoForwarderArgs* aForwarderArgsOut);
 
 /**
  * Merges (replaces) properties of an existing LoadInfo on the parent process
  * with properties contained in a ChildLoadInfoForwarderArgs.
  */
-nsresult
-MergeChildLoadInfoForwarder(const mozilla::net::ChildLoadInfoForwarderArgs& aForwardArgs,
-                            nsILoadInfo* aLoadInfo);
+nsresult MergeChildLoadInfoForwarder(
+    const mozilla::net::ChildLoadInfoForwarderArgs& aForwardArgs,
+    nsILoadInfo* aLoadInfo);
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_backgroundutils_h__
+#endif  // mozilla_ipc_backgroundutils_h__

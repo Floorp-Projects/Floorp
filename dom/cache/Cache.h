@@ -27,8 +27,10 @@ class Promise;
 struct CacheQueryOptions;
 class RequestOrUSVString;
 class Response;
-template<typename T> class Optional;
-template<typename T> class Sequence;
+template <typename T>
+class Optional;
+template <typename T>
+class Sequence;
 enum class CallerType : uint32_t;
 
 namespace cache {
@@ -36,56 +38,56 @@ namespace cache {
 class AutoChildOpArgs;
 class CacheChild;
 
-class Cache final : public nsISupports
-                  , public nsWrapperCache
-                  , public TypeUtils
-{
-public:
+class Cache final : public nsISupports,
+                    public nsWrapperCache,
+                    public TypeUtils {
+ public:
   Cache(nsIGlobalObject* aGlobal, CacheChild* aActor, Namespace aNamespace);
 
   // webidl interface methods
-  already_AddRefed<Promise>
-  Match(JSContext* aCx, const RequestOrUSVString& aRequest,
-        const CacheQueryOptions& aOptions, ErrorResult& aRv);
-  already_AddRefed<Promise>
-  MatchAll(JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
-           const CacheQueryOptions& aOptions, ErrorResult& aRv);
-  already_AddRefed<Promise>
-  Add(JSContext* aContext, const RequestOrUSVString& aRequest,
+  already_AddRefed<Promise> Match(JSContext* aCx,
+                                  const RequestOrUSVString& aRequest,
+                                  const CacheQueryOptions& aOptions,
+                                  ErrorResult& aRv);
+  already_AddRefed<Promise> MatchAll(
+      JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
+      const CacheQueryOptions& aOptions, ErrorResult& aRv);
+  already_AddRefed<Promise> Add(JSContext* aContext,
+                                const RequestOrUSVString& aRequest,
+                                CallerType aCallerType, ErrorResult& aRv);
+  already_AddRefed<Promise> AddAll(
+      JSContext* aContext, const Sequence<OwningRequestOrUSVString>& aRequests,
       CallerType aCallerType, ErrorResult& aRv);
-  already_AddRefed<Promise>
-  AddAll(JSContext* aContext,
-         const Sequence<OwningRequestOrUSVString>& aRequests,
-         CallerType aCallerType, ErrorResult& aRv);
-  already_AddRefed<Promise>
-  Put(JSContext* aCx, const RequestOrUSVString& aRequest, Response& aResponse,
-      ErrorResult& aRv);
-  already_AddRefed<Promise>
-  Delete(JSContext* aCx, const RequestOrUSVString& aRequest,
-         const CacheQueryOptions& aOptions, ErrorResult& aRv);
-  already_AddRefed<Promise>
-  Keys(JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
-       const CacheQueryOptions& aParams, ErrorResult& aRv);
+  already_AddRefed<Promise> Put(JSContext* aCx,
+                                const RequestOrUSVString& aRequest,
+                                Response& aResponse, ErrorResult& aRv);
+  already_AddRefed<Promise> Delete(JSContext* aCx,
+                                   const RequestOrUSVString& aRequest,
+                                   const CacheQueryOptions& aOptions,
+                                   ErrorResult& aRv);
+  already_AddRefed<Promise> Keys(JSContext* aCx,
+                                 const Optional<RequestOrUSVString>& aRequest,
+                                 const CacheQueryOptions& aParams,
+                                 ErrorResult& aRv);
 
   // binding methods
   nsISupports* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aContext,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // Called when CacheChild actor is being destroyed
   void DestroyInternal(CacheChild* aActor);
 
   // TypeUtils methods
-  virtual nsIGlobalObject*
-  GetGlobalObject() const override;
+  virtual nsIGlobalObject* GetGlobalObject() const override;
 
 #ifdef DEBUG
   virtual void AssertOwningThread() const override;
 #endif
 
-  virtual mozilla::ipc::PBackgroundChild*
-  GetIPCManager() override;
+  virtual mozilla::ipc::PBackgroundChild* GetIPCManager() override;
 
-private:
+ private:
   class FetchHandler;
 
   ~Cache();
@@ -93,32 +95,30 @@ private:
   // Called when we're destroyed or CCed.
   void DisconnectFromActor();
 
-  already_AddRefed<Promise>
-  ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv);
+  already_AddRefed<Promise> ExecuteOp(AutoChildOpArgs& aOpArgs,
+                                      ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  AddAll(const GlobalObject& aGlobal, nsTArray<RefPtr<Request>>&& aRequestList,
-         CallerType aCallerType, ErrorResult& aRv);
+  already_AddRefed<Promise> AddAll(const GlobalObject& aGlobal,
+                                   nsTArray<RefPtr<Request>>&& aRequestList,
+                                   CallerType aCallerType, ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  PutAll(JSContext* aCx, const nsTArray<RefPtr<Request>>& aRequestList,
-         const nsTArray<RefPtr<Response>>& aResponseList,
-         ErrorResult& aRv);
+  already_AddRefed<Promise> PutAll(
+      JSContext* aCx, const nsTArray<RefPtr<Request>>& aRequestList,
+      const nsTArray<RefPtr<Response>>& aResponseList, ErrorResult& aRv);
 
-  OpenMode
-  GetOpenMode() const;
+  OpenMode GetOpenMode() const;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   CacheChild* mActor;
   const Namespace mNamespace;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Cache)
 };
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Cache_h
+#endif  // mozilla_dom_Cache_h

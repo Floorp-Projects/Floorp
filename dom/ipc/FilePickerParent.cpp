@@ -26,23 +26,18 @@ NS_IMPL_ISUPPORTS(FilePickerParent::FilePickerShownCallback,
                   nsIFilePickerShownCallback);
 
 NS_IMETHODIMP
-FilePickerParent::FilePickerShownCallback::Done(int16_t aResult)
-{
+FilePickerParent::FilePickerShownCallback::Done(int16_t aResult) {
   if (mFilePickerParent) {
     mFilePickerParent->Done(aResult);
   }
   return NS_OK;
 }
 
-void
-FilePickerParent::FilePickerShownCallback::Destroy()
-{
+void FilePickerParent::FilePickerShownCallback::Destroy() {
   mFilePickerParent = nullptr;
 }
 
-FilePickerParent::~FilePickerParent()
-{
-}
+FilePickerParent::~FilePickerParent() {}
 
 // We run code in three places:
 // 1. The main thread calls Dispatch() to start the runnable.
@@ -52,17 +47,14 @@ FilePickerParent::~FilePickerParent()
 FilePickerParent::IORunnable::IORunnable(FilePickerParent* aFPParent,
                                          nsTArray<nsCOMPtr<nsIFile>>& aFiles,
                                          bool aIsDirectory)
-  : mozilla::Runnable("dom::FilePickerParent::IORunnable")
-  , mFilePickerParent(aFPParent)
-  , mIsDirectory(aIsDirectory)
-{
+    : mozilla::Runnable("dom::FilePickerParent::IORunnable"),
+      mFilePickerParent(aFPParent),
+      mIsDirectory(aIsDirectory) {
   mFiles.SwapElements(aFiles);
   MOZ_ASSERT_IF(aIsDirectory, mFiles.Length() == 1);
 }
 
-bool
-FilePickerParent::IORunnable::Dispatch()
-{
+bool FilePickerParent::IORunnable::Dispatch() {
   MOZ_ASSERT(NS_IsMainThread());
 
   mEventTarget = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
@@ -75,8 +67,7 @@ FilePickerParent::IORunnable::Dispatch()
 }
 
 NS_IMETHODIMP
-FilePickerParent::IORunnable::Run()
-{
+FilePickerParent::IORunnable::Run() {
   // If we're on the main thread, then that means we're done. Just send the
   // results.
   if (NS_IsMainThread()) {
@@ -133,15 +124,10 @@ FilePickerParent::IORunnable::Run()
   return NS_OK;
 }
 
-void
-FilePickerParent::IORunnable::Destroy()
-{
-  mFilePickerParent = nullptr;
-}
+void FilePickerParent::IORunnable::Destroy() { mFilePickerParent = nullptr; }
 
-void
-FilePickerParent::SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData)
-{
+void FilePickerParent::SendFilesOrDirectories(
+    const nsTArray<BlobImplOrString>& aData) {
   nsIContentParent* parent = TabParent::GetFrom(Manager())->Manager();
 
   if (mMode == nsIFilePicker::modeGetFolder) {
@@ -185,9 +171,7 @@ FilePickerParent::SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData
   Unused << Send__delete__(this, inblobs, mResult);
 }
 
-void
-FilePickerParent::Done(int16_t aResult)
-{
+void FilePickerParent::Done(int16_t aResult) {
   mResult = aResult;
 
   if (mResult != nsIFilePicker::returnOK) {
@@ -224,7 +208,8 @@ FilePickerParent::Done(int16_t aResult)
   }
 
   MOZ_ASSERT(!mRunnable);
-  mRunnable = new IORunnable(this, files, mMode == nsIFilePicker::modeGetFolder);
+  mRunnable =
+      new IORunnable(this, files, mMode == nsIFilePicker::modeGetFolder);
 
   // Dispatch to background thread to do I/O:
   if (!mRunnable->Dispatch()) {
@@ -232,9 +217,7 @@ FilePickerParent::Done(int16_t aResult)
   }
 }
 
-bool
-FilePickerParent::CreateFilePicker()
-{
+bool FilePickerParent::CreateFilePicker() {
   mFilePicker = do_CreateInstance("@mozilla.org/filepicker;1");
   if (!mFilePicker) {
     return false;
@@ -253,17 +236,13 @@ FilePickerParent::CreateFilePicker()
   return NS_SUCCEEDED(mFilePicker->Init(window, mTitle, mMode));
 }
 
-mozilla::ipc::IPCResult
-FilePickerParent::RecvOpen(const int16_t& aSelectedType,
-                           const bool& aAddToRecentDocs,
-                           const nsString& aDefaultFile,
-                           const nsString& aDefaultExtension,
-                           InfallibleTArray<nsString>&& aFilters,
-                           InfallibleTArray<nsString>&& aFilterNames,
-                           const nsString& aDisplayDirectory,
-                           const nsString& aDisplaySpecialDirectory,
-                           const nsString& aOkButtonLabel)
-{
+mozilla::ipc::IPCResult FilePickerParent::RecvOpen(
+    const int16_t& aSelectedType, const bool& aAddToRecentDocs,
+    const nsString& aDefaultFile, const nsString& aDefaultExtension,
+    InfallibleTArray<nsString>&& aFilters,
+    InfallibleTArray<nsString>&& aFilterNames,
+    const nsString& aDisplayDirectory, const nsString& aDisplaySpecialDirectory,
+    const nsString& aOkButtonLabel) {
   if (!CreateFilePicker()) {
     Unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
     return IPC_OK();
@@ -296,9 +275,7 @@ FilePickerParent::RecvOpen(const int16_t& aSelectedType,
   return IPC_OK();
 }
 
-void
-FilePickerParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void FilePickerParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (mCallback) {
     mCallback->Destroy();
     mCallback = nullptr;

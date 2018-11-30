@@ -12,8 +12,7 @@
 NS_IMPL_ISUPPORTS(nsIOUtil, nsIIOUtil)
 
 NS_IMETHODIMP
-nsIOUtil::InputStreamIsBuffered(nsIInputStream* aStream, bool* aResult)
-{
+nsIOUtil::InputStreamIsBuffered(nsIInputStream* aStream, bool* aResult) {
   if (NS_WARN_IF(!aStream)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -22,8 +21,7 @@ nsIOUtil::InputStreamIsBuffered(nsIInputStream* aStream, bool* aResult)
 }
 
 NS_IMETHODIMP
-nsIOUtil::OutputStreamIsBuffered(nsIOutputStream* aStream, bool* aResult)
-{
+nsIOUtil::OutputStreamIsBuffered(nsIOutputStream* aStream, bool* aResult) {
   if (NS_WARN_IF(!aStream)) {
     return NS_ERROR_INVALID_ARG;
   }

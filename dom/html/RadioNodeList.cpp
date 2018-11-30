@@ -15,15 +15,12 @@
 namespace mozilla {
 namespace dom {
 
-/* virtual */ JSObject*
-RadioNodeList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* RadioNodeList::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return RadioNodeList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-HTMLInputElement*
-GetAsRadio(nsIContent* node)
-{
+HTMLInputElement* GetAsRadio(nsIContent* node) {
   HTMLInputElement* el = HTMLInputElement::FromNode(node);
   if (el && el->ControlType() == NS_FORM_INPUT_RADIO) {
     return el;
@@ -31,9 +28,7 @@ GetAsRadio(nsIContent* node)
   return nullptr;
 }
 
-void
-RadioNodeList::GetValue(nsString& retval, CallerType aCallerType)
-{
+void RadioNodeList::GetValue(nsString& retval, CallerType aCallerType) {
   for (uint32_t i = 0; i < Length(); i++) {
     HTMLInputElement* maybeRadio = GetAsRadio(Item(i));
     if (maybeRadio && maybeRadio->Checked()) {
@@ -44,11 +39,8 @@ RadioNodeList::GetValue(nsString& retval, CallerType aCallerType)
   retval.Truncate();
 }
 
-void
-RadioNodeList::SetValue(const nsAString& value, CallerType aCallerType)
-{
+void RadioNodeList::SetValue(const nsAString& value, CallerType aCallerType) {
   for (uint32_t i = 0; i < Length(); i++) {
-
     HTMLInputElement* maybeRadio = GetAsRadio(Item(i));
     if (!maybeRadio) {
       continue;
@@ -60,11 +52,10 @@ RadioNodeList::SetValue(const nsAString& value, CallerType aCallerType)
       maybeRadio->SetChecked(true);
       return;
     }
-
   }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(RadioNodeList, nsSimpleContentList, RadioNodeList)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

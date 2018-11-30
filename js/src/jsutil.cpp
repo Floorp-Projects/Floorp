@@ -36,92 +36,68 @@ namespace oom {
 JS_PUBLIC_DATA FailureSimulator simulator;
 static MOZ_THREAD_LOCAL(uint32_t) threadType;
 
-bool
-InitThreadType()
-{
-    return threadType.init();
+bool InitThreadType() { return threadType.init(); }
+
+void SetThreadType(ThreadType type) { threadType.set(type); }
+
+uint32_t GetThreadType(void) { return threadType.get(); }
+
+static inline bool IsHelperThreadType(uint32_t thread) {
+  return thread != THREAD_TYPE_NONE && thread != THREAD_TYPE_MAIN;
 }
 
-void
-SetThreadType(ThreadType type)
-{
-    threadType.set(type);
+void FailureSimulator::simulateFailureAfter(Kind kind, uint64_t checks,
+                                            uint32_t thread, bool always) {
+  Maybe<AutoLockHelperThreadState> lock;
+  if (IsHelperThreadType(targetThread_) || IsHelperThreadType(thread)) {
+    lock.emplace();
+    HelperThreadState().waitForAllThreadsLocked(lock.ref());
+  }
+
+  MOZ_ASSERT(counter_ + checks > counter_);
+  MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
+  targetThread_ = thread;
+  maxChecks_ = counter_ + checks;
+  failAlways_ = always;
+  kind_ = kind;
 }
 
-uint32_t
-GetThreadType(void)
-{
-    return threadType.get();
+void FailureSimulator::reset() {
+  Maybe<AutoLockHelperThreadState> lock;
+  if (IsHelperThreadType(targetThread_)) {
+    lock.emplace();
+    HelperThreadState().waitForAllThreadsLocked(lock.ref());
+  }
+
+  targetThread_ = THREAD_TYPE_NONE;
+  maxChecks_ = UINT64_MAX;
+  failAlways_ = false;
+  kind_ = Kind::Nothing;
 }
 
-static inline bool
-IsHelperThreadType(uint32_t thread)
-{
-    return thread != THREAD_TYPE_NONE && thread != THREAD_TYPE_MAIN;
-}
-
-void
-FailureSimulator::simulateFailureAfter(Kind kind, uint64_t checks, uint32_t thread,
-                                       bool always)
-{
-    Maybe<AutoLockHelperThreadState> lock;
-    if (IsHelperThreadType(targetThread_) || IsHelperThreadType(thread)) {
-        lock.emplace();
-        HelperThreadState().waitForAllThreadsLocked(lock.ref());
-    }
-
-    MOZ_ASSERT(counter_ + checks > counter_);
-    MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
-    targetThread_ = thread;
-    maxChecks_ = counter_ + checks;
-    failAlways_ = always;
-    kind_ = kind;
-}
-
-void
-FailureSimulator::reset()
-{
-    Maybe<AutoLockHelperThreadState> lock;
-    if (IsHelperThreadType(targetThread_)) {
-        lock.emplace();
-        HelperThreadState().waitForAllThreadsLocked(lock.ref());
-    }
-
-    targetThread_ = THREAD_TYPE_NONE;
-    maxChecks_ = UINT64_MAX;
-    failAlways_ = false;
-    kind_ = Kind::Nothing;
-}
-
-} // namespace oom
-} // namespace js
-#endif // defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+}  // namespace oom
+}  // namespace js
+#endif  // defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 
 bool js::gDisablePoisoning = false;
 
 JS_PUBLIC_DATA arena_id_t js::MallocArena;
 JS_PUBLIC_DATA arena_id_t js::ArrayBufferContentsArena;
 
-void
-js::InitMallocAllocator()
-{
-    MallocArena = moz_create_arena();
-    ArrayBufferContentsArena = moz_create_arena();
+void js::InitMallocAllocator() {
+  MallocArena = moz_create_arena();
+  ArrayBufferContentsArena = moz_create_arena();
 }
 
-void
-js::ShutDownMallocAllocator()
-{
-    // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
-    // moz_dispose_arena(MallocArena);
-    // moz_dispose_arena(ArrayBufferContentsArena);
+void js::ShutDownMallocAllocator() {
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // moz_dispose_arena(MallocArena);
+  // moz_dispose_arena(ArrayBufferContentsArena);
 }
 
-JS_PUBLIC_API void
-JS_Assert(const char* s, const char* file, int ln)
-{
-    MOZ_ReportAssertionFailure(s, file, ln);
-    MOZ_CRASH();
+JS_PUBLIC_API void JS_Assert(const char* s, const char* file, int ln) {
+  MOZ_ReportAssertionFailure(s, file, ln);
+  MOZ_CRASH();
 }
 
 #ifdef __linux__
@@ -134,36 +110,29 @@ namespace js {
 // This function calls all the vanilla heap allocation functions.  It is never
 // called, and exists purely to help config/check_vanilla_allocations.py.  See
 // that script for more details.
-extern MOZ_COLD void
-AllTheNonBasicVanillaNewAllocations()
-{
-    // posix_memalign and aligned_alloc aren't available on all Linux
-    // configurations.
-    // valloc was deprecated in Android 5.0
-    //char* q;
-    //posix_memalign((void**)&q, 16, 16);
+extern MOZ_COLD void AllTheNonBasicVanillaNewAllocations() {
+  // posix_memalign and aligned_alloc aren't available on all Linux
+  // configurations.
+  // valloc was deprecated in Android 5.0
+  // char* q;
+  // posix_memalign((void**)&q, 16, 16);
 
-    intptr_t p =
-        intptr_t(malloc(16)) +
-        intptr_t(calloc(1, 16)) +
-        intptr_t(realloc(nullptr, 16)) +
-        intptr_t(new char) +
-        intptr_t(new char) +
-        intptr_t(new char) +
-        intptr_t(new char[16]) +
-        intptr_t(memalign(16, 16)) +
-        //intptr_t(q) +
-        //intptr_t(aligned_alloc(16, 16)) +
-        //intptr_t(valloc(4096)) +
-        intptr_t(strdup("dummy"));
+  intptr_t p = intptr_t(malloc(16)) + intptr_t(calloc(1, 16)) +
+               intptr_t(realloc(nullptr, 16)) + intptr_t(new char) +
+               intptr_t(new char) + intptr_t(new char) +
+               intptr_t(new char[16]) + intptr_t(memalign(16, 16)) +
+               // intptr_t(q) +
+               // intptr_t(aligned_alloc(16, 16)) +
+               // intptr_t(valloc(4096)) +
+               intptr_t(strdup("dummy"));
 
-    printf("%u\n", uint32_t(p));  // make sure |p| is not optimized away
+  printf("%u\n", uint32_t(p));  // make sure |p| is not optimized away
 
-    free((int*)p);      // this would crash if ever actually called
+  free((int*)p);  // this would crash if ever actually called
 
-    MOZ_CRASH();
+  MOZ_CRASH();
 }
 
-} // namespace js
+}  // namespace js
 
-#endif // __linux__
+#endif  // __linux__

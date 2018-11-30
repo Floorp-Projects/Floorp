@@ -24,20 +24,21 @@ namespace dom {
 struct PostMessageOptions;
 class ServiceWorkerCloneData;
 
-#define NS_DOM_SERVICEWORKER_IID \
-  {0xd42e0611, 0x3647, 0x4319, {0xae, 0x05, 0x19, 0x89, 0x59, 0xba, 0x99, 0x5e}}
+#define NS_DOM_SERVICEWORKER_IID                     \
+  {                                                  \
+    0xd42e0611, 0x3647, 0x4319, {                    \
+      0xae, 0x05, 0x19, 0x89, 0x59, 0xba, 0x99, 0x5e \
+    }                                                \
+  }
 
-bool
-ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
+bool ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
 
-class ServiceWorker final : public DOMEventTargetHelper
-{
-public:
+class ServiceWorker final : public DOMEventTargetHelper {
+ public:
   // Abstract interface for the internal representation of the
   // ServiceWorker object.
-  class Inner
-  {
-  public:
+  class Inner {
+   public:
     // This will be called when a DOM ServiceWorker object is
     // created and takes a strong ref to the Inner object.
     // RemoveServiceWorker() is guaranteed to be called on the
@@ -49,24 +50,20 @@ public:
     // necessary to handle race conditions where the DOM
     // ServiceWorker object is created while the state is being
     // updated in another process.
-    virtual void
-    AddServiceWorker(ServiceWorker* aWorker) = 0;
+    virtual void AddServiceWorker(ServiceWorker* aWorker) = 0;
 
     // This is called when the DOM ServiceWorker object is
     // destroyed and drops its ref to the Inner object.
-    virtual void
-    RemoveServiceWorker(ServiceWorker* aWorker) = 0;
+    virtual void RemoveServiceWorker(ServiceWorker* aWorker) = 0;
 
     // Get the associated registration for this ServiceWorker.  The success
     // callback should always be called asynchronously.
-    virtual void
-    GetRegistration(ServiceWorkerRegistrationCallback&& aSuccessCB,
-                    ServiceWorkerFailureCallback&& aFailureCB) = 0;
+    virtual void GetRegistration(ServiceWorkerRegistrationCallback&& aSuccessCB,
+                                 ServiceWorkerFailureCallback&& aFailureCB) = 0;
 
-    virtual void
-    PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
-                const ClientInfo& aClientInfo,
-                const ClientState& aClientState) = 0;
+    virtual void PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
+                             const ClientInfo& aClientInfo,
+                             const ClientState& aClientState) = 0;
 
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   };
@@ -78,48 +75,38 @@ public:
   IMPL_EVENT_HANDLER(statechange)
   IMPL_EVENT_HANDLER(error)
 
-  static already_AddRefed<ServiceWorker>
-  Create(nsIGlobalObject* aOwner, const ServiceWorkerDescriptor& aDescriptor);
+  static already_AddRefed<ServiceWorker> Create(
+      nsIGlobalObject* aOwner, const ServiceWorkerDescriptor& aDescriptor);
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  ServiceWorkerState
-  State() const;
+  ServiceWorkerState State() const;
 
-  void
-  SetState(ServiceWorkerState aState);
+  void SetState(ServiceWorkerState aState);
 
-  void
-  MaybeDispatchStateChangeEvent();
+  void MaybeDispatchStateChangeEvent();
 
-  void
-  GetScriptURL(nsString& aURL) const;
+  void GetScriptURL(nsString& aURL) const;
 
-  void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
-  void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const PostMessageOptions& aOptions, ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const PostMessageOptions& aOptions, ErrorResult& aRv);
 
-  const ServiceWorkerDescriptor&
-  Descriptor() const;
+  const ServiceWorkerDescriptor& Descriptor() const;
 
-  void
-  DisconnectFromOwner() override;
+  void DisconnectFromOwner() override;
 
-private:
+ private:
   ServiceWorker(nsIGlobalObject* aWindow,
-                const ServiceWorkerDescriptor& aDescriptor,
-                Inner* aInner);
+                const ServiceWorkerDescriptor& aDescriptor, Inner* aInner);
 
   // This class is reference-counted and will be destroyed from Release().
   ~ServiceWorker();
 
-  void
-  MaybeAttachToRegistration(ServiceWorkerRegistration* aRegistration);
+  void MaybeAttachToRegistration(ServiceWorkerRegistration* aRegistration);
 
   ServiceWorkerDescriptor mDescriptor;
 
@@ -130,7 +117,7 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorker, NS_DOM_SERVICEWORKER_IID)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_serviceworker_h__
+#endif  // mozilla_dom_serviceworker_h__

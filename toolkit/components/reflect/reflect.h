@@ -12,19 +12,18 @@
 namespace mozilla {
 namespace reflect {
 
-class Module final : public nsIXPCScriptable
-{
-public:
+class Module final : public nsIXPCScriptable {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSCRIPTABLE
 
   Module();
 
-private:
+ private:
   ~Module();
 };
 
-} // namespace reflect
-} // namespace mozilla
+}  // namespace reflect
+}  // namespace mozilla
 
 #endif

@@ -17,13 +17,13 @@ namespace net {
 class HttpBackgroundChannelParent;
 class HttpChannelParent;
 
-class BackgroundChannelRegistrar final : public nsIBackgroundChannelRegistrar
-{
+class BackgroundChannelRegistrar final : public nsIBackgroundChannelRegistrar {
   typedef nsRefPtrHashtable<nsUint64HashKey, HttpChannelParent>
-          ChannelHashtable;
+      ChannelHashtable;
   typedef nsRefPtrHashtable<nsUint64HashKey, HttpBackgroundChannelParent>
-          BackgroundChannelHashtable;
-public:
+      BackgroundChannelHashtable;
+
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIBACKGROUNDCHANNELREGISTRAR
 
@@ -34,7 +34,7 @@ public:
 
   static void Shutdown();
 
-private:
+ private:
   virtual ~BackgroundChannelRegistrar();
 
   // A helper function for BackgroundChannelRegistrar itself to callback
@@ -49,10 +49,9 @@ private:
 
   // Store unlinked HttpBackgroundChannelParent objects.
   BackgroundChannelHashtable mBgChannels;
-
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_BackgroundChannelRegistrar_h__
+#endif  // mozilla_net_BackgroundChannelRegistrar_h__

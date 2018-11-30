@@ -49,9 +49,8 @@ namespace dom {
 /**
  * DOM wrapper for an SVG matrix.
  */
-class SVGMatrix final : public nsWrapperCache
-{
-public:
+class SVGMatrix final : public nsWrapperCache {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGMatrix)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGMatrix)
 
@@ -66,7 +65,7 @@ public:
   // Default ctor for gfxMatrix will produce identity mx
   SVGMatrix() {}
 
-  explicit SVGMatrix(const gfxMatrix &aMatrix) : mMatrix(aMatrix) {}
+  explicit SVGMatrix(const gfxMatrix& aMatrix) : mMatrix(aMatrix) {}
 
   const gfxMatrix& GetMatrix() const {
     return mTransform ? mTransform->Matrixgfx() : mMatrix;
@@ -74,7 +73,8 @@ public:
 
   // WebIDL
   SVGTransform* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   float A() const { return static_cast<float>(GetMatrix()._11); }
   void SetA(float aA, ErrorResult& rv);
@@ -95,15 +95,14 @@ public:
   already_AddRefed<SVGMatrix> ScaleNonUniform(float scaleFactorX,
                                               float scaleFactorY);
   already_AddRefed<SVGMatrix> Rotate(float angle);
-  already_AddRefed<SVGMatrix> RotateFromVector(float x,
-                                               float y,
+  already_AddRefed<SVGMatrix> RotateFromVector(float x, float y,
                                                ErrorResult& aRv);
   already_AddRefed<SVGMatrix> FlipX();
   already_AddRefed<SVGMatrix> FlipY();
   already_AddRefed<SVGMatrix> SkewX(float angle, ErrorResult& rv);
   already_AddRefed<SVGMatrix> SkewY(float angle, ErrorResult& rv);
 
-private:
+ private:
   ~SVGMatrix() {}
 
   void SetMatrix(const gfxMatrix& aMatrix) {
@@ -125,7 +124,7 @@ private:
   gfxMatrix mMatrix;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGMatrix_h
+#endif  // mozilla_dom_SVGMatrix_h

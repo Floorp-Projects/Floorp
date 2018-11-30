@@ -25,13 +25,9 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ already_AddRefed<Promise>
-FileCreatorHelper::CreateFile(nsIGlobalObject* aGlobalObject,
-                              nsIFile* aFile,
-                              const ChromeFilePropertyBag& aBag,
-                              bool aIsFromNsIFile,
-                              ErrorResult& aRv)
-{
+/* static */ already_AddRefed<Promise> FileCreatorHelper::CreateFile(
+    nsIGlobalObject* aGlobalObject, nsIFile* aFile,
+    const ChromeFilePropertyBag& aBag, bool aIsFromNsIFile, ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
   RefPtr<Promise> promise = Promise::Create(aGlobalObject, aRv);
@@ -45,7 +41,7 @@ FileCreatorHelper::CreateFile(nsIGlobalObject* aGlobalObject,
 
   if (XRE_IsParentProcess()) {
     RefPtr<File> file =
-      CreateFileInternal(window, aFile, aBag, aIsFromNsIFile, aRv);
+        CreateFileInternal(window, aFile, aBag, aIsFromNsIFile, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
@@ -81,13 +77,9 @@ FileCreatorHelper::CreateFile(nsIGlobalObject* aGlobalObject,
   return promise.forget();
 }
 
-/* static */ already_AddRefed<File>
-FileCreatorHelper::CreateFileInternal(nsPIDOMWindowInner* aWindow,
-                                      nsIFile* aFile,
-                                      const ChromeFilePropertyBag& aBag,
-                                      bool aIsFromNsIFile,
-                                      ErrorResult& aRv)
-{
+/* static */ already_AddRefed<File> FileCreatorHelper::CreateFileInternal(
+    nsPIDOMWindowInner* aWindow, nsIFile* aFile,
+    const ChromeFilePropertyBag& aBag, bool aIsFromNsIFile, ErrorResult& aRv) {
   bool lastModifiedPassed = false;
   int64_t lastModified = 0;
   if (aBag.mLastModified.WasPassed()) {
@@ -100,7 +92,7 @@ FileCreatorHelper::CreateFileInternal(nsPIDOMWindowInner* aWindow,
                        lastModified, aBag.mExistenceCheck, aIsFromNsIFile,
                        getter_AddRefs(blobImpl));
   if (aRv.Failed()) {
-     return nullptr;
+    return nullptr;
   }
 
   RefPtr<File> file = File::Create(aWindow, blobImpl);
@@ -109,22 +101,15 @@ FileCreatorHelper::CreateFileInternal(nsPIDOMWindowInner* aWindow,
 
 FileCreatorHelper::FileCreatorHelper(Promise* aPromise,
                                      nsPIDOMWindowInner* aWindow)
-  : mPromise(aPromise)
-  , mWindow(aWindow)
-{
+    : mPromise(aPromise), mWindow(aWindow) {
   MOZ_ASSERT(aPromise);
 }
 
-FileCreatorHelper::~FileCreatorHelper()
-{
-}
+FileCreatorHelper::~FileCreatorHelper() {}
 
-void
-FileCreatorHelper::SendRequest(nsIFile* aFile,
-                               const ChromeFilePropertyBag& aBag,
-                               bool aIsFromNsIFile,
-                               ErrorResult& aRv)
-{
+void FileCreatorHelper::SendRequest(nsIFile* aFile,
+                                    const ChromeFilePropertyBag& aBag,
+                                    bool aIsFromNsIFile, ErrorResult& aRv) {
   MOZ_ASSERT(aFile);
 
   ContentChild* cc = ContentChild::GetSingleton();
@@ -150,9 +135,7 @@ FileCreatorHelper::SendRequest(nsIFile* aFile,
                           aIsFromNsIFile);
 }
 
-void
-FileCreatorHelper::ResponseReceived(BlobImpl* aBlobImpl, nsresult aRv)
-{
+void FileCreatorHelper::ResponseReceived(BlobImpl* aBlobImpl, nsresult aRv) {
   if (NS_FAILED(aRv)) {
     mPromise->MaybeReject(aRv);
     return;
@@ -162,16 +145,10 @@ FileCreatorHelper::ResponseReceived(BlobImpl* aBlobImpl, nsresult aRv)
   mPromise->MaybeResolve(file);
 }
 
-/* static */ nsresult
-FileCreatorHelper::CreateBlobImplForIPC(const nsAString& aPath,
-                                        const nsAString& aType,
-                                        const nsAString& aName,
-                                        bool aLastModifiedPassed,
-                                        int64_t aLastModified,
-                                        bool aExistenceCheck,
-                                        bool aIsFromNsIFile,
-                                        BlobImpl** aBlobImpl)
-{
+/* static */ nsresult FileCreatorHelper::CreateBlobImplForIPC(
+    const nsAString& aPath, const nsAString& aType, const nsAString& aName,
+    bool aLastModifiedPassed, int64_t aLastModified, bool aExistenceCheck,
+    bool aIsFromNsIFile, BlobImpl** aBlobImpl) {
   nsCOMPtr<nsIFile> file;
   nsresult rv = NS_NewLocalFile(aPath, true, getter_AddRefs(file));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -182,16 +159,10 @@ FileCreatorHelper::CreateBlobImplForIPC(const nsAString& aPath,
                         aExistenceCheck, aIsFromNsIFile, aBlobImpl);
 }
 
-/* static */ nsresult
-FileCreatorHelper::CreateBlobImpl(nsIFile* aFile,
-                                  const nsAString& aType,
-                                  const nsAString& aName,
-                                  bool aLastModifiedPassed,
-                                  int64_t aLastModified,
-                                  bool aExistenceCheck,
-                                  bool aIsFromNsIFile,
-                                  BlobImpl** aBlobImpl)
-{
+/* static */ nsresult FileCreatorHelper::CreateBlobImpl(
+    nsIFile* aFile, const nsAString& aType, const nsAString& aName,
+    bool aLastModifiedPassed, int64_t aLastModified, bool aExistenceCheck,
+    bool aIsFromNsIFile, BlobImpl** aBlobImpl) {
   if (!aExistenceCheck) {
     RefPtr<FileBlobImpl> impl = new FileBlobImpl(aFile);
 
@@ -212,9 +183,8 @@ FileCreatorHelper::CreateBlobImpl(nsIFile* aFile,
   }
 
   RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(EmptyString());
-  nsresult rv =
-    impl->InitializeChromeFile(aFile, aType, aName, aLastModifiedPassed,
-                               aLastModified, aIsFromNsIFile);
+  nsresult rv = impl->InitializeChromeFile(
+      aFile, aType, aName, aLastModifiedPassed, aLastModified, aIsFromNsIFile);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -225,5 +195,5 @@ FileCreatorHelper::CreateBlobImpl(nsIFile* aFile,
   return NS_OK;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

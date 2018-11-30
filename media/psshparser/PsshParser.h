@@ -22,9 +22,7 @@
 
 #define CENC_KEY_LEN ((size_t)16)
 
-bool
-ParseCENCInitData(const uint8_t* aInitData,
-                  uint32_t aInitDataSize,
-                  std::vector<std::vector<uint8_t>>& aOutKeyIds);
+bool ParseCENCInitData(const uint8_t* aInitData, uint32_t aInitDataSize,
+                       std::vector<std::vector<uint8_t>>& aOutKeyIds);
 
 #endif

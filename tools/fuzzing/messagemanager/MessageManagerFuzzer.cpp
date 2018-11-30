@@ -27,11 +27,10 @@
 #include "nsLocalFile.h"
 #include "nsTArray.h"
 
-
 #define MESSAGEMANAGER_FUZZER_DEFAULT_MUTATION_PROBABILITY 2
-#define MSGMGR_FUZZER_LOG(fmt, args...)                         \
-  if (MessageManagerFuzzer::IsLoggingEnabled()) {               \
-    printf_stderr("[MessageManagerFuzzer] " fmt "\n", ## args); \
+#define MSGMGR_FUZZER_LOG(fmt, args...)                        \
+  if (MessageManagerFuzzer::IsLoggingEnabled()) {              \
+    printf_stderr("[MessageManagerFuzzer] " fmt "\n", ##args); \
   }
 
 namespace mozilla {
@@ -41,13 +40,11 @@ using namespace fuzzing;
 using namespace ipc;
 
 /* static */
-void
-MessageManagerFuzzer::ReadFile(const char* path, nsTArray<nsCString> &aArray)
-{
+void MessageManagerFuzzer::ReadFile(const char* path,
+                                    nsTArray<nsCString>& aArray) {
   nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(path),
-                                true,
-                                getter_AddRefs(file));
+  nsresult rv =
+      NS_NewLocalFile(NS_ConvertUTF8toUTF16(path), true, getter_AddRefs(file));
   NS_ENSURE_SUCCESS_VOID(rv);
 
   bool exists = false;
@@ -57,7 +54,7 @@ MessageManagerFuzzer::ReadFile(const char* path, nsTArray<nsCString> &aArray)
   }
 
   nsCOMPtr<nsIFileInputStream> fileStream(
-    do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv));
+      do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS_VOID(rv);
 
   rv = fileStream->Init(file, -1, -1, false);
@@ -76,8 +73,8 @@ MessageManagerFuzzer::ReadFile(const char* path, nsTArray<nsCString> &aArray)
 }
 
 /* static */
-bool
-MessageManagerFuzzer::IsMessageNameBlacklisted(const nsAString& aMessageName) {
+bool MessageManagerFuzzer::IsMessageNameBlacklisted(
+    const nsAString& aMessageName) {
   static bool sFileLoaded = false;
   static nsTArray<nsCString> valuesInFile;
 
@@ -94,9 +91,7 @@ MessageManagerFuzzer::IsMessageNameBlacklisted(const nsAString& aMessageName) {
 }
 
 /* static */
-nsCString
-MessageManagerFuzzer::GetFuzzValueFromFile()
-{
+nsCString MessageManagerFuzzer::GetFuzzValueFromFile() {
   static bool sFileLoaded = false;
   static nsTArray<nsCString> valuesInFile;
 
@@ -114,13 +109,9 @@ MessageManagerFuzzer::GetFuzzValueFromFile()
   return valuesInFile.ElementAt(randIdx);
 }
 
-
 /* static */
-void
-MessageManagerFuzzer::MutateObject(JSContext* aCx,
-                                   JS::HandleValue aValue,
-                                   unsigned short int aRecursionCounter)
-{
+void MessageManagerFuzzer::MutateObject(JSContext* aCx, JS::HandleValue aValue,
+                                        unsigned short int aRecursionCounter) {
   JS::Rooted<JSObject*> object(aCx, &aValue.toObject());
   JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
 
@@ -134,8 +125,7 @@ MessageManagerFuzzer::MutateObject(JSContext* aCx,
     if (!propName.init(aCx, ids[i])) {
       continue;
     }
-    MSGMGR_FUZZER_LOG("%*s- Property: %s",
-                      aRecursionCounter*4, "",
+    MSGMGR_FUZZER_LOG("%*s- Property: %s", aRecursionCounter * 4, "",
                       NS_ConvertUTF16toUTF8(propName).get());
 
     // The likelihood when a value gets fuzzed of this object.
@@ -155,12 +145,9 @@ MessageManagerFuzzer::MutateObject(JSContext* aCx,
 }
 
 /* static */
-bool
-MessageManagerFuzzer::MutateValue(JSContext* aCx,
-                                  JS::HandleValue aValue,
-                                  JS::MutableHandleValue aOutMutationValue,
-                                  unsigned short int aRecursionCounter)
-{
+bool MessageManagerFuzzer::MutateValue(JSContext* aCx, JS::HandleValue aValue,
+                                       JS::MutableHandleValue aOutMutationValue,
+                                       unsigned short int aRecursionCounter) {
   if (aValue.isInt32()) {
     if (FuzzingTraits::Sometimes(DefaultMutationProbability() * 2)) {
       aOutMutationValue.set(JS::Int32Value(RandomNumericLimit<int>()));
@@ -168,24 +155,24 @@ MessageManagerFuzzer::MutateValue(JSContext* aCx,
       aOutMutationValue.set(JS::Int32Value(RandomInteger<int>()));
     }
     MSGMGR_FUZZER_LOG("%*s! Mutated value of type |int32|: '%d' to '%d'",
-                      aRecursionCounter * 4, "",
-                      aValue.toInt32(), aOutMutationValue.toInt32());
+                      aRecursionCounter * 4, "", aValue.toInt32(),
+                      aOutMutationValue.toInt32());
     return true;
   }
 
   if (aValue.isDouble()) {
     aOutMutationValue.set(JS::DoubleValue(RandomFloatingPoint<double>()));
     MSGMGR_FUZZER_LOG("%*s! Mutated value of type |double|: '%f' to '%f'",
-                      aRecursionCounter * 4, "",
-                      aValue.toDouble(), aOutMutationValue.toDouble());
+                      aRecursionCounter * 4, "", aValue.toDouble(),
+                      aOutMutationValue.toDouble());
     return true;
   }
 
   if (aValue.isBoolean()) {
     aOutMutationValue.set(JS::BooleanValue(bool(RandomIntegerRange(0, 2))));
     MSGMGR_FUZZER_LOG("%*s! Mutated value of type |boolean|: '%d' to '%d'",
-                      aRecursionCounter * 4, "",
-                      aValue.toBoolean(), aOutMutationValue.toBoolean());
+                      aRecursionCounter * 4, "", aValue.toBoolean(),
+                      aOutMutationValue.toBoolean());
     return true;
   }
 
@@ -199,15 +186,14 @@ MessageManagerFuzzer::MutateValue(JSContext* aCx,
     JS::RootedString rootedValue(aCx, aValue.toString());
     JS::UniqueChars valueChars = JS_EncodeStringToUTF8(aCx, rootedValue);
     MSGMGR_FUZZER_LOG("%*s! Mutated value of type |string|: '%s' to '%s'",
-                      aRecursionCounter * 4, "",
-                      valueChars.get(), x.get());
+                      aRecursionCounter * 4, "", valueChars.get(), x.get());
     return true;
   }
 
   if (aValue.isObject()) {
     aRecursionCounter++;
-    MSGMGR_FUZZER_LOG("%*s<Enumerating found object>",
-                      aRecursionCounter * 4, "");
+    MSGMGR_FUZZER_LOG("%*s<Enumerating found object>", aRecursionCounter * 4,
+                      "");
     MutateObject(aCx, aValue, aRecursionCounter);
     aOutMutationValue.set(aValue);
     return true;
@@ -217,15 +203,12 @@ MessageManagerFuzzer::MutateValue(JSContext* aCx,
 }
 
 /* static */
-bool
-MessageManagerFuzzer::Mutate(JSContext* aCx,
-                             const nsAString& aMessageName,
-                             ipc::StructuredCloneData* aData,
-                             const JS::Value& aTransfer)
-{
+bool MessageManagerFuzzer::Mutate(JSContext* aCx, const nsAString& aMessageName,
+                                  ipc::StructuredCloneData* aData,
+                                  const JS::Value& aTransfer) {
   MSGMGR_FUZZER_LOG("Message: %s in process: %d",
-                   NS_ConvertUTF16toUTF8(aMessageName).get(),
-                   XRE_GetProcessType());
+                    NS_ConvertUTF16toUTF8(aMessageName).get(),
+                    XRE_GetProcessType());
 
   unsigned short int aRecursionCounter = 0;
   ErrorResult rv;
@@ -241,10 +224,8 @@ MessageManagerFuzzer::Mutate(JSContext* aCx,
   }
 
   JS::RootedValue scdMutationContent(aCx);
-  bool isMutated = MutateValue(aCx,
-                               scdContent,
-                               &scdMutationContent,
-                               aRecursionCounter);
+  bool isMutated =
+      MutateValue(aCx, scdContent, &scdMutationContent, aRecursionCounter);
 
   /* Write mutated StructuredCloneData. */
   ipc::StructuredCloneData mutatedStructuredCloneData;
@@ -271,10 +252,9 @@ MessageManagerFuzzer::Mutate(JSContext* aCx,
 }
 
 /* static */
-unsigned int
-MessageManagerFuzzer::DefaultMutationProbability()
-{
-  static unsigned long sPropValue = MESSAGEMANAGER_FUZZER_DEFAULT_MUTATION_PROBABILITY;
+unsigned int MessageManagerFuzzer::DefaultMutationProbability() {
+  static unsigned long sPropValue =
+      MESSAGEMANAGER_FUZZER_DEFAULT_MUTATION_PROBABILITY;
   static bool sInitialized = false;
 
   if (sInitialized) {
@@ -283,7 +263,8 @@ MessageManagerFuzzer::DefaultMutationProbability()
   sInitialized = true;
 
   // Defines the likelihood of fuzzing a message.
-  const char* probability = PR_GetEnv("MESSAGEMANAGER_FUZZER_MUTATION_PROBABILITY");
+  const char* probability =
+      PR_GetEnv("MESSAGEMANAGER_FUZZER_MUTATION_PROBABILITY");
   if (probability) {
     long n = std::strtol(probability, nullptr, 10);
     if (n != 0) {
@@ -296,9 +277,7 @@ MessageManagerFuzzer::DefaultMutationProbability()
 }
 
 /* static */
-bool
-MessageManagerFuzzer::IsLoggingEnabled()
-{
+bool MessageManagerFuzzer::IsLoggingEnabled() {
   static bool sInitialized = false;
   static bool sIsLoggingEnabled = false;
 
@@ -311,19 +290,15 @@ MessageManagerFuzzer::IsLoggingEnabled()
 }
 
 /* static */
-bool
-MessageManagerFuzzer::IsEnabled()
-{
+bool MessageManagerFuzzer::IsEnabled() {
   return !!PR_GetEnv("MESSAGEMANAGER_FUZZER_ENABLE") && XRE_IsContentProcess();
 }
 
 /* static */
-void
-MessageManagerFuzzer::TryMutate(JSContext* aCx,
-                                const nsAString& aMessageName,
-                                ipc::StructuredCloneData* aData,
-                                const JS::Value& aTransfer)
-{
+void MessageManagerFuzzer::TryMutate(JSContext* aCx,
+                                     const nsAString& aMessageName,
+                                     ipc::StructuredCloneData* aData,
+                                     const JS::Value& aTransfer) {
   if (!IsEnabled()) {
     return;
   }
@@ -337,5 +312,5 @@ MessageManagerFuzzer::TryMutate(JSContext* aCx,
   Mutate(aCx, aMessageName, aData, aTransfer);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

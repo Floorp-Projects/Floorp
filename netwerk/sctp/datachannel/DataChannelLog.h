@@ -15,6 +15,7 @@ extern mozilla::LazyLogModule gDataChannelLog;
 }
 
 #undef LOG
-#define LOG(args) MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Debug, args)
+#define LOG(args) \
+  MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Debug, args)
 
 #endif

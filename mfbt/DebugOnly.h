@@ -35,16 +35,15 @@ namespace mozilla {
  * DebugOnly for struct/class members and unwittingly inflating the size of
  * their objects in release builds.
  */
-template<typename T>
-class MOZ_STACK_CLASS DebugOnly
-{
-public:
+template <typename T>
+class MOZ_STACK_CLASS DebugOnly {
+ public:
 #ifdef DEBUG
   T value;
 
-  DebugOnly() { }
-  MOZ_IMPLICIT DebugOnly(const T& aOther) : value(aOther) { }
-  DebugOnly(const DebugOnly& aOther) : value(aOther.value) { }
+  DebugOnly() {}
+  MOZ_IMPLICIT DebugOnly(const T& aOther) : value(aOther) {}
+  DebugOnly(const DebugOnly& aOther) : value(aOther.value) {}
   DebugOnly& operator=(const T& aRhs) {
     value = aRhs;
     return *this;
@@ -66,12 +65,12 @@ public:
   const T& operator->() const { return value; }
 
 #else
-  DebugOnly() { }
-  MOZ_IMPLICIT DebugOnly(const T&) { }
-  DebugOnly(const DebugOnly&) { }
+  DebugOnly() {}
+  MOZ_IMPLICIT DebugOnly(const T&) {}
+  DebugOnly(const DebugOnly&) {}
   DebugOnly& operator=(const T&) { return *this; }
-  void operator++(int) { }
-  void operator--(int) { }
+  void operator++(int) {}
+  void operator--(int) {}
   DebugOnly& operator+=(const T&) { return *this; }
   DebugOnly& operator-=(const T&) { return *this; }
   DebugOnly& operator&=(const T&) { return *this; }
@@ -87,6 +86,6 @@ public:
   ~DebugOnly() {}
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_DebugOnly_h */

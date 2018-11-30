@@ -21,31 +21,31 @@ namespace ubi {
 // An EdgeRange concrete class that simply holds a vector of Edges,
 // populated by the addTracerEdges method.
 class SimpleEdgeRange : public EdgeRange {
-    EdgeVector edges;
-    size_t i;
+  EdgeVector edges;
+  size_t i;
 
-  protected:
-    void settle() {
-        front_ = i < edges.length() ? &edges[i] : nullptr;
-    }
+ protected:
+  void settle() { front_ = i < edges.length() ? &edges[i] : nullptr; }
 
-  public:
-    explicit SimpleEdgeRange() : edges(), i(0) { }
+ public:
+  explicit SimpleEdgeRange() : edges(), i(0) {}
 
-    bool addTracerEdges(JSRuntime* rt, void* thing, JS::TraceKind kind, bool wantNames);
+  bool addTracerEdges(JSRuntime* rt, void* thing, JS::TraceKind kind,
+                      bool wantNames);
 
-    bool addEdge(Edge edge) {
-        if(!edges.append(std::move(edge)))
-            return false;
-        settle();
-        return true;
-    }
+  bool addEdge(Edge edge) {
+    if (!edges.append(std::move(edge))) return false;
+    settle();
+    return true;
+  }
 
-    void popFront() override { i++; settle(); }
+  void popFront() override {
+    i++;
+    settle();
+  }
 };
 
-} // namespace JS
-} // namespace ubi
+}  // namespace ubi
+}  // namespace JS
 
-
-#endif // js_UbiNodeUtils_h
+#endif  // js_UbiNodeUtils_h

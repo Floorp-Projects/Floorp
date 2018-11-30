@@ -13,15 +13,13 @@ namespace dom {
 XULCommandEvent::XULCommandEvent(EventTarget* aOwner,
                                  nsPresContext* aPresContext,
                                  WidgetInputEvent* aEvent)
-  : UIEvent(aOwner, aPresContext,
-            aEvent ? aEvent :
-                     new WidgetInputEvent(false, eVoidEvent, nullptr))
-  , mInputSource(0)
-{
+    : UIEvent(
+          aOwner, aPresContext,
+          aEvent ? aEvent : new WidgetInputEvent(false, eVoidEvent, nullptr)),
+      mInputSource(0) {
   if (aEvent) {
     mEventIsInternal = false;
-  }
-  else {
+  } else {
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
   }
@@ -30,80 +28,48 @@ XULCommandEvent::XULCommandEvent(EventTarget* aOwner,
 NS_IMPL_ADDREF_INHERITED(XULCommandEvent, UIEvent)
 NS_IMPL_RELEASE_INHERITED(XULCommandEvent, UIEvent)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(XULCommandEvent, UIEvent,
-                                   mSourceEvent)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(XULCommandEvent, UIEvent, mSourceEvent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XULCommandEvent)
 NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
-bool
-XULCommandEvent::AltKey()
-{
-  return mEvent->AsInputEvent()->IsAlt();
-}
+bool XULCommandEvent::AltKey() { return mEvent->AsInputEvent()->IsAlt(); }
 
-bool
-XULCommandEvent::CtrlKey()
-{
-  return mEvent->AsInputEvent()->IsControl();
-}
+bool XULCommandEvent::CtrlKey() { return mEvent->AsInputEvent()->IsControl(); }
 
-bool
-XULCommandEvent::ShiftKey()
-{
-  return mEvent->AsInputEvent()->IsShift();
-}
+bool XULCommandEvent::ShiftKey() { return mEvent->AsInputEvent()->IsShift(); }
 
-bool
-XULCommandEvent::MetaKey()
-{
-  return mEvent->AsInputEvent()->IsMeta();
-}
+bool XULCommandEvent::MetaKey() { return mEvent->AsInputEvent()->IsMeta(); }
 
-uint16_t
-XULCommandEvent::InputSource()
-{
-  return mInputSource;
-}
+uint16_t XULCommandEvent::InputSource() { return mInputSource; }
 
-void
-XULCommandEvent::InitCommandEvent(const nsAString& aType,
-                                  bool aCanBubble,
-                                  bool aCancelable,
-                                  nsGlobalWindowInner* aView,
-                                  int32_t aDetail,
-                                  bool aCtrlKey,
-                                  bool aAltKey,
-                                  bool aShiftKey,
-                                  bool aMetaKey,
-                                  Event* aSourceEvent,
-                                  uint16_t aInputSource,
-                                  ErrorResult& aRv)
-{
+void XULCommandEvent::InitCommandEvent(
+    const nsAString& aType, bool aCanBubble, bool aCancelable,
+    nsGlobalWindowInner* aView, int32_t aDetail, bool aCtrlKey, bool aAltKey,
+    bool aShiftKey, bool aMetaKey, Event* aSourceEvent, uint16_t aInputSource,
+    ErrorResult& aRv) {
   if (NS_WARN_IF(mEvent->mFlags.mIsBeingDispatched)) {
     return;
   }
 
   UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
 
-  mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey,
-                                             aShiftKey, aMetaKey);
+  mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey,
+                                             aMetaKey);
   mSourceEvent = aSourceEvent;
   mInputSource = aInputSource;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-already_AddRefed<XULCommandEvent>
-NS_NewDOMXULCommandEvent(EventTarget* aOwner,
-                         nsPresContext* aPresContext,
-                         WidgetInputEvent* aEvent)
-{
+already_AddRefed<XULCommandEvent> NS_NewDOMXULCommandEvent(
+    EventTarget* aOwner, nsPresContext* aPresContext,
+    WidgetInputEvent* aEvent) {
   RefPtr<XULCommandEvent> it =
-    new XULCommandEvent(aOwner, aPresContext, aEvent);
+      new XULCommandEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

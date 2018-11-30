@@ -9,23 +9,23 @@
 
 #include "nscore.h"
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
 // This is an abstract class that can be pointed to by either
 // nsCOMPtr or nsRefPtr. nsHttpConnectionMgr uses it for generic
 // objects that need to be reference counted - similiar to nsISupports
 // but it may or may not be xpcom.
 
-class ARefBase
-{
-public:
+class ARefBase {
+ public:
   ARefBase() = default;
   virtual ~ARefBase() = default;
 
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

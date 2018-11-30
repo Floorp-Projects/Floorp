@@ -25,11 +25,7 @@
 namespace base {
 
 SharedMemory::SharedMemory()
-    : mapped_file_(-1),
-      memory_(NULL),
-      read_only_(false),
-      max_size_(0) {
-}
+    : mapped_file_(-1), memory_(NULL), read_only_(false), max_size_(0) {}
 
 SharedMemory::SharedMemory(SharedMemory&& other) {
   if (this == &other) {
@@ -45,9 +41,7 @@ SharedMemory::SharedMemory(SharedMemory&& other) {
   other.memory_ = nullptr;
 }
 
-SharedMemory::~SharedMemory() {
-  Close();
-}
+SharedMemory::~SharedMemory() { Close(); }
 
 bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
   DCHECK(mapped_file_ == -1);
@@ -63,13 +57,10 @@ bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
 }
 
 // static
-SharedMemoryHandle SharedMemory::NULLHandle() {
-  return SharedMemoryHandle();
-}
+SharedMemoryHandle SharedMemory::NULLHandle() { return SharedMemoryHandle(); }
 
 // static
-bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid)
-{
+bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
 #if defined(ANDROID) || defined(SHM_ANON)
   return false;
 #else
@@ -79,7 +70,7 @@ bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid)
   // (it's used for communication with services like PulseAudio);
   // instead AppArmor is used to restrict access to it.  Anything with
   // this prefix is allowed:
-  static const char* const kSnap = []{
+  static const char* const kSnap = [] {
     auto instanceName = PR_GetEnv("SNAP_INSTANCE_NAME");
     if (instanceName != nullptr) {
       return instanceName;
@@ -91,12 +82,12 @@ bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid)
   if (kSnap) {
     StringAppendF(str, "snap.%s.", kSnap);
   }
-#endif // OS_LINUX
+#endif  // OS_LINUX
   // Hopefully the "implementation defined" name length limit is long
   // enough for this.
   StringAppendF(str, "org.mozilla.ipc.%d.", static_cast<int>(pid));
   return true;
-#endif // !ANDROID && !SHM_ANON
+#endif  // !ANDROID && !SHM_ANON
 }
 
 bool SharedMemory::Create(size_t size) {
@@ -166,14 +157,12 @@ bool SharedMemory::Create(size_t size) {
 }
 
 bool SharedMemory::Map(size_t bytes) {
-  if (mapped_file_ == -1)
-    return false;
+  if (mapped_file_ == -1) return false;
 
   memory_ = mmap(NULL, bytes, PROT_READ | (read_only_ ? 0 : PROT_WRITE),
                  MAP_SHARED, mapped_file_, 0);
 
-  if (memory_)
-    max_size_ = bytes;
+  if (memory_) max_size_ = bytes;
 
   bool mmap_succeeded = (memory_ != (void*)-1);
   DCHECK(mmap_succeeded) << "Call to mmap failed, errno=" << errno;
@@ -181,8 +170,7 @@ bool SharedMemory::Map(size_t bytes) {
 }
 
 bool SharedMemory::Unmap() {
-  if (memory_ == NULL)
-    return false;
+  if (memory_ == NULL) return false;
 
   munmap(memory_, max_size_);
   memory_ = NULL;
@@ -191,19 +179,17 @@ bool SharedMemory::Unmap() {
 }
 
 bool SharedMemory::ShareToProcessCommon(ProcessId processId,
-                                        SharedMemoryHandle *new_handle,
+                                        SharedMemoryHandle* new_handle,
                                         bool close_self) {
   const int new_fd = dup(mapped_file_);
   DCHECK(new_fd >= -1);
   new_handle->fd = new_fd;
   new_handle->auto_close = true;
 
-  if (close_self)
-    Close();
+  if (close_self) Close();
 
   return true;
 }
-
 
 void SharedMemory::Close(bool unmap_view) {
   if (unmap_view) {

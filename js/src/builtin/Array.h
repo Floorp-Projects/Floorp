@@ -21,102 +21,102 @@ namespace js {
 /* 2^32-2, inclusive */
 const uint32_t MAX_ARRAY_INDEX = 4294967294u;
 
-MOZ_ALWAYS_INLINE bool
-IdIsIndex(jsid id, uint32_t* indexp)
-{
-    if (JSID_IS_INT(id)) {
-        int32_t i = JSID_TO_INT(id);
-        MOZ_ASSERT(i >= 0);
-        *indexp = (uint32_t)i;
-        return true;
-    }
+MOZ_ALWAYS_INLINE bool IdIsIndex(jsid id, uint32_t* indexp) {
+  if (JSID_IS_INT(id)) {
+    int32_t i = JSID_TO_INT(id);
+    MOZ_ASSERT(i >= 0);
+    *indexp = (uint32_t)i;
+    return true;
+  }
 
-    if (MOZ_UNLIKELY(!JSID_IS_STRING(id))) {
-        return false;
-    }
+  if (MOZ_UNLIKELY(!JSID_IS_STRING(id))) {
+    return false;
+  }
 
-    JSAtom* atom = JSID_TO_ATOM(id);
-    if (atom->length() == 0 || !mozilla::IsAsciiDigit(atom->latin1OrTwoByteChar(0))) {
-        return false;
-    }
+  JSAtom* atom = JSID_TO_ATOM(id);
+  if (atom->length() == 0 ||
+      !mozilla::IsAsciiDigit(atom->latin1OrTwoByteChar(0))) {
+    return false;
+  }
 
-    return js::StringIsArrayIndex(atom, indexp);
+  return js::StringIsArrayIndex(atom, indexp);
 }
 
 // The methods below only create dense boxed arrays.
 
 // Create a dense array with no capacity allocated, length set to 0.
-extern ArrayObject * JS_FASTCALL
+extern ArrayObject* JS_FASTCALL
 NewDenseEmptyArray(JSContext* cx, HandleObject proto = nullptr,
                    NewObjectKind newKind = GenericObject);
 
 // Create a dense array with a set length, but without allocating space for the
 // contents. This is useful, e.g., when accepting length from the user.
-extern ArrayObject * JS_FASTCALL
-NewDenseUnallocatedArray(JSContext* cx, uint32_t length, HandleObject proto = nullptr,
-                         NewObjectKind newKind = GenericObject);
+extern ArrayObject* JS_FASTCALL NewDenseUnallocatedArray(
+    JSContext* cx, uint32_t length, HandleObject proto = nullptr,
+    NewObjectKind newKind = GenericObject);
 
 // Create a dense array with length and capacity == |length|, initialized length
 // set to 0, but with only |EagerAllocationMaxLength| elements allocated.
-extern ArrayObject * JS_FASTCALL
-NewDensePartlyAllocatedArray(JSContext* cx, uint32_t length, HandleObject proto = nullptr,
-                             NewObjectKind newKind = GenericObject);
+extern ArrayObject* JS_FASTCALL NewDensePartlyAllocatedArray(
+    JSContext* cx, uint32_t length, HandleObject proto = nullptr,
+    NewObjectKind newKind = GenericObject);
 
 // Create a dense array with length and capacity == 'length', initialized length
 // set to 0.
-extern ArrayObject * JS_FASTCALL
-NewDenseFullyAllocatedArray(JSContext* cx, uint32_t length, HandleObject proto = nullptr,
-                            NewObjectKind newKind = GenericObject);
+extern ArrayObject* JS_FASTCALL NewDenseFullyAllocatedArray(
+    JSContext* cx, uint32_t length, HandleObject proto = nullptr,
+    NewObjectKind newKind = GenericObject);
 
 // Create a dense array from the given array values, which must be rooted.
-extern ArrayObject*
-NewDenseCopiedArray(JSContext* cx, uint32_t length, const Value* values,
-                    HandleObject proto = nullptr, NewObjectKind newKind = GenericObject);
+extern ArrayObject* NewDenseCopiedArray(JSContext* cx, uint32_t length,
+                                        const Value* values,
+                                        HandleObject proto = nullptr,
+                                        NewObjectKind newKind = GenericObject);
 
 // Create a dense array based on templateObject with the given length.
-extern ArrayObject*
-NewDenseFullyAllocatedArrayWithTemplate(JSContext* cx, uint32_t length, JSObject* templateObject);
+extern ArrayObject* NewDenseFullyAllocatedArrayWithTemplate(
+    JSContext* cx, uint32_t length, JSObject* templateObject);
 
 // Create a dense array with the same copy-on-write elements as another object.
-extern ArrayObject*
-NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc::InitialHeap heap);
+extern ArrayObject* NewDenseCopyOnWriteArray(JSContext* cx,
+                                             HandleArrayObject templateObject,
+                                             gc::InitialHeap heap);
 
-extern ArrayObject*
-NewFullyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
-                                  NewObjectKind newKind = GenericObject);
+extern ArrayObject* NewFullyAllocatedArrayTryUseGroup(
+    JSContext* cx, HandleObjectGroup group, size_t length,
+    NewObjectKind newKind = GenericObject);
 
-extern ArrayObject*
-NewPartlyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length);
+extern ArrayObject* NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
+                                                       HandleObjectGroup group,
+                                                       size_t length);
 
-extern ArrayObject*
-NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length,
-                                    NewObjectKind newKind = GenericObject);
+extern ArrayObject* NewFullyAllocatedArrayTryReuseGroup(
+    JSContext* cx, HandleObject obj, size_t length,
+    NewObjectKind newKind = GenericObject);
 
-extern ArrayObject*
-NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length);
+extern ArrayObject* NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx,
+                                                         HandleObject obj,
+                                                         size_t length);
 
-extern ArrayObject*
-NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,
-                                               NewObjectKind newKind = GenericObject);
+extern ArrayObject* NewFullyAllocatedArrayForCallingAllocationSite(
+    JSContext* cx, size_t length, NewObjectKind newKind = GenericObject);
 
-extern ArrayObject*
-NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length, HandleObject proto);
+extern ArrayObject* NewPartlyAllocatedArrayForCallingAllocationSite(
+    JSContext* cx, size_t length, HandleObject proto);
 
-extern ArrayObject*
-NewCopiedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group,
-                          const Value* vp, size_t length,
-                          NewObjectKind newKind = GenericObject,
-                          ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update);
+extern ArrayObject* NewCopiedArrayTryUseGroup(
+    JSContext* cx, HandleObjectGroup group, const Value* vp, size_t length,
+    NewObjectKind newKind = GenericObject,
+    ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update);
 
-extern ArrayObject*
-NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length,
-                                       HandleObject proto = nullptr);
+extern ArrayObject* NewCopiedArrayForCallingAllocationSite(
+    JSContext* cx, const Value* vp, size_t length,
+    HandleObject proto = nullptr);
 
-extern bool
-GetLengthProperty(JSContext* cx, HandleObject obj, uint32_t* lengthp);
+extern bool GetLengthProperty(JSContext* cx, HandleObject obj,
+                              uint32_t* lengthp);
 
-extern bool
-SetLengthProperty(JSContext* cx, HandleObject obj, uint32_t length);
+extern bool SetLengthProperty(JSContext* cx, HandleObject obj, uint32_t length);
 
 /*
  * Copy 'length' elements from aobj to vp.
@@ -124,43 +124,35 @@ SetLengthProperty(JSContext* cx, HandleObject obj, uint32_t length);
  * This function assumes 'length' is effectively the result of calling
  * GetLengthProperty on aobj. vp must point to rooted memory.
  */
-extern bool
-GetElements(JSContext* cx, HandleObject aobj, uint32_t length, js::Value* vp);
+extern bool GetElements(JSContext* cx, HandleObject aobj, uint32_t length,
+                        js::Value* vp);
 
 /* Natives exposed for optimization by the interpreter and JITs. */
 
-extern bool
-intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, js::Value* vp);
+extern bool intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc,
+                                      js::Value* vp);
 
-extern bool
-array_push(JSContext* cx, unsigned argc, js::Value* vp);
+extern bool array_push(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern bool
-array_pop(JSContext* cx, unsigned argc, js::Value* vp);
+extern bool array_pop(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern bool
-array_join(JSContext* cx, unsigned argc, js::Value* vp);
+extern bool array_join(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern void
-ArrayShiftMoveElements(NativeObject* obj);
+extern void ArrayShiftMoveElements(NativeObject* obj);
 
-extern bool
-array_shift(JSContext* cx, unsigned argc, js::Value* vp);
+extern bool array_shift(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern bool
-array_unshift(JSContext* cx, unsigned argc, js::Value* vp);
+extern bool array_unshift(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern bool
-array_slice(JSContext* cx, unsigned argc, js::Value* vp);
+extern bool array_slice(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern JSObject*
-array_slice_dense(JSContext* cx, HandleObject obj, int32_t begin, int32_t end, HandleObject result);
+extern JSObject* array_slice_dense(JSContext* cx, HandleObject obj,
+                                   int32_t begin, int32_t end,
+                                   HandleObject result);
 
-extern bool
-array_reverse(JSContext* cx, unsigned argc, js::Value* vp);
+extern bool array_reverse(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern bool
-array_splice(JSContext* cx, unsigned argc, js::Value* vp);
+extern bool array_splice(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern const JSJitInfo array_splice_info;
 
@@ -171,114 +163,107 @@ extern const JSJitInfo array_splice_info;
  * extending the array to accommodate the element will never make the array
  * sparse, which requires that the array be completely filled.)
  */
-extern bool
-NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v);
+extern bool NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v);
 
-extern ArrayObject*
-ArrayConstructorOneArg(JSContext* cx, HandleObjectGroup group, int32_t lengthInt);
+extern ArrayObject* ArrayConstructorOneArg(JSContext* cx,
+                                           HandleObjectGroup group,
+                                           int32_t lengthInt);
 
 #ifdef DEBUG
-extern bool
-ArrayInfo(JSContext* cx, unsigned argc, Value* vp);
+extern bool ArrayInfo(JSContext* cx, unsigned argc, Value* vp);
 #endif
 
 /* Array constructor native. Exposed only so the JIT can know its address. */
-extern bool
-ArrayConstructor(JSContext* cx, unsigned argc, Value* vp);
+extern bool ArrayConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 // Like Array constructor, but doesn't perform GetPrototypeFromConstructor.
-extern bool
-array_construct(JSContext* cx, unsigned argc, Value* vp);
+extern bool array_construct(JSContext* cx, unsigned argc, Value* vp);
 
-extern bool
-IsCrossRealmArrayConstructor(JSContext* cx, const Value& v, bool* result);
+extern bool IsCrossRealmArrayConstructor(JSContext* cx, const Value& v,
+                                         bool* result);
 
-extern bool
-ObjectMayHaveExtraIndexedProperties(JSObject* obj);
+extern bool ObjectMayHaveExtraIndexedProperties(JSObject* obj);
 
-class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final
-{
-    /*
-     * An ArraySpeciesLookup holds the following:
-     *
-     *  Array.prototype (arrayProto_)
-     *      To ensure that the incoming array has the standard proto.
-     *
-     *  Array.prototype's shape (arrayProtoShape_)
-     *      To ensure that Array.prototype has not been modified.
-     *
-     *  Array (arrayConstructor_)
-     *  Array's shape (arrayConstructorShape_)
-     *       To ensure that Array has not been modified.
-     *
-     *  Array.prototype's slot number for constructor (arrayProtoConstructorSlot_)
-     *      To quickly retrieve and ensure that the Array constructor
-     *      stored in the slot has not changed.
-     *
-     *  Array's shape for the @@species getter. (arraySpeciesShape_)
-     *  Array's canonical value for @@species (canonicalSpeciesFunc_)
-     *      To quickly retrieve and ensure that the @@species getter for Array
-     *      has not changed.
-     *
-     * MOZ_INIT_OUTSIDE_CTOR fields below are set in |initialize()|.  The
-     * constructor only initializes a |state_| field, that defines whether the
-     * other fields are accessible.
-     */
+class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final {
+  /*
+   * An ArraySpeciesLookup holds the following:
+   *
+   *  Array.prototype (arrayProto_)
+   *      To ensure that the incoming array has the standard proto.
+   *
+   *  Array.prototype's shape (arrayProtoShape_)
+   *      To ensure that Array.prototype has not been modified.
+   *
+   *  Array (arrayConstructor_)
+   *  Array's shape (arrayConstructorShape_)
+   *       To ensure that Array has not been modified.
+   *
+   *  Array.prototype's slot number for constructor (arrayProtoConstructorSlot_)
+   *      To quickly retrieve and ensure that the Array constructor
+   *      stored in the slot has not changed.
+   *
+   *  Array's shape for the @@species getter. (arraySpeciesShape_)
+   *  Array's canonical value for @@species (canonicalSpeciesFunc_)
+   *      To quickly retrieve and ensure that the @@species getter for Array
+   *      has not changed.
+   *
+   * MOZ_INIT_OUTSIDE_CTOR fields below are set in |initialize()|.  The
+   * constructor only initializes a |state_| field, that defines whether the
+   * other fields are accessible.
+   */
 
-    // Pointer to canonical Array.prototype and Array.
-    MOZ_INIT_OUTSIDE_CTOR NativeObject* arrayProto_;
-    MOZ_INIT_OUTSIDE_CTOR NativeObject* arrayConstructor_;
+  // Pointer to canonical Array.prototype and Array.
+  MOZ_INIT_OUTSIDE_CTOR NativeObject* arrayProto_;
+  MOZ_INIT_OUTSIDE_CTOR NativeObject* arrayConstructor_;
 
-    // Shape of matching Array, and slot containing the @@species
-    // property, and the canonical value.
-    MOZ_INIT_OUTSIDE_CTOR Shape* arrayConstructorShape_;
+  // Shape of matching Array, and slot containing the @@species
+  // property, and the canonical value.
+  MOZ_INIT_OUTSIDE_CTOR Shape* arrayConstructorShape_;
 #ifdef DEBUG
-    MOZ_INIT_OUTSIDE_CTOR Shape* arraySpeciesShape_;
-    MOZ_INIT_OUTSIDE_CTOR JSFunction* canonicalSpeciesFunc_;
+  MOZ_INIT_OUTSIDE_CTOR Shape* arraySpeciesShape_;
+  MOZ_INIT_OUTSIDE_CTOR JSFunction* canonicalSpeciesFunc_;
 #endif
 
-    // Shape of matching Array.prototype object, and slot containing the
-    // constructor for it.
-    MOZ_INIT_OUTSIDE_CTOR Shape* arrayProtoShape_;
-    MOZ_INIT_OUTSIDE_CTOR uint32_t arrayProtoConstructorSlot_;
+  // Shape of matching Array.prototype object, and slot containing the
+  // constructor for it.
+  MOZ_INIT_OUTSIDE_CTOR Shape* arrayProtoShape_;
+  MOZ_INIT_OUTSIDE_CTOR uint32_t arrayProtoConstructorSlot_;
 
-    enum class State : uint8_t {
-        // Flags marking the lazy initialization of the above fields.
-        Uninitialized,
-        Initialized,
+  enum class State : uint8_t {
+    // Flags marking the lazy initialization of the above fields.
+    Uninitialized,
+    Initialized,
 
-        // The disabled flag is set when we don't want to try optimizing
-        // anymore because core objects were changed.
-        Disabled
-    };
+    // The disabled flag is set when we don't want to try optimizing
+    // anymore because core objects were changed.
+    Disabled
+  };
 
-    State state_ = State::Uninitialized;
+  State state_ = State::Uninitialized;
 
-    // Initialize the internal fields.
-    void initialize(JSContext* cx);
+  // Initialize the internal fields.
+  void initialize(JSContext* cx);
 
-    // Reset the cache.
-    void reset();
+  // Reset the cache.
+  void reset();
 
-    // Check if the global array-related objects have not been messed with
-    // in a way that would disable this cache.
-    bool isArrayStateStillSane();
+  // Check if the global array-related objects have not been messed with
+  // in a way that would disable this cache.
+  bool isArrayStateStillSane();
 
-  public:
-    /** Construct an |ArraySpeciesLookup| in the uninitialized state. */
-    ArraySpeciesLookup() {
-        reset();
+ public:
+  /** Construct an |ArraySpeciesLookup| in the uninitialized state. */
+  ArraySpeciesLookup() { reset(); }
+
+  // Try to optimize the @@species lookup for an array.
+  bool tryOptimizeArray(JSContext* cx, ArrayObject* array);
+
+  // Purge the cache and all info associated with it.
+  void purge() {
+    if (state_ == State::Initialized) {
+      reset();
     }
-
-    // Try to optimize the @@species lookup for an array.
-    bool tryOptimizeArray(JSContext* cx, ArrayObject* array);
-
-    // Purge the cache and all info associated with it.
-    void purge() {
-        if (state_ == State::Initialized) {
-            reset();
-        }
-    }
+  }
 };
 
 } /* namespace js */

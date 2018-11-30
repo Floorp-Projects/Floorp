@@ -9,22 +9,19 @@
 
 #include "nsOSPermissionRequestBase.h"
 
-class nsOSPermissionRequest : public nsOSPermissionRequestBase
-{
-public:
-  nsOSPermissionRequest() {};
+class nsOSPermissionRequest : public nsOSPermissionRequestBase {
+ public:
+  nsOSPermissionRequest(){};
 
   NS_IMETHOD GetAudioCapturePermissionState(uint16_t* aAudio) override;
 
   NS_IMETHOD GetVideoCapturePermissionState(uint16_t* aVideo) override;
 
-  NS_IMETHOD RequestVideoCapturePermission(JSContext* aCx,
-                                           mozilla::dom::Promise** aPromiseOut)
-                                           override;
+  NS_IMETHOD RequestVideoCapturePermission(
+      JSContext* aCx, mozilla::dom::Promise** aPromiseOut) override;
 
-  NS_IMETHOD RequestAudioCapturePermission(JSContext* aCx,
-                                           mozilla::dom::Promise** aPromiseOut)
-                                           override;
+  NS_IMETHOD RequestAudioCapturePermission(
+      JSContext* aCx, mozilla::dom::Promise** aPromiseOut) override;
 };
 
 #endif

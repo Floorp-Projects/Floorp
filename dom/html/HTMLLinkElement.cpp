@@ -46,7 +46,7 @@ enum {
   HTML_LINK_DNS_PREFETCH_REQUESTED = LINK_ELEMENT_FLAG_BIT(0),
 
   // Indicates that a DNS Prefetch was added to the deferral queue
-  HTML_LINK_DNS_PREFETCH_DEFERRED =  LINK_ELEMENT_FLAG_BIT(1)
+  HTML_LINK_DNS_PREFETCH_DEFERRED = LINK_ELEMENT_FLAG_BIT(1)
 };
 
 #undef LINK_ELEMENT_FLAG_BIT
@@ -58,15 +58,11 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Link)
 namespace mozilla {
 namespace dom {
 
-HTMLLinkElement::HTMLLinkElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : nsGenericHTMLElement(std::move(aNodeInfo))
-  , Link(this)
-{
-}
+HTMLLinkElement::HTMLLinkElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)), Link(this) {}
 
-HTMLLinkElement::~HTMLLinkElement()
-{
-}
+HTMLLinkElement::~HTMLLinkElement() {}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLLinkElement)
 
@@ -84,55 +80,42 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLLinkElement,
                                              nsGenericHTMLElement,
-                                             nsIStyleSheetLinkingElement,
-                                             Link)
+                                             nsIStyleSheetLinkingElement, Link)
 
 NS_IMPL_ELEMENT_CLONE(HTMLLinkElement)
 
-bool
-HTMLLinkElement::Disabled()
-{
+bool HTMLLinkElement::Disabled() {
   StyleSheet* ss = GetSheet();
   return ss && ss->Disabled();
 }
 
-void
-HTMLLinkElement::SetDisabled(bool aDisabled)
-{
+void HTMLLinkElement::SetDisabled(bool aDisabled) {
   if (StyleSheet* ss = GetSheet()) {
     ss->SetDisabled(aDisabled);
   }
 }
 
-void
-HTMLLinkElement::OnDNSPrefetchRequested()
-{
+void HTMLLinkElement::OnDNSPrefetchRequested() {
   UnsetFlags(HTML_LINK_DNS_PREFETCH_DEFERRED);
   SetFlags(HTML_LINK_DNS_PREFETCH_REQUESTED);
 }
 
-void
-HTMLLinkElement::OnDNSPrefetchDeferred()
-{
+void HTMLLinkElement::OnDNSPrefetchDeferred() {
   UnsetFlags(HTML_LINK_DNS_PREFETCH_REQUESTED);
   SetFlags(HTML_LINK_DNS_PREFETCH_DEFERRED);
 }
 
-bool
-HTMLLinkElement::HasDeferredDNSPrefetchRequest()
-{
+bool HTMLLinkElement::HasDeferredDNSPrefetchRequest() {
   return HasFlag(HTML_LINK_DNS_PREFETCH_DEFERRED);
 }
 
-nsresult
-HTMLLinkElement::BindToTree(nsIDocument* aDocument,
-                            nsIContent* aParent,
-                            nsIContent* aBindingParent)
-{
+nsresult HTMLLinkElement::BindToTree(nsIDocument* aDocument,
+                                     nsIContent* aParent,
+                                     nsIContent* aBindingParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
-                                                 aBindingParent);
+  nsresult rv =
+      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (nsIDocument* doc = GetComposedDoc()) {
@@ -140,11 +123,13 @@ HTMLLinkElement::BindToTree(nsIDocument* aDocument,
     TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
   }
 
-  void (HTMLLinkElement::*update)() = &HTMLLinkElement::UpdateStyleSheetInternal;
+  void (HTMLLinkElement::*update)() =
+      &HTMLLinkElement::UpdateStyleSheetInternal;
   nsContentUtils::AddScriptRunner(
-    NewRunnableMethod("dom::HTMLLinkElement::BindToTree", this, update));
+      NewRunnableMethod("dom::HTMLLinkElement::BindToTree", this, update));
 
-  if (aDocument && this->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization, eIgnoreCase)) {
+  if (aDocument && this->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel,
+                                     nsGkAtoms::localization, eIgnoreCase)) {
     aDocument->LocalizationLinkAdded(this);
   }
 
@@ -153,21 +138,15 @@ HTMLLinkElement::BindToTree(nsIDocument* aDocument,
   return rv;
 }
 
-void
-HTMLLinkElement::LinkAdded()
-{
+void HTMLLinkElement::LinkAdded() {
   CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkAdded"));
 }
 
-void
-HTMLLinkElement::LinkRemoved()
-{
+void HTMLLinkElement::LinkRemoved() {
   CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkRemoved"));
 }
 
-void
-HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
+void HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   // Cancel any DNS prefetches
   // Note: Must come before ResetLinkState.  If called after, it will recreate
   // mCachedURI based on data that is invalid - due to a call to GetHostname.
@@ -184,7 +163,8 @@ HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsIDocument* oldDoc = GetUncomposedDoc();
   ShadowRoot* oldShadowRoot = GetContainingShadow();
 
-  if (oldDoc && this->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization, eIgnoreCase)) {
+  if (oldDoc && this->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel,
+                                  nsGkAtoms::localization, eIgnoreCase)) {
     oldDoc->LocalizationLinkRemoved(this);
   }
 
@@ -194,13 +174,10 @@ HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   Unused << UpdateStyleSheetInternal(oldDoc, oldShadowRoot);
 }
 
-bool
-HTMLLinkElement::ParseAttribute(int32_t aNamespaceID,
-                                nsAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                nsAttrValue& aResult)
-{
+bool HTMLLinkElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                     const nsAString& aValue,
+                                     nsIPrincipal* aMaybeScriptedPrincipal,
+                                     nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::crossorigin) {
       ParseCORSValue(aValue, aResult);
@@ -227,12 +204,9 @@ HTMLLinkElement::ParseAttribute(int32_t aNamespaceID,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-void
-HTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
-                                        const nsAString& aEventName)
-{
-  if (!aDoc)
-    return;
+void HTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
+                                             const nsAString& aEventName) {
+  if (!aDoc) return;
 
   // In the unlikely case that both rev is specified *and* rel=stylesheet,
   // this code will cause the event to fire, on the principle that maybe the
@@ -240,29 +214,25 @@ HTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   // this should never actually happen and the performance hit is minimal,
   // doing the "right" thing costs virtually nothing here, even if it doesn't
   // make much sense.
-  static Element::AttrValuesArray strings[] =
-    {nsGkAtoms::_empty, nsGkAtoms::stylesheet, nullptr};
+  static Element::AttrValuesArray strings[] = {nsGkAtoms::_empty,
+                                               nsGkAtoms::stylesheet, nullptr};
 
   if (!nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
                                        nsGkAtoms::rev) &&
-      FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::rel,
-                      strings, eIgnoreCase) != ATTR_VALUE_NO_MATCH)
+      FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::rel, strings,
+                      eIgnoreCase) != ATTR_VALUE_NO_MATCH)
     return;
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this,
-                             aEventName,
-                             CanBubble::eYes,
-                             ChromeOnlyDispatch::eYes);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+      this, aEventName, CanBubble::eYes, ChromeOnlyDispatch::eYes);
   // Always run async in order to avoid running script when the content
   // sink isn't expecting it.
   asyncDispatcher->PostDOMEvent();
 }
 
-nsresult
-HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                               const nsAttrValueOrString* aValue, bool aNotify)
-{
+nsresult HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                        const nsAttrValueOrString* aValue,
+                                        bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aName == nsGkAtoms::href || aName == nsGkAtoms::rel)) {
     CancelDNSPrefetch(HTML_LINK_DNS_PREFETCH_DEFERRED,
@@ -270,17 +240,15 @@ HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     CancelPrefetchOrPreload();
   }
 
-  return nsGenericHTMLElement::BeforeSetAttr(aNameSpaceID, aName,
-                                             aValue, aNotify);
+  return nsGenericHTMLElement::BeforeSetAttr(aNameSpaceID, aName, aValue,
+                                             aNotify);
 }
 
-nsresult
-HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                              const nsAttrValue* aValue,
-                              const nsAttrValue* aOldValue,
-                              nsIPrincipal* aSubjectPrincipal,
-                              bool aNotify)
-{
+nsresult HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                       const nsAttrValue* aValue,
+                                       const nsAttrValue* aOldValue,
+                                       nsIPrincipal* aSubjectPrincipal,
+                                       bool aNotify) {
   // It's safe to call ResetLinkState here because our new attr value has
   // already been set or unset.  ResetLinkState needs the updated attribute
   // value because notifying the document that content states have changed will
@@ -306,10 +274,13 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     nsIDocument* doc = GetComposedDoc();
     if (doc) {
       if ((aValue && aValue->Equals(nsGkAtoms::localization, eIgnoreCase)) &&
-          (!aOldValue || !aOldValue->Equals(nsGkAtoms::localization, eIgnoreCase))) {
+          (!aOldValue ||
+           !aOldValue->Equals(nsGkAtoms::localization, eIgnoreCase))) {
         doc->LocalizationLinkAdded(this);
-      } else if ((aOldValue && aOldValue->Equals(nsGkAtoms::localization, eIgnoreCase)) &&
-                 (!aValue || !aValue->Equals(nsGkAtoms::localization, eIgnoreCase))) {
+      } else if ((aOldValue &&
+                  aOldValue->Equals(nsGkAtoms::localization, eIgnoreCase)) &&
+                 (!aValue ||
+                  !aValue->Equals(nsGkAtoms::localization, eIgnoreCase))) {
         doc->LocalizationLinkRemoved(this);
       }
     }
@@ -317,8 +288,9 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 
   // If the link has `rel=localization` and its `href` attribute is changed,
   // update the list of localization links.
-  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::href && 
-      AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization, eIgnoreCase)) {
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::href &&
+      AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization,
+                  eIgnoreCase)) {
     nsIDocument* doc = GetComposedDoc();
     if (doc) {
       if (aOldValue) {
@@ -332,12 +304,9 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 
   if (aValue) {
     if (aNameSpaceID == kNameSpaceID_None &&
-        (aName == nsGkAtoms::href ||
-         aName == nsGkAtoms::rel ||
-         aName == nsGkAtoms::title ||
-         aName == nsGkAtoms::media ||
-         aName == nsGkAtoms::type ||
-         aName == nsGkAtoms::as ||
+        (aName == nsGkAtoms::href || aName == nsGkAtoms::rel ||
+         aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
+         aName == nsGkAtoms::type || aName == nsGkAtoms::as ||
          aName == nsGkAtoms::crossorigin)) {
       bool dropSheet = false;
       if (aName == nsGkAtoms::rel) {
@@ -360,10 +329,9 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         UpdatePreload(aName, aValue, aOldValue);
       }
 
-      const bool forceUpdate = dropSheet ||
-        aName == nsGkAtoms::title ||
-        aName == nsGkAtoms::media ||
-        aName == nsGkAtoms::type;
+      const bool forceUpdate = dropSheet || aName == nsGkAtoms::title ||
+                               aName == nsGkAtoms::media ||
+                               aName == nsGkAtoms::type;
 
       Unused << UpdateStyleSheetInternal(
           nullptr, nullptr, forceUpdate ? ForceUpdate::Yes : ForceUpdate::No);
@@ -372,10 +340,8 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     // Since removing href or rel makes us no longer link to a
     // stylesheet, force updates for those too.
     if (aNameSpaceID == kNameSpaceID_None) {
-      if (aName == nsGkAtoms::href ||
-          aName == nsGkAtoms::rel ||
-          aName == nsGkAtoms::title ||
-          aName == nsGkAtoms::media ||
+      if (aName == nsGkAtoms::href || aName == nsGkAtoms::rel ||
+          aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
           aName == nsGkAtoms::type) {
         Unused << UpdateStyleSheetInternal(nullptr, nullptr, ForceUpdate::Yes);
       }
@@ -387,31 +353,21 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   }
 
-  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
-                                            aOldValue, aSubjectPrincipal, aNotify);
+  return nsGenericHTMLElement::AfterSetAttr(
+      aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-void
-HTMLLinkElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
-{
+void HTMLLinkElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   GetEventTargetParentForAnchors(aVisitor);
 }
 
-nsresult
-HTMLLinkElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
-{
+nsresult HTMLLinkElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForAnchors(aVisitor);
 }
 
-bool
-HTMLLinkElement::IsLink(nsIURI** aURI) const
-{
-  return IsHTMLLink(aURI);
-}
+bool HTMLLinkElement::IsLink(nsIURI** aURI) const { return IsHTMLLink(aURI); }
 
-void
-HTMLLinkElement::GetLinkTarget(nsAString& aTarget)
-{
+void HTMLLinkElement::GetLinkTarget(nsAString& aTarget) {
   GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
     GetBaseTarget(aTarget);
@@ -419,42 +375,28 @@ HTMLLinkElement::GetLinkTarget(nsAString& aTarget)
 }
 
 static const DOMTokenListSupportedToken sSupportedRelValues[] = {
-  // Keep this in sync with ToLinkMask in nsStyleLinkElement.cpp.
-  // "preload" must come first because it can be disabled.
-  "preload",
-  "prefetch",
-  "dns-prefetch",
-  "stylesheet",
-  "next",
-  "alternate",
-  "preconnect",
-  "icon",
-  "search",
-  nullptr
-};
+    // Keep this in sync with ToLinkMask in nsStyleLinkElement.cpp.
+    // "preload" must come first because it can be disabled.
+    "preload",   "prefetch",   "dns-prefetch", "stylesheet", "next",
+    "alternate", "preconnect", "icon",         "search",     nullptr};
 
-nsDOMTokenList*
-HTMLLinkElement::RelList()
-{
+nsDOMTokenList* HTMLLinkElement::RelList() {
   if (!mRelList) {
     if (Preferences::GetBool("network.preload")) {
       mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, sSupportedRelValues);
     } else {
-      mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, &sSupportedRelValues[1]);
+      mRelList =
+          new nsDOMTokenList(this, nsGkAtoms::rel, &sSupportedRelValues[1]);
     }
   }
   return mRelList;
 }
 
-already_AddRefed<nsIURI>
-HTMLLinkElement::GetHrefURI() const
-{
+already_AddRefed<nsIURI> HTMLLinkElement::GetHrefURI() const {
   return GetHrefURIForAnchors();
 }
 
-Maybe<nsStyleLinkElement::SheetInfo>
-HTMLLinkElement::GetStyleSheetInfo()
-{
+Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
   nsAutoString rel;
   GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
   uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(rel);
@@ -484,43 +426,36 @@ HTMLLinkElement::GetStyleSheetInfo()
 
   nsCOMPtr<nsIURI> uri = Link::GetURI();
   nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
-  return Some(SheetInfo {
-    *OwnerDoc(),
-    this,
-    uri.forget(),
-    prin.forget(),
-    GetReferrerPolicyAsEnum(),
-    GetCORSMode(),
-    title,
-    media,
-    alternate ? HasAlternateRel::Yes : HasAlternateRel::No,
-    IsInline::No,
+  return Some(SheetInfo{
+      *OwnerDoc(),
+      this,
+      uri.forget(),
+      prin.forget(),
+      GetReferrerPolicyAsEnum(),
+      GetCORSMode(),
+      title,
+      media,
+      alternate ? HasAlternateRel::Yes : HasAlternateRel::No,
+      IsInline::No,
   });
 }
 
-EventStates
-HTMLLinkElement::IntrinsicState() const
-{
+EventStates HTMLLinkElement::IntrinsicState() const {
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
 
-void
-HTMLLinkElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
-                                        size_t* aNodeSize) const
-{
+void HTMLLinkElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
+                                             size_t* aNodeSize) const {
   nsGenericHTMLElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
   *aNodeSize += Link::SizeOfExcludingThis(aSizes.mState);
 }
 
-JSObject*
-HTMLLinkElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLLinkElement::WrapNode(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return HTMLLinkElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-HTMLLinkElement::GetAs(nsAString& aResult)
-{
+void HTMLLinkElement::GetAs(nsAString& aResult) {
   GetEnumAttr(nsGkAtoms::as, EmptyCString().get(), aResult);
 }
 
@@ -530,16 +465,9 @@ HTMLLinkElement::GetAs(nsAString& aResult)
 // (We currectly do not support font/collection)
 static uint32_t StyleLinkElementFontMimeTypesNum = 5;
 static const char* StyleLinkElementFontMimeTypes[] = {
-  "font/otf",
-  "font/sfnt",
-  "font/ttf",
-  "font/woff",
-  "font/woff2"
-};
+    "font/otf", "font/sfnt", "font/ttf", "font/woff", "font/woff2"};
 
-bool
-IsFontMimeType(const nsAString& aType)
-{
+bool IsFontMimeType(const nsAString& aType) {
   if (aType.IsEmpty()) {
     return true;
   }
@@ -551,12 +479,10 @@ IsFontMimeType(const nsAString& aType)
   return false;
 }
 
-bool
-HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
-                                   const nsAString& aType,
-                                   const nsAString& aMedia,
-                                   nsIDocument* aDocument)
-{
+bool HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
+                                        const nsAString& aType,
+                                        const nsAString& aMedia,
+                                        nsIDocument* aDocument) {
   nsContentPolicyType policyType = Link::AsValueToContentPolicy(aAs);
   if (policyType == nsIContentPolicy::TYPE_INVALID) {
     return false;
@@ -597,8 +523,8 @@ HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
       return false;
     }
     DecoderDoctorDiagnostics diagnostics;
-    CanPlayStatus status = DecoderTraits::CanHandleContainerType(*mimeType,
-                                                                 &diagnostics);
+    CanPlayStatus status =
+        DecoderTraits::CanHandleContainerType(*mimeType, &diagnostics);
     // Preload if this return CANPLAY_YES and CANPLAY_MAYBE.
     if (status == CANPLAY_NO) {
       return false;
@@ -614,8 +540,9 @@ HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
     }
 
   } else if (policyType == nsIContentPolicy::TYPE_IMAGE) {
-    if (imgLoader::SupportImageWithMimeType(NS_ConvertUTF16toUTF8(type).get(),
-                                            AcceptedMimeTypes::IMAGES_AND_DOCUMENTS)) {
+    if (imgLoader::SupportImageWithMimeType(
+            NS_ConvertUTF16toUTF8(type).get(),
+            AcceptedMimeTypes::IMAGES_AND_DOCUMENTS)) {
       return true;
     } else {
       return false;
@@ -638,5 +565,5 @@ HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
   return false;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

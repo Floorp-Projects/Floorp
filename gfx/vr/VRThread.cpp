@@ -14,25 +14,17 @@ namespace mozilla {
 
 namespace gfx {
 
-static const uint32_t kDefaultThreadLifeTime = 60; // in 60 seconds.
-static const uint32_t kDelayPostTaskTime = 20000; // in 20000 ms.
+static const uint32_t kDefaultThreadLifeTime = 60;  // in 60 seconds.
+static const uint32_t kDelayPostTaskTime = 20000;   // in 20000 ms.
 
 VRThread::VRThread(const nsCString& aName)
- : mThread(nullptr)
- , mLifeTime(kDefaultThreadLifeTime)
- , mStarted(false)
-{
+    : mThread(nullptr), mLifeTime(kDefaultThreadLifeTime), mStarted(false) {
   mName = aName;
 }
 
-VRThread::~VRThread()
-{
-  Shutdown();
-}
+VRThread::~VRThread() { Shutdown(); }
 
-void
-VRThread::Start()
-{
+void VRThread::Start() {
   if (!mThread) {
     nsresult rv = NS_NewNamedThread(mName, getter_AddRefs(mThread));
     MOZ_ASSERT(mThread);
@@ -41,8 +33,8 @@ VRThread::Start()
       MOZ_ASSERT(false, "Failed to create a vr thread.");
     }
     RefPtr<Runnable> runnable =
-      NewRunnableMethod<TimeStamp>(
-        "gfx::VRThread::CheckLife", this, &VRThread::CheckLife, TimeStamp::Now());
+        NewRunnableMethod<TimeStamp>("gfx::VRThread::CheckLife", this,
+                                     &VRThread::CheckLife, TimeStamp::Now());
     // Post it to the main thread for tracking the lifetime.
     nsCOMPtr<nsIThread> mainThread;
     rv = NS_GetMainThread(getter_AddRefs(mainThread));
@@ -56,41 +48,29 @@ VRThread::Start()
   mLastActiveTime = TimeStamp::Now();
 }
 
-void
-VRThread::Shutdown()
-{
+void VRThread::Shutdown() {
   if (mThread) {
     if (nsThreadManager::get().IsNSThread()) {
       mThread->Shutdown();
     } else {
-      NS_WARNING("VRThread::Shutdown() may only be called from an XPCOM thread");
+      NS_WARNING(
+          "VRThread::Shutdown() may only be called from an XPCOM thread");
       NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "VRThread::Shutdown",
-        [thread = mThread]() {
-          thread->Shutdown();
-        }));
+          "VRThread::Shutdown", [thread = mThread]() { thread->Shutdown(); }));
     }
     mThread = nullptr;
   }
   mStarted = false;
 }
 
-const nsCOMPtr<nsIThread>
-VRThread::GetThread() const
-{
-  return mThread;
-}
+const nsCOMPtr<nsIThread> VRThread::GetThread() const { return mThread; }
 
-void
-VRThread::PostTask(already_AddRefed<Runnable> aTask)
-{
+void VRThread::PostTask(already_AddRefed<Runnable> aTask) {
   PostDelayedTask(std::move(aTask), 0);
 }
 
-void
-VRThread::PostDelayedTask(already_AddRefed<Runnable> aTask,
-                          uint32_t aTime)
-{
+void VRThread::PostDelayedTask(already_AddRefed<Runnable> aTask,
+                               uint32_t aTime) {
   MOZ_ASSERT(mStarted, "Must call Start() before posting tasks.");
   MOZ_ASSERT(mThread);
   mLastActiveTime = TimeStamp::Now();
@@ -102,9 +82,7 @@ VRThread::PostDelayedTask(already_AddRefed<Runnable> aTask,
   }
 }
 
-void
-VRThread::CheckLife(TimeStamp aCheckTimestamp)
-{
+void VRThread::CheckLife(TimeStamp aCheckTimestamp) {
   // VR system is going to shutdown.
   if (!mStarted) {
     Shutdown();
@@ -116,8 +94,8 @@ VRThread::CheckLife(TimeStamp aCheckTimestamp)
     Shutdown();
   } else {
     RefPtr<Runnable> runnable =
-      NewRunnableMethod<TimeStamp>(
-        "gfx::VRThread::CheckLife", this, &VRThread::CheckLife, TimeStamp::Now());
+        NewRunnableMethod<TimeStamp>("gfx::VRThread::CheckLife", this,
+                                     &VRThread::CheckLife, TimeStamp::Now());
     // Post it to the main thread for tracking the lifetime.
     nsCOMPtr<nsIThread> mainThread;
     nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
@@ -129,23 +107,11 @@ VRThread::CheckLife(TimeStamp aCheckTimestamp)
   }
 }
 
-void
-VRThread::SetLifeTime(uint32_t aLifeTime)
-{
-  mLifeTime = aLifeTime;
-}
+void VRThread::SetLifeTime(uint32_t aLifeTime) { mLifeTime = aLifeTime; }
 
-uint32_t
-VRThread::GetLifeTime()
-{
-  return mLifeTime;
-}
+uint32_t VRThread::GetLifeTime() { return mLifeTime; }
 
-bool
-VRThread::IsActive()
-{
-  return !!mThread;
-}
+bool VRThread::IsActive() { return !!mThread; }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

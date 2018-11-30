@@ -22,17 +22,15 @@ using DefaultHasher = mozilla::DefaultHasher<T>;
 template <typename Key>
 using PointerHasher = mozilla::PointerHasher<Key>;
 
-template <typename T,
-          class HashPolicy = mozilla::DefaultHasher<T>,
+template <typename T, class HashPolicy = mozilla::DefaultHasher<T>,
           class AllocPolicy = TempAllocPolicy>
 using HashSet = mozilla::HashSet<T, HashPolicy, AllocPolicy>;
 
-template <typename Key,
-          typename Value,
+template <typename Key, typename Value,
           class HashPolicy = mozilla::DefaultHasher<Key>,
           class AllocPolicy = TempAllocPolicy>
 using HashMap = mozilla::HashMap<Key, Value, HashPolicy, AllocPolicy>;
 
-}
+}  // namespace js
 
-#endif  /* js_HashTable_h */
+#endif /* js_HashTable_h */

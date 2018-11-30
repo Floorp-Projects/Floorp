@@ -22,7 +22,8 @@ void Shutdown();
 
 // VTune profiling may be attached/detached at any time, but there is no API for
 // attaching a callback to execute at attachment time. Methods compiled before
-// VTune was most recently attached therefore do not provide any information to VTune.
+// VTune was most recently attached therefore do not provide any information to
+// VTune.
 bool IsProfilingActive();
 
 // Wrapper exists in case we need locking in the future.
@@ -32,22 +33,18 @@ void MarkStub(const js::jit::JitCode* code, const char* name);
 
 void MarkRegExp(const js::jit::JitCode* code, bool match_only);
 
-void MarkScript(const js::jit::JitCode* code,
-                JSScript* script,
+void MarkScript(const js::jit::JitCode* code, JSScript* script,
                 const char* module);
 
-void MarkWasm(unsigned methodId,
-              const char* name,
-              void* start,
-              uintptr_t size);
+void MarkWasm(unsigned methodId, const char* name, void* start, uintptr_t size);
 
 void UnmarkCode(const js::jit::JitCode* code);
 
 void UnmarkBytes(void* bytes, unsigned size);
 
-} // namespace vtune
-} // namespace js
+}  // namespace vtune
+}  // namespace js
 
-#endif // MOZ_VTUNE
+#endif  // MOZ_VTUNE
 
-#endif // vtune_vtunewrapper_h
+#endif  // vtune_vtunewrapper_h

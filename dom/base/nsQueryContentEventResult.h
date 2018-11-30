@@ -16,16 +16,15 @@
 
 class nsIWidget;
 
-class nsQueryContentEventResult final : public nsIQueryContentEventResult
-{
-public:
+class nsQueryContentEventResult final : public nsIQueryContentEventResult {
+ public:
   explicit nsQueryContentEventResult(mozilla::WidgetQueryContentEvent& aEvent);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUERYCONTENTEVENTRESULT
 
   void SetEventResult(nsIWidget* aWidget);
 
-protected:
+ protected:
   ~nsQueryContentEventResult();
 
   mozilla::EventMessage mEventMessage;
@@ -40,4 +39,4 @@ protected:
   bool mReversed;
 };
 
-#endif // mozilla_dom_nsQueryContentEventResult_h
+#endif  // mozilla_dom_nsQueryContentEventResult_h

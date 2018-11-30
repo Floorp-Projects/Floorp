@@ -16,13 +16,11 @@
 
 using namespace mozilla;
 
-class psm_DataStorageTest : public ::testing::Test
-{
-protected:
-  void SetUp() override
-  {
+class psm_DataStorageTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
     const ::testing::TestInfo* const testInfo =
-      ::testing::UnitTest::GetInstance()->current_test_info();
+        ::testing::UnitTest::GetInstance()->current_test_info();
     NS_ConvertUTF8toUTF16 testName(testInfo->name());
     storage = DataStorage::GetFromRawFileName(testName);
     storage->Init(dataWillPersist);
@@ -36,8 +34,7 @@ NS_NAMED_LITERAL_CSTRING(testKey, "test");
 NS_NAMED_LITERAL_CSTRING(testValue, "value");
 NS_NAMED_LITERAL_CSTRING(privateTestValue, "private");
 
-TEST_F(psm_DataStorageTest, GetPutRemove)
-{
+TEST_F(psm_DataStorageTest, GetPutRemove) {
   EXPECT_TRUE(dataWillPersist);
 
   // Test Put/Get on Persistent data
@@ -45,8 +42,8 @@ TEST_F(psm_DataStorageTest, GetPutRemove)
   // Don't re-use testKey / testValue here, to make sure that this works as
   // expected with objects that have the same semantic value but are not
   // literally the same object.
-  nsCString result = storage->Get(NS_LITERAL_CSTRING("test"),
-                                  DataStorage_Persistent);
+  nsCString result =
+      storage->Get(NS_LITERAL_CSTRING("test"), DataStorage_Persistent);
   EXPECT_STREQ("value", result.get());
 
   // Get on Temporary/Private data with the same key should give nothing
@@ -57,10 +54,10 @@ TEST_F(psm_DataStorageTest, GetPutRemove)
 
   // Put with Temporary/Private data shouldn't affect Persistent data
   NS_NAMED_LITERAL_CSTRING(temporaryTestValue, "temporary");
-  EXPECT_EQ(NS_OK, storage->Put(testKey, temporaryTestValue,
-                                DataStorage_Temporary));
-  EXPECT_EQ(NS_OK, storage->Put(testKey, privateTestValue,
-                                DataStorage_Private));
+  EXPECT_EQ(NS_OK,
+            storage->Put(testKey, temporaryTestValue, DataStorage_Temporary));
+  EXPECT_EQ(NS_OK,
+            storage->Put(testKey, privateTestValue, DataStorage_Private));
   result = storage->Get(testKey, DataStorage_Temporary);
   EXPECT_STREQ("temporary", result.get());
   result = storage->Get(testKey, DataStorage_Private);
@@ -92,27 +89,26 @@ TEST_F(psm_DataStorageTest, GetPutRemove)
   EXPECT_TRUE(result.IsEmpty());
 }
 
-TEST_F(psm_DataStorageTest, InputValidation)
-{
+TEST_F(psm_DataStorageTest, InputValidation) {
   EXPECT_TRUE(dataWillPersist);
 
   // Keys may not have tabs or newlines
   EXPECT_EQ(NS_ERROR_INVALID_ARG,
             storage->Put(NS_LITERAL_CSTRING("key\thas tab"), testValue,
-                   DataStorage_Persistent));
-  nsCString result = storage->Get(NS_LITERAL_CSTRING("key\thas tab"),
-                            DataStorage_Persistent);
+                         DataStorage_Persistent));
+  nsCString result =
+      storage->Get(NS_LITERAL_CSTRING("key\thas tab"), DataStorage_Persistent);
   EXPECT_TRUE(result.IsEmpty());
   EXPECT_EQ(NS_ERROR_INVALID_ARG,
             storage->Put(NS_LITERAL_CSTRING("key has\nnewline"), testValue,
-                   DataStorage_Persistent));
+                         DataStorage_Persistent));
   result = storage->Get(NS_LITERAL_CSTRING("keyhas\nnewline"),
-                  DataStorage_Persistent);
+                        DataStorage_Persistent);
   EXPECT_TRUE(result.IsEmpty());
   // Values may not have newlines
   EXPECT_EQ(NS_ERROR_INVALID_ARG,
             storage->Put(testKey, NS_LITERAL_CSTRING("value\nhas newline"),
-                   DataStorage_Persistent));
+                         DataStorage_Persistent));
   result = storage->Get(testKey, DataStorage_Persistent);
   // Values may have tabs
   EXPECT_TRUE(result.IsEmpty());
@@ -154,25 +150,24 @@ TEST_F(psm_DataStorageTest, InputValidation)
   EXPECT_TRUE(result.IsEmpty());
 }
 
-TEST_F(psm_DataStorageTest, Eviction)
-{
+TEST_F(psm_DataStorageTest, Eviction) {
   EXPECT_TRUE(dataWillPersist);
 
   // Eviction is on a per-table basis. Tables shouldn't affect each other.
   EXPECT_EQ(NS_OK, storage->Put(testKey, testValue, DataStorage_Persistent));
   for (int i = 0; i < 1025; i++) {
-    EXPECT_EQ(NS_OK, storage->Put(nsPrintfCString("%d", i),
-                                  nsPrintfCString("%d", i),
-                                  DataStorage_Temporary));
-    nsCString result = storage->Get(nsPrintfCString("%d", i),
-                                    DataStorage_Temporary);
+    EXPECT_EQ(NS_OK,
+              storage->Put(nsPrintfCString("%d", i), nsPrintfCString("%d", i),
+                           DataStorage_Temporary));
+    nsCString result =
+        storage->Get(nsPrintfCString("%d", i), DataStorage_Temporary);
     EXPECT_STREQ(nsPrintfCString("%d", i).get(), result.get());
   }
   // We don't know which entry got evicted, but we can count them.
   int entries = 0;
   for (int i = 0; i < 1025; i++) {
-    nsCString result = storage->Get(nsPrintfCString("%d", i),
-                                    DataStorage_Temporary);
+    nsCString result =
+        storage->Get(nsPrintfCString("%d", i), DataStorage_Temporary);
     if (!result.IsEmpty()) {
       entries++;
     }
@@ -182,12 +177,11 @@ TEST_F(psm_DataStorageTest, Eviction)
   EXPECT_STREQ("value", result.get());
 }
 
-TEST_F(psm_DataStorageTest, ClearPrivateData)
-{
+TEST_F(psm_DataStorageTest, ClearPrivateData) {
   EXPECT_TRUE(dataWillPersist);
 
-  EXPECT_EQ(NS_OK, storage->Put(testKey, privateTestValue,
-                                DataStorage_Private));
+  EXPECT_EQ(NS_OK,
+            storage->Put(testKey, privateTestValue, DataStorage_Private));
   nsCString result = storage->Get(testKey, DataStorage_Private);
   EXPECT_STREQ("private", result.get());
   storage->Observe(nullptr, "last-pb-context-exited", nullptr);
@@ -195,8 +189,7 @@ TEST_F(psm_DataStorageTest, ClearPrivateData)
   EXPECT_TRUE(result.IsEmpty());
 }
 
-TEST_F(psm_DataStorageTest, Shutdown)
-{
+TEST_F(psm_DataStorageTest, Shutdown) {
   EXPECT_TRUE(dataWillPersist);
 
   EXPECT_EQ(NS_OK, storage->Put(testKey, testValue, DataStorage_Persistent));
@@ -215,7 +208,7 @@ TEST_F(psm_DataStorageTest, Shutdown)
   EXPECT_EQ(NS_OK, NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                           getter_AddRefs(backingFile)));
   const ::testing::TestInfo* const testInfo =
-    ::testing::UnitTest::GetInstance()->current_test_info();
+      ::testing::UnitTest::GetInstance()->current_test_info();
   NS_ConvertUTF8toUTF16 testName(testInfo->name());
   EXPECT_EQ(NS_OK, backingFile->Append(testName));
   nsCOMPtr<nsIInputStream> fileInputStream;

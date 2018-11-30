@@ -15,10 +15,9 @@
  * a binary heap. The default comparator causes this to act like a min-heap.
  * Only the LessThan method of the comparator is used.
  */
-template<class T, class Compare = nsDefaultComparator<T, T>>
-class nsTPriorityQueue
-{
-public:
+template <class T, class Compare = nsDefaultComparator<T, T>>
+class nsTPriorityQueue {
+ public:
   typedef typename nsTArray<T>::size_type size_type;
 
   /**
@@ -37,10 +36,7 @@ public:
    * Copy constructor
    */
   nsTPriorityQueue(const nsTPriorityQueue& aOther)
-    : mElements(aOther.mElements)
-    , mCompare(aOther.mCompare)
-  {
-  }
+      : mElements(aOther.mElements), mCompare(aOther.mCompare) {}
 
   /**
    * @return True if the queue is empty or false otherwise.
@@ -59,8 +55,7 @@ public:
    * for duplicate entries there may exist 'b' for which Compare(a, b) returns
    * false.)
    */
-  const T& Top() const
-  {
+  const T& Top() const {
     MOZ_ASSERT(!mElements.IsEmpty(), "Empty queue");
     return mElements[0];
   }
@@ -70,8 +65,7 @@ public:
    * @param aElement The element to add
    * @return true on success, false on out of memory.
    */
-  bool Push(const T& aElement)
-  {
+  bool Push(const T& aElement) {
     T* elem = mElements.AppendElement(aElement);
     if (!elem) {
       return false;  // Out of memory
@@ -97,8 +91,7 @@ public:
    * other element 'b' in the queue for which Compare(b, a) returns true.
    * @see Top()
    */
-  T Pop()
-  {
+  T Pop() {
     MOZ_ASSERT(!mElements.IsEmpty(), "Empty queue");
     T pop = mElements[0];
 
@@ -143,19 +136,18 @@ public:
    */
   const T* Elements() const { return mElements.Elements(); }
 
-protected:
+ protected:
   /**
    * Swaps the elements at the specified indices.
    */
-  void Swap(size_type aIndexA, size_type aIndexB)
-  {
+  void Swap(size_type aIndexA, size_type aIndexB) {
     T temp = mElements[aIndexA];
     mElements[aIndexA] = mElements[aIndexB];
     mElements[aIndexB] = temp;
   }
 
   nsTArray<T> mElements;
-  Compare mCompare; // Comparator object
+  Compare mCompare;  // Comparator object
 };
 
-#endif // NS_TPRIORITY_QUEUE_H_
+#endif  // NS_TPRIORITY_QUEUE_H_

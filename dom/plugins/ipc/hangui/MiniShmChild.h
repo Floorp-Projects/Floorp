@@ -23,9 +23,8 @@ namespace plugins {
  *
  * @see MiniShmParent
  */
-class MiniShmChild : public MiniShmBase
-{
-public:
+class MiniShmChild : public MiniShmBase {
+ public:
   MiniShmChild();
   virtual ~MiniShmChild();
 
@@ -37,18 +36,15 @@ public:
    * @param aTimeout Timeout in milliseconds.
    * @return nsresult error code
    */
-  nsresult
-  Init(MiniShmObserver* aObserver, const std::wstring& aCookie,
-       const DWORD aTimeout);
+  nsresult Init(MiniShmObserver* aObserver, const std::wstring& aCookie,
+                const DWORD aTimeout);
 
-  virtual nsresult
-  Send() override;
+  virtual nsresult Send() override;
 
-protected:
-  void
-  OnEvent() override;
+ protected:
+  void OnEvent() override;
 
-private:
+ private:
   HANDLE mParentEvent;
   HANDLE mParentGuard;
   HANDLE mChildEvent;
@@ -56,13 +52,12 @@ private:
   HANDLE mFileMapping;
   HANDLE mRegWait;
   LPVOID mView;
-  DWORD  mTimeout;
+  DWORD mTimeout;
 
   DISALLOW_COPY_AND_ASSIGN(MiniShmChild);
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif // mozilla_plugins_MiniShmChild_h
-
+#endif  // mozilla_plugins_MiniShmChild_h

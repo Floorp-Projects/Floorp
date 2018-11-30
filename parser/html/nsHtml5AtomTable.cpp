@@ -5,9 +5,7 @@
 #include "nsHtml5AtomTable.h"
 #include "nsThreadUtils.h"
 
-nsHtml5AtomTable::nsHtml5AtomTable()
-  : mRecentlyUsedParserAtoms{}
-{
+nsHtml5AtomTable::nsHtml5AtomTable() : mRecentlyUsedParserAtoms{} {
 #ifdef DEBUG
   mPermittedLookupEventTarget = mozilla::GetCurrentThreadSerialEventTarget();
 #endif
@@ -15,9 +13,7 @@ nsHtml5AtomTable::nsHtml5AtomTable()
 
 nsHtml5AtomTable::~nsHtml5AtomTable() {}
 
-nsAtom*
-nsHtml5AtomTable::GetAtom(const nsAString& aKey)
-{
+nsAtom* nsHtml5AtomTable::GetAtom(const nsAString& aKey) {
 #ifdef DEBUG
   MOZ_ASSERT(mPermittedLookupEventTarget->IsOnCurrentThread());
 #endif

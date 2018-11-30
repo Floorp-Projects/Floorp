@@ -15,9 +15,8 @@
 
 namespace mozilla {
 
-void
-DelayForChaosMode(ChaosFeature aFeature, const uint32_t aMicrosecondLimit)
-{
+void DelayForChaosMode(ChaosFeature aFeature,
+                       const uint32_t aMicrosecondLimit) {
   if (!ChaosMode::isActive(aFeature)) {
     return;
   }
@@ -26,12 +25,13 @@ DelayForChaosMode(ChaosFeature aFeature, const uint32_t aMicrosecondLimit)
 #if defined(XP_WIN)
   // Windows doesn't support sleeping at less than millisecond resolution.
   // We could spin here, or we could just sleep for one millisecond.
-  // Sleeping for a full millisecond causes heavy delays, so we don't do anything
-  // here for now until we have found a good way to sleep more precisely here.
+  // Sleeping for a full millisecond causes heavy delays, so we don't do
+  // anything here for now until we have found a good way to sleep more
+  // precisely here.
 #else
   const uint32_t duration = ChaosMode::randomUint32LessThan(aMicrosecondLimit);
   ::usleep(duration);
 #endif
 }
 
-} // namespace mozilla
+}  // namespace mozilla

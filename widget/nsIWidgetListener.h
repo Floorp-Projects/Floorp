@@ -22,8 +22,7 @@ class nsIXULWindow;
 /**
  * sizemode is an adjunct to widget size
  */
-enum nsSizeMode
-{
+enum nsSizeMode {
   nsSizeMode_Normal = 0,
   nsSizeMode_Minimized,
   nsSizeMode_Maximized,
@@ -34,17 +33,14 @@ enum nsSizeMode
 /**
  * different types of (top-level) window z-level positioning
  */
-enum nsWindowZ
-{
-  nsWindowZTop = 0,   // on top
-  nsWindowZBottom,    // on bottom
-  nsWindowZRelative   // just below some specified widget
+enum nsWindowZ {
+  nsWindowZTop = 0,  // on top
+  nsWindowZBottom,   // on bottom
+  nsWindowZRelative  // just below some specified widget
 };
 
-class nsIWidgetListener
-{
-public:
-
+class nsIWidgetListener {
+ public:
   /**
    * If this listener is for an nsIXULWindow, return it. If this is null, then
    * this is likely a listener for a view, which can be determined using
@@ -72,8 +68,8 @@ public:
    * Called when a window is resized to (width, height). Returns true if the
    * notification was handled. Coordinates are outer window screen coordinates.
    */
-  virtual bool WindowResized(nsIWidget* aWidget,
-                             int32_t aWidth, int32_t aHeight);
+  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth,
+                             int32_t aHeight);
 
   /**
    * Called when the size mode (minimized, maximized, fullscreen) is changed.

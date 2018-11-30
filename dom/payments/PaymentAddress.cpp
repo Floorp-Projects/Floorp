@@ -20,109 +20,70 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PaymentAddress)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-PaymentAddress::PaymentAddress(nsPIDOMWindowInner* aWindow,
-                               const nsAString& aCountry,
-                               const nsTArray<nsString>& aAddressLine,
-                               const nsAString& aRegion,
-                               const nsAString& aRegionCode,
-                               const nsAString& aCity,
-                               const nsAString& aDependentLocality,
-                               const nsAString& aPostalCode,
-                               const nsAString& aSortingCode,
-                               const nsAString& aOrganization,
-                               const nsAString& aRecipient,
-                               const nsAString& aPhone)
-  : mCountry(aCountry)
-  , mAddressLine(aAddressLine)
-  , mRegion(aRegion)
-  , mRegionCode(aRegionCode)
-  , mCity(aCity)
-  , mDependentLocality(aDependentLocality)
-  , mPostalCode(aPostalCode)
-  , mSortingCode(aSortingCode)
-  , mOrganization(aOrganization)
-  , mRecipient(aRecipient)
-  , mPhone(aPhone)
-  , mOwner(aWindow)
-{
-}
+PaymentAddress::PaymentAddress(
+    nsPIDOMWindowInner* aWindow, const nsAString& aCountry,
+    const nsTArray<nsString>& aAddressLine, const nsAString& aRegion,
+    const nsAString& aRegionCode, const nsAString& aCity,
+    const nsAString& aDependentLocality, const nsAString& aPostalCode,
+    const nsAString& aSortingCode, const nsAString& aOrganization,
+    const nsAString& aRecipient, const nsAString& aPhone)
+    : mCountry(aCountry),
+      mAddressLine(aAddressLine),
+      mRegion(aRegion),
+      mRegionCode(aRegionCode),
+      mCity(aCity),
+      mDependentLocality(aDependentLocality),
+      mPostalCode(aPostalCode),
+      mSortingCode(aSortingCode),
+      mOrganization(aOrganization),
+      mRecipient(aRecipient),
+      mPhone(aPhone),
+      mOwner(aWindow) {}
 
-void
-PaymentAddress::GetCountry(nsAString& aRetVal) const
-{
+void PaymentAddress::GetCountry(nsAString& aRetVal) const {
   aRetVal = mCountry;
 }
 
-void
-PaymentAddress::GetAddressLine(nsTArray<nsString>& aRetVal) const
-{
+void PaymentAddress::GetAddressLine(nsTArray<nsString>& aRetVal) const {
   aRetVal = mAddressLine;
 }
 
-void
-PaymentAddress::GetRegion(nsAString& aRetVal) const
-{
-  aRetVal = mRegion;
-}
+void PaymentAddress::GetRegion(nsAString& aRetVal) const { aRetVal = mRegion; }
 
-void
-PaymentAddress::GetRegionCode(nsAString& aRetVal) const
-{
+void PaymentAddress::GetRegionCode(nsAString& aRetVal) const {
   aRetVal = mRegionCode;
 }
 
-void
-PaymentAddress::GetCity(nsAString& aRetVal) const
-{
-  aRetVal = mCity;
-}
+void PaymentAddress::GetCity(nsAString& aRetVal) const { aRetVal = mCity; }
 
-void
-PaymentAddress::GetDependentLocality(nsAString& aRetVal) const
-{
+void PaymentAddress::GetDependentLocality(nsAString& aRetVal) const {
   aRetVal = mDependentLocality;
 }
 
-void
-PaymentAddress::GetPostalCode(nsAString& aRetVal) const
-{
+void PaymentAddress::GetPostalCode(nsAString& aRetVal) const {
   aRetVal = mPostalCode;
 }
 
-void
-PaymentAddress::GetSortingCode(nsAString& aRetVal) const
-{
+void PaymentAddress::GetSortingCode(nsAString& aRetVal) const {
   aRetVal = mSortingCode;
 }
 
-void
-PaymentAddress::GetOrganization(nsAString& aRetVal) const
-{
+void PaymentAddress::GetOrganization(nsAString& aRetVal) const {
   aRetVal = mOrganization;
 }
 
-void
-PaymentAddress::GetRecipient(nsAString& aRetVal) const
-{
+void PaymentAddress::GetRecipient(nsAString& aRetVal) const {
   aRetVal = mRecipient;
 }
 
-void
-PaymentAddress::GetPhone(nsAString& aRetVal) const
-{
-  aRetVal = mPhone;
-}
+void PaymentAddress::GetPhone(nsAString& aRetVal) const { aRetVal = mPhone; }
 
-PaymentAddress::~PaymentAddress()
-{
-}
+PaymentAddress::~PaymentAddress() {}
 
-JSObject*
-PaymentAddress::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PaymentAddress::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return PaymentAddress_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

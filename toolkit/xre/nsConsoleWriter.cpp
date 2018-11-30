@@ -17,9 +17,7 @@
 #include "nsIConsoleService.h"
 #include "nsIConsoleMessage.h"
 
-void
-WriteConsoleLog()
-{
+void WriteConsoleLog() {
   nsresult rv;
 
   nsCOMPtr<nsIFile> lfile;
@@ -27,28 +25,22 @@ WriteConsoleLog()
   char* logFileEnv = PR_GetEnv("XRE_CONSOLE_LOG");
   if (logFileEnv && *logFileEnv) {
     rv = XRE_GetFileFromPath(logFileEnv, getter_AddRefs(lfile));
-    if (NS_FAILED(rv))
-      return;
-  }
-  else {
-    if (!gLogConsoleErrors)
-      return;
+    if (NS_FAILED(rv)) return;
+  } else {
+    if (!gLogConsoleErrors) return;
 
     rv = nsXREDirProvider::GetUserAppDataDirectory(getter_AddRefs(lfile));
-    if (NS_FAILED(rv))
-      return;
+    if (NS_FAILED(rv)) return;
 
     lfile->AppendNative(NS_LITERAL_CSTRING("console.log"));
   }
 
-  PRFileDesc *file;
-  rv = lfile->OpenNSPRFileDesc(PR_WRONLY | PR_APPEND | PR_CREATE_FILE,
-                               0660, &file);
-  if (NS_FAILED(rv))
-    return;
+  PRFileDesc* file;
+  rv = lfile->OpenNSPRFileDesc(PR_WRONLY | PR_APPEND | PR_CREATE_FILE, 0660,
+                               &file);
+  if (NS_FAILED(rv)) return;
 
-  nsCOMPtr<nsIConsoleService> csrv
-    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  nsCOMPtr<nsIConsoleService> csrv(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (!csrv) {
     PR_Close(file);
     return;
@@ -67,11 +59,10 @@ WriteConsoleLog()
     PRExplodedTime etime;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &etime);
     char datetime[512];
-    PR_FormatTimeUSEnglish(datetime, sizeof(datetime),
-                           "%Y-%m-%d %H:%M:%S", &etime);
+    PR_FormatTimeUSEnglish(datetime, sizeof(datetime), "%Y-%m-%d %H:%M:%S",
+                           &etime);
 
-    PR_fprintf(file, NS_LINEBREAK
-                     "*** Console log: %s ***" NS_LINEBREAK,
+    PR_fprintf(file, NS_LINEBREAK "*** Console log: %s ***" NS_LINEBREAK,
                datetime);
   }
 

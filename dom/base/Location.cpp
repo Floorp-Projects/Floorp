@@ -39,16 +39,13 @@
 namespace mozilla {
 namespace dom {
 
-Location::Location(nsPIDOMWindowInner* aWindow, nsIDocShell *aDocShell)
-  : mInnerWindow(aWindow)
-{
+Location::Location(nsPIDOMWindowInner* aWindow, nsIDocShell* aDocShell)
+    : mInnerWindow(aWindow) {
   // aDocShell can be null if it gets called after nsDocShell::Destory().
   mDocShell = do_GetWeakReference(aDocShell);
 }
 
-Location::~Location()
-{
-}
+Location::~Location() {}
 
 // QueryInterface implementation for Location
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Location)
@@ -61,10 +58,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Location, mInnerWindow)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Location)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Location)
 
-already_AddRefed<nsDocShellLoadState>
-Location::CheckURL(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
-                   ErrorResult& aRv)
-{
+already_AddRefed<nsDocShellLoadState> Location::CheckURL(
+    nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (NS_WARN_IF(!docShell)) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
@@ -83,8 +78,8 @@ Location::CheckURL(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   }
 
   // Check to see if URI is allowed.
-  nsresult rv = ssm->CheckLoadURIWithPrincipal(&aSubjectPrincipal, aURI,
-                                               nsIScriptSecurityManager::STANDARD);
+  nsresult rv = ssm->CheckLoadURIWithPrincipal(
+      &aSubjectPrincipal, aURI, nsIScriptSecurityManager::STANDARD);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     nsAutoCString spec;
     aURI->GetSpec(spec);
@@ -108,7 +103,7 @@ Location::CheckURL(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   // after the document was loaded.
 
   nsCOMPtr<nsPIDOMWindowInner> incumbent =
-    do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
+      do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
   nsCOMPtr<nsIDocument> doc = incumbent ? incumbent->GetDoc() : nullptr;
 
   if (doc) {
@@ -130,8 +125,7 @@ Location::CheckURL(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
     }
     if (urisEqual) {
       sourceURI = docCurrentURI;
-    }
-    else {
+    } else {
       // Use principalURI as long as it is not an NullPrincipalURI.  We
       // could add a method such as GetReferrerURI to principals to make this
       // cleaner, but given that we need to start using Source Browsing
@@ -164,9 +158,7 @@ Location::CheckURL(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   return loadState.forget();
 }
 
-nsresult
-Location::GetURI(nsIURI** aURI, bool aGetInnermostURI)
-{
+nsresult Location::GetURI(nsIURI** aURI, bool aGetInnermostURI) {
   *aURI = nullptr;
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
@@ -206,15 +198,12 @@ Location::GetURI(nsIURI** aURI, bool aGetInnermostURI)
   return urifixup->CreateExposableURI(uri, aURI);
 }
 
-void
-Location::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
-                 ErrorResult& aRv, bool aReplace)
-{
+void Location::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
+                      ErrorResult& aRv, bool aReplace) {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (docShell) {
-
     RefPtr<nsDocShellLoadState> loadState =
-      CheckURL(aURI, aSubjectPrincipal, aRv);
+        CheckURL(aURI, aSubjectPrincipal, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -227,7 +216,7 @@ Location::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
 
     // Get the incumbent script's browsing context to set as source.
     nsCOMPtr<nsPIDOMWindowInner> sourceWindow =
-      do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
+        do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
     if (sourceWindow) {
       loadState->SetSourceDocShell(sourceWindow->GetDocShell());
     }
@@ -243,11 +232,8 @@ Location::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   }
 }
 
-void
-Location::GetHash(nsAString& aHash,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
-{
+void Location::GetHash(nsAString& aHash, nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -284,11 +270,8 @@ Location::GetHash(nsAString& aHash,
   }
 }
 
-void
-Location::SetHash(const nsAString& aHash,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
-{
+void Location::SetHash(const nsAString& aHash, nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -305,9 +288,7 @@ Location::SetHash(const nsAString& aHash,
     return;
   }
 
-  aRv = NS_MutateURI(uri)
-          .SetRef(hash)
-          .Finalize(uri);
+  aRv = NS_MutateURI(uri).SetRef(hash).Finalize(uri);
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }
@@ -315,11 +296,8 @@ Location::SetHash(const nsAString& aHash,
   SetURI(uri, aSubjectPrincipal, aRv);
 }
 
-void
-Location::GetHost(nsAString& aHost,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
-{
+void Location::GetHost(nsAString& aHost, nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -343,11 +321,8 @@ Location::GetHost(nsAString& aHost,
   }
 }
 
-void
-Location::SetHost(const nsAString& aHost,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
-{
+void Location::SetHost(const nsAString& aHost, nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -359,9 +334,8 @@ Location::SetHost(const nsAString& aHost,
     return;
   }
 
-  aRv = NS_MutateURI(uri)
-          .SetHostPort(NS_ConvertUTF16toUTF8(aHost))
-          .Finalize(uri);
+  aRv =
+      NS_MutateURI(uri).SetHostPort(NS_ConvertUTF16toUTF8(aHost)).Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -369,11 +343,8 @@ Location::SetHost(const nsAString& aHost,
   SetURI(uri, aSubjectPrincipal, aRv);
 }
 
-void
-Location::GetHostname(nsAString& aHostname,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
-{
+void Location::GetHostname(nsAString& aHostname,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -388,11 +359,8 @@ Location::GetHostname(nsAString& aHostname,
   }
 }
 
-void
-Location::SetHostname(const nsAString& aHostname,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
-{
+void Location::SetHostname(const nsAString& aHostname,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -404,9 +372,8 @@ Location::SetHostname(const nsAString& aHostname,
     return;
   }
 
-  aRv = NS_MutateURI(uri)
-          .SetHost(NS_ConvertUTF16toUTF8(aHostname))
-          .Finalize(uri);
+  aRv =
+      NS_MutateURI(uri).SetHost(NS_ConvertUTF16toUTF8(aHostname)).Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -414,9 +381,7 @@ Location::SetHostname(const nsAString& aHostname,
   SetURI(uri, aSubjectPrincipal, aRv);
 }
 
-nsresult
-Location::GetHref(nsAString& aHref)
-{
+nsresult Location::GetHref(nsAString& aHref) {
   aHref.Truncate();
 
   nsCOMPtr<nsIURI> uri;
@@ -435,28 +400,22 @@ Location::GetHref(nsAString& aHref)
   return NS_OK;
 }
 
-void
-Location::SetHref(const nsAString& aHref,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
-{
+void Location::SetHref(const nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv) {
   DoSetHref(aHref, aSubjectPrincipal, false, aRv);
 }
 
-void
-Location::DoSetHref(const nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
-                    bool aReplace, ErrorResult& aRv)
-{
+void Location::DoSetHref(const nsAString& aHref,
+                         nsIPrincipal& aSubjectPrincipal, bool aReplace,
+                         ErrorResult& aRv) {
   // Get the source of the caller
   nsCOMPtr<nsIURI> base = GetSourceBaseURL();
   SetHrefWithBase(aHref, base, aSubjectPrincipal, aReplace, aRv);
 }
 
-void
-Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
-                          nsIPrincipal& aSubjectPrincipal,
-                          bool aReplace, ErrorResult& aRv)
-{
+void Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
+                               nsIPrincipal& aSubjectPrincipal, bool aReplace,
+                               ErrorResult& aRv) {
   nsresult result;
   nsCOMPtr<nsIURI> newUri;
 
@@ -492,7 +451,7 @@ Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
         // since we only want to replace if the location is set by a
         // <script> tag in the same window.  See bug 178729.
         nsCOMPtr<nsIScriptGlobalObject> ourGlobal =
-          docShell ? docShell->GetScriptGlobalObject() : nullptr;
+            docShell ? docShell->GetScriptGlobalObject() : nullptr;
         inScriptTag = (ourGlobal == scriptContext->GetGlobalObject());
       }
     }
@@ -504,11 +463,8 @@ Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
   aRv.Throw(result);
 }
 
-void
-Location::GetOrigin(nsAString& aOrigin,
-                    nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aRv)
-{
+void Location::GetOrigin(nsAString& aOrigin, nsIPrincipal& aSubjectPrincipal,
+                         ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -531,11 +487,8 @@ Location::GetOrigin(nsAString& aOrigin,
   aOrigin = origin;
 }
 
-void
-Location::GetPathname(nsAString& aPathname,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
-{
+void Location::GetPathname(nsAString& aPathname,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -559,11 +512,8 @@ Location::GetPathname(nsAString& aPathname,
   AppendUTF8toUTF16(file, aPathname);
 }
 
-void
-Location::SetPathname(const nsAString& aPathname,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
-{
+void Location::SetPathname(const nsAString& aPathname,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -576,8 +526,8 @@ Location::SetPathname(const nsAString& aPathname,
   }
 
   nsresult rv = NS_MutateURI(uri)
-                  .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
-                  .Finalize(uri);
+                    .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
+                    .Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -585,11 +535,8 @@ Location::SetPathname(const nsAString& aPathname,
   SetURI(uri, aSubjectPrincipal, aRv);
 }
 
-void
-Location::GetPort(nsAString& aPort,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
-{
+void Location::GetPort(nsAString& aPort, nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -614,11 +561,8 @@ Location::GetPort(nsAString& aPort,
   }
 }
 
-void
-Location::SetPort(const nsAString& aPort,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
-{
+void Location::SetPort(const nsAString& aPort, nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -632,21 +576,18 @@ Location::SetPort(const nsAString& aPort,
 
   // perhaps use nsReadingIterators at some point?
   NS_ConvertUTF16toUTF8 portStr(aPort);
-  const char *buf = portStr.get();
+  const char* buf = portStr.get();
   int32_t port = -1;
 
   if (!portStr.IsEmpty() && buf) {
     if (*buf == ':') {
-      port = atol(buf+1);
-    }
-    else {
+      port = atol(buf + 1);
+    } else {
       port = atol(buf);
     }
   }
 
-  aRv = NS_MutateURI(uri)
-          .SetPort(port)
-          .Finalize(uri);
+  aRv = NS_MutateURI(uri).SetPort(port).Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -654,11 +595,8 @@ Location::SetPort(const nsAString& aPort,
   SetURI(uri, aSubjectPrincipal, aRv);
 }
 
-void
-Location::GetProtocol(nsAString& aProtocol,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
-{
+void Location::GetProtocol(nsAString& aProtocol,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -683,11 +621,8 @@ Location::GetProtocol(nsAString& aProtocol,
   aProtocol.Append(char16_t(':'));
 }
 
-void
-Location::SetProtocol(const nsAString& aProtocol,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
-{
+void Location::SetProtocol(const nsAString& aProtocol,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -706,8 +641,8 @@ Location::SetProtocol(const nsAString& aProtocol,
   Unused << FindCharInReadable(':', iter, end);
 
   nsresult rv = NS_MutateURI(uri)
-                  .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
-                  .Finalize(uri);
+                    .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                    .Finalize(uri);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Oh, I wish nsStandardURL returned NS_ERROR_MALFORMED_URI for _all_ the
     // malformed cases, not just some of them!
@@ -751,11 +686,8 @@ Location::SetProtocol(const nsAString& aProtocol,
   SetURI(uri, aSubjectPrincipal, aRv);
 }
 
-void
-Location::GetSearch(nsAString& aSearch,
-                    nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aRv)
-{
+void Location::GetSearch(nsAString& aSearch, nsIPrincipal& aSubjectPrincipal,
+                         ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -782,11 +714,8 @@ Location::GetSearch(nsAString& aSearch,
   }
 }
 
-void
-Location::SetSearch(const nsAString& aSearch,
-                    nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aRv)
-{
+void Location::SetSearch(const nsAString& aSearch,
+                         nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -801,13 +730,13 @@ Location::SetSearch(const nsAString& aSearch,
 
   if (nsIDocument* doc = GetEntryDocument()) {
     aRv = NS_MutateURI(uri)
-            .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch),
+              .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch),
                                     doc->GetDocumentCharacterSet())
-            .Finalize(uri);
+              .Finalize(uri);
   } else {
     aRv = NS_MutateURI(uri)
-            .SetQuery(NS_ConvertUTF16toUTF8(aSearch))
-            .Finalize(uri);
+              .SetQuery(NS_ConvertUTF16toUTF8(aSearch))
+              .Finalize(uri);
   }
   if (NS_WARN_IF(aRv.Failed())) {
     return;
@@ -816,13 +745,11 @@ Location::SetSearch(const nsAString& aSearch,
   SetURI(uri, aSubjectPrincipal, aRv);
 }
 
-nsresult
-Location::Reload(bool aForceget)
-{
+nsresult Location::Reload(bool aForceget) {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-  nsCOMPtr<nsPIDOMWindowOuter> window = docShell ? docShell->GetWindow()
-                                                 : nullptr;
+  nsCOMPtr<nsPIDOMWindowOuter> window =
+      docShell ? docShell->GetWindow() : nullptr;
 
   if (window && window->IsHandlingResizeEvent()) {
     // location.reload() was called on a window that is handling a
@@ -864,19 +791,13 @@ Location::Reload(bool aForceget)
   return rv;
 }
 
-void
-Location::Replace(const nsAString& aUrl,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
-{
+void Location::Replace(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv) {
   DoSetHref(aUrl, aSubjectPrincipal, true, aRv);
 }
 
-void
-Location::Assign(const nsAString& aUrl,
-                 nsIPrincipal& aSubjectPrincipal,
-                 ErrorResult& aRv)
-{
+void Location::Assign(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
+                      ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -885,9 +806,7 @@ Location::Assign(const nsAString& aUrl,
   DoSetHref(aUrl, aSubjectPrincipal, false, aRv);
 }
 
-already_AddRefed<nsIURI>
-Location::GetSourceBaseURL()
-{
+already_AddRefed<nsIURI> Location::GetSourceBaseURL() {
   nsIDocument* doc = GetEntryDocument();
   // If there's no entry document, we either have no Script Entry Point or one
   // that isn't a DOM Window.  This doesn't generally happen with the DOM, but
@@ -898,7 +817,7 @@ Location::GetSourceBaseURL()
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (!doc && docShell) {
     nsCOMPtr<nsPIDOMWindowOuter> docShellWin =
-      do_QueryInterface(docShell->GetScriptGlobalObject());
+        do_QueryInterface(docShell->GetScriptGlobalObject());
     if (docShellWin) {
       doc = docShellWin->GetDoc();
     }
@@ -907,9 +826,7 @@ Location::GetSourceBaseURL()
   return doc->GetBaseURI();
 }
 
-bool
-Location::CallerSubsumes(nsIPrincipal* aSubjectPrincipal)
-{
+bool Location::CallerSubsumes(nsIPrincipal* aSubjectPrincipal) {
   MOZ_ASSERT(aSubjectPrincipal);
 
   // Get the principal associated with the location object.  Note that this is
@@ -918,22 +835,19 @@ Location::CallerSubsumes(nsIPrincipal* aSubjectPrincipal)
   // even though we only allow limited cross-origin access to Location objects
   // in general.
   nsCOMPtr<nsPIDOMWindowOuter> outer = mInnerWindow->GetOuterWindow();
-  if (MOZ_UNLIKELY(!outer))
-    return false;
+  if (MOZ_UNLIKELY(!outer)) return false;
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(outer);
   bool subsumes = false;
-  nsresult rv =
-    aSubjectPrincipal->SubsumesConsideringDomain(sop->GetPrincipal(),
-                                                 &subsumes);
+  nsresult rv = aSubjectPrincipal->SubsumesConsideringDomain(
+      sop->GetPrincipal(), &subsumes);
   NS_ENSURE_SUCCESS(rv, false);
   return subsumes;
 }
 
-JSObject*
-Location::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* Location::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) {
   return Location_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

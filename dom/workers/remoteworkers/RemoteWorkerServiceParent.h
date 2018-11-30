@@ -14,23 +14,20 @@ namespace dom {
 
 class RemoteWorkerManager;
 
-class RemoteWorkerServiceParent final : public PRemoteWorkerServiceParent
-{
-public:
+class RemoteWorkerServiceParent final : public PRemoteWorkerServiceParent {
+ public:
   RemoteWorkerServiceParent();
   ~RemoteWorkerServiceParent();
 
-  void
-  ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
+  void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
-  void
-  Initialize();
+  void Initialize();
 
-private:
+ private:
   RefPtr<RemoteWorkerManager> mManager;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_RemoteWorkerServiceParent_h
+#endif  // mozilla_dom_RemoteWorkerServiceParent_h

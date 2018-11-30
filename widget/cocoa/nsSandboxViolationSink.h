@@ -22,15 +22,15 @@
 #define SANDBOX_VIOLATION_QUEUE_NAME "org.mozilla.sandbox.violation.queue"
 #define SANDBOX_VIOLATION_NOTIFICATION_NAME "com.apple.sandbox.violation.*"
 
-class nsSandboxViolationSink
-{
-public:
+class nsSandboxViolationSink {
+ public:
   static void Start();
   static void Stop();
-private:
+
+ private:
   static void ViolationHandler();
   static int mNotifyToken;
   static uint64_t mLastMsgReceived;
 };
 
-#endif // nsSandboxViolationSink_h_
+#endif  // nsSandboxViolationSink_h_

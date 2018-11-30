@@ -11,13 +11,11 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 NS_IMETHODIMP
-xpcAccessibleValue::GetMaximumValue(double* aValue)
-{
+xpcAccessibleValue::GetMaximumValue(double* aValue) {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
   if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
     return NS_ERROR_FAILURE;
@@ -29,20 +27,17 @@ xpcAccessibleValue::GetMaximumValue(double* aValue)
     value = Intl().AsProxy()->MaxValue();
   }
 
-  if (!IsNaN(value))
-    *aValue = value;
+  if (!IsNaN(value)) *aValue = value;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleValue::GetMinimumValue(double* aValue)
-{
+xpcAccessibleValue::GetMinimumValue(double* aValue) {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
   if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
     return NS_ERROR_FAILURE;
@@ -54,20 +49,17 @@ xpcAccessibleValue::GetMinimumValue(double* aValue)
     value = Intl().AsProxy()->MinValue();
   }
 
-  if (!IsNaN(value))
-    *aValue = value;
+  if (!IsNaN(value)) *aValue = value;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleValue::GetCurrentValue(double* aValue)
-{
+xpcAccessibleValue::GetCurrentValue(double* aValue) {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
   if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
     return NS_ERROR_FAILURE;
@@ -79,17 +71,14 @@ xpcAccessibleValue::GetCurrentValue(double* aValue)
     value = Intl().AsProxy()->CurValue();
   }
 
-  if (!IsNaN(value))
-    *aValue = value;
+  if (!IsNaN(value)) *aValue = value;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleValue::SetCurrentValue(double aValue)
-{
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+xpcAccessibleValue::SetCurrentValue(double aValue) {
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
   if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
     return NS_ERROR_FAILURE;
@@ -104,13 +93,11 @@ xpcAccessibleValue::SetCurrentValue(double aValue)
 }
 
 NS_IMETHODIMP
-xpcAccessibleValue::GetMinimumIncrement(double* aValue)
-{
+xpcAccessibleValue::GetMinimumIncrement(double* aValue) {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
   if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
     return NS_ERROR_FAILURE;
@@ -122,8 +109,7 @@ xpcAccessibleValue::GetMinimumIncrement(double* aValue)
     value = Intl().AsProxy()->Step();
   }
 
-  if (!IsNaN(value))
-    *aValue = value;
+  if (!IsNaN(value)) *aValue = value;
 
   return NS_OK;
 }

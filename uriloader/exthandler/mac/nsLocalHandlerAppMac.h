@@ -8,19 +8,19 @@
 #include "nsLocalHandlerApp.h"
 
 class nsLocalHandlerAppMac : public nsLocalHandlerApp {
+ public:
+  nsLocalHandlerAppMac() {}
 
-  public:
-    nsLocalHandlerAppMac() { }
-
-    nsLocalHandlerAppMac(const char16_t *aName, nsIFile *aExecutable)
-      : nsLocalHandlerApp(aName, aExecutable) {} 
-
-    nsLocalHandlerAppMac(const nsAString & aName, nsIFile *aExecutable) 
+  nsLocalHandlerAppMac(const char16_t* aName, nsIFile* aExecutable)
       : nsLocalHandlerApp(aName, aExecutable) {}
-    virtual ~nsLocalHandlerAppMac() { }
 
-    NS_IMETHOD LaunchWithURI(nsIURI* aURI, nsIInterfaceRequestor* aWindowContext) override;
-    NS_IMETHOD GetName(nsAString& aName) override;
+  nsLocalHandlerAppMac(const nsAString& aName, nsIFile* aExecutable)
+      : nsLocalHandlerApp(aName, aExecutable) {}
+  virtual ~nsLocalHandlerAppMac() {}
+
+  NS_IMETHOD LaunchWithURI(nsIURI* aURI,
+                           nsIInterfaceRequestor* aWindowContext) override;
+  NS_IMETHOD GetName(nsAString& aName) override;
 };
 
 #endif /*NSLOCALHANDLERAPPMAC_H_*/

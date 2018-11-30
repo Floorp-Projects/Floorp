@@ -21,16 +21,16 @@
 
 #include <stddef.h>
 
-template<class E>
+template <class E>
 class nsTArray;
 
-template<class E>
+template <class E>
 class FallibleTArray;
 
-template<class E, size_t N>
+template <class E, size_t N>
 class AutoTArray;
 
-template<class E>
+template <class E>
 using InfallibleTArray = nsTArray<E>;
 
 #endif

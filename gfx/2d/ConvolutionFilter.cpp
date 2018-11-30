@@ -17,29 +17,17 @@ namespace mozilla {
 namespace gfx {
 
 ConvolutionFilter::ConvolutionFilter()
-  : mFilter(MakeUnique<SkConvolutionFilter1D>())
-{
-}
+    : mFilter(MakeUnique<SkConvolutionFilter1D>()) {}
 
-ConvolutionFilter::~ConvolutionFilter()
-{
-}
+ConvolutionFilter::~ConvolutionFilter() {}
 
-int32_t
-ConvolutionFilter::MaxFilter() const
-{
-  return mFilter->maxFilter();
-}
+int32_t ConvolutionFilter::MaxFilter() const { return mFilter->maxFilter(); }
 
-int32_t
-ConvolutionFilter::NumValues() const
-{
-  return mFilter->numValues();
-}
+int32_t ConvolutionFilter::NumValues() const { return mFilter->numValues(); }
 
-bool
-ConvolutionFilter::GetFilterOffsetAndLength(int32_t aRowIndex, int32_t* aResultOffset, int32_t* aResultLength)
-{
+bool ConvolutionFilter::GetFilterOffsetAndLength(int32_t aRowIndex,
+                                                 int32_t* aResultOffset,
+                                                 int32_t* aResultLength) {
   if (aRowIndex >= mFilter->numValues()) {
     return false;
   }
@@ -47,51 +35,53 @@ ConvolutionFilter::GetFilterOffsetAndLength(int32_t aRowIndex, int32_t* aResultO
   return true;
 }
 
-void
-ConvolutionFilter::ConvolveHorizontally(const uint8_t* aSrc, uint8_t* aDst, bool aHasAlpha)
-{
+void ConvolutionFilter::ConvolveHorizontally(const uint8_t* aSrc, uint8_t* aDst,
+                                             bool aHasAlpha) {
   SkOpts::convolve_horizontally(aSrc, *mFilter, aDst, aHasAlpha);
 }
 
-void
-ConvolutionFilter::ConvolveVertically(uint8_t* const* aSrc, uint8_t* aDst, int32_t aRowIndex, int32_t aRowSize, bool aHasAlpha)
-{
+void ConvolutionFilter::ConvolveVertically(uint8_t* const* aSrc, uint8_t* aDst,
+                                           int32_t aRowIndex, int32_t aRowSize,
+                                           bool aHasAlpha) {
   MOZ_ASSERT(aRowIndex < mFilter->numValues());
 
   int32_t filterOffset;
   int32_t filterLength;
-  auto filterValues = mFilter->FilterForValue(aRowIndex, &filterOffset, &filterLength);
-  SkOpts::convolve_vertically(filterValues, filterLength, aSrc, aRowSize, aDst, aHasAlpha);
+  auto filterValues =
+      mFilter->FilterForValue(aRowIndex, &filterOffset, &filterLength);
+  SkOpts::convolve_vertically(filterValues, filterLength, aSrc, aRowSize, aDst,
+                              aHasAlpha);
 }
 
-/* ConvolutionFilter::ComputeResizeFactor is derived from Skia's SkBitmapScaler/SkResizeFilter::computeFactors.
- * It is governed by Skia's BSD-style license (see gfx/skia/LICENSE) and the following copyright:
+/* ConvolutionFilter::ComputeResizeFactor is derived from Skia's
+ * SkBitmapScaler/SkResizeFilter::computeFactors. It is governed by Skia's
+ * BSD-style license (see gfx/skia/LICENSE) and the following copyright:
  * Copyright (c) 2015 Google Inc.
  */
-bool
-ConvolutionFilter::ComputeResizeFilter(ResizeMethod aResizeMethod, int32_t aSrcSize, int32_t aDstSize)
-{
+bool ConvolutionFilter::ComputeResizeFilter(ResizeMethod aResizeMethod,
+                                            int32_t aSrcSize,
+                                            int32_t aDstSize) {
   typedef SkConvolutionFilter1D::ConvolutionFixed Fixed;
 
   UniquePtr<SkBitmapFilter> bitmapFilter;
   switch (aResizeMethod) {
-  case ResizeMethod::BOX:
-    bitmapFilter = MakeUnique<SkBoxFilter>();
-    break;
-  case ResizeMethod::TRIANGLE:
-    bitmapFilter = MakeUnique<SkTriangleFilter>();
-    break;
-  case ResizeMethod::LANCZOS3:
-    bitmapFilter = MakeUnique<SkLanczosFilter>();
-    break;
-  case ResizeMethod::HAMMING:
-    bitmapFilter = MakeUnique<SkHammingFilter>();
-    break;
-  case ResizeMethod::MITCHELL:
-    bitmapFilter = MakeUnique<SkMitchellFilter>();
-    break;
-  default:
-    return false;
+    case ResizeMethod::BOX:
+      bitmapFilter = MakeUnique<SkBoxFilter>();
+      break;
+    case ResizeMethod::TRIANGLE:
+      bitmapFilter = MakeUnique<SkTriangleFilter>();
+      break;
+    case ResizeMethod::LANCZOS3:
+      bitmapFilter = MakeUnique<SkLanczosFilter>();
+      break;
+    case ResizeMethod::HAMMING:
+      bitmapFilter = MakeUnique<SkHammingFilter>();
+      break;
+    case ResizeMethod::MITCHELL:
+      bitmapFilter = MakeUnique<SkMitchellFilter>();
+      break;
+    default:
+      return false;
   }
 
   // When we're doing a magnification, the scale will be larger than one. This
@@ -113,7 +103,8 @@ ConvolutionFilter::ComputeResizeFilter(ResizeMethod aResizeMethod, int32_t aSrcS
   // filter values for each one. Those values will tell us how to blend the
   // source pixels to compute the destination pixel.
 
-  mFilter->reserveAdditional(aDstSize, int32_t(ceil(aDstSize * srcSupport * 2)));
+  mFilter->reserveAdditional(aDstSize,
+                             int32_t(ceil(aDstSize * srcSupport * 2)));
   for (int32_t destI = 0; destI < aDstSize; destI++) {
     // This is the pixel in the source directly under the pixel in the dest.
     // Note that we base computations on the "center" of the pixels. To see
@@ -139,20 +130,20 @@ ConvolutionFilter::ComputeResizeFilter(ResizeMethod aResizeMethod, int32_t aSrcS
     // is at (2.5, 2.5).
     float destFilterDist = (srcBegin + 0.5f - srcPixel) * clampedScale;
     int32_t filterCount = int32_t(srcEnd - srcBegin) + 1;
-    if (filterCount <= 0 ||
-        !filterValues.resize(filterCount) ||
+    if (filterCount <= 0 || !filterValues.resize(filterCount) ||
         !fixedFilterValues.resize(filterCount)) {
       return false;
     }
-    float filterSum = bitmapFilter->evaluate_n(destFilterDist, clampedScale, filterCount,
-                                               filterValues.begin());
+    float filterSum = bitmapFilter->evaluate_n(
+        destFilterDist, clampedScale, filterCount, filterValues.begin());
 
     // The filter must be normalized so that we don't affect the brightness of
     // the image. Convert to normalized fixed point.
     Fixed fixedSum = 0;
     float invFilterSum = 1.0f / filterSum;
     for (int32_t fixedI = 0; fixedI < filterCount; fixedI++) {
-      Fixed curFixed = SkConvolutionFilter1D::FloatToFixed(filterValues[fixedI] * invFilterSum);
+      Fixed curFixed = SkConvolutionFilter1D::FloatToFixed(
+          filterValues[fixedI] * invFilterSum);
       fixedSum += curFixed;
       fixedFilterValues[fixedI] = curFixed;
     }
@@ -165,12 +156,12 @@ ConvolutionFilter::ComputeResizeFilter(ResizeMethod aResizeMethod, int32_t aSrcS
     Fixed leftovers = SkConvolutionFilter1D::FloatToFixed(1) - fixedSum;
     fixedFilterValues[filterCount / 2] += leftovers;
 
-    mFilter->AddFilter(int32_t(srcBegin), fixedFilterValues.begin(), filterCount);
+    mFilter->AddFilter(int32_t(srcBegin), fixedFilterValues.begin(),
+                       filterCount);
   }
 
   return mFilter->maxFilter() > 0 && mFilter->numValues() == aDstSize;
 }
 
-} // namespace gfx
-} // namespace mozilla
-
+}  // namespace gfx
+}  // namespace mozilla

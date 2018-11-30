@@ -56,80 +56,80 @@ OSVR_EXTERN_C_BEGIN
 /* generated file - do not edit! */
 /** @brief C function type for a Pose callback */
 typedef void (*OSVR_PoseCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_PoseReport *report);
+                                  const struct OSVR_TimeValue *timestamp,
+                                  const struct OSVR_PoseReport *report);
 /** @brief C function type for a Position callback */
 typedef void (*OSVR_PositionCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_PositionReport *report);
+                                      const struct OSVR_TimeValue *timestamp,
+                                      const struct OSVR_PositionReport *report);
 /** @brief C function type for a Orientation callback */
-typedef void (*OSVR_OrientationCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_OrientationReport *report);
+typedef void (*OSVR_OrientationCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_OrientationReport *report);
 /** @brief C function type for a Velocity callback */
 typedef void (*OSVR_VelocityCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_VelocityReport *report);
+                                      const struct OSVR_TimeValue *timestamp,
+                                      const struct OSVR_VelocityReport *report);
 /** @brief C function type for a LinearVelocity callback */
-typedef void (*OSVR_LinearVelocityCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_LinearVelocityReport *report);
+typedef void (*OSVR_LinearVelocityCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_LinearVelocityReport *report);
 /** @brief C function type for a AngularVelocity callback */
-typedef void (*OSVR_AngularVelocityCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_AngularVelocityReport *report);
+typedef void (*OSVR_AngularVelocityCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_AngularVelocityReport *report);
 /** @brief C function type for a Acceleration callback */
-typedef void (*OSVR_AccelerationCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_AccelerationReport *report);
+typedef void (*OSVR_AccelerationCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_AccelerationReport *report);
 /** @brief C function type for a LinearAcceleration callback */
-typedef void (*OSVR_LinearAccelerationCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_LinearAccelerationReport *report);
+typedef void (*OSVR_LinearAccelerationCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_LinearAccelerationReport *report);
 /** @brief C function type for a AngularAcceleration callback */
-typedef void (*OSVR_AngularAccelerationCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_AngularAccelerationReport *report);
+typedef void (*OSVR_AngularAccelerationCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_AngularAccelerationReport *report);
 /** @brief C function type for a Button callback */
 typedef void (*OSVR_ButtonCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_ButtonReport *report);
+                                    const struct OSVR_TimeValue *timestamp,
+                                    const struct OSVR_ButtonReport *report);
 /** @brief C function type for a Analog callback */
 typedef void (*OSVR_AnalogCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_AnalogReport *report);
+                                    const struct OSVR_TimeValue *timestamp,
+                                    const struct OSVR_AnalogReport *report);
 /** @brief C function type for a Imaging callback */
 typedef void (*OSVR_ImagingCallback)(void *userdata,
                                      const struct OSVR_TimeValue *timestamp,
                                      const struct OSVR_ImagingReport *report);
 /** @brief C function type for a Location2D callback */
-typedef void (*OSVR_Location2DCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_Location2DReport *report);
+typedef void (*OSVR_Location2DCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_Location2DReport *report);
 /** @brief C function type for a Direction callback */
-typedef void (*OSVR_DirectionCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_DirectionReport *report);
+typedef void (*OSVR_DirectionCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_DirectionReport *report);
 /** @brief C function type for a EyeTracker2D callback */
-typedef void (*OSVR_EyeTracker2DCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_EyeTracker2DReport *report);
+typedef void (*OSVR_EyeTracker2DCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_EyeTracker2DReport *report);
 /** @brief C function type for a EyeTracker3D callback */
-typedef void (*OSVR_EyeTracker3DCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_EyeTracker3DReport *report);
+typedef void (*OSVR_EyeTracker3DCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_EyeTracker3DReport *report);
 /** @brief C function type for a EyeTrackerBlink callback */
-typedef void (*OSVR_EyeTrackerBlinkCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_EyeTrackerBlinkReport *report);
+typedef void (*OSVR_EyeTrackerBlinkCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_EyeTrackerBlinkReport *report);
 /** @brief C function type for a NaviVelocity callback */
-typedef void (*OSVR_NaviVelocityCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_NaviVelocityReport *report);
+typedef void (*OSVR_NaviVelocityCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_NaviVelocityReport *report);
 /** @brief C function type for a NaviPosition callback */
-typedef void (*OSVR_NaviPositionCallback)(void *userdata,
-                                     const struct OSVR_TimeValue *timestamp,
-                                     const struct OSVR_NaviPositionReport *report);
+typedef void (*OSVR_NaviPositionCallback)(
+    void *userdata, const struct OSVR_TimeValue *timestamp,
+    const struct OSVR_NaviPositionReport *report);
 
 /** @} */
 

@@ -11,19 +11,18 @@
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"
 
-class xpcJSWeakReference final : public xpcIJSWeakReference
-{
-    ~xpcJSWeakReference() {}
+class xpcJSWeakReference final : public xpcIJSWeakReference {
+  ~xpcJSWeakReference() {}
 
-public:
-    xpcJSWeakReference();
-    nsresult Init(JSContext* cx, const JS::Value& object);
+ public:
+  xpcJSWeakReference();
+  nsresult Init(JSContext* cx, const JS::Value& object);
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_XPCIJSWEAKREFERENCE
+  NS_DECL_ISUPPORTS
+  NS_DECL_XPCIJSWEAKREFERENCE
 
-private:
-    nsWeakPtr mReferent;
+ private:
+  nsWeakPtr mReferent;
 };
 
-#endif // xpcjsweakreference_h___
+#endif  // xpcjsweakreference_h___

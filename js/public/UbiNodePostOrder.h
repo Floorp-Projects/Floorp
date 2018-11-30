@@ -52,141 +52,136 @@ namespace ubi {
  *     causes `PostOrder::traverse` to return false.
  */
 struct PostOrder {
-  private:
-    struct OriginAndEdges {
-        Node                 origin;
-        EdgeVector           edges;
+ private:
+  struct OriginAndEdges {
+    Node origin;
+    EdgeVector edges;
 
-        OriginAndEdges(const Node& node, EdgeVector&& edges)
-          : origin(node)
-          , edges(std::move(edges))
-        { }
+    OriginAndEdges(const Node& node, EdgeVector&& edges)
+        : origin(node), edges(std::move(edges)) {}
 
-        OriginAndEdges(const OriginAndEdges& rhs) = delete;
-        OriginAndEdges& operator=(const OriginAndEdges& rhs) = delete;
+    OriginAndEdges(const OriginAndEdges& rhs) = delete;
+    OriginAndEdges& operator=(const OriginAndEdges& rhs) = delete;
 
-        OriginAndEdges(OriginAndEdges&& rhs)
-          : origin(rhs.origin)
-          , edges(std::move(rhs.edges))
-        {
-            MOZ_ASSERT(&rhs != this, "self-move disallowed");
-        }
+    OriginAndEdges(OriginAndEdges&& rhs)
+        : origin(rhs.origin), edges(std::move(rhs.edges)) {
+      MOZ_ASSERT(&rhs != this, "self-move disallowed");
+    }
 
-        OriginAndEdges& operator=(OriginAndEdges&& rhs) {
-            this->~OriginAndEdges();
-            new (this) OriginAndEdges(std::move(rhs));
-            return *this;
-        }
-    };
+    OriginAndEdges& operator=(OriginAndEdges&& rhs) {
+      this->~OriginAndEdges();
+      new (this) OriginAndEdges(std::move(rhs));
+      return *this;
+    }
+  };
 
-    using Stack = js::Vector<OriginAndEdges, 256, js::SystemAllocPolicy>;
-    using Set = js::HashSet<Node, js::DefaultHasher<Node>, js::SystemAllocPolicy>;
+  using Stack = js::Vector<OriginAndEdges, 256, js::SystemAllocPolicy>;
+  using Set = js::HashSet<Node, js::DefaultHasher<Node>, js::SystemAllocPolicy>;
 
-    JSContext*               cx;
-    Set                      seen;
-    Stack                    stack;
+  JSContext* cx;
+  Set seen;
+  Stack stack;
 #ifdef DEBUG
-    bool                     traversed;
+  bool traversed;
 #endif
 
-  private:
-    MOZ_MUST_USE bool fillEdgesFromRange(EdgeVector& edges, js::UniquePtr<EdgeRange>& range) {
-        MOZ_ASSERT(range);
-        for ( ; !range->empty(); range->popFront()) {
-            if (!edges.append(std::move(range->front()))) {
-                return false;
-            }
-        }
-        return true;
+ private:
+  MOZ_MUST_USE bool fillEdgesFromRange(EdgeVector& edges,
+                                       js::UniquePtr<EdgeRange>& range) {
+    MOZ_ASSERT(range);
+    for (; !range->empty(); range->popFront()) {
+      if (!edges.append(std::move(range->front()))) {
+        return false;
+      }
     }
+    return true;
+  }
 
-    MOZ_MUST_USE bool pushForTraversing(const Node& node) {
-        EdgeVector edges;
-        auto range = node.edges(cx, /* wantNames */ false);
-        return range &&
-            fillEdgesFromRange(edges, range) &&
-            stack.append(OriginAndEdges(node, std::move(edges)));
-    }
+  MOZ_MUST_USE bool pushForTraversing(const Node& node) {
+    EdgeVector edges;
+    auto range = node.edges(cx, /* wantNames */ false);
+    return range && fillEdgesFromRange(edges, range) &&
+           stack.append(OriginAndEdges(node, std::move(edges)));
+  }
 
-
-  public:
-    // Construct a post-order traversal object.
-    //
-    // The traversal asserts that no GC happens in its runtime during its
-    // lifetime via the `AutoCheckCannotGC&` parameter. We do nothing with it,
-    // other than require it to exist with a lifetime that encloses our own.
-    PostOrder(JSContext* cx, AutoCheckCannotGC&)
-      : cx(cx)
-      , seen()
-      , stack()
+ public:
+  // Construct a post-order traversal object.
+  //
+  // The traversal asserts that no GC happens in its runtime during its
+  // lifetime via the `AutoCheckCannotGC&` parameter. We do nothing with it,
+  // other than require it to exist with a lifetime that encloses our own.
+  PostOrder(JSContext* cx, AutoCheckCannotGC&)
+      : cx(cx),
+        seen(),
+        stack()
 #ifdef DEBUG
-      , traversed(false)
+        ,
+        traversed(false)
 #endif
-    { }
+  {
+  }
 
-    // Add `node` as a starting point for the traversal. You may add
-    // as many starting points as you like. Returns false on OOM.
-    MOZ_MUST_USE bool addStart(const Node& node) {
-        if (!seen.put(node)) {
-            return false;
-        }
-        return pushForTraversing(node);
+  // Add `node` as a starting point for the traversal. You may add
+  // as many starting points as you like. Returns false on OOM.
+  MOZ_MUST_USE bool addStart(const Node& node) {
+    if (!seen.put(node)) {
+      return false;
     }
+    return pushForTraversing(node);
+  }
 
-    // Traverse the graph in post-order, starting with the set of nodes passed
-    // to `addStart` and applying `onNode::operator()` for each node in the
-    // graph and `onEdge::operator()` for each edge in the graph, as described
-    // above.
-    //
-    // This should be called only once per instance of this class.
-    //
-    // Return false on OOM or error return from `onNode::operator()` or
-    // `onEdge::operator()`.
-    template<typename NodeVisitor, typename EdgeVisitor>
-    MOZ_MUST_USE bool traverse(NodeVisitor onNode, EdgeVisitor onEdge) {
+  // Traverse the graph in post-order, starting with the set of nodes passed
+  // to `addStart` and applying `onNode::operator()` for each node in the
+  // graph and `onEdge::operator()` for each edge in the graph, as described
+  // above.
+  //
+  // This should be called only once per instance of this class.
+  //
+  // Return false on OOM or error return from `onNode::operator()` or
+  // `onEdge::operator()`.
+  template <typename NodeVisitor, typename EdgeVisitor>
+  MOZ_MUST_USE bool traverse(NodeVisitor onNode, EdgeVisitor onEdge) {
 #ifdef DEBUG
-        MOZ_ASSERT(!traversed, "Can only traverse() once!");
-        traversed = true;
+    MOZ_ASSERT(!traversed, "Can only traverse() once!");
+    traversed = true;
 #endif
 
-        while (!stack.empty()) {
-            auto& origin = stack.back().origin;
-            auto& edges = stack.back().edges;
+    while (!stack.empty()) {
+      auto& origin = stack.back().origin;
+      auto& edges = stack.back().edges;
 
-            if (edges.empty()) {
-                if (!onNode(origin)) {
-                    return false;
-                }
-                stack.popBack();
-                continue;
-            }
-
-            Edge edge = std::move(edges.back());
-            edges.popBack();
-
-            if (!onEdge(origin, edge)) {
-                return false;
-            }
-
-            auto ptr = seen.lookupForAdd(edge.referent);
-            // We've already seen this node, don't follow its edges.
-            if (ptr) {
-                continue;
-            }
-
-            // Mark the referent as seen and follow its edges.
-            if (!seen.add(ptr, edge.referent) ||
-                !pushForTraversing(edge.referent))
-            {
-                return false;
-            }
+      if (edges.empty()) {
+        if (!onNode(origin)) {
+          return false;
         }
+        stack.popBack();
+        continue;
+      }
 
-        return true;
+      Edge edge = std::move(edges.back());
+      edges.popBack();
+
+      if (!onEdge(origin, edge)) {
+        return false;
+      }
+
+      auto ptr = seen.lookupForAdd(edge.referent);
+      // We've already seen this node, don't follow its edges.
+      if (ptr) {
+        continue;
+      }
+
+      // Mark the referent as seen and follow its edges.
+      if (!seen.add(ptr, edge.referent) || !pushForTraversing(edge.referent)) {
+        return false;
+      }
     }
+
+    return true;
+  }
 };
 
-} // namespace ubi
-} // namespace JS
+}  // namespace ubi
+}  // namespace JS
 
-#endif // js_UbiNodePostOrder_h
+#endif  // js_UbiNodePostOrder_h

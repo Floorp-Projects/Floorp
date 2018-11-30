@@ -9,31 +9,30 @@
 #include "jsapi-tests/tests.h"
 #include "vm/EnvironmentObject.h"
 
-BEGIN_TEST(testForceLexicalInitialization)
-{
-    // Attach an uninitialized lexical to a scope and ensure that it's
-    // set to undefined
-    js::RootedGlobalObject g(cx, cx->global());
-    JS::Rooted<js::LexicalEnvironmentObject*> env(
-        cx, js::LexicalEnvironmentObject::createGlobal(cx, g));
+BEGIN_TEST(testForceLexicalInitialization) {
+  // Attach an uninitialized lexical to a scope and ensure that it's
+  // set to undefined
+  js::RootedGlobalObject g(cx, cx->global());
+  JS::Rooted<js::LexicalEnvironmentObject*> env(
+      cx, js::LexicalEnvironmentObject::createGlobal(cx, g));
 
-    JS::RootedValue uninitialized(cx, JS::MagicValue(JS_UNINITIALIZED_LEXICAL));
-    js::RootedPropertyName name(cx, Atomize(cx, "foopi", 4)->asPropertyName());
-    JS::RootedId id(cx, NameToId(name));
-    unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+  JS::RootedValue uninitialized(cx, JS::MagicValue(JS_UNINITIALIZED_LEXICAL));
+  js::RootedPropertyName name(cx, Atomize(cx, "foopi", 4)->asPropertyName());
+  JS::RootedId id(cx, NameToId(name));
+  unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
-    CHECK(NativeDefineDataProperty(cx, env, id, uninitialized, attrs));
+  CHECK(NativeDefineDataProperty(cx, env, id, uninitialized, attrs));
 
-    // Verify that "foopi" is uninitialized
-    const JS::Value v = env->getSlot(env->lookup(cx, id)->slot());
-    CHECK(v.isMagic(JS_UNINITIALIZED_LEXICAL));
+  // Verify that "foopi" is uninitialized
+  const JS::Value v = env->getSlot(env->lookup(cx, id)->slot());
+  CHECK(v.isMagic(JS_UNINITIALIZED_LEXICAL));
 
-    ForceLexicalInitialization(cx, env);
+  ForceLexicalInitialization(cx, env);
 
-    // Verify that "foopi" has been initialized to undefined
-    const JS::Value v2 = env->getSlot(env->lookup(cx, id)->slot());
-    CHECK(v2.isUndefined());
+  // Verify that "foopi" has been initialized to undefined
+  const JS::Value v2 = env->getSlot(env->lookup(cx, id)->slot());
+  CHECK(v2.isUndefined());
 
-    return true;
+  return true;
 }
 END_TEST(testForceLexicalInitialization)

@@ -17,23 +17,20 @@ namespace dom {
 
 class PresentationConnection;
 
-class ControllerConnectionCollection final
-{
-public:
+class ControllerConnectionCollection final {
+ public:
   static ControllerConnectionCollection* GetSingleton();
 
-  void AddConnection(PresentationConnection* aConnection,
-                     const uint8_t aRole);
+  void AddConnection(PresentationConnection* aConnection, const uint8_t aRole);
 
   void RemoveConnection(PresentationConnection* aConnection,
                         const uint8_t aRole);
 
-  already_AddRefed<PresentationConnection>
-  FindConnection(uint64_t aWindowId,
-                 const nsAString& aId,
-                 const uint8_t aRole);
+  already_AddRefed<PresentationConnection> FindConnection(uint64_t aWindowId,
+                                                          const nsAString& aId,
+                                                          const uint8_t aRole);
 
-private:
+ private:
   friend class StaticAutoPtr<ControllerConnectionCollection>;
 
   ControllerConnectionCollection();
@@ -43,7 +40,7 @@ private:
   nsTArray<WeakPtr<PresentationConnection>> mConnections;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ControllerConnectionCollection_h
+#endif  // mozilla_dom_ControllerConnectionCollection_h

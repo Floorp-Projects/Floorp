@@ -12,38 +12,33 @@
 namespace mozilla {
 namespace dom {
 
-mozilla::ipc::IPCResult
-WebAuthnTransactionParent::RecvRequestRegister(const uint64_t& aTransactionId,
-                                               const WebAuthnMakeCredentialInfo& aTransactionInfo)
-{
+mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
+    const uint64_t& aTransactionId,
+    const WebAuthnMakeCredentialInfo& aTransactionInfo) {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->Register(this, aTransactionId, aTransactionInfo);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebAuthnTransactionParent::RecvRequestSign(const uint64_t& aTransactionId,
-                                           const WebAuthnGetAssertionInfo& aTransactionInfo)
-{
+mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
+    const uint64_t& aTransactionId,
+    const WebAuthnGetAssertionInfo& aTransactionInfo) {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->Sign(this, aTransactionId, aTransactionInfo);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebAuthnTransactionParent::RecvRequestCancel(const uint64_t& aTransactionId)
-{
+mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestCancel(
+    const uint64_t& aTransactionId) {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->Cancel(this, aTransactionId);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebAuthnTransactionParent::RecvDestroyMe()
-{
+mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvDestroyMe() {
   AssertIsOnBackgroundThread();
 
   // The child was disconnected from the WebAuthnManager instance and will send
@@ -61,9 +56,7 @@ WebAuthnTransactionParent::RecvDestroyMe()
   return IPC_OK();
 }
 
-void
-WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
 
   // Called either by Send__delete__() in RecvDestroyMe() above, or when
@@ -76,5 +69,5 @@ WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-}
-}
+}  // namespace dom
+}  // namespace mozilla

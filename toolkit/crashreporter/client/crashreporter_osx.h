@@ -13,37 +13,36 @@
 // Defined below
 @class TextViewWithPlaceHolder;
 
-@interface CrashReporterUI : NSObject
-{
-    IBOutlet NSWindow* mWindow;
+@interface CrashReporterUI : NSObject {
+  IBOutlet NSWindow* mWindow;
 
-    /* Crash reporter view */
-    IBOutlet NSTextField* mHeaderLabel;
-    IBOutlet NSTextField* mDescriptionLabel;
-    IBOutlet NSButton* mViewReportButton;
-    IBOutlet NSScrollView* mCommentScrollView;
-    IBOutlet TextViewWithPlaceHolder* mCommentText;
-    IBOutlet NSButton* mSubmitReportButton;
-    IBOutlet NSButton* mIncludeURLButton;
-    IBOutlet NSButton* mEmailMeButton;
-    IBOutlet NSTextField* mEmailText;
-    IBOutlet NSButton* mCloseButton;
-    IBOutlet NSButton* mRestartButton;
-    IBOutlet NSProgressIndicator* mProgressIndicator;
-    IBOutlet NSTextField* mProgressText;
+  /* Crash reporter view */
+  IBOutlet NSTextField* mHeaderLabel;
+  IBOutlet NSTextField* mDescriptionLabel;
+  IBOutlet NSButton* mViewReportButton;
+  IBOutlet NSScrollView* mCommentScrollView;
+  IBOutlet TextViewWithPlaceHolder* mCommentText;
+  IBOutlet NSButton* mSubmitReportButton;
+  IBOutlet NSButton* mIncludeURLButton;
+  IBOutlet NSButton* mEmailMeButton;
+  IBOutlet NSTextField* mEmailText;
+  IBOutlet NSButton* mCloseButton;
+  IBOutlet NSButton* mRestartButton;
+  IBOutlet NSProgressIndicator* mProgressIndicator;
+  IBOutlet NSTextField* mProgressText;
 
-    /* Error view */
-    IBOutlet NSView* mErrorView;
-    IBOutlet NSTextField* mErrorHeaderLabel;
-    IBOutlet NSTextField* mErrorLabel;
-    IBOutlet NSButton* mErrorCloseButton;
+  /* Error view */
+  IBOutlet NSView* mErrorView;
+  IBOutlet NSTextField* mErrorHeaderLabel;
+  IBOutlet NSTextField* mErrorLabel;
+  IBOutlet NSButton* mErrorCloseButton;
 
-    /* For "show info" alert */
-    IBOutlet NSWindow* mViewReportWindow;
-    IBOutlet NSTextView* mViewReportTextView;
-    IBOutlet NSButton* mViewReportOkButton;
+  /* For "show info" alert */
+  IBOutlet NSWindow* mViewReportWindow;
+  IBOutlet NSTextView* mViewReportTextView;
+  IBOutlet NSButton* mViewReportOkButton;
 
-    HTTPMultipartUpload* mPost;
+  HTTPMultipartUpload* mPost;
 }
 
 - (void)showCrashUI:(const StringTable&)files
@@ -62,15 +61,17 @@
 - (IBAction)includeURLClicked:(id)sender;
 - (IBAction)emailMeClicked:(id)sender;
 
-- (void)controlTextDidChange:(NSNotification *)note;
-- (void)textDidChange:(NSNotification *)aNotification;
-- (BOOL)textView:(NSTextView *)aTextView shouldChangeTextInRange:(NSRange)affectedCharRange replacementString:(NSString *)replacementString;
+- (void)controlTextDidChange:(NSNotification*)note;
+- (void)textDidChange:(NSNotification*)aNotification;
+- (BOOL)textView:(NSTextView*)aTextView
+    shouldChangeTextInRange:(NSRange)affectedCharRange
+          replacementString:(NSString*)replacementString;
 
 - (void)doInitialResizing;
 - (float)setStringFitVertically:(NSControl*)control
                          string:(NSString*)str
                    resizeWindow:(BOOL)resizeWindow;
-- (void)setView:(NSView*)v animate: (BOOL) animate;
+- (void)setView:(NSView*)v animate:(BOOL)animate;
 - (void)enableControls:(BOOL)enabled;
 - (void)updateSubmit;
 - (void)updateURL;
@@ -80,8 +81,8 @@
 - (void)uploadThread:(HTTPMultipartUpload*)post;
 - (void)uploadComplete:(NSData*)data;
 
--(BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication;
--(void)applicationWillTerminate:(NSNotification *)aNotification;
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication;
+- (void)applicationWillTerminate:(NSNotification*)aNotification;
 
 @end
 
@@ -90,7 +91,7 @@
  * Also provide a setEnabled implementation.
  */
 @interface TextViewWithPlaceHolder : NSTextView {
-  NSMutableAttributedString *mPlaceHolderString;
+  NSMutableAttributedString* mPlaceHolderString;
 }
 
 - (BOOL)becomeFirstResponder;

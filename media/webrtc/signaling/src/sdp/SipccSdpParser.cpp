@@ -12,25 +12,20 @@ extern "C" {
 #include "signaling/src/sdp/sipcc/sdp.h"
 }
 
-namespace mozilla
-{
+namespace mozilla {
 
 extern "C" {
 
-void
-sipcc_sdp_parser_error_handler(void *context, uint32_t line,
-                               const char *message)
-{
+void sipcc_sdp_parser_error_handler(void *context, uint32_t line,
+                                    const char *message) {
   SdpErrorHolder *errorHolder = static_cast<SdpErrorHolder *>(context);
   std::string err(message);
   errorHolder->AddParseError(line, err);
 }
 
-} // extern "C"
+}  // extern "C"
 
-UniquePtr<Sdp>
-SipccSdpParser::Parse(const std::string &sdpText)
-{
+UniquePtr<Sdp> SipccSdpParser::Parse(const std::string &sdpText) {
   ClearParseErrors();
 
   sdp_conf_options_t *sipcc_config = sdp_init_config();
@@ -82,4 +77,4 @@ SipccSdpParser::Parse(const std::string &sdpText)
   return UniquePtr<Sdp>(std::move(sipccSdp));
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -42,21 +42,17 @@ class IndexMetadata;
 class ObjectStoreSpec;
 class OpenCursorParams;
 class RequestParams;
-}
+}  // namespace indexedDB
 
-class IDBTransaction final
-  : public IDBWrapperCache
-  , public nsIRunnable
-{
+class IDBTransaction final : public IDBWrapperCache, public nsIRunnable {
   friend class indexedDB::BackgroundCursorChild;
   friend class indexedDB::BackgroundRequestChild;
 
   class WorkerHolder;
   friend class WorkerHolder;
 
-public:
-  enum Mode
-  {
+ public:
+  enum Mode {
     READ_ONLY = 0,
     READ_WRITE,
     READ_WRITE_FLUSH,
@@ -67,15 +63,9 @@ public:
     MODE_INVALID
   };
 
-  enum ReadyState
-  {
-    INITIAL = 0,
-    LOADING,
-    COMMITTING,
-    DONE
-  };
+  enum ReadyState { INITIAL = 0, LOADING, COMMITTING, DONE };
 
-private:
+ private:
   RefPtr<IDBDatabase> mDatabase;
   RefPtr<DOMException> mError;
   nsTArray<nsString> mObjectStoreNames;
@@ -88,7 +78,8 @@ private:
   // BackgroundTransactionChild.
   union {
     indexedDB::BackgroundTransactionChild* mNormalBackgroundActor;
-    indexedDB::BackgroundVersionChangeTransactionChild* mVersionChangeBackgroundActor;
+    indexedDB::BackgroundVersionChangeTransactionChild*
+        mVersionChangeBackgroundActor;
   } mBackgroundActor;
 
   const int64_t mLoggingSerialNumber;
@@ -117,36 +108,31 @@ private:
   bool mFiredCompleteOrAbort;
 #endif
 
-public:
-  static already_AddRefed<IDBTransaction>
-  CreateVersionChange(IDBDatabase* aDatabase,
-                      indexedDB::BackgroundVersionChangeTransactionChild* aActor,
-                      IDBOpenDBRequest* aOpenRequest,
-                      int64_t aNextObjectStoreId,
-                      int64_t aNextIndexId);
+ public:
+  static already_AddRefed<IDBTransaction> CreateVersionChange(
+      IDBDatabase* aDatabase,
+      indexedDB::BackgroundVersionChangeTransactionChild* aActor,
+      IDBOpenDBRequest* aOpenRequest, int64_t aNextObjectStoreId,
+      int64_t aNextIndexId);
 
-  static already_AddRefed<IDBTransaction>
-  Create(JSContext* aCx, IDBDatabase* aDatabase,
-         const nsTArray<nsString>& aObjectStoreNames,
-         Mode aMode);
+  static already_AddRefed<IDBTransaction> Create(
+      JSContext* aCx, IDBDatabase* aDatabase,
+      const nsTArray<nsString>& aObjectStoreNames, Mode aMode);
 
-  static IDBTransaction*
-  GetCurrent();
+  static IDBTransaction* GetCurrent();
 
-  void
-  AssertIsOnOwningThread() const
+  void AssertIsOnOwningThread() const
 #ifdef DEBUG
-  ;
+      ;
 #else
-  { }
+  {
+  }
 #endif
 
-  void
-  SetBackgroundActor(indexedDB::BackgroundTransactionChild* aBackgroundActor);
+  void SetBackgroundActor(
+      indexedDB::BackgroundTransactionChild* aBackgroundActor);
 
-  void
-  ClearBackgroundActor()
-  {
+  void ClearBackgroundActor() {
     AssertIsOnOwningThread();
 
     if (mMode == VERSION_CHANGE) {
@@ -160,196 +146,148 @@ public:
     MaybeNoteInactiveTransaction();
   }
 
-  indexedDB::BackgroundRequestChild*
-  StartRequest(IDBRequest* aRequest, const indexedDB::RequestParams& aParams);
+  indexedDB::BackgroundRequestChild* StartRequest(
+      IDBRequest* aRequest, const indexedDB::RequestParams& aParams);
 
-  void
-  OpenCursor(indexedDB::BackgroundCursorChild* aBackgroundActor,
-             const indexedDB::OpenCursorParams& aParams);
+  void OpenCursor(indexedDB::BackgroundCursorChild* aBackgroundActor,
+                  const indexedDB::OpenCursorParams& aParams);
 
-  void
-  RefreshSpec(bool aMayDelete);
+  void RefreshSpec(bool aMayDelete);
 
-  bool
-  IsOpen() const;
+  bool IsOpen() const;
 
-  bool
-  IsCommittingOrDone() const
-  {
+  bool IsCommittingOrDone() const {
     AssertIsOnOwningThread();
 
     return mReadyState == COMMITTING || mReadyState == DONE;
   }
 
-  bool
-  IsDone() const
-  {
+  bool IsDone() const {
     AssertIsOnOwningThread();
 
     return mReadyState == DONE;
   }
 
-  bool
-  IsWriteAllowed() const
-  {
+  bool IsWriteAllowed() const {
     AssertIsOnOwningThread();
-    return mMode == READ_WRITE ||
-           mMode == READ_WRITE_FLUSH ||
-           mMode == CLEANUP ||
-           mMode == VERSION_CHANGE;
+    return mMode == READ_WRITE || mMode == READ_WRITE_FLUSH ||
+           mMode == CLEANUP || mMode == VERSION_CHANGE;
   }
 
-  bool
-  IsAborted() const
-  {
+  bool IsAborted() const {
     AssertIsOnOwningThread();
     return NS_FAILED(mAbortCode);
   }
 
-  nsresult
-  AbortCode() const
-  {
+  nsresult AbortCode() const {
     AssertIsOnOwningThread();
     return mAbortCode;
   }
 
-  void
-  GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo,
-                    uint32_t* aColumn) const;
+  void GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo,
+                         uint32_t* aColumn) const;
 
   // 'Get' prefix is to avoid name collisions with the enum
-  Mode
-  GetMode() const
-  {
+  Mode GetMode() const {
     AssertIsOnOwningThread();
     return mMode;
   }
 
-  IDBDatabase*
-  Database() const
-  {
+  IDBDatabase* Database() const {
     AssertIsOnOwningThread();
     return mDatabase;
   }
 
-  IDBDatabase*
-  Db() const
-  {
-    return Database();
-  }
+  IDBDatabase* Db() const { return Database(); }
 
-  const nsTArray<nsString>&
-  ObjectStoreNamesInternal() const
-  {
+  const nsTArray<nsString>& ObjectStoreNamesInternal() const {
     AssertIsOnOwningThread();
     return mObjectStoreNames;
   }
 
-  already_AddRefed<IDBObjectStore>
-  CreateObjectStore(const indexedDB::ObjectStoreSpec& aSpec);
+  already_AddRefed<IDBObjectStore> CreateObjectStore(
+      const indexedDB::ObjectStoreSpec& aSpec);
 
-  void
-  DeleteObjectStore(int64_t aObjectStoreId);
+  void DeleteObjectStore(int64_t aObjectStoreId);
 
-  void
-  RenameObjectStore(int64_t aObjectStoreId, const nsAString& aName);
+  void RenameObjectStore(int64_t aObjectStoreId, const nsAString& aName);
 
-  void
-  CreateIndex(IDBObjectStore* aObjectStore, const indexedDB::IndexMetadata& aMetadata);
+  void CreateIndex(IDBObjectStore* aObjectStore,
+                   const indexedDB::IndexMetadata& aMetadata);
 
-  void
-  DeleteIndex(IDBObjectStore* aObjectStore, int64_t aIndexId);
+  void DeleteIndex(IDBObjectStore* aObjectStore, int64_t aIndexId);
 
-  void
-  RenameIndex(IDBObjectStore* aObjectStore, int64_t aIndexId, const nsAString& aName);
+  void RenameIndex(IDBObjectStore* aObjectStore, int64_t aIndexId,
+                   const nsAString& aName);
 
-  void
-  Abort(IDBRequest* aRequest);
+  void Abort(IDBRequest* aRequest);
 
-  void
-  Abort(nsresult aAbortCode);
+  void Abort(nsresult aAbortCode);
 
-  int64_t
-  LoggingSerialNumber() const
-  {
+  int64_t LoggingSerialNumber() const {
     AssertIsOnOwningThread();
 
     return mLoggingSerialNumber;
   }
 
-  nsPIDOMWindowInner*
-  GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
-  IDBTransactionMode
-  GetMode(ErrorResult& aRv) const;
+  IDBTransactionMode GetMode(ErrorResult& aRv) const;
 
-  DOMException*
-  GetError() const;
+  DOMException* GetError() const;
 
-  already_AddRefed<IDBObjectStore>
-  ObjectStore(const nsAString& aName, ErrorResult& aRv);
+  already_AddRefed<IDBObjectStore> ObjectStore(const nsAString& aName,
+                                               ErrorResult& aRv);
 
-  void
-  Abort(ErrorResult& aRv);
+  void Abort(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(abort)
   IMPL_EVENT_HANDLER(complete)
   IMPL_EVENT_HANDLER(error)
 
-  already_AddRefed<DOMStringList>
-  ObjectStoreNames() const;
+  already_AddRefed<DOMStringList> ObjectStoreNames() const;
 
-  void
-  FireCompleteOrAbortEvents(nsresult aResult);
+  void FireCompleteOrAbortEvents(nsresult aResult);
 
   // Only for VERSION_CHANGE transactions.
-  int64_t
-  NextObjectStoreId();
+  int64_t NextObjectStoreId();
 
   // Only for VERSION_CHANGE transactions.
-  int64_t
-  NextIndexId();
+  int64_t NextIndexId();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, IDBWrapperCache)
 
   // nsWrapperCache
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
-private:
+ private:
   IDBTransaction(IDBDatabase* aDatabase,
-                 const nsTArray<nsString>& aObjectStoreNames,
-                 Mode aMode);
+                 const nsTArray<nsString>& aObjectStoreNames, Mode aMode);
   ~IDBTransaction();
 
-  void
-  AbortInternal(nsresult aAbortCode, already_AddRefed<DOMException> aError);
+  void AbortInternal(nsresult aAbortCode,
+                     already_AddRefed<DOMException> aError);
 
-  void
-  SendCommit();
+  void SendCommit();
 
-  void
-  SendAbort(nsresult aResultCode);
+  void SendAbort(nsresult aResultCode);
 
-  void
-  NoteActiveTransaction();
+  void NoteActiveTransaction();
 
-  void
-  MaybeNoteInactiveTransaction();
+  void MaybeNoteInactiveTransaction();
 
-  void
-  OnNewRequest();
+  void OnNewRequest();
 
-  void
-  OnRequestFinished(bool aActorDestroyedNormally);
+  void OnRequestFinished(bool aActorDestroyedNormally);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_idbtransaction_h__
+#endif  // mozilla_dom_idbtransaction_h__

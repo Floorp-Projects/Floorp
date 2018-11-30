@@ -16,22 +16,16 @@ class nsDocShell;
 class nsIURI;
 class nsIPrincipal;
 
-class nsRefreshTimer : public nsITimerCallback
-                     , public nsINamed
-{
-public:
-  nsRefreshTimer(nsDocShell* aDocShell,
-                 nsIURI* aURI,
-                 nsIPrincipal* aPrincipal,
-                 int32_t aDelay,
-                 bool aRepeat,
-                 bool aMetaRefresh);
+class nsRefreshTimer : public nsITimerCallback, public nsINamed {
+ public:
+  nsRefreshTimer(nsDocShell* aDocShell, nsIURI* aURI, nsIPrincipal* aPrincipal,
+                 int32_t aDelay, bool aRepeat, bool aMetaRefresh);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
-  int32_t GetDelay() { return mDelay ;}
+  int32_t GetDelay() { return mDelay; }
 
   RefPtr<nsDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURI;
@@ -40,7 +34,7 @@ public:
   bool mRepeat;
   bool mMetaRefresh;
 
-private:
+ private:
   virtual ~nsRefreshTimer();
 };
 

@@ -15,35 +15,30 @@ class nsIFile;
 namespace mozilla {
 namespace dom {
 
-class TemporaryIPCBlobParent final : public mozilla::ipc::PTemporaryIPCBlobParent
-{
-public:
+class TemporaryIPCBlobParent final
+    : public mozilla::ipc::PTemporaryIPCBlobParent {
+ public:
   explicit TemporaryIPCBlobParent();
 
-  mozilla::ipc::IPCResult
-  CreateAndShareFile();
+  mozilla::ipc::IPCResult CreateAndShareFile();
 
-private:
+ private:
   ~TemporaryIPCBlobParent();
 
-  mozilla::ipc::IPCResult
-  RecvOperationFailed() override;
+  mozilla::ipc::IPCResult RecvOperationFailed() override;
 
-  mozilla::ipc::IPCResult
-  RecvOperationDone(const nsCString& aContentType,
-                    const FileDescriptor& aFD) override;
+  mozilla::ipc::IPCResult RecvOperationDone(const nsCString& aContentType,
+                                            const FileDescriptor& aFD) override;
 
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult
-  SendDeleteError(nsresult aRv);
+  mozilla::ipc::IPCResult SendDeleteError(nsresult aRv);
 
   nsCOMPtr<nsIFile> mFile;
   bool mActive;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ipc_TemporaryIPCBlobParent_h
+#endif  // mozilla_dom_ipc_TemporaryIPCBlobParent_h

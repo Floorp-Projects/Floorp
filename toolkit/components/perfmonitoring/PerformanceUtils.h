@@ -14,15 +14,14 @@ namespace mozilla {
  * Returns an array of promises to asynchronously collect all performance
  * info in the current process.
  */
-nsTArray<RefPtr<PerformanceInfoPromise>>
-CollectPerformanceInfo();
+nsTArray<RefPtr<PerformanceInfoPromise>> CollectPerformanceInfo();
 
 /**
  * Asynchronously collects memory info for a given window
  */
-RefPtr<MemoryPromise>
-CollectMemoryInfo(const nsCOMPtr<nsPIDOMWindowOuter>& aWindow,
-                  const RefPtr<AbstractThread>& aEventTarget);
+RefPtr<MemoryPromise> CollectMemoryInfo(
+    const nsCOMPtr<nsPIDOMWindowOuter>& aWindow,
+    const RefPtr<AbstractThread>& aEventTarget);
 
-} // namespace mozilla
-#endif // PerformanceUtils_h
+}  // namespace mozilla
+#endif  // PerformanceUtils_h

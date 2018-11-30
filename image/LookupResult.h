@@ -19,8 +19,7 @@
 namespace mozilla {
 namespace image {
 
-enum class MatchType : uint8_t
-{
+enum class MatchType : uint8_t {
   NOT_FOUND,  // No matching surface and no placeholder.
   PENDING,    // Found a matching placeholder, but no surface.
   EXACT,      // Found a surface that matches exactly.
@@ -40,51 +39,43 @@ enum class MatchType : uint8_t
  * LookupResult is the return type of SurfaceCache's Lookup*() functions. It
  * combines a surface with relevant metadata tracked by SurfaceCache.
  */
-class MOZ_STACK_CLASS LookupResult
-{
-public:
-  explicit LookupResult(MatchType aMatchType)
-    : mMatchType(aMatchType)
-  {
-    MOZ_ASSERT(mMatchType == MatchType::NOT_FOUND ||
-               mMatchType == MatchType::PENDING,
-               "Only NOT_FOUND or PENDING make sense with no surface");
+class MOZ_STACK_CLASS LookupResult {
+ public:
+  explicit LookupResult(MatchType aMatchType) : mMatchType(aMatchType) {
+    MOZ_ASSERT(
+        mMatchType == MatchType::NOT_FOUND || mMatchType == MatchType::PENDING,
+        "Only NOT_FOUND or PENDING make sense with no surface");
   }
 
   LookupResult(LookupResult&& aOther)
-    : mSurface(std::move(aOther.mSurface))
-    , mMatchType(aOther.mMatchType)
-    , mSuggestedSize(aOther.mSuggestedSize)
-  { }
+      : mSurface(std::move(aOther.mSurface)),
+        mMatchType(aOther.mMatchType),
+        mSuggestedSize(aOther.mSuggestedSize) {}
 
   LookupResult(DrawableSurface&& aSurface, MatchType aMatchType)
-    : mSurface(std::move(aSurface))
-    , mMatchType(aMatchType)
-  {
+      : mSurface(std::move(aSurface)), mMatchType(aMatchType) {
     MOZ_ASSERT(!mSurface || !(mMatchType == MatchType::NOT_FOUND ||
                               mMatchType == MatchType::PENDING),
                "Only NOT_FOUND or PENDING make sense with no surface");
     MOZ_ASSERT(mSurface || mMatchType == MatchType::NOT_FOUND ||
-                           mMatchType == MatchType::PENDING,
+                   mMatchType == MatchType::PENDING,
                "NOT_FOUND or PENDING do not make sense with a surface");
   }
 
   LookupResult(DrawableSurface&& aSurface, MatchType aMatchType,
                const gfx::IntSize& aSuggestedSize)
-    : mSurface(std::move(aSurface))
-    , mMatchType(aMatchType)
-    , mSuggestedSize(aSuggestedSize)
-  {
+      : mSurface(std::move(aSurface)),
+        mMatchType(aMatchType),
+        mSuggestedSize(aSuggestedSize) {
     MOZ_ASSERT(!mSurface || !(mMatchType == MatchType::NOT_FOUND ||
                               mMatchType == MatchType::PENDING),
                "Only NOT_FOUND or PENDING make sense with no surface");
     MOZ_ASSERT(mSurface || mMatchType == MatchType::NOT_FOUND ||
-                           mMatchType == MatchType::PENDING,
+                   mMatchType == MatchType::PENDING,
                "NOT_FOUND or PENDING do not make sense with a surface");
   }
 
-  LookupResult& operator=(LookupResult&& aOther)
-  {
+  LookupResult& operator=(LookupResult&& aOther) {
     MOZ_ASSERT(&aOther != this, "Self-move-assignment is not supported");
     mSurface = std::move(aOther.mSurface);
     mMatchType = aOther.mMatchType;
@@ -102,7 +93,7 @@ public:
   /// @return what kind of match this is (exact, substitute, etc.)
   MatchType Type() const { return mMatchType; }
 
-private:
+ private:
   LookupResult(const LookupResult&) = delete;
   LookupResult& operator=(const LookupResult& aOther) = delete;
 
@@ -117,7 +108,7 @@ private:
   gfx::IntSize mSuggestedSize;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_LookupResult_h
+#endif  // mozilla_image_LookupResult_h

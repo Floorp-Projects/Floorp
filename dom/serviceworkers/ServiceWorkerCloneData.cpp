@@ -11,8 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-ServiceWorkerCloneData::~ServiceWorkerCloneData()
-{
+ServiceWorkerCloneData::~ServiceWorkerCloneData() {
   RefPtr<ipc::SharedJSAllocatedData> sharedData = TakeSharedData();
   if (sharedData) {
     NS_ProxyRelease(__func__, mEventTarget, sharedData.forget());
@@ -20,10 +19,9 @@ ServiceWorkerCloneData::~ServiceWorkerCloneData()
 }
 
 ServiceWorkerCloneData::ServiceWorkerCloneData()
-  : mEventTarget(GetCurrentThreadSerialEventTarget())
-{
+    : mEventTarget(GetCurrentThreadSerialEventTarget()) {
   MOZ_DIAGNOSTIC_ASSERT(mEventTarget);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

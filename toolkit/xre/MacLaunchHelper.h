@@ -11,13 +11,13 @@
 #include <unistd.h>
 
 extern "C" {
-  /**
-   * Passing an aPid parameter to LaunchChildMac will wait for the launched
-   * process to terminate. When the process terminates, aPid will be set to the
-   * pid of the terminated process to confirm that it executed successfully.
-   */
-  void LaunchChildMac(int aArgc, char** aArgv, pid_t* aPid = 0);
-  bool LaunchElevatedUpdate(int aArgc, char** aArgv, pid_t* aPid = 0);
+/**
+ * Passing an aPid parameter to LaunchChildMac will wait for the launched
+ * process to terminate. When the process terminates, aPid will be set to the
+ * pid of the terminated process to confirm that it executed successfully.
+ */
+void LaunchChildMac(int aArgc, char** aArgv, pid_t* aPid = 0);
+bool LaunchElevatedUpdate(int aArgc, char** aArgv, pid_t* aPid = 0);
 }
 
 #endif

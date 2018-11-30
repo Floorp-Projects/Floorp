@@ -6,14 +6,13 @@
 
 #include "CTDiversityPolicy.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 typedef mozilla::pkix::Result Result;
 
-void
-GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
-                                     CTLogOperatorList& operators)
-{
+void GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
+                                          CTLogOperatorList& operators) {
   operators.clear();
   for (const VerifiedSCT& verifiedSct : list) {
     CTLogOperatorId sctLogOperatorId = verifiedSct.logOperatorId;
@@ -30,12 +29,11 @@ GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
   }
 }
 
-Result
-CTDiversityPolicy::GetDependentOperators(const CERTCertList* builtChain,
-                                         const CTLogOperatorList& operators,
-                                         CTLogOperatorList& dependentOperators)
-{
+Result CTDiversityPolicy::GetDependentOperators(
+    const CERTCertList* builtChain, const CTLogOperatorList& operators,
+    CTLogOperatorList& dependentOperators) {
   return Success;
 }
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla

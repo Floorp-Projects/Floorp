@@ -31,33 +31,27 @@ class SourceSurfaceSharedData;
  * If it is in a different process, mBuf is a new SharedMemoryBasic object which
  * mapped in the given shared memory handle as read only memory.
  */
-class SourceSurfaceSharedDataWrapper final : public DataSourceSurface
-{
+class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
   typedef mozilla::ipc::SharedMemoryBasic SharedMemoryBasic;
 
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceSharedDataWrapper, override)
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceSharedDataWrapper,
+                                          override)
 
   SourceSurfaceSharedDataWrapper()
-    : mStride(0)
-    , mConsumers(0)
-    , mFormat(SurfaceFormat::UNKNOWN)
-    , mCreatorPid(0)
-    , mCreatorRef(true)
-  { }
+      : mStride(0),
+        mConsumers(0),
+        mFormat(SurfaceFormat::UNKNOWN),
+        mCreatorPid(0),
+        mCreatorRef(true) {}
 
-  bool Init(const IntSize& aSize,
-            int32_t aStride,
-            SurfaceFormat aFormat,
+  bool Init(const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
             const SharedMemoryBasic::Handle& aHandle,
             base::ProcessId aCreatorPid);
 
-  void Init(SourceSurfaceSharedData *aSurface);
+  void Init(SourceSurfaceSharedData* aSurface);
 
-  base::ProcessId GetCreatorPid() const
-  {
-    return mCreatorPid;
-  }
+  base::ProcessId GetCreatorPid() const { return mCreatorPid; }
 
   int32_t Stride() override { return mStride; }
 
@@ -65,23 +59,13 @@ public:
   IntSize GetSize() const override { return mSize; }
   SurfaceFormat GetFormat() const override { return mFormat; }
 
-  uint8_t* GetData() override
-  {
-    return static_cast<uint8_t*>(mBuf->memory());
-  }
+  uint8_t* GetData() override { return static_cast<uint8_t*>(mBuf->memory()); }
 
-  bool OnHeap() const override
-  {
-    return false;
-  }
+  bool OnHeap() const override { return false; }
 
-  bool AddConsumer()
-  {
-    return ++mConsumers == 1;
-  }
+  bool AddConsumer() { return ++mConsumers == 1; }
 
-  bool RemoveConsumer(bool aForCreator)
-  {
+  bool RemoveConsumer(bool aForCreator) {
     MOZ_ASSERT(mConsumers > 0);
     if (aForCreator) {
       if (!mCreatorRef) {
@@ -93,25 +77,19 @@ public:
     return --mConsumers == 0;
   }
 
-  uint32_t GetConsumers() const
-  {
+  uint32_t GetConsumers() const {
     MOZ_ASSERT(mConsumers > 0);
     return mConsumers;
   }
 
-  bool HasCreatorRef() const
-  {
-    return mCreatorRef;
-  }
+  bool HasCreatorRef() const { return mCreatorRef; }
 
-private:
-  size_t GetDataLength() const
-  {
+ private:
+  size_t GetDataLength() const {
     return static_cast<size_t>(mStride) * mSize.height;
   }
 
-  size_t GetAlignedDataLength() const
-  {
+  size_t GetAlignedDataLength() const {
     return mozilla::ipc::SharedMemory::PageAlignedSize(GetDataLength());
   }
 
@@ -128,23 +106,20 @@ private:
  * This class is used to wrap shared (as in process) data buffers used by a
  * source surface.
  */
-class SourceSurfaceSharedData final : public DataSourceSurface
-{
+class SourceSurfaceSharedData final : public DataSourceSurface {
   typedef mozilla::ipc::SharedMemoryBasic SharedMemoryBasic;
 
-public:
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceSharedData, override)
 
   SourceSurfaceSharedData()
-    : mMutex("SourceSurfaceSharedData")
-    , mStride(0)
-    , mHandleCount(0)
-    , mFormat(SurfaceFormat::UNKNOWN)
-    , mClosed(false)
-    , mFinalized(false)
-    , mShared(false)
-  {
-  }
+      : mMutex("SourceSurfaceSharedData"),
+        mStride(0),
+        mHandleCount(0),
+        mFormat(SurfaceFormat::UNKNOWN),
+        mClosed(false),
+        mFinalized(false),
+        mShared(false) {}
 
   /**
    * Initialize the surface by creating a shared memory buffer with a size
@@ -152,13 +127,10 @@ public:
    * immediately attempt to share the surface with the GPU process via
    * SharedSurfacesChild.
    */
-  bool Init(const IntSize& aSize,
-            int32_t aStride,
-            SurfaceFormat aFormat,
+  bool Init(const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
             bool aShare = true);
 
-  uint8_t* GetData() override
-  {
+  uint8_t* GetData() override {
     MutexAutoLock lock(mMutex);
     return GetDataInternal();
   }
@@ -171,16 +143,11 @@ public:
 
   void GuaranteePersistance() override;
 
-  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                              size_t& aHeapSizeOut,
-                              size_t& aNonHeapSizeOut,
-                              size_t& aExtHandlesOut,
+  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
+                              size_t& aNonHeapSizeOut, size_t& aExtHandlesOut,
                               uint64_t& aExtIdOut) const override;
 
-  bool OnHeap() const override
-  {
-    return false;
-  }
+  bool OnHeap() const override { return false; }
 
   /**
    * Although Map (and Moz2D in general) isn't normally threadsafe,
@@ -195,8 +162,7 @@ public:
    * the same data pointer by retaining the old shared buffer until
    * the last mapping is freed via Unmap.
    */
-  bool Map(MapType, MappedSurface *aMappedSurface) override
-  {
+  bool Map(MapType, MappedSurface* aMappedSurface) override {
     MutexAutoLock lock(mMutex);
     ++mMapCount;
     aMappedSurface->mData = GetDataInternal();
@@ -204,8 +170,7 @@ public:
     return true;
   }
 
-  void Unmap() override
-  {
+  void Unmap() override {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mMapCount > 0);
     if (--mMapCount == 0) {
@@ -226,8 +191,7 @@ public:
    * Indicates the buffer is not expected to be shared with any more processes.
    * May release the handle if possible (see CloseHandleInternal).
    */
-  void FinishedSharing()
-  {
+  void FinishedSharing() {
     MutexAutoLock lock(mMutex);
     mShared = true;
     CloseHandleInternal();
@@ -238,8 +202,7 @@ public:
    * without reallocating. Note that this is racy and should only be used for
    * informational/reporting purposes.
    */
-  bool CanShare() const
-  {
+  bool CanShare() const {
     MutexAutoLock lock(mMutex);
     return !mClosed;
   }
@@ -262,8 +225,7 @@ public:
    * Indicates whether or not the buffer can change. If this returns true, it is
    * guaranteed to continue to do so for the remainder of the surface's life.
    */
-  bool IsFinalized() const
-  {
+  bool IsFinalized() const {
     MutexAutoLock lock(mMutex);
     return mFinalized;
   }
@@ -271,8 +233,7 @@ public:
   /**
    * Yields a dirty rect of what has changed since it was last called.
    */
-  Maybe<IntRect> TakeDirtyRect() override
-  {
+  Maybe<IntRect> TakeDirtyRect() override {
     MutexAutoLock lock(mMutex);
     if (mDirtyRect) {
       Maybe<IntRect> ret = std::move(mDirtyRect);
@@ -284,8 +245,7 @@ public:
   /**
    * Increment the invalidation counter.
    */
-  void Invalidate(const IntRect& aDirtyRect) override
-  {
+  void Invalidate(const IntRect& aDirtyRect) override {
     MutexAutoLock lock(mMutex);
     if (!aDirtyRect.IsEmpty()) {
       if (mDirtyRect) {
@@ -304,37 +264,29 @@ public:
    * cannot be released.
    */
   class MOZ_STACK_CLASS HandleLock final {
-  public:
+   public:
     explicit HandleLock(SourceSurfaceSharedData* aSurface)
-      : mSurface(aSurface)
-    {
+        : mSurface(aSurface) {
       mSurface->LockHandle();
     }
 
-    ~HandleLock()
-    {
-      mSurface->UnlockHandle();
-    }
+    ~HandleLock() { mSurface->UnlockHandle(); }
 
-  private:
+   private:
     RefPtr<SourceSurfaceSharedData> mSurface;
   };
 
-private:
+ private:
   friend class SourceSurfaceSharedDataWrapper;
 
-  ~SourceSurfaceSharedData() override
-  {
-  }
+  ~SourceSurfaceSharedData() override {}
 
-  void LockHandle()
-  {
+  void LockHandle() {
     MutexAutoLock lock(mMutex);
     ++mHandleCount;
   }
 
-  void UnlockHandle()
-  {
+  void UnlockHandle() {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mHandleCount > 0);
     --mHandleCount;
@@ -344,13 +296,11 @@ private:
 
   uint8_t* GetDataInternal() const;
 
-  size_t GetDataLength() const
-  {
+  size_t GetDataLength() const {
     return static_cast<size_t>(mStride) * mSize.height;
   }
 
-  size_t GetAlignedDataLength() const
-  {
+  size_t GetAlignedDataLength() const {
     return mozilla::ipc::SharedMemory::PageAlignedSize(GetDataLength());
   }
 
@@ -373,7 +323,7 @@ private:
   bool mShared : 1;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_SOURCESURFACESHAREDDATA_H_ */

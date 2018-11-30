@@ -13,38 +13,34 @@ namespace mozilla {
 namespace layers {
 class D3D11ShareHandleImage;
 class TextureClient;
-} // namespace layers
+}  // namespace layers
 
 namespace plugins {
 
-class D3D11SurfaceHolder
-{
-public:
-  D3D11SurfaceHolder(ID3D11Texture2D* back, gfx::SurfaceFormat format, const gfx::IntSize& size);
+class D3D11SurfaceHolder {
+ public:
+  D3D11SurfaceHolder(ID3D11Texture2D* back, gfx::SurfaceFormat format,
+                     const gfx::IntSize& size);
 
   NS_INLINE_DECL_REFCOUNTING(D3D11SurfaceHolder);
 
   bool IsValid();
   bool CopyToTextureClient(layers::TextureClient* aClient);
 
-  gfx::SurfaceFormat GetFormat() const {
-    return mFormat;
-  }
-  const gfx::IntSize& GetSize() const {
-    return mSize;
-  }
+  gfx::SurfaceFormat GetFormat() const { return mFormat; }
+  const gfx::IntSize& GetSize() const { return mSize; }
 
-private:
+ private:
   ~D3D11SurfaceHolder();
 
-private:
+ private:
   RefPtr<ID3D11Device> mDevice11;
   RefPtr<ID3D11Texture2D> mBack;
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif // _include_dom_plugins_ipc_D3D11nSurfaceHolder_h__
+#endif  // _include_dom_plugins_ipc_D3D11nSurfaceHolder_h__

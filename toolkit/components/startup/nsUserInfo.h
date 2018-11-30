@@ -7,16 +7,16 @@
 
 #include "nsIUserInfo.h"
 
-class nsUserInfo: public nsIUserInfo
+class nsUserInfo : public nsIUserInfo
 
 {
-public:
+ public:
   nsUserInfo(void);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUSERINFO
 
-protected:
+ protected:
   virtual ~nsUserInfo();
 };
 

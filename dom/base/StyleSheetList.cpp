@@ -23,30 +23,25 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StyleSheetList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(StyleSheetList)
 
-/* virtual */ JSObject*
-StyleSheetList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* StyleSheetList::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return StyleSheetList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-StyleSheetList::NodeWillBeDestroyed(const nsINode* aNode)
-{
+void StyleSheetList::NodeWillBeDestroyed(const nsINode* aNode) {
   mDocumentOrShadowRoot = nullptr;
 }
 
 StyleSheetList::StyleSheetList(DocumentOrShadowRoot& aScope)
-  : mDocumentOrShadowRoot(&aScope)
-{
+    : mDocumentOrShadowRoot(&aScope) {
   mDocumentOrShadowRoot->AsNode().AddMutationObserver(this);
 }
 
-StyleSheetList::~StyleSheetList()
-{
+StyleSheetList::~StyleSheetList() {
   if (mDocumentOrShadowRoot) {
     mDocumentOrShadowRoot->AsNode().RemoveMutationObserver(this);
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

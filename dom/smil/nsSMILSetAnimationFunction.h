@@ -16,9 +16,8 @@
 // Subclass of nsSMILAnimationFunction that limits the behaviour to that offered
 // by a <set> element.
 //
-class nsSMILSetAnimationFunction : public nsSMILAnimationFunction
-{
-public:
+class nsSMILSetAnimationFunction : public nsSMILAnimationFunction {
+ public:
   /*
    * Sets animation-specific attributes (or marks them dirty, in the case
    * of from/to/by/values).
@@ -33,7 +32,8 @@ public:
    *          attribute; false otherwise.
    */
   virtual bool SetAttr(nsAtom* aAttribute, const nsAString& aValue,
-                         nsAttrValue& aResult, nsresult* aParseResult = nullptr) override;
+                       nsAttrValue& aResult,
+                       nsresult* aParseResult = nullptr) override;
 
   /*
    * Unsets the given attribute.
@@ -43,26 +43,21 @@ public:
    */
   virtual bool UnsetAttr(nsAtom* aAttribute) override;
 
-protected:
+ protected:
   // Although <set> animation might look like to-animation, unlike to-animation,
   // it never interpolates values.
   // Returning false here will mean this animation function gets treated as
   // a single-valued function and no interpolation will be attempted.
-  virtual bool IsToAnimation() const override {
-    return false;
-  }
+  virtual bool IsToAnimation() const override { return false; }
 
   // <set> applies the exact same value across the simple duration.
-  virtual bool IsValueFixedForSimpleDuration() const override {
-    return true;
-  }
-  virtual bool               HasAttr(nsAtom* aAttName) const override;
+  virtual bool IsValueFixedForSimpleDuration() const override { return true; }
+  virtual bool HasAttr(nsAtom* aAttName) const override;
   virtual const nsAttrValue* GetAttr(nsAtom* aAttName) const override;
-  virtual bool               GetAttr(nsAtom* aAttName,
-                                     nsAString& aResult) const override;
+  virtual bool GetAttr(nsAtom* aAttName, nsAString& aResult) const override;
   virtual bool WillReplace() const override;
 
   bool IsDisallowedAttribute(const nsAtom* aAttribute) const;
 };
 
-#endif // NS_SMILSETANIMATIONFUNCTION_H_
+#endif  // NS_SMILSETANIMATIONFUNCTION_H_

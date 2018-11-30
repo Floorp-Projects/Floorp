@@ -8,7 +8,7 @@
 #define MOZILLA_GFX_COORD_H_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/TypeTraits.h" // For IsSame
+#include "mozilla/TypeTraits.h"  // For IsSame
 #include "Types.h"
 #include "BaseCoord.h"
 
@@ -16,12 +16,15 @@
 
 namespace mozilla {
 
-template <typename> struct IsPixel;
+template <typename>
+struct IsPixel;
 
 namespace gfx {
 
-template <class units> struct IntCoordTyped;
-template <class units, class F = Float> struct CoordTyped;
+template <class units>
+struct IntCoordTyped;
+template <class units, class F = Float>
+struct CoordTyped;
 
 // CommonType<coord, primitive> is a metafunction that returns the type of the
 // result of an arithmetic operation on the underlying type of a strongly-typed
@@ -36,12 +39,12 @@ struct CommonType;
 
 template <class units, class primitive>
 struct CommonType<IntCoordTyped<units>, primitive> {
-    typedef decltype(int32_t() + primitive()) type;
+  typedef decltype(int32_t() + primitive()) type;
 };
 
 template <class units, class F, class primitive>
 struct CommonType<CoordTyped<units, F>, primitive> {
-    typedef decltype(F() + primitive()) type;
+  typedef decltype(F() + primitive()) type;
 };
 
 // This is a base class that provides mixed-type operator overloads between
@@ -59,33 +62,17 @@ struct CoordOperatorsHelper {
 
 template <class coord, class primitive>
 struct CoordOperatorsHelper<true, coord, primitive> {
-  friend bool operator==(coord aA, primitive aB) {
-    return aA.value == aB;
-  }
-  friend bool operator==(primitive aA, coord aB) {
-    return aA == aB.value;
-  }
-  friend bool operator!=(coord aA, primitive aB) {
-    return aA.value != aB;
-  }
-  friend bool operator!=(primitive aA, coord aB) {
-    return aA != aB.value;
-  }
+  friend bool operator==(coord aA, primitive aB) { return aA.value == aB; }
+  friend bool operator==(primitive aA, coord aB) { return aA == aB.value; }
+  friend bool operator!=(coord aA, primitive aB) { return aA.value != aB; }
+  friend bool operator!=(primitive aA, coord aB) { return aA != aB.value; }
 
   typedef typename CommonType<coord, primitive>::type result_type;
 
-  friend result_type operator+(coord aA, primitive aB) {
-    return aA.value + aB;
-  }
-  friend result_type operator+(primitive aA, coord aB) {
-    return aA + aB.value;
-  }
-  friend result_type operator-(coord aA, primitive aB) {
-    return aA.value - aB;
-  }
-  friend result_type operator-(primitive aA, coord aB) {
-    return aA - aB.value;
-  }
+  friend result_type operator+(coord aA, primitive aB) { return aA.value + aB; }
+  friend result_type operator+(primitive aA, coord aB) { return aA + aB.value; }
+  friend result_type operator-(coord aA, primitive aB) { return aA.value - aB; }
+  friend result_type operator-(primitive aA, coord aB) { return aA - aB.value; }
   friend result_type operator*(coord aCoord, primitive aScale) {
     return aCoord.value * aScale;
   }
@@ -101,42 +88,42 @@ struct CoordOperatorsHelper<true, coord, primitive> {
 // Note: 'IntCoordTyped<units>' and 'CoordTyped<units>' do not derive from
 // 'units' to work around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61959.
 
-template<class units>
-struct IntCoordTyped :
-  public BaseCoord< int32_t, IntCoordTyped<units> >,
-  public CoordOperatorsHelper< true, IntCoordTyped<units>, float >,
-  public CoordOperatorsHelper< true, IntCoordTyped<units>, double > {
+template <class units>
+struct IntCoordTyped
+    : public BaseCoord<int32_t, IntCoordTyped<units> >,
+      public CoordOperatorsHelper<true, IntCoordTyped<units>, float>,
+      public CoordOperatorsHelper<true, IntCoordTyped<units>, double> {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef BaseCoord< int32_t, IntCoordTyped<units> > Super;
+  typedef BaseCoord<int32_t, IntCoordTyped<units> > Super;
 
   constexpr IntCoordTyped() : Super() {}
   constexpr MOZ_IMPLICIT IntCoordTyped(int32_t aValue) : Super(aValue) {}
 };
 
-template<class units, class F>
-struct CoordTyped :
-  public BaseCoord< F, CoordTyped<units, F> >,
-  public CoordOperatorsHelper< !IsSame<F, int32_t>::value, CoordTyped<units, F>, int32_t >,
-  public CoordOperatorsHelper< !IsSame<F, uint32_t>::value, CoordTyped<units, F>, uint32_t >,
-  public CoordOperatorsHelper< !IsSame<F, double>::value, CoordTyped<units, F>, double >,
-  public CoordOperatorsHelper< !IsSame<F, float>::value, CoordTyped<units, F>, float > {
+template <class units, class F>
+struct CoordTyped : public BaseCoord<F, CoordTyped<units, F> >,
+                    public CoordOperatorsHelper<!IsSame<F, int32_t>::value,
+                                                CoordTyped<units, F>, int32_t>,
+                    public CoordOperatorsHelper<!IsSame<F, uint32_t>::value,
+                                                CoordTyped<units, F>, uint32_t>,
+                    public CoordOperatorsHelper<!IsSame<F, double>::value,
+                                                CoordTyped<units, F>, double>,
+                    public CoordOperatorsHelper<!IsSame<F, float>::value,
+                                                CoordTyped<units, F>, float> {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef BaseCoord< F, CoordTyped<units, F> > Super;
+  typedef BaseCoord<F, CoordTyped<units, F> > Super;
 
   constexpr CoordTyped() : Super() {}
   constexpr MOZ_IMPLICIT CoordTyped(F aValue) : Super(aValue) {}
-  explicit constexpr CoordTyped(const IntCoordTyped<units>& aCoord) : Super(F(aCoord.value)) {}
+  explicit constexpr CoordTyped(const IntCoordTyped<units>& aCoord)
+      : Super(F(aCoord.value)) {}
 
-  void Round() {
-    this->value = floor(this->value + 0.5);
-  }
-  void Truncate() {
-    this->value = int32_t(this->value);
-  }
+  void Round() { this->value = floor(this->value + 0.5); }
+  void Truncate() { this->value = int32_t(this->value); }
 
   IntCoordTyped<units> Rounded() const {
     return IntCoordTyped<units>(int32_t(floor(this->value + 0.5)));
@@ -146,7 +133,7 @@ struct CoordTyped :
   }
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_COORD_H_ */

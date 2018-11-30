@@ -17,8 +17,7 @@
 namespace mozilla {
 
 // Visibility states for frames.
-enum class Visibility : uint8_t
-{
+enum class Visibility : uint8_t {
   // Indicates that we're not tracking visibility for this frame.
   UNTRACKED,
 
@@ -37,11 +36,10 @@ enum class Visibility : uint8_t
 };
 
 // Requested actions when frames transition to the nonvisible state.
-enum class OnNonvisible : uint8_t
-{
+enum class OnNonvisible : uint8_t {
   DISCARD_IMAGES  // Discard images associated with the frame.
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_layout_generic_Visibility_h
+#endif  // mozilla_layout_generic_Visibility_h

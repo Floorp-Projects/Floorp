@@ -20,9 +20,7 @@
 /***************************************************************************/
 // Helpers for static convert functions...
 
-static nsresult
-String2Double(const char* aString, double* aResult)
-{
+static nsresult String2Double(const char* aString, double* aResult) {
   char* next;
   double value = PR_strtod(aString, &next);
   if (next == aString) {
@@ -32,9 +30,7 @@ String2Double(const char* aString, double* aResult)
   return NS_OK;
 }
 
-static nsresult
-AString2Double(const nsAString& aString, double* aResult)
-{
+static nsresult AString2Double(const nsAString& aString, double* aResult) {
   char* pChars = ToNewCString(aString);
   if (!pChars) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -44,53 +40,49 @@ AString2Double(const nsAString& aString, double* aResult)
   return rv;
 }
 
-static nsresult
-AUTF8String2Double(const nsAUTF8String& aString, double* aResult)
-{
+static nsresult AUTF8String2Double(const nsAUTF8String& aString,
+                                   double* aResult) {
   return String2Double(PromiseFlatUTF8String(aString).get(), aResult);
 }
 
-static nsresult
-ACString2Double(const nsACString& aString, double* aResult)
-{
+static nsresult ACString2Double(const nsACString& aString, double* aResult) {
   return String2Double(PromiseFlatCString(aString).get(), aResult);
 }
 
 // Fills aOutData with double, uint32_t, or int32_t.
 // Returns NS_OK, an error code, or a non-NS_OK success code
-nsresult
-nsDiscriminatedUnion::ToManageableNumber(nsDiscriminatedUnion* aOutData) const
-{
+nsresult nsDiscriminatedUnion::ToManageableNumber(
+    nsDiscriminatedUnion* aOutData) const {
   nsresult rv;
 
   switch (mType) {
     // This group results in a int32_t...
 
-#define CASE__NUMBER_INT32(type_, member_)                                    \
-    case nsIDataType::type_ :                                                 \
-        aOutData->u.mInt32Value = u.member_ ;                                 \
-        aOutData->mType = nsIDataType::VTYPE_INT32;                           \
-        return NS_OK;
+#define CASE__NUMBER_INT32(type_, member_)      \
+  case nsIDataType::type_:                      \
+    aOutData->u.mInt32Value = u.member_;        \
+    aOutData->mType = nsIDataType::VTYPE_INT32; \
+    return NS_OK;
 
-    CASE__NUMBER_INT32(VTYPE_INT8,   mInt8Value)
-    CASE__NUMBER_INT32(VTYPE_INT16,  mInt16Value)
-    CASE__NUMBER_INT32(VTYPE_INT32,  mInt32Value)
-    CASE__NUMBER_INT32(VTYPE_UINT8,  mUint8Value)
+    CASE__NUMBER_INT32(VTYPE_INT8, mInt8Value)
+    CASE__NUMBER_INT32(VTYPE_INT16, mInt16Value)
+    CASE__NUMBER_INT32(VTYPE_INT32, mInt32Value)
+    CASE__NUMBER_INT32(VTYPE_UINT8, mUint8Value)
     CASE__NUMBER_INT32(VTYPE_UINT16, mUint16Value)
-    CASE__NUMBER_INT32(VTYPE_BOOL,   mBoolValue)
-    CASE__NUMBER_INT32(VTYPE_CHAR,   mCharValue)
-    CASE__NUMBER_INT32(VTYPE_WCHAR,  mWCharValue)
+    CASE__NUMBER_INT32(VTYPE_BOOL, mBoolValue)
+    CASE__NUMBER_INT32(VTYPE_CHAR, mCharValue)
+    CASE__NUMBER_INT32(VTYPE_WCHAR, mWCharValue)
 
 #undef CASE__NUMBER_INT32
 
-    // This group results in a uint32_t...
+      // This group results in a uint32_t...
 
     case nsIDataType::VTYPE_UINT32:
       aOutData->u.mInt32Value = u.mUint32Value;
       aOutData->mType = nsIDataType::VTYPE_INT32;
       return NS_OK;
 
-    // This group results in a double...
+      // This group results in a double...
 
     case nsIDataType::VTYPE_INT64:
     case nsIDataType::VTYPE_UINT64:
@@ -123,16 +115,14 @@ nsDiscriminatedUnion::ToManageableNumber(nsDiscriminatedUnion* aOutData) const
       aOutData->mType = nsIDataType::VTYPE_DOUBLE;
       return NS_OK;
     case nsIDataType::VTYPE_UTF8STRING:
-      rv = AUTF8String2Double(*u.mUTF8StringValue,
-                              &aOutData->u.mDoubleValue);
+      rv = AUTF8String2Double(*u.mUTF8StringValue, &aOutData->u.mDoubleValue);
       if (NS_FAILED(rv)) {
         return rv;
       }
       aOutData->mType = nsIDataType::VTYPE_DOUBLE;
       return NS_OK;
     case nsIDataType::VTYPE_CSTRING:
-      rv = ACString2Double(*u.mCStringValue,
-                           &aOutData->u.mDoubleValue);
+      rv = ACString2Double(*u.mCStringValue, &aOutData->u.mDoubleValue);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -148,7 +138,7 @@ nsDiscriminatedUnion::ToManageableNumber(nsDiscriminatedUnion* aOutData) const
       aOutData->mType = nsIDataType::VTYPE_DOUBLE;
       return NS_OK;
 
-    // This group fails...
+      // This group fails...
 
     case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_ID:
@@ -165,32 +155,26 @@ nsDiscriminatedUnion::ToManageableNumber(nsDiscriminatedUnion* aOutData) const
 /***************************************************************************/
 // Array helpers...
 
-void
-nsDiscriminatedUnion::FreeArray()
-{
+void nsDiscriminatedUnion::FreeArray() {
   NS_ASSERTION(mType == nsIDataType::VTYPE_ARRAY, "bad FreeArray call");
   NS_ASSERTION(u.array.mArrayValue, "bad array");
   NS_ASSERTION(u.array.mArrayCount, "bad array count");
 
-#define CASE__FREE_ARRAY_PTR(type_, ctype_)                                   \
-        case nsIDataType::type_ :                                             \
-        {                                                                     \
-            ctype_** p = (ctype_**) u.array.mArrayValue;                      \
-            for (uint32_t i = u.array.mArrayCount; i > 0; p++, i--)           \
-                if (*p)                                                       \
-                    free((char*)*p);                                          \
-            break;                                                            \
-        }
+#define CASE__FREE_ARRAY_PTR(type_, ctype_)                 \
+  case nsIDataType::type_: {                                \
+    ctype_** p = (ctype_**)u.array.mArrayValue;             \
+    for (uint32_t i = u.array.mArrayCount; i > 0; p++, i--) \
+      if (*p) free((char*)*p);                              \
+    break;                                                  \
+  }
 
-#define CASE__FREE_ARRAY_IFACE(type_, ctype_)                                 \
-        case nsIDataType::type_ :                                             \
-        {                                                                     \
-            ctype_** p = (ctype_**) u.array.mArrayValue;                      \
-            for (uint32_t i = u.array.mArrayCount; i > 0; p++, i--)           \
-                if (*p)                                                       \
-                    (*p)->Release();                                          \
-            break;                                                            \
-        }
+#define CASE__FREE_ARRAY_IFACE(type_, ctype_)               \
+  case nsIDataType::type_: {                                \
+    ctype_** p = (ctype_**)u.array.mArrayValue;             \
+    for (uint32_t i = u.array.mArrayCount; i > 0; p++, i--) \
+      if (*p) (*p)->Release();                              \
+    break;                                                  \
+  }
 
   switch (u.array.mArrayType) {
     case nsIDataType::VTYPE_INT8:
@@ -208,12 +192,12 @@ nsDiscriminatedUnion::FreeArray()
     case nsIDataType::VTYPE_WCHAR:
       break;
 
-    // XXX We ASSUME that "array of nsID" means "array of pointers to nsID".
-    CASE__FREE_ARRAY_PTR(VTYPE_ID, nsID)
-    CASE__FREE_ARRAY_PTR(VTYPE_CHAR_STR, char)
-    CASE__FREE_ARRAY_PTR(VTYPE_WCHAR_STR, char16_t)
-    CASE__FREE_ARRAY_IFACE(VTYPE_INTERFACE, nsISupports)
-    CASE__FREE_ARRAY_IFACE(VTYPE_INTERFACE_IS, nsISupports)
+      // XXX We ASSUME that "array of nsID" means "array of pointers to nsID".
+      CASE__FREE_ARRAY_PTR(VTYPE_ID, nsID)
+      CASE__FREE_ARRAY_PTR(VTYPE_CHAR_STR, char)
+      CASE__FREE_ARRAY_PTR(VTYPE_WCHAR_STR, char16_t)
+      CASE__FREE_ARRAY_IFACE(VTYPE_INTERFACE, nsISupports)
+      CASE__FREE_ARRAY_IFACE(VTYPE_INTERFACE_IS, nsISupports)
 
     // The rest are illegal.
     case nsIDataType::VTYPE_VOID:
@@ -237,12 +221,10 @@ nsDiscriminatedUnion::FreeArray()
 #undef CASE__FREE_ARRAY_IFACE
 }
 
-static nsresult
-CloneArray(uint16_t aInType, const nsIID* aInIID,
-           uint32_t aInCount, void* aInValue,
-           uint16_t* aOutType, nsIID* aOutIID,
-           uint32_t* aOutCount, void** aOutValue)
-{
+static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
+                           uint32_t aInCount, void* aInValue,
+                           uint16_t* aOutType, nsIID* aOutIID,
+                           uint32_t* aOutCount, void** aOutValue) {
   NS_ASSERTION(aInCount, "bad param");
   NS_ASSERTION(aInValue, "bad param");
   NS_ASSERTION(aOutType, "bad param");
@@ -321,7 +303,6 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
       return NS_ERROR_CANNOT_CONVERT_DATA;
   }
 
-
   // Alloc the u.array.
 
   allocSize = aInCount * elementSize;
@@ -365,7 +346,7 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
 
     // XXX We ASSUME that "array of nsID" means "array of pointers to nsID".
     case nsIDataType::VTYPE_ID: {
-      nsID** inp  = (nsID**)aInValue;
+      nsID** inp = (nsID**)aInValue;
       nsID** outp = (nsID**)*aOutValue;
       for (i = aInCount; i > 0; --i) {
         nsID* idp = *(inp++);
@@ -379,7 +360,7 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
     }
 
     case nsIDataType::VTYPE_CHAR_STR: {
-      char** inp  = (char**)aInValue;
+      char** inp = (char**)aInValue;
       char** outp = (char**)*aOutValue;
       for (i = aInCount; i > 0; i--) {
         char* str = *(inp++);
@@ -393,7 +374,7 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
     }
 
     case nsIDataType::VTYPE_WCHAR_STR: {
-      char16_t** inp  = (char16_t**)aInValue;
+      char16_t** inp = (char16_t**)aInValue;
       char16_t** outp = (char16_t**)*aOutValue;
       for (i = aInCount; i > 0; i--) {
         char16_t* str = *(inp++);
@@ -428,16 +409,14 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
 
 /***************************************************************************/
 
-#define TRIVIAL_DATA_CONVERTER(type_, member_, retval_)                       \
-    if (mType == nsIDataType::type_) {                                        \
-        *retval_ = u.member_;                                                 \
-        return NS_OK;                                                         \
-    }
+#define TRIVIAL_DATA_CONVERTER(type_, member_, retval_) \
+  if (mType == nsIDataType::type_) {                    \
+    *retval_ = u.member_;                               \
+    return NS_OK;                                       \
+  }
 
 #define NUMERIC_CONVERSION_METHOD_BEGIN(type_, Ctype_, name_)                 \
-nsresult                                                                      \
-nsDiscriminatedUnion::ConvertTo##name_ (Ctype_* aResult) const                \
-{                                                                             \
+  nsresult nsDiscriminatedUnion::ConvertTo##name_(Ctype_* aResult) const {    \
     TRIVIAL_DATA_CONVERTER(type_, m##name_##Value, aResult)                   \
     nsDiscriminatedUnion tempData;                                            \
     nsresult rv = ToManageableNumber(&tempData);                              \
@@ -446,130 +425,124 @@ nsDiscriminatedUnion::ConvertTo##name_ (Ctype_* aResult) const                \
     /* For the final return. So all the return cases below should return   */ \
     /* this rv when indicating success.                                    */ \
     /*                                                                     */ \
-    if (NS_FAILED(rv))                                                        \
-        return rv;                                                            \
-    switch(tempData.mType)                                                    \
-    {
+    if (NS_FAILED(rv)) return rv;                                             \
+    switch (tempData.mType) {
+#define CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(Ctype_) \
+  case nsIDataType::VTYPE_INT32:                         \
+    *aResult = (Ctype_)tempData.u.mInt32Value;           \
+    return rv;
 
-#define CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(Ctype_)                      \
-    case nsIDataType::VTYPE_INT32:                                            \
-        *aResult = ( Ctype_ ) tempData.u.mInt32Value;                         \
-        return rv;
+#define CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(Ctype_, min_, max_) \
+  case nsIDataType::VTYPE_INT32: {                                 \
+    int32_t value = tempData.u.mInt32Value;                        \
+    if (value < min_ || value > max_)                              \
+      return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                    \
+    *aResult = (Ctype_)value;                                      \
+    return rv;                                                     \
+  }
 
-#define CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(Ctype_, min_, max_)            \
-    case nsIDataType::VTYPE_INT32:                                            \
-    {                                                                         \
-        int32_t value = tempData.u.mInt32Value;                               \
-        if (value < min_ || value > max_)                                     \
-            return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
-        *aResult = ( Ctype_ ) value;                                          \
-        return rv;                                                            \
-    }
+#define CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(Ctype_) \
+  case nsIDataType::VTYPE_UINT32:                         \
+    *aResult = (Ctype_)tempData.u.mUint32Value;           \
+    return rv;
 
-#define CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(Ctype_)                     \
-    case nsIDataType::VTYPE_UINT32:                                           \
-        *aResult = ( Ctype_ ) tempData.u.mUint32Value;                        \
-        return rv;
+#define CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)       \
+  case nsIDataType::VTYPE_UINT32: {                             \
+    uint32_t value = tempData.u.mUint32Value;                   \
+    if (value > max_) return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA; \
+    *aResult = (Ctype_)value;                                   \
+    return rv;                                                  \
+  }
 
-#define CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)                     \
-    case nsIDataType::VTYPE_UINT32:                                           \
-    {                                                                         \
-        uint32_t value = tempData.u.mUint32Value;                             \
-        if (value > max_)                                                     \
-            return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
-        *aResult = ( Ctype_ ) value;                                          \
-        return rv;                                                            \
-    }
+#define CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(Ctype_) \
+  case nsIDataType::VTYPE_DOUBLE:                         \
+    *aResult = (Ctype_)tempData.u.mDoubleValue;           \
+    return rv;
 
-#define CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(Ctype_)                     \
-    case nsIDataType::VTYPE_DOUBLE:                                           \
-        *aResult = ( Ctype_ ) tempData.u.mDoubleValue;                        \
-        return rv;
-
-#define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX(Ctype_, min_, max_)           \
-    case nsIDataType::VTYPE_DOUBLE:                                           \
-    {                                                                         \
-        double value = tempData.u.mDoubleValue;                               \
-        if (value < min_ || value > max_)                                     \
-            return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
-        *aResult = ( Ctype_ ) value;                                          \
-        return rv;                                                            \
-    }
+#define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX(Ctype_, min_, max_) \
+  case nsIDataType::VTYPE_DOUBLE: {                                 \
+    double value = tempData.u.mDoubleValue;                         \
+    if (value < min_ || value > max_)                               \
+      return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                     \
+    *aResult = (Ctype_)value;                                       \
+    return rv;                                                      \
+  }
 
 #define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(Ctype_, min_, max_)       \
-    case nsIDataType::VTYPE_DOUBLE:                                           \
-    {                                                                         \
-        double value = tempData.u.mDoubleValue;                               \
-        if (value < min_ || value > max_)                                     \
-            return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
-        *aResult = ( Ctype_ ) value;                                          \
-        return (0.0 == fmod(value,1.0)) ?                                     \
-            rv : NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;                       \
+  case nsIDataType::VTYPE_DOUBLE: {                                           \
+    double value = tempData.u.mDoubleValue;                                   \
+    if (value < min_ || value > max_)                                         \
+      return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                               \
+    *aResult = (Ctype_)value;                                                 \
+    return (0.0 == fmod(value, 1.0)) ? rv                                     \
+                                     : NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA; \
+  }
+
+#define CASES__NUMERIC_CONVERSION_NORMAL(Ctype_, min_, max_) \
+  CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(Ctype_, min_, max_) \
+  CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)          \
+  CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(Ctype_, min_, max_)
+
+#define NUMERIC_CONVERSION_METHOD_END                      \
+  default:                                                 \
+    NS_ERROR("bad type returned from ToManageableNumber"); \
+    return NS_ERROR_CANNOT_CONVERT_DATA;                   \
+    }                                                      \
     }
 
-#define CASES__NUMERIC_CONVERSION_NORMAL(Ctype_, min_, max_)                  \
-    CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(Ctype_, min_, max_)                \
-    CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)                         \
-    CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(Ctype_, min_, max_)
-
-#define NUMERIC_CONVERSION_METHOD_END                                         \
-    default:                                                                  \
-        NS_ERROR("bad type returned from ToManageableNumber");                \
-        return NS_ERROR_CANNOT_CONVERT_DATA;                                  \
-    }                                                                         \
-}
-
-#define NUMERIC_CONVERSION_METHOD_NORMAL(type_, Ctype_, name_, min_, max_)    \
-    NUMERIC_CONVERSION_METHOD_BEGIN(type_, Ctype_, name_)                     \
-        CASES__NUMERIC_CONVERSION_NORMAL(Ctype_, min_, max_)                  \
-    NUMERIC_CONVERSION_METHOD_END
+#define NUMERIC_CONVERSION_METHOD_NORMAL(type_, Ctype_, name_, min_, max_) \
+  NUMERIC_CONVERSION_METHOD_BEGIN(type_, Ctype_, name_)                    \
+  CASES__NUMERIC_CONVERSION_NORMAL(Ctype_, min_, max_)                     \
+  NUMERIC_CONVERSION_METHOD_END
 
 /***************************************************************************/
 // These expand into full public methods...
 
 NUMERIC_CONVERSION_METHOD_NORMAL(VTYPE_INT8, uint8_t, Int8, (-127 - 1), 127)
-NUMERIC_CONVERSION_METHOD_NORMAL(VTYPE_INT16, int16_t, Int16, (-32767 - 1), 32767)
+NUMERIC_CONVERSION_METHOD_NORMAL(VTYPE_INT16, int16_t, Int16, (-32767 - 1),
+                                 32767)
 
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_INT32, int32_t, Int32)
-  CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(int32_t)
-  CASE__NUMERIC_CONVERSION_UINT32_MAX(int32_t, 2147483647)
-  CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(int32_t, (-2147483647 - 1), 2147483647)
+CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(int32_t)
+CASE__NUMERIC_CONVERSION_UINT32_MAX(int32_t, 2147483647)
+CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(int32_t, (-2147483647 - 1),
+                                            2147483647)
 NUMERIC_CONVERSION_METHOD_END
 
 NUMERIC_CONVERSION_METHOD_NORMAL(VTYPE_UINT8, uint8_t, Uint8, 0, 255)
 NUMERIC_CONVERSION_METHOD_NORMAL(VTYPE_UINT16, uint16_t, Uint16, 0, 65535)
 
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_UINT32, uint32_t, Uint32)
-  CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(uint32_t, 0, 2147483647)
-  CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(uint32_t)
-  CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(uint32_t, 0, 4294967295U)
+CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(uint32_t, 0, 2147483647)
+CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(uint32_t)
+CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(uint32_t, 0, 4294967295U)
 NUMERIC_CONVERSION_METHOD_END
 
 // XXX toFloat convertions need to be fixed!
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_FLOAT, float, Float)
-  CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(float)
-  CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(float)
-  CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(float)
+CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(float)
+CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(float)
+CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(float)
 NUMERIC_CONVERSION_METHOD_END
 
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_DOUBLE, double, Double)
-  CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(double)
-  CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(double)
-  CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(double)
+CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(double)
+CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(double)
+CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(double)
 NUMERIC_CONVERSION_METHOD_END
 
 // XXX toChar convertions need to be fixed!
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_CHAR, char, Char)
-  CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(char)
-  CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(char)
-  CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(char)
+CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(char)
+CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(char)
+CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(char)
 NUMERIC_CONVERSION_METHOD_END
 
 // XXX toWChar convertions need to be fixed!
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_WCHAR, char16_t, WChar)
-  CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(char16_t)
-  CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(char16_t)
-  CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(char16_t)
+CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(char16_t)
+CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(char16_t)
+CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(char16_t)
 NUMERIC_CONVERSION_METHOD_END
 
 #undef NUMERIC_CONVERSION_METHOD_BEGIN
@@ -589,9 +562,7 @@ NUMERIC_CONVERSION_METHOD_END
 // Just leverage a numeric converter for bool (but restrict the values).
 // XXX Is this really what we want to do?
 
-nsresult
-nsDiscriminatedUnion::ConvertToBool(bool* aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToBool(bool* aResult) const {
   TRIVIAL_DATA_CONVERTER(VTYPE_BOOL, mBoolValue, aResult)
 
   double val;
@@ -605,9 +576,7 @@ nsDiscriminatedUnion::ConvertToBool(bool* aResult) const
 
 /***************************************************************************/
 
-nsresult
-nsDiscriminatedUnion::ConvertToInt64(int64_t* aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToInt64(int64_t* aResult) const {
   TRIVIAL_DATA_CONVERTER(VTYPE_INT64, mInt64Value, aResult)
   TRIVIAL_DATA_CONVERTER(VTYPE_UINT64, mUint64Value, aResult)
 
@@ -633,17 +602,13 @@ nsDiscriminatedUnion::ConvertToInt64(int64_t* aResult) const
   }
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToUint64(uint64_t* aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToUint64(uint64_t* aResult) const {
   return ConvertToInt64((int64_t*)aResult);
 }
 
 /***************************************************************************/
 
-bool
-nsDiscriminatedUnion::String2ID(nsID* aPid) const
-{
+bool nsDiscriminatedUnion::String2ID(nsID* aPid) const {
   nsAutoString tempString;
   nsAString* pString;
 
@@ -677,9 +642,7 @@ nsDiscriminatedUnion::String2ID(nsID* aPid) const
   return result;
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToID(nsID* aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToID(nsID* aResult) const {
   nsID id;
 
   switch (mType) {
@@ -711,9 +674,7 @@ nsDiscriminatedUnion::ConvertToID(nsID* aResult) const
 
 /***************************************************************************/
 
-nsresult
-nsDiscriminatedUnion::ToString(nsACString& aOutString) const
-{
+nsresult nsDiscriminatedUnion::ToString(nsACString& aOutString) const {
   mozilla::SmprintfPointer pptr;
 
   switch (mType) {
@@ -729,7 +690,7 @@ nsDiscriminatedUnion::ToString(nsACString& aOutString) const
       NS_ERROR("ToString being called for a string type - screwy logic!");
       MOZ_FALLTHROUGH;
 
-    // XXX We might want stringified versions of these... ???
+      // XXX We might want stringified versions of these... ???
 
     case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_EMPTY:
@@ -743,7 +704,7 @@ nsDiscriminatedUnion::ToString(nsACString& aOutString) const
     default:
       return NS_ERROR_CANNOT_CONVERT_DATA;
 
-    // nsID has its own text formatter.
+      // nsID has its own text formatter.
 
     case nsIDataType::VTYPE_ID: {
       char* ptr = u.mIDValue.ToString();
@@ -756,43 +717,42 @@ nsDiscriminatedUnion::ToString(nsACString& aOutString) const
     }
 
     // Can't use Smprintf for floats, since it's locale-dependent
-#define CASE__APPENDFLOAT_NUMBER(type_, member_)                        \
-    case nsIDataType::type_ :                                           \
-    {                                                                   \
-        nsAutoCString str;                                              \
-        str.AppendFloat(u.member_);                                     \
-        aOutString.Assign(str);                                         \
-        return NS_OK;                                                   \
-    }
+#define CASE__APPENDFLOAT_NUMBER(type_, member_) \
+  case nsIDataType::type_: {                     \
+    nsAutoCString str;                           \
+    str.AppendFloat(u.member_);                  \
+    aOutString.Assign(str);                      \
+    return NS_OK;                                \
+  }
 
-    CASE__APPENDFLOAT_NUMBER(VTYPE_FLOAT,  mFloatValue)
-    CASE__APPENDFLOAT_NUMBER(VTYPE_DOUBLE, mDoubleValue)
+      CASE__APPENDFLOAT_NUMBER(VTYPE_FLOAT, mFloatValue)
+      CASE__APPENDFLOAT_NUMBER(VTYPE_DOUBLE, mDoubleValue)
 
 #undef CASE__APPENDFLOAT_NUMBER
 
-    // the rest can be Smprintf'd and use common code.
+      // the rest can be Smprintf'd and use common code.
 
 #define CASE__SMPRINTF_NUMBER(type_, format_, cast_, member_)          \
-    case nsIDataType::type_:                                           \
-        static_assert(sizeof(cast_) >= sizeof(u.member_),              \
-                      "size of type should be at least as big as member"); \
-        pptr = mozilla::Smprintf( format_ , (cast_) u.member_);        \
-        break;
+  case nsIDataType::type_:                                             \
+    static_assert(sizeof(cast_) >= sizeof(u.member_),                  \
+                  "size of type should be at least as big as member"); \
+    pptr = mozilla::Smprintf(format_, (cast_)u.member_);               \
+    break;
 
-    CASE__SMPRINTF_NUMBER(VTYPE_INT8,   "%d",   int,      mInt8Value)
-    CASE__SMPRINTF_NUMBER(VTYPE_INT16,  "%d",   int,      mInt16Value)
-    CASE__SMPRINTF_NUMBER(VTYPE_INT32,  "%d",   int,      mInt32Value)
-    CASE__SMPRINTF_NUMBER(VTYPE_INT64,  "%" PRId64, int64_t,  mInt64Value)
+      CASE__SMPRINTF_NUMBER(VTYPE_INT8, "%d", int, mInt8Value)
+      CASE__SMPRINTF_NUMBER(VTYPE_INT16, "%d", int, mInt16Value)
+      CASE__SMPRINTF_NUMBER(VTYPE_INT32, "%d", int, mInt32Value)
+      CASE__SMPRINTF_NUMBER(VTYPE_INT64, "%" PRId64, int64_t, mInt64Value)
 
-    CASE__SMPRINTF_NUMBER(VTYPE_UINT8,  "%u",   unsigned, mUint8Value)
-    CASE__SMPRINTF_NUMBER(VTYPE_UINT16, "%u",   unsigned, mUint16Value)
-    CASE__SMPRINTF_NUMBER(VTYPE_UINT32, "%u",   unsigned, mUint32Value)
-    CASE__SMPRINTF_NUMBER(VTYPE_UINT64, "%" PRIu64, int64_t,  mUint64Value)
+      CASE__SMPRINTF_NUMBER(VTYPE_UINT8, "%u", unsigned, mUint8Value)
+      CASE__SMPRINTF_NUMBER(VTYPE_UINT16, "%u", unsigned, mUint16Value)
+      CASE__SMPRINTF_NUMBER(VTYPE_UINT32, "%u", unsigned, mUint32Value)
+      CASE__SMPRINTF_NUMBER(VTYPE_UINT64, "%" PRIu64, int64_t, mUint64Value)
 
-    // XXX Would we rather print "true" / "false" ?
-    CASE__SMPRINTF_NUMBER(VTYPE_BOOL,   "%d",   int,      mBoolValue)
+      // XXX Would we rather print "true" / "false" ?
+      CASE__SMPRINTF_NUMBER(VTYPE_BOOL, "%d", int, mBoolValue)
 
-    CASE__SMPRINTF_NUMBER(VTYPE_CHAR,   "%c",   char,     mCharValue)
+      CASE__SMPRINTF_NUMBER(VTYPE_CHAR, "%c", char, mCharValue)
 
 #undef CASE__SMPRINTF_NUMBER
   }
@@ -804,9 +764,7 @@ nsDiscriminatedUnion::ToString(nsACString& aOutString) const
   return NS_OK;
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToAString(nsAString& aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToAString(nsAString& aResult) const {
   switch (mType) {
     case nsIDataType::VTYPE_ASTRING:
       aResult.Assign(*u.mAStringValue);
@@ -824,9 +782,8 @@ nsDiscriminatedUnion::ConvertToAString(nsAString& aResult) const
       aResult.Assign(u.wstr.mWStringValue);
       return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-      CopyASCIItoUTF16(nsDependentCString(u.str.mStringValue,
-                                          u.str.mStringLength),
-                       aResult);
+      CopyASCIItoUTF16(
+          nsDependentCString(u.str.mStringValue, u.str.mStringLength), aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
       aResult.Assign(u.wstr.mWStringValue, u.wstr.mWStringLength);
@@ -846,9 +803,7 @@ nsDiscriminatedUnion::ConvertToAString(nsAString& aResult) const
   }
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToACString(nsACString& aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToACString(nsACString& aResult) const {
   switch (mType) {
     case nsIDataType::VTYPE_ASTRING:
       LossyCopyUTF16toASCII(*u.mAStringValue, aResult);
@@ -867,16 +822,15 @@ nsDiscriminatedUnion::ConvertToACString(nsACString& aResult) const
       aResult.Assign(*u.str.mStringValue);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
-      LossyCopyUTF16toASCII(nsDependentString(u.wstr.mWStringValue),
-                            aResult);
+      LossyCopyUTF16toASCII(nsDependentString(u.wstr.mWStringValue), aResult);
       return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
       aResult.Assign(u.str.mStringValue, u.str.mStringLength);
       return NS_OK;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      LossyCopyUTF16toASCII(nsDependentString(u.wstr.mWStringValue,
-                                              u.wstr.mWStringLength),
-                            aResult);
+      LossyCopyUTF16toASCII(
+          nsDependentString(u.wstr.mWStringValue, u.wstr.mWStringLength),
+          aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR: {
       const char16_t* str = &u.mWCharValue;
@@ -888,9 +842,8 @@ nsDiscriminatedUnion::ConvertToACString(nsACString& aResult) const
   }
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToAUTF8String(nsAUTF8String& aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToAUTF8String(
+    nsAUTF8String& aResult) const {
   switch (mType) {
     case nsIDataType::VTYPE_ASTRING:
       CopyUTF16toUTF8(*u.mAStringValue, aResult);
@@ -898,8 +851,7 @@ nsDiscriminatedUnion::ConvertToAUTF8String(nsAUTF8String& aResult) const
     case nsIDataType::VTYPE_CSTRING:
       // XXX Extra copy, can be removed if we're sure CSTRING can
       //     only contain ASCII.
-      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(*u.mCStringValue),
-                      aResult);
+      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(*u.mCStringValue), aResult);
       return NS_OK;
     case nsIDataType::VTYPE_UTF8STRING:
       aResult.Assign(*u.mUTF8StringValue);
@@ -907,8 +859,7 @@ nsDiscriminatedUnion::ConvertToAUTF8String(nsAUTF8String& aResult) const
     case nsIDataType::VTYPE_CHAR_STR:
       // XXX Extra copy, can be removed if we're sure CHAR_STR can
       //     only contain ASCII.
-      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(u.str.mStringValue),
-                      aResult);
+      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(u.str.mStringValue), aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
       CopyUTF16toUTF8(mozilla::MakeStringSpan(u.wstr.mWStringValue), aResult);
@@ -916,14 +867,14 @@ nsDiscriminatedUnion::ConvertToAUTF8String(nsAUTF8String& aResult) const
     case nsIDataType::VTYPE_STRING_SIZE_IS:
       // XXX Extra copy, can be removed if we're sure CHAR_STR can
       //     only contain ASCII.
-      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(
-        nsDependentCString(u.str.mStringValue,
-                           u.str.mStringLength)), aResult);
+      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(nsDependentCString(
+                          u.str.mStringValue, u.str.mStringLength)),
+                      aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      CopyUTF16toUTF8(nsDependentString(u.wstr.mWStringValue,
-                                        u.wstr.mWStringLength),
-                      aResult);
+      CopyUTF16toUTF8(
+          nsDependentString(u.wstr.mWStringValue, u.wstr.mWStringLength),
+          aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR: {
       const char16_t* str = &u.mWCharValue;
@@ -944,24 +895,19 @@ nsDiscriminatedUnion::ConvertToAUTF8String(nsAUTF8String& aResult) const
   }
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToString(char** aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToString(char** aResult) const {
   uint32_t ignored;
   return ConvertToStringWithSize(&ignored, aResult);
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToWString(char16_t** aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToWString(char16_t** aResult) const {
   uint32_t ignored;
   return ConvertToWStringWithSize(&ignored, aResult);
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToStringWithSize(uint32_t* aSize, char** aStr) const
-{
-  nsAutoString  tempString;
+nsresult nsDiscriminatedUnion::ConvertToStringWithSize(uint32_t* aSize,
+                                                       char** aStr) const {
+  nsAutoString tempString;
   nsAutoCString tempCString;
   nsresult rv;
 
@@ -999,15 +945,13 @@ nsDiscriminatedUnion::ConvertToStringWithSize(uint32_t* aSize, char** aStr) cons
       break;
     }
     case nsIDataType::VTYPE_STRING_SIZE_IS: {
-      nsDependentCString cString(u.str.mStringValue,
-                                 u.str.mStringLength);
+      nsDependentCString cString(u.str.mStringValue, u.str.mStringLength);
       *aSize = cString.Length();
       *aStr = ToNewCString(cString);
       break;
     }
     case nsIDataType::VTYPE_WSTRING_SIZE_IS: {
-      nsDependentString string(u.wstr.mWStringValue,
-                               u.wstr.mWStringLength);
+      nsDependentString string(u.wstr.mWStringValue, u.wstr.mWStringLength);
       *aSize = string.Length();
       *aStr = ToNewCString(string);
       break;
@@ -1029,10 +973,9 @@ nsDiscriminatedUnion::ConvertToStringWithSize(uint32_t* aSize, char** aStr) cons
 
   return *aStr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
-nsresult
-nsDiscriminatedUnion::ConvertToWStringWithSize(uint32_t* aSize, char16_t** aStr) const
-{
-  nsAutoString  tempString;
+nsresult nsDiscriminatedUnion::ConvertToWStringWithSize(uint32_t* aSize,
+                                                        char16_t** aStr) const {
+  nsAutoString tempString;
   nsAutoCString tempCString;
   nsresult rv;
 
@@ -1062,15 +1005,13 @@ nsDiscriminatedUnion::ConvertToWStringWithSize(uint32_t* aSize, char16_t** aStr)
       break;
     }
     case nsIDataType::VTYPE_STRING_SIZE_IS: {
-      nsDependentCString cString(u.str.mStringValue,
-                                 u.str.mStringLength);
+      nsDependentCString cString(u.str.mStringValue, u.str.mStringLength);
       *aSize = cString.Length();
       *aStr = ToNewUnicode(cString);
       break;
     }
     case nsIDataType::VTYPE_WSTRING_SIZE_IS: {
-      nsDependentString string(u.wstr.mWStringValue,
-                               u.wstr.mWStringLength);
+      nsDependentString string(u.wstr.mWStringValue, u.wstr.mWStringLength);
       *aSize = string.Length();
       *aStr = ToNewUnicode(string);
       break;
@@ -1093,15 +1034,13 @@ nsDiscriminatedUnion::ConvertToWStringWithSize(uint32_t* aSize, char16_t** aStr)
   return *aStr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToISupports(nsISupports** aResult) const
-{
+nsresult nsDiscriminatedUnion::ConvertToISupports(nsISupports** aResult) const {
   switch (mType) {
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
       if (u.iface.mInterfaceValue) {
-        return u.iface.mInterfaceValue->
-          QueryInterface(NS_GET_IID(nsISupports), (void**)aResult);
+        return u.iface.mInterfaceValue->QueryInterface(NS_GET_IID(nsISupports),
+                                                       (void**)aResult);
       } else {
         *aResult = nullptr;
         return NS_OK;
@@ -1111,10 +1050,8 @@ nsDiscriminatedUnion::ConvertToISupports(nsISupports** aResult) const
   }
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToInterface(nsIID** aIID,
-                                         void** aInterface) const
-{
+nsresult nsDiscriminatedUnion::ConvertToInterface(nsIID** aIID,
+                                                  void** aInterface) const {
   const nsIID* piid;
 
   switch (mType) {
@@ -1138,18 +1075,17 @@ nsDiscriminatedUnion::ConvertToInterface(nsIID** aIID,
   return NS_OK;
 }
 
-nsresult
-nsDiscriminatedUnion::ConvertToArray(uint16_t* aType, nsIID* aIID,
-                                     uint32_t* aCount, void** aPtr) const
-{
+nsresult nsDiscriminatedUnion::ConvertToArray(uint16_t* aType, nsIID* aIID,
+                                              uint32_t* aCount,
+                                              void** aPtr) const {
   // XXX perhaps we'd like to add support for converting each of the various
   // types into an array containing one element of that type. We can leverage
   // CloneArray to do this if we want to support this.
 
   if (mType == nsIDataType::VTYPE_ARRAY) {
     return CloneArray(u.array.mArrayType, &u.array.mArrayInterfaceID,
-                      u.array.mArrayCount, u.array.mArrayValue,
-                      aType, aIID, aCount, aPtr);
+                      u.array.mArrayCount, u.array.mArrayValue, aType, aIID,
+                      aCount, aPtr);
   }
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
@@ -1157,57 +1093,49 @@ nsDiscriminatedUnion::ConvertToArray(uint16_t* aType, nsIID* aIID,
 /***************************************************************************/
 // static setter functions...
 
-#define DATA_SETTER_PROLOGUE                                                  \
-    Cleanup()
+#define DATA_SETTER_PROLOGUE Cleanup()
 
-#define DATA_SETTER_EPILOGUE(type_)                                           \
-    mType = nsIDataType::type_;
+#define DATA_SETTER_EPILOGUE(type_) mType = nsIDataType::type_;
 
-#define DATA_SETTER(type_, member_, value_)                                   \
-    DATA_SETTER_PROLOGUE;                                                     \
-    u.member_ = value_;                                                       \
-    DATA_SETTER_EPILOGUE(type_)
+#define DATA_SETTER(type_, member_, value_) \
+  DATA_SETTER_PROLOGUE;                     \
+  u.member_ = value_;                       \
+  DATA_SETTER_EPILOGUE(type_)
 
-#define DATA_SETTER_WITH_CAST(type_, member_, cast_, value_)                  \
-    DATA_SETTER_PROLOGUE;                                                     \
-    u.member_ = cast_ value_;                                                 \
-    DATA_SETTER_EPILOGUE(type_)
-
+#define DATA_SETTER_WITH_CAST(type_, member_, cast_, value_) \
+  DATA_SETTER_PROLOGUE;                                      \
+  u.member_ = cast_ value_;                                  \
+  DATA_SETTER_EPILOGUE(type_)
 
 /********************************************/
 
-#define CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(type_)                          \
-    {                                                                         \
+#define CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(type_) {
+#define CASE__SET_FROM_VARIANT_VTYPE__GETTER(member_, name_) \
+  rv = aValue->GetAs##name_(&(u.member_));
 
-#define CASE__SET_FROM_VARIANT_VTYPE__GETTER(member_, name_)                  \
-        rv = aValue->GetAs##name_ (&(u.member_ ));
+#define CASE__SET_FROM_VARIANT_VTYPE__GETTER_CAST(cast_, member_, name_) \
+  rv = aValue->GetAs##name_(cast_ & (u.member_));
 
-#define CASE__SET_FROM_VARIANT_VTYPE__GETTER_CAST(cast_, member_, name_)      \
-        rv = aValue->GetAs##name_ ( cast_ &(u.member_ ));
+#define CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_) \
+  if (NS_SUCCEEDED(rv)) {                            \
+    mType = nsIDataType::type_;                      \
+  }                                                  \
+  break;                                             \
+  }
 
-#define CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)                          \
-        if (NS_SUCCEEDED(rv)) {                                               \
-          mType  = nsIDataType::type_ ;                                       \
-        }                                                                     \
-        break;                                                                \
-    }
+#define CASE__SET_FROM_VARIANT_TYPE(type_, member_, name_) \
+  case nsIDataType::type_:                                 \
+    CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(type_)           \
+    CASE__SET_FROM_VARIANT_VTYPE__GETTER(member_, name_)   \
+    CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)
 
-#define CASE__SET_FROM_VARIANT_TYPE(type_, member_, name_)                    \
-    case nsIDataType::type_:                                                  \
-        CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(type_)                          \
-        CASE__SET_FROM_VARIANT_VTYPE__GETTER(member_, name_)                  \
-        CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)
+#define CASE__SET_FROM_VARIANT_VTYPE_CAST(type_, cast_, member_, name_) \
+  case nsIDataType::type_:                                              \
+    CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(type_)                        \
+    CASE__SET_FROM_VARIANT_VTYPE__GETTER_CAST(cast_, member_, name_)    \
+    CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)
 
-#define CASE__SET_FROM_VARIANT_VTYPE_CAST(type_, cast_, member_, name_)       \
-    case nsIDataType::type_ :                                                 \
-        CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(type_)                          \
-        CASE__SET_FROM_VARIANT_VTYPE__GETTER_CAST(cast_, member_, name_)      \
-        CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)
-
-
-nsresult
-nsDiscriminatedUnion::SetFromVariant(nsIVariant* aValue)
-{
+nsresult nsDiscriminatedUnion::SetFromVariant(nsIVariant* aValue) {
   nsresult rv = NS_OK;
 
   Cleanup();
@@ -1215,19 +1143,18 @@ nsDiscriminatedUnion::SetFromVariant(nsIVariant* aValue)
   uint16_t type = aValue->GetDataType();
 
   switch (type) {
-    CASE__SET_FROM_VARIANT_VTYPE_CAST(VTYPE_INT8, (uint8_t*), mInt8Value,
-                                      Int8)
-    CASE__SET_FROM_VARIANT_TYPE(VTYPE_INT16,  mInt16Value,  Int16)
-    CASE__SET_FROM_VARIANT_TYPE(VTYPE_INT32,  mInt32Value,  Int32)
-    CASE__SET_FROM_VARIANT_TYPE(VTYPE_UINT8,  mUint8Value,  Uint8)
+    CASE__SET_FROM_VARIANT_VTYPE_CAST(VTYPE_INT8, (uint8_t*), mInt8Value, Int8)
+    CASE__SET_FROM_VARIANT_TYPE(VTYPE_INT16, mInt16Value, Int16)
+    CASE__SET_FROM_VARIANT_TYPE(VTYPE_INT32, mInt32Value, Int32)
+    CASE__SET_FROM_VARIANT_TYPE(VTYPE_UINT8, mUint8Value, Uint8)
     CASE__SET_FROM_VARIANT_TYPE(VTYPE_UINT16, mUint16Value, Uint16)
     CASE__SET_FROM_VARIANT_TYPE(VTYPE_UINT32, mUint32Value, Uint32)
-    CASE__SET_FROM_VARIANT_TYPE(VTYPE_FLOAT,  mFloatValue,  Float)
+    CASE__SET_FROM_VARIANT_TYPE(VTYPE_FLOAT, mFloatValue, Float)
     CASE__SET_FROM_VARIANT_TYPE(VTYPE_DOUBLE, mDoubleValue, Double)
-    CASE__SET_FROM_VARIANT_TYPE(VTYPE_BOOL ,  mBoolValue,   Bool)
-    CASE__SET_FROM_VARIANT_TYPE(VTYPE_CHAR,   mCharValue,   Char)
-    CASE__SET_FROM_VARIANT_TYPE(VTYPE_WCHAR,  mWCharValue,  WChar)
-    CASE__SET_FROM_VARIANT_TYPE(VTYPE_ID,     mIDValue,     ID)
+    CASE__SET_FROM_VARIANT_TYPE(VTYPE_BOOL, mBoolValue, Bool)
+    CASE__SET_FROM_VARIANT_TYPE(VTYPE_CHAR, mCharValue, Char)
+    CASE__SET_FROM_VARIANT_TYPE(VTYPE_WCHAR, mWCharValue, WChar)
+    CASE__SET_FROM_VARIANT_TYPE(VTYPE_ID, mIDValue, ID)
 
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_WCHAR_STR:
@@ -1288,10 +1215,8 @@ nsDiscriminatedUnion::SetFromVariant(nsIVariant* aValue)
 
     case nsIDataType::VTYPE_ARRAY:
       CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_ARRAY);
-      rv = aValue->GetAsArray(&u.array.mArrayType,
-                              &u.array.mArrayInterfaceID,
-                              &u.array.mArrayCount,
-                              &u.array.mArrayValue);
+      rv = aValue->GetAsArray(&u.array.mArrayType, &u.array.mArrayInterfaceID,
+                              &u.array.mArrayCount, &u.array.mArrayValue);
       CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_ARRAY)
 
     case nsIDataType::VTYPE_VOID:
@@ -1314,145 +1239,100 @@ nsDiscriminatedUnion::SetFromVariant(nsIVariant* aValue)
   return rv;
 }
 
-void
-nsDiscriminatedUnion::SetFromInt8(uint8_t aValue)
-{
+void nsDiscriminatedUnion::SetFromInt8(uint8_t aValue) {
   DATA_SETTER_WITH_CAST(VTYPE_INT8, mInt8Value, (uint8_t), aValue);
 }
-void
-nsDiscriminatedUnion::SetFromInt16(int16_t aValue)
-{
+void nsDiscriminatedUnion::SetFromInt16(int16_t aValue) {
   DATA_SETTER(VTYPE_INT16, mInt16Value, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromInt32(int32_t aValue)
-{
+void nsDiscriminatedUnion::SetFromInt32(int32_t aValue) {
   DATA_SETTER(VTYPE_INT32, mInt32Value, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromInt64(int64_t aValue)
-{
+void nsDiscriminatedUnion::SetFromInt64(int64_t aValue) {
   DATA_SETTER(VTYPE_INT64, mInt64Value, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromUint8(uint8_t aValue)
-{
+void nsDiscriminatedUnion::SetFromUint8(uint8_t aValue) {
   DATA_SETTER(VTYPE_UINT8, mUint8Value, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromUint16(uint16_t aValue)
-{
+void nsDiscriminatedUnion::SetFromUint16(uint16_t aValue) {
   DATA_SETTER(VTYPE_UINT16, mUint16Value, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromUint32(uint32_t aValue)
-{
+void nsDiscriminatedUnion::SetFromUint32(uint32_t aValue) {
   DATA_SETTER(VTYPE_UINT32, mUint32Value, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromUint64(uint64_t aValue)
-{
+void nsDiscriminatedUnion::SetFromUint64(uint64_t aValue) {
   DATA_SETTER(VTYPE_UINT64, mUint64Value, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromFloat(float aValue)
-{
+void nsDiscriminatedUnion::SetFromFloat(float aValue) {
   DATA_SETTER(VTYPE_FLOAT, mFloatValue, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromDouble(double aValue)
-{
+void nsDiscriminatedUnion::SetFromDouble(double aValue) {
   DATA_SETTER(VTYPE_DOUBLE, mDoubleValue, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromBool(bool aValue)
-{
+void nsDiscriminatedUnion::SetFromBool(bool aValue) {
   DATA_SETTER(VTYPE_BOOL, mBoolValue, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromChar(char aValue)
-{
+void nsDiscriminatedUnion::SetFromChar(char aValue) {
   DATA_SETTER(VTYPE_CHAR, mCharValue, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromWChar(char16_t aValue)
-{
+void nsDiscriminatedUnion::SetFromWChar(char16_t aValue) {
   DATA_SETTER(VTYPE_WCHAR, mWCharValue, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromID(const nsID& aValue)
-{
+void nsDiscriminatedUnion::SetFromID(const nsID& aValue) {
   DATA_SETTER(VTYPE_ID, mIDValue, aValue);
 }
-void
-nsDiscriminatedUnion::SetFromAString(const nsAString& aValue)
-{
+void nsDiscriminatedUnion::SetFromAString(const nsAString& aValue) {
   DATA_SETTER_PROLOGUE;
   u.mAStringValue = new nsString(aValue);
   DATA_SETTER_EPILOGUE(VTYPE_ASTRING);
 }
 
-void
-nsDiscriminatedUnion::SetFromACString(const nsACString& aValue)
-{
+void nsDiscriminatedUnion::SetFromACString(const nsACString& aValue) {
   DATA_SETTER_PROLOGUE;
   u.mCStringValue = new nsCString(aValue);
   DATA_SETTER_EPILOGUE(VTYPE_CSTRING);
 }
 
-void
-nsDiscriminatedUnion::SetFromAUTF8String(const nsAUTF8String& aValue)
-{
+void nsDiscriminatedUnion::SetFromAUTF8String(const nsAUTF8String& aValue) {
   DATA_SETTER_PROLOGUE;
   u.mUTF8StringValue = new nsUTF8String(aValue);
   DATA_SETTER_EPILOGUE(VTYPE_UTF8STRING);
 }
 
-nsresult
-nsDiscriminatedUnion::SetFromString(const char* aValue)
-{
+nsresult nsDiscriminatedUnion::SetFromString(const char* aValue) {
   DATA_SETTER_PROLOGUE;
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
   return SetFromStringWithSize(strlen(aValue), aValue);
 }
-nsresult
-nsDiscriminatedUnion::SetFromWString(const char16_t* aValue)
-{
+nsresult nsDiscriminatedUnion::SetFromWString(const char16_t* aValue) {
   DATA_SETTER_PROLOGUE;
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
   return SetFromWStringWithSize(NS_strlen(aValue), aValue);
 }
-void
-nsDiscriminatedUnion::SetFromISupports(nsISupports* aValue)
-{
+void nsDiscriminatedUnion::SetFromISupports(nsISupports* aValue) {
   return SetFromInterface(NS_GET_IID(nsISupports), aValue);
 }
-void
-nsDiscriminatedUnion::SetFromInterface(const nsIID& aIID, nsISupports* aValue)
-{
+void nsDiscriminatedUnion::SetFromInterface(const nsIID& aIID,
+                                            nsISupports* aValue) {
   DATA_SETTER_PROLOGUE;
   NS_IF_ADDREF(aValue);
   u.iface.mInterfaceValue = aValue;
   u.iface.mInterfaceID = aIID;
   DATA_SETTER_EPILOGUE(VTYPE_INTERFACE_IS);
 }
-nsresult
-nsDiscriminatedUnion::SetFromArray(uint16_t aType, const nsIID* aIID,
-                                   uint32_t aCount, void* aValue)
-{
+nsresult nsDiscriminatedUnion::SetFromArray(uint16_t aType, const nsIID* aIID,
+                                            uint32_t aCount, void* aValue) {
   DATA_SETTER_PROLOGUE;
   if (!aValue || !aCount) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsresult rv = CloneArray(aType, aIID, aCount, aValue,
-                           &u.array.mArrayType,
-                           &u.array.mArrayInterfaceID,
-                           &u.array.mArrayCount,
+  nsresult rv = CloneArray(aType, aIID, aCount, aValue, &u.array.mArrayType,
+                           &u.array.mArrayInterfaceID, &u.array.mArrayCount,
                            &u.array.mArrayValue);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1460,66 +1340,52 @@ nsDiscriminatedUnion::SetFromArray(uint16_t aType, const nsIID* aIID,
   DATA_SETTER_EPILOGUE(VTYPE_ARRAY);
   return NS_OK;
 }
-nsresult
-nsDiscriminatedUnion::SetFromStringWithSize(uint32_t aSize,
-                                            const char* aValue)
-{
+nsresult nsDiscriminatedUnion::SetFromStringWithSize(uint32_t aSize,
+                                                     const char* aValue) {
   DATA_SETTER_PROLOGUE;
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-  u.str.mStringValue = (char*) moz_xmemdup(aValue, (aSize + 1) * sizeof(char));
+  u.str.mStringValue = (char*)moz_xmemdup(aValue, (aSize + 1) * sizeof(char));
   u.str.mStringLength = aSize;
   DATA_SETTER_EPILOGUE(VTYPE_STRING_SIZE_IS);
   return NS_OK;
 }
-nsresult
-nsDiscriminatedUnion::SetFromWStringWithSize(uint32_t aSize,
-                                             const char16_t* aValue)
-{
+nsresult nsDiscriminatedUnion::SetFromWStringWithSize(uint32_t aSize,
+                                                      const char16_t* aValue) {
   DATA_SETTER_PROLOGUE;
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
   u.wstr.mWStringValue =
-    (char16_t*) moz_xmemdup(aValue, (aSize + 1) * sizeof(char16_t));
+      (char16_t*)moz_xmemdup(aValue, (aSize + 1) * sizeof(char16_t));
   u.wstr.mWStringLength = aSize;
   DATA_SETTER_EPILOGUE(VTYPE_WSTRING_SIZE_IS);
   return NS_OK;
 }
-void
-nsDiscriminatedUnion::AllocateWStringWithSize(uint32_t aSize)
-{
+void nsDiscriminatedUnion::AllocateWStringWithSize(uint32_t aSize) {
   DATA_SETTER_PROLOGUE;
   u.wstr.mWStringValue = (char16_t*)moz_xmalloc((aSize + 1) * sizeof(char16_t));
   u.wstr.mWStringValue[aSize] = '\0';
   u.wstr.mWStringLength = aSize;
   DATA_SETTER_EPILOGUE(VTYPE_WSTRING_SIZE_IS);
 }
-void
-nsDiscriminatedUnion::SetToVoid()
-{
+void nsDiscriminatedUnion::SetToVoid() {
   DATA_SETTER_PROLOGUE;
   DATA_SETTER_EPILOGUE(VTYPE_VOID);
 }
-void
-nsDiscriminatedUnion::SetToEmpty()
-{
+void nsDiscriminatedUnion::SetToEmpty() {
   DATA_SETTER_PROLOGUE;
   DATA_SETTER_EPILOGUE(VTYPE_EMPTY);
 }
-void
-nsDiscriminatedUnion::SetToEmptyArray()
-{
+void nsDiscriminatedUnion::SetToEmptyArray() {
   DATA_SETTER_PROLOGUE;
   DATA_SETTER_EPILOGUE(VTYPE_EMPTY_ARRAY);
 }
 
 /***************************************************************************/
 
-void
-nsDiscriminatedUnion::Cleanup()
-{
+void nsDiscriminatedUnion::Cleanup() {
   switch (mType) {
     case nsIDataType::VTYPE_INT8:
     case nsIDataType::VTYPE_INT16:
@@ -1572,9 +1438,8 @@ nsDiscriminatedUnion::Cleanup()
   mType = nsIDataType::VTYPE_EMPTY;
 }
 
-void
-nsDiscriminatedUnion::Traverse(nsCycleCollectionTraversalCallback& aCb) const
-{
+void nsDiscriminatedUnion::Traverse(
+    nsCycleCollectionTraversalCallback& aCb) const {
   switch (mType) {
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
@@ -1605,183 +1470,143 @@ nsDiscriminatedUnion::Traverse(nsCycleCollectionTraversalCallback& aCb) const
 /***************************************************************************/
 // members...
 
-nsVariantBase::nsVariantBase()
-  : mWritable(true)
-{
-}
+nsVariantBase::nsVariantBase() : mWritable(true) {}
 
 // For all the data getters we just forward to the static (and sharable)
 // 'ConvertTo' functions.
 
-uint16_t
-nsVariantBase::GetDataType()
-{
-  return mData.GetType();
-}
+uint16_t nsVariantBase::GetDataType() { return mData.GetType(); }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsInt8(uint8_t* aResult)
-{
+nsVariantBase::GetAsInt8(uint8_t* aResult) {
   return mData.ConvertToInt8(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsInt16(int16_t* aResult)
-{
+nsVariantBase::GetAsInt16(int16_t* aResult) {
   return mData.ConvertToInt16(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsInt32(int32_t* aResult)
-{
+nsVariantBase::GetAsInt32(int32_t* aResult) {
   return mData.ConvertToInt32(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsInt64(int64_t* aResult)
-{
+nsVariantBase::GetAsInt64(int64_t* aResult) {
   return mData.ConvertToInt64(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsUint8(uint8_t* aResult)
-{
+nsVariantBase::GetAsUint8(uint8_t* aResult) {
   return mData.ConvertToUint8(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsUint16(uint16_t* aResult)
-{
+nsVariantBase::GetAsUint16(uint16_t* aResult) {
   return mData.ConvertToUint16(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsUint32(uint32_t* aResult)
-{
+nsVariantBase::GetAsUint32(uint32_t* aResult) {
   return mData.ConvertToUint32(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsUint64(uint64_t* aResult)
-{
+nsVariantBase::GetAsUint64(uint64_t* aResult) {
   return mData.ConvertToUint64(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsFloat(float* aResult)
-{
+nsVariantBase::GetAsFloat(float* aResult) {
   return mData.ConvertToFloat(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsDouble(double* aResult)
-{
+nsVariantBase::GetAsDouble(double* aResult) {
   return mData.ConvertToDouble(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsBool(bool* aResult)
-{
-  return mData.ConvertToBool(aResult);
-}
+nsVariantBase::GetAsBool(bool* aResult) { return mData.ConvertToBool(aResult); }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsChar(char* aResult)
-{
-  return mData.ConvertToChar(aResult);
-}
+nsVariantBase::GetAsChar(char* aResult) { return mData.ConvertToChar(aResult); }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsWChar(char16_t* aResult)
-{
+nsVariantBase::GetAsWChar(char16_t* aResult) {
   return mData.ConvertToWChar(aResult);
 }
 
 NS_IMETHODIMP_(nsresult)
-nsVariantBase::GetAsID(nsID* aResult)
-{
-  return mData.ConvertToID(aResult);
-}
+nsVariantBase::GetAsID(nsID* aResult) { return mData.ConvertToID(aResult); }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsAString(nsAString& aResult)
-{
+nsVariantBase::GetAsAString(nsAString& aResult) {
   return mData.ConvertToAString(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsACString(nsACString& aResult)
-{
+nsVariantBase::GetAsACString(nsACString& aResult) {
   return mData.ConvertToACString(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsAUTF8String(nsAUTF8String& aResult)
-{
+nsVariantBase::GetAsAUTF8String(nsAUTF8String& aResult) {
   return mData.ConvertToAUTF8String(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsString(char** aResult)
-{
+nsVariantBase::GetAsString(char** aResult) {
   return mData.ConvertToString(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsWString(char16_t** aResult)
-{
+nsVariantBase::GetAsWString(char16_t** aResult) {
   return mData.ConvertToWString(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsISupports(nsISupports** aResult)
-{
+nsVariantBase::GetAsISupports(nsISupports** aResult) {
   return mData.ConvertToISupports(aResult);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsJSVal(JS::MutableHandleValue)
-{
+nsVariantBase::GetAsJSVal(JS::MutableHandleValue) {
   // Can only get the jsval from an XPCVariant.
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsInterface(nsIID** aIID, void** aInterface)
-{
+nsVariantBase::GetAsInterface(nsIID** aIID, void** aInterface) {
   return mData.ConvertToInterface(aIID, aInterface);
 }
 
 NS_IMETHODIMP_(nsresult)
-nsVariantBase::GetAsArray(uint16_t* aType, nsIID* aIID,
-                      uint32_t* aCount, void** aPtr)
-{
+nsVariantBase::GetAsArray(uint16_t* aType, nsIID* aIID, uint32_t* aCount,
+                          void** aPtr) {
   return mData.ConvertToArray(aType, aIID, aCount, aPtr);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsStringWithSize(uint32_t* aSize, char** aStr)
-{
+nsVariantBase::GetAsStringWithSize(uint32_t* aSize, char** aStr) {
   return mData.ConvertToStringWithSize(aSize, aStr);
 }
 
 NS_IMETHODIMP
-nsVariantBase::GetAsWStringWithSize(uint32_t* aSize, char16_t** aStr)
-{
+nsVariantBase::GetAsWStringWithSize(uint32_t* aSize, char16_t** aStr) {
   return mData.ConvertToWStringWithSize(aSize, aStr);
 }
 
 /***************************************************************************/
 
 NS_IMETHODIMP
-nsVariantBase::GetWritable(bool* aWritable)
-{
+nsVariantBase::GetWritable(bool* aWritable) {
   *aWritable = mWritable;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsVariantBase::SetWritable(bool aWritable)
-{
+nsVariantBase::SetWritable(bool aWritable) {
   if (!mWritable && aWritable) {
     return NS_ERROR_FAILURE;
   }
@@ -1795,8 +1620,7 @@ nsVariantBase::SetWritable(bool aWritable)
 // 'SetFrom' functions.
 
 NS_IMETHODIMP
-nsVariantBase::SetAsInt8(uint8_t aValue)
-{
+nsVariantBase::SetAsInt8(uint8_t aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1805,8 +1629,7 @@ nsVariantBase::SetAsInt8(uint8_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsInt16(int16_t aValue)
-{
+nsVariantBase::SetAsInt16(int16_t aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1815,8 +1638,7 @@ nsVariantBase::SetAsInt16(int16_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsInt32(int32_t aValue)
-{
+nsVariantBase::SetAsInt32(int32_t aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1825,8 +1647,7 @@ nsVariantBase::SetAsInt32(int32_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsInt64(int64_t aValue)
-{
+nsVariantBase::SetAsInt64(int64_t aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1835,8 +1656,7 @@ nsVariantBase::SetAsInt64(int64_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsUint8(uint8_t aValue)
-{
+nsVariantBase::SetAsUint8(uint8_t aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1845,8 +1665,7 @@ nsVariantBase::SetAsUint8(uint8_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsUint16(uint16_t aValue)
-{
+nsVariantBase::SetAsUint16(uint16_t aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1855,8 +1674,7 @@ nsVariantBase::SetAsUint16(uint16_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsUint32(uint32_t aValue)
-{
+nsVariantBase::SetAsUint32(uint32_t aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1865,8 +1683,7 @@ nsVariantBase::SetAsUint32(uint32_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsUint64(uint64_t aValue)
-{
+nsVariantBase::SetAsUint64(uint64_t aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1875,8 +1692,7 @@ nsVariantBase::SetAsUint64(uint64_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsFloat(float aValue)
-{
+nsVariantBase::SetAsFloat(float aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1885,8 +1701,7 @@ nsVariantBase::SetAsFloat(float aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsDouble(double aValue)
-{
+nsVariantBase::SetAsDouble(double aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1895,8 +1710,7 @@ nsVariantBase::SetAsDouble(double aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsBool(bool aValue)
-{
+nsVariantBase::SetAsBool(bool aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1905,8 +1719,7 @@ nsVariantBase::SetAsBool(bool aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsChar(char aValue)
-{
+nsVariantBase::SetAsChar(char aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1915,8 +1728,7 @@ nsVariantBase::SetAsChar(char aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsWChar(char16_t aValue)
-{
+nsVariantBase::SetAsWChar(char16_t aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1925,8 +1737,7 @@ nsVariantBase::SetAsWChar(char16_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsID(const nsID& aValue)
-{
+nsVariantBase::SetAsID(const nsID& aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1935,8 +1746,7 @@ nsVariantBase::SetAsID(const nsID& aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsAString(const nsAString& aValue)
-{
+nsVariantBase::SetAsAString(const nsAString& aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1945,8 +1755,7 @@ nsVariantBase::SetAsAString(const nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsACString(const nsACString& aValue)
-{
+nsVariantBase::SetAsACString(const nsACString& aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1955,8 +1764,7 @@ nsVariantBase::SetAsACString(const nsACString& aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsAUTF8String(const nsAUTF8String& aValue)
-{
+nsVariantBase::SetAsAUTF8String(const nsAUTF8String& aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1965,8 +1773,7 @@ nsVariantBase::SetAsAUTF8String(const nsAUTF8String& aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsString(const char* aValue)
-{
+nsVariantBase::SetAsString(const char* aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1974,8 +1781,7 @@ nsVariantBase::SetAsString(const char* aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsWString(const char16_t* aValue)
-{
+nsVariantBase::SetAsWString(const char16_t* aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1983,8 +1789,7 @@ nsVariantBase::SetAsWString(const char16_t* aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsISupports(nsISupports* aValue)
-{
+nsVariantBase::SetAsISupports(nsISupports* aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -1993,8 +1798,7 @@ nsVariantBase::SetAsISupports(nsISupports* aValue)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsInterface(const nsIID& aIID, void* aInterface)
-{
+nsVariantBase::SetAsInterface(const nsIID& aIID, void* aInterface) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -2003,9 +1807,8 @@ nsVariantBase::SetAsInterface(const nsIID& aIID, void* aInterface)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsArray(uint16_t aType, const nsIID* aIID,
-                      uint32_t aCount, void* aPtr)
-{
+nsVariantBase::SetAsArray(uint16_t aType, const nsIID* aIID, uint32_t aCount,
+                          void* aPtr) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -2013,8 +1816,7 @@ nsVariantBase::SetAsArray(uint16_t aType, const nsIID* aIID,
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsStringWithSize(uint32_t aSize, const char* aStr)
-{
+nsVariantBase::SetAsStringWithSize(uint32_t aSize, const char* aStr) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -2022,8 +1824,7 @@ nsVariantBase::SetAsStringWithSize(uint32_t aSize, const char* aStr)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsWStringWithSize(uint32_t aSize, const char16_t* aStr)
-{
+nsVariantBase::SetAsWStringWithSize(uint32_t aSize, const char16_t* aStr) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -2031,8 +1832,7 @@ nsVariantBase::SetAsWStringWithSize(uint32_t aSize, const char16_t* aStr)
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsVoid()
-{
+nsVariantBase::SetAsVoid() {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -2041,8 +1841,7 @@ nsVariantBase::SetAsVoid()
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsEmpty()
-{
+nsVariantBase::SetAsEmpty() {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -2051,8 +1850,7 @@ nsVariantBase::SetAsEmpty()
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetAsEmptyArray()
-{
+nsVariantBase::SetAsEmptyArray() {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -2061,8 +1859,7 @@ nsVariantBase::SetAsEmptyArray()
 }
 
 NS_IMETHODIMP
-nsVariantBase::SetFromVariant(nsIVariant* aValue)
-{
+nsVariantBase::SetFromVariant(nsIVariant* aValue) {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -2072,7 +1869,6 @@ nsVariantBase::SetFromVariant(nsIVariant* aValue)
 /* nsVariant implementation */
 
 NS_IMPL_ISUPPORTS(nsVariant, nsIVariant, nsIWritableVariant)
-
 
 /* nsVariantCC implementation */
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsVariantCC)

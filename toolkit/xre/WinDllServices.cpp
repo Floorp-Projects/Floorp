@@ -25,9 +25,7 @@ namespace mozilla {
 // Returns a Vector of currently-loaded module base addresses. Basically this
 // is a wrapper around EnumProcessModulesEx()
 // In case of error, returns an empty Vector.
-static Vector<uintptr_t, 0, InfallibleAllocPolicy>
-GetProcessModuleBases()
-{
+static Vector<uintptr_t, 0, InfallibleAllocPolicy> GetProcessModuleBases() {
   Vector<uintptr_t, 0, InfallibleAllocPolicy> ret;
   // At the time this is called, we are far into process execution so we can
   // expect quite a few modules to be loaded. 100 seems reasonable to start.
@@ -56,8 +54,7 @@ GetProcessModuleBases()
 // This class keeps track of incoming module load events, and takes
 // care of processing these events, weeding out trusted DLLs and filling in
 // remaining data.
-class UntrustedModulesManager
-{
+class UntrustedModulesManager {
   // This mutex does synchronization for all members.
   //
   // WARNING: This mutex locks during the Windows loader, which means you must
@@ -95,10 +92,8 @@ class UntrustedModulesManager
   Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy> mProcessedEvents;
   Telemetry::CombinedStacks mProcessedStacks;
 
-public:
-  UntrustedModulesManager()
-    : mMutex("UntrustedModulesManager::mMutex")
-  {
+ public:
+  UntrustedModulesManager() : mMutex("UntrustedModulesManager::mMutex") {
     // Ensure whitelisted paths are initialized on the main thread.
     MOZ_ASSERT(NS_IsMainThread());
     widget::WinUtils::GetWhitelistedPaths();
@@ -109,8 +104,7 @@ public:
   //
   // WARNING: This is called within the loader; only trivial calls are allowed.
   void OnNewEvents(
-      const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents)
-  {
+      const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents) {
     // Hold a reference to DllServices to ensure the object doesn't get deleted
     // during this call.
     RefPtr<DllServices> dllSvcRef(DllServices::Get());
@@ -124,8 +118,8 @@ public:
     // is the last chance to fill in thread name.
     const char* thisThreadName = PR_GetThreadName(PR_GetCurrentThread());
 
-    // Lock mQueuedEvents to append events and fill in thread name if possible...
-    // Only trivial (loader lock friendly) code allowed here!
+    // Lock mQueuedEvents to append events and fill in thread name if
+    // possible... Only trivial (loader lock friendly) code allowed here!
     MutexAutoLock lock(mMutex);
 
     for (auto& event : aEvents) {
@@ -146,8 +140,7 @@ public:
    *          that we could end up calling ProcessStartupModules() multiple
    *          times, which is totally safe, and would be extremely rare.
    */
-  void ProcessQueuedEvents(bool& aHasProcessedStartupModules)
-  {
+  void ProcessQueuedEvents(bool& aHasProcessedStartupModules) {
     MOZ_ASSERT(!NS_IsMainThread());
 
     // Hold a reference to DllServices to ensure the object doesn't get deleted
@@ -162,7 +155,7 @@ public:
     Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy> queuedEvents;
     aHasProcessedStartupModules = false;
 
-    { // Scope for lock
+    {  // Scope for lock
       // Lock mQueuedEvents to steal its contents, and
       // mHasProcessedStartupModules to see if we can skip some steps.
       // Only trivial (loader lock friendly) code allowed here!
@@ -181,10 +174,11 @@ public:
     for (auto& e : queuedEvents) {
       // Create a copy of the event without its modules; we'll then fill them
       // in, filtering out any trusted modules we can ignore.
-      ModuleLoadEvent eventCopy(e, ModuleLoadEvent::CopyOption::CopyWithoutModules);
+      ModuleLoadEvent eventCopy(
+          e, ModuleLoadEvent::CopyOption::CopyWithoutModules);
       for (auto& m : e.mModules) {
-        Maybe<bool> ret = mEvaluator.IsModuleTrusted(m, eventCopy,
-                                                     dllSvcRef.get());
+        Maybe<bool> ret =
+            mEvaluator.IsModuleTrusted(m, eventCopy, dllSvcRef.get());
         if (ret.isNothing()) {
           // If there was an error, assume the DLL is trusted to avoid
           // flooding the telemetry packet, but record that an error occurred.
@@ -220,7 +214,7 @@ public:
           stackProcessor.GetStackAndModules(stdCopy));
     }
 
-    { // Scope for lock
+    {  // Scope for lock
       // Lock mTrustedModuleHistory and mProcessedEvents in order to merge the
       // data we just processed.
       // Only trivial (loader lock friendly) code allowed here!
@@ -256,8 +250,7 @@ public:
    *                                     unnecessary locking.
    * @return true if any events were added to mQueuedEvents.
    */
-  bool ProcessStartupModules(bool aHasProcessedStartupModules)
-  {
+  bool ProcessStartupModules(bool aHasProcessedStartupModules) {
     MOZ_ASSERT(!NS_IsMainThread());
 
     // Hold a reference to DllServices to ensure the object doesn't get deleted
@@ -278,7 +271,7 @@ public:
 
     Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy> startupEvents;
 
-    { // Scope for lock
+    {  // Scope for lock
       // Lock mTrustedModuleHistory and mProcessedEvents in order to form
       // list of startup modules.
       // Only trivial (loader lock friendly) code allowed here!
@@ -330,8 +323,7 @@ public:
       MOZ_ASSERT(e.mModules.length() == 1);
       ModuleLoadEvent::ModuleInfo& mi(e.mModules[0]);
       widget::WinUtils::GetModuleFullPath((HMODULE)mi.mBase, mi.mLdrName);
-      Unused << NS_NewLocalFile(mi.mLdrName,
-                                false, getter_AddRefs(mi.mFile));
+      Unused << NS_NewLocalFile(mi.mLdrName, false, getter_AddRefs(mi.mFile));
     }
 
     // Lock mQueuedEvents to add the new items.
@@ -343,8 +335,7 @@ public:
     return true;
   }
 
-  bool GetTelemetryData(UntrustedModuleLoadTelemetryData& aOut)
-  {
+  bool GetTelemetryData(UntrustedModuleLoadTelemetryData& aOut) {
     MOZ_ASSERT(!NS_IsMainThread());
 
     // Hold a reference to DllServices to ensure the object doesn't get deleted
@@ -378,7 +369,8 @@ public:
 };
 
 const char* DllServices::kTopicDllLoadedMainThread = "dll-loaded-main-thread";
-const char* DllServices::kTopicDllLoadedNonMainThread = "dll-loaded-non-main-thread";
+const char* DllServices::kTopicDllLoadedNonMainThread =
+    "dll-loaded-non-main-thread";
 
 // In order to prevent sInstance from being "woken back up" after it's been
 // cleared on shutdown, this will let us know if sInstance is empty because
@@ -386,9 +378,7 @@ const char* DllServices::kTopicDllLoadedNonMainThread = "dll-loaded-non-main-thr
 static Atomic<bool> sDllServicesHasBeenSet;
 static StaticRefPtr<DllServices> sInstance;
 
-DllServices*
-DllServices::Get()
-{
+DllServices* DllServices::Get() {
   if (sDllServicesHasBeenSet) {
     return sInstance;
   }
@@ -405,20 +395,15 @@ DllServices::Get()
 }
 
 DllServices::DllServices()
-  : mUntrustedModulesManager(new UntrustedModulesManager())
-{
-}
+    : mUntrustedModulesManager(new UntrustedModulesManager()) {}
 
-bool
-DllServices::GetUntrustedModuleTelemetryData(
-    UntrustedModuleLoadTelemetryData& aOut)
-{
+bool DllServices::GetUntrustedModuleTelemetryData(
+    UntrustedModuleLoadTelemetryData& aOut) {
   return mUntrustedModulesManager->GetTelemetryData(aOut);
 }
 
-void
-DllServices::NotifyDllLoad(const bool aIsMainThread, const nsString& aDllName)
-{
+void DllServices::NotifyDllLoad(const bool aIsMainThread,
+                                const nsString& aDllName) {
   const char* topic;
 
   if (aIsMainThread) {
@@ -431,11 +416,9 @@ DllServices::NotifyDllLoad(const bool aIsMainThread, const nsString& aDllName)
   obsServ->NotifyObservers(nullptr, topic, aDllName.get());
 }
 
-void
-DllServices::NotifyUntrustedModuleLoads(
-    const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents)
-{
+void DllServices::NotifyUntrustedModuleLoads(
+    const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents) {
   mUntrustedModulesManager->OnNewEvents(aEvents);
 }
 
-}// namespace mozilla
+}  // namespace mozilla

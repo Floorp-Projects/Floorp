@@ -13,22 +13,17 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult
-DispatcherTrait::Dispatch(TaskCategory aCategory,
-                          already_AddRefed<nsIRunnable>&& aRunnable)
-{
+nsresult DispatcherTrait::Dispatch(TaskCategory aCategory,
+                                   already_AddRefed<nsIRunnable>&& aRunnable) {
   return SchedulerGroup::UnlabeledDispatch(aCategory, std::move(aRunnable));
 }
 
-nsISerialEventTarget*
-DispatcherTrait::EventTargetFor(TaskCategory aCategory) const
-{
+nsISerialEventTarget* DispatcherTrait::EventTargetFor(
+    TaskCategory aCategory) const {
   return GetMainThreadSerialEventTarget();
 }
 
-AbstractThread*
-DispatcherTrait::AbstractMainThreadFor(TaskCategory aCategory)
-{
+AbstractThread* DispatcherTrait::AbstractMainThreadFor(TaskCategory aCategory) {
   // Return non DocGroup version by default.
   return AbstractThread::MainThread();
 }

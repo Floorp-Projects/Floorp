@@ -10,169 +10,119 @@
 #include "nsTableFrame.h"
 
 nsDisplayItemGeometry::nsDisplayItemGeometry(nsDisplayItem* aItem,
-                                             nsDisplayListBuilder* aBuilder)
-{
+                                             nsDisplayListBuilder* aBuilder) {
   MOZ_COUNT_CTOR(nsDisplayItemGeometry);
   bool snap;
   mBounds = aItem->GetBounds(aBuilder, &snap);
 }
 
-nsDisplayItemGeometry::~nsDisplayItemGeometry()
-{
+nsDisplayItemGeometry::~nsDisplayItemGeometry() {
   MOZ_COUNT_DTOR(nsDisplayItemGeometry);
 }
 
 nsDisplayItemGenericGeometry::nsDisplayItemGenericGeometry(
-  nsDisplayItem* aItem,
-  nsDisplayListBuilder* aBuilder)
-  : nsDisplayItemGeometry(aItem, aBuilder)
-  , mBorderRect(aItem->GetBorderRect())
-{
-}
+    nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplayItemGeometry(aItem, aBuilder),
+      mBorderRect(aItem->GetBorderRect()) {}
 
-bool
-ShouldSyncDecodeImages(nsDisplayListBuilder* aBuilder)
-{
+bool ShouldSyncDecodeImages(nsDisplayListBuilder* aBuilder) {
   return aBuilder->ShouldSyncDecodeImages();
 }
 
-void
-nsDisplayItemGenericGeometry::MoveBy(const nsPoint& aOffset)
-{
+void nsDisplayItemGenericGeometry::MoveBy(const nsPoint& aOffset) {
   nsDisplayItemGeometry::MoveBy(aOffset);
   mBorderRect.MoveBy(aOffset);
 }
 
 nsDisplayItemBoundsGeometry::nsDisplayItemBoundsGeometry(
-  nsDisplayItem* aItem,
-  nsDisplayListBuilder* aBuilder)
-  : nsDisplayItemGeometry(aItem, aBuilder)
-{
+    nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplayItemGeometry(aItem, aBuilder) {
   nscoord radii[8];
   mHasRoundedCorners = aItem->Frame()->GetBorderRadii(radii);
 }
 
 nsDisplayBorderGeometry::nsDisplayBorderGeometry(nsDisplayItem* aItem,
                                                  nsDisplayListBuilder* aBuilder)
-  : nsDisplayItemGeometry(aItem, aBuilder)
-  , nsImageGeometryMixin(aItem, aBuilder)
-{
-}
+    : nsDisplayItemGeometry(aItem, aBuilder),
+      nsImageGeometryMixin(aItem, aBuilder) {}
 
 nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(
-  nsDisplayBackgroundImage* aItem,
-  nsDisplayListBuilder* aBuilder)
-  : nsDisplayItemGeometry(aItem, aBuilder)
-  , nsImageGeometryMixin(aItem, aBuilder)
-  , mPositioningArea(aItem->GetPositioningArea())
-  , mDestRect(aItem->GetDestRect())
-{
-}
+    nsDisplayBackgroundImage* aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplayItemGeometry(aItem, aBuilder),
+      nsImageGeometryMixin(aItem, aBuilder),
+      mPositioningArea(aItem->GetPositioningArea()),
+      mDestRect(aItem->GetDestRect()) {}
 
-void
-nsDisplayBackgroundGeometry::MoveBy(const nsPoint& aOffset)
-{
+void nsDisplayBackgroundGeometry::MoveBy(const nsPoint& aOffset) {
   nsDisplayItemGeometry::MoveBy(aOffset);
   mPositioningArea.MoveBy(aOffset);
   mDestRect.MoveBy(aOffset);
 }
 
 nsDisplayThemedBackgroundGeometry::nsDisplayThemedBackgroundGeometry(
-  nsDisplayThemedBackground* aItem,
-  nsDisplayListBuilder* aBuilder)
-  : nsDisplayItemGeometry(aItem, aBuilder)
-  , mPositioningArea(aItem->GetPositioningArea())
-  , mWindowIsActive(aItem->IsWindowActive())
-{
-}
+    nsDisplayThemedBackground* aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplayItemGeometry(aItem, aBuilder),
+      mPositioningArea(aItem->GetPositioningArea()),
+      mWindowIsActive(aItem->IsWindowActive()) {}
 
-void
-nsDisplayThemedBackgroundGeometry::MoveBy(const nsPoint& aOffset)
-{
+void nsDisplayThemedBackgroundGeometry::MoveBy(const nsPoint& aOffset) {
   nsDisplayItemGeometry::MoveBy(aOffset);
   mPositioningArea.MoveBy(aOffset);
 }
 
 nsDisplayBoxShadowInnerGeometry::nsDisplayBoxShadowInnerGeometry(
-  nsDisplayItem* aItem,
-  nsDisplayListBuilder* aBuilder)
-  : nsDisplayItemGeometry(aItem, aBuilder)
-  , mPaddingRect(aItem->GetPaddingRect())
-{
-}
+    nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplayItemGeometry(aItem, aBuilder),
+      mPaddingRect(aItem->GetPaddingRect()) {}
 
-void
-nsDisplayBoxShadowInnerGeometry::MoveBy(const nsPoint& aOffset)
-{
+void nsDisplayBoxShadowInnerGeometry::MoveBy(const nsPoint& aOffset) {
   nsDisplayItemGeometry::MoveBy(aOffset);
   mPaddingRect.MoveBy(aOffset);
 }
 
 nsDisplayBoxShadowOuterGeometry::nsDisplayBoxShadowOuterGeometry(
-  nsDisplayItem* aItem,
-  nsDisplayListBuilder* aBuilder,
-  float aOpacity)
-  : nsDisplayItemGenericGeometry(aItem, aBuilder)
-  , mOpacity(aOpacity)
-{
-}
+    nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder, float aOpacity)
+    : nsDisplayItemGenericGeometry(aItem, aBuilder), mOpacity(aOpacity) {}
 
-void
-nsDisplaySolidColorRegionGeometry::MoveBy(const nsPoint& aOffset)
-{
+void nsDisplaySolidColorRegionGeometry::MoveBy(const nsPoint& aOffset) {
   nsDisplayItemGeometry::MoveBy(aOffset);
   mRegion.MoveBy(aOffset);
 }
 
 nsDisplaySVGEffectGeometry::nsDisplaySVGEffectGeometry(
-  nsDisplayEffectsBase* aItem,
-  nsDisplayListBuilder* aBuilder)
-  : nsDisplayItemGeometry(aItem, aBuilder)
-  , mBBox(aItem->BBoxInUserSpace())
-  , mUserSpaceOffset(aItem->UserSpaceOffset())
-  , mFrameOffsetToReferenceFrame(aItem->ToReferenceFrame())
-  , mOpacity(aItem->Frame()->StyleEffects()->mOpacity)
-  , mHandleOpacity(aItem->ShouldHandleOpacity())
-{
-}
+    nsDisplayEffectsBase* aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplayItemGeometry(aItem, aBuilder),
+      mBBox(aItem->BBoxInUserSpace()),
+      mUserSpaceOffset(aItem->UserSpaceOffset()),
+      mFrameOffsetToReferenceFrame(aItem->ToReferenceFrame()),
+      mOpacity(aItem->Frame()->StyleEffects()->mOpacity),
+      mHandleOpacity(aItem->ShouldHandleOpacity()) {}
 
-void
-nsDisplaySVGEffectGeometry::MoveBy(const nsPoint& aOffset)
-{
+void nsDisplaySVGEffectGeometry::MoveBy(const nsPoint& aOffset) {
   mBounds.MoveBy(aOffset);
   mFrameOffsetToReferenceFrame += aOffset;
 }
 
 nsDisplayMasksAndClipPathsGeometry::nsDisplayMasksAndClipPathsGeometry(
-                                      nsDisplayMasksAndClipPaths* aItem,
-                                      nsDisplayListBuilder* aBuilder)
-  : nsDisplaySVGEffectGeometry(aItem, aBuilder)
-  , nsImageGeometryMixin(aItem, aBuilder)
-  , mDestRects(aItem->GetDestRects())
-{
-}
+    nsDisplayMasksAndClipPaths* aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplaySVGEffectGeometry(aItem, aBuilder),
+      nsImageGeometryMixin(aItem, aBuilder),
+      mDestRects(aItem->GetDestRects()) {}
 
-nsDisplayFiltersGeometry::nsDisplayFiltersGeometry(nsDisplayFilters* aItem,
-                                                   nsDisplayListBuilder* aBuilder)
-  : nsDisplaySVGEffectGeometry(aItem, aBuilder)
-  , nsImageGeometryMixin(aItem, aBuilder)
-{
-}
+nsDisplayFiltersGeometry::nsDisplayFiltersGeometry(
+    nsDisplayFilters* aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplaySVGEffectGeometry(aItem, aBuilder),
+      nsImageGeometryMixin(aItem, aBuilder) {}
 
 nsCharClipGeometry::nsCharClipGeometry(nsCharClipDisplayItem* aItem,
                                        nsDisplayListBuilder* aBuilder)
-  : nsDisplayItemGenericGeometry(aItem, aBuilder)
-  , mVisIStartEdge(aItem->mVisIStartEdge)
-  , mVisIEndEdge(aItem->mVisIEndEdge)
-{
-}
+    : nsDisplayItemGenericGeometry(aItem, aBuilder),
+      mVisIStartEdge(aItem->mVisIStartEdge),
+      mVisIEndEdge(aItem->mVisIEndEdge) {}
 
 nsDisplayTableItemGeometry::nsDisplayTableItemGeometry(
-  nsDisplayTableItem* aItem,
-  nsDisplayListBuilder* aBuilder,
-  const nsPoint& aFrameOffsetToViewport)
-  : nsDisplayItemGenericGeometry(aItem, aBuilder)
-  , nsImageGeometryMixin(aItem, aBuilder)
-  , mFrameOffsetToViewport(aFrameOffsetToViewport)
-{
-}
+    nsDisplayTableItem* aItem, nsDisplayListBuilder* aBuilder,
+    const nsPoint& aFrameOffsetToViewport)
+    : nsDisplayItemGenericGeometry(aItem, aBuilder),
+      nsImageGeometryMixin(aItem, aBuilder),
+      mFrameOffsetToViewport(aFrameOffsetToViewport) {}

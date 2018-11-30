@@ -36,35 +36,28 @@ struct nsPoint : public mozilla::gfx::BasePoint<nscoord, nsPoint> {
    * @param aFromAPP the APP to scale from
    * @param aToAPP the APP to scale to
    */
-  MOZ_MUST_USE inline nsPoint
-    ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
+  MOZ_MUST_USE inline nsPoint ScaleToOtherAppUnits(int32_t aFromAPP,
+                                                   int32_t aToAPP) const;
 
-  MOZ_MUST_USE inline nsPoint
-    RemoveResolution(const float resolution) const;
-  MOZ_MUST_USE inline nsPoint
-    ApplyResolution(const float resolution) const;
+  MOZ_MUST_USE inline nsPoint RemoveResolution(const float resolution) const;
+  MOZ_MUST_USE inline nsPoint ApplyResolution(const float resolution) const;
 };
 
 inline nsPoint ToAppUnits(const nsIntPoint& aPoint, nscoord aAppUnitsPerPixel);
 
-inline nsIntPoint
-nsPoint::ScaleToNearestPixels(float aXScale, float aYScale,
-                              nscoord aAppUnitsPerPixel) const
-{
+inline nsIntPoint nsPoint::ScaleToNearestPixels(
+    float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const {
   return nsIntPoint(
       NSToIntRoundUp(NSAppUnitsToDoublePixels(x, aAppUnitsPerPixel) * aXScale),
       NSToIntRoundUp(NSAppUnitsToDoublePixels(y, aAppUnitsPerPixel) * aYScale));
 }
 
-inline nsIntPoint
-nsPoint::ToNearestPixels(nscoord aAppUnitsPerPixel) const
-{
+inline nsIntPoint nsPoint::ToNearestPixels(nscoord aAppUnitsPerPixel) const {
   return ScaleToNearestPixels(1.0f, 1.0f, aAppUnitsPerPixel);
 }
 
-inline nsPoint
-nsPoint::ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const
-{
+inline nsPoint nsPoint::ScaleToOtherAppUnits(int32_t aFromAPP,
+                                             int32_t aToAPP) const {
   if (aFromAPP != aToAPP) {
     nsPoint point;
     point.x = NSToCoordRound(NSCoordScale(x, aFromAPP, aToAPP));
@@ -74,8 +67,7 @@ nsPoint::ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const
   return *this;
 }
 
-inline nsPoint
-nsPoint::RemoveResolution(const float resolution) const {
+inline nsPoint nsPoint::RemoveResolution(const float resolution) const {
   if (resolution != 1.0f) {
     nsPoint point;
     point.x = NSToCoordRound(NSCoordToFloat(x) / resolution);
@@ -85,8 +77,7 @@ nsPoint::RemoveResolution(const float resolution) const {
   return *this;
 }
 
-inline nsPoint
-nsPoint::ApplyResolution(const float resolution) const {
+inline nsPoint nsPoint::ApplyResolution(const float resolution) const {
   if (resolution != 1.0f) {
     nsPoint point;
     point.x = NSToCoordRound(NSCoordToFloat(x) * resolution);
@@ -97,9 +88,7 @@ nsPoint::ApplyResolution(const float resolution) const {
 }
 
 // app units are integer multiples of pixels, so no rounding needed
-inline nsPoint
-ToAppUnits(const nsIntPoint& aPoint, nscoord aAppUnitsPerPixel)
-{
+inline nsPoint ToAppUnits(const nsIntPoint& aPoint, nscoord aAppUnitsPerPixel) {
   return nsPoint(NSIntPixelsToAppUnits(aPoint.x, aAppUnitsPerPixel),
                  NSIntPixelsToAppUnits(aPoint.y, aAppUnitsPerPixel));
 }

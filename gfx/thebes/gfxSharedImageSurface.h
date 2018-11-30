@@ -9,16 +9,19 @@
 
 #include "gfxBaseSharedMemorySurface.h"
 
-class gfxSharedImageSurface : public gfxBaseSharedMemorySurface<gfxImageSurface, gfxSharedImageSurface>
-{
-  typedef gfxBaseSharedMemorySurface<gfxImageSurface, gfxSharedImageSurface> Super;
-  friend class gfxBaseSharedMemorySurface<gfxImageSurface, gfxSharedImageSurface>;
-private:
-    gfxSharedImageSurface(const mozilla::gfx::IntSize& aSize, long aStride,
-                          gfxImageFormat aFormat,
-                          const mozilla::ipc::Shmem& aShmem)
-      : Super(aSize, aStride, aFormat, aShmem)
-    {}
+class gfxSharedImageSurface
+    : public gfxBaseSharedMemorySurface<gfxImageSurface,
+                                        gfxSharedImageSurface> {
+  typedef gfxBaseSharedMemorySurface<gfxImageSurface, gfxSharedImageSurface>
+      Super;
+  friend class gfxBaseSharedMemorySurface<gfxImageSurface,
+                                          gfxSharedImageSurface>;
+
+ private:
+  gfxSharedImageSurface(const mozilla::gfx::IntSize& aSize, long aStride,
+                        gfxImageFormat aFormat,
+                        const mozilla::ipc::Shmem& aShmem)
+      : Super(aSize, aStride, aFormat, aShmem) {}
 };
 
 #endif /* GFX_SHARED_IMAGESURFACE_H */

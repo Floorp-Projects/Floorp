@@ -20,7 +20,7 @@ enum WakeLockState {
  */
 WakeLockState ComputeWakeLockState(int aNumLocks, int aNumHidden);
 
-} // namespace hal
-} // namespace mozilla
+}  // namespace hal
+}  // namespace mozilla
 
 #endif /* __HAL_WAKELOCK_H_ */

@@ -12,13 +12,11 @@ namespace a11y {
 
 namespace DOMtoATK {
 
-void
-AddBOMs(nsACString& aDest, const nsACString& aSource)
-{
+void AddBOMs(nsACString& aDest, const nsACString& aSource) {
   uint32_t destlength = 0;
 
   // First compute how much room we will need.
-  for (uint32_t srci = 0; srci < aSource.Length(); ) {
+  for (uint32_t srci = 0; srci < aSource.Length();) {
     int bytes = UTF8traits::bytes(aSource[srci]);
     if (bytes >= 4) {
       // Non-BMP character, will add a BOM after it.
@@ -29,14 +27,15 @@ AddBOMs(nsACString& aDest, const nsACString& aSource)
     destlength += bytes;
   }
 
-  uint32_t desti = 0; // Index within aDest.
+  uint32_t desti = 0;  // Index within aDest.
 
   // Add BOMs after non-BMP characters.
   aDest.SetLength(destlength);
-  for (uint32_t srci = 0; srci < aSource.Length(); ) {
+  for (uint32_t srci = 0; srci < aSource.Length();) {
     uint32_t bytes = UTF8traits::bytes(aSource[srci]);
 
-    MOZ_ASSERT(bytes <= aSource.Length() - srci, "We should have the whole sequence");
+    MOZ_ASSERT(bytes <= aSource.Length() - srci,
+               "We should have the whole sequence");
 
     // Copy whole sequence.
     aDest.Replace(desti, bytes, Substring(aSource, srci, bytes));
@@ -53,15 +52,16 @@ AddBOMs(nsACString& aDest, const nsACString& aSource)
       desti += 3;
     }
   }
-  MOZ_ASSERT(desti == destlength, "Incoherency between computed length"
-                                  "and actually translated length");
+  MOZ_ASSERT(desti == destlength,
+             "Incoherency between computed length"
+             "and actually translated length");
 }
 
-void
-ATKStringConverterHelper::AdjustOffsets(gint* aStartOffset, gint* aEndOffset,
-                                        gint count)
-{
-  MOZ_ASSERT(!mAdjusted, "DOMtoATK::ATKStringConverterHelper::AdjustOffsets needs to be called only once");
+void ATKStringConverterHelper::AdjustOffsets(gint* aStartOffset,
+                                             gint* aEndOffset, gint count) {
+  MOZ_ASSERT(!mAdjusted,
+             "DOMtoATK::ATKStringConverterHelper::AdjustOffsets needs to be "
+             "called only once");
 
   if (*aStartOffset > 0) {
     (*aStartOffset)--;
@@ -78,17 +78,16 @@ ATKStringConverterHelper::AdjustOffsets(gint* aStartOffset, gint* aEndOffset,
 #endif
 }
 
-gchar*
-ATKStringConverterHelper::FinishUTF16toUTF8(nsCString& aStr)
-{
+gchar* ATKStringConverterHelper::FinishUTF16toUTF8(nsCString& aStr) {
   int skip = 0;
 
   if (mStartShifted) {
     // AdjustOffsets added a leading character.
 
     MOZ_ASSERT(aStr.Length() > 0, "There should be a leading character");
-    MOZ_ASSERT(static_cast<int>(aStr.Length()) >= UTF8traits::bytes(aStr.CharAt(0)),
-               "The leading character should be complete");
+    MOZ_ASSERT(
+        static_cast<int>(aStr.Length()) >= UTF8traits::bytes(aStr.CharAt(0)),
+        "The leading character should be complete");
 
     // drop first character
     skip = UTF8traits::bytes(aStr.CharAt(0));
@@ -108,7 +107,8 @@ ATKStringConverterHelper::FinishUTF16toUTF8(nsCString& aStr)
     }
     MOZ_ASSERT(trail >= 0,
                "There should be at least a whole trailing character");
-    MOZ_ASSERT(trail + UTF8traits::bytes(aStr.CharAt(trail)) == static_cast<int>(aStr.Length()),
+    MOZ_ASSERT(trail + UTF8traits::bytes(aStr.CharAt(trail)) ==
+                   static_cast<int>(aStr.Length()),
                "The trailing character should be complete");
 
     // Drop the last character.
@@ -119,10 +119,10 @@ ATKStringConverterHelper::FinishUTF16toUTF8(nsCString& aStr)
   return g_strdup(aStr.get() + skip);
 }
 
-gchar*
-ATKStringConverterHelper::ConvertAdjusted(const nsAString& aStr)
-{
-  MOZ_ASSERT(mAdjusted, "DOMtoATK::ATKStringConverterHelper::AdjustOffsets needs to be called before ATKStringConverterHelper::ConvertAdjusted");
+gchar* ATKStringConverterHelper::ConvertAdjusted(const nsAString& aStr) {
+  MOZ_ASSERT(mAdjusted,
+             "DOMtoATK::ATKStringConverterHelper::AdjustOffsets needs to be "
+             "called before ATKStringConverterHelper::ConvertAdjusted");
 
   NS_ConvertUTF16toUTF8 cautoStr(aStr);
   if (!cautoStr.get()) {
@@ -134,9 +134,7 @@ ATKStringConverterHelper::ConvertAdjusted(const nsAString& aStr)
   return FinishUTF16toUTF8(cautoStrBOMs);
 }
 
-gchar*
-Convert(const nsAString& aStr)
-{
+gchar* Convert(const nsAString& aStr) {
   NS_ConvertUTF16toUTF8 cautoStr(aStr);
   if (!cautoStr.get()) {
     return nullptr;
@@ -147,15 +145,13 @@ Convert(const nsAString& aStr)
   return g_strdup(cautoStrBOMs.get());
 }
 
-void
-ConvertTexttoAsterisks(nsAString& aString)
-{
+void ConvertTexttoAsterisks(nsAString& aString) {
   for (uint32_t i = 0; i < aString.Length(); i++) {
     aString.ReplaceLiteral(i, 1, u"*");
   }
 }
 
-}
+}  // namespace DOMtoATK
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla

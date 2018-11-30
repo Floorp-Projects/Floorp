@@ -18,59 +18,45 @@
 #include "nsDOMString.h"
 
 #define NS_ATTRNAME_NODEINFO_BIT 1
-class nsAttrName
-{
-public:
-  nsAttrName(const nsAttrName& aOther)
-    : mBits(aOther.mBits)
-  {
+class nsAttrName {
+ public:
+  nsAttrName(const nsAttrName& aOther) : mBits(aOther.mBits) {
     AddRefInternalName();
   }
 
   explicit nsAttrName(nsAtom* aAtom)
-    : mBits(reinterpret_cast<uintptr_t>(aAtom))
-  {
+      : mBits(reinterpret_cast<uintptr_t>(aAtom)) {
     NS_ASSERTION(aAtom, "null atom-name in nsAttrName");
     NS_ADDREF(aAtom);
   }
 
-  explicit nsAttrName(mozilla::dom::NodeInfo* aNodeInfo)
-  {
+  explicit nsAttrName(mozilla::dom::NodeInfo* aNodeInfo) {
     NS_ASSERTION(aNodeInfo, "null nodeinfo-name in nsAttrName");
     if (aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
       mBits = reinterpret_cast<uintptr_t>(aNodeInfo->NameAtom());
       NS_ADDREF(aNodeInfo->NameAtom());
-    }
-    else {
-      mBits = reinterpret_cast<uintptr_t>(aNodeInfo) |
-              NS_ATTRNAME_NODEINFO_BIT;
+    } else {
+      mBits = reinterpret_cast<uintptr_t>(aNodeInfo) | NS_ATTRNAME_NODEINFO_BIT;
       NS_ADDREF(aNodeInfo);
     }
   }
 
-  ~nsAttrName()
-  {
-    ReleaseInternalName();
-  }
+  ~nsAttrName() { ReleaseInternalName(); }
 
-  void SetTo(mozilla::dom::NodeInfo* aNodeInfo)
-  {
+  void SetTo(mozilla::dom::NodeInfo* aNodeInfo) {
     NS_ASSERTION(aNodeInfo, "null nodeinfo-name in nsAttrName");
 
     ReleaseInternalName();
     if (aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
       mBits = reinterpret_cast<uintptr_t>(aNodeInfo->NameAtom());
       NS_ADDREF(aNodeInfo->NameAtom());
-    }
-    else {
-      mBits = reinterpret_cast<uintptr_t>(aNodeInfo) |
-              NS_ATTRNAME_NODEINFO_BIT;
+    } else {
+      mBits = reinterpret_cast<uintptr_t>(aNodeInfo) | NS_ATTRNAME_NODEINFO_BIT;
       NS_ADDREF(aNodeInfo);
     }
   }
 
-  void SetTo(nsAtom* aAtom)
-  {
+  void SetTo(nsAtom* aAtom) {
     NS_ASSERTION(aAtom, "null atom-name in nsAttrName");
 
     ReleaseInternalName();
@@ -78,124 +64,100 @@ public:
     NS_ADDREF(aAtom);
   }
 
-  bool IsAtom() const
-  {
-    return !(mBits & NS_ATTRNAME_NODEINFO_BIT);
-  }
+  bool IsAtom() const { return !(mBits & NS_ATTRNAME_NODEINFO_BIT); }
 
-  mozilla::dom::NodeInfo* NodeInfo() const
-  {
+  mozilla::dom::NodeInfo* NodeInfo() const {
     NS_ASSERTION(!IsAtom(), "getting nodeinfo-value of atom-name");
-    return reinterpret_cast<mozilla::dom::NodeInfo*>(mBits & ~NS_ATTRNAME_NODEINFO_BIT);
+    return reinterpret_cast<mozilla::dom::NodeInfo*>(mBits &
+                                                     ~NS_ATTRNAME_NODEINFO_BIT);
   }
 
-  nsAtom* Atom() const
-  {
+  nsAtom* Atom() const {
     NS_ASSERTION(IsAtom(), "getting atom-value of nodeinfo-name");
     return reinterpret_cast<nsAtom*>(mBits);
   }
 
-  bool Equals(const nsAttrName& aOther) const
-  {
-    return mBits == aOther.mBits;
-  }
+  bool Equals(const nsAttrName& aOther) const { return mBits == aOther.mBits; }
 
   // Faster comparison in the case we know the namespace is null
   // Note that some callers such as AttrArray::IndexOfAttr() will
   // call this function on nsAttrName structs with 0 mBits, so no attempt
   // must be made to do anything with mBits besides comparing it with the
   // incoming aAtom argument.
-  bool Equals(const nsAtom* aAtom) const
-  {
+  bool Equals(const nsAtom* aAtom) const {
     return reinterpret_cast<uintptr_t>(aAtom) == mBits;
   }
 
   // And the same but without forcing callers to atomize
-  bool Equals(const nsAString& aLocalName) const
-  {
+  bool Equals(const nsAString& aLocalName) const {
     return IsAtom() && Atom()->Equals(aLocalName);
   }
 
-  bool Equals(const nsAtom* aLocalName, int32_t aNamespaceID) const
-  {
+  bool Equals(const nsAtom* aLocalName, int32_t aNamespaceID) const {
     if (aNamespaceID == kNameSpaceID_None) {
       return Equals(aLocalName);
     }
     return !IsAtom() && NodeInfo()->Equals(aLocalName, aNamespaceID);
   }
 
-  bool Equals(mozilla::dom::NodeInfo* aNodeInfo) const
-  {
+  bool Equals(mozilla::dom::NodeInfo* aNodeInfo) const {
     return Equals(aNodeInfo->NameAtom(), aNodeInfo->NamespaceID());
   }
 
-  int32_t NamespaceID() const
-  {
+  int32_t NamespaceID() const {
     return IsAtom() ? kNameSpaceID_None : NodeInfo()->NamespaceID();
   }
 
-  int32_t NamespaceEquals(int32_t aNamespaceID) const
-  {
-    return aNamespaceID == kNameSpaceID_None ?
-           IsAtom() :
-           (!IsAtom() && NodeInfo()->NamespaceEquals(aNamespaceID));
+  int32_t NamespaceEquals(int32_t aNamespaceID) const {
+    return aNamespaceID == kNameSpaceID_None
+               ? IsAtom()
+               : (!IsAtom() && NodeInfo()->NamespaceEquals(aNamespaceID));
   }
 
-  nsAtom* LocalName() const
-  {
+  nsAtom* LocalName() const {
     return IsAtom() ? Atom() : NodeInfo()->NameAtom();
   }
 
-  nsAtom* GetPrefix() const
-  {
+  nsAtom* GetPrefix() const {
     return IsAtom() ? nullptr : NodeInfo()->GetPrefixAtom();
   }
 
-  bool QualifiedNameEquals(const nsAString& aName) const
-  {
-    return IsAtom() ? Atom()->Equals(aName) :
-                      NodeInfo()->QualifiedNameEquals(aName);
+  bool QualifiedNameEquals(const nsAString& aName) const {
+    return IsAtom() ? Atom()->Equals(aName)
+                    : NodeInfo()->QualifiedNameEquals(aName);
   }
 
-  void GetQualifiedName(nsAString& aStr) const
-  {
+  void GetQualifiedName(nsAString& aStr) const {
     if (IsAtom()) {
       Atom()->ToString(aStr);
-    }
-    else {
+    } else {
       aStr = NodeInfo()->QualifiedName();
     }
   }
 
 #ifdef MOZILLA_INTERNAL_API
-  void GetPrefix(nsAString& aStr) const
-  {
+  void GetPrefix(nsAString& aStr) const {
     if (IsAtom()) {
       SetDOMStringToNull(aStr);
-    }
-    else {
+    } else {
       NodeInfo()->GetPrefix(aStr);
     }
   }
 #endif
 
-  uint32_t HashValue() const
-  {
+  uint32_t HashValue() const {
     // mBits and uint32_t might have different size. This should silence
     // any warnings or compile-errors. This is what the implementation of
     // NS_PTR_TO_INT32 does to take care of the same problem.
     return mBits - 0;
   }
 
-  bool IsSmaller(const nsAtom* aOther) const
-  {
+  bool IsSmaller(const nsAtom* aOther) const {
     return mBits < reinterpret_cast<uintptr_t>(aOther);
   }
 
-private:
-
-  void AddRefInternalName()
-  {
+ private:
+  void AddRefInternalName() {
     if (IsAtom()) {
       NS_ADDREF(Atom());
     } else {
@@ -203,8 +165,7 @@ private:
     }
   }
 
-  void ReleaseInternalName()
-  {
+  void ReleaseInternalName() {
     if (IsAtom()) {
       Atom()->Release();
     } else {

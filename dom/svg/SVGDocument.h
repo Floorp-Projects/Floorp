@@ -20,41 +20,31 @@ namespace dom {
 
 class SVGForeignObjectElement;
 
-class SVGDocument final : public XMLDocument
-{
-public:
-  SVGDocument()
-    : XMLDocument("image/svg+xml")
-  {
-    mType = eSVG;
-  }
+class SVGDocument final : public XMLDocument {
+ public:
+  SVGDocument() : XMLDocument("image/svg+xml") { mType = eSVG; }
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  void SetCurrentContextPaint(const SVGContextPaint* aContextPaint)
-  {
+  void SetCurrentContextPaint(const SVGContextPaint* aContextPaint) {
     mCurrentContextPaint = aContextPaint;
   }
 
-  const SVGContextPaint* GetCurrentContextPaint() const
-  {
+  const SVGContextPaint* GetCurrentContextPaint() const {
     return mCurrentContextPaint;
   }
 
-private:
-
+ private:
   // This is maintained by AutoSetRestoreSVGContextPaint.
   const SVGContextPaint* mCurrentContextPaint = nullptr;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-inline mozilla::dom::SVGDocument*
-nsIDocument::AsSVGDocument()
-{
+inline mozilla::dom::SVGDocument* nsIDocument::AsSVGDocument() {
   MOZ_ASSERT(IsSVGDocument());
   return static_cast<mozilla::dom::SVGDocument*>(this);
 }
 
-#endif // mozilla_dom_SVGDocument_h
+#endif  // mozilla_dom_SVGDocument_h

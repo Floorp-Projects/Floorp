@@ -18,32 +18,26 @@
 namespace mozilla {
 namespace layers {
 
-IMFYCbCrImage::IMFYCbCrImage(IMFMediaBuffer* aBuffer,
-                             IMF2DBuffer* a2DBuffer,
+IMFYCbCrImage::IMFYCbCrImage(IMFMediaBuffer* aBuffer, IMF2DBuffer* a2DBuffer,
                              KnowsCompositor* aKnowsCompositor,
                              ImageContainer* aContainer)
-  : RecyclingPlanarYCbCrImage(nullptr)
-  , mBuffer(aBuffer)
-  , m2DBuffer(a2DBuffer)
-{
+    : RecyclingPlanarYCbCrImage(nullptr),
+      mBuffer(aBuffer),
+      m2DBuffer(a2DBuffer) {
   mAllocator = aContainer->GetD3D11YCbCrRecycleAllocator(aKnowsCompositor);
 }
 
-IMFYCbCrImage::~IMFYCbCrImage()
-{
+IMFYCbCrImage::~IMFYCbCrImage() {
   if (m2DBuffer) {
     m2DBuffer->Unlock2D();
-  }
-  else {
+  } else {
     mBuffer->Unlock();
   }
 }
 
-/* static */ bool
-IMFYCbCrImage::CopyDataToTexture(const Data& aData,
-                                 ID3D11Device* aDevice,
-                                 DXGIYCbCrTextureData* aTextureData)
-{
+/* static */ bool IMFYCbCrImage::CopyDataToTexture(
+    const Data& aData, ID3D11Device* aDevice,
+    DXGIYCbCrTextureData* aTextureData) {
   MOZ_ASSERT(aTextureData);
 
   HRESULT hr;
@@ -93,20 +87,22 @@ IMFYCbCrImage::CopyDataToTexture(const Data& aData,
     box.back = 1;
     box.right = aData.mYSize.width;
     box.bottom = aData.mYSize.height;
-    ctx->UpdateSubresource(textureY, 0, &box, aData.mYChannel, aData.mYStride, 0);
+    ctx->UpdateSubresource(textureY, 0, &box, aData.mYChannel, aData.mYStride,
+                           0);
 
     box.right = aData.mCbCrSize.width;
     box.bottom = aData.mCbCrSize.height;
-    ctx->UpdateSubresource(textureCb, 0, &box, aData.mCbChannel, aData.mCbCrStride, 0);
-    ctx->UpdateSubresource(textureCr, 0, &box, aData.mCrChannel, aData.mCbCrStride, 0);
+    ctx->UpdateSubresource(textureCb, 0, &box, aData.mCbChannel,
+                           aData.mCbCrStride, 0);
+    ctx->UpdateSubresource(textureCr, 0, &box, aData.mCrChannel,
+                           aData.mCbCrStride, 0);
   }
 
   return true;
 }
 
-TextureClient*
-IMFYCbCrImage::GetD3D11TextureClient(KnowsCompositor* aForwarder)
-{
+TextureClient* IMFYCbCrImage::GetD3D11TextureClient(
+    KnowsCompositor* aForwarder) {
   if (!mAllocator) {
     return nullptr;
   }
@@ -117,7 +113,8 @@ IMFYCbCrImage::GetD3D11TextureClient(KnowsCompositor* aForwarder)
   }
 
   {
-    DXGIYCbCrTextureAllocationHelper helper(mData, TextureFlags::DEFAULT, device);
+    DXGIYCbCrTextureAllocationHelper helper(mData, TextureFlags::DEFAULT,
+                                            device);
     mTextureClient = mAllocator->CreateOrRecycle(helper);
   }
 
@@ -126,7 +123,7 @@ IMFYCbCrImage::GetD3D11TextureClient(KnowsCompositor* aForwarder)
   }
 
   DXGIYCbCrTextureData* data =
-    mTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
+      mTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
 
   if (!CopyDataToTexture(mData, device, data)) {
     // Failed to copy data
@@ -137,9 +134,7 @@ IMFYCbCrImage::GetD3D11TextureClient(KnowsCompositor* aForwarder)
   return mTextureClient;
 }
 
-TextureClient*
-IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
-{
+TextureClient* IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder) {
   if (mTextureClient) {
     return mTextureClient;
   }
@@ -151,5 +146,5 @@ IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
   return GetD3D11TextureClient(aForwarder);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

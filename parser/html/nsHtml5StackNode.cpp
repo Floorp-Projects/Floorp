@@ -55,66 +55,47 @@
 
 #include "nsHtml5StackNode.h"
 
-int32_t
-nsHtml5StackNode::getGroup()
-{
+int32_t nsHtml5StackNode::getGroup() {
   return flags & nsHtml5ElementName::GROUP_MASK;
 }
 
-bool
-nsHtml5StackNode::isScoping()
-{
+bool nsHtml5StackNode::isScoping() {
   return (flags & nsHtml5ElementName::SCOPING);
 }
 
-bool
-nsHtml5StackNode::isSpecial()
-{
+bool nsHtml5StackNode::isSpecial() {
   return (flags & nsHtml5ElementName::SPECIAL);
 }
 
-bool
-nsHtml5StackNode::isFosterParenting()
-{
+bool nsHtml5StackNode::isFosterParenting() {
   return (flags & nsHtml5ElementName::FOSTER_PARENTING);
 }
 
-bool
-nsHtml5StackNode::isHtmlIntegrationPoint()
-{
+bool nsHtml5StackNode::isHtmlIntegrationPoint() {
   return (flags & nsHtml5ElementName::HTML_INTEGRATION_POINT);
 }
 
 nsHtml5StackNode::nsHtml5StackNode(int32_t idxInTreeBuilder)
-  : idxInTreeBuilder(idxInTreeBuilder)
-  , flags(0)
-  , name(nullptr)
-  , popName(nullptr)
-  , ns(0)
-  , node(nullptr)
-  , attributes(nullptr)
-  , refcount(0)
-  , htmlCreator(nullptr)
-{
+    : idxInTreeBuilder(idxInTreeBuilder),
+      flags(0),
+      name(nullptr),
+      popName(nullptr),
+      ns(0),
+      node(nullptr),
+      attributes(nullptr),
+      refcount(0),
+      htmlCreator(nullptr) {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
 }
 
-mozilla::dom::HTMLContentCreatorFunction
-nsHtml5StackNode::getHtmlCreator()
-{
+mozilla::dom::HTMLContentCreatorFunction nsHtml5StackNode::getHtmlCreator() {
   return htmlCreator;
 }
 
-void
-nsHtml5StackNode::setValues(
-  int32_t flags,
-  int32_t ns,
-  nsAtom* name,
-  nsIContentHandle* node,
-  nsAtom* popName,
-  nsHtml5HtmlAttributes* attributes,
-  mozilla::dom::HTMLContentCreatorFunction htmlCreator)
-{
+void nsHtml5StackNode::setValues(
+    int32_t flags, int32_t ns, nsAtom* name, nsIContentHandle* node,
+    nsAtom* popName, nsHtml5HtmlAttributes* attributes,
+    mozilla::dom::HTMLContentCreatorFunction htmlCreator) {
   MOZ_ASSERT(isUnused());
   this->flags = flags;
   this->name = name;
@@ -126,10 +107,8 @@ nsHtml5StackNode::setValues(
   this->htmlCreator = htmlCreator;
 }
 
-void
-nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
-                            nsIContentHandle* node)
-{
+void nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                                 nsIContentHandle* node) {
   MOZ_ASSERT(isUnused());
   this->flags = elementName->getFlags();
   this->name = elementName->getName();
@@ -143,11 +122,9 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->htmlCreator = nullptr;
 }
 
-void
-nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
-                            nsIContentHandle* node,
-                            nsHtml5HtmlAttributes* attributes)
-{
+void nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                                 nsIContentHandle* node,
+                                 nsHtml5HtmlAttributes* attributes) {
   MOZ_ASSERT(isUnused());
   this->flags = elementName->getFlags();
   this->name = elementName->getName();
@@ -161,11 +138,8 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->htmlCreator = elementName->getHtmlCreator();
 }
 
-void
-nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
-                            nsIContentHandle* node,
-                            nsAtom* popName)
-{
+void nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                                 nsIContentHandle* node, nsAtom* popName) {
   MOZ_ASSERT(isUnused());
   this->flags = elementName->getFlags();
   this->name = elementName->getName();
@@ -177,11 +151,8 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->htmlCreator = nullptr;
 }
 
-void
-nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
-                            nsAtom* popName,
-                            nsIContentHandle* node)
-{
+void nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                                 nsAtom* popName, nsIContentHandle* node) {
   MOZ_ASSERT(isUnused());
   this->flags = prepareSvgFlags(elementName->getFlags());
   this->name = elementName->getName();
@@ -193,15 +164,12 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->htmlCreator = nullptr;
 }
 
-void
-nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
-                            nsIContentHandle* node,
-                            nsAtom* popName,
-                            bool markAsIntegrationPoint)
-{
+void nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
+                                 nsIContentHandle* node, nsAtom* popName,
+                                 bool markAsIntegrationPoint) {
   MOZ_ASSERT(isUnused());
   this->flags =
-    prepareMathFlags(elementName->getFlags(), markAsIntegrationPoint);
+      prepareMathFlags(elementName->getFlags(), markAsIntegrationPoint);
   this->name = elementName->getName();
   this->popName = popName;
   this->ns = kNameSpaceID_MathML;
@@ -211,12 +179,10 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->htmlCreator = nullptr;
 }
 
-int32_t
-nsHtml5StackNode::prepareSvgFlags(int32_t flags)
-{
+int32_t nsHtml5StackNode::prepareSvgFlags(int32_t flags) {
   flags &=
-    ~(nsHtml5ElementName::FOSTER_PARENTING | nsHtml5ElementName::SCOPING |
-      nsHtml5ElementName::SPECIAL | nsHtml5ElementName::OPTIONAL_END_TAG);
+      ~(nsHtml5ElementName::FOSTER_PARENTING | nsHtml5ElementName::SCOPING |
+        nsHtml5ElementName::SPECIAL | nsHtml5ElementName::OPTIONAL_END_TAG);
   if ((flags & nsHtml5ElementName::SCOPING_AS_SVG)) {
     flags |= (nsHtml5ElementName::SCOPING | nsHtml5ElementName::SPECIAL |
               nsHtml5ElementName::HTML_INTEGRATION_POINT);
@@ -224,12 +190,11 @@ nsHtml5StackNode::prepareSvgFlags(int32_t flags)
   return flags;
 }
 
-int32_t
-nsHtml5StackNode::prepareMathFlags(int32_t flags, bool markAsIntegrationPoint)
-{
+int32_t nsHtml5StackNode::prepareMathFlags(int32_t flags,
+                                           bool markAsIntegrationPoint) {
   flags &=
-    ~(nsHtml5ElementName::FOSTER_PARENTING | nsHtml5ElementName::SCOPING |
-      nsHtml5ElementName::SPECIAL | nsHtml5ElementName::OPTIONAL_END_TAG);
+      ~(nsHtml5ElementName::FOSTER_PARENTING | nsHtml5ElementName::SCOPING |
+        nsHtml5ElementName::SPECIAL | nsHtml5ElementName::OPTIONAL_END_TAG);
   if ((flags & nsHtml5ElementName::SCOPING_AS_MATHML)) {
     flags |= (nsHtml5ElementName::SCOPING | nsHtml5ElementName::SPECIAL);
   }
@@ -239,26 +204,13 @@ nsHtml5StackNode::prepareMathFlags(int32_t flags, bool markAsIntegrationPoint)
   return flags;
 }
 
-nsHtml5StackNode::~nsHtml5StackNode()
-{
-  MOZ_COUNT_DTOR(nsHtml5StackNode);
-}
+nsHtml5StackNode::~nsHtml5StackNode() { MOZ_COUNT_DTOR(nsHtml5StackNode); }
 
-void
-nsHtml5StackNode::dropAttributes()
-{
-  attributes = nullptr;
-}
+void nsHtml5StackNode::dropAttributes() { attributes = nullptr; }
 
-void
-nsHtml5StackNode::retain()
-{
-  refcount++;
-}
+void nsHtml5StackNode::retain() { refcount++; }
 
-void
-nsHtml5StackNode::release(nsHtml5TreeBuilder* owningTreeBuilder)
-{
+void nsHtml5StackNode::release(nsHtml5TreeBuilder* owningTreeBuilder) {
   refcount--;
   MOZ_ASSERT(refcount >= 0);
   if (!refcount) {
@@ -272,18 +224,8 @@ nsHtml5StackNode::release(nsHtml5TreeBuilder* owningTreeBuilder)
   }
 }
 
-bool
-nsHtml5StackNode::isUnused()
-{
-  return !refcount;
-}
+bool nsHtml5StackNode::isUnused() { return !refcount; }
 
-void
-nsHtml5StackNode::initializeStatics()
-{
-}
+void nsHtml5StackNode::initializeStatics() {}
 
-void
-nsHtml5StackNode::releaseStatics()
-{
-}
+void nsHtml5StackNode::releaseStatics() {}

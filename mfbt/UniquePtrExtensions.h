@@ -18,40 +18,35 @@ namespace mozilla {
  * MakeUniqueFallible works exactly like MakeUnique, except that the memory
  * allocation performed is done fallibly, i.e. it can return nullptr.
  */
-template<typename T, typename... Args>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUniqueFallible(Args&&... aArgs)
-{
+template <typename T, typename... Args>
+typename detail::UniqueSelector<T>::SingleObject MakeUniqueFallible(
+    Args&&... aArgs) {
   return UniquePtr<T>(new (fallible) T(std::forward<Args>(aArgs)...));
 }
 
-template<typename T>
-typename detail::UniqueSelector<T>::UnknownBound
-MakeUniqueFallible(decltype(sizeof(int)) aN)
-{
+template <typename T>
+typename detail::UniqueSelector<T>::UnknownBound MakeUniqueFallible(
+    decltype(sizeof(int)) aN) {
   typedef typename RemoveExtent<T>::Type ArrayType;
   return UniquePtr<T>(new (fallible) ArrayType[aN]());
 }
 
-template<typename T, typename... Args>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUniqueFallible(Args&&... aArgs) = delete;
+template <typename T, typename... Args>
+typename detail::UniqueSelector<T>::KnownBound MakeUniqueFallible(
+    Args&&... aArgs) = delete;
 
 namespace detail {
 
-template<typename T>
-struct FreePolicy
-{
-  void operator()(const void* ptr) {
-    free(const_cast<void*>(ptr));
-  }
+template <typename T>
+struct FreePolicy {
+  void operator()(const void* ptr) { free(const_cast<void*>(ptr)); }
 };
 
-} // namespace detail
+}  // namespace detail
 
-template<typename T>
+template <typename T>
 using UniqueFreePtr = UniquePtr<T, detail::FreePolicy<T>>;
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_UniquePtrExtensions_h
+#endif  // mozilla_UniquePtrExtensions_h

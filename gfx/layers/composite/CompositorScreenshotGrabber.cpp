@@ -25,18 +25,16 @@ namespace layers {
  * The CompositorScreenshotGrabberImpl object is destroyed if the profiler is
  * disabled and MaybeGrabScreenshot notices it.
  */
-class CompositorScreenshotGrabberImpl final
-{
-public:
+class CompositorScreenshotGrabberImpl final {
+ public:
   explicit CompositorScreenshotGrabberImpl(const IntSize& aBufferSize);
   ~CompositorScreenshotGrabberImpl();
 
   void GrabScreenshot(Compositor* aCompositor);
   void ProcessQueue();
 
-private:
-  struct QueueItem final
-  {
+ private:
+  struct QueueItem final {
     mozilla::TimeStamp mTimeStamp;
     RefPtr<AsyncReadbackBuffer> mScreenshotBuffer;
     gfx::IntSize mScreenshotSize;
@@ -44,11 +42,9 @@ private:
     uintptr_t mWindowIdentifier;
   };
 
-  RefPtr<CompositingRenderTarget>
-  ScaleDownWindowTargetToSize(Compositor* aCompositor,
-                              const gfx::IntSize& aDestSize,
-                              CompositingRenderTarget* aWindowTarget,
-                              size_t aLevel);
+  RefPtr<CompositingRenderTarget> ScaleDownWindowTargetToSize(
+      Compositor* aCompositor, const gfx::IntSize& aDestSize,
+      CompositingRenderTarget* aWindowTarget, size_t aLevel);
 
   already_AddRefed<AsyncReadbackBuffer> TakeNextBuffer(Compositor* aCompositor);
   void ReturnBuffer(AsyncReadbackBuffer* aBuffer);
@@ -61,20 +57,15 @@ private:
   const IntSize mBufferSize;
 };
 
-CompositorScreenshotGrabber::CompositorScreenshotGrabber()
-{
-}
+CompositorScreenshotGrabber::CompositorScreenshotGrabber() {}
 
-CompositorScreenshotGrabber::~CompositorScreenshotGrabber()
-{
-}
+CompositorScreenshotGrabber::~CompositorScreenshotGrabber() {}
 
-void
-CompositorScreenshotGrabber::MaybeGrabScreenshot(Compositor* aCompositor)
-{
+void CompositorScreenshotGrabber::MaybeGrabScreenshot(Compositor* aCompositor) {
   if (ProfilerScreenshots::IsEnabled()) {
     if (!mImpl) {
-      mImpl = MakeUnique<CompositorScreenshotGrabberImpl>(ProfilerScreenshots::ScreenshotSize());
+      mImpl = MakeUnique<CompositorScreenshotGrabberImpl>(
+          ProfilerScreenshots::ScreenshotSize());
     }
     mImpl->GrabScreenshot(aCompositor);
   } else if (mImpl) {
@@ -82,12 +73,11 @@ CompositorScreenshotGrabber::MaybeGrabScreenshot(Compositor* aCompositor)
   }
 }
 
-void
-CompositorScreenshotGrabber::MaybeProcessQueue()
-{
+void CompositorScreenshotGrabber::MaybeProcessQueue() {
   if (ProfilerScreenshots::IsEnabled()) {
     if (!mImpl) {
-      mImpl = MakeUnique<CompositorScreenshotGrabberImpl>(ProfilerScreenshots::ScreenshotSize());
+      mImpl = MakeUnique<CompositorScreenshotGrabberImpl>(
+          ProfilerScreenshots::ScreenshotSize());
     }
     mImpl->ProcessQueue();
   } else if (mImpl) {
@@ -95,27 +85,19 @@ CompositorScreenshotGrabber::MaybeProcessQueue()
   }
 }
 
-void
-CompositorScreenshotGrabber::NotifyEmptyFrame()
-{
+void CompositorScreenshotGrabber::NotifyEmptyFrame() {
 #ifdef MOZ_GECKO_PROFILER
   profiler_add_marker("NoCompositorScreenshot because nothing changed");
 #endif
 }
 
-void
-CompositorScreenshotGrabber::Destroy()
-{
-  mImpl = nullptr;
-}
+void CompositorScreenshotGrabber::Destroy() { mImpl = nullptr; }
 
-CompositorScreenshotGrabberImpl::CompositorScreenshotGrabberImpl(const IntSize& aBufferSize)
-  : mBufferSize(aBufferSize)
-{
-}
+CompositorScreenshotGrabberImpl::CompositorScreenshotGrabberImpl(
+    const IntSize& aBufferSize)
+    : mBufferSize(aBufferSize) {}
 
-CompositorScreenshotGrabberImpl::~CompositorScreenshotGrabberImpl()
-{
+CompositorScreenshotGrabberImpl::~CompositorScreenshotGrabberImpl() {
   // Any queue items in mQueue or mCurrentFrameQueueItem will be lost.
   // That's ok: Either the profiler has stopped and we don't care about these
   // screenshots, or the window is closing and we don't really need the last
@@ -128,14 +110,12 @@ CompositorScreenshotGrabberImpl::~CompositorScreenshotGrabberImpl()
 // because it'll look bad. If higher scales are needed, use another
 // intermediate target by calling this function recursively with aLevel + 1.
 RefPtr<CompositingRenderTarget>
-CompositorScreenshotGrabberImpl::ScaleDownWindowTargetToSize(Compositor* aCompositor,
-                                                             const IntSize& aDestSize,
-                                                             CompositingRenderTarget* aWindowTarget,
-                                                             size_t aLevel)
-{
+CompositorScreenshotGrabberImpl::ScaleDownWindowTargetToSize(
+    Compositor* aCompositor, const IntSize& aDestSize,
+    CompositingRenderTarget* aWindowTarget, size_t aLevel) {
   if (aLevel == mTargets.Length()) {
     mTargets.AppendElement(aCompositor->CreateRenderTarget(
-      IntRect(IntPoint(), mBufferSize * (1 << aLevel)), INIT_MODE_NONE));
+        IntRect(IntPoint(), mBufferSize * (1 << aLevel)), INIT_MODE_NONE));
   }
   MOZ_RELEASE_ASSERT(aLevel < mTargets.Length());
 
@@ -156,17 +136,17 @@ CompositorScreenshotGrabberImpl::ScaleDownWindowTargetToSize(Compositor* aCompos
   return nullptr;
 }
 
-void
-CompositorScreenshotGrabberImpl::GrabScreenshot(Compositor* aCompositor)
-{
+void CompositorScreenshotGrabberImpl::GrabScreenshot(Compositor* aCompositor) {
   RefPtr<CompositingRenderTarget> previousTarget =
-    aCompositor->GetCurrentRenderTarget();
+      aCompositor->GetCurrentRenderTarget();
 
   RefPtr<CompositingRenderTarget> windowTarget =
-    aCompositor->GetWindowRenderTarget();
+      aCompositor->GetWindowRenderTarget();
 
   if (!windowTarget) {
-    PROFILER_ADD_MARKER("NoCompositorScreenshot because of unsupported compositor configuration");
+    PROFILER_ADD_MARKER(
+        "NoCompositorScreenshot because of unsupported compositor "
+        "configuration");
     return;
   }
 
@@ -175,19 +155,21 @@ CompositorScreenshotGrabberImpl::GrabScreenshot(Compositor* aCompositor)
                          mBufferSize.height / windowSize.height);
   IntSize scaledSize = IntSize::Round(windowSize * scale);
   RefPtr<CompositingRenderTarget> scaledTarget =
-    ScaleDownWindowTargetToSize(aCompositor, scaledSize, windowTarget, 0);
+      ScaleDownWindowTargetToSize(aCompositor, scaledSize, windowTarget, 0);
 
   // Restore the old render target.
   aCompositor->SetRenderTarget(previousTarget);
 
   if (!scaledTarget) {
-    PROFILER_ADD_MARKER("NoCompositorScreenshot because ScaleDownWindowTargetToSize failed");
+    PROFILER_ADD_MARKER(
+        "NoCompositorScreenshot because ScaleDownWindowTargetToSize failed");
     return;
   }
 
   RefPtr<AsyncReadbackBuffer> buffer = TakeNextBuffer(aCompositor);
   if (!buffer) {
-    PROFILER_ADD_MARKER("NoCompositorScreenshot because AsyncReadbackBuffer creation failed");
+    PROFILER_ADD_MARKER(
+        "NoCompositorScreenshot because AsyncReadbackBuffer creation failed");
     return;
   }
 
@@ -197,14 +179,12 @@ CompositorScreenshotGrabberImpl::GrabScreenshot(Compositor* aCompositor)
   // ProcessQueue(). This ensures that the buffer isn't mapped into main memory
   // until the next frame. If we did it in this frame, we'd block on the GPU.
   mCurrentFrameQueueItem = Some(QueueItem{
-    TimeStamp::Now(), buffer.forget(), scaledSize, windowTarget->GetSize(),
-    reinterpret_cast<uintptr_t>(static_cast<void*>(this))
-  });
+      TimeStamp::Now(), buffer.forget(), scaledSize, windowTarget->GetSize(),
+      reinterpret_cast<uintptr_t>(static_cast<void*>(this))});
 }
 
 already_AddRefed<AsyncReadbackBuffer>
-CompositorScreenshotGrabberImpl::TakeNextBuffer(Compositor* aCompositor)
-{
+CompositorScreenshotGrabberImpl::TakeNextBuffer(Compositor* aCompositor) {
   if (!mAvailableBuffers.IsEmpty()) {
     RefPtr<AsyncReadbackBuffer> buffer = mAvailableBuffers[0];
     mAvailableBuffers.RemoveElementAt(0);
@@ -213,27 +193,23 @@ CompositorScreenshotGrabberImpl::TakeNextBuffer(Compositor* aCompositor)
   return aCompositor->CreateAsyncReadbackBuffer(mBufferSize);
 }
 
-void
-CompositorScreenshotGrabberImpl::ReturnBuffer(AsyncReadbackBuffer* aBuffer)
-{
+void CompositorScreenshotGrabberImpl::ReturnBuffer(
+    AsyncReadbackBuffer* aBuffer) {
   mAvailableBuffers.AppendElement(aBuffer);
 }
 
-void
-CompositorScreenshotGrabberImpl::ProcessQueue()
-{
+void CompositorScreenshotGrabberImpl::ProcessQueue() {
   if (!mQueue.IsEmpty()) {
     if (!mProfilerScreenshots) {
       mProfilerScreenshots = MakeUnique<ProfilerScreenshots>();
     }
     for (const auto& item : mQueue) {
       mProfilerScreenshots->SubmitScreenshot(
-        item.mWindowIdentifier, item.mWindowSize,
-        item.mScreenshotSize, item.mTimeStamp,
-        [&item](DataSourceSurface* aTargetSurface) {
-          return item.mScreenshotBuffer->MapAndCopyInto(aTargetSurface,
-                                                        item.mScreenshotSize);
-        });
+          item.mWindowIdentifier, item.mWindowSize, item.mScreenshotSize,
+          item.mTimeStamp, [&item](DataSourceSurface* aTargetSurface) {
+            return item.mScreenshotBuffer->MapAndCopyInto(aTargetSurface,
+                                                          item.mScreenshotSize);
+          });
       ReturnBuffer(item.mScreenshotBuffer);
     }
   }
@@ -245,5 +221,5 @@ CompositorScreenshotGrabberImpl::ProcessQueue()
   }
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

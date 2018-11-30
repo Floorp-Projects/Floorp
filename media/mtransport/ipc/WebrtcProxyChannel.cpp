@@ -24,49 +24,35 @@
 namespace mozilla {
 namespace net {
 
-class WebrtcProxyData
-{
-public:
-  explicit WebrtcProxyData(nsTArray<uint8_t>&& aData)
-    : mData(aData)
-  {
+class WebrtcProxyData {
+ public:
+  explicit WebrtcProxyData(nsTArray<uint8_t>&& aData) : mData(aData) {
     MOZ_COUNT_CTOR(WebrtcProxyData);
   }
 
-  ~WebrtcProxyData()
-  {
-    MOZ_COUNT_DTOR(WebrtcProxyData);
-  }
+  ~WebrtcProxyData() { MOZ_COUNT_DTOR(WebrtcProxyData); }
 
-  const nsTArray<uint8_t>& GetData() const
-  {
-    return mData;
-  }
+  const nsTArray<uint8_t>& GetData() const { return mData; }
 
-private:
+ private:
   nsTArray<uint8_t> mData;
 };
 
-NS_IMPL_ISUPPORTS(WebrtcProxyChannel,
-                  nsIAuthPromptProvider,
-                  nsIHttpUpgradeListener,
-                  nsIInputStreamCallback,
-                  nsIInterfaceRequestor,
-                  nsIOutputStreamCallback,
-                  nsIRequestObserver,
-                  nsIStreamListener)
+NS_IMPL_ISUPPORTS(WebrtcProxyChannel, nsIAuthPromptProvider,
+                  nsIHttpUpgradeListener, nsIInputStreamCallback,
+                  nsIInterfaceRequestor, nsIOutputStreamCallback,
+                  nsIRequestObserver, nsIStreamListener)
 
 WebrtcProxyChannel::WebrtcProxyChannel(nsIAuthPromptProvider* aAuthProvider,
                                        WebrtcProxyChannelCallback* aCallbacks)
-    : mProxyCallbacks(aCallbacks)
-    , mClosed(false)
-    , mOpened(false)
-    , mWriteOffset(0)
-    , mAuthProvider(aAuthProvider)
-    , mTransport(nullptr)
-    , mSocketIn(nullptr)
-    , mSocketOut(nullptr)
-{
+    : mProxyCallbacks(aCallbacks),
+      mClosed(false),
+      mOpened(false),
+      mWriteOffset(0),
+      mAuthProvider(aAuthProvider),
+      mTransport(nullptr),
+      mSocketIn(nullptr),
+      mSocketOut(nullptr) {
   LOG(("WebrtcProxyChannel::WebrtcProxyChannel %p\n", this));
   mMainThread = GetMainThreadEventTarget();
   mSocketThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
@@ -74,31 +60,24 @@ WebrtcProxyChannel::WebrtcProxyChannel(nsIAuthPromptProvider* aAuthProvider,
   MOZ_RELEASE_ASSERT(mSocketThread, "no socket thread");
 }
 
-WebrtcProxyChannel::~WebrtcProxyChannel()
-{
+WebrtcProxyChannel::~WebrtcProxyChannel() {
   LOG(("WebrtcProxyChannel::~WebrtcProxyChannel %p\n", this));
 
-  NS_ProxyRelease("WebrtcProxyChannel::CleanUpAuthProvider",
-                  mMainThread,
+  NS_ProxyRelease("WebrtcProxyChannel::CleanUpAuthProvider", mMainThread,
                   mAuthProvider.forget());
 }
 
-nsresult
-WebrtcProxyChannel::Write(nsTArray<uint8_t>&& aWriteData)
-{
+nsresult WebrtcProxyChannel::Write(nsTArray<uint8_t>&& aWriteData) {
   LOG(("WebrtcProxyChannel::Write %p\n", this));
-  MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(
-    NewRunnableMethod<nsTArray<uint8_t>&&>("WebrtcProxyChannel::Write",
-                                           this,
-                                           &WebrtcProxyChannel::EnqueueWrite_s,
-                                           std::move(aWriteData))));
+  MOZ_ALWAYS_SUCCEEDS(
+      mSocketThread->Dispatch(NewRunnableMethod<nsTArray<uint8_t>&&>(
+          "WebrtcProxyChannel::Write", this,
+          &WebrtcProxyChannel::EnqueueWrite_s, std::move(aWriteData))));
 
   return NS_OK;
 }
 
-nsresult
-WebrtcProxyChannel::Close()
-{
+nsresult WebrtcProxyChannel::Close() {
   LOG(("WebrtcProxyChannel::Close %p\n", this));
 
   CloseWithReason(NS_OK);
@@ -106,11 +85,8 @@ WebrtcProxyChannel::Close()
   return NS_OK;
 }
 
-void
-WebrtcProxyChannel::CloseWithReason(nsresult aReason)
-{
-  LOG(("WebrtcProxyChannel::CloseWithReason %p reason=%u\n",
-       this,
+void WebrtcProxyChannel::CloseWithReason(nsresult aReason) {
+  LOG(("WebrtcProxyChannel::CloseWithReason %p reason=%u\n", this,
        static_cast<uint32_t>(aReason)));
 
   if (!OnSocketThread()) {
@@ -119,11 +95,9 @@ WebrtcProxyChannel::CloseWithReason(nsresult aReason)
     // Let's pretend we got an open even if we didn't to prevent an Open later.
     mOpened = true;
 
-    MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(
-      NewRunnableMethod<nsresult>("WebrtcProxyChannel::CloseWithReason",
-                                  this,
-                                  &WebrtcProxyChannel::CloseWithReason,
-                                  aReason)));
+    MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(NewRunnableMethod<nsresult>(
+        "WebrtcProxyChannel::CloseWithReason", this,
+        &WebrtcProxyChannel::CloseWithReason, aReason)));
     return;
   }
 
@@ -148,17 +122,14 @@ WebrtcProxyChannel::CloseWithReason(nsresult aReason)
     mTransport = nullptr;
   }
 
-  NS_ProxyRelease("WebrtcProxyChannel::CleanUpAuthProvider",
-                  mMainThread,
+  NS_ProxyRelease("WebrtcProxyChannel::CleanUpAuthProvider", mMainThread,
                   mAuthProvider.forget());
   InvokeOnClose(aReason);
 }
 
-nsresult WebrtcProxyChannel::Open(const nsCString& aHost,
-                                  const int& aPort,
+nsresult WebrtcProxyChannel::Open(const nsCString& aHost, const int& aPort,
                                   nsILoadInfo* aLoadInfo,
-                                  const nsCString& aAlpn)
-{
+                                  const nsCString& aAlpn) {
   LOG(("WebrtcProxyChannel::AsyncOpen %p\n", this));
 
   if (mOpened) {
@@ -174,9 +145,9 @@ nsresult WebrtcProxyChannel::Open(const nsCString& aHost,
 
   nsCOMPtr<nsIURI> uri;
   rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-         .SetSpec(spec)
-         .SetPort(aPort)
-         .Finalize(uri);
+           .SetSpec(spec)
+           .SetPort(aPort)
+           .Finalize(uri);
 
   if (NS_FAILED(rv)) {
     LOG(("WebrtcProxyChannel %p: bad proxy connect uri set\n", this));
@@ -199,20 +170,15 @@ nsresult WebrtcProxyChannel::Open(const nsCString& aHost,
   // introduce new behavior. can't follow redirects on connect anyway.
   nsCOMPtr<nsIChannel> localChannel;
   rv = ioService->NewChannelFromURIWithProxyFlags2(
-         uri,
-         nullptr,
-         // Proxy flags are overridden by SetConnectOnly()
-         0,
-         aLoadInfo->LoadingNode(),
-         aLoadInfo->LoadingPrincipal(),
-         aLoadInfo->TriggeringPrincipal(),
-         nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS |
-         nsILoadInfo::SEC_COOKIES_OMIT |
-         // We need this flag to allow loads from any origin since this channel
-         // is being used to CONNECT to an HTTP proxy.
-         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-         nsIContentPolicy::TYPE_OTHER,
-         getter_AddRefs(localChannel));
+      uri, nullptr,
+      // Proxy flags are overridden by SetConnectOnly()
+      0, aLoadInfo->LoadingNode(), aLoadInfo->LoadingPrincipal(),
+      aLoadInfo->TriggeringPrincipal(),
+      nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS | nsILoadInfo::SEC_COOKIES_OMIT |
+          // We need this flag to allow loads from any origin since this channel
+          // is being used to CONNECT to an HTTP proxy.
+          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      nsIContentPolicy::TYPE_OTHER, getter_AddRefs(localChannel));
   if (NS_FAILED(rv)) {
     LOG(("WebrtcProxyChannel %p: bad open channel\n", this));
     CloseWithReason(rv);
@@ -258,9 +224,7 @@ nsresult WebrtcProxyChannel::Open(const nsCString& aHost,
   return NS_OK;
 }
 
-void
-WebrtcProxyChannel::EnqueueWrite_s(nsTArray<uint8_t>&& aWriteData)
-{
+void WebrtcProxyChannel::EnqueueWrite_s(nsTArray<uint8_t>&& aWriteData) {
   LOG(("WebrtcProxyChannel::EnqueueWrite %p\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!mClosed, "webrtc proxy channel closed");
@@ -272,17 +236,13 @@ WebrtcProxyChannel::EnqueueWrite_s(nsTArray<uint8_t>&& aWriteData)
   }
 }
 
-void
-WebrtcProxyChannel::InvokeOnClose(nsresult aReason)
-{
+void WebrtcProxyChannel::InvokeOnClose(nsresult aReason) {
   LOG(("WebrtcProxyChannel::InvokeOnClose %p\n", this));
 
   if (!NS_IsMainThread()) {
-    MOZ_ALWAYS_SUCCEEDS(mMainThread->Dispatch(
-      NewRunnableMethod<nsresult>("WebrtcProxyChannel::InvokeOnClose",
-                                  this,
-                                  &WebrtcProxyChannel::InvokeOnClose,
-                                  aReason)));
+    MOZ_ALWAYS_SUCCEEDS(mMainThread->Dispatch(NewRunnableMethod<nsresult>(
+        "WebrtcProxyChannel::InvokeOnClose", this,
+        &WebrtcProxyChannel::InvokeOnClose, aReason)));
     return;
   }
 
@@ -292,16 +252,13 @@ WebrtcProxyChannel::InvokeOnClose(nsresult aReason)
   mProxyCallbacks = nullptr;
 }
 
-void
-WebrtcProxyChannel::InvokeOnConnected()
-{
+void WebrtcProxyChannel::InvokeOnConnected() {
   LOG(("WebrtcProxyChannel::InvokeOnConnected %p\n", this));
 
   if (!NS_IsMainThread()) {
     MOZ_ALWAYS_SUCCEEDS(mMainThread->Dispatch(
-      NewRunnableMethod("WebrtcProxyChannel::InvokeOnConnected",
-                        this,
-                        &WebrtcProxyChannel::InvokeOnConnected)));
+        NewRunnableMethod("WebrtcProxyChannel::InvokeOnConnected", this,
+                          &WebrtcProxyChannel::InvokeOnConnected)));
     return;
   }
 
@@ -310,20 +267,15 @@ WebrtcProxyChannel::InvokeOnConnected()
   mProxyCallbacks->OnConnected();
 }
 
-void
-WebrtcProxyChannel::InvokeOnRead(nsTArray<uint8_t>&& aReadData)
-{
-  LOG(("WebrtcProxyChannel::InvokeOnRead %p count=%zu\n",
-       this,
+void WebrtcProxyChannel::InvokeOnRead(nsTArray<uint8_t>&& aReadData) {
+  LOG(("WebrtcProxyChannel::InvokeOnRead %p count=%zu\n", this,
        aReadData.Length()));
 
   if (!NS_IsMainThread()) {
-    MOZ_ALWAYS_SUCCEEDS(mMainThread->Dispatch(
-      NewRunnableMethod<nsTArray<uint8_t>&&>(
-        "WebrtcProxyChannel::InvokeOnRead",
-         this,
-         &WebrtcProxyChannel::InvokeOnRead,
-         std::move(aReadData))));
+    MOZ_ALWAYS_SUCCEEDS(
+        mMainThread->Dispatch(NewRunnableMethod<nsTArray<uint8_t>&&>(
+            "WebrtcProxyChannel::InvokeOnRead", this,
+            &WebrtcProxyChannel::InvokeOnRead, std::move(aReadData))));
     return;
   }
 
@@ -336,8 +288,7 @@ WebrtcProxyChannel::InvokeOnRead(nsTArray<uint8_t>&& aReadData)
 NS_IMETHODIMP
 WebrtcProxyChannel::OnTransportAvailable(nsISocketTransport* aTransport,
                                          nsIAsyncInputStream* aSocketIn,
-                                         nsIAsyncOutputStream* aSocketOut)
-{
+                                         nsIAsyncOutputStream* aSocketOut) {
   LOG(("WebrtcProxyChannel::OnTransportAvailable %p\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!mTransport, "already called transport available on webrtc proxy");
@@ -381,20 +332,16 @@ WebrtcProxyChannel::OnTransportAvailable(nsISocketTransport* aTransport,
 // nsIRequestObserver (from nsIStreamListener)
 NS_IMETHODIMP
 WebrtcProxyChannel::OnStartRequest(nsIRequest* aRequest,
-                                   nsISupports* aContext)
-{
+                                   nsISupports* aContext) {
   LOG(("WebrtcProxyChannel::OnStartRequest %p\n", this));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-WebrtcProxyChannel::OnStopRequest(nsIRequest* aRequest,
-                                  nsISupports* aContext,
-                                  nsresult aStatusCode)
-{
-  LOG(("WebrtcProxyChannel::OnStopRequest %p status=%u\n",
-       this,
+WebrtcProxyChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                                  nsresult aStatusCode) {
+  LOG(("WebrtcProxyChannel::OnStopRequest %p status=%u\n", this,
        static_cast<uint32_t>(aStatusCode)));
 
   // see nsHttpChannel::ProcessFailedProxyConnect for most error codes
@@ -408,12 +355,9 @@ WebrtcProxyChannel::OnStopRequest(nsIRequest* aRequest,
 
 // nsIStreamListener
 NS_IMETHODIMP
-WebrtcProxyChannel::OnDataAvailable(nsIRequest* aRequest,
-                                    nsISupports* aContext,
+WebrtcProxyChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                     nsIInputStream* aInputStream,
-                                    uint64_t aOffset,
-                                    uint32_t aCount)
-{
+                                    uint64_t aOffset, uint32_t aCount) {
   LOG(("WebrtcProxyChannel::OnDataAvailable %p count=%u\n", this, aCount));
   MOZ_ASSERT(0, "unreachable data available");
   return NS_OK;
@@ -421,21 +365,19 @@ WebrtcProxyChannel::OnDataAvailable(nsIRequest* aRequest,
 
 // nsIInputStreamCallback
 NS_IMETHODIMP
-WebrtcProxyChannel::OnInputStreamReady(nsIAsyncInputStream* in)
-{
-  LOG(("WebrtcProxyChannel::OnInputStreamReady %p unwritten=%zu\n",
-       this,
+WebrtcProxyChannel::OnInputStreamReady(nsIAsyncInputStream* in) {
+  LOG(("WebrtcProxyChannel::OnInputStreamReady %p unwritten=%zu\n", this,
        CountUnwrittenBytes()));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!mClosed, "webrtc proxy channel closed");
   MOZ_ASSERT(mTransport, "webrtc proxy channel not connected");
   MOZ_ASSERT(mSocketIn == in, "wrong input stream");
 
-  char      buffer[9216];
-  uint32_t  remainingCapacity = sizeof(buffer);
-  uint32_t  read = 0;
+  char buffer[9216];
+  uint32_t remainingCapacity = sizeof(buffer);
+  uint32_t read = 0;
 
-  while(remainingCapacity > 0) {
+  while (remainingCapacity > 0) {
     uint32_t count = 0;
     nsresult rv = mSocketIn->Read(buffer + read, remainingCapacity, &count);
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
@@ -443,8 +385,7 @@ WebrtcProxyChannel::OnInputStreamReady(nsIAsyncInputStream* in)
     }
 
     if (NS_FAILED(rv)) {
-      LOG(("WebrtcProxyChannel::OnInputStreamReady %p failed %u\n",
-           this,
+      LOG(("WebrtcProxyChannel::OnInputStreamReady %p failed %u\n", this,
            static_cast<uint32_t>(rv)));
       CloseWithReason(rv);
       return rv;
@@ -476,21 +417,20 @@ WebrtcProxyChannel::OnInputStreamReady(nsIAsyncInputStream* in)
 
 // nsIOutputStreamCallback
 NS_IMETHODIMP
-WebrtcProxyChannel::OnOutputStreamReady(nsIAsyncOutputStream* out)
-{
-  LOG(("WebrtcProxyChannel::OnOutputStreamReady %p unwritten=%zu\n",
-       this,
+WebrtcProxyChannel::OnOutputStreamReady(nsIAsyncOutputStream* out) {
+  LOG(("WebrtcProxyChannel::OnOutputStreamReady %p unwritten=%zu\n", this,
        CountUnwrittenBytes()));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!mClosed, "webrtc proxy channel closed");
   MOZ_ASSERT(mTransport, "webrtc proxy channel not connected");
   MOZ_ASSERT(mSocketOut == out, "wrong output stream");
 
-  while(!mWriteQueue.empty()) {
+  while (!mWriteQueue.empty()) {
     const WebrtcProxyData& data = mWriteQueue.front();
 
     char* buffer = reinterpret_cast<char*>(
-      const_cast<uint8_t*>(data.GetData().Elements())) + mWriteOffset;
+                       const_cast<uint8_t*>(data.GetData().Elements())) +
+                   mWriteOffset;
     uint32_t toWrite = data.GetData().Length() - mWriteOffset;
 
     uint32_t wrote = 0;
@@ -500,9 +440,8 @@ WebrtcProxyChannel::OnOutputStreamReady(nsIAsyncOutputStream* out)
       return NS_OK;
     }
 
-    if(NS_FAILED(rv)) {
-      LOG(("WebrtcProxyChannel::OnOutputStreamReady %p failed %u\n",
-           this,
+    if (NS_FAILED(rv)) {
+      LOG(("WebrtcProxyChannel::OnOutputStreamReady %p failed %u\n", this,
            static_cast<uint32_t>(rv)));
       CloseWithReason(rv);
       return NS_OK;
@@ -521,19 +460,16 @@ WebrtcProxyChannel::OnOutputStreamReady(nsIAsyncOutputStream* out)
 
 // nsIInterfaceRequestor
 NS_IMETHODIMP
-WebrtcProxyChannel::GetInterface(const nsIID& iid, void** result)
-{
+WebrtcProxyChannel::GetInterface(const nsIID& iid, void** result) {
   LOG(("WebrtcProxyChannel::GetInterface %p\n", this));
 
   return QueryInterface(iid, result);
 }
 
-size_t
-WebrtcProxyChannel::CountUnwrittenBytes() const
-{
+size_t WebrtcProxyChannel::CountUnwrittenBytes() const {
   size_t count = 0;
 
-  for(const WebrtcProxyData& data : mWriteQueue) {
+  for (const WebrtcProxyData& data : mWriteQueue) {
     count += data.GetData().Length();
   }
 
@@ -544,6 +480,5 @@ WebrtcProxyChannel::CountUnwrittenBytes() const
   return count;
 }
 
-} // namespace net
-} // namespace mozilla
-
+}  // namespace net
+}  // namespace mozilla

@@ -12,27 +12,24 @@
 namespace mozilla {
 namespace dom {
 
-class ClientNavigateOpChild final : public PClientNavigateOpChild
-{
+class ClientNavigateOpChild final : public PClientNavigateOpChild {
   MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
   nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;
 
-  already_AddRefed<ClientOpPromise>
-  DoNavigate(const ClientNavigateOpConstructorArgs& aArgs);
+  already_AddRefed<ClientOpPromise> DoNavigate(
+      const ClientNavigateOpConstructorArgs& aArgs);
 
   // PClientNavigateOpChild interface
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-public:
+ public:
   ClientNavigateOpChild() = default;
   ~ClientNavigateOpChild() = default;
 
-  void
-  Init(const ClientNavigateOpConstructorArgs& aArgs);
+  void Init(const ClientNavigateOpConstructorArgs& aArgs);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientNavigateOpChild_h
+#endif  // _mozilla_dom_ClientNavigateOpChild_h

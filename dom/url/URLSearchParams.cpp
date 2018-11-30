@@ -14,9 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-bool
-URLParams::Has(const nsAString& aName)
-{
+bool URLParams::Has(const nsAString& aName) {
   for (uint32_t i = 0, len = mParams.Length(); i < len; ++i) {
     if (mParams[i].mKey.Equals(aName)) {
       return true;
@@ -26,9 +24,7 @@ URLParams::Has(const nsAString& aName)
   return false;
 }
 
-void
-URLParams::Get(const nsAString& aName, nsString& aRetval)
-{
+void URLParams::Get(const nsAString& aName, nsString& aRetval) {
   SetDOMStringToNull(aRetval);
 
   for (uint32_t i = 0, len = mParams.Length(); i < len; ++i) {
@@ -39,9 +35,7 @@ URLParams::Get(const nsAString& aName, nsString& aRetval)
   }
 }
 
-void
-URLParams::GetAll(const nsAString& aName, nsTArray<nsString>& aRetval)
-{
+void URLParams::GetAll(const nsAString& aName, nsTArray<nsString>& aRetval) {
   aRetval.Clear();
 
   for (uint32_t i = 0, len = mParams.Length(); i < len; ++i) {
@@ -51,17 +45,13 @@ URLParams::GetAll(const nsAString& aName, nsTArray<nsString>& aRetval)
   }
 }
 
-void
-URLParams::Append(const nsAString& aName, const nsAString& aValue)
-{
+void URLParams::Append(const nsAString& aName, const nsAString& aValue) {
   Param* param = mParams.AppendElement();
   param->mKey = aName;
   param->mValue = aValue;
 }
 
-void
-URLParams::Set(const nsAString& aName, const nsAString& aValue)
-{
+void URLParams::Set(const nsAString& aName, const nsAString& aValue) {
   Param* param = nullptr;
   for (uint32_t i = 0, len = mParams.Length(); i < len;) {
     if (!mParams[i].mKey.Equals(aName)) {
@@ -86,9 +76,7 @@ URLParams::Set(const nsAString& aName, const nsAString& aValue)
   param->mValue = aValue;
 }
 
-void
-URLParams::Delete(const nsAString& aName)
-{
+void URLParams::Delete(const nsAString& aName) {
   for (uint32_t i = 0; i < mParams.Length();) {
     if (mParams[i].mKey.Equals(aName)) {
       mParams.RemoveElementAt(i);
@@ -98,17 +86,15 @@ URLParams::Delete(const nsAString& aName)
   }
 }
 
-/* static */ void
-URLParams::ConvertString(const nsACString& aInput, nsAString& aOutput)
-{
+/* static */ void URLParams::ConvertString(const nsACString& aInput,
+                                           nsAString& aOutput) {
   if (NS_FAILED(UTF_8_ENCODING->DecodeWithoutBOMHandling(aInput, aOutput))) {
     MOZ_CRASH("Out of memory when converting URL params.");
   }
 }
 
-/* static */ void
-URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput)
-{
+/* static */ void URLParams::DecodeString(const nsACString& aInput,
+                                          nsAString& aOutput) {
   nsACString::const_iterator start, end;
   aInput.BeginReading(start);
   aInput.EndReading(end);
@@ -131,20 +117,17 @@ URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput)
       nsACString::const_iterator second(first);
       ++second;
 
-#define ASCII_HEX_DIGIT( x )    \
-  ((x >= 0x41 && x <= 0x46) ||  \
-   (x >= 0x61 && x <= 0x66) ||  \
+#define ASCII_HEX_DIGIT(x)                                 \
+  ((x >= 0x41 && x <= 0x46) || (x >= 0x61 && x <= 0x66) || \
    (x >= 0x30 && x <= 0x39))
 
-#define HEX_DIGIT( x )              \
-   (*x >= 0x30 && *x <= 0x39        \
-     ? *x - 0x30                    \
-     : (*x >= 0x41 && *x <= 0x46    \
-        ? *x - 0x37                 \
-        : *x - 0x57))
+#define HEX_DIGIT(x)        \
+  (*x >= 0x30 && *x <= 0x39 \
+       ? *x - 0x30          \
+       : (*x >= 0x41 && *x <= 0x46 ? *x - 0x37 : *x - 0x57))
 
-      if (first != end && second != end &&
-          ASCII_HEX_DIGIT(*first) && ASCII_HEX_DIGIT(*second)) {
+      if (first != end && second != end && ASCII_HEX_DIGIT(*first) &&
+          ASCII_HEX_DIGIT(*second)) {
         unescaped.Append(HEX_DIGIT(first) * 16 + HEX_DIGIT(second));
         start = ++second;
         continue;
@@ -163,9 +146,8 @@ URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput)
   ConvertString(unescaped, aOutput);
 }
 
-/* static */ bool
-URLParams::Parse(const nsACString& aInput, ForEachIterator& aIterator)
-{
+/* static */ bool URLParams::Parse(const nsACString& aInput,
+                                   ForEachIterator& aIterator) {
   nsACString::const_iterator start, end;
   aInput.BeginReading(start);
   aInput.EndReading(end);
@@ -217,16 +199,13 @@ URLParams::Parse(const nsACString& aInput, ForEachIterator& aIterator)
 }
 
 class MOZ_STACK_CLASS ExtractURLParam final
-  : public URLParams::ForEachIterator
-{
-public:
+    : public URLParams::ForEachIterator {
+ public:
   explicit ExtractURLParam(const nsAString& aName, nsAString& aValue)
-    : mName(aName), mValue(aValue)
-  {}
+      : mName(aName), mValue(aValue) {}
 
   bool URLParamsIterator(const nsAString& aName,
-                         const nsAString& aValue) override
-  {
+                         const nsAString& aValue) override {
     if (mName == aName) {
       mValue = aValue;
       return false;
@@ -234,11 +213,10 @@ public:
     return true;
   }
 
-private:
+ private:
   const nsAString& mName;
   nsAString& mValue;
 };
-
 
 /**
  * Extracts the first form-urlencoded parameter named `aName` from `aInput`.
@@ -247,40 +225,32 @@ private:
  * @param aValue The value of the extracted parameter, void if not found.
  * @return Whether the parameter was found in the form-urlencoded.
  */
-/* static */ bool
-URLParams::Extract(const nsACString& aInput,
-                   const nsAString& aName,
-                   nsAString& aValue)
-{
+/* static */ bool URLParams::Extract(const nsACString& aInput,
+                                     const nsAString& aName,
+                                     nsAString& aValue) {
   aValue.SetIsVoid(true);
   ExtractURLParam iterator(aName, aValue);
   return !URLParams::Parse(aInput, iterator);
 }
 
 class MOZ_STACK_CLASS PopulateIterator final
-  : public URLParams::ForEachIterator
-{
-public:
-  explicit PopulateIterator(URLParams* aParams)
-    : mParams(aParams)
-  {
+    : public URLParams::ForEachIterator {
+ public:
+  explicit PopulateIterator(URLParams* aParams) : mParams(aParams) {
     MOZ_ASSERT(aParams);
   }
 
   bool URLParamsIterator(const nsAString& aName,
-                         const nsAString& aValue) override
-  {
+                         const nsAString& aValue) override {
     mParams->Append(aName, aValue);
     return true;
   }
 
-private:
+ private:
   URLParams* mParams;
 };
 
-void
-URLParams::ParseInput(const nsACString& aInput)
-{
+void URLParams::ParseInput(const nsACString& aInput) {
   // Remove all the existing data before parsing a new input.
   DeleteAll();
 
@@ -290,20 +260,18 @@ URLParams::ParseInput(const nsACString& aInput)
 
 namespace {
 
-void SerializeString(const nsCString& aInput, nsAString& aValue)
-{
-  const unsigned char* p = (const unsigned char*) aInput.get();
+void SerializeString(const nsCString& aInput, nsAString& aValue) {
+  const unsigned char* p = (const unsigned char*)aInput.get();
   const unsigned char* end = p + aInput.Length();
 
   while (p != end) {
     // ' ' to '+'
     if (*p == 0x20) {
       aValue.Append(0x2B);
-    // Percent Encode algorithm
+      // Percent Encode algorithm
     } else if (*p == 0x2A || *p == 0x2D || *p == 0x2E ||
-               (*p >= 0x30 && *p <= 0x39) ||
-               (*p >= 0x41 && *p <= 0x5A) || *p == 0x5F ||
-               (*p >= 0x61 && *p <= 0x7A)) {
+               (*p >= 0x30 && *p <= 0x39) || (*p >= 0x41 && *p <= 0x5A) ||
+               *p == 0x5F || (*p >= 0x61 && *p <= 0x7A)) {
       aValue.Append(*p);
     } else {
       aValue.AppendPrintf("%%%.2X", *p);
@@ -313,11 +281,9 @@ void SerializeString(const nsCString& aInput, nsAString& aValue)
   }
 }
 
-} // namespace
+}  // namespace
 
-void
-URLParams::Serialize(nsAString& aValue) const
-{
+void URLParams::Serialize(nsAString& aValue) const {
   aValue.Truncate();
   bool first = true;
 
@@ -345,30 +311,21 @@ NS_INTERFACE_MAP_END
 
 URLSearchParams::URLSearchParams(nsISupports* aParent,
                                  URLSearchParamsObserver* aObserver)
-  : mParams(new URLParams())
-  , mParent(aParent)
-  , mObserver(aObserver)
-{
-}
+    : mParams(new URLParams()), mParent(aParent), mObserver(aObserver) {}
 
-URLSearchParams::~URLSearchParams()
-{
-  DeleteAll();
-}
+URLSearchParams::~URLSearchParams() { DeleteAll(); }
 
-JSObject*
-URLSearchParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* URLSearchParams::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return URLSearchParams_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<URLSearchParams>
-URLSearchParams::Constructor(const GlobalObject& aGlobal,
-                             const USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString& aInit,
-                             ErrorResult& aRv)
-{
+/* static */ already_AddRefed<URLSearchParams> URLSearchParams::Constructor(
+    const GlobalObject& aGlobal,
+    const USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString& aInit,
+    ErrorResult& aRv) {
   RefPtr<URLSearchParams> sp =
-    new URLSearchParams(aGlobal.GetAsSupports(), nullptr);
+      new URLSearchParams(aGlobal.GetAsSupports(), nullptr);
 
   if (aInit.IsUSVString()) {
     NS_ConvertUTF16toUTF8 input(aInit.GetAsUSVString());
@@ -379,7 +336,7 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
     }
   } else if (aInit.IsUSVStringSequenceSequence()) {
     const Sequence<Sequence<nsString>>& list =
-      aInit.GetAsUSVStringSequenceSequence();
+        aInit.GetAsUSVStringSequenceSequence();
     for (uint32_t i = 0; i < list.Length(); ++i) {
       const Sequence<nsString>& item = list[i];
       if (item.Length() != 2) {
@@ -390,7 +347,7 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
     }
   } else if (aInit.IsUSVStringUSVStringRecord()) {
     const Record<nsString, nsString>& record =
-      aInit.GetAsUSVStringUSVStringRecord();
+        aInit.GetAsUSVStringUSVStringRecord();
     for (auto& entry : record.Entries()) {
       sp->Append(entry.mKey, entry.mValue);
     }
@@ -401,92 +358,63 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
   return sp.forget();
 }
 
-void
-URLSearchParams::ParseInput(const nsACString& aInput)
-{
+void URLSearchParams::ParseInput(const nsACString& aInput) {
   mParams->ParseInput(aInput);
 }
 
-void
-URLSearchParams::Get(const nsAString& aName, nsString& aRetval)
-{
+void URLSearchParams::Get(const nsAString& aName, nsString& aRetval) {
   return mParams->Get(aName, aRetval);
 }
 
-void
-URLSearchParams::GetAll(const nsAString& aName, nsTArray<nsString>& aRetval)
-{
+void URLSearchParams::GetAll(const nsAString& aName,
+                             nsTArray<nsString>& aRetval) {
   return mParams->GetAll(aName, aRetval);
 }
 
-void
-URLSearchParams::Set(const nsAString& aName, const nsAString& aValue)
-{
+void URLSearchParams::Set(const nsAString& aName, const nsAString& aValue) {
   mParams->Set(aName, aValue);
   NotifyObserver();
 }
 
-void
-URLSearchParams::Append(const nsAString& aName, const nsAString& aValue)
-{
+void URLSearchParams::Append(const nsAString& aName, const nsAString& aValue) {
   mParams->Append(aName, aValue);
   NotifyObserver();
 }
 
-bool
-URLSearchParams::Has(const nsAString& aName)
-{
+bool URLSearchParams::Has(const nsAString& aName) {
   return mParams->Has(aName);
 }
 
-void
-URLSearchParams::Delete(const nsAString& aName)
-{
+void URLSearchParams::Delete(const nsAString& aName) {
   mParams->Delete(aName);
   NotifyObserver();
 }
 
-void
-URLSearchParams::DeleteAll()
-{
-  mParams->DeleteAll();
-}
+void URLSearchParams::DeleteAll() { mParams->DeleteAll(); }
 
-void
-URLSearchParams::Serialize(nsAString& aValue) const
-{
+void URLSearchParams::Serialize(nsAString& aValue) const {
   mParams->Serialize(aValue);
 }
 
-void
-URLSearchParams::NotifyObserver()
-{
+void URLSearchParams::NotifyObserver() {
   if (mObserver) {
     mObserver->URLSearchParamsUpdated(this);
   }
 }
 
-uint32_t
-URLSearchParams::GetIterableLength() const
-{
+uint32_t URLSearchParams::GetIterableLength() const {
   return mParams->Length();
 }
 
-const nsAString&
-URLSearchParams::GetKeyAtIndex(uint32_t aIndex) const
-{
+const nsAString& URLSearchParams::GetKeyAtIndex(uint32_t aIndex) const {
   return mParams->GetKeyAtIndex(aIndex);
 }
 
-const nsAString&
-URLSearchParams::GetValueAtIndex(uint32_t aIndex) const
-{
+const nsAString& URLSearchParams::GetValueAtIndex(uint32_t aIndex) const {
   return mParams->GetValueAtIndex(aIndex);
 }
 
-void
-URLSearchParams::Sort(ErrorResult& aRv)
-{
+void URLSearchParams::Sort(ErrorResult& aRv) {
   aRv = mParams->Sort();
   if (!aRv.Failed()) {
     NotifyObserver();
@@ -494,9 +422,7 @@ URLSearchParams::Sort(ErrorResult& aRv)
 }
 
 // Helper functions for structured cloning
-inline bool
-ReadString(JSStructuredCloneReader* aReader, nsString& aString)
-{
+inline bool ReadString(JSStructuredCloneReader* aReader, nsString& aString) {
   MOZ_ASSERT(aReader);
 
   bool read;
@@ -510,7 +436,7 @@ ReadString(JSStructuredCloneReader* aReader, nsString& aString)
     return false;
   }
   size_t charSize = sizeof(nsString::char_type);
-  read = JS_ReadBytes(aReader, (void*) aString.BeginWriting(),
+  read = JS_ReadBytes(aReader, (void*)aString.BeginWriting(),
                       nameLength * charSize);
   if (!read) {
     return false;
@@ -519,9 +445,7 @@ ReadString(JSStructuredCloneReader* aReader, nsString& aString)
   return true;
 }
 
-nsresult
-URLParams::Sort()
-{
+nsresult URLParams::Sort() {
   // Unfortunately we cannot use nsTArray<>.Sort() because it doesn't keep the
   // correct order of the values for equal keys.
 
@@ -541,8 +465,7 @@ URLParams::Sort()
        ++keyId) {
     const nsString& key = keys[keyId];
     for (const Param& param : mParams) {
-      if (param.mKey.Equals(key) &&
-          !params.AppendElement(param, fallible)) {
+      if (param.mKey.Equals(key) && !params.AppendElement(param, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -552,9 +475,8 @@ URLParams::Sort()
   return NS_OK;
 }
 
-inline bool
-WriteString(JSStructuredCloneWriter* aWriter, const nsString& aString)
-{
+inline bool WriteString(JSStructuredCloneWriter* aWriter,
+                        const nsString& aString) {
   MOZ_ASSERT(aWriter);
 
   size_t charSize = sizeof(nsString::char_type);
@@ -562,9 +484,7 @@ WriteString(JSStructuredCloneWriter* aWriter, const nsString& aString)
          JS_WriteBytes(aWriter, aString.get(), aString.Length() * charSize);
 }
 
-bool
-URLParams::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
-{
+bool URLParams::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const {
   const uint32_t& nParams = mParams.Length();
   if (!JS_WriteUint32Pair(aWriter, nParams, 0)) {
     return false;
@@ -578,9 +498,7 @@ URLParams::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
   return true;
 }
 
-bool
-URLParams::ReadStructuredClone(JSStructuredCloneReader* aReader)
-{
+bool URLParams::ReadStructuredClone(JSStructuredCloneReader* aReader) {
   MOZ_ASSERT(aReader);
 
   DeleteAll();
@@ -600,27 +518,24 @@ URLParams::ReadStructuredClone(JSStructuredCloneReader* aReader)
   return true;
 }
 
-bool
-URLSearchParams::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
-{
+bool URLSearchParams::WriteStructuredClone(
+    JSStructuredCloneWriter* aWriter) const {
   return mParams->WriteStructuredClone(aWriter);
 }
 
-bool
-URLSearchParams::ReadStructuredClone(JSStructuredCloneReader* aReader)
-{
- return mParams->ReadStructuredClone(aReader);
+bool URLSearchParams::ReadStructuredClone(JSStructuredCloneReader* aReader) {
+  return mParams->ReadStructuredClone(aReader);
 }
 
 // contentTypeWithCharset can be set to the contentType or
 // contentType+charset based on what the spec says.
 // See: https://fetch.spec.whatwg.org/#concept-bodyinit-extract
-nsresult
-URLSearchParams::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
-                             nsACString& aContentTypeWithCharset,
-                             nsACString& aCharset) const
-{
-  aContentTypeWithCharset.AssignLiteral("application/x-www-form-urlencoded;charset=UTF-8");
+nsresult URLSearchParams::GetSendInfo(nsIInputStream** aBody,
+                                      uint64_t* aContentLength,
+                                      nsACString& aContentTypeWithCharset,
+                                      nsACString& aCharset) const {
+  aContentTypeWithCharset.AssignLiteral(
+      "application/x-www-form-urlencoded;charset=UTF-8");
   aCharset.AssignLiteral("UTF-8");
 
   nsAutoString serialized;
@@ -630,5 +545,5 @@ URLSearchParams::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   return NS_NewCStringInputStream(aBody, std::move(converted));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

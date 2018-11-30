@@ -22,58 +22,43 @@
 namespace mozilla {
 namespace dom {
 
-class CallbackFunction : public CallbackObject
-{
-public:
+class CallbackFunction : public CallbackObject {
+ public:
   // See CallbackObject for an explanation of the arguments.
   explicit CallbackFunction(JSContext* aCx, JS::Handle<JSObject*> aCallable,
                             JS::Handle<JSObject*> aCallableGlobal,
                             nsIGlobalObject* aIncumbentGlobal)
-    : CallbackObject(aCx, aCallable, aCallableGlobal, aIncumbentGlobal)
-  {
-  }
+      : CallbackObject(aCx, aCallable, aCallableGlobal, aIncumbentGlobal) {}
 
   // See CallbackObject for an explanation of the arguments.
-  explicit CallbackFunction(JSObject* aCallable,
-                            JSObject* aCallableGlobal,
+  explicit CallbackFunction(JSObject* aCallable, JSObject* aCallableGlobal,
                             JSObject* aAsyncStack,
                             nsIGlobalObject* aIncumbentGlobal)
-    : CallbackObject(aCallable, aCallableGlobal, aAsyncStack, aIncumbentGlobal)
-  {
-  }
+      : CallbackObject(aCallable, aCallableGlobal, aAsyncStack,
+                       aIncumbentGlobal) {}
 
-  JS::Handle<JSObject*> CallableOrNull() const
-  {
-    return CallbackOrNull();
-  }
+  JS::Handle<JSObject*> CallableOrNull() const { return CallbackOrNull(); }
 
-  JS::Handle<JSObject*> CallablePreserveColor() const
-  {
+  JS::Handle<JSObject*> CallablePreserveColor() const {
     return CallbackPreserveColor();
   }
 
-  bool HasGrayCallable() const
-  {
+  bool HasGrayCallable() const {
     // Play it safe in case this gets called after unlink.
     return mCallback && JS::ObjectIsMarkedGray(mCallback);
   }
 
-protected:
+ protected:
   explicit CallbackFunction(CallbackFunction* aCallbackFunction)
-    : CallbackObject(aCallbackFunction)
-  {
-  }
+      : CallbackObject(aCallbackFunction) {}
 
   // See CallbackObject for an explanation of the arguments.
-  CallbackFunction(JSObject* aCallable,
-                   JSObject* aCallableGlobal,
+  CallbackFunction(JSObject* aCallable, JSObject* aCallableGlobal,
                    const FastCallbackConstructor&)
-    : CallbackObject(aCallable, aCallableGlobal, FastCallbackConstructor())
-  {
-  }
+      : CallbackObject(aCallable, aCallableGlobal, FastCallbackConstructor()) {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CallbackFunction_h
+#endif  // mozilla_dom_CallbackFunction_h

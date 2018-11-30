@@ -11,14 +11,9 @@
 namespace mozilla {
 namespace layers {
 
-TouchCounter::TouchCounter()
-  : mActiveTouchCount(0)
-{
-}
+TouchCounter::TouchCounter() : mActiveTouchCount(0) {}
 
-void
-TouchCounter::Update(const MultiTouchInput& aInput)
-{
+void TouchCounter::Update(const MultiTouchInput& aInput) {
   switch (aInput.mType) {
     case MultiTouchInput::MULTITOUCH_START:
       // touch-start event contains all active touches of the current session
@@ -41,11 +36,7 @@ TouchCounter::Update(const MultiTouchInput& aInput)
   }
 }
 
-uint32_t
-TouchCounter::GetActiveTouchCount() const
-{
-  return mActiveTouchCount;
-}
+uint32_t TouchCounter::GetActiveTouchCount() const { return mActiveTouchCount; }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

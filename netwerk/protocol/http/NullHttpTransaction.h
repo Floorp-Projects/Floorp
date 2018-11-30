@@ -18,26 +18,29 @@
 
 class nsIHttpActivityObserver;
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
 class nsAHttpConnection;
 class nsHttpConnectionInfo;
 class nsHttpRequestHead;
 
 // 6c445340-3b82-4345-8efa-4902c3b8805a
-#define NS_NULLHTTPTRANSACTION_IID \
-{ 0x6c445340, 0x3b82, 0x4345, {0x8e, 0xfa, 0x49, 0x02, 0xc3, 0xb8, 0x80, 0x5a }}
+#define NS_NULLHTTPTRANSACTION_IID                   \
+  {                                                  \
+    0x6c445340, 0x3b82, 0x4345, {                    \
+      0x8e, 0xfa, 0x49, 0x02, 0xc3, 0xb8, 0x80, 0x5a \
+    }                                                \
+  }
 
-class NullHttpTransaction : public nsAHttpTransaction
-{
-public:
+class NullHttpTransaction : public nsAHttpTransaction {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NULLHTTPTRANSACTION_IID)
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPTRANSACTION
 
   NullHttpTransaction(nsHttpConnectionInfo *ci,
-                      nsIInterfaceRequestor *callbacks,
-                      uint32_t caps);
+                      nsIInterfaceRequestor *callbacks, uint32_t caps);
 
   MOZ_MUST_USE bool Claim();
   void Unclaim();
@@ -45,14 +48,11 @@ public:
   // Overload of nsAHttpTransaction methods
   bool IsNullTransaction() final { return true; }
   NullHttpTransaction *QueryNullTransaction() final { return this; }
-  bool ResponseTimeoutEnabled() const final {return true; }
-  PRIntervalTime ResponseTimeout() final
-  {
-    return PR_SecondsToInterval(15);
-  }
+  bool ResponseTimeoutEnabled() const final { return true; }
+  PRIntervalTime ResponseTimeout() final { return PR_SecondsToInterval(15); }
 
-  // We have to override this function because |mTransaction| in nsHalfOpenSocket
-  // could be either nsHttpTransaction or NullHttpTransaction.
+  // We have to override this function because |mTransaction| in
+  // nsHalfOpenSocket could be either nsHttpTransaction or NullHttpTransaction.
   // NullHttpTransaction will be activated on the connection immediately after
   // creation and be never put in a pending queue, so it's OK to just return 0.
   uint64_t TopLevelOuterContentWindowId() override { return 0; }
@@ -60,25 +60,25 @@ public:
   TimingStruct Timings() { return mTimings; }
 
   mozilla::TimeStamp GetTcpConnectEnd() { return mTimings.tcpConnectEnd; }
-  mozilla::TimeStamp GetSecureConnectionStart()
-  {
+  mozilla::TimeStamp GetSecureConnectionStart() {
     return mTimings.secureConnectionStart;
   }
 
-  void SetFastOpenStatus(uint8_t aStatus) override
-  {
+  void SetFastOpenStatus(uint8_t aStatus) override {
     mFastOpenStatus = aStatus;
   }
 
-protected:
+ protected:
   virtual ~NullHttpTransaction();
 
-private:
+ private:
   nsresult mStatus;
-protected:
+
+ protected:
   uint32_t mCaps;
   nsHttpRequestHead *mRequestHead;
-private:
+
+ private:
   // mCapsToClear holds flags that should be cleared in mCaps, e.g. unset
   // NS_HTTP_REFRESH_DNS when DNS refresh request has completed to avoid
   // redundant requests on the network. The member itself is atomic, but
@@ -92,7 +92,7 @@ private:
   TimingStruct mTimings;
   uint8_t mFastOpenStatus;
 
-protected:
+ protected:
   RefPtr<nsAHttpConnection> mConnection;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   RefPtr<nsHttpConnectionInfo> mConnectionInfo;
@@ -101,7 +101,7 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(NullHttpTransaction, NS_NULLHTTPTRANSACTION_IID)
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_NullHttpTransaction_h
+#endif  // mozilla_net_NullHttpTransaction_h

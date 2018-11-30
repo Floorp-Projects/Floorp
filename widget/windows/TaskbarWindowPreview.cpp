@@ -19,13 +19,14 @@ namespace mozilla {
 namespace widget {
 
 namespace {
-bool WindowHookProc(void *aContext, HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam, LRESULT *aResult)
-{
-  TaskbarWindowPreview *preview = reinterpret_cast<TaskbarWindowPreview*>(aContext);
+bool WindowHookProc(void *aContext, HWND hWnd, UINT nMsg, WPARAM wParam,
+                    LPARAM lParam, LRESULT *aResult) {
+  TaskbarWindowPreview *preview =
+      reinterpret_cast<TaskbarWindowPreview *>(aContext);
   *aResult = preview->WndProc(nMsg, wParam, lParam);
   return true;
 }
-}
+}  // namespace
 
 NS_IMPL_ISUPPORTS(TaskbarWindowPreview, nsITaskbarWindowPreview,
                   nsITaskbarProgress, nsITaskbarOverlayIconController,
@@ -35,26 +36,21 @@ NS_IMPL_ISUPPORTS(TaskbarWindowPreview, nsITaskbarWindowPreview,
  * These correspond directly to the states defined in nsITaskbarProgress.idl, so
  * they should be kept in sync.
  */
-static TBPFLAG sNativeStates[] =
-{
-  TBPF_NOPROGRESS,
-  TBPF_INDETERMINATE,
-  TBPF_NORMAL,
-  TBPF_ERROR,
-  TBPF_PAUSED
-};
+static TBPFLAG sNativeStates[] = {TBPF_NOPROGRESS, TBPF_INDETERMINATE,
+                                  TBPF_NORMAL, TBPF_ERROR, TBPF_PAUSED};
 
-TaskbarWindowPreview::TaskbarWindowPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewController *aController, HWND aHWND, nsIDocShell *aShell)
-  : TaskbarPreview(aTaskbar, aController, aHWND, aShell),
-    mCustomDrawing(false),
-    mHaveButtons(false),
-    mState(TBPF_NOPROGRESS),
-    mCurrentValue(0),
-    mMaxValue(0),
-    mOverlayIcon(nullptr)
-{
+TaskbarWindowPreview::TaskbarWindowPreview(
+    ITaskbarList4 *aTaskbar, nsITaskbarPreviewController *aController,
+    HWND aHWND, nsIDocShell *aShell)
+    : TaskbarPreview(aTaskbar, aController, aHWND, aShell),
+      mCustomDrawing(false),
+      mHaveButtons(false),
+      mState(TBPF_NOPROGRESS),
+      mCurrentValue(0),
+      mMaxValue(0),
+      mOverlayIcon(nullptr) {
   // Window previews are visible by default
-  (void) SetVisible(true);
+  (void)SetVisible(true);
 
   memset(mThumbButtons, 0, sizeof mThumbButtons);
   for (int32_t i = 0; i < nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS; i++) {
@@ -82,25 +78,21 @@ TaskbarWindowPreview::~TaskbarWindowPreview() {
   }
 }
 
-nsresult
-TaskbarWindowPreview::ShowActive(bool active) {
+nsresult TaskbarWindowPreview::ShowActive(bool active) {
   return FAILED(mTaskbar->ActivateTab(active ? mWnd : nullptr))
-       ? NS_ERROR_FAILURE
-       : NS_OK;
-
+             ? NS_ERROR_FAILURE
+             : NS_OK;
 }
 
-HWND &
-TaskbarWindowPreview::PreviewWindow() {
-  return mWnd;
-}
+HWND &TaskbarWindowPreview::PreviewWindow() { return mWnd; }
 
-nsresult
-TaskbarWindowPreview::GetButton(uint32_t index, nsITaskbarPreviewButton **_retVal) {
+nsresult TaskbarWindowPreview::GetButton(uint32_t index,
+                                         nsITaskbarPreviewButton **_retVal) {
   if (index >= nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsITaskbarPreviewButton> button(do_QueryReferent(mWeakButtons[index]));
+  nsCOMPtr<nsITaskbarPreviewButton> button(
+      do_QueryReferent(mWeakButtons[index]));
 
   if (!button) {
     // Lost reference
@@ -115,9 +107,11 @@ TaskbarWindowPreview::GetButton(uint32_t index, nsITaskbarPreviewButton **_retVa
     mHaveButtons = true;
 
     WindowHook &hook = GetWindowHook();
-    (void) hook.AddHook(WM_COMMAND, WindowHookProc, this);
+    (void)hook.AddHook(WM_COMMAND, WindowHookProc, this);
 
-    if (mVisible && FAILED(mTaskbar->ThumbBarAddButtons(mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS, mThumbButtons))) {
+    if (mVisible && FAILED(mTaskbar->ThumbBarAddButtons(
+                        mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS,
+                        mThumbButtons))) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -127,18 +121,18 @@ TaskbarWindowPreview::GetButton(uint32_t index, nsITaskbarPreviewButton **_retVa
 
 NS_IMETHODIMP
 TaskbarWindowPreview::SetEnableCustomDrawing(bool aEnable) {
-  if (aEnable == mCustomDrawing)
-    return NS_OK;
+  if (aEnable == mCustomDrawing) return NS_OK;
   mCustomDrawing = aEnable;
   TaskbarPreview::EnableCustomDrawing(mWnd, aEnable);
 
   WindowHook &hook = GetWindowHook();
   if (aEnable) {
-    (void) hook.AddHook(WM_DWMSENDICONICTHUMBNAIL, WindowHookProc, this);
-    (void) hook.AddHook(WM_DWMSENDICONICLIVEPREVIEWBITMAP, WindowHookProc, this);
+    (void)hook.AddHook(WM_DWMSENDICONICTHUMBNAIL, WindowHookProc, this);
+    (void)hook.AddHook(WM_DWMSENDICONICLIVEPREVIEWBITMAP, WindowHookProc, this);
   } else {
-    (void) hook.RemoveHook(WM_DWMSENDICONICLIVEPREVIEWBITMAP, WindowHookProc, this);
-    (void) hook.RemoveHook(WM_DWMSENDICONICTHUMBNAIL, WindowHookProc, this);
+    (void)hook.RemoveHook(WM_DWMSENDICONICLIVEPREVIEWBITMAP, WindowHookProc,
+                          this);
+    (void)hook.RemoveHook(WM_DWMSENDICONICTHUMBNAIL, WindowHookProc, this);
   }
   return NS_OK;
 }
@@ -152,10 +146,8 @@ TaskbarWindowPreview::GetEnableCustomDrawing(bool *aEnable) {
 NS_IMETHODIMP
 TaskbarWindowPreview::SetProgressState(nsTaskbarProgressState aState,
                                        uint64_t aCurrentValue,
-                                       uint64_t aMaxValue)
-{
-  NS_ENSURE_ARG_RANGE(aState,
-                      nsTaskbarProgressState(0),
+                                       uint64_t aMaxValue) {
+  NS_ENSURE_ARG_RANGE(aState, nsTaskbarProgressState(0),
                       nsTaskbarProgressState(ArrayLength(sNativeStates) - 1));
 
   TBPFLAG nativeState = sNativeStates[aState];
@@ -164,8 +156,7 @@ TaskbarWindowPreview::SetProgressState(nsTaskbarProgressState aState,
     NS_ENSURE_TRUE(aMaxValue == 0, NS_ERROR_INVALID_ARG);
   }
 
-  if (aCurrentValue > aMaxValue)
-    return NS_ERROR_ILLEGAL_VALUE;
+  if (aCurrentValue > aMaxValue) return NS_ERROR_ILLEGAL_VALUE;
 
   mState = nativeState;
   mCurrentValue = aCurrentValue;
@@ -176,8 +167,8 @@ TaskbarWindowPreview::SetProgressState(nsTaskbarProgressState aState,
 }
 
 NS_IMETHODIMP
-TaskbarWindowPreview::SetOverlayIcon(imgIContainer* aStatusIcon,
-                                     const nsAString& aStatusDescription) {
+TaskbarWindowPreview::SetOverlayIcon(imgIContainer *aStatusIcon,
+                                     const nsAString &aStatusDescription) {
   nsresult rv;
   if (aStatusIcon) {
     // The image shouldn't be animated
@@ -189,14 +180,13 @@ TaskbarWindowPreview::SetOverlayIcon(imgIContainer* aStatusIcon,
 
   HICON hIcon = nullptr;
   if (aStatusIcon) {
-    rv = nsWindowGfx::CreateIcon(aStatusIcon, false, 0, 0,
-                                 nsWindowGfx::GetIconMetrics(nsWindowGfx::kSmallIcon),
-                                 &hIcon);
+    rv = nsWindowGfx::CreateIcon(
+        aStatusIcon, false, 0, 0,
+        nsWindowGfx::GetIconMetrics(nsWindowGfx::kSmallIcon), &hIcon);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (mOverlayIcon)
-    ::DestroyIcon(mOverlayIcon);
+  if (mOverlayIcon) ::DestroyIcon(mOverlayIcon);
   mOverlayIcon = hIcon;
   mIconDescription = aStatusDescription;
 
@@ -204,10 +194,10 @@ TaskbarWindowPreview::SetOverlayIcon(imgIContainer* aStatusIcon,
   return CanMakeTaskbarCalls() ? UpdateOverlayIcon() : NS_OK;
 }
 
-nsresult
-TaskbarWindowPreview::UpdateTaskbarProperties() {
+nsresult TaskbarWindowPreview::UpdateTaskbarProperties() {
   if (mHaveButtons) {
-    if (FAILED(mTaskbar->ThumbBarAddButtons(mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS, mThumbButtons)))
+    if (FAILED(mTaskbar->ThumbBarAddButtons(
+            mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS, mThumbButtons)))
       return NS_ERROR_FAILURE;
   }
   nsresult rv = UpdateTaskbarProgress();
@@ -217,8 +207,7 @@ TaskbarWindowPreview::UpdateTaskbarProperties() {
   return TaskbarPreview::UpdateTaskbarProperties();
 }
 
-nsresult
-TaskbarWindowPreview::UpdateTaskbarProgress() {
+nsresult TaskbarWindowPreview::UpdateTaskbarProgress() {
   HRESULT hr = mTaskbar->SetProgressState(mWnd, mState);
   if (SUCCEEDED(hr) && mState != TBPF_NOPROGRESS &&
       mState != TBPF_INDETERMINATE)
@@ -227,10 +216,9 @@ TaskbarWindowPreview::UpdateTaskbarProgress() {
   return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-TaskbarWindowPreview::UpdateOverlayIcon() {
-  HRESULT hr = mTaskbar->SetOverlayIcon(mWnd, mOverlayIcon,
-                                        mIconDescription.get());
+nsresult TaskbarWindowPreview::UpdateOverlayIcon() {
+  HRESULT hr =
+      mTaskbar->SetOverlayIcon(mWnd, mOverlayIcon, mIconDescription.get());
   return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -238,80 +226,67 @@ LRESULT
 TaskbarWindowPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
   RefPtr<TaskbarWindowPreview> kungFuDeathGrip(this);
   switch (nMsg) {
-    case WM_COMMAND:
-      {
-        uint32_t id = LOWORD(wParam);
-        uint32_t index = id;
-        nsCOMPtr<nsITaskbarPreviewButton> button;
-        nsresult rv = GetButton(index, getter_AddRefs(button));
-        if (NS_SUCCEEDED(rv))
-          mController->OnClick(button);
-      }
+    case WM_COMMAND: {
+      uint32_t id = LOWORD(wParam);
+      uint32_t index = id;
+      nsCOMPtr<nsITaskbarPreviewButton> button;
+      nsresult rv = GetButton(index, getter_AddRefs(button));
+      if (NS_SUCCEEDED(rv)) mController->OnClick(button);
+    }
       return 0;
   }
   return TaskbarPreview::WndProc(nMsg, wParam, lParam);
 }
 
 /* static */
-bool
-TaskbarWindowPreview::TaskbarWindowHook(void *aContext,
-                                        HWND hWnd, UINT nMsg,
-                                        WPARAM wParam, LPARAM lParam,
-                                        LRESULT *aResult)
-{
+bool TaskbarWindowPreview::TaskbarWindowHook(void *aContext, HWND hWnd,
+                                             UINT nMsg, WPARAM wParam,
+                                             LPARAM lParam, LRESULT *aResult) {
   NS_ASSERTION(nMsg == nsAppShell::GetTaskbarButtonCreatedMessage(),
                "Window hook proc called with wrong message");
   TaskbarWindowPreview *preview =
-    reinterpret_cast<TaskbarWindowPreview*>(aContext);
+      reinterpret_cast<TaskbarWindowPreview *>(aContext);
   // Now we can make all the calls to mTaskbar
   preview->UpdateTaskbarProperties();
   return false;
 }
 
-nsresult
-TaskbarWindowPreview::Enable() {
+nsresult TaskbarWindowPreview::Enable() {
   nsresult rv = TaskbarPreview::Enable();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return FAILED(mTaskbar->AddTab(mWnd))
-       ? NS_ERROR_FAILURE
-       : NS_OK;
+  return FAILED(mTaskbar->AddTab(mWnd)) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-nsresult
-TaskbarWindowPreview::Disable() {
+nsresult TaskbarWindowPreview::Disable() {
   nsresult rv = TaskbarPreview::Disable();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return FAILED(mTaskbar->DeleteTab(mWnd))
-       ? NS_ERROR_FAILURE
-       : NS_OK;
+  return FAILED(mTaskbar->DeleteTab(mWnd)) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-void
-TaskbarWindowPreview::DetachFromNSWindow() {
+void TaskbarWindowPreview::DetachFromNSWindow() {
   // Remove the hooks we have for drawing
   SetEnableCustomDrawing(false);
 
   WindowHook &hook = GetWindowHook();
-  (void) hook.RemoveHook(WM_COMMAND, WindowHookProc, this);
-  (void) hook.RemoveMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
-                            TaskbarWindowHook, this);
+  (void)hook.RemoveHook(WM_COMMAND, WindowHookProc, this);
+  (void)hook.RemoveMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
+                           TaskbarWindowHook, this);
 
   TaskbarPreview::DetachFromNSWindow();
 }
 
-nsresult
-TaskbarWindowPreview::UpdateButtons() {
+nsresult TaskbarWindowPreview::UpdateButtons() {
   NS_ASSERTION(mVisible, "UpdateButtons called on invisible preview");
 
-  if (FAILED(mTaskbar->ThumbBarUpdateButtons(mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS, mThumbButtons)))
+  if (FAILED(mTaskbar->ThumbBarUpdateButtons(
+          mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS, mThumbButtons)))
     return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
-nsresult
-TaskbarWindowPreview::UpdateButton(uint32_t index) {
+nsresult TaskbarWindowPreview::UpdateButton(uint32_t index) {
   if (index >= nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS)
     return NS_ERROR_INVALID_ARG;
   if (mVisible) {
@@ -321,6 +296,5 @@ TaskbarWindowPreview::UpdateButton(uint32_t index) {
   return NS_OK;
 }
 
-} // namespace widget
-} // namespace mozilla
-
+}  // namespace widget
+}  // namespace mozilla

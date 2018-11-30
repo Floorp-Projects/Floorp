@@ -22,17 +22,13 @@ static const int sTimeoutMS = 10000;
 
 #define DLL_LEAF_NAME (u"InjectorDLL.dll")
 
-static nsString
-makeString(PUNICODE_STRING aOther)
-{
+static nsString makeString(PUNICODE_STRING aOther) {
   size_t numChars = aOther->Length / sizeof(WCHAR);
-  return nsString((const char16_t *)aOther->Buffer, numChars);
+  return nsString((const char16_t*)aOther->Buffer, numChars);
 }
 
-static void
-DllLoadHook(bool aDllLoaded, NTSTATUS aStatus, HANDLE aDllBase,
-            PUNICODE_STRING aDllName)
-{
+static void DllLoadHook(bool aDllLoaded, NTSTATUS aStatus, HANDLE aDllBase,
+                        PUNICODE_STRING aDllName) {
   nsString str = makeString(aDllName);
 
   nsString dllName = nsString(DLL_LEAF_NAME);
@@ -43,9 +39,7 @@ DllLoadHook(bool aDllLoaded, NTSTATUS aStatus, HANDLE aDllBase,
   }
 }
 
-static void
-CreateThreadHook(bool aWasAllowed, void* aStartAddress)
-{
+static void CreateThreadHook(bool aWasAllowed, void* aStartAddress) {
   if (sStartAddress == (uintptr_t)aStartAddress) {
     if (!aWasAllowed) {
       SetEvent(sThreadWasBlocked);
@@ -84,10 +78,8 @@ CreateThreadHook(bool aWasAllowed, void* aStartAddress)
  *                      startAddress and threadParam are passed into
  *                      CreateRemoteThread as arguments.
  */
-template<typename TgetArgsProc>
-static void
-DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc)
-{
+template <typename TgetArgsProc>
+static void DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc) {
   sThreadWasBlocked = CreateEvent(NULL, FALSE, FALSE, NULL);
   if (!sThreadWasBlocked) {
     EXPECT_TRUE(!"Unable to create sThreadWasBlocked event");
@@ -106,7 +98,7 @@ DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc)
     ASSERT_EQ(GetLastError(), ERROR_SUCCESS);
   }
 
-  auto closeEvents = mozilla::MakeScopeExit([&](){
+  auto closeEvents = mozilla::MakeScopeExit([&]() {
     CloseHandle(sThreadWasAllowed);
     CloseHandle(sThreadWasBlocked);
     CloseHandle(sDllWasLoaded);
@@ -115,16 +107,16 @@ DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc)
   // Hook into our DLL and thread blocking routines during this test.
   DllBlocklist_SetDllLoadHook(DllLoadHook);
   DllBlocklist_SetCreateThreadHook(CreateThreadHook);
-  auto undoHooks = mozilla::MakeScopeExit([&](){
+  auto undoHooks = mozilla::MakeScopeExit([&]() {
     DllBlocklist_SetDllLoadHook(nullptr);
     DllBlocklist_SetCreateThreadHook(nullptr);
   });
 
   // Launch Injector.exe.
-  STARTUPINFOW si = { 0 };
+  STARTUPINFOW si = {0};
   si.cb = sizeof(si);
   ::GetStartupInfoW(&si);
-  PROCESS_INFORMATION pi = { 0 };
+  PROCESS_INFORMATION pi = {0};
 
   nsString path(u"Injector.exe");
   nsString dllPath(DLL_LEAF_NAME);
@@ -135,15 +127,15 @@ DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc)
 
   path.AppendPrintf(" %lu 0x%p 0x%p", GetCurrentProcessId(), sStartAddress,
                     threadParam);
-  if (::CreateProcessW(NULL, path.get(), 0, 0, FALSE, 0, NULL, NULL,
-    &si, &pi) == FALSE) {
+  if (::CreateProcessW(NULL, path.get(), 0, 0, FALSE, 0, NULL, NULL, &si,
+                       &pi) == FALSE) {
     EXPECT_TRUE(!"Error in CreateProcessW() launching Injector.exe");
     ASSERT_EQ(GetLastError(), ERROR_SUCCESS);
     return;
   }
 
   // Ensure Injector.exe doesn't stay running after this test finishes.
-  auto cleanup = mozilla::MakeScopeExit([&](){
+  auto cleanup = mozilla::MakeScopeExit([&]() {
     CloseHandle(pi.hThread);
     EXPECT_TRUE("Shutting down.");
     WaitForSingleObject(pi.hProcess, INFINITE);
@@ -151,31 +143,27 @@ DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc)
   });
 
   // Wait for information to come in and complete the test.
-  HANDLE handles[] = {
-    sThreadWasBlocked,
-    sThreadWasAllowed,
-    sDllWasLoaded,
-    pi.hProcess
-  };
+  HANDLE handles[] = {sThreadWasBlocked, sThreadWasAllowed, sDllWasLoaded,
+                      pi.hProcess};
   int handleCount = mozilla::ArrayLength(handles);
-  bool keepGoing = true; // Set to false to signal that the test is over.
+  bool keepGoing = true;  // Set to false to signal that the test is over.
 
-  while(keepGoing) {
-    switch(WaitForMultipleObjectsEx(handleCount, handles,
-                                    FALSE, sTimeoutMS, FALSE)) {
-      case WAIT_OBJECT_0: { // sThreadWasBlocked
+  while (keepGoing) {
+    switch (WaitForMultipleObjectsEx(handleCount, handles, FALSE, sTimeoutMS,
+                                     FALSE)) {
+      case WAIT_OBJECT_0: {  // sThreadWasBlocked
         EXPECT_TRUE("Thread was blocked successfully.");
         // No need to continue testing; blocking was successful.
         keepGoing = false;
         break;
       }
-      case WAIT_OBJECT_0 + 1: { // sThreadWasAllowed
+      case WAIT_OBJECT_0 + 1: {  // sThreadWasAllowed
         EXPECT_TRUE(!"Thread was allowed but should have been blocked.");
         // No need to continue testing; blocking failed.
         keepGoing = false;
         break;
       }
-      case WAIT_OBJECT_0 + 2: { // sDllWasLoaded
+      case WAIT_OBJECT_0 + 2: {  // sDllWasLoaded
         EXPECT_TRUE(!"DLL was loaded.");
         // No need to continue testing; blocking failed and the DLL was
         // consequently loaded. In theory we should never see this fire, because
@@ -183,12 +171,13 @@ DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc)
         keepGoing = false;
         break;
       }
-      case WAIT_OBJECT_0 + 3: { // pi.hProcess
+      case WAIT_OBJECT_0 + 3: {  // pi.hProcess
         // Check to see if we got an error code from Injector.exe, in which case
         // fail the test and exit.
         DWORD exitCode;
         if (!GetExitCodeProcess(pi.hProcess, &exitCode)) {
-          EXPECT_TRUE(!"Injector.exe exited but we were unable to get the exit code.");
+          EXPECT_TRUE(
+              !"Injector.exe exited but we were unable to get the exit code.");
           keepGoing = false;
           break;
         }
@@ -226,52 +215,45 @@ DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc)
   return;
 }
 
-TEST(TestInjectEject, CreateRemoteThread_LoadLibraryA)
-{
-  DoTest_CreateRemoteThread_LoadLibrary([](const nsString& dllPath,
-                                           const nsCString& dllPathC,
-                                           uintptr_t& aStartAddress,
-                                           uintptr_t& aThreadParam){
-    HMODULE hKernel32 = GetModuleHandleW(L"Kernel32");
-    aStartAddress = (uintptr_t)GetProcAddress(hKernel32, "LoadLibraryA");
-    aThreadParam = (uintptr_t)dllPathC.get();
-  });
+TEST(TestInjectEject, CreateRemoteThread_LoadLibraryA) {
+  DoTest_CreateRemoteThread_LoadLibrary(
+      [](const nsString& dllPath, const nsCString& dllPathC,
+         uintptr_t& aStartAddress, uintptr_t& aThreadParam) {
+        HMODULE hKernel32 = GetModuleHandleW(L"Kernel32");
+        aStartAddress = (uintptr_t)GetProcAddress(hKernel32, "LoadLibraryA");
+        aThreadParam = (uintptr_t)dllPathC.get();
+      });
 }
 
-TEST(TestInjectEject, CreateRemoteThread_LoadLibraryW)
-{
-  DoTest_CreateRemoteThread_LoadLibrary([](const nsString& dllPath,
-                                           const nsCString& dllPathC,
-                                           uintptr_t& aStartAddress,
-                                           uintptr_t& aThreadParam){
-    HMODULE hKernel32 = GetModuleHandleW(L"Kernel32");
-    aStartAddress = (uintptr_t)GetProcAddress(hKernel32, "LoadLibraryW");
-    aThreadParam = (uintptr_t)dllPath.get();
-  });
+TEST(TestInjectEject, CreateRemoteThread_LoadLibraryW) {
+  DoTest_CreateRemoteThread_LoadLibrary(
+      [](const nsString& dllPath, const nsCString& dllPathC,
+         uintptr_t& aStartAddress, uintptr_t& aThreadParam) {
+        HMODULE hKernel32 = GetModuleHandleW(L"Kernel32");
+        aStartAddress = (uintptr_t)GetProcAddress(hKernel32, "LoadLibraryW");
+        aThreadParam = (uintptr_t)dllPath.get();
+      });
 }
 
-TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExW)
-{
-  DoTest_CreateRemoteThread_LoadLibrary([](const nsString& dllPath,
-                                           const nsCString& dllPathC,
-                                           uintptr_t& aStartAddress,
-                                           uintptr_t& aThreadParam){
-    HMODULE hKernel32 = GetModuleHandleW(L"Kernel32");
-    // LoadLibraryEx requires three arguments so this injection method may not
-    // be viable. It's certainly not an allowable thread start in any case.
-    aStartAddress = (uintptr_t)GetProcAddress(hKernel32, "LoadLibraryExW");
-    aThreadParam = (uintptr_t)dllPath.get();
-  });
+TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExW) {
+  DoTest_CreateRemoteThread_LoadLibrary(
+      [](const nsString& dllPath, const nsCString& dllPathC,
+         uintptr_t& aStartAddress, uintptr_t& aThreadParam) {
+        HMODULE hKernel32 = GetModuleHandleW(L"Kernel32");
+        // LoadLibraryEx requires three arguments so this injection method may
+        // not be viable. It's certainly not an allowable thread start in any
+        // case.
+        aStartAddress = (uintptr_t)GetProcAddress(hKernel32, "LoadLibraryExW");
+        aThreadParam = (uintptr_t)dllPath.get();
+      });
 }
 
-TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExA)
-{
-  DoTest_CreateRemoteThread_LoadLibrary([](const nsString& dllPath,
-                                           const nsCString& dllPathC,
-                                           uintptr_t& aStartAddress,
-                                           uintptr_t& aThreadParam){
-    HMODULE hKernel32 = GetModuleHandleW(L"Kernel32");
-    aStartAddress = (uintptr_t)GetProcAddress(hKernel32, "LoadLibraryExA");
-    aThreadParam = (uintptr_t)dllPathC.get();
-  });
+TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExA) {
+  DoTest_CreateRemoteThread_LoadLibrary(
+      [](const nsString& dllPath, const nsCString& dllPathC,
+         uintptr_t& aStartAddress, uintptr_t& aThreadParam) {
+        HMODULE hKernel32 = GetModuleHandleW(L"Kernel32");
+        aStartAddress = (uintptr_t)GetProcAddress(hKernel32, "LoadLibraryExA");
+        aThreadParam = (uintptr_t)dllPathC.get();
+      });
 }

@@ -14,8 +14,7 @@ namespace mozilla {
 class DisplayItemBlueprint;
 
 // Stack node used during tree visits, to store the path to a display item.
-struct DisplayItemBlueprintStack
-{
+struct DisplayItemBlueprintStack {
   const DisplayItemBlueprintStack* mPrevious;
   const DisplayItemBlueprint* mItem;
   // Output stack to aSs, with format "name#index > ... > name#index".
@@ -26,31 +25,24 @@ struct DisplayItemBlueprintStack
 // Object representing a list of display items (either the top of the tree, or
 // an item's children), with just enough information to compare with another
 // tree and output useful debugging information.
-class DisplayListBlueprint
-{
-public:
+class DisplayListBlueprint {
+ public:
   DisplayListBlueprint(nsDisplayList* aList, const char* aName)
-    : DisplayListBlueprint(aList, 0, aName)
-  {
-  }
+      : DisplayListBlueprint(aList, 0, aName) {}
 
-  DisplayListBlueprint(nsDisplayList* aList,
-                       const char* aName,
-                       unsigned& aIndex)
-  {
+  DisplayListBlueprint(nsDisplayList* aList, const char* aName,
+                       unsigned& aIndex) {
     processChildren(aList, aName, aIndex);
   }
 
   // Find a display item with the given frame and per-frame key.
   // Returns empty string if not found.
-  std::string Find(const nsIFrame* aFrame, uint32_t aPerFrameKey) const
-  {
-    const DisplayItemBlueprintStack stack{ nullptr, nullptr };
+  std::string Find(const nsIFrame* aFrame, uint32_t aPerFrameKey) const {
+    const DisplayItemBlueprintStack stack{nullptr, nullptr};
     return Find(aFrame, aPerFrameKey, stack);
   }
 
-  std::string Find(const nsIFrame* aFrame,
-                   uint32_t aPerFrameKey,
+  std::string Find(const nsIFrame* aFrame, uint32_t aPerFrameKey,
                    const DisplayItemBlueprintStack& aStack) const;
 
   // Compare this list with another one, output differences between the two
@@ -60,12 +52,11 @@ public:
   // parent items.
   // Returns true if trees are similar, false if different.
   bool CompareList(const DisplayListBlueprint& aOther,
-                   std::stringstream& aDiff) const
-  {
-    const DisplayItemBlueprintStack stack{ nullptr, nullptr };
+                   std::stringstream& aDiff) const {
+    const DisplayItemBlueprintStack stack{nullptr, nullptr};
     const bool ab = CompareList(*this, aOther, aOther, aDiff, stack, stack);
     const bool ba =
-      aOther.CompareList(aOther, *this, *this, aDiff, stack, stack);
+        aOther.CompareList(aOther, *this, *this, aDiff, stack, stack);
     return ab && ba;
   }
 
@@ -81,16 +72,13 @@ public:
 
   void Dump(std::stringstream& aSs, unsigned aDepth) const;
 
-private:
+ private:
   // Only used by first constructor, to call the 2nd constructor with an index
   // variable on the stack.
   DisplayListBlueprint(nsDisplayList* aList, unsigned aIndex, const char* aName)
-    : DisplayListBlueprint(aList, aName, aIndex)
-  {
-  }
+      : DisplayListBlueprint(aList, aName, aIndex) {}
 
-  void processChildren(nsDisplayList* aList,
-                       const char* aName,
+  void processChildren(nsDisplayList* aList, const char* aName,
                        unsigned& aIndex);
 
   std::vector<DisplayItemBlueprint> mItems;
@@ -99,29 +87,24 @@ private:
 
 // Object representing one display item, with just enough information to
 // compare with another item and output useful debugging information.
-class DisplayItemBlueprint
-{
-public:
-  DisplayItemBlueprint(nsDisplayItem& aItem,
-                       const char* aName,
+class DisplayItemBlueprint {
+ public:
+  DisplayItemBlueprint(nsDisplayItem& aItem, const char* aName,
                        unsigned& aIndex)
-    : mListName(aName)
-    , mIndex(++aIndex)
-    , mIndexString(WriteIndex(aName, aIndex))
-    , mIndexStringFW(WriteIndexFW(aName, aIndex))
-    , mDisplayItemPointer(WriteDisplayItemPointer(aItem))
-    , mDescription(WriteDescription(aName, aIndex, aItem))
-    , mFrame(aItem.HasDeletedFrame() ? nullptr : aItem.Frame())
-    , mPerFrameKey(aItem.GetPerFrameKey())
-    , mChildren(aItem.GetChildren(), aName, aIndex)
-  {
-  }
+      : mListName(aName),
+        mIndex(++aIndex),
+        mIndexString(WriteIndex(aName, aIndex)),
+        mIndexStringFW(WriteIndexFW(aName, aIndex)),
+        mDisplayItemPointer(WriteDisplayItemPointer(aItem)),
+        mDescription(WriteDescription(aName, aIndex, aItem)),
+        mFrame(aItem.HasDeletedFrame() ? nullptr : aItem.Frame()),
+        mPerFrameKey(aItem.GetPerFrameKey()),
+        mChildren(aItem.GetChildren(), aName, aIndex) {}
 
   // Compare this item with another one, based on frame and per-frame key.
   // Not recursive! I.e., children are not examined.
   bool CompareItem(const DisplayItemBlueprint& aOther,
-                   std::stringstream& aDiff) const
-  {
+                   std::stringstream& aDiff) const {
     return mFrame == aOther.mFrame && mPerFrameKey == aOther.mPerFrameKey;
   }
 
@@ -140,30 +123,25 @@ public:
 
   const DisplayListBlueprint mChildren;
 
-private:
-  static std::string WriteIndex(const char* aName, unsigned aIndex)
-  {
+ private:
+  static std::string WriteIndex(const char* aName, unsigned aIndex) {
     return nsPrintfCString("%s#%u", aName, aIndex).get();
   }
 
-  static std::string WriteIndexFW(const char* aName, unsigned aIndex)
-  {
+  static std::string WriteIndexFW(const char* aName, unsigned aIndex) {
     return nsPrintfCString("%s#%4u", aName, aIndex).get();
   }
 
-  static std::string WriteDisplayItemPointer(nsDisplayItem& aItem)
-  {
+  static std::string WriteDisplayItemPointer(nsDisplayItem& aItem) {
     return nsPrintfCString("0x%p", &aItem).get();
   }
 
-  static std::string WriteDescription(const char* aName,
-                                      unsigned aIndex,
-                                      nsDisplayItem& aItem)
-  {
+  static std::string WriteDescription(const char* aName, unsigned aIndex,
+                                      nsDisplayItem& aItem) {
     if (aItem.HasDeletedFrame()) {
-      return nsPrintfCString(
-               "%s %s#%u 0x%p f=0x0", aItem.Name(), aName, aIndex, &aItem)
-        .get();
+      return nsPrintfCString("%s %s#%u 0x%p f=0x0", aItem.Name(), aName, aIndex,
+                             &aItem)
+          .get();
     }
 
     const nsIFrame* f = aItem.Frame();
@@ -180,7 +158,7 @@ private:
         contentData.Append(tmp);
       }
       const nsAttrValue* classes =
-        content->IsElement() ? content->AsElement()->GetClasses() : nullptr;
+          content->IsElement() ? content->AsElement()->GetClasses() : nullptr;
       if (classes) {
         classes->ToString(tmp);
         contentData.AppendLiteral(" class:");
@@ -188,22 +166,16 @@ private:
       }
     }
     return nsPrintfCString("%s %s#%u p=0x%p f=0x%p(%s) key=%" PRIu32,
-                           aItem.Name(),
-                           aName,
-                           aIndex,
-                           &aItem,
-                           f,
+                           aItem.Name(), aName, aIndex, &aItem, f,
                            NS_ConvertUTF16toUTF8(contentData).get(),
                            aItem.GetPerFrameKey())
-      .get();
+        .get();
   }
 };
 
-void
-DisplayListBlueprint::processChildren(nsDisplayList* aList,
-                                      const char* aName,
-                                      unsigned& aIndex)
-{
+void DisplayListBlueprint::processChildren(nsDisplayList* aList,
+                                           const char* aName,
+                                           unsigned& aIndex) {
   if (!aList) {
     return;
   }
@@ -219,9 +191,7 @@ DisplayListBlueprint::processChildren(nsDisplayList* aList,
   MOZ_ASSERT(mItems.size() == n);
 }
 
-bool
-DisplayItemBlueprintStack::Output(std::stringstream& aSs) const
-{
+bool DisplayItemBlueprintStack::Output(std::stringstream& aSs) const {
   const bool output = mPrevious ? mPrevious->Output(aSs) : false;
   if (mItem) {
     if (output) {
@@ -233,11 +203,9 @@ DisplayItemBlueprintStack::Output(std::stringstream& aSs) const
   return output;
 }
 
-std::string
-DisplayListBlueprint::Find(const nsIFrame* aFrame,
-                           uint32_t aPerFrameKey,
-                           const DisplayItemBlueprintStack& aStack) const
-{
+std::string DisplayListBlueprint::Find(
+    const nsIFrame* aFrame, uint32_t aPerFrameKey,
+    const DisplayItemBlueprintStack& aStack) const {
   for (const DisplayItemBlueprint& item : mItems) {
     if (item.mFrame == aFrame && item.mPerFrameKey == aPerFrameKey) {
       std::stringstream ss;
@@ -247,7 +215,7 @@ DisplayListBlueprint::Find(const nsIFrame* aFrame,
       ss << item.mDescription;
       return ss.str();
     }
-    const DisplayItemBlueprintStack stack = { &aStack, &item };
+    const DisplayItemBlueprintStack stack = {&aStack, &item};
     std::string s = item.mChildren.Find(aFrame, aPerFrameKey, stack);
     if (!s.empty()) {
       return s;
@@ -256,15 +224,11 @@ DisplayListBlueprint::Find(const nsIFrame* aFrame,
   return "";
 }
 
-bool
-DisplayListBlueprint::CompareList(
-  const DisplayListBlueprint& aRoot,
-  const DisplayListBlueprint& aOther,
-  const DisplayListBlueprint& aOtherRoot,
-  std::stringstream& aDiff,
-  const DisplayItemBlueprintStack& aStack,
-  const DisplayItemBlueprintStack& aStackOther) const
-{
+bool DisplayListBlueprint::CompareList(
+    const DisplayListBlueprint& aRoot, const DisplayListBlueprint& aOther,
+    const DisplayListBlueprint& aOtherRoot, std::stringstream& aDiff,
+    const DisplayItemBlueprintStack& aStack,
+    const DisplayItemBlueprintStack& aStackOther) const {
   bool same = true;
   unsigned previousFoundIndex = 0;
   const DisplayItemBlueprint* previousFoundItemBefore = nullptr;
@@ -307,14 +271,10 @@ DisplayListBlueprint::CompareList(
           previousFoundItemAfter = &itemAfter;
         }
 
-        const DisplayItemBlueprintStack stack = { &aStack, &itemBefore };
-        const DisplayItemBlueprintStack stackOther = { &aStackOther,
-                                                       &itemAfter };
-        if (!itemBefore.mChildren.CompareList(aRoot,
-                                              itemAfter.mChildren,
-                                              aOtherRoot,
-                                              aDiff,
-                                              stack,
+        const DisplayItemBlueprintStack stack = {&aStack, &itemBefore};
+        const DisplayItemBlueprintStack stackOther = {&aStackOther, &itemAfter};
+        if (!itemBefore.mChildren.CompareList(aRoot, itemAfter.mChildren,
+                                              aOtherRoot, aDiff, stack,
                                               stackOther)) {
           same = false;
         }
@@ -338,7 +298,7 @@ DisplayListBlueprint::CompareList(
         }
       }
       std::string elsewhere =
-        aOtherRoot.Find(itemBefore.mFrame, itemBefore.mPerFrameKey);
+          aOtherRoot.Find(itemBefore.mFrame, itemBefore.mPerFrameKey);
       if (!elsewhere.empty()) {
         aDiff << "\n * But found: " << elsewhere;
       }
@@ -347,17 +307,13 @@ DisplayListBlueprint::CompareList(
   return same;
 }
 
-void
-DisplayListBlueprint::Dump(std::stringstream& aSs, unsigned aDepth) const
-{
+void DisplayListBlueprint::Dump(std::stringstream& aSs, unsigned aDepth) const {
   for (const DisplayItemBlueprint& item : mItems) {
     item.Dump(aSs, aDepth);
   }
 }
 
-void
-DisplayItemBlueprint::Dump(std::stringstream& aSs, unsigned aDepth) const
-{
+void DisplayItemBlueprint::Dump(std::stringstream& aSs, unsigned aDepth) const {
   aSs << "\n" << mIndexStringFW << " ";
   for (unsigned i = 0; i < aDepth; ++i) {
     aSs << "  ";
@@ -366,21 +322,14 @@ DisplayItemBlueprint::Dump(std::stringstream& aSs, unsigned aDepth) const
   mChildren.Dump(aSs, aDepth + 1);
 }
 
-DisplayListChecker::DisplayListChecker()
-  : mBlueprint(nullptr)
-{
-}
+DisplayListChecker::DisplayListChecker() : mBlueprint(nullptr) {}
 
 DisplayListChecker::DisplayListChecker(nsDisplayList* aList, const char* aName)
-  : mBlueprint(MakeUnique<DisplayListBlueprint>(aList, aName))
-{
-}
+    : mBlueprint(MakeUnique<DisplayListBlueprint>(aList, aName)) {}
 
 DisplayListChecker::~DisplayListChecker() = default;
 
-void
-DisplayListChecker::Set(nsDisplayList* aList, const char* aName)
-{
+void DisplayListChecker::Set(nsDisplayList* aList, const char* aName) {
   mBlueprint = MakeUnique<DisplayListBlueprint>(aList, aName);
 }
 
@@ -390,20 +339,16 @@ DisplayListChecker::Set(nsDisplayList* aList, const char* aName)
 // item (same frame and per-frame key) cannot be found under corresponding
 // parent items.
 // Returns true if trees are similar, false if different.
-bool
-DisplayListChecker::CompareList(const DisplayListChecker& aOther,
-                                std::stringstream& aDiff) const
-{
+bool DisplayListChecker::CompareList(const DisplayListChecker& aOther,
+                                     std::stringstream& aDiff) const {
   MOZ_ASSERT(mBlueprint);
   MOZ_ASSERT(aOther.mBlueprint);
   return mBlueprint->CompareList(*aOther.mBlueprint, aDiff);
 }
 
-void
-DisplayListChecker::Dump(std::stringstream& aSs) const
-{
+void DisplayListChecker::Dump(std::stringstream& aSs) const {
   MOZ_ASSERT(mBlueprint);
   mBlueprint->Dump(aSs);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

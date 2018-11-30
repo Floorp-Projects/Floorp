@@ -9,7 +9,7 @@ namespace mozilla {
 namespace safebrowsing {
 
 class RiceDeltaDecoder {
-public:
+ public:
   // This decoder is tailored for safebrowsing v4, including the
   // bit reading order and how the remainder part is interpreted.
   // The caller just needs to feed the byte stream received from
@@ -23,17 +23,15 @@ public:
   //                     aDecodedData[0] will be filled with |aFirstValue|
   //                     and the buffer length (in byte) should be
   //                     ((aNumEntries + 1) * sizeof(uint32_t)).
-  bool Decode(uint32_t aRiceParameter,
-              uint32_t aFirstValue,
-              uint32_t aNumEntries,
-              uint32_t* aDecodedData);
+  bool Decode(uint32_t aRiceParameter, uint32_t aFirstValue,
+              uint32_t aNumEntries, uint32_t* aDecodedData);
 
-private:
+ private:
   uint8_t* mEncodedData;
   size_t mEncodedDataSize;
 };
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla
 
 #endif  // UPDATE_V4_DECODER_H

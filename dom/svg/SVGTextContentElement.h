@@ -23,10 +23,10 @@ class SVGIRect;
 
 typedef SVGGraphicsElement SVGTextContentElementBase;
 
-class SVGTextContentElement : public SVGTextContentElementBase
-{
+class SVGTextContentElement : public SVGTextContentElementBase {
   friend class ::SVGTextFrame;
-public:
+
+ public:
   using FragmentOrElement::TextLength;
 
   // WebIDL
@@ -39,23 +39,25 @@ public:
   MOZ_CAN_RUN_SCRIPT
   float GetSubStringLength(uint32_t charnum, uint32_t nchars, ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<nsISVGPoint> GetStartPositionOfChar(uint32_t charnum, ErrorResult& rv);
+  already_AddRefed<nsISVGPoint> GetStartPositionOfChar(uint32_t charnum,
+                                                       ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<nsISVGPoint> GetEndPositionOfChar(uint32_t charnum, ErrorResult& rv);
+  already_AddRefed<nsISVGPoint> GetEndPositionOfChar(uint32_t charnum,
+                                                     ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
   already_AddRefed<SVGIRect> GetExtentOfChar(uint32_t charnum, ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT float GetRotationOfChar(uint32_t charnum, ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT int32_t GetCharNumAtPosition(nsISVGPoint& point);
 
-protected:
-
-  explicit SVGTextContentElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : SVGTextContentElementBase(std::move(aNodeInfo))
-  {}
+ protected:
+  explicit SVGTextContentElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : SVGTextContentElementBase(std::move(aNodeInfo)) {}
 
   MOZ_CAN_RUN_SCRIPT SVGTextFrame* GetSVGTextFrame();
   MOZ_CAN_RUN_SCRIPT SVGTextFrame* GetSVGTextFrameForNonLayoutDependentQuery();
-  MOZ_CAN_RUN_SCRIPT mozilla::Maybe<int32_t> GetNonLayoutDependentNumberOfChars();
+  MOZ_CAN_RUN_SCRIPT mozilla::Maybe<int32_t>
+  GetNonLayoutDependentNumberOfChars();
 
   enum { LENGTHADJUST };
   virtual nsSVGEnum* EnumAttributes() = 0;
@@ -67,7 +69,7 @@ protected:
   static LengthInfo sLengthInfo[1];
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGTextContentElement_h
+#endif  // mozilla_dom_SVGTextContentElement_h

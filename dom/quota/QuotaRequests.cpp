@@ -13,34 +13,26 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
-RequestBase::RequestBase()
-  : mResultCode(NS_OK)
-  , mHaveResultOrErrorCode(false)
-{
+RequestBase::RequestBase() : mResultCode(NS_OK), mHaveResultOrErrorCode(false) {
   AssertIsOnOwningThread();
 }
 
 RequestBase::RequestBase(nsIPrincipal* aPrincipal)
-  : mPrincipal(aPrincipal)
-  , mResultCode(NS_OK)
-  , mHaveResultOrErrorCode(false)
-{
+    : mPrincipal(aPrincipal),
+      mResultCode(NS_OK),
+      mHaveResultOrErrorCode(false) {
   AssertIsOnOwningThread();
 }
 
 #ifdef DEBUG
 
-void
-RequestBase::AssertIsOnOwningThread() const
-{
+void RequestBase::AssertIsOnOwningThread() const {
   NS_ASSERT_OWNINGTHREAD(RequestBase);
 }
 
-#endif // DEBUG
+#endif  // DEBUG
 
-void
-RequestBase::SetError(nsresult aRv)
-{
+void RequestBase::SetError(nsresult aRv) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mResultCode == NS_OK);
   MOZ_ASSERT(!mHaveResultOrErrorCode);
@@ -61,8 +53,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(RequestBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(RequestBase)
 
 NS_IMETHODIMP
-RequestBase::GetPrincipal(nsIPrincipal** aPrincipal)
-{
+RequestBase::GetPrincipal(nsIPrincipal** aPrincipal) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aPrincipal);
 
@@ -71,8 +62,7 @@ RequestBase::GetPrincipal(nsIPrincipal** aPrincipal)
 }
 
 NS_IMETHODIMP
-RequestBase::GetResultCode(nsresult* aResultCode)
-{
+RequestBase::GetResultCode(nsresult* aResultCode) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResultCode);
 
@@ -85,34 +75,26 @@ RequestBase::GetResultCode(nsresult* aResultCode)
 }
 
 UsageRequest::UsageRequest(nsIQuotaUsageCallback* aCallback)
-  : mCallback(aCallback)
-  , mBackgroundActor(nullptr)
-  , mCanceled(false)
-{
+    : mCallback(aCallback), mBackgroundActor(nullptr), mCanceled(false) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCallback);
 }
 
 UsageRequest::UsageRequest(nsIPrincipal* aPrincipal,
                            nsIQuotaUsageCallback* aCallback)
-  : RequestBase(aPrincipal)
-  , mCallback(aCallback)
-  , mBackgroundActor(nullptr)
-  , mCanceled(false)
-{
+    : RequestBase(aPrincipal),
+      mCallback(aCallback),
+      mBackgroundActor(nullptr),
+      mCanceled(false) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aCallback);
 }
 
-UsageRequest::~UsageRequest()
-{
-  AssertIsOnOwningThread();
-}
+UsageRequest::~UsageRequest() { AssertIsOnOwningThread(); }
 
-void
-UsageRequest::SetBackgroundActor(QuotaUsageRequestChild* aBackgroundActor)
-{
+void UsageRequest::SetBackgroundActor(
+    QuotaUsageRequestChild* aBackgroundActor) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor);
   MOZ_ASSERT(!mBackgroundActor);
@@ -124,9 +106,7 @@ UsageRequest::SetBackgroundActor(QuotaUsageRequestChild* aBackgroundActor)
   }
 }
 
-void
-UsageRequest::SetResult(nsIVariant* aResult)
-{
+void UsageRequest::SetResult(nsIVariant* aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResult);
   MOZ_ASSERT(!mHaveResultOrErrorCode);
@@ -148,8 +128,7 @@ NS_IMPL_ADDREF_INHERITED(UsageRequest, RequestBase)
 NS_IMPL_RELEASE_INHERITED(UsageRequest, RequestBase)
 
 NS_IMETHODIMP
-UsageRequest::GetResult(nsIVariant** aResult)
-{
+UsageRequest::GetResult(nsIVariant** aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResult);
 
@@ -162,8 +141,7 @@ UsageRequest::GetResult(nsIVariant** aResult)
 }
 
 NS_IMETHODIMP
-UsageRequest::GetCallback(nsIQuotaUsageCallback** aCallback)
-{
+UsageRequest::GetCallback(nsIQuotaUsageCallback** aCallback) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCallback);
 
@@ -172,8 +150,7 @@ UsageRequest::GetCallback(nsIQuotaUsageCallback** aCallback)
 }
 
 NS_IMETHODIMP
-UsageRequest::SetCallback(nsIQuotaUsageCallback* aCallback)
-{
+UsageRequest::SetCallback(nsIQuotaUsageCallback* aCallback) {
   AssertIsOnOwningThread();
 
   mCallback = aCallback;
@@ -181,8 +158,7 @@ UsageRequest::SetCallback(nsIQuotaUsageCallback* aCallback)
 }
 
 NS_IMETHODIMP
-UsageRequest::Cancel()
-{
+UsageRequest::Cancel() {
   AssertIsOnOwningThread();
 
   if (mCanceled) {
@@ -199,9 +175,7 @@ UsageRequest::Cancel()
   return NS_OK;
 }
 
-void
-UsageRequest::FireCallback()
-{
+void UsageRequest::FireCallback() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mCallback);
 
@@ -211,26 +185,16 @@ UsageRequest::FireCallback()
   mCallback = nullptr;
 }
 
-Request::Request()
-{
-  AssertIsOnOwningThread();
-}
+Request::Request() { AssertIsOnOwningThread(); }
 
-Request::Request(nsIPrincipal* aPrincipal)
-  : RequestBase(aPrincipal)
-{
+Request::Request(nsIPrincipal* aPrincipal) : RequestBase(aPrincipal) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aPrincipal);
 }
 
-Request::~Request()
-{
-  AssertIsOnOwningThread();
-}
+Request::~Request() { AssertIsOnOwningThread(); }
 
-void
-Request::SetResult(nsIVariant* aResult)
-{
+void Request::SetResult(nsIVariant* aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResult);
   MOZ_ASSERT(!mHaveResultOrErrorCode);
@@ -243,8 +207,7 @@ Request::SetResult(nsIVariant* aResult)
 }
 
 NS_IMETHODIMP
-Request::GetResult(nsIVariant** aResult)
-{
+Request::GetResult(nsIVariant** aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResult);
 
@@ -266,8 +229,7 @@ NS_IMPL_ADDREF_INHERITED(mozilla::dom::quota::Request, RequestBase)
 NS_IMPL_RELEASE_INHERITED(mozilla::dom::quota::Request, RequestBase)
 
 NS_IMETHODIMP
-Request::GetCallback(nsIQuotaCallback** aCallback)
-{
+Request::GetCallback(nsIQuotaCallback** aCallback) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCallback);
 
@@ -276,17 +238,14 @@ Request::GetCallback(nsIQuotaCallback** aCallback)
 }
 
 NS_IMETHODIMP
-Request::SetCallback(nsIQuotaCallback* aCallback)
-{
+Request::SetCallback(nsIQuotaCallback* aCallback) {
   AssertIsOnOwningThread();
 
   mCallback = aCallback;
   return NS_OK;
 }
 
-void
-Request::FireCallback()
-{
+void Request::FireCallback() {
   AssertIsOnOwningThread();
 
   if (mCallback) {
@@ -297,6 +256,6 @@ Request::FireCallback()
   }
 }
 
-} // namespace quota
-} // namespace dom
-} // namespace mozilla
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla

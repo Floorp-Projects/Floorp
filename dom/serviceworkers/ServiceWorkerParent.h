@@ -15,34 +15,29 @@ namespace dom {
 class IPCServiceWorkerDescriptor;
 class ServiceWorkerProxy;
 
-class ServiceWorkerParent final : public PServiceWorkerParent
-{
+class ServiceWorkerParent final : public PServiceWorkerParent {
   RefPtr<ServiceWorkerProxy> mProxy;
   bool mDeleteSent;
 
   // PServiceWorkerParent
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-  mozilla::ipc::IPCResult
-  RecvTeardown() override;
+  mozilla::ipc::IPCResult RecvTeardown() override;
 
-  mozilla::ipc::IPCResult
-  RecvPostMessage(const ClonedMessageData& aClonedData,
-                  const ClientInfoAndState& aSource) override;
+  mozilla::ipc::IPCResult RecvPostMessage(
+      const ClonedMessageData& aClonedData,
+      const ClientInfoAndState& aSource) override;
 
-public:
+ public:
   ServiceWorkerParent();
   ~ServiceWorkerParent();
 
-  void
-  Init(const IPCServiceWorkerDescriptor& aDescriptor);
+  void Init(const IPCServiceWorkerDescriptor& aDescriptor);
 
-  void
-  MaybeSendDelete();
+  void MaybeSendDelete();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_serviceworkerparent_h__
+#endif  // mozilla_dom_serviceworkerparent_h__

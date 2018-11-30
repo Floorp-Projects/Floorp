@@ -23,19 +23,12 @@ using namespace gfx;
 using namespace mlg;
 
 MLGRenderTarget::MLGRenderTarget(MLGRenderTargetFlags aFlags)
- : mFlags(aFlags),
-   mLastDepthStart(-1)
-{
-}
+    : mFlags(aFlags), mLastDepthStart(-1) {}
 
-MLGSwapChain::MLGSwapChain()
- : mIsDoubleBuffered(false)
-{
-}
+MLGSwapChain::MLGSwapChain() : mIsDoubleBuffered(false) {}
 
-bool
-MLGSwapChain::ApplyNewInvalidRegion(nsIntRegion&& aRegion, const Maybe<gfx::IntRect>& aExtraRect)
-{
+bool MLGSwapChain::ApplyNewInvalidRegion(
+    nsIntRegion&& aRegion, const Maybe<gfx::IntRect>& aExtraRect) {
   // We clamp the invalid region to the backbuffer size, otherwise the present
   // can fail.
   IntRect bounds(IntPoint(0, 0), GetSize());
@@ -57,39 +50,37 @@ MLGSwapChain::ApplyNewInvalidRegion(nsIntRegion&& aRegion, const Maybe<gfx::IntR
   // paint succeeded or was thrown out due to a buffer resize. Effectively, it
   // will now contain the invalid region specific to this frame.
   mBackBufferInvalid.OrWith(invalid);
-  AL_LOG("Backbuffer invalid region: %s\n", Stringify(mBackBufferInvalid).c_str());
+  AL_LOG("Backbuffer invalid region: %s\n",
+         Stringify(mBackBufferInvalid).c_str());
 
   if (mIsDoubleBuffered) {
     mFrontBufferInvalid.OrWith(invalid);
-    AL_LOG("Frontbuffer invalid region: %s\n", Stringify(mFrontBufferInvalid).c_str());
+    AL_LOG("Frontbuffer invalid region: %s\n",
+           Stringify(mFrontBufferInvalid).c_str());
   }
   return true;
 }
 
 MLGDevice::MLGDevice()
- : mTopology(MLGPrimitiveTopology::Unknown),
-   mInitialized(false),
-   mIsValid(false),
-   mCanUseClearView(false),
-   mCanUseConstantBufferOffsetBinding(false),
-   mMaxConstantBufferBindSize(0)
-{
-}
+    : mTopology(MLGPrimitiveTopology::Unknown),
+      mInitialized(false),
+      mIsValid(false),
+      mCanUseClearView(false),
+      mCanUseConstantBufferOffsetBinding(false),
+      mMaxConstantBufferBindSize(0) {}
 
-MLGDevice::~MLGDevice()
-{
-}
+MLGDevice::~MLGDevice() {}
 
-bool
-MLGDevice::Initialize()
-{
+bool MLGDevice::Initialize() {
   if (!mMaxConstantBufferBindSize) {
-    return Fail("FEATURE_FAILURE_NO_MAX_CB_BIND_SIZE", "Failed to set a max constant buffer bind size");
+    return Fail("FEATURE_FAILURE_NO_MAX_CB_BIND_SIZE",
+                "Failed to set a max constant buffer bind size");
   }
   if (mMaxConstantBufferBindSize < mlg::kMaxConstantBufferSize) {
     // StagingBuffer depends on this value being accurate, so for now we just
     // double-check it here.
-    return Fail("FEATURE_FAILURE_MIN_MAX_CB_BIND_SIZE", "Minimum constant buffer bind size not met");
+    return Fail("FEATURE_FAILURE_MIN_MAX_CB_BIND_SIZE",
+                "Minimum constant buffer bind size not met");
   }
 
   // We allow this to be pref'd off for testing. Switching it off enables
@@ -113,22 +104,27 @@ MLGDevice::Initialize()
   }
 
   // When compositing normal sized layer trees, we typically have small vertex
-  // buffers. Empirically the vertex and pixel constant buffer sizes are generally
-  // under 1KB and the vertex constant buffer size is under 8KB.
+  // buffers. Empirically the vertex and pixel constant buffer sizes are
+  // generally under 1KB and the vertex constant buffer size is under 8KB.
   static const size_t kDefaultVertexBufferSize = 4096;
-  static const size_t kDefaultVSConstantBufferSize = 512 * kConstantBufferElementSize;
-  static const size_t kDefaultPSConstantBufferSize = 256 * kConstantBufferElementSize;
+  static const size_t kDefaultVSConstantBufferSize =
+      512 * kConstantBufferElementSize;
+  static const size_t kDefaultPSConstantBufferSize =
+      256 * kConstantBufferElementSize;
 
-  // Note: we create these after we've verified all the device-specific properties above.
-  mSharedVertexBuffer = MakeUnique<SharedVertexBuffer>(this, kDefaultVertexBufferSize);
-  mSharedVSBuffer = MakeUnique<SharedConstantBuffer>(this, kDefaultVSConstantBufferSize);
-  mSharedPSBuffer = MakeUnique<SharedConstantBuffer>(this, kDefaultPSConstantBufferSize);
+  // Note: we create these after we've verified all the device-specific
+  // properties above.
+  mSharedVertexBuffer =
+      MakeUnique<SharedVertexBuffer>(this, kDefaultVertexBufferSize);
+  mSharedVSBuffer =
+      MakeUnique<SharedConstantBuffer>(this, kDefaultVSConstantBufferSize);
+  mSharedPSBuffer =
+      MakeUnique<SharedConstantBuffer>(this, kDefaultPSConstantBufferSize);
 
-  if (!mSharedVertexBuffer->Init() ||
-      !mSharedVSBuffer->Init() ||
-      !mSharedPSBuffer->Init())
-  {
-    return Fail("FEATURE_FAILURE_ALLOC_SHARED_BUFFER", "Failed to allocate a shared shader buffer");
+  if (!mSharedVertexBuffer->Init() || !mSharedVSBuffer->Init() ||
+      !mSharedPSBuffer->Init()) {
+    return Fail("FEATURE_FAILURE_ALLOC_SHARED_BUFFER",
+                "Failed to allocate a shared shader buffer");
   }
 
   if (gfxPrefs::AdvancedLayersEnableBufferCache()) {
@@ -140,33 +136,25 @@ MLGDevice::Initialize()
   return true;
 }
 
-void
-MLGDevice::BeginFrame()
-{
+void MLGDevice::BeginFrame() {
   mSharedVertexBuffer->Reset();
   mSharedPSBuffer->Reset();
   mSharedVSBuffer->Reset();
 }
 
-void
-MLGDevice::EndFrame()
-{
+void MLGDevice::EndFrame() {
   if (mConstantBufferCache) {
     mConstantBufferCache->EndFrame();
   }
 }
 
-void
-MLGDevice::FinishSharedBufferUse()
-{
+void MLGDevice::FinishSharedBufferUse() {
   mSharedVertexBuffer->PrepareForUsage();
   mSharedPSBuffer->PrepareForUsage();
   mSharedVSBuffer->PrepareForUsage();
 }
 
-void
-MLGDevice::SetTopology(MLGPrimitiveTopology aTopology)
-{
+void MLGDevice::SetTopology(MLGPrimitiveTopology aTopology) {
   if (mTopology == aTopology) {
     return;
   }
@@ -174,18 +162,17 @@ MLGDevice::SetTopology(MLGPrimitiveTopology aTopology)
   mTopology = aTopology;
 }
 
-void
-MLGDevice::SetVertexBuffer(uint32_t aSlot, const VertexBufferSection* aSection)
-{
+void MLGDevice::SetVertexBuffer(uint32_t aSlot,
+                                const VertexBufferSection* aSection) {
   if (!aSection->IsValid()) {
     return;
   }
-  SetVertexBuffer(aSlot, aSection->GetBuffer(), aSection->Stride(), aSection->Offset());
+  SetVertexBuffer(aSlot, aSection->GetBuffer(), aSection->Stride(),
+                  aSection->Offset());
 }
 
-void
-MLGDevice::SetPSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSection)
-{
+void MLGDevice::SetPSConstantBuffer(uint32_t aSlot,
+                                    const ConstantBufferSection* aSection) {
   if (!aSection->IsValid()) {
     return;
   }
@@ -201,9 +188,8 @@ MLGDevice::SetPSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSec
   }
 }
 
-void
-MLGDevice::SetVSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSection)
-{
+void MLGDevice::SetVSConstantBuffer(uint32_t aSlot,
+                                    const ConstantBufferSection* aSection) {
   if (!aSection->IsValid()) {
     return;
   }
@@ -219,16 +205,12 @@ MLGDevice::SetVSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSec
   }
 }
 
-void
-MLGDevice::SetPSTexturesYUV(uint32_t aSlot, TextureSource* aTexture)
-{
+void MLGDevice::SetPSTexturesYUV(uint32_t aSlot, TextureSource* aTexture) {
   // Note, we don't support tiled YCbCr textures.
   const int Y = 0, Cb = 1, Cr = 2;
-  TextureSource* textures[3] = {
-    aTexture->GetSubSource(Y),
-    aTexture->GetSubSource(Cb),
-    aTexture->GetSubSource(Cr)
-  };
+  TextureSource* textures[3] = {aTexture->GetSubSource(Y),
+                                aTexture->GetSubSource(Cb),
+                                aTexture->GetSubSource(Cr)};
   MOZ_ASSERT(textures[0]);
   MOZ_ASSERT(textures[1]);
   MOZ_ASSERT(textures[2]);
@@ -236,56 +218,41 @@ MLGDevice::SetPSTexturesYUV(uint32_t aSlot, TextureSource* aTexture)
   SetPSTextures(0, 3, textures);
 }
 
-void
-MLGDevice::SetPSTexture(uint32_t aSlot, TextureSource* aSource)
-{
+void MLGDevice::SetPSTexture(uint32_t aSlot, TextureSource* aSource) {
   SetPSTextures(aSlot, 1, &aSource);
 }
 
-void
-MLGDevice::SetSamplerMode(uint32_t aIndex, gfx::SamplingFilter aFilter)
-{
+void MLGDevice::SetSamplerMode(uint32_t aIndex, gfx::SamplingFilter aFilter) {
   SetSamplerMode(aIndex, FilterToSamplerMode(aFilter));
 }
 
-bool
-MLGDevice::Fail(const nsCString& aFailureId, const nsCString* aMessage)
-{
-  const char* message = aMessage
-                        ? aMessage->get()
-                        : "Failed initializing MLGDeviceD3D11";
+bool MLGDevice::Fail(const nsCString& aFailureId, const nsCString* aMessage) {
+  const char* message =
+      aMessage ? aMessage->get() : "Failed initializing MLGDeviceD3D11";
   gfxWarning() << "Failure initializing MLGDeviceD3D11: " << message;
   mFailureId = aFailureId;
   mFailureMessage = message;
   return false;
 }
 
-void
-MLGDevice::UnmapSharedBuffers()
-{
+void MLGDevice::UnmapSharedBuffers() {
   mSharedVertexBuffer->Reset();
   mSharedPSBuffer->Reset();
   mSharedVSBuffer->Reset();
 }
 
-RefPtr<MLGBuffer>
-MLGDevice::GetBufferForColorSpace(YUVColorSpace aColorSpace)
-{
+RefPtr<MLGBuffer> MLGDevice::GetBufferForColorSpace(YUVColorSpace aColorSpace) {
   if (mColorSpaceBuffers[aColorSpace]) {
     return mColorSpaceBuffers[aColorSpace];
   }
 
   YCbCrShaderConstants buffer;
-  memcpy(
-    &buffer.yuvColorMatrix,
-    gfxUtils::YuvToRgbMatrix4x3RowMajor(aColorSpace),
-    sizeof(buffer.yuvColorMatrix));
+  memcpy(&buffer.yuvColorMatrix,
+         gfxUtils::YuvToRgbMatrix4x3RowMajor(aColorSpace),
+         sizeof(buffer.yuvColorMatrix));
 
   RefPtr<MLGBuffer> resource = CreateBuffer(
-    MLGBufferType::Constant,
-    sizeof(buffer),
-    MLGUsage::Immutable,
-    &buffer);
+      MLGBufferType::Constant, sizeof(buffer), MLGUsage::Immutable, &buffer);
   if (!resource) {
     return nullptr;
   }
@@ -294,9 +261,8 @@ MLGDevice::GetBufferForColorSpace(YUVColorSpace aColorSpace)
   return resource;
 }
 
-RefPtr<MLGBuffer>
-MLGDevice::GetBufferForColorDepthCoefficient(ColorDepth aColorDepth)
-{
+RefPtr<MLGBuffer> MLGDevice::GetBufferForColorDepthCoefficient(
+    ColorDepth aColorDepth) {
   if (mColorDepthBuffers[aColorDepth]) {
     return mColorDepthBuffers[aColorDepth];
   }
@@ -305,7 +271,7 @@ MLGDevice::GetBufferForColorDepthCoefficient(ColorDepth aColorDepth)
   buffer.coefficient = gfx::RescalingFactorForColorDepth(aColorDepth);
 
   RefPtr<MLGBuffer> resource = CreateBuffer(
-    MLGBufferType::Constant, sizeof(buffer), MLGUsage::Immutable, &buffer);
+      MLGBufferType::Constant, sizeof(buffer), MLGUsage::Immutable, &buffer);
   if (!resource) {
     return nullptr;
   }
@@ -314,35 +280,24 @@ MLGDevice::GetBufferForColorDepthCoefficient(ColorDepth aColorDepth)
   return resource;
 }
 
-bool
-MLGDevice::Synchronize()
-{
-  return true;
-}
+bool MLGDevice::Synchronize() { return true; }
 
-void
-MLGDevice::PrepareClearRegion(ClearRegionHelper* aOut,
-                              nsTArray<gfx::IntRect>&& aRects,
-                              const Maybe<int32_t>& aSortIndex)
-{
+void MLGDevice::PrepareClearRegion(ClearRegionHelper* aOut,
+                                   nsTArray<gfx::IntRect>&& aRects,
+                                   const Maybe<int32_t>& aSortIndex) {
   if (CanUseClearView() && !aSortIndex) {
     aOut->mRects = std::move(aRects);
     return;
   }
 
-  mSharedVertexBuffer->Allocate(
-    &aOut->mInput,
-    aRects.Length(),
-    sizeof(IntRect),
-    aRects.Elements());
+  mSharedVertexBuffer->Allocate(&aOut->mInput, aRects.Length(), sizeof(IntRect),
+                                aRects.Elements());
 
   ClearConstants consts(aSortIndex ? aSortIndex.value() : 1);
   mSharedVSBuffer->Allocate(&aOut->mVSBuffer, consts);
 }
 
-void
-MLGDevice::DrawClearRegion(const ClearRegionHelper& aHelper)
-{
+void MLGDevice::DrawClearRegion(const ClearRegionHelper& aHelper) {
   // If we've set up vertices for a shader-based clear, execute that now.
   if (aHelper.mInput.IsValid()) {
     SetTopology(MLGPrimitiveTopology::UnitQuad);
@@ -359,46 +314,36 @@ MLGDevice::DrawClearRegion(const ClearRegionHelper& aHelper)
   // ClearView.
   if (!aHelper.mRects.IsEmpty()) {
     Color color(0.0, 0.0, 0.0, 0.0);
-    ClearView(mCurrentRT, color, aHelper.mRects.Elements(), aHelper.mRects.Length());
+    ClearView(mCurrentRT, color, aHelper.mRects.Elements(),
+              aHelper.mRects.Length());
   }
 }
 
-void
-MLGDevice::WriteAsPNG(MLGTexture* aTexture, const char* aPath)
-{
+void MLGDevice::WriteAsPNG(MLGTexture* aTexture, const char* aPath) {
   MLGMappedResource map;
   if (!Map(aTexture, MLGMapType::READ, &map)) {
     return;
   }
 
   RefPtr<DataSourceSurface> surface = Factory::CreateWrappingDataSourceSurface(
-    map.mData,
-    map.mStride,
-    aTexture->GetSize(),
-    SurfaceFormat::B8G8R8A8);
+      map.mData, map.mStride, aTexture->GetSize(), SurfaceFormat::B8G8R8A8);
   gfxUtils::WriteAsPNG(surface, aPath);
 
   Unmap(aTexture);
 }
 
-RefPtr<MLGTexture>
-MLGDevice::CopyAndCreateReadbackTexture(MLGTexture* aTexture)
-{
-  RefPtr<MLGTexture> copy = CreateTexture(
-    aTexture->GetSize(),
-    SurfaceFormat::B8G8R8A8,
-    MLGUsage::Staging,
-    MLGTextureFlags::None);
+RefPtr<MLGTexture> MLGDevice::CopyAndCreateReadbackTexture(
+    MLGTexture* aTexture) {
+  RefPtr<MLGTexture> copy =
+      CreateTexture(aTexture->GetSize(), SurfaceFormat::B8G8R8A8,
+                    MLGUsage::Staging, MLGTextureFlags::None);
   if (!copy) {
     return nullptr;
   }
-  CopyTexture(
-    copy,
-    IntPoint(0, 0),
-    aTexture,
-    IntRect(IntPoint(0, 0), aTexture->GetSize()));
+  CopyTexture(copy, IntPoint(0, 0), aTexture,
+              IntRect(IntPoint(0, 0), aTexture->GetSize()));
   return copy;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

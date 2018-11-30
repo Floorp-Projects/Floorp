@@ -14,9 +14,8 @@ namespace mozilla {
 
 class TextEditor;
 
-class TextEditUtils final
-{
-public:
+class TextEditUtils final {
+ public:
   // from TextEditRules:
   static bool IsBody(nsINode* aNode);
   static bool IsBreak(nsINode* aNode);
@@ -28,17 +27,16 @@ public:
  * stack based helper class for detecting end of editor initialization, in
  * order to trigger "end of init" initialization of the edit rules.
  */
-class AutoEditInitRulesTrigger final
-{
-private:
+class AutoEditInitRulesTrigger final {
+ private:
   TextEditor* mTextEditor;
   nsresult& mResult;
 
-public:
+ public:
   AutoEditInitRulesTrigger(TextEditor* aTextEditor, nsresult& aResult);
   ~AutoEditInitRulesTrigger();
 };
 
-} // naemspace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef TextEditUtils_h
+#endif  // #ifndef TextEditUtils_h

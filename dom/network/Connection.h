@@ -16,7 +16,7 @@ namespace mozilla {
 
 namespace hal {
 class NetworkInformation;
-} // namespace hal
+}  // namespace hal
 
 namespace dom {
 
@@ -24,17 +24,14 @@ class WorkerPrivate;
 
 namespace network {
 
-class Connection : public DOMEventTargetHelper
-{
-public:
+class Connection : public DOMEventTargetHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  static Connection*
-  CreateForWindow(nsPIDOMWindowInner* aWindow);
+  static Connection* CreateForWindow(nsPIDOMWindowInner* aWindow);
 
-  static already_AddRefed<Connection>
-  CreateForWorker(WorkerPrivate* aWorkerPrivate,
-                  ErrorResult& aRv);
+  static already_AddRefed<Connection> CreateForWorker(
+      WorkerPrivate* aWorkerPrivate, ErrorResult& aRv);
 
   void Shutdown();
 
@@ -43,20 +40,18 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  ConnectionType Type() const
-  {
-    return nsContentUtils::ShouldResistFingerprinting() ?
-             static_cast<ConnectionType>(ConnectionType::Unknown) : mType;
+  ConnectionType Type() const {
+    return nsContentUtils::ShouldResistFingerprinting()
+               ? static_cast<ConnectionType>(ConnectionType::Unknown)
+               : mType;
   }
 
-  bool GetIsWifi()
-  {
+  bool GetIsWifi() {
     NS_ASSERT_OWNINGTHREAD(Connection);
 
     return mIsWifi;
   }
-  uint32_t GetDhcpGateway()
-  {
+  uint32_t GetDhcpGateway() {
     NS_ASSERT_OWNINGTHREAD(Connection);
 
     return mDHCPGateway;
@@ -64,7 +59,7 @@ public:
 
   IMPL_EVENT_HANDLER(typechange)
 
-protected:
+ protected:
   Connection(nsPIDOMWindowInner* aWindow);
   virtual ~Connection();
 
@@ -73,7 +68,7 @@ protected:
 
   virtual void ShutdownInternal() = 0;
 
-private:
+ private:
   /**
    * The type of current connection.
    */
@@ -92,8 +87,8 @@ private:
   bool mBeenShutDown;
 };
 
-} // namespace network
-} // namespace dom
-} // namespace mozilla
+}  // namespace network
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_network_Connection_h
+#endif  // mozilla_dom_network_Connection_h

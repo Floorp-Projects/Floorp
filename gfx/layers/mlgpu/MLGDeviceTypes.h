@@ -13,8 +13,7 @@
 namespace mozilla {
 namespace layers {
 
-enum class MLGUsage
-{
+enum class MLGUsage {
   // GPU read-only, CPU write once on creation and read/write never.
   Immutable,
 
@@ -28,8 +27,7 @@ enum class MLGUsage
   Staging
 };
 
-enum class MLGDepthTestMode
-{
+enum class MLGDepthTestMode {
   Disabled,
   Write,
   ReadOnly,
@@ -37,14 +35,9 @@ enum class MLGDepthTestMode
   MaxModes
 };
 
-enum class MLGBufferType : uint32_t
-{
-  Vertex,
-  Constant
-};
+enum class MLGBufferType : uint32_t { Vertex, Constant };
 
-enum class SamplerMode
-{
+enum class SamplerMode {
   // Linear filter, clamped to border.
   LinearClamp = 0,
   // Linear filter, clamped to transparent pixels.
@@ -56,8 +49,7 @@ enum class SamplerMode
   MaxModes
 };
 
-enum class MLGBlendState
-{
+enum class MLGBlendState {
   Copy = 0,
   Over,
   OverAndPremultiply,
@@ -66,8 +58,7 @@ enum class MLGBlendState
   MaxStates
 };
 
-enum class MLGPrimitiveTopology
-{
+enum class MLGPrimitiveTopology {
   Unknown = 0,
   TriangleStrip = 1,
   TriangleList = 2,
@@ -75,55 +66,37 @@ enum class MLGPrimitiveTopology
   UnitTriangle = 4
 };
 
-struct MLGMappedResource
-{
+struct MLGMappedResource {
   uint8_t* mData;
   uint32_t mStride;
 };
 
-enum class MLGMapType
-{
-  READ = 0,
-  WRITE,
-  READ_WRITE,
-  WRITE_DISCARD
-};
+enum class MLGMapType { READ = 0, WRITE, READ_WRITE, WRITE_DISCARD };
 
-enum class MLGTextureFlags
-{
-  None,
-  ShaderResource,
-  RenderTarget
-};
+enum class MLGTextureFlags { None, ShaderResource, RenderTarget };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MLGTextureFlags);
 
-enum class MLGRenderTargetFlags : uint32_t
-{
-  Default = 0,
-  ZBuffer = (1 << 0)
-};
+enum class MLGRenderTargetFlags : uint32_t { Default = 0, ZBuffer = (1 << 0) };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MLGRenderTargetFlags);
 
 // NVIDIA drivers crash when we supply too many rects to ClearView - it
 // seems to cause a stack overflow >= 20 rects. We cap to 12 for now.
 static const size_t kMaxClearViewRects = 12;
 
-static inline SamplerMode
-FilterToSamplerMode(gfx::SamplingFilter aFilter)
-{
+static inline SamplerMode FilterToSamplerMode(gfx::SamplingFilter aFilter) {
   switch (aFilter) {
-  case gfx::SamplingFilter::POINT:
-    return SamplerMode::Point;
-  case gfx::SamplingFilter::LINEAR:
-  case gfx::SamplingFilter::GOOD:
-    return SamplerMode::LinearClamp;
-  default:
-    MOZ_ASSERT_UNREACHABLE("Unknown sampler mode");
-    return SamplerMode::LinearClamp;
+    case gfx::SamplingFilter::POINT:
+      return SamplerMode::Point;
+    case gfx::SamplingFilter::LINEAR:
+    case gfx::SamplingFilter::GOOD:
+      return SamplerMode::LinearClamp;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown sampler mode");
+      return SamplerMode::LinearClamp;
   }
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_mlgpu_MLGDeviceTypes_h
+#endif  // mozilla_gfx_layers_mlgpu_MLGDeviceTypes_h

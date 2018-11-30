@@ -26,81 +26,72 @@
 namespace mozilla {
 namespace plugins {
 
-class LaunchCompleteTask : public Runnable
-{
-public:
+class LaunchCompleteTask : public Runnable {
+ public:
   LaunchCompleteTask()
-    : Runnable("plugins::LaunchCompleteTask")
-    , mLaunchSucceeded(false)
-  {
-    }
+      : Runnable("plugins::LaunchCompleteTask"), mLaunchSucceeded(false) {}
 
-    void SetLaunchSucceeded() { mLaunchSucceeded = true; }
+  void SetLaunchSucceeded() { mLaunchSucceeded = true; }
 
-protected:
-    bool mLaunchSucceeded;
+ protected:
+  bool mLaunchSucceeded;
 };
 
-class PluginProcessParent : public mozilla::ipc::GeckoChildProcessHost
-{
-public:
-    explicit PluginProcessParent(const std::string& aPluginFilePath);
-    ~PluginProcessParent();
+class PluginProcessParent : public mozilla::ipc::GeckoChildProcessHost {
+ public:
+  explicit PluginProcessParent(const std::string& aPluginFilePath);
+  ~PluginProcessParent();
 
-    /**
-     * Launch the plugin process. If the process fails to launch,
-     * this method will return false.
-     *
-     * @param aLaunchCompleteTask Task that is executed on the main
-     * thread once the asynchonous launch has completed.
-     * @param aSandboxLevel Determines the strength of the sandbox.
-     * <= 0 means no sandbox.
-     * @param aIsSandboxLoggingEnabled Indicates if sandbox violation
-     * logging should be enabled for the plugin process.
-     */
-    bool Launch(UniquePtr<LaunchCompleteTask> aLaunchCompleteTask = UniquePtr<LaunchCompleteTask>(),
-                int32_t aSandboxLevel = 0,
-                bool aIsSandboxLoggingEnabled = false);
+  /**
+   * Launch the plugin process. If the process fails to launch,
+   * this method will return false.
+   *
+   * @param aLaunchCompleteTask Task that is executed on the main
+   * thread once the asynchonous launch has completed.
+   * @param aSandboxLevel Determines the strength of the sandbox.
+   * <= 0 means no sandbox.
+   * @param aIsSandboxLoggingEnabled Indicates if sandbox violation
+   * logging should be enabled for the plugin process.
+   */
+  bool Launch(UniquePtr<LaunchCompleteTask> aLaunchCompleteTask =
+                  UniquePtr<LaunchCompleteTask>(),
+              int32_t aSandboxLevel = 0, bool aIsSandboxLoggingEnabled = false);
 
-    void Delete();
+  void Delete();
 
-    virtual bool CanShutdown() override
-    {
-        return true;
-    }
+  virtual bool CanShutdown() override { return true; }
 
-    const std::string& GetPluginFilePath() { return mPluginFilePath; }
+  const std::string& GetPluginFilePath() { return mPluginFilePath; }
 
-    using mozilla::ipc::GeckoChildProcessHost::GetChannel;
+  using mozilla::ipc::GeckoChildProcessHost::GetChannel;
 
-    virtual bool WaitUntilConnected(int32_t aTimeoutMs = 0) override;
+  virtual bool WaitUntilConnected(int32_t aTimeoutMs = 0) override;
 
-    virtual void OnChannelConnected(int32_t peer_pid) override;
-    virtual void OnChannelError() override;
+  virtual void OnChannelConnected(int32_t peer_pid) override;
+  virtual void OnChannelError() override;
 
-    bool IsConnected();
+  bool IsConnected();
 
-    static bool IsPluginProcessId(base::ProcessId procId);
+  static bool IsPluginProcessId(base::ProcessId procId);
 
-private:
-    void RunLaunchCompleteTask();
+ private:
+  void RunLaunchCompleteTask();
 
-    std::string mPluginFilePath;
-    ipc::TaskFactory<PluginProcessParent> mTaskFactory;
-    UniquePtr<LaunchCompleteTask> mLaunchCompleteTask;
-    MessageLoop* mMainMsgLoop;
+  std::string mPluginFilePath;
+  ipc::TaskFactory<PluginProcessParent> mTaskFactory;
+  UniquePtr<LaunchCompleteTask> mLaunchCompleteTask;
+  MessageLoop* mMainMsgLoop;
 #ifdef XP_WIN
-    typedef nsTHashtable<nsUint32HashKey> PidSet;
-    // Set of PIDs for all plugin child processes or NULL if empty.
-    static PidSet* sPidSet;
-    uint32_t mChildPid;
+  typedef nsTHashtable<nsUint32HashKey> PidSet;
+  // Set of PIDs for all plugin child processes or NULL if empty.
+  static PidSet* sPidSet;
+  uint32_t mChildPid;
 #endif
 
-    DISALLOW_EVIL_CONSTRUCTORS(PluginProcessParent);
+  DISALLOW_EVIL_CONSTRUCTORS(PluginProcessParent);
 };
 
+}  // namespace plugins
+}  // namespace mozilla
 
-} // namespace plugins
-} // namespace mozilla
-
-#endif // ifndef dom_plugins_PluginProcessParent_h
+#endif  // ifndef dom_plugins_PluginProcessParent_h

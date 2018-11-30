@@ -34,4 +34,4 @@ void DeleteNullVTable(IUnknown* aUnk);
 }
 #endif
 
-#endif //  mozilla_mscom_VTableBuilder_h
+#endif  //  mozilla_mscom_VTableBuilder_h

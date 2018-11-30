@@ -14,31 +14,28 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLDataElement final : public nsGenericHTMLElement
-{
-public:
-  explicit HTMLDataElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+class HTMLDataElement final : public nsGenericHTMLElement {
+ public:
+  explicit HTMLDataElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   // HTMLDataElement WebIDL
-  void GetValue(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::value, aValue);
-  }
+  void GetValue(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::value, aValue); }
 
-  void SetValue(const nsAString& aValue, ErrorResult& aError)
-  {
+  void SetValue(const nsAString& aValue, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::value, aValue, aError);
   }
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-protected:
+ protected:
   virtual ~HTMLDataElement();
 
-  JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLDataElement_h
+#endif  // mozilla_dom_HTMLDataElement_h

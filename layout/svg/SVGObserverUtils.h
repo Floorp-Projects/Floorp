@@ -36,8 +36,8 @@ namespace mozilla {
 namespace dom {
 class CanvasRenderingContext2D;
 class SVGGeometryElement;
-}
-}
+}  // namespace dom
+}  // namespace mozilla
 
 namespace mozilla {
 
@@ -47,23 +47,18 @@ namespace mozilla {
  * We use it to pass to svg system instead of nsIURI. The object brings referrer
  * and referrer policy so we can send correct Referer headers.
  */
-class URLAndReferrerInfo
-{
-public:
+class URLAndReferrerInfo {
+ public:
   URLAndReferrerInfo(nsIURI* aURI, nsIURI* aReferrer,
                      mozilla::net::ReferrerPolicy aReferrerPolicy)
-    : mURI(aURI)
-    , mReferrer(aReferrer)
-    , mReferrerPolicy(aReferrerPolicy)
-  {
+      : mURI(aURI), mReferrer(aReferrer), mReferrerPolicy(aReferrerPolicy) {
     MOZ_ASSERT(aURI);
   }
 
   URLAndReferrerInfo(nsIURI* aURI, URLExtraData* aExtraData)
-    : mURI(aURI)
-    , mReferrer(aExtraData->GetReferrer())
-    , mReferrerPolicy(aExtraData->GetReferrerPolicy())
-  {
+      : mURI(aURI),
+        mReferrer(aExtraData->GetReferrer()),
+        mReferrerPolicy(aExtraData->GetReferrerPolicy()) {
     MOZ_ASSERT(aURI);
   }
 
@@ -73,7 +68,7 @@ public:
   nsIURI* GetReferrer() { return mReferrer; }
   mozilla::net::ReferrerPolicy GetReferrerPolicy() { return mReferrerPolicy; }
 
-private:
+ private:
   ~URLAndReferrerInfo() = default;
 
   nsCOMPtr<nsIURI> mURI;
@@ -101,18 +96,14 @@ private:
  * Although the referenced element may be found and stored during construction,
  * observing for rendering changes does not start until requested.
  */
-class SVGRenderingObserver : public nsStubMutationObserver
-{
-
-protected:
+class SVGRenderingObserver : public nsStubMutationObserver {
+ protected:
   virtual ~SVGRenderingObserver() = default;
 
-public:
+ public:
   typedef mozilla::dom::Element Element;
 
-  SVGRenderingObserver()
-    : mInObserverList(false)
-  {}
+  SVGRenderingObserver() : mInObserverList(false) {}
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -137,8 +128,8 @@ public:
 
   nsIFrame* GetAndObserveReferencedFrame();
   /**
-   * @param aOK this is only for the convenience of callers. We set *aOK to false
-   * if the frame is the wrong type
+   * @param aOK this is only for the convenience of callers. We set *aOK to
+   * false if the frame is the wrong type
    */
   nsIFrame* GetAndObserveReferencedFrame(mozilla::LayoutFrameType aFrameType,
                                          bool* aOK);
@@ -147,7 +138,7 @@ public:
 
   virtual bool ObservesReflow() { return false; }
 
-protected:
+ protected:
   void StartObserving();
   void StopObserving();
 
@@ -175,10 +166,8 @@ protected:
   bool mInObserverList;
 };
 
-
-class SVGObserverUtils
-{
-public:
+class SVGObserverUtils {
+ public:
   typedef mozilla::dom::CanvasRenderingContext2D CanvasRenderingContext2D;
   typedef mozilla::dom::Element Element;
   typedef dom::SVGGeometryElement SVGGeometryElement;
@@ -211,12 +200,12 @@ public:
    * @param aFrame must be a first-continuation.
    */
   static void AddRenderingObserver(Element* aElement,
-                                   SVGRenderingObserver *aObserver);
+                                   SVGRenderingObserver* aObserver);
   /**
    * @param aFrame must be a first-continuation.
    */
   static void RemoveRenderingObserver(Element* aElement,
-                                      SVGRenderingObserver *aObserver);
+                                      SVGRenderingObserver* aObserver);
 
   /**
    * Removes all rendering observers from aElement.
@@ -240,9 +229,7 @@ public:
    */
   static void InvalidateRenderingObservers(nsIFrame* aFrame);
 
-  enum {
-    INVALIDATE_REFLOW = 1
-  };
+  enum { INVALIDATE_REFLOW = 1 };
 
   enum ReferenceState {
     /// Has no references to SVG filters (may still have CSS filter functions!)
@@ -255,23 +242,24 @@ public:
    * This can be called on any element or frame. Only direct observers of this
    * (frame's) element, if any, are invalidated.
    */
-  static void InvalidateDirectRenderingObservers(Element* aElement, uint32_t aFlags = 0);
-  static void InvalidateDirectRenderingObservers(nsIFrame* aFrame, uint32_t aFlags = 0);
+  static void InvalidateDirectRenderingObservers(Element* aElement,
+                                                 uint32_t aFlags = 0);
+  static void InvalidateDirectRenderingObservers(nsIFrame* aFrame,
+                                                 uint32_t aFlags = 0);
 
   /**
    * Get the paint server for aPaintedFrame.
    */
-  static nsSVGPaintServerFrame*
-  GetAndObservePaintServer(nsIFrame* aPaintedFrame,
-                           nsStyleSVGPaint nsStyleSVG::* aPaint);
+  static nsSVGPaintServerFrame* GetAndObservePaintServer(
+      nsIFrame* aPaintedFrame, nsStyleSVGPaint nsStyleSVG::*aPaint);
 
   /**
    * Get the start/mid/end-markers for the given frame, and add the frame as
    * an observer to those markers.  Returns true if at least one marker type is
    * found, false otherwise.
    */
-  static bool
-  GetAndObserveMarkers(nsIFrame* aMarkedFrame, nsSVGMarkerFrame*(*aFrames)[3]);
+  static bool GetAndObserveMarkers(nsIFrame* aMarkedFrame,
+                                   nsSVGMarkerFrame* (*aFrames)[3]);
 
   /**
    * Get the frames of the SVG filters applied to the given frame, and add the
@@ -288,18 +276,16 @@ public:
    * bugs, or cause later invalidation problems.  However, let's not change
    * that behavior just yet due to the regression potential.
    */
-  static ReferenceState
-  GetAndObserveFilters(nsIFrame* aFilteredFrame,
-                       nsTArray<nsSVGFilterFrame*>* aFilterFrames);
+  static ReferenceState GetAndObserveFilters(
+      nsIFrame* aFilteredFrame, nsTArray<nsSVGFilterFrame*>* aFilterFrames);
 
   /**
    * If the given frame is already observing SVG filters, this function gets
    * those filters.  If the frame is not already observing filters this
    * function assumes that it doesn't have anything to observe.
    */
-  static ReferenceState
-  GetFiltersIfObserving(nsIFrame* aFilteredFrame,
-                        nsTArray<nsSVGFilterFrame*>* aFilterFrames);
+  static ReferenceState GetFiltersIfObserving(
+      nsIFrame* aFilteredFrame, nsTArray<nsSVGFilterFrame*>* aFilterFrames);
 
   /**
    * Starts observing filters for a <canvas> element's CanvasRenderingContext2D.
@@ -314,10 +300,9 @@ public:
    * objects separately.  It would be better to refactor things so that we only
    * do that work once.
    */
-  static already_AddRefed<nsISupports>
-  ObserveFiltersForCanvasContext(CanvasRenderingContext2D* aContext,
-                                 Element* aCanvasElement,
-                                 nsTArray<nsStyleFilter>& aFilters);
+  static already_AddRefed<nsISupports> ObserveFiltersForCanvasContext(
+      CanvasRenderingContext2D* aContext, Element* aCanvasElement,
+      nsTArray<nsStyleFilter>& aFilters);
 
   /**
    * Called when cycle collecting CanvasRenderingContext2D, and requires the
@@ -330,8 +315,7 @@ public:
    * even doing anything useful in terms of preventing further invalidation
    * from any observed filters.
    */
-  static void
-  DetachFromCanvasContext(nsISupports* aAutoObserver);
+  static void DetachFromCanvasContext(nsISupports* aAutoObserver);
 
   /**
    * Get the frame of the SVG clipPath applied to aClippedFrame, if any, and
@@ -350,9 +334,8 @@ public:
    * is not invalid for clip-path or mask.  We will return eHasNoRefs in that
    * case.
    */
-  static ReferenceState
-  GetAndObserveClipPath(nsIFrame* aClippedFrame,
-                        nsSVGClipPathFrame** aClipPathFrame);
+  static ReferenceState GetAndObserveClipPath(
+      nsIFrame* aClippedFrame, nsSVGClipPathFrame** aClipPathFrame);
 
   /**
    * If masking is applied to aMaskedFrame, gets an array of any SVG masks
@@ -366,23 +349,21 @@ public:
    * is not invalid for clip-path or mask.  We will return eHasNoRefs in that
    * case.
    */
-  static ReferenceState
-  GetAndObserveMasks(nsIFrame* aMaskedFrame,
-                     nsTArray<nsSVGMaskFrame*>* aMaskFrames);
+  static ReferenceState GetAndObserveMasks(
+      nsIFrame* aMaskedFrame, nsTArray<nsSVGMaskFrame*>* aMaskFrames);
 
   /**
    * Get the SVGGeometryElement that is referenced by aTextPathFrame, and make
    * aTextPathFrame start observing rendering changes to that element.
    */
-  static SVGGeometryElement*
-  GetAndObserveTextPathsPath(nsIFrame* aTextPathFrame);
+  static SVGGeometryElement* GetAndObserveTextPathsPath(
+      nsIFrame* aTextPathFrame);
 
   /**
    * Make aTextPathFrame stop observing rendering changes to the
    * SVGGeometryElement that it references, if any.
    */
-  static void
-  RemoveTextPathObserver(nsIFrame* aTextPathFrame);
+  static void RemoveTextPathObserver(nsIFrame* aTextPathFrame);
 
   /**
    * Gets the nsIFrame of a referenced SVG "template" element, if any, and
@@ -397,11 +378,10 @@ public:
    * class, which is why it is necessary to pass in a function that can be
    * used as a callback to lazily get the href value, if necessary.
    */
-  static nsIFrame*
-  GetAndObserveTemplate(nsIFrame* aFrame, HrefToTemplateCallback aGetHref);
+  static nsIFrame* GetAndObserveTemplate(nsIFrame* aFrame,
+                                         HrefToTemplateCallback aGetHref);
 
-  static void
-  RemoveTemplateObserver(nsIFrame* aFrame);
+  static void RemoveTemplateObserver(nsIFrame* aFrame);
 
   /**
    * Gets an arbitrary element and starts observing it.  Used to implement
@@ -410,15 +390,14 @@ public:
    * Note that bug 1496065 has been filed to remove support for referencing
    * arbitrary elements using '-moz-element'.
    */
-  static Element*
-  GetAndObserveBackgroundImage(nsIFrame* aFrame,
-                               const nsAtom* aHref);
+  static Element* GetAndObserveBackgroundImage(nsIFrame* aFrame,
+                                               const nsAtom* aHref);
 
   /**
    * A helper function to resolve filter URL.
    */
-  static already_AddRefed<URLAndReferrerInfo>
-  GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter);
+  static already_AddRefed<URLAndReferrerInfo> GetFilterURI(
+      nsIFrame* aFrame, const nsStyleFilter& aFilter);
 
   /**
    * Return a baseURL for resolving a local-ref URL.
@@ -429,10 +408,10 @@ public:
    *                   <circle clip-path=url(#foo)>
    *                   <use xlink:href="#foo">
    */
-  static already_AddRefed<nsIURI>
-  GetBaseURLForLocalRef(nsIContent* aContent, nsIURI* aDocURI);
+  static already_AddRefed<nsIURI> GetBaseURLForLocalRef(nsIContent* aContent,
+                                                        nsIURI* aDocURI);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /*NSSVGEFFECTS_H_*/

@@ -20,14 +20,16 @@ namespace recordreplay {
 // StaticInfallibleVector is designed for use in static storage, and does not
 // have a static constructor or destructor in release builds.
 
-template<typename Outer, typename T, size_t MinInlineCapacity, class AllocPolicy>
-class InfallibleVectorOperations
-{
+template <typename Outer, typename T, size_t MinInlineCapacity,
+          class AllocPolicy>
+class InfallibleVectorOperations {
   typedef Vector<T, MinInlineCapacity, AllocPolicy> InnerVector;
   InnerVector& Vector() { return static_cast<Outer*>(this)->Vector(); }
-  const InnerVector& Vector() const { return static_cast<const Outer*>(this)->Vector(); }
+  const InnerVector& Vector() const {
+    return static_cast<const Outer*>(this)->Vector();
+  }
 
-public:
+ public:
   size_t length() const { return Vector().length(); }
   bool empty() const { return Vector().empty(); }
   T* begin() { return Vector().begin(); }
@@ -55,13 +57,15 @@ public:
     }
   }
 
-  template<typename U> void append(U&& aU) {
+  template <typename U>
+  void append(U&& aU) {
     if (!Vector().append(std::forward<U>(aU))) {
       MOZ_CRASH();
     }
   }
 
-  template<typename U> void append(const U* aBegin, size_t aLength) {
+  template <typename U>
+  void append(const U* aBegin, size_t aLength) {
     if (!Vector().append(aBegin, aLength)) {
       MOZ_CRASH();
     }
@@ -73,45 +77,46 @@ public:
     }
   }
 
-  template<typename... Args> void emplaceBack(Args&&... aArgs) {
+  template <typename... Args>
+  void emplaceBack(Args&&... aArgs) {
     if (!Vector().emplaceBack(std::forward<Args>(aArgs)...)) {
       MOZ_CRASH();
     }
   }
 
-  template<typename... Args> void infallibleEmplaceBack(Args&&... aArgs) {
+  template <typename... Args>
+  void infallibleEmplaceBack(Args&&... aArgs) {
     Vector().infallibleEmplaceBack(std::forward<Args>(aArgs)...);
   }
 
-  template<typename U> void insert(T* aP, U&& aVal) {
+  template <typename U>
+  void insert(T* aP, U&& aVal) {
     if (!Vector().insert(aP, std::forward<U>(aVal))) {
       MOZ_CRASH();
     }
   }
 };
 
-template<typename T,
-         size_t MinInlineCapacity = 0,
-         class AllocPolicy = MallocAllocPolicy>
+template <typename T, size_t MinInlineCapacity = 0,
+          class AllocPolicy = MallocAllocPolicy>
 class InfallibleVector
-  : public InfallibleVectorOperations<InfallibleVector<T, MinInlineCapacity, AllocPolicy>,
-                                      T, MinInlineCapacity, AllocPolicy>
-{
+    : public InfallibleVectorOperations<
+          InfallibleVector<T, MinInlineCapacity, AllocPolicy>, T,
+          MinInlineCapacity, AllocPolicy> {
   typedef Vector<T, MinInlineCapacity, AllocPolicy> InnerVector;
   InnerVector mVector;
 
-public:
+ public:
   InnerVector& Vector() { return mVector; }
   const InnerVector& Vector() const { return mVector; }
 };
 
-template<typename T,
-         size_t MinInlineCapacity = 0,
-         class AllocPolicy = MallocAllocPolicy>
+template <typename T, size_t MinInlineCapacity = 0,
+          class AllocPolicy = MallocAllocPolicy>
 class StaticInfallibleVector
-  : public InfallibleVectorOperations<StaticInfallibleVector<T, MinInlineCapacity, AllocPolicy>,
-                                      T, MinInlineCapacity, AllocPolicy>
-{
+    : public InfallibleVectorOperations<
+          StaticInfallibleVector<T, MinInlineCapacity, AllocPolicy>, T,
+          MinInlineCapacity, AllocPolicy> {
   typedef Vector<T, MinInlineCapacity, AllocPolicy> InnerVector;
   mutable InnerVector* mVector;
 
@@ -122,19 +127,25 @@ class StaticInfallibleVector
       AllocPolicy policy;
       void* memory = policy.template pod_malloc<InnerVector>(1);
       MOZ_RELEASE_ASSERT(memory);
-      mVector = new(memory) InnerVector();
+      mVector = new (memory) InnerVector();
     }
   }
 
-public:
+ public:
   // InfallibleVectors are allocated in static storage and should not have
   // constructors. Their memory will be initially zero.
 
-  InnerVector& Vector() { EnsureVector(); return *mVector; }
-  const InnerVector& Vector() const { EnsureVector(); return *mVector; }
+  InnerVector& Vector() {
+    EnsureVector();
+    return *mVector;
+  }
+  const InnerVector& Vector() const {
+    EnsureVector();
+    return *mVector;
+  }
 };
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_InfallibleVector_h
+#endif  // mozilla_recordreplay_InfallibleVector_h

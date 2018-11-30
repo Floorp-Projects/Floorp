@@ -19,16 +19,16 @@ namespace gfx {
 class VRLayerParent : public PVRLayerParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRLayerParent)
 
-public:
+ public:
   VRLayerParent(uint32_t aVRDisplayID, const uint32_t aGroup);
-  virtual mozilla::ipc::IPCResult RecvSubmitFrame(const layers::SurfaceDescriptor &aTexture,
-                                                  const uint64_t& aFrameId,
-                                                  const gfx::Rect& aLeftEyeRect,
-                                                  const gfx::Rect& aRightEyeRect) override;
+  virtual mozilla::ipc::IPCResult RecvSubmitFrame(
+      const layers::SurfaceDescriptor& aTexture, const uint64_t& aFrameId,
+      const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect) override;
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
   uint32_t GetDisplayID() const { return mVRDisplayID; }
   uint32_t GetGroup() const { return mGroup; }
-protected:
+
+ protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual ~VRLayerParent();
@@ -42,7 +42,7 @@ protected:
   uint32_t mGroup;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

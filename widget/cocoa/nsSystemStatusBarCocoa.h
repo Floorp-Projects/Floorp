@@ -13,23 +13,21 @@
 class nsStandaloneNativeMenu;
 @class NSStatusItem;
 
-class nsSystemStatusBarCocoa : public nsISystemStatusBar
-{
-public:
+class nsSystemStatusBarCocoa : public nsISystemStatusBar {
+ public:
   nsSystemStatusBarCocoa() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISYSTEMSTATUSBAR
 
-protected:
+ protected:
   virtual ~nsSystemStatusBarCocoa() {}
 
-  struct StatusItem
-  {
+  struct StatusItem {
     explicit StatusItem(nsStandaloneNativeMenu* aMenu);
     ~StatusItem();
 
-  private:
+   private:
     RefPtr<nsStandaloneNativeMenu> mMenu;
     NSStatusItem* mStatusItem;
   };
@@ -37,4 +35,4 @@ protected:
   nsClassHashtable<nsISupportsHashKey, StatusItem> mItems;
 };
 
-#endif // nsSystemStatusBarCocoa_h_
+#endif  // nsSystemStatusBarCocoa_h_

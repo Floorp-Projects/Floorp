@@ -8,7 +8,7 @@
 #define mozilla_ipc_SharedMemory_h
 
 #include "nsDebug.h"
-#include "nsISupportsImpl.h"    // NS_INLINE_DECL_REFCOUNTING
+#include "nsISupportsImpl.h"  // NS_INLINE_DECL_REFCOUNTING
 #include "mozilla/Attributes.h"
 
 #include "base/process.h"
@@ -19,35 +19,26 @@
 // use it directly; use Shmem allocated through IPDL interfaces.
 //
 namespace {
-enum Rights {
-  RightsNone = 0,
-  RightsRead = 1 << 0,
-  RightsWrite = 1 << 1
-};
-} // namespace
+enum Rights { RightsNone = 0, RightsRead = 1 << 0, RightsWrite = 1 << 1 };
+}  // namespace
 
 namespace mozilla {
 
 namespace ipc {
 class SharedMemory;
-} // namespace ipc
+}  // namespace ipc
 
 namespace ipc {
 
-class SharedMemory
-{
-protected:
-  virtual ~SharedMemory()
-  {
+class SharedMemory {
+ protected:
+  virtual ~SharedMemory() {
     Unmapped();
     Destroyed();
   }
 
-public:
-  enum SharedMemoryType {
-    TYPE_BASIC,
-    TYPE_UNKNOWN
-  };
+ public:
+  enum SharedMemoryType { TYPE_BASIC, TYPE_UNKNOWN };
 
   enum OpenRights {
     RightsReadOnly = RightsRead,
@@ -65,38 +56,37 @@ public:
 
   virtual SharedMemoryType Type() const = 0;
 
-  virtual bool ShareHandle(base::ProcessId aProcessId, IPC::Message* aMessage) = 0;
-  virtual bool ReadHandle(const IPC::Message* aMessage, PickleIterator* aIter) = 0;
+  virtual bool ShareHandle(base::ProcessId aProcessId,
+                           IPC::Message* aMessage) = 0;
+  virtual bool ReadHandle(const IPC::Message* aMessage,
+                          PickleIterator* aIter) = 0;
 
-  void
-  Protect(char* aAddr, size_t aSize, int aRights)
-  {
+  void Protect(char* aAddr, size_t aSize, int aRights) {
     char* memStart = reinterpret_cast<char*>(memory());
-    if (!memStart)
-      MOZ_CRASH("SharedMemory region points at NULL!");
+    if (!memStart) MOZ_CRASH("SharedMemory region points at NULL!");
     char* memEnd = memStart + Size();
 
     char* protStart = aAddr;
-    if (!protStart)
-      MOZ_CRASH("trying to Protect() a NULL region!");
+    if (!protStart) MOZ_CRASH("trying to Protect() a NULL region!");
     char* protEnd = protStart + aSize;
 
-    if (!(memStart <= protStart
-          && protEnd <= memEnd))
+    if (!(memStart <= protStart && protEnd <= memEnd))
       MOZ_CRASH("attempt to Protect() a region outside this SharedMemory");
 
     // checks alignment etc.
     SystemProtect(aAddr, aSize, aRights);
   }
 
-  // bug 1168843, compositor thread may create shared memory instances that are destroyed by main thread on shutdown, so this must use thread-safe RC to avoid hitting assertion
+  // bug 1168843, compositor thread may create shared memory instances that are
+  // destroyed by main thread on shutdown, so this must use thread-safe RC to
+  // avoid hitting assertion
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedMemory)
 
   static void SystemProtect(char* aAddr, size_t aSize, int aRights);
   static size_t SystemPageSize();
   static size_t PageAlignedSize(size_t aSize);
 
-protected:
+ protected:
   SharedMemory();
 
   // Implementations should call these methods on shmem usage changes,
@@ -121,18 +111,17 @@ protected:
   size_t mMappedSize;
 };
 
-template<typename HandleImpl>
-class SharedMemoryCommon : public SharedMemory
-{
-public:
+template <typename HandleImpl>
+class SharedMemoryCommon : public SharedMemory {
+ public:
   typedef HandleImpl Handle;
 
   virtual bool ShareToProcess(base::ProcessId aProcessId, Handle* aHandle) = 0;
   virtual bool IsHandleValid(const Handle& aHandle) const = 0;
   virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) = 0;
 
-  virtual bool ShareHandle(base::ProcessId aProcessId, IPC::Message* aMessage) override
-  {
+  virtual bool ShareHandle(base::ProcessId aProcessId,
+                           IPC::Message* aMessage) override {
     Handle handle;
     if (!ShareToProcess(aProcessId, &handle)) {
       return false;
@@ -141,17 +130,15 @@ public:
     return true;
   }
 
-  virtual bool ReadHandle(const IPC::Message* aMessage, PickleIterator* aIter) override
-  {
+  virtual bool ReadHandle(const IPC::Message* aMessage,
+                          PickleIterator* aIter) override {
     Handle handle;
-    return IPC::ReadParam(aMessage, aIter, &handle) &&
-           IsHandleValid(handle) &&
+    return IPC::ReadParam(aMessage, aIter, &handle) && IsHandleValid(handle) &&
            SetHandle(handle, RightsReadWrite);
   }
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-
-#endif // ifndef mozilla_ipc_SharedMemory_h
+#endif  // ifndef mozilla_ipc_SharedMemory_h

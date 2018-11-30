@@ -16,7 +16,7 @@ void Pause();
 bool Resume();
 void Stop(const char* profileName);
 
-}
+}  // namespace Instruments
 
 #endif /* __APPLE__ */
 

@@ -29,8 +29,7 @@ enum class SetPermissionsOf {
 HRESULT GetCommonUpdateDirectory(const wchar_t* installPath,
                                  SetPermissionsOf dirPermsToSet,
                                  mozilla::UniquePtr<wchar_t[]>& result);
-HRESULT GetUserUpdateDirectory(const wchar_t* installPath,
-                               const char* vendor,
+HRESULT GetUserUpdateDirectory(const wchar_t* installPath, const char* vendor,
                                const char* appName,
                                mozilla::UniquePtr<wchar_t[]>& result);
 #endif

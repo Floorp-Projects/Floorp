@@ -34,9 +34,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace dom {
 
-bool
-ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
-{
+bool ServiceWorkerVisible(JSContext* aCx, JSObject* aObj) {
   if (NS_IsMainThread()) {
     return StaticPrefs::dom_serviceWorkers_enabled();
   }
@@ -45,10 +43,8 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
 }
 
 // static
-already_AddRefed<ServiceWorker>
-ServiceWorker::Create(nsIGlobalObject* aOwner,
-                      const ServiceWorkerDescriptor& aDescriptor)
-{
+already_AddRefed<ServiceWorker> ServiceWorker::Create(
+    nsIGlobalObject* aOwner, const ServiceWorkerDescriptor& aDescriptor) {
   RefPtr<ServiceWorker> ref;
   RefPtr<ServiceWorker::Inner> inner;
 
@@ -59,7 +55,7 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
     NS_ENSURE_TRUE(swm, nullptr);
 
     RefPtr<ServiceWorkerRegistrationInfo> reg =
-      swm->GetRegistration(aDescriptor.PrincipalInfo(), aDescriptor.Scope());
+        swm->GetRegistration(aDescriptor.PrincipalInfo(), aDescriptor.Scope());
     NS_ENSURE_TRUE(reg, nullptr);
 
     RefPtr<ServiceWorkerInfo> info = reg->GetByDescriptor(aDescriptor);
@@ -77,11 +73,10 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
 ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
                              const ServiceWorkerDescriptor& aDescriptor,
                              ServiceWorker::Inner* aInner)
-  : DOMEventTargetHelper(aGlobal)
-  , mDescriptor(aDescriptor)
-  , mInner(aInner)
-  , mLastNotifiedState(ServiceWorkerState::Installing)
-{
+    : DOMEventTargetHelper(aGlobal),
+      mDescriptor(aDescriptor),
+      mInner(aInner),
+      mLastNotifiedState(ServiceWorkerState::Installing) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mInner);
@@ -96,39 +91,38 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
 
   // Attempt to get an existing binding object for the registration
   // associated with this ServiceWorker.
-  RefPtr<ServiceWorkerRegistration> reg = aGlobal->GetServiceWorkerRegistration(
-    ServiceWorkerRegistrationDescriptor(mDescriptor.RegistrationId(),
-                                        mDescriptor.RegistrationVersion(),
-                                        mDescriptor.PrincipalInfo(),
-                                        mDescriptor.Scope(),
-                                        ServiceWorkerUpdateViaCache::Imports));
+  RefPtr<ServiceWorkerRegistration> reg =
+      aGlobal->GetServiceWorkerRegistration(ServiceWorkerRegistrationDescriptor(
+          mDescriptor.RegistrationId(), mDescriptor.RegistrationVersion(),
+          mDescriptor.PrincipalInfo(), mDescriptor.Scope(),
+          ServiceWorkerUpdateViaCache::Imports));
   if (reg) {
     MaybeAttachToRegistration(reg);
   } else {
     RefPtr<ServiceWorker> self = this;
 
     mInner->GetRegistration(
-      [self = std::move(self)] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
-        nsIGlobalObject* global = self->GetParentObject();
-        NS_ENSURE_TRUE_VOID(global);
-        RefPtr<ServiceWorkerRegistration> reg =
-          global->GetOrCreateServiceWorkerRegistration(aDescriptor);
-        self->MaybeAttachToRegistration(reg);
-      }, [] (ErrorResult& aRv) {
-        // do nothing
-        aRv.SuppressException();
-      });
+        [self = std::move(self)](
+            const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+          nsIGlobalObject* global = self->GetParentObject();
+          NS_ENSURE_TRUE_VOID(global);
+          RefPtr<ServiceWorkerRegistration> reg =
+              global->GetOrCreateServiceWorkerRegistration(aDescriptor);
+          self->MaybeAttachToRegistration(reg);
+        },
+        [](ErrorResult& aRv) {
+          // do nothing
+          aRv.SuppressException();
+        });
   }
 }
 
-ServiceWorker::~ServiceWorker()
-{
+ServiceWorker::~ServiceWorker() {
   MOZ_ASSERT(NS_IsMainThread());
   mInner->RemoveServiceWorker(this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorker,
-                                   DOMEventTargetHelper,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorker, DOMEventTargetHelper,
                                    mRegistration);
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorker, DOMEventTargetHelper)
@@ -138,30 +132,21 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorker)
   NS_INTERFACE_MAP_ENTRY(ServiceWorker)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-JSObject*
-ServiceWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ServiceWorker::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   MOZ_ASSERT(NS_IsMainThread());
 
   return ServiceWorker_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-ServiceWorkerState
-ServiceWorker::State() const
-{
-  return mDescriptor.State();
-}
+ServiceWorkerState ServiceWorker::State() const { return mDescriptor.State(); }
 
-void
-ServiceWorker::SetState(ServiceWorkerState aState)
-{
+void ServiceWorker::SetState(ServiceWorkerState aState) {
   NS_ENSURE_TRUE_VOID(aState >= mDescriptor.State());
   mDescriptor.SetState(aState);
 }
 
-void
-ServiceWorker::MaybeDispatchStateChangeEvent()
-{
+void ServiceWorker::MaybeDispatchStateChangeEvent() {
   if (mDescriptor.State() <= mLastNotifiedState || !GetParentObject()) {
     return;
   }
@@ -177,17 +162,13 @@ ServiceWorker::MaybeDispatchStateChangeEvent()
   }
 }
 
-void
-ServiceWorker::GetScriptURL(nsString& aURL) const
-{
+void ServiceWorker::GetScriptURL(nsString& aURL) const {
   CopyUTF8toUTF16(mDescriptor.ScriptURL(), aURL);
 }
 
-void
-ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                           const Sequence<JSObject*>& aTransferable,
-                           ErrorResult& aRv)
-{
+void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                                const Sequence<JSObject*>& aTransferable,
+                                ErrorResult& aRv) {
   if (State() == ServiceWorkerState::Redundant) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -202,8 +183,8 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
   if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
     ServiceWorkerManager::LocalizeAndReportToAllClients(
-      mDescriptor.Scope(), "ServiceWorkerPostMessageStorageError",
-      nsTArray<nsString> { NS_ConvertUTF8toUTF16(mDescriptor.Scope()) });
+        mDescriptor.Scope(), "ServiceWorkerPostMessageStorageError",
+        nsTArray<nsString>{NS_ConvertUTF8toUTF16(mDescriptor.Scope())});
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -231,29 +212,22 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   mInner->PostMessage(std::move(data), clientInfo.ref(), clientState.ref());
 }
 
-void
-ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                           const PostMessageOptions& aOptions,
-                           ErrorResult& aRv)
-{
+void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                                const PostMessageOptions& aOptions,
+                                ErrorResult& aRv) {
   PostMessage(aCx, aMessage, aOptions.mTransfer, aRv);
 }
 
-const ServiceWorkerDescriptor&
-ServiceWorker::Descriptor() const
-{
+const ServiceWorkerDescriptor& ServiceWorker::Descriptor() const {
   return mDescriptor;
 }
 
-void
-ServiceWorker::DisconnectFromOwner()
-{
+void ServiceWorker::DisconnectFromOwner() {
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
-void
-ServiceWorker::MaybeAttachToRegistration(ServiceWorkerRegistration* aRegistration)
-{
+void ServiceWorker::MaybeAttachToRegistration(
+    ServiceWorkerRegistration* aRegistration) {
   MOZ_DIAGNOSTIC_ASSERT(aRegistration);
   MOZ_DIAGNOSTIC_ASSERT(!mRegistration);
 
@@ -268,5 +242,5 @@ ServiceWorker::MaybeAttachToRegistration(ServiceWorkerRegistration* aRegistratio
   mRegistration = aRegistration;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

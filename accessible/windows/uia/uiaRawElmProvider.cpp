@@ -18,19 +18,15 @@ using namespace mozilla::a11y;
 // uiaRawElmProvider
 ////////////////////////////////////////////////////////////////////////////////
 
-IMPL_IUNKNOWN2(uiaRawElmProvider,
-               IAccessibleEx,
-               IRawElementProviderSimple)
+IMPL_IUNKNOWN2(uiaRawElmProvider, IAccessibleEx, IRawElementProviderSimple)
 
 ////////////////////////////////////////////////////////////////////////////////
 // IAccessibleEx
 
 STDMETHODIMP
-uiaRawElmProvider::GetObjectForChild(long aIdChild,
-                                     __RPC__deref_out_opt IAccessibleEx** aAccEx)
-{
-  if (!aAccEx)
-    return E_INVALIDARG;
+uiaRawElmProvider::GetObjectForChild(
+    long aIdChild, __RPC__deref_out_opt IAccessibleEx** aAccEx) {
+  if (!aAccEx) return E_INVALIDARG;
 
   *aAccEx = nullptr;
 
@@ -39,16 +35,13 @@ uiaRawElmProvider::GetObjectForChild(long aIdChild,
 
 STDMETHODIMP
 uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
-                                      __RPC__out long* aIdChild)
-{
-  if (!aAcc || !aIdChild)
-    return E_INVALIDARG;
+                                      __RPC__out long* aIdChild) {
+  if (!aAcc || !aIdChild) return E_INVALIDARG;
 
   *aAcc = nullptr;
   *aIdChild = 0;
 
-  if (mAcc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (mAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   *aIdChild = CHILDID_SELF;
   RefPtr<AccessibleWrap> copy(mAcc);
@@ -58,15 +51,13 @@ uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
 }
 
 STDMETHODIMP
-uiaRawElmProvider::GetRuntimeId(__RPC__deref_out_opt SAFEARRAY** aRuntimeIds)
-{
-  if (!aRuntimeIds)
-    return E_INVALIDARG;
+uiaRawElmProvider::GetRuntimeId(__RPC__deref_out_opt SAFEARRAY** aRuntimeIds) {
+  if (!aRuntimeIds) return E_INVALIDARG;
 
-  int ids[] = { UiaAppendRuntimeId, static_cast<int>(reinterpret_cast<intptr_t>(mAcc->UniqueID())) };
+  int ids[] = {UiaAppendRuntimeId,
+               static_cast<int>(reinterpret_cast<intptr_t>(mAcc->UniqueID()))};
   *aRuntimeIds = SafeArrayCreateVector(VT_I4, 0, 2);
-  if (!*aRuntimeIds)
-    return E_OUTOFMEMORY;
+  if (!*aRuntimeIds) return E_OUTOFMEMORY;
 
   for (LONG i = 0; i < (LONG)ArrayLength(ids); i++)
     SafeArrayPutElement(*aRuntimeIds, &i, (void*)&(ids[i]));
@@ -75,18 +66,16 @@ uiaRawElmProvider::GetRuntimeId(__RPC__deref_out_opt SAFEARRAY** aRuntimeIds)
 }
 
 STDMETHODIMP
-uiaRawElmProvider::ConvertReturnedElement(__RPC__in_opt IRawElementProviderSimple* aRawElmProvider,
-                                          __RPC__deref_out_opt IAccessibleEx** aAccEx)
-{
-  if (!aRawElmProvider || !aAccEx)
-    return E_INVALIDARG;
+uiaRawElmProvider::ConvertReturnedElement(
+    __RPC__in_opt IRawElementProviderSimple* aRawElmProvider,
+    __RPC__deref_out_opt IAccessibleEx** aAccEx) {
+  if (!aRawElmProvider || !aAccEx) return E_INVALIDARG;
 
   *aAccEx = nullptr;
 
   void* instancePtr = nullptr;
   HRESULT hr = aRawElmProvider->QueryInterface(IID_IAccessibleEx, &instancePtr);
-  if (SUCCEEDED(hr))
-    *aAccEx = static_cast<IAccessibleEx*>(instancePtr);
+  if (SUCCEEDED(hr)) *aAccEx = static_cast<IAccessibleEx*>(instancePtr);
 
   return hr;
 }
@@ -95,10 +84,9 @@ uiaRawElmProvider::ConvertReturnedElement(__RPC__in_opt IRawElementProviderSimpl
 // IRawElementProviderSimple
 
 STDMETHODIMP
-uiaRawElmProvider::get_ProviderOptions(__RPC__out enum ProviderOptions* aOptions)
-{
-  if (!aOptions)
-    return E_INVALIDARG;
+uiaRawElmProvider::get_ProviderOptions(
+    __RPC__out enum ProviderOptions* aOptions) {
+  if (!aOptions) return E_INVALIDARG;
 
   // This method is not used with IAccessibleEx implementations.
   *aOptions = ProviderOptions_ServerSideProvider;
@@ -106,11 +94,9 @@ uiaRawElmProvider::get_ProviderOptions(__RPC__out enum ProviderOptions* aOptions
 }
 
 STDMETHODIMP
-uiaRawElmProvider::GetPatternProvider(PATTERNID aPatternId,
-                                      __RPC__deref_out_opt IUnknown** aPatternProvider)
-{
-  if (!aPatternProvider)
-    return E_INVALIDARG;
+uiaRawElmProvider::GetPatternProvider(
+    PATTERNID aPatternId, __RPC__deref_out_opt IUnknown** aPatternProvider) {
+  if (!aPatternProvider) return E_INVALIDARG;
 
   *aPatternProvider = nullptr;
   return S_OK;
@@ -118,13 +104,10 @@ uiaRawElmProvider::GetPatternProvider(PATTERNID aPatternId,
 
 STDMETHODIMP
 uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
-                                    __RPC__out VARIANT* aPropertyValue)
-{
-  if (!aPropertyValue)
-    return E_INVALIDARG;
+                                    __RPC__out VARIANT* aPropertyValue) {
+  if (!aPropertyValue) return E_INVALIDARG;
 
-  if (mAcc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (mAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   aPropertyValue->vt = VT_EMPTY;
 
@@ -159,14 +142,14 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       break;
     }
 
-    //ARIA Role / shortcut
+    // ARIA Role / shortcut
     case UIA_AriaRolePropertyId: {
       nsAutoString xmlRoles;
 
       nsCOMPtr<nsIPersistentProperties> attributes = mAcc->Attributes();
       attributes->GetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRoles);
 
-      if(!xmlRoles.IsEmpty()) {
+      if (!xmlRoles.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;
         aPropertyValue->bstrVal = ::SysAllocString(xmlRoles.get());
         return S_OK;
@@ -175,7 +158,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       break;
     }
 
-    //ARIA Properties
+    // ARIA Properties
     case UIA_AriaPropertiesPropertyId: {
       nsAutoString ariaProperties;
 
@@ -189,8 +172,8 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       }
 
       if (!ariaProperties.IsEmpty()) {
-        //remove last delimiter:
-        ariaProperties.Truncate(ariaProperties.Length()-1);
+        // remove last delimiter:
+        ariaProperties.Truncate(ariaProperties.Length() - 1);
         aPropertyValue->vt = VT_BSTR;
         aPropertyValue->bstrVal = ::SysAllocString(ariaProperties.get());
         return S_OK;
@@ -204,10 +187,9 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
 }
 
 STDMETHODIMP
-uiaRawElmProvider::get_HostRawElementProvider(__RPC__deref_out_opt IRawElementProviderSimple** aRawElmProvider)
-{
-  if (!aRawElmProvider)
-    return E_INVALIDARG;
+uiaRawElmProvider::get_HostRawElementProvider(
+    __RPC__deref_out_opt IRawElementProviderSimple** aRawElmProvider) {
+  if (!aRawElmProvider) return E_INVALIDARG;
 
   // This method is not used with IAccessibleEx implementations.
   *aRawElmProvider = nullptr;

@@ -30,31 +30,20 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StorageEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 StorageEvent::StorageEvent(EventTarget* aOwner)
-  : Event(aOwner, nullptr, nullptr)
-{
-}
+    : Event(aOwner, nullptr, nullptr) {}
 
-StorageEvent::~StorageEvent()
-{
-}
+StorageEvent::~StorageEvent() {}
 
-StorageEvent*
-StorageEvent::AsStorageEvent()
-{
-  return this;
-}
+StorageEvent* StorageEvent::AsStorageEvent() { return this; }
 
-JSObject*
-StorageEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* StorageEvent::WrapObjectInternal(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return StorageEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<StorageEvent>
-StorageEvent::Constructor(EventTarget* aOwner,
-                          const nsAString& aType,
-                          const StorageEventInit& aEventInitDict)
-{
+already_AddRefed<StorageEvent> StorageEvent::Constructor(
+    EventTarget* aOwner, const nsAString& aType,
+    const StorageEventInit& aEventInitDict) {
   RefPtr<StorageEvent> e = new StorageEvent(aOwner);
 
   bool trusted = e->Init(aOwner);
@@ -69,24 +58,19 @@ StorageEvent::Constructor(EventTarget* aOwner,
   return e.forget();
 }
 
-already_AddRefed<StorageEvent>
-StorageEvent::Constructor(const GlobalObject& aGlobal,
-                          const nsAString& aType,
-                          const StorageEventInit& aEventInitDict,
-                          ErrorResult& aRv)
-{
+already_AddRefed<StorageEvent> StorageEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const StorageEventInit& aEventInitDict, ErrorResult& aRv) {
   nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(owner, aType, aEventInitDict);
 }
 
-void
-StorageEvent::InitStorageEvent(const nsAString& aType, bool aCanBubble,
-                               bool aCancelable, const nsAString& aKey,
-                               const nsAString& aOldValue,
-                               const nsAString& aNewValue,
-                               const nsAString& aURL,
-                               Storage* aStorageArea)
-{
+void StorageEvent::InitStorageEvent(const nsAString& aType, bool aCanBubble,
+                                    bool aCancelable, const nsAString& aKey,
+                                    const nsAString& aOldValue,
+                                    const nsAString& aNewValue,
+                                    const nsAString& aURL,
+                                    Storage* aStorageArea) {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
   InitEvent(aType, aCanBubble, aCancelable);
@@ -97,5 +81,5 @@ StorageEvent::InitStorageEvent(const nsAString& aType, bool aCanBubble,
   mStorageArea = aStorageArea;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

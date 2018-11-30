@@ -22,33 +22,32 @@ namespace base {
 // TODO(dkegel): add support for background file IO somehow
 class MessagePumpLibevent : public MessagePump {
  public:
-
   // Object returned by WatchFileDescriptor to manage further watching.
   class FileDescriptorWatcher {
-    public:
-     FileDescriptorWatcher();
-     ~FileDescriptorWatcher();  // Implicitly calls StopWatchingFileDescriptor.
+   public:
+    FileDescriptorWatcher();
+    ~FileDescriptorWatcher();  // Implicitly calls StopWatchingFileDescriptor.
 
-     // NOTE: These methods aren't called StartWatching()/StopWatching() to
-     // avoid confusion with the win32 ObjectWatcher class.
+    // NOTE: These methods aren't called StartWatching()/StopWatching() to
+    // avoid confusion with the win32 ObjectWatcher class.
 
-     // Stop watching the FD, always safe to call.  No-op if there's nothing
-     // to do.
-     bool StopWatchingFileDescriptor();
+    // Stop watching the FD, always safe to call.  No-op if there's nothing
+    // to do.
+    bool StopWatchingFileDescriptor();
 
-    private:
-     // Called by MessagePumpLibevent, ownership of |e| is transferred to this
-     // object.
-     void Init(event* e, bool is_persistent);
+   private:
+    // Called by MessagePumpLibevent, ownership of |e| is transferred to this
+    // object.
+    void Init(event* e, bool is_persistent);
 
-     // Used by MessagePumpLibevent to take ownership of event_.
-     event *ReleaseEvent();
-     friend class MessagePumpLibevent;
+    // Used by MessagePumpLibevent to take ownership of event_.
+    event* ReleaseEvent();
+    friend class MessagePumpLibevent;
 
-    private:
-     bool is_persistent_;  // false if this event is one-shot.
-     event* event_;
-     DISALLOW_COPY_AND_ASSIGN(FileDescriptorWatcher);
+   private:
+    bool is_persistent_;  // false if this event is one-shot.
+    event* event_;
+    DISALLOW_COPY_AND_ASSIGN(FileDescriptorWatcher);
   };
 
   // Used with WatchFileDescptor to asynchronously monitor the I/O readiness of
@@ -81,12 +80,9 @@ class MessagePumpLibevent : public MessagePump {
   // event previously attached to |controller| is aborted.
   // Returns true on success.
   // TODO(dkegel): switch to edge-triggered readiness notification
-  bool WatchFileDescriptor(int fd,
-                           bool persistent,
-                           Mode mode,
-                           FileDescriptorWatcher *controller,
-                           Watcher *delegate);
-
+  bool WatchFileDescriptor(int fd, bool persistent, Mode mode,
+                           FileDescriptorWatcher* controller,
+                           Watcher* delegate);
 
   // This is analagous to FileDescriptorWatcher above, which really is
   // just a wrapper around libevent's |struct event|.  This class acts
@@ -97,16 +93,16 @@ class MessagePumpLibevent : public MessagePump {
   // XXX/cjones: this isn't my favorite API, but preserving it in
   // order to match code above
   class SignalEvent {
-     friend class MessagePumpLibevent;
+    friend class MessagePumpLibevent;
 
-  public:
+   public:
     SignalEvent();
-    ~SignalEvent();             // implicitly calls StopCatching()
+    ~SignalEvent();  // implicitly calls StopCatching()
 
     // Have libevent forget this event.
     bool StopCatching();
 
-  private:
+   private:
     void Init(event* e);
     event* ReleaseEvent();
 
@@ -116,7 +112,7 @@ class MessagePumpLibevent : public MessagePump {
   };
 
   class SignalWatcher {
-  public:
+   public:
     virtual ~SignalWatcher() {}
     // Called from MessageLoop::Run when |sig| has been delivered to
     // this process
@@ -128,10 +124,7 @@ class MessagePumpLibevent : public MessagePump {
   // upon its delivery.  Callers must provide a preallocated
   // SignalEvent object which can be used to manage the lifetime of
   // this event.  Returns true on success.
-  bool CatchSignal(int sig,
-                   SignalEvent* sigevent,
-                   SignalWatcher* delegate);
-
+  bool CatchSignal(int sig, SignalEvent* sigevent, SignalWatcher* delegate);
 
   // MessagePump methods:
   virtual void Run(Delegate* delegate) override;
@@ -140,11 +133,9 @@ class MessagePumpLibevent : public MessagePump {
   virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time) override;
 
  protected:
-
   virtual ~MessagePumpLibevent();
 
  private:
-
   // Risky part of constructor.  Returns true on success.
   bool Init();
 
@@ -162,12 +153,10 @@ class MessagePumpLibevent : public MessagePump {
   event_base* event_base_;
 
   // Called by libevent to tell us a registered FD can be read/written to.
-  static void OnLibeventNotification(int fd, short flags,
-                                     void* context);
+  static void OnLibeventNotification(int fd, short flags, void* context);
 
   // Called by libevent upon receiving a signal
-  static void OnLibeventSignalNotification(int sig, short flags,
-                                           void* context);
+  static void OnLibeventSignalNotification(int sig, short flags, void* context);
 
   // Unix pipe used to implement ScheduleWork()
   // ... callback; called by libevent inside Run() when pipe is ready to read
@@ -186,19 +175,16 @@ class MessagePumpLibevent : public MessagePump {
  *  LineWatcher overrides OnFileCanReadWithoutBlocking. It separates the read
  *  data by mTerminator and passes each line to OnLineRead.
  */
-class LineWatcher : public MessagePumpLibevent::Watcher
-{
-public:
-  LineWatcher(char aTerminator, int aBufferSize) : mReceivedIndex(0),
-    mBufferSize(aBufferSize),
-    mTerminator(aTerminator)
-  {
+class LineWatcher : public MessagePumpLibevent::Watcher {
+ public:
+  LineWatcher(char aTerminator, int aBufferSize)
+      : mReceivedIndex(0), mBufferSize(aBufferSize), mTerminator(aTerminator) {
     mReceiveBuffer = mozilla::MakeUnique<char[]>(mBufferSize);
   }
 
   ~LineWatcher() {}
 
-protected:
+ protected:
   /**
    * OnError will be called when |read| returns error. Derived class should
    * implement this function to handle error cases when needed.
@@ -206,7 +192,8 @@ protected:
   virtual void OnError() {}
   virtual void OnLineRead(int aFd, nsDependentCSubstring& aMessage) = 0;
   virtual void OnFileCanWriteWithoutBlocking(int /* aFd */) override {}
-private:
+
+ private:
   void OnFileCanReadWithoutBlocking(int aFd) final;
 
   mozilla::UniquePtr<char[]> mReceiveBuffer;

@@ -19,18 +19,14 @@ namespace mscom {
 static const TimeDuration kMaxSpinTime = TimeDuration::FromMilliseconds(30);
 bool SpinEvent::sIsMulticore = false;
 
-/* static */ bool
-SpinEvent::InitStatics()
-{
+/* static */ bool SpinEvent::InitStatics() {
   SYSTEM_INFO sysInfo;
   ::GetSystemInfo(&sysInfo);
   sIsMulticore = sysInfo.dwNumberOfProcessors > 1;
   return true;
 }
 
-SpinEvent::SpinEvent()
-  : mDone(false)
-{
+SpinEvent::SpinEvent() : mDone(false) {
   static const bool gotStatics = InitStatics();
   MOZ_ASSERT(gotStatics);
 
@@ -38,9 +34,7 @@ SpinEvent::SpinEvent()
   MOZ_ASSERT(mDoneEvent);
 }
 
-bool
-SpinEvent::Wait(HANDLE aTargetThread)
-{
+bool SpinEvent::Wait(HANDLE aTargetThread) {
   MOZ_ASSERT(aTargetThread);
   if (!aTargetThread) {
     return false;
@@ -73,12 +67,10 @@ SpinEvent::Wait(HANDLE aTargetThread)
   return waitResult == WAIT_OBJECT_0;
 }
 
-void
-SpinEvent::Signal()
-{
+void SpinEvent::Signal() {
   ::SetEvent(mDoneEvent);
   mDone = true;
 }
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla

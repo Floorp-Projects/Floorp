@@ -19,52 +19,42 @@
 using namespace mozilla;
 
 class nsLayoutHistoryState final : public nsILayoutHistoryState,
-                                   public nsSupportsWeakReference
-{
-public:
-  nsLayoutHistoryState()
-    : mScrollPositionOnly(false)
-  {
-  }
+                                   public nsSupportsWeakReference {
+ public:
+  nsLayoutHistoryState() : mScrollPositionOnly(false) {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSILAYOUTHISTORYSTATE
 
-private:
+ private:
   ~nsLayoutHistoryState() {}
   bool mScrollPositionOnly;
 
   nsDataHashtable<nsCStringHashKey, UniquePtr<PresState>> mStates;
 };
 
-
-already_AddRefed<nsILayoutHistoryState>
-NS_NewLayoutHistoryState()
-{
+already_AddRefed<nsILayoutHistoryState> NS_NewLayoutHistoryState() {
   RefPtr<nsLayoutHistoryState> state = new nsLayoutHistoryState();
   return state.forget();
 }
 
-NS_IMPL_ISUPPORTS(nsLayoutHistoryState,
-                  nsILayoutHistoryState,
+NS_IMPL_ISUPPORTS(nsLayoutHistoryState, nsILayoutHistoryState,
                   nsISupportsWeakReference)
 
 NS_IMETHODIMP
-nsLayoutHistoryState::GetHasStates(bool* aHasStates)
-{
+nsLayoutHistoryState::GetHasStates(bool* aHasStates) {
   *aHasStates = HasStates();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutHistoryState::GetKeys(uint32_t* aCount, char*** aKeys)
-{
+nsLayoutHistoryState::GetKeys(uint32_t* aCount, char*** aKeys) {
   if (!HasStates()) {
     return NS_ERROR_FAILURE;
   }
 
   char** keys =
-    static_cast<char**>(moz_xmalloc(sizeof(char*) * mStates.Count()));
+      static_cast<char**>(moz_xmalloc(sizeof(char*) * mStates.Count()));
   *aCount = mStates.Count();
   *aKeys = keys;
 
@@ -77,11 +67,10 @@ nsLayoutHistoryState::GetKeys(uint32_t* aCount, char*** aKeys)
 }
 
 NS_IMETHODIMP
-nsLayoutHistoryState::GetPresState(const nsACString& aKey,
-                                   float* aScrollX, float* aScrollY,
+nsLayoutHistoryState::GetPresState(const nsACString& aKey, float* aScrollX,
+                                   float* aScrollY,
                                    bool* aAllowScrollOriginDowngrade,
-                                   float* aRes, bool* aScaleToRes)
-{
+                                   float* aRes, bool* aScaleToRes) {
   PresState* state = GetState(nsCString(aKey));
 
   if (!state) {
@@ -98,11 +87,10 @@ nsLayoutHistoryState::GetPresState(const nsACString& aKey,
 }
 
 NS_IMETHODIMP
-nsLayoutHistoryState::AddNewPresState(const nsACString& aKey,
-                                      float aScrollX, float aScrollY,
+nsLayoutHistoryState::AddNewPresState(const nsACString& aKey, float aScrollX,
+                                      float aScrollY,
                                       bool aAllowScrollOriginDowngrade,
-                                      float aRes, bool aScaleToRes)
-{
+                                      float aRes, bool aScaleToRes) {
   UniquePtr<PresState> newState = NewPresState();
   newState->scrollState() = nsPoint(aScrollX, aScrollY);
   newState->allowScrollOriginDowngrade() = aAllowScrollOriginDowngrade;
@@ -114,15 +102,12 @@ nsLayoutHistoryState::AddNewPresState(const nsACString& aKey,
   return NS_OK;
 }
 
-void
-nsLayoutHistoryState::AddState(const nsCString& aStateKey, UniquePtr<PresState> aState)
-{
+void nsLayoutHistoryState::AddState(const nsCString& aStateKey,
+                                    UniquePtr<PresState> aState) {
   mStates.Put(aStateKey, std::move(aState));
 }
 
-PresState*
-nsLayoutHistoryState::GetState(const nsCString& aKey)
-{
+PresState* nsLayoutHistoryState::GetState(const nsCString& aKey) {
   UniquePtr<PresState>* statePtr = mStates.GetValue(aKey);
   if (!statePtr) {
     return nullptr;
@@ -138,27 +123,17 @@ nsLayoutHistoryState::GetState(const nsCString& aKey)
   return state;
 }
 
-void
-nsLayoutHistoryState::RemoveState(const nsCString& aKey)
-{
+void nsLayoutHistoryState::RemoveState(const nsCString& aKey) {
   mStates.Remove(aKey);
 }
 
-bool
-nsLayoutHistoryState::HasStates()
-{
-  return mStates.Count() != 0;
-}
+bool nsLayoutHistoryState::HasStates() { return mStates.Count() != 0; }
 
-void
-nsLayoutHistoryState::SetScrollPositionOnly(const bool aFlag)
-{
+void nsLayoutHistoryState::SetScrollPositionOnly(const bool aFlag) {
   mScrollPositionOnly = aFlag;
 }
 
-void
-nsLayoutHistoryState::ResetScrollState()
-{
+void nsLayoutHistoryState::ResetScrollState() {
   for (auto iter = mStates.Iter(); !iter.Done(); iter.Next()) {
     PresState* state = iter.Data().get();
     if (state) {
@@ -168,9 +143,7 @@ nsLayoutHistoryState::ResetScrollState()
 }
 
 namespace mozilla {
-UniquePtr<PresState>
-NewPresState()
-{
+UniquePtr<PresState> NewPresState() {
   return MakeUnique<PresState>(
       /* contentData */ mozilla::void_t(),
       /* scrollState */ nsPoint(0, 0),
@@ -181,4 +154,4 @@ NewPresState()
       /* disabled */ false,
       /* droppedDown */ false);
 }
-} // namespace mozilla
+}  // namespace mozilla

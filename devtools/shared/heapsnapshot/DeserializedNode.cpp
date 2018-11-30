@@ -10,23 +10,19 @@
 namespace mozilla {
 namespace devtools {
 
-DeserializedEdge::DeserializedEdge(DeserializedEdge&& rhs)
-{
+DeserializedEdge::DeserializedEdge(DeserializedEdge&& rhs) {
   referent = rhs.referent;
   name = rhs.name;
 }
 
-DeserializedEdge& DeserializedEdge::operator=(DeserializedEdge&& rhs)
-{
+DeserializedEdge& DeserializedEdge::operator=(DeserializedEdge&& rhs) {
   MOZ_ASSERT(&rhs != this);
   this->~DeserializedEdge();
-  new(this) DeserializedEdge(std::move(rhs));
+  new (this) DeserializedEdge(std::move(rhs));
   return *this;
 }
 
-JS::ubi::Node
-DeserializedNode::getEdgeReferent(const DeserializedEdge& edge)
-{
+JS::ubi::Node DeserializedNode::getEdgeReferent(const DeserializedEdge& edge) {
   auto ptr = owner->nodes.lookup(edge.referent);
   MOZ_ASSERT(ptr);
 
@@ -39,9 +35,7 @@ DeserializedNode::getEdgeReferent(const DeserializedEdge& edge)
   return JS::ubi::Node(const_cast<DeserializedNode*>(&*ptr));
 }
 
-JS::ubi::StackFrame
-DeserializedStackFrame::getParentStackFrame() const
-{
+JS::ubi::StackFrame DeserializedStackFrame::getParentStackFrame() const {
   MOZ_ASSERT(parent.isSome());
   auto ptr = owner->frames.lookup(parent.ref());
   MOZ_ASSERT(ptr);
@@ -50,8 +44,8 @@ DeserializedStackFrame::getParentStackFrame() const
   return JS::ubi::StackFrame(const_cast<DeserializedStackFrame*>(&*ptr));
 }
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla
 
 namespace JS {
 namespace ubi {
@@ -59,25 +53,21 @@ namespace ubi {
 using mozilla::devtools::DeserializedEdge;
 
 const char16_t Concrete<DeserializedNode>::concreteTypeName[] =
-  u"mozilla::devtools::DeserializedNode";
+    u"mozilla::devtools::DeserializedNode";
 
-const char16_t*
-Concrete<DeserializedNode>::typeName() const
-{
+const char16_t* Concrete<DeserializedNode>::typeName() const {
   return get().typeName;
 }
 
-Node::Size
-Concrete<DeserializedNode>::size(mozilla::MallocSizeOf mallocSizeof) const
-{
+Node::Size Concrete<DeserializedNode>::size(
+    mozilla::MallocSizeOf mallocSizeof) const {
   return get().size;
 }
 
-class DeserializedEdgeRange : public EdgeRange
-{
+class DeserializedEdgeRange : public EdgeRange {
   DeserializedNode* node;
-  Edge              currentEdge;
-  size_t            i;
+  Edge currentEdge;
+  size_t i;
 
   void settle() {
     if (i >= node->edges.length()) {
@@ -91,24 +81,18 @@ class DeserializedEdgeRange : public EdgeRange
     front_ = &currentEdge;
   }
 
-public:
-  explicit DeserializedEdgeRange(DeserializedNode& node)
-    : node(&node)
-    , i(0)
-  {
+ public:
+  explicit DeserializedEdgeRange(DeserializedNode& node) : node(&node), i(0) {
     settle();
   }
 
-  void popFront() override
-  {
+  void popFront() override {
     i++;
     settle();
   }
 };
 
-StackFrame
-Concrete<DeserializedNode>::allocationStack() const
-{
+StackFrame Concrete<DeserializedNode>::allocationStack() const {
   MOZ_ASSERT(hasAllocationStack());
   auto id = get().allocationStack.ref();
   auto ptr = get().owner->frames.lookup(id);
@@ -118,32 +102,25 @@ Concrete<DeserializedNode>::allocationStack() const
   return JS::ubi::StackFrame(const_cast<DeserializedStackFrame*>(&*ptr));
 }
 
+js::UniquePtr<EdgeRange> Concrete<DeserializedNode>::edges(JSContext* cx,
+                                                           bool) const {
+  js::UniquePtr<DeserializedEdgeRange> range(
+      js_new<DeserializedEdgeRange>(get()));
 
-js::UniquePtr<EdgeRange>
-Concrete<DeserializedNode>::edges(JSContext* cx, bool) const
-{
-  js::UniquePtr<DeserializedEdgeRange> range(js_new<DeserializedEdgeRange>(get()));
-
-  if (!range)
-    return nullptr;
+  if (!range) return nullptr;
 
   return js::UniquePtr<EdgeRange>(range.release());
 }
 
-StackFrame
-ConcreteStackFrame<DeserializedStackFrame>::parent() const
-{
+StackFrame ConcreteStackFrame<DeserializedStackFrame>::parent() const {
   return get().parent.isNothing() ? StackFrame() : get().getParentStackFrame();
 }
 
-bool
-ConcreteStackFrame<DeserializedStackFrame>::constructSavedFrameStack(
-  JSContext* cx,
-  MutableHandleObject outSavedFrameStack) const
-{
+bool ConcreteStackFrame<DeserializedStackFrame>::constructSavedFrameStack(
+    JSContext* cx, MutableHandleObject outSavedFrameStack) const {
   StackFrame f(&get());
   return ConstructSavedFrameStackSlow(cx, f, outSavedFrameStack);
 }
 
-} // namespace ubi
-} // namespace JS
+}  // namespace ubi
+}  // namespace JS

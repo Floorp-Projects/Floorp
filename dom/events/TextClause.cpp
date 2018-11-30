@@ -16,15 +16,13 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(TextClause)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TextClause)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TextClause)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextClause)
-NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 TextClause::TextClause(nsPIDOMWindowInner* aOwner, const TextRange& aRange,
                        const TextRange* aTargetRange)
-  : mOwner(aOwner)
-  , mIsTargetClause(false)
-{
+    : mOwner(aOwner), mIsTargetClause(false) {
   MOZ_ASSERT(aOwner);
   mStartOffset = aRange.mStartOffset;
   mEndOffset = aRange.mEndOffset;
@@ -38,13 +36,12 @@ TextClause::TextClause(nsPIDOMWindowInner* aOwner, const TextRange& aRange,
   }
 }
 
-JSObject*
-TextClause::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* TextClause::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return TextClause_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 TextClause::~TextClause() {}
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

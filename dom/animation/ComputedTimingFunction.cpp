@@ -6,34 +6,32 @@
 
 #include "ComputedTimingFunction.h"
 #include "mozilla/ServoBindings.h"
-#include "nsAlgorithm.h" // For clamped()
+#include "nsAlgorithm.h"  // For clamped()
 
 namespace mozilla {
 
-void
-ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
-{
+void ComputedTimingFunction::Init(const nsTimingFunction& aFunction) {
   const StyleComputedTimingFunction& timing = aFunction.mTiming;
   switch (timing.tag) {
     case StyleComputedTimingFunction::Tag::Keyword: {
       mType = static_cast<Type>(static_cast<uint8_t>(timing.keyword._0));
 
       static_assert(
-        static_cast<uint8_t>(StyleTimingKeyword::Linear) == 0 &&
-          static_cast<uint8_t>(StyleTimingKeyword::Ease) == 1 &&
-          static_cast<uint8_t>(StyleTimingKeyword::EaseIn) == 2 &&
-          static_cast<uint8_t>(StyleTimingKeyword::EaseOut) == 3 &&
-          static_cast<uint8_t>(StyleTimingKeyword::EaseInOut) == 4,
-        "transition timing function constants not as expected");
+          static_cast<uint8_t>(StyleTimingKeyword::Linear) == 0 &&
+              static_cast<uint8_t>(StyleTimingKeyword::Ease) == 1 &&
+              static_cast<uint8_t>(StyleTimingKeyword::EaseIn) == 2 &&
+              static_cast<uint8_t>(StyleTimingKeyword::EaseOut) == 3 &&
+              static_cast<uint8_t>(StyleTimingKeyword::EaseInOut) == 4,
+          "transition timing function constants not as expected");
 
       static const float timingFunctionValues[5][4] = {
-        { 0.00f, 0.00f, 1.00f, 1.00f }, // linear
-        { 0.25f, 0.10f, 0.25f, 1.00f }, // ease
-        { 0.42f, 0.00f, 1.00f, 1.00f }, // ease-in
-        { 0.00f, 0.00f, 0.58f, 1.00f }, // ease-out
-        { 0.42f, 0.00f, 0.58f, 1.00f }  // ease-in-out
+          {0.00f, 0.00f, 1.00f, 1.00f},  // linear
+          {0.25f, 0.10f, 0.25f, 1.00f},  // ease
+          {0.42f, 0.00f, 1.00f, 1.00f},  // ease-in
+          {0.00f, 0.00f, 0.58f, 1.00f},  // ease-out
+          {0.42f, 0.00f, 0.58f, 1.00f}   // ease-in-out
       };
-      const float (&values)[4] = timingFunctionValues[uint8_t(mType)];
+      const float(&values)[4] = timingFunctionValues[uint8_t(mType)];
       mTimingFunction.Init(values[0], values[1], values[2], values[3]);
       break;
     }
@@ -50,11 +48,9 @@ ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
   }
 }
 
-static inline double
-StepTiming(const ComputedTimingFunction::StepFunc& aStepFunc,
-           double aPortion,
-           ComputedTimingFunction::BeforeFlag aBeforeFlag)
-{
+static inline double StepTiming(
+    const ComputedTimingFunction::StepFunc& aStepFunc, double aPortion,
+    ComputedTimingFunction::BeforeFlag aBeforeFlag) {
   // Use the algorithm defined in the spec:
   // https://drafts.csswg.org/css-easing-1/#step-timing-function-algo
 
@@ -98,11 +94,8 @@ StepTiming(const ComputedTimingFunction::StepFunc& aStepFunc,
   return double(currentStep) / double(jumps);
 }
 
-double
-ComputedTimingFunction::GetValue(
-    double aPortion,
-    ComputedTimingFunction::BeforeFlag aBeforeFlag) const
-{
+double ComputedTimingFunction::GetValue(
+    double aPortion, ComputedTimingFunction::BeforeFlag aBeforeFlag) const {
   if (HasSpline()) {
     // Check for a linear curve.
     // (GetSplineValue(), below, also checks this but doesn't work when
@@ -136,11 +129,11 @@ ComputedTimingFunction::GetValue(
     // if p2 is coincident with p3, with (p1 - p3).
     if (aPortion > 1.0) {
       if (mTimingFunction.X2() < 1.0) {
-        return 1.0 + (aPortion - 1.0) *
-          (mTimingFunction.Y2() - 1) / (mTimingFunction.X2() - 1);
+        return 1.0 + (aPortion - 1.0) * (mTimingFunction.Y2() - 1) /
+                         (mTimingFunction.X2() - 1);
       } else if (mTimingFunction.Y2() == 1 && mTimingFunction.X1() < 1.0) {
-        return 1.0 + (aPortion - 1.0) *
-          (mTimingFunction.Y1() - 1) / (mTimingFunction.X1() - 1);
+        return 1.0 + (aPortion - 1.0) * (mTimingFunction.Y1() - 1) /
+                         (mTimingFunction.X1() - 1);
       }
       // If we can't calculate a sensible tangent, don't extrapolate at all.
       return 1.0;
@@ -152,9 +145,8 @@ ComputedTimingFunction::GetValue(
   return StepTiming(mSteps, aPortion, aBeforeFlag);
 }
 
-int32_t
-ComputedTimingFunction::Compare(const ComputedTimingFunction& aRhs) const
-{
+int32_t ComputedTimingFunction::Compare(
+    const ComputedTimingFunction& aRhs) const {
   if (mType != aRhs.mType) {
     return int32_t(mType) - int32_t(aRhs.mType);
   }
@@ -175,22 +167,17 @@ ComputedTimingFunction::Compare(const ComputedTimingFunction& aRhs) const
   return 0;
 }
 
-void
-ComputedTimingFunction::AppendToString(nsAString& aResult) const
-{
+void ComputedTimingFunction::AppendToString(nsAString& aResult) const {
   nsTimingFunction timing;
   switch (mType) {
     case Type::CubicBezier:
       timing.mTiming = StyleComputedTimingFunction::CubicBezier(
-        mTimingFunction.X1(),
-        mTimingFunction.Y1(),
-        mTimingFunction.X2(),
-        mTimingFunction.Y2());
+          mTimingFunction.X1(), mTimingFunction.Y1(), mTimingFunction.X2(),
+          mTimingFunction.Y2());
       break;
     case Type::Step:
-      timing.mTiming = StyleComputedTimingFunction::Steps(
-        mSteps.mSteps,
-        mSteps.mPos);
+      timing.mTiming =
+          StyleComputedTimingFunction::Steps(mSteps.mSteps, mSteps.mPos);
       break;
     case Type::Linear:
     case Type::Ease:
@@ -198,7 +185,7 @@ ComputedTimingFunction::AppendToString(nsAString& aResult) const
     case Type::EaseOut:
     case Type::EaseInOut:
       timing.mTiming = StyleComputedTimingFunction::Keyword(
-        static_cast<StyleTimingKeyword>(mType));
+          static_cast<StyleTimingKeyword>(mType));
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported timing type");
@@ -206,10 +193,9 @@ ComputedTimingFunction::AppendToString(nsAString& aResult) const
   Servo_SerializeEasing(&timing, &aResult);
 }
 
-/* static */ int32_t
-ComputedTimingFunction::Compare(const Maybe<ComputedTimingFunction>& aLhs,
-                                const Maybe<ComputedTimingFunction>& aRhs)
-{
+/* static */ int32_t ComputedTimingFunction::Compare(
+    const Maybe<ComputedTimingFunction>& aLhs,
+    const Maybe<ComputedTimingFunction>& aRhs) {
   // We can't use |operator<| for const Maybe<>& here because
   // 'ease' is prior to 'linear' which is represented by Nothing().
   // So we have to convert Nothing() as 'linear' and check it first.
@@ -229,4 +215,4 @@ ComputedTimingFunction::Compare(const Maybe<ComputedTimingFunction>& aLhs,
   return aLhs->Compare(aRhs.value());
 }
 
-} // namespace mozilla
+}  // namespace mozilla

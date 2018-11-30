@@ -17,9 +17,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Template)
 namespace mozilla {
 namespace dom {
 
-HTMLTemplateElement::HTMLTemplateElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : nsGenericHTMLElement(std::move(aNodeInfo))
-{
+HTMLTemplateElement::HTMLTemplateElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)) {
   SetHasWeirdParserInsertionMode();
 
   nsIDocument* contentsOwner = OwnerDoc()->GetTemplateContentsOwner();
@@ -31,8 +31,7 @@ HTMLTemplateElement::HTMLTemplateElement(already_AddRefed<mozilla::dom::NodeInfo
   mContent->SetHost(this);
 }
 
-HTMLTemplateElement::~HTMLTemplateElement()
-{
+HTMLTemplateElement::~HTMLTemplateElement() {
   if (mContent) {
     mContent->SetHost(nullptr);
   }
@@ -58,12 +57,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLTemplateElement)
 
-JSObject*
-HTMLTemplateElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLTemplateElement::WrapNode(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return HTMLTemplateElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

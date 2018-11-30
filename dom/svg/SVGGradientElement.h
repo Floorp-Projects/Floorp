@@ -18,12 +18,10 @@ class nsSVGGradientFrame;
 class nsSVGLinearGradientFrame;
 class nsSVGRadialGradientFrame;
 
-nsresult
-NS_NewSVGLinearGradientElement(nsIContent** aResult,
-                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-nsresult
-NS_NewSVGRadialGradientElement(nsIContent** aResult,
-                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGLinearGradientElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGRadialGradientElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -34,22 +32,23 @@ class SVGAnimatedTransformList;
 
 typedef nsSVGElement SVGGradientElementBase;
 
-class SVGGradientElement : public SVGGradientElementBase
-{
+class SVGGradientElement : public SVGGradientElementBase {
   friend class ::nsSVGGradientFrame;
 
-protected:
-  explicit SVGGradientElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override = 0;
+ protected:
+  explicit SVGGradientElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override = 0;
 
-public:
+ public:
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
 
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  virtual nsSVGAnimatedTransformList*
-    GetAnimatedTransformList(uint32_t aFlags = 0) override;
+  virtual nsSVGAnimatedTransformList* GetAnimatedTransformList(
+      uint32_t aFlags = 0) override;
   virtual nsStaticAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::gradientTransform;
   }
@@ -60,7 +59,7 @@ public:
   already_AddRefed<SVGAnimatedEnumeration> SpreadMethod();
   already_AddRefed<SVGAnimatedString> Href();
 
-protected:
+ protected:
   virtual EnumAttributesInfo GetEnumInfo() override;
   virtual StringAttributesInfo GetStringInfo() override;
 
@@ -81,18 +80,19 @@ protected:
 
 typedef SVGGradientElement SVGLinearGradientElementBase;
 
-class SVGLinearGradientElement : public SVGLinearGradientElementBase
-{
+class SVGLinearGradientElement : public SVGLinearGradientElementBase {
   friend class ::nsSVGLinearGradientFrame;
-  friend nsresult
-    (::NS_NewSVGLinearGradientElement(nsIContent** aResult,
-                                      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  friend nsresult(::NS_NewSVGLinearGradientElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-protected:
-  explicit SVGLinearGradientElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+ protected:
+  explicit SVGLinearGradientElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-public:
+ public:
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
@@ -101,8 +101,7 @@ public:
   already_AddRefed<SVGAnimatedLength> X2();
   already_AddRefed<SVGAnimatedLength> Y2();
 
-protected:
-
+ protected:
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_X1, ATTR_Y1, ATTR_X2, ATTR_Y2 };
@@ -114,18 +113,19 @@ protected:
 
 typedef SVGGradientElement SVGRadialGradientElementBase;
 
-class SVGRadialGradientElement : public SVGRadialGradientElementBase
-{
+class SVGRadialGradientElement : public SVGRadialGradientElementBase {
   friend class ::nsSVGRadialGradientFrame;
-  friend nsresult
-    (::NS_NewSVGRadialGradientElement(nsIContent** aResult,
-                                      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  friend nsresult(::NS_NewSVGRadialGradientElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-protected:
-  explicit SVGRadialGradientElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+ protected:
+  explicit SVGRadialGradientElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-public:
+ public:
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
@@ -135,8 +135,8 @@ public:
   already_AddRefed<SVGAnimatedLength> Fx();
   already_AddRefed<SVGAnimatedLength> Fy();
   already_AddRefed<SVGAnimatedLength> Fr();
-protected:
 
+ protected:
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_CX, ATTR_CY, ATTR_R, ATTR_FX, ATTR_FY, ATTR_FR };
@@ -144,7 +144,7 @@ protected:
   static LengthInfo sLengthInfo[6];
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

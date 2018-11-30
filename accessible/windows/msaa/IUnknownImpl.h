@@ -9,7 +9,7 @@
 #define mozilla_a11y_IUnknownImpl_h_
 
 #include <windows.h>
-#undef CreateEvent // thank you windows you're such a helper
+#undef CreateEvent  // thank you windows you're such a helper
 #include "nsError.h"
 
 // Avoid warning C4509 like "nonstandard extension used:
@@ -17,7 +17,7 @@
 // At this point we're catching a crash which is of much greater
 // importance than the missing dereference for the nsCOMPtr<>
 #ifdef _MSC_VER
-#pragma warning( disable : 4509 )
+#pragma warning(disable : 4509)
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -29,9 +29,8 @@
 namespace mozilla {
 namespace a11y {
 
-class AutoRefCnt
-{
-public:
+class AutoRefCnt {
+ public:
   AutoRefCnt() : mValue(0) {}
 
   ULONG operator++() { return ++mValue; }
@@ -41,117 +40,111 @@ public:
 
   operator ULONG() const { return mValue; }
 
-private:
+ private:
   ULONG mValue;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#define DECL_IUNKNOWN                                                          \
-public:                                                                        \
-  virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**);            \
-  ULONG STDMETHODCALLTYPE AddRef() final                                       \
-  {                                                                            \
-    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                       \
-    ++mRefCnt;                                                                 \
-    return mRefCnt;                                                            \
-  }                                                                            \
-  ULONG STDMETHODCALLTYPE Release() final                                      \
-  {                                                                            \
-     MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                          \
-     --mRefCnt;                                                                \
-     if (mRefCnt)                                                              \
-       return mRefCnt;                                                         \
-                                                                               \
-     delete this;                                                              \
-     return 0;                                                                 \
-  }                                                                            \
-private:                                                                       \
-  mozilla::a11y::AutoRefCnt mRefCnt;                                           \
-public:
+#define DECL_IUNKNOWN                                               \
+ public:                                                            \
+  virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**); \
+  ULONG STDMETHODCALLTYPE AddRef() final {                          \
+    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");            \
+    ++mRefCnt;                                                      \
+    return mRefCnt;                                                 \
+  }                                                                 \
+  ULONG STDMETHODCALLTYPE Release() final {                         \
+    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                \
+    --mRefCnt;                                                      \
+    if (mRefCnt) return mRefCnt;                                    \
+                                                                    \
+    delete this;                                                    \
+    return 0;                                                       \
+  }                                                                 \
+                                                                    \
+ private:                                                           \
+  mozilla::a11y::AutoRefCnt mRefCnt;                                \
+                                                                    \
+ public:
 
-#define DECL_IUNKNOWN_INHERITED                                                \
-public:                                                                        \
-virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**);              \
+#define DECL_IUNKNOWN_INHERITED \
+ public:                        \
+  virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**);
 
-#define IMPL_IUNKNOWN_QUERY_HEAD(Class)                                        \
-STDMETHODIMP                                                                   \
-Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
-{                                                                              \
-  if (!aInstancePtr)                                                           \
-    return E_INVALIDARG;                                                       \
-  *aInstancePtr = nullptr;                                                     \
-                                                                               \
-  HRESULT hr ATTRIBUTE_UNUSED = E_NOINTERFACE;
+#define IMPL_IUNKNOWN_QUERY_HEAD(Class)                     \
+  STDMETHODIMP                                              \
+  Class::QueryInterface(REFIID aIID, void** aInstancePtr) { \
+    if (!aInstancePtr) return E_INVALIDARG;                 \
+    *aInstancePtr = nullptr;                                \
+                                                            \
+    HRESULT hr ATTRIBUTE_UNUSED = E_NOINTERFACE;
 
-#define IMPL_IUNKNOWN_QUERY_TAIL                                               \
-  return hr;                                                                   \
-}
-
-#define IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(Member)                            \
-  return Member->QueryInterface(aIID, aInstancePtr);                           \
-}
-
-#define IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(BaseClass)                          \
-  return BaseClass::QueryInterface(aIID, aInstancePtr);                        \
-}
-
-#define IMPL_IUNKNOWN_QUERY_IFACE(Iface)                                       \
-  if (aIID == IID_##Iface) {                                                   \
-    *aInstancePtr = static_cast<Iface*>(this);                                 \
-    AddRef();                                                                  \
-    return S_OK;                                                               \
+#define IMPL_IUNKNOWN_QUERY_TAIL \
+  return hr;                     \
   }
 
-#define IMPL_IUNKNOWN_QUERY_IFACE_AMBIGIOUS(Iface, aResolveIface)              \
-  if (aIID == IID_##Iface) {                                                   \
-    *aInstancePtr = static_cast<Iface*>(static_cast<aResolveIface*>(this));    \
-    AddRef();                                                                  \
-    return S_OK;                                                               \
+#define IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(Member)  \
+  return Member->QueryInterface(aIID, aInstancePtr); \
   }
 
-#define IMPL_IUNKNOWN_QUERY_CLASS(Class)                                       \
-  hr = Class::QueryInterface(aIID, aInstancePtr);                              \
-  if (SUCCEEDED(hr))                                                           \
-    return hr;
-
-#define IMPL_IUNKNOWN_QUERY_CLASS_COND(Class, Cond)                            \
-  if (Cond) {                                                                  \
-    hr = Class::QueryInterface(aIID, aInstancePtr);                            \
-    if (SUCCEEDED(hr))                                                         \
-      return hr;                                                               \
+#define IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(BaseClass)   \
+  return BaseClass::QueryInterface(aIID, aInstancePtr); \
   }
 
-#define IMPL_IUNKNOWN_QUERY_AGGR_COND(Member, Cond)                            \
-  if (Cond) {                                                                  \
-    hr = Member->QueryInterface(aIID, aInstancePtr);                           \
-    if (SUCCEEDED(hr))                                                         \
-      return hr;                                                               \
+#define IMPL_IUNKNOWN_QUERY_IFACE(Iface)       \
+  if (aIID == IID_##Iface) {                   \
+    *aInstancePtr = static_cast<Iface*>(this); \
+    AddRef();                                  \
+    return S_OK;                               \
   }
 
-#define IMPL_IUNKNOWN1(Class, I1)                                              \
-  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
-  IMPL_IUNKNOWN_QUERY_IFACE(I1);                                               \
-  IMPL_IUNKNOWN_QUERY_IFACE(IUnknown);                                         \
-  IMPL_IUNKNOWN_QUERY_TAIL                                                     \
+#define IMPL_IUNKNOWN_QUERY_IFACE_AMBIGIOUS(Iface, aResolveIface)           \
+  if (aIID == IID_##Iface) {                                                \
+    *aInstancePtr = static_cast<Iface*>(static_cast<aResolveIface*>(this)); \
+    AddRef();                                                               \
+    return S_OK;                                                            \
+  }
 
-#define IMPL_IUNKNOWN2(Class, I1, I2)                                          \
-  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
-  IMPL_IUNKNOWN_QUERY_IFACE(I1);                                               \
-  IMPL_IUNKNOWN_QUERY_IFACE(I2);                                               \
-  IMPL_IUNKNOWN_QUERY_IFACE_AMBIGIOUS(IUnknown, I1);                           \
-  IMPL_IUNKNOWN_QUERY_TAIL                                                     \
+#define IMPL_IUNKNOWN_QUERY_CLASS(Class)          \
+  hr = Class::QueryInterface(aIID, aInstancePtr); \
+  if (SUCCEEDED(hr)) return hr;
 
-#define IMPL_IUNKNOWN_INHERITED1(Class, Super0, Super1)                        \
-  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
-  IMPL_IUNKNOWN_QUERY_CLASS(Super1);                                           \
+#define IMPL_IUNKNOWN_QUERY_CLASS_COND(Class, Cond) \
+  if (Cond) {                                       \
+    hr = Class::QueryInterface(aIID, aInstancePtr); \
+    if (SUCCEEDED(hr)) return hr;                   \
+  }
+
+#define IMPL_IUNKNOWN_QUERY_AGGR_COND(Member, Cond)  \
+  if (Cond) {                                        \
+    hr = Member->QueryInterface(aIID, aInstancePtr); \
+    if (SUCCEEDED(hr)) return hr;                    \
+  }
+
+#define IMPL_IUNKNOWN1(Class, I1)      \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)      \
+  IMPL_IUNKNOWN_QUERY_IFACE(I1);       \
+  IMPL_IUNKNOWN_QUERY_IFACE(IUnknown); \
+  IMPL_IUNKNOWN_QUERY_TAIL
+
+#define IMPL_IUNKNOWN2(Class, I1, I2)                \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                    \
+  IMPL_IUNKNOWN_QUERY_IFACE(I1);                     \
+  IMPL_IUNKNOWN_QUERY_IFACE(I2);                     \
+  IMPL_IUNKNOWN_QUERY_IFACE_AMBIGIOUS(IUnknown, I1); \
+  IMPL_IUNKNOWN_QUERY_TAIL
+
+#define IMPL_IUNKNOWN_INHERITED1(Class, Super0, Super1) \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                       \
+  IMPL_IUNKNOWN_QUERY_CLASS(Super1);                    \
   IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(Super0)
 
-#define IMPL_IUNKNOWN_INHERITED2(Class, Super0, Super1, Super2)                \
-  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
-  IMPL_IUNKNOWN_QUERY_CLASS(Super1);                                           \
-  IMPL_IUNKNOWN_QUERY_CLASS(Super2);                                           \
+#define IMPL_IUNKNOWN_INHERITED2(Class, Super0, Super1, Super2) \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                               \
+  IMPL_IUNKNOWN_QUERY_CLASS(Super1);                            \
+  IMPL_IUNKNOWN_QUERY_CLASS(Super2);                            \
   IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(Super0)
 
 namespace mozilla {
@@ -162,7 +155,7 @@ namespace a11y {
  */
 HRESULT GetHRESULT(nsresult aResult);
 
-} // namespace a11y;
-} //namespace mozilla;
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

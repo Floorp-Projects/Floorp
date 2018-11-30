@@ -13,8 +13,7 @@ namespace dom {
 namespace network {
 
 ConnectionMainThread::ConnectionMainThread(nsPIDOMWindowInner* aWindow)
-  : Connection(aWindow)
-{
+    : Connection(aWindow) {
   hal::RegisterNetworkObserver(this);
 
   hal::NetworkInformation networkInfo;
@@ -23,31 +22,22 @@ ConnectionMainThread::ConnectionMainThread(nsPIDOMWindowInner* aWindow)
   UpdateFromNetworkInfo(networkInfo, false);
 }
 
-ConnectionMainThread::~ConnectionMainThread()
-{
-  Shutdown();
-}
+ConnectionMainThread::~ConnectionMainThread() { Shutdown(); }
 
-void
-ConnectionMainThread::ShutdownInternal()
-{
+void ConnectionMainThread::ShutdownInternal() {
   hal::UnregisterNetworkObserver(this);
 }
 
-void
-ConnectionMainThread::UpdateFromNetworkInfo(const hal::NetworkInformation& aNetworkInfo,
-                                            bool aNotify)
-{
+void ConnectionMainThread::UpdateFromNetworkInfo(
+    const hal::NetworkInformation& aNetworkInfo, bool aNotify) {
   Update(static_cast<ConnectionType>(aNetworkInfo.type()),
          aNetworkInfo.isWifi(), aNetworkInfo.dhcpGateway(), aNotify);
 }
 
-void
-ConnectionMainThread::Notify(const hal::NetworkInformation& aNetworkInfo)
-{
+void ConnectionMainThread::Notify(const hal::NetworkInformation& aNetworkInfo) {
   UpdateFromNetworkInfo(aNetworkInfo, true);
 }
 
-} // namespace network
-} // namespace dom
-} // namespace mozilla
+}  // namespace network
+}  // namespace dom
+}  // namespace mozilla

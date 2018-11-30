@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /**
  * MODULE NOTES:
  * @update  gess7/30/98
@@ -19,23 +18,19 @@
  * routines, we simply return 0.
  */
 
-
 #include "nsCRT.h"
 #include "nsDebug.h"
 
 //----------------------------------------------------------------------
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // My lovely strtok routine
 
-#define IS_DELIM(m, c)          ((m)[(c) >> 3] & (1 << ((c) & 7)))
-#define SET_DELIM(m, c)         ((m)[(c) >> 3] |= (1 << ((c) & 7)))
-#define DELIM_TABLE_SIZE        32
+#define IS_DELIM(m, c) ((m)[(c) >> 3] & (1 << ((c)&7)))
+#define SET_DELIM(m, c) ((m)[(c) >> 3] |= (1 << ((c)&7)))
+#define DELIM_TABLE_SIZE 32
 
-char*
-nsCRT::strtok(char* aString, const char* aDelims, char** aNewStr)
-{
+char* nsCRT::strtok(char* aString, const char* aDelims, char** aNewStr) {
   NS_ASSERTION(aString,
                "Unlike regular strtok, the first argument cannot be null.");
 
@@ -83,9 +78,7 @@ nsCRT::strtok(char* aString, const char* aDelims, char** aNewStr)
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-int32_t
-nsCRT::strcmp(const char16_t* aStr1, const char16_t* aStr2)
-{
+int32_t nsCRT::strcmp(const char16_t* aStr1, const char16_t* aStr2) {
   if (aStr1 && aStr2) {
     for (;;) {
       char16_t c1 = *aStr1++;
@@ -113,9 +106,7 @@ nsCRT::strcmp(const char16_t* aStr1, const char16_t* aStr2)
 
 // This should use NSPR but NSPR isn't exporting its PR_strtoll function
 // Until then...
-int64_t
-nsCRT::atoll(const char* aStr)
-{
+int64_t nsCRT::atoll(const char* aStr) {
   if (!aStr) {
     return 0;
   }
@@ -130,4 +121,3 @@ nsCRT::atoll(const char* aStr)
 
   return ll;
 }
-

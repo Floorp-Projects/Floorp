@@ -46,11 +46,10 @@ namespace image {
 
 static mozilla::LazyLogModule sJPEGLog("JPEGDecoder");
 
-static mozilla::LazyLogModule sJPEGDecoderAccountingLog("JPEGDecoderAccounting");
+static mozilla::LazyLogModule sJPEGDecoderAccountingLog(
+    "JPEGDecoderAccounting");
 
-static qcms_profile*
-GetICCProfile(struct jpeg_decompress_struct& info)
-{
+static qcms_profile* GetICCProfile(struct jpeg_decompress_struct& info) {
   JOCTET* profilebuf;
   uint32_t profileLength;
   qcms_profile* profile = nullptr;
@@ -63,26 +62,24 @@ GetICCProfile(struct jpeg_decompress_struct& info)
   return profile;
 }
 
-METHODDEF(void) init_source (j_decompress_ptr jd);
-METHODDEF(boolean) fill_input_buffer (j_decompress_ptr jd);
-METHODDEF(void) skip_input_data (j_decompress_ptr jd, long num_bytes);
-METHODDEF(void) term_source (j_decompress_ptr jd);
-METHODDEF(void) my_error_exit (j_common_ptr cinfo);
+METHODDEF(void) init_source(j_decompress_ptr jd);
+METHODDEF(boolean) fill_input_buffer(j_decompress_ptr jd);
+METHODDEF(void) skip_input_data(j_decompress_ptr jd, long num_bytes);
+METHODDEF(void) term_source(j_decompress_ptr jd);
+METHODDEF(void) my_error_exit(j_common_ptr cinfo);
 
 // Normal JFIF markers can't have more bytes than this.
-#define MAX_JPEG_MARKER_LENGTH  (((uint32_t)1 << 16) - 1)
+#define MAX_JPEG_MARKER_LENGTH (((uint32_t)1 << 16) - 1)
 
 nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
                              Decoder::DecodeStyle aDecodeStyle)
-  : Decoder(aImage)
-  , mLexer(Transition::ToUnbuffered(State::FINISHED_JPEG_DATA,
-                                    State::JPEG_DATA,
-                                    SIZE_MAX),
-           Transition::TerminateSuccess())
-  , mProfile(nullptr)
-  , mProfileLength(0)
-  , mDecodeStyle(aDecodeStyle)
-{
+    : Decoder(aImage),
+      mLexer(Transition::ToUnbuffered(State::FINISHED_JPEG_DATA,
+                                      State::JPEG_DATA, SIZE_MAX),
+             Transition::TerminateSuccess()),
+      mProfile(nullptr),
+      mProfileLength(0),
+      mDecodeStyle(aDecodeStyle) {
   this->mErr.pub.error_exit = nullptr;
   this->mErr.pub.emit_message = nullptr;
   this->mErr.pub.output_message = nullptr;
@@ -117,12 +114,10 @@ nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
   mCMSMode = 0;
 
   MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-         ("nsJPEGDecoder::nsJPEGDecoder: Creating JPEG decoder %p",
-          this));
+          ("nsJPEGDecoder::nsJPEGDecoder: Creating JPEG decoder %p", this));
 }
 
-nsJPEGDecoder::~nsJPEGDecoder()
-{
+nsJPEGDecoder::~nsJPEGDecoder() {
   // Step 8: Release JPEG decompression object
   mInfo.src = nullptr;
   jpeg_destroy_decompress(&mInfo);
@@ -137,19 +132,14 @@ nsJPEGDecoder::~nsJPEGDecoder()
   }
 
   MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-         ("nsJPEGDecoder::~nsJPEGDecoder: Destroying JPEG decoder %p",
-          this));
+          ("nsJPEGDecoder::~nsJPEGDecoder: Destroying JPEG decoder %p", this));
 }
 
-Maybe<Telemetry::HistogramID>
-nsJPEGDecoder::SpeedHistogram() const
-{
+Maybe<Telemetry::HistogramID> nsJPEGDecoder::SpeedHistogram() const {
   return Some(Telemetry::IMAGE_DECODE_SPEED_JPEG);
 }
 
-nsresult
-nsJPEGDecoder::InitInternal()
-{
+nsresult nsJPEGDecoder::InitInternal() {
   mCMSMode = gfxPlatform::GetCMSMode();
   if (GetSurfaceFlags() & SurfaceFlags::NO_COLORSPACE_CONVERSION) {
     mCMSMode = eCMSMode_Off;
@@ -188,39 +178,34 @@ nsJPEGDecoder::InitInternal()
   return NS_OK;
 }
 
-nsresult
-nsJPEGDecoder::FinishInternal()
-{
+nsresult nsJPEGDecoder::FinishInternal() {
   // If we're not in any sort of error case, force our state to JPEG_DONE.
   if ((mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER) &&
-      (mState != JPEG_ERROR) &&
-      !IsMetadataDecode()) {
+      (mState != JPEG_ERROR) && !IsMetadataDecode()) {
     mState = JPEG_DONE;
   }
 
   return NS_OK;
 }
 
-LexerResult
-nsJPEGDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
-{
+LexerResult nsJPEGDecoder::DoDecode(SourceBufferIterator& aIterator,
+                                    IResumable* aOnResume) {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
 
   return mLexer.Lex(aIterator, aOnResume,
                     [=](State aState, const char* aData, size_t aLength) {
-    switch (aState) {
-      case State::JPEG_DATA:
-        return ReadJPEGData(aData, aLength);
-      case State::FINISHED_JPEG_DATA:
-        return FinishedJPEGData();
-    }
-    MOZ_CRASH("Unknown State");
-  });
+                      switch (aState) {
+                        case State::JPEG_DATA:
+                          return ReadJPEGData(aData, aLength);
+                        case State::FINISHED_JPEG_DATA:
+                          return FinishedJPEGData();
+                      }
+                      MOZ_CRASH("Unknown State");
+                    });
 }
 
-LexerTransition<nsJPEGDecoder::State>
-nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
-{
+LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
+    const char* aData, size_t aLength) {
   mSegment = reinterpret_cast<const JOCTET*>(aData);
   mSegmentLen = aLength;
 
@@ -228,36 +213,39 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
   nsresult error_code;
   // This cast to nsresult makes sense because setjmp() returns whatever we
   // passed to longjmp(), which was actually an nsresult.
-  if ((error_code = static_cast<nsresult>(setjmp(mErr.setjmp_buffer))) != NS_OK) {
+  if ((error_code = static_cast<nsresult>(setjmp(mErr.setjmp_buffer))) !=
+      NS_OK) {
     if (error_code == NS_ERROR_FAILURE) {
       // Error due to corrupt data. Make sure that we don't feed any more data
       // to libjpeg-turbo.
       mState = JPEG_SINK_NON_JPEG_TRAILER;
       MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-             ("} (setjmp returned NS_ERROR_FAILURE)"));
+              ("} (setjmp returned NS_ERROR_FAILURE)"));
     } else {
       // Error for another reason. (Possibly OOM.)
       mState = JPEG_ERROR;
       MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-             ("} (setjmp returned an error)"));
+              ("} (setjmp returned an error)"));
     }
 
     return Transition::TerminateFailure();
   }
 
   MOZ_LOG(sJPEGLog, LogLevel::Debug,
-         ("[this=%p] nsJPEGDecoder::Write -- processing JPEG data\n", this));
+          ("[this=%p] nsJPEGDecoder::Write -- processing JPEG data\n", this));
 
   switch (mState) {
     case JPEG_HEADER: {
-      LOG_SCOPE((mozilla::LogModule*)sJPEGLog, "nsJPEGDecoder::Write -- entering JPEG_HEADER"
+      LOG_SCOPE((mozilla::LogModule*)sJPEGLog,
+                "nsJPEGDecoder::Write -- entering JPEG_HEADER"
                 " case");
 
       // Step 3: read file parameters with jpeg_read_header()
       if (jpeg_read_header(&mInfo, TRUE) == JPEG_SUSPENDED) {
         MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-               ("} (JPEG_SUSPENDED)"));
-        return Transition::ContinueUnbuffered(State::JPEG_DATA); // I/O suspension
+                ("} (JPEG_SUSPENDED)"));
+        return Transition::ContinueUnbuffered(
+            State::JPEG_DATA);  // I/O suspension
       }
 
       // Post our size to the superclass
@@ -281,56 +269,56 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
         bool mismatch = false;
 
 #ifdef DEBUG_tor
-      fprintf(stderr, "JPEG profileSpace: 0x%08X\n", profileSpace);
+        fprintf(stderr, "JPEG profileSpace: 0x%08X\n", profileSpace);
 #endif
-      switch (mInfo.jpeg_color_space) {
-        case JCS_GRAYSCALE:
-          if (profileSpace == icSigRgbData) {
-            mInfo.out_color_space = JCS_RGB;
-          } else if (profileSpace != icSigGrayData) {
-            mismatch = true;
-          }
-          break;
-        case JCS_RGB:
-          if (profileSpace != icSigRgbData) {
-            mismatch =  true;
-          }
-          break;
-        case JCS_YCbCr:
-          if (profileSpace == icSigRgbData) {
-            mInfo.out_color_space = JCS_RGB;
-          } else {
-            // qcms doesn't support ycbcr
-            mismatch = true;
-          }
-          break;
-        case JCS_CMYK:
-        case JCS_YCCK:
-            // qcms doesn't support cmyk
-            mismatch = true;
-          break;
-        default:
-          mState = JPEG_ERROR;
-          MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                 ("} (unknown colorpsace (1))"));
-          return Transition::TerminateFailure();
-      }
-
-      if (!mismatch) {
-        qcms_data_type type;
-        switch (mInfo.out_color_space) {
+        switch (mInfo.jpeg_color_space) {
           case JCS_GRAYSCALE:
-            type = QCMS_DATA_GRAY_8;
+            if (profileSpace == icSigRgbData) {
+              mInfo.out_color_space = JCS_RGB;
+            } else if (profileSpace != icSigGrayData) {
+              mismatch = true;
+            }
             break;
           case JCS_RGB:
-            type = QCMS_DATA_RGB_8;
+            if (profileSpace != icSigRgbData) {
+              mismatch = true;
+            }
+            break;
+          case JCS_YCbCr:
+            if (profileSpace == icSigRgbData) {
+              mInfo.out_color_space = JCS_RGB;
+            } else {
+              // qcms doesn't support ycbcr
+              mismatch = true;
+            }
+            break;
+          case JCS_CMYK:
+          case JCS_YCCK:
+            // qcms doesn't support cmyk
+            mismatch = true;
             break;
           default:
             mState = JPEG_ERROR;
             MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                   ("} (unknown colorpsace (2))"));
+                    ("} (unknown colorpsace (1))"));
             return Transition::TerminateFailure();
         }
+
+        if (!mismatch) {
+          qcms_data_type type;
+          switch (mInfo.out_color_space) {
+            case JCS_GRAYSCALE:
+              type = QCMS_DATA_GRAY_8;
+              break;
+            case JCS_RGB:
+              type = QCMS_DATA_RGB_8;
+              break;
+            default:
+              mState = JPEG_ERROR;
+              MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                      ("} (unknown colorpsace (2))"));
+              return Transition::TerminateFailure();
+          }
 #if 0
         // We don't currently support CMYK profiles. The following
         // code dealt with lcms types. Add something like this
@@ -342,271 +330,274 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
         }
 #endif
 
-        if (gfxPlatform::GetCMSOutputProfile()) {
+          if (gfxPlatform::GetCMSOutputProfile()) {
+            // Calculate rendering intent.
+            int intent = gfxPlatform::GetRenderingIntent();
+            if (intent == -1) {
+              intent = qcms_profile_get_rendering_intent(mInProfile);
+            }
 
-          // Calculate rendering intent.
-          int intent = gfxPlatform::GetRenderingIntent();
-          if (intent == -1) {
-            intent = qcms_profile_get_rendering_intent(mInProfile);
+            // Create the color management transform.
+            mTransform = qcms_transform_create(
+                mInProfile, type, gfxPlatform::GetCMSOutputProfile(),
+                QCMS_DATA_RGB_8, (qcms_intent)intent);
           }
-
-          // Create the color management transform.
-          mTransform = qcms_transform_create(mInProfile,
-                                          type,
-                                          gfxPlatform::GetCMSOutputProfile(),
-                                          QCMS_DATA_RGB_8,
-                                          (qcms_intent)intent);
-        }
-      } else {
+        } else {
 #ifdef DEBUG_tor
-        fprintf(stderr, "ICM profile colorspace mismatch\n");
+          fprintf(stderr, "ICM profile colorspace mismatch\n");
 #endif
+        }
       }
-    }
 
-    if (!mTransform) {
-      switch (mInfo.jpeg_color_space) {
-        case JCS_GRAYSCALE:
-        case JCS_RGB:
-        case JCS_YCbCr:
-          // if we're not color managing we can decode directly to
-          // MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB
-          if (mCMSMode != eCMSMode_All) {
+      if (!mTransform) {
+        switch (mInfo.jpeg_color_space) {
+          case JCS_GRAYSCALE:
+          case JCS_RGB:
+          case JCS_YCbCr:
+            // if we're not color managing we can decode directly to
+            // MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB
+            if (mCMSMode != eCMSMode_All) {
               mInfo.out_color_space = MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB;
               mInfo.out_color_components = 4;
-          } else {
+            } else {
               mInfo.out_color_space = JCS_RGB;
-          }
-          break;
-        case JCS_CMYK:
-        case JCS_YCCK:
-          // libjpeg can convert from YCCK to CMYK, but not to RGB
-          mInfo.out_color_space = JCS_CMYK;
-          break;
-        default:
-          mState = JPEG_ERROR;
-          MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                 ("} (unknown colorpsace (3))"));
-          return Transition::TerminateFailure();
+            }
+            break;
+          case JCS_CMYK:
+          case JCS_YCCK:
+            // libjpeg can convert from YCCK to CMYK, but not to RGB
+            mInfo.out_color_space = JCS_CMYK;
+            break;
+          default:
+            mState = JPEG_ERROR;
+            MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                    ("} (unknown colorpsace (3))"));
+            return Transition::TerminateFailure();
+        }
       }
-    }
 
-    // Don't allocate a giant and superfluous memory buffer
-    // when not doing a progressive decode.
-    mInfo.buffered_image = mDecodeStyle == PROGRESSIVE &&
-                           jpeg_has_multiple_scans(&mInfo);
+      // Don't allocate a giant and superfluous memory buffer
+      // when not doing a progressive decode.
+      mInfo.buffered_image =
+          mDecodeStyle == PROGRESSIVE && jpeg_has_multiple_scans(&mInfo);
 
-    /* Used to set up image size so arrays can be allocated */
-    jpeg_calc_output_dimensions(&mInfo);
+      /* Used to set up image size so arrays can be allocated */
+      jpeg_calc_output_dimensions(&mInfo);
 
-    MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-    nsresult rv = AllocateFrame(OutputSize(), FullOutputFrame(),
-                                SurfaceFormat::B8G8R8X8);
-    if (NS_FAILED(rv)) {
-      mState = JPEG_ERROR;
-      MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-             ("} (could not initialize image frame)"));
-      return Transition::TerminateFailure();
-    }
-
-    MOZ_ASSERT(mImageData, "Should have a buffer now");
-
-    if (mDownscaler) {
-      nsresult rv = mDownscaler->BeginFrame(Size(), Nothing(),
-                                            mImageData,
-                                            /* aHasAlpha = */ false);
+      MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
+      nsresult rv = AllocateFrame(OutputSize(), FullOutputFrame(),
+                                  SurfaceFormat::B8G8R8X8);
       if (NS_FAILED(rv)) {
         mState = JPEG_ERROR;
+        MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                ("} (could not initialize image frame)"));
         return Transition::TerminateFailure();
       }
-    }
 
-    MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-           ("        JPEGDecoderAccounting: nsJPEGDecoder::"
-            "Write -- created image frame with %ux%u pixels",
-            mInfo.image_width, mInfo.image_height));
+      MOZ_ASSERT(mImageData, "Should have a buffer now");
 
-    mState = JPEG_START_DECOMPRESS;
-    MOZ_FALLTHROUGH; // to start decompressing.
-  }
-
-  case JPEG_START_DECOMPRESS: {
-    LOG_SCOPE((mozilla::LogModule*)sJPEGLog, "nsJPEGDecoder::Write -- entering"
-                            " JPEG_START_DECOMPRESS case");
-    // Step 4: set parameters for decompression
-
-    // FIXME -- Should reset dct_method and dither mode
-    // for final pass of progressive JPEG
-
-    mInfo.dct_method =  JDCT_ISLOW;
-    mInfo.dither_mode = JDITHER_FS;
-    mInfo.do_fancy_upsampling = TRUE;
-    mInfo.enable_2pass_quant = FALSE;
-    mInfo.do_block_smoothing = TRUE;
-
-    // Step 5: Start decompressor
-    if (jpeg_start_decompress(&mInfo) == FALSE) {
-      MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-             ("} (I/O suspension after jpeg_start_decompress())"));
-      return Transition::ContinueUnbuffered(State::JPEG_DATA); // I/O suspension
-    }
-
-    // If this is a progressive JPEG ...
-    mState = mInfo.buffered_image ?
-             JPEG_DECOMPRESS_PROGRESSIVE : JPEG_DECOMPRESS_SEQUENTIAL;
-    MOZ_FALLTHROUGH; // to decompress sequential JPEG.
-  }
-
-  case JPEG_DECOMPRESS_SEQUENTIAL: {
-    if (mState == JPEG_DECOMPRESS_SEQUENTIAL) {
-      LOG_SCOPE((mozilla::LogModule*)sJPEGLog, "nsJPEGDecoder::Write -- "
-                              "JPEG_DECOMPRESS_SEQUENTIAL case");
-
-      bool suspend;
-      OutputScanlines(&suspend);
-
-      if (suspend) {
-        MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-               ("} (I/O suspension after OutputScanlines() - SEQUENTIAL)"));
-        return Transition::ContinueUnbuffered(State::JPEG_DATA); // I/O suspension
+      if (mDownscaler) {
+        nsresult rv = mDownscaler->BeginFrame(Size(), Nothing(), mImageData,
+                                              /* aHasAlpha = */ false);
+        if (NS_FAILED(rv)) {
+          mState = JPEG_ERROR;
+          return Transition::TerminateFailure();
+        }
       }
 
-      // If we've completed image output ...
-      NS_ASSERTION(mInfo.output_scanline == mInfo.output_height,
-                   "We didn't process all of the data!");
-      mState = JPEG_DONE;
+      MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+              ("        JPEGDecoderAccounting: nsJPEGDecoder::"
+               "Write -- created image frame with %ux%u pixels",
+               mInfo.image_width, mInfo.image_height));
+
+      mState = JPEG_START_DECOMPRESS;
+      MOZ_FALLTHROUGH;  // to start decompressing.
     }
-    MOZ_FALLTHROUGH; // to decompress progressive JPEG.
-  }
 
-  case JPEG_DECOMPRESS_PROGRESSIVE: {
-    if (mState == JPEG_DECOMPRESS_PROGRESSIVE) {
+    case JPEG_START_DECOMPRESS: {
       LOG_SCOPE((mozilla::LogModule*)sJPEGLog,
-                "nsJPEGDecoder::Write -- JPEG_DECOMPRESS_PROGRESSIVE case");
+                "nsJPEGDecoder::Write -- entering"
+                " JPEG_START_DECOMPRESS case");
+      // Step 4: set parameters for decompression
 
-      int status;
-      do {
-        status = jpeg_consume_input(&mInfo);
-      } while ((status != JPEG_SUSPENDED) &&
-               (status != JPEG_REACHED_EOI));
+      // FIXME -- Should reset dct_method and dither mode
+      // for final pass of progressive JPEG
 
-      for (;;) {
-        if (mInfo.output_scanline == 0) {
-          int scan = mInfo.input_scan_number;
+      mInfo.dct_method = JDCT_ISLOW;
+      mInfo.dither_mode = JDITHER_FS;
+      mInfo.do_fancy_upsampling = TRUE;
+      mInfo.enable_2pass_quant = FALSE;
+      mInfo.do_block_smoothing = TRUE;
 
-          // if we haven't displayed anything yet (output_scan_number==0)
-          // and we have enough data for a complete scan, force output
-          // of the last full scan
-          if ((mInfo.output_scan_number == 0) &&
-              (scan > 1) &&
-              (status != JPEG_REACHED_EOI))
-            scan--;
+      // Step 5: Start decompressor
+      if (jpeg_start_decompress(&mInfo) == FALSE) {
+        MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                ("} (I/O suspension after jpeg_start_decompress())"));
+        return Transition::ContinueUnbuffered(
+            State::JPEG_DATA);  // I/O suspension
+      }
 
-          if (!jpeg_start_output(&mInfo, scan)) {
-            MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                   ("} (I/O suspension after jpeg_start_output() -"
-                    " PROGRESSIVE)"));
-            return Transition::ContinueUnbuffered(State::JPEG_DATA); // I/O suspension
-          }
-        }
+      // If this is a progressive JPEG ...
+      mState = mInfo.buffered_image ? JPEG_DECOMPRESS_PROGRESSIVE
+                                    : JPEG_DECOMPRESS_SEQUENTIAL;
+      MOZ_FALLTHROUGH;  // to decompress sequential JPEG.
+    }
 
-        if (mInfo.output_scanline == 0xffffff) {
-          mInfo.output_scanline = 0;
-        }
+    case JPEG_DECOMPRESS_SEQUENTIAL: {
+      if (mState == JPEG_DECOMPRESS_SEQUENTIAL) {
+        LOG_SCOPE((mozilla::LogModule*)sJPEGLog,
+                  "nsJPEGDecoder::Write -- "
+                  "JPEG_DECOMPRESS_SEQUENTIAL case");
 
         bool suspend;
         OutputScanlines(&suspend);
 
         if (suspend) {
-          if (mInfo.output_scanline == 0) {
-            // didn't manage to read any lines - flag so we don't call
-            // jpeg_start_output() multiple times for the same scan
-            mInfo.output_scanline = 0xffffff;
-          }
           MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                 ("} (I/O suspension after OutputScanlines() - PROGRESSIVE)"));
-          return Transition::ContinueUnbuffered(State::JPEG_DATA); // I/O suspension
+                  ("} (I/O suspension after OutputScanlines() - SEQUENTIAL)"));
+          return Transition::ContinueUnbuffered(
+              State::JPEG_DATA);  // I/O suspension
         }
 
-        if (mInfo.output_scanline == mInfo.output_height) {
-          if (!jpeg_finish_output(&mInfo)) {
-            MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                   ("} (I/O suspension after jpeg_finish_output() -"
-                    " PROGRESSIVE)"));
-            return Transition::ContinueUnbuffered(State::JPEG_DATA); // I/O suspension
+        // If we've completed image output ...
+        NS_ASSERTION(mInfo.output_scanline == mInfo.output_height,
+                     "We didn't process all of the data!");
+        mState = JPEG_DONE;
+      }
+      MOZ_FALLTHROUGH;  // to decompress progressive JPEG.
+    }
+
+    case JPEG_DECOMPRESS_PROGRESSIVE: {
+      if (mState == JPEG_DECOMPRESS_PROGRESSIVE) {
+        LOG_SCOPE((mozilla::LogModule*)sJPEGLog,
+                  "nsJPEGDecoder::Write -- JPEG_DECOMPRESS_PROGRESSIVE case");
+
+        int status;
+        do {
+          status = jpeg_consume_input(&mInfo);
+        } while ((status != JPEG_SUSPENDED) && (status != JPEG_REACHED_EOI));
+
+        for (;;) {
+          if (mInfo.output_scanline == 0) {
+            int scan = mInfo.input_scan_number;
+
+            // if we haven't displayed anything yet (output_scan_number==0)
+            // and we have enough data for a complete scan, force output
+            // of the last full scan
+            if ((mInfo.output_scan_number == 0) && (scan > 1) &&
+                (status != JPEG_REACHED_EOI))
+              scan--;
+
+            if (!jpeg_start_output(&mInfo, scan)) {
+              MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                      ("} (I/O suspension after jpeg_start_output() -"
+                       " PROGRESSIVE)"));
+              return Transition::ContinueUnbuffered(
+                  State::JPEG_DATA);  // I/O suspension
+            }
           }
 
-          if (jpeg_input_complete(&mInfo) &&
-              (mInfo.input_scan_number == mInfo.output_scan_number))
-            break;
+          if (mInfo.output_scanline == 0xffffff) {
+            mInfo.output_scanline = 0;
+          }
 
-          mInfo.output_scanline = 0;
-          if (mDownscaler) {
-            mDownscaler->ResetForNextProgressivePass();
+          bool suspend;
+          OutputScanlines(&suspend);
+
+          if (suspend) {
+            if (mInfo.output_scanline == 0) {
+              // didn't manage to read any lines - flag so we don't call
+              // jpeg_start_output() multiple times for the same scan
+              mInfo.output_scanline = 0xffffff;
+            }
+            MOZ_LOG(
+                sJPEGDecoderAccountingLog, LogLevel::Debug,
+                ("} (I/O suspension after OutputScanlines() - PROGRESSIVE)"));
+            return Transition::ContinueUnbuffered(
+                State::JPEG_DATA);  // I/O suspension
+          }
+
+          if (mInfo.output_scanline == mInfo.output_height) {
+            if (!jpeg_finish_output(&mInfo)) {
+              MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                      ("} (I/O suspension after jpeg_finish_output() -"
+                       " PROGRESSIVE)"));
+              return Transition::ContinueUnbuffered(
+                  State::JPEG_DATA);  // I/O suspension
+            }
+
+            if (jpeg_input_complete(&mInfo) &&
+                (mInfo.input_scan_number == mInfo.output_scan_number))
+              break;
+
+            mInfo.output_scanline = 0;
+            if (mDownscaler) {
+              mDownscaler->ResetForNextProgressivePass();
+            }
           }
         }
+
+        mState = JPEG_DONE;
+      }
+      MOZ_FALLTHROUGH;  // to finish decompressing.
+    }
+
+    case JPEG_DONE: {
+      LOG_SCOPE((mozilla::LogModule*)sJPEGLog,
+                "nsJPEGDecoder::ProcessData -- entering"
+                " JPEG_DONE case");
+
+      // Step 7: Finish decompression
+
+      if (jpeg_finish_decompress(&mInfo) == FALSE) {
+        MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                ("} (I/O suspension after jpeg_finish_decompress() - DONE)"));
+        return Transition::ContinueUnbuffered(
+            State::JPEG_DATA);  // I/O suspension
       }
 
-      mState = JPEG_DONE;
+      // Make sure we don't feed any more data to libjpeg-turbo.
+      mState = JPEG_SINK_NON_JPEG_TRAILER;
+
+      // We're done.
+      return Transition::TerminateSuccess();
     }
-    MOZ_FALLTHROUGH; // to finish decompressing.
-  }
+    case JPEG_SINK_NON_JPEG_TRAILER:
+      MOZ_LOG(sJPEGLog, LogLevel::Debug,
+              ("[this=%p] nsJPEGDecoder::ProcessData -- entering"
+               " JPEG_SINK_NON_JPEG_TRAILER case\n",
+               this));
 
-  case JPEG_DONE: {
-    LOG_SCOPE((mozilla::LogModule*)sJPEGLog, "nsJPEGDecoder::ProcessData -- entering"
-                            " JPEG_DONE case");
+      MOZ_ASSERT_UNREACHABLE(
+          "Should stop getting data after entering state "
+          "JPEG_SINK_NON_JPEG_TRAILER");
 
-    // Step 7: Finish decompression
+      return Transition::TerminateSuccess();
 
-    if (jpeg_finish_decompress(&mInfo) == FALSE) {
-      MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-             ("} (I/O suspension after jpeg_finish_decompress() - DONE)"));
-      return Transition::ContinueUnbuffered(State::JPEG_DATA); // I/O suspension
-    }
+    case JPEG_ERROR:
+      MOZ_ASSERT_UNREACHABLE(
+          "Should stop getting data after entering state "
+          "JPEG_ERROR");
 
-    // Make sure we don't feed any more data to libjpeg-turbo.
-    mState = JPEG_SINK_NON_JPEG_TRAILER;
-
-    // We're done.
-    return Transition::TerminateSuccess();
-  }
-  case JPEG_SINK_NON_JPEG_TRAILER:
-    MOZ_LOG(sJPEGLog, LogLevel::Debug,
-           ("[this=%p] nsJPEGDecoder::ProcessData -- entering"
-            " JPEG_SINK_NON_JPEG_TRAILER case\n", this));
-
-    MOZ_ASSERT_UNREACHABLE("Should stop getting data after entering state "
-                           "JPEG_SINK_NON_JPEG_TRAILER");
-
-    return Transition::TerminateSuccess();
-
-  case JPEG_ERROR:
-    MOZ_ASSERT_UNREACHABLE("Should stop getting data after entering state "
-                           "JPEG_ERROR");
-
-    return Transition::TerminateFailure();
+      return Transition::TerminateFailure();
   }
 
   MOZ_ASSERT_UNREACHABLE("Escaped the JPEG decoder state machine");
   return Transition::TerminateFailure();
 }
 
-LexerTransition<nsJPEGDecoder::State>
-nsJPEGDecoder::FinishedJPEGData()
-{
+LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::FinishedJPEGData() {
   // Since we set up an unbuffered read for SIZE_MAX bytes, if we actually read
   // all that data something is really wrong.
   MOZ_ASSERT_UNREACHABLE("Read the entire address space?");
   return Transition::TerminateFailure();
 }
 
-Orientation
-nsJPEGDecoder::ReadOrientationFromEXIF()
-{
+Orientation nsJPEGDecoder::ReadOrientationFromEXIF() {
   jpeg_saved_marker_ptr marker;
 
   // Locate the APP1 marker, where EXIF data is stored, in the marker list.
-  for (marker = mInfo.marker_list ; marker != nullptr ; marker = marker->next) {
+  for (marker = mInfo.marker_list; marker != nullptr; marker = marker->next) {
     if (marker->marker == JPEG_APP0 + 1) {
       break;
     }
@@ -623,16 +614,12 @@ nsJPEGDecoder::ReadOrientationFromEXIF()
   return exif.orientation;
 }
 
-void
-nsJPEGDecoder::NotifyDone()
-{
+void nsJPEGDecoder::NotifyDone() {
   PostFrameStop(Opacity::FULLY_OPAQUE);
   PostDecodeDone();
 }
 
-void
-nsJPEGDecoder::FinishRow(uint32_t aLastSourceRow)
-{
+void nsJPEGDecoder::FinishRow(uint32_t aLastSourceRow) {
   if (mDownscaler) {
     mDownscaler->CommitRow();
     if (mDownscaler->HasInvalidation()) {
@@ -642,132 +629,127 @@ nsJPEGDecoder::FinishRow(uint32_t aLastSourceRow)
       MOZ_ASSERT(!mDownscaler->HasInvalidation());
     }
   } else if (aLastSourceRow != mInfo.output_scanline) {
-    PostInvalidation(nsIntRect(0, aLastSourceRow,
-                               mInfo.output_width,
+    PostInvalidation(nsIntRect(0, aLastSourceRow, mInfo.output_width,
                                mInfo.output_scanline - aLastSourceRow));
   }
 }
 
-void
-nsJPEGDecoder::OutputScanlines(bool* suspend)
-{
+void nsJPEGDecoder::OutputScanlines(bool* suspend) {
   *suspend = false;
 
   while ((mInfo.output_scanline < mInfo.output_height)) {
-      const uint32_t top = mInfo.output_scanline;
-      uint32_t* imageRow = nullptr;
-      if (mDownscaler) {
-        imageRow = reinterpret_cast<uint32_t*>(mDownscaler->RowBuffer());
-      } else {
-        imageRow = reinterpret_cast<uint32_t*>(mImageData) +
-                   (mInfo.output_scanline * mInfo.output_width);
-      }
+    const uint32_t top = mInfo.output_scanline;
+    uint32_t* imageRow = nullptr;
+    if (mDownscaler) {
+      imageRow = reinterpret_cast<uint32_t*>(mDownscaler->RowBuffer());
+    } else {
+      imageRow = reinterpret_cast<uint32_t*>(mImageData) +
+                 (mInfo.output_scanline * mInfo.output_width);
+    }
 
-      MOZ_ASSERT(imageRow, "Should have a row buffer here");
+    MOZ_ASSERT(imageRow, "Should have a row buffer here");
 
-      if (mInfo.out_color_space == MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB) {
-        // Special case: scanline will be directly converted into packed ARGB
-        if (jpeg_read_scanlines(&mInfo, (JSAMPARRAY)&imageRow, 1) != 1) {
-          *suspend = true; // suspend
-          break;
-        }
-        FinishRow(top);
-        continue; // all done for this row!
-      }
-
-      JSAMPROW sampleRow = (JSAMPROW)imageRow;
-      if (mInfo.output_components == 3) {
-        // Put the pixels at end of row to enable in-place expansion
-        sampleRow += mInfo.output_width;
-      }
-
-      // Request one scanline.  Returns 0 or 1 scanlines.
-      if (jpeg_read_scanlines(&mInfo, &sampleRow, 1) != 1) {
-        *suspend = true; // suspend
+    if (mInfo.out_color_space == MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB) {
+      // Special case: scanline will be directly converted into packed ARGB
+      if (jpeg_read_scanlines(&mInfo, (JSAMPARRAY)&imageRow, 1) != 1) {
+        *suspend = true;  // suspend
         break;
       }
-
-      if (mTransform) {
-        JSAMPROW source = sampleRow;
-        if (mInfo.out_color_space == JCS_GRAYSCALE) {
-          // Convert from the 1byte grey pixels at begin of row
-          // to the 3byte RGB byte pixels at 'end' of row
-          sampleRow += mInfo.output_width;
-        }
-        qcms_transform_data(mTransform, source, sampleRow, mInfo.output_width);
-        // Move 3byte RGB data to end of row
-        if (mInfo.out_color_space == JCS_CMYK) {
-          memmove(sampleRow + mInfo.output_width,
-                  sampleRow,
-                  3 * mInfo.output_width);
-          sampleRow += mInfo.output_width;
-        }
-      } else {
-        if (mInfo.out_color_space == JCS_CMYK) {
-          // Convert from CMYK to RGB
-          // We cannot convert directly to Cairo, as the CMSRGBTransform
-          // may wants to do a RGB transform...
-          // Would be better to have platform CMSenabled transformation
-          // from CMYK to (A)RGB...
-          cmyk_convert_rgb((JSAMPROW)imageRow, mInfo.output_width);
-          sampleRow += mInfo.output_width;
-        }
-        if (mCMSMode == eCMSMode_All) {
-          // No embedded ICC profile - treat as sRGB
-          qcms_transform* transform = gfxPlatform::GetCMSRGBTransform();
-          if (transform) {
-            qcms_transform_data(transform, sampleRow, sampleRow,
-                                mInfo.output_width);
-          }
-        }
-      }
-
-      // counter for while() loops below
-      uint32_t idx = mInfo.output_width;
-
-      // copy as bytes until source pointer is 32-bit-aligned
-      for (; (NS_PTR_TO_UINT32(sampleRow) & 0x3) && idx; --idx) {
-        *imageRow++ = gfxPackedPixel(0xFF, sampleRow[0], sampleRow[1],
-                                     sampleRow[2]);
-        sampleRow += 3;
-      }
-
-      // copy pixels in blocks of 4
-      while (idx >= 4) {
-        GFX_BLOCK_RGB_TO_FRGB(sampleRow, imageRow);
-        idx       -=  4;
-        sampleRow += 12;
-        imageRow  +=  4;
-      }
-
-      // copy remaining pixel(s)
-      while (idx--) {
-        // 32-bit read of final pixel will exceed buffer, so read bytes
-        *imageRow++ = gfxPackedPixel(0xFF, sampleRow[0], sampleRow[1],
-                                     sampleRow[2]);
-        sampleRow += 3;
-      }
-
       FinishRow(top);
+      continue;  // all done for this row!
+    }
+
+    JSAMPROW sampleRow = (JSAMPROW)imageRow;
+    if (mInfo.output_components == 3) {
+      // Put the pixels at end of row to enable in-place expansion
+      sampleRow += mInfo.output_width;
+    }
+
+    // Request one scanline.  Returns 0 or 1 scanlines.
+    if (jpeg_read_scanlines(&mInfo, &sampleRow, 1) != 1) {
+      *suspend = true;  // suspend
+      break;
+    }
+
+    if (mTransform) {
+      JSAMPROW source = sampleRow;
+      if (mInfo.out_color_space == JCS_GRAYSCALE) {
+        // Convert from the 1byte grey pixels at begin of row
+        // to the 3byte RGB byte pixels at 'end' of row
+        sampleRow += mInfo.output_width;
+      }
+      qcms_transform_data(mTransform, source, sampleRow, mInfo.output_width);
+      // Move 3byte RGB data to end of row
+      if (mInfo.out_color_space == JCS_CMYK) {
+        memmove(sampleRow + mInfo.output_width, sampleRow,
+                3 * mInfo.output_width);
+        sampleRow += mInfo.output_width;
+      }
+    } else {
+      if (mInfo.out_color_space == JCS_CMYK) {
+        // Convert from CMYK to RGB
+        // We cannot convert directly to Cairo, as the CMSRGBTransform
+        // may wants to do a RGB transform...
+        // Would be better to have platform CMSenabled transformation
+        // from CMYK to (A)RGB...
+        cmyk_convert_rgb((JSAMPROW)imageRow, mInfo.output_width);
+        sampleRow += mInfo.output_width;
+      }
+      if (mCMSMode == eCMSMode_All) {
+        // No embedded ICC profile - treat as sRGB
+        qcms_transform* transform = gfxPlatform::GetCMSRGBTransform();
+        if (transform) {
+          qcms_transform_data(transform, sampleRow, sampleRow,
+                              mInfo.output_width);
+        }
+      }
+    }
+
+    // counter for while() loops below
+    uint32_t idx = mInfo.output_width;
+
+    // copy as bytes until source pointer is 32-bit-aligned
+    for (; (NS_PTR_TO_UINT32(sampleRow) & 0x3) && idx; --idx) {
+      *imageRow++ =
+          gfxPackedPixel(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
+      sampleRow += 3;
+    }
+
+    // copy pixels in blocks of 4
+    while (idx >= 4) {
+      GFX_BLOCK_RGB_TO_FRGB(sampleRow, imageRow);
+      idx -= 4;
+      sampleRow += 12;
+      imageRow += 4;
+    }
+
+    // copy remaining pixel(s)
+    while (idx--) {
+      // 32-bit read of final pixel will exceed buffer, so read bytes
+      *imageRow++ =
+          gfxPackedPixel(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
+      sampleRow += 3;
+    }
+
+    FinishRow(top);
   }
 }
 
 // Override the standard error method in the IJG JPEG decoder code.
 METHODDEF(void)
-my_error_exit (j_common_ptr cinfo)
-{
-  decoder_error_mgr* err = (decoder_error_mgr*) cinfo->err;
+my_error_exit(j_common_ptr cinfo) {
+  decoder_error_mgr* err = (decoder_error_mgr*)cinfo->err;
 
   // Convert error to a browser error code
   nsresult error_code = err->pub.msg_code == JERR_OUT_OF_MEMORY
-                      ? NS_ERROR_OUT_OF_MEMORY
-                      : NS_ERROR_FAILURE;
+                            ? NS_ERROR_OUT_OF_MEMORY
+                            : NS_ERROR_FAILURE;
 
 #ifdef DEBUG
   char buffer[JMSG_LENGTH_MAX];
 
   // Create the message
-  (*err->pub.format_message) (cinfo, buffer);
+  (*err->pub.format_message)(cinfo, buffer);
 
   fprintf(stderr, "JPEG decoding error:\n%s\n", buffer);
 #endif
@@ -818,9 +800,7 @@ my_error_exit (j_common_ptr cinfo)
         will occur immediately).
 */
 METHODDEF(void)
-init_source (j_decompress_ptr jd)
-{
-}
+init_source(j_decompress_ptr jd) {}
 
 /******************************************************************************/
 /* data source manager method
@@ -834,8 +814,7 @@ init_source (j_decompress_ptr jd)
         A zero or negative skip count should be treated as a no-op.
 */
 METHODDEF(void)
-skip_input_data (j_decompress_ptr jd, long num_bytes)
-{
+skip_input_data(j_decompress_ptr jd, long num_bytes) {
   struct jpeg_source_mgr* src = jd->src;
   nsJPEGDecoder* decoder = (nsJPEGDecoder*)(jd->client_data);
 
@@ -868,8 +847,7 @@ skip_input_data (j_decompress_ptr jd, long num_bytes)
         suspension is desired.
 */
 METHODDEF(boolean)
-fill_input_buffer (j_decompress_ptr jd)
-{
+fill_input_buffer(j_decompress_ptr jd) {
   struct jpeg_source_mgr* src = jd->src;
   nsJPEGDecoder* decoder = (nsJPEGDecoder*)(jd->client_data);
 
@@ -878,7 +856,7 @@ fill_input_buffer (j_decompress_ptr jd)
     uint32_t new_buflen = decoder->mSegmentLen;
 
     if (!new_buffer || new_buflen == 0) {
-      return false; // suspend
+      return false;  // suspend
     }
 
     decoder->mSegmentLen = 0;
@@ -892,7 +870,7 @@ fill_input_buffer (j_decompress_ptr jd)
       } else {
         // Still need to skip some more data in the future
         decoder->mBytesToSkip -= (size_t)new_buflen;
-        return false; // suspend
+        return false;  // suspend
       }
     }
 
@@ -912,8 +890,8 @@ fill_input_buffer (j_decompress_ptr jd)
   }
 
   // Save remainder of netlib buffer in backtrack buffer
-  const uint32_t new_backtrack_buflen = src->bytes_in_buffer +
-                                        decoder->mBackBufferLen;
+  const uint32_t new_backtrack_buflen =
+      src->bytes_in_buffer + decoder->mBackBufferLen;
 
   // Make sure backtrack buffer is big enough to hold new data.
   if (decoder->mBackBufferSize < new_backtrack_buflen) {
@@ -925,7 +903,7 @@ fill_input_buffer (j_decompress_ptr jd)
 
     // Round up to multiple of 256 bytes.
     const size_t roundup_buflen = ((new_backtrack_buflen + 255) >> 8) << 8;
-    JOCTET* buf = (JOCTET*) realloc(decoder->mBackBuffer, roundup_buflen);
+    JOCTET* buf = (JOCTET*)realloc(decoder->mBackBuffer, roundup_buflen);
     // Check for OOM
     if (!buf) {
       decoder->mInfo.err->msg_code = JERR_OUT_OF_MEMORY;
@@ -940,8 +918,7 @@ fill_input_buffer (j_decompress_ptr jd)
   if (decoder->mBackBuffer) {
     // Copy remainder of netlib segment into backtrack buffer.
     memmove(decoder->mBackBuffer + decoder->mBackBufferLen,
-            src->next_input_byte,
-            src->bytes_in_buffer);
+            src->next_input_byte, src->bytes_in_buffer);
   } else {
     MOZ_ASSERT(src->bytes_in_buffer == 0);
     MOZ_ASSERT(decoder->mBackBufferLen == 0);
@@ -966,8 +943,7 @@ fill_input_buffer (j_decompress_ptr jd)
  * jpeg_abort() or jpeg_destroy().
  */
 METHODDEF(void)
-term_source (j_decompress_ptr jd)
-{
+term_source(j_decompress_ptr jd) {
   nsJPEGDecoder* decoder = (nsJPEGDecoder*)(jd->client_data);
 
   // This function shouldn't be called if we ran into an error we didn't
@@ -979,8 +955,8 @@ term_source (j_decompress_ptr jd)
   decoder->NotifyDone();
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
 ///*************** Inverted CMYK -> RGB conversion *************************
 /// Input is (Inverted) CMYK stored as 4 bytes per pixel.
@@ -988,10 +964,9 @@ term_source (j_decompress_ptr jd)
 /// @param row Points to row buffer containing the CMYK bytes for each pixel
 /// in the row.
 /// @param width Number of pixels in the row.
-static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width)
-{
+static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width) {
   // Work from end to front to shrink from 4 bytes per pixel to 3
-  JSAMPROW in = row + width*4;
+  JSAMPROW in = row + width * 4;
   JSAMPROW out = in;
 
   for (uint32_t i = width; i > 0; i--) {
@@ -1021,8 +996,8 @@ static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width)
     const uint32_t iM = in[1];
     const uint32_t iY = in[2];
     const uint32_t iK = in[3];
-    out[0] = iC*iK/255;   // Red
-    out[1] = iM*iK/255;   // Green
-    out[2] = iY*iK/255;   // Blue
+    out[0] = iC * iK / 255;  // Red
+    out[1] = iM * iK / 255;  // Green
+    out[2] = iY * iK / 255;  // Blue
   }
 }

@@ -21,189 +21,179 @@ namespace gl {
 class GLContext;
 class GLLibraryEGL;
 
-class SharedSurface_EGLImage
-    : public SharedSurface
-{
-public:
-    static UniquePtr<SharedSurface_EGLImage> Create(GLContext* prodGL,
-                                                    const GLFormats& formats,
-                                                    const gfx::IntSize& size,
-                                                    bool hasAlpha,
-                                                    EGLContext context);
+class SharedSurface_EGLImage : public SharedSurface {
+ public:
+  static UniquePtr<SharedSurface_EGLImage> Create(GLContext* prodGL,
+                                                  const GLFormats& formats,
+                                                  const gfx::IntSize& size,
+                                                  bool hasAlpha,
+                                                  EGLContext context);
 
-    static SharedSurface_EGLImage* Cast(SharedSurface* surf) {
-        MOZ_ASSERT(surf->mType == SharedSurfaceType::EGLImageShare);
+  static SharedSurface_EGLImage* Cast(SharedSurface* surf) {
+    MOZ_ASSERT(surf->mType == SharedSurfaceType::EGLImageShare);
 
-        return (SharedSurface_EGLImage*)surf;
-    }
+    return (SharedSurface_EGLImage*)surf;
+  }
 
-    static bool HasExtensions(GLLibraryEGL* egl, GLContext* gl);
+  static bool HasExtensions(GLLibraryEGL* egl, GLContext* gl);
 
-protected:
-    mutable Mutex mMutex;
-    GLLibraryEGL* const mEGL;
-    const GLFormats mFormats;
-    GLuint mProdTex;
-public:
-    const EGLImage mImage;
-protected:
-    EGLSync mSync;
+ protected:
+  mutable Mutex mMutex;
+  GLLibraryEGL* const mEGL;
+  const GLFormats mFormats;
+  GLuint mProdTex;
 
-    SharedSurface_EGLImage(GLContext* gl,
-                           GLLibraryEGL* egl,
-                           const gfx::IntSize& size,
-                           bool hasAlpha,
-                           const GLFormats& formats,
-                           GLuint prodTex,
-                           EGLImage image);
+ public:
+  const EGLImage mImage;
 
-    EGLDisplay Display() const;
-    void UpdateProdTexture(const MutexAutoLock& curAutoLock);
+ protected:
+  EGLSync mSync;
 
-public:
-    virtual ~SharedSurface_EGLImage();
+  SharedSurface_EGLImage(GLContext* gl, GLLibraryEGL* egl,
+                         const gfx::IntSize& size, bool hasAlpha,
+                         const GLFormats& formats, GLuint prodTex,
+                         EGLImage image);
 
-    virtual layers::TextureFlags GetTextureFlags() const override {
-      return layers::TextureFlags::DEALLOCATE_CLIENT;
-    }
+  EGLDisplay Display() const;
+  void UpdateProdTexture(const MutexAutoLock& curAutoLock);
 
-    virtual void LockProdImpl() override {}
-    virtual void UnlockProdImpl() override {}
+ public:
+  virtual ~SharedSurface_EGLImage();
 
-    virtual void ProducerAcquireImpl() override {}
-    virtual void ProducerReleaseImpl() override;
+  virtual layers::TextureFlags GetTextureFlags() const override {
+    return layers::TextureFlags::DEALLOCATE_CLIENT;
+  }
 
-    virtual void ProducerReadAcquireImpl() override;
-    virtual void ProducerReadReleaseImpl() override {};
+  virtual void LockProdImpl() override {}
+  virtual void UnlockProdImpl() override {}
 
-    virtual GLuint ProdTexture() override {
-      return mProdTex;
-    }
+  virtual void ProducerAcquireImpl() override {}
+  virtual void ProducerReleaseImpl() override;
 
-    // Implementation-specific functions below:
-    // Returns texture and target
-    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
+  virtual void ProducerReadAcquireImpl() override;
+  virtual void ProducerReadReleaseImpl() override{};
 
-    virtual bool ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface) override;
+  virtual GLuint ProdTexture() override { return mProdTex; }
+
+  // Implementation-specific functions below:
+  // Returns texture and target
+  virtual bool ToSurfaceDescriptor(
+      layers::SurfaceDescriptor* const out_descriptor) override;
+
+  virtual bool ReadbackBySharedHandle(
+      gfx::DataSourceSurface* out_surface) override;
 };
 
+class SurfaceFactory_EGLImage : public SurfaceFactory {
+ public:
+  // Fallible:
+  static UniquePtr<SurfaceFactory_EGLImage> Create(
+      GLContext* prodGL, const SurfaceCaps& caps,
+      const RefPtr<layers::LayersIPCChannel>& allocator,
+      const layers::TextureFlags& flags);
 
+ protected:
+  const EGLContext mContext;
 
-class SurfaceFactory_EGLImage
-    : public SurfaceFactory
-{
-public:
-    // Fallible:
-    static UniquePtr<SurfaceFactory_EGLImage> Create(GLContext* prodGL,
-                                                     const SurfaceCaps& caps,
-                                                     const RefPtr<layers::LayersIPCChannel>& allocator,
-                                                     const layers::TextureFlags& flags);
+  SurfaceFactory_EGLImage(GLContext* prodGL, const SurfaceCaps& caps,
+                          const RefPtr<layers::LayersIPCChannel>& allocator,
+                          const layers::TextureFlags& flags, EGLContext context)
+      : SurfaceFactory(SharedSurfaceType::EGLImageShare, prodGL, caps,
+                       allocator, flags),
+        mContext(context) {}
 
-protected:
-    const EGLContext mContext;
-
-    SurfaceFactory_EGLImage(GLContext* prodGL, const SurfaceCaps& caps,
-                            const RefPtr<layers::LayersIPCChannel>& allocator,
-                            const layers::TextureFlags& flags,
-                            EGLContext context)
-        : SurfaceFactory(SharedSurfaceType::EGLImageShare, prodGL, caps, allocator, flags)
-        , mContext(context)
-    { }
-
-public:
-    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
-        bool hasAlpha = mReadCaps.alpha;
-        return SharedSurface_EGLImage::Create(mGL, mFormats, size, hasAlpha, mContext);
-    }
+ public:
+  virtual UniquePtr<SharedSurface> CreateShared(
+      const gfx::IntSize& size) override {
+    bool hasAlpha = mReadCaps.alpha;
+    return SharedSurface_EGLImage::Create(mGL, mFormats, size, hasAlpha,
+                                          mContext);
+  }
 };
 
 #ifdef MOZ_WIDGET_ANDROID
 
-class SharedSurface_SurfaceTexture
-    : public SharedSurface
-{
-public:
-    static UniquePtr<SharedSurface_SurfaceTexture> Create(GLContext* prodGL,
-                                                          const GLFormats& formats,
-                                                          const gfx::IntSize& size,
-                                                          bool hasAlpha,
-                                                          java::GeckoSurface::Param surface);
+class SharedSurface_SurfaceTexture : public SharedSurface {
+ public:
+  static UniquePtr<SharedSurface_SurfaceTexture> Create(
+      GLContext* prodGL, const GLFormats& formats, const gfx::IntSize& size,
+      bool hasAlpha, java::GeckoSurface::Param surface);
 
-    static SharedSurface_SurfaceTexture* Cast(SharedSurface* surf) {
-        MOZ_ASSERT(surf->mType == SharedSurfaceType::AndroidSurfaceTexture);
+  static SharedSurface_SurfaceTexture* Cast(SharedSurface* surf) {
+    MOZ_ASSERT(surf->mType == SharedSurfaceType::AndroidSurfaceTexture);
 
-        return (SharedSurface_SurfaceTexture*)surf;
-    }
+    return (SharedSurface_SurfaceTexture*)surf;
+  }
 
-    java::GeckoSurface::Param JavaSurface() { return mSurface; }
+  java::GeckoSurface::Param JavaSurface() { return mSurface; }
 
-protected:
-    java::GeckoSurface::GlobalRef mSurface;
-    EGLSurface mEglSurface;
-    EGLSurface mOrigEglSurface;
+ protected:
+  java::GeckoSurface::GlobalRef mSurface;
+  EGLSurface mEglSurface;
+  EGLSurface mOrigEglSurface;
 
-    SharedSurface_SurfaceTexture(GLContext* gl,
-                                 const gfx::IntSize& size,
-                                 bool hasAlpha,
-                                 const GLFormats& formats,
-                                 java::GeckoSurface::Param surface,
-                                 EGLSurface eglSurface);
+  SharedSurface_SurfaceTexture(GLContext* gl, const gfx::IntSize& size,
+                               bool hasAlpha, const GLFormats& formats,
+                               java::GeckoSurface::Param surface,
+                               EGLSurface eglSurface);
 
-public:
-    virtual ~SharedSurface_SurfaceTexture();
+ public:
+  virtual ~SharedSurface_SurfaceTexture();
 
-    virtual layers::TextureFlags GetTextureFlags() const override {
-      return layers::TextureFlags::DEALLOCATE_CLIENT;
-    }
+  virtual layers::TextureFlags GetTextureFlags() const override {
+    return layers::TextureFlags::DEALLOCATE_CLIENT;
+  }
 
-    virtual void LockProdImpl() override;
-    virtual void UnlockProdImpl() override;
+  virtual void LockProdImpl() override;
+  virtual void UnlockProdImpl() override;
 
-    virtual void ProducerAcquireImpl() override {}
-    virtual void ProducerReleaseImpl() override {}
+  virtual void ProducerAcquireImpl() override {}
+  virtual void ProducerReleaseImpl() override {}
 
-    virtual void ProducerReadAcquireImpl() override {}
-    virtual void ProducerReadReleaseImpl() override {}
+  virtual void ProducerReadAcquireImpl() override {}
+  virtual void ProducerReadReleaseImpl() override {}
 
-    // Implementation-specific functions below:
-    // Returns texture and target
-    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
+  // Implementation-specific functions below:
+  // Returns texture and target
+  virtual bool ToSurfaceDescriptor(
+      layers::SurfaceDescriptor* const out_descriptor) override;
 
-    virtual bool ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface) override { return false; }
+  virtual bool ReadbackBySharedHandle(
+      gfx::DataSourceSurface* out_surface) override {
+    return false;
+  }
 
-    virtual void Commit() override;
+  virtual void Commit() override;
 
-    virtual void WaitForBufferOwnership() override;
+  virtual void WaitForBufferOwnership() override;
 
-    virtual bool IsBufferAvailable() const override;
+  virtual bool IsBufferAvailable() const override;
 };
 
+class SurfaceFactory_SurfaceTexture : public SurfaceFactory {
+ public:
+  // Fallible:
+  static UniquePtr<SurfaceFactory_SurfaceTexture> Create(
+      GLContext* prodGL, const SurfaceCaps& caps,
+      const RefPtr<layers::LayersIPCChannel>& allocator,
+      const layers::TextureFlags& flags);
 
+ protected:
+  SurfaceFactory_SurfaceTexture(
+      GLContext* prodGL, const SurfaceCaps& caps,
+      const RefPtr<layers::LayersIPCChannel>& allocator,
+      const layers::TextureFlags& flags)
+      : SurfaceFactory(SharedSurfaceType::AndroidSurfaceTexture, prodGL, caps,
+                       allocator, flags) {}
 
-class SurfaceFactory_SurfaceTexture
-    : public SurfaceFactory
-{
-public:
-    // Fallible:
-    static UniquePtr<SurfaceFactory_SurfaceTexture> Create(GLContext* prodGL,
-                                                           const SurfaceCaps& caps,
-                                                           const RefPtr<layers::LayersIPCChannel>& allocator,
-                                                           const layers::TextureFlags& flags);
-
-protected:
-    SurfaceFactory_SurfaceTexture(GLContext* prodGL, const SurfaceCaps& caps,
-                            const RefPtr<layers::LayersIPCChannel>& allocator,
-                            const layers::TextureFlags& flags)
-        : SurfaceFactory(SharedSurfaceType::AndroidSurfaceTexture, prodGL, caps, allocator, flags)
-    { }
-
-public:
-    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override;
+ public:
+  virtual UniquePtr<SharedSurface> CreateShared(
+      const gfx::IntSize& size) override;
 };
 
-#endif // MOZ_WIDGET_ANDROID
+#endif  // MOZ_WIDGET_ANDROID
 
-} // namespace gl
+}  // namespace gl
 
 } /* namespace mozilla */
 

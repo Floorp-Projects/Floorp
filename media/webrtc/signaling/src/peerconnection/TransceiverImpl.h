@@ -33,7 +33,7 @@ class JsepTrackNegotiatedDetails;
 namespace dom {
 class RTCRtpTransceiver;
 struct RTCRtpSourceEntry;
-}
+}  // namespace dom
 
 /**
  * This is what ties all the various pieces that make up a transceiver
@@ -42,9 +42,9 @@ struct RTCRtpSourceEntry;
  * MediaTransportHandler for RTP transmission/reception
  * Audio/VideoConduit for feeding RTP/RTCP into webrtc.org for decoding, and
  * feeding audio/video frames into webrtc.org for encoding into RTP/RTCP.
-*/
+ */
 class TransceiverImpl : public nsISupports {
-public:
+ public:
   /**
    * |aReceiveStream| is always set; this holds even if the remote end has not
    * negotiated one for this transceiver. |aSendTrack| might or might not be
@@ -53,16 +53,12 @@ public:
   TransceiverImpl(const std::string& aPCHandle,
                   MediaTransportHandler* aTransportHandler,
                   JsepTransceiver* aJsepTransceiver,
-                  nsIEventTarget* aMainThread,
-                  nsIEventTarget* aStsThread,
+                  nsIEventTarget* aMainThread, nsIEventTarget* aStsThread,
                   dom::MediaStreamTrack* aReceiveTrack,
                   dom::MediaStreamTrack* aSendTrack,
                   WebRtcCallWrapper* aCallWrapper);
 
-  bool IsValid() const
-  {
-    return !!mConduit;
-  }
+  bool IsValid() const { return !!mConduit; }
 
   nsresult UpdateSendTrack(dom::MediaStreamTrack* aSendTrack);
 
@@ -90,10 +86,7 @@ public:
   // This is so PCImpl can unregister from PrincipalChanged callbacks; maybe we
   // should have TransceiverImpl handle these callbacks instead? It would need
   // to be able to get a ref to PCImpl though.
-  RefPtr<dom::MediaStreamTrack> GetSendTrack()
-  {
-    return mSendTrack;
-  }
+  RefPtr<dom::MediaStreamTrack> GetSendTrack() { return mSendTrack; }
 
   // for webidl
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
@@ -110,8 +103,7 @@ public:
 
   RefPtr<MediaPipeline> GetReceivePipeline();
 
-  std::string GetTransportId() const
-  {
+  std::string GetTransportId() const {
     return mJsepTransceiver->mTransport.mTransportId;
   }
 
@@ -126,13 +118,12 @@ public:
 
   // test-only: insert fake CSRCs and audio levels for testing
   void InsertAudioLevelForContributingSource(uint32_t aSource,
-                                             int64_t aTimestamp,
-                                             bool aHasLevel,
+                                             int64_t aTimestamp, bool aHasLevel,
                                              uint8_t aLevel);
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-private:
+ private:
   virtual ~TransceiverImpl();
   void InitAudio();
   void InitVideo();
@@ -160,7 +151,6 @@ private:
   RefPtr<MediaPipelineTransmit> mTransmitPipeline;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // _TRANSCEIVERIMPL_H_
-
+#endif  // _TRANSCEIVERIMPL_H_

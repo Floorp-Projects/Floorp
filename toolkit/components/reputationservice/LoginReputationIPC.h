@@ -14,9 +14,8 @@ namespace mozilla {
 namespace dom {
 
 class LoginReputationParent : public nsILoginReputationQueryCallback,
-                              public PLoginReputationParent
-{
-public:
+                              public PLoginReputationParent {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSILOGINREPUTATIONQUERYCALLBACK
 
@@ -26,12 +25,12 @@ public:
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
+ private:
   ~LoginReputationParent() = default;
   bool mIPCOpen = true;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_LoginReputationIPC_h
+#endif  // mozilla_dom_LoginReputationIPC_h

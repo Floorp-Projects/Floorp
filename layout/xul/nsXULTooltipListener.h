@@ -24,12 +24,11 @@ namespace mozilla {
 namespace dom {
 class Event;
 class MouseEvent;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsXULTooltipListener final : public nsIDOMEventListener
-{
-public:
+class nsXULTooltipListener final : public nsIDOMEventListener {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
@@ -39,13 +38,11 @@ public:
   void AddTooltipSupport(nsIContent* aNode);
   void RemoveTooltipSupport(nsIContent* aNode);
   static nsXULTooltipListener* GetInstance() {
-    if (!sInstance)
-      sInstance = new nsXULTooltipListener();
+    if (!sInstance) sInstance = new nsXULTooltipListener();
     return sInstance;
   }
 
-protected:
-
+ protected:
   nsXULTooltipListener();
   ~nsXULTooltipListener();
 
@@ -70,7 +67,7 @@ protected:
   nsresult GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip);
 
   static nsXULTooltipListener* sInstance;
-  static void ToolbarTipsPrefChanged(const char *aPref, void *aClosure);
+  static void ToolbarTipsPrefChanged(const char* aPref, void* aClosure);
 
   nsWeakPtr mSourceNode;
   nsWeakPtr mTargetNode;
@@ -78,7 +75,7 @@ protected:
 
   // a timer for showing the tooltip
   nsCOMPtr<nsITimer> mTooltipTimer;
-  static void sTooltipCallback (nsITimer* aTimer, void* aListener);
+  static void sTooltipCallback(nsITimer* aTimer, void* aListener);
 
   // screen coordinates of the last mousemove event, stored so that the
   // tooltip can be opened at this location.
@@ -86,7 +83,7 @@ protected:
 
   // various constants for tooltips
   enum {
-    kTooltipMouseMoveTolerance = 7     // 7 pixel tolerance for mousemove event
+    kTooltipMouseMoveTolerance = 7  // 7 pixel tolerance for mousemove event
   };
 
   // flag specifying if the tooltip has already been displayed by a MouseMove
@@ -103,4 +100,4 @@ protected:
 #endif
 };
 
-#endif // nsXULTooltipListener
+#endif  // nsXULTooltipListener

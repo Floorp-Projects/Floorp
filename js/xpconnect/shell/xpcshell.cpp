@@ -31,48 +31,46 @@
 #include <gtk/gtk.h>
 #endif
 
-int
-main(int argc, char** argv, char** envp)
-{
+int main(int argc, char** argv, char** envp) {
 #ifdef MOZ_WIDGET_GTK
-    // A default display may or may not be required for xpcshell tests, and so
-    // is not created here. Instead we set the command line args, which is a
-    // fairly cheap operation.
-    gtk_parse_args(&argc, &argv);
+  // A default display may or may not be required for xpcshell tests, and so
+  // is not created here. Instead we set the command line args, which is a
+  // fairly cheap operation.
+  gtk_parse_args(&argc, &argv);
 #endif
 
 #ifdef XP_MACOSX
-    InitAutoreleasePool();
+  InitAutoreleasePool();
 #endif
 
-    // unbuffer stdout so that output is in the correct order; note that stderr
-    // is unbuffered by default
-    setbuf(stdout, nullptr);
+  // unbuffer stdout so that output is in the correct order; note that stderr
+  // is unbuffered by default
+  setbuf(stdout, nullptr);
 
 #ifdef HAS_DLL_BLOCKLIST
-    DllBlocklist_Initialize();
+  DllBlocklist_Initialize();
 #endif
 
-    XREShellData shellData;
+  XREShellData shellData;
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-    shellData.sandboxBrokerServices =
+  shellData.sandboxBrokerServices =
       mozilla::sandboxing::GetInitializedBrokerServices();
 #endif
 
-    mozilla::Bootstrap::UniquePtr bootstrap = mozilla::GetBootstrap();
-    if (!bootstrap) {
-        return 2;
-    }
+  mozilla::Bootstrap::UniquePtr bootstrap = mozilla::GetBootstrap();
+  if (!bootstrap) {
+    return 2;
+  }
 
-    int result = bootstrap->XRE_XPCShellMain(argc, argv, envp, &shellData);
+  int result = bootstrap->XRE_XPCShellMain(argc, argv, envp, &shellData);
 
 #if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
-    DllBlocklist_Shutdown();
+  DllBlocklist_Shutdown();
 #endif
 
 #ifdef XP_MACOSX
-    FinishAutoreleasePool();
+  FinishAutoreleasePool();
 #endif
 
-    return result;
+  return result;
 }

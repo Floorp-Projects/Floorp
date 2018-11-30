@@ -9,19 +9,21 @@
 #include "nsCharSetProber.h"
 #include "nsCodingStateMachine.h"
 
-class nsUTF8Prober: public nsCharSetProber {
-public:
-  nsUTF8Prober(){mNumOfMBChar = 0;
-                mCodingSM = new nsCodingStateMachine(&UTF8SMModel);
-                Reset(); }
-  virtual ~nsUTF8Prober(){delete mCodingSM;}
+class nsUTF8Prober : public nsCharSetProber {
+ public:
+  nsUTF8Prober() {
+    mNumOfMBChar = 0;
+    mCodingSM = new nsCodingStateMachine(&UTF8SMModel);
+    Reset();
+  }
+  virtual ~nsUTF8Prober() { delete mCodingSM; }
   nsProbingState HandleData(const char* aBuf, uint32_t aLen) override;
-  const char* GetCharSetName() override {return "UTF-8";}
-  nsProbingState GetState(void) override {return mState;}
-  void      Reset(void) override;
-  float     GetConfidence(void) override;
+  const char* GetCharSetName() override { return "UTF-8"; }
+  nsProbingState GetState(void) override { return mState; }
+  void Reset(void) override;
+  float GetConfidence(void) override;
 
-protected:
+ protected:
   nsCodingStateMachine* mCodingSM;
   nsProbingState mState;
   uint32_t mNumOfMBChar;

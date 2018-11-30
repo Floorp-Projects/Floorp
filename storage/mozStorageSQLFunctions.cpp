@@ -34,13 +34,10 @@ namespace {
  *        The character to use for escaping symbols in the pattern.
  * @return 1 if the pattern is found, 0 otherwise.
  */
-int
-likeCompare(nsAString::const_iterator aPatternItr,
-            nsAString::const_iterator aPatternEnd,
-            nsAString::const_iterator aStringItr,
-            nsAString::const_iterator aStringEnd,
-            char16_t aEscapeChar)
-{
+int likeCompare(nsAString::const_iterator aPatternItr,
+                nsAString::const_iterator aPatternEnd,
+                nsAString::const_iterator aStringItr,
+                nsAString::const_iterator aStringEnd, char16_t aEscapeChar) {
   const char16_t MATCH_ALL('%');
   const char16_t MATCH_ONE('_');
 
@@ -64,16 +61,14 @@ likeCompare(nsAString::const_iterator aPatternItr,
       while (*aPatternItr == MATCH_ALL || *aPatternItr == MATCH_ONE) {
         if (*aPatternItr == MATCH_ONE) {
           // If we've hit the end of the string we are testing, no match
-          if (aStringItr == aStringEnd)
-            return 0;
+          if (aStringItr == aStringEnd) return 0;
           aStringItr++;
         }
         aPatternItr++;
       }
 
       // If we've hit the end of the pattern string, match
-      if (aPatternItr == aPatternEnd)
-        return 1;
+      if (aPatternItr == aPatternEnd) return 1;
 
       while (aStringItr != aStringEnd) {
         if (likeCompare(aPatternItr, aPatternEnd, aStringItr, aStringEnd,
@@ -86,8 +81,7 @@ likeCompare(nsAString::const_iterator aPatternItr,
 
       // No match
       return 0;
-    }
-    else if (!lastWasEscape && *aPatternItr == MATCH_ONE) {
+    } else if (!lastWasEscape && *aPatternItr == MATCH_ONE) {
       // CASE 2
       if (aStringItr == aStringEnd) {
         // If we've hit the end of the string we are testing, no match
@@ -95,12 +89,10 @@ likeCompare(nsAString::const_iterator aPatternItr,
       }
       aStringItr++;
       lastWasEscape = false;
-    }
-    else if (!lastWasEscape && *aPatternItr == aEscapeChar) {
+    } else if (!lastWasEscape && *aPatternItr == aEscapeChar) {
       // CASE 3
       lastWasEscape = true;
-    }
-    else {
+    } else {
       // CASE 4
       if (::ToUpperCase(*aStringItr) != ::ToUpperCase(*aPatternItr)) {
         // If we've hit a point where the strings don't match, there is no match
@@ -127,100 +119,94 @@ likeCompare(nsAString::const_iterator aPatternItr,
  *        an outparam that will receive the edit distance between the arguments
  * @return a Sqlite result code, e.g. SQLITE_OK, SQLITE_NOMEM, etc.
  */
-int
-levenshteinDistance(const nsAString &aStringS,
-                    const nsAString &aStringT,
-                    int *_result)
-{
-    // Set the result to a non-sensical value in case we encounter an error.
-    *_result = -1;
+int levenshteinDistance(const nsAString &aStringS, const nsAString &aStringT,
+                        int *_result) {
+  // Set the result to a non-sensical value in case we encounter an error.
+  *_result = -1;
 
-    const uint32_t sLen = aStringS.Length();
-    const uint32_t tLen = aStringT.Length();
+  const uint32_t sLen = aStringS.Length();
+  const uint32_t tLen = aStringT.Length();
 
-    if (sLen == 0) {
-      *_result = tLen;
-      return SQLITE_OK;
-    }
-    if (tLen == 0) {
-      *_result = sLen;
-      return SQLITE_OK;
-    }
-
-    // Notionally, Levenshtein Distance is computed in a matrix.  If we
-    // assume s = "span" and t = "spam", the matrix would look like this:
-    //    s -->
-    //  t          s   p   a   n
-    //  |      0   1   2   3   4
-    //  V  s   1   *   *   *   *
-    //     p   2   *   *   *   *
-    //     a   3   *   *   *   *
-    //     m   4   *   *   *   *
-    //
-    // Note that the row width is sLen + 1 and the column height is tLen + 1,
-    // where sLen is the length of the string "s" and tLen is the length of "t".
-    // The first row and the first column are initialized as shown, and
-    // the algorithm computes the remaining cells row-by-row, and
-    // left-to-right within each row.  The computation only requires that
-    // we be able to see the current row and the previous one.
-
-    // Allocate memory for two rows.
-    AutoTArray<int, nsAutoString::kStorageSize> row1;
-    AutoTArray<int, nsAutoString::kStorageSize> row2;
-
-    // Declare the raw pointers that will actually be used to access the memory.
-    int *prevRow = row1.AppendElements(sLen + 1);
-    int *currRow = row2.AppendElements(sLen + 1);
-
-    // Initialize the first row.
-    for (uint32_t i = 0; i <= sLen; i++)
-        prevRow[i] = i;
-
-    const char16_t *s = aStringS.BeginReading();
-    const char16_t *t = aStringT.BeginReading();
-
-    // Compute the empty cells in the "matrix" row-by-row, starting with
-    // the second row.
-    for (uint32_t ti = 1; ti <= tLen; ti++) {
-
-        // Initialize the first cell in this row.
-        currRow[0] = ti;
-
-        // Get the character from "t" that corresponds to this row.
-        const char16_t tch = t[ti - 1];
-
-        // Compute the remaining cells in this row, left-to-right,
-        // starting at the second column (and first character of "s").
-        for (uint32_t si = 1; si <= sLen; si++) {
-
-            // Get the character from "s" that corresponds to this column,
-            // compare it to the t-character, and compute the "cost".
-            const char16_t sch = s[si - 1];
-            int cost = (sch == tch) ? 0 : 1;
-
-            // ............ We want to calculate the value of cell "d" from
-            // ...ab....... the previously calculated (or initialized) cells
-            // ...cd....... "a", "b", and "c", where d = min(a', b', c').
-            // ............
-            int aPrime = prevRow[si - 1] + cost;
-            int bPrime = prevRow[si] + 1;
-            int cPrime = currRow[si - 1] + 1;
-            currRow[si] = std::min(aPrime, std::min(bPrime, cPrime));
-        }
-
-        // Advance to the next row.  The current row becomes the previous
-        // row and we recycle the old previous row as the new current row.
-        // We don't need to re-initialize the new current row since we will
-        // rewrite all of its cells anyway.
-        int *oldPrevRow = prevRow;
-        prevRow = currRow;
-        currRow = oldPrevRow;
-    }
-
-    // The final result is the value of the last cell in the last row.
-    // Note that that's now in the "previous" row, since we just swapped them.
-    *_result = prevRow[sLen];
+  if (sLen == 0) {
+    *_result = tLen;
     return SQLITE_OK;
+  }
+  if (tLen == 0) {
+    *_result = sLen;
+    return SQLITE_OK;
+  }
+
+  // Notionally, Levenshtein Distance is computed in a matrix.  If we
+  // assume s = "span" and t = "spam", the matrix would look like this:
+  //    s -->
+  //  t          s   p   a   n
+  //  |      0   1   2   3   4
+  //  V  s   1   *   *   *   *
+  //     p   2   *   *   *   *
+  //     a   3   *   *   *   *
+  //     m   4   *   *   *   *
+  //
+  // Note that the row width is sLen + 1 and the column height is tLen + 1,
+  // where sLen is the length of the string "s" and tLen is the length of "t".
+  // The first row and the first column are initialized as shown, and
+  // the algorithm computes the remaining cells row-by-row, and
+  // left-to-right within each row.  The computation only requires that
+  // we be able to see the current row and the previous one.
+
+  // Allocate memory for two rows.
+  AutoTArray<int, nsAutoString::kStorageSize> row1;
+  AutoTArray<int, nsAutoString::kStorageSize> row2;
+
+  // Declare the raw pointers that will actually be used to access the memory.
+  int *prevRow = row1.AppendElements(sLen + 1);
+  int *currRow = row2.AppendElements(sLen + 1);
+
+  // Initialize the first row.
+  for (uint32_t i = 0; i <= sLen; i++) prevRow[i] = i;
+
+  const char16_t *s = aStringS.BeginReading();
+  const char16_t *t = aStringT.BeginReading();
+
+  // Compute the empty cells in the "matrix" row-by-row, starting with
+  // the second row.
+  for (uint32_t ti = 1; ti <= tLen; ti++) {
+    // Initialize the first cell in this row.
+    currRow[0] = ti;
+
+    // Get the character from "t" that corresponds to this row.
+    const char16_t tch = t[ti - 1];
+
+    // Compute the remaining cells in this row, left-to-right,
+    // starting at the second column (and first character of "s").
+    for (uint32_t si = 1; si <= sLen; si++) {
+      // Get the character from "s" that corresponds to this column,
+      // compare it to the t-character, and compute the "cost".
+      const char16_t sch = s[si - 1];
+      int cost = (sch == tch) ? 0 : 1;
+
+      // ............ We want to calculate the value of cell "d" from
+      // ...ab....... the previously calculated (or initialized) cells
+      // ...cd....... "a", "b", and "c", where d = min(a', b', c').
+      // ............
+      int aPrime = prevRow[si - 1] + cost;
+      int bPrime = prevRow[si] + 1;
+      int cPrime = currRow[si - 1] + 1;
+      currRow[si] = std::min(aPrime, std::min(bPrime, cPrime));
+    }
+
+    // Advance to the next row.  The current row becomes the previous
+    // row and we recycle the old previous row as the new current row.
+    // We don't need to re-initialize the new current row since we will
+    // rewrite all of its cells anyway.
+    int *oldPrevRow = prevRow;
+    prevRow = currRow;
+    currRow = oldPrevRow;
+  }
+
+  // The final result is the value of the last cell in the last row.
+  // Note that that's now in the "previous" row, since we just swapped them.
+  *_result = prevRow[sLen];
+  return SQLITE_OK;
 }
 
 // This struct is used only by registerFunctions below, but ISO C++98 forbids
@@ -230,70 +216,28 @@ struct Functions {
   int nArg;
   int enc;
   void *pContext;
-  void (*xFunc)(::sqlite3_context*, int, sqlite3_value**);
+  void (*xFunc)(::sqlite3_context *, int, sqlite3_value **);
 };
 
-} // namespace
+}  // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Exposed Functions
 
-int
-registerFunctions(sqlite3 *aDB)
-{
+int registerFunctions(sqlite3 *aDB) {
   Functions functions[] = {
-    {"lower",
-      1,
-      SQLITE_UTF16,
-      0,
-      caseFunction},
-    {"lower",
-      1,
-      SQLITE_UTF8,
-      0,
-      caseFunction},
-    {"upper",
-      1,
-      SQLITE_UTF16,
-      (void*)1,
-      caseFunction},
-    {"upper",
-      1,
-      SQLITE_UTF8,
-      (void*)1,
-      caseFunction},
+      {"lower", 1, SQLITE_UTF16, 0, caseFunction},
+      {"lower", 1, SQLITE_UTF8, 0, caseFunction},
+      {"upper", 1, SQLITE_UTF16, (void *)1, caseFunction},
+      {"upper", 1, SQLITE_UTF8, (void *)1, caseFunction},
 
-    {"like",
-      2,
-      SQLITE_UTF16,
-      0,
-      likeFunction},
-    {"like",
-      2,
-      SQLITE_UTF8,
-      0,
-      likeFunction},
-    {"like",
-      3,
-      SQLITE_UTF16,
-      0,
-      likeFunction},
-    {"like",
-      3,
-      SQLITE_UTF8,
-      0,
-      likeFunction},
+      {"like", 2, SQLITE_UTF16, 0, likeFunction},
+      {"like", 2, SQLITE_UTF8, 0, likeFunction},
+      {"like", 3, SQLITE_UTF16, 0, likeFunction},
+      {"like", 3, SQLITE_UTF8, 0, likeFunction},
 
-    {"levenshteinDistance",
-      2,
-      SQLITE_UTF16,
-      0,
-      levenshteinDistanceFunction},
-    {"levenshteinDistance",
-      2,
-      SQLITE_UTF8,
-      0,
-      levenshteinDistanceFunction},
+      {"levenshteinDistance", 2, SQLITE_UTF16, 0, levenshteinDistanceFunction},
+      {"levenshteinDistance", 2, SQLITE_UTF8, 0, levenshteinDistanceFunction},
   };
 
   int rv = SQLITE_OK;
@@ -309,14 +253,11 @@ registerFunctions(sqlite3 *aDB)
 ////////////////////////////////////////////////////////////////////////////////
 //// SQL Functions
 
-void
-caseFunction(sqlite3_context *aCtx,
-             int aArgc,
-             sqlite3_value **aArgv)
-{
+void caseFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
   NS_ASSERTION(1 == aArgc, "Invalid number of arguments!");
 
-  nsAutoString data(static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0])));
+  nsAutoString data(
+      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0])));
   bool toUpper = ::sqlite3_user_data(aCtx) ? true : false;
 
   if (toUpper)
@@ -333,11 +274,7 @@ caseFunction(sqlite3_context *aCtx,
  * The SQL statement 'A LIKE B' is implemented as 'like(B, A)', and if there is
  * an escape character, say E, it is implemented as 'like(B, A, E)'.
  */
-void
-likeFunction(sqlite3_context *aCtx,
-             int aArgc,
-             sqlite3_value **aArgv)
-{
+void likeFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
   NS_ASSERTION(2 == aArgc || 3 == aArgc, "Invalid number of arguments!");
 
   if (::sqlite3_value_bytes(aArgv[0]) > SQLITE_MAX_LIKE_PATTERN_LENGTH) {
@@ -349,8 +286,10 @@ likeFunction(sqlite3_context *aCtx,
   if (!::sqlite3_value_text16(aArgv[0]) || !::sqlite3_value_text16(aArgv[1]))
     return;
 
-  nsDependentString A(static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[1])));
-  nsDependentString B(static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0])));
+  nsDependentString A(
+      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[1])));
+  nsDependentString B(
+      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0])));
   NS_ASSERTION(!B.IsEmpty(), "LIKE string must not be null!");
 
   char16_t E = 0;
@@ -363,14 +302,12 @@ likeFunction(sqlite3_context *aCtx,
   nsAString::const_iterator itrPattern, endPattern;
   B.BeginReading(itrPattern);
   B.EndReading(endPattern);
-  ::sqlite3_result_int(aCtx, likeCompare(itrPattern, endPattern, itrString,
-                                         endString, E));
+  ::sqlite3_result_int(
+      aCtx, likeCompare(itrPattern, endPattern, itrString, endString, E));
 }
 
-void levenshteinDistanceFunction(sqlite3_context *aCtx,
-                                 int aArgc,
-                                 sqlite3_value **aArgv)
-{
+void levenshteinDistanceFunction(sqlite3_context *aCtx, int aArgc,
+                                 sqlite3_value **aArgv) {
   NS_ASSERTION(2 == aArgc, "Invalid number of arguments!");
 
   // If either argument is a SQL NULL, then return SQL NULL.
@@ -381,10 +318,12 @@ void levenshteinDistanceFunction(sqlite3_context *aCtx,
   }
 
   int aLen = ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t);
-  const char16_t *a = static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0]));
+  const char16_t *a =
+      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0]));
 
   int bLen = ::sqlite3_value_bytes16(aArgv[1]) / sizeof(char16_t);
-  const char16_t *b = static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[1]));
+  const char16_t *b =
+      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[1]));
 
   // Compute the Levenshtein Distance, and return the result (or error).
   int distance = -1;
@@ -393,14 +332,12 @@ void levenshteinDistanceFunction(sqlite3_context *aCtx,
   int status = levenshteinDistance(A, B, &distance);
   if (status == SQLITE_OK) {
     ::sqlite3_result_int(aCtx, distance);
-  }
-  else if (status == SQLITE_NOMEM) {
+  } else if (status == SQLITE_NOMEM) {
     ::sqlite3_result_error_nomem(aCtx);
-  }
-  else {
+  } else {
     ::sqlite3_result_error(aCtx, "User function returned error code", -1);
   }
 }
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla

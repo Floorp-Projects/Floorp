@@ -13,8 +13,7 @@ NS_IMPL_ISUPPORTS(DCPresentationChannelDescription,
                   nsIPresentationChannelDescription)
 
 NS_IMETHODIMP
-DCPresentationChannelDescription::GetType(uint8_t* aRetVal)
-{
+DCPresentationChannelDescription::GetType(uint8_t* aRetVal) {
   if (NS_WARN_IF(!aRetVal)) {
     return NS_ERROR_INVALID_POINTER;
   }
@@ -24,23 +23,21 @@ DCPresentationChannelDescription::GetType(uint8_t* aRetVal)
 }
 
 NS_IMETHODIMP
-DCPresentationChannelDescription::GetTcpAddress(nsIArray** aRetVal)
-{
+DCPresentationChannelDescription::GetTcpAddress(nsIArray** aRetVal) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-DCPresentationChannelDescription::GetTcpPort(uint16_t* aRetVal)
-{
+DCPresentationChannelDescription::GetTcpPort(uint16_t* aRetVal) {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-DCPresentationChannelDescription::GetDataChannelSDP(nsAString& aDataChannelSDP)
-{
+DCPresentationChannelDescription::GetDataChannelSDP(
+    nsAString& aDataChannelSDP) {
   aDataChannelSDP = mSDP;
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

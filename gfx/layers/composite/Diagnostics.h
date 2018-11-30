@@ -20,11 +20,10 @@ namespace layers {
 
 class PaintTiming;
 
-class TimedMetric
-{
+class TimedMetric {
   typedef std::pair<float, TimeStamp> Entry;
 
-public:
+ public:
   void Add(float aValue) {
     if (mHistory.size() > kMaxHistory) {
       mHistory.pop_front();
@@ -33,24 +32,17 @@ public:
   }
 
   float Average() const;
-  bool Empty() const {
-    return mHistory.empty();
-  }
+  bool Empty() const { return mHistory.empty(); }
 
-private:
+ private:
   static const size_t kMaxHistory = 60;
 
   std::deque<Entry> mHistory;
 };
 
 // These statistics are collected by layers backends, preferably by the GPU
-struct GPUStats
-{
-  GPUStats()
-   : mInvalidPixels(0),
-     mScreenPixels(0),
-     mPixelsFilled(0)
-  {}
+struct GPUStats {
+  GPUStats() : mInvalidPixels(0), mScreenPixels(0), mPixelsFilled(0) {}
 
   uint32_t mInvalidPixels;
   uint32_t mScreenPixels;
@@ -59,46 +51,35 @@ struct GPUStats
 };
 
 // Collects various diagnostics about layers performance.
-class Diagnostics
-{
-public:
+class Diagnostics {
+ public:
   Diagnostics();
 
   void RecordPaintTimes(const PaintTiming& aPaintTimes);
-  void RecordUpdateTime(float aValue) {
-    mUpdateMs.Add(aValue);
-  }
-  void RecordPrepareTime(float aValue) {
-    mPrepareMs.Add(aValue);
-  }
-  void RecordCompositeTime(float aValue) {
-    mCompositeMs.Add(aValue);
-  }
-  void AddTxnFrame() {
-    mTransactionFps.AddFrame(TimeStamp::Now());
-  }
+  void RecordUpdateTime(float aValue) { mUpdateMs.Add(aValue); }
+  void RecordPrepareTime(float aValue) { mPrepareMs.Add(aValue); }
+  void RecordCompositeTime(float aValue) { mCompositeMs.Add(aValue); }
+  void AddTxnFrame() { mTransactionFps.AddFrame(TimeStamp::Now()); }
 
   std::string GetFrameOverlayString(const GPUStats& aStats);
 
   class Record {
-  public:
+   public:
     explicit Record(TimeStamp aStart = TimeStamp()) {
       if (gfxPrefs::LayersDrawFPS()) {
         mStart = aStart.IsNull() ? TimeStamp::Now() : aStart;
       }
     }
-    bool Recording() const {
-      return !mStart.IsNull();
-    }
+    bool Recording() const { return !mStart.IsNull(); }
     float Duration() const {
       return (TimeStamp::Now() - mStart).ToMilliseconds();
     }
 
-  private:
+   private:
     TimeStamp mStart;
   };
 
-private:
+ private:
   FPSCounter mCompositeFps;
   FPSCounter mTransactionFps;
   TimedMetric mDlbMs;
@@ -113,7 +94,7 @@ private:
   TimedMetric mGPUDrawMs;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_composite_Diagnostics_h
+#endif  // mozilla_gfx_layers_composite_Diagnostics_h

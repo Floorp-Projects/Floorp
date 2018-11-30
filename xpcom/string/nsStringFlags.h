@@ -18,8 +18,7 @@ namespace detail {
 // strings.
 
 // bits for mDataFlags
-enum class StringDataFlags : uint16_t
-{
+enum class StringDataFlags : uint16_t {
   // Some terminology:
   //
   //   "dependent buffer"    A dependent buffer is one that the string class
@@ -53,35 +52,34 @@ enum class StringDataFlags : uint16_t
   //   mutually exclusive with REFCOUNTED, OWNED, and INLINE.
 
   // IsTerminated returns true
-  TERMINATED   = 1 << 0,
+  TERMINATED = 1 << 0,
 
   // IsVoid returns true
-  VOIDED       = 1 << 1,
+  VOIDED = 1 << 1,
 
   // mData points to a heap-allocated, shareable, refcounted buffer
-  REFCOUNTED   = 1 << 2,
+  REFCOUNTED = 1 << 2,
 
   // mData points to a heap-allocated, raw buffer
-  OWNED        = 1 << 3,
+  OWNED = 1 << 3,
 
   // mData points to a writable, inline buffer
-  INLINE       = 1 << 4,
+  INLINE = 1 << 4,
 
   // mData points to a string literal; DataFlags::TERMINATED will also be set
-  LITERAL      = 1 << 5
+  LITERAL = 1 << 5
 };
 
 // bits for mClassFlags
-enum class StringClassFlags : uint16_t
-{
-  INLINE          = 1 << 0, // |this|'s buffer is inline
+enum class StringClassFlags : uint16_t {
+  INLINE = 1 << 0,          // |this|'s buffer is inline
   NULL_TERMINATED = 1 << 1  // |this| requires its buffer is null-terminated
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StringDataFlags)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StringClassFlags)
 
-} // namespace detail
-} // namespace mozilla
+}  // namespace detail
+}  // namespace mozilla
 
 #endif

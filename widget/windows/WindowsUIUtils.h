@@ -8,22 +8,19 @@
 
 #include "nsIWindowsUIUtils.h"
 
-enum TabletModeState {
-  eTabletModeUnknown = 0,
-  eTabletModeOff,
-  eTabletModeOn
-};
+enum TabletModeState { eTabletModeUnknown = 0, eTabletModeOff, eTabletModeOn };
 
 class WindowsUIUtils final : public nsIWindowsUIUtils {
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWSUIUTILS
 
   WindowsUIUtils();
-protected:
+
+ protected:
   ~WindowsUIUtils();
 
   TabletModeState mInTabletMode;
 };
 
-#endif // mozilla_widget_WindowsUIUtils_h__
+#endif  // mozilla_widget_WindowsUIUtils_h__

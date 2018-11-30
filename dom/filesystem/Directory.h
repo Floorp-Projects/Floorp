@@ -21,47 +21,39 @@ class FileSystemBase;
 class Promise;
 class StringOrFileOrDirectory;
 
-class Directory final
-  : public nsISupports
-  , public nsWrapperCache
-{
-public:
+class Directory final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Directory)
 
-  static already_AddRefed<Directory>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aRealPath,
-              ErrorResult& aRv);
+  static already_AddRefed<Directory> Constructor(const GlobalObject& aGlobal,
+                                                 const nsAString& aRealPath,
+                                                 ErrorResult& aRv);
 
-  static already_AddRefed<Directory>
-  Create(nsISupports* aParent, nsIFile* aDirectory,
-         FileSystemBase* aFileSystem = 0);
+  static already_AddRefed<Directory> Create(nsISupports* aParent,
+                                            nsIFile* aDirectory,
+                                            FileSystemBase* aFileSystem = 0);
 
   // ========= Begin WebIDL bindings. ===========
 
-  nsISupports*
-  GetParentObject() const;
+  nsISupports* GetParentObject() const;
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  GetName(nsAString& aRetval, ErrorResult& aRv);
+  void GetName(nsAString& aRetval, ErrorResult& aRv);
 
-  // From https://microsoftedge.github.io/directory-upload/proposal.html#directory-interface :
+  // From
+  // https://microsoftedge.github.io/directory-upload/proposal.html#directory-interface
+  // :
 
-  void
-  GetPath(nsAString& aRetval, ErrorResult& aRv);
+  void GetPath(nsAString& aRetval, ErrorResult& aRv);
 
-  nsresult
-  GetFullRealPath(nsAString& aPath);
+  nsresult GetFullRealPath(nsAString& aPath);
 
-  already_AddRefed<Promise>
-  GetFilesAndDirectories(ErrorResult& aRv);
+  already_AddRefed<Promise> GetFilesAndDirectories(ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  GetFiles(bool aRecursiveFlag, ErrorResult& aRv);
+  already_AddRefed<Promise> GetFiles(bool aRecursiveFlag, ErrorResult& aRv);
 
   // =========== End WebIDL bindings.============
 
@@ -87,29 +79,21 @@ public:
    * <input type=file directory accept="..."> to the results of a directory
    * picker operation.
    */
-  void
-  SetContentFilters(const nsAString& aFilters);
+  void SetContentFilters(const nsAString& aFilters);
 
-  FileSystemBase*
-  GetFileSystem(ErrorResult& aRv);
+  FileSystemBase* GetFileSystem(ErrorResult& aRv);
 
-  nsIFile*
-  GetInternalNsIFile() const
-  {
-    return mFile;
-  }
+  nsIFile* GetInternalNsIFile() const { return mFile; }
 
-private:
-  Directory(nsISupports* aParent,
-            nsIFile* aFile,
+ private:
+  Directory(nsISupports* aParent, nsIFile* aFile,
             FileSystemBase* aFileSystem = nullptr);
   ~Directory();
 
   /*
    * Convert relative DOM path to the absolute real path.
    */
-  nsresult
-  DOMPathToRealPath(const nsAString& aPath, nsIFile** aFile) const;
+  nsresult DOMPathToRealPath(const nsAString& aPath, nsIFile** aFile) const;
 
   nsCOMPtr<nsISupports> mParent;
   RefPtr<FileSystemBase> mFileSystem;
@@ -119,7 +103,7 @@ private:
   nsString mPath;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Directory_h
+#endif  // mozilla_dom_Directory_h

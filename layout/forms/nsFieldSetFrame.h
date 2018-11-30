@@ -11,18 +11,16 @@
 #include "ImgDrawResult.h"
 #include "nsContainerFrame.h"
 
-class nsFieldSetFrame final : public nsContainerFrame
-{
+class nsFieldSetFrame final : public nsContainerFrame {
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
 
-public:
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsFieldSetFrame)
 
   explicit nsFieldSetFrame(ComputedStyle* aStyle);
 
-  nscoord
-    GetIntrinsicISize(gfxContext* aRenderingContext,
-                      nsLayoutUtils::IntrinsicISizeType);
+  nscoord GetIntrinsicISize(gfxContext* aRenderingContext,
+                            nsLayoutUtils::IntrinsicISizeType);
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
@@ -32,8 +30,7 @@ public:
    */
   virtual nsRect VisualBorderRectRelativeToSelf() const override;
 
-  virtual void Reflow(nsPresContext* aPresContext,
-                      ReflowOutput& aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
@@ -44,32 +41,28 @@ public:
                                  BaselineSharingGroup aBaselineGroup,
                                  nscoord* aBaseline) const override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
   ImgDrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
-                         gfxContext& aRenderingContext,
-                         nsPoint aPt, const nsRect& aDirtyRect);
+                            gfxContext& aRenderingContext, nsPoint aPt,
+                            const nsRect& aDirtyRect);
 
 #ifdef DEBUG
-  virtual void SetInitialChildList(ChildListID    aListID,
-                                   nsFrameList&   aChildList) override;
-  virtual void AppendFrames(ChildListID    aListID,
-                            nsFrameList&   aFrameList) override;
-  virtual void InsertFrames(ChildListID    aListID,
-                            nsIFrame*      aPrevFrame,
-                            nsFrameList&   aFrameList) override;
-  virtual void RemoveFrame(ChildListID    aListID,
-                           nsIFrame*      aOldFrame) override;
+  virtual void SetInitialChildList(ChildListID aListID,
+                                   nsFrameList& aChildList) override;
+  virtual void AppendFrames(ChildListID aListID,
+                            nsFrameList& aFrameList) override;
+  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            nsFrameList& aFrameList) override;
+  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 #endif
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-  {
-    return nsContainerFrame::IsFrameOfType(aFlags &
-             ~nsIFrame::eCanContainOverflowContainers);
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+    return nsContainerFrame::IsFrameOfType(
+        aFlags & ~nsIFrame::eCanContainOverflowContainers);
   }
-  virtual nsIScrollableFrame* GetScrollTargetFrame() override
-  {
+  virtual nsIScrollableFrame* GetScrollTargetFrame() override {
     return do_QueryFrame(GetInner());
   }
 
@@ -102,9 +95,9 @@ public:
    */
   nsIFrame* GetLegend() const;
 
-protected:
+ protected:
   mozilla::LogicalRect mLegendRect;
-  nscoord   mLegendSpace;
+  nscoord mLegendSpace;
 };
 
-#endif // nsFieldSetFrame_h___
+#endif  // nsFieldSetFrame_h___

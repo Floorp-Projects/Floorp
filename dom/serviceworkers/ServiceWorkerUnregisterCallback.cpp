@@ -12,33 +12,26 @@ namespace dom {
 NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
 
 UnregisterCallback::UnregisterCallback()
-  : mPromise(new GenericPromise::Private(__func__)) {}
+    : mPromise(new GenericPromise::Private(__func__)) {}
 
 UnregisterCallback::UnregisterCallback(GenericPromise::Private* aPromise)
-  : mPromise(aPromise)
-{
+    : mPromise(aPromise) {
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
 }
 
 NS_IMETHODIMP
-UnregisterCallback::UnregisterSucceeded(bool aState)
-{
+UnregisterCallback::UnregisterSucceeded(bool aState) {
   mPromise->Resolve(aState, __func__);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-UnregisterCallback::UnregisterFailed()
-{
+UnregisterCallback::UnregisterFailed() {
   mPromise->Reject(NS_ERROR_DOM_SECURITY_ERR, __func__);
   return NS_OK;
 }
 
-RefPtr<GenericPromise>
-UnregisterCallback::Promise() const
-{
-  return mPromise;
-}
+RefPtr<GenericPromise> UnregisterCallback::Promise() const { return mPromise; }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

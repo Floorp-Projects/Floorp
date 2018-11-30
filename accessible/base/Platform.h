@@ -115,9 +115,8 @@ void ProxyVirtualCursorChangeEvent(ProxyAccessible* aTarget,
                                    int32_t aOldEndOffset,
                                    ProxyAccessible* aNewPosition,
                                    int32_t aNewStartOffset,
-                                   int32_t aNewEndOffset,
-                                   int16_t aReason, int16_t aBoundaryType,
-                                   bool aFromUser);
+                                   int32_t aNewEndOffset, int16_t aReason,
+                                   int16_t aBoundaryType, bool aFromUser);
 
 void ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
                          uint32_t aScrollX, uint32_t aScrollY,
@@ -125,13 +124,12 @@ void ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
 
 class BatchData;
 
-void ProxyBatch(ProxyAccessible* aDocument,
-                const uint64_t aBatchType,
+void ProxyBatch(ProxyAccessible* aDocument, const uint64_t aBatchType,
                 const nsTArray<ProxyAccessible*>& aAccessibles,
                 const nsTArray<BatchData>& aData);
 #endif
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif // mozilla_a11y_Platform_h
+#endif  // mozilla_a11y_Platform_h

@@ -18,7 +18,6 @@
 namespace mozilla {
 namespace dom {
 
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(MIDIMessageEvent)
 
 NS_IMPL_ADDREF_INHERITED(MIDIMessageEvent, Event)
@@ -39,34 +38,25 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MIDIMessageEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 MIDIMessageEvent::MIDIMessageEvent(mozilla::dom::EventTarget* aOwner)
-  : Event(aOwner, nullptr, nullptr)
-{
+    : Event(aOwner, nullptr, nullptr) {
   mozilla::HoldJSObjects(this);
 }
 
-MIDIMessageEvent::~MIDIMessageEvent()
-{
+MIDIMessageEvent::~MIDIMessageEvent() {
   mData = nullptr;
   mozilla::DropJSObjects(this);
 }
 
-JSObject*
-MIDIMessageEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MIDIMessageEvent::WrapObjectInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return MIDIMessageEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-MIDIMessageEvent*
-MIDIMessageEvent::AsMIDIMessageEvent()
-{
-  return this;
-}
+MIDIMessageEvent* MIDIMessageEvent::AsMIDIMessageEvent() { return this; }
 
-already_AddRefed<MIDIMessageEvent>
-MIDIMessageEvent::Constructor(EventTarget* aOwner,
-                              const class TimeStamp& aReceivedTime,
-                              const nsTArray<uint8_t>& aData)
-{
+already_AddRefed<MIDIMessageEvent> MIDIMessageEvent::Constructor(
+    EventTarget* aOwner, const class TimeStamp& aReceivedTime,
+    const nsTArray<uint8_t>& aData) {
   MOZ_ASSERT(aOwner);
   RefPtr<MIDIMessageEvent> e = new MIDIMessageEvent(aOwner);
   e->InitEvent(NS_LITERAL_STRING("midimessage"), false, false);
@@ -76,12 +66,9 @@ MIDIMessageEvent::Constructor(EventTarget* aOwner,
   return e.forget();
 }
 
-already_AddRefed<MIDIMessageEvent>
-MIDIMessageEvent::Constructor(const GlobalObject& aGlobal,
-                              const nsAString& aType,
-                              const MIDIMessageEventInit& aEventInitDict,
-                              ErrorResult& aRv)
-{
+already_AddRefed<MIDIMessageEvent> MIDIMessageEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const MIDIMessageEventInit& aEventInitDict, ErrorResult& aRv) {
   nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<MIDIMessageEvent> e = new MIDIMessageEvent(owner);
   bool trusted = e->Init(owner);
@@ -101,16 +88,12 @@ MIDIMessageEvent::Constructor(const GlobalObject& aGlobal,
   return e.forget();
 }
 
-void
-MIDIMessageEvent::GetData(JSContext* cx,
-                          JS::MutableHandle<JSObject*> aData,
-                          ErrorResult& aRv)
-{
+void MIDIMessageEvent::GetData(JSContext* cx,
+                               JS::MutableHandle<JSObject*> aData,
+                               ErrorResult& aRv) {
   if (!mData) {
-    mData = Uint8Array::Create(cx,
-                               this,
-                               mRawData.Length(),
-                               mRawData.Elements());
+    mData =
+        Uint8Array::Create(cx, this, mRawData.Length(), mRawData.Elements());
     if (!mData) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
@@ -121,6 +104,5 @@ MIDIMessageEvent::GetData(JSContext* cx,
   aData.set(mData);
 }
 
-
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

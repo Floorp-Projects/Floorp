@@ -6,23 +6,19 @@
 
 #include "mozilla/Encoding.h"
 
-const mozilla::Encoding*
-nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes)
-{
+const mozilla::Encoding* nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes) {
   readable = bytes;
   stateLoop(stateSave);
   readable = nullptr;
   return mEncoding;
 }
 
-bool
-nsHtml5MetaScanner::tryCharset(nsHtml5String charset)
-{
+bool nsHtml5MetaScanner::tryCharset(nsHtml5String charset) {
   // This code needs to stay in sync with
   // nsHtml5StreamParser::internalEncodingDeclaration. Unfortunately, the
   // trickery with member fields here leads to some copy-paste reuse. :-(
   nsAutoCString label;
-  nsString charset16; // Not Auto, because using it to hold nsStringBuffer*
+  nsString charset16;  // Not Auto, because using it to hold nsStringBuffer*
   charset.ToString(charset16);
   CopyUTF16toUTF8(charset16, label);
   const mozilla::Encoding* encoding = Encoding::ForLabel(label);

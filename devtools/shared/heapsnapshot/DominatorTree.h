@@ -16,25 +16,22 @@
 namespace mozilla {
 namespace devtools {
 
-class DominatorTree final : public nsISupports
-                          , public nsWrapperCache
-{
-protected:
+class DominatorTree final : public nsISupports, public nsWrapperCache {
+ protected:
   nsCOMPtr<nsISupports> mParent;
 
-  virtual ~DominatorTree() { }
+  virtual ~DominatorTree() {}
 
-private:
+ private:
   JS::ubi::DominatorTree mDominatorTree;
   RefPtr<HeapSnapshot> mHeapSnapshot;
 
-public:
-  explicit DominatorTree(JS::ubi::DominatorTree&& aDominatorTree, HeapSnapshot* aHeapSnapshot,
-                         nsISupports* aParent)
-    : mParent(aParent)
-    , mDominatorTree(std::move(aDominatorTree))
-    , mHeapSnapshot(aHeapSnapshot)
-  {
+ public:
+  explicit DominatorTree(JS::ubi::DominatorTree&& aDominatorTree,
+                         HeapSnapshot* aHeapSnapshot, nsISupports* aParent)
+      : mParent(aParent),
+        mDominatorTree(std::move(aDominatorTree)),
+        mHeapSnapshot(aHeapSnapshot) {
     MOZ_ASSERT(aParent);
     MOZ_ASSERT(aHeapSnapshot);
   };
@@ -54,14 +51,15 @@ public:
   dom::Nullable<uint64_t> GetRetainedSize(uint64_t aNodeId, ErrorResult& aRv);
 
   // [Throws] sequence<NodeId>? getImmediatelyDominated(NodeId node);
-  void GetImmediatelyDominated(uint64_t aNodeId, dom::Nullable<nsTArray<uint64_t>>& aOutDominated,
+  void GetImmediatelyDominated(uint64_t aNodeId,
+                               dom::Nullable<nsTArray<uint64_t>>& aOutDominated,
                                ErrorResult& aRv);
 
   // NodeId? getImmediateDominator(NodeId node);
   dom::Nullable<uint64_t> GetImmediateDominator(uint64_t aNodeId) const;
 };
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla
 
-#endif // mozilla_devtools_DominatorTree__
+#endif  // mozilla_devtools_DominatorTree__

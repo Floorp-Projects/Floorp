@@ -113,7 +113,8 @@ enum class RelationType {
   CONTAINING_DOCUMENT = 0x11,
 
   /**
-   * The target object is the topmost containing document object in the tab pane.
+   * The target object is the topmost containing document object in the tab
+   * pane.
    */
   CONTAINING_TAB_PANE = 0x12,
 
@@ -126,7 +127,6 @@ enum class RelationType {
    * The target object is the containing application object.
    */
   CONTAINING_APPLICATION = 0x14,
-
 
   /**
    * The target object provides the detailed, extended description for this
@@ -157,7 +157,7 @@ enum class RelationType {
   LAST = ERRORMSG_FOR
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

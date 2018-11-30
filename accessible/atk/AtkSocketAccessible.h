@@ -12,9 +12,9 @@
 // This file gets included by nsAccessibilityService.cpp, which can't include
 // atk.h (or glib.h), so we can't rely on it being included.
 #ifdef __ATK_H__
-extern "C" typedef void (*AtkSocketEmbedType) (AtkSocket*, gchar*);
+extern "C" typedef void (*AtkSocketEmbedType)(AtkSocket*, gchar*);
 #else
-extern "C" typedef void (*AtkSocketEmbedType) (void*, void*);
+extern "C" typedef void (*AtkSocketEmbedType)(void*, void*);
 #endif
 
 namespace mozilla {
@@ -24,10 +24,8 @@ namespace a11y {
  * Provides a AccessibleWrap wrapper around AtkSocket for out-of-process
  * accessibles.
  */
-class AtkSocketAccessible : public AccessibleWrap
-{
-public:
-
+class AtkSocketAccessible : public AccessibleWrap {
+ public:
   // Soft references to AtkSocket
   static AtkSocketEmbedType g_atk_socket_embed;
 #ifdef __ATK_H__
@@ -50,7 +48,7 @@ public:
   virtual void GetNativeInterface(void** aOutAccessible) override;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

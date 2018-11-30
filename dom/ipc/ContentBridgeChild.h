@@ -13,50 +13,48 @@
 namespace mozilla {
 namespace dom {
 
-class ContentBridgeChild final : public PContentBridgeChild
-                               , public nsIContentChild
-{
-public:
+class ContentBridgeChild final : public PContentBridgeChild,
+                                 public nsIContentChild {
+ public:
   explicit ContentBridgeChild();
 
   NS_DECL_ISUPPORTS
 
-  static void
-  Create(Endpoint<PContentBridgeChild>&& aEndpoint);
+  static void Create(Endpoint<PContentBridgeChild>&& aEndpoint);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeferredDestroy();
 
-  virtual mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
-                                                   InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                                                   const IPC::Principal& aPrincipal,
-                                                   const ClonedMessageData& aData) override;
+  virtual mozilla::ipc::IPCResult RecvAsyncMessage(
+      const nsString& aMsg, InfallibleTArray<jsipc::CpowEntry>&& aCpows,
+      const IPC::Principal& aPrincipal,
+      const ClonedMessageData& aData) override;
 
   jsipc::CPOWManager* GetCPOWManager() override;
 
-  virtual bool SendPBrowserConstructor(PBrowserChild* aActor,
-                                       const TabId& aTabId,
-                                       const TabId& aSameTabGroupAs,
-                                       const IPCTabContext& aContext,
-                                       const uint32_t& aChromeFlags,
-                                       const ContentParentId& aCpID,
-                                       const bool& aIsForBrowser) override;
+  virtual bool SendPBrowserConstructor(
+      PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
+      const IPCTabContext& aContext, const uint32_t& aChromeFlags,
+      const ContentParentId& aCpID, const bool& aIsForBrowser) override;
 
   virtual mozilla::ipc::PFileDescriptorSetChild*
-  SendPFileDescriptorSetConstructor(const mozilla::ipc::FileDescriptor&) override;
+  SendPFileDescriptorSetConstructor(
+      const mozilla::ipc::FileDescriptor&) override;
 
   virtual mozilla::ipc::PChildToParentStreamChild*
-  SendPChildToParentStreamConstructor(mozilla::ipc::PChildToParentStreamChild*) override;
+  SendPChildToParentStreamConstructor(
+      mozilla::ipc::PChildToParentStreamChild*) override;
 
   virtual mozilla::ipc::IPCResult RecvActivate(PBrowserChild* aTab) override;
 
   virtual mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab) override;
 
-  virtual already_AddRefed<nsIEventTarget> GetEventTargetFor(TabChild* aTabChild) override;
+  virtual already_AddRefed<nsIEventTarget> GetEventTargetFor(
+      TabChild* aTabChild) override;
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentBridgeChild)
 
-protected:
+ protected:
   virtual ~ContentBridgeChild();
 
   virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
@@ -66,52 +64,49 @@ protected:
                                             const ContentParentId& aCpID,
                                             const bool& aIsForBrowser) override;
   virtual bool DeallocPBrowserChild(PBrowserChild*) override;
-  virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(PBrowserChild* aCctor,
-                                                          const TabId& aTabId,
-                                                          const TabId& aSameTabGroupAs,
-                                                          const IPCTabContext& aContext,
-                                                          const uint32_t& aChromeFlags,
-                                                          const ContentParentId& aCpID,
-                                                          const bool& aIsForBrowser) override;
+  virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(
+      PBrowserChild* aCctor, const TabId& aTabId, const TabId& aSameTabGroupAs,
+      const IPCTabContext& aContext, const uint32_t& aChromeFlags,
+      const ContentParentId& aCpID, const bool& aIsForBrowser) override;
 
   virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild() override;
-  virtual bool DeallocPJavaScriptChild(mozilla::jsipc::PJavaScriptChild*) override;
+  virtual bool DeallocPJavaScriptChild(
+      mozilla::jsipc::PJavaScriptChild*) override;
 
-  virtual PIPCBlobInputStreamChild*
-  AllocPIPCBlobInputStreamChild(const nsID& aID,
-                                const uint64_t& aSize) override;
+  virtual PIPCBlobInputStreamChild* AllocPIPCBlobInputStreamChild(
+      const nsID& aID, const uint64_t& aSize) override;
 
-  virtual bool
-  DeallocPIPCBlobInputStreamChild(PIPCBlobInputStreamChild*) override;
+  virtual bool DeallocPIPCBlobInputStreamChild(
+      PIPCBlobInputStreamChild*) override;
 
   virtual mozilla::ipc::PChildToParentStreamChild*
   AllocPChildToParentStreamChild() override;
 
-  virtual bool
-  DeallocPChildToParentStreamChild(mozilla::ipc::PChildToParentStreamChild* aActor) override;
+  virtual bool DeallocPChildToParentStreamChild(
+      mozilla::ipc::PChildToParentStreamChild* aActor) override;
 
   virtual PParentToChildStreamChild* AllocPParentToChildStreamChild() override;
 
-  virtual bool
-  DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor) override;
+  virtual bool DeallocPParentToChildStreamChild(
+      PParentToChildStreamChild* aActor) override;
 
-  virtual PFileDescriptorSetChild*
-  AllocPFileDescriptorSetChild(const mozilla::ipc::FileDescriptor& aFD) override;
+  virtual PFileDescriptorSetChild* AllocPFileDescriptorSetChild(
+      const mozilla::ipc::FileDescriptor& aFD) override;
 
-  virtual bool
-  DeallocPFileDescriptorSetChild(mozilla::ipc::PFileDescriptorSetChild* aActor) override;
+  virtual bool DeallocPFileDescriptorSetChild(
+      mozilla::ipc::PFileDescriptorSetChild* aActor) override;
 
   DISALLOW_EVIL_CONSTRUCTORS(ContentBridgeChild);
 
-private:
-  virtual already_AddRefed<nsIEventTarget>
-  GetConstructedEventTarget(const Message& aMsg) override;
+ private:
+  virtual already_AddRefed<nsIEventTarget> GetConstructedEventTarget(
+      const Message& aMsg) override;
 
-protected: // members
+ protected:  // members
   RefPtr<ContentBridgeChild> mSelfRef;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ContentBridgeChild_h
+#endif  // mozilla_dom_ContentBridgeChild_h

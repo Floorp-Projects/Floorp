@@ -28,8 +28,7 @@ class nsHtml5Parser;
 #define NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE 1024
 #define NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE 1024
 
-enum eParserMode
-{
+enum eParserMode {
   /**
    * Parse a document normally as HTML.
    */
@@ -61,8 +60,7 @@ enum eParserMode
   LOAD_AS_DATA
 };
 
-enum eBomState
-{
+enum eBomState {
   /**
    * BOM sniffing hasn't started.
    */
@@ -98,16 +96,14 @@ enum eBomState
   BOM_SNIFFING_OVER = 5
 };
 
-enum eHtml5StreamState
-{
+enum eHtml5StreamState {
   STREAM_NOT_STARTED = 0,
   STREAM_BEING_READ = 1,
   STREAM_ENDED = 2
 };
 
-class nsHtml5StreamParser final : public nsICharsetDetectionObserver
-{
-  template<typename T>
+class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
+  template <typename T>
   using NotNull = mozilla::NotNull<T>;
   using Encoding = mozilla::Encoding;
 
@@ -117,13 +113,12 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver
   friend class nsHtml5TimerKungFu;
   friend class nsHtml5StreamParserPtr;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHtml5StreamParser,
                                            nsICharsetDetectionObserver)
 
-  nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
-                      nsHtml5Parser* aOwner,
+  nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor, nsHtml5Parser* aOwner,
                       eParserMode aMode);
 
   // Methods that nsHtml5StreamListener calls
@@ -131,14 +126,11 @@ public:
 
   nsresult OnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
 
-  nsresult OnDataAvailable(nsIRequest* aRequest,
-                           nsISupports* aContext,
-                           nsIInputStream* aInStream,
-                           uint64_t aSourceOffset,
+  nsresult OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+                           nsIInputStream* aInStream, uint64_t aSourceOffset,
                            uint32_t aLength);
 
-  nsresult OnStopRequest(nsIRequest* aRequest,
-                         nsISupports* aContext,
+  nsresult OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                          nsresult status);
 
   // nsICharsetDetectionObserver
@@ -164,8 +156,7 @@ public:
    *  @param   aCharsetSource the source of the charset
    */
   inline void SetDocumentCharset(NotNull<const Encoding*> aEncoding,
-                                 int32_t aSource)
-  {
+                                 int32_t aSource) {
     MOZ_ASSERT(mStreamState == STREAM_NOT_STARTED,
                "SetDocumentCharset called too late.");
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -173,8 +164,7 @@ public:
     mCharsetSource = aSource;
   }
 
-  inline void SetObserver(nsIRequestObserver* aObserver)
-  {
+  inline void SetObserver(nsIRequestObserver* aObserver) {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mObserver = aObserver;
   }
@@ -187,16 +177,14 @@ public:
    * buffer has been exhausted.
    */
   void ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
-                            nsHtml5TreeBuilder* aTreeBuilder,
-                            bool aLastWasCR);
+                            nsHtml5TreeBuilder* aTreeBuilder, bool aLastWasCR);
 
   /**
    * Continues the stream parser if the charset switch failed.
    */
   void ContinueAfterFailedCharsetSwitch();
 
-  void Terminate()
-  {
+  void Terminate() {
     mozilla::MutexAutoLock autoLock(mTerminatedMutex);
     mTerminated = true;
   }
@@ -217,7 +205,7 @@ public:
    */
   void SetViewSourceTitle(nsIURI* aURL);
 
-private:
+ private:
   virtual ~nsHtml5StreamParser();
 
 #ifdef DEBUG
@@ -232,14 +220,12 @@ private:
    * avoid having a previous in-flight runnable cancel your Interrupt()
    * call on the other thread too soon.
    */
-  void Interrupt()
-  {
+  void Interrupt() {
     mozilla::MutexAutoLock autoLock(mTerminatedMutex);
     mInterrupted = true;
   }
 
-  void Uninterrupt()
-  {
+  void Uninterrupt() {
     NS_ASSERTION(IsParserThread(), "Wrong thread!");
     mTokenizerMutex.AssertCurrentThreadOwns();
     // Not acquiring mTerminatedMutex because mTokenizerMutex is already
@@ -260,20 +246,16 @@ private:
   void DoDataAvailable(const uint8_t* aBuffer, uint32_t aLength);
 
   static nsresult CopySegmentsToParser(nsIInputStream* aInStream,
-                                       void* aClosure,
-                                       const char* aFromSegment,
-                                       uint32_t aToOffset,
-                                       uint32_t aCount,
+                                       void* aClosure, const char* aFromSegment,
+                                       uint32_t aToOffset, uint32_t aCount,
                                        uint32_t* aWriteCount);
 
-  bool IsTerminatedOrInterrupted()
-  {
+  bool IsTerminatedOrInterrupted() {
     mozilla::MutexAutoLock autoLock(mTerminatedMutex);
     return mTerminated || mInterrupted;
   }
 
-  bool IsTerminated()
-  {
+  bool IsTerminated() {
     mozilla::MutexAutoLock autoLock(mTerminatedMutex);
     return mTerminated;
   }
@@ -286,15 +268,13 @@ private:
   /**
    * Push bytes from network when there is no Unicode decoder yet
    */
-  nsresult SniffStreamBytes(const uint8_t* aFromSegment,
-                            uint32_t aCount,
+  nsresult SniffStreamBytes(const uint8_t* aFromSegment, uint32_t aCount,
                             uint32_t* aWriteCount);
 
   /**
    * Push bytes from network when there is a Unicode decoder already
    */
-  nsresult WriteStreamBytes(const uint8_t* aFromSegment,
-                            uint32_t aCount,
+  nsresult WriteStreamBytes(const uint8_t* aFromSegment, uint32_t aCount,
                             uint32_t* aWriteCount);
 
   /**
@@ -316,8 +296,7 @@ private:
    * @param aCountToSniffingLimit The number of unfilled slots in
    *                              mSniffingBuffer
    */
-  nsresult FinalizeSniffing(const uint8_t* aFromSegment,
-                            uint32_t aCount,
+  nsresult FinalizeSniffing(const uint8_t* aFromSegment, uint32_t aCount,
                             uint32_t* aWriteCount,
                             uint32_t aCountToSniffingLimit);
 
@@ -333,9 +312,7 @@ private:
    *                     buffer.
    */
   nsresult SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
-    const uint8_t* aFromSegment,
-    uint32_t aCount,
-    uint32_t* aWriteCount);
+      const uint8_t* aFromSegment, uint32_t aCount, uint32_t* aWriteCount);
 
   /**
    * Initialize the Unicode decoder, mark the BOM as the source and
@@ -446,8 +423,9 @@ private:
    * The last buffer in the pending UTF-16 buffer queue
    */
   nsHtml5OwningUTF16Buffer*
-    mLastBuffer; // weak ref; always points to
-                 // a buffer of the size NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE
+      mLastBuffer;  // weak ref; always points to
+                    // a buffer of the size
+                    // NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE
 
   /**
    * The tree operation executor
@@ -580,4 +558,4 @@ private:
   eParserMode mMode;
 };
 
-#endif // nsHtml5StreamParser_h
+#endif  // nsHtml5StreamParser_h

@@ -124,12 +124,11 @@
  * Evaluate the boolean expression expr. If it's true, do nothing.
  * If it's false, return an error result.
  */
-#define JS_TRY_BOOL_TO_RESULT(cx, expr) \
-    do { \
-        bool ok_ = (expr); \
-        if (!ok_) \
-            return (cx)->boolToResult(ok_); \
-    } while (0)
+#define JS_TRY_BOOL_TO_RESULT(cx, expr)       \
+  do {                                        \
+    bool ok_ = (expr);                        \
+    if (!ok_) return (cx)->boolToResult(ok_); \
+  } while (0)
 
 /**
  * JS_TRY_OR_RETURN_FALSE(cx, expr) runs expr to compute a Result value.
@@ -138,62 +137,57 @@
  * Implementation note: this involves cx because this may eventually
  * do the work of setting a pending exception or reporting OOM.
  */
-#define JS_TRY_OR_RETURN_FALSE(cx, expr) \
-    do { \
-        auto tmpResult_ = (expr); \
-        if (tmpResult_.isErr()) \
-            return (cx)->resultToBool(tmpResult_); \
-    } while (0)
+#define JS_TRY_OR_RETURN_FALSE(cx, expr)                           \
+  do {                                                             \
+    auto tmpResult_ = (expr);                                      \
+    if (tmpResult_.isErr()) return (cx)->resultToBool(tmpResult_); \
+  } while (0)
 
 /**
  * Like JS_TRY_OR_RETURN_FALSE, but returning nullptr on error,
  * rather than false.
  */
-#define JS_TRY_OR_RETURN_NULL(cx, expr) \
-    do { \
-        auto tmpResult_ = (expr); \
-        if (tmpResult_.isErr()) { \
-            MOZ_ALWAYS_FALSE((cx)->resultToBool(tmpResult_)); \
-            return nullptr; \
-        } \
-    } while (0)
+#define JS_TRY_OR_RETURN_NULL(cx, expr)                 \
+  do {                                                  \
+    auto tmpResult_ = (expr);                           \
+    if (tmpResult_.isErr()) {                           \
+      MOZ_ALWAYS_FALSE((cx)->resultToBool(tmpResult_)); \
+      return nullptr;                                   \
+    }                                                   \
+  } while (0)
 
-#define JS_TRY_VAR_OR_RETURN_FALSE(cx, target, expr) \
-    do { \
-        auto tmpResult_ = (expr); \
-        if (tmpResult_.isErr()) \
-            return (cx)->resultToBool(tmpResult_); \
-        (target) = tmpResult_.unwrap(); \
-    } while (0)
+#define JS_TRY_VAR_OR_RETURN_FALSE(cx, target, expr)               \
+  do {                                                             \
+    auto tmpResult_ = (expr);                                      \
+    if (tmpResult_.isErr()) return (cx)->resultToBool(tmpResult_); \
+    (target) = tmpResult_.unwrap();                                \
+  } while (0)
 
-#define JS_TRY_VAR_OR_RETURN_NULL(cx, target, expr) \
-    do { \
-        auto tmpResult_ = (expr); \
-        if (tmpResult_.isErr()) {  \
-            MOZ_ALWAYS_FALSE((cx)->resultToBool(tmpResult_)); \
-            return nullptr; \
-        } \
-        (target) = tmpResult_.unwrap(); \
-    } while (0)
+#define JS_TRY_VAR_OR_RETURN_NULL(cx, target, expr)     \
+  do {                                                  \
+    auto tmpResult_ = (expr);                           \
+    if (tmpResult_.isErr()) {                           \
+      MOZ_ALWAYS_FALSE((cx)->resultToBool(tmpResult_)); \
+      return nullptr;                                   \
+    }                                                   \
+    (target) = tmpResult_.unwrap();                     \
+  } while (0)
 
 namespace JS {
 
 using mozilla::Ok;
 
 /**
- * Type representing a JS error or exception. At the moment this only "represents"
- * an error in a rather abstract way.
+ * Type representing a JS error or exception. At the moment this only
+ * "represents" an error in a rather abstract way.
  */
-struct Error
-{
-    // Ensure sizeof(Error) > 1 so that Result<V, Error&> can use pointer
-    // tagging.
-    int dummy;
+struct Error {
+  // Ensure sizeof(Error) > 1 so that Result<V, Error&> can use pointer
+  // tagging.
+  int dummy;
 };
 
-struct OOM : public Error
-{
-};
+struct OOM : public Error {};
 
 /**
  * `Result` is intended to be the return type of JSAPI calls and internal
@@ -219,6 +213,6 @@ static_assert(sizeof(Result<>) == sizeof(uintptr_t),
 static_assert(sizeof(Result<int*, Error&>) == sizeof(uintptr_t),
               "Result<V*, Error&> should be pointer-sized");
 
-} // namespace JS
+}  // namespace JS
 
 #endif  // js_Result_h

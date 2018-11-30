@@ -16,9 +16,9 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class StorageAccessPermissionRequest final : public ContentPermissionRequestBase
-{
-public:
+class StorageAccessPermissionRequest final
+    : public ContentPermissionRequestBase {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StorageAccessPermissionRequest,
                                            ContentPermissionRequestBase)
@@ -33,19 +33,18 @@ public:
   typedef std::function<void()> CancelCallback;
 
   static already_AddRefed<StorageAccessPermissionRequest> Create(
-    nsPIDOMWindowInner* aWindow,
-    AllowCallback&& aAllowCallback,
-    AllowAutoGrantCallback&& aAllowAutoGrantCallback,
-    AllowAnySiteCallback&& aAllowAnySiteCallback,
-    CancelCallback&& aCancelCallback);
+      nsPIDOMWindowInner* aWindow, AllowCallback&& aAllowCallback,
+      AllowAutoGrantCallback&& aAllowAutoGrantCallback,
+      AllowAnySiteCallback&& aAllowAnySiteCallback,
+      CancelCallback&& aCancelCallback);
 
-private:
-  StorageAccessPermissionRequest(nsPIDOMWindowInner* aWindow,
-                                 nsIPrincipal* aNodePrincipal,
-                                 AllowCallback&& aAllowCallback,
-                                 AllowAutoGrantCallback&& aAllowAutoGrantCallback,
-                                 AllowAnySiteCallback&& aAllowAnySiteCallback,
-                                 CancelCallback&& aCancelCallback);
+ private:
+  StorageAccessPermissionRequest(
+      nsPIDOMWindowInner* aWindow, nsIPrincipal* aNodePrincipal,
+      AllowCallback&& aAllowCallback,
+      AllowAutoGrantCallback&& aAllowAutoGrantCallback,
+      AllowAnySiteCallback&& aAllowAnySiteCallback,
+      CancelCallback&& aCancelCallback);
   ~StorageAccessPermissionRequest();
 
   AllowCallback mAllowCallback;
@@ -56,7 +55,7 @@ private:
   bool mCallbackCalled;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // StorageAccessPermissionRequest_h_
+#endif  // StorageAccessPermissionRequest_h_

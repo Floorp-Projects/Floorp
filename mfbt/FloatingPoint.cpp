@@ -8,13 +8,11 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include <cfloat> // for FLT_MAX
+#include <cfloat>  // for FLT_MAX
 
 namespace mozilla {
 
-bool
-IsFloat32Representable(double aValue)
-{
+bool IsFloat32Representable(double aValue) {
   // NaNs and infinities are representable.
   if (!IsFinite(aValue)) {
     return true;

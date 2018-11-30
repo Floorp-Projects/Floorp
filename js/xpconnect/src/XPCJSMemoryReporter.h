@@ -18,16 +18,14 @@ typedef nsDataHashtable<nsUint64HashKey, nsCString> WindowPaths;
 // This is very nearly an instance of nsIMemoryReporter, but it's not,
 // because it's invoked by nsWindowMemoryReporter in order to get |windowPaths|
 // in CollectReports.
-class JSReporter
-{
-public:
-    static void CollectReports(WindowPaths* windowPaths,
-                               WindowPaths* topWindowPaths,
-                               nsIHandleReportCallback* handleReport,
-                               nsISupports* data,
-                               bool anonymize);
+class JSReporter {
+ public:
+  static void CollectReports(WindowPaths* windowPaths,
+                             WindowPaths* topWindowPaths,
+                             nsIHandleReportCallback* handleReport,
+                             nsISupports* data, bool anonymize);
 };
 
-} // namespace xpc
+}  // namespace xpc
 
 #endif

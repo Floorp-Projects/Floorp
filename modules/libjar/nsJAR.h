@@ -37,67 +37,56 @@ class nsZipReaderCache;
  * nsJAR serves as an XPCOM wrapper for nsZipArchive with the addition of
  * JAR manifest file parsing.
  *------------------------------------------------------------------------*/
-class nsJAR final : public nsIZipReader
-{
+class nsJAR final : public nsIZipReader {
   // Allows nsJARInputStream to call the verification functions
   friend class nsJARInputStream;
   // Allows nsZipReaderCache to access mOuterZipEntry
   friend class nsZipReaderCache;
 
-  private:
+ private:
+  virtual ~nsJAR();
 
-    virtual ~nsJAR();
+ public:
+  nsJAR();
 
-  public:
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_ZIPREADER_CID)
 
-    nsJAR();
+  NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_DEFINE_STATIC_CID_ACCESSOR( NS_ZIPREADER_CID )
+  NS_DECL_NSIZIPREADER
 
-    NS_DECL_THREADSAFE_ISUPPORTS
+  nsresult GetJarPath(nsACString& aResult);
 
-    NS_DECL_NSIZIPREADER
+  PRIntervalTime GetReleaseTime() { return mReleaseTime; }
 
-    nsresult GetJarPath(nsACString& aResult);
+  bool IsReleased() { return mReleaseTime != PR_INTERVAL_NO_TIMEOUT; }
 
-    PRIntervalTime GetReleaseTime() {
-        return mReleaseTime;
-    }
+  void SetReleaseTime() { mReleaseTime = PR_IntervalNow(); }
 
-    bool IsReleased() {
-        return mReleaseTime != PR_INTERVAL_NO_TIMEOUT;
-    }
+  void ClearReleaseTime() { mReleaseTime = PR_INTERVAL_NO_TIMEOUT; }
 
-    void SetReleaseTime() {
-      mReleaseTime = PR_IntervalNow();
-    }
+  void SetZipReaderCache(nsZipReaderCache* aCache) {
+    mozilla::MutexAutoLock lock(mLock);
+    mCache = aCache;
+  }
 
-    void ClearReleaseTime() {
-      mReleaseTime = PR_INTERVAL_NO_TIMEOUT;
-    }
+  nsresult GetNSPRFileDesc(PRFileDesc** aNSPRFileDesc);
 
-    void SetZipReaderCache(nsZipReaderCache* aCache) {
-      mozilla::MutexAutoLock lock(mLock);
-      mCache = aCache;
-    }
+ protected:
+  //-- Private data members
+  nsCOMPtr<nsIFile> mZipFile;   // The zip/jar file on disk
+  nsCString mOuterZipEntry;     // The entry in the zip this zip is reading from
+  RefPtr<nsZipArchive> mZip;    // The underlying zip archive
+  PRIntervalTime mReleaseTime;  // used by nsZipReaderCache for flushing entries
+  nsZipReaderCache*
+      mCache;  // if cached, this points to the cache it's contained in
+  mozilla::Mutex mLock;  // protect mCache and mZip
+  int64_t mMtime;
+  bool mOpened;
+  bool mIsOmnijar;
 
-    nsresult GetNSPRFileDesc(PRFileDesc** aNSPRFileDesc);
-
-  protected:
-
-    //-- Private data members
-    nsCOMPtr<nsIFile>        mZipFile;        // The zip/jar file on disk
-    nsCString                mOuterZipEntry;  // The entry in the zip this zip is reading from
-    RefPtr<nsZipArchive>     mZip;            // The underlying zip archive
-    PRIntervalTime           mReleaseTime;    // used by nsZipReaderCache for flushing entries
-    nsZipReaderCache*        mCache;          // if cached, this points to the cache it's contained in
-    mozilla::Mutex           mLock;           // protect mCache and mZip
-    int64_t                  mMtime;
-    bool                     mOpened;
-    bool                     mIsOmnijar;
-
-    nsresult LoadEntry(const nsACString& aFilename, nsCString& aBuf);
-    int32_t  ReadLine(const char** src);
+  nsresult LoadEntry(const nsACString& aFilename, nsCString& aBuf);
+  int32_t ReadLine(const char** src);
 };
 
 /**
@@ -106,25 +95,24 @@ class nsJAR final : public nsIZipReader
  * An individual JAR entry. A set of nsJARItems matching a
  * supplied pattern are returned in a nsJAREnumerator.
  */
-class nsJARItem : public nsIZipEntry
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIZIPENTRY
+class nsJARItem : public nsIZipEntry {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIZIPENTRY
 
-    explicit nsJARItem(nsZipItem* aZipItem);
+  explicit nsJARItem(nsZipItem* aZipItem);
 
-private:
-    virtual ~nsJARItem() {}
+ private:
+  virtual ~nsJARItem() {}
 
-    uint32_t     mSize;             /* size in original file */
-    uint32_t     mRealsize;         /* inflated size */
-    uint32_t     mCrc32;
-    PRTime       mLastModTime;
-    uint16_t     mCompression;
-    uint32_t     mPermissions;
-    bool mIsDirectory;
-    bool mIsSynthetic;
+  uint32_t mSize;     /* size in original file */
+  uint32_t mRealsize; /* inflated size */
+  uint32_t mCrc32;
+  PRTime mLastModTime;
+  uint16_t mCompression;
+  uint32_t mPermissions;
+  bool mIsDirectory;
+  bool mIsSynthetic;
 };
 
 /**
@@ -133,25 +121,24 @@ private:
  * Enumerates a list of files in a zip archive
  * (based on a pattern match in its member nsZipFind).
  */
-class nsJAREnumerator final : public nsStringEnumeratorBase
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIUTF8STRINGENUMERATOR
+class nsJAREnumerator final : public nsStringEnumeratorBase {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIUTF8STRINGENUMERATOR
 
-    using nsStringEnumeratorBase::GetNext;
+  using nsStringEnumeratorBase::GetNext;
 
-    explicit nsJAREnumerator(nsZipFind *aFind)
+  explicit nsJAREnumerator(nsZipFind* aFind)
       : mFind(aFind), mName(nullptr), mNameLen(0) {
-      NS_ASSERTION(mFind, "nsJAREnumerator: Missing zipFind.");
-    }
+    NS_ASSERTION(mFind, "nsJAREnumerator: Missing zipFind.");
+  }
 
-private:
-    nsZipFind    *mFind;
-    const char*   mName;    // pointer to an name owned by mArchive -- DON'T delete
-    uint16_t      mNameLen;
+ private:
+  nsZipFind* mFind;
+  const char* mName;  // pointer to an name owned by mArchive -- DON'T delete
+  uint16_t mNameLen;
 
-    ~nsJAREnumerator() { delete mFind; }
+  ~nsJAREnumerator() { delete mFind; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,10 +147,10 @@ private:
 #define ZIP_CACHE_HIT_RATE
 #endif
 
-class nsZipReaderCache : public nsIZipReaderCache, public nsIObserver,
-                         public nsSupportsWeakReference
-{
-public:
+class nsZipReaderCache : public nsIZipReaderCache,
+                         public nsIObserver,
+                         public nsSupportsWeakReference {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIZIPREADERCACHE
   NS_DECL_NSIOBSERVER
@@ -174,23 +161,22 @@ public:
 
   typedef nsRefPtrHashtable<nsCStringHashKey, nsJAR> ZipsHashtable;
 
-protected:
-
+ protected:
   virtual ~nsZipReaderCache();
 
-  mozilla::Mutex        mLock;
-  uint32_t              mCacheSize;
-  ZipsHashtable         mZips;
+  mozilla::Mutex mLock;
+  uint32_t mCacheSize;
+  ZipsHashtable mZips;
 
 #ifdef ZIP_CACHE_HIT_RATE
-  uint32_t              mZipCacheLookups;
-  uint32_t              mZipCacheHits;
-  uint32_t              mZipCacheFlushes;
-  uint32_t              mZipSyncMisses;
+  uint32_t mZipCacheLookups;
+  uint32_t mZipCacheHits;
+  uint32_t mZipCacheFlushes;
+  uint32_t mZipSyncMisses;
 #endif
 
-private:
-  nsresult GetZip(nsIFile* zipFile, nsIZipReader* *result, bool failOnMiss);
+ private:
+  nsresult GetZip(nsIFile* zipFile, nsIZipReader** result, bool failOnMiss);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

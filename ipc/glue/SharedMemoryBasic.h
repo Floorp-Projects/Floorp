@@ -8,11 +8,11 @@
 #define mozilla_ipc_SharedMemoryBasic_h
 
 #ifdef ANDROID
-#  include "mozilla/ipc/SharedMemoryBasic_android.h"
+#include "mozilla/ipc/SharedMemoryBasic_android.h"
 #elif defined(XP_DARWIN)
-#  include "mozilla/ipc/SharedMemoryBasic_mach.h"
+#include "mozilla/ipc/SharedMemoryBasic_mach.h"
 #else
-#  include "mozilla/ipc/SharedMemoryBasic_chromium.h"
+#include "mozilla/ipc/SharedMemoryBasic_chromium.h"
 #endif
 
-#endif // ifndef mozilla_ipc_SharedMemoryBasic_h
+#endif  // ifndef mozilla_ipc_SharedMemoryBasic_h

@@ -33,12 +33,11 @@ namespace mozilla {
 namespace dom {
 class AutoJSAPI;
 class Element;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsJSUtils
-{
-public:
+class nsJSUtils {
+ public:
   static bool GetCallingLocation(JSContext* aContext, nsACString& aFilename,
                                  uint32_t* aLineno = nullptr,
                                  uint32_t* aColumn = nullptr);
@@ -54,17 +53,15 @@ public:
    *
    * @returns uint64_t the inner window ID.
    */
-  static uint64_t GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext);
+  static uint64_t GetCurrentlyRunningCodeInnerWindowID(JSContext* aContext);
 
   static nsresult CompileFunction(mozilla::dom::AutoJSAPI& jsapi,
                                   JS::AutoObjectVector& aScopeChain,
                                   JS::CompileOptions& aOptions,
-                                  const nsACString& aName,
-                                  uint32_t aArgCount,
+                                  const nsACString& aName, uint32_t aArgCount,
                                   const char** aArgArray,
                                   const nsAString& aBody,
                                   JSObject** aFunctionObject);
-
 
   // ExecutionContext is used to switch compartment.
   class MOZ_STACK_CLASS ExecutionContext {
@@ -106,7 +103,6 @@ public:
 #endif
 
    public:
-
     // Enter compartment in which the code would be executed.  The JSContext
     // must come from an AutoEntryScript.
     ExecutionContext(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
@@ -175,10 +171,12 @@ public:
     // After getting a notification that an off-thread decoding terminated, this
     // function will get the result of the decoder by moving it to the main
     // thread before starting the execution of the script.
-    MOZ_MUST_USE nsresult DecodeJoinAndExec(JS::OffThreadToken** aOffThreadToken);
+    MOZ_MUST_USE nsresult
+    DecodeJoinAndExec(JS::OffThreadToken** aOffThreadToken);
 
-    MOZ_MUST_USE nsresult DecodeBinASTJoinAndExec(JS::OffThreadToken** aOffThreadToken,
-                                                  JS::MutableHandle<JSScript*> aScript);
+    MOZ_MUST_USE nsresult
+    DecodeBinASTJoinAndExec(JS::OffThreadToken** aOffThreadToken,
+                            JS::MutableHandle<JSScript*> aScript);
 
     // Decode a BinAST encoded script contained in a buffer, and execute it.
     nsresult DecodeBinASTAndExec(JS::CompileOptions& aCompileOptions,
@@ -189,7 +187,7 @@ public:
   static nsresult CompileModule(JSContext* aCx,
                                 JS::SourceText<char16_t>& aSrcBuf,
                                 JS::Handle<JSObject*> aEvaluationGlobal,
-                                JS::CompileOptions &aCompileOptions,
+                                JS::CompileOptions& aCompileOptions,
                                 JS::MutableHandle<JSObject*> aModule);
 
   static nsresult InitModuleSourceElement(JSContext* aCx,
@@ -199,8 +197,7 @@ public:
   static nsresult ModuleInstantiate(JSContext* aCx,
                                     JS::Handle<JSObject*> aModule);
 
-  static nsresult ModuleEvaluate(JSContext* aCx,
-                                 JS::Handle<JSObject*> aModule);
+  static nsresult ModuleEvaluate(JSContext* aCx, JS::Handle<JSObject*> aModule);
 
   // Returns false if an exception got thrown on aCx.  Passing a null
   // aElement is allowed; that wil produce an empty aScopeChain.
@@ -222,10 +219,8 @@ public:
   static void ResetTimeZone();
 };
 
-template<typename T>
-inline bool
-AssignJSString(JSContext *cx, T &dest, JSString *s)
-{
+template <typename T>
+inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
   size_t len = JS::GetStringLength(s);
   static_assert(js::MaxStringLength < (1 << 30),
                 "Shouldn't overflow here or in SetCapacity");
@@ -236,9 +231,7 @@ AssignJSString(JSContext *cx, T &dest, JSString *s)
   return js::CopyStringChars(cx, dest.BeginWriting(), s, len);
 }
 
-inline void
-AssignJSFlatString(nsAString &dest, JSFlatString *s)
-{
+inline void AssignJSFlatString(nsAString& dest, JSFlatString* s) {
   size_t len = js::GetFlatStringLength(s);
   static_assert(js::MaxStringLength < (1 << 30),
                 "Shouldn't overflow here or in SetCapacity");
@@ -246,23 +239,19 @@ AssignJSFlatString(nsAString &dest, JSFlatString *s)
   js::CopyFlatStringChars(dest.BeginWriting(), s, len);
 }
 
-class nsAutoJSString : public nsAutoString
-{
-public:
-
+class nsAutoJSString : public nsAutoString {
+ public:
   /**
    * nsAutoJSString should be default constructed, which leaves it empty
    * (this->IsEmpty()), and initialized with one of the init() methods below.
    */
   nsAutoJSString() {}
 
-  bool init(JSContext* aContext, JSString* str)
-  {
+  bool init(JSContext* aContext, JSString* str) {
     return AssignJSString(aContext, *this, str);
   }
 
-  bool init(JSContext* aContext, const JS::Value &v)
-  {
+  bool init(JSContext* aContext, const JS::Value& v) {
     if (v.isString()) {
       return init(aContext, v.toString());
     }
@@ -279,13 +268,12 @@ public:
     return str && init(aContext, str);
   }
 
-  bool init(JSContext* aContext, jsid id)
-  {
+  bool init(JSContext* aContext, jsid id) {
     JS::Rooted<JS::Value> v(aContext);
     return JS_IdToValue(aContext, id, &v) && init(aContext, v);
   }
 
-  bool init(const JS::Value &v);
+  bool init(const JS::Value& v);
 
   ~nsAutoJSString() {}
 };

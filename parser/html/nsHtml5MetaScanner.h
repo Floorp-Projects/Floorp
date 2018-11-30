@@ -55,9 +55,8 @@ class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
 
-class nsHtml5MetaScanner
-{
-private:
+class nsHtml5MetaScanner {
+ private:
   static staticJArray<char16_t, int32_t> CHARSET;
   static staticJArray<char16_t, int32_t> CONTENT;
   static staticJArray<char16_t, int32_t> HTTP_EQUIV;
@@ -118,32 +117,37 @@ private:
 
   static const int32_t HTTP_EQUIV_OTHER = 2;
 
-protected:
+ protected:
   nsHtml5ByteReadable* readable;
-private:
+
+ private:
   int32_t metaState;
   int32_t contentIndex;
   int32_t charsetIndex;
   int32_t httpEquivIndex;
   int32_t contentTypeIndex;
-protected:
+
+ protected:
   int32_t stateSave;
-private:
+
+ private:
   int32_t strBufLen;
   autoJArray<char16_t, int32_t> strBuf;
   nsHtml5String content;
   nsHtml5String charset;
   int32_t httpEquivState;
   nsHtml5TreeBuilder* treeBuilder;
-public:
+
+ public:
   explicit nsHtml5MetaScanner(nsHtml5TreeBuilder* tb);
   ~nsHtml5MetaScanner();
-protected:
+
+ protected:
   void stateLoop(int32_t state);
-private:
+
+ private:
   void handleCharInAttributeValue(int32_t c);
-  inline int32_t toAsciiLowerCase(int32_t c)
-  {
+  inline int32_t toAsciiLowerCase(int32_t c) {
     if (c >= 'A' && c <= 'Z') {
       return c + 0x20;
     }
@@ -154,9 +158,11 @@ private:
   void handleAttributeValue();
   bool handleTag();
   bool handleTagInner();
-protected:
+
+ protected:
   bool tryCharset(nsHtml5String encoding);
-public:
+
+ public:
   static void initializeStatics();
   static void releaseStatics();
 

@@ -12,33 +12,30 @@
 #include "jsapi.h"
 
 CPOWTimer::CPOWTimer(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : cx_(nullptr)
-    , startInterval_(0)
-{
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (!js::GetStopwatchIsMonitoringCPOW(cx)) {
-        return;
-    }
-    cx_ = cx;
-    startInterval_ = JS_Now();
+    : cx_(nullptr), startInterval_(0) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  if (!js::GetStopwatchIsMonitoringCPOW(cx)) {
+    return;
+  }
+  cx_ = cx;
+  startInterval_ = JS_Now();
 }
-CPOWTimer::~CPOWTimer()
-{
-    if (!cx_) {
-        // Monitoring was off when we started the timer.
-        return;
-    }
+CPOWTimer::~CPOWTimer() {
+  if (!cx_) {
+    // Monitoring was off when we started the timer.
+    return;
+  }
 
-    if (!js::GetStopwatchIsMonitoringCPOW(cx_)) {
-        // Monitoring has been deactivated while we were in the timer.
-        return;
-    }
+  if (!js::GetStopwatchIsMonitoringCPOW(cx_)) {
+    // Monitoring has been deactivated while we were in the timer.
+    return;
+  }
 
-    const int64_t endInterval = JS_Now();
-    if (endInterval <= startInterval_) {
-        // Do not assume monotonicity.
-        return;
-    }
+  const int64_t endInterval = JS_Now();
+  if (endInterval <= startInterval_) {
+    // Do not assume monotonicity.
+    return;
+  }
 
-    js::AddCPOWPerformanceDelta(cx_, endInterval - startInterval_);
+  js::AddCPOWPerformanceDelta(cx_, endInterval - startInterval_);
 }

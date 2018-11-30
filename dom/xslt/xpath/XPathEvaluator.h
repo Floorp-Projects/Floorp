@@ -29,50 +29,41 @@ class XPathResult;
 /**
  * A class for evaluating an XPath expression string
  */
-class XPathEvaluator final : public NonRefcountedDOMObject
-{
-public:
-    explicit XPathEvaluator(nsIDocument* aDocument = nullptr);
-    ~XPathEvaluator();
+class XPathEvaluator final : public NonRefcountedDOMObject {
+ public:
+  explicit XPathEvaluator(nsIDocument* aDocument = nullptr);
+  ~XPathEvaluator();
 
-    // WebIDL API
-    bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
-    nsIDocument* GetParentObject()
-    {
-        nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-        return doc;
-    }
-    static XPathEvaluator*
-        Constructor(const GlobalObject& aGlobal, ErrorResult& rv);
-    XPathExpression*
-        CreateExpression(const nsAString& aExpression,
-                         XPathNSResolver* aResolver,
-                         ErrorResult& rv);
-    XPathExpression*
-        CreateExpression(const nsAString& aExpression,
-                         nsINode* aResolver,
-                         ErrorResult& aRv);
-    nsINode* CreateNSResolver(nsINode& aNodeResolver)
-    {
-        return &aNodeResolver;
-    }
-    already_AddRefed<XPathResult>
-        Evaluate(JSContext* aCx, const nsAString& aExpression,
-                 nsINode& aContextNode, XPathNSResolver* aResolver,
-                 uint16_t aType, JS::Handle<JSObject*> aResult,
-                 ErrorResult& rv);
-private:
-    XPathExpression*
-        CreateExpression(const nsAString& aExpression,
-                         txIParseContext* aContext,
-                         nsIDocument* aDocument,
-                         ErrorResult& aRv);
+  // WebIDL API
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aReflector);
+  nsIDocument* GetParentObject() {
+    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+    return doc;
+  }
+  static XPathEvaluator* Constructor(const GlobalObject& aGlobal,
+                                     ErrorResult& rv);
+  XPathExpression* CreateExpression(const nsAString& aExpression,
+                                    XPathNSResolver* aResolver,
+                                    ErrorResult& rv);
+  XPathExpression* CreateExpression(const nsAString& aExpression,
+                                    nsINode* aResolver, ErrorResult& aRv);
+  nsINode* CreateNSResolver(nsINode& aNodeResolver) { return &aNodeResolver; }
+  already_AddRefed<XPathResult> Evaluate(
+      JSContext* aCx, const nsAString& aExpression, nsINode& aContextNode,
+      XPathNSResolver* aResolver, uint16_t aType, JS::Handle<JSObject*> aResult,
+      ErrorResult& rv);
 
-    nsWeakPtr mDocument;
-    RefPtr<txResultRecycler> mRecycler;
+ private:
+  XPathExpression* CreateExpression(const nsAString& aExpression,
+                                    txIParseContext* aContext,
+                                    nsIDocument* aDocument, ErrorResult& aRv);
+
+  nsWeakPtr mDocument;
+  RefPtr<txResultRecycler> mRecycler;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_XPathEvaluator_h */

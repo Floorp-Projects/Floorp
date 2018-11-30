@@ -19,6 +19,6 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
                           base::LaunchOptions* aOptions);
 bool HasAtiDrivers();
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SandboxLaunch_h
+#endif  // mozilla_SandboxLaunch_h

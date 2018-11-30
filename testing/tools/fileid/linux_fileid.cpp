@@ -14,9 +14,7 @@ using google_breakpad::auto_wasteful_vector;
 using google_breakpad::FileID;
 using google_breakpad::PageAllocator;
 
-int main(int argc, char** argv)
-{
-
+int main(int argc, char** argv) {
   if (argc != 2) {
     fprintf(stderr, "usage: fileid <elf file>\n");
     return 1;
@@ -26,8 +24,7 @@ int main(int argc, char** argv)
   auto_wasteful_vector<uint8_t, sizeof(MDGUID)> identifier(&allocator);
   FileID file_id(argv[1]);
   if (!file_id.ElfFileIdentifier(identifier)) {
-    fprintf(stderr, "%s: unable to generate file identifier\n",
-            argv[1]);
+    fprintf(stderr, "%s: unable to generate file identifier\n", argv[1]);
     return 1;
   }
 

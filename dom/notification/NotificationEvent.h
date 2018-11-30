@@ -18,28 +18,23 @@ namespace dom {
 class ServiceWorker;
 class ServiceWorkerClient;
 
-class NotificationEvent final : public ExtendableEvent
-{
-protected:
+class NotificationEvent final : public ExtendableEvent {
+ protected:
   explicit NotificationEvent(EventTarget* aOwner);
-  ~NotificationEvent()
-  {}
+  ~NotificationEvent() {}
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(NotificationEvent, ExtendableEvent)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return NotificationEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  static already_AddRefed<NotificationEvent>
-  Constructor(mozilla::dom::EventTarget* aOwner,
-              const nsAString& aType,
-              const NotificationEventInit& aOptions,
-              ErrorResult& aRv)
-  {
+  static already_AddRefed<NotificationEvent> Constructor(
+      mozilla::dom::EventTarget* aOwner, const nsAString& aType,
+      const NotificationEventInit& aOptions, ErrorResult& aRv) {
     RefPtr<NotificationEvent> e = new NotificationEvent(aOwner);
     bool trusted = e->Init(aOwner);
     e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
@@ -50,28 +45,23 @@ public:
     return e.forget();
   }
 
-  static already_AddRefed<NotificationEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const NotificationEventInit& aOptions,
-              ErrorResult& aRv)
-  {
+  static already_AddRefed<NotificationEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const NotificationEventInit& aOptions, ErrorResult& aRv) {
     nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
     return Constructor(owner, aType, aOptions, aRv);
   }
 
-  already_AddRefed<Notification>
-  Notification_()
-  {
+  already_AddRefed<Notification> Notification_() {
     RefPtr<Notification> n = mNotification;
     return n.forget();
   }
 
-private:
+ private:
   RefPtr<Notification> mNotification;
 };
 
-} // dom namspace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_workers_notificationevent_h__ */

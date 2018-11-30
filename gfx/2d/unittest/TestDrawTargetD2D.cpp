@@ -7,18 +7,16 @@
 #include "TestDrawTargetD2D.h"
 
 using namespace mozilla::gfx;
-TestDrawTargetD2D::TestDrawTargetD2D()
-{
-  ::D3D10CreateDevice1(nullptr,
-                       D3D10_DRIVER_TYPE_HARDWARE,
-                       nullptr,
-                       D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-                       D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-                       D3D10_FEATURE_LEVEL_10_0,
-                       D3D10_1_SDK_VERSION,
-                       getter_AddRefs(mDevice));
+TestDrawTargetD2D::TestDrawTargetD2D() {
+  ::D3D10CreateDevice1(
+      nullptr, D3D10_DRIVER_TYPE_HARDWARE, nullptr,
+      D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+          D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+      D3D10_FEATURE_LEVEL_10_0, D3D10_1_SDK_VERSION, getter_AddRefs(mDevice));
 
   Factory::SetDirect3D10Device(mDevice);
 
-  mDT = Factory::CreateDrawTarget(BackendType::DIRECT2D, IntSize(DT_WIDTH, DT_HEIGHT), SurfaceFormat::B8G8R8A8);
+  mDT = Factory::CreateDrawTarget(BackendType::DIRECT2D,
+                                  IntSize(DT_WIDTH, DT_HEIGHT),
+                                  SurfaceFormat::B8G8R8A8);
 }

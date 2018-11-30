@@ -44,65 +44,51 @@ using mozilla::dom::Location;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void
-nsChromeRegistry::LogMessage(const char* aMsg, ...)
-{
-  nsCOMPtr<nsIConsoleService> console
-    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  if (!console)
-    return;
+void nsChromeRegistry::LogMessage(const char* aMsg, ...) {
+  nsCOMPtr<nsIConsoleService> console(
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!console) return;
 
   va_list args;
   va_start(args, aMsg);
   mozilla::SmprintfPointer formatted = mozilla::Vsmprintf(aMsg, args);
   va_end(args);
-  if (!formatted)
-    return;
+  if (!formatted) return;
 
   console->LogStringMessage(NS_ConvertUTF8toUTF16(formatted.get()).get());
 }
 
-void
-nsChromeRegistry::LogMessageWithContext(nsIURI* aURL, uint32_t aLineNumber, uint32_t flags,
-                                        const char* aMsg, ...)
-{
+void nsChromeRegistry::LogMessageWithContext(nsIURI* aURL, uint32_t aLineNumber,
+                                             uint32_t flags, const char* aMsg,
+                                             ...) {
   nsresult rv;
 
-  nsCOMPtr<nsIConsoleService> console
-    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  nsCOMPtr<nsIConsoleService> console(
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID));
 
-  nsCOMPtr<nsIScriptError> error
-    (do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-  if (!console || !error)
-    return;
+  nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  if (!console || !error) return;
 
   va_list args;
   va_start(args, aMsg);
   mozilla::SmprintfPointer formatted = mozilla::Vsmprintf(aMsg, args);
   va_end(args);
-  if (!formatted)
-    return;
+  if (!formatted) return;
 
   nsCString spec;
-  if (aURL)
-    aURL->GetSpec(spec);
+  if (aURL) aURL->GetSpec(spec);
 
   rv = error->Init(NS_ConvertUTF8toUTF16(formatted.get()),
-                   NS_ConvertUTF8toUTF16(spec),
-                   EmptyString(),
-                   aLineNumber, 0, flags, "chrome registration",
+                   NS_ConvertUTF8toUTF16(spec), EmptyString(), aLineNumber, 0,
+                   flags, "chrome registration",
                    false /* from private window */);
 
-  if (NS_FAILED(rv))
-    return;
+  if (NS_FAILED(rv)) return;
 
   console->LogMessage(error);
 }
 
-nsChromeRegistry::~nsChromeRegistry()
-{
-  gChromeRegistry = nullptr;
-}
+nsChromeRegistry::~nsChromeRegistry() { gChromeRegistry = nullptr; }
 
 NS_INTERFACE_MAP_BEGIN(nsChromeRegistry)
   NS_INTERFACE_MAP_ENTRY(nsIChromeRegistry)
@@ -119,25 +105,19 @@ NS_IMPL_RELEASE(nsChromeRegistry)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:
 
-already_AddRefed<nsIChromeRegistry>
-nsChromeRegistry::GetService()
-{
-  if (!gChromeRegistry)
-  {
+already_AddRefed<nsIChromeRegistry> nsChromeRegistry::GetService() {
+  if (!gChromeRegistry) {
     // We don't actually want this ref, we just want the service to
     // initialize if it hasn't already.
     nsCOMPtr<nsIChromeRegistry> reg(
         do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
-    if (!gChromeRegistry)
-      return nullptr;
+    if (!gChromeRegistry) return nullptr;
   }
   nsCOMPtr<nsIChromeRegistry> registry = gChromeRegistry;
   return registry.forget();
 }
 
-nsresult
-nsChromeRegistry::Init()
-{
+nsresult nsChromeRegistry::Init() {
   // This initialization process is fairly complicated and may cause reentrant
   // getservice calls to resolve chrome URIs (especially locale files). We
   // don't want that, so we inform the protocol handler about our existence
@@ -149,10 +129,9 @@ nsChromeRegistry::Init()
   return NS_OK;
 }
 
-nsresult
-nsChromeRegistry::GetProviderAndPath(nsIURI* aChromeURL,
-                                     nsACString& aProvider, nsACString& aPath)
-{
+nsresult nsChromeRegistry::GetProviderAndPath(nsIURI* aChromeURL,
+                                              nsACString& aProvider,
+                                              nsACString& aPath) {
   nsresult rv;
 
 #ifdef DEBUG
@@ -181,9 +160,8 @@ nsChromeRegistry::GetProviderAndPath(nsIURI* aChromeURL,
 
   if (slash == -1) {
     aPath.Truncate();
-  }
-  else {
-    if (slash == (int32_t) path.Length() - 1)
+  } else {
+    if (slash == (int32_t)path.Length() - 1)
       aPath.Truncate();
     else
       aPath.Assign(path.get() + slash + 1, path.Length() - slash - 1);
@@ -195,10 +173,7 @@ nsChromeRegistry::GetProviderAndPath(nsIURI* aChromeURL,
   return NS_OK;
 }
 
-
-nsresult
-nsChromeRegistry::Canonify(nsCOMPtr<nsIURI>& aChromeURL)
-{
+nsresult nsChromeRegistry::Canonify(nsCOMPtr<nsIURI>& aChromeURL) {
   NS_NAMED_LITERAL_CSTRING(kSlash, "/");
 
   nsresult rv;
@@ -216,28 +191,21 @@ nsChromeRegistry::Canonify(nsCOMPtr<nsIURI>& aChromeURL)
     path.Assign(kSlash + provider + kSlash + package);
     if (provider.EqualsLiteral("content")) {
       path.AppendLiteral(".xul");
-    }
-    else if (provider.EqualsLiteral("locale")) {
+    } else if (provider.EqualsLiteral("locale")) {
       path.AppendLiteral(".dtd");
-    }
-    else if (provider.EqualsLiteral("skin")) {
+    } else if (provider.EqualsLiteral("skin")) {
       path.AppendLiteral(".css");
-    }
-    else {
+    } else {
       return NS_ERROR_INVALID_ARG;
     }
-    return NS_MutateURI(aChromeURL)
-             .SetPathQueryRef(path)
-             .Finalize(aChromeURL);
-  }
-  else {
+    return NS_MutateURI(aChromeURL).SetPathQueryRef(path).Finalize(aChromeURL);
+  } else {
     // prevent directory traversals ("..")
     // path is already unescaped once, but uris can get unescaped twice
     const char* pos = path.BeginReading();
     const char* end = path.EndReading();
     // Must start with [a-zA-Z0-9].
-    if (!('a' <= *pos && *pos <= 'z') &&
-        !('A' <= *pos && *pos <= 'Z') &&
+    if (!('a' <= *pos && *pos <= 'z') && !('A' <= *pos && *pos <= 'Z') &&
         !('0' <= *pos && *pos <= '9')) {
       return NS_ERROR_DOM_BAD_URI;
     }
@@ -246,15 +214,13 @@ nsChromeRegistry::Canonify(nsCOMPtr<nsIURI>& aChromeURL)
         case ':':
           return NS_ERROR_DOM_BAD_URI;
         case '.':
-          if (pos[1] == '.')
-            return NS_ERROR_DOM_BAD_URI;
+          if (pos[1] == '.') return NS_ERROR_DOM_BAD_URI;
           break;
         case '%':
           // chrome: URIs with double-escapes are trying to trick us.
           // watch for %2e, and %25 in case someone triple unescapes
           if (pos[1] == '2' &&
-               ( pos[2] == 'e' || pos[2] == 'E' ||
-                 pos[2] == '5' ))
+              (pos[2] == 'e' || pos[2] == 'E' || pos[2] == '5'))
             return NS_ERROR_DOM_BAD_URI;
           break;
         case '?':
@@ -270,17 +236,15 @@ nsChromeRegistry::Canonify(nsCOMPtr<nsIURI>& aChromeURL)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
-{
+nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI** aResult) {
   nsresult rv;
   if (NS_WARN_IF(!aChromeURI)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (mOverrideTable.Get(aChromeURI, aResult))
-    return NS_OK;
+  if (mOverrideTable.Get(aChromeURI, aResult)) return NS_OK;
 
-  nsCOMPtr<nsIURL> chromeURL (do_QueryInterface(aChromeURI));
+  nsCOMPtr<nsIURL> chromeURL(do_QueryInterface(aChromeURI));
   NS_ENSURE_TRUE(chromeURL, NS_NOINTERFACE);
 
   nsAutoCString package, provider, path;
@@ -294,8 +258,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
 
   uint32_t flags;
   rv = GetFlagsFromPackage(package, &flags);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   if (!baseURI) {
     LogMessage("No chrome package registered for chrome://%s/%s/%s",
@@ -310,25 +273,20 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
 
 // theme stuff
 
-
-static void FlushSkinBindingsForWindow(nsPIDOMWindowOuter* aWindow)
-{
+static void FlushSkinBindingsForWindow(nsPIDOMWindowOuter* aWindow) {
   // Get the document.
   nsCOMPtr<nsIDocument> document = aWindow->GetDoc();
-  if (!document)
-    return;
+  if (!document) return;
 
   // Annihilate all XBL bindings.
   document->FlushSkinBindings();
 }
 
 // XXXbsmedberg: move this to nsIWindowMediator
-NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
-{
-  nsCOMPtr<nsIWindowMediator> windowMediator
-    (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
-  if (!windowMediator)
-    return NS_OK;
+NS_IMETHODIMP nsChromeRegistry::RefreshSkins() {
+  nsCOMPtr<nsIWindowMediator> windowMediator(
+      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
+  if (!windowMediator) return NS_OK;
 
   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
   windowMediator->GetEnumerator(nullptr, getter_AddRefs(windowEnumerator));
@@ -339,8 +297,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     windowEnumerator->GetNext(getter_AddRefs(protoWindow));
     if (protoWindow) {
       nsCOMPtr<nsPIDOMWindowOuter> domWindow = do_QueryInterface(protoWindow);
-      if (domWindow)
-        FlushSkinBindingsForWindow(domWindow);
+      if (domWindow) FlushSkinBindingsForWindow(domWindow);
     }
     windowEnumerator->HasMoreElements(&more);
   }
@@ -354,8 +311,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     windowEnumerator->GetNext(getter_AddRefs(protoWindow));
     if (protoWindow) {
       nsCOMPtr<nsPIDOMWindowOuter> domWindow = do_QueryInterface(protoWindow);
-      if (domWindow)
-        RefreshWindow(domWindow);
+      if (domWindow) RefreshWindow(domWindow);
     }
     windowEnumerator->HasMoreElements(&more);
   }
@@ -363,11 +319,8 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
   return NS_OK;
 }
 
-void
-nsChromeRegistry::FlushSkinCaches()
-{
-  nsCOMPtr<nsIObserverService> obsSvc =
-    mozilla::services::GetObserverService();
+void nsChromeRegistry::FlushSkinCaches() {
+  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   NS_ASSERTION(obsSvc, "Couldn't get observer service.");
 
   obsSvc->NotifyObservers(static_cast<nsIChromeRegistry*>(this),
@@ -375,8 +328,7 @@ nsChromeRegistry::FlushSkinCaches()
 }
 
 // XXXbsmedberg: move this to windowmediator
-nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
-{
+nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow) {
   // Deal with our subframes first.
   nsDOMWindowList* frames = aWindow->GetFrames();
   uint32_t length = frames->GetLength();
@@ -388,8 +340,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
   nsresult rv;
   // Get the document.
   nsCOMPtr<nsIDocument> document = aWindow->GetDoc();
-  if (!document)
-    return NS_OK;
+  if (!document) return NS_OK;
 
   // Deal with the agent sheets first.  Have to do all the style sets by hand.
   nsCOMPtr<nsIPresShell> shell = document->GetShell();
@@ -412,8 +363,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
           newAgentSheets.AppendElement(newSheet);
           return NS_OK;
         }
-      }
-      else {  // Just use the same sheet.
+      } else {  // Just use the same sheet.
         rv = newAgentSheets.AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
         if (NS_FAILED(rv)) return rv;
       }
@@ -438,8 +388,9 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
   // Iterate over our old sheets and kick off a sync load of the new
   // sheet if and only if it's a non-inline sheet with a chrome URL.
   for (StyleSheet* sheet : oldSheets) {
-    MOZ_ASSERT(sheet, "SheetAt shouldn't return nullptr for "
-                      "in-range sheet indexes");
+    MOZ_ASSERT(sheet,
+               "SheetAt shouldn't return nullptr for "
+               "in-range sheet indexes");
     nsIURI* uri = sheet->GetSheetURI();
 
     if (!sheet->IsInline() && IsChromeURI(uri)) {
@@ -461,20 +412,16 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
   return NS_OK;
 }
 
-void
-nsChromeRegistry::FlushAllCaches()
-{
-  nsCOMPtr<nsIObserverService> obsSvc =
-    mozilla::services::GetObserverService();
+void nsChromeRegistry::FlushAllCaches() {
+  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   NS_ASSERTION(obsSvc, "Couldn't get observer service.");
 
-  obsSvc->NotifyObservers((nsIChromeRegistry*) this,
-                          NS_CHROME_FLUSH_TOPIC, nullptr);
+  obsSvc->NotifyObservers((nsIChromeRegistry*)this, NS_CHROME_FLUSH_TOPIC,
+                          nullptr);
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, bool *aResult)
-{
+nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, bool* aResult) {
   nsresult rv;
   *aResult = false;
 
@@ -484,22 +431,20 @@ nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, bool *aResult)
   NS_ASSERTION(isChrome, "Non-chrome URI passed to AllowScriptsForPackage!");
 #endif
 
-  nsCOMPtr<nsIURL> url (do_QueryInterface(aChromeURI));
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aChromeURI));
   NS_ENSURE_TRUE(url, NS_NOINTERFACE);
 
   nsAutoCString provider, file;
   rv = GetProviderAndPath(url, provider, file);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!provider.EqualsLiteral("skin"))
-    *aResult = true;
+  if (!provider.EqualsLiteral("skin")) *aResult = true;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::AllowContentToAccess(nsIURI *aURI, bool *aResult)
-{
+nsChromeRegistry::AllowContentToAccess(nsIURI* aURI, bool* aResult) {
   nsresult rv;
 
   *aResult = false;
@@ -530,8 +475,7 @@ nsChromeRegistry::AllowContentToAccess(nsIURI *aURI, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::CanLoadURLRemotely(nsIURI *aURI, bool *aResult)
-{
+nsChromeRegistry::CanLoadURLRemotely(nsIURI* aURI, bool* aResult) {
   nsresult rv;
 
   *aResult = false;
@@ -562,8 +506,7 @@ nsChromeRegistry::CanLoadURLRemotely(nsIURI *aURI, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::MustLoadURLRemotely(nsIURI *aURI, bool *aResult)
-{
+nsChromeRegistry::MustLoadURLRemotely(nsIURI* aURI, bool* aResult) {
   nsresult rv;
 
   *aResult = false;
@@ -593,9 +536,7 @@ nsChromeRegistry::MustLoadURLRemotely(nsIURI *aURI, bool *aResult)
   return NS_OK;
 }
 
-bool
-nsChromeRegistry::GetDirectionForLocale(const nsACString& aLocale)
-{
+bool nsChromeRegistry::GetDirectionForLocale(const nsACString& aLocale) {
   int pref = mozilla::Preferences::GetInt("intl.uidirection", -1);
   if (pref >= 0) {
     return (pref > 0);
@@ -605,9 +546,7 @@ nsChromeRegistry::GetDirectionForLocale(const nsACString& aLocale)
   return uloc_isRightToLeft(locale.get());
 }
 
-already_AddRefed<nsChromeRegistry>
-nsChromeRegistry::GetSingleton()
-{
+already_AddRefed<nsChromeRegistry> nsChromeRegistry::GetSingleton() {
   if (gChromeRegistry) {
     RefPtr<nsChromeRegistry> registry = gChromeRegistry;
     return registry.forget();
@@ -619,15 +558,12 @@ nsChromeRegistry::GetSingleton()
   else
     cr = new nsChromeRegistryChrome();
 
-  if (NS_FAILED(cr->Init()))
-    return nullptr;
+  if (NS_FAILED(cr->Init())) return nullptr;
 
   return cr.forget();
 }
 
-void
-nsChromeRegistry::SanitizeForBCP47(nsACString& aLocale)
-{
+void nsChromeRegistry::SanitizeForBCP47(nsACString& aLocale) {
   // Currently, the only locale code we use that's not BCP47-conformant is
   // "ja-JP-mac" on OS X, but let's try to be more general than just
   // hard-coding that here.
@@ -637,8 +573,8 @@ nsChromeRegistry::SanitizeForBCP47(nsACString& aLocale)
   UErrorCode err = U_ZERO_ERROR;
   // This is a fail-safe method that will set langTag to "und" if it cannot
   // match any part of the input locale code.
-  int32_t len = uloc_toLanguageTag(locale.get(), langTag, LANG_TAG_CAPACITY,
-                                   false, &err);
+  int32_t len =
+      uloc_toLanguageTag(locale.get(), langTag, LANG_TAG_CAPACITY, false, &err);
   if (U_SUCCESS(err) && len > 0) {
     aLocale.Assign(langTag, len);
   }

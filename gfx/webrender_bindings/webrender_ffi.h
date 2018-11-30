@@ -26,7 +26,8 @@ const char* gfx_wr_resource_path_override();
 void gfx_critical_note(const char* msg);
 void gfx_critical_error(const char* msg);
 void gecko_printf_stderr_output(const char* msg);
-void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
+void* get_proc_address_from_glcontext(void* glcontext_ptr,
+                                      const char* procname);
 void gecko_profiler_register_thread(const char* threadname);
 void gecko_profiler_unregister_thread();
 
@@ -55,7 +56,7 @@ struct FontInstanceFlags {
   }
 
   FontInstanceFlags operator|(uint32_t aBits) const {
-    FontInstanceFlags flags = { bits | aBits };
+    FontInstanceFlags flags = {bits | aBits};
     return flags;
   }
 
@@ -65,29 +66,29 @@ struct FontInstanceFlags {
   }
 
   FontInstanceFlags operator&(uint32_t aBits) const {
-    FontInstanceFlags flags = { bits & aBits };
+    FontInstanceFlags flags = {bits & aBits};
     return flags;
   }
 
   MOZ_IMPLICIT operator bool() const { return bits != 0; }
 
   enum : uint32_t {
-    SYNTHETIC_BOLD    = 1 << 1,
-    EMBEDDED_BITMAPS  = 1 << 2,
-    SUBPIXEL_BGR      = 1 << 3,
-    TRANSPOSE         = 1 << 4,
-    FLIP_X            = 1 << 5,
-    FLIP_Y            = 1 << 6,
+    SYNTHETIC_BOLD = 1 << 1,
+    EMBEDDED_BITMAPS = 1 << 2,
+    SUBPIXEL_BGR = 1 << 3,
+    TRANSPOSE = 1 << 4,
+    FLIP_X = 1 << 5,
+    FLIP_Y = 1 << 6,
     SUBPIXEL_POSITION = 1 << 7,
 
-    FORCE_GDI         = 1 << 16,
+    FORCE_GDI = 1 << 16,
 
-    FONT_SMOOTHING    = 1 << 16,
+    FONT_SMOOTHING = 1 << 16,
 
-    FORCE_AUTOHINT    = 1 << 16,
-    NO_AUTOHINT       = 1 << 17,
-    VERTICAL_LAYOUT   = 1 << 18,
-    LCD_VERTICAL      = 1 << 19
+    FORCE_AUTOHINT = 1 << 16,
+    NO_AUTOHINT = 1 << 17,
+    VERTICAL_LAYOUT = 1 << 18,
+    LCD_VERTICAL = 1 << 19
   };
 };
 
@@ -95,19 +96,21 @@ struct Transaction;
 struct WrWindowId;
 struct WrPipelineInfo;
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla
 
 void apz_register_updater(mozilla::wr::WrWindowId aWindowId);
 void apz_pre_scene_swap(mozilla::wr::WrWindowId aWindowId);
-void apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId, mozilla::wr::WrPipelineInfo aInfo);
+void apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId,
+                         mozilla::wr::WrPipelineInfo aInfo);
 void apz_run_updater(mozilla::wr::WrWindowId aWindowId);
 void apz_deregister_updater(mozilla::wr::WrWindowId aWindowId);
 
 void apz_register_sampler(mozilla::wr::WrWindowId aWindowId);
-void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId, mozilla::wr::Transaction *aTransaction);
+void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
+                           mozilla::wr::Transaction* aTransaction);
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
-} // extern "C"
+}  // extern "C"
 
 // Some useful defines to stub out webrender binding functions for when we
 // build gecko without webrender. We try to tell the compiler these functions
@@ -117,13 +120,15 @@ void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 // destructors in C++ classes, use WR_DESTRUCTOR_SAFE_FUNC instead, which omits
 // the unreachable annotation.
 #ifdef MOZ_BUILD_WEBRENDER
-#  define WR_INLINE
-#  define WR_FUNC
-#  define WR_DESTRUCTOR_SAFE_FUNC
+#define WR_INLINE
+#define WR_FUNC
+#define WR_DESTRUCTOR_SAFE_FUNC
 #else
-#  define WR_INLINE inline
-#  define WR_FUNC { MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("WebRender disabled"); }
-#  define WR_DESTRUCTOR_SAFE_FUNC {}
+#define WR_INLINE inline
+#define WR_FUNC \
+  { MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("WebRender disabled"); }
+#define WR_DESTRUCTOR_SAFE_FUNC \
+  {}
 #endif
 
 #include "webrender_ffi_generated.h"
@@ -134,7 +139,8 @@ void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 // More functions invoked from Rust code. These are down here because they
 // refer to data structures from webrender_ffi_generated.h
 extern "C" {
-void record_telemetry_time(mozilla::wr::TelemetryProbe aProbe, uint64_t aTimeNs);
+void record_telemetry_time(mozilla::wr::TelemetryProbe aProbe,
+                           uint64_t aTimeNs);
 }
 
 namespace mozilla {
@@ -144,8 +150,7 @@ namespace wr {
 // a display item.
 inline ImageKey AsImageKey(BlobImageKey aKey) { return aKey._0; }
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla
 
-
-#endif // WR_h
+#endif  // WR_h

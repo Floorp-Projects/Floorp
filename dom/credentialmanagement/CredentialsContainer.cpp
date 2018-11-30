@@ -22,9 +22,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CredentialsContainer)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-already_AddRefed<Promise>
-CreateAndReject(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
-{
+already_AddRefed<Promise> CreateAndReject(nsPIDOMWindowInner* aParent,
+                                          ErrorResult& aRv) {
   MOZ_ASSERT(aParent);
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
@@ -42,9 +41,7 @@ CreateAndReject(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
   return promise.forget();
 }
 
-static bool
-IsInActiveTab(nsPIDOMWindowInner* aParent)
-{
+static bool IsInActiveTab(nsPIDOMWindowInner* aParent) {
   // Returns whether aParent is an inner window somewhere in the active tab.
   // The active tab is the selected (i.e. visible) tab in the focused window.
   MOZ_ASSERT(aParent);
@@ -85,9 +82,7 @@ IsInActiveTab(nsPIDOMWindowInner* aParent)
   return activeWindow == rootWin;
 }
 
-static bool
-IsSameOriginWithAncestors(nsPIDOMWindowInner* aParent)
-{
+static bool IsSameOriginWithAncestors(nsPIDOMWindowInner* aParent) {
   // This method returns true if aParent is either not in a frame / iframe, or
   // is in a frame or iframe and all ancestors for aParent are the same origin.
   // This is useful for Credential Management because we need to prohibit
@@ -101,7 +96,8 @@ IsSameOriginWithAncestors(nsPIDOMWindowInner* aParent)
 
   // We're in some kind of frame, so let's get the parent and start checking
   // the same origin policy
-  nsINode* node = nsContentUtils::GetCrossDocParentNode(aParent->GetExtantDoc());
+  nsINode* node =
+      nsContentUtils::GetCrossDocParentNode(aParent->GetExtantDoc());
   if (NS_WARN_IF(!node)) {
     // This is a sanity check, since there has to be a parent. Fail safe.
     return false;
@@ -110,7 +106,8 @@ IsSameOriginWithAncestors(nsPIDOMWindowInner* aParent)
   // Check that all ancestors are the same origin, repeating until we find a
   // null parent
   do {
-    nsresult rv = nsContentUtils::CheckSameOrigin(aParent->GetExtantDoc(), node);
+    nsresult rv =
+        nsContentUtils::CheckSameOrigin(aParent->GetExtantDoc(), node);
     if (NS_FAILED(rv)) {
       // same-origin policy is violated
       return false;
@@ -122,18 +119,14 @@ IsSameOriginWithAncestors(nsPIDOMWindowInner* aParent)
   return true;
 }
 
-CredentialsContainer::CredentialsContainer(nsPIDOMWindowInner* aParent) :
-  mParent(aParent)
-{
+CredentialsContainer::CredentialsContainer(nsPIDOMWindowInner* aParent)
+    : mParent(aParent) {
   MOZ_ASSERT(aParent);
 }
 
-CredentialsContainer::~CredentialsContainer()
-{}
+CredentialsContainer::~CredentialsContainer() {}
 
-void
-CredentialsContainer::EnsureWebAuthnManager()
-{
+void CredentialsContainer::EnsureWebAuthnManager() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mManager) {
@@ -141,16 +134,13 @@ CredentialsContainer::EnsureWebAuthnManager()
   }
 }
 
-JSObject*
-CredentialsContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* CredentialsContainer::WrapObject(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return CredentialsContainer_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<Promise>
-CredentialsContainer::Get(const CredentialRequestOptions& aOptions,
-                          ErrorResult& aRv)
-{
+already_AddRefed<Promise> CredentialsContainer::Get(
+    const CredentialRequestOptions& aOptions, ErrorResult& aRv) {
   if (!IsSameOriginWithAncestors(mParent) || !IsInActiveTab(mParent)) {
     return CreateAndReject(mParent, aRv);
   }
@@ -159,10 +149,8 @@ CredentialsContainer::Get(const CredentialRequestOptions& aOptions,
   return mManager->GetAssertion(aOptions.mPublicKey, aOptions.mSignal);
 }
 
-already_AddRefed<Promise>
-CredentialsContainer::Create(const CredentialCreationOptions& aOptions,
-                             ErrorResult& aRv)
-{
+already_AddRefed<Promise> CredentialsContainer::Create(
+    const CredentialCreationOptions& aOptions, ErrorResult& aRv) {
   if (!IsSameOriginWithAncestors(mParent) || !IsInActiveTab(mParent)) {
     return CreateAndReject(mParent, aRv);
   }
@@ -171,9 +159,8 @@ CredentialsContainer::Create(const CredentialCreationOptions& aOptions,
   return mManager->MakeCredential(aOptions.mPublicKey, aOptions.mSignal);
 }
 
-already_AddRefed<Promise>
-CredentialsContainer::Store(const Credential& aCredential, ErrorResult& aRv)
-{
+already_AddRefed<Promise> CredentialsContainer::Store(
+    const Credential& aCredential, ErrorResult& aRv) {
   if (!IsSameOriginWithAncestors(mParent) || !IsInActiveTab(mParent)) {
     return CreateAndReject(mParent, aRv);
   }
@@ -182,9 +169,8 @@ CredentialsContainer::Store(const Credential& aCredential, ErrorResult& aRv)
   return mManager->Store(aCredential);
 }
 
-already_AddRefed<Promise>
-CredentialsContainer::PreventSilentAccess(ErrorResult& aRv)
-{
+already_AddRefed<Promise> CredentialsContainer::PreventSilentAccess(
+    ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
   if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -200,5 +186,5 @@ CredentialsContainer::PreventSilentAccess(ErrorResult& aRv)
   return promise.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -10,26 +10,27 @@
 #include "nsProxyRelease.h"
 #include "mozilla/Mutex.h"
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
-class nsHttpActivityDistributor : public nsIHttpActivityDistributor
-{
-public:
-    typedef nsTArray<nsMainThreadPtrHandle<nsIHttpActivityObserver> > ObserverArray;
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIHTTPACTIVITYOBSERVER
-    NS_DECL_NSIHTTPACTIVITYDISTRIBUTOR
+class nsHttpActivityDistributor : public nsIHttpActivityDistributor {
+ public:
+  typedef nsTArray<nsMainThreadPtrHandle<nsIHttpActivityObserver> >
+      ObserverArray;
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIHTTPACTIVITYOBSERVER
+  NS_DECL_NSIHTTPACTIVITYDISTRIBUTOR
 
-    nsHttpActivityDistributor();
+  nsHttpActivityDistributor();
 
-protected:
-    virtual ~nsHttpActivityDistributor() = default;
+ protected:
+  virtual ~nsHttpActivityDistributor() = default;
 
-    ObserverArray mObservers;
-    Mutex mLock;
+  ObserverArray mObservers;
+  Mutex mLock;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // nsHttpActivityDistributor_h__
+#endif  // nsHttpActivityDistributor_h__

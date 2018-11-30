@@ -13,24 +13,19 @@ class ClientOpenWindowArgs;
 class PClientOpenWindowOpChild;
 class PClientOpenWindowOpParent;
 
-PClientOpenWindowOpChild*
-AllocClientOpenWindowOpChild();
+PClientOpenWindowOpChild* AllocClientOpenWindowOpChild();
 
-void
-InitClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor,
-                            const ClientOpenWindowArgs& aArgs);
+void InitClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor,
+                                 const ClientOpenWindowArgs& aArgs);
 
-bool
-DeallocClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor);
+bool DeallocClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor);
 
-PClientOpenWindowOpParent*
-AllocClientOpenWindowOpParent(const ClientOpenWindowArgs& aArgs);
+PClientOpenWindowOpParent* AllocClientOpenWindowOpParent(
+    const ClientOpenWindowArgs& aArgs);
 
-bool
-DeallocClientOpenWindowOpParent(PClientOpenWindowOpParent* aActor);
+bool DeallocClientOpenWindowOpParent(PClientOpenWindowOpParent* aActor);
 
+}  // namespace dom
+}  // namespace mozilla
 
-} // namespace dom
-} // namespace mozilla
-
-#endif // _mozilla_dom_ClientOpenWindowOpActors_h
+#endif  // _mozilla_dom_ClientOpenWindowOpActors_h

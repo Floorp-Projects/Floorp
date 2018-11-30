@@ -8,21 +8,20 @@
 #include "nsThreadUtils.h"
 
 static bool gProfileResetCleanupCompleted = false;
-static const char kResetProgressURL[] = "chrome://global/content/resetProfileProgress.xul";
+static const char kResetProgressURL[] =
+    "chrome://global/content/resetProfileProgress.xul";
 
 nsresult CreateResetProfile(nsIToolkitProfileService* aProfileSvc,
                             const nsACString& aOldProfileName,
-                            nsIToolkitProfile* *aNewProfile);
+                            nsIToolkitProfile** aNewProfile);
 
 nsresult ProfileResetCleanup(nsIToolkitProfile* aOldProfile);
 
-class ProfileResetCleanupResultTask : public mozilla::Runnable
-{
-public:
+class ProfileResetCleanupResultTask : public mozilla::Runnable {
+ public:
   ProfileResetCleanupResultTask()
-    : mozilla::Runnable("ProfileResetCleanupResultTask")
-    , mWorkerThread(do_GetCurrentThread())
-  {
+      : mozilla::Runnable("ProfileResetCleanupResultTask"),
+        mWorkerThread(do_GetCurrentThread()) {
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
@@ -32,44 +31,42 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   nsCOMPtr<nsIThread> mWorkerThread;
 };
 
-class ProfileResetCleanupAsyncTask : public mozilla::Runnable
-{
-public:
-  ProfileResetCleanupAsyncTask(nsIFile* aProfileDir,
-                               nsIFile* aProfileLocalDir,
-                               nsIFile* aTargetDir,
-                               const nsAString& aLeafName)
-    : mozilla::Runnable("ProfileResetCleanupAsyncTask")
-    , mProfileDir(aProfileDir)
-    , mProfileLocalDir(aProfileLocalDir)
-    , mTargetDir(aTargetDir)
-    , mLeafName(aLeafName)
-  { }
+class ProfileResetCleanupAsyncTask : public mozilla::Runnable {
+ public:
+  ProfileResetCleanupAsyncTask(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
+                               nsIFile* aTargetDir, const nsAString& aLeafName)
+      : mozilla::Runnable("ProfileResetCleanupAsyncTask"),
+        mProfileDir(aProfileDir),
+        mProfileLocalDir(aProfileLocalDir),
+        mTargetDir(aTargetDir),
+        mLeafName(aLeafName) {}
 
-/**
- * Copy a root profile to a backup folder before deleting it.  Then delete the local profile dir.
- */
-  NS_IMETHOD Run() override
-  {
-    // Copy to the destination then delete the profile. A move doesn't follow links.
+  /**
+   * Copy a root profile to a backup folder before deleting it.  Then delete the
+   * local profile dir.
+   */
+  NS_IMETHOD Run() override {
+    // Copy to the destination then delete the profile. A move doesn't follow
+    // links.
     nsresult rv = mProfileDir->CopyToFollowingLinks(mTargetDir, mLeafName);
-    if (NS_SUCCEEDED(rv))
-      rv = mProfileDir->Remove(true);
+    if (NS_SUCCEEDED(rv)) rv = mProfileDir->Remove(true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       NS_WARNING("Could not backup the root profile directory");
     }
 
     // If we have a separate local cache profile directory, just delete it.
-    // Don't return an error if this fails so that reset can proceed if it can't be deleted.
+    // Don't return an error if this fails so that reset can proceed if it can't
+    // be deleted.
     bool sameDir;
     nsresult rvLocal = mProfileDir->Equals(mProfileLocalDir, &sameDir);
     if (NS_SUCCEEDED(rvLocal) && !sameDir) {
       rvLocal = mProfileLocalDir->Remove(true);
-      if (NS_FAILED(rvLocal)) NS_WARNING("Could not remove the old local profile directory (cache)");
+      if (NS_FAILED(rvLocal))
+        NS_WARNING("Could not remove the old local profile directory (cache)");
     }
     gProfileResetCleanupCompleted = true;
 
@@ -78,7 +75,7 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   nsCOMPtr<nsIFile> mProfileDir;
   nsCOMPtr<nsIFile> mProfileLocalDir;
   nsCOMPtr<nsIFile> mTargetDir;

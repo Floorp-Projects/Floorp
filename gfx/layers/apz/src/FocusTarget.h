@@ -7,11 +7,11 @@
 #ifndef mozilla_layers_FocusTarget_h
 #define mozilla_layers_FocusTarget_h
 
-#include <stdint.h> // for int32_t, uint32_t
+#include <stdint.h>  // for int32_t, uint32_t
 
-#include "mozilla/DefineEnum.h"  // for MOZ_DEFINE_ENUM
-#include "mozilla/layers/ScrollableLayerGuid.h" // for ViewID
-#include "mozilla/Variant.h"     // for Variant
+#include "mozilla/DefineEnum.h"                  // for MOZ_DEFINE_ENUM
+#include "mozilla/layers/ScrollableLayerGuid.h"  // for ViewID
+#include "mozilla/Variant.h"                     // for Variant
 
 class nsIPresShell;
 
@@ -20,32 +20,25 @@ namespace layers {
 
 /**
  * This class is used for communicating information about the currently focused
- * element of a document and the scrollable frames to use when keyboard scrolling
- * it. It is created on the main thread at paint-time, but is then passed over
- * IPC to the compositor/APZ code.
+ * element of a document and the scrollable frames to use when keyboard
+ * scrolling it. It is created on the main thread at paint-time, but is then
+ * passed over IPC to the compositor/APZ code.
  */
-class FocusTarget final
-{
-public:
-  struct ScrollTargets
-  {
+class FocusTarget final {
+ public:
+  struct ScrollTargets {
     ScrollableLayerGuid::ViewID mHorizontal;
     ScrollableLayerGuid::ViewID mVertical;
 
-    bool operator==(const ScrollTargets& aRhs) const
-    {
-      return mHorizontal == aRhs.mHorizontal &&
-             mVertical == aRhs.mVertical;
+    bool operator==(const ScrollTargets& aRhs) const {
+      return mHorizontal == aRhs.mHorizontal && mVertical == aRhs.mVertical;
     }
   };
 
   // We need this to represent the case where mData has no focus target data
   // because we can't have an empty variant
   struct NoFocusTarget {
-    bool operator==(const NoFocusTarget& aRhs) const
-    {
-     return true;
-    }
+    bool operator==(const NoFocusTarget& aRhs) const { return true; }
   };
 
   FocusTarget();
@@ -53,14 +46,13 @@ public:
   /**
    * Construct a focus target for the specified top level PresShell
    */
-  FocusTarget(nsIPresShell* aRootPresShell,
-              uint64_t aFocusSequenceNumber);
+  FocusTarget(nsIPresShell* aRootPresShell, uint64_t aFocusSequenceNumber);
 
   bool operator==(const FocusTarget& aRhs) const;
 
   const char* Type() const;
 
-public:
+ public:
   // The content sequence number recorded at the time of this class's creation
   uint64_t mSequenceNumber;
 
@@ -71,7 +63,7 @@ public:
   mozilla::Variant<LayersId, ScrollTargets, NoFocusTarget> mData;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_FocusTarget_h
+#endif  // mozilla_layers_FocusTarget_h

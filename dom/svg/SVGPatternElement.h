@@ -18,8 +18,8 @@
 
 class nsSVGPatternFrame;
 
-nsresult NS_NewSVGPatternElement(nsIContent **aResult,
-                                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGPatternElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -27,18 +27,21 @@ class SVGAnimatedTransformList;
 
 typedef nsSVGElement SVGPatternElementBase;
 
-class SVGPatternElement final : public SVGPatternElementBase
-{
+class SVGPatternElement final : public SVGPatternElementBase {
   friend class ::nsSVGPatternFrame;
 
-protected:
-  friend nsresult (::NS_NewSVGPatternElement(nsIContent **aResult,
-                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGPatternElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+ protected:
+  friend nsresult(::NS_NewSVGPatternElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  explicit SVGPatternElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  virtual JSObject* WrapNode(JSContext* cx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-public:
-  typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
+ public:
+  typedef mozilla::SVGAnimatedPreserveAspectRatio
+      SVGAnimatedPreserveAspectRatio;
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
@@ -48,8 +51,8 @@ public:
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
-  virtual mozilla::nsSVGAnimatedTransformList*
-    GetAnimatedTransformList(uint32_t aFlags = 0) override;
+  virtual mozilla::nsSVGAnimatedTransformList* GetAnimatedTransformList(
+      uint32_t aFlags = 0) override;
   virtual nsStaticAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::patternTransform;
   }
@@ -66,12 +69,11 @@ public:
   already_AddRefed<SVGAnimatedLength> Height();
   already_AddRefed<SVGAnimatedString> Href();
 
-protected:
-
+ protected:
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual EnumAttributesInfo GetEnumInfo() override;
-  virtual nsSVGViewBox *GetViewBox() override;
-  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() override;
+  virtual nsSVGViewBox* GetViewBox() override;
+  virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
@@ -93,7 +95,7 @@ protected:
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGPatternElement_h
+#endif  // mozilla_dom_SVGPatternElement_h

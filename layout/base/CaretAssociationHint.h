@@ -14,11 +14,8 @@ namespace mozilla {
  * given character offset (ASSOCIATE_BEFORE), or with the content after a given
  * character offset (ASSOCIATE_AFTER).
  */
-enum CaretAssociationHint {
-  CARET_ASSOCIATE_BEFORE,
-  CARET_ASSOCIATE_AFTER
-};
+enum CaretAssociationHint { CARET_ASSOCIATE_BEFORE, CARET_ASSOCIATE_AFTER };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

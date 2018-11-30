@@ -14,78 +14,75 @@
 namespace js {
 namespace jit {
 
-class StupidAllocator : public RegisterAllocator
-{
-    static const uint32_t MAX_REGISTERS = AnyRegister::Total;
-    static const uint32_t MISSING_ALLOCATION = UINT32_MAX;
+class StupidAllocator : public RegisterAllocator {
+  static const uint32_t MAX_REGISTERS = AnyRegister::Total;
+  static const uint32_t MISSING_ALLOCATION = UINT32_MAX;
 
-    struct AllocatedRegister {
-        AnyRegister reg;
+  struct AllocatedRegister {
+    AnyRegister reg;
 
-        // The type of the value in the register.
-        LDefinition::Type type;
+    // The type of the value in the register.
+    LDefinition::Type type;
 
-        // Virtual register this physical reg backs, or MISSING_ALLOCATION.
-        uint32_t vreg;
+    // Virtual register this physical reg backs, or MISSING_ALLOCATION.
+    uint32_t vreg;
 
-        // id of the instruction which most recently used this register.
-        uint32_t age;
+    // id of the instruction which most recently used this register.
+    uint32_t age;
 
-        // Whether the physical register is not synced with the backing stack slot.
-        bool dirty;
+    // Whether the physical register is not synced with the backing stack slot.
+    bool dirty;
 
-        void set(uint32_t vreg, LInstruction* ins = nullptr, bool dirty = false) {
-            this->vreg = vreg;
-            this->age = ins ? ins->id() : 0;
-            this->dirty = dirty;
-        }
-    };
-
-    // Active allocation for the current code position.
-    mozilla::Array<AllocatedRegister, MAX_REGISTERS> registers;
-    uint32_t registerCount;
-
-    // Type indicating an index into registers.
-    typedef uint32_t RegisterIndex;
-
-    // Information about each virtual register.
-    Vector<LDefinition*, 0, SystemAllocPolicy> virtualRegisters;
-
-  public:
-    StupidAllocator(MIRGenerator* mir, LIRGenerator* lir, LIRGraph& graph)
-      : RegisterAllocator(mir, lir, graph),
-        registerCount(0)
-    {
+    void set(uint32_t vreg, LInstruction* ins = nullptr, bool dirty = false) {
+      this->vreg = vreg;
+      this->age = ins ? ins->id() : 0;
+      this->dirty = dirty;
     }
+  };
 
-    MOZ_MUST_USE bool go();
+  // Active allocation for the current code position.
+  mozilla::Array<AllocatedRegister, MAX_REGISTERS> registers;
+  uint32_t registerCount;
 
-  private:
-    MOZ_MUST_USE bool init();
+  // Type indicating an index into registers.
+  typedef uint32_t RegisterIndex;
 
-    void syncForBlockEnd(LBlock* block, LInstruction* ins);
-    void allocateForInstruction(LInstruction* ins);
-    void allocateForDefinition(LInstruction* ins, LDefinition* def);
+  // Information about each virtual register.
+  Vector<LDefinition*, 0, SystemAllocPolicy> virtualRegisters;
 
-    LAllocation* stackLocation(uint32_t vreg);
+ public:
+  StupidAllocator(MIRGenerator* mir, LIRGenerator* lir, LIRGraph& graph)
+      : RegisterAllocator(mir, lir, graph), registerCount(0) {}
 
-    RegisterIndex registerIndex(AnyRegister reg);
+  MOZ_MUST_USE bool go();
 
-    AnyRegister ensureHasRegister(LInstruction* ins, uint32_t vreg);
-    RegisterIndex allocateRegister(LInstruction* ins, uint32_t vreg);
+ private:
+  MOZ_MUST_USE bool init();
 
-    void syncRegister(LInstruction* ins, RegisterIndex index);
-    void evictRegister(LInstruction* ins, RegisterIndex index);
-    void evictAliasedRegister(LInstruction* ins, RegisterIndex index);
-    void loadRegister(LInstruction* ins, uint32_t vreg, RegisterIndex index, LDefinition::Type type);
+  void syncForBlockEnd(LBlock* block, LInstruction* ins);
+  void allocateForInstruction(LInstruction* ins);
+  void allocateForDefinition(LInstruction* ins, LDefinition* def);
 
-    RegisterIndex findExistingRegister(uint32_t vreg);
+  LAllocation* stackLocation(uint32_t vreg);
 
-    bool allocationRequiresRegister(const LAllocation* alloc, AnyRegister reg);
-    bool registerIsReserved(LInstruction* ins, AnyRegister reg);
+  RegisterIndex registerIndex(AnyRegister reg);
+
+  AnyRegister ensureHasRegister(LInstruction* ins, uint32_t vreg);
+  RegisterIndex allocateRegister(LInstruction* ins, uint32_t vreg);
+
+  void syncRegister(LInstruction* ins, RegisterIndex index);
+  void evictRegister(LInstruction* ins, RegisterIndex index);
+  void evictAliasedRegister(LInstruction* ins, RegisterIndex index);
+  void loadRegister(LInstruction* ins, uint32_t vreg, RegisterIndex index,
+                    LDefinition::Type type);
+
+  RegisterIndex findExistingRegister(uint32_t vreg);
+
+  bool allocationRequiresRegister(const LAllocation* alloc, AnyRegister reg);
+  bool registerIsReserved(LInstruction* ins, AnyRegister reg);
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_StupidAllocator_h */

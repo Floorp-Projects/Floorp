@@ -25,9 +25,7 @@ namespace image {
 // Helpers for sending notifications to the image associated with a decoder.
 ///////////////////////////////////////////////////////////////////////////////
 
-void
-IDecodingTask::EnsureHasEventTarget(NotNull<RasterImage*> aImage)
-{
+void IDecodingTask::EnsureHasEventTarget(NotNull<RasterImage*> aImage) {
   if (!mEventTarget) {
     // We determine the event target as late as possible, at the first dispatch
     // time, because the observers bound to an imgRequest will affect it.
@@ -48,9 +46,7 @@ IDecodingTask::EnsureHasEventTarget(NotNull<RasterImage*> aImage)
   }
 }
 
-bool
-IDecodingTask::IsOnEventTarget() const
-{
+bool IDecodingTask::IsOnEventTarget() const {
   // This is essentially equivalent to NS_IsOnMainThread() because all of the
   // event targets are for the main thread (although perhaps with a different
   // label / scheduler group). The observers in ProgressTracker may have
@@ -60,10 +56,8 @@ IDecodingTask::IsOnEventTarget() const
   return current;
 }
 
-void
-IDecodingTask::NotifyProgress(NotNull<RasterImage*> aImage,
-                              NotNull<Decoder*> aDecoder)
-{
+void IDecodingTask::NotifyProgress(NotNull<RasterImage*> aImage,
+                                   NotNull<Decoder*> aDecoder) {
   MOZ_ASSERT(aDecoder->HasProgress() && !aDecoder->IsMetadataDecode());
   EnsureHasEventTarget(aImage);
 
@@ -81,25 +75,25 @@ IDecodingTask::NotifyProgress(NotNull<RasterImage*> aImage,
 
   // Synchronously notify if we can.
   if (IsOnEventTarget() && !(decoderFlags & DecoderFlags::ASYNC_NOTIFY)) {
-    aImage->NotifyProgress(progress, invalidRect, frameCount,
-                           decoderFlags, surfaceFlags);
+    aImage->NotifyProgress(progress, invalidRect, frameCount, decoderFlags,
+                           surfaceFlags);
     return;
   }
 
   // We're forced to notify asynchronously.
   NotNull<RefPtr<RasterImage>> image = aImage;
-  mEventTarget->Dispatch(NS_NewRunnableFunction(
-                           "IDecodingTask::NotifyProgress",
-                           [=]() -> void {
-    image->NotifyProgress(progress, invalidRect, frameCount,
-                          decoderFlags, surfaceFlags);
-  }), NS_DISPATCH_NORMAL);
+  mEventTarget->Dispatch(NS_NewRunnableFunction("IDecodingTask::NotifyProgress",
+                                                [=]() -> void {
+                                                  image->NotifyProgress(
+                                                      progress, invalidRect,
+                                                      frameCount, decoderFlags,
+                                                      surfaceFlags);
+                                                }),
+                         NS_DISPATCH_NORMAL);
 }
 
-void
-IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
-                                    NotNull<Decoder*> aDecoder)
-{
+void IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
+                                         NotNull<Decoder*> aDecoder) {
   MOZ_ASSERT(aDecoder->HasError() || !aDecoder->InFrame(),
              "Decode complete in the middle of a frame?");
   EnsureHasEventTarget(aImage);
@@ -124,42 +118,34 @@ IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
 
   // We're forced to notify asynchronously.
   NotNull<RefPtr<RasterImage>> image = aImage;
-  mEventTarget->Dispatch(NS_NewRunnableFunction(
-                           "IDecodingTask::NotifyDecodeComplete",
-                           [=]() -> void {
-    image->NotifyDecodeComplete(finalStatus, metadata, telemetry, progress,
-                                invalidRect, frameCount, decoderFlags,
-                                surfaceFlags);
-  }), NS_DISPATCH_NORMAL);
+  mEventTarget->Dispatch(
+      NS_NewRunnableFunction("IDecodingTask::NotifyDecodeComplete",
+                             [=]() -> void {
+                               image->NotifyDecodeComplete(
+                                   finalStatus, metadata, telemetry, progress,
+                                   invalidRect, frameCount, decoderFlags,
+                                   surfaceFlags);
+                             }),
+      NS_DISPATCH_NORMAL);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // IDecodingTask implementation.
 ///////////////////////////////////////////////////////////////////////////////
 
-void
-IDecodingTask::Resume()
-{
-  DecodePool::Singleton()->AsyncRun(this);
-}
-
+void IDecodingTask::Resume() { DecodePool::Singleton()->AsyncRun(this); }
 
 ///////////////////////////////////////////////////////////////////////////////
 // MetadataDecodingTask implementation.
 ///////////////////////////////////////////////////////////////////////////////
 
 MetadataDecodingTask::MetadataDecodingTask(NotNull<Decoder*> aDecoder)
-  : mMutex("mozilla::image::MetadataDecodingTask")
-  , mDecoder(aDecoder)
-{
+    : mMutex("mozilla::image::MetadataDecodingTask"), mDecoder(aDecoder) {
   MOZ_ASSERT(mDecoder->IsMetadataDecode(),
              "Use DecodingTask for non-metadata decodes");
 }
 
-void
-MetadataDecodingTask::Run()
-{
+void MetadataDecodingTask::Run() {
   MutexAutoLock lock(mMutex);
 
   LexerResult result = mDecoder->Decode(WrapNotNull(this));
@@ -180,20 +166,15 @@ MetadataDecodingTask::Run()
   MOZ_ASSERT_UNREACHABLE("Metadata decode yielded for an unexpected reason");
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // AnonymousDecodingTask implementation.
 ///////////////////////////////////////////////////////////////////////////////
 
 AnonymousDecodingTask::AnonymousDecodingTask(NotNull<Decoder*> aDecoder,
                                              bool aResumable)
-  : mDecoder(aDecoder)
-  , mResumable(aResumable)
-{ }
+    : mDecoder(aDecoder), mResumable(aResumable) {}
 
-void
-AnonymousDecodingTask::Run()
-{
+void AnonymousDecodingTask::Run() {
   while (true) {
     LexerResult result = mDecoder->Decode(WrapNotNull(this));
 
@@ -213,20 +194,18 @@ AnonymousDecodingTask::Run()
   }
 }
 
-void
-AnonymousDecodingTask::Resume()
-{
+void AnonymousDecodingTask::Resume() {
   // Anonymous decoders normally get all their data at once. We have tests
   // where they don't; typically in these situations, the test re-runs them
   // manually. However some tests want to verify Resume works, so they will
   // explicitly request this behaviour.
   if (mResumable) {
     RefPtr<AnonymousDecodingTask> self(this);
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "image::AnonymousDecodingTask::Resume",
-      [self]() -> void { self->Run(); }));
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("image::AnonymousDecodingTask::Resume",
+                               [self]() -> void { self->Run(); }));
   }
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla

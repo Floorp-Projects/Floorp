@@ -12,8 +12,7 @@
 #include "nsIX509CertList.h"
 #include "nsServiceManagerUtils.h"
 
-TEST(psm_CertDB, Test)
-{
+TEST(psm_CertDB, Test) {
   {
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     ASSERT_TRUE(prefs) << "couldn't get nsIPrefBranch";
@@ -39,13 +38,13 @@ TEST(psm_CertDB, Test)
     while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> supports;
       ASSERT_TRUE(NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(supports))))
-        << "couldn't get next certificate";
+          << "couldn't get next certificate";
 
       nsCOMPtr<nsIX509Cert> cert(do_QueryInterface(supports));
       ASSERT_TRUE(cert) << "couldn't QI to nsIX509Cert";
 
-      ASSERT_TRUE(NS_SUCCEEDED(cert->GetIsBuiltInRoot(&foundBuiltIn))) <<
-        "GetIsBuiltInRoot failed";
+      ASSERT_TRUE(NS_SUCCEEDED(cert->GetIsBuiltInRoot(&foundBuiltIn)))
+          << "GetIsBuiltInRoot failed";
 
       if (foundBuiltIn) {
         break;
@@ -56,5 +55,5 @@ TEST(psm_CertDB, Test)
 
     printf("successfully loaded at least one built-in certificate\n");
 
-  } // this scopes the nsCOMPtrs
+  }  // this scopes the nsCOMPtrs
 }

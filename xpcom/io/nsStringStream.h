@@ -21,12 +21,11 @@
  */
 #define NS_STRINGINPUTSTREAM_CONTRACTID "@mozilla.org/io/string-input-stream;1"
 #define NS_STRINGINPUTSTREAM_CID                     \
-{ /* 0abb0835-5000-4790-af28-61b3ba17c295 */         \
-    0x0abb0835,                                      \
-    0x5000,                                          \
-    0x4790,                                          \
-    {0xaf, 0x28, 0x61, 0xb3, 0xba, 0x17, 0xc2, 0x95} \
-}
+  { /* 0abb0835-5000-4790-af28-61b3ba17c295 */       \
+    0x0abb0835, 0x5000, 0x4790, {                    \
+      0xaf, 0x28, 0x61, 0xb3, 0xba, 0x17, 0xc2, 0x95 \
+    }                                                \
+  }
 
 /**
  * Factory method to get an nsInputStream from a byte buffer.  Result will
@@ -48,20 +47,17 @@
  * If aLength is less than zero, then the length of aStringToRead will be
  * determined by scanning the buffer for the first null byte.
  */
-extern nsresult
-NS_NewByteInputStream(nsIInputStream** aStreamResult,
-                      const char* aStringToRead, int32_t aLength = -1,
-                      nsAssignmentType aAssignment = NS_ASSIGNMENT_DEPEND);
+extern nsresult NS_NewByteInputStream(
+    nsIInputStream** aStreamResult, const char* aStringToRead,
+    int32_t aLength = -1, nsAssignmentType aAssignment = NS_ASSIGNMENT_DEPEND);
 
 /**
  * Factory method to get an nsInputStream from an nsACString.  Result will
  * implement nsIStringInputStream, nsTellableStream and nsISeekableStream.
  */
-extern nsresult
-NS_NewCStringInputStream(nsIInputStream** aStreamResult,
-                         const nsACString& aStringToRead);
-extern nsresult
-NS_NewCStringInputStream(nsIInputStream** aStreamResult,
-                         nsCString&& aStringToRead);
+extern nsresult NS_NewCStringInputStream(nsIInputStream** aStreamResult,
+                                         const nsACString& aStringToRead);
+extern nsresult NS_NewCStringInputStream(nsIInputStream** aStreamResult,
+                                         nsCString&& aStringToRead);
 
-#endif // nsStringStream_h__
+#endif  // nsStringStream_h__

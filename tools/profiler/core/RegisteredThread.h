@@ -17,24 +17,16 @@
 // protection against data races, it must provide internal protection. Hence
 // the "Racy" prefix.
 //
-class RacyRegisteredThread final
-{
-public:
+class RacyRegisteredThread final {
+ public:
   explicit RacyRegisteredThread(int aThreadId)
-    : mThreadId(aThreadId)
-    , mSleep(AWAKE)
-    , mIsBeingProfiled(false)
-  {
+      : mThreadId(aThreadId), mSleep(AWAKE), mIsBeingProfiled(false) {
     MOZ_COUNT_CTOR(RacyRegisteredThread);
   }
 
-  ~RacyRegisteredThread()
-  {
-    MOZ_COUNT_DTOR(RacyRegisteredThread);
-  }
+  ~RacyRegisteredThread() { MOZ_COUNT_DTOR(RacyRegisteredThread); }
 
-  void SetIsBeingProfiled(bool aIsBeingProfiled)
-  {
+  void SetIsBeingProfiled(bool aIsBeingProfiled) {
     mIsBeingProfiled = aIsBeingProfiled;
   }
 
@@ -42,18 +34,16 @@ public:
 
   void AddPendingMarker(const char* aMarkerName,
                         mozilla::UniquePtr<ProfilerMarkerPayload> aPayload,
-                        double aTime)
-  {
+                        double aTime) {
     // Note: We don't assert on mIsBeingProfiled, because it could have changed
     // between the check in the caller and now.
     ProfilerMarker* marker =
-      new ProfilerMarker(aMarkerName, mThreadId, std::move(aPayload), aTime);
+        new ProfilerMarker(aMarkerName, mThreadId, std::move(aPayload), aTime);
     mPendingMarkers.insert(marker);
   }
 
   // Called within signal. Function must be reentrant.
-  ProfilerMarkerLinkedList* GetPendingMarkers()
-  {
+  ProfilerMarkerLinkedList* GetPendingMarkers() {
     // The profiled thread is interrupted, so we can access the list safely.
     // Unless the profiled thread was in the middle of changing the list when
     // we interrupted it - in that case, accessList() will return null.
@@ -62,8 +52,7 @@ public:
 
   // This is called on every profiler restart. Put things that should happen at
   // that time here.
-  void ReinitializeOnResume()
-  {
+  void ReinitializeOnResume() {
     // This is needed to cause an initial sample to be taken from sleeping
     // threads that had been observed prior to the profiler stopping and
     // restarting. Otherwise sleeping threads would not have any samples to
@@ -72,8 +61,7 @@ public:
   }
 
   // This returns true for the second and subsequent calls in each sleep cycle.
-  bool CanDuplicateLastSampleDueToSleep()
-  {
+  bool CanDuplicateLastSampleDueToSleep() {
     if (mSleep == AWAKE) {
       return false;
     }
@@ -87,16 +75,14 @@ public:
 
   // Call this whenever the current thread sleeps. Calling it twice in a row
   // without an intervening setAwake() call is an error.
-  void SetSleeping()
-  {
+  void SetSleeping() {
     MOZ_ASSERT(mSleep == AWAKE);
     mSleep = SLEEPING_NOT_OBSERVED;
   }
 
   // Call this whenever the current thread wakes. Calling it twice in a row
   // without an intervening setSleeping() call is an error.
-  void SetAwake()
-  {
+  void SetAwake() {
     MOZ_ASSERT(mSleep != AWAKE);
     mSleep = AWAKE;
   }
@@ -105,10 +91,12 @@ public:
 
   int ThreadId() const { return mThreadId; }
 
-  class ProfilingStack& ProfilingStack() { return mProfilingStack; }
+  class ProfilingStack& ProfilingStack() {
+    return mProfilingStack;
+  }
   const class ProfilingStack& ProfilingStack() const { return mProfilingStack; }
 
-private:
+ private:
   class ProfilingStack mProfilingStack;
 
   // A list of pending markers that must be moved to the circular buffer.
@@ -160,22 +148,25 @@ private:
   // Accesses to this atomic are not recorded by web replay as they may occur
   // at non-deterministic points.
   mozilla::Atomic<bool, mozilla::MemoryOrdering::Relaxed,
-                  recordreplay::Behavior::DontPreserve> mIsBeingProfiled;
+                  recordreplay::Behavior::DontPreserve>
+      mIsBeingProfiled;
 };
 
 // This class contains information that's relevant to a single thread only
 // while that thread is running and registered with the profiler, but
 // regardless of whether the profiler is running. All accesses to it are
 // protected by the profiler state lock.
-class RegisteredThread final
-{
-public:
-  RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread,
-                   void* aStackTop);
+class RegisteredThread final {
+ public:
+  RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread, void* aStackTop);
   ~RegisteredThread();
 
-  class RacyRegisteredThread& RacyRegisteredThread() { return mRacyRegisteredThread; }
-  const class RacyRegisteredThread& RacyRegisteredThread() const { return mRacyRegisteredThread; }
+  class RacyRegisteredThread& RacyRegisteredThread() {
+    return mRacyRegisteredThread;
+  }
+  const class RacyRegisteredThread& RacyRegisteredThread() const {
+    return mRacyRegisteredThread;
+  }
 
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   const void* StackTop() const { return mStackTop; }
@@ -184,8 +175,7 @@ public:
 
   // Set the JSContext of the thread to be sampled. Sampling cannot begin until
   // this has been set.
-  void SetJSContext(JSContext* aContext)
-  {
+  void SetJSContext(JSContext* aContext) {
     // This function runs on-thread.
 
     MOZ_ASSERT(aContext && !mContext);
@@ -194,13 +184,13 @@ public:
 
     // We give the JS engine a non-owning reference to the ProfilingStack. It's
     // important that the JS engine doesn't touch this once the thread dies.
-    js::SetContextProfilingStack(aContext, &RacyRegisteredThread().ProfilingStack());
+    js::SetContextProfilingStack(aContext,
+                                 &RacyRegisteredThread().ProfilingStack());
 
     PollJSSampling();
   }
 
-  void ClearJSContext()
-  {
+  void ClearJSContext() {
     // This function runs on-thread.
     mContext = nullptr;
   }
@@ -213,8 +203,7 @@ public:
   // Request that this thread start JS sampling. JS sampling won't actually
   // start until a subsequent PollJSSampling() call occurs *and* mContext has
   // been set.
-  void StartJSSampling(bool aTrackOptimizations)
-  {
+  void StartJSSampling(bool aTrackOptimizations) {
     // This function runs on-thread or off-thread.
 
     MOZ_RELEASE_ASSERT(mJSSampling == INACTIVE ||
@@ -225,8 +214,7 @@ public:
 
   // Request that this thread stop JS sampling. JS sampling won't actually stop
   // until a subsequent PollJSSampling() call occurs.
-  void StopJSSampling()
-  {
+  void StopJSSampling() {
     // This function runs on-thread or off-thread.
 
     MOZ_RELEASE_ASSERT(mJSSampling == ACTIVE ||
@@ -235,8 +223,7 @@ public:
   }
 
   // Poll to see if JS sampling should be started/stopped.
-  void PollJSSampling()
-  {
+  void PollJSSampling() {
     // This function runs on-thread.
 
     // We can't start/stop profiling until we have the thread's JSContext.
@@ -253,8 +240,8 @@ public:
       if (mJSSampling == ACTIVE_REQUESTED) {
         mJSSampling = ACTIVE;
         js::EnableContextProfilingStack(mContext, true);
-        JS_SetGlobalJitCompilerOption(mContext, JSJITCOMPILER_TRACK_OPTIMIZATIONS,
-                                      mJSTrackOptimizations);
+        JS_SetGlobalJitCompilerOption(
+            mContext, JSJITCOMPILER_TRACK_OPTIMIZATIONS, mJSTrackOptimizations);
         js::RegisterContextProfilingEventMarker(mContext, profiler_add_marker);
 
       } else if (mJSSampling == INACTIVE_REQUESTED) {
@@ -264,7 +251,7 @@ public:
     }
   }
 
-private:
+ private:
   class RacyRegisteredThread mRacyRegisteredThread;
 
   const UniquePlatformData mPlatformData;

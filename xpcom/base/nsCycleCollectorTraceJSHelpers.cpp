@@ -8,11 +8,9 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
-void
-CycleCollectionNoteEdgeNameImpl(nsCycleCollectionTraversalCallback& aCallback,
-                                const char* aName,
-                                uint32_t aFlags)
-{
+void CycleCollectionNoteEdgeNameImpl(
+    nsCycleCollectionTraversalCallback& aCallback, const char* aName,
+    uint32_t aFlags) {
   nsAutoCString arrayEdgeName(aName);
   if (aFlags & CycleCollectionEdgeNameArrayFlag) {
     arrayEdgeName.AppendLiteral("[i]");
@@ -20,86 +18,68 @@ CycleCollectionNoteEdgeNameImpl(nsCycleCollectionTraversalCallback& aCallback,
   aCallback.NoteNextEdgeName(arrayEdgeName.get());
 }
 
-void
-nsCycleCollectionParticipant::NoteJSChild(JS::GCCellPtr aGCThing,
-                                          const char* aName,
-                                          void* aClosure)
-{
+void nsCycleCollectionParticipant::NoteJSChild(JS::GCCellPtr aGCThing,
+                                               const char* aName,
+                                               void* aClosure) {
   nsCycleCollectionTraversalCallback* cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
+      static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, aName);
   if (JS::IsCCTraceKind(aGCThing.kind())) {
     cb->NoteJSChild(aGCThing);
   }
 }
 
-void
-TraceCallbackFunc::Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
-                         void* aClosure) const
-{
+void TraceCallbackFunc::Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
+                              void* aClosure) const {
   if (aPtr->unbarrieredGet().isGCThing()) {
     mCallback(JS::GCCellPtr(aPtr->unbarrieredGet()), aName, aClosure);
   }
 }
 
-void
-TraceCallbackFunc::Trace(JS::Heap<jsid>* aPtr, const char* aName,
-                         void* aClosure) const
-{
+void TraceCallbackFunc::Trace(JS::Heap<jsid>* aPtr, const char* aName,
+                              void* aClosure) const {
   if (JSID_IS_GCTHING(aPtr->unbarrieredGet())) {
     mCallback(JSID_TO_GCTHING(aPtr->unbarrieredGet()), aName, aClosure);
   }
 }
 
-void
-TraceCallbackFunc::Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
-                         void* aClosure) const
-{
+void TraceCallbackFunc::Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
+                              void* aClosure) const {
   if (*aPtr) {
     mCallback(JS::GCCellPtr(aPtr->unbarrieredGet()), aName, aClosure);
   }
 }
 
-void
-TraceCallbackFunc::Trace(JSObject** aPtr, const char* aName,
-                         void* aClosure) const
-{
+void TraceCallbackFunc::Trace(JSObject** aPtr, const char* aName,
+                              void* aClosure) const {
   if (*aPtr) {
     mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
   }
 }
 
-void
-TraceCallbackFunc::Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
-                         void* aClosure) const
-{
+void TraceCallbackFunc::Trace(JS::TenuredHeap<JSObject*>* aPtr,
+                              const char* aName, void* aClosure) const {
   if (*aPtr) {
     mCallback(JS::GCCellPtr(aPtr->unbarrieredGetPtr()), aName, aClosure);
   }
 }
 
-void
-TraceCallbackFunc::Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
-                         void* aClosure) const
-{
+void TraceCallbackFunc::Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
+                              void* aClosure) const {
   if (*aPtr) {
     mCallback(JS::GCCellPtr(aPtr->unbarrieredGet()), aName, aClosure);
   }
 }
 
-void
-TraceCallbackFunc::Trace(JS::Heap<JSString*>* aPtr, const char* aName,
-                         void* aClosure) const
-{
+void TraceCallbackFunc::Trace(JS::Heap<JSString*>* aPtr, const char* aName,
+                              void* aClosure) const {
   if (*aPtr) {
     mCallback(JS::GCCellPtr(aPtr->unbarrieredGet()), aName, aClosure);
   }
 }
 
-void
-TraceCallbackFunc::Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
-                         void* aClosure) const
-{
+void TraceCallbackFunc::Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
+                              void* aClosure) const {
   if (*aPtr) {
     mCallback(JS::GCCellPtr(aPtr->unbarrieredGet()), aName, aClosure);
   }

@@ -21,10 +21,8 @@ namespace mozilla {
 // This object collects the SandboxReport messages from all of the
 // child processes, submits them to Telemetry, and maintains a ring
 // buffer of the last kSandboxReporterBufferSize reports.
-class SandboxReporter final
-  : public PlatformThread::Delegate
-{
-public:
+class SandboxReporter final : public PlatformThread::Delegate {
+ public:
   // For normal use, don't construct this directly; use the
   // Singleton() method.
   //
@@ -61,7 +59,8 @@ public:
   // Thread-safe as long as the pointer isn't used during/after XPCOM
   // shutdown.
   static SandboxReporter* Singleton();
-private:
+
+ private:
   // These are constant over the life of the object:
   int mClientFd;
   int mServerFd;
@@ -82,6 +81,6 @@ private:
 // exposed in the header so that unit tests can see it.
 static const size_t kSandboxReporterBufferSize = 32;
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SandboxReporter_h
+#endif  // mozilla_SandboxReporter_h

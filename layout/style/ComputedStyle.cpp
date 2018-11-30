@@ -43,23 +43,19 @@ namespace mozilla {
 
 //----------------------------------------------------------------------
 
-ComputedStyle::ComputedStyle(nsPresContext* aPresContext,
-                             nsAtom* aPseudoTag,
+ComputedStyle::ComputedStyle(nsPresContext* aPresContext, nsAtom* aPseudoTag,
                              CSSPseudoElementType aPseudoType,
                              ServoComputedDataForgotten aComputedValues)
-  : mPresContext(aPresContext)
-  , mSource(aComputedValues)
-  , mPseudoTag(aPseudoTag)
-  , mBits(static_cast<Bit>(Servo_ComputedValues_GetStyleBits(this)))
-  , mPseudoType(aPseudoType)
-{
+    : mPresContext(aPresContext),
+      mSource(aComputedValues),
+      mPseudoTag(aPseudoTag),
+      mBits(static_cast<Bit>(Servo_ComputedValues_GetStyleBits(this))),
+      mPseudoType(aPseudoType) {
   MOZ_ASSERT(ComputedData());
 }
 
-nsChangeHint
-ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
-                                   uint32_t* aEqualStructs)
-{
+nsChangeHint ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
+                                                uint32_t* aEqualStructs) {
   MOZ_ASSERT(aNewContext);
   AUTO_PROFILER_LABEL("ComputedStyle::CalcStyleDifference", LAYOUT);
   static_assert(StyleStructConstants::kStyleStructCount <= 32,
@@ -92,34 +88,33 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
   // structs.
 #define STYLE_STRUCT_BIT(name_) \
   StyleStructConstants::BitFor(StyleStructID::name_)
-#define PEEK(struct_) \
-   ComputedData()->GetStyle##struct_()
+#define PEEK(struct_) ComputedData()->GetStyle##struct_()
 
 #define EXPAND(...) __VA_ARGS__
-#define DO_STRUCT_DIFFERENCE_WITH_ARGS(struct_, extra_args_)                  \
-  PR_BEGIN_MACRO                                                              \
-    const nsStyle##struct_* this##struct_ = PEEK(struct_);                    \
-    if (this##struct_) {                                                      \
-      structsFound |= STYLE_STRUCT_BIT(struct_);                              \
-                                                                              \
-      const nsStyle##struct_* other##struct_ =                                \
-        aNewContext->ThreadsafeStyle##struct_();                              \
-      if (this##struct_ == other##struct_) {                                  \
-        /* The very same struct, so we know that there will be no */          \
-        /* differences.                                           */          \
-        *aEqualStructs |= STYLE_STRUCT_BIT(struct_);                          \
-      } else {                                                                \
-        nsChangeHint difference =                                             \
-          this##struct_->CalcDifference(*other##struct_ EXPAND extra_args_);  \
-        hint |= difference;                                                   \
-        if (!difference) {                                                    \
-          *aEqualStructs |= STYLE_STRUCT_BIT(struct_);                        \
-        }                                                                     \
-      }                                                                       \
-    } else {                                                                  \
-      *aEqualStructs |= STYLE_STRUCT_BIT(struct_);                            \
-    }                                                                         \
-    styleStructCount++;                                                       \
+#define DO_STRUCT_DIFFERENCE_WITH_ARGS(struct_, extra_args_)                 \
+  PR_BEGIN_MACRO                                                             \
+  const nsStyle##struct_* this##struct_ = PEEK(struct_);                     \
+  if (this##struct_) {                                                       \
+    structsFound |= STYLE_STRUCT_BIT(struct_);                               \
+                                                                             \
+    const nsStyle##struct_* other##struct_ =                                 \
+        aNewContext->ThreadsafeStyle##struct_();                             \
+    if (this##struct_ == other##struct_) {                                   \
+      /* The very same struct, so we know that there will be no */           \
+      /* differences.                                           */           \
+      *aEqualStructs |= STYLE_STRUCT_BIT(struct_);                           \
+    } else {                                                                 \
+      nsChangeHint difference =                                              \
+          this##struct_->CalcDifference(*other##struct_ EXPAND extra_args_); \
+      hint |= difference;                                                    \
+      if (!difference) {                                                     \
+        *aEqualStructs |= STYLE_STRUCT_BIT(struct_);                         \
+      }                                                                      \
+    }                                                                        \
+  } else {                                                                   \
+    *aEqualStructs |= STYLE_STRUCT_BIT(struct_);                             \
+  }                                                                          \
+  styleStructCount++;                                                        \
   PR_END_MACRO
 #define DO_STRUCT_DIFFERENCE(struct_) \
   DO_STRUCT_DIFFERENCE_WITH_ARGS(struct_, ())
@@ -159,13 +154,13 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
              "missing a call to DO_STRUCT_DIFFERENCE");
 
 #ifdef DEBUG
-  #define STYLE_STRUCT(name_)                                             \
-    MOZ_ASSERT(!!(structsFound & STYLE_STRUCT_BIT(name_)) ==              \
-               (PEEK(name_) != nullptr),                                  \
-               "PeekStyleData results must not change in the middle of "  \
-               "difference calculation.");
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
+#define STYLE_STRUCT(name_)                                                   \
+  MOZ_ASSERT(                                                                 \
+      !!(structsFound & STYLE_STRUCT_BIT(name_)) == (PEEK(name_) != nullptr), \
+      "PeekStyleData results must not change in the middle of "               \
+      "difference calculation.");
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 #endif
 
   // Note that we do not check whether this->RelevantLinkVisited() !=
@@ -189,8 +184,7 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
   if (!thisVis != !otherVis) {
     // One style has a style-if-visited and the other doesn't.
     // Presume a difference.
-#define STYLE_STRUCT(name_, fields_) \
-    *aEqualStructs &= ~STYLE_STRUCT_BIT(name_);
+#define STYLE_STRUCT(name_, fields_) *aEqualStructs &= ~STYLE_STRUCT_BIT(name_);
 #include "nsCSSVisitedDependentPropList.h"
 #undef STYLE_STRUCT
     hint |= nsChangeHint_RepaintFrame;
@@ -204,17 +198,15 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
     // due to change being true already or due to the old style not having a
     // style-if-visited), but not the other way around.
 #define STYLE_FIELD(name_) thisVisStruct->name_ != otherVisStruct->name_
-#define STYLE_STRUCT(name_, fields_)                                    \
-    if (PEEK(name_)) {                                                  \
-      const nsStyle##name_* thisVisStruct =                             \
-        thisVis->ThreadsafeStyle##name_();                              \
-      const nsStyle##name_* otherVisStruct =                            \
-        otherVis->ThreadsafeStyle##name_();                             \
-      if (MOZ_FOR_EACH_SEPARATED(STYLE_FIELD, (||), (), fields_)) {     \
-        *aEqualStructs &= ~STYLE_STRUCT_BIT(name_);                     \
-        change = true;                                                  \
-      }                                                                 \
-    }
+#define STYLE_STRUCT(name_, fields_)                                           \
+  if (PEEK(name_)) {                                                           \
+    const nsStyle##name_* thisVisStruct = thisVis->ThreadsafeStyle##name_();   \
+    const nsStyle##name_* otherVisStruct = otherVis->ThreadsafeStyle##name_(); \
+    if (MOZ_FOR_EACH_SEPARATED(STYLE_FIELD, (||), (), fields_)) {              \
+      *aEqualStructs &= ~STYLE_STRUCT_BIT(name_);                              \
+      change = true;                                                           \
+    }                                                                          \
+  }
 #include "nsCSSVisitedDependentPropList.h"
 #undef STYLE_STRUCT
 #undef STYLE_FIELD
@@ -243,16 +235,18 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
     const nsStyleDisplay* newDisp = aNewContext->ThreadsafeStyleDisplay();
     bool isFixedCB;
     if (oldDisp->IsAbsPosContainingBlockForNonSVGTextFrames() ==
-        newDisp->IsAbsPosContainingBlockForNonSVGTextFrames() &&
+            newDisp->IsAbsPosContainingBlockForNonSVGTextFrames() &&
         (isFixedCB =
-           oldDisp->IsFixedPosContainingBlockForNonSVGTextFrames(*this)) ==
-        newDisp->IsFixedPosContainingBlockForNonSVGTextFrames(*aNewContext) &&
+             oldDisp->IsFixedPosContainingBlockForNonSVGTextFrames(*this)) ==
+            newDisp->IsFixedPosContainingBlockForNonSVGTextFrames(
+                *aNewContext) &&
         // transform-supporting frames are a subcategory of non-SVG-text
         // frames, so no need to test this if isFixedCB is true (both
         // before and after the change)
         (isFixedCB ||
          oldDisp->IsFixedPosContainingBlockForTransformSupportingFrames() ==
-         newDisp->IsFixedPosContainingBlockForTransformSupportingFrames()) &&
+             newDisp
+                 ->IsFixedPosContainingBlockForTransformSupportingFrames()) &&
         // contain-layout-and-paint-supporting frames are a subset of
         // non-SVG-text frames, so no need to test this if isFixedCB is true
         // (both before and after the change).
@@ -265,7 +259,8 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
         // and row groups, many SVG frames).
         (isFixedCB ||
          oldDisp->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() ==
-         newDisp->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames())) {
+             newDisp
+                 ->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames())) {
       // While some styles that cause the frame to be a containing block
       // has changed, the overall result cannot have changed (no matter
       // what the frame type is).
@@ -279,20 +274,16 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
 }
 
 #ifdef DEBUG
-void ComputedStyle::List(FILE* out, int32_t aIndent)
-{
+void ComputedStyle::List(FILE* out, int32_t aIndent) {
   nsAutoCString str;
   // Indent
   int32_t ix;
-  for (ix = aIndent; --ix >= 0; ) {
+  for (ix = aIndent; --ix >= 0;) {
     str.AppendLiteral("  ");
   }
-  str.Append(nsPrintfCString("%p(%d) parent=%p ",
-                             (void*)this,
-                             0, nullptr
-                             ));
+  str.Append(nsPrintfCString("%p(%d) parent=%p ", (void*)this, 0, nullptr));
   if (mPseudoTag) {
-    nsAutoString  buffer;
+    nsAutoString buffer;
     mPseudoTag->ToString(buffer);
     AppendUTF16toUTF8(buffer, str);
     str.Append(' ');
@@ -302,59 +293,49 @@ void ComputedStyle::List(FILE* out, int32_t aIndent)
 }
 #endif
 
+nsIPresShell* ComputedStyle::Arena() { return mPresContext->PresShell(); }
 
-nsIPresShell*
-ComputedStyle::Arena()
-{
-  return mPresContext->PresShell();
-}
-
-template<typename Func>
-static nscolor
-GetVisitedDependentColorInternal(ComputedStyle* aSc, Func aColorFunc)
-{
+template <typename Func>
+static nscolor GetVisitedDependentColorInternal(ComputedStyle* aSc,
+                                                Func aColorFunc) {
   nscolor colors[2];
   colors[0] = aColorFunc(aSc);
   if (ComputedStyle* visitedStyle = aSc->GetStyleIfVisited()) {
     colors[1] = aColorFunc(visitedStyle);
-    return ComputedStyle::
-      CombineVisitedColors(colors, aSc->RelevantLinkVisited());
+    return ComputedStyle::CombineVisitedColors(colors,
+                                               aSc->RelevantLinkVisited());
   }
   return colors[0];
 }
 
-static nscolor
-ExtractColor(ComputedStyle* aStyle, const nscolor& aColor)
-{
+static nscolor ExtractColor(ComputedStyle* aStyle, const nscolor& aColor) {
   return aColor;
 }
 
-static nscolor
-ExtractColor(ComputedStyle* aStyle, const StyleComplexColor& aColor)
-{
+static nscolor ExtractColor(ComputedStyle* aStyle,
+                            const StyleComplexColor& aColor) {
   return aColor.CalcColor(aStyle);
 }
 
-static nscolor
-ExtractColor(ComputedStyle* aStyle, const nsStyleSVGPaint& aPaintServer)
-{
+static nscolor ExtractColor(ComputedStyle* aStyle,
+                            const nsStyleSVGPaint& aPaintServer) {
   return aPaintServer.Type() == eStyleSVGPaintType_Color
-    ? aPaintServer.GetColor(aStyle) : NS_RGBA(0, 0, 0, 0);
+             ? aPaintServer.GetColor(aStyle)
+             : NS_RGBA(0, 0, 0, 0);
 }
 
 #define STYLE_FIELD(struct_, field_) aField == &struct_::field_ ||
-#define STYLE_STRUCT(name_, fields_)                                          \
-  template<> nscolor                                                          \
-  ComputedStyle::GetVisitedDependentColor(                                   \
-    decltype(nsStyle##name_::MOZ_ARG_1 fields_) nsStyle##name_::* aField)     \
-  {                                                                           \
-    MOZ_ASSERT(MOZ_FOR_EACH(STYLE_FIELD, (nsStyle##name_,), fields_) false,   \
-               "Getting visited-dependent color for a field in nsStyle"#name_ \
-               " which is not listed in nsCSSVisitedDependentPropList.h");    \
-    return GetVisitedDependentColorInternal(this,                             \
-                                            [aField](ComputedStyle* sc) {    \
-      return ExtractColor(sc, sc->Style##name_()->*aField);                   \
-    });                                                                       \
+#define STYLE_STRUCT(name_, fields_)                                           \
+  template <>                                                                  \
+  nscolor ComputedStyle::GetVisitedDependentColor(                             \
+      decltype(nsStyle##name_::MOZ_ARG_1 fields_) nsStyle##name_::*aField) {   \
+    MOZ_ASSERT(MOZ_FOR_EACH(STYLE_FIELD, (nsStyle##name_, ), fields_) false,   \
+               "Getting visited-dependent color for a field in nsStyle" #name_ \
+               " which is not listed in nsCSSVisitedDependentPropList.h");     \
+    return GetVisitedDependentColorInternal(                                   \
+        this, [aField](ComputedStyle* sc) {                                    \
+          return ExtractColor(sc, sc->Style##name_()->*aField);                \
+        });                                                                    \
   }
 #include "nsCSSVisitedDependentPropList.h"
 #undef STYLE_STRUCT
@@ -364,11 +345,10 @@ struct ColorIndexSet {
   uint8_t colorIndex, alphaIndex;
 };
 
-static const ColorIndexSet gVisitedIndices[2] = { { 0, 0 }, { 1, 0 } };
+static const ColorIndexSet gVisitedIndices[2] = {{0, 0}, {1, 0}};
 
-/* static */ nscolor
-ComputedStyle::CombineVisitedColors(nscolor *aColors, bool aLinkIsVisited)
-{
+/* static */ nscolor ComputedStyle::CombineVisitedColors(nscolor* aColors,
+                                                         bool aLinkIsVisited) {
   if (NS_GET_A(aColors[1]) == 0) {
     // If the style-if-visited is transparent, then just use the
     // unvisited style rather than using the (meaningless) color
@@ -379,8 +359,7 @@ ComputedStyle::CombineVisitedColors(nscolor *aColors, bool aLinkIsVisited)
 
   // NOTE: We want this code to have as little timing dependence as
   // possible on whether this->RelevantLinkVisited() is true.
-  const ColorIndexSet &set =
-    gVisitedIndices[aLinkIsVisited ? 1 : 0];
+  const ColorIndexSet& set = gVisitedIndices[aLinkIsVisited ? 1 : 0];
 
   nscolor colorColor = aColors[set.colorIndex];
   nscolor alphaColor = aColors[set.alphaIndex];
@@ -389,13 +368,11 @@ ComputedStyle::CombineVisitedColors(nscolor *aColors, bool aLinkIsVisited)
 }
 
 #ifdef DEBUG
-/* static */ const char*
-ComputedStyle::StructName(StyleStructID aSID)
-{
+/* static */ const char* ComputedStyle::StructName(StyleStructID aSID) {
   switch (aSID) {
-#define STYLE_STRUCT(name_)     \
-    case StyleStructID::name_:  \
-      return #name_;
+#define STYLE_STRUCT(name_)  \
+  case StyleStructID::name_: \
+    return #name_;
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
     default:
@@ -403,39 +380,36 @@ ComputedStyle::StructName(StyleStructID aSID)
   }
 }
 
-/* static */ Maybe<StyleStructID>
-ComputedStyle::LookupStruct(const nsACString& aName)
-{
-#define STYLE_STRUCT(name_)             \
-  if (aName.EqualsLiteral(#name_)) \
-    return Some(StyleStructID::name_);
+/* static */ Maybe<StyleStructID> ComputedStyle::LookupStruct(
+    const nsACString& aName) {
+#define STYLE_STRUCT(name_) \
+  if (aName.EqualsLiteral(#name_)) return Some(StyleStructID::name_);
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
   return Nothing();
 }
-#endif // DEBUG
+#endif  // DEBUG
 
-ComputedStyle*
-ComputedStyle::GetCachedLazyPseudoStyle(CSSPseudoElementType aPseudo) const
-{
+ComputedStyle* ComputedStyle::GetCachedLazyPseudoStyle(
+    CSSPseudoElementType aPseudo) const {
   MOZ_ASSERT(aPseudo != CSSPseudoElementType::NotPseudo &&
              aPseudo != CSSPseudoElementType::InheritingAnonBox &&
              aPseudo != CSSPseudoElementType::NonInheritingAnonBox);
-  MOZ_ASSERT(!IsLazilyCascadedPseudoElement(), "Lazy pseudos can't inherit lazy pseudos");
+  MOZ_ASSERT(!IsLazilyCascadedPseudoElement(),
+             "Lazy pseudos can't inherit lazy pseudos");
 
   if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(aPseudo)) {
     return nullptr;
   }
 
-  return mCachedInheritingStyles.Lookup(nsCSSPseudoElements::GetPseudoAtom(aPseudo));
+  return mCachedInheritingStyles.Lookup(
+      nsCSSPseudoElements::GetPseudoAtom(aPseudo));
 }
 
 MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoComputedValuesMallocEnclosingSizeOf)
 
-void
-ComputedStyle::AddSizeOfIncludingThis(nsWindowSizes& aSizes,
-                                      size_t* aCVsSize) const
-{
+void ComputedStyle::AddSizeOfIncludingThis(nsWindowSizes& aSizes,
+                                           size_t* aCVsSize) const {
   // Note: |this| sits within a servo_arc::Arc, i.e. it is preceded by a
   // refcount. So we need to measure it with a function that can handle an
   // interior pointer. We use ServoComputedValuesMallocEnclosingSizeOf to
@@ -445,4 +419,4 @@ ComputedStyle::AddSizeOfIncludingThis(nsWindowSizes& aSizes,
   mCachedInheritingStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

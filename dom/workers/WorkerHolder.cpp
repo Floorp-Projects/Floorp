@@ -12,35 +12,28 @@ namespace dom {
 
 namespace {
 
-void
-AssertOnOwningThread(void* aThread)
-{
+void AssertOnOwningThread(void* aThread) {
   if (MOZ_UNLIKELY(aThread != GetCurrentVirtualThread())) {
     MOZ_CRASH_UNSAFE_OOL("WorkerHolder on the wrong thread.");
   }
 }
 
-} // anonymous
+}  // namespace
 
 WorkerHolder::WorkerHolder(const char* aName, Behavior aBehavior)
-  : mWorkerPrivate(nullptr)
-  , mBehavior(aBehavior)
-  , mThread(GetCurrentVirtualThread())
-  , mName(aName)
-{
-}
+    : mWorkerPrivate(nullptr),
+      mBehavior(aBehavior),
+      mThread(GetCurrentVirtualThread()),
+      mName(aName) {}
 
-WorkerHolder::~WorkerHolder()
-{
+WorkerHolder::~WorkerHolder() {
   AssertOnOwningThread(mThread);
   ReleaseWorkerInternal();
   MOZ_ASSERT(mWorkerPrivate == nullptr);
 }
 
-bool
-WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate,
-                         WorkerStatus aFailStatus)
-{
+bool WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate,
+                              WorkerStatus aFailStatus) {
   AssertOnOwningThread(mThread);
   MOZ_ASSERT(aWorkerPrivate);
   MOZ_ASSERT(aFailStatus >= Canceling);
@@ -55,24 +48,16 @@ WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate,
   return true;
 }
 
-void
-WorkerHolder::ReleaseWorker()
-{
+void WorkerHolder::ReleaseWorker() {
   AssertOnOwningThread(mThread);
   MOZ_ASSERT(mWorkerPrivate);
 
   ReleaseWorkerInternal();
 }
 
-WorkerHolder::Behavior
-WorkerHolder::GetBehavior() const
-{
-  return mBehavior;
-}
+WorkerHolder::Behavior WorkerHolder::GetBehavior() const { return mBehavior; }
 
-void
-WorkerHolder::ReleaseWorkerInternal()
-{
+void WorkerHolder::ReleaseWorkerInternal() {
   AssertOnOwningThread(mThread);
 
   if (mWorkerPrivate) {
@@ -82,5 +67,5 @@ WorkerHolder::ReleaseWorkerInternal()
   }
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

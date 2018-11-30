@@ -11,10 +11,10 @@
 class nsIWidget;
 
 namespace mozilla {
-namespace widget{
+namespace widget {
 class TextInputHandler;
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 // A protocol listing all the methods that an object which wants
 // to live in gecko's widget hierarchy must implement. |nsChildView|
@@ -22,41 +22,41 @@ class TextInputHandler;
 // implement this protocol.
 @protocol mozView
 
-  // aHandler is Gecko's default text input handler:  It implements the
-  // NSTextInput protocol to handle key events.  Don't make aHandler a
-  // strong reference -- that causes a memory leak.
+// aHandler is Gecko's default text input handler:  It implements the
+// NSTextInput protocol to handle key events.  Don't make aHandler a
+// strong reference -- that causes a memory leak.
 - (void)installTextInputHandler:(mozilla::widget::TextInputHandler*)aHandler;
 - (void)uninstallTextInputHandler;
 
-  // access the nsIWidget associated with this view. DOES NOT ADDREF.
+// access the nsIWidget associated with this view. DOES NOT ADDREF.
 - (nsIWidget*)widget;
 
-  // return a context menu for this view
+// return a context menu for this view
 - (NSMenu*)contextMenu;
 
-  // called when our corresponding Gecko view goes away
+// called when our corresponding Gecko view goes away
 - (void)widgetDestroyed;
 
 - (BOOL)isDragInProgress;
 
-  // Checks whether the view is first responder or not
+// Checks whether the view is first responder or not
 - (BOOL)isFirstResponder;
 
-  // Call when you dispatch an event which may cause to open context menu.
+// Call when you dispatch an event which may cause to open context menu.
 - (void)maybeInitContextMenuTracking;
 
 @end
 
 // An informal protocol implemented by the NSWindow of the host application.
-// 
+//
 // It's used to prevent re-entrant calls to -makeKeyAndOrderFront: when gecko
 // focus/activate events propagate out to the embedder's
 // nsIEmbeddingSiteWindow::SetFocus implementation.
-@interface NSObject(mozWindow)
+@interface NSObject (mozWindow)
 
 - (BOOL)suppressMakeKeyFront;
 - (void)setSuppressMakeKeyFront:(BOOL)inSuppress;
 
 @end
 
-#endif // mozView_h_
+#endif  // mozView_h_

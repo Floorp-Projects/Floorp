@@ -26,7 +26,9 @@
 #define DISABLE_ASSERTS_FOR_FUZZING 0
 
 #if DISABLE_ASSERTS_FOR_FUZZING
-#define ASSERT_UNLESS_FUZZING(...) do { } while (0)
+#define ASSERT_UNLESS_FUZZING(...) \
+  do {                             \
+  } while (0)
 #else
 #define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
@@ -49,35 +51,27 @@ const uint32_t kCopyBufferSize = 32768;
  * Actor class declarations
  ******************************************************************************/
 
-class StreamHelper final
-  : public Runnable
-{
+class StreamHelper final : public Runnable {
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   nsCOMPtr<nsIFileStream> mFileStream;
   nsCOMPtr<nsIRunnable> mCallback;
 
-public:
-  StreamHelper(nsIFileStream* aFileStream,
-               nsIRunnable* aCallback);
+ public:
+  StreamHelper(nsIFileStream* aFileStream, nsIRunnable* aCallback);
 
-  void
-  AsyncClose();
+  void AsyncClose();
 
-private:
+ private:
   ~StreamHelper() override;
 
-  void
-  RunOnBackgroundThread();
+  void RunOnBackgroundThread();
 
-  void
-  RunOnIOThread();
+  void RunOnIOThread();
 
   NS_DECL_NSIRUNNABLE
 };
 
-class Connection final
-  : public PBackgroundSDBConnectionParent
-{
+class Connection final : public PBackgroundSDBConnectionParent {
   RefPtr<DirectoryLock> mDirectoryLock;
   nsCOMPtr<nsIFileStream> mFileStream;
   const PrincipalInfo mPrincipalInfo;
@@ -89,145 +83,109 @@ class Connection final
   bool mAllowedToClose;
   bool mActorDestroyed;
 
-public:
+ public:
   explicit Connection(const PrincipalInfo& aPrincipalInfo);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::Connection)
 
-  nsIFileStream*
-  GetFileStream() const
-  {
+  nsIFileStream* GetFileStream() const {
     AssertIsOnIOThread();
 
     return mFileStream;
   }
 
-  const PrincipalInfo&
-  GetPrincipalInfo() const
-  {
+  const PrincipalInfo& GetPrincipalInfo() const {
     MOZ_ASSERT(NS_IsMainThread());
 
     return mPrincipalInfo;
   }
 
-  const nsCString&
-  Origin() const
-  {
+  const nsCString& Origin() const {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(!mOrigin.IsEmpty());
 
     return mOrigin;
   }
 
-  const nsString&
-  Name() const
-  {
+  const nsString& Name() const {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(!mName.IsEmpty());
 
     return mName;
   }
 
-  void
-  OnNewRequest();
+  void OnNewRequest();
 
-  void
-  OnRequestFinished();
+  void OnRequestFinished();
 
-  void
-  OnOpen(const nsACString& aOrigin,
-         const nsAString& aName,
-         already_AddRefed<DirectoryLock> aDirectoryLock,
-         already_AddRefed<nsIFileStream> aFileStream);
+  void OnOpen(const nsACString& aOrigin, const nsAString& aName,
+              already_AddRefed<DirectoryLock> aDirectoryLock,
+              already_AddRefed<nsIFileStream> aFileStream);
 
-  void
-  OnClose();
+  void OnClose();
 
-  void
-  AllowToClose();
+  void AllowToClose();
 
-private:
+ private:
   ~Connection();
 
-  void
-  MaybeCloseStream();
+  void MaybeCloseStream();
 
-  bool
-  VerifyRequestParams(const SDBRequestParams& aParams) const;
+  bool VerifyRequestParams(const SDBRequestParams& aParams) const;
 
   // IPDL methods.
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult
-  RecvDeleteMe() override;
+  mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  virtual PBackgroundSDBRequestParent*
-  AllocPBackgroundSDBRequestParent(const SDBRequestParams& aParams) override;
+  virtual PBackgroundSDBRequestParent* AllocPBackgroundSDBRequestParent(
+      const SDBRequestParams& aParams) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvPBackgroundSDBRequestConstructor(PBackgroundSDBRequestParent* aActor,
-                                       const SDBRequestParams& aParams)
-                                       override;
+  virtual mozilla::ipc::IPCResult RecvPBackgroundSDBRequestConstructor(
+      PBackgroundSDBRequestParent* aActor,
+      const SDBRequestParams& aParams) override;
 
-  virtual bool
-  DeallocPBackgroundSDBRequestParent(PBackgroundSDBRequestParent* aActor)
-                                     override;
+  virtual bool DeallocPBackgroundSDBRequestParent(
+      PBackgroundSDBRequestParent* aActor) override;
 };
 
-class ConnectionOperationBase
-  : public Runnable
-  , public PBackgroundSDBRequestParent
-{
+class ConnectionOperationBase : public Runnable,
+                                public PBackgroundSDBRequestParent {
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   RefPtr<Connection> mConnection;
   nsresult mResultCode;
   Atomic<bool> mOperationMayProceed;
   bool mActorDestroyed;
 
-public:
-  nsIEventTarget*
-  OwningEventTarget() const
-  {
+ public:
+  nsIEventTarget* OwningEventTarget() const {
     MOZ_ASSERT(mOwningEventTarget);
 
     return mOwningEventTarget;
   }
 
-  bool
-  IsOnOwningThread() const
-  {
+  bool IsOnOwningThread() const {
     MOZ_ASSERT(mOwningEventTarget);
 
     bool current;
-    return
-      NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) && current;
+    return NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) &&
+           current;
   }
 
-  void
-  AssertIsOnOwningThread() const
-  {
+  void AssertIsOnOwningThread() const {
     MOZ_ASSERT(IsOnBackgroundThread());
     MOZ_ASSERT(IsOnOwningThread());
   }
 
-  Connection*
-  GetConnection() const
-  {
+  Connection* GetConnection() const {
     MOZ_ASSERT(mConnection);
 
     return mConnection;
   }
 
-  nsresult
-  ResultCode() const
-  {
-    return mResultCode;
-  }
+  nsresult ResultCode() const { return mResultCode; }
 
-  void
-  MaybeSetFailureCode(nsresult aErrorCode)
-  {
+  void MaybeSetFailureCode(nsresult aErrorCode) {
     MOZ_ASSERT(NS_FAILED(aErrorCode));
 
     if (NS_SUCCEEDED(mResultCode)) {
@@ -237,15 +195,9 @@ public:
 
   // May be called on any thread, but you should call IsActorDestroyed() if
   // you know you're on the background thread because it is slightly faster.
-  bool
-  OperationMayProceed() const
-  {
-    return mOperationMayProceed;
-  }
+  bool OperationMayProceed() const { return mOperationMayProceed; }
 
-  bool
-  IsActorDestroyed() const
-  {
+  bool IsActorDestroyed() const {
     AssertIsOnOwningThread();
 
     return mActorDestroyed;
@@ -255,65 +207,52 @@ public:
   // background thread before being dispatched but must always call the base
   // class implementation. Returning false will kill the child actors and
   // prevent dispatch.
-  virtual bool
-  Init();
+  virtual bool Init();
 
-  virtual nsresult
-  Dispatch();
+  virtual nsresult Dispatch();
 
   // This callback will be called on the background thread before releasing the
   // final reference to this request object. Subclasses may perform any
   // additional cleanup here but must always call the base class implementation.
-  virtual void
-  Cleanup();
+  virtual void Cleanup();
 
-protected:
+ protected:
   ConnectionOperationBase(Connection* aConnection)
-    : Runnable("dom::ConnectionOperationBase")
-    , mOwningEventTarget(GetCurrentThreadEventTarget())
-    , mConnection(aConnection)
-    , mResultCode(NS_OK)
-    , mOperationMayProceed(true)
-    , mActorDestroyed(false)
-  {
+      : Runnable("dom::ConnectionOperationBase"),
+        mOwningEventTarget(GetCurrentThreadEventTarget()),
+        mConnection(aConnection),
+        mResultCode(NS_OK),
+        mOperationMayProceed(true),
+        mActorDestroyed(false) {
     AssertIsOnOwningThread();
   }
 
   ~ConnectionOperationBase() override;
 
-  void
-  SendResults();
+  void SendResults();
 
-  void
-  DatabaseWork();
+  void DatabaseWork();
 
   // Methods that subclasses must implement.
-  virtual nsresult
-  DoDatabaseWork(nsIFileStream* aFileStream) = 0;
+  virtual nsresult DoDatabaseWork(nsIFileStream* aFileStream) = 0;
 
   // Subclasses use this override to set the IPDL response value.
-  virtual void
-  GetResponse(SDBRequestResponse& aResponse) = 0;
+  virtual void GetResponse(SDBRequestResponse& aResponse) = 0;
 
   // A method that subclasses may implement.
-  virtual void
-  OnSuccess();
+  virtual void OnSuccess();
 
-private:
+ private:
   NS_IMETHOD
   Run() override;
 
   // IPDL methods.
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
-class OpenOp final
-  : public ConnectionOperationBase
-  , public OpenDirectoryListener
-{
-  enum class State
-  {
+class OpenOp final : public ConnectionOperationBase,
+                     public OpenDirectoryListener {
+  enum class State {
     // Just created on the PBackground thread, dispatched to the main thread.
     // Next step is FinishOpen.
     Initial,
@@ -355,48 +294,36 @@ class OpenOp final
   State mState;
   bool mFileStreamOpen;
 
-public:
+ public:
   OpenOp(Connection* aConnection, const SDBRequestParams& aParams);
 
-  nsresult
-  Dispatch() override;
+  nsresult Dispatch() override;
 
-private:
+ private:
   ~OpenOp() override;
 
-  nsresult
-  Open();
+  nsresult Open();
 
-  nsresult
-  FinishOpen();
+  nsresult FinishOpen();
 
-  nsresult
-  QuotaManagerOpen();
+  nsresult QuotaManagerOpen();
 
-  nsresult
-  OpenDirectory();
+  nsresult OpenDirectory();
 
-  nsresult
-  SendToIOThread();
+  nsresult SendToIOThread();
 
-  nsresult
-  DatabaseWork();
+  nsresult DatabaseWork();
 
-  void
-  StreamClosedCallback();
+  void StreamClosedCallback();
 
   // ConnectionOperationBase overrides
-  nsresult
-  DoDatabaseWork(nsIFileStream* aFileStream) override;
+  nsresult DoDatabaseWork(nsIFileStream* aFileStream) override;
 
-  void
-  GetResponse(SDBRequestResponse& aResponse) override;
+  void GetResponse(SDBRequestResponse& aResponse) override;
 
-  void
-  OnSuccess() override;
+  void OnSuccess() override;
 
-  void
-  Cleanup() override;
+  void Cleanup() override;
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -404,118 +331,90 @@ private:
   Run() override;
 
   // OpenDirectoryListener overrides.
-  void
-  DirectoryLockAcquired(DirectoryLock* aLock) override;
+  void DirectoryLockAcquired(DirectoryLock* aLock) override;
 
-  void
-  DirectoryLockFailed() override;
+  void DirectoryLockFailed() override;
 };
 
-class SeekOp final
-  : public ConnectionOperationBase
-{
+class SeekOp final : public ConnectionOperationBase {
   const SDBRequestSeekParams mParams;
 
-public:
-  SeekOp(Connection* aConnection,
-         const SDBRequestParams& aParams);
+ public:
+  SeekOp(Connection* aConnection, const SDBRequestParams& aParams);
 
-private:
+ private:
   ~SeekOp() override = default;
 
-  nsresult
-  DoDatabaseWork(nsIFileStream* aFileStream) override;
+  nsresult DoDatabaseWork(nsIFileStream* aFileStream) override;
 
-  void
-  GetResponse(SDBRequestResponse& aResponse) override;
+  void GetResponse(SDBRequestResponse& aResponse) override;
 };
 
-class ReadOp final
-  : public ConnectionOperationBase
-{
+class ReadOp final : public ConnectionOperationBase {
   const SDBRequestReadParams mParams;
 
   RefPtr<MemoryOutputStream> mOutputStream;
 
-public:
-  ReadOp(Connection* aConnection,
-         const SDBRequestParams& aParams);
+ public:
+  ReadOp(Connection* aConnection, const SDBRequestParams& aParams);
 
-  bool
-  Init() override;
+  bool Init() override;
 
-private:
+ private:
   ~ReadOp() override = default;
 
-  nsresult
-  DoDatabaseWork(nsIFileStream* aFileStream) override;
+  nsresult DoDatabaseWork(nsIFileStream* aFileStream) override;
 
-  void
-  GetResponse(SDBRequestResponse& aResponse) override;
+  void GetResponse(SDBRequestResponse& aResponse) override;
 };
 
-class WriteOp final
-  : public ConnectionOperationBase
-{
+class WriteOp final : public ConnectionOperationBase {
   const SDBRequestWriteParams mParams;
 
   nsCOMPtr<nsIInputStream> mInputStream;
 
   uint64_t mSize;
 
-public:
-  WriteOp(Connection* aConnection,
-          const SDBRequestParams& aParams);
+ public:
+  WriteOp(Connection* aConnection, const SDBRequestParams& aParams);
 
-  bool
-  Init() override;
+  bool Init() override;
 
-private:
+ private:
   ~WriteOp() override = default;
 
-  nsresult
-  DoDatabaseWork(nsIFileStream* aFileStream) override;
+  nsresult DoDatabaseWork(nsIFileStream* aFileStream) override;
 
-  void
-  GetResponse(SDBRequestResponse& aResponse) override;
+  void GetResponse(SDBRequestResponse& aResponse) override;
 };
 
-class CloseOp final
-  : public ConnectionOperationBase
-{
-public:
+class CloseOp final : public ConnectionOperationBase {
+ public:
   explicit CloseOp(Connection* aConnection);
 
-private:
+ private:
   ~CloseOp() override = default;
 
-  nsresult
-  DoDatabaseWork(nsIFileStream* aFileStream) override;
+  nsresult DoDatabaseWork(nsIFileStream* aFileStream) override;
 
-  void
-  GetResponse(SDBRequestResponse& aResponse) override;
+  void GetResponse(SDBRequestResponse& aResponse) override;
 
-  void
-  OnSuccess() override;
+  void OnSuccess() override;
 };
 
 /*******************************************************************************
  * Other class declarations
  ******************************************************************************/
 
-class QuotaClient final
-  : public mozilla::dom::quota::Client
-{
+class QuotaClient final : public mozilla::dom::quota::Client {
   static QuotaClient* sInstance;
 
   bool mShutdownRequested;
 
-public:
+ public:
   QuotaClient();
 
-  static bool
-  IsShuttingDownOnBackgroundThread()
-  {
+  static bool IsShuttingDownOnBackgroundThread() {
     AssertIsOnBackgroundThread();
 
     if (sInstance) {
@@ -525,17 +424,13 @@ public:
     return QuotaManager::IsShuttingDown();
   }
 
-  static bool
-  IsShuttingDownOnNonBackgroundThread()
-  {
+  static bool IsShuttingDownOnNonBackgroundThread() {
     MOZ_ASSERT(!IsOnBackgroundThread());
 
     return QuotaManager::IsShuttingDown();
   }
 
-  bool
-  IsShuttingDown() const
-  {
+  bool IsShuttingDown() const {
     AssertIsOnBackgroundThread();
 
     return mShutdownRequested;
@@ -543,47 +438,35 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(QuotaClient, override)
 
-  Type
-  GetType() override;
+  Type GetType() override;
 
-  nsresult
-  InitOrigin(PersistenceType aPersistenceType,
-             const nsACString& aGroup,
-             const nsACString& aOrigin,
-             const AtomicBool& aCanceled,
-             UsageInfo* aUsageInfo) override;
+  nsresult InitOrigin(PersistenceType aPersistenceType,
+                      const nsACString& aGroup, const nsACString& aOrigin,
+                      const AtomicBool& aCanceled,
+                      UsageInfo* aUsageInfo) override;
 
-  nsresult
-  GetUsageForOrigin(PersistenceType aPersistenceType,
-                    const nsACString& aGroup,
-                    const nsACString& aOrigin,
-                    const AtomicBool& aCanceled,
-                    UsageInfo* aUsageInfo) override;
+  nsresult GetUsageForOrigin(PersistenceType aPersistenceType,
+                             const nsACString& aGroup,
+                             const nsACString& aOrigin,
+                             const AtomicBool& aCanceled,
+                             UsageInfo* aUsageInfo) override;
 
-  void
-  OnOriginClearCompleted(PersistenceType aPersistenceType,
-                         const nsACString& aOrigin)
-                         override;
+  void OnOriginClearCompleted(PersistenceType aPersistenceType,
+                              const nsACString& aOrigin) override;
 
-  void
-  ReleaseIOThreadObjects() override;
+  void ReleaseIOThreadObjects() override;
 
-  void
-  AbortOperations(const nsACString& aOrigin) override;
+  void AbortOperations(const nsACString& aOrigin) override;
 
-  void
-  AbortOperationsForProcess(ContentParentId aContentParentId) override;
+  void AbortOperationsForProcess(ContentParentId aContentParentId) override;
 
-  void
-  StartIdleMaintenance() override;
+  void StartIdleMaintenance() override;
 
-  void
-  StopIdleMaintenance() override;
+  void StopIdleMaintenance() override;
 
-  void
-  ShutdownWorkThreads() override;
+  void ShutdownWorkThreads() override;
 
-private:
+ private:
   ~QuotaClient() override;
 };
 
@@ -595,15 +478,14 @@ typedef nsTArray<RefPtr<Connection>> ConnectionArray;
 
 StaticAutoPtr<ConnectionArray> gOpenConnections;
 
-} // namespace
+}  // namespace
 
 /*******************************************************************************
  * Exported functions
  ******************************************************************************/
 
-PBackgroundSDBConnectionParent*
-AllocPBackgroundSDBConnectionParent(const PrincipalInfo& aPrincipalInfo)
-{
+PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
+    const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
@@ -620,10 +502,9 @@ AllocPBackgroundSDBConnectionParent(const PrincipalInfo& aPrincipalInfo)
   return actor.forget().take();
 }
 
-bool
-RecvPBackgroundSDBConnectionConstructor(PBackgroundSDBConnectionParent* aActor,
-                                        const PrincipalInfo& aPrincipalInfo)
-{
+bool RecvPBackgroundSDBConnectionConstructor(
+    PBackgroundSDBConnectionParent* aActor,
+    const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
@@ -631,9 +512,8 @@ RecvPBackgroundSDBConnectionConstructor(PBackgroundSDBConnectionParent* aActor,
   return true;
 }
 
-bool
-DeallocPBackgroundSDBConnectionParent(PBackgroundSDBConnectionParent* aActor)
-{
+bool DeallocPBackgroundSDBConnectionParent(
+    PBackgroundSDBConnectionParent* aActor) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
@@ -643,54 +523,45 @@ DeallocPBackgroundSDBConnectionParent(PBackgroundSDBConnectionParent* aActor)
 
 namespace simpledb {
 
-already_AddRefed<mozilla::dom::quota::Client>
-CreateQuotaClient()
-{
+already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient() {
   AssertIsOnBackgroundThread();
 
   RefPtr<QuotaClient> client = new QuotaClient();
   return client.forget();
 }
 
-} // namespace simpledb
+}  // namespace simpledb
 
 /*******************************************************************************
  * StreamHelper
  ******************************************************************************/
 
-StreamHelper::StreamHelper(nsIFileStream* aFileStream,
-                           nsIRunnable* aCallback)
-  : Runnable("dom::StreamHelper")
-  , mOwningEventTarget(GetCurrentThreadEventTarget())
-  , mFileStream(aFileStream)
-  , mCallback(aCallback)
-{
+StreamHelper::StreamHelper(nsIFileStream* aFileStream, nsIRunnable* aCallback)
+    : Runnable("dom::StreamHelper"),
+      mOwningEventTarget(GetCurrentThreadEventTarget()),
+      mFileStream(aFileStream),
+      mCallback(aCallback) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aFileStream);
   MOZ_ASSERT(aCallback);
 }
 
-StreamHelper::~StreamHelper()
-{
+StreamHelper::~StreamHelper() {
   MOZ_ASSERT(!mFileStream);
   MOZ_ASSERT(!mCallback);
 }
 
-void
-StreamHelper::AsyncClose()
-{
+void StreamHelper::AsyncClose() {
   AssertIsOnBackgroundThread();
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   MOZ_ALWAYS_SUCCEEDS(
-    quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL));
+      quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
-void
-StreamHelper::RunOnBackgroundThread()
-{
+void StreamHelper::RunOnBackgroundThread() {
   AssertIsOnBackgroundThread();
 
   nsCOMPtr<nsIFileStream> fileStream;
@@ -702,9 +573,7 @@ StreamHelper::RunOnBackgroundThread()
   callback->Run();
 }
 
-void
-StreamHelper::RunOnIOThread()
-{
+void StreamHelper::RunOnIOThread() {
   AssertIsOnIOThread();
   MOZ_ASSERT(mFileStream);
 
@@ -718,8 +587,7 @@ StreamHelper::RunOnIOThread()
 }
 
 NS_IMETHODIMP
-StreamHelper::Run()
-{
+StreamHelper::Run() {
   MOZ_ASSERT(mCallback);
 
   if (IsOnBackgroundThread()) {
@@ -736,35 +604,29 @@ StreamHelper::Run()
  ******************************************************************************/
 
 Connection::Connection(const PrincipalInfo& aPrincipalInfo)
-  : mPrincipalInfo(aPrincipalInfo)
-  , mRunningRequest(false)
-  , mOpen(false)
-  , mAllowedToClose(false)
-  , mActorDestroyed(false)
-{
+    : mPrincipalInfo(aPrincipalInfo),
+      mRunningRequest(false),
+      mOpen(false),
+      mAllowedToClose(false),
+      mActorDestroyed(false) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 }
 
-Connection::~Connection()
-{
+Connection::~Connection() {
   MOZ_ASSERT(!mRunningRequest);
   MOZ_ASSERT(!mOpen);
   MOZ_ASSERT(mActorDestroyed);
 }
 
-void
-Connection::OnNewRequest()
-{
+void Connection::OnNewRequest() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mRunningRequest);
 
   mRunningRequest = true;
 }
 
-void
-Connection::OnRequestFinished()
-{
+void Connection::OnRequestFinished() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mRunningRequest);
 
@@ -773,12 +635,9 @@ Connection::OnRequestFinished()
   MaybeCloseStream();
 }
 
-void
-Connection::OnOpen(const nsACString& aOrigin,
-                   const nsAString& aName,
-                   already_AddRefed<DirectoryLock> aDirectoryLock,
-                   already_AddRefed<nsIFileStream> aFileStream)
-{
+void Connection::OnOpen(const nsACString& aOrigin, const nsAString& aName,
+                        already_AddRefed<DirectoryLock> aDirectoryLock,
+                        already_AddRefed<nsIFileStream> aFileStream) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(!aName.IsEmpty());
@@ -801,9 +660,7 @@ Connection::OnOpen(const nsACString& aOrigin,
   gOpenConnections->AppendElement(this);
 }
 
-void
-Connection::OnClose()
-{
+void Connection::OnClose() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mOrigin.IsEmpty());
   MOZ_ASSERT(mDirectoryLock);
@@ -828,9 +685,7 @@ Connection::OnClose()
   }
 }
 
-void
-Connection::AllowToClose()
-{
+void Connection::AllowToClose() {
   AssertIsOnBackgroundThread();
 
   if (mAllowedToClose) {
@@ -846,27 +701,19 @@ Connection::AllowToClose()
   MaybeCloseStream();
 }
 
-void
-Connection::MaybeCloseStream()
-{
+void Connection::MaybeCloseStream() {
   AssertIsOnBackgroundThread();
 
-  if (!mRunningRequest &&
-      mOpen &&
-      mAllowedToClose) {
-    nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod("dom::Connection::OnClose",
-                        this,
-                        &Connection::OnClose);
+  if (!mRunningRequest && mOpen && mAllowedToClose) {
+    nsCOMPtr<nsIRunnable> callback = NewRunnableMethod(
+        "dom::Connection::OnClose", this, &Connection::OnClose);
 
     RefPtr<StreamHelper> helper = new StreamHelper(mFileStream, callback);
     helper->AsyncClose();
   }
 }
 
-bool
-Connection::VerifyRequestParams(const SDBRequestParams& aParams) const
-{
+bool Connection::VerifyRequestParams(const SDBRequestParams& aParams) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != SDBRequestParams::T__None);
 
@@ -899,9 +746,7 @@ Connection::VerifyRequestParams(const SDBRequestParams& aParams) const
   return true;
 }
 
-void
-Connection::ActorDestroy(ActorDestroyReason aWhy)
-{
+void Connection::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
@@ -910,9 +755,7 @@ Connection::ActorDestroy(ActorDestroyReason aWhy)
   AllowToClose();
 }
 
-mozilla::ipc::IPCResult
-Connection::RecvDeleteMe()
-{
+mozilla::ipc::IPCResult Connection::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
@@ -924,9 +767,8 @@ Connection::RecvDeleteMe()
   return IPC_OK();
 }
 
-PBackgroundSDBRequestParent*
-Connection::AllocPBackgroundSDBRequestParent(const SDBRequestParams& aParams)
-{
+PBackgroundSDBRequestParent* Connection::AllocPBackgroundSDBRequestParent(
+    const SDBRequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != SDBRequestParams::T__None);
 
@@ -990,11 +832,8 @@ Connection::AllocPBackgroundSDBRequestParent(const SDBRequestParams& aParams)
   return actor.forget().take();
 }
 
-mozilla::ipc::IPCResult
-Connection::RecvPBackgroundSDBRequestConstructor(
-                                            PBackgroundSDBRequestParent* aActor,
-                                            const SDBRequestParams& aParams)
-{
+mozilla::ipc::IPCResult Connection::RecvPBackgroundSDBRequestConstructor(
+    PBackgroundSDBRequestParent* aActor, const SDBRequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != SDBRequestParams::T__None);
@@ -1018,16 +857,14 @@ Connection::RecvPBackgroundSDBRequestConstructor(
   return IPC_OK();
 }
 
-bool
-Connection::DeallocPBackgroundSDBRequestParent(
-                                            PBackgroundSDBRequestParent* aActor)
-{
+bool Connection::DeallocPBackgroundSDBRequestParent(
+    PBackgroundSDBRequestParent* aActor) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
   RefPtr<ConnectionOperationBase> actor =
-    dont_AddRef(static_cast<ConnectionOperationBase*>(aActor));
+      dont_AddRef(static_cast<ConnectionOperationBase*>(aActor));
   return true;
 }
 
@@ -1035,16 +872,14 @@ Connection::DeallocPBackgroundSDBRequestParent(
  * ConnectionOperationBase
  ******************************************************************************/
 
-ConnectionOperationBase::~ConnectionOperationBase()
-{
-  MOZ_ASSERT(!mConnection,
-             "ConnectionOperationBase::Cleanup() was not called by a subclass!");
+ConnectionOperationBase::~ConnectionOperationBase() {
+  MOZ_ASSERT(
+      !mConnection,
+      "ConnectionOperationBase::Cleanup() was not called by a subclass!");
   MOZ_ASSERT(mActorDestroyed);
 }
 
-bool
-ConnectionOperationBase::Init()
-{
+bool ConnectionOperationBase::Init() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mConnection);
 
@@ -1053,9 +888,7 @@ ConnectionOperationBase::Init()
   return true;
 }
 
-nsresult
-ConnectionOperationBase::Dispatch()
-{
+nsresult ConnectionOperationBase::Dispatch() {
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       IsActorDestroyed()) {
     return NS_ERROR_FAILURE;
@@ -1072,9 +905,7 @@ ConnectionOperationBase::Dispatch()
   return NS_OK;
 }
 
-void
-ConnectionOperationBase::Cleanup()
-{
+void ConnectionOperationBase::Cleanup() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mConnection);
 
@@ -1083,9 +914,7 @@ ConnectionOperationBase::Cleanup()
   mConnection = nullptr;
 }
 
-void
-ConnectionOperationBase::SendResults()
-{
+void ConnectionOperationBase::SendResults() {
   AssertIsOnOwningThread();
 
   if (IsActorDestroyed()) {
@@ -1102,8 +931,7 @@ ConnectionOperationBase::SendResults()
       response = mResultCode;
     }
 
-    Unused <<
-      PBackgroundSDBRequestParent::Send__delete__(this, response);
+    Unused << PBackgroundSDBRequestParent::Send__delete__(this, response);
 
     if (NS_SUCCEEDED(mResultCode)) {
       OnSuccess();
@@ -1113,9 +941,7 @@ ConnectionOperationBase::SendResults()
   Cleanup();
 }
 
-void
-ConnectionOperationBase::DatabaseWork()
-{
+void ConnectionOperationBase::DatabaseWork() {
   AssertIsOnIOThread();
   MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
 
@@ -1136,15 +962,10 @@ ConnectionOperationBase::DatabaseWork()
   MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
-void
-ConnectionOperationBase::OnSuccess()
-{
-  AssertIsOnOwningThread();
-}
+void ConnectionOperationBase::OnSuccess() { AssertIsOnOwningThread(); }
 
 NS_IMETHODIMP
-ConnectionOperationBase::Run()
-{
+ConnectionOperationBase::Run() {
   if (IsOnBackgroundThread()) {
     SendResults();
   } else {
@@ -1154,9 +975,7 @@ ConnectionOperationBase::Run()
   return NS_OK;
 }
 
-void
-ConnectionOperationBase::ActorDestroy(ActorDestroyReason aWhy)
-{
+void ConnectionOperationBase::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
 
   mOperationMayProceed = false;
@@ -1164,16 +983,14 @@ ConnectionOperationBase::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 OpenOp::OpenOp(Connection* aConnection, const SDBRequestParams& aParams)
-  : ConnectionOperationBase(aConnection)
-  , mParams(aParams.get_SDBRequestOpenParams())
-  , mState(State::Initial)
-  , mFileStreamOpen(false)
-{
+    : ConnectionOperationBase(aConnection),
+      mParams(aParams.get_SDBRequestOpenParams()),
+      mState(State::Initial),
+      mFileStreamOpen(false) {
   MOZ_ASSERT(aParams.type() == SDBRequestParams::TSDBRequestOpenParams);
 }
 
-OpenOp::~OpenOp()
-{
+OpenOp::~OpenOp() {
   MOZ_ASSERT(!mDirectoryLock);
   MOZ_ASSERT(!mFileStream);
   MOZ_ASSERT(!mFileStreamOpen);
@@ -1181,17 +998,13 @@ OpenOp::~OpenOp()
                 mState == State::Initial || mState == State::Completed);
 }
 
-nsresult
-OpenOp::Dispatch()
-{
+nsresult OpenOp::Dispatch() {
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
   return NS_OK;
 }
 
-nsresult
-OpenOp::Open()
-{
+nsresult OpenOp::Open() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::Initial);
 
@@ -1213,14 +1026,12 @@ OpenOp::Open()
 
     nsresult rv;
     nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(principalInfo, &rv);
+        PrincipalInfoToPrincipal(principalInfo, &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = QuotaManager::GetInfoFromPrincipal(principal,
-                                            &mSuffix,
-                                            &mGroup,
+    rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup,
                                             &mOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1233,9 +1044,7 @@ OpenOp::Open()
   return NS_OK;
 }
 
-nsresult
-OpenOp::FinishOpen()
-{
+nsresult OpenOp::FinishOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::FinishOpen);
 
@@ -1263,9 +1072,7 @@ OpenOp::FinishOpen()
   return NS_OK;
 }
 
-nsresult
-OpenOp::QuotaManagerOpen()
-{
+nsresult OpenOp::QuotaManagerOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::QuotaManagerPending);
 
@@ -1281,9 +1088,7 @@ OpenOp::QuotaManagerOpen()
   return NS_OK;
 }
 
-nsresult
-OpenOp::OpenDirectory()
-{
+nsresult OpenOp::OpenDirectory() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::FinishOpen ||
              mState == State::QuotaManagerPending);
@@ -1293,19 +1098,14 @@ OpenOp::OpenDirectory()
   MOZ_ASSERT(QuotaManager::Get());
 
   mState = State::DirectoryOpenPending;
-  QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT,
-                                     mGroup,
-                                     mOrigin,
+  QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin,
                                      mozilla::dom::quota::Client::SDB,
-                                     /* aExclusive */ false,
-                                     this);
+                                     /* aExclusive */ false, this);
 
   return NS_OK;
 }
 
-nsresult
-OpenOp::SendToIOThread()
-{
+nsresult OpenOp::SendToIOThread() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
 
@@ -1330,9 +1130,7 @@ OpenOp::SendToIOThread()
   return NS_OK;
 }
 
-nsresult
-OpenOp::DatabaseWork()
-{
+nsresult OpenOp::DatabaseWork() {
   AssertIsOnIOThread();
   MOZ_ASSERT(mState == State::DatabaseWorkOpen);
   MOZ_ASSERT(mFileStream);
@@ -1347,13 +1145,9 @@ OpenOp::DatabaseWork()
   MOZ_ASSERT(quotaManager);
 
   nsCOMPtr<nsIFile> dbDirectory;
-  nsresult rv =
-    quotaManager->EnsureOriginIsInitialized(PERSISTENCE_TYPE_DEFAULT,
-                                            mSuffix,
-                                            mGroup,
-                                            mOrigin,
-                                            /* aCreateIfNotExists */ true,
-                                            getter_AddRefs(dbDirectory));
+  nsresult rv = quotaManager->EnsureOriginIsInitialized(
+      PERSISTENCE_TYPE_DEFAULT, mSuffix, mGroup, mOrigin,
+      /* aCreateIfNotExists */ true, getter_AddRefs(dbDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1424,9 +1218,7 @@ OpenOp::DatabaseWork()
   return NS_OK;
 }
 
-void
-OpenOp::StreamClosedCallback()
-{
+void OpenOp::StreamClosedCallback() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_FAILED(ResultCode()));
   MOZ_ASSERT(mDirectoryLock);
@@ -1438,25 +1230,19 @@ OpenOp::StreamClosedCallback()
   mFileStreamOpen = false;
 }
 
-nsresult
-OpenOp::DoDatabaseWork(nsIFileStream* aFileStream)
-{
+nsresult OpenOp::DoDatabaseWork(nsIFileStream* aFileStream) {
   AssertIsOnIOThread();
 
   return NS_OK;
 }
 
-void
-OpenOp::GetResponse(SDBRequestResponse& aResponse)
-{
+void OpenOp::GetResponse(SDBRequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
   aResponse = SDBRequestOpenResponse();
 }
 
-void
-OpenOp::OnSuccess()
-{
+void OpenOp::OnSuccess() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
   MOZ_ASSERT(!mOrigin.IsEmpty());
@@ -1471,15 +1257,11 @@ OpenOp::OnSuccess()
   mFileStream.swap(fileStream);
   mFileStreamOpen = false;
 
-  GetConnection()->OnOpen(mOrigin,
-                          mParams.name(),
-                          directoryLock.forget(),
+  GetConnection()->OnOpen(mOrigin, mParams.name(), directoryLock.forget(),
                           fileStream.forget());
 }
 
-void
-OpenOp::Cleanup()
-{
+void OpenOp::Cleanup() {
   AssertIsOnOwningThread();
   MOZ_ASSERT_IF(mFileStreamOpen, mFileStream);
 
@@ -1492,9 +1274,8 @@ OpenOp::Cleanup()
     // We must close the stream on the I/O thread before releasing it on this
     // thread. The directory lock can't be released either.
     nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod("dom::OpenOp::StreamClosedCallback",
-                        this,
-                        &OpenOp::StreamClosedCallback);
+        NewRunnableMethod("dom::OpenOp::StreamClosedCallback", this,
+                          &OpenOp::StreamClosedCallback);
 
     RefPtr<StreamHelper> helper = new StreamHelper(mFileStream, callback);
     helper->AsyncClose();
@@ -1511,8 +1292,7 @@ OpenOp::Cleanup()
 NS_IMPL_ISUPPORTS_INHERITED0(OpenOp, ConnectionOperationBase)
 
 NS_IMETHODIMP
-OpenOp::Run()
-{
+OpenOp::Run() {
   nsresult rv;
 
   switch (mState) {
@@ -1551,16 +1331,14 @@ OpenOp::Run()
       SendResults();
     } else {
       MOZ_ALWAYS_SUCCEEDS(
-        OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
+          OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
     }
   }
 
   return NS_OK;
 }
 
-void
-OpenOp::DirectoryLockAcquired(DirectoryLock* aLock)
-{
+void OpenOp::DirectoryLockAcquired(DirectoryLock* aLock) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
@@ -1581,9 +1359,7 @@ OpenOp::DirectoryLockAcquired(DirectoryLock* aLock)
   }
 }
 
-void
-OpenOp::DirectoryLockFailed()
-{
+void OpenOp::DirectoryLockFailed() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
@@ -1597,25 +1373,21 @@ OpenOp::DirectoryLockFailed()
   MOZ_ALWAYS_SUCCEEDS(Run());
 }
 
-SeekOp::SeekOp(Connection* aConnection,
-               const SDBRequestParams& aParams)
-  : ConnectionOperationBase(aConnection)
-  , mParams(aParams.get_SDBRequestSeekParams())
-{
+SeekOp::SeekOp(Connection* aConnection, const SDBRequestParams& aParams)
+    : ConnectionOperationBase(aConnection),
+      mParams(aParams.get_SDBRequestSeekParams()) {
   MOZ_ASSERT(aParams.type() == SDBRequestParams::TSDBRequestSeekParams);
 }
 
-nsresult
-SeekOp::DoDatabaseWork(nsIFileStream* aFileStream)
-{
+nsresult SeekOp::DoDatabaseWork(nsIFileStream* aFileStream) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aFileStream);
 
   nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(aFileStream);
   MOZ_ASSERT(seekableStream);
 
-  nsresult rv = seekableStream->Seek(nsISeekableStream::NS_SEEK_SET,
-                                     mParams.offset());
+  nsresult rv =
+      seekableStream->Seek(nsISeekableStream::NS_SEEK_SET, mParams.offset());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1624,23 +1396,17 @@ SeekOp::DoDatabaseWork(nsIFileStream* aFileStream)
   return NS_OK;
 }
 
-void
-SeekOp::GetResponse(SDBRequestResponse& aResponse)
-{
+void SeekOp::GetResponse(SDBRequestResponse& aResponse) {
   aResponse = SDBRequestSeekResponse();
 }
 
-ReadOp::ReadOp(Connection* aConnection,
-               const SDBRequestParams& aParams)
-  : ConnectionOperationBase(aConnection)
-  , mParams(aParams.get_SDBRequestReadParams())
-{
+ReadOp::ReadOp(Connection* aConnection, const SDBRequestParams& aParams)
+    : ConnectionOperationBase(aConnection),
+      mParams(aParams.get_SDBRequestReadParams()) {
   MOZ_ASSERT(aParams.type() == SDBRequestParams::TSDBRequestReadParams);
 }
 
-bool
-ReadOp::Init()
-{
+bool ReadOp::Init() {
   AssertIsOnOwningThread();
 
   if (NS_WARN_IF(!ConnectionOperationBase::Init())) {
@@ -1655,9 +1421,7 @@ ReadOp::Init()
   return true;
 }
 
-nsresult
-ReadOp::DoDatabaseWork(nsIFileStream* aFileStream)
-{
+nsresult ReadOp::DoDatabaseWork(nsIFileStream* aFileStream) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aFileStream);
 
@@ -1711,24 +1475,18 @@ ReadOp::DoDatabaseWork(nsIFileStream* aFileStream)
   return NS_OK;
 }
 
-void
-ReadOp::GetResponse(SDBRequestResponse& aResponse)
-{
+void ReadOp::GetResponse(SDBRequestResponse& aResponse) {
   aResponse = SDBRequestReadResponse(mOutputStream->Data());
 }
 
-WriteOp::WriteOp(Connection* aConnection,
-                 const SDBRequestParams& aParams)
-  : ConnectionOperationBase(aConnection)
-  , mParams(aParams.get_SDBRequestWriteParams())
-  , mSize(0)
-{
+WriteOp::WriteOp(Connection* aConnection, const SDBRequestParams& aParams)
+    : ConnectionOperationBase(aConnection),
+      mParams(aParams.get_SDBRequestWriteParams()),
+      mSize(0) {
   MOZ_ASSERT(aParams.type() == SDBRequestParams::TSDBRequestWriteParams);
 }
 
-bool
-WriteOp::Init()
-{
+bool WriteOp::Init() {
   AssertIsOnOwningThread();
 
   if (NS_WARN_IF(!ConnectionOperationBase::Init())) {
@@ -1738,8 +1496,7 @@ WriteOp::Init()
   const nsCString& string = mParams.data();
 
   nsCOMPtr<nsIInputStream> inputStream;
-  nsresult rv =
-    NS_NewCStringInputStream(getter_AddRefs(inputStream), string);
+  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream), string);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
@@ -1750,9 +1507,7 @@ WriteOp::Init()
   return true;
 }
 
-nsresult
-WriteOp::DoDatabaseWork(nsIFileStream* aFileStream)
-{
+nsresult WriteOp::DoDatabaseWork(nsIFileStream* aFileStream) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aFileStream);
 
@@ -1790,19 +1545,14 @@ WriteOp::DoDatabaseWork(nsIFileStream* aFileStream)
   return NS_OK;
 }
 
-void
-WriteOp::GetResponse(SDBRequestResponse& aResponse)
-{
+void WriteOp::GetResponse(SDBRequestResponse& aResponse) {
   aResponse = SDBRequestWriteResponse();
 }
 
 CloseOp::CloseOp(Connection* aConnection)
-  : ConnectionOperationBase(aConnection)
-{ }
+    : ConnectionOperationBase(aConnection) {}
 
-nsresult
-CloseOp::DoDatabaseWork(nsIFileStream* aFileStream)
-{
+nsresult CloseOp::DoDatabaseWork(nsIFileStream* aFileStream) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aFileStream);
 
@@ -1817,15 +1567,11 @@ CloseOp::DoDatabaseWork(nsIFileStream* aFileStream)
   return NS_OK;
 }
 
-void
-CloseOp::GetResponse(SDBRequestResponse& aResponse)
-{
+void CloseOp::GetResponse(SDBRequestResponse& aResponse) {
   aResponse = SDBRequestCloseResponse();
 }
 
-void
-CloseOp::OnSuccess()
-{
+void CloseOp::OnSuccess() {
   AssertIsOnOwningThread();
 
   GetConnection()->OnClose();
@@ -1837,56 +1583,44 @@ CloseOp::OnSuccess()
 
 QuotaClient* QuotaClient::sInstance = nullptr;
 
-QuotaClient::QuotaClient()
-  : mShutdownRequested(false)
-{
+QuotaClient::QuotaClient() : mShutdownRequested(false) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
 
   sInstance = this;
 }
 
-QuotaClient::~QuotaClient()
-{
+QuotaClient::~QuotaClient() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(sInstance == this, "We expect this to be a singleton!");
 
   sInstance = nullptr;
 }
 
-mozilla::dom::quota::Client::Type
-QuotaClient::GetType()
-{
+mozilla::dom::quota::Client::Type QuotaClient::GetType() {
   return QuotaClient::SDB;
 }
 
-nsresult
-QuotaClient::InitOrigin(PersistenceType aPersistenceType,
-                        const nsACString& aGroup,
-                        const nsACString& aOrigin,
-                        const AtomicBool& aCanceled,
-                        UsageInfo* aUsageInfo)
-{
+nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
+                                 const nsACString& aGroup,
+                                 const nsACString& aOrigin,
+                                 const AtomicBool& aCanceled,
+                                 UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
 
   if (!aUsageInfo) {
     return NS_OK;
   }
 
-  return GetUsageForOrigin(aPersistenceType,
-                           aGroup,
-                           aOrigin,
-                           aCanceled,
+  return GetUsageForOrigin(aPersistenceType, aGroup, aOrigin, aCanceled,
                            aUsageInfo);
 }
 
-nsresult
-QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
-                               const nsACString& aGroup,
-                               const nsACString& aOrigin,
-                               const AtomicBool& aCanceled,
-                               UsageInfo* aUsageInfo)
-{
+nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
+                                        const nsACString& aGroup,
+                                        const nsACString& aOrigin,
+                                        const AtomicBool& aCanceled,
+                                        UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aUsageInfo);
 
@@ -1917,8 +1651,8 @@ QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
   }
 
   bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
-         hasMore && !aCanceled) {
+  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore &&
+         !aCanceled) {
     nsCOMPtr<nsISupports> entry;
     rv = entries->GetNext(getter_AddRefs(entry));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1945,22 +1679,14 @@ QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
   return NS_OK;
 }
 
-void
-QuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
-                                    const nsACString& aOrigin)
-{
+void QuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
+                                         const nsACString& aOrigin) {
   AssertIsOnIOThread();
 }
 
-void
-QuotaClient::ReleaseIOThreadObjects()
-{
-  AssertIsOnIOThread();
-}
+void QuotaClient::ReleaseIOThreadObjects() { AssertIsOnIOThread(); }
 
-void
-QuotaClient::AbortOperations(const nsACString& aOrigin)
-{
+void QuotaClient::AbortOperations(const nsACString& aOrigin) {
   AssertIsOnBackgroundThread();
 
   if (gOpenConnections) {
@@ -1972,27 +1698,15 @@ QuotaClient::AbortOperations(const nsACString& aOrigin)
   }
 }
 
-void
-QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId)
-{
+void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
   AssertIsOnBackgroundThread();
 }
 
-void
-QuotaClient::StartIdleMaintenance()
-{
-  AssertIsOnBackgroundThread();
-}
+void QuotaClient::StartIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
-void
-QuotaClient::StopIdleMaintenance()
-{
-  AssertIsOnBackgroundThread();
-}
+void QuotaClient::StopIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
-void
-QuotaClient::ShutdownWorkThreads()
-{
+void QuotaClient::ShutdownWorkThreads() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mShutdownRequested);
 
@@ -2007,5 +1721,5 @@ QuotaClient::ShutdownWorkThreads()
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

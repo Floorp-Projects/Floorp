@@ -40,60 +40,53 @@ overlap with libstdc++.
 // unordered_map and unordered_set.
 #include <unordered_map>
 #include <tr1/unordered_map>
-namespace std
-{
-  size_t __attribute__((weak))
-  __detail::_Prime_rehash_policy::_M_next_bkt(size_t __n) const
-  {
-    tr1::__detail::_Prime_rehash_policy policy(_M_max_load_factor);
-    size_t ret = policy._M_next_bkt(__n);
-    _M_next_resize = policy._M_next_resize;
-    return ret;
-  }
-
-  pair<bool, size_t> __attribute__((weak))
-  __detail::_Prime_rehash_policy::_M_need_rehash(size_t __n_bkt,
-                                                 size_t __n_elt,
-                                                 size_t __n_ins) const
-  {
-    tr1::__detail::_Prime_rehash_policy policy(_M_max_load_factor);
-    policy._M_next_resize = _M_next_resize;
-    pair<bool, size_t> ret = policy._M_need_rehash(__n_bkt, __n_elt, __n_ins);
-    _M_next_resize = policy._M_next_resize;
-    return ret;
-  }
+namespace std {
+size_t __attribute__((weak))
+__detail::_Prime_rehash_policy::_M_next_bkt(size_t __n) const {
+  tr1::__detail::_Prime_rehash_policy policy(_M_max_load_factor);
+  size_t ret = policy._M_next_bkt(__n);
+  _M_next_resize = policy._M_next_resize;
+  return ret;
 }
+
+pair<bool, size_t> __attribute__((weak))
+__detail::_Prime_rehash_policy::_M_need_rehash(size_t __n_bkt, size_t __n_elt,
+                                               size_t __n_ins) const {
+  tr1::__detail::_Prime_rehash_policy policy(_M_max_load_factor);
+  policy._M_next_resize = _M_next_resize;
+  pair<bool, size_t> ret = policy._M_need_rehash(__n_bkt, __n_elt, __n_ins);
+  _M_next_resize = policy._M_next_resize;
+  return ret;
+}
+}  // namespace std
 #endif
 
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 20)
 namespace std {
 
-    /* We shouldn't be throwing exceptions at all, but it sadly turns out
-       we call STL (inline) functions that do. */
-    void __attribute__((weak)) __throw_out_of_range_fmt(char const* fmt, ...)
-    {
-        va_list ap;
-        char buf[1024]; // That should be big enough.
+/* We shouldn't be throwing exceptions at all, but it sadly turns out
+   we call STL (inline) functions that do. */
+void __attribute__((weak)) __throw_out_of_range_fmt(char const* fmt, ...) {
+  va_list ap;
+  char buf[1024];  // That should be big enough.
 
-        va_start(ap, fmt);
-        vsnprintf(buf, sizeof(buf), fmt, ap);
-        buf[sizeof(buf) - 1] = 0;
-        va_end(ap);
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  buf[sizeof(buf) - 1] = 0;
+  va_end(ap);
 
-        __throw_range_error(buf);
-    }
-
+  __throw_range_error(buf);
 }
+
+}  // namespace std
 #endif
 
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 20)
 /* Technically, this symbol is not in GLIBCXX_3.4.20, but in CXXABI_1.3.8,
    but that's equivalent, version-wise. Those calls are added by the compiler
    itself on `new Class[n]` calls. */
-extern "C" void __attribute__((weak))
-__cxa_throw_bad_array_new_length()
-{
-    MOZ_CRASH();
+extern "C" void __attribute__((weak)) __cxa_throw_bad_array_new_length() {
+  MOZ_CRASH();
 }
 #endif
 
@@ -103,11 +96,9 @@ __cxa_throw_bad_array_new_length()
  * char const* argument. Older versions only have a constructor with
  * std::string. */
 namespace std {
-    __attribute__((weak)) runtime_error::runtime_error(char const* s)
-    : runtime_error(std::string(s))
-    {
-    }
-}
+__attribute__((weak)) runtime_error::runtime_error(char const* s)
+    : runtime_error(std::string(s)) {}
+}  // namespace std
 #endif
 
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 21)
@@ -116,56 +107,48 @@ namespace std {
 #include <thread>
 
 namespace std {
-  /* The old ABI has a thread::_M_start_thread(shared_ptr<_Impl_base>),
-   * while the new has thread::_M_start_thread(unique_ptr<_State>, void(*)()).
-   * There is an intermediate ABI at version 3.4.21, with
-   * thread::_M_start_thread(shared_ptr<_Impl_base>, void(*)()).
-   * The void(*)() parameter is only there to keep a reference to pthread_create
-   * on the caller side, and is unused in the implementation
-   * We're creating an entry point for the new and intermediate ABIs, and make
-   * them call the old ABI. */
+/* The old ABI has a thread::_M_start_thread(shared_ptr<_Impl_base>),
+ * while the new has thread::_M_start_thread(unique_ptr<_State>, void(*)()).
+ * There is an intermediate ABI at version 3.4.21, with
+ * thread::_M_start_thread(shared_ptr<_Impl_base>, void(*)()).
+ * The void(*)() parameter is only there to keep a reference to pthread_create
+ * on the caller side, and is unused in the implementation
+ * We're creating an entry point for the new and intermediate ABIs, and make
+ * them call the old ABI. */
 
-  __attribute__((weak))
-  void thread::_M_start_thread(shared_ptr<_Impl_base> impl, void (*)())
-  {
-    _M_start_thread(std::move(impl));
-  }
+__attribute__((weak)) void thread::_M_start_thread(shared_ptr<_Impl_base> impl,
+                                                   void (*)()) {
+  _M_start_thread(std::move(impl));
+}
 
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 22)
-  /* We need a _Impl_base-derived class wrapping a _State to call the old ABI
-   * from what we got by diverting the new API */
-  struct StateWrapper: public thread::_Impl_base {
-    unique_ptr<thread::_State> mState;
+/* We need a _Impl_base-derived class wrapping a _State to call the old ABI
+ * from what we got by diverting the new API */
+struct StateWrapper : public thread::_Impl_base {
+  unique_ptr<thread::_State> mState;
 
-    StateWrapper(unique_ptr<thread::_State> aState)
-    : mState(std::move(aState))
-    { }
+  StateWrapper(unique_ptr<thread::_State> aState) : mState(std::move(aState)) {}
 
-    void _M_run() override
-    {
-      mState->_M_run();
-    }
-  };
+  void _M_run() override { mState->_M_run(); }
+};
 
-  __attribute__((weak))
-  void thread::_M_start_thread(unique_ptr<_State> aState, void (*)())
-  {
-    auto impl = std::make_shared<StateWrapper>(std::move(aState));
-    _M_start_thread(std::move(impl));
-  }
-
-  /* For some reason this is a symbol exported by new versions of libstdc++,
-   * even though the destructor is default there too */
-  __attribute__((weak)) thread::_State::~_State() = default;
-#endif
+__attribute__((weak)) void thread::_M_start_thread(unique_ptr<_State> aState,
+                                                   void (*)()) {
+  auto impl = std::make_shared<StateWrapper>(std::move(aState));
+  _M_start_thread(std::move(impl));
 }
+
+/* For some reason this is a symbol exported by new versions of libstdc++,
+ * even though the destructor is default there too */
+__attribute__((weak)) thread::_State::~_State() = default;
+#endif
+}  // namespace std
 #endif
 
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 21)
-namespace std
-{
-  /* Instantiate this template to avoid GLIBCXX_3.4.21 symbol versions
-   * depending on optimization level */
-  template basic_ios<char, char_traits<char> >::operator bool() const;
-}
+namespace std {
+/* Instantiate this template to avoid GLIBCXX_3.4.21 symbol versions
+ * depending on optimization level */
+template basic_ios<char, char_traits<char> >::operator bool() const;
+}  // namespace std
 #endif

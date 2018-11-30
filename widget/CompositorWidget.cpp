@@ -11,34 +11,24 @@ namespace mozilla {
 namespace widget {
 
 CompositorWidget::CompositorWidget(const layers::CompositorOptions& aOptions)
-  : mOptions(aOptions)
-{
-}
+    : mOptions(aOptions) {}
 
-CompositorWidget::~CompositorWidget()
-{
-}
+CompositorWidget::~CompositorWidget() {}
 
-already_AddRefed<gfx::DrawTarget>
-CompositorWidget::StartRemoteDrawing()
-{
+already_AddRefed<gfx::DrawTarget> CompositorWidget::StartRemoteDrawing() {
   return nullptr;
 }
 
-void
-CompositorWidget::CleanupRemoteDrawing()
-{
-  mLastBackBuffer = nullptr;
-}
+void CompositorWidget::CleanupRemoteDrawing() { mLastBackBuffer = nullptr; }
 
-already_AddRefed<gfx::DrawTarget>
-CompositorWidget::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
-                                          const LayoutDeviceIntRect& aRect,
-                                          const LayoutDeviceIntRect& aClearRect)
-{
+already_AddRefed<gfx::DrawTarget> CompositorWidget::GetBackBufferDrawTarget(
+    gfx::DrawTarget* aScreenTarget, const LayoutDeviceIntRect& aRect,
+    const LayoutDeviceIntRect& aClearRect) {
   MOZ_ASSERT(aScreenTarget);
   gfx::SurfaceFormat format =
-    aScreenTarget->GetFormat() == gfx::SurfaceFormat::B8G8R8X8 ? gfx::SurfaceFormat::B8G8R8X8 : gfx::SurfaceFormat::B8G8R8A8;
+      aScreenTarget->GetFormat() == gfx::SurfaceFormat::B8G8R8X8
+          ? gfx::SurfaceFormat::B8G8R8X8
+          : gfx::SurfaceFormat::B8G8R8A8;
   gfx::IntSize size = aRect.ToUnknownRect().Size();
   gfx::IntSize clientSize(GetClientSize().ToUnknownSize());
 
@@ -52,8 +42,10 @@ CompositorWidget::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
     target = mLastBackBuffer;
     target->SetTransform(gfx::Matrix());
     if (!aClearRect.IsEmpty()) {
-      gfx::IntRect clearRect = aClearRect.ToUnknownRect() - aRect.ToUnknownRect().TopLeft();
-      target->ClearRect(gfx::Rect(clearRect.X(), clearRect.Y(), clearRect.Width(), clearRect.Height()));
+      gfx::IntRect clearRect =
+          aClearRect.ToUnknownRect() - aRect.ToUnknownRect().TopLeft();
+      target->ClearRect(gfx::Rect(clearRect.X(), clearRect.Y(),
+                                  clearRect.Width(), clearRect.Height()));
     }
   } else {
     target = aScreenTarget->CreateSimilarDrawTarget(size, format);
@@ -62,22 +54,15 @@ CompositorWidget::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
   return target.forget();
 }
 
-already_AddRefed<gfx::SourceSurface>
-CompositorWidget::EndBackBufferDrawing()
-{
-  RefPtr<gfx::SourceSurface> surface = mLastBackBuffer ? mLastBackBuffer->Snapshot() : nullptr;
+already_AddRefed<gfx::SourceSurface> CompositorWidget::EndBackBufferDrawing() {
+  RefPtr<gfx::SourceSurface> surface =
+      mLastBackBuffer ? mLastBackBuffer->Snapshot() : nullptr;
   return surface.forget();
 }
 
-uint32_t
-CompositorWidget::GetGLFrameBufferFormat()
-{
-  return LOCAL_GL_RGBA;
-}
+uint32_t CompositorWidget::GetGLFrameBufferFormat() { return LOCAL_GL_RGBA; }
 
-RefPtr<VsyncObserver>
-CompositorWidget::GetVsyncObserver() const
-{
+RefPtr<VsyncObserver> CompositorWidget::GetVsyncObserver() const {
   // This should only used when the widget is in the GPU process, and should be
   // implemented by IPDL-enabled CompositorWidgets.
   // GPU process does not have a CompositorVsyncDispatcher.
@@ -85,5 +70,5 @@ CompositorWidget::GetVsyncObserver() const
   return nullptr;
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

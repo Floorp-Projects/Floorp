@@ -19,20 +19,18 @@ static int sArgsUsed = 0;
 
 static bool sBuildingCommandLine = false;
 
-void AddToCommandLine(const char* inArgText)
-{
+void AddToCommandLine(const char* inArgText) {
   if (sArgsUsed >= sArgsAllocated - 1) {
     // realloc does not free the given pointer if allocation fails
-    char **temp = static_cast<char**>(realloc(sArgs, (sArgsAllocated + kArgsGrowSize) * sizeof(char*)));
-    if (!temp)
-      return;
+    char** temp = static_cast<char**>(
+        realloc(sArgs, (sArgsAllocated + kArgsGrowSize) * sizeof(char*)));
+    if (!temp) return;
     sArgs = temp;
     sArgsAllocated += kArgsGrowSize;
   }
 
-  char *temp2 = strdup(inArgText);
-  if (!temp2)
-    return;
+  char* temp2 = strdup(inArgText);
+  if (!temp2) return;
 
   sArgs[sArgsUsed++] = temp2;
   sArgs[sArgsUsed] = nullptr;
@@ -40,11 +38,9 @@ void AddToCommandLine(const char* inArgText)
   return;
 }
 
-void SetupMacCommandLine(int& argc, char**& argv, bool forRestart)
-{
-  sArgs = static_cast<char **>(malloc(kArgsGrowSize * sizeof(char*)));
-  if (!sArgs)
-    return;
+void SetupMacCommandLine(int& argc, char**& argv, bool forRestart) {
+  sArgs = static_cast<char**>(malloc(kArgsGrowSize * sizeof(char*)));
+  if (!sArgs) return;
   sArgsAllocated = kArgsGrowSize;
   sArgs[0] = nullptr;
   sArgsUsed = 0;
@@ -56,8 +52,7 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart)
     char* flag = argv[arg];
     // Don't pass on the psn (Process Serial Number) flag from the OS, or
     // the "-foreground" flag since it will be set below if necessary.
-    if (strncmp(flag, "-psn_", 5) != 0 &&
-        strncmp(flag, "-foreground", 11) != 0)
+    if (strncmp(flag, "-psn_", 5) != 0 && strncmp(flag, "-foreground", 11) != 0)
       AddToCommandLine(flag);
   }
 
@@ -87,8 +82,7 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart)
   argv = sArgs;
 }
 
-bool AddURLToCurrentCommandLine(const char* aURL)
-{
+bool AddURLToCurrentCommandLine(const char* aURL) {
   if (!sBuildingCommandLine) {
     return false;
   }
@@ -99,4 +93,4 @@ bool AddURLToCurrentCommandLine(const char* aURL)
   return true;
 }
 
-} // namespace CommandLineServiceMac
+}  // namespace CommandLineServiceMac

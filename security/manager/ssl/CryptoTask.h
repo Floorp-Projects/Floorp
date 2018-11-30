@@ -21,25 +21,18 @@ namespace mozilla {
  *   (2) Override CallCallback() for the on-the-main-thread call of the
  *       callback.
  */
-class CryptoTask : public Runnable
-{
-public:
+class CryptoTask : public Runnable {
+ public:
   template <size_t LEN>
-  nsresult Dispatch(const char (&taskThreadName)[LEN])
-  {
-    static_assert(LEN <= 15,
-                  "Thread name must be no more than 15 characters");
+  nsresult Dispatch(const char (&taskThreadName)[LEN]) {
+    static_assert(LEN <= 15, "Thread name must be no more than 15 characters");
     return Dispatch(nsDependentCString(taskThreadName, LEN - 1));
   }
 
   nsresult Dispatch(const nsACString& taskThreadName);
 
-protected:
-  CryptoTask()
-    : Runnable("CryptoTask")
-    , mRv(NS_ERROR_NOT_INITIALIZED)
-  {
-  }
+ protected:
+  CryptoTask() : Runnable("CryptoTask"), mRv(NS_ERROR_NOT_INITIALIZED) {}
 
   virtual ~CryptoTask() {}
 
@@ -54,13 +47,13 @@ protected:
    */
   virtual void CallCallback(nsresult rv) = 0;
 
-private:
+ private:
   NS_IMETHOD Run() final;
 
   nsresult mRv;
   nsCOMPtr<nsIThread> mThread;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla__CryptoTask_h
+#endif  // mozilla__CryptoTask_h

@@ -9,9 +9,8 @@
 #include "nsIAuthModule.h"
 #include "nsString.h"
 
-class nsNTLMAuthModule : public nsIAuthModule
-{
-public:
+class nsNTLMAuthModule : public nsIAuthModule {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTHMODULE
 
@@ -21,14 +20,14 @@ public:
 
   static void SetSendLM(bool sendLM);
 
-protected:
+ protected:
   virtual ~nsNTLMAuthModule();
 
-private:
+ private:
   nsString mDomain;
   nsString mUsername;
   nsString mPassword;
   bool mNTLMNegotiateSent;
 };
 
-#endif // nsNTLMAuthModule_h__
+#endif  // nsNTLMAuthModule_h__

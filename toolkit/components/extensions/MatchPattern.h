@@ -25,20 +25,17 @@
 #include "nsIURI.h"
 #include "nsWrapperCache.h"
 
-
 namespace mozilla {
 namespace extensions {
 
 using dom::MatchPatternOptions;
 
-
 // A sorted, binary-search-backed set of atoms, optimized for frequent lookups
 // and infrequent updates.
-class AtomSet final : public RefCounted<AtomSet>
-{
+class AtomSet final : public RefCounted<AtomSet> {
   using ArrayType = AutoTArray<RefPtr<nsAtom>, 1>;
 
-public:
+ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(AtomSet)
 
   explicit AtomSet(const nsTArray<nsString>& aElems);
@@ -47,37 +44,31 @@ public:
 
   MOZ_IMPLICIT AtomSet(std::initializer_list<nsAtom*> aIL);
 
-  bool Contains(const nsAString& elem) const
-  {
+  bool Contains(const nsAString& elem) const {
     RefPtr<nsAtom> atom = NS_AtomizeMainThread(elem);
     return Contains(atom);
   }
 
-  bool Contains(const nsACString& aElem) const
-  {
+  bool Contains(const nsACString& aElem) const {
     RefPtr<nsAtom> atom = NS_Atomize(aElem);
     return Contains(atom);
   }
 
-  bool Contains(const nsAtom* aAtom) const
-  {
+  bool Contains(const nsAtom* aAtom) const {
     return mElems.ContainsSorted(aAtom);
   }
 
   bool Intersects(const AtomSet& aOther) const;
 
-
   void Add(nsAtom* aElem);
   void Remove(nsAtom* aElem);
 
-  void Add(const nsAString& aElem)
-  {
+  void Add(const nsAString& aElem) {
     RefPtr<nsAtom> atom = NS_AtomizeMainThread(aElem);
     return Add(atom);
   }
 
-  void Remove(const nsAString& aElem)
-  {
+  void Remove(const nsAString& aElem) {
     RefPtr<nsAtom> atom = NS_AtomizeMainThread(aElem);
     return Remove(atom);
   }
@@ -85,9 +76,7 @@ public:
   // Returns a cached, statically-allocated matcher for the given set of
   // literal strings.
   template <const char** schemes>
-  static already_AddRefed<AtomSet>
-  Get()
-  {
+  static already_AddRefed<AtomSet> Get() {
     static RefPtr<AtomSet> sMatcher;
 
     if (MOZ_UNLIKELY(!sMatcher)) {
@@ -98,9 +87,7 @@ public:
     return do_AddRef(sMatcher);
   }
 
-  void
-  Get(nsTArray<nsString>& aResult) const
-  {
+  void Get(nsTArray<nsString>& aResult) const {
     aResult.SetCapacity(mElems.Length());
 
     for (const auto& atom : mElems) {
@@ -108,48 +95,34 @@ public:
     }
   }
 
-  auto begin() const
-    -> decltype(DeclVal<const ArrayType>().begin())
-  {
+  auto begin() const -> decltype(DeclVal<const ArrayType>().begin()) {
     return mElems.begin();
   }
 
-  auto end() const
-    -> decltype(DeclVal<const ArrayType>().end())
-  {
+  auto end() const -> decltype(DeclVal<const ArrayType>().end()) {
     return mElems.end();
   }
 
-private:
+ private:
   ArrayType mElems;
 
   void SortAndUniquify();
 };
 
-
 // A helper class to lazily retrieve, transcode, and atomize certain URI
 // properties the first time they're used, and cache the results, so that they
 // can be used across multiple match operations.
-class URLInfo final
-{
-public:
-  MOZ_IMPLICIT URLInfo(nsIURI* aURI)
-    : mURI(aURI)
-  {
-    mHost.SetIsVoid(true);
-  }
+class URLInfo final {
+ public:
+  MOZ_IMPLICIT URLInfo(nsIURI* aURI) : mURI(aURI) { mHost.SetIsVoid(true); }
 
-  URLInfo(nsIURI* aURI, bool aNoRef)
-    : URLInfo(aURI)
-  {
+  URLInfo(nsIURI* aURI, bool aNoRef) : URLInfo(aURI) {
     if (aNoRef) {
       mURINoRef = mURI;
     }
   }
 
-  URLInfo(const URLInfo& aOther)
-    : URLInfo(aOther.mURI.get())
-  {}
+  URLInfo(const URLInfo& aOther) : URLInfo(aOther.mURI.get()) {}
 
   nsIURI* URI() const { return mURI; }
 
@@ -163,7 +136,7 @@ public:
 
   bool InheritsPrincipal() const;
 
-private:
+ private:
   nsIURI* URINoRef() const;
 
   nsCOMPtr<nsIURI> mURI;
@@ -181,14 +154,10 @@ private:
   mutable Maybe<bool> mInheritsPrincipal;
 };
 
-
 // Similar to URLInfo, but for cookies.
-class MOZ_STACK_CLASS CookieInfo final
-{
-public:
-  MOZ_IMPLICIT CookieInfo(nsICookie2* aCookie)
-    : mCookie(aCookie)
-  {}
+class MOZ_STACK_CLASS CookieInfo final {
+ public:
+  MOZ_IMPLICIT CookieInfo(nsICookie2* aCookie) : mCookie(aCookie) {}
 
   bool IsSecure() const;
   bool IsDomain() const;
@@ -196,7 +165,7 @@ public:
   const nsCString& Host() const;
   const nsCString& RawHost() const;
 
-private:
+ private:
   nsCOMPtr<nsICookie2> mCookie;
 
   mutable Maybe<bool> mIsSecure;
@@ -206,28 +175,21 @@ private:
   mutable nsCString mRawHost;
 };
 
-
-class MatchPattern final : public nsISupports
-                         , public nsWrapperCache
-{
+class MatchPattern final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MatchPattern)
 
-  static already_AddRefed<MatchPattern>
-  Constructor(dom::GlobalObject& aGlobal,
-              const nsAString& aPattern,
-              const MatchPatternOptions& aOptions,
-              ErrorResult& aRv);
+  static already_AddRefed<MatchPattern> Constructor(
+      dom::GlobalObject& aGlobal, const nsAString& aPattern,
+      const MatchPatternOptions& aOptions, ErrorResult& aRv);
 
   bool Matches(const nsAString& aURL, bool aExplicit, ErrorResult& aRv) const;
 
   bool Matches(const URLInfo& aURL, bool aExplicit = false) const;
 
-  bool Matches(const URLInfo& aURL, bool aExplicit, ErrorResult& aRv) const
-  {
+  bool Matches(const URLInfo& aURL, bool aExplicit, ErrorResult& aRv) const {
     return Matches(aURL, aExplicit);
   }
-
 
   bool MatchesCookie(const CookieInfo& aCookie) const;
 
@@ -237,31 +199,25 @@ class MatchPattern final : public nsISupports
 
   bool Overlaps(const MatchPattern& aPattern) const;
 
-  bool DomainIsWildcard() const
-  {
-    return mMatchSubdomain && mDomain.IsEmpty();
-  }
+  bool DomainIsWildcard() const { return mMatchSubdomain && mDomain.IsEmpty(); }
 
-  void GetPattern(nsAString& aPattern) const
-  {
-    aPattern = mPattern;
-  }
+  void GetPattern(nsAString& aPattern) const { aPattern = mPattern; }
 
   nsISupports* GetParentObject() const { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::HandleObject aGivenProto) override;
 
-protected:
+ protected:
   virtual ~MatchPattern() = default;
 
-private:
+ private:
   explicit MatchPattern(nsISupports* aParent) : mParent(aParent) {}
 
   void Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath,
             bool aRestrictSchemes, ErrorResult& aRv);
 
   bool SubsumesDomain(const MatchPattern& aPattern) const;
-
 
   nsCOMPtr<nsISupports> mParent;
 
@@ -275,8 +231,8 @@ private:
   // matches the exact domain. If it's true, matches the domain or any
   // subdomain.
   //
-  // For instance, "*.foo.com" gives mDomain = "foo.com" and mMatchSubdomain = true,
-  // and matches "foo.com" or "bar.foo.com" but not "barfoo.com".
+  // For instance, "*.foo.com" gives mDomain = "foo.com" and mMatchSubdomain =
+  // true, and matches "foo.com" or "bar.foo.com" but not "barfoo.com".
   //
   // While "foo.com" gives mDomain = "foo.com" and mMatchSubdomain = false,
   // and matches "foo.com" but not "bar.foo.com".
@@ -293,32 +249,24 @@ private:
   static bool MatchesAllURLs(const URLInfo& aURL);
 };
 
-
-class MatchPatternSet final : public nsISupports
-                            , public nsWrapperCache
-{
+class MatchPatternSet final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MatchPatternSet)
 
   using ArrayType = nsTArray<RefPtr<MatchPattern>>;
 
-
-  static already_AddRefed<MatchPatternSet>
-  Constructor(dom::GlobalObject& aGlobal,
-              const nsTArray<dom::OwningStringOrMatchPattern>& aPatterns,
-              const MatchPatternOptions& aOptions,
-              ErrorResult& aRv);
-
+  static already_AddRefed<MatchPatternSet> Constructor(
+      dom::GlobalObject& aGlobal,
+      const nsTArray<dom::OwningStringOrMatchPattern>& aPatterns,
+      const MatchPatternOptions& aOptions, ErrorResult& aRv);
 
   bool Matches(const nsAString& aURL, bool aExplicit, ErrorResult& aRv) const;
 
   bool Matches(const URLInfo& aURL, bool aExplicit = false) const;
 
-  bool Matches(const URLInfo& aURL, bool aExplicit, ErrorResult& aRv) const
-  {
+  bool Matches(const URLInfo& aURL, bool aExplicit, ErrorResult& aRv) const {
     return Matches(aURL, aExplicit);
   }
-
 
   bool MatchesCookie(const CookieInfo& aCookie) const;
 
@@ -330,31 +278,28 @@ class MatchPatternSet final : public nsISupports
 
   bool OverlapsAll(const MatchPatternSet& aPatternSet) const;
 
-  void GetPatterns(ArrayType& aPatterns)
-  {
+  void GetPatterns(ArrayType& aPatterns) {
     aPatterns.AppendElements(mPatterns);
   }
 
-
   nsISupports* GetParentObject() const { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::HandleObject aGivenProto) override;
 
-protected:
+ protected:
   virtual ~MatchPatternSet() = default;
 
-private:
+ private:
   explicit MatchPatternSet(nsISupports* aParent, ArrayType&& aPatterns)
-    : mParent(aParent)
-    , mPatterns(std::forward<ArrayType>(aPatterns))
-  {}
+      : mParent(aParent), mPatterns(std::forward<ArrayType>(aPatterns)) {}
 
   nsCOMPtr<nsISupports> mParent;
 
   ArrayType mPatterns;
 };
 
-} // namespace extensions
-} // namespace mozilla
+}  // namespace extensions
+}  // namespace mozilla
 
-#endif // mozilla_extensions_MatchPattern_h
+#endif  // mozilla_extensions_MatchPattern_h

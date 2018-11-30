@@ -16,9 +16,7 @@ namespace dom {
 
 using mozilla::ipc::IPCResult;
 
-void
-ClientSourceChild::ActorDestroy(ActorDestroyReason aReason)
-{
+void ClientSourceChild::ActorDestroy(ActorDestroyReason aReason) {
   if (mSource) {
     mSource->RevokeActor(this);
 
@@ -28,59 +26,42 @@ ClientSourceChild::ActorDestroy(ActorDestroyReason aReason)
   }
 }
 
-PClientSourceOpChild*
-ClientSourceChild::AllocPClientSourceOpChild(const ClientOpConstructorArgs& aArgs)
-{
+PClientSourceOpChild* ClientSourceChild::AllocPClientSourceOpChild(
+    const ClientOpConstructorArgs& aArgs) {
   return new ClientSourceOpChild();
 }
 
-bool
-ClientSourceChild::DeallocPClientSourceOpChild(PClientSourceOpChild* aActor)
-{
+bool ClientSourceChild::DeallocPClientSourceOpChild(
+    PClientSourceOpChild* aActor) {
   delete aActor;
   return true;
 }
 
-IPCResult
-ClientSourceChild::RecvPClientSourceOpConstructor(PClientSourceOpChild* aActor,
-                                                  const ClientOpConstructorArgs& aArgs)
-{
+IPCResult ClientSourceChild::RecvPClientSourceOpConstructor(
+    PClientSourceOpChild* aActor, const ClientOpConstructorArgs& aArgs) {
   auto actor = static_cast<ClientSourceOpChild*>(aActor);
   actor->Init(aArgs);
   return IPC_OK();
 }
 
 ClientSourceChild::ClientSourceChild(const ClientSourceConstructorArgs& aArgs)
-  : mSource(nullptr)
-  , mTeardownStarted(false)
-{
-}
+    : mSource(nullptr), mTeardownStarted(false) {}
 
-void
-ClientSourceChild::SetOwner(ClientThing<ClientSourceChild>* aThing)
-{
+void ClientSourceChild::SetOwner(ClientThing<ClientSourceChild>* aThing) {
   MOZ_DIAGNOSTIC_ASSERT(aThing);
   MOZ_DIAGNOSTIC_ASSERT(!mSource);
   mSource = static_cast<ClientSource*>(aThing);
 }
 
-void
-ClientSourceChild::RevokeOwner(ClientThing<ClientSourceChild>* aThing)
-{
+void ClientSourceChild::RevokeOwner(ClientThing<ClientSourceChild>* aThing) {
   MOZ_DIAGNOSTIC_ASSERT(mSource);
   MOZ_DIAGNOSTIC_ASSERT(mSource == static_cast<ClientSource*>(aThing));
   mSource = nullptr;
 }
 
-ClientSource*
-ClientSourceChild::GetSource() const
-{
-  return mSource;
-}
+ClientSource* ClientSourceChild::GetSource() const { return mSource; }
 
-void
-ClientSourceChild::MaybeStartTeardown()
-{
+void ClientSourceChild::MaybeStartTeardown() {
   if (mTeardownStarted) {
     return;
   }
@@ -88,5 +69,5 @@ ClientSourceChild::MaybeStartTeardown()
   Unused << SendTeardown();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

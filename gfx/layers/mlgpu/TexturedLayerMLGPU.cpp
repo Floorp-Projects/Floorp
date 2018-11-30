@@ -18,21 +18,16 @@ namespace layers {
 using namespace gfx;
 
 TexturedLayerMLGPU::TexturedLayerMLGPU(LayerManagerMLGPU* aManager)
- : LayerMLGPU(aManager)
-{
-}
+    : LayerMLGPU(aManager) {}
 
-TexturedLayerMLGPU::~TexturedLayerMLGPU()
-{
+TexturedLayerMLGPU::~TexturedLayerMLGPU() {
   // Note: we have to cleanup resources in derived classes, since we can't
   // easily tell in our destructor if we have a TempImageLayerMLGPU, which
   // should not have its compositable detached, and we can't call GetLayer
   // here.
 }
 
-bool
-TexturedLayerMLGPU::SetCompositableHost(CompositableHost* aHost)
-{
+bool TexturedLayerMLGPU::SetCompositableHost(CompositableHost* aHost) {
   switch (aHost->GetType()) {
     case CompositableType::IMAGE:
       mHost = aHost->AsImageHost();
@@ -42,18 +37,14 @@ TexturedLayerMLGPU::SetCompositableHost(CompositableHost* aHost)
   }
 }
 
-CompositableHost*
-TexturedLayerMLGPU::GetCompositableHost()
-{
+CompositableHost* TexturedLayerMLGPU::GetCompositableHost() {
   if (mHost && mHost->IsAttached()) {
     return mHost.get();
   }
   return nullptr;
 }
 
-RefPtr<TextureSource>
-TexturedLayerMLGPU::BindAndGetTexture()
-{
+RefPtr<TextureSource> TexturedLayerMLGPU::BindAndGetTexture() {
   if (!mHost) {
     return nullptr;
   }
@@ -77,9 +68,7 @@ TexturedLayerMLGPU::BindAndGetTexture()
   return source;
 }
 
-bool
-TexturedLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
-{
+bool TexturedLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder) {
   if (!mHost) {
     return false;
   }
@@ -103,17 +92,16 @@ TexturedLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
     mTexture = source;
   }
 
-  mPictureRect = IntRect(0, 0, info.img->mPictureRect.Width(), info.img->mPictureRect.Height());
+  mPictureRect = IntRect(0, 0, info.img->mPictureRect.Width(),
+                         info.img->mPictureRect.Height());
 
   mHost->FinishRendering(info);
   return true;
 }
 
-void
-TexturedLayerMLGPU::AssignToView(FrameBuilder* aBuilder,
-                                 RenderViewMLGPU* aView,
-                                 Maybe<Polygon>&& aGeometry)
-{
+void TexturedLayerMLGPU::AssignToView(FrameBuilder* aBuilder,
+                                      RenderViewMLGPU* aView,
+                                      Maybe<Polygon>&& aGeometry) {
   if (mBigImageTexture) {
     BigImageIterator* iter = mBigImageTexture->AsBigImageIterator();
     iter->BeginBigImageIteration();
@@ -124,12 +112,10 @@ TexturedLayerMLGPU::AssignToView(FrameBuilder* aBuilder,
   }
 }
 
-void
-TexturedLayerMLGPU::AssignBigImage(FrameBuilder* aBuilder,
-                                   RenderViewMLGPU* aView,
-                                   BigImageIterator* aIter,
-                                   const Maybe<Polygon>& aGeometry)
-{
+void TexturedLayerMLGPU::AssignBigImage(FrameBuilder* aBuilder,
+                                        RenderViewMLGPU* aView,
+                                        BigImageIterator* aIter,
+                                        const Maybe<Polygon>& aGeometry) {
   const Matrix4x4& transform = GetLayer()->GetEffectiveTransformForBuffer();
 
   // Note that we don't need to assign these in any particular order, since
@@ -144,7 +130,8 @@ TexturedLayerMLGPU::AssignBigImage(FrameBuilder* aBuilder,
     {
       Rect screenRect = transform.TransformBounds(Rect(rect));
       screenRect.MoveBy(-aView->GetTargetOffset());
-      screenRect = screenRect.Intersect(Rect(mComputedClipRect.ToUnknownRect()));
+      screenRect =
+          screenRect.Intersect(Rect(mComputedClipRect.ToUnknownRect()));
       if (screenRect.IsEmpty()) {
         // This tile is not in the clip region, so skip it.
         continue;
@@ -157,7 +144,8 @@ TexturedLayerMLGPU::AssignBigImage(FrameBuilder* aBuilder,
     }
 
     // Create a temporary item.
-    RefPtr<TempImageLayerMLGPU> item = new TempImageLayerMLGPU(aBuilder->GetManager());
+    RefPtr<TempImageLayerMLGPU> item =
+        new TempImageLayerMLGPU(aBuilder->GetManager());
     item->Init(this, tile, rect);
 
     Maybe<Polygon> geometry = aGeometry;
@@ -170,25 +158,20 @@ TexturedLayerMLGPU::AssignBigImage(FrameBuilder* aBuilder,
 }
 
 TempImageLayerMLGPU::TempImageLayerMLGPU(LayerManagerMLGPU* aManager)
- : ImageLayer(aManager, static_cast<HostLayer*>(this)),
-   TexturedLayerMLGPU(aManager),
-   mFilter(gfx::SamplingFilter::GOOD),
-   mIsOpaque(false)
-{
-}
+    : ImageLayer(aManager, static_cast<HostLayer*>(this)),
+      TexturedLayerMLGPU(aManager),
+      mFilter(gfx::SamplingFilter::GOOD),
+      mIsOpaque(false) {}
 
-TempImageLayerMLGPU::~TempImageLayerMLGPU()
-{
-}
+TempImageLayerMLGPU::~TempImageLayerMLGPU() {}
 
-void
-TempImageLayerMLGPU::Init(TexturedLayerMLGPU* aSource,
-                          const RefPtr<TextureSource>& aTexture,
-                          const gfx::IntRect& aPictureRect)
-{
+void TempImageLayerMLGPU::Init(TexturedLayerMLGPU* aSource,
+                               const RefPtr<TextureSource>& aTexture,
+                               const gfx::IntRect& aPictureRect) {
   // ImageLayer properties.
   mEffectiveTransform = aSource->GetLayer()->GetEffectiveTransform();
-  mEffectiveTransformForBuffer = aSource->GetLayer()->GetEffectiveTransformForBuffer();
+  mEffectiveTransformForBuffer =
+      aSource->GetLayer()->GetEffectiveTransformForBuffer();
 
   // Base LayerMLGPU properties.
   mComputedClipRect = aSource->GetComputedClipRect();
@@ -209,5 +192,5 @@ TempImageLayerMLGPU::Init(TexturedLayerMLGPU* aSource,
   MarkPrepared();
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

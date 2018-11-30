@@ -26,8 +26,8 @@ namespace mozilla {
 namespace dom {
 class Element;
 class SVGAnimationElement;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 //----------------------------------------------------------------------
 // nsSMILAnimationController
@@ -43,9 +43,8 @@ class SVGAnimationElement;
 // here, at the document level.
 //
 class nsSMILAnimationController final : public nsSMILTimeContainer,
-                                        public nsARefreshObserver
-{
-public:
+                                        public nsARefreshObserver {
+ public:
   explicit nsSMILAnimationController(nsIDocument* aDoc);
 
   // Clears mDocument pointer. (Called by our nsIDocument when it's going away)
@@ -63,8 +62,10 @@ public:
   virtual void WillRefresh(mozilla::TimeStamp aTime) override;
 
   // Methods for registering and enumerating animation elements
-  void RegisterAnimationElement(mozilla::dom::SVGAnimationElement* aAnimationElement);
-  void UnregisterAnimationElement(mozilla::dom::SVGAnimationElement* aAnimationElement);
+  void RegisterAnimationElement(
+      mozilla::dom::SVGAnimationElement* aAnimationElement);
+  void UnregisterAnimationElement(
+      mozilla::dom::SVGAnimationElement* aAnimationElement);
 
   // Methods for resampling all animations
   // (A resample performs the same operations as a sample but doesn't advance
@@ -72,8 +73,7 @@ public:
   // This will flush pending style changes for the document.
   void Resample() { DoSample(false); }
 
-  void SetResampleNeeded()
-  {
+  void SetResampleNeeded() {
     if (!mRunningSample && !mResampleNeeded) {
       FlagDocumentNeedsFlush();
       mResampleNeeded = true;
@@ -81,10 +81,8 @@ public:
   }
 
   // This will flush pending style changes for the document.
-  void FlushResampleRequests()
-  {
-    if (!mResampleNeeded)
-      return;
+  void FlushResampleRequests() {
+    if (!mResampleNeeded) return;
 
     Resample();
   }
@@ -102,26 +100,25 @@ public:
   void NotifyRefreshDriverDestroying(nsRefreshDriver* aRefreshDriver);
 
   // Helper to check if we have any animation elements at all
-  bool HasRegisteredAnimations() const
-  {
+  bool HasRegisteredAnimations() const {
     return mAnimationElementTable.Count() != 0;
   }
 
-  bool MightHavePendingStyleUpdates() const
-  {
+  bool MightHavePendingStyleUpdates() const {
     return mMightHavePendingStyleUpdates;
   }
 
   bool PreTraverse();
   bool PreTraverseInSubtree(mozilla::dom::Element* aRoot);
 
-protected:
+ protected:
   ~nsSMILAnimationController();
 
   // Typedefs
   typedef nsPtrHashKey<nsSMILTimeContainer> TimeContainerPtrKey;
   typedef nsTHashtable<TimeContainerPtrKey> TimeContainerHashtable;
-  typedef nsPtrHashKey<mozilla::dom::SVGAnimationElement> AnimationElementPtrKey;
+  typedef nsPtrHashKey<mozilla::dom::SVGAnimationElement>
+      AnimationElementPtrKey;
   typedef nsTHashtable<AnimationElementPtrKey> AnimationElementHashtable;
 
   // Returns mDocument's refresh driver, if it's got one.
@@ -147,15 +144,15 @@ protected:
 
   static void AddAnimationToCompositorTable(
       mozilla::dom::SVGAnimationElement* aElement,
-      nsSMILCompositorTable* aCompositorTable,
-      bool& aStyleFlushNeeded);
+      nsSMILCompositorTable* aCompositorTable, bool& aStyleFlushNeeded);
 
   static bool GetTargetIdentifierForAnimation(
-      mozilla::dom::SVGAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult);
+      mozilla::dom::SVGAnimationElement* aAnimElem,
+      nsSMILTargetIdentifier& aResult);
 
   // Methods for adding/removing time containers
   virtual nsresult AddChild(nsSMILTimeContainer& aChild) override;
-  virtual void     RemoveChild(nsSMILTimeContainer& aChild) override;
+  virtual void RemoveChild(nsSMILTimeContainer& aChild) override;
 
   void FlagDocumentNeedsFlush();
 
@@ -163,10 +160,10 @@ protected:
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 
-  AnimationElementHashtable  mAnimationElementTable;
-  TimeContainerHashtable     mChildContainerTable;
-  mozilla::TimeStamp         mCurrentSampleTime;
-  mozilla::TimeStamp         mStartTime;
+  AnimationElementHashtable mAnimationElementTable;
+  TimeContainerHashtable mChildContainerTable;
+  mozilla::TimeStamp mCurrentSampleTime;
+  mozilla::TimeStamp mStartTime;
 
   // Average time between samples from the refresh driver. This is used to
   // detect large unexpected gaps between samples such as can occur when the
@@ -184,20 +181,20 @@ protected:
   // This behaviour does not affect pausing (since we're not *expecting* any
   // samples then) nor seeking (where the SMIL model behaves somewhat
   // differently such as not dispatching events).
-  nsSMILTime                 mAvgTimeBetweenSamples;
+  nsSMILTime mAvgTimeBetweenSamples;
 
-  bool                       mResampleNeeded;
+  bool mResampleNeeded;
   // If we're told to start sampling but there are no animation elements we just
   // record the time, set the following flag, and then wait until we have an
   // animation element. Then we'll reset this flag and actually start sampling.
-  bool                       mDeferredStartSampling;
-  bool                       mRunningSample;
+  bool mDeferredStartSampling;
+  bool mRunningSample;
 
   // Are we registered with our document's refresh driver?
-  bool                       mRegisteredWithRefreshDriver;
+  bool mRegisteredWithRefreshDriver;
 
   // Have we updated animated values without adding them to the restyle tracker?
-  bool                       mMightHavePendingStyleUpdates;
+  bool mMightHavePendingStyleUpdates;
 
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it
@@ -210,4 +207,4 @@ protected:
   nsAutoPtr<nsSMILCompositorTable> mLastCompositorTable;
 };
 
-#endif // NS_SMILANIMATIONCONTROLLER_H_
+#endif  // NS_SMILANIMATIONCONTROLLER_H_

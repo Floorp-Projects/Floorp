@@ -7,10 +7,10 @@
 #ifndef mozilla_layers_PaintCounter_h_
 #define mozilla_layers_PaintCounter_h_
 
-#include <map>                          // for std::map
+#include <map>  // for std::map
 #include "mozilla/Maybe.h"
-#include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
-#include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
+#include "mozilla/RefPtr.h"     // for already_AddRefed, RefCounted
+#include "mozilla/TimeStamp.h"  // for TimeStamp, TimeDuration
 #include "skia/include/core/SkCanvas.h"
 
 namespace mozilla {
@@ -24,14 +24,15 @@ using namespace mozilla::gl;
 // Keeps track and paints how long a full invalidation paint takes to rasterize
 // and composite.
 class PaintCounter {
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PaintCounter)
 
   PaintCounter();
-  void Draw(Compositor* aCompositor, TimeDuration aPaintTime, TimeDuration aCompositeTime);
+  void Draw(Compositor* aCompositor, TimeDuration aPaintTime,
+            TimeDuration aCompositeTime);
   static IntRect GetPaintRect() { return PaintCounter::mRect; }
 
-private:
+ private:
   virtual ~PaintCounter();
 
   SurfaceFormat mFormat;
@@ -46,7 +47,7 @@ private:
   static IntRect mRect;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_opengl_PaintCounter_h_
+#endif  // mozilla_layers_opengl_PaintCounter_h_

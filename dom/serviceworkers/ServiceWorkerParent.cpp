@@ -18,26 +18,20 @@ namespace dom {
 using mozilla::dom::ipc::StructuredCloneData;
 using mozilla::ipc::IPCResult;
 
-void
-ServiceWorkerParent::ActorDestroy(ActorDestroyReason aReason)
-{
+void ServiceWorkerParent::ActorDestroy(ActorDestroyReason aReason) {
   if (mProxy) {
     mProxy->RevokeActor(this);
     mProxy = nullptr;
   }
 }
 
-IPCResult
-ServiceWorkerParent::RecvTeardown()
-{
+IPCResult ServiceWorkerParent::RecvTeardown() {
   MaybeSendDelete();
   return IPC_OK();
 }
 
-IPCResult
-ServiceWorkerParent::RecvPostMessage(const ClonedMessageData& aClonedData,
-                                     const ClientInfoAndState& aSource)
-{
+IPCResult ServiceWorkerParent::RecvPostMessage(
+    const ClonedMessageData& aClonedData, const ClientInfoAndState& aSource) {
   RefPtr<ServiceWorkerCloneData> data = new ServiceWorkerCloneData();
   data->CopyFromClonedMessageDataForBackgroundParent(aClonedData);
 
@@ -47,27 +41,17 @@ ServiceWorkerParent::RecvPostMessage(const ClonedMessageData& aClonedData,
   return IPC_OK();
 }
 
-ServiceWorkerParent::ServiceWorkerParent()
-  : mDeleteSent(false)
-{
-}
+ServiceWorkerParent::ServiceWorkerParent() : mDeleteSent(false) {}
 
-ServiceWorkerParent::~ServiceWorkerParent()
-{
-  MOZ_DIAGNOSTIC_ASSERT(!mProxy);
-}
+ServiceWorkerParent::~ServiceWorkerParent() { MOZ_DIAGNOSTIC_ASSERT(!mProxy); }
 
-void
-ServiceWorkerParent::Init(const IPCServiceWorkerDescriptor& aDescriptor)
-{
+void ServiceWorkerParent::Init(const IPCServiceWorkerDescriptor& aDescriptor) {
   MOZ_DIAGNOSTIC_ASSERT(!mProxy);
   mProxy = new ServiceWorkerProxy(ServiceWorkerDescriptor(aDescriptor));
   mProxy->Init(this);
 }
 
-void
-ServiceWorkerParent::MaybeSendDelete()
-{
+void ServiceWorkerParent::MaybeSendDelete() {
   if (mDeleteSent) {
     return;
   }
@@ -75,5 +59,5 @@ ServiceWorkerParent::MaybeSendDelete()
   Unused << Send__delete__(this);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

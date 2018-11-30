@@ -24,15 +24,13 @@
 #include "signaling/src/sdp/SdpEnum.h"
 #include "signaling/src/common/EncodingConstraints.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 /**
  * Base class for SDP attributes
-*/
-class SdpAttribute
-{
-public:
+ */
+class SdpAttribute {
+ public:
   enum AttributeType {
     kFirstAttribute = 0,
     kBundleOnlyAttribute = 0,
@@ -78,11 +76,7 @@ public:
   explicit SdpAttribute(AttributeType type) : mType(type) {}
   virtual ~SdpAttribute() {}
 
-  AttributeType
-  GetType() const
-  {
-    return mType;
-  }
+  AttributeType GetType() const { return mType; }
 
   virtual void Serialize(std::ostream&) const = 0;
 
@@ -90,19 +84,17 @@ public:
   static bool IsAllowedAtMediaLevel(AttributeType type);
   static const std::string GetAttributeTypeString(AttributeType type);
 
-protected:
+ protected:
   AttributeType mType;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const SdpAttribute& attr)
-{
+inline std::ostream& operator<<(std::ostream& os, const SdpAttribute& attr) {
   attr.Serialize(os);
   return os;
 }
 
 inline std::ostream& operator<<(std::ostream& os,
-                                const SdpAttribute::AttributeType type)
-{
+                                const SdpAttribute::AttributeType type) {
   os << SdpAttribute::GetAttributeTypeString(type);
   return os;
 }
@@ -141,15 +133,12 @@ inline std::ostream& operator<<(std::ostream& os,
 //-------------------------------------------------------------------------
 //         connection-attr        = "a=connection:" conn-value
 //         conn-value             = "new" / "existing"
-class SdpConnectionAttribute : public SdpAttribute
-{
-public:
+class SdpConnectionAttribute : public SdpAttribute {
+ public:
   enum ConnValue { kNew, kExisting };
 
   explicit SdpConnectionAttribute(SdpConnectionAttribute::ConnValue value)
-      : SdpAttribute(kConnectionAttribute), mValue(value)
-  {
-  }
+      : SdpAttribute(kConnectionAttribute), mValue(value) {}
 
   virtual void Serialize(std::ostream& os) const override;
 
@@ -157,8 +146,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os,
-                                SdpConnectionAttribute::ConnValue c)
-{
+                                SdpConnectionAttribute::ConnValue c) {
   switch (c) {
     case SdpConnectionAttribute::kNew:
       os << "new";
@@ -176,9 +164,8 @@ inline std::ostream& operator<<(std::ostream& os,
 ///////////////////////////////////////////////////////////////////////////
 // a=sendrecv / a=sendonly / a=recvonly / a=inactive, RFC 4566
 //-------------------------------------------------------------------------
-class SdpDirectionAttribute : public SdpAttribute
-{
-public:
+class SdpDirectionAttribute : public SdpAttribute {
+ public:
   enum Direction {
     kInactive = 0,
     kSendonly = sdp::kSend,
@@ -187,9 +174,7 @@ public:
   };
 
   explicit SdpDirectionAttribute(Direction value)
-      : SdpAttribute(kDirectionAttribute), mValue(value)
-  {
-  }
+      : SdpAttribute(kDirectionAttribute), mValue(value) {}
 
   virtual void Serialize(std::ostream& os) const override;
 
@@ -197,8 +182,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os,
-                                SdpDirectionAttribute::Direction d)
-{
+                                SdpDirectionAttribute::Direction d) {
   switch (d) {
     case SdpDirectionAttribute::kSendonly:
       os << "sendonly";
@@ -219,9 +203,8 @@ inline std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-inline SdpDirectionAttribute::Direction
-reverse(SdpDirectionAttribute::Direction d)
-{
+inline SdpDirectionAttribute::Direction reverse(
+    SdpDirectionAttribute::Direction d) {
   switch (d) {
     case SdpDirectionAttribute::Direction::kInactive:
       return SdpDirectionAttribute::Direction::kInactive;
@@ -236,32 +219,24 @@ reverse(SdpDirectionAttribute::Direction d)
   MOZ_RELEASE_ASSERT(false);
 }
 
-inline SdpDirectionAttribute::Direction
-operator|(SdpDirectionAttribute::Direction d1,
-          SdpDirectionAttribute::Direction d2)
-{
+inline SdpDirectionAttribute::Direction operator|(
+    SdpDirectionAttribute::Direction d1, SdpDirectionAttribute::Direction d2) {
   return (SdpDirectionAttribute::Direction)((unsigned)d1 | (unsigned)d2);
 }
 
-inline SdpDirectionAttribute::Direction
-operator&(SdpDirectionAttribute::Direction d1,
-          SdpDirectionAttribute::Direction d2)
-{
+inline SdpDirectionAttribute::Direction operator&(
+    SdpDirectionAttribute::Direction d1, SdpDirectionAttribute::Direction d2) {
   return (SdpDirectionAttribute::Direction)((unsigned)d1 & (unsigned)d2);
 }
 
-inline SdpDirectionAttribute::Direction
-operator|=(SdpDirectionAttribute::Direction& d1,
-           SdpDirectionAttribute::Direction d2)
-{
+inline SdpDirectionAttribute::Direction operator|=(
+    SdpDirectionAttribute::Direction& d1, SdpDirectionAttribute::Direction d2) {
   d1 = d1 | d2;
   return d1;
 }
 
-inline SdpDirectionAttribute::Direction
-operator&=(SdpDirectionAttribute::Direction& d1,
-           SdpDirectionAttribute::Direction d2)
-{
+inline SdpDirectionAttribute::Direction operator&=(
+    SdpDirectionAttribute::Direction& d1, SdpDirectionAttribute::Direction d2) {
   d1 = d1 & d2;
   return d1;
 }
@@ -277,25 +252,16 @@ operator&=(SdpDirectionAttribute::Direction& d1,
 //
 //   value                   =    1*(ALPHA / DIGIT / "+" / "/" / "=" )
 //                                ; base64 encoded message
-class SdpDtlsMessageAttribute : public SdpAttribute
-{
-public:
-  enum Role {
-    kClient,
-    kServer
-  };
+class SdpDtlsMessageAttribute : public SdpAttribute {
+ public:
+  enum Role { kClient, kServer };
 
   explicit SdpDtlsMessageAttribute(Role role, const std::string& value)
-    : SdpAttribute(kDtlsMessageAttribute),
-      mRole(role),
-      mValue(value)
-  {}
+      : SdpAttribute(kDtlsMessageAttribute), mRole(role), mValue(value) {}
 
   // TODO: remove this, Bug 1469702
   explicit SdpDtlsMessageAttribute(const std::string& unparsed)
-    : SdpAttribute(kDtlsMessageAttribute),
-      mRole(kClient)
-  {
+      : SdpAttribute(kDtlsMessageAttribute), mRole(kClient) {
     std::istringstream is(unparsed);
     std::string error;
     // We're not really worried about errors here if we don't parse;
@@ -313,8 +279,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os,
-                                SdpDtlsMessageAttribute::Role r)
-{
+                                SdpDtlsMessageAttribute::Role r) {
   switch (r) {
     case SdpDtlsMessageAttribute::kClient:
       os << "client";
@@ -328,7 +293,6 @@ inline std::ostream& operator<<(std::ostream& os,
   }
   return os;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // a=extmap, RFC5285
@@ -351,9 +315,8 @@ inline std::ostream& operator<<(std::ostream& os,
 //        SP = <Defined in RFC 5234>
 //
 //        DIGIT = <Defined in RFC 5234>
-class SdpExtmapAttributeList : public SdpAttribute
-{
-public:
+class SdpExtmapAttributeList : public SdpAttribute {
+ public:
   SdpExtmapAttributeList() : SdpAttribute(kExtmapAttribute) {}
 
   struct Extmap {
@@ -364,13 +327,11 @@ public:
     std::string extensionattributes;
   };
 
-  void
-  PushEntry(uint16_t entry, SdpDirectionAttribute::Direction direction,
-            bool direction_specified, const std::string& extensionname,
-            const std::string& extensionattributes = "")
-  {
-    Extmap value = { entry, direction, direction_specified, extensionname,
-                     extensionattributes };
+  void PushEntry(uint16_t entry, SdpDirectionAttribute::Direction direction,
+                 bool direction_specified, const std::string& extensionname,
+                 const std::string& extensionattributes = "") {
+    Extmap value = {entry, direction, direction_specified, extensionname,
+                    extensionattributes};
     mExtmaps.push_back(value);
   }
 
@@ -395,9 +356,8 @@ public:
 //                             ; by colons.
 //
 //   UHEX                   =  DIGIT / %x41-46 ; A-F uppercase
-class SdpFingerprintAttributeList : public SdpAttribute
-{
-public:
+class SdpFingerprintAttributeList : public SdpAttribute {
+ public:
   SdpFingerprintAttributeList() : SdpAttribute(kFingerprintAttribute) {}
 
   enum HashAlgorithm {
@@ -418,15 +378,11 @@ public:
 
   // For use by application programmers. Enforces that it's a known and
   // non-crazy algorithm.
-  void
-  PushEntry(std::string algorithm_str,
-            const std::vector<uint8_t>& fingerprint,
-            bool enforcePlausible = true)
-  {
-    std::transform(algorithm_str.begin(),
-                   algorithm_str.end(),
-                   algorithm_str.begin(),
-                   ::tolower);
+  void PushEntry(std::string algorithm_str,
+                 const std::vector<uint8_t>& fingerprint,
+                 bool enforcePlausible = true) {
+    std::transform(algorithm_str.begin(), algorithm_str.end(),
+                   algorithm_str.begin(), ::tolower);
 
     SdpFingerprintAttributeList::HashAlgorithm algorithm =
         SdpFingerprintAttributeList::kUnknownAlgorithm;
@@ -459,10 +415,9 @@ public:
     PushEntry(algorithm, fingerprint);
   }
 
-  void
-  PushEntry(HashAlgorithm hashFunc, const std::vector<uint8_t>& fingerprint)
-  {
-    Fingerprint value = { hashFunc, fingerprint };
+  void PushEntry(HashAlgorithm hashFunc,
+                 const std::vector<uint8_t>& fingerprint) {
+    Fingerprint value = {hashFunc, fingerprint};
     mFingerprints.push_back(value);
   }
 
@@ -475,8 +430,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os,
-                                SdpFingerprintAttributeList::HashAlgorithm a)
-{
+                                SdpFingerprintAttributeList::HashAlgorithm a) {
   switch (a) {
     case SdpFingerprintAttributeList::kSha1:
       os << "sha-1";
@@ -514,22 +468,21 @@ inline std::ostream& operator<<(std::ostream& os,
 //         semantics           = "LS" / "FID" / semantics-extension
 //         semantics-extension = token
 //         identification-tag  = token
-class SdpGroupAttributeList : public SdpAttribute
-{
-public:
+class SdpGroupAttributeList : public SdpAttribute {
+ public:
   SdpGroupAttributeList() : SdpAttribute(kGroupAttribute) {}
 
   enum Semantics {
-    kLs,    // RFC5888
-    kFid,   // RFC5888
-    kSrf,   // RFC3524
-    kAnat,  // RFC4091
-    kFec,   // RFC5956
-    kFecFr, // RFC5956
-    kCs,    // draft-mehta-rmt-flute-sdp-05
-    kDdp,   // RFC5583
-    kDup,   // RFC7104
-    kBundle // draft-ietf-mmusic-bundle
+    kLs,     // RFC5888
+    kFid,    // RFC5888
+    kSrf,    // RFC3524
+    kAnat,   // RFC4091
+    kFec,    // RFC5956
+    kFecFr,  // RFC5956
+    kCs,     // draft-mehta-rmt-flute-sdp-05
+    kDdp,    // RFC5583
+    kDup,    // RFC7104
+    kBundle  // draft-ietf-mmusic-bundle
   };
 
   struct Group {
@@ -537,16 +490,12 @@ public:
     std::vector<std::string> tags;
   };
 
-  void
-  PushEntry(Semantics semantics, const std::vector<std::string>& tags)
-  {
-    Group value = { semantics, tags };
+  void PushEntry(Semantics semantics, const std::vector<std::string>& tags) {
+    Group value = {semantics, tags};
     mGroups.push_back(value);
   }
 
-  void
-  RemoveMid(const std::string& mid)
-  {
+  void RemoveMid(const std::string& mid) {
     for (auto i = mGroups.begin(); i != mGroups.end();) {
       auto tag = std::find(i->tags.begin(), i->tags.end(), mid);
       if (tag != i->tags.end()) {
@@ -567,8 +516,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os,
-                                SdpGroupAttributeList::Semantics s)
-{
+                                SdpGroupAttributeList::Semantics s) {
   switch (s) {
     case SdpGroupAttributeList::kLs:
       os << "LS";
@@ -711,98 +659,86 @@ public:
 //  XXX TBD -- We don't use this yet, and it's a project unto itself.
 //
 
-class SdpImageattrAttributeList : public SdpAttribute
-{
-public:
+class SdpImageattrAttributeList : public SdpAttribute {
+ public:
   SdpImageattrAttributeList() : SdpAttribute(kImageattrAttribute) {}
 
-  class XYRange
-  {
-    public:
-      XYRange() : min(0), max(0), step(1) {}
-      void Serialize(std::ostream& os) const;
-      // TODO: Remove this Bug 1469702
-      bool Parse(std::istream& is, std::string* error);
-      // TODO: Remove this Bug 1469702
-      bool ParseAfterBracket(std::istream& is, std::string* error);
-      // TODO: Remove this Bug 1469702
-      bool ParseAfterMin(std::istream& is, std::string* error);
-      // TODO: Remove this Bug 1469702
-      bool ParseDiscreteValues(std::istream& is, std::string* error);
-      std::vector<uint32_t> discreteValues;
-      // min/max are used iff discreteValues is empty
-      uint32_t min;
-      uint32_t max;
-      uint32_t step;
+  class XYRange {
+   public:
+    XYRange() : min(0), max(0), step(1) {}
+    void Serialize(std::ostream& os) const;
+    // TODO: Remove this Bug 1469702
+    bool Parse(std::istream& is, std::string* error);
+    // TODO: Remove this Bug 1469702
+    bool ParseAfterBracket(std::istream& is, std::string* error);
+    // TODO: Remove this Bug 1469702
+    bool ParseAfterMin(std::istream& is, std::string* error);
+    // TODO: Remove this Bug 1469702
+    bool ParseDiscreteValues(std::istream& is, std::string* error);
+    std::vector<uint32_t> discreteValues;
+    // min/max are used iff discreteValues is empty
+    uint32_t min;
+    uint32_t max;
+    uint32_t step;
   };
 
-  class SRange
-  {
-    public:
-      SRange() : min(0), max(0) {}
-      void Serialize(std::ostream& os) const;
-      // TODO: Remove this Bug 1469702
-      bool Parse(std::istream& is, std::string* error);
-      // TODO: Remove this Bug 1469702
-      bool ParseAfterBracket(std::istream& is, std::string* error);
-      // TODO: Remove this Bug 1469702
-      bool ParseAfterMin(std::istream& is, std::string* error);
-      // TODO: Remove this Bug 1469702
-      bool ParseDiscreteValues(std::istream& is, std::string* error);
-      bool IsSet() const
-      {
-        return !discreteValues.empty() || (min && max);
-      }
-      std::vector<float> discreteValues;
-      // min/max are used iff discreteValues is empty
-      float min;
-      float max;
+  class SRange {
+   public:
+    SRange() : min(0), max(0) {}
+    void Serialize(std::ostream& os) const;
+    // TODO: Remove this Bug 1469702
+    bool Parse(std::istream& is, std::string* error);
+    // TODO: Remove this Bug 1469702
+    bool ParseAfterBracket(std::istream& is, std::string* error);
+    // TODO: Remove this Bug 1469702
+    bool ParseAfterMin(std::istream& is, std::string* error);
+    // TODO: Remove this Bug 1469702
+    bool ParseDiscreteValues(std::istream& is, std::string* error);
+    bool IsSet() const { return !discreteValues.empty() || (min && max); }
+    std::vector<float> discreteValues;
+    // min/max are used iff discreteValues is empty
+    float min;
+    float max;
   };
 
-  class PRange
-  {
-    public:
-      PRange() : min(0), max(0) {}
-      void Serialize(std::ostream& os) const;
-      // TODO: Remove this Bug 1469702
-      bool Parse(std::istream& is, std::string* error);
-      bool IsSet() const
-      {
-        return min && max;
-      }
-      float min;
-      float max;
+  class PRange {
+   public:
+    PRange() : min(0), max(0) {}
+    void Serialize(std::ostream& os) const;
+    // TODO: Remove this Bug 1469702
+    bool Parse(std::istream& is, std::string* error);
+    bool IsSet() const { return min && max; }
+    float min;
+    float max;
   };
 
-  class Set
-  {
-    public:
-      Set() : qValue(-1) {}
-      void Serialize(std::ostream& os) const;
-      // TODO: Remove this Bug 1469702
-      bool Parse(std::istream& is, std::string* error);
-      XYRange xRange;
-      XYRange yRange;
-      SRange sRange;
-      PRange pRange;
-      float qValue;
+  class Set {
+   public:
+    Set() : qValue(-1) {}
+    void Serialize(std::ostream& os) const;
+    // TODO: Remove this Bug 1469702
+    bool Parse(std::istream& is, std::string* error);
+    XYRange xRange;
+    XYRange yRange;
+    SRange sRange;
+    PRange pRange;
+    float qValue;
   };
 
-  class Imageattr
-  {
-    public:
-      Imageattr() : pt(), sendAll(false), recvAll(false) {}
-      void Serialize(std::ostream& os) const;
-      // TODO: Remove this Bug 1469702
-      bool Parse(std::istream& is, std::string* error);
-      // TODO: Remove this Bug 1469702
-      bool ParseSets(std::istream& is, std::string* error);
-      // If not set, this means all payload types
-      Maybe<uint16_t> pt;
-      bool sendAll;
-      std::vector<Set> sendSets;
-      bool recvAll;
-      std::vector<Set> recvSets;
+  class Imageattr {
+   public:
+    Imageattr() : pt(), sendAll(false), recvAll(false) {}
+    void Serialize(std::ostream& os) const;
+    // TODO: Remove this Bug 1469702
+    bool Parse(std::istream& is, std::string* error);
+    // TODO: Remove this Bug 1469702
+    bool ParseSets(std::istream& is, std::string* error);
+    // If not set, this means all payload types
+    Maybe<uint16_t> pt;
+    bool sendAll;
+    std::vector<Set> sendSets;
+    bool recvAll;
+    std::vector<Set> recvSets;
   };
 
   virtual void Serialize(std::ostream& os) const override;
@@ -819,9 +755,8 @@ public:
 //   msid-attr = "msid:" identifier [ SP appdata ]
 //   identifier = 1*64token-char ; see RFC 4566
 //   appdata = 1*64token-char  ; see RFC 4566
-class SdpMsidAttributeList : public SdpAttribute
-{
-public:
+class SdpMsidAttributeList : public SdpAttribute {
+ public:
   SdpMsidAttributeList() : SdpAttribute(kMsidAttribute) {}
 
   struct Msid {
@@ -829,10 +764,9 @@ public:
     std::string appdata;
   };
 
-  void
-  PushEntry(const std::string& identifier, const std::string& appdata = "")
-  {
-    Msid value = { identifier, appdata };
+  void PushEntry(const std::string& identifier,
+                 const std::string& appdata = "") {
+    Msid value = {identifier, appdata};
     mMsids.push_back(value);
   }
 
@@ -847,21 +781,18 @@ public:
 //   msid-semantic-attr = "msid-semantic:" msid-semantic msid-list
 //   msid-semantic = token ; see RFC 4566
 //   msid-list = *(" " msid-id) / " *"
-class SdpMsidSemanticAttributeList : public SdpAttribute
-{
-public:
+class SdpMsidSemanticAttributeList : public SdpAttribute {
+ public:
   SdpMsidSemanticAttributeList() : SdpAttribute(kMsidSemanticAttribute) {}
 
-  struct MsidSemantic
-  {
+  struct MsidSemantic {
     // TODO: Once we have some more of these, we might want to make an enum
     std::string semantic;
     std::vector<std::string> msids;
   };
 
-  void
-  PushEntry(const std::string& semantic, const std::vector<std::string>& msids)
-  {
+  void PushEntry(const std::string& semantic,
+                 const std::vector<std::string>& msids) {
     MsidSemantic value = {semantic, msids};
     mMsidSemantics.push_back(value);
   }
@@ -877,9 +808,8 @@ public:
 //   remote-candidate-att = "remote-candidates" ":" remote-candidate
 //                           0*(SP remote-candidate)
 //   remote-candidate = component-ID SP connection-address SP port
-class SdpRemoteCandidatesAttribute : public SdpAttribute
-{
-public:
+class SdpRemoteCandidatesAttribute : public SdpAttribute {
+ public:
   struct Candidate {
     std::string id;
     std::string address;
@@ -888,9 +818,7 @@ public:
 
   explicit SdpRemoteCandidatesAttribute(
       const std::vector<Candidate>& candidates)
-      : SdpAttribute(kRemoteCandidatesAttribute), mCandidates(candidates)
-  {
-  }
+      : SdpAttribute(kRemoteCandidatesAttribute), mCandidates(candidates) {}
 
   virtual void Serialize(std::ostream& os) const override;
 
@@ -946,18 +874,12 @@ a=rid, draft-pthatcher-mmusic-rid-01
    param-val         = *( %x20-58 / %x60-7E )
                        ; Any printable character except semicolon
 */
-class SdpRidAttributeList : public SdpAttribute
-{
-public:
-  explicit SdpRidAttributeList()
-    : SdpAttribute(kRidAttribute)
-  {}
+class SdpRidAttributeList : public SdpAttribute {
+ public:
+  explicit SdpRidAttributeList() : SdpAttribute(kRidAttribute) {}
 
-  struct Rid
-  {
-    Rid() :
-      direction(sdp::kSend)
-    {}
+  struct Rid {
+    Rid() : direction(sdp::kSend) {}
 
     // Remove this function. See Bug 1469702
     bool Parse(std::istream& is, std::string* error);
@@ -971,22 +893,15 @@ public:
     void Serialize(std::ostream& os) const;
     void SerializeParameters(std::ostream& os) const;
     bool HasFormat(const std::string& format) const;
-    bool HasParameters() const
-    {
-      return !formats.empty() ||
-        constraints.maxWidth ||
-        constraints.maxHeight ||
-        constraints.maxFps ||
-        constraints.maxFs ||
-        constraints.maxBr ||
-        constraints.maxPps ||
-        !dependIds.empty();
+    bool HasParameters() const {
+      return !formats.empty() || constraints.maxWidth ||
+             constraints.maxHeight || constraints.maxFps || constraints.maxFs ||
+             constraints.maxBr || constraints.maxPps || !dependIds.empty();
     }
-
 
     std::string id;
     sdp::Direction direction;
-    std::vector<uint16_t> formats; // Empty implies all
+    std::vector<uint16_t> formats;  // Empty implies all
     EncodingConstraints constraints;
     std::vector<std::string> dependIds;
   };
@@ -1001,7 +916,6 @@ public:
                  const EncodingConstraints& constraints,
                  const std::vector<std::string>& dependIds);
 
-
   std::vector<Rid> mRids;
 };
 
@@ -1010,26 +924,21 @@ public:
 //-------------------------------------------------------------------------
 //   rtcp-attribute =  "a=rtcp:" port  [nettype space addrtype space
 //                         connection-address] CRLF
-class SdpRtcpAttribute : public SdpAttribute
-{
-public:
+class SdpRtcpAttribute : public SdpAttribute {
+ public:
   explicit SdpRtcpAttribute(uint16_t port)
-    : SdpAttribute(kRtcpAttribute),
-      mPort(port),
-      mNetType(sdp::kNetTypeNone),
-      mAddrType(sdp::kAddrTypeNone)
-  {}
+      : SdpAttribute(kRtcpAttribute),
+        mPort(port),
+        mNetType(sdp::kNetTypeNone),
+        mAddrType(sdp::kAddrTypeNone) {}
 
-  SdpRtcpAttribute(uint16_t port,
-                   sdp::NetType netType,
-                   sdp::AddrType addrType,
+  SdpRtcpAttribute(uint16_t port, sdp::NetType netType, sdp::AddrType addrType,
                    const std::string& address)
       : SdpAttribute(kRtcpAttribute),
         mPort(port),
         mNetType(netType),
         mAddrType(addrType),
-        mAddress(address)
-  {
+        mAddress(address) {
     MOZ_ASSERT(netType != sdp::kNetTypeNone);
     MOZ_ASSERT(addrType != sdp::kAddrTypeNone);
     MOZ_ASSERT(!address.empty());
@@ -1074,9 +983,8 @@ public:
 //                       / SP token [SP byte-string]
 //                       / ; empty
 //
-class SdpRtcpFbAttributeList : public SdpAttribute
-{
-public:
+class SdpRtcpFbAttributeList : public SdpAttribute {
+ public:
   SdpRtcpFbAttributeList() : SdpAttribute(kRtcpFbAttribute) {}
 
   enum Type { kAck, kApp, kCcm, kNack, kTrrInt, kRemb, kTransCC };
@@ -1098,11 +1006,10 @@ public:
     std::string extra;
   };
 
-  void
-  PushEntry(const std::string& pt, Type type, const std::string& parameter = "",
-            const std::string& extra = "")
-  {
-    Feedback value = { pt, type, parameter, extra };
+  void PushEntry(const std::string& pt, Type type,
+                 const std::string& parameter = "",
+                 const std::string& extra = "") {
+    Feedback value = {pt, type, parameter, extra};
     mFeedbacks.push_back(value);
   }
 
@@ -1112,8 +1019,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os,
-                                SdpRtcpFbAttributeList::Type type)
-{
+                                SdpRtcpFbAttributeList::Type type) {
   switch (type) {
     case SdpRtcpFbAttributeList::kAck:
       os << "ack";
@@ -1147,9 +1053,8 @@ inline std::ostream& operator<<(std::ostream& os,
 // a=rtpmap, RFC4566
 //-------------------------------------------------------------------------
 // a=rtpmap:<payload type> <encoding name>/<clock rate> [/<encoding parameters>]
-class SdpRtpmapAttributeList : public SdpAttribute
-{
-public:
+class SdpRtpmapAttributeList : public SdpAttribute {
+ public:
   SdpRtpmapAttributeList() : SdpAttribute(kRtpmapAttribute) {}
 
   // Minimal set to get going
@@ -1179,19 +1084,16 @@ public:
     uint32_t channels;
   };
 
-  void
-  PushEntry(const std::string& pt, CodecType codec, const std::string& name,
-            uint32_t clock, uint32_t channels = 0)
-  {
-    Rtpmap value = { pt, codec, name, clock, channels };
+  void PushEntry(const std::string& pt, CodecType codec,
+                 const std::string& name, uint32_t clock,
+                 uint32_t channels = 0) {
+    Rtpmap value = {pt, codec, name, clock, channels};
     mRtpmaps.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const override;
 
-  bool
-  HasEntry(const std::string& pt) const
-  {
+  bool HasEntry(const std::string& pt) const {
     for (auto it = mRtpmaps.begin(); it != mRtpmaps.end(); ++it) {
       if (it->pt == pt) {
         return true;
@@ -1200,9 +1102,7 @@ public:
     return false;
   }
 
-  const Rtpmap&
-  GetEntry(const std::string& pt) const
-  {
+  const Rtpmap& GetEntry(const std::string& pt) const {
     for (auto it = mRtpmaps.begin(); it != mRtpmaps.end(); ++it) {
       if (it->pt == pt) {
         return *it;
@@ -1215,8 +1115,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os,
-                                SdpRtpmapAttributeList::CodecType c)
-{
+                                SdpRtpmapAttributeList::CodecType c) {
   switch (c) {
     case SdpRtpmapAttributeList::kOpus:
       os << "opus";
@@ -1266,69 +1165,51 @@ inline std::ostream& operator<<(std::ostream& os,
 //-------------------------------------------------------------------------
 //       a=fmtp:<format> <format specific parameters>
 //
-class SdpFmtpAttributeList : public SdpAttribute
-{
-public:
+class SdpFmtpAttributeList : public SdpAttribute {
+ public:
   SdpFmtpAttributeList() : SdpAttribute(kFmtpAttribute) {}
 
   // Base class for format parameters
-  class Parameters
-  {
-  public:
+  class Parameters {
+   public:
     explicit Parameters(SdpRtpmapAttributeList::CodecType aCodec)
-        : codec_type(aCodec)
-    {
-    }
+        : codec_type(aCodec) {}
 
     virtual ~Parameters() {}
     virtual Parameters* Clone() const = 0;
     virtual void Serialize(std::ostream& os) const = 0;
     virtual bool CompareEq(const Parameters& other) const = 0;
 
-    bool operator==(const Parameters& other) const
-    {
-        return codec_type == other.codec_type &&
-               CompareEq(other);
+    bool operator==(const Parameters& other) const {
+      return codec_type == other.codec_type && CompareEq(other);
     }
 
     SdpRtpmapAttributeList::CodecType codec_type;
   };
 
-  class RedParameters : public Parameters
-  {
-  public:
-    RedParameters()
-        : Parameters(SdpRtpmapAttributeList::kRed)
-    {
-    }
+  class RedParameters : public Parameters {
+   public:
+    RedParameters() : Parameters(SdpRtpmapAttributeList::kRed) {}
 
-    virtual Parameters*
-    Clone() const override
-    {
+    virtual Parameters* Clone() const override {
       return new RedParameters(*this);
     }
 
-    virtual void
-    Serialize(std::ostream& os) const override
-    {
-      for(size_t i = 0; i < encodings.size(); ++i) {
-        os << (i != 0 ? "/" : "")
-           << std::to_string(encodings[i]);
+    virtual void Serialize(std::ostream& os) const override {
+      for (size_t i = 0; i < encodings.size(); ++i) {
+        os << (i != 0 ? "/" : "") << std::to_string(encodings[i]);
       }
     }
 
-    virtual bool
-    CompareEq(const Parameters& other) const override
-    {
+    virtual bool CompareEq(const Parameters& other) const override {
       return encodings == static_cast<const RedParameters&>(other).encodings;
     }
 
     std::vector<uint8_t> encodings;
   };
 
-  class H264Parameters : public Parameters
-  {
-  public:
+  class H264Parameters : public Parameters {
+   public:
     static const uint32_t kDefaultProfileLevelId = 0x420010;
 
     H264Parameters()
@@ -1340,20 +1221,15 @@ public:
           max_fs(0),
           max_cpb(0),
           max_dpb(0),
-          max_br(0)
-    {
+          max_br(0) {
       memset(sprop_parameter_sets, 0, sizeof(sprop_parameter_sets));
     }
 
-    virtual Parameters*
-    Clone() const override
-    {
+    virtual Parameters* Clone() const override {
       return new H264Parameters(*this);
     }
 
-    virtual void
-    Serialize(std::ostream& os) const override
-    {
+    virtual void Serialize(std::ostream& os) const override {
       // Note: don't move this, since having an unconditional param up top
       // lets us avoid a whole bunch of conditional streaming of ';' below
       os << "profile-level-id=" << std::hex << std::setfill('0') << std::setw(6)
@@ -1390,19 +1266,15 @@ public:
       }
     }
 
-    virtual bool
-    CompareEq(const Parameters& other) const override
-    {
+    virtual bool CompareEq(const Parameters& other) const override {
       const auto& otherH264 = static_cast<const H264Parameters&>(other);
 
       // sprop is not comapred here as it does not get parsed in the rsdparsa
       return packetization_mode == otherH264.packetization_mode &&
              level_asymmetry_allowed == otherH264.level_asymmetry_allowed &&
              profile_level_id == otherH264.profile_level_id &&
-             max_mbps == otherH264.max_mbps &&
-             max_fs == otherH264.max_fs &&
-             max_cpb == otherH264.max_cpb &&
-             max_dpb == otherH264.max_dpb &&
+             max_mbps == otherH264.max_mbps && max_fs == otherH264.max_fs &&
+             max_cpb == otherH264.max_cpb && max_dpb == otherH264.max_dpb &&
              max_br == otherH264.max_br;
     }
 
@@ -1419,72 +1291,53 @@ public:
   };
 
   // Also used for VP9 since they share parameters
-  class VP8Parameters : public Parameters
-  {
-  public:
+  class VP8Parameters : public Parameters {
+   public:
     explicit VP8Parameters(SdpRtpmapAttributeList::CodecType type)
-        : Parameters(type), max_fs(0), max_fr(0)
-    {
-    }
+        : Parameters(type), max_fs(0), max_fr(0) {}
 
-    virtual Parameters*
-    Clone() const override
-    {
+    virtual Parameters* Clone() const override {
       return new VP8Parameters(*this);
     }
 
-    virtual void
-    Serialize(std::ostream& os) const override
-    {
+    virtual void Serialize(std::ostream& os) const override {
       // draft-ietf-payload-vp8-11 says these are mandatory, upper layer
       // needs to ensure they're set properly.
       os << "max-fs=" << max_fs;
       os << ";max-fr=" << max_fr;
     }
 
-    virtual bool
-    CompareEq(const Parameters& other) const override
-    {
+    virtual bool CompareEq(const Parameters& other) const override {
       const auto& otherVP8 = static_cast<const VP8Parameters&>(other);
 
-      return max_fs == otherVP8.max_fs &&
-             max_fr == otherVP8.max_fr;
+      return max_fs == otherVP8.max_fs && max_fr == otherVP8.max_fr;
     }
 
     unsigned int max_fs;
     unsigned int max_fr;
   };
 
-  class OpusParameters : public Parameters
-  {
-  public:
-    enum { kDefaultMaxPlaybackRate = 48000,
-           kDefaultStereo = 0,
-           kDefaultUseInBandFec = 0 };
-    OpusParameters() :
-      Parameters(SdpRtpmapAttributeList::kOpus),
-      maxplaybackrate(kDefaultMaxPlaybackRate),
-      stereo(kDefaultStereo),
-      useInBandFec(kDefaultUseInBandFec)
-    {}
+  class OpusParameters : public Parameters {
+   public:
+    enum {
+      kDefaultMaxPlaybackRate = 48000,
+      kDefaultStereo = 0,
+      kDefaultUseInBandFec = 0
+    };
+    OpusParameters()
+        : Parameters(SdpRtpmapAttributeList::kOpus),
+          maxplaybackrate(kDefaultMaxPlaybackRate),
+          stereo(kDefaultStereo),
+          useInBandFec(kDefaultUseInBandFec) {}
 
-    Parameters*
-    Clone() const override
-    {
-      return new OpusParameters(*this);
-    }
+    Parameters* Clone() const override { return new OpusParameters(*this); }
 
-    void
-    Serialize(std::ostream& os) const override
-    {
-      os << "maxplaybackrate=" << maxplaybackrate
-         << ";stereo=" << stereo
+    void Serialize(std::ostream& os) const override {
+      os << "maxplaybackrate=" << maxplaybackrate << ";stereo=" << stereo
          << ";useinbandfec=" << useInBandFec;
     }
 
-    virtual bool
-    CompareEq(const Parameters& other) const override
-    {
+    virtual bool CompareEq(const Parameters& other) const override {
       const auto& otherOpus = static_cast<const OpusParameters&>(other);
 
       bool maxplaybackrateIsEq = (maxplaybackrate == otherOpus.maxplaybackrate);
@@ -1493,11 +1346,10 @@ public:
       // always be 0 if it appears in the fmtp
       if (((maxplaybackrate == 0) && (otherOpus.maxplaybackrate != 0)) ||
           ((maxplaybackrate != 0) && (otherOpus.maxplaybackrate == 0))) {
-           maxplaybackrateIsEq = true;
-       }
+        maxplaybackrateIsEq = true;
+      }
 
-      return maxplaybackrateIsEq &&
-             stereo == otherOpus.stereo &&
+      return maxplaybackrateIsEq && stereo == otherOpus.stereo &&
              useInBandFec == otherOpus.useInBandFec;
     }
 
@@ -1506,56 +1358,38 @@ public:
     unsigned int useInBandFec;
   };
 
-  class TelephoneEventParameters : public Parameters
-  {
-  public:
-    TelephoneEventParameters() :
-      Parameters(SdpRtpmapAttributeList::kTelephoneEvent),
-      dtmfTones("0-15")
-    {}
+  class TelephoneEventParameters : public Parameters {
+   public:
+    TelephoneEventParameters()
+        : Parameters(SdpRtpmapAttributeList::kTelephoneEvent),
+          dtmfTones("0-15") {}
 
-    virtual Parameters*
-    Clone() const override
-    {
+    virtual Parameters* Clone() const override {
       return new TelephoneEventParameters(*this);
     }
 
-    void
-    Serialize(std::ostream& os) const override
-    {
-      os << dtmfTones;
-    }
+    void Serialize(std::ostream& os) const override { os << dtmfTones; }
 
-    virtual bool
-    CompareEq(const Parameters& other) const override
-    {
-      return dtmfTones == static_cast<const TelephoneEventParameters&>(other)
-                          .dtmfTones;
+    virtual bool CompareEq(const Parameters& other) const override {
+      return dtmfTones ==
+             static_cast<const TelephoneEventParameters&>(other).dtmfTones;
     }
 
     std::string dtmfTones;
   };
 
-  class Fmtp
-  {
-  public:
+  class Fmtp {
+   public:
     Fmtp(const std::string& aFormat, UniquePtr<Parameters> aParameters)
-        : format(aFormat),
-          parameters(std::move(aParameters))
-    {
-    }
+        : format(aFormat), parameters(std::move(aParameters)) {}
 
     Fmtp(const std::string& aFormat, const Parameters& aParameters)
-        : format(aFormat),
-          parameters(aParameters.Clone())
-    {
-    }
+        : format(aFormat), parameters(aParameters.Clone()) {}
 
     // TODO: Rip all of this out when we have move semantics in the stl.
     Fmtp(const Fmtp& orig) { *this = orig; }
 
-    Fmtp& operator=(const Fmtp& rhs)
-    {
+    Fmtp& operator=(const Fmtp& rhs) {
       if (this != &rhs) {
         format = rhs.format;
         parameters.reset(rhs.parameters ? rhs.parameters->Clone() : nullptr);
@@ -1563,10 +1397,8 @@ public:
       return *this;
     }
 
-    bool operator==(const Fmtp& other) const
-    {
-      return format == other.format &&
-             *parameters == *other.parameters;
+    bool operator==(const Fmtp& other) const {
+      return format == other.format && *parameters == *other.parameters;
     }
 
     // The contract around these is as follows:
@@ -1584,9 +1416,7 @@ public:
 
   virtual void Serialize(std::ostream& os) const override;
 
-  void
-  PushEntry(const std::string& format, UniquePtr<Parameters> parameters)
-  {
+  void PushEntry(const std::string& format, UniquePtr<Parameters> parameters) {
     mFmtps.push_back(Fmtp(format, std::move(parameters)));
   }
 
@@ -1605,9 +1435,8 @@ public:
 //      streams      =  1*DIGIT
 //
 // We're going to pretend that there are spaces where they make sense.
-class SdpSctpmapAttributeList : public SdpAttribute
-{
-public:
+class SdpSctpmapAttributeList : public SdpAttribute {
+ public:
   SdpSctpmapAttributeList() : SdpAttribute(kSctpmapAttribute) {}
 
   struct Sctpmap {
@@ -1616,19 +1445,15 @@ public:
     uint32_t streams;
   };
 
-  void
-  PushEntry(const std::string& pt, const std::string& name,
-            uint32_t streams = 0)
-  {
-    Sctpmap value = { pt, name, streams };
+  void PushEntry(const std::string& pt, const std::string& name,
+                 uint32_t streams = 0) {
+    Sctpmap value = {pt, name, streams};
     mSctpmaps.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const override;
 
-  bool
-  HasEntry(const std::string& pt) const
-  {
+  bool HasEntry(const std::string& pt) const {
     for (auto it = mSctpmaps.begin(); it != mSctpmaps.end(); ++it) {
       if (it->pt == pt) {
         return true;
@@ -1637,11 +1462,7 @@ public:
     return false;
   }
 
-  const Sctpmap&
-  GetFirstEntry() const
-  {
-    return mSctpmaps[0];
-  }
+  const Sctpmap& GetFirstEntry() const { return mSctpmaps[0]; }
 
   std::vector<Sctpmap> mSctpmaps;
 };
@@ -1651,23 +1472,19 @@ public:
 //-------------------------------------------------------------------------
 //       setup-attr           =  "a=setup:" role
 //       role                 =  "active" / "passive" / "actpass" / "holdconn"
-class SdpSetupAttribute : public SdpAttribute
-{
-public:
+class SdpSetupAttribute : public SdpAttribute {
+ public:
   enum Role { kActive, kPassive, kActpass, kHoldconn };
 
   explicit SdpSetupAttribute(Role role)
-      : SdpAttribute(kSetupAttribute), mRole(role)
-  {
-  }
+      : SdpAttribute(kSetupAttribute), mRole(role) {}
 
   virtual void Serialize(std::ostream& os) const override;
 
   Role mRole;
 };
 
-inline std::ostream& operator<<(std::ostream& os, SdpSetupAttribute::Role r)
-{
+inline std::ostream& operator<<(std::ostream& os, SdpSetupAttribute::Role r) {
   switch (r) {
     case SdpSetupAttribute::kActive:
       os << "active";
@@ -1698,55 +1515,45 @@ inline std::ostream& operator<<(std::ostream& os, SdpSetupAttribute::Role r)
 // ; WSP defined in [RFC5234]
 // ; fmt, token defined in [RFC4566]
 // ; rid-identifier defined in [I-D.pthatcher-mmusic-rid]
-class SdpSimulcastAttribute : public SdpAttribute
-{
-public:
+class SdpSimulcastAttribute : public SdpAttribute {
+ public:
   SdpSimulcastAttribute() : SdpAttribute(kSimulcastAttribute) {}
 
   void Serialize(std::ostream& os) const override;
   bool Parse(std::istream& is, std::string* error);
 
-  class Version
-  {
-    public:
-      void Serialize(std::ostream& os) const;
-      bool IsSet() const
-      {
-        return !choices.empty();
-      }
-      bool Parse(std::istream& is, std::string* error);
-      bool GetChoicesAsFormats(std::vector<uint16_t>* formats) const;
+  class Version {
+   public:
+    void Serialize(std::ostream& os) const;
+    bool IsSet() const { return !choices.empty(); }
+    bool Parse(std::istream& is, std::string* error);
+    bool GetChoicesAsFormats(std::vector<uint16_t>* formats) const;
 
-      std::vector<std::string> choices;
+    std::vector<std::string> choices;
   };
 
-  class Versions : public std::vector<Version>
-  {
-    public:
-      enum Type {
-        kPt,
-        kRid
-      };
+  class Versions : public std::vector<Version> {
+   public:
+    enum Type { kPt, kRid };
 
-      Versions() : type(kRid) {}
-      void Serialize(std::ostream& os) const;
-      bool IsSet() const
-      {
-        if (empty()) {
-          return false;
-        }
-
-        for (const Version& version : *this) {
-          if (version.IsSet()) {
-            return true;
-          }
-        }
-
+    Versions() : type(kRid) {}
+    void Serialize(std::ostream& os) const;
+    bool IsSet() const {
+      if (empty()) {
         return false;
       }
 
-      bool Parse(std::istream& is, std::string* error);
-      Type type;
+      for (const Version& version : *this) {
+        if (version.IsSet()) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    bool Parse(std::istream& is, std::string* error);
+    Type type;
   };
 
   Versions sendVersions;
@@ -1768,9 +1575,8 @@ public:
 // media sections, and we're not really going to care about the attribute
 // itself. So we're just going to store it as a string for the time being.
 // Issue 187.
-class SdpSsrcAttributeList : public SdpAttribute
-{
-public:
+class SdpSsrcAttributeList : public SdpAttribute {
+ public:
   SdpSsrcAttributeList() : SdpAttribute(kSsrcAttribute) {}
 
   struct Ssrc {
@@ -1778,10 +1584,8 @@ public:
     std::string attribute;
   };
 
-  void
-  PushEntry(uint32_t ssrc, const std::string& attribute)
-  {
-    Ssrc value = { ssrc, attribute };
+  void PushEntry(uint32_t ssrc, const std::string& attribute) {
+    Ssrc value = {ssrc, attribute};
     mSsrcs.push_back(value);
   }
 
@@ -1798,14 +1602,13 @@ public:
 // semantics       = "FEC" / "FID" / token
 //
 // ssrc-id = integer ; 0 .. 2**32 - 1
-class SdpSsrcGroupAttributeList : public SdpAttribute
-{
-public:
+class SdpSsrcGroupAttributeList : public SdpAttribute {
+ public:
   enum Semantics {
-    kFec,   // RFC5576
-    kFid,   // RFC5576
-    kFecFr, // RFC5956
-    kDup    // RFC7104
+    kFec,    // RFC5576
+    kFid,    // RFC5576
+    kFecFr,  // RFC5956
+    kDup     // RFC7104
   };
 
   struct SsrcGroup {
@@ -1815,10 +1618,8 @@ public:
 
   SdpSsrcGroupAttributeList() : SdpAttribute(kSsrcGroupAttribute) {}
 
-  void
-  PushEntry(Semantics semantics, const std::vector<uint32_t>& ssrcs)
-  {
-    SsrcGroup value = { semantics, ssrcs };
+  void PushEntry(Semantics semantics, const std::vector<uint32_t>& ssrcs) {
+    SsrcGroup value = {semantics, ssrcs};
     mSsrcGroups.push_back(value);
   }
 
@@ -1828,8 +1629,7 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os,
-                                SdpSsrcGroupAttributeList::Semantics s)
-{
+                                SdpSsrcGroupAttributeList::Semantics s) {
   switch (s) {
     case SdpSsrcGroupAttributeList::kFec:
       os << "FEC";
@@ -1851,16 +1651,11 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 
 ///////////////////////////////////////////////////////////////////////////
-class SdpMultiStringAttribute : public SdpAttribute
-{
-public:
+class SdpMultiStringAttribute : public SdpAttribute {
+ public:
   explicit SdpMultiStringAttribute(AttributeType type) : SdpAttribute(type) {}
 
-  void
-  PushEntry(const std::string& entry)
-  {
-    mValues.push_back(entry);
-  }
+  void PushEntry(const std::string& entry) { mValues.push_back(entry); }
 
   virtual void Serialize(std::ostream& os) const override;
 
@@ -1870,16 +1665,11 @@ public:
 // otherwise identical to SdpMultiStringAttribute, this is used for
 // ice-options and other places where the value is serialized onto
 // a single line with space separating tokens
-class SdpOptionsAttribute : public SdpAttribute
-{
-public:
+class SdpOptionsAttribute : public SdpAttribute {
+ public:
   explicit SdpOptionsAttribute(AttributeType type) : SdpAttribute(type) {}
 
-  void
-  PushEntry(const std::string& entry)
-  {
-    mValues.push_back(entry);
-  }
+  void PushEntry(const std::string& entry) { mValues.push_back(entry); }
 
   void Load(const std::string& value);
 
@@ -1889,22 +1679,18 @@ public:
 };
 
 // Used for attributes that take no value (eg; a=ice-lite)
-class SdpFlagAttribute : public SdpAttribute
-{
-public:
+class SdpFlagAttribute : public SdpAttribute {
+ public:
   explicit SdpFlagAttribute(AttributeType type) : SdpAttribute(type) {}
 
   virtual void Serialize(std::ostream& os) const override;
 };
 
 // Used for any other kind of single-valued attribute not otherwise specialized
-class SdpStringAttribute : public SdpAttribute
-{
-public:
+class SdpStringAttribute : public SdpAttribute {
+ public:
   explicit SdpStringAttribute(AttributeType type, const std::string& value)
-      : SdpAttribute(type), mValue(value)
-  {
-  }
+      : SdpAttribute(type), mValue(value) {}
 
   virtual void Serialize(std::ostream& os) const override;
 
@@ -1912,19 +1698,16 @@ public:
 };
 
 // Used for any purely (non-negative) numeric attribute
-class SdpNumberAttribute : public SdpAttribute
-{
-public:
+class SdpNumberAttribute : public SdpAttribute {
+ public:
   explicit SdpNumberAttribute(AttributeType type, uint32_t value = 0)
-      : SdpAttribute(type), mValue(value)
-  {
-  }
+      : SdpAttribute(type), mValue(value) {}
 
   virtual void Serialize(std::ostream& os) const override;
 
   uint32_t mValue;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

@@ -15,7 +15,7 @@
 #include <string>
 #include "logging.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h" // Pinch hitting for <utility> and std::move
+#include "mozilla/Move.h"  // Pinch hitting for <utility> and std::move
 #include "mozilla/Mutex.h"
 #include "mozilla/Sprintf.h"
 #include <vector>
@@ -27,9 +27,7 @@ extern "C" {
 }
 
 /* Matches r_dest_vlog type defined in r_log.h */
-static int ringbuffer_vlog(int facility,
-                           int level,
-                           const char *format,
+static int ringbuffer_vlog(int facility, int level, const char* format,
                            va_list ap) {
   MOZ_ASSERT(mozilla::RLogConnector::GetInstance());
   // I could be evil and printf right into a std::string, but unless this
@@ -67,13 +65,9 @@ namespace mozilla {
 RLogConnector* RLogConnector::instance;
 
 RLogConnector::RLogConnector()
-  : log_limit_(4096),
-    mutex_("RLogConnector::mutex_"),
-    disableCount_(0) {
-}
+    : log_limit_(4096), mutex_("RLogConnector::mutex_"), disableCount_(0) {}
 
-RLogConnector::~RLogConnector() {
-}
+RLogConnector::~RLogConnector() {}
 
 void RLogConnector::SetLogLimit(uint32_t new_limit) {
   OffTheBooksMutexAutoLock lock(mutex_);
@@ -112,9 +106,7 @@ RLogConnector* RLogConnector::CreateInstance() {
   return instance;
 }
 
-RLogConnector* RLogConnector::GetInstance() {
-  return instance;
-}
+RLogConnector* RLogConnector::GetInstance() { return instance; }
 
 void RLogConnector::DestroyInstance() {
   // First param is ignored when passing null
@@ -123,10 +115,11 @@ void RLogConnector::DestroyInstance() {
   instance = nullptr;
 }
 
-// As long as at least one PeerConnection exists in a Private Window rlog messages will not
-// be saved in the RLogConnector. This is necessary because the log_messages buffer
-// is shared across all instances of PeerConnectionImpls. There is no way with the current
-// structure of r_log to run separate logs.
+// As long as at least one PeerConnection exists in a Private Window rlog
+// messages will not be saved in the RLogConnector. This is necessary because
+// the log_messages buffer is shared across all instances of
+// PeerConnectionImpls. There is no way with the current structure of r_log to
+// run separate logs.
 
 void RLogConnector::EnterPrivateMode() {
   OffTheBooksMutexAutoLock lock(mutex_);
@@ -143,7 +136,8 @@ void RLogConnector::ExitPrivateMode() {
   MOZ_ASSERT(disableCount_ != 0);
 
   if (--disableCount_ == 0) {
-    AddMsg("LOGGING RESUMED: no connections are active in a Private Window ***");
+    AddMsg(
+        "LOGGING RESUMED: no connections are active in a Private Window ***");
   }
 }
 
@@ -152,9 +146,8 @@ void RLogConnector::Clear() {
   log_messages_.clear();
 }
 
-void RLogConnector::Filter(const std::string& substring,
-                            uint32_t limit,
-                            std::deque<std::string>* matching_logs) {
+void RLogConnector::Filter(const std::string& substring, uint32_t limit,
+                           std::deque<std::string>* matching_logs) {
   std::vector<std::string> substrings;
   substrings.push_back(substring);
   FilterAny(substrings, limit, matching_logs);
@@ -171,8 +164,8 @@ inline bool AnySubstringMatches(const std::vector<std::string>& substrings,
 }
 
 void RLogConnector::FilterAny(const std::vector<std::string>& substrings,
-                               uint32_t limit,
-                               std::deque<std::string>* matching_logs) {
+                              uint32_t limit,
+                              std::deque<std::string>* matching_logs) {
   OffTheBooksMutexAutoLock lock(mutex_);
   if (limit == 0) {
     // At a max, all of the log messages.
@@ -180,12 +173,11 @@ void RLogConnector::FilterAny(const std::vector<std::string>& substrings,
   }
 
   for (auto log = log_messages_.begin();
-       log != log_messages_.end() && matching_logs->size() < limit;
-       ++log) {
+       log != log_messages_.end() && matching_logs->size() < limit; ++log) {
     if (AnySubstringMatches(substrings, *log)) {
       matching_logs->push_front(*log);
     }
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

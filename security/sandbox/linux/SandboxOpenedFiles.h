@@ -64,17 +64,17 @@ class SandboxOpenedFile final {
 // Because the seccomp-bpf policy exists until the process exits, this
 // object must not be destroyed after the syscall filter is installed.
 class SandboxOpenedFiles {
-public:
+ public:
   SandboxOpenedFiles() = default;
 
-  template<typename... Args>
+  template <typename... Args>
   void Add(Args&&... aArgs) {
     mFiles.emplace_back(std::forward<Args>(aArgs)...);
   }
 
   int GetDesc(const char* aPath) const;
 
-private:
+ private:
   std::vector<SandboxOpenedFile> mFiles;
 
   // We could allow destroying instances of this class that aren't
@@ -84,6 +84,6 @@ private:
   ~SandboxOpenedFiles() = delete;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SandboxOpenedFiles_h
+#endif  // mozilla_SandboxOpenedFiles_h

@@ -20,9 +20,8 @@ namespace mozilla {
  * LogModule for "Foo" to the LogLevel::Verbose level. Setting "logging.Bar" to
  * 4 would set the LogModule for "Bar" to the LogLevel::Debug level.
  */
-class LogModulePrefWatcher : public nsIObserver
-{
-public:
+class LogModulePrefWatcher : public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -31,12 +30,10 @@ public:
    */
   static void RegisterPrefWatcher();
 
-private:
+ private:
   LogModulePrefWatcher();
-  virtual ~LogModulePrefWatcher()
-  {
-  }
+  virtual ~LogModulePrefWatcher() {}
 };
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // LogModulePrefWatcher_h
+#endif  // LogModulePrefWatcher_h

@@ -12,5 +12,4 @@
 
 #include "nsTDependentString.h"
 
-
 #endif /* !defined(nsDependentString_h___) */

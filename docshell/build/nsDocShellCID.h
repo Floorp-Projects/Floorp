@@ -65,4 +65,4 @@
  */
 #define NS_CHROME_WEBNAVIGATION_DESTROY "chrome-webnavigation-destroy"
 
-#endif // nsDocShellCID_h__
+#endif  // nsDocShellCID_h__

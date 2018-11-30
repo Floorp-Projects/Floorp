@@ -21,159 +21,142 @@
 //------------------------------/
 
 // static
-nsresult
-XMLUtils::splitExpatName(const char16_t *aExpatName, nsAtom **aPrefix,
-                         nsAtom **aLocalName, int32_t* aNameSpaceID)
-{
-    /**
-     *  Expat can send the following:
-     *    localName
-     *    namespaceURI<separator>localName
-     *    namespaceURI<separator>localName<separator>prefix
-     */
+nsresult XMLUtils::splitExpatName(const char16_t* aExpatName, nsAtom** aPrefix,
+                                  nsAtom** aLocalName, int32_t* aNameSpaceID) {
+  /**
+   *  Expat can send the following:
+   *    localName
+   *    namespaceURI<separator>localName
+   *    namespaceURI<separator>localName<separator>prefix
+   */
 
-    const char16_t *uriEnd = nullptr;
-    const char16_t *nameEnd = nullptr;
-    const char16_t *pos;
-    for (pos = aExpatName; *pos; ++pos) {
-        if (*pos == kExpatSeparatorChar) {
-            if (uriEnd) {
-                nameEnd = pos;
-            }
-            else {
-                uriEnd = pos;
-            }
-        }
-    }
-
-    const char16_t *nameStart;
-    if (uriEnd) {
-        *aNameSpaceID =
-            txNamespaceManager::getNamespaceID(nsDependentSubstring(aExpatName,
-                                                                    uriEnd));
-        if (*aNameSpaceID == kNameSpaceID_Unknown) {
-            return NS_ERROR_FAILURE;
-        }
-
-        nameStart = (uriEnd + 1);
-        if (nameEnd)  {
-            const char16_t *prefixStart = nameEnd + 1;
-            *aPrefix = NS_Atomize(Substring(prefixStart, pos)).take();
-            if (!*aPrefix) {
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-        }
-        else {
-            nameEnd = pos;
-            *aPrefix = nullptr;
-        }
-    }
-    else {
-        *aNameSpaceID = kNameSpaceID_None;
-        nameStart = aExpatName;
+  const char16_t* uriEnd = nullptr;
+  const char16_t* nameEnd = nullptr;
+  const char16_t* pos;
+  for (pos = aExpatName; *pos; ++pos) {
+    if (*pos == kExpatSeparatorChar) {
+      if (uriEnd) {
         nameEnd = pos;
-        *aPrefix = nullptr;
+      } else {
+        uriEnd = pos;
+      }
+    }
+  }
+
+  const char16_t* nameStart;
+  if (uriEnd) {
+    *aNameSpaceID = txNamespaceManager::getNamespaceID(
+        nsDependentSubstring(aExpatName, uriEnd));
+    if (*aNameSpaceID == kNameSpaceID_Unknown) {
+      return NS_ERROR_FAILURE;
     }
 
-    *aLocalName = NS_Atomize(Substring(nameStart, nameEnd)).take();
+    nameStart = (uriEnd + 1);
+    if (nameEnd) {
+      const char16_t* prefixStart = nameEnd + 1;
+      *aPrefix = NS_Atomize(Substring(prefixStart, pos)).take();
+      if (!*aPrefix) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    } else {
+      nameEnd = pos;
+      *aPrefix = nullptr;
+    }
+  } else {
+    *aNameSpaceID = kNameSpaceID_None;
+    nameStart = aExpatName;
+    nameEnd = pos;
+    *aPrefix = nullptr;
+  }
 
-    return *aLocalName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  *aLocalName = NS_Atomize(Substring(nameStart, nameEnd)).take();
+
+  return *aLocalName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult
-XMLUtils::splitQName(const nsAString& aName, nsAtom** aPrefix,
-                     nsAtom** aLocalName)
-{
-    const char16_t* colon;
-    bool valid = XMLUtils::isValidQName(aName, &colon);
-    if (!valid) {
-        return NS_ERROR_FAILURE;
-    }
+nsresult XMLUtils::splitQName(const nsAString& aName, nsAtom** aPrefix,
+                              nsAtom** aLocalName) {
+  const char16_t* colon;
+  bool valid = XMLUtils::isValidQName(aName, &colon);
+  if (!valid) {
+    return NS_ERROR_FAILURE;
+  }
 
-    if (colon) {
-        const char16_t *end;
-        aName.EndReading(end);
+  if (colon) {
+    const char16_t* end;
+    aName.EndReading(end);
 
-        *aPrefix = NS_Atomize(Substring(aName.BeginReading(), colon)).take();
-        *aLocalName = NS_Atomize(Substring(colon + 1, end)).take();
-    }
-    else {
-        *aPrefix = nullptr;
-        *aLocalName = NS_Atomize(aName).take();
-    }
+    *aPrefix = NS_Atomize(Substring(aName.BeginReading(), colon)).take();
+    *aLocalName = NS_Atomize(Substring(colon + 1, end)).take();
+  } else {
+    *aPrefix = nullptr;
+    *aLocalName = NS_Atomize(aName).take();
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 /**
  * Returns true if the given string has only whitespace characters
  */
-bool XMLUtils::isWhitespace(const nsAString& aText)
-{
-    nsString::const_char_iterator start, end;
-    aText.BeginReading(start);
-    aText.EndReading(end);
-    for ( ; start != end; ++start) {
-        if (!isWhitespace(*start)) {
-            return false;
-        }
+bool XMLUtils::isWhitespace(const nsAString& aText) {
+  nsString::const_char_iterator start, end;
+  aText.BeginReading(start);
+  aText.EndReading(end);
+  for (; start != end; ++start) {
+    if (!isWhitespace(*start)) {
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
 /**
  * Normalizes the value of a XML processing instruction
-**/
-void XMLUtils::normalizePIValue(nsAString& piValue)
-{
-    nsAutoString origValue(piValue);
-    uint32_t origLength = origValue.Length();
-    uint32_t conversionLoop = 0;
-    char16_t prevCh = 0;
-    piValue.Truncate();
+ **/
+void XMLUtils::normalizePIValue(nsAString& piValue) {
+  nsAutoString origValue(piValue);
+  uint32_t origLength = origValue.Length();
+  uint32_t conversionLoop = 0;
+  char16_t prevCh = 0;
+  piValue.Truncate();
 
-    while (conversionLoop < origLength) {
-        char16_t ch = origValue.CharAt(conversionLoop);
-        switch (ch) {
-            case '>':
-            {
-                if (prevCh == '?') {
-                    piValue.Append(char16_t(' '));
-                }
-                break;
-            }
-            default:
-            {
-                break;
-            }
+  while (conversionLoop < origLength) {
+    char16_t ch = origValue.CharAt(conversionLoop);
+    switch (ch) {
+      case '>': {
+        if (prevCh == '?') {
+          piValue.Append(char16_t(' '));
         }
-        piValue.Append(ch);
-        prevCh = ch;
-        ++conversionLoop;
+        break;
+      }
+      default: { break; }
     }
+    piValue.Append(ch);
+    prevCh = ch;
+    ++conversionLoop;
+  }
 }
 
-//static
-bool XMLUtils::isValidQName(const nsAString& aQName, const char16_t** aColon)
-{
+// static
+bool XMLUtils::isValidQName(const nsAString& aQName, const char16_t** aColon) {
   return NS_SUCCEEDED(nsContentUtils::CheckQName(aQName, true, aColon));
 }
 
-//static
-bool XMLUtils::getXMLSpacePreserve(const txXPathNode& aNode)
-{
-    nsAutoString value;
-    txXPathTreeWalker walker(aNode);
-    do {
-        if (walker.getAttr(nsGkAtoms::space, kNameSpaceID_XML, value)) {
-            if (TX_StringEqualsAtom(value, nsGkAtoms::preserve)) {
-                return true;
-            }
-            if (TX_StringEqualsAtom(value, nsGkAtoms::_default)) {
-                return false;
-            }
-        }
-    } while (walker.moveToParent());
+// static
+bool XMLUtils::getXMLSpacePreserve(const txXPathNode& aNode) {
+  nsAutoString value;
+  txXPathTreeWalker walker(aNode);
+  do {
+    if (walker.getAttr(nsGkAtoms::space, kNameSpaceID_XML, value)) {
+      if (TX_StringEqualsAtom(value, nsGkAtoms::preserve)) {
+        return true;
+      }
+      if (TX_StringEqualsAtom(value, nsGkAtoms::_default)) {
+        return false;
+      }
+    }
+  } while (walker.moveToParent());
 
-    return false;
+  return false;
 }

@@ -52,7 +52,8 @@ void InitializeForwarding();
 // Terminate all children and kill this process.
 void Shutdown();
 
-// Monitor used for synchronizing between the main and channel or message loop threads.
+// Monitor used for synchronizing between the main and channel or message loop
+// threads.
 static Monitor* gMonitor;
 
 // Allow the child process to resume execution.
@@ -124,14 +125,10 @@ bool InRepaintStressMode();
 
 // Information about the role which a child process is fulfilling, and governs
 // how the process responds to incoming messages.
-class ChildRole
-{
-public:
+class ChildRole {
+ public:
   // See ParentIPC.cpp for the meaning of these role types.
-#define ForEachRoleType(Macro)                      \
-  Macro(Active)                                     \
-  Macro(Standby)                                    \
-  Macro(Inert)
+#define ForEachRoleType(Macro) Macro(Active) Macro(Standby) Macro(Inert)
 
   enum Type {
 #define DefineType(Name) Name,
@@ -141,22 +138,22 @@ public:
 
   static const char* TypeString(Type aType) {
     switch (aType) {
-#define GetTypeString(Name) case Name: return #Name;
-    ForEachRoleType(GetTypeString)
+#define GetTypeString(Name) \
+  case Name:                \
+    return #Name;
+      ForEachRoleType(GetTypeString)
 #undef GetTypeString
-    default: MOZ_CRASH("Bad ChildRole type");
+          default : MOZ_CRASH("Bad ChildRole type");
     }
   }
 
-protected:
+ protected:
   ChildProcessInfo* mProcess;
   Type mType;
 
-  explicit ChildRole(Type aType)
-    : mProcess(nullptr), mType(aType)
-  {}
+  explicit ChildRole(Type aType) : mProcess(nullptr), mType(aType) {}
 
-public:
+ public:
   void SetProcess(ChildProcessInfo* aProcess) {
     MOZ_RELEASE_ASSERT(!mProcess);
     mProcess = aProcess;
@@ -186,22 +183,18 @@ extern ipc::GeckoChildProcessHost* gRecordingProcess;
 
 // Any information needed to spawn a recording child process, in addition to
 // the contents of the introduction message.
-struct RecordingProcessData
-{
+struct RecordingProcessData {
   // File descriptors that will need to be remapped for the child process.
   const base::SharedMemoryHandle& mPrefsHandle;
   const ipc::FileDescriptor& mPrefMapHandle;
 
   RecordingProcessData(const base::SharedMemoryHandle& aPrefsHandle,
                        const ipc::FileDescriptor& aPrefMapHandle)
-    : mPrefsHandle(aPrefsHandle)
-    , mPrefMapHandle(aPrefMapHandle)
-  {}
+      : mPrefsHandle(aPrefsHandle), mPrefMapHandle(aPrefMapHandle) {}
 };
 
 // Information about a recording or replaying child process.
-class ChildProcessInfo
-{
+class ChildProcessInfo {
   // Channel for communicating with the process.
   Channel* mChannel;
 
@@ -297,9 +290,10 @@ class ChildProcessInfo
                Message** aMessages, size_t aNumMessages);
 
   void OnCrash(const char* aWhy);
-  void LaunchSubprocess(const Maybe<RecordingProcessData>& aRecordingProcessData);
+  void LaunchSubprocess(
+      const Maybe<RecordingProcessData>& aRecordingProcessData);
 
-public:
+ public:
   ChildProcessInfo(UniquePtr<ChildRole> aRole,
                    const Maybe<RecordingProcessData>& aRecordingProcessData);
   ~ChildProcessInfo();
@@ -310,34 +304,38 @@ public:
   size_t LastCheckpoint() { return mLastCheckpoint; }
   bool IsRecovering() { return mRecoveryStage != RecoveryStage::None; }
   bool PauseNeeded() { return mPauseNeeded; }
-  const InfallibleVector<size_t>& MajorCheckpoints() { return mMajorCheckpoints; }
+  const InfallibleVector<size_t>& MajorCheckpoints() {
+    return mMajorCheckpoints;
+  }
 
   bool IsPaused() { return mPaused; }
   bool IsPausedAtCheckpoint();
   bool IsPausedAtRecordingEndpoint();
 
   // Get all breakpoints currently installed for this process.
-  void GetInstalledBreakpoints(InfallibleVector<AddBreakpointMessage*>& aBreakpoints);
+  void GetInstalledBreakpoints(
+      InfallibleVector<AddBreakpointMessage*>& aBreakpoints);
 
   typedef std::function<bool(js::BreakpointPosition::Kind)> BreakpointFilter;
 
   // Get the checkpoint at or earlier to the process' position. This is either
   // the last reached checkpoint or the previous one.
   size_t MostRecentCheckpoint() {
-    return (GetDisposition() == BeforeLastCheckpoint) ? mLastCheckpoint - 1 : mLastCheckpoint;
+    return (GetDisposition() == BeforeLastCheckpoint) ? mLastCheckpoint - 1
+                                                      : mLastCheckpoint;
   }
 
   // Get the checkpoint which needs to be saved in order for this process
   // (or another at the same place) to rewind.
   size_t RewindTargetCheckpoint() {
     switch (GetDisposition()) {
-    case BeforeLastCheckpoint:
-    case AtLastCheckpoint:
-      // This will return CheckpointId::Invalid if we are the beginning of the
-      // recording.
-      return LastCheckpoint() - 1;
-    case AfterLastCheckpoint:
-      return LastCheckpoint();
+      case BeforeLastCheckpoint:
+      case AtLastCheckpoint:
+        // This will return CheckpointId::Invalid if we are the beginning of the
+        // recording.
+        return LastCheckpoint() - 1;
+      case AfterLastCheckpoint:
+        return LastCheckpoint();
     }
   }
 
@@ -361,9 +359,7 @@ public:
     return id;
   }
 
-  void SetPauseNeeded() {
-    mPauseNeeded = true;
-  }
+  void SetPauseNeeded() { mPauseNeeded = true; }
 
   void ClearPauseNeeded() {
     MOZ_RELEASE_ASSERT(IsPaused());
@@ -385,15 +381,17 @@ public:
   // callback succeeds.
   void WaitUntil(const std::function<bool()>& aCallback);
 
-  void WaitUntilPaused() { WaitUntil([=]() { return IsPaused(); }); }
+  void WaitUntilPaused() {
+    WaitUntil([=]() { return IsPaused(); });
+  }
 
   static bool MaybeProcessPendingMessage(ChildProcessInfo* aProcess);
 
   static void SetIntroductionMessage(IntroductionMessage* aMessage);
 };
 
-} // namespace parent
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace parent
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_ParentInternal_h
+#endif  // mozilla_recordreplay_ParentInternal_h

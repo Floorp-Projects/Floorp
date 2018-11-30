@@ -8,7 +8,6 @@
 
 using namespace mozilla::intl;
 
-
 TEST(Intl_Locale_Locale, Locale) {
   Locale loc = Locale("en-US");
 

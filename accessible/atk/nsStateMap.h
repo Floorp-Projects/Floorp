@@ -41,8 +41,8 @@ The following ATK states are not supported:
 
 enum EStateMapEntryType {
   kMapDirectly,
-  kMapOpposite,   // For example, UNAVAILABLE is the opposite of ENABLED
-  kNoStateChange, // Don't fire state change event
+  kMapOpposite,    // For example, UNAVAILABLE is the opposite of ENABLED
+  kNoStateChange,  // Don't fire state change event
 };
 
 const AtkStateType kNone = ATK_STATE_INVALID;
@@ -52,10 +52,12 @@ struct AtkStateMap {
   EStateMapEntryType stateMapEntryType;
 };
 
-
 // Map array from cross platform states to ATK states
-static const AtkStateMap gAtkStateMap[] = {                     // Cross Platform States
-  // clang-format off
+static const AtkStateMap
+    gAtkStateMap[] =
+        {
+            // Cross Platform States
+            // clang-format off
   { kNone,                                    kMapOpposite },   // states::UNAVAILABLE             = 1 << 0
   { ATK_STATE_SELECTED,                       kMapDirectly },   // states::SELECTED                = 1 << 1
   { ATK_STATE_FOCUSED,                        kMapDirectly },   // states::FOCUSED                 = 1 << 2
@@ -105,10 +107,11 @@ static const AtkStateMap gAtkStateMap[] = {                     // Cross Platfor
   { ATK_STATE_EXPANDABLE,                     kMapDirectly },   // states::EXPANDABLE              = 1 << 46
   { kNone,                                    kMapDirectly },   // states::PINNED                  = 1 << 47
   { ATK_STATE_ACTIVE,                         kMapDirectly }    // states::CURRENT                 = 1 << 48
-  // clang-format on
+                                              // clang-format on
 };
 
 static const auto gAtkStateMapLen = std::extent<decltype(gAtkStateMap)>::value;
 
-static_assert(((uint64_t) 0x1) << (gAtkStateMapLen - 1) == mozilla::a11y::states::LAST_ENTRY,
+static_assert(((uint64_t)0x1) << (gAtkStateMapLen - 1) ==
+                  mozilla::a11y::states::LAST_ENTRY,
               "ATK states map is out of sync with internal states");

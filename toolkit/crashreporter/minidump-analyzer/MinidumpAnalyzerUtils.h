@@ -26,9 +26,8 @@ extern MinidumpAnalyzerOptions gMinidumpAnalyzerOptions;
 
 #ifdef XP_WIN
 
-static inline std::string
-WideToMBCP(const std::wstring& wide, unsigned int cp, bool* success = nullptr)
-{
+static inline std::string WideToMBCP(const std::wstring& wide, unsigned int cp,
+                                     bool* success = nullptr) {
   int bufferCharLen = WideCharToMultiByte(cp, 0, wide.c_str(), wide.length(),
                                           nullptr, 0, nullptr, nullptr);
   if (!bufferCharLen) {
@@ -48,8 +47,9 @@ WideToMBCP(const std::wstring& wide, unsigned int cp, bool* success = nullptr)
     return "";
   }
 
-  int result = WideCharToMultiByte(cp, 0, wide.c_str(), wide.length(),
-                                   buffer.get(), bufferCharLen, nullptr, nullptr);
+  int result =
+      WideCharToMultiByte(cp, 0, wide.c_str(), wide.length(), buffer.get(),
+                          bufferCharLen, nullptr, nullptr);
   if (success) {
     *success = result > 0;
   }
@@ -57,10 +57,9 @@ WideToMBCP(const std::wstring& wide, unsigned int cp, bool* success = nullptr)
   return std::string(buffer.get(), result);
 }
 
-static inline std::wstring
-MBCPToWide(const std::string& aMbStr, unsigned int aCodepage,
-           bool *aSuccess = nullptr)
-{
+static inline std::wstring MBCPToWide(const std::string& aMbStr,
+                                      unsigned int aCodepage,
+                                      bool* aSuccess = nullptr) {
   int bufferCharLen = MultiByteToWideChar(aCodepage, 0, aMbStr.c_str(),
                                           aMbStr.length(), nullptr, 0);
   if (!bufferCharLen) {
@@ -80,8 +79,9 @@ MBCPToWide(const std::string& aMbStr, unsigned int aCodepage,
     return L"";
   }
 
-  int result = MultiByteToWideChar(aCodepage, 0, aMbStr.c_str(), aMbStr.length(),
-                                   buffer.get(), bufferCharLen);
+  int result =
+      MultiByteToWideChar(aCodepage, 0, aMbStr.c_str(), aMbStr.length(),
+                          buffer.get(), bufferCharLen);
   if (aSuccess) {
     *aSuccess = result > 0;
   }
@@ -89,44 +89,36 @@ MBCPToWide(const std::string& aMbStr, unsigned int aCodepage,
   return std::wstring(buffer.get(), result);
 }
 
-static inline std::string
-WideToUTF8(const std::wstring& aWide, bool* aSuccess = nullptr)
-{
+static inline std::string WideToUTF8(const std::wstring& aWide,
+                                     bool* aSuccess = nullptr) {
   return WideToMBCP(aWide, CP_UTF8, aSuccess);
 }
 
-static inline std::wstring
-UTF8ToWide(const std::string& aUtf8Str, bool* aSuccess = nullptr)
-{
+static inline std::wstring UTF8ToWide(const std::string& aUtf8Str,
+                                      bool* aSuccess = nullptr) {
   return MBCPToWide(aUtf8Str, CP_UTF8, aSuccess);
 }
 
-static inline std::wstring
-MBCSToWide(const std::string& aMbStr, bool* aSuccess = nullptr)
-{
+static inline std::wstring MBCSToWide(const std::string& aMbStr,
+                                      bool* aSuccess = nullptr) {
   return MBCPToWide(aMbStr, CP_ACP, aSuccess);
 }
 
-static inline std::string
-WideToMBCS(const std::wstring &aWide, bool* aSuccess = nullptr)
-{
+static inline std::string WideToMBCS(const std::wstring& aWide,
+                                     bool* aSuccess = nullptr) {
   return WideToMBCP(aWide, CP_ACP, aSuccess);
 }
 
-static inline std::string
-UTF8ToMBCS(const std::string &aUtf8)
-{
+static inline std::string UTF8ToMBCS(const std::string& aUtf8) {
   return WideToMBCS(UTF8ToWide(aUtf8));
 }
 
-static inline std::string
-MBCSToUTF8(const std::string &aMbcs)
-{
+static inline std::string MBCSToUTF8(const std::string& aMbcs) {
   return WideToUTF8(MBCSToWide(aMbcs));
 }
 
-#endif // XP_WIN
+#endif  // XP_WIN
 
-} // namespace CrashReporter
+}  // namespace CrashReporter
 
-#endif // MinidumpAnalyzerUtils_h
+#endif  // MinidumpAnalyzerUtils_h

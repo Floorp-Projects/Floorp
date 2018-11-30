@@ -23,9 +23,8 @@
 namespace mozilla {
 namespace gfx {
 
-class OSVRSession : public VRSession
-{
-public:
+class OSVRSession : public VRSession {
+ public:
   OSVRSession();
   virtual ~OSVRSession();
 
@@ -36,11 +35,11 @@ public:
   bool StartPresentation() override;
   void StopPresentation() override;
   void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                    float aIntensity, float aDuration) override;
+                     float aIntensity, float aDuration) override;
   void StopVibrateHaptic(uint32_t aControllerIdx) override;
   void StopAllHaptics() override;
 
-protected:
+ protected:
 #if defined(XP_WIN)
   bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
                    ID3D11Texture2D* aTexture) override;
@@ -49,7 +48,7 @@ protected:
                    const VRLayerTextureHandle& aTexture) override;
 #endif
 
-private:
+ private:
   bool InitState(mozilla::gfx::VRSystemState& aSystemState);
   void UpdateHeadsetPose(mozilla::gfx::VRSystemState& aState);
   bool mRuntimeLoaded;
@@ -70,7 +69,7 @@ private:
   void InitializeInterface();
 };
 
-} // namespace mozilla
-} // namespace gfx
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // GFX_VR_SERVICE_OSVRSESSION_H
+#endif  // GFX_VR_SERVICE_OSVRSESSION_H

@@ -39,93 +39,97 @@
 
 namespace mozilla {
 class AudioBlock;
-} // namespace mozilla
+}  // namespace mozilla
 
 namespace WebCore {
 
 using mozilla::AudioBlock;
 
-// DynamicsCompressor implements a flexible audio dynamics compression effect such as
-// is commonly used in musical production and game audio. It lowers the volume
-// of the loudest parts of the signal and raises the volume of the softest parts,
-// making the sound richer, fuller, and more controlled.
+// DynamicsCompressor implements a flexible audio dynamics compression effect
+// such as is commonly used in musical production and game audio. It lowers the
+// volume of the loudest parts of the signal and raises the volume of the
+// softest parts, making the sound richer, fuller, and more controlled.
 
 class DynamicsCompressor {
-public:
-    enum {
-        ParamThreshold,
-        ParamKnee,
-        ParamRatio,
-        ParamAttack,
-        ParamRelease,
-        ParamPreDelay,
-        ParamReleaseZone1,
-        ParamReleaseZone2,
-        ParamReleaseZone3,
-        ParamReleaseZone4,
-        ParamPostGain,
-        ParamFilterStageGain,
-        ParamFilterStageRatio,
-        ParamFilterAnchor,
-        ParamEffectBlend,
-        ParamReduction,
-        ParamLast
-    };
+ public:
+  enum {
+    ParamThreshold,
+    ParamKnee,
+    ParamRatio,
+    ParamAttack,
+    ParamRelease,
+    ParamPreDelay,
+    ParamReleaseZone1,
+    ParamReleaseZone2,
+    ParamReleaseZone3,
+    ParamReleaseZone4,
+    ParamPostGain,
+    ParamFilterStageGain,
+    ParamFilterStageRatio,
+    ParamFilterAnchor,
+    ParamEffectBlend,
+    ParamReduction,
+    ParamLast
+  };
 
-    DynamicsCompressor(float sampleRate, unsigned numberOfChannels);
+  DynamicsCompressor(float sampleRate, unsigned numberOfChannels);
 
-    void process(const AudioBlock* sourceChunk, AudioBlock* destinationChunk, unsigned framesToProcess);
-    void reset();
-    void setNumberOfChannels(unsigned);
-    unsigned numberOfChannels() const { return m_numberOfChannels; }
+  void process(const AudioBlock* sourceChunk, AudioBlock* destinationChunk,
+               unsigned framesToProcess);
+  void reset();
+  void setNumberOfChannels(unsigned);
+  unsigned numberOfChannels() const { return m_numberOfChannels; }
 
-    void setParameterValue(unsigned parameterID, float value);
-    float parameterValue(unsigned parameterID);
+  void setParameterValue(unsigned parameterID, float value);
+  float parameterValue(unsigned parameterID);
 
-    float sampleRate() const { return m_sampleRate; }
-    float nyquist() const { return m_sampleRate / 2; }
+  float sampleRate() const { return m_sampleRate; }
+  float nyquist() const { return m_sampleRate / 2; }
 
-    double tailTime() const { return 0; }
-    double latencyTime() const { return m_compressor.latencyFrames() / static_cast<double>(sampleRate()); }
+  double tailTime() const { return 0; }
+  double latencyTime() const {
+    return m_compressor.latencyFrames() / static_cast<double>(sampleRate());
+  }
 
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-protected:
-    unsigned m_numberOfChannels;
+ protected:
+  unsigned m_numberOfChannels;
 
-    // m_parameters holds the tweakable compressor parameters.
-    float m_parameters[ParamLast];
-    void initializeParameters();
+  // m_parameters holds the tweakable compressor parameters.
+  float m_parameters[ParamLast];
+  void initializeParameters();
 
-    float m_sampleRate;
+  float m_sampleRate;
 
-    // Emphasis filter controls.
-    float m_lastFilterStageRatio;
-    float m_lastAnchor;
-    float m_lastFilterStageGain;
+  // Emphasis filter controls.
+  float m_lastFilterStageRatio;
+  float m_lastAnchor;
+  float m_lastFilterStageGain;
 
-    typedef struct {
-        ZeroPole filters[4];
-        size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-        {
-            return aMallocSizeOf(this);
-        }
-    } ZeroPoleFilterPack4;
+  typedef struct {
+    ZeroPole filters[4];
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+      return aMallocSizeOf(this);
+    }
+  } ZeroPoleFilterPack4;
 
-    // Per-channel emphasis filters.
-    nsTArray<nsAutoPtr<ZeroPoleFilterPack4> > m_preFilterPacks;
-    nsTArray<nsAutoPtr<ZeroPoleFilterPack4> > m_postFilterPacks;
+  // Per-channel emphasis filters.
+  nsTArray<nsAutoPtr<ZeroPoleFilterPack4> > m_preFilterPacks;
+  nsTArray<nsAutoPtr<ZeroPoleFilterPack4> > m_postFilterPacks;
 
-    mozilla::UniquePtr<const float*[]> m_sourceChannels;
-    mozilla::UniquePtr<float*[]> m_destinationChannels;
+  mozilla::UniquePtr<const float*[]> m_sourceChannels;
+  mozilla::UniquePtr<float*[]> m_destinationChannels;
 
-    void setEmphasisStageParameters(unsigned stageIndex, float gain, float normalizedFrequency /* 0 -> 1 */);
-    void setEmphasisParameters(float gain, float anchorFreq, float filterStageRatio);
+  void setEmphasisStageParameters(unsigned stageIndex, float gain,
+                                  float normalizedFrequency /* 0 -> 1 */);
+  void setEmphasisParameters(float gain, float anchorFreq,
+                             float filterStageRatio);
 
-    // The core compressor.
-    DynamicsCompressorKernel m_compressor;
+  // The core compressor.
+  DynamicsCompressorKernel m_compressor;
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
-#endif // DynamicsCompressor_h
+#endif  // DynamicsCompressor_h

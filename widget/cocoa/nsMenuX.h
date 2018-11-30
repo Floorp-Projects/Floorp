@@ -24,19 +24,16 @@ class nsIWidget;
 
 // MenuDelegate is used to receive Cocoa notifications for setting
 // up carbon events. Protocol is defined as of 10.6 SDK.
-@interface MenuDelegate : NSObject < NSMenuDelegate >
-{
-  nsMenuX* mGeckoMenu; // weak ref
+@interface MenuDelegate : NSObject <NSMenuDelegate> {
+  nsMenuX* mGeckoMenu;  // weak ref
 }
 - (id)initWithGeckoMenu:(nsMenuX*)geckoMenu;
 @end
 
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
-class nsMenuX : public nsMenuObjectX,
-                public nsChangeObserver
-{
-public:
+class nsMenuX : public nsMenuObjectX, public nsChangeObserver {
+ public:
   nsMenuX();
   virtual ~nsMenuX();
 
@@ -48,55 +45,55 @@ public:
   NS_DECL_CHANGEOBSERVER
 
   // nsMenuObjectX
-  void*             NativeData() override {return (void*)mNativeMenu;}
-  nsMenuObjectTypeX MenuObjectType() override {return eSubmenuObjectType;}
-  void              IconUpdated() override { mParent->IconUpdated(); }
+  void* NativeData() override { return (void*)mNativeMenu; }
+  nsMenuObjectTypeX MenuObjectType() override { return eSubmenuObjectType; }
+  void IconUpdated() override { mParent->IconUpdated(); }
 
   // nsMenuX
-  nsresult       Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
-  uint32_t       GetItemCount();
+  nsresult Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
+  uint32_t GetItemCount();
   nsMenuObjectX* GetItemAt(uint32_t aPos);
-  nsresult       GetVisibleItemCount(uint32_t &aCount);
+  nsresult GetVisibleItemCount(uint32_t& aCount);
   nsMenuObjectX* GetVisibleItemAt(uint32_t aPos);
-  nsEventStatus  MenuOpened();
-  void           MenuClosed();
-  void           SetRebuild(bool aMenuEvent);
-  NSMenuItem*    NativeMenuItem();
-  nsresult       SetupIcon();
+  nsEventStatus MenuOpened();
+  void MenuClosed();
+  void SetRebuild(bool aMenuEvent);
+  NSMenuItem* NativeMenuItem();
+  nsresult SetupIcon();
 
-  static bool    IsXULHelpMenu(nsIContent* aMenuContent);
+  static bool IsXULHelpMenu(nsIContent* aMenuContent);
 
-protected:
-  void           MenuConstruct();
-  nsresult       RemoveAll();
-  nsresult       SetEnabled(bool aIsEnabled);
-  nsresult       GetEnabled(bool* aIsEnabled);
-  void           GetMenuPopupContent(nsIContent** aResult);
-  bool           OnOpen();
-  bool           OnClose();
-  nsresult       AddMenuItem(nsMenuItemX* aMenuItem);
-  nsMenuX*       AddMenu(mozilla::UniquePtr<nsMenuX> aMenu);
-  void           LoadMenuItem(nsIContent* inMenuItemContent);
-  void           LoadSubMenu(nsIContent* inMenuContent);
-  GeckoNSMenu*   CreateMenuWithGeckoString(nsString& menuTitle);
+ protected:
+  void MenuConstruct();
+  nsresult RemoveAll();
+  nsresult SetEnabled(bool aIsEnabled);
+  nsresult GetEnabled(bool* aIsEnabled);
+  void GetMenuPopupContent(nsIContent** aResult);
+  bool OnOpen();
+  bool OnClose();
+  nsresult AddMenuItem(nsMenuItemX* aMenuItem);
+  nsMenuX* AddMenu(mozilla::UniquePtr<nsMenuX> aMenu);
+  void LoadMenuItem(nsIContent* inMenuItemContent);
+  void LoadSubMenu(nsIContent* inMenuContent);
+  GeckoNSMenu* CreateMenuWithGeckoString(nsString& menuTitle);
 
   nsTArray<mozilla::UniquePtr<nsMenuObjectX>> mMenuObjectsArray;
-  nsString                  mLabel;
-  uint32_t                  mVisibleItemsCount; // cache
-  nsMenuObjectX*            mParent; // [weak]
-  nsMenuGroupOwnerX*        mMenuGroupOwner; // [weak]
+  nsString mLabel;
+  uint32_t mVisibleItemsCount;         // cache
+  nsMenuObjectX* mParent;              // [weak]
+  nsMenuGroupOwnerX* mMenuGroupOwner;  // [weak]
   // The icon object should never outlive its creating nsMenuX object.
   RefPtr<nsMenuItemIconX> mIcon;
-  GeckoNSMenu*              mNativeMenu; // [strong]
-  MenuDelegate*             mMenuDelegate; // [strong]
+  GeckoNSMenu* mNativeMenu;     // [strong]
+  MenuDelegate* mMenuDelegate;  // [strong]
   // nsMenuX objects should always have a valid native menu item.
-  NSMenuItem*               mNativeMenuItem; // [strong]
-  bool                      mIsEnabled;
-  bool                      mDestroyHandlerCalled;
-  bool                      mNeedsRebuild;
-  bool                      mConstructed;
-  bool                      mVisible;
-  bool                      mXBLAttached;
+  NSMenuItem* mNativeMenuItem;  // [strong]
+  bool mIsEnabled;
+  bool mDestroyHandlerCalled;
+  bool mNeedsRebuild;
+  bool mConstructed;
+  bool mVisible;
+  bool mXBLAttached;
 };
 
-#endif // nsMenuX_h_
+#endif  // nsMenuX_h_
