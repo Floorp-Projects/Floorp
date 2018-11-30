@@ -1,1 +1,3 @@
-long f(int x) { return (long)(x * 1000); }
+long f(int x) {
+    return (long)(x * 1000);
+}

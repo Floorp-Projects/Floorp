@@ -8,7 +8,7 @@ template <typename _Tp>
 constexpr typename std::remove_reference<_Tp>::type &&move(_Tp &&__t) {
   return static_cast<typename std::remove_reference<_Tp>::type &&>(__t);
 }
-}  // namespace std
+} // namespace std
 
 struct TriviallyCopyable {
   int i;

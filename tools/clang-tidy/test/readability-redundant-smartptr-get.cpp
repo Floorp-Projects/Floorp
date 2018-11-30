@@ -9,8 +9,12 @@ struct unique_ptr {
   T* get() const;
   explicit operator bool() const noexcept;
 };
-}  // namespace std
+}
 
-struct A {};
+struct A {
+};
 
-void foo() { A& b2 = *std::unique_ptr<A>().get(); }
+void foo() {
+  A& b2 = *std::unique_ptr<A>().get();
+}
+

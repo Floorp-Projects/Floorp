@@ -1,2 +1,4 @@
 #include <stdlib.h>
-void test() { random(); }
+void test() {
+  random();
+}
