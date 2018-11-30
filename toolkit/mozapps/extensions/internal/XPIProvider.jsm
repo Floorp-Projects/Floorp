@@ -1252,8 +1252,8 @@ var XPIStates = {
     // When upgrading from a build prior to bug 857456, convert startup
     // metadata.
     let done = false;
-    for (let location of Object.values(state)) {
-      for (let data of Object.values(location.addons)) {
+    for (let location of Object.values(state || {})) {
+      for (let data of Object.values(location.addons || {})) {
         if (!migrateAddonLoader(data)) {
           done = true;
           break;
