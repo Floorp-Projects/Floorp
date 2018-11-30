@@ -42,12 +42,15 @@ function doNextTest(aWindow) {
     // Initialy setup the quota to testing value of 1024B and
     // set a 500 bytes key with name length 1 (allocate 501 bytes)
     case 1:
-      slaveOrigin = "http://example.com";
+      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+        slaveOrigin = "http://test1.example.com";
+      } else {
+        slaveOrigin = "http://example.com";
+      }
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
       break;
 
-    // In subdomain now set another key with length 500 bytes, i.e.
-    // allocate 501 bytes
+    // Now set another key with length 500 bytes, i.e. allocate 501 bytes
     case 2:
       slaveOrigin = "http://test1.example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
@@ -68,16 +71,19 @@ function doNextTest(aWindow) {
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add2&B&failure";
       break;
 
-    // In a different subdomain try to set a new 500 bytes key
-    // and check we fail because we are over the quota
+    // Try to set a new 500 bytes key and check we fail because we are over the
+    // quota.
     case 5:
-      slaveOrigin = "https://test2.example.com";
+      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+        slaveOrigin = "http://test1.example.com";
+      } else {
+        slaveOrigin = "https://test2.example.com";
+      }
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&failure";
       break;
 
-    // Remove from the second subdomain the second key, it must not fail
-    // This should release the allocated space of the quota assigned to
-    // example.com.
+    // Remove the second key, it must not fail. This should release the
+    // allocated space of the quota assigned to test1.example.com.
     case 6:
       slaveOrigin = "http://test1.example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?remove&B&success";
@@ -85,30 +91,38 @@ function doNextTest(aWindow) {
 
     // Now try again to set 500 bytes key, it must succeed.
     case 7:
-      slaveOrigin = "https://test2.example.com";
+      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+        slaveOrigin = "http://test1.example.com";
+      } else {
+        slaveOrigin = "https://test2.example.com";
+      }
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&success";
       break;
 
     case 8:
-      // Do a clean up...
-      // TODO Bug 455070, use just ?clear what invokes call
-      // of clear() in the target frame. W/o clear method we must
-      // call clear implemented as removeItem for each item in
-      // the localStorage.
-      slaveOrigin = "http://example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear&A&";
+      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+        SimpleTest.executeSoon(() => doNextTest(aWindow));
+      } else {
+        // Do a clean up...
+        slaveOrigin = "http://example.com";
+        slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      }
       break;
 
     case 9:
       // Do a clean up...
       slaveOrigin = "http://test1.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear&B&";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
       break;
 
     case 10:
-      // Do a clean up...
-      slaveOrigin = "https://test2.example.com";
-      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear&C&";
+      if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+        SimpleTest.executeSoon(() => doNextTest(aWindow));
+      } else {
+        // Do a clean up...
+        slaveOrigin = "https://test2.example.com";
+        slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      }
       break;
 
     default:

@@ -190,6 +190,7 @@ dom/grid/**
 dom/html/**
 dom/ipc/**
 dom/jsurl/**
+dom/localstorage/**
 dom/manifest/**
 dom/media/test/**
 dom/media/tests/**

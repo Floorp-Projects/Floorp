@@ -13,6 +13,8 @@ function testFilePath(container, expectedFilePath) {
   is(filePath.previousElementSibling.textContent, "Location", "file path has label");
 }
 
+// Remove in Bug 1497264
+/*
 add_task(async function testLegacyAddon() {
   const addonId = "test-devtools@mozilla.org";
   const addonName = "test-devtools";
@@ -32,6 +34,7 @@ add_task(async function testLegacyAddon() {
 
   await closeAboutDebugging(tab);
 });
+*/
 
 add_task(async function testWebExtension() {
   const addonId = "test-devtools-webextension-nobg@mozilla.org";

@@ -16,6 +16,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/dom/ClientManagerActors.h"
+#include "mozilla/dom/PBackgroundLSDatabaseChild.h"
+#include "mozilla/dom/PBackgroundLSObserverChild.h"
+#include "mozilla/dom/PBackgroundLSRequestChild.h"
+#include "mozilla/dom/PBackgroundLSSimpleRequestChild.h"
 #include "mozilla/dom/PBackgroundSDBConnectionChild.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
@@ -223,6 +227,77 @@ BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
   return true;
 }
 
+BackgroundChildImpl::PBackgroundSDBConnectionChild*
+BackgroundChildImpl::AllocPBackgroundSDBConnectionChild(
+                                            const PrincipalInfo& aPrincipalInfo)
+{
+  MOZ_CRASH("PBackgroundSDBConnectionChild actor should be manually "
+            "constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundSDBConnectionChild(
+                                          PBackgroundSDBConnectionChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
+BackgroundChildImpl::PBackgroundLSDatabaseChild*
+BackgroundChildImpl::AllocPBackgroundLSDatabaseChild(
+                                            const PrincipalInfo& aPrincipalInfo,
+                                            const uint32_t& aPrivateBrowsingId,
+                                            const uint64_t& aDatastoreId)
+{
+  MOZ_CRASH("PBackgroundLSDatabaseChild actor should be manually constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundLSDatabaseChild(
+                                             PBackgroundLSDatabaseChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
+BackgroundChildImpl::PBackgroundLSObserverChild*
+BackgroundChildImpl::AllocPBackgroundLSObserverChild(
+                                                    const uint64_t& aObserverId)
+{
+  MOZ_CRASH("PBackgroundLSObserverChild actor should be manually constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundLSObserverChild(
+                                             PBackgroundLSObserverChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
+BackgroundChildImpl::PBackgroundLSRequestChild*
+BackgroundChildImpl::AllocPBackgroundLSRequestChild(
+                                                 const LSRequestParams& aParams)
+{
+  MOZ_CRASH("PBackgroundLSRequestChild actor should be manually constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundLSRequestChild(
+                                              PBackgroundLSRequestChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
 BackgroundChildImpl::PBackgroundLocalStorageCacheChild*
 BackgroundChildImpl::AllocPBackgroundLocalStorageCacheChild(
                                             const PrincipalInfo& aPrincipalInfo,
@@ -243,17 +318,17 @@ BackgroundChildImpl::DeallocPBackgroundLocalStorageCacheChild(
   return true;
 }
 
-BackgroundChildImpl::PBackgroundSDBConnectionChild*
-BackgroundChildImpl::AllocPBackgroundSDBConnectionChild(
-                                            const PrincipalInfo& aPrincipalInfo)
+BackgroundChildImpl::PBackgroundLSSimpleRequestChild*
+BackgroundChildImpl::AllocPBackgroundLSSimpleRequestChild(
+                                           const LSSimpleRequestParams& aParams)
 {
-  MOZ_CRASH("PBackgroundSDBConnectionChild actor should be manually "
+  MOZ_CRASH("PBackgroundLSSimpleRequestChild actor should be manually "
             "constructed!");
 }
 
 bool
-BackgroundChildImpl::DeallocPBackgroundSDBConnectionChild(
-                                          PBackgroundSDBConnectionChild* aActor)
+BackgroundChildImpl::DeallocPBackgroundLSSimpleRequestChild(
+                                        PBackgroundLSSimpleRequestChild* aActor)
 {
   MOZ_ASSERT(aActor);
 

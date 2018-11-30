@@ -4,7 +4,14 @@
 if (window.opener) {
   SpecialPowers.wrap(document).userInteractionForTesting();
   localStorage.foo = "opener" + Math.random();
-  window.close();
+  // Don't call window.close immediatelly. It can happen that adding the
+  // "storage" event listener below takes more time than usual (it may need to
+  // synchronously subscribe in the parent process to receive storage
+  // notifications). Spending more time in the initial script can prevent
+  // the "load" event from being fired for the window opened by "open and test".
+  setTimeout(() => {
+    window.close();
+  }, 0);
 }
 
 if (parent) {

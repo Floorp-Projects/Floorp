@@ -58,63 +58,6 @@ StorageDBThread* sStorageThread = nullptr;
 // False until we shut the storage thread down.
 bool sStorageThreadDown = false;
 
-// This is only a compatibility code for schema version 0.  Returns the 'scope'
-// key in the schema version 0 format for the scope column.
-nsCString
-Scheme0Scope(LocalStorageCacheBridge* aCache)
-{
-  nsCString result;
-
-  nsCString suffix = aCache->OriginSuffix();
-
-  OriginAttributes oa;
-  if (!suffix.IsEmpty()) {
-    DebugOnly<bool> success = oa.PopulateFromSuffix(suffix);
-    MOZ_ASSERT(success);
-  }
-
-  if (oa.mAppId != nsIScriptSecurityManager::NO_APP_ID ||
-      oa.mInIsolatedMozBrowser) {
-    result.AppendInt(oa.mAppId);
-    result.Append(':');
-    result.Append(oa.mInIsolatedMozBrowser ? 't' : 'f');
-    result.Append(':');
-  }
-
-  // If there is more than just appid and/or inbrowser stored in origin
-  // attributes, put it to the schema 0 scope as well.  We must do that
-  // to keep the scope column unique (same resolution as schema 1 has
-  // with originAttributes and originKey columns) so that switch between
-  // schema 1 and 0 always works in both ways.
-  nsAutoCString remaining;
-  oa.mAppId = 0;
-  oa.mInIsolatedMozBrowser = false;
-  oa.CreateSuffix(remaining);
-  if (!remaining.IsEmpty()) {
-    MOZ_ASSERT(!suffix.IsEmpty());
-
-    if (result.IsEmpty()) {
-      // Must contain the old prefix, otherwise we won't search for the whole
-      // origin attributes suffix.
-      result.AppendLiteral("0:f:");
-    }
-
-    // Append the whole origin attributes suffix despite we have already stored
-    // appid and inbrowser.  We are only looking for it when the scope string
-    // starts with "$appid:$inbrowser:" (with whatever valid values).
-    //
-    // The OriginAttributes suffix is a string in a form like:
-    // "^addonId=101&userContextId=5" and it's ensured it always starts with '^'
-    // and never contains ':'.  See OriginAttributes::CreateSuffix.
-    result.Append(suffix);
-    result.Append(':');
-  }
-
-  result.Append(aCache->OriginNoSuffix());
-
-  return result;
-}
-
 } // anon
 
 // XXX Fix me!
@@ -1156,7 +1099,8 @@ StorageDBThread::DBOperation::Perform(StorageDBThread* aThread)
     NS_ENSURE_SUCCESS(rv, rv);
     // Filling the 'scope' column just for downgrade compatibility reasons
     rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                    Scheme0Scope(mCache));
+                                    Scheme0Scope(mCache->OriginSuffix(),
+                                                 mCache->OriginNoSuffix()));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"),
                                 mKey);

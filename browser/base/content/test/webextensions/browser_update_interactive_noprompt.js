@@ -51,11 +51,6 @@ async function testUpdateNoPrompt(filename, id,
   await addon.uninstall();
 }
 
-// Test that we don't see a prompt when updating from a legacy
-// extension to a webextension.
-add_task(() => testUpdateNoPrompt("browser_legacy.xpi",
-                                  "legacy_update@tests.mozilla.org", "1.1"));
-
 // Test that we don't see a prompt when no new promptable permissions
 // are added.
 add_task(() => testUpdateNoPrompt("browser_webext_update_perms1.xpi",

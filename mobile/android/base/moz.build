@@ -183,19 +183,6 @@ for f in ['res/values/strings.xml',
         'locales/en-US/sync_strings.dtd',
     ]
 
-generated_inputs = [
-    '!AndroidManifest.xml',
-    '!generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
-    '!generated/preprocessed/org/mozilla/gecko/AppConstants.java',
-    '!generated/preprocessed/org/mozilla/gecko/CrashReporterConstants.java',
-    '!generated/preprocessed/org/mozilla/gecko/MmaConstants.java',
-    # These all depend on AB_CD, which isn't captured in this definition.  Due
-    # to subtle RecursiveMake details, everything works out.  In the future we
-    # can try to express the APKs themselves as LOCALIZED_GENERATED_FILES.
-    '!res/raw/suggestedsites.json',
-    '!res/values/strings.xml',
-]
-
 # The recursive make backend treats the first output specially: it's passed as
 # an open FileAvoidWrite to the invoked script.  That doesn't work well with
 # the Gradle task that generates all of the outputs, so we add a dummy first
@@ -207,9 +194,15 @@ t = ('android_apks',
 GENERATED_FILES += [t]
 GENERATED_FILES[t].force = True
 GENERATED_FILES[t].script = '/mobile/android/gradle.py:assemble_app'
-GENERATED_FILES[t].inputs += generated_inputs
-
-# This makes |mach build faster| build these files.  See the workaround in
-# config/faster/rules.mk.  None of these files appear in package-manifest.in,
-# so they're not packaged.
-FINAL_TARGET_FILES.android += generated_inputs
+GENERATED_FILES[t].inputs += [
+    '!AndroidManifest.xml',
+    '!generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
+    '!generated/preprocessed/org/mozilla/gecko/AppConstants.java',
+    '!generated/preprocessed/org/mozilla/gecko/CrashReporterConstants.java',
+    '!generated/preprocessed/org/mozilla/gecko/MmaConstants.java',
+    # These all depend on AB_CD, which isn't captured in this definition.  Due
+    # to subtle RecursiveMake details, everything works out.  In the future we
+    # can try to express the APKs themselves as LOCALIZED_GENERATED_FILES.
+    '!res/raw/suggestedsites.json',
+    '!res/values/strings.xml',
+]

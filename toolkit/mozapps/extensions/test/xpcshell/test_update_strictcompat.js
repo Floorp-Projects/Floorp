@@ -2,9 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// This verifies that add-on update checks work
-// This file is a placeholder for now, it holds test cases related to
-// strict compatibility to be moved or removed shortly.
+// This verifies that add-on update checks work in conjunction with
+// strict compatibility settings.
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 
@@ -12,160 +11,205 @@ const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
-const updateFile = "test_update.json";
 const appId = "toolkit@mozilla.org";
 
-const profileDir = gProfD.clone();
-profileDir.append("extensions");
-
-const ADDONS = {
-  test_update: {
-    id: "addon1@tests.mozilla.org",
-    version: "2.0",
-    name: "Test 1",
-  },
-  test_update8: {
-    id: "addon8@tests.mozilla.org",
-    version: "2.0",
-    name: "Test 8",
-  },
-  test_update12: {
-    id: "addon12@tests.mozilla.org",
-    version: "2.0",
-    name: "Test 12",
-  },
-  test_install2_1: {
-    id: "addon2@tests.mozilla.org",
-    version: "2.0",
-    name: "Real Test 2",
-  },
-  test_install2_2: {
-    id: "addon2@tests.mozilla.org",
-    version: "3.0",
-    name: "Real Test 3",
-  },
-};
-
-var testserver = createHttpServer({hosts: ["example.com"]});
+testserver = createHttpServer({hosts: ["example.com"]});
 testserver.registerDirectory("/data/", do_get_file("data"));
-
-const XPIS = {};
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-
-  Services.locale.requestedLocales = ["fr-FR"];
-
-  for (let [name, info] of Object.entries(ADDONS)) {
-    XPIS[name] = createTempWebExtensionFile({
-      manifest: {
-        name: info.name,
-        version: info.version,
-        applications: {gecko: {id: info.id}},
-      },
-    });
-    testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
-  }
-
   AddonTestUtils.updateReason = AddonManager.UPDATE_WHEN_USER_REQUESTED;
 
-  await promiseStartupManager();
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
+                             "http://example.com/data/test_update_addons.json");
+  Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
+                             "http://example.com/data/test_update_compat.json");
+  Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 });
 
 // Test that the update check correctly observes the
 // extensions.strictCompatibility pref and compatibility overrides.
-add_task(async function test_17() {
-  await promiseInstallWebExtension({
-    manifest: {
-      name: "Test Addon 9",
-      version: "1.0",
-      applications: {
-        gecko: {
-          id: "addon9@tests.mozilla.org",
-          update_url: "http://example.com/data/" + updateFile,
-        },
+add_task(async function test_update_strict() {
+  const ID = "addon9@tests.mozilla.org";
+  let xpi = await createAddon({
+    id: ID,
+    updateURL: "http://example.com/update.json",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "0.1",
+      maxVersion: "0.2",
+    }],
+  });
+  await manuallyInstall(xpi, AddonTestUtils.profileExtensions, ID);
+
+  await promiseStartupManager();
+
+  await AddonRepository.backgroundUpdateCheck();
+
+  let UPDATE = {
+    addons: {
+      [ID]: {
+        updates: [
+          {
+            version: "2.0",
+            update_link: "http://example.com/addons/test_update9_2.xpi",
+            applications: {
+              gecko: {
+                strict_min_version: "1",
+                advisory_max_version: "1",
+              },
+            },
+          },
+
+          // Incompatible when strict compatibility is enabled
+          {
+            version: "3.0",
+            update_link: "http://example.com/addons/test_update9_3.xpi",
+            applications: {
+              gecko: {
+                strict_min_version: "0.9",
+                advisory_max_version: "0.9",
+              },
+            },
+          },
+
+          // Incompatible due to compatibility override
+          {
+            version: "4.0",
+            update_link: "http://example.com/addons/test_update9_4.xpi",
+            applications: {
+              gecko: {
+                strict_min_version: "0.9",
+                advisory_max_version: "0.9",
+              },
+            },
+          },
+
+          // Addon for future version of app
+          {
+            version: "4.0",
+            update_link: "http://example.com/addons/test_update9_5.xpi",
+            applications: {
+              gecko: {
+                strict_min_version: "5",
+                advisory_max_version: "6",
+              },
+            },
+          },
+        ],
       },
     },
-  });
+  };
 
-  let listener;
-  await new Promise(resolve => {
-    listener = {
-      onNewInstall(aInstall) {
-        equal(aInstall.existingAddon.id, "addon9@tests.mozilla.org",
-              "Saw unexpected onNewInstall for " + aInstall.existingAddon.id);
-        equal(aInstall.version, "3.0");
-      },
-      onDownloadFailed(aInstall) {
-        resolve();
-      },
-    };
-    AddonManager.addInstallListener(listener);
+  AddonTestUtils.registerJSON(testserver, "/update.json", UPDATE);
 
-    Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
-                               `http://example.com/data/test_update_addons.json`);
-    Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
-                               `http://example.com/data/test_update_compat.json`);
-    Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
+  let addon = await AddonManager.getAddonByID(ID);
+  let {updateAvailable} = await promiseFindAddonUpdates(addon);
 
-    AddonManagerInternal.backgroundUpdateCheck();
-  });
+  Assert.notEqual(updateAvailable, null, "Got update");
+  Assert.equal(updateAvailable.version, "3.0", "The correct update was selected");
+  await addon.uninstall();
 
-  AddonManager.removeInstallListener(listener);
-
-  let a9 = await AddonManager.getAddonByID("addon9@tests.mozilla.org");
-  await a9.uninstall();
+  await promiseShutdownManager();
 });
 
 // Tests that compatibility updates are applied to addons when the updated
 // compatibility data wouldn't match with strict compatibility enabled.
-add_task(async function test_18() {
-  await promiseInstallXPI({
-    id: "addon10@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
+add_task(async function test_update_strict2() {
+  const ID = "addon10@tests.mozilla.org";
+  let xpi = createAddon({
+    id: ID,
+    updateURL: "http://example.com/update.json",
     targetApplications: [{
       id: appId,
       minVersion: "0.1",
       maxVersion: "0.2",
     }],
-    name: "Test Addon 10",
   });
+  await manuallyInstall(xpi, AddonTestUtils.profileExtensions, ID);
 
-  let a10 = await AddonManager.getAddonByID("addon10@tests.mozilla.org");
-  notEqual(a10, null);
+  await promiseStartupManager();
+  await AddonRepository.backgroundUpdateCheck();
 
-  let result = await AddonTestUtils.promiseFindAddonUpdates(a10);
+  const UPDATE = {
+    addons: {
+      [ID]: {
+        updates: [
+          {
+            version: "1.0",
+            update_link: "http://example.com/addons/test_update10.xpi",
+            applications: {
+              gecko: {
+                strict_min_version: "0.1",
+                advisory_max_version: "0.4",
+              },
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  AddonTestUtils.registerJSON(testserver, "/update.json", UPDATE);
+
+  let addon = await AddonManager.getAddonByID(ID);
+  notEqual(addon, null);
+
+  let result = await promiseFindAddonUpdates(addon);
   ok(result.compatibilityUpdate, "Should have seen a compatibility update");
   ok(!result.updateAvailable, "Should not have seen a version update");
 
-  await a10.uninstall();
+  await addon.uninstall();
+  await promiseShutdownManager();
 });
 
 // Test that the update check correctly observes when an addon opts-in to
 // strict compatibility checking.
-add_task(async function test_19() {
-  await promiseInstallXPI({
-    id: "addon11@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
+add_task(async function test_update_strict_optin() {
+  const ID = "addon11@tests.mozilla.org";
+  let xpi = await createAddon({
+    id: ID,
+    updateURL: "http://example.com/update.json",
     targetApplications: [{
       id: appId,
       minVersion: "0.1",
       maxVersion: "0.2",
     }],
-    name: "Test Addon 11",
   });
+  await manuallyInstall(xpi, AddonTestUtils.profileExtensions, ID);
 
-  let a11 = await AddonManager.getAddonByID("addon11@tests.mozilla.org");
-  notEqual(a11, null);
+  await promiseStartupManager();
 
-  let result = await AddonTestUtils.promiseFindAddonUpdates(a11);
+  await AddonRepository.backgroundUpdateCheck();
+
+  const UPDATE = {
+    addons: {
+      [ID]: {
+        updates: [
+          {
+            version: "2.0",
+            update_link: "http://example.com/addons/test_update11.xpi",
+            applications: {
+              gecko: {
+                strict_min_version: "0.1",
+                strict_max_version: "0.2",
+              },
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  AddonTestUtils.registerJSON(testserver, "/update.json", UPDATE);
+
+  let addon = await AddonManager.getAddonByID(ID);
+  notEqual(addon, null);
+
+  let result = await AddonTestUtils.promiseFindAddonUpdates(addon);
   ok(!result.compatibilityUpdate, "Should not have seen a compatibility update");
   ok(!result.updateAvailable, "Should not have seen a version update");
 
-  await a11.uninstall();
+  await addon.uninstall();
+  await promiseShutdownManager();
 });
-

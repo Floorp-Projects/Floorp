@@ -6,6 +6,10 @@ include protocol PAsmJSCacheEntry;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundIndexedDBUtils;
 include protocol PBackgroundSDBConnection;
+include protocol PBackgroundLSDatabase;
+include protocol PBackgroundLSObserver;
+include protocol PBackgroundLSRequest;
+include protocol PBackgroundLSSimpleRequest;
 include protocol PBackgroundLocalStorageCache;
 include protocol PBackgroundStorage;
 include protocol PBackgroundTest;
@@ -44,6 +48,7 @@ include DOMTypes;
 include IPCBlob;
 include IPCServiceWorkerDescriptor;
 include IPCServiceWorkerRegistrationDescriptor;
+include PBackgroundLSSharedTypes;
 include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
@@ -72,6 +77,10 @@ sync protocol PBackground
   manages PBackgroundIDBFactory;
   manages PBackgroundIndexedDBUtils;
   manages PBackgroundSDBConnection;
+  manages PBackgroundLSDatabase;
+  manages PBackgroundLSObserver;
+  manages PBackgroundLSRequest;
+  manages PBackgroundLSSimpleRequest;
   manages PBackgroundLocalStorageCache;
   manages PBackgroundStorage;
   manages PBackgroundTest;
@@ -118,6 +127,27 @@ parent:
   async FlushPendingFileDeletions();
 
   async PBackgroundSDBConnection(PrincipalInfo principalInfo);
+
+  async PBackgroundLSDatabase(PrincipalInfo principalInfo,
+                              uint32_t privateBrowsingId,
+                              uint64_t datastoreId);
+
+  async PBackgroundLSObserver(uint64_t observerId);
+
+  /**
+   * Issue an asynchronous request that will be used in a synchronous fashion
+   * through complex machinations described in `PBackgroundLSRequest.ipdl` and
+   * `LSObject.h`.
+   */
+  async PBackgroundLSRequest(LSRequestParams params);
+
+  /**
+   * Issues a simple, non-cancelable asynchronous request that's used in an
+   * asynchronous fashion by callers.  (LSRequest is not simple because it used
+   * in a synchronous fashion which leads to complexities regarding cancelation,
+   * see `PBackgroundLSRequest.ipdl` for details.)
+   */
+  async PBackgroundLSSimpleRequest(LSSimpleRequestParams params);
 
   async PBackgroundLocalStorageCache(PrincipalInfo principalInfo,
                                      nsCString originKey,

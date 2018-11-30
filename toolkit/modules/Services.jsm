@@ -80,6 +80,7 @@ var initTable = {
   scriptSecurityManager: ["@mozilla.org/scriptsecuritymanager;1", "nsIScriptSecurityManager"],
   storage: ["@mozilla.org/storage/service;1", "mozIStorageService"],
   domStorageManager: ["@mozilla.org/dom/localStorage-manager;1", "nsIDOMStorageManager"],
+  lsm: ["@mozilla.org/dom/localStorage-manager;1", "nsILocalStorageManager"],
   strings: ["@mozilla.org/intl/stringbundle;1", "nsIStringBundleService"],
   telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
   textToSubURI: ["@mozilla.org/intl/texttosuburi;1", "nsITextToSubURI"],
