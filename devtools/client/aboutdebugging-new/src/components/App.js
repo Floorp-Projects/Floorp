@@ -80,7 +80,10 @@ class App extends PureComponent {
     }
 
     const isRuntimeAvailable = id => {
-      const runtimes = this.props.usbRuntimes;
+      const runtimes = [
+        ...this.props.networkRuntimes,
+        ...this.props.usbRuntimes,
+      ];
       return !!runtimes.find(x => x.id === id);
     };
 
