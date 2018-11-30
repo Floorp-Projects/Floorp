@@ -171,9 +171,6 @@ class nsSocketTransport final : public nsASocketHandler,
       Telemetry::HistogramID aIDConnectivityChange,
       Telemetry::HistogramID aIDLinkChange, Telemetry::HistogramID aIDOffline);
 
-  static bool HasIPv4Connectivity() { return sHasIPv4Connectivity; }
-  static bool HasIPv6Connectivity() { return sHasIPv6Connectivity; }
-
  protected:
   virtual ~nsSocketTransport();
   void CleanupTypes();
@@ -471,11 +468,6 @@ class nsSocketTransport final : public nsASocketHandler,
   nsresult mFirstRetryError;
 
   bool mDoNotRetryToConnect;
-
-  static bool sHasIPv4Connectivity;
-  static bool sHasIPv6Connectivity;
-  static uint32_t sIPv4FailedCounter;
-  static uint32_t sIPv6FailedCounter;
 };
 
 }  // namespace net
