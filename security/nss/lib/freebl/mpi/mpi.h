@@ -128,7 +128,8 @@ typedef int mp_sword;
 #define MP_WORD_MAX UINT_MAX
 #endif
 
-#define MP_DIGIT_BIT (CHAR_BIT * sizeof(mp_digit))
+#define MP_DIGIT_SIZE sizeof(mp_digit)
+#define MP_DIGIT_BIT (CHAR_BIT * MP_DIGIT_SIZE)
 #define MP_WORD_BIT (CHAR_BIT * sizeof(mp_word))
 #define MP_RADIX (1 + (mp_word)MP_DIGIT_MAX)
 
