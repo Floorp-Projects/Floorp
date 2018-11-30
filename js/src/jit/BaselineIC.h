@@ -345,7 +345,7 @@ class ICScript {
   void noteHasDenseAdd(uint32_t pcOffset);
 
   void trace(JSTracer* trc);
-  void purgeOptimizedStubs(Zone* zone);
+  void purgeOptimizedStubs(JSScript* script);
 
   ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
   ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
