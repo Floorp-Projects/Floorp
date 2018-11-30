@@ -15,10 +15,8 @@ using namespace ipc;
 
 namespace dom {
 
-mozilla::ipc::IPCResult
-ServiceWorkerManagerChild::RecvNotifyRegister(
-                                     const ServiceWorkerRegistrationData& aData)
-{
+mozilla::ipc::IPCResult ServiceWorkerManagerChild::RecvNotifyRegister(
+    const ServiceWorkerRegistrationData& aData) {
   if (mShuttingDown) {
     return IPC_OK();
   }
@@ -31,11 +29,8 @@ ServiceWorkerManagerChild::RecvNotifyRegister(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ServiceWorkerManagerChild::RecvNotifySoftUpdate(
-                                      const OriginAttributes& aOriginAttributes,
-                                      const nsString& aScope)
-{
+mozilla::ipc::IPCResult ServiceWorkerManagerChild::RecvNotifySoftUpdate(
+    const OriginAttributes& aOriginAttributes, const nsString& aScope) {
   if (mShuttingDown) {
     return IPC_OK();
   }
@@ -48,10 +43,8 @@ ServiceWorkerManagerChild::RecvNotifySoftUpdate(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ServiceWorkerManagerChild::RecvNotifyUnregister(const PrincipalInfo& aPrincipalInfo,
-                                                const nsString& aScope)
-{
+mozilla::ipc::IPCResult ServiceWorkerManagerChild::RecvNotifyUnregister(
+    const PrincipalInfo& aPrincipalInfo, const nsString& aScope) {
   if (mShuttingDown) {
     return IPC_OK();
   }
@@ -72,9 +65,8 @@ ServiceWorkerManagerChild::RecvNotifyUnregister(const PrincipalInfo& aPrincipalI
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ServiceWorkerManagerChild::RecvNotifyRemove(const nsCString& aHost)
-{
+mozilla::ipc::IPCResult ServiceWorkerManagerChild::RecvNotifyRemove(
+    const nsCString& aHost) {
   if (mShuttingDown) {
     return IPC_OK();
   }
@@ -87,9 +79,7 @@ ServiceWorkerManagerChild::RecvNotifyRemove(const nsCString& aHost)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ServiceWorkerManagerChild::RecvNotifyRemoveAll()
-{
+mozilla::ipc::IPCResult ServiceWorkerManagerChild::RecvNotifyRemoveAll() {
   if (mShuttingDown) {
     return IPC_OK();
   }
@@ -103,18 +93,16 @@ ServiceWorkerManagerChild::RecvNotifyRemoveAll()
 }
 
 PServiceWorkerUpdaterChild*
-ServiceWorkerManagerChild::AllocPServiceWorkerUpdaterChild(const OriginAttributes& aOriginAttributes,
-                                                           const nsCString& aScope)
-{
+ServiceWorkerManagerChild::AllocPServiceWorkerUpdaterChild(
+    const OriginAttributes& aOriginAttributes, const nsCString& aScope) {
   MOZ_CRASH("Do no use ServiceWorkerUpdaterChild IPC CTOR.");
 }
 
-bool
-ServiceWorkerManagerChild::DeallocPServiceWorkerUpdaterChild(PServiceWorkerUpdaterChild* aActor)
-{
+bool ServiceWorkerManagerChild::DeallocPServiceWorkerUpdaterChild(
+    PServiceWorkerUpdaterChild* aActor) {
   delete aActor;
   return true;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

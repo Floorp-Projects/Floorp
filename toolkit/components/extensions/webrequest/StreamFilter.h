@@ -17,7 +17,8 @@
 
 namespace mozilla {
 namespace ipc {
-  template <class T> class Endpoint;
+template <class T>
+class Endpoint;
 }
 
 namespace extensions {
@@ -27,20 +28,18 @@ class StreamFilterChild;
 
 using namespace mozilla::dom;
 
-class StreamFilter : public DOMEventTargetHelper
-{
+class StreamFilter : public DOMEventTargetHelper {
   friend class StreamFilterChild;
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(StreamFilter, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(StreamFilter,
+                                                         DOMEventTargetHelper)
 
-  static already_AddRefed<StreamFilter>
-  Create(GlobalObject& global,
-         uint64_t aRequestId,
-         const nsAString& aAddonId);
+  static already_AddRefed<StreamFilter> Create(GlobalObject& global,
+                                               uint64_t aRequestId,
+                                               const nsAString& aAddonId);
 
-  explicit StreamFilter(nsIGlobalObject* aParent,
-                        uint64_t aRequestId,
+  explicit StreamFilter(nsIGlobalObject* aParent, uint64_t aRequestId,
                         const nsAString& aAddonId);
 
   IMPL_EVENT_HANDLER(start);
@@ -48,13 +47,9 @@ class StreamFilter : public DOMEventTargetHelper
   IMPL_EVENT_HANDLER(data);
   IMPL_EVENT_HANDLER(error);
 
-  void Write(const ArrayBufferOrUint8Array& aData,
-             ErrorResult& aRv);
+  void Write(const ArrayBufferOrUint8Array& aData, ErrorResult& aRv);
 
-  void GetError(nsAString& aError)
-  {
-    aError = mError;
-  }
+  void GetError(nsAString& aError) { aError = mError; }
 
   StreamFilterStatus Status() const;
   void Suspend(ErrorResult& aRv);
@@ -67,10 +62,9 @@ class StreamFilter : public DOMEventTargetHelper
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  static bool
-  IsAllowedInContext(JSContext* aCx, JSObject* aObj);
+  static bool IsAllowedInContext(JSContext* aCx, JSObject* aObj);
 
-protected:
+ protected:
   virtual ~StreamFilter();
 
   void FireEvent(const nsAString& aType);
@@ -81,12 +75,10 @@ protected:
 
   bool CheckAlive();
 
-private:
-  void
-  Connect();
+ private:
+  void Connect();
 
-  void
-  FinishConnect(mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint);
+  void FinishConnect(mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint);
 
   void ForgetActor();
 
@@ -99,7 +91,7 @@ private:
   const RefPtr<nsAtom> mAddonId;
 };
 
-} // namespace extensions
-} // namespace mozilla
+}  // namespace extensions
+}  // namespace mozilla
 
-#endif // mozilla_extensions_StreamFilter_h
+#endif  // mozilla_extensions_StreamFilter_h

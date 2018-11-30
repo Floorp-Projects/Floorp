@@ -12,34 +12,26 @@
 namespace mozilla {
 namespace dom {
 
-class TextMetrics final : public NonRefcountedDOMObject
-{
-public:
-  explicit TextMetrics(float aValue) : width(aValue)
-  {
+class TextMetrics final : public NonRefcountedDOMObject {
+ public:
+  explicit TextMetrics(float aValue) : width(aValue) {
     MOZ_COUNT_CTOR(TextMetrics);
   }
 
-  ~TextMetrics()
-  {
-    MOZ_COUNT_DTOR(TextMetrics);
-  }
+  ~TextMetrics() { MOZ_COUNT_DTOR(TextMetrics); }
 
-  float Width() const
-  {
-    return width;
-  }
+  float Width() const { return width; }
 
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
-  {
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aReflector) {
     return TextMetrics_Binding::Wrap(aCx, this, aGivenProto, aReflector);
   }
 
-private:
+ private:
   float width;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TextMetrics_h
+#endif  // mozilla_dom_TextMetrics_h

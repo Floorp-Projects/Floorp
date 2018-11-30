@@ -28,9 +28,7 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 namespace base {
 
 bool LaunchApp(const std::vector<std::string>& argv,
-               const LaunchOptions& options,
-               ProcessHandle* process_handle)
-{
+               const LaunchOptions& options, ProcessHandle* process_handle) {
   mozilla::UniquePtr<char*[]> argv_cstr(new char*[argv.size() + 1]);
 
   EnvironmentArray envp = BuildEnvironmentArray(options.env_map);
@@ -50,8 +48,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
   pid_t pid = fork();
 #endif
 
-  if (pid < 0)
-    return false;
+  if (pid < 0) return false;
 
   if (pid == 0) {
     // In the child:
@@ -83,17 +80,14 @@ bool LaunchApp(const std::vector<std::string>& argv,
   // In the parent:
   gProcessLog.print("==> process %d launched child process %d\n",
                     GetCurrentProcId(), pid);
-  if (options.wait)
-    HANDLE_EINTR(waitpid(pid, 0, 0));
+  if (options.wait) HANDLE_EINTR(waitpid(pid, 0, 0));
 
-  if (process_handle)
-    *process_handle = pid;
+  if (process_handle) *process_handle = pid;
 
   return true;
 }
 
-bool LaunchApp(const CommandLine& cl,
-               const LaunchOptions& options,
+bool LaunchApp(const CommandLine& cl, const LaunchOptions& options,
                ProcessHandle* process_handle) {
   return LaunchApp(cl.argv(), options, process_handle);
 }

@@ -36,10 +36,9 @@ namespace mozilla {
 //   normal and high queues.
 // - We do not select events from the idle queue if the current idle period
 //   is almost over.
-template<class InnerQueueT>
-class PrioritizedEventQueue final : public AbstractEventQueue
-{
-public:
+template <class InnerQueueT>
+class PrioritizedEventQueue final : public AbstractEventQueue {
+ public:
   static const bool SupportsPrioritization = true;
 
   PrioritizedEventQueue(UniquePtr<InnerQueueT> aHighQueue,
@@ -48,11 +47,10 @@ public:
                         UniquePtr<InnerQueueT> aIdleQueue,
                         already_AddRefed<nsIIdlePeriod> aIdlePeriod);
 
-  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                EventPriority aPriority,
+  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent, EventPriority aPriority,
                 const MutexAutoLock& aProofOfLock) final;
-  already_AddRefed<nsIRunnable> GetEvent(EventPriority* aPriority,
-                                         const MutexAutoLock& aProofOfLock) final;
+  already_AddRefed<nsIRunnable> GetEvent(
+      EventPriority* aPriority, const MutexAutoLock& aProofOfLock) final;
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
   size_t Count(const MutexAutoLock& aProofOfLock) const final;
@@ -68,7 +66,9 @@ public:
   // nsThread.cpp sends telemetry containing the most recently computed idle
   // deadline. We store a reference to a field in nsThread where this deadline
   // will be stored so that it can be fetched quickly for telemetry.
-  void SetNextIdleDeadlineRef(TimeStamp& aDeadline) { mNextIdleDeadline = &aDeadline; }
+  void SetNextIdleDeadlineRef(TimeStamp& aDeadline) {
+    mNextIdleDeadline = &aDeadline;
+  }
 #endif
 
   void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
@@ -76,8 +76,8 @@ public:
   void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
   void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfExcludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const override {
     size_t n = 0;
 
     n += mHighQueue->SizeOfIncludingThis(aMallocSizeOf);
@@ -92,8 +92,9 @@ public:
     return n;
   }
 
-private:
-  EventPriority SelectQueue(bool aUpdateState, const MutexAutoLock& aProofOfLock);
+ private:
+  EventPriority SelectQueue(bool aUpdateState,
+                            const MutexAutoLock& aProofOfLock);
 
   // Returns a null TimeStamp if we're not in the idle period.
   mozilla::TimeStamp GetIdleDeadline();
@@ -132,8 +133,7 @@ private:
 
   TimeStamp mInputHandlingStartTime;
 
-  enum InputEventQueueState
-  {
+  enum InputEventQueueState {
     STATE_DISABLED,
     STATE_FLUSHING,
     STATE_SUSPEND,
@@ -146,6 +146,6 @@ class EventQueue;
 extern template class PrioritizedEventQueue<EventQueue>;
 extern template class PrioritizedEventQueue<LabeledEventQueue>;
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_PrioritizedEventQueue_h
+#endif  // mozilla_PrioritizedEventQueue_h

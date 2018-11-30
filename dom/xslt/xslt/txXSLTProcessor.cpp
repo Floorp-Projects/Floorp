@@ -15,39 +15,28 @@
 TX_LG_IMPL
 
 /* static */
-bool
-txXSLTProcessor::init()
-{
-    TX_LG_CREATE;
+bool txXSLTProcessor::init() {
+  TX_LG_CREATE;
 
-    if (!txHandlerTable::init())
-        return false;
+  if (!txHandlerTable::init()) return false;
 
-    extern bool TX_InitEXSLTFunction();
-    if (!TX_InitEXSLTFunction())
-        return false;
+  extern bool TX_InitEXSLTFunction();
+  if (!TX_InitEXSLTFunction()) return false;
 
-    return true;
+  return true;
 }
 
 /* static */
-void
-txXSLTProcessor::shutdown()
-{
-    txHandlerTable::shutdown();
-}
-
+void txXSLTProcessor::shutdown() { txHandlerTable::shutdown(); }
 
 /* static */
-nsresult
-txXSLTProcessor::execute(txExecutionState& aEs)
-{
-    nsresult rv = NS_OK;
-    txInstruction* instr;
-    while ((instr = aEs.getNextInstruction())) {
-        rv = instr->execute(aEs);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+nsresult txXSLTProcessor::execute(txExecutionState& aEs) {
+  nsresult rv = NS_OK;
+  txInstruction* instr;
+  while ((instr = aEs.getNextInstruction())) {
+    rv = instr->execute(aEs);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-    return NS_OK;
+  return NS_OK;
 }

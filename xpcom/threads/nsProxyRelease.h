@@ -26,27 +26,21 @@
 
 namespace detail {
 
-template<typename T>
-class ProxyReleaseEvent : public mozilla::CancelableRunnable
-{
-public:
+template <typename T>
+class ProxyReleaseEvent : public mozilla::CancelableRunnable {
+ public:
   ProxyReleaseEvent(const char* aName, already_AddRefed<T> aDoomed)
-  : CancelableRunnable(aName), mDoomed(aDoomed.take()) {}
+      : CancelableRunnable(aName), mDoomed(aDoomed.take()) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     NS_IF_RELEASE(mDoomed);
     return NS_OK;
   }
 
-  nsresult Cancel() override
-  {
-    return Run();
-  }
+  nsresult Cancel() override { return Run(); }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-  NS_IMETHOD GetName(nsACString& aName) override
-  {
+  NS_IMETHOD GetName(nsACString& aName) override {
     if (mName) {
       aName.Append(nsPrintfCString("ProxyReleaseEvent for %s", mName));
     } else {
@@ -56,15 +50,13 @@ public:
   }
 #endif
 
-private:
+ private:
   T* MOZ_OWNING_REF mDoomed;
 };
 
-template<typename T>
-void
-ProxyRelease(const char* aName, nsIEventTarget* aTarget,
-             already_AddRefed<T> aDoomed, bool aAlwaysProxy)
-{
+template <typename T>
+void ProxyRelease(const char* aName, nsIEventTarget* aTarget,
+                  already_AddRefed<T> aDoomed, bool aAlwaysProxy) {
   // Auto-managing release of the pointer.
   RefPtr<T> doomed = aDoomed;
   nsresult rv;
@@ -91,40 +83,31 @@ ProxyRelease(const char* aName, nsIEventTarget* aTarget,
   }
 }
 
-template<bool nsISupportsBased>
-struct ProxyReleaseChooser
-{
-  template<typename T>
-  static void ProxyRelease(const char* aName,
-                           nsIEventTarget* aTarget,
-                           already_AddRefed<T> aDoomed,
-                           bool aAlwaysProxy)
-  {
+template <bool nsISupportsBased>
+struct ProxyReleaseChooser {
+  template <typename T>
+  static void ProxyRelease(const char* aName, nsIEventTarget* aTarget,
+                           already_AddRefed<T> aDoomed, bool aAlwaysProxy) {
     ::detail::ProxyRelease(aName, aTarget, std::move(aDoomed), aAlwaysProxy);
   }
 };
 
-template<>
-struct ProxyReleaseChooser<true>
-{
+template <>
+struct ProxyReleaseChooser<true> {
   // We need an intermediate step for handling classes with ambiguous
   // inheritance to nsISupports.
-  template<typename T>
-  static void ProxyRelease(const char* aName,
-                           nsIEventTarget* aTarget,
-                           already_AddRefed<T> aDoomed,
-                           bool aAlwaysProxy)
-  {
-    ProxyReleaseISupports(aName, aTarget, ToSupports(aDoomed.take()), aAlwaysProxy);
+  template <typename T>
+  static void ProxyRelease(const char* aName, nsIEventTarget* aTarget,
+                           already_AddRefed<T> aDoomed, bool aAlwaysProxy) {
+    ProxyReleaseISupports(aName, aTarget, ToSupports(aDoomed.take()),
+                          aAlwaysProxy);
   }
 
-  static void ProxyReleaseISupports(const char* aName,
-                                    nsIEventTarget* aTarget,
-                                    nsISupports* aDoomed,
-                                    bool aAlwaysProxy);
+  static void ProxyReleaseISupports(const char* aName, nsIEventTarget* aTarget,
+                                    nsISupports* aDoomed, bool aAlwaysProxy);
 };
 
-} // namespace detail
+}  // namespace detail
 
 /**
  * Ensures that the delete of a smart pointer occurs on the target thread.
@@ -141,13 +124,12 @@ struct ProxyReleaseChooser<true>
  *        true, then an event will always be posted to the target thread for
  *        asynchronous release.
  */
-template<class T>
+template <class T>
 inline NS_HIDDEN_(void)
-NS_ProxyRelease(const char* aName, nsIEventTarget* aTarget,
-                already_AddRefed<T> aDoomed, bool aAlwaysProxy = false)
-{
-  ::detail::ProxyReleaseChooser<mozilla::IsBaseOf<nsISupports, T>::value>
-    ::ProxyRelease(aName, aTarget, std::move(aDoomed), aAlwaysProxy);
+    NS_ProxyRelease(const char* aName, nsIEventTarget* aTarget,
+                    already_AddRefed<T> aDoomed, bool aAlwaysProxy = false) {
+  ::detail::ProxyReleaseChooser<mozilla::IsBaseOf<nsISupports, T>::value>::
+      ProxyRelease(aName, aTarget, std::move(aDoomed), aAlwaysProxy);
 }
 
 /**
@@ -163,18 +145,18 @@ NS_ProxyRelease(const char* aName, nsIEventTarget* aTarget,
  *        this parameter is true, then an event will always be posted to the
  *        main thread for asynchronous release.
  */
-template<class T>
+template <class T>
 inline NS_HIDDEN_(void)
-NS_ReleaseOnMainThreadSystemGroup(const char* aName,
-                                  already_AddRefed<T> aDoomed,
-                                  bool aAlwaysProxy = false)
-{
+    NS_ReleaseOnMainThreadSystemGroup(const char* aName,
+                                      already_AddRefed<T> aDoomed,
+                                      bool aAlwaysProxy = false) {
   // NS_ProxyRelease treats a null event target as "the current thread".  So a
   // handle on the main thread is only necessary when we're not already on the
   // main thread or the release must happen asynchronously.
   nsCOMPtr<nsIEventTarget> systemGroupEventTarget;
   if (!NS_IsMainThread() || aAlwaysProxy) {
-    systemGroupEventTarget = mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
+    systemGroupEventTarget =
+        mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
 
     if (!systemGroupEventTarget) {
       MOZ_ASSERT_UNREACHABLE("Could not get main thread; leaking an object!");
@@ -187,11 +169,10 @@ NS_ReleaseOnMainThreadSystemGroup(const char* aName,
                   aAlwaysProxy);
 }
 
-template<class T>
+template <class T>
 inline NS_HIDDEN_(void)
-NS_ReleaseOnMainThreadSystemGroup(already_AddRefed<T> aDoomed,
-                                  bool aAlwaysProxy = false)
-{
+    NS_ReleaseOnMainThreadSystemGroup(already_AddRefed<T> aDoomed,
+                                      bool aAlwaysProxy = false) {
   NS_ReleaseOnMainThreadSystemGroup("NS_ReleaseOnMainThreadSystemGroup",
                                     std::move(aDoomed), aAlwaysProxy);
 }
@@ -234,10 +215,9 @@ NS_ReleaseOnMainThreadSystemGroup(already_AddRefed<T> aDoomed,
  * All structs and classes that might be accessed on other threads should store
  * an nsMainThreadPtrHandle<T> rather than an nsCOMPtr<T>.
  */
-template<class T>
-class nsMainThreadPtrHolder final
-{
-public:
+template <class T>
+class nsMainThreadPtrHolder final {
+ public:
   // We can only acquire a pointer on the main thread. We to fail fast for
   // threading bugs, so by default we assert if our pointer is used or acquired
   // off-main-thread. But some consumers need to use the same pointer for
@@ -245,11 +225,12 @@ public:
   // aren't. So we allow them to explicitly disable this strict checking.
   nsMainThreadPtrHolder(const char* aName, T* aPtr, bool aStrict = true,
                         nsIEventTarget* aMainThreadEventTarget = nullptr)
-    : mRawPtr(nullptr)
-    , mStrict(aStrict)
-    , mMainThreadEventTarget(aMainThreadEventTarget)
+      : mRawPtr(nullptr),
+        mStrict(aStrict),
+        mMainThreadEventTarget(aMainThreadEventTarget)
 #ifndef RELEASE_OR_BETA
-    , mName(aName)
+        ,
+        mName(aName)
 #endif
   {
     // We can only AddRef our pointer on the main thread, which means that the
@@ -260,21 +241,21 @@ public:
   nsMainThreadPtrHolder(const char* aName, already_AddRefed<T> aPtr,
                         bool aStrict = true,
                         nsIEventTarget* aMainThreadEventTarget = nullptr)
-    : mRawPtr(aPtr.take())
-    , mStrict(aStrict)
-    , mMainThreadEventTarget(aMainThreadEventTarget)
+      : mRawPtr(aPtr.take()),
+        mStrict(aStrict),
+        mMainThreadEventTarget(aMainThreadEventTarget)
 #ifndef RELEASE_OR_BETA
-    , mName(aName)
+        ,
+        mName(aName)
 #endif
   {
     // Since we don't need to AddRef the pointer, this constructor is safe to
     // call on any thread.
   }
 
-private:
+ private:
   // We can be released on any thread.
-  ~nsMainThreadPtrHolder()
-  {
+  ~nsMainThreadPtrHolder() {
     if (NS_IsMainThread()) {
       NS_IF_RELEASE(mRawPtr);
     } else if (mRawPtr) {
@@ -284,17 +265,16 @@ private:
       MOZ_ASSERT(mMainThreadEventTarget);
       NS_ProxyRelease(
 #ifdef RELEASE_OR_BETA
-        nullptr,
+          nullptr,
 #else
-        mName,
+          mName,
 #endif
-        mMainThreadEventTarget, dont_AddRef(mRawPtr));
+          mMainThreadEventTarget, dont_AddRef(mRawPtr));
     }
   }
 
-public:
-  T* get()
-  {
+ public:
+  T* get() {
     // Nobody should be touching the raw pointer off-main-thread.
     if (mStrict && MOZ_UNLIKELY(!NS_IsMainThread())) {
       NS_ERROR("Can't dereference nsMainThreadPtrHolder off main thread");
@@ -303,18 +283,14 @@ public:
     return mRawPtr;
   }
 
-  bool operator==(const nsMainThreadPtrHolder<T>& aOther) const
-  {
+  bool operator==(const nsMainThreadPtrHolder<T>& aOther) const {
     return mRawPtr == aOther.mRawPtr;
   }
-  bool operator!() const
-  {
-    return !mRawPtr;
-  }
+  bool operator!() const { return !mRawPtr; }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsMainThreadPtrHolder<T>)
 
-private:
+ private:
   // Our wrapped pointer.
   T* mRawPtr;
 
@@ -333,34 +309,25 @@ private:
   nsMainThreadPtrHolder(const nsMainThreadPtrHolder& aOther);
 };
 
-template<class T>
-class nsMainThreadPtrHandle
-{
+template <class T>
+class nsMainThreadPtrHandle {
   RefPtr<nsMainThreadPtrHolder<T>> mPtr;
 
-public:
+ public:
   nsMainThreadPtrHandle() : mPtr(nullptr) {}
   MOZ_IMPLICIT nsMainThreadPtrHandle(decltype(nullptr)) : mPtr(nullptr) {}
   explicit nsMainThreadPtrHandle(nsMainThreadPtrHolder<T>* aHolder)
-    : mPtr(aHolder)
-  {
-  }
+      : mPtr(aHolder) {}
   explicit nsMainThreadPtrHandle(
       already_AddRefed<nsMainThreadPtrHolder<T>> aHolder)
-    : mPtr(aHolder)
-  {
-  }
+      : mPtr(aHolder) {}
   nsMainThreadPtrHandle(const nsMainThreadPtrHandle& aOther)
-    : mPtr(aOther.mPtr)
-  {
-  }
-  nsMainThreadPtrHandle& operator=(const nsMainThreadPtrHandle& aOther)
-  {
+      : mPtr(aOther.mPtr) {}
+  nsMainThreadPtrHandle& operator=(const nsMainThreadPtrHandle& aOther) {
     mPtr = aOther.mPtr;
     return *this;
   }
-  nsMainThreadPtrHandle& operator=(nsMainThreadPtrHolder<T>* aHolder)
-  {
+  nsMainThreadPtrHandle& operator=(nsMainThreadPtrHolder<T>* aHolder) {
     mPtr = aHolder;
     return *this;
   }
@@ -368,8 +335,7 @@ public:
   // These all call through to nsMainThreadPtrHolder, and thus implicitly
   // assert that we're on the main thread. Off-main-thread consumers must treat
   // these handles as opaque.
-  T* get() const
-  {
+  T* get() const {
     if (mPtr) {
       return mPtr.get()->get();
     }
@@ -380,32 +346,28 @@ public:
   T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN { return get(); }
 
   // These are safe to call on other threads with appropriate external locking.
-  bool operator==(const nsMainThreadPtrHandle<T>& aOther) const
-  {
+  bool operator==(const nsMainThreadPtrHandle<T>& aOther) const {
     if (!mPtr || !aOther.mPtr) {
       return mPtr == aOther.mPtr;
     }
     return *mPtr == *aOther.mPtr;
   }
-  bool operator!=(const nsMainThreadPtrHandle<T>& aOther) const
-  {
+  bool operator!=(const nsMainThreadPtrHandle<T>& aOther) const {
     return !operator==(aOther);
   }
   bool operator==(decltype(nullptr)) const { return mPtr == nullptr; }
   bool operator!=(decltype(nullptr)) const { return mPtr != nullptr; }
-  bool operator!() const {
-    return !mPtr || !*mPtr;
-  }
+  bool operator!() const { return !mPtr || !*mPtr; }
 };
 
 namespace mozilla {
 
-template<typename T>
+template <typename T>
 using PtrHolder = nsMainThreadPtrHolder<T>;
 
-template<typename T>
+template <typename T>
 using PtrHandle = nsMainThreadPtrHandle<T>;
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

@@ -17,49 +17,40 @@ namespace dom {
 
 class WeakWorkerRef;
 
-class FetchStreamReader final : public nsIOutputStreamCallback
-                              , public PromiseNativeHandler
-{
-public:
+class FetchStreamReader final : public nsIOutputStreamCallback,
+                                public PromiseNativeHandler {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(FetchStreamReader, nsIOutputStreamCallback)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
+      FetchStreamReader, nsIOutputStreamCallback)
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
 
   // This creates a nsIInputStream able to retrieve data from the ReadableStream
   // object. The reading starts when StartConsuming() is called.
-  static nsresult
-  Create(JSContext* aCx, nsIGlobalObject* aGlobal,
-         FetchStreamReader** aStreamReader,
-         nsIInputStream** aInputStream);
+  static nsresult Create(JSContext* aCx, nsIGlobalObject* aGlobal,
+                         FetchStreamReader** aStreamReader,
+                         nsIInputStream** aInputStream);
 
-  void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
-  void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
   // Idempotently close the output stream and null out all state. If aCx is
   // provided, the reader will also be canceled.  aStatus must be a DOM error
   // as understood by DOMException because it will be provided as the
   // cancellation reason.
-  void
-  CloseAndRelease(JSContext* aCx, nsresult aStatus);
+  void CloseAndRelease(JSContext* aCx, nsresult aStatus);
 
-  void
-  StartConsuming(JSContext* aCx,
-                 JS::HandleObject aStream,
-                 JS::MutableHandle<JSObject*> aReader,
-                 ErrorResult& aRv);
+  void StartConsuming(JSContext* aCx, JS::HandleObject aStream,
+                      JS::MutableHandle<JSObject*> aReader, ErrorResult& aRv);
 
-private:
+ private:
   explicit FetchStreamReader(nsIGlobalObject* aGlobal);
   ~FetchStreamReader();
 
-  nsresult
-  WriteBuffer();
+  nsresult WriteBuffer();
 
-  void
-  ReportErrorToConsole(JSContext* aCx, JS::Handle<JS::Value> aValue);
+  void ReportErrorToConsole(JSContext* aCx, JS::Handle<JS::Value> aValue);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
@@ -77,7 +68,7 @@ private:
   bool mStreamClosed;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FetchStreamReader_h
+#endif  // mozilla_dom_FetchStreamReader_h

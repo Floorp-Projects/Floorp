@@ -13,38 +13,27 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-X11TextureSourceBasic::X11TextureSourceBasic(BasicCompositor* aCompositor, gfxXlibSurface* aSurface)
- : mSurface(aSurface)
-{
-}
+X11TextureSourceBasic::X11TextureSourceBasic(BasicCompositor* aCompositor,
+                                             gfxXlibSurface* aSurface)
+    : mSurface(aSurface) {}
 
-IntSize
-X11TextureSourceBasic::GetSize() const
-{
-  return mSurface->GetSize();
-}
+IntSize X11TextureSourceBasic::GetSize() const { return mSurface->GetSize(); }
 
-SurfaceFormat
-X11TextureSourceBasic::GetFormat() const
-{
+SurfaceFormat X11TextureSourceBasic::GetFormat() const {
   gfxContentType type = mSurface->GetContentType();
   return X11TextureSourceBasic::ContentTypeToSurfaceFormat(type);
 }
 
-SourceSurface*
-X11TextureSourceBasic::GetSurface(DrawTarget* aTarget)
-{
+SourceSurface* X11TextureSourceBasic::GetSurface(DrawTarget* aTarget) {
   if (!mSourceSurface) {
-    mSourceSurface =
-        Factory::CreateSourceSurfaceForCairoSurface(mSurface->CairoSurface(),
-                                                    GetSize(), GetFormat());
+    mSourceSurface = Factory::CreateSourceSurfaceForCairoSurface(
+        mSurface->CairoSurface(), GetSize(), GetFormat());
   }
   return mSourceSurface;
 }
 
-SurfaceFormat
-X11TextureSourceBasic::ContentTypeToSurfaceFormat(gfxContentType aType)
-{
+SurfaceFormat X11TextureSourceBasic::ContentTypeToSurfaceFormat(
+    gfxContentType aType) {
   switch (aType) {
     case gfxContentType::COLOR:
       return SurfaceFormat::B8G8R8X8;
@@ -57,5 +46,5 @@ X11TextureSourceBasic::ContentTypeToSurfaceFormat(gfxContentType aType)
   }
 }
 
-}
-}
+}  // namespace layers
+}  // namespace mozilla

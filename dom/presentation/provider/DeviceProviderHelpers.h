@@ -13,18 +13,17 @@ namespace mozilla {
 namespace dom {
 namespace presentation {
 
-class DeviceProviderHelpers final
-{
-public:
+class DeviceProviderHelpers final {
+ public:
   static bool IsCommonlySupportedScheme(const nsAString& aUrl);
   static bool IsFxTVSupportedAppUrl(const nsAString& aUrl);
 
-private:
+ private:
   DeviceProviderHelpers() = delete;
 };
 
-} // namespace presentation
-} // namespace dom
-} // namespace mozilla
+}  // namespace presentation
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_presentation_DeviceProviderHelpers_h
+#endif  // mozilla_dom_presentation_DeviceProviderHelpers_h

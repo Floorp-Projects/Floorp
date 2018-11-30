@@ -13,27 +13,23 @@
 namespace mozilla {
 namespace dom {
 
-class Comment final : public CharacterData
-{
-private:
-  void Init()
-  {
+class Comment final : public CharacterData {
+ private:
+  void Init() {
     MOZ_ASSERT(mNodeInfo->NodeType() == COMMENT_NODE,
                "Bad NodeType in aNodeInfo");
   }
 
   virtual ~Comment();
 
-public:
+ public:
   explicit Comment(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : CharacterData(std::move(aNodeInfo))
-  {
+      : CharacterData(std::move(aNodeInfo)) {
     Init();
   }
 
   explicit Comment(nsNodeInfoManager* aNodeInfoManager)
-    : CharacterData(aNodeInfoManager->GetCommentNodeInfo())
-  {
+      : CharacterData(aNodeInfoManager->GetCommentNodeInfo()) {
     Init();
   }
 
@@ -42,28 +38,27 @@ public:
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(Comment, CharacterData)
 
-  virtual already_AddRefed<CharacterData>
-    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                  bool aCloneText) const override;
+  virtual already_AddRefed<CharacterData> CloneDataNode(
+      mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const override;
 
 #ifdef DEBUG
   virtual void List(FILE* out, int32_t aIndent) const override;
   virtual void DumpContent(FILE* out = stdout, int32_t aIndent = 0,
-                           bool aDumpAll = true) const override
-  {
+                           bool aDumpAll = true) const override {
     return;
   }
 #endif
 
-  static already_AddRefed<Comment>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aData,
-              ErrorResult& aRv);
+  static already_AddRefed<Comment> Constructor(const GlobalObject& aGlobal,
+                                               const nsAString& aData,
+                                               ErrorResult& aRv);
 
-protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+ protected:
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Comment_h
+#endif  // mozilla_dom_Comment_h

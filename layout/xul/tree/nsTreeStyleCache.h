@@ -17,58 +17,50 @@
 
 class nsIContent;
 
-class nsTreeStyleCache
-{
-public:
-  nsTreeStyleCache()
-    : mNextState(0)
-  {
-  }
+class nsTreeStyleCache {
+ public:
+  nsTreeStyleCache() : mNextState(0) {}
 
-  ~nsTreeStyleCache()
-  {
-    Clear();
-  }
+  ~nsTreeStyleCache() { Clear(); }
 
-  void Clear()
-  {
+  void Clear() {
     mTransitionTable = nullptr;
     mCache = nullptr;
     mNextState = 0;
   }
 
   mozilla::ComputedStyle* GetComputedStyle(
-      nsPresContext* aPresContext,
-      nsIContent* aContent,
+      nsPresContext* aPresContext, nsIContent* aContent,
       mozilla::ComputedStyle* aStyle,
       nsCSSAnonBoxPseudoStaticAtom* aPseudoElement,
       const mozilla::AtomArray& aInputWord);
 
-protected:
+ protected:
   typedef uint32_t DFAState;
 
-  class Transition final
-  {
-  public:
+  class Transition final {
+   public:
     Transition(DFAState aState, nsAtom* aSymbol);
     bool operator==(const Transition& aOther) const;
     uint32_t Hash() const;
 
-  private:
+   private:
     DFAState mState;
     RefPtr<nsAtom> mInputSymbol;
   };
 
-  typedef nsDataHashtable<nsGenericHashKey<Transition>, DFAState> TransitionTable;
+  typedef nsDataHashtable<nsGenericHashKey<Transition>, DFAState>
+      TransitionTable;
 
   // A transition table for a deterministic finite automaton.  The DFA
   // takes as its input a single pseudoelement and an ordered set of properties.
-  // It transitions on an input word that is the concatenation of the pseudoelement supplied
-  // with the properties in the array.
+  // It transitions on an input word that is the concatenation of the
+  // pseudoelement supplied with the properties in the array.
   //
-  // It transitions from state to state by looking up entries in the transition table (which is
-  // a mapping from (S,i)->S', where S is the current state, i is the next
-  // property in the input word, and S' is the state to transition to.
+  // It transitions from state to state by looking up entries in the transition
+  // table (which is a mapping from (S,i)->S', where S is the current state, i
+  // is the next property in the input word, and S' is the state to transition
+  // to.
   //
   // If S' is not found, it is constructed and entered into the hashtable
   // under the key (S,i).
@@ -79,7 +71,8 @@ protected:
 
   // The cache of all active ComputedStyles.  This is a hash from
   // a final state in the DFA, Sf, to the resultant ComputedStyle.
-  typedef nsRefPtrHashtable<nsUint32HashKey, mozilla::ComputedStyle> ComputedStyleCache;
+  typedef nsRefPtrHashtable<nsUint32HashKey, mozilla::ComputedStyle>
+      ComputedStyleCache;
   nsAutoPtr<ComputedStyleCache> mCache;
 
   // An integer counter that is used when we need to make new states in the
@@ -87,4 +80,4 @@ protected:
   DFAState mNextState;
 };
 
-#endif // nsTreeStyleCache_h__
+#endif  // nsTreeStyleCache_h__

@@ -51,45 +51,41 @@
 
 namespace mozilla {
 
-static bool
-IsValidTexTarget(WebGLContext* webgl, uint8_t funcDims, GLenum rawTexTarget,
-                 TexTarget* const out)
-{
-    uint8_t targetDims;
+static bool IsValidTexTarget(WebGLContext* webgl, uint8_t funcDims,
+                             GLenum rawTexTarget, TexTarget* const out) {
+  uint8_t targetDims;
 
-    switch (rawTexTarget) {
+  switch (rawTexTarget) {
     case LOCAL_GL_TEXTURE_2D:
     case LOCAL_GL_TEXTURE_CUBE_MAP:
-        targetDims = 2;
-        break;
+      targetDims = 2;
+      break;
 
     case LOCAL_GL_TEXTURE_3D:
     case LOCAL_GL_TEXTURE_2D_ARRAY:
-        if (!webgl->IsWebGL2())
-            return false;
+      if (!webgl->IsWebGL2()) return false;
 
-        targetDims = 3;
-        break;
+      targetDims = 3;
+      break;
 
     default:
-        return false;
-    }
+      return false;
+  }
 
-    // Some funcs (like GenerateMipmap) doesn't know the dimension, so don't check it.
-    if (funcDims && targetDims != funcDims)
-        return false;
+  // Some funcs (like GenerateMipmap) doesn't know the dimension, so don't check
+  // it.
+  if (funcDims && targetDims != funcDims) return false;
 
-    *out = rawTexTarget;
-    return true;
+  *out = rawTexTarget;
+  return true;
 }
 
-static bool
-IsValidTexImageTarget(WebGLContext* webgl, uint8_t funcDims, GLenum rawTexImageTarget,
-                      TexImageTarget* const out)
-{
-    uint8_t targetDims;
+static bool IsValidTexImageTarget(WebGLContext* webgl, uint8_t funcDims,
+                                  GLenum rawTexImageTarget,
+                                  TexImageTarget* const out) {
+  uint8_t targetDims;
 
-    switch (rawTexImageTarget) {
+  switch (rawTexImageTarget) {
     case LOCAL_GL_TEXTURE_2D:
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
@@ -97,295 +93,264 @@ IsValidTexImageTarget(WebGLContext* webgl, uint8_t funcDims, GLenum rawTexImageT
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        targetDims = 2;
-        break;
+      targetDims = 2;
+      break;
 
     case LOCAL_GL_TEXTURE_3D:
     case LOCAL_GL_TEXTURE_2D_ARRAY:
-        if (!webgl->IsWebGL2())
-            return false;
+      if (!webgl->IsWebGL2()) return false;
 
-        targetDims = 3;
-        break;
+      targetDims = 3;
+      break;
 
     default:
-        return false;
-    }
+      return false;
+  }
 
-    if (targetDims != funcDims)
-        return false;
+  if (targetDims != funcDims) return false;
 
-    *out = rawTexImageTarget;
-    return true;
+  *out = rawTexImageTarget;
+  return true;
 }
 
-bool
-ValidateTexTarget(WebGLContext* webgl, uint8_t funcDims,
-                  GLenum rawTexTarget, TexTarget* const out_texTarget,
-                  WebGLTexture** const out_tex)
-{
-    if (webgl->IsContextLost())
-        return false;
+bool ValidateTexTarget(WebGLContext* webgl, uint8_t funcDims,
+                       GLenum rawTexTarget, TexTarget* const out_texTarget,
+                       WebGLTexture** const out_tex) {
+  if (webgl->IsContextLost()) return false;
 
-    TexTarget texTarget;
-    if (!IsValidTexTarget(webgl, funcDims, rawTexTarget, &texTarget)) {
-        webgl->ErrorInvalidEnumInfo("texTarget", rawTexTarget);
-        return false;
-    }
+  TexTarget texTarget;
+  if (!IsValidTexTarget(webgl, funcDims, rawTexTarget, &texTarget)) {
+    webgl->ErrorInvalidEnumInfo("texTarget", rawTexTarget);
+    return false;
+  }
 
-    WebGLTexture* tex = webgl->ActiveBoundTextureForTarget(texTarget);
-    if (!tex) {
-        webgl->ErrorInvalidOperation("No texture is bound to this target.");
-        return false;
-    }
+  WebGLTexture* tex = webgl->ActiveBoundTextureForTarget(texTarget);
+  if (!tex) {
+    webgl->ErrorInvalidOperation("No texture is bound to this target.");
+    return false;
+  }
 
-    *out_texTarget = texTarget;
-    *out_tex = tex;
-    return true;
+  *out_texTarget = texTarget;
+  *out_tex = tex;
+  return true;
 }
 
-bool
-ValidateTexImageTarget(WebGLContext* webgl, uint8_t funcDims,
-                       GLenum rawTexImageTarget, TexImageTarget* const out_texImageTarget,
-                       WebGLTexture** const out_tex)
-{
-    if (webgl->IsContextLost())
-        return false;
+bool ValidateTexImageTarget(WebGLContext* webgl, uint8_t funcDims,
+                            GLenum rawTexImageTarget,
+                            TexImageTarget* const out_texImageTarget,
+                            WebGLTexture** const out_tex) {
+  if (webgl->IsContextLost()) return false;
 
-    TexImageTarget texImageTarget;
-    if (!IsValidTexImageTarget(webgl, funcDims, rawTexImageTarget, &texImageTarget)) {
-        webgl->ErrorInvalidEnumInfo("texImageTarget", rawTexImageTarget);
-        return false;
-    }
+  TexImageTarget texImageTarget;
+  if (!IsValidTexImageTarget(webgl, funcDims, rawTexImageTarget,
+                             &texImageTarget)) {
+    webgl->ErrorInvalidEnumInfo("texImageTarget", rawTexImageTarget);
+    return false;
+  }
 
-    WebGLTexture* tex = webgl->ActiveBoundTextureForTexImageTarget(texImageTarget);
-    if (!tex) {
-        webgl->ErrorInvalidOperation("No texture is bound to this target.");
-        return false;
-    }
+  WebGLTexture* tex =
+      webgl->ActiveBoundTextureForTexImageTarget(texImageTarget);
+  if (!tex) {
+    webgl->ErrorInvalidOperation("No texture is bound to this target.");
+    return false;
+  }
 
-    *out_texImageTarget = texImageTarget;
-    *out_tex = tex;
-    return true;
+  *out_texImageTarget = texImageTarget;
+  *out_tex = tex;
+  return true;
 }
 
-/*virtual*/ bool
-WebGLContext::IsTexParamValid(GLenum pname) const
-{
-    switch (pname) {
+/*virtual*/ bool WebGLContext::IsTexParamValid(GLenum pname) const {
+  switch (pname) {
     case LOCAL_GL_TEXTURE_MIN_FILTER:
     case LOCAL_GL_TEXTURE_MAG_FILTER:
     case LOCAL_GL_TEXTURE_WRAP_S:
     case LOCAL_GL_TEXTURE_WRAP_T:
-        return true;
+      return true;
 
     case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
-        return IsExtensionEnabled(WebGLExtensionID::EXT_texture_filter_anisotropic);
+      return IsExtensionEnabled(
+          WebGLExtensionID::EXT_texture_filter_anisotropic);
 
     default:
-        return false;
-    }
+      return false;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // GL calls
 
-void
-WebGLContext::BindTexture(GLenum rawTarget, WebGLTexture* newTex)
-{
-    const FuncScope funcScope(*this, "bindTexture");
-    if (IsContextLost())
-        return;
+void WebGLContext::BindTexture(GLenum rawTarget, WebGLTexture* newTex) {
+  const FuncScope funcScope(*this, "bindTexture");
+  if (IsContextLost()) return;
 
-     if (newTex && !ValidateObject("tex", *newTex))
-        return;
+  if (newTex && !ValidateObject("tex", *newTex)) return;
 
-    // Need to check rawTarget first before comparing against newTex->Target() as
-    // newTex->Target() returns a TexTarget, which will assert on invalid value.
-    WebGLRefPtr<WebGLTexture>* currentTexPtr = nullptr;
-    switch (rawTarget) {
+  // Need to check rawTarget first before comparing against newTex->Target() as
+  // newTex->Target() returns a TexTarget, which will assert on invalid value.
+  WebGLRefPtr<WebGLTexture>* currentTexPtr = nullptr;
+  switch (rawTarget) {
     case LOCAL_GL_TEXTURE_2D:
-        currentTexPtr = &mBound2DTextures[mActiveTexture];
-        break;
+      currentTexPtr = &mBound2DTextures[mActiveTexture];
+      break;
 
-   case LOCAL_GL_TEXTURE_CUBE_MAP:
-        currentTexPtr = &mBoundCubeMapTextures[mActiveTexture];
-        break;
+    case LOCAL_GL_TEXTURE_CUBE_MAP:
+      currentTexPtr = &mBoundCubeMapTextures[mActiveTexture];
+      break;
 
-   case LOCAL_GL_TEXTURE_3D:
-        if (IsWebGL2())
-            currentTexPtr = &mBound3DTextures[mActiveTexture];
-        break;
+    case LOCAL_GL_TEXTURE_3D:
+      if (IsWebGL2()) currentTexPtr = &mBound3DTextures[mActiveTexture];
+      break;
 
-   case LOCAL_GL_TEXTURE_2D_ARRAY:
-        if (IsWebGL2())
-            currentTexPtr = &mBound2DArrayTextures[mActiveTexture];
-        break;
-    }
+    case LOCAL_GL_TEXTURE_2D_ARRAY:
+      if (IsWebGL2()) currentTexPtr = &mBound2DArrayTextures[mActiveTexture];
+      break;
+  }
 
-    if (!currentTexPtr) {
-        ErrorInvalidEnumInfo("target", rawTarget);
-        return;
-    }
+  if (!currentTexPtr) {
+    ErrorInvalidEnumInfo("target", rawTarget);
+    return;
+  }
 
-    const TexTarget texTarget(rawTarget);
-    if (newTex) {
-        if (!newTex->BindTexture(texTarget))
-            return;
-    } else {
-        gl->fBindTexture(texTarget.get(), 0);
-    }
+  const TexTarget texTarget(rawTarget);
+  if (newTex) {
+    if (!newTex->BindTexture(texTarget)) return;
+  } else {
+    gl->fBindTexture(texTarget.get(), 0);
+  }
 
-    *currentTexPtr = newTex;
+  *currentTexPtr = newTex;
 }
 
-void
-WebGLContext::GenerateMipmap(GLenum rawTexTarget)
-{
-    const FuncScope funcScope(*this, "generateMipmap");
-    const uint8_t funcDims = 0;
+void WebGLContext::GenerateMipmap(GLenum rawTexTarget) {
+  const FuncScope funcScope(*this, "generateMipmap");
+  const uint8_t funcDims = 0;
 
-    TexTarget texTarget;
-    WebGLTexture* tex;
-    if (!ValidateTexTarget(this, funcDims, rawTexTarget, &texTarget, &tex))
-        return;
+  TexTarget texTarget;
+  WebGLTexture* tex;
+  if (!ValidateTexTarget(this, funcDims, rawTexTarget, &texTarget, &tex))
+    return;
 
-    tex->GenerateMipmap();
+  tex->GenerateMipmap();
 }
 
-JS::Value
-WebGLContext::GetTexParameter(GLenum rawTexTarget, GLenum pname)
-{
-    const FuncScope funcScope(*this, "getTexParameter");
-    const uint8_t funcDims = 0;
+JS::Value WebGLContext::GetTexParameter(GLenum rawTexTarget, GLenum pname) {
+  const FuncScope funcScope(*this, "getTexParameter");
+  const uint8_t funcDims = 0;
 
-    TexTarget texTarget;
-    WebGLTexture* tex;
-    if (!ValidateTexTarget(this, funcDims, rawTexTarget, &texTarget, &tex))
-        return JS::NullValue();
+  TexTarget texTarget;
+  WebGLTexture* tex;
+  if (!ValidateTexTarget(this, funcDims, rawTexTarget, &texTarget, &tex))
+    return JS::NullValue();
 
-    if (!IsTexParamValid(pname)) {
-        ErrorInvalidEnumInfo("pname", pname);
-        return JS::NullValue();
-    }
+  if (!IsTexParamValid(pname)) {
+    ErrorInvalidEnumInfo("pname", pname);
+    return JS::NullValue();
+  }
 
-    return tex->GetTexParameter(texTarget, pname);
+  return tex->GetTexParameter(texTarget, pname);
 }
 
-void
-WebGLContext::TexParameter_base(GLenum rawTexTarget, GLenum pname,
-                                const FloatOrInt& param)
-{
-    const FuncScope funcScope(*this, "texParameter");
-    const uint8_t funcDims = 0;
+void WebGLContext::TexParameter_base(GLenum rawTexTarget, GLenum pname,
+                                     const FloatOrInt& param) {
+  const FuncScope funcScope(*this, "texParameter");
+  const uint8_t funcDims = 0;
 
-    TexTarget texTarget;
-    WebGLTexture* tex;
-    if (!ValidateTexTarget(this, funcDims, rawTexTarget, &texTarget, &tex))
-        return;
+  TexTarget texTarget;
+  WebGLTexture* tex;
+  if (!ValidateTexTarget(this, funcDims, rawTexTarget, &texTarget, &tex))
+    return;
 
-    tex->TexParameter(texTarget, pname, param);
+  tex->TexParameter(texTarget, pname, param);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Uploads
 
-void
-WebGLContext::CompressedTexImage(uint8_t funcDims, GLenum rawTarget,
-                                 GLint level, GLenum internalFormat, GLsizei width,
-                                 GLsizei height, GLsizei depth, GLint border,
-                                 const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize)
-{
-    TexImageTarget target;
-    WebGLTexture* tex;
-    if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex))
-        return;
+void WebGLContext::CompressedTexImage(uint8_t funcDims, GLenum rawTarget,
+                                      GLint level, GLenum internalFormat,
+                                      GLsizei width, GLsizei height,
+                                      GLsizei depth, GLint border,
+                                      const TexImageSource& src,
+                                      const Maybe<GLsizei>& expectedImageSize) {
+  TexImageTarget target;
+  WebGLTexture* tex;
+  if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
-    tex->CompressedTexImage(target, level, internalFormat, width, height, depth,
-                            border, src, expectedImageSize);
+  tex->CompressedTexImage(target, level, internalFormat, width, height, depth,
+                          border, src, expectedImageSize);
 }
 
-void
-WebGLContext::CompressedTexSubImage(uint8_t funcDims,
-                                    GLenum rawTarget, GLint level, GLint xOffset,
-                                    GLint yOffset, GLint zOffset, GLsizei width,
-                                    GLsizei height, GLsizei depth, GLenum unpackFormat,
-                                    const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize)
-{
-    TexImageTarget target;
-    WebGLTexture* tex;
-    if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex))
-        return;
+void WebGLContext::CompressedTexSubImage(
+    uint8_t funcDims, GLenum rawTarget, GLint level, GLint xOffset,
+    GLint yOffset, GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
+    GLenum unpackFormat, const TexImageSource& src,
+    const Maybe<GLsizei>& expectedImageSize) {
+  TexImageTarget target;
+  WebGLTexture* tex;
+  if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
-    tex->CompressedTexSubImage(target, level, xOffset, yOffset, zOffset, width,
-                               height, depth, unpackFormat, src, expectedImageSize);
+  tex->CompressedTexSubImage(target, level, xOffset, yOffset, zOffset, width,
+                             height, depth, unpackFormat, src,
+                             expectedImageSize);
 }
 
 ////
 
-void
-WebGLContext::CopyTexImage2D(GLenum rawTarget, GLint level, GLenum internalFormat,
-                             GLint x, GLint y, GLsizei width, GLsizei height,
-                             GLint border)
-{
-    const FuncScope funcScope(*this, "copyTexImage2D");
-    const uint8_t funcDims = 2;
+void WebGLContext::CopyTexImage2D(GLenum rawTarget, GLint level,
+                                  GLenum internalFormat, GLint x, GLint y,
+                                  GLsizei width, GLsizei height, GLint border) {
+  const FuncScope funcScope(*this, "copyTexImage2D");
+  const uint8_t funcDims = 2;
 
-    TexImageTarget target;
-    WebGLTexture* tex;
-    if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex))
-        return;
+  TexImageTarget target;
+  WebGLTexture* tex;
+  if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
-    tex->CopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
+  tex->CopyTexImage2D(target, level, internalFormat, x, y, width, height,
+                      border);
 }
 
-void
-WebGLContext::CopyTexSubImage(uint8_t funcDims, GLenum rawTarget,
-                              GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
-                              GLint x, GLint y, GLsizei width, GLsizei height)
-{
-    TexImageTarget target;
-    WebGLTexture* tex;
-    if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex))
-        return;
+void WebGLContext::CopyTexSubImage(uint8_t funcDims, GLenum rawTarget,
+                                   GLint level, GLint xOffset, GLint yOffset,
+                                   GLint zOffset, GLint x, GLint y,
+                                   GLsizei width, GLsizei height) {
+  TexImageTarget target;
+  WebGLTexture* tex;
+  if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
-    tex->CopyTexSubImage(target, level, xOffset, yOffset, zOffset, x, y, width,
-                         height);
+  tex->CopyTexSubImage(target, level, xOffset, yOffset, zOffset, x, y, width,
+                       height);
 }
 
 ////
 
-void
-WebGLContext::TexImage(uint8_t funcDims, GLenum rawTarget,
-                       GLint level, GLenum internalFormat, GLsizei width, GLsizei height,
-                       GLsizei depth, GLint border, GLenum unpackFormat,
-                       GLenum unpackType, const TexImageSource& src)
-{
-    TexImageTarget target;
-    WebGLTexture* tex;
-    if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex))
-        return;
+void WebGLContext::TexImage(uint8_t funcDims, GLenum rawTarget, GLint level,
+                            GLenum internalFormat, GLsizei width,
+                            GLsizei height, GLsizei depth, GLint border,
+                            GLenum unpackFormat, GLenum unpackType,
+                            const TexImageSource& src) {
+  TexImageTarget target;
+  WebGLTexture* tex;
+  if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
-    const webgl::PackingInfo pi = {unpackFormat, unpackType};
-    tex->TexImage(target, level, internalFormat, width, height, depth, border,
-                  pi, src);
+  const webgl::PackingInfo pi = {unpackFormat, unpackType};
+  tex->TexImage(target, level, internalFormat, width, height, depth, border, pi,
+                src);
 }
 
-void
-WebGLContext::TexSubImage(uint8_t funcDims, GLenum rawTarget,
-                          GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
-                          GLsizei width, GLsizei height, GLsizei depth,
-                          GLenum unpackFormat, GLenum unpackType,
-                          const TexImageSource& src)
-{
-    TexImageTarget target;
-    WebGLTexture* tex;
-    if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex))
-        return;
+void WebGLContext::TexSubImage(uint8_t funcDims, GLenum rawTarget, GLint level,
+                               GLint xOffset, GLint yOffset, GLint zOffset,
+                               GLsizei width, GLsizei height, GLsizei depth,
+                               GLenum unpackFormat, GLenum unpackType,
+                               const TexImageSource& src) {
+  TexImageTarget target;
+  WebGLTexture* tex;
+  if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
-    const webgl::PackingInfo pi = {unpackFormat, unpackType};
-    tex->TexSubImage(target, level, xOffset, yOffset, zOffset, width, height,
-                     depth, pi, src);
+  const webgl::PackingInfo pi = {unpackFormat, unpackType};
+  tex->TexSubImage(target, level, xOffset, yOffset, zOffset, width, height,
+                   depth, pi, src);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

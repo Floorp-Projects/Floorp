@@ -39,23 +39,24 @@
 // This class is the right place to store buffer positions. Profiler buffer
 // positions become invalid if the profiler buffer is destroyed, which happens
 // when the profiler is stopped.
-class ProfiledThreadData final
-{
-public:
+class ProfiledThreadData final {
+ public:
   ProfiledThreadData(ThreadInfo* aThreadInfo, nsIEventTarget* aEventTarget,
                      bool aIncludeResponsiveness);
   ~ProfiledThreadData();
 
-  void NotifyUnregistered(uint64_t aBufferPosition)
-  {
+  void NotifyUnregistered(uint64_t aBufferPosition) {
     mResponsiveness.reset();
     mLastSample = mozilla::Nothing();
     MOZ_ASSERT(!mBufferPositionWhenReceivedJSContext,
-               "JSContext should have been cleared before the thread was unregistered");
+               "JSContext should have been cleared before the thread was "
+               "unregistered");
     mUnregisterTime = TimeStamp::Now();
     mBufferPositionWhenUnregistered = mozilla::Some(aBufferPosition);
   }
-  mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() { return mBufferPositionWhenUnregistered; }
+  mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() {
+    return mBufferPositionWhenUnregistered;
+  }
 
   mozilla::Maybe<uint64_t>& LastSample() { return mLastSample; }
 
@@ -66,17 +67,16 @@ public:
 
   // Returns nullptr if this is not the main thread, the responsiveness
   // feature is not turned on, or if this thread is not being profiled.
-  ThreadResponsiveness* GetThreadResponsiveness()
-  {
+  ThreadResponsiveness* GetThreadResponsiveness() {
     ThreadResponsiveness* responsiveness = mResponsiveness.ptrOr(nullptr);
     return responsiveness;
   }
 
   const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
 
-  void NotifyReceivedJSContext(uint64_t aCurrentBufferPosition)
-  {
-    mBufferPositionWhenReceivedJSContext = mozilla::Some(aCurrentBufferPosition);
+  void NotifyReceivedJSContext(uint64_t aCurrentBufferPosition) {
+    mBufferPositionWhenReceivedJSContext =
+        mozilla::Some(aCurrentBufferPosition);
   }
 
   // Call this method when the JS entries inside the buffer are about to
@@ -85,7 +85,7 @@ public:
                                   const TimeStamp& aProcessStartTime,
                                   ProfileBuffer& aBuffer);
 
-private:
+ private:
   // Group A:
   // The following fields are interesting for the entire lifetime of a
   // ProfiledThreadData object.
@@ -122,14 +122,12 @@ private:
   mozilla::TimeStamp mUnregisterTime;
 };
 
-void
-StreamSamplesAndMarkers(const char* aName, int aThreadId,
-                        const ProfileBuffer& aBuffer,
-                        SpliceableJSONWriter& aWriter,
-                        const mozilla::TimeStamp& aProcessStartTime,
-                        const TimeStamp& aRegisterTime,
-                        const TimeStamp& aUnregisterTime,
-                        double aSinceTime,
-                        UniqueStacks& aUniqueStacks);
+void StreamSamplesAndMarkers(const char* aName, int aThreadId,
+                             const ProfileBuffer& aBuffer,
+                             SpliceableJSONWriter& aWriter,
+                             const mozilla::TimeStamp& aProcessStartTime,
+                             const TimeStamp& aRegisterTime,
+                             const TimeStamp& aUnregisterTime,
+                             double aSinceTime, UniqueStacks& aUniqueStacks);
 
 #endif  // ProfiledThreadData_h

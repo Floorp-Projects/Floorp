@@ -16,16 +16,11 @@
 /**
  * base class for native plugin window implementations
  */
-class nsPluginNativeWindow : public NPWindow
-{
-public:
-  nsPluginNativeWindow() : NPWindow() {
-    MOZ_COUNT_CTOR(nsPluginNativeWindow);
-  }
+class nsPluginNativeWindow : public NPWindow {
+ public:
+  nsPluginNativeWindow() : NPWindow() { MOZ_COUNT_CTOR(nsPluginNativeWindow); }
 
-  virtual ~nsPluginNativeWindow() {
-    MOZ_COUNT_DTOR(nsPluginNativeWindow);
-  }
+  virtual ~nsPluginNativeWindow() { MOZ_COUNT_DTOR(nsPluginNativeWindow); }
 
   /**
    *   !!! CAUTION !!!
@@ -37,14 +32,13 @@ public:
    * necessity occur it must be properly casted first.
    */
 
-public:
+ public:
   nsresult GetPluginInstance(RefPtr<nsNPAPIPluginInstance> &aPluginInstance) {
     aPluginInstance = mPluginInstance;
     return NS_OK;
   }
   nsresult SetPluginInstance(nsNPAPIPluginInstance *aPluginInstance) {
-    if (mPluginInstance != aPluginInstance)
-      mPluginInstance = aPluginInstance;
+    if (mPluginInstance != aPluginInstance) mPluginInstance = aPluginInstance;
     return NS_OK;
   }
 
@@ -57,8 +51,9 @@ public:
     return NS_OK;
   }
 
-public:
-  virtual nsresult CallSetWindow(RefPtr<nsNPAPIPluginInstance> &aPluginInstance) {
+ public:
+  virtual nsresult CallSetWindow(
+      RefPtr<nsNPAPIPluginInstance> &aPluginInstance) {
     // null aPluginInstance means that we want to call SetWindow(null)
     if (aPluginInstance)
       aPluginInstance->SetWindow(this);
@@ -69,12 +64,13 @@ public:
     return NS_OK;
   }
 
-protected:
+ protected:
   RefPtr<nsNPAPIPluginInstance> mPluginInstance;
   nsCOMPtr<nsIWidget> mWidget;
 };
 
-nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);
-nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow);
+nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow **aPluginNativeWindow);
+nsresult PLUG_DeletePluginNativeWindow(
+    nsPluginNativeWindow *aPluginNativeWindow);
 
-#endif //_nsPluginNativeWindow_h_
+#endif  //_nsPluginNativeWindow_h_

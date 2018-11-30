@@ -20,15 +20,11 @@ StaticRefPtr<nsZipArchive> Omnijar::sOuterReader[2];
 bool Omnijar::sInitialized = false;
 bool Omnijar::sIsUnified = false;
 
-static const char* sProp[2] = {
-  NS_GRE_DIR, NS_XPCOM_CURRENT_PROCESS_DIR
-};
+static const char* sProp[2] = {NS_GRE_DIR, NS_XPCOM_CURRENT_PROCESS_DIR};
 
 #define SPROP(Type) ((Type == mozilla::Omnijar::GRE) ? sProp[GRE] : sProp[APP])
 
-void
-Omnijar::CleanUpOne(Type aType)
-{
+void Omnijar::CleanUpOne(Type aType) {
   if (sReader[aType]) {
     sReader[aType]->CloseArchive();
     sReader[aType] = nullptr;
@@ -40,9 +36,7 @@ Omnijar::CleanUpOne(Type aType)
   sPath[aType] = nullptr;
 }
 
-void
-Omnijar::InitOne(nsIFile* aPath, Type aType)
-{
+void Omnijar::InitOne(nsIFile* aPath, Type aType) {
   nsCOMPtr<nsIFile> file;
   if (aPath) {
     file = aPath;
@@ -105,25 +99,19 @@ Omnijar::InitOne(nsIFile* aPath, Type aType)
   sPath[aType] = file;
 }
 
-void
-Omnijar::Init(nsIFile* aGrePath, nsIFile* aAppPath)
-{
+void Omnijar::Init(nsIFile* aGrePath, nsIFile* aAppPath) {
   InitOne(aGrePath, GRE);
   InitOne(aAppPath, APP);
   sInitialized = true;
 }
 
-void
-Omnijar::CleanUp()
-{
+void Omnijar::CleanUp() {
   CleanUpOne(GRE);
   CleanUpOne(APP);
   sInitialized = false;
 }
 
-already_AddRefed<nsZipArchive>
-Omnijar::GetReader(nsIFile* aPath)
-{
+already_AddRefed<nsZipArchive> Omnijar::GetReader(nsIFile* aPath) {
   MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
 
   bool equals;
@@ -144,9 +132,7 @@ Omnijar::GetReader(nsIFile* aPath)
   return nullptr;
 }
 
-nsresult
-Omnijar::GetURIString(Type aType, nsACString& aResult)
-{
+nsresult Omnijar::GetURIString(Type aType, nsACString& aResult) {
   MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
 
   aResult.Truncate();

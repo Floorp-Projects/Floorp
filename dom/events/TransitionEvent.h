@@ -14,23 +14,19 @@
 namespace mozilla {
 namespace dom {
 
-class TransitionEvent : public Event
-{
-public:
-  TransitionEvent(EventTarget* aOwner,
-                  nsPresContext* aPresContext,
+class TransitionEvent : public Event {
+ public:
+  TransitionEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                   InternalTransitionEvent* aEvent);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(TransitionEvent, Event)
 
-  static already_AddRefed<TransitionEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const TransitionEventInit& aParam,
-              ErrorResult& aRv);
+  static already_AddRefed<TransitionEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const TransitionEventInit& aParam, ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return TransitionEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
@@ -39,16 +35,15 @@ public:
 
   float ElapsedTime();
 
-protected:
+ protected:
   ~TransitionEvent() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::TransitionEvent>
-NS_NewDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
-                         nsPresContext* aPresContext,
-                         mozilla::InternalTransitionEvent* aEvent);
+already_AddRefed<mozilla::dom::TransitionEvent> NS_NewDOMTransitionEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::InternalTransitionEvent* aEvent);
 
-#endif // mozilla_dom_TransitionEvent_h_
+#endif  // mozilla_dom_TransitionEvent_h_

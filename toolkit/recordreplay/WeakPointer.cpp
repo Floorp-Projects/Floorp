@@ -15,26 +15,25 @@
 namespace mozilla {
 namespace recordreplay {
 
-typedef std::unordered_map<const void*, UniquePtr<JS::PersistentRootedObject>> WeakPointerRootMap;
+typedef std::unordered_map<const void*, UniquePtr<JS::PersistentRootedObject>>
+    WeakPointerRootMap;
 static WeakPointerRootMap* gWeakPointerRootMap;
 
 static StaticMutexNotRecorded gWeakPointerMutex;
 
-static UniquePtr<JS::PersistentRootedObject>
-NewRoot(JSObject* aJSObj)
-{
+static UniquePtr<JS::PersistentRootedObject> NewRoot(JSObject* aJSObj) {
   MOZ_RELEASE_ASSERT(aJSObj);
   JSContext* cx = dom::danger::GetJSContext();
-  UniquePtr<JS::PersistentRootedObject> root = MakeUnique<JS::PersistentRootedObject>(cx);
+  UniquePtr<JS::PersistentRootedObject> root =
+      MakeUnique<JS::PersistentRootedObject>(cx);
   *root = aJSObj;
   return root;
 }
 
 extern "C" {
 
-MOZ_EXPORT void
-RecordReplayInterface_SetWeakPointerJSRoot(const void* aPtr, JSObject* aJSObj)
-{
+MOZ_EXPORT void RecordReplayInterface_SetWeakPointerJSRoot(const void* aPtr,
+                                                           JSObject* aJSObj) {
   MOZ_RELEASE_ASSERT(IsReplaying());
 
   StaticMutexAutoLock lock(gWeakPointerMutex);
@@ -47,17 +46,16 @@ RecordReplayInterface_SetWeakPointerJSRoot(const void* aPtr, JSObject* aJSObj)
       gWeakPointerRootMap->erase(aPtr);
     }
   } else if (aJSObj) {
-    gWeakPointerRootMap->insert(WeakPointerRootMap::value_type(aPtr, NewRoot(aJSObj)));
+    gWeakPointerRootMap->insert(
+        WeakPointerRootMap::value_type(aPtr, NewRoot(aJSObj)));
   }
 }
 
-} // extern "C"
+}  // extern "C"
 
-void
-InitializeWeakPointers()
-{
+void InitializeWeakPointers() {
   gWeakPointerRootMap = new WeakPointerRootMap();
 }
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla

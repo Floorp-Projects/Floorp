@@ -6,11 +6,10 @@
 
 #include "nsIHapticFeedback.h"
 
-class nsHapticFeedback final : public nsIHapticFeedback
-{
+class nsHapticFeedback final : public nsIHapticFeedback {
   ~nsHapticFeedback() {}
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHAPTICFEEDBACK
 };

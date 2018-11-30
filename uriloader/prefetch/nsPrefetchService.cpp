@@ -67,11 +67,9 @@ static LazyLogModule gPrefetchLog("nsPrefetch");
 // helpers
 //-----------------------------------------------------------------------------
 
-static inline uint32_t
-PRTimeToSeconds(PRTime t_usec)
-{
-    PRTime usec_per_sec = PR_USEC_PER_SEC;
-    return uint32_t(t_usec /= usec_per_sec);
+static inline uint32_t PRTimeToSeconds(PRTime t_usec) {
+  PRTime usec_per_sec = PR_USEC_PER_SEC;
+  return uint32_t(t_usec /= usec_per_sec);
 }
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
@@ -80,129 +78,112 @@ PRTimeToSeconds(PRTime t_usec)
 // nsPrefetchNode <public>
 //-----------------------------------------------------------------------------
 
-nsPrefetchNode::nsPrefetchNode(nsPrefetchService *aService,
-                               nsIURI *aURI,
-                               nsIURI *aReferrerURI,
-                               nsINode *aSource,
-                               nsContentPolicyType aPolicyType,
-                               bool aPreload)
-    : mURI(aURI)
-    , mReferrerURI(aReferrerURI)
-    , mPolicyType(aPolicyType)
-    , mPreload(aPreload)
-    , mService(aService)
-    , mChannel(nullptr)
-    , mBytesRead(0)
-    , mShouldFireLoadEvent(false)
-{
-    nsWeakPtr source = do_GetWeakReference(aSource);
-    mSources.AppendElement(source);
+nsPrefetchNode::nsPrefetchNode(nsPrefetchService *aService, nsIURI *aURI,
+                               nsIURI *aReferrerURI, nsINode *aSource,
+                               nsContentPolicyType aPolicyType, bool aPreload)
+    : mURI(aURI),
+      mReferrerURI(aReferrerURI),
+      mPolicyType(aPolicyType),
+      mPreload(aPreload),
+      mService(aService),
+      mChannel(nullptr),
+      mBytesRead(0),
+      mShouldFireLoadEvent(false) {
+  nsWeakPtr source = do_GetWeakReference(aSource);
+  mSources.AppendElement(source);
 }
 
-nsresult
-nsPrefetchNode::OpenChannel()
-{
-    if (mSources.IsEmpty()) {
-        // Don't attempt to prefetch if we don't have a source node
-        // (which should never happen).
-        return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsINode> source;
-    while (!mSources.IsEmpty() && !(source = do_QueryReferent(mSources.ElementAt(0)))) {
-        // If source is null remove it.
-        // (which should never happen).
-        mSources.RemoveElementAt(0);
-    }
+nsresult nsPrefetchNode::OpenChannel() {
+  if (mSources.IsEmpty()) {
+    // Don't attempt to prefetch if we don't have a source node
+    // (which should never happen).
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsINode> source;
+  while (!mSources.IsEmpty() &&
+         !(source = do_QueryReferent(mSources.ElementAt(0)))) {
+    // If source is null remove it.
+    // (which should never happen).
+    mSources.RemoveElementAt(0);
+  }
 
-    if (!source) {
-        // Don't attempt to prefetch if we don't have a source node
-        // (which should never happen).
+  if (!source) {
+    // Don't attempt to prefetch if we don't have a source node
+    // (which should never happen).
 
-        return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsILoadGroup> loadGroup = source->OwnerDoc()->GetDocumentLoadGroup();
+  CORSMode corsMode = CORS_NONE;
+  net::ReferrerPolicy referrerPolicy = net::RP_Unset;
+  if (auto *link = dom::HTMLLinkElement::FromNode(source)) {
+    corsMode = link->GetCORSMode();
+    referrerPolicy = link->GetReferrerPolicyAsEnum();
+  }
+
+  if (referrerPolicy == net::RP_Unset) {
+    referrerPolicy = source->OwnerDoc()->GetReferrerPolicy();
+  }
+
+  uint32_t securityFlags;
+  if (corsMode == CORS_NONE) {
+    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+  } else {
+    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+    if (corsMode == CORS_USE_CREDENTIALS) {
+      securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
     }
-    nsCOMPtr<nsILoadGroup> loadGroup = source->OwnerDoc()->GetDocumentLoadGroup();
-    CORSMode corsMode = CORS_NONE;
-    net::ReferrerPolicy referrerPolicy = net::RP_Unset;
-    if (auto* link = dom::HTMLLinkElement::FromNode(source)) {
-      corsMode = link->GetCORSMode();
-      referrerPolicy = link->GetReferrerPolicyAsEnum();
-    }
+  }
+  nsresult rv = NS_NewChannelInternal(
+      getter_AddRefs(mChannel), mURI, source, source->NodePrincipal(),
+      nullptr,  // aTriggeringPrincipal
+      Maybe<ClientInfo>(), Maybe<ServiceWorkerDescriptor>(), securityFlags,
+      mPolicyType,
+      nullptr,    // aPerformanceStorage
+      loadGroup,  // aLoadGroup
+      this,       // aCallbacks
+      nsIRequest::LOAD_BACKGROUND | nsICachingChannel::LOAD_ONLY_IF_MODIFIED);
 
-    if (referrerPolicy == net::RP_Unset) {
-      referrerPolicy = source->OwnerDoc()->GetReferrerPolicy();
-    }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    uint32_t securityFlags;
-    if (corsMode == CORS_NONE) {
-      securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
-    } else {
-      securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
-      if (corsMode == CORS_USE_CREDENTIALS) {
-        securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
-      }
-    }
-    nsresult rv = NS_NewChannelInternal(getter_AddRefs(mChannel),
-                                        mURI,
-                                        source,
-                                        source->NodePrincipal(),
-                                        nullptr,   //aTriggeringPrincipal
-                                        Maybe<ClientInfo>(),
-                                        Maybe<ServiceWorkerDescriptor>(),
-                                        securityFlags,
-                                        mPolicyType,
-                                        nullptr,   // aPerformanceStorage
-                                        loadGroup, // aLoadGroup
-                                        this,      // aCallbacks
-                                        nsIRequest::LOAD_BACKGROUND |
-                                        nsICachingChannel::LOAD_ONLY_IF_MODIFIED);
+  // configure HTTP specific stuff
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  if (httpChannel) {
+    rv = httpChannel->SetReferrerWithPolicy(mReferrerURI, referrerPolicy);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
+                                       NS_LITERAL_CSTRING("prefetch"), false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
 
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Reduce the priority of prefetch network requests.
+  nsCOMPtr<nsISupportsPriority> priorityChannel = do_QueryInterface(mChannel);
+  if (priorityChannel) {
+    priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_LOWEST);
+  }
 
-    // configure HTTP specific stuff
-    nsCOMPtr<nsIHttpChannel> httpChannel =
-        do_QueryInterface(mChannel);
-    if (httpChannel) {
-        rv = httpChannel->SetReferrerWithPolicy(mReferrerURI, referrerPolicy);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-        rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
-                                           NS_LITERAL_CSTRING("prefetch"),
-                                           false);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-
-    // Reduce the priority of prefetch network requests.
-    nsCOMPtr<nsISupportsPriority> priorityChannel = do_QueryInterface(mChannel);
-    if (priorityChannel) {
-      priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_LOWEST);
-    }
-
-    rv = mChannel->AsyncOpen2(this);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      // Drop the ref to the channel, because we don't want to end up with
-      // cycles through it.
-      mChannel = nullptr;
-    }
-    return rv;
-}
-
-nsresult
-nsPrefetchNode::CancelChannel(nsresult error)
-{
-    mChannel->Cancel(error);
+  rv = mChannel->AsyncOpen2(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Drop the ref to the channel, because we don't want to end up with
+    // cycles through it.
     mChannel = nullptr;
+  }
+  return rv;
+}
 
-    return NS_OK;
+nsresult nsPrefetchNode::CancelChannel(nsresult error) {
+  mChannel->Cancel(error);
+  mChannel = nullptr;
+
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
 // nsPrefetchNode::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsPrefetchNode,
-                  nsIRequestObserver,
-                  nsIStreamListener,
-                  nsIInterfaceRequestor,
-                  nsIChannelEventSink,
+NS_IMPL_ISUPPORTS(nsPrefetchNode, nsIRequestObserver, nsIStreamListener,
+                  nsIInterfaceRequestor, nsIChannelEventSink,
                   nsIRedirectResultListener)
 
 //-----------------------------------------------------------------------------
@@ -210,95 +191,87 @@ NS_IMPL_ISUPPORTS(nsPrefetchNode,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchNode::OnStartRequest(nsIRequest *aRequest,
-                               nsISupports *aContext)
-{
-    nsresult rv;
+nsPrefetchNode::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
+  nsresult rv;
 
-    nsCOMPtr<nsIHttpChannel> httpChannel =
-        do_QueryInterface(aRequest, &rv);
-    if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-    // if the load is cross origin without CORS, or the CORS access is rejected,
-    // always fire load event to avoid leaking site information.
-    nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->GetLoadInfo();
-    if (loadInfo) {
-        mShouldFireLoadEvent = loadInfo->GetTainting() == LoadTainting::Opaque ||
-                               (loadInfo->GetTainting() == LoadTainting::CORS &&
-                                (NS_FAILED(httpChannel->GetStatus(&rv)) ||
-                                 NS_FAILED(rv)));
-    }
+  // if the load is cross origin without CORS, or the CORS access is rejected,
+  // always fire load event to avoid leaking site information.
+  nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->GetLoadInfo();
+  if (loadInfo) {
+    mShouldFireLoadEvent =
+        loadInfo->GetTainting() == LoadTainting::Opaque ||
+        (loadInfo->GetTainting() == LoadTainting::CORS &&
+         (NS_FAILED(httpChannel->GetStatus(&rv)) || NS_FAILED(rv)));
+  }
 
-    // no need to prefetch http error page
-    bool requestSucceeded;
-    if (NS_FAILED(httpChannel->GetRequestSucceeded(&requestSucceeded)) ||
-        !requestSucceeded) {
+  // no need to prefetch http error page
+  bool requestSucceeded;
+  if (NS_FAILED(httpChannel->GetRequestSucceeded(&requestSucceeded)) ||
+      !requestSucceeded) {
+    return NS_BINDING_ABORTED;
+  }
+
+  nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel =
+      do_QueryInterface(aRequest, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // no need to prefetch a document that is already in the cache
+  bool fromCache;
+  if (NS_SUCCEEDED(cacheInfoChannel->IsFromCache(&fromCache)) && fromCache) {
+    LOG(("document is already in the cache; canceling prefetch\n"));
+    // although it's canceled we still want to fire load event
+    mShouldFireLoadEvent = true;
+    return NS_BINDING_ABORTED;
+  }
+
+  //
+  // no need to prefetch a document that must be requested fresh each
+  // and every time.
+  //
+  uint32_t expTime;
+  if (NS_SUCCEEDED(cacheInfoChannel->GetCacheTokenExpirationTime(&expTime))) {
+    if (NowInSeconds() >= expTime) {
+      LOG(
+          ("document cannot be reused from cache; "
+           "canceling prefetch\n"));
       return NS_BINDING_ABORTED;
     }
+  }
 
-    nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel =
-        do_QueryInterface(aRequest, &rv);
-    if (NS_FAILED(rv)) return rv;
- 
-    // no need to prefetch a document that is already in the cache
-    bool fromCache;
-    if (NS_SUCCEEDED(cacheInfoChannel->IsFromCache(&fromCache)) &&
-        fromCache) {
-        LOG(("document is already in the cache; canceling prefetch\n"));
-        // although it's canceled we still want to fire load event
-        mShouldFireLoadEvent = true;
-        return NS_BINDING_ABORTED;
-    }
-
-    //
-    // no need to prefetch a document that must be requested fresh each
-    // and every time.
-    //
-    uint32_t expTime;
-    if (NS_SUCCEEDED(cacheInfoChannel->GetCacheTokenExpirationTime(&expTime))) {
-        if (NowInSeconds() >= expTime) {
-            LOG(("document cannot be reused from cache; "
-                 "canceling prefetch\n"));
-            return NS_BINDING_ABORTED;
-        }
-    }
-
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrefetchNode::OnDataAvailable(nsIRequest *aRequest,
-                                nsISupports *aContext,
-                                nsIInputStream *aStream,
-                                uint64_t aOffset,
-                                uint32_t aCount)
-{
-    uint32_t bytesRead = 0;
-    aStream->ReadSegments(NS_DiscardSegment, nullptr, aCount, &bytesRead);
-    mBytesRead += bytesRead;
-    LOG(("prefetched %u bytes [offset=%" PRIu64 "]\n", bytesRead, aOffset));
-    return NS_OK;
+nsPrefetchNode::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+                                nsIInputStream *aStream, uint64_t aOffset,
+                                uint32_t aCount) {
+  uint32_t bytesRead = 0;
+  aStream->ReadSegments(NS_DiscardSegment, nullptr, aCount, &bytesRead);
+  mBytesRead += bytesRead;
+  LOG(("prefetched %u bytes [offset=%" PRIu64 "]\n", bytesRead, aOffset));
+  return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsPrefetchNode::OnStopRequest(nsIRequest *aRequest,
-                              nsISupports *aContext,
-                              nsresult aStatus)
-{
-    LOG(("done prefetching [status=%" PRIx32 "]\n", static_cast<uint32_t>(aStatus)));
+nsPrefetchNode::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+                              nsresult aStatus) {
+  LOG(("done prefetching [status=%" PRIx32 "]\n",
+       static_cast<uint32_t>(aStatus)));
 
-    if (mBytesRead == 0 && aStatus == NS_OK && mChannel) {
-        // we didn't need to read (because LOAD_ONLY_IF_MODIFIED was
-        // specified), but the object should report loadedSize as if it
-        // did.
-        mChannel->GetContentLength(&mBytesRead);
-    }
+  if (mBytesRead == 0 && aStatus == NS_OK && mChannel) {
+    // we didn't need to read (because LOAD_ONLY_IF_MODIFIED was
+    // specified), but the object should report loadedSize as if it
+    // did.
+    mChannel->GetContentLength(&mBytesRead);
+  }
 
-    mService->NotifyLoadCompleted(this);
-    mService->DispatchEvent(this, mShouldFireLoadEvent || NS_SUCCEEDED(aStatus));
-    mService->RemoveNodeAndMaybeStartNextPrefetchURI(this);
-    return NS_OK;
+  mService->NotifyLoadCompleted(this);
+  mService->DispatchEvent(this, mShouldFireLoadEvent || NS_SUCCEEDED(aStatus));
+  mService->RemoveNodeAndMaybeStartNextPrefetchURI(this);
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -306,21 +279,20 @@ nsPrefetchNode::OnStopRequest(nsIRequest *aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchNode::GetInterface(const nsIID &aIID, void **aResult)
-{
-    if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
-        NS_ADDREF_THIS();
-        *aResult = static_cast<nsIChannelEventSink *>(this);
-        return NS_OK;
-    }
+nsPrefetchNode::GetInterface(const nsIID &aIID, void **aResult) {
+  if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    NS_ADDREF_THIS();
+    *aResult = static_cast<nsIChannelEventSink *>(this);
+    return NS_OK;
+  }
 
-    if (aIID.Equals(NS_GET_IID(nsIRedirectResultListener))) {
-        NS_ADDREF_THIS();
-        *aResult = static_cast<nsIRedirectResultListener *>(this);
-        return NS_OK;
-    }
+  if (aIID.Equals(NS_GET_IID(nsIRedirectResultListener))) {
+    NS_ADDREF_THIS();
+    *aResult = static_cast<nsIRedirectResultListener *>(this);
+    return NS_OK;
+  }
 
-    return NS_ERROR_NO_INTERFACE;
+  return NS_ERROR_NO_INTERFACE;
 }
 
 //-----------------------------------------------------------------------------
@@ -328,41 +300,37 @@ nsPrefetchNode::GetInterface(const nsIID &aIID, void **aResult)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchNode::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
-                                       nsIChannel *aNewChannel,
-                                       uint32_t aFlags,
-                                       nsIAsyncVerifyRedirectCallback *callback)
-{
-    nsCOMPtr<nsIURI> newURI;
-    nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
-    if (NS_FAILED(rv))
-        return rv;
+nsPrefetchNode::AsyncOnChannelRedirect(
+    nsIChannel *aOldChannel, nsIChannel *aNewChannel, uint32_t aFlags,
+    nsIAsyncVerifyRedirectCallback *callback) {
+  nsCOMPtr<nsIURI> newURI;
+  nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+  if (NS_FAILED(rv)) return rv;
 
-    bool match;
-    rv = newURI->SchemeIs("http", &match); 
+  bool match;
+  rv = newURI->SchemeIs("http", &match);
+  if (NS_FAILED(rv) || !match) {
+    rv = newURI->SchemeIs("https", &match);
     if (NS_FAILED(rv) || !match) {
-        rv = newURI->SchemeIs("https", &match); 
-        if (NS_FAILED(rv) || !match) {
-            LOG(("rejected: URL is not of type http/https\n"));
-            return NS_ERROR_ABORT;
-        }
+      LOG(("rejected: URL is not of type http/https\n"));
+      return NS_ERROR_ABORT;
     }
+  }
 
-    // HTTP request headers are not automatically forwarded to the new channel.
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel);
-    NS_ENSURE_STATE(httpChannel);
+  // HTTP request headers are not automatically forwarded to the new channel.
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel);
+  NS_ENSURE_STATE(httpChannel);
 
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
-                                       NS_LITERAL_CSTRING("prefetch"),
-                                       false);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
+                                     NS_LITERAL_CSTRING("prefetch"), false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    // Assign to mChannel after we get notification about success of the
-    // redirect in OnRedirectResult.
-    mRedirectChannel = aNewChannel;
+  // Assign to mChannel after we get notification about success of the
+  // redirect in OnRedirectResult.
+  mRedirectChannel = aNewChannel;
 
-    callback->OnRedirectVerifyCallback(NS_OK);
-    return NS_OK;
+  callback->OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -370,14 +338,12 @@ nsPrefetchNode::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchNode::OnRedirectResult(bool proceeding)
-{
-    if (proceeding && mRedirectChannel)
-        mChannel = mRedirectChannel;
+nsPrefetchNode::OnRedirectResult(bool proceeding) {
+  if (proceeding && mRedirectChannel) mChannel = mRedirectChannel;
 
-    mRedirectChannel = nullptr;
+  mRedirectChannel = nullptr;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -385,591 +351,524 @@ nsPrefetchNode::OnRedirectResult(bool proceeding)
 //-----------------------------------------------------------------------------
 
 nsPrefetchService::nsPrefetchService()
-    : mMaxParallelism(6)
-    , mStopCount(0)
-    , mHaveProcessed(false)
-    , mPrefetchDisabled(true)
-    , mPreloadDisabled(true)
-    , mAggressive(false)
-{
+    : mMaxParallelism(6),
+      mStopCount(0),
+      mHaveProcessed(false),
+      mPrefetchDisabled(true),
+      mPreloadDisabled(true),
+      mAggressive(false) {}
+
+nsPrefetchService::~nsPrefetchService() {
+  Preferences::RemoveObserver(this, PREFETCH_PREF);
+  Preferences::RemoveObserver(this, PRELOAD_PREF);
+  Preferences::RemoveObserver(this, PARALLELISM_PREF);
+  Preferences::RemoveObserver(this, AGGRESSIVE_PREF);
+  // cannot reach destructor if prefetch in progress (listener owns reference
+  // to this service)
+  EmptyPrefetchQueue();
 }
 
-nsPrefetchService::~nsPrefetchService()
-{
-    Preferences::RemoveObserver(this, PREFETCH_PREF);
-    Preferences::RemoveObserver(this, PRELOAD_PREF);
-    Preferences::RemoveObserver(this, PARALLELISM_PREF);
-    Preferences::RemoveObserver(this, AGGRESSIVE_PREF);
-    // cannot reach destructor if prefetch in progress (listener owns reference
-    // to this service)
-    EmptyPrefetchQueue();
-}
+nsresult nsPrefetchService::Init() {
+  nsresult rv;
 
-nsresult
-nsPrefetchService::Init()
-{
-    nsresult rv;
+  // read prefs and hook up pref observer
+  mPrefetchDisabled = !Preferences::GetBool(PREFETCH_PREF, !mPrefetchDisabled);
+  Preferences::AddWeakObserver(this, PREFETCH_PREF);
 
-    // read prefs and hook up pref observer
-    mPrefetchDisabled = !Preferences::GetBool(PREFETCH_PREF, !mPrefetchDisabled);
-    Preferences::AddWeakObserver(this, PREFETCH_PREF);
+  mPreloadDisabled = !Preferences::GetBool(PRELOAD_PREF, !mPreloadDisabled);
+  Preferences::AddWeakObserver(this, PRELOAD_PREF);
 
-    mPreloadDisabled = !Preferences::GetBool(PRELOAD_PREF, !mPreloadDisabled);
-    Preferences::AddWeakObserver(this, PRELOAD_PREF);
+  mMaxParallelism = Preferences::GetInt(PARALLELISM_PREF, mMaxParallelism);
+  if (mMaxParallelism < 1) {
+    mMaxParallelism = 1;
+  }
+  Preferences::AddWeakObserver(this, PARALLELISM_PREF);
 
-    mMaxParallelism = Preferences::GetInt(PARALLELISM_PREF, mMaxParallelism);
-    if (mMaxParallelism < 1) {
-        mMaxParallelism = 1;
-    }
-    Preferences::AddWeakObserver(this, PARALLELISM_PREF);
+  mAggressive = Preferences::GetBool(AGGRESSIVE_PREF, false);
+  Preferences::AddWeakObserver(this, AGGRESSIVE_PREF);
 
-    mAggressive = Preferences::GetBool(AGGRESSIVE_PREF, false);
-    Preferences::AddWeakObserver(this, AGGRESSIVE_PREF);
-
-    // Observe xpcom-shutdown event
-    nsCOMPtr<nsIObserverService> observerService =
+  // Observe xpcom-shutdown event
+  nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
-    if (!observerService)
-      return NS_ERROR_FAILURE;
+  if (!observerService) return NS_ERROR_FAILURE;
 
-    rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!mPrefetchDisabled || !mPreloadDisabled) {
-        AddProgressListener();
-    }
+  if (!mPrefetchDisabled || !mPreloadDisabled) {
+    AddProgressListener();
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
-void
-nsPrefetchService::RemoveNodeAndMaybeStartNextPrefetchURI(nsPrefetchNode *aFinished)
-{
-    if (aFinished) {
-        mCurrentNodes.RemoveElement(aFinished);
-    }
+void nsPrefetchService::RemoveNodeAndMaybeStartNextPrefetchURI(
+    nsPrefetchNode *aFinished) {
+  if (aFinished) {
+    mCurrentNodes.RemoveElement(aFinished);
+  }
 
-    if ((!mStopCount && mHaveProcessed) || mAggressive) {
-        ProcessNextPrefetchURI();
-    }
+  if ((!mStopCount && mHaveProcessed) || mAggressive) {
+    ProcessNextPrefetchURI();
+  }
 }
 
-void
-nsPrefetchService::ProcessNextPrefetchURI()
-{
-    if (mCurrentNodes.Length() >= static_cast<uint32_t>(mMaxParallelism)) {
-        // We already have enough prefetches going on, so hold off
-        // for now.
-        return;
+void nsPrefetchService::ProcessNextPrefetchURI() {
+  if (mCurrentNodes.Length() >= static_cast<uint32_t>(mMaxParallelism)) {
+    // We already have enough prefetches going on, so hold off
+    // for now.
+    return;
+  }
+
+  nsresult rv;
+
+  do {
+    if (mPrefetchQueue.empty()) {
+      break;
+    }
+    RefPtr<nsPrefetchNode> node = mPrefetchQueue.front().forget();
+    mPrefetchQueue.pop_front();
+
+    if (LOG_ENABLED()) {
+      LOG(("ProcessNextPrefetchURI [%s]\n",
+           node->mURI->GetSpecOrDefault().get()));
     }
 
-    nsresult rv;
-
-    do {
-        if (mPrefetchQueue.empty()) {
-          break;
-        }
-        RefPtr<nsPrefetchNode> node = mPrefetchQueue.front().forget();
-        mPrefetchQueue.pop_front();
-
-        if (LOG_ENABLED()) {
-            LOG(("ProcessNextPrefetchURI [%s]\n",
-                 node->mURI->GetSpecOrDefault().get())); }
-
-        //
-        // if opening the channel fails (e.g. security check returns an error),
-        // send an error event and then just skip to the next uri
-        //
-        rv = node->OpenChannel();
-        if (NS_SUCCEEDED(rv)) {
-            mCurrentNodes.AppendElement(node);
-        } else {
-          DispatchEvent(node, false);
-        }
+    //
+    // if opening the channel fails (e.g. security check returns an error),
+    // send an error event and then just skip to the next uri
+    //
+    rv = node->OpenChannel();
+    if (NS_SUCCEEDED(rv)) {
+      mCurrentNodes.AppendElement(node);
+    } else {
+      DispatchEvent(node, false);
     }
-    while (NS_FAILED(rv));
+  } while (NS_FAILED(rv));
 }
 
-void
-nsPrefetchService::NotifyLoadRequested(nsPrefetchNode *node)
-{
-    nsCOMPtr<nsIObserverService> observerService =
+void nsPrefetchService::NotifyLoadRequested(nsPrefetchNode *node) {
+  nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
-    if (!observerService)
-      return;
+  if (!observerService) return;
 
-    observerService->NotifyObservers(static_cast<nsIStreamListener*>(node),
-                                     (node->mPreload) ? "preload-load-requested"
-                                                      : "prefetch-load-requested",
-                                     nullptr);
+  observerService->NotifyObservers(
+      static_cast<nsIStreamListener *>(node),
+      (node->mPreload) ? "preload-load-requested" : "prefetch-load-requested",
+      nullptr);
 }
 
-void
-nsPrefetchService::NotifyLoadCompleted(nsPrefetchNode *node)
-{
-    nsCOMPtr<nsIObserverService> observerService =
+void nsPrefetchService::NotifyLoadCompleted(nsPrefetchNode *node) {
+  nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
-    if (!observerService)
-      return;
+  if (!observerService) return;
 
-    observerService->NotifyObservers(static_cast<nsIStreamListener*>(node),
-                                     (node->mPreload) ? "preload-load-completed"
-                                                      : "prefetch-load-completed",
-                                     nullptr);
+  observerService->NotifyObservers(
+      static_cast<nsIStreamListener *>(node),
+      (node->mPreload) ? "preload-load-completed" : "prefetch-load-completed",
+      nullptr);
 }
 
-void
-nsPrefetchService::DispatchEvent(nsPrefetchNode *node, bool aSuccess)
-{
-    for (uint32_t i = 0; i < node->mSources.Length(); i++) {
-      nsCOMPtr<nsINode> domNode = do_QueryReferent(node->mSources.ElementAt(i));
-      if (domNode && domNode->IsInComposedDoc()) {
-        // We don't dispatch synchronously since |node| might be in a DocGroup
-        // that we're not allowed to touch. (Our network request happens in the
-        // DocGroup of one of the mSources nodes--not necessarily this one).
-        RefPtr<AsyncEventDispatcher> dispatcher =
-          new AsyncEventDispatcher(domNode,
-                                   aSuccess ?
-                                    NS_LITERAL_STRING("load") :
-                                    NS_LITERAL_STRING("error"),
-                                   CanBubble::eNo);
-        dispatcher->RequireNodeInDocument();
-        dispatcher->PostDOMEvent();
-      }
+void nsPrefetchService::DispatchEvent(nsPrefetchNode *node, bool aSuccess) {
+  for (uint32_t i = 0; i < node->mSources.Length(); i++) {
+    nsCOMPtr<nsINode> domNode = do_QueryReferent(node->mSources.ElementAt(i));
+    if (domNode && domNode->IsInComposedDoc()) {
+      // We don't dispatch synchronously since |node| might be in a DocGroup
+      // that we're not allowed to touch. (Our network request happens in the
+      // DocGroup of one of the mSources nodes--not necessarily this one).
+      RefPtr<AsyncEventDispatcher> dispatcher = new AsyncEventDispatcher(
+          domNode,
+          aSuccess ? NS_LITERAL_STRING("load") : NS_LITERAL_STRING("error"),
+          CanBubble::eNo);
+      dispatcher->RequireNodeInDocument();
+      dispatcher->PostDOMEvent();
     }
+  }
 }
 
 //-----------------------------------------------------------------------------
 // nsPrefetchService <private>
 //-----------------------------------------------------------------------------
 
-void
-nsPrefetchService::AddProgressListener()
-{
-    // Register as an observer for the document loader  
-    nsCOMPtr<nsIWebProgress> progress = 
-        do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
-    if (progress)
-        progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+void nsPrefetchService::AddProgressListener() {
+  // Register as an observer for the document loader
+  nsCOMPtr<nsIWebProgress> progress =
+      do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
+  if (progress)
+    progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
 }
 
-void
-nsPrefetchService::RemoveProgressListener()
-{
-    // Register as an observer for the document loader  
-    nsCOMPtr<nsIWebProgress> progress =
-        do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
-    if (progress)
-        progress->RemoveProgressListener(this);
+void nsPrefetchService::RemoveProgressListener() {
+  // Register as an observer for the document loader
+  nsCOMPtr<nsIWebProgress> progress =
+      do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
+  if (progress) progress->RemoveProgressListener(this);
 }
 
-nsresult
-nsPrefetchService::EnqueueURI(nsIURI *aURI,
-                              nsIURI *aReferrerURI,
-                              nsINode *aSource,
-                              nsPrefetchNode **aNode)
-{
-    RefPtr<nsPrefetchNode> node = new nsPrefetchNode(this, aURI, aReferrerURI,
-                                                     aSource,
-                                                     nsIContentPolicy::TYPE_OTHER,
-                                                     false);
-    mPrefetchQueue.push_back(node);
-    node.forget(aNode);
-    return NS_OK;
+nsresult nsPrefetchService::EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI,
+                                       nsINode *aSource,
+                                       nsPrefetchNode **aNode) {
+  RefPtr<nsPrefetchNode> node = new nsPrefetchNode(
+      this, aURI, aReferrerURI, aSource, nsIContentPolicy::TYPE_OTHER, false);
+  mPrefetchQueue.push_back(node);
+  node.forget(aNode);
+  return NS_OK;
 }
 
-void
-nsPrefetchService::EmptyPrefetchQueue()
-{
-    while (!mPrefetchQueue.empty()) {
-        mPrefetchQueue.pop_back();
+void nsPrefetchService::EmptyPrefetchQueue() {
+  while (!mPrefetchQueue.empty()) {
+    mPrefetchQueue.pop_back();
+  }
+}
+
+void nsPrefetchService::StartPrefetching() {
+  //
+  // at initialization time we might miss the first DOCUMENT START
+  // notification, so we have to be careful to avoid letting our
+  // stop count go negative.
+  //
+  if (mStopCount > 0) mStopCount--;
+
+  LOG(("StartPrefetching [stopcount=%d]\n", mStopCount));
+
+  // only start prefetching after we've received enough DOCUMENT
+  // STOP notifications.  we do this inorder to defer prefetching
+  // until after all sub-frames have finished loading.
+  if (!mStopCount) {
+    mHaveProcessed = true;
+    while (!mPrefetchQueue.empty() &&
+           mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
+      ProcessNextPrefetchURI();
     }
+  }
 }
 
-void
-nsPrefetchService::StartPrefetching()
-{
-    //
-    // at initialization time we might miss the first DOCUMENT START
-    // notification, so we have to be careful to avoid letting our
-    // stop count go negative.
-    //
-    if (mStopCount > 0)
-        mStopCount--;
+void nsPrefetchService::StopPrefetching() {
+  mStopCount++;
 
-    LOG(("StartPrefetching [stopcount=%d]\n", mStopCount));
+  LOG(("StopPrefetching [stopcount=%d]\n", mStopCount));
 
-    // only start prefetching after we've received enough DOCUMENT
-    // STOP notifications.  we do this inorder to defer prefetching
-    // until after all sub-frames have finished loading.
-    if (!mStopCount) {
-        mHaveProcessed = true;
-        while (!mPrefetchQueue.empty() &&
-               mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
-            ProcessNextPrefetchURI();
-        }
-    }
+  // When we start a load, we need to stop all prefetches that has been
+  // added by the old load, therefore call StopAll only at the moment we
+  // switch to a new page load (i.e. mStopCount == 1).
+  // TODO: do not stop prefetches that are relevant for the new load.
+  if (mStopCount == 1) {
+    StopAll();
+  }
 }
 
-void
-nsPrefetchService::StopPrefetching()
-{
-    mStopCount++;
-
-    LOG(("StopPrefetching [stopcount=%d]\n", mStopCount));
-
-    // When we start a load, we need to stop all prefetches that has been
-    // added by the old load, therefore call StopAll only at the moment we
-    // switch to a new page load (i.e. mStopCount == 1).
-    // TODO: do not stop prefetches that are relevant for the new load.
-    if (mStopCount == 1) {
-        StopAll();
+void nsPrefetchService::StopCurrentPrefetchsPreloads(bool aPreload) {
+  for (int32_t i = mCurrentNodes.Length() - 1; i >= 0; --i) {
+    if (mCurrentNodes[i]->mPreload == aPreload) {
+      mCurrentNodes[i]->CancelChannel(NS_BINDING_ABORTED);
+      mCurrentNodes.RemoveElementAt(i);
     }
-}
+  }
 
-void
-nsPrefetchService::StopCurrentPrefetchsPreloads(bool aPreload)
-{
-    for (int32_t i = mCurrentNodes.Length() - 1; i >= 0; --i) {
-        if (mCurrentNodes[i]->mPreload == aPreload) {
-            mCurrentNodes[i]->CancelChannel(NS_BINDING_ABORTED);
-            mCurrentNodes.RemoveElementAt(i);
-        }
-    }
-
-    if (!aPreload) {
-        EmptyPrefetchQueue();
-    }
-}
-
-void
-nsPrefetchService::StopAll()
-{
-    for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
-        mCurrentNodes[i]->CancelChannel(NS_BINDING_ABORTED);
-    }
-    mCurrentNodes.Clear();
+  if (!aPreload) {
     EmptyPrefetchQueue();
+  }
 }
 
-nsresult
-nsPrefetchService::CheckURIScheme(nsIURI *aURI, nsIURI *aReferrerURI)
-{
-    //
-    // XXX we should really be asking the protocol handler if it supports
-    // caching, so we can determine if there is any value to prefetching.
-    // for now, we'll only prefetch http and https links since we know that's
-    // the most common case.
-    //
-    bool match;
-    nsresult rv = aURI->SchemeIs("http", &match);
-    if (NS_FAILED(rv) || !match) {
-        rv = aURI->SchemeIs("https", &match);
-        if (NS_FAILED(rv) || !match) {
-            LOG(("rejected: URL is not of type http/https\n"));
-            return NS_ERROR_ABORT;
-        }
-    }
+void nsPrefetchService::StopAll() {
+  for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
+    mCurrentNodes[i]->CancelChannel(NS_BINDING_ABORTED);
+  }
+  mCurrentNodes.Clear();
+  EmptyPrefetchQueue();
+}
 
-    // 
-    // the referrer URI must be http:
-    //
-    rv = aReferrerURI->SchemeIs("http", &match);
+nsresult nsPrefetchService::CheckURIScheme(nsIURI *aURI, nsIURI *aReferrerURI) {
+  //
+  // XXX we should really be asking the protocol handler if it supports
+  // caching, so we can determine if there is any value to prefetching.
+  // for now, we'll only prefetch http and https links since we know that's
+  // the most common case.
+  //
+  bool match;
+  nsresult rv = aURI->SchemeIs("http", &match);
+  if (NS_FAILED(rv) || !match) {
+    rv = aURI->SchemeIs("https", &match);
     if (NS_FAILED(rv) || !match) {
-        rv = aReferrerURI->SchemeIs("https", &match);
-        if (NS_FAILED(rv) || !match) {
-            LOG(("rejected: referrer URL is neither http nor https\n"));
-            return NS_ERROR_ABORT;
-        }
+      LOG(("rejected: URL is not of type http/https\n"));
+      return NS_ERROR_ABORT;
     }
+  }
 
-    return NS_OK;
+  //
+  // the referrer URI must be http:
+  //
+  rv = aReferrerURI->SchemeIs("http", &match);
+  if (NS_FAILED(rv) || !match) {
+    rv = aReferrerURI->SchemeIs("https", &match);
+    if (NS_FAILED(rv) || !match) {
+      LOG(("rejected: referrer URL is neither http nor https\n"));
+      return NS_ERROR_ABORT;
+    }
+  }
+
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
 // nsPrefetchService::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsPrefetchService,
-                  nsIPrefetchService,
-                  nsIWebProgressListener,
-                  nsIObserver,
-                  nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsPrefetchService, nsIPrefetchService, nsIWebProgressListener,
+                  nsIObserver, nsISupportsWeakReference)
 
 //-----------------------------------------------------------------------------
 // nsPrefetchService::nsIPrefetchService
 //-----------------------------------------------------------------------------
 
-nsresult
-nsPrefetchService::Preload(nsIURI *aURI,
-                           nsIURI *aReferrerURI,
-                           nsINode *aSource,
-                           nsContentPolicyType aPolicyType)
-{
-    NS_ENSURE_ARG_POINTER(aURI);
-    NS_ENSURE_ARG_POINTER(aReferrerURI);
-    if (LOG_ENABLED()) {
-        LOG(("PreloadURI [%s]\n", aURI->GetSpecOrDefault().get()));
-    }
+nsresult nsPrefetchService::Preload(nsIURI *aURI, nsIURI *aReferrerURI,
+                                    nsINode *aSource,
+                                    nsContentPolicyType aPolicyType) {
+  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aReferrerURI);
+  if (LOG_ENABLED()) {
+    LOG(("PreloadURI [%s]\n", aURI->GetSpecOrDefault().get()));
+  }
 
-    if (mPreloadDisabled) {
-        LOG(("rejected: preload service is disabled\n"));
+  if (mPreloadDisabled) {
+    LOG(("rejected: preload service is disabled\n"));
+    return NS_ERROR_ABORT;
+  }
+
+  nsresult rv = CheckURIScheme(aURI, aReferrerURI);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // XXX we might want to either leverage nsIProtocolHandler::protocolFlags
+  // or possibly nsIRequest::loadFlags to determine if this URI should be
+  // prefetched.
+  //
+
+  if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
+    if (aSource && aSource->IsInComposedDoc()) {
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+          new AsyncEventDispatcher(aSource, NS_LITERAL_STRING("error"),
+                                   CanBubble::eNo, ChromeOnlyDispatch::eNo);
+      asyncDispatcher->RunDOMEventWhenSafe();
+    }
+    return NS_OK;
+  }
+
+  //
+  // Check whether it is being preloaded.
+  //
+  for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
+    bool equals;
+    if ((mCurrentNodes[i]->mPolicyType == aPolicyType) &&
+        NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) && equals) {
+      nsWeakPtr source = do_GetWeakReference(aSource);
+      if (mCurrentNodes[i]->mSources.IndexOf(source) ==
+          mCurrentNodes[i]->mSources.NoIndex) {
+        LOG(
+            ("URL is already being preloaded, add a new reference "
+             "document\n"));
+        mCurrentNodes[i]->mSources.AppendElement(source);
+        return NS_OK;
+      } else {
+        LOG(("URL is already being preloaded by this document"));
         return NS_ERROR_ABORT;
+      }
     }
+  }
 
-    nsresult rv = CheckURIScheme(aURI, aReferrerURI);
-    if (NS_FAILED(rv)) {
-        return rv;
+  LOG(("This is a preload, so start loading immediately.\n"));
+  RefPtr<nsPrefetchNode> enqueuedNode;
+  enqueuedNode =
+      new nsPrefetchNode(this, aURI, aReferrerURI, aSource, aPolicyType, true);
+
+  NotifyLoadRequested(enqueuedNode);
+  rv = enqueuedNode->OpenChannel();
+  if (NS_SUCCEEDED(rv)) {
+    mCurrentNodes.AppendElement(enqueuedNode);
+  } else {
+    if (aSource && aSource->IsInComposedDoc()) {
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+          new AsyncEventDispatcher(aSource, NS_LITERAL_STRING("error"),
+                                   CanBubble::eNo, ChromeOnlyDispatch::eNo);
+      asyncDispatcher->RunDOMEventWhenSafe();
     }
+  }
+  return NS_OK;
+}
 
-    // XXX we might want to either leverage nsIProtocolHandler::protocolFlags
-    // or possibly nsIRequest::loadFlags to determine if this URI should be
-    // prefetched.
-    //
+nsresult nsPrefetchService::Prefetch(nsIURI *aURI, nsIURI *aReferrerURI,
+                                     nsINode *aSource, bool aExplicit) {
+  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aReferrerURI);
 
-    if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
-        if (aSource && aSource->IsInComposedDoc()) {
-            RefPtr<AsyncEventDispatcher> asyncDispatcher =
-                new AsyncEventDispatcher(aSource,
-                                         NS_LITERAL_STRING("error"),
-                                         CanBubble::eNo,
-                                         ChromeOnlyDispatch::eNo);
-            asyncDispatcher->RunDOMEventWhenSafe();
+  if (LOG_ENABLED()) {
+    LOG(("PrefetchURI [%s]\n", aURI->GetSpecOrDefault().get()));
+  }
+
+  if (mPrefetchDisabled) {
+    LOG(("rejected: prefetch service is disabled\n"));
+    return NS_ERROR_ABORT;
+  }
+
+  nsresult rv = CheckURIScheme(aURI, aReferrerURI);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // XXX we might want to either leverage nsIProtocolHandler::protocolFlags
+  // or possibly nsIRequest::loadFlags to determine if this URI should be
+  // prefetched.
+  //
+
+  // skip URLs that contain query strings, except URLs for which prefetching
+  // has been explicitly requested.
+  if (!aExplicit) {
+    nsCOMPtr<nsIURL> url(do_QueryInterface(aURI, &rv));
+    if (NS_FAILED(rv)) return rv;
+    nsAutoCString query;
+    rv = url->GetQuery(query);
+    if (NS_FAILED(rv) || !query.IsEmpty()) {
+      LOG(("rejected: URL has a query string\n"));
+      return NS_ERROR_ABORT;
+    }
+  }
+
+  //
+  // Check whether it is being prefetched.
+  //
+  for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
+    bool equals;
+    if (NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) && equals) {
+      nsWeakPtr source = do_GetWeakReference(aSource);
+      if (mCurrentNodes[i]->mSources.IndexOf(source) ==
+          mCurrentNodes[i]->mSources.NoIndex) {
+        LOG(
+            ("URL is already being prefetched, add a new reference "
+             "document\n"));
+        mCurrentNodes[i]->mSources.AppendElement(source);
+        return NS_OK;
+      } else {
+        LOG(("URL is already being prefetched by this document"));
+        return NS_ERROR_ABORT;
+      }
+    }
+  }
+
+  //
+  // Check whether it is on the prefetch queue.
+  //
+  for (std::deque<RefPtr<nsPrefetchNode>>::iterator nodeIt =
+           mPrefetchQueue.begin();
+       nodeIt != mPrefetchQueue.end(); nodeIt++) {
+    bool equals;
+    RefPtr<nsPrefetchNode> node = nodeIt->get();
+    if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
+      nsWeakPtr source = do_GetWeakReference(aSource);
+      if (node->mSources.IndexOf(source) == node->mSources.NoIndex) {
+        LOG(
+            ("URL is already being prefetched, add a new reference "
+             "document\n"));
+        node->mSources.AppendElement(do_GetWeakReference(aSource));
+        return NS_OK;
+      } else {
+        LOG(("URL is already being prefetched by this document"));
+        return NS_ERROR_ABORT;
+      }
+    }
+  }
+
+  RefPtr<nsPrefetchNode> enqueuedNode;
+  rv = EnqueueURI(aURI, aReferrerURI, aSource, getter_AddRefs(enqueuedNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NotifyLoadRequested(enqueuedNode);
+
+  // if there are no pages loading, kick off the request immediately
+  if ((!mStopCount && mHaveProcessed) || mAggressive) {
+    ProcessNextPrefetchURI();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrefetchService::CancelPrefetchPreloadURI(nsIURI *aURI, nsINode *aSource) {
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  if (LOG_ENABLED()) {
+    LOG(("CancelPrefetchURI [%s]\n", aURI->GetSpecOrDefault().get()));
+  }
+
+  //
+  // look in current prefetches
+  //
+  for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
+    bool equals;
+    if (NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) && equals) {
+      nsWeakPtr source = do_GetWeakReference(aSource);
+      if (mCurrentNodes[i]->mSources.IndexOf(source) !=
+          mCurrentNodes[i]->mSources.NoIndex) {
+        mCurrentNodes[i]->mSources.RemoveElement(source);
+        if (mCurrentNodes[i]->mSources.IsEmpty()) {
+          mCurrentNodes[i]->CancelChannel(NS_BINDING_ABORTED);
+          mCurrentNodes.RemoveElementAt(i);
         }
         return NS_OK;
+      }
+      return NS_ERROR_FAILURE;
     }
+  }
 
-    //
-    // Check whether it is being preloaded.
-    //
-    for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
-        bool equals;
-        if ((mCurrentNodes[i]->mPolicyType == aPolicyType) &&
-            NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) &&
-            equals) {
-            nsWeakPtr source = do_GetWeakReference(aSource);
-            if (mCurrentNodes[i]->mSources.IndexOf(source) ==
-                mCurrentNodes[i]->mSources.NoIndex) {
-                LOG(("URL is already being preloaded, add a new reference "
-                     "document\n"));
-                mCurrentNodes[i]->mSources.AppendElement(source);
-                return NS_OK;
-            } else {
-                LOG(("URL is already being preloaded by this document"));
-                return NS_ERROR_ABORT;
-            }
-        }
-    }
-
-    LOG(("This is a preload, so start loading immediately.\n"));
-    RefPtr<nsPrefetchNode> enqueuedNode;
-    enqueuedNode = new nsPrefetchNode(this, aURI, aReferrerURI,
-                                      aSource, aPolicyType, true);
-
-    NotifyLoadRequested(enqueuedNode);
-    rv = enqueuedNode->OpenChannel();
-    if (NS_SUCCEEDED(rv)) {
-        mCurrentNodes.AppendElement(enqueuedNode);
-    } else {
-        if (aSource && aSource->IsInComposedDoc()) {
-            RefPtr<AsyncEventDispatcher> asyncDispatcher =
-                new AsyncEventDispatcher(aSource,
-                                         NS_LITERAL_STRING("error"),
-                                         CanBubble::eNo,
-                                         ChromeOnlyDispatch::eNo);
-            asyncDispatcher->RunDOMEventWhenSafe();
-        }
-    }
-    return NS_OK;
-}
-
-nsresult
-nsPrefetchService::Prefetch(nsIURI *aURI,
-                            nsIURI *aReferrerURI,
-                            nsINode *aSource,
-                            bool aExplicit)
-{
-    NS_ENSURE_ARG_POINTER(aURI);
-    NS_ENSURE_ARG_POINTER(aReferrerURI);
-
-    if (LOG_ENABLED()) {
-        LOG(("PrefetchURI [%s]\n", aURI->GetSpecOrDefault().get()));
-    }
-
-    if (mPrefetchDisabled) {
-        LOG(("rejected: prefetch service is disabled\n"));
-        return NS_ERROR_ABORT;
-    }
-
-    nsresult rv = CheckURIScheme(aURI, aReferrerURI);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    // XXX we might want to either leverage nsIProtocolHandler::protocolFlags
-    // or possibly nsIRequest::loadFlags to determine if this URI should be
-    // prefetched.
-    //
-
-    // skip URLs that contain query strings, except URLs for which prefetching
-    // has been explicitly requested.
-    if (!aExplicit) {
-        nsCOMPtr<nsIURL> url(do_QueryInterface(aURI, &rv));
-        if (NS_FAILED(rv)) return rv;
-        nsAutoCString query;
-        rv = url->GetQuery(query);
-        if (NS_FAILED(rv) || !query.IsEmpty()) {
-            LOG(("rejected: URL has a query string\n"));
-            return NS_ERROR_ABORT;
-        }
-    }
-
-    //
-    // Check whether it is being prefetched.
-    //
-    for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
-        bool equals;
-        if (NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) &&
-            equals) {
-            nsWeakPtr source = do_GetWeakReference(aSource);
-            if (mCurrentNodes[i]->mSources.IndexOf(source) ==
-                mCurrentNodes[i]->mSources.NoIndex) {
-                LOG(("URL is already being prefetched, add a new reference "
-                     "document\n"));
-                mCurrentNodes[i]->mSources.AppendElement(source);
-                return NS_OK;
-            } else {
-                LOG(("URL is already being prefetched by this document"));
-                return NS_ERROR_ABORT;
-            }
-        }
-    }
-
-    //
-    // Check whether it is on the prefetch queue.
-    //
-    for (std::deque<RefPtr<nsPrefetchNode>>::iterator nodeIt = mPrefetchQueue.begin();
-         nodeIt != mPrefetchQueue.end(); nodeIt++) {
-        bool equals;
-        RefPtr<nsPrefetchNode> node = nodeIt->get();
-        if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
-            nsWeakPtr source = do_GetWeakReference(aSource);
-            if (node->mSources.IndexOf(source) ==
-                node->mSources.NoIndex) {
-                LOG(("URL is already being prefetched, add a new reference "
-                     "document\n"));
-                node->mSources.AppendElement(do_GetWeakReference(aSource));
-                return NS_OK;
-            } else {
-                LOG(("URL is already being prefetched by this document"));
-                return NS_ERROR_ABORT;
-            }
-
-        }
-    }
-
-    RefPtr<nsPrefetchNode> enqueuedNode;
-    rv = EnqueueURI(aURI, aReferrerURI, aSource,
-                    getter_AddRefs(enqueuedNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NotifyLoadRequested(enqueuedNode);
-
-    // if there are no pages loading, kick off the request immediately
-    if ((!mStopCount && mHaveProcessed) || mAggressive) {
-        ProcessNextPrefetchURI();
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefetchService::CancelPrefetchPreloadURI(nsIURI* aURI,
-                                            nsINode* aSource)
-{
-    NS_ENSURE_ARG_POINTER(aURI);
-
-    if (LOG_ENABLED()) {
-        LOG(("CancelPrefetchURI [%s]\n", aURI->GetSpecOrDefault().get()));
-    }
-
-    //
-    // look in current prefetches
-    //
-    for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
-        bool equals;
-        if (NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) &&
-            equals) {
-            nsWeakPtr source = do_GetWeakReference(aSource);
-            if (mCurrentNodes[i]->mSources.IndexOf(source) !=
-                mCurrentNodes[i]->mSources.NoIndex) {
-                mCurrentNodes[i]->mSources.RemoveElement(source);
-                if (mCurrentNodes[i]->mSources.IsEmpty()) {
-                    mCurrentNodes[i]->CancelChannel(NS_BINDING_ABORTED);
-                    mCurrentNodes.RemoveElementAt(i);
-                }
-                return NS_OK;
-            }
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    //
-    // look into the prefetch queue
-    //
-    for (std::deque<RefPtr<nsPrefetchNode>>::iterator nodeIt = mPrefetchQueue.begin();
-         nodeIt != mPrefetchQueue.end(); nodeIt++) {
-        bool equals;
-        RefPtr<nsPrefetchNode> node = nodeIt->get();
-        if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
-            nsWeakPtr source = do_GetWeakReference(aSource);
-            if (node->mSources.IndexOf(source) !=
-                node->mSources.NoIndex) {
-
+  //
+  // look into the prefetch queue
+  //
+  for (std::deque<RefPtr<nsPrefetchNode>>::iterator nodeIt =
+           mPrefetchQueue.begin();
+       nodeIt != mPrefetchQueue.end(); nodeIt++) {
+    bool equals;
+    RefPtr<nsPrefetchNode> node = nodeIt->get();
+    if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
+      nsWeakPtr source = do_GetWeakReference(aSource);
+      if (node->mSources.IndexOf(source) != node->mSources.NoIndex) {
 #ifdef DEBUG
-                int32_t inx = node->mSources.IndexOf(source);
-                nsCOMPtr<nsINode> domNode =
-                    do_QueryReferent(node->mSources.ElementAt(inx));
-                MOZ_ASSERT(domNode);
+        int32_t inx = node->mSources.IndexOf(source);
+        nsCOMPtr<nsINode> domNode =
+            do_QueryReferent(node->mSources.ElementAt(inx));
+        MOZ_ASSERT(domNode);
 #endif
 
-                node->mSources.RemoveElement(source);
-                if (node->mSources.IsEmpty()) {
-                    mPrefetchQueue.erase(nodeIt);
-                }
-                return NS_OK;
-            }
-            return NS_ERROR_FAILURE;
+        node->mSources.RemoveElement(source);
+        if (node->mSources.IsEmpty()) {
+          mPrefetchQueue.erase(nodeIt);
         }
+        return NS_OK;
+      }
+      return NS_ERROR_FAILURE;
     }
+  }
 
-    // not found!
-    return NS_ERROR_FAILURE;
+  // not found!
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsPrefetchService::PreloadURI(nsIURI *aURI,
-                              nsIURI *aReferrerURI,
+nsPrefetchService::PreloadURI(nsIURI *aURI, nsIURI *aReferrerURI,
                               nsINode *aSource,
-                              nsContentPolicyType aPolicyType)
-{
-    return Preload(aURI, aReferrerURI, aSource, aPolicyType);
+                              nsContentPolicyType aPolicyType) {
+  return Preload(aURI, aReferrerURI, aSource, aPolicyType);
 }
 
 NS_IMETHODIMP
-nsPrefetchService::PrefetchURI(nsIURI *aURI,
-                               nsIURI *aReferrerURI,
-                               nsINode *aSource,
-                               bool aExplicit)
-{
-    return Prefetch(aURI, aReferrerURI, aSource, aExplicit);
+nsPrefetchService::PrefetchURI(nsIURI *aURI, nsIURI *aReferrerURI,
+                               nsINode *aSource, bool aExplicit) {
+  return Prefetch(aURI, aReferrerURI, aSource, aExplicit);
 }
 
 NS_IMETHODIMP
-nsPrefetchService::HasMoreElements(bool *aHasMore)
-{
-    *aHasMore = (mCurrentNodes.Length() || !mPrefetchQueue.empty());
-    return NS_OK;
+nsPrefetchService::HasMoreElements(bool *aHasMore) {
+  *aHasMore = (mCurrentNodes.Length() || !mPrefetchQueue.empty());
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -978,62 +877,53 @@ nsPrefetchService::HasMoreElements(bool *aHasMore)
 
 NS_IMETHODIMP
 nsPrefetchService::OnProgressChange(nsIWebProgress *aProgress,
-                                    nsIRequest *aRequest, 
-                                    int32_t curSelfProgress, 
-                                    int32_t maxSelfProgress, 
-                                    int32_t curTotalProgress, 
-                                    int32_t maxTotalProgress)
-{
-    MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
-    return NS_OK;
+                                    nsIRequest *aRequest,
+                                    int32_t curSelfProgress,
+                                    int32_t maxSelfProgress,
+                                    int32_t curTotalProgress,
+                                    int32_t maxTotalProgress) {
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
-
-NS_IMETHODIMP 
-nsPrefetchService::OnStateChange(nsIWebProgress* aWebProgress, 
-                                 nsIRequest *aRequest, 
-                                 uint32_t progressStateFlags, 
-                                 nsresult aStatus)
-{
-    if (progressStateFlags & STATE_IS_DOCUMENT) {
-        if (progressStateFlags & STATE_STOP)
-            StartPrefetching();
-        else if (progressStateFlags & STATE_START)
-            StopPrefetching();
-    }
-            
-    return NS_OK;
-}
-
 
 NS_IMETHODIMP
-nsPrefetchService::OnLocationChange(nsIWebProgress* aWebProgress,
-                                    nsIRequest* aRequest,
-                                    nsIURI *location,
-                                    uint32_t aFlags)
-{
-    MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
-    return NS_OK;
+nsPrefetchService::OnStateChange(nsIWebProgress *aWebProgress,
+                                 nsIRequest *aRequest,
+                                 uint32_t progressStateFlags,
+                                 nsresult aStatus) {
+  if (progressStateFlags & STATE_IS_DOCUMENT) {
+    if (progressStateFlags & STATE_STOP)
+      StartPrefetching();
+    else if (progressStateFlags & STATE_START)
+      StopPrefetching();
+  }
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPrefetchService::OnStatusChange(nsIWebProgress* aWebProgress,
-                                  nsIRequest* aRequest,
-                                  nsresult aStatus,
-                                  const char16_t* aMessage)
-{
-    MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
-    return NS_OK;
+NS_IMETHODIMP
+nsPrefetchService::OnLocationChange(nsIWebProgress *aWebProgress,
+                                    nsIRequest *aRequest, nsIURI *location,
+                                    uint32_t aFlags) {
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPrefetchService::OnSecurityChange(nsIWebProgress *aWebProgress, 
-                                    nsIRequest *aRequest, 
-                                    uint32_t aOldState,
+NS_IMETHODIMP
+nsPrefetchService::OnStatusChange(nsIWebProgress *aWebProgress,
+                                  nsIRequest *aRequest, nsresult aStatus,
+                                  const char16_t *aMessage) {
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrefetchService::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                    nsIRequest *aRequest, uint32_t aOldState,
                                     uint32_t aState,
-                                    const nsAString& aContentBlockingLogJSON)
-{
-    MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
-    return NS_OK;
+                                    const nsAString &aContentBlockingLogJSON) {
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -1041,85 +931,83 @@ nsPrefetchService::OnSecurityChange(nsIWebProgress *aWebProgress,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchService::Observe(nsISupports     *aSubject,
-                           const char      *aTopic,
-                           const char16_t *aData)
-{
-    LOG(("nsPrefetchService::Observe [topic=%s]\n", aTopic));
+nsPrefetchService::Observe(nsISupports *aSubject, const char *aTopic,
+                           const char16_t *aData) {
+  LOG(("nsPrefetchService::Observe [topic=%s]\n", aTopic));
 
-    if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        StopAll();
-        mPrefetchDisabled = true;
-        mPreloadDisabled = true;
-    }
-    else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-        const nsCString converted = NS_ConvertUTF16toUTF8(aData);
-        const char* pref = converted.get();
-        if (!strcmp(pref, PREFETCH_PREF)) {
-            if (Preferences::GetBool(PREFETCH_PREF, false)) {
-                if (mPrefetchDisabled) {
-                    LOG(("enabling prefetching\n"));
-                    mPrefetchDisabled = false;
-                    if (mPreloadDisabled) {
-                        AddProgressListener();
-                    }
-                }
-            } else {
-                if (!mPrefetchDisabled) {
-                    LOG(("disabling prefetching\n"));
-                    StopCurrentPrefetchsPreloads(false);
-                    mPrefetchDisabled = true;
-                    if (mPreloadDisabled) {
-                        RemoveProgressListener();
-                    }
-                }
-            }
-        } else if (!strcmp(pref, PRELOAD_PREF)) {
-            if (Preferences::GetBool(PRELOAD_PREF, false)) {
-                if (mPreloadDisabled) {
-                    LOG(("enabling preloading\n"));
-                    mPreloadDisabled = false;
-                    if (mPrefetchDisabled) {
-                        AddProgressListener();
-                    }
-                }
-            } else {
-                if (!mPreloadDisabled) {
-                  LOG(("disabling preloading\n"));
-                  StopCurrentPrefetchsPreloads(true);
-                  mPreloadDisabled = true;
-                  if (mPrefetchDisabled) {
-                      RemoveProgressListener();
-                  }
-                }
-            }
-        } else if (!strcmp(pref, PARALLELISM_PREF)) {
-            mMaxParallelism = Preferences::GetInt(PARALLELISM_PREF, mMaxParallelism);
-            if (mMaxParallelism < 1) {
-                mMaxParallelism = 1;
-            }
-            // If our parallelism has increased, go ahead and kick off enough
-            // prefetches to fill up our allowance. If we're now over our
-            // allowance, we'll just silently let some of them finish to get
-            // back below our limit.
-            while (((!mStopCount && mHaveProcessed) || mAggressive) &&
-                   !mPrefetchQueue.empty() &&
-                   mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
-                ProcessNextPrefetchURI();
-            }
-        } else if (!strcmp(pref, AGGRESSIVE_PREF)) {
-            mAggressive = Preferences::GetBool(AGGRESSIVE_PREF, false);
-            // in aggressive mode, start prefetching immediately
-            if (mAggressive) {
-                while (mStopCount && !mPrefetchQueue.empty() &&
-                       mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
-                    ProcessNextPrefetchURI();
-                }
-            }
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    StopAll();
+    mPrefetchDisabled = true;
+    mPreloadDisabled = true;
+  } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    const nsCString converted = NS_ConvertUTF16toUTF8(aData);
+    const char *pref = converted.get();
+    if (!strcmp(pref, PREFETCH_PREF)) {
+      if (Preferences::GetBool(PREFETCH_PREF, false)) {
+        if (mPrefetchDisabled) {
+          LOG(("enabling prefetching\n"));
+          mPrefetchDisabled = false;
+          if (mPreloadDisabled) {
+            AddProgressListener();
+          }
         }
+      } else {
+        if (!mPrefetchDisabled) {
+          LOG(("disabling prefetching\n"));
+          StopCurrentPrefetchsPreloads(false);
+          mPrefetchDisabled = true;
+          if (mPreloadDisabled) {
+            RemoveProgressListener();
+          }
+        }
+      }
+    } else if (!strcmp(pref, PRELOAD_PREF)) {
+      if (Preferences::GetBool(PRELOAD_PREF, false)) {
+        if (mPreloadDisabled) {
+          LOG(("enabling preloading\n"));
+          mPreloadDisabled = false;
+          if (mPrefetchDisabled) {
+            AddProgressListener();
+          }
+        }
+      } else {
+        if (!mPreloadDisabled) {
+          LOG(("disabling preloading\n"));
+          StopCurrentPrefetchsPreloads(true);
+          mPreloadDisabled = true;
+          if (mPrefetchDisabled) {
+            RemoveProgressListener();
+          }
+        }
+      }
+    } else if (!strcmp(pref, PARALLELISM_PREF)) {
+      mMaxParallelism = Preferences::GetInt(PARALLELISM_PREF, mMaxParallelism);
+      if (mMaxParallelism < 1) {
+        mMaxParallelism = 1;
+      }
+      // If our parallelism has increased, go ahead and kick off enough
+      // prefetches to fill up our allowance. If we're now over our
+      // allowance, we'll just silently let some of them finish to get
+      // back below our limit.
+      while (((!mStopCount && mHaveProcessed) || mAggressive) &&
+             !mPrefetchQueue.empty() &&
+             mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
+        ProcessNextPrefetchURI();
+      }
+    } else if (!strcmp(pref, AGGRESSIVE_PREF)) {
+      mAggressive = Preferences::GetBool(AGGRESSIVE_PREF, false);
+      // in aggressive mode, start prefetching immediately
+      if (mAggressive) {
+        while (mStopCount && !mPrefetchQueue.empty() &&
+               mCurrentNodes.Length() <
+                   static_cast<uint32_t>(mMaxParallelism)) {
+          ProcessNextPrefetchURI();
+        }
+      }
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 // vim: ts=4 sw=4 expandtab

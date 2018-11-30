@@ -23,9 +23,8 @@ namespace mozilla {
 // maintain each nsColumnSetFrame as an independent set of columns, and each
 // column-span element then becomes just a block level element.
 //
-class ColumnSetWrapperFrame final : public nsBlockFrame
-{
-public:
+class ColumnSetWrapperFrame final : public nsBlockFrame {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(ColumnSetWrapperFrame)
   NS_DECL_QUERYFRAME
 
@@ -43,13 +42,12 @@ public:
 
   void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) override;
 
-  void InsertFrames(ChildListID aListID,
-                    nsIFrame* aPrevFrame,
+  void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     nsFrameList& aFrameList) override;
 
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 
-private:
+ private:
   explicit ColumnSetWrapperFrame(ComputedStyle* aStyle);
   ~ColumnSetWrapperFrame() override = default;
 
@@ -62,6 +60,6 @@ private:
 #endif
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ColumnSetWrapperFrame_h
+#endif  // mozilla_ColumnSetWrapperFrame_h

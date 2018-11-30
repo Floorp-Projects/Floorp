@@ -26,9 +26,8 @@ class WakeLockTopic;
  * Receives WakeLock events and simply passes it on to the right WakeLockTopic
  * to inhibit the screensaver.
  */
-class WakeLockListener final : public nsIDOMMozWakeLockListener
-{
-public:
+class WakeLockListener final : public nsIDOMMozWakeLockListener {
+ public:
   NS_DECL_ISUPPORTS;
 
   static WakeLockListener* GetSingleton(bool aCreate = true);
@@ -37,7 +36,7 @@ public:
   virtual nsresult Callback(const nsAString& topic,
                             const nsAString& state) override;
 
-private:
+ private:
   WakeLockListener();
   ~WakeLockListener() = default;
 
@@ -53,4 +52,4 @@ private:
   nsClassHashtable<nsStringHashKey, WakeLockTopic> mTopics;
 };
 
-#endif // __WakeLockListener_h__
+#endif  // __WakeLockListener_h__

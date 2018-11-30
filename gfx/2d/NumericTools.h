@@ -14,9 +14,7 @@ namespace mozilla {
 // Returns the largest multiple of aMultiplied that's <= x.
 // Same as int32_t(floor(double(x) / aMultiplier)) * aMultiplier,
 // but faster.
-inline int32_t
-RoundDownToMultiple(int32_t x, int32_t aMultiplier)
-{
+inline int32_t RoundDownToMultiple(int32_t x, int32_t aMultiplier) {
   // We don't use float division + floor because that's hard for the compiler
   // to optimize.
   int mod = x % aMultiplier;
@@ -29,9 +27,7 @@ RoundDownToMultiple(int32_t x, int32_t aMultiplier)
 // Returns the smallest multiple of aMultiplied that's >= x.
 // Same as int32_t(ceil(double(x) / aMultiplier)) * aMultiplier,
 // but faster.
-inline int32_t
-RoundUpToMultiple(int32_t x, int32_t aMultiplier)
-{
+inline int32_t RoundUpToMultiple(int32_t x, int32_t aMultiplier) {
   int mod = x % aMultiplier;
   if (x > 0) {
     return mod ? x + aMultiplier - mod : x;
@@ -39,6 +35,6 @@ RoundUpToMultiple(int32_t x, int32_t aMultiplier)
   return x - mod;
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_NUMERICTOOLS_H_ */

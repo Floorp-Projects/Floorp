@@ -49,9 +49,7 @@ namespace profiler {
 static malloc_table_t gMallocTable;
 
 // This is only needed because of the |const void*| vs |void*| arg mismatch.
-static size_t
-MallocSizeOf(const void* aPtr)
-{
+static size_t MallocSizeOf(const void* aPtr) {
   return gMallocTable.malloc_usable_size(const_cast<void*>(aPtr));
 }
 
@@ -59,9 +57,7 @@ MallocSizeOf(const void* aPtr)
 // malloc/free callbacks
 //---------------------------------------------------------------------------
 
-static void
-AllocCallback(void* aPtr, size_t aReqSize)
-{
+static void AllocCallback(void* aPtr, size_t aReqSize) {
   if (!aPtr) {
     return;
   }
@@ -75,15 +71,13 @@ AllocCallback(void* aPtr, size_t aReqSize)
   // We're ignoring aReqSize here
 }
 
-static void
-FreeCallback(void* aPtr)
-{
+static void FreeCallback(void* aPtr) {
   if (!aPtr) {
     return;
   }
 
   // this never allocates
-  sCounter->Add(-((int64_t) MallocSizeOf(aPtr)));
+  sCounter->Add(-((int64_t)MallocSizeOf(aPtr)));
 
   // XXX add optional stackwalk here
 }
@@ -94,31 +88,25 @@ FreeCallback(void* aPtr)
 
 static bool Init(malloc_table_t const* aMallocTable);
 
-} // namespace profiler
-} // namespace mozilla
+}  // namespace profiler
+}  // namespace mozilla
 
 using namespace mozilla::profiler;
 
-static void*
-replace_malloc(size_t aSize)
-{
+static void* replace_malloc(size_t aSize) {
   // This must be a call to malloc from outside.  Intercept it.
   void* ptr = gMallocTable.malloc(aSize);
   AllocCallback(ptr, aSize);
   return ptr;
 }
 
-static void*
-replace_calloc(size_t aCount, size_t aSize)
-{
+static void* replace_calloc(size_t aCount, size_t aSize) {
   void* ptr = gMallocTable.calloc(aCount, aSize);
   AllocCallback(ptr, aCount * aSize);
   return ptr;
 }
 
-static void*
-replace_realloc(void* aOldPtr, size_t aSize)
-{
+static void* replace_realloc(void* aOldPtr, size_t aSize) {
   // If |aOldPtr| is nullptr, the call is equivalent to |malloc(aSize)|.
   if (!aOldPtr) {
     return replace_malloc(aSize);
@@ -140,55 +128,44 @@ replace_realloc(void* aOldPtr, size_t aSize)
   return ptr;
 }
 
-static void*
-replace_memalign(size_t aAlignment, size_t aSize)
-{
+static void* replace_memalign(size_t aAlignment, size_t aSize) {
   void* ptr = gMallocTable.memalign(aAlignment, aSize);
   AllocCallback(ptr, aSize);
   return ptr;
 }
 
-static void
-replace_free(void* aPtr)
-{
+static void replace_free(void* aPtr) {
   FreeCallback(aPtr);
   gMallocTable.free(aPtr);
 }
 
-static void *
-replace_moz_arena_malloc(arena_id_t aArena, size_t aSize)
-{
+static void* replace_moz_arena_malloc(arena_id_t aArena, size_t aSize) {
   void* ptr = gMallocTable.moz_arena_malloc(aArena, aSize);
   AllocCallback(ptr, aSize);
   return ptr;
 }
 
-static void *
-replace_moz_arena_calloc(arena_id_t aArena, size_t aCount, size_t aSize)
-{
+static void* replace_moz_arena_calloc(arena_id_t aArena, size_t aCount,
+                                      size_t aSize) {
   void* ptr = gMallocTable.moz_arena_calloc(aArena, aCount, aSize);
   AllocCallback(ptr, aCount * aSize);
   return ptr;
 }
 
-static void *
-replace_moz_arena_realloc(arena_id_t aArena, void* aPtr, size_t aSize)
-{
+static void* replace_moz_arena_realloc(arena_id_t aArena, void* aPtr,
+                                       size_t aSize) {
   void* ptr = gMallocTable.moz_arena_realloc(aArena, aPtr, aSize);
   AllocCallback(ptr, aSize);
   return ptr;
 }
 
-static void
-replace_moz_arena_free(arena_id_t aArena, void* aPtr)
-{
+static void replace_moz_arena_free(arena_id_t aArena, void* aPtr) {
   FreeCallback(aPtr);
   gMallocTable.moz_arena_free(aArena, aPtr);
 }
 
-static void *
-replace_moz_arena_memalign(arena_id_t aArena, size_t aAlignment, size_t aSize)
-{
+static void* replace_moz_arena_memalign(arena_id_t aArena, size_t aAlignment,
+                                        size_t aSize) {
   void* ptr = gMallocTable.moz_arena_memalign(aArena, aAlignment, aSize);
   AllocCallback(ptr, aSize);
   return ptr;
@@ -196,33 +173,25 @@ replace_moz_arena_memalign(arena_id_t aArena, size_t aAlignment, size_t aSize)
 
 // we have to replace these or jemalloc will assume we don't implement any
 // of the arena replacements!
-static arena_id_t
-replace_moz_create_arena_with_params(arena_params_t* aParams)
-{
+static arena_id_t replace_moz_create_arena_with_params(
+    arena_params_t* aParams) {
   return gMallocTable.moz_create_arena_with_params(aParams);
 }
 
-static void
-replace_moz_dispose_arena(arena_id_t aArenaId)
-{
+static void replace_moz_dispose_arena(arena_id_t aArenaId) {
   return gMallocTable.moz_dispose_arena(aArenaId);
 }
 
 // Must come after all the replace_* funcs
-void
-replace_init(malloc_table_t * aMallocTable, ReplaceMallocBridge** aBridge)
-{
+void replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge) {
   if (mozilla::profiler::Init(aMallocTable)) {
 #define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC_BASE | MALLOC_FUNCS_ARENA)
-#define MALLOC_DECL(name, ...) aMallocTable->name = replace_ ## name;
+#define MALLOC_DECL(name, ...) aMallocTable->name = replace_##name;
 #include "malloc_decls.h"
   }
 }
 
-void
-profiler_replace_remove()
-{
-}
+void profiler_replace_remove() {}
 
 namespace mozilla {
 namespace profiler {
@@ -230,20 +199,17 @@ namespace profiler {
 // Initialization
 //---------------------------------------------------------------------------
 
-static bool
-Init(malloc_table_t const* aMallocTable)
-{
+static bool Init(malloc_table_t const* aMallocTable) {
   gMallocTable = *aMallocTable;
 
   return true;
 }
 
-void
-install_memory_counter(bool aInstall)
-{
+void install_memory_counter(bool aInstall) {
   if (!sCounter) {
     if (aInstall) {
-      sCounter = MakeUnique<ProfilerCounterTotal>("malloc", "Memory", "Amount of allocated memory");
+      sCounter = MakeUnique<ProfilerCounterTotal>("malloc", "Memory",
+                                                  "Amount of allocated memory");
     } else {
       return;
     }
@@ -252,5 +218,5 @@ install_memory_counter(bool aInstall)
   jemalloc_replace_dynamic(aInstall ? replace_init : nullptr);
 }
 
-}
-}
+}  // namespace profiler
+}  // namespace mozilla

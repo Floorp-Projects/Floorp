@@ -17,33 +17,32 @@ class ErrorResult;
 namespace dom {
 class Blob;
 class GlobalObject;
-template<typename> class Optional;
+template <typename>
+class Optional;
 
-class FileReaderSync final
-{
+class FileReaderSync final {
   NS_INLINE_DECL_REFCOUNTING(FileReaderSync)
 
-private:
+ private:
   // Private destructor, to discourage deletion outside of Release():
-  ~FileReaderSync()
-  {
-  }
+  ~FileReaderSync() {}
 
-  nsresult ConvertStream(nsIInputStream *aStream, const char *aCharset,
-                         nsAString &aResult);
+  nsresult ConvertStream(nsIInputStream* aStream, const char* aCharset,
+                         nsAString& aResult);
 
-  nsresult ConvertAsyncToSyncStream(uint64_t aStreamSize,
-                                    already_AddRefed<nsIInputStream> aAsyncStream,
-                                    nsIInputStream** aSyncStream);
+  nsresult ConvertAsyncToSyncStream(
+      uint64_t aStreamSize, already_AddRefed<nsIInputStream> aAsyncStream,
+      nsIInputStream** aSyncStream);
 
   nsresult SyncRead(nsIInputStream* aStream, char* aBuffer,
                     uint32_t aBufferSize, uint32_t* aRead);
 
-public:
-  static already_AddRefed<FileReaderSync>
-  Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+ public:
+  static already_AddRefed<FileReaderSync> Constructor(
+      const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aReflector);
 
   void ReadAsArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aScopeObj,
                          Blob& aBlob, JS::MutableHandle<JSObject*> aRetval,
@@ -54,7 +53,7 @@ public:
   void ReadAsDataURL(Blob& aBlob, nsAString& aResult, ErrorResult& aRv);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_filereadersync_h__
+#endif  // mozilla_dom_filereadersync_h__

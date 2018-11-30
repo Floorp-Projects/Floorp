@@ -13,24 +13,23 @@
 namespace mozilla {
 namespace net {
 
-class nsSimpleStreamListener : public nsISimpleStreamListener
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISIMPLESTREAMLISTENER
+class nsSimpleStreamListener : public nsISimpleStreamListener {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSISIMPLESTREAMLISTENER
 
-    nsSimpleStreamListener() = default;
+  nsSimpleStreamListener() = default;
 
-protected:
-    virtual ~nsSimpleStreamListener() = default;
+ protected:
+  virtual ~nsSimpleStreamListener() = default;
 
-    nsCOMPtr<nsIOutputStream>    mSink;
-    nsCOMPtr<nsIRequestObserver> mObserver;
+  nsCOMPtr<nsIOutputStream> mSink;
+  nsCOMPtr<nsIRequestObserver> mObserver;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

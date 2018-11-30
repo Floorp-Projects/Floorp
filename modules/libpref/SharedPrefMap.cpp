@@ -18,15 +18,12 @@ namespace mozilla {
 
 using namespace ipc;
 
-static inline size_t
-GetAlignmentOffset(size_t aOffset, size_t aAlign)
-{
+static inline size_t GetAlignmentOffset(size_t aOffset, size_t aAlign) {
   auto mod = aOffset % aAlign;
   return mod ? aAlign - mod : 0;
 }
 
-SharedPrefMap::SharedPrefMap(const FileDescriptor& aMapFile, size_t aMapSize)
-{
+SharedPrefMap::SharedPrefMap(const FileDescriptor& aMapFile, size_t aMapSize) {
   auto result = mMap.initWithHandle(aMapFile, aMapSize);
   MOZ_RELEASE_ASSERT(result.isOk());
   // We return literal nsCStrings pointing to the mapped data for preference
@@ -36,78 +33,59 @@ SharedPrefMap::SharedPrefMap(const FileDescriptor& aMapFile, size_t aMapSize)
   mMap.setPersistent();
 }
 
-SharedPrefMap::SharedPrefMap(SharedPrefMapBuilder&& aBuilder)
-{
+SharedPrefMap::SharedPrefMap(SharedPrefMapBuilder&& aBuilder) {
   auto result = aBuilder.Finalize(mMap);
   MOZ_RELEASE_ASSERT(result.isOk());
   mMap.setPersistent();
 }
 
-mozilla::ipc::FileDescriptor
-SharedPrefMap::CloneFileDescriptor() const
-{
+mozilla::ipc::FileDescriptor SharedPrefMap::CloneFileDescriptor() const {
   return mMap.cloneHandle();
 }
 
-bool
-SharedPrefMap::Has(const char* aKey) const
-{
+bool SharedPrefMap::Has(const char* aKey) const {
   size_t index;
   return Find(aKey, &index);
 }
 
-Maybe<const SharedPrefMap::Pref>
-SharedPrefMap::Get(const char* aKey) const
-{
+Maybe<const SharedPrefMap::Pref> SharedPrefMap::Get(const char* aKey) const {
   Maybe<const Pref> result;
 
   size_t index;
   if (Find(aKey, &index)) {
-    result.emplace(Pref{ this, &Entries()[index] });
+    result.emplace(Pref{this, &Entries()[index]});
   }
 
   return result;
 }
 
-bool
-SharedPrefMap::Find(const char* aKey, size_t* aIndex) const
-{
+bool SharedPrefMap::Find(const char* aKey, size_t* aIndex) const {
   const auto& keys = KeyTable();
 
-  return BinarySearchIf(Entries(),
-                        0,
-                        EntryCount(),
+  return BinarySearchIf(Entries(), 0, EntryCount(),
                         [&](const Entry& aEntry) {
                           return strcmp(aKey, keys.GetBare(aEntry.mKey));
                         },
                         aIndex);
 }
 
-void
-SharedPrefMapBuilder::Add(const char* aKey,
-                          const Flags& aFlags,
-                          bool aDefaultValue,
-                          bool aUserValue)
-{
+void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
+                               bool aDefaultValue, bool aUserValue) {
   mEntries.AppendElement(Entry{
-    aKey,
-    mKeyTable.Add(aKey),
-    { aDefaultValue, aUserValue },
-    uint8_t(PrefType::Bool),
-    aFlags.mHasDefaultValue,
-    aFlags.mHasUserValue,
-    aFlags.mIsSticky,
-    aFlags.mIsLocked,
-    aFlags.mDefaultChanged,
+      aKey,
+      mKeyTable.Add(aKey),
+      {aDefaultValue, aUserValue},
+      uint8_t(PrefType::Bool),
+      aFlags.mHasDefaultValue,
+      aFlags.mHasUserValue,
+      aFlags.mIsSticky,
+      aFlags.mIsLocked,
+      aFlags.mDefaultChanged,
   });
 }
 
-void
-SharedPrefMapBuilder::Add(const char* aKey,
-                          const Flags& aFlags,
-                          int32_t aDefaultValue,
-                          int32_t aUserValue)
-{
+void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
+                               int32_t aDefaultValue, int32_t aUserValue) {
   ValueIdx index;
   if (aFlags.mHasUserValue) {
     index = mIntValueTable.Add(aDefaultValue, aUserValue);
@@ -116,24 +94,21 @@ SharedPrefMapBuilder::Add(const char* aKey,
   }
 
   mEntries.AppendElement(Entry{
-    aKey,
-    mKeyTable.Add(aKey),
-    { index },
-    uint8_t(PrefType::Int),
-    aFlags.mHasDefaultValue,
-    aFlags.mHasUserValue,
-    aFlags.mIsSticky,
-    aFlags.mIsLocked,
-    aFlags.mDefaultChanged,
+      aKey,
+      mKeyTable.Add(aKey),
+      {index},
+      uint8_t(PrefType::Int),
+      aFlags.mHasDefaultValue,
+      aFlags.mHasUserValue,
+      aFlags.mIsSticky,
+      aFlags.mIsLocked,
+      aFlags.mDefaultChanged,
   });
 }
 
-void
-SharedPrefMapBuilder::Add(const char* aKey,
-                          const Flags& aFlags,
-                          const nsCString& aDefaultValue,
-                          const nsCString& aUserValue)
-{
+void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
+                               const nsCString& aDefaultValue,
+                               const nsCString& aUserValue) {
   ValueIdx index;
   StringTableEntry defaultVal = mValueStringTable.Add(aDefaultValue);
   if (aFlags.mHasUserValue) {
@@ -144,21 +119,19 @@ SharedPrefMapBuilder::Add(const char* aKey,
   }
 
   mEntries.AppendElement(Entry{
-    aKey,
-    mKeyTable.Add(aKey),
-    { index },
-    uint8_t(PrefType::String),
-    aFlags.mHasDefaultValue,
-    aFlags.mHasUserValue,
-    aFlags.mIsSticky,
-    aFlags.mIsLocked,
-    aFlags.mDefaultChanged,
+      aKey,
+      mKeyTable.Add(aKey),
+      {index},
+      uint8_t(PrefType::String),
+      aFlags.mHasDefaultValue,
+      aFlags.mHasUserValue,
+      aFlags.mIsSticky,
+      aFlags.mIsLocked,
+      aFlags.mDefaultChanged,
   });
 }
 
-Result<Ok, nsresult>
-SharedPrefMapBuilder::Finalize(loader::AutoMemMap& aMap)
-{
+Result<Ok, nsresult> SharedPrefMapBuilder::Finalize(loader::AutoMemMap& aMap) {
   using Header = SharedPrefMap::Header;
 
   // Create an array of entry pointers for the entry array, and sort it by
@@ -172,7 +145,7 @@ SharedPrefMapBuilder::Finalize(loader::AutoMemMap& aMap)
     return strcmp(aA->mKeyString, aB->mKeyString);
   });
 
-  Header header = { uint32_t(entries.Length()) };
+  Header header = {uint32_t(entries.Length())};
 
   size_t offset = sizeof(header);
   offset += GetAlignmentOffset(offset, alignof(Header));
@@ -216,32 +189,31 @@ SharedPrefMapBuilder::Finalize(loader::AutoMemMap& aMap)
   auto* entryPtr = reinterpret_cast<SharedPrefMap::Entry*>(&headerPtr[1]);
   for (auto* entry : entries) {
     *entryPtr = {
-      entry->mKey,          GetValue(*entry),
-      entry->mType,         entry->mHasDefaultValue,
-      entry->mHasUserValue, entry->mIsSticky,
-      entry->mIsLocked,     entry->mDefaultChanged,
+        entry->mKey,          GetValue(*entry),
+        entry->mType,         entry->mHasDefaultValue,
+        entry->mHasUserValue, entry->mIsSticky,
+        entry->mIsLocked,     entry->mDefaultChanged,
     };
     entryPtr++;
   }
 
   auto ptr = mem.Get<uint8_t>();
 
-  mKeyTable.Write(
-    { &ptr[header.mKeyStrings.mOffset], header.mKeyStrings.mSize });
+  mKeyTable.Write({&ptr[header.mKeyStrings.mOffset], header.mKeyStrings.mSize});
 
   mValueStringTable.Write(
-    { &ptr[header.mValueStrings.mOffset], header.mValueStrings.mSize });
+      {&ptr[header.mValueStrings.mOffset], header.mValueStrings.mSize});
 
   mIntValueTable.WriteDefaultValues(
-    { &ptr[header.mDefaultIntValues.mOffset], header.mDefaultIntValues.mSize });
+      {&ptr[header.mDefaultIntValues.mOffset], header.mDefaultIntValues.mSize});
   mIntValueTable.WriteUserValues(
-    { &ptr[header.mUserIntValues.mOffset], header.mUserIntValues.mSize });
+      {&ptr[header.mUserIntValues.mOffset], header.mUserIntValues.mSize});
 
   mStringValueTable.WriteDefaultValues(
-    { &ptr[header.mDefaultStringValues.mOffset],
-      header.mDefaultStringValues.mSize });
+      {&ptr[header.mDefaultStringValues.mOffset],
+       header.mDefaultStringValues.mSize});
   mStringValueTable.WriteUserValues(
-    { &ptr[header.mUserStringValues.mOffset], header.mUserStringValues.mSize });
+      {&ptr[header.mUserStringValues.mOffset], header.mUserStringValues.mSize});
 
   mKeyTable.Clear();
   mValueStringTable.Clear();
@@ -252,4 +224,4 @@ SharedPrefMapBuilder::Finalize(loader::AutoMemMap& aMap)
   return mem.Finalize(aMap);
 }
 
-} // mozilla
+}  // namespace mozilla

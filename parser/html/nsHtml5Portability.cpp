@@ -8,18 +8,14 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsString.h"
 
-nsAtom*
-nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf,
-                                           int32_t length,
-                                           nsHtml5AtomTable* interner)
-{
+nsAtom* nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf,
+                                                   int32_t length,
+                                                   nsHtml5AtomTable* interner) {
   NS_ASSERTION(interner, "Didn't get an atom service.");
   return interner->GetAtom(nsDependentSubstring(buf, buf + length));
 }
 
-static bool
-ContainsWhiteSpace(mozilla::Span<char16_t> aSpan)
-{
+static bool ContainsWhiteSpace(mozilla::Span<char16_t> aSpan) {
   for (char16_t c : aSpan) {
     if (nsContentUtils::IsHTMLWhitespace(c)) {
       return true;
@@ -28,45 +24,34 @@ ContainsWhiteSpace(mozilla::Span<char16_t> aSpan)
   return false;
 }
 
-nsHtml5String
-nsHtml5Portability::newStringFromBuffer(char16_t* buf,
-                                        int32_t offset,
-                                        int32_t length,
-                                        nsHtml5TreeBuilder* treeBuilder,
-                                        bool maybeAtomize)
-{
+nsHtml5String nsHtml5Portability::newStringFromBuffer(
+    char16_t* buf, int32_t offset, int32_t length,
+    nsHtml5TreeBuilder* treeBuilder, bool maybeAtomize) {
   if (!length) {
     return nsHtml5String::EmptyString();
   }
   if (maybeAtomize &&
       !ContainsWhiteSpace(mozilla::MakeSpan(buf + offset, length))) {
     return nsHtml5String::FromAtom(
-      NS_AtomizeMainThread(nsDependentSubstring(buf + offset, length)));
+        NS_AtomizeMainThread(nsDependentSubstring(buf + offset, length)));
   }
   return nsHtml5String::FromBuffer(buf + offset, length, treeBuilder);
 }
 
-nsHtml5String
-nsHtml5Portability::newEmptyString()
-{
+nsHtml5String nsHtml5Portability::newEmptyString() {
   return nsHtml5String::EmptyString();
 }
 
-nsHtml5String
-nsHtml5Portability::newStringFromLiteral(const char* literal)
-{
+nsHtml5String nsHtml5Portability::newStringFromLiteral(const char* literal) {
   return nsHtml5String::FromLiteral(literal);
 }
 
-nsHtml5String
-nsHtml5Portability::newStringFromString(nsHtml5String string)
-{
+nsHtml5String nsHtml5Portability::newStringFromString(nsHtml5String string) {
   return string.Clone();
 }
 
-jArray<char16_t, int32_t>
-nsHtml5Portability::newCharArrayFromLocal(nsAtom* local)
-{
+jArray<char16_t, int32_t> nsHtml5Portability::newCharArrayFromLocal(
+    nsAtom* local) {
   nsAutoString temp;
   local->ToString(temp);
   int32_t len = temp.Length();
@@ -75,9 +60,8 @@ nsHtml5Portability::newCharArrayFromLocal(nsAtom* local)
   return arr;
 }
 
-jArray<char16_t, int32_t>
-nsHtml5Portability::newCharArrayFromString(nsHtml5String string)
-{
+jArray<char16_t, int32_t> nsHtml5Portability::newCharArrayFromString(
+    nsHtml5String string) {
   MOZ_RELEASE_ASSERT(string);
   uint32_t len = string.Length();
   MOZ_RELEASE_ASSERT(len < INT32_MAX);
@@ -86,49 +70,31 @@ nsHtml5Portability::newCharArrayFromString(nsHtml5String string)
   return arr;
 }
 
-bool
-nsHtml5Portability::localEqualsBuffer(nsAtom* local,
-                                      char16_t* buf,
-                                      int32_t length)
-{
+bool nsHtml5Portability::localEqualsBuffer(nsAtom* local, char16_t* buf,
+                                           int32_t length) {
   return local->Equals(buf, length);
 }
 
-bool
-nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
-  const char* lowerCaseLiteral,
-  nsHtml5String string)
-{
+bool nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+    const char* lowerCaseLiteral, nsHtml5String string) {
   return string.LowerCaseStartsWithASCII(lowerCaseLiteral);
 }
 
-bool
-nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(
-  const char* lowerCaseLiteral,
-  nsHtml5String string)
-{
+bool nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(
+    const char* lowerCaseLiteral, nsHtml5String string) {
   return string.LowerCaseEqualsASCII(lowerCaseLiteral);
 }
 
-bool
-nsHtml5Portability::literalEqualsString(const char* literal,
-                                        nsHtml5String string)
-{
+bool nsHtml5Portability::literalEqualsString(const char* literal,
+                                             nsHtml5String string) {
   return string.EqualsASCII(literal);
 }
 
-bool
-nsHtml5Portability::stringEqualsString(nsHtml5String one, nsHtml5String other)
-{
+bool nsHtml5Portability::stringEqualsString(nsHtml5String one,
+                                            nsHtml5String other) {
   return one.Equals(other);
 }
 
-void
-nsHtml5Portability::initializeStatics()
-{
-}
+void nsHtml5Portability::initializeStatics() {}
 
-void
-nsHtml5Portability::releaseStatics()
-{
-}
+void nsHtml5Portability::releaseStatics() {}

@@ -41,10 +41,10 @@ extern nsXREDirProvider* gDirServiceProvider;
 extern const mozilla::XREAppData* gAppData;
 extern bool gSafeMode;
 
-extern int    gArgc;
-extern char **gArgv;
-extern int    gRestartArgc;
-extern char **gRestartArgv;
+extern int gArgc;
+extern char** gArgv;
+extern int gRestartArgc;
+extern char** gRestartArgv;
 extern bool gRestartedByOS;
 extern bool gLogConsoleErrors;
 extern nsString gAbsoluteArgv0Path;
@@ -56,14 +56,12 @@ extern bool gIsGtest;
  *
  * @note XPCOMInit has not happened yet.
  */
-nsresult NS_CreateNativeAppSupport(nsINativeAppSupport* *aResult);
+nsresult NS_CreateNativeAppSupport(nsINativeAppSupport** aResult);
 already_AddRefed<nsINativeAppSupport> NS_GetNativeAppSupport();
 
-nsresult
-NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult);
+nsresult NS_NewToolkitProfileService(nsIToolkitProfileService** aResult);
 
-nsresult
-NS_NewToolkitProfileFactory(nsIFactory* *aResult);
+nsresult NS_NewToolkitProfileFactory(nsIFactory** aResult);
 
 /**
  * Try to acquire exclusive access to the specified profile directory.
@@ -82,33 +80,28 @@ NS_NewToolkitProfileFactory(nsIFactory* *aResult);
  * @return NS_ERROR_FILE_ACCESS_DENIED to indicate that the profile
  *         directory cannot be unlocked.
  */
-nsresult
-NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
-                   nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult);
+nsresult NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
+                            nsIProfileUnlocker** aUnlocker,
+                            nsIProfileLock** aResult);
 
-void
-WriteConsoleLog();
+void WriteConsoleLog();
 
-void
-OverrideDefaultLocaleIfNeeded();
+void OverrideDefaultLocaleIfNeeded();
 
 /**
  * Allow exit() calls to complete. This should be done from a proper Gecko
  * shutdown path. Otherwise we aim to catch improper shutdowns.
  */
-void
-MozExpectedExit();
+void MozExpectedExit();
 
 #ifdef XP_WIN
-void
-UseParentConsole();
+void UseParentConsole();
 
-BOOL
-WinLaunchChild(const wchar_t *exePath, int argc,
-               char **argv, HANDLE userToken = nullptr,
-               HANDLE *hProcess = nullptr);
+BOOL WinLaunchChild(const wchar_t* exePath, int argc, char** argv,
+                    HANDLE userToken = nullptr, HANDLE* hProcess = nullptr);
 
-#define PREF_WIN_REGISTER_APPLICATION_RESTART "toolkit.winRegisterApplicationRestart"
+#define PREF_WIN_REGISTER_APPLICATION_RESTART \
+  "toolkit.winRegisterApplicationRestart"
 #endif
 
 namespace mozilla {
@@ -116,11 +109,11 @@ namespace startup {
 Result<nsCOMPtr<nsIFile>, nsresult> GetIncompleteStartupFile(nsIFile* aProfLD);
 
 extern GeckoProcessType sChildProcessType;
-} // namespace startup
+}  // namespace startup
 
 const char* PlatformBuildID();
 
-} // namespace mozilla
+}  // namespace mozilla
 
 /**
  * Set up platform specific error handling such as suppressing DLL load dialog
@@ -128,14 +121,13 @@ const char* PlatformBuildID();
  */
 void SetupErrorHandling(const char* progname);
 
-
 #ifdef MOZ_ASAN_REPORTER
 extern "C" {
-  void MOZ_EXPORT __sanitizer_set_report_path(const char *path);
+void MOZ_EXPORT __sanitizer_set_report_path(const char* path);
 }
 void setASanReporterPath(nsIFile* aDir);
 
-already_AddRefed<nsIFile> GetFileFromEnv(const char *name);
+already_AddRefed<nsIFile> GetFileFromEnv(const char* name);
 #endif
 
-#endif // nsAppRunner_h__
+#endif  // nsAppRunner_h__

@@ -16,45 +16,33 @@
 // scoped_ptr<>'s interface, with which everyone is already familiar.
 //
 // When scoped_cftyperef<> takes ownership of an object (in the constructor or
-// in reset()), it takes over the caller's existing ownership claim.  The 
+// in reset()), it takes over the caller's existing ownership claim.  The
 // caller must own the object it gives to scoped_cftyperef<>, and relinquishes
 // an ownership claim to that object.  scoped_cftyperef<> does not call
 // CFRetain().
-template<typename CFT>
+template <typename CFT>
 class scoped_cftyperef {
  public:
   typedef CFT element_type;
 
-  explicit scoped_cftyperef(CFT object = NULL)
-      : object_(object) {
-  }
+  explicit scoped_cftyperef(CFT object = NULL) : object_(object) {}
 
   ~scoped_cftyperef() {
-    if (object_)
-      CFRelease(object_);
+    if (object_) CFRelease(object_);
   }
 
   void reset(CFT object = NULL) {
-    if (object_)
-      CFRelease(object_);
+    if (object_) CFRelease(object_);
     object_ = object;
   }
 
-  bool operator==(CFT that) const {
-    return object_ == that;
-  }
+  bool operator==(CFT that) const { return object_ == that; }
 
-  bool operator!=(CFT that) const {
-    return object_ != that;
-  }
+  bool operator!=(CFT that) const { return object_ != that; }
 
-  operator CFT() const {
-    return object_;
-  }
+  operator CFT() const { return object_; }
 
-  CFT get() const {
-    return object_;
-  }
+  CFT get() const { return object_; }
 
   void swap(scoped_cftyperef& that) {
     CFT temp = that.object_;

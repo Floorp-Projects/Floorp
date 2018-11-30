@@ -19,43 +19,37 @@
 namespace mozilla {
 namespace dom {
 
-class GeneratedImageContent final
-  : public nsGenericHTMLElement
-{
-public:
-  static already_AddRefed<GeneratedImageContent>
-    Create(nsIDocument&, uint32_t aContentIndex);
+class GeneratedImageContent final : public nsGenericHTMLElement {
+ public:
+  static already_AddRefed<GeneratedImageContent> Create(nsIDocument&,
+                                                        uint32_t aContentIndex);
 
   explicit GeneratedImageContent(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo))
-  {
-    MOZ_ASSERT(IsInNamespace(kNameSpaceID_XHTML), "Someone messed up our nodeinfo");
+      : nsGenericHTMLElement(std::move(aNodeInfo)) {
+    MOZ_ASSERT(IsInNamespace(kNameSpaceID_XHTML),
+               "Someone messed up our nodeinfo");
   }
 
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const final;
 
-  nsresult CopyInnerTo(GeneratedImageContent* aDest)
-  {
+  nsresult CopyInnerTo(GeneratedImageContent* aDest) {
     nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
     NS_ENSURE_SUCCESS(rv, rv);
     aDest->mIndex = mIndex;
     return NS_OK;
   }
 
-  uint32_t Index() const
-  {
-    return mIndex;
-  }
+  uint32_t Index() const { return mIndex; }
 
-protected:
+ protected:
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
-private:
+ private:
   virtual ~GeneratedImageContent() = default;
   uint32_t mIndex = 0;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // dom_base_GeneratedImageContent_h
+#endif  // dom_base_GeneratedImageContent_h

@@ -15,13 +15,12 @@ namespace plugins {
  * class lets us cast to the right type of object and send the appropriate
  * message.
  */
-class AStream
-{
-public:
+class AStream {
+ public:
   virtual bool IsBrowserStream() = 0;
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
 #endif

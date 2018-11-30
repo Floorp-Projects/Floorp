@@ -30,27 +30,21 @@ namespace mozilla {
  * SyncRunnable::DispatchToThread(new myrunnable...());
  *
  */
-class SyncRunnable : public Runnable
-{
-public:
+class SyncRunnable : public Runnable {
+ public:
   explicit SyncRunnable(nsIRunnable* aRunnable)
-    : Runnable("SyncRunnable")
-    , mRunnable(aRunnable)
-    , mMonitor("SyncRunnable")
-    , mDone(false)
-  {
-  }
+      : Runnable("SyncRunnable"),
+        mRunnable(aRunnable),
+        mMonitor("SyncRunnable"),
+        mDone(false) {}
 
   explicit SyncRunnable(already_AddRefed<nsIRunnable> aRunnable)
-    : Runnable("SyncRunnable")
-    , mRunnable(std::move(aRunnable))
-    , mMonitor("SyncRunnable")
-    , mDone(false)
-  {
-  }
+      : Runnable("SyncRunnable"),
+        mRunnable(std::move(aRunnable)),
+        mMonitor("SyncRunnable"),
+        mDone(false) {}
 
-  void DispatchToThread(nsIEventTarget* aThread, bool aForceDispatch = false)
-  {
+  void DispatchToThread(nsIEventTarget* aThread, bool aForceDispatch = false) {
     nsresult rv;
     bool on;
 
@@ -72,8 +66,7 @@ public:
     }
   }
 
-  void DispatchToThread(AbstractThread* aThread, bool aForceDispatch = false)
-  {
+  void DispatchToThread(AbstractThread* aThread, bool aForceDispatch = false) {
     if (!aForceDispatch && aThread->IsCurrentThreadIn()) {
       mRunnable->Run();
       return;
@@ -90,25 +83,20 @@ public:
     }
   }
 
-  static void DispatchToThread(nsIEventTarget* aThread,
-                               nsIRunnable* aRunnable,
-                               bool aForceDispatch = false)
-  {
+  static void DispatchToThread(nsIEventTarget* aThread, nsIRunnable* aRunnable,
+                               bool aForceDispatch = false) {
     RefPtr<SyncRunnable> s(new SyncRunnable(aRunnable));
     s->DispatchToThread(aThread, aForceDispatch);
   }
 
-  static void DispatchToThread(AbstractThread* aThread,
-                               nsIRunnable* aRunnable,
-                               bool aForceDispatch = false)
-  {
+  static void DispatchToThread(AbstractThread* aThread, nsIRunnable* aRunnable,
+                               bool aForceDispatch = false) {
     RefPtr<SyncRunnable> s(new SyncRunnable(aRunnable));
     s->DispatchToThread(aThread, aForceDispatch);
   }
 
-protected:
-  NS_IMETHOD Run() override
-  {
+ protected:
+  NS_IMETHOD Run() override {
     mRunnable->Run();
 
     mozilla::MonitorAutoLock lock(mMonitor);
@@ -120,12 +108,12 @@ protected:
     return NS_OK;
   }
 
-private:
+ private:
   nsCOMPtr<nsIRunnable> mRunnable;
   mozilla::Monitor mMonitor;
   bool mDone;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SyncRunnable_h
+#endif  // mozilla_SyncRunnable_h

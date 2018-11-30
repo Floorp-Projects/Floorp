@@ -50,126 +50,91 @@ int32_t CompareVersions(const char* aStrA, const char* aStrB);
 int32_t CompareVersions(const char16_t* aStrA, const char16_t* aStrB);
 #endif
 
-struct Version
-{
-  explicit Version(const char* aVersionString)
-  {
+struct Version {
+  explicit Version(const char* aVersionString) {
     versionContent = strdup(aVersionString);
   }
 
-  const char* ReadContent() const
-  {
-    return versionContent;
-  }
+  const char* ReadContent() const { return versionContent; }
 
-  ~Version()
-  {
-    free(versionContent);
-  }
+  ~Version() { free(versionContent); }
 
-  bool operator<(const Version& aRhs) const
-  {
+  bool operator<(const Version& aRhs) const {
     return CompareVersions(versionContent, aRhs.ReadContent()) == -1;
   }
-  bool operator<=(const Version& aRhs) const
-  {
+  bool operator<=(const Version& aRhs) const {
     return CompareVersions(versionContent, aRhs.ReadContent()) < 1;
   }
-  bool operator>(const Version& aRhs) const
-  {
+  bool operator>(const Version& aRhs) const {
     return CompareVersions(versionContent, aRhs.ReadContent()) == 1;
   }
-  bool operator>=(const Version& aRhs) const
-  {
+  bool operator>=(const Version& aRhs) const {
     return CompareVersions(versionContent, aRhs.ReadContent()) > -1;
   }
-  bool operator==(const Version& aRhs) const
-  {
+  bool operator==(const Version& aRhs) const {
     return CompareVersions(versionContent, aRhs.ReadContent()) == 0;
   }
-  bool operator!=(const Version& aRhs) const
-  {
+  bool operator!=(const Version& aRhs) const {
     return CompareVersions(versionContent, aRhs.ReadContent()) != 0;
   }
-  bool operator<(const char* aRhs) const
-  {
+  bool operator<(const char* aRhs) const {
     return CompareVersions(versionContent, aRhs) == -1;
   }
-  bool operator<=(const char* aRhs) const
-  {
+  bool operator<=(const char* aRhs) const {
     return CompareVersions(versionContent, aRhs) < 1;
   }
-  bool operator>(const char* aRhs) const
-  {
+  bool operator>(const char* aRhs) const {
     return CompareVersions(versionContent, aRhs) == 1;
   }
-  bool operator>=(const char* aRhs) const
-  {
+  bool operator>=(const char* aRhs) const {
     return CompareVersions(versionContent, aRhs) > -1;
   }
-  bool operator==(const char* aRhs) const
-  {
+  bool operator==(const char* aRhs) const {
     return CompareVersions(versionContent, aRhs) == 0;
   }
-  bool operator!=(const char* aRhs) const
-  {
+  bool operator!=(const char* aRhs) const {
     return CompareVersions(versionContent, aRhs) != 0;
   }
 
-private:
+ private:
   char* versionContent;
 };
 
 #ifdef XP_WIN
-struct VersionW
-{
-  explicit VersionW(const char16_t* aVersionStringW)
-  {
+struct VersionW {
+  explicit VersionW(const char16_t* aVersionStringW) {
     versionContentW =
-      reinterpret_cast<char16_t*>(wcsdup(char16ptr_t(aVersionStringW)));
+        reinterpret_cast<char16_t*>(wcsdup(char16ptr_t(aVersionStringW)));
   }
 
-  const char16_t* ReadContentW() const
-  {
-    return versionContentW;
-  }
+  const char16_t* ReadContentW() const { return versionContentW; }
 
-  ~VersionW()
-  {
-    free(versionContentW);
-  }
+  ~VersionW() { free(versionContentW); }
 
-  bool operator<(const VersionW& aRhs) const
-  {
+  bool operator<(const VersionW& aRhs) const {
     return CompareVersions(versionContentW, aRhs.ReadContentW()) == -1;
   }
-  bool operator<=(const VersionW& aRhs) const
-  {
+  bool operator<=(const VersionW& aRhs) const {
     return CompareVersions(versionContentW, aRhs.ReadContentW()) < 1;
   }
-  bool operator>(const VersionW& aRhs) const
-  {
+  bool operator>(const VersionW& aRhs) const {
     return CompareVersions(versionContentW, aRhs.ReadContentW()) == 1;
   }
-  bool operator>=(const VersionW& aRhs) const
-  {
+  bool operator>=(const VersionW& aRhs) const {
     return CompareVersions(versionContentW, aRhs.ReadContentW()) > -1;
   }
-  bool operator==(const VersionW& aRhs) const
-  {
+  bool operator==(const VersionW& aRhs) const {
     return CompareVersions(versionContentW, aRhs.ReadContentW()) == 0;
   }
-  bool operator!=(const VersionW& aRhs) const
-  {
+  bool operator!=(const VersionW& aRhs) const {
     return CompareVersions(versionContentW, aRhs.ReadContentW()) != 0;
   }
 
-private:
+ private:
   char16_t* versionContentW;
 };
 #endif
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // nsVersionComparator_h__
-
+#endif  // nsVersionComparator_h__

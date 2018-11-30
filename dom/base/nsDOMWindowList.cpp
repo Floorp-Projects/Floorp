@@ -17,24 +17,17 @@
 
 using namespace mozilla;
 
-nsDOMWindowList::nsDOMWindowList(nsIDocShell *aDocShell)
-{
+nsDOMWindowList::nsDOMWindowList(nsIDocShell* aDocShell) {
   SetDocShell(aDocShell);
 }
 
-nsDOMWindowList::~nsDOMWindowList()
-{
+nsDOMWindowList::~nsDOMWindowList() {}
+
+void nsDOMWindowList::SetDocShell(nsIDocShell* aDocShell) {
+  mDocShellNode = aDocShell;  // Weak Reference
 }
 
-void
-nsDOMWindowList::SetDocShell(nsIDocShell* aDocShell)
-{
-  mDocShellNode = aDocShell; // Weak Reference
-}
-
-void
-nsDOMWindowList::EnsureFresh()
-{
+void nsDOMWindowList::EnsureFresh() {
   nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
 
   if (shellAsNav) {
@@ -47,9 +40,7 @@ nsDOMWindowList::EnsureFresh()
   }
 }
 
-uint32_t
-nsDOMWindowList::GetLength()
-{
+uint32_t nsDOMWindowList::GetLength() {
   EnsureFresh();
 
   NS_ENSURE_TRUE(mDocShellNode, 0);
@@ -61,9 +52,8 @@ nsDOMWindowList::GetLength()
   return uint32_t(length);
 }
 
-already_AddRefed<nsPIDOMWindowOuter>
-nsDOMWindowList::IndexedGetter(uint32_t aIndex)
-{
+already_AddRefed<nsPIDOMWindowOuter> nsDOMWindowList::IndexedGetter(
+    uint32_t aIndex) {
   nsCOMPtr<nsIDocShellTreeItem> item = GetDocShellTreeItemAt(aIndex);
   if (!item) {
     return nullptr;
@@ -75,9 +65,8 @@ nsDOMWindowList::IndexedGetter(uint32_t aIndex)
   return window.forget();
 }
 
-already_AddRefed<nsPIDOMWindowOuter>
-nsDOMWindowList::NamedItem(const nsAString& aName)
-{
+already_AddRefed<nsPIDOMWindowOuter> nsDOMWindowList::NamedItem(
+    const nsAString& aName) {
   EnsureFresh();
 
   if (!mDocShellNode) {
@@ -85,8 +74,8 @@ nsDOMWindowList::NamedItem(const nsAString& aName)
   }
 
   nsCOMPtr<nsIDocShellTreeItem> item;
-  mDocShellNode->FindChildWithName(aName, false, false, nullptr,
-                                   nullptr, getter_AddRefs(item));
+  mDocShellNode->FindChildWithName(aName, false, false, nullptr, nullptr,
+                                   getter_AddRefs(item));
 
   nsCOMPtr<nsPIDOMWindowOuter> childWindow(do_GetInterface(item));
   return childWindow.forget();

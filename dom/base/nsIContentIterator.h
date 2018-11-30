@@ -14,13 +14,15 @@
 class nsINode;
 class nsRange;
 
-#define NS_ICONTENTITERATOR_IID \
-{ 0x2550078e, 0xae87, 0x4914, \
- { 0xb3, 0x04, 0xe4, 0xd1, 0x46, 0x19, 0x3d, 0x5f } }
+#define NS_ICONTENTITERATOR_IID                      \
+  {                                                  \
+    0x2550078e, 0xae87, 0x4914, {                    \
+      0xb3, 0x04, 0xe4, 0xd1, 0x46, 0x19, 0x3d, 0x5f \
+    }                                                \
+  }
 
-class nsIContentIterator : public nsISupports
-{
-public:
+class nsIContentIterator : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTITERATOR_IID)
 
   /* Initializes an iterator for the subtree rooted by the node aRoot
@@ -66,10 +68,10 @@ public:
   /** CurrentItem will return the current item, or null if the list is empty
    *  @return the current node
    */
-  virtual nsINode *GetCurrentNode() = 0;
+  virtual nsINode* GetCurrentNode() = 0;
 
-  /** return if the collection is at the end. that is the beginning following a call to Prev
-   *  and it is the end of the list following a call to next
+  /** return if the collection is at the end. that is the beginning following a
+   * call to Prev and it is the end of the list following a call to next
    *  @return if the iterator is done.
    */
   virtual bool IsDone() = 0;
@@ -85,4 +87,4 @@ already_AddRefed<nsIContentIterator> NS_NewContentIterator();
 already_AddRefed<nsIContentIterator> NS_NewPreContentIterator();
 already_AddRefed<nsIContentIterator> NS_NewContentSubtreeIterator();
 
-#endif // __nsIContentIterator_h___
+#endif  // __nsIContentIterator_h___

@@ -10,8 +10,9 @@
 #include "ipc/IPCMessageUtils.h"
 
 namespace IPC {
-template<typename T> struct ParamTraits;
-} // namespace IPC
+template <typename T>
+struct ParamTraits;
+}  // namespace IPC
 
 namespace mozilla {
 namespace dom {
@@ -19,55 +20,49 @@ class BrowsingContext;
 class ContentParent;
 class TabParent;
 
-template<typename T>
-class IdType
-{
+template <typename T>
+class IdType {
   friend struct IPC::ParamTraits<IdType<T>>;
 
-public:
+ public:
   IdType() : mId(0) {}
   explicit IdType(uint64_t aId) : mId(aId) {}
 
   operator uint64_t() const { return mId; }
 
-  IdType& operator=(uint64_t aId)
-  {
+  IdType& operator=(uint64_t aId) {
     mId = aId;
     return *this;
   }
 
-  bool operator<(const IdType& rhs)
-  {
-    return mId < rhs.mId;
-  }
-private:
+  bool operator<(const IdType& rhs) { return mId < rhs.mId; }
+
+ private:
   uint64_t mId;
 };
 
 typedef IdType<TabParent> TabId;
 typedef IdType<ContentParent> ContentParentId;
 typedef IdType<BrowsingContext> BrowsingContextId;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 namespace IPC {
 
-template<typename T>
-struct ParamTraits<mozilla::dom::IdType<T>>
-{
+template <typename T>
+struct ParamTraits<mozilla::dom::IdType<T>> {
   typedef mozilla::dom::IdType<T> paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mId);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mId);
   }
 };
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // mozilla_dom_IdType_h
+#endif  // mozilla_dom_IdType_h

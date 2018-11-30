@@ -11,25 +11,17 @@
 namespace mozilla {
 namespace gfx {
 
-DrawingJobBuilder::DrawingJobBuilder()
-{}
+DrawingJobBuilder::DrawingJobBuilder() {}
 
-DrawingJobBuilder::~DrawingJobBuilder()
-{
-  MOZ_ASSERT(!mDrawTarget);
-}
+DrawingJobBuilder::~DrawingJobBuilder() { MOZ_ASSERT(!mDrawTarget); }
 
-void
-DrawingJob::Clear()
-{
+void DrawingJob::Clear() {
   mCommandBuffer = nullptr;
   mCursor = 0;
 }
 
-void
-DrawingJobBuilder::BeginDrawingJob(DrawTarget* aTarget, IntPoint aOffset,
-                                     SyncObject* aStart)
-{
+void DrawingJobBuilder::BeginDrawingJob(DrawTarget* aTarget, IntPoint aOffset,
+                                        SyncObject* aStart) {
   MOZ_ASSERT(mCommandOffsets.empty());
   MOZ_ASSERT(aTarget);
   mDrawTarget = aTarget;
@@ -37,13 +29,12 @@ DrawingJobBuilder::BeginDrawingJob(DrawTarget* aTarget, IntPoint aOffset,
   mStart = aStart;
 }
 
-DrawingJob*
-DrawingJobBuilder::EndDrawingJob(CommandBuffer* aCmdBuffer,
-                                   SyncObject* aCompletion,
-                                   WorkerThread* aPinToWorker)
-{
+DrawingJob* DrawingJobBuilder::EndDrawingJob(CommandBuffer* aCmdBuffer,
+                                             SyncObject* aCompletion,
+                                             WorkerThread* aPinToWorker) {
   MOZ_ASSERT(mDrawTarget);
-  DrawingJob* task = new DrawingJob(mDrawTarget, mOffset, mStart, aCompletion, aPinToWorker);
+  DrawingJob* task =
+      new DrawingJob(mDrawTarget, mOffset, mStart, aCompletion, aPinToWorker);
   task->mCommandBuffer = aCmdBuffer;
   task->mCommandOffsets = std::move(mCommandOffsets);
 
@@ -55,23 +46,20 @@ DrawingJobBuilder::EndDrawingJob(CommandBuffer* aCmdBuffer,
 }
 
 DrawingJob::DrawingJob(DrawTarget* aTarget, IntPoint aOffset,
-                         SyncObject* aStart, SyncObject* aCompletion,
-                         WorkerThread* aPinToWorker)
-: Job(aStart, aCompletion, aPinToWorker)
-, mCommandBuffer(nullptr)
-, mCursor(0)
-, mDrawTarget(aTarget)
-, mOffset(aOffset)
-{
+                       SyncObject* aStart, SyncObject* aCompletion,
+                       WorkerThread* aPinToWorker)
+    : Job(aStart, aCompletion, aPinToWorker),
+      mCommandBuffer(nullptr),
+      mCursor(0),
+      mDrawTarget(aTarget),
+      mOffset(aOffset) {
   mCommandOffsets.reserve(64);
 }
 
-JobStatus
-DrawingJob::Run()
-{
+JobStatus DrawingJob::Run() {
   while (mCursor < mCommandOffsets.size()) {
-
-    const DrawingCommand* cmd = mCommandBuffer->GetDrawingCommand(mCommandOffsets[mCursor]);
+    const DrawingCommand* cmd =
+        mCommandBuffer->GetDrawingCommand(mCommandOffsets[mCursor]);
 
     if (!cmd) {
       return JobStatus::Error;
@@ -85,37 +73,27 @@ DrawingJob::Run()
   return JobStatus::Complete;
 }
 
-DrawingJob::~DrawingJob()
-{
-  Clear();
-}
+DrawingJob::~DrawingJob() { Clear(); }
 
-const DrawingCommand*
-CommandBuffer::GetDrawingCommand(ptrdiff_t aId)
-{
+const DrawingCommand* CommandBuffer::GetDrawingCommand(ptrdiff_t aId) {
   return static_cast<DrawingCommand*>(mStorage.GetStorage(aId));
 }
 
-CommandBuffer::~CommandBuffer()
-{
-  mStorage.ForEach([](void* item){
+CommandBuffer::~CommandBuffer() {
+  mStorage.ForEach([](void* item) {
     static_cast<DrawingCommand*>(item)->~DrawingCommand();
   });
   mStorage.Clear();
 }
 
-void
-CommandBufferBuilder::BeginCommandBuffer(size_t aBufferSize)
-{
+void CommandBufferBuilder::BeginCommandBuffer(size_t aBufferSize) {
   MOZ_ASSERT(!mCommands);
   mCommands = new CommandBuffer(aBufferSize);
 }
 
-already_AddRefed<CommandBuffer>
-CommandBufferBuilder::EndCommandBuffer()
-{
+already_AddRefed<CommandBuffer> CommandBufferBuilder::EndCommandBuffer() {
   return mCommands.forget();
 }
 
-} // namespace
-} // namespace
+}  // namespace gfx
+}  // namespace mozilla

@@ -23,14 +23,12 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-nsTArray<RefPtr<PerformanceInfoPromise>>
-CollectPerformanceInfo()
-{
+nsTArray<RefPtr<PerformanceInfoPromise>> CollectPerformanceInfo() {
   nsTArray<RefPtr<PerformanceInfoPromise>> promises;
 
   // collecting ReportPerformanceInfo from all WorkerDebugger instances
   RefPtr<mozilla::dom::WorkerDebuggerManager> wdm =
-    WorkerDebuggerManager::GetOrCreate();
+      WorkerDebuggerManager::GetOrCreate();
   if (NS_WARN_IF(!wdm)) {
     return promises;
   }
@@ -47,7 +45,7 @@ CollectPerformanceInfo()
   if (tabGroups) {
     for (TabGroup* tabGroup = tabGroups->getFirst(); tabGroup;
          tabGroup =
-           static_cast<LinkedListElement<TabGroup>*>(tabGroup)->getNext()) {
+             static_cast<LinkedListElement<TabGroup>*>(tabGroup)->getNext()) {
       for (auto iter = tabGroup->Iter(); !iter.Done(); iter.Next()) {
         DocGroup* docGroup = iter.Get()->mDocGroup;
         promises.AppendElement(docGroup->ReportPerformanceInfo());
@@ -57,9 +55,7 @@ CollectPerformanceInfo()
   return promises;
 }
 
-nsresult
-GetTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes)
-{
+nsresult GetTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes) {
   // Measure the window.
   SizeOfState state(moz_malloc_size_of);
   nsWindowSizes windowSizes(state);
@@ -86,10 +82,9 @@ GetTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes)
   return NS_OK;
 }
 
-RefPtr<MemoryPromise>
-CollectMemoryInfo(const nsCOMPtr<nsPIDOMWindowOuter>& aWindow,
-                  const RefPtr<AbstractThread>& aEventTarget)
-{
+RefPtr<MemoryPromise> CollectMemoryInfo(
+    const nsCOMPtr<nsPIDOMWindowOuter>& aWindow,
+    const RefPtr<AbstractThread>& aEventTarget) {
   // Getting Dom sizes. -- XXX should we reimplement GetTabSizes to async here ?
   nsGlobalWindowOuter* window = nsGlobalWindowOuter::Cast(aWindow);
   nsTabSizes sizes;
@@ -107,17 +102,16 @@ CollectMemoryInfo(const nsCOMPtr<nsPIDOMWindowOuter>& aWindow,
 
   // Getting Media sizes.
   return GetMediaMemorySizes()->Then(
-    aEventTarget,
-    __func__,
-    [GCHeapUsage, sizes](const MediaMemoryInfo& media) {
-      return MemoryPromise::CreateAndResolve(
-        PerformanceMemoryInfo(
-          media, sizes.mDom, sizes.mStyle, sizes.mOther, GCHeapUsage),
-        __func__);
-    },
-    [](const nsresult rv) {
-      return MemoryPromise::CreateAndReject(rv, __func__);
-    });
+      aEventTarget, __func__,
+      [GCHeapUsage, sizes](const MediaMemoryInfo& media) {
+        return MemoryPromise::CreateAndResolve(
+            PerformanceMemoryInfo(media, sizes.mDom, sizes.mStyle, sizes.mOther,
+                                  GCHeapUsage),
+            __func__);
+      },
+      [](const nsresult rv) {
+        return MemoryPromise::CreateAndReject(rv, __func__);
+      });
 }
 
-} // namespace
+}  // namespace mozilla

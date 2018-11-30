@@ -13,9 +13,7 @@ namespace dom {
 
 using mozilla::ipc::IPCResult;
 
-void
-ServiceWorkerRegistrationChild::ActorDestroy(ActorDestroyReason aReason)
-{
+void ServiceWorkerRegistrationChild::ActorDestroy(ActorDestroyReason aReason) {
   if (mWorkerHolderToken) {
     mWorkerHolderToken->RemoveListener(this);
     mWorkerHolderToken = nullptr;
@@ -27,59 +25,50 @@ ServiceWorkerRegistrationChild::ActorDestroy(ActorDestroyReason aReason)
   }
 }
 
-IPCResult
-ServiceWorkerRegistrationChild::RecvUpdateState(const IPCServiceWorkerRegistrationDescriptor& aDescriptor)
-{
+IPCResult ServiceWorkerRegistrationChild::RecvUpdateState(
+    const IPCServiceWorkerRegistrationDescriptor& aDescriptor) {
   if (mOwner) {
     mOwner->UpdateState(ServiceWorkerRegistrationDescriptor(aDescriptor));
   }
   return IPC_OK();
 }
 
-IPCResult
-ServiceWorkerRegistrationChild::RecvFireUpdateFound()
-{
+IPCResult ServiceWorkerRegistrationChild::RecvFireUpdateFound() {
   if (mOwner) {
     mOwner->FireUpdateFound();
   }
   return IPC_OK();
 }
 
-void
-ServiceWorkerRegistrationChild::WorkerShuttingDown()
-{
+void ServiceWorkerRegistrationChild::WorkerShuttingDown() {
   MaybeStartTeardown();
 }
 
-ServiceWorkerRegistrationChild::ServiceWorkerRegistrationChild(WorkerHolderToken* aWorkerHolderToken)
-  : mWorkerHolderToken(aWorkerHolderToken)
-  , mOwner(nullptr)
-  , mTeardownStarted(false)
-{
+ServiceWorkerRegistrationChild::ServiceWorkerRegistrationChild(
+    WorkerHolderToken* aWorkerHolderToken)
+    : mWorkerHolderToken(aWorkerHolderToken),
+      mOwner(nullptr),
+      mTeardownStarted(false) {
   if (mWorkerHolderToken) {
     mWorkerHolderToken->AddListener(this);
   }
 }
 
-void
-ServiceWorkerRegistrationChild::SetOwner(RemoteServiceWorkerRegistrationImpl* aOwner)
-{
+void ServiceWorkerRegistrationChild::SetOwner(
+    RemoteServiceWorkerRegistrationImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(!mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner);
   mOwner = aOwner;
 }
 
-void
-ServiceWorkerRegistrationChild::RevokeOwner(RemoteServiceWorkerRegistrationImpl* aOwner)
-{
+void ServiceWorkerRegistrationChild::RevokeOwner(
+    RemoteServiceWorkerRegistrationImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner == mOwner);
   mOwner = nullptr;
 }
 
-void
-ServiceWorkerRegistrationChild::MaybeStartTeardown()
-{
+void ServiceWorkerRegistrationChild::MaybeStartTeardown() {
   if (mTeardownStarted) {
     return;
   }
@@ -87,5 +76,5 @@ ServiceWorkerRegistrationChild::MaybeStartTeardown()
   Unused << SendTeardown();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

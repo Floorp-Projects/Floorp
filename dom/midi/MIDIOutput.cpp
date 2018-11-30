@@ -16,18 +16,17 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-MIDIOutput::MIDIOutput(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent)
-  : MIDIPort(aWindow, aMIDIAccessParent)
-{
+MIDIOutput::MIDIOutput(nsPIDOMWindowInner* aWindow,
+                       MIDIAccess* aMIDIAccessParent)
+    : MIDIPort(aWindow, aMIDIAccessParent) {}
 
-}
-
-//static
-MIDIOutput*
-MIDIOutput::Create(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent,
-                   const MIDIPortInfo& aPortInfo, const bool aSysexEnabled)
-{
-  MOZ_ASSERT(static_cast<MIDIPortType>(aPortInfo.type()) == MIDIPortType::Output);
+// static
+MIDIOutput* MIDIOutput::Create(nsPIDOMWindowInner* aWindow,
+                               MIDIAccess* aMIDIAccessParent,
+                               const MIDIPortInfo& aPortInfo,
+                               const bool aSysexEnabled) {
+  MOZ_ASSERT(static_cast<MIDIPortType>(aPortInfo.type()) ==
+             MIDIPortType::Output);
   auto port = new MIDIOutput(aWindow, aMIDIAccessParent);
   if (NS_WARN_IF(!port->Initialize(aPortInfo, aSysexEnabled))) {
     return nullptr;
@@ -35,15 +34,13 @@ MIDIOutput::Create(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent,
   return port;
 }
 
-JSObject*
-MIDIOutput::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MIDIOutput::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return MIDIOutput_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-MIDIOutput::Send(const Sequence<uint8_t>& aData, const Optional<double>& aTimestamp, ErrorResult& aRv)
-{
+void MIDIOutput::Send(const Sequence<uint8_t>& aData,
+                      const Optional<double>& aTimestamp, ErrorResult& aRv) {
   if (mPort->DeviceState() == MIDIPortDeviceState::Disconnected) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -62,8 +59,11 @@ MIDIOutput::Send(const Sequence<uint8_t>& aData, const Optional<double>& aTimest
       return;
     }
     TimeDuration ts_diff = TimeDuration::FromMilliseconds(aTimestamp.Value());
-    timestamp =
-      GetOwner()->GetPerformance()->GetDOMTiming()->GetNavigationStartTimeStamp() + ts_diff;
+    timestamp = GetOwner()
+                    ->GetPerformance()
+                    ->GetDOMTiming()
+                    ->GetNavigationStartTimeStamp() +
+                ts_diff;
   } else {
     timestamp = TimeStamp::Now();
   }
@@ -90,9 +90,7 @@ MIDIOutput::Send(const Sequence<uint8_t>& aData, const Optional<double>& aTimest
   mPort->SendSend(msgArray);
 }
 
-void
-MIDIOutput::Clear()
-{
+void MIDIOutput::Clear() {
   if (mPort->ConnectionState() == MIDIPortConnectionState::Closed) {
     return;
   }

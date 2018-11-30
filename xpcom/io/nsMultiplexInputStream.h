@@ -14,17 +14,17 @@
 
 #include "nsIMultiplexInputStream.h"
 
-#define NS_MULTIPLEXINPUTSTREAM_CONTRACTID "@mozilla.org/io/multiplex-input-stream;1"
+#define NS_MULTIPLEXINPUTSTREAM_CONTRACTID \
+  "@mozilla.org/io/multiplex-input-stream;1"
 #define NS_MULTIPLEXINPUTSTREAM_CID                  \
   { /* 565e3a2c-1dd2-11b2-8da1-b4cef17e568d */       \
-    0x565e3a2c,                                      \
-    0x1dd2,                                          \
-    0x11b2,                                          \
-    {0x8d, 0xa1, 0xb4, 0xce, 0xf1, 0x7e, 0x56, 0x8d} \
+    0x565e3a2c, 0x1dd2, 0x11b2, {                    \
+      0x8d, 0xa1, 0xb4, 0xce, 0xf1, 0x7e, 0x56, 0x8d \
+    }                                                \
   }
 
 extern nsresult nsMultiplexInputStreamConstructor(nsISupports* aOuter,
                                                   REFNSIID aIID,
                                                   void** aResult);
 
-#endif //  _nsMultiplexInputStream_h_
+#endif  //  _nsMultiplexInputStream_h_

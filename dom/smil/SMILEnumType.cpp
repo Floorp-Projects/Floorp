@@ -11,73 +11,59 @@
 
 namespace mozilla {
 
-void
-SMILEnumType::Init(nsSMILValue& aValue) const
-{
+void SMILEnumType::Init(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
   aValue.mU.mUint = 0;
   aValue.mType = this;
 }
 
-void
-SMILEnumType::Destroy(nsSMILValue& aValue) const
-{
+void SMILEnumType::Destroy(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mUint = 0;
   aValue.mType = nsSMILNullType::Singleton();
 }
 
-nsresult
-SMILEnumType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
-{
+nsresult SMILEnumType::Assign(nsSMILValue& aDest,
+                              const nsSMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
   aDest.mU.mUint = aSrc.mU.mUint;
   return NS_OK;
 }
 
-bool
-SMILEnumType::IsEqual(const nsSMILValue& aLeft,
-                      const nsSMILValue& aRight) const
-{
+bool SMILEnumType::IsEqual(const nsSMILValue& aLeft,
+                           const nsSMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
   return aLeft.mU.mUint == aRight.mU.mUint;
 }
 
-nsresult
-SMILEnumType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                  uint32_t aCount) const
-{
-  MOZ_ASSERT(aValueToAdd.mType == aDest.mType,
-                  "Trying to add invalid types");
+nsresult SMILEnumType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+                           uint32_t aCount) const {
+  MOZ_ASSERT(aValueToAdd.mType == aDest.mType, "Trying to add invalid types");
   MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
-  return NS_ERROR_FAILURE; // enum values can't be added to each other
+  return NS_ERROR_FAILURE;  // enum values can't be added to each other
 }
 
-nsresult
-SMILEnumType::ComputeDistance(const nsSMILValue& aFrom,
-                              const nsSMILValue& aTo,
-                              double& aDistance) const
-{
-  MOZ_ASSERT(aFrom.mType == aTo.mType,"Trying to compare different types");
+nsresult SMILEnumType::ComputeDistance(const nsSMILValue& aFrom,
+                                       const nsSMILValue& aTo,
+                                       double& aDistance) const {
+  MOZ_ASSERT(aFrom.mType == aTo.mType, "Trying to compare different types");
   MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
-  return NS_ERROR_FAILURE; // there is no concept of distance between enum values
+  return NS_ERROR_FAILURE;  // there is no concept of distance between enum
+                            // values
 }
 
-nsresult
-SMILEnumType::Interpolate(const nsSMILValue& aStartVal,
-                          const nsSMILValue& aEndVal,
-                          double aUnitDistance,
-                          nsSMILValue& aResult) const
-{
+nsresult SMILEnumType::Interpolate(const nsSMILValue& aStartVal,
+                                   const nsSMILValue& aEndVal,
+                                   double aUnitDistance,
+                                   nsSMILValue& aResult) const {
   MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
-      "Trying to interpolate different types");
-  MOZ_ASSERT(aStartVal.mType == this,
-      "Unexpected types for interpolation");
-  MOZ_ASSERT(aResult.mType   == this, "Unexpected result type");
-  return NS_ERROR_FAILURE; // enum values do not interpolate
+             "Trying to interpolate different types");
+  MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");
+  MOZ_ASSERT(aResult.mType == this, "Unexpected result type");
+  return NS_ERROR_FAILURE;  // enum values do not interpolate
 }
 
-} // namespace mozilla
+}  // namespace mozilla

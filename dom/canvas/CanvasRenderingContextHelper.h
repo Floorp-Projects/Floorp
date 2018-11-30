@@ -34,24 +34,20 @@ enum class CanvasContextType : uint8_t {
  * Povides common RenderingContext functionality used by both OffscreenCanvas
  * and HTMLCanvasElement.
  */
-class CanvasRenderingContextHelper
-{
-public:
-  virtual already_AddRefed<nsISupports>
-  GetContext(JSContext* aCx,
-             const nsAString& aContextId,
-             JS::Handle<JS::Value> aContextOptions,
-             ErrorResult& aRv);
+class CanvasRenderingContextHelper {
+ public:
+  virtual already_AddRefed<nsISupports> GetContext(
+      JSContext* aCx, const nsAString& aContextId,
+      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv);
 
   virtual bool GetOpaqueAttr() = 0;
 
-protected:
+ protected:
   virtual nsresult UpdateContext(JSContext* aCx,
                                  JS::Handle<JS::Value> aNewContextOptions,
                                  ErrorResult& aRvForDictionaryInit);
 
-  virtual nsresult ParseParams(JSContext* aCx,
-                               const nsAString& aType,
+  virtual nsresult ParseParams(JSContext* aCx, const nsAString& aType,
                                const JS::Value& aEncoderOptions,
                                nsAString& outParams,
                                bool* const outCustomParseOptions);
@@ -60,16 +56,16 @@ protected:
               const nsAString& aType, JS::Handle<JS::Value> aParams,
               bool aUsePlaceholder, ErrorResult& aRv);
 
-  void ToBlob(JSContext* aCx, nsIGlobalObject* aGlobal, EncodeCompleteCallback* aCallback,
-              const nsAString& aType, JS::Handle<JS::Value> aParams,
-              bool aUsePlaceholder, ErrorResult& aRv);
+  void ToBlob(JSContext* aCx, nsIGlobalObject* aGlobal,
+              EncodeCompleteCallback* aCallback, const nsAString& aType,
+              JS::Handle<JS::Value> aParams, bool aUsePlaceholder,
+              ErrorResult& aRv);
 
-  virtual already_AddRefed<nsICanvasRenderingContextInternal>
-  CreateContext(CanvasContextType aContextType);
+  virtual already_AddRefed<nsICanvasRenderingContextInternal> CreateContext(
+      CanvasContextType aContextType);
 
-  already_AddRefed<nsICanvasRenderingContextInternal>
-  CreateContextHelper(CanvasContextType aContextType,
-                      layers::LayersBackend aCompositorBackend);
+  already_AddRefed<nsICanvasRenderingContextInternal> CreateContextHelper(
+      CanvasContextType aContextType, layers::LayersBackend aCompositorBackend);
 
   virtual nsIntSize GetWidthHeight() = 0;
 
@@ -77,7 +73,7 @@ protected:
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // MOZILLA_DOM_CANVASRENDERINGCONTEXTHELPER_H_
+#endif  // MOZILLA_DOM_CANVASRENDERINGCONTEXTHELPER_H_

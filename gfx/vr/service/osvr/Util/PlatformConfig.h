@@ -49,7 +49,7 @@
 /* #undef OSVR_HAVE_STRUCT_TIMEVAL_IN_SYS_TIME_H */
 #endif
 
-#if defined(OSVR_HAVE_STRUCT_TIMEVAL_IN_SYS_TIME_H) ||                         \
+#if defined(OSVR_HAVE_STRUCT_TIMEVAL_IN_SYS_TIME_H) || \
     defined(OSVR_HAVE_STRUCT_TIMEVAL_IN_WINSOCK2_H)
 #define OSVR_HAVE_STRUCT_TIMEVAL
 #endif
@@ -85,4 +85,3 @@
 //@}
 
 #endif
-

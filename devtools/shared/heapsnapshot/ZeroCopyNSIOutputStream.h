@@ -23,8 +23,7 @@ namespace devtools {
 // succeeds or fails, then you should call the `flush` method yourself. Errors
 // will be logged, however.
 class MOZ_STACK_CLASS ZeroCopyNSIOutputStream
-  : public ::google::protobuf::io::ZeroCopyOutputStream
-{
+    : public ::google::protobuf::io::ZeroCopyOutputStream {
   static const int BUFFER_SIZE = 8192;
 
   // The nsIOutputStream we are streaming to.
@@ -47,7 +46,7 @@ class MOZ_STACK_CLASS ZeroCopyNSIOutputStream
   // Write the internal buffer to the output stream and flush it.
   nsresult writeBuffer();
 
-public:
+ public:
   explicit ZeroCopyNSIOutputStream(nsCOMPtr<nsIOutputStream>& out);
 
   nsresult flush() { return writeBuffer(); }
@@ -64,7 +63,7 @@ public:
   virtual ::google::protobuf::int64 ByteCount() const override;
 };
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla
 
-#endif // mozilla_devtools_ZeroCopyNSIOutputStream__
+#endif  // mozilla_devtools_ZeroCopyNSIOutputStream__

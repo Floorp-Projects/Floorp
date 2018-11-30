@@ -47,11 +47,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Directory)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<Directory>
-Directory::Constructor(const GlobalObject& aGlobal,
-                       const nsAString& aRealPath,
-                       ErrorResult& aRv)
-{
+/* static */ already_AddRefed<Directory> Directory::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aRealPath, ErrorResult& aRv) {
   nsCOMPtr<nsIFile> path;
   aRv = NS_NewLocalFile(aRealPath, true, getter_AddRefs(path));
   if (NS_WARN_IF(aRv.Failed())) {
@@ -61,10 +58,8 @@ Directory::Constructor(const GlobalObject& aGlobal,
   return Create(aGlobal.GetAsSupports(), path);
 }
 
-/* static */ already_AddRefed<Directory>
-Directory::Create(nsISupports* aParent, nsIFile* aFile,
-                  FileSystemBase* aFileSystem)
-{
+/* static */ already_AddRefed<Directory> Directory::Create(
+    nsISupports* aParent, nsIFile* aFile, FileSystemBase* aFileSystem) {
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(aFile);
 
@@ -72,12 +67,9 @@ Directory::Create(nsISupports* aParent, nsIFile* aFile,
   return directory.forget();
 }
 
-Directory::Directory(nsISupports* aParent,
-                     nsIFile* aFile,
+Directory::Directory(nsISupports* aParent, nsIFile* aFile,
                      FileSystemBase* aFileSystem)
-  : mParent(aParent)
-  , mFile(aFile)
-{
+    : mParent(aParent), mFile(aFile) {
   MOZ_ASSERT(aFile);
 
   // aFileSystem can be null. In this case we create a OSFileSystem when needed.
@@ -90,25 +82,16 @@ Directory::Directory(nsISupports* aParent,
   }
 }
 
-Directory::~Directory()
-{
-}
+Directory::~Directory() {}
 
-nsISupports*
-Directory::GetParentObject() const
-{
-  return mParent;
-}
+nsISupports* Directory::GetParentObject() const { return mParent; }
 
-JSObject*
-Directory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* Directory::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto) {
   return Directory_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-Directory::GetName(nsAString& aRetval, ErrorResult& aRv)
-{
+void Directory::GetName(nsAString& aRetval, ErrorResult& aRv) {
   aRetval.Truncate();
 
   RefPtr<FileSystemBase> fs = GetFileSystem(aRv);
@@ -119,9 +102,7 @@ Directory::GetName(nsAString& aRetval, ErrorResult& aRv)
   fs->GetDirectoryName(mFile, aRetval, aRv);
 }
 
-void
-Directory::GetPath(nsAString& aRetval, ErrorResult& aRv)
-{
+void Directory::GetPath(nsAString& aRetval, ErrorResult& aRv) {
   // This operation is expensive. Better to cache the result.
   if (mPath.IsEmpty()) {
     RefPtr<FileSystemBase> fs = GetFileSystem(aRv);
@@ -138,9 +119,7 @@ Directory::GetPath(nsAString& aRetval, ErrorResult& aRv)
   aRetval = mPath;
 }
 
-nsresult
-Directory::GetFullRealPath(nsAString& aPath)
-{
+nsresult Directory::GetFullRealPath(nsAString& aPath) {
   nsresult rv = mFile->GetPath(aPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -149,16 +128,14 @@ Directory::GetFullRealPath(nsAString& aPath)
   return NS_OK;
 }
 
-already_AddRefed<Promise>
-Directory::GetFilesAndDirectories(ErrorResult& aRv)
-{
+already_AddRefed<Promise> Directory::GetFilesAndDirectories(ErrorResult& aRv) {
   RefPtr<FileSystemBase> fs = GetFileSystem(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   RefPtr<GetDirectoryListingTaskChild> task =
-    GetDirectoryListingTaskChild::Create(fs, this, mFile, mFilters, aRv);
+      GetDirectoryListingTaskChild::Create(fs, this, mFile, mFilters, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -168,9 +145,8 @@ Directory::GetFilesAndDirectories(ErrorResult& aRv)
   return task->GetPromise();
 }
 
-already_AddRefed<Promise>
-Directory::GetFiles(bool aRecursiveFlag, ErrorResult& aRv)
-{
+already_AddRefed<Promise> Directory::GetFiles(bool aRecursiveFlag,
+                                              ErrorResult& aRv) {
   ErrorResult rv;
   RefPtr<FileSystemBase> fs = GetFileSystem(rv);
   if (NS_WARN_IF(rv.Failed())) {
@@ -179,7 +155,7 @@ Directory::GetFiles(bool aRecursiveFlag, ErrorResult& aRv)
   }
 
   RefPtr<GetFilesTaskChild> task =
-    GetFilesTaskChild::Create(fs, this, mFile, aRecursiveFlag, rv);
+      GetFilesTaskChild::Create(fs, this, mFile, aRecursiveFlag, rv);
   if (NS_WARN_IF(rv.Failed())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -190,15 +166,11 @@ Directory::GetFiles(bool aRecursiveFlag, ErrorResult& aRv)
   return task->GetPromise();
 }
 
-void
-Directory::SetContentFilters(const nsAString& aFilters)
-{
+void Directory::SetContentFilters(const nsAString& aFilters) {
   mFilters = aFilters;
 }
 
-FileSystemBase*
-Directory::GetFileSystem(ErrorResult& aRv)
-{
+FileSystemBase* Directory::GetFileSystem(ErrorResult& aRv) {
   if (!mFileSystem) {
     nsAutoString path;
     aRv = mFile->GetPath(path);
@@ -215,5 +187,5 @@ Directory::GetFileSystem(ErrorResult& aRv)
   return mFileSystem;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

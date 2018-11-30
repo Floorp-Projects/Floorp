@@ -16,9 +16,8 @@
 namespace mozilla {
 namespace layers {
 
-class DIBTextureData : public TextureData
-{
-public:
+class DIBTextureData : public TextureData {
+ public:
   virtual bool Lock(OpenMode) override { return true; }
 
   virtual void Unlock() override {}
@@ -27,17 +26,13 @@ public:
 
   virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
-  static
-  DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                         LayersIPCChannel* aAllocator);
+  static DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                                LayersIPCChannel* aAllocator);
 
-protected:
+ protected:
   DIBTextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                  gfxWindowsSurface* aSurface)
-  : mSurface(aSurface)
-  , mSize(aSize)
-  , mFormat(aFormat)
-  {
+      : mSurface(aSurface), mSize(aSize), mFormat(aFormat) {
     MOZ_ASSERT(aSurface);
   }
 
@@ -47,25 +42,20 @@ protected:
 };
 
 /**
-  * This is meant for a texture host which does a direct upload from
-  * Updated to a Compositor specific DataTextureSource and therefor doesn't
-  * need any specific Lock/Unlock magic.
-  */
-class TextureHostDirectUpload : public TextureHost
-{
-public:
-  TextureHostDirectUpload(TextureFlags aFlags,
-                          gfx::SurfaceFormat aFormat,
+ * This is meant for a texture host which does a direct upload from
+ * Updated to a Compositor specific DataTextureSource and therefor doesn't
+ * need any specific Lock/Unlock magic.
+ */
+class TextureHostDirectUpload : public TextureHost {
+ public:
+  TextureHostDirectUpload(TextureFlags aFlags, gfx::SurfaceFormat aFormat,
                           gfx::IntSize aSize)
-    : TextureHost(aFlags)
-    , mFormat(aFormat)
-    , mSize(aSize)
-    , mIsLocked(false)
-  { }
+      : TextureHost(aFlags), mFormat(aFormat), mSize(aSize), mIsLocked(false) {}
 
   virtual void DeallocateDeviceData() override;
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+  virtual void SetTextureSourceProvider(
+      TextureSourceProvider* aProvider) override;
 
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
@@ -77,10 +67,12 @@ public:
 
   virtual bool HasIntermediateBuffer() const { return true; }
 
-  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
-  virtual bool AcquireTextureSource(CompositableTextureSourceRef& aTexture) override;
+  virtual bool BindTextureSource(
+      CompositableTextureSourceRef& aTexture) override;
+  virtual bool AcquireTextureSource(
+      CompositableTextureSourceRef& aTexture) override;
 
-protected:
+ protected:
   RefPtr<TextureSourceProvider> mProvider;
   RefPtr<DataTextureSource> mTextureSource;
   gfx::SurfaceFormat mFormat;
@@ -88,45 +80,40 @@ protected:
   bool mIsLocked;
 };
 
-class DIBTextureHost : public TextureHostDirectUpload
-{
-public:
-  DIBTextureHost(TextureFlags aFlags,
-                 const SurfaceDescriptorDIB& aDescriptor);
+class DIBTextureHost : public TextureHostDirectUpload {
+ public:
+  DIBTextureHost(TextureFlags aFlags, const SurfaceDescriptorDIB& aDescriptor);
 
-  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override
-  {
-    return nullptr; // TODO: cf bug 872568
+  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
+    return nullptr;  // TODO: cf bug 872568
   }
 
-protected:
+ protected:
   virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
   RefPtr<gfxWindowsSurface> mSurface;
 };
 
-class TextureHostFileMapping : public TextureHostDirectUpload
-{
-public:
+class TextureHostFileMapping : public TextureHostDirectUpload {
+ public:
   TextureHostFileMapping(TextureFlags aFlags,
                          const SurfaceDescriptorFileMapping& aDescriptor);
   ~TextureHostFileMapping();
 
-  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override
-  {
+  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     MOZ_CRASH("GFX: TextureHostFileMapping::GetAsSurface not implemented");
-                 // Not implemented! It would be tricky to keep track of the
-                 // scope of the file mapping. We could do this through UserData
-                 // on the DataSourceSurface but we don't need this right now.
+    // Not implemented! It would be tricky to keep track of the
+    // scope of the file mapping. We could do this through UserData
+    // on the DataSourceSurface but we don't need this right now.
   }
 
-protected:
+ protected:
   virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
   HANDLE mFileMapping;
 };
 
-}
-}
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_TEXTUREDIB_H */

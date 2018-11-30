@@ -18,9 +18,8 @@ namespace dom {
 
 class BlobImpl;
 
-class BlobURLChannel final : public nsBaseChannel
-{
-public:
+class BlobURLChannel final : public nsBaseChannel {
+ public:
   BlobURLChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo);
 
   // This method is called when there is not a valid BlobImpl for this channel.
@@ -31,7 +30,7 @@ public:
   // used when ::OpenContentStream is called.
   void Initialize(BlobImpl* aBlobImpl);
 
-private:
+ private:
   ~BlobURLChannel();
 
   nsresult OpenContentStream(bool aAsync, nsIInputStream** aResult,
@@ -47,7 +46,7 @@ private:
   bool mInitialized;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_BlobURLChannel_h */

@@ -11,7 +11,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/Transport.h"
 
-template <class> struct already_AddRefed;
+template <class>
+struct already_AddRefed;
 
 namespace mozilla {
 namespace dom {
@@ -19,18 +20,18 @@ namespace dom {
 class BlobImpl;
 class ContentParent;
 
-} // namespace dom
+}  // namespace dom
 
 namespace ipc {
 
 class PBackgroundParent;
 
-template<class PFooSide> class Endpoint;
+template <class PFooSide>
+class Endpoint;
 
 // This class is not designed for public consumption beyond the few static
 // member functions.
-class BackgroundParent final
-{
+class BackgroundParent final {
   friend class mozilla::dom::ContentParent;
 
   typedef base::ProcessId ProcessId;
@@ -38,13 +39,12 @@ class BackgroundParent final
   typedef mozilla::dom::ContentParent ContentParent;
   typedef mozilla::ipc::Transport Transport;
 
-public:
+ public:
   // This function allows the caller to determine if the given parent actor
   // corresponds to a child actor from another process or a child actor from a
   // different thread in the same process.
   // This function may only be called on the background thread.
-  static bool
-  IsOtherProcessActor(PBackgroundParent* aBackgroundActor);
+  static bool IsOtherProcessActor(PBackgroundParent* aBackgroundActor);
 
   // This function returns the ContentParent associated with the parent actor if
   // the parent actor corresponds to a child actor from another process. If the
@@ -54,55 +54,44 @@ public:
   // ContentParent is not threadsafe and the returned pointer may not be used on
   // any thread other than the main thread. Callers must take care to use (and
   // release) the returned pointer appropriately.
-  static already_AddRefed<ContentParent>
-  GetContentParent(PBackgroundParent* aBackgroundActor);
+  static already_AddRefed<ContentParent> GetContentParent(
+      PBackgroundParent* aBackgroundActor);
 
   // Get a value that represents the ContentParent associated with the parent
   // actor for comparison. The value is not guaranteed to uniquely identify the
   // ContentParent after the ContentParent has died. This function may only be
   // called on the background thread.
-  static intptr_t
-  GetRawContentParentForComparison(PBackgroundParent* aBackgroundActor);
+  static intptr_t GetRawContentParentForComparison(
+      PBackgroundParent* aBackgroundActor);
 
-  static uint64_t
-  GetChildID(PBackgroundParent* aBackgroundActor);
+  static uint64_t GetChildID(PBackgroundParent* aBackgroundActor);
 
-  static bool
-  GetLiveActorArray(PBackgroundParent* aBackgroundActor,
-                    nsTArray<PBackgroundParent*>& aLiveActorArray);
+  static bool GetLiveActorArray(PBackgroundParent* aBackgroundActor,
+                                nsTArray<PBackgroundParent*>& aLiveActorArray);
 
-private:
+ private:
   // Only called by ContentParent for cross-process actors.
-  static bool
-  Alloc(ContentParent* aContent,
-        Endpoint<PBackgroundParent>&& aEndpoint);
+  static bool Alloc(ContentParent* aContent,
+                    Endpoint<PBackgroundParent>&& aEndpoint);
 };
 
 // Implemented in BackgroundImpl.cpp.
-bool
-IsOnBackgroundThread();
+bool IsOnBackgroundThread();
 
 #ifdef DEBUG
 
 // Implemented in BackgroundImpl.cpp.
-void
-AssertIsOnBackgroundThread();
+void AssertIsOnBackgroundThread();
 
 #else
 
-inline void
-AssertIsOnBackgroundThread()
-{ }
+inline void AssertIsOnBackgroundThread() {}
 
-#endif // DEBUG
+#endif  // DEBUG
 
-inline void
-AssertIsInMainProcess()
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-}
+inline void AssertIsInMainProcess() { MOZ_ASSERT(XRE_IsParentProcess()); }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_backgroundparent_h__
+#endif  // mozilla_ipc_backgroundparent_h__

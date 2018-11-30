@@ -22,31 +22,30 @@
 #include "mozilla/sandboxing/sandboxLogging.h"
 #endif
 
-int
-content_process_main(mozilla::Bootstrap* bootstrap, int argc, char* argv[])
-{
-    // Check for the absolute minimum number of args we need to move
-    // forward here. We expect the last arg to be the child process type.
-    if (argc < 1) {
-      return 3;
-    }
+int content_process_main(mozilla::Bootstrap* bootstrap, int argc,
+                         char* argv[]) {
+  // Check for the absolute minimum number of args we need to move
+  // forward here. We expect the last arg to be the child process type.
+  if (argc < 1) {
+    return 3;
+  }
 
-    XREChildData childData;
+  XREChildData childData;
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-    if (IsSandboxedProcess()) {
-        childData.sandboxTargetServices =
-            mozilla::sandboxing::GetInitializedTargetServices();
-        if (!childData.sandboxTargetServices) {
-            return 1;
-        }
-
-        childData.ProvideLogFunction = mozilla::sandboxing::ProvideLogFunction;
+  if (IsSandboxedProcess()) {
+    childData.sandboxTargetServices =
+        mozilla::sandboxing::GetInitializedTargetServices();
+    if (!childData.sandboxTargetServices) {
+      return 1;
     }
+
+    childData.ProvideLogFunction = mozilla::sandboxing::ProvideLogFunction;
+  }
 #endif
 
-    bootstrap->XRE_SetProcessType(argv[--argc]);
+  bootstrap->XRE_SetProcessType(argv[--argc]);
 
-    nsresult rv = bootstrap->XRE_InitChildProcess(argc, argv, &childData);
-    return NS_FAILED(rv);
+  nsresult rv = bootstrap->XRE_InitChildProcess(argc, argv, &childData);
+  return NS_FAILED(rv);
 }

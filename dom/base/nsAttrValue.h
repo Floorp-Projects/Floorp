@@ -37,7 +37,7 @@ struct MiscContainer;
 
 namespace mozilla {
 class DeclarationBlock;
-} // namespace mozilla
+}  // namespace mozilla
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
 
@@ -45,16 +45,23 @@ const uintptr_t NS_ATTRVALUE_BASETYPE_MASK = 3;
 #define NS_ATTRVALUE_POINTERVALUE_MASK (~NS_ATTRVALUE_BASETYPE_MASK)
 
 #define NS_ATTRVALUE_INTEGERTYPE_BITS 4
-#define NS_ATTRVALUE_INTEGERTYPE_MASK (uintptr_t((1 << NS_ATTRVALUE_INTEGERTYPE_BITS) - 1))
+#define NS_ATTRVALUE_INTEGERTYPE_MASK \
+  (uintptr_t((1 << NS_ATTRVALUE_INTEGERTYPE_BITS) - 1))
 #define NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER (1 << NS_ATTRVALUE_INTEGERTYPE_BITS)
-#define NS_ATTRVALUE_INTEGERTYPE_MAXVALUE ((1 << (31 - NS_ATTRVALUE_INTEGERTYPE_BITS)) - 1)
-#define NS_ATTRVALUE_INTEGERTYPE_MINVALUE (-NS_ATTRVALUE_INTEGERTYPE_MAXVALUE - 1)
+#define NS_ATTRVALUE_INTEGERTYPE_MAXVALUE \
+  ((1 << (31 - NS_ATTRVALUE_INTEGERTYPE_BITS)) - 1)
+#define NS_ATTRVALUE_INTEGERTYPE_MINVALUE \
+  (-NS_ATTRVALUE_INTEGERTYPE_MAXVALUE - 1)
 
-#define NS_ATTRVALUE_ENUMTABLEINDEX_BITS (32 - 16 - NS_ATTRVALUE_INTEGERTYPE_BITS)
-#define NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER (1 << (NS_ATTRVALUE_ENUMTABLEINDEX_BITS - 1))
-#define NS_ATTRVALUE_ENUMTABLEINDEX_MAXVALUE (NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER - 1)
-#define NS_ATTRVALUE_ENUMTABLEINDEX_MASK \
-  (uintptr_t((((1 << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) - 1) &~ NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER)))
+#define NS_ATTRVALUE_ENUMTABLEINDEX_BITS \
+  (32 - 16 - NS_ATTRVALUE_INTEGERTYPE_BITS)
+#define NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER \
+  (1 << (NS_ATTRVALUE_ENUMTABLEINDEX_BITS - 1))
+#define NS_ATTRVALUE_ENUMTABLEINDEX_MAXVALUE \
+  (NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER - 1)
+#define NS_ATTRVALUE_ENUMTABLEINDEX_MASK                      \
+  (uintptr_t((((1 << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) - 1) & \
+              ~NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER)))
 
 /**
  * A class used to construct a nsString from a nsStringBuffer (we might
@@ -68,26 +75,25 @@ const uintptr_t NS_ATTRVALUE_BASETYPE_MASK = 3;
  * at the end of our nsCheapString.
  */
 class nsCheapString : public nsString {
-public:
-  explicit nsCheapString(nsStringBuffer* aBuf)
-  {
-    if (aBuf)
-      aBuf->ToString(aBuf->StorageSize()/sizeof(char16_t) - 1, *this);
+ public:
+  explicit nsCheapString(nsStringBuffer* aBuf) {
+    if (aBuf) aBuf->ToString(aBuf->StorageSize() / sizeof(char16_t) - 1, *this);
   }
 };
 
 class nsAttrValue {
   friend struct MiscContainer;
-public:
+
+ public:
   // This has to be the same as in ValueBaseType
   enum ValueType {
-    eString =       0x00, //   00
-                          //   01  this value indicates a 'misc' struct
-    eAtom =         0x02, //   10
-    eInteger =      0x03, // 0011
-    eColor =        0x07, // 0111
-    eEnum =         0x0B, // 1011  This should eventually die
-    ePercent =      0x0F, // 1111
+    eString = 0x00,   //   00
+                      //   01  this value indicates a 'misc' struct
+    eAtom = 0x02,     //   10
+    eInteger = 0x03,  // 0011
+    eColor = 0x07,    // 0111
+    eEnum = 0x0B,     // 1011  This should eventually die
+    ePercent = 0x0F,  // 1111
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
     eCSSDeclaration = 0x10,
@@ -261,17 +267,12 @@ public:
     // or a value of an enumeration type that can fit within an int16_t.
 
     constexpr EnumTable(const char* aTag, int16_t aValue)
-      : tag(aTag)
-      , value(aValue)
-    {
-    }
+        : tag(aTag), value(aValue) {}
 
-    template<typename T,
-             typename = typename std::enable_if<std::is_enum<T>::value>::type>
+    template <typename T,
+              typename = typename std::enable_if<std::is_enum<T>::value>::type>
     constexpr EnumTable(const char* aTag, T aValue)
-      : tag(aTag)
-      , value(static_cast<int16_t>(aValue))
-    {
+        : tag(aTag), value(static_cast<int16_t>(aValue)) {
       static_assert(mozilla::EnumTypeFitsWithin<T, int16_t>::value,
                     "aValue must be an enum that fits within int16_t");
     }
@@ -293,10 +294,9 @@ public:
    *        cause aDefaultValue->value to be stored as the enumeration value.
    * @return whether the enum value was found or not
    */
-  bool ParseEnumValue(const nsAString& aValue,
-                        const EnumTable* aTable,
-                        bool aCaseSensitive,
-                        const EnumTable* aDefaultValue = nullptr);
+  bool ParseEnumValue(const nsAString& aValue, const EnumTable* aTable,
+                      bool aCaseSensitive,
+                      const EnumTable* aDefaultValue = nullptr);
 
   /**
    * Parse a string into an integer. Can optionally parse percent (n%).
@@ -309,7 +309,6 @@ public:
    * @see http://www.whatwg.org/html/#rules-for-parsing-dimension-values
    */
   bool ParseSpecialIntValue(const nsAString& aString);
-
 
   /**
    * Parse a string value into an integer.
@@ -330,7 +329,7 @@ public:
    * @return whether the value could be parsed
    */
   bool ParseIntWithBounds(const nsAString& aString, int32_t aMin,
-                            int32_t aMax = INT32_MAX);
+                          int32_t aMax = INT32_MAX);
 
   /**
    * Parse a string value into an integer with a fallback for invalid values.
@@ -429,13 +428,13 @@ public:
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
+ private:
   // These have to be the same as in ValueType
   enum ValueBaseType {
-    eStringBase =    eString,    // 00
-    eOtherBase =     0x01,       // 01
-    eAtomBase =      eAtom,      // 10
-    eIntegerBase =   0x03        // 11
+    eStringBase = eString,  // 00
+    eOtherBase = 0x01,      // 01
+    eAtomBase = eAtom,      // 10
+    eIntegerBase = 0x03     // 11
   };
 
   inline ValueBaseType BaseType() const;
@@ -448,7 +447,7 @@ private:
    * @param aTable   the EnumTable to get the index of.
    * @return         the index of the EnumTable.
    */
-  int16_t  GetEnumTableIndex(const EnumTable* aTable);
+  int16_t GetEnumTableIndex(const EnumTable* aTable);
 
   inline void SetPtrValueAndType(void* aValue, ValueBaseType aType);
   void SetIntValueAndType(int32_t aValue, ValueType aType,
@@ -471,8 +470,8 @@ private:
   // exist already.
   MiscContainer* EnsureEmptyMiscContainer();
   bool EnsureEmptyAtomArray();
-  already_AddRefed<nsStringBuffer>
-    GetStringBuffer(const nsAString& aValue) const;
+  already_AddRefed<nsStringBuffer> GetStringBuffer(
+      const nsAString& aValue) const;
   // Given an enum table and a particular entry in that table, return
   // the actual integer value we should store.
   int32_t EnumTableEntryToValue(const EnumTable* aEnumTable,
@@ -487,31 +486,20 @@ private:
   uintptr_t mBits;
 };
 
-inline const nsAttrValue&
-nsAttrValue::operator=(const nsAttrValue& aOther)
-{
+inline const nsAttrValue& nsAttrValue::operator=(const nsAttrValue& aOther) {
   SetTo(aOther);
   return *this;
 }
 
-inline nsAttrValue::ValueBaseType
-nsAttrValue::BaseType() const
-{
+inline nsAttrValue::ValueBaseType nsAttrValue::BaseType() const {
   return static_cast<ValueBaseType>(mBits & NS_ATTRVALUE_BASETYPE_MASK);
 }
 
-inline void*
-nsAttrValue::GetPtr() const
-{
-  NS_ASSERTION(BaseType() != eIntegerBase,
-               "getting pointer from non-pointer");
+inline void* nsAttrValue::GetPtr() const {
+  NS_ASSERTION(BaseType() != eIntegerBase, "getting pointer from non-pointer");
   return reinterpret_cast<void*>(mBits & NS_ATTRVALUE_POINTERVALUE_MASK);
 }
 
-inline bool
-nsAttrValue::IsEmptyString() const
-{
-  return !mBits;
-}
+inline bool nsAttrValue::IsEmptyString() const { return !mBits; }
 
 #endif

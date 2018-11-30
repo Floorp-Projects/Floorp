@@ -11,12 +11,12 @@
 #include "CTVerifyResult.h"
 #include "mozpkix/Result.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // Information about the compliance of the TLS connection with the
 // Certificate Transparency policy.
-enum class CTPolicyCompliance
-{
+enum class CTPolicyCompliance {
   // Compliance not checked or not applicable.
   Unknown,
   // The connection complied with the certificate policy
@@ -42,9 +42,8 @@ enum class CTPolicyCompliance
 // 2. The grandfathering provision of the operator diversity requirement
 // is not implemented (see "CT Qualified" section of the policy and
 // CheckOperatorDiversityCompliance in CTPolicyEnforcer.cpp).
-class CTPolicyEnforcer
-{
-public:
+class CTPolicyEnforcer {
+ public:
   // |verifiedSct| - SCTs present on the connection along with their
   // verification status.
   // |certLifetimeInCalendarMonths| - certificate lifetime in full calendar
@@ -60,6 +59,7 @@ public:
                        CTPolicyCompliance& compliance);
 };
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
-#endif // CTPolicyEnforcer_h
+#endif  // CTPolicyEnforcer_h

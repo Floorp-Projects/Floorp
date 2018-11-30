@@ -10,23 +10,22 @@
 #include "nsIDOMEventListener.h"
 #include "nsBoxFrame.h"
 
-class nsButtonBoxFrame : public nsBoxFrame
-{
-public:
+class nsButtonBoxFrame : public nsBoxFrame {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsButtonBoxFrame)
 
   friend nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell);
 
   explicit nsButtonBoxFrame(ComputedStyle* aStyle, ClassID = kClassID);
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 
-  virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
-                                           const nsDisplayListSet& aLists) override;
+  virtual void BuildDisplayListForChildren(
+      nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
@@ -42,28 +41,28 @@ public:
   }
 #endif
 
-  void UpdateMouseThrough() override { AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); }
+  void UpdateMouseThrough() override {
+    AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER);
+  }
 
-private:
-  class nsButtonBoxListener final : public nsIDOMEventListener
-  {
-  public:
-    explicit nsButtonBoxListener(nsButtonBoxFrame* aButtonBoxFrame) :
-      mButtonBoxFrame(aButtonBoxFrame)
-      { }
+ private:
+  class nsButtonBoxListener final : public nsIDOMEventListener {
+   public:
+    explicit nsButtonBoxListener(nsButtonBoxFrame* aButtonBoxFrame)
+        : mButtonBoxFrame(aButtonBoxFrame) {}
 
     NS_DECL_NSIDOMEVENTLISTENER
 
     NS_DECL_ISUPPORTS
 
-  private:
+   private:
     friend class nsButtonBoxFrame;
-    virtual ~nsButtonBoxListener() { }
+    virtual ~nsButtonBoxListener() {}
     nsButtonBoxFrame* mButtonBoxFrame;
   };
 
   RefPtr<nsButtonBoxListener> mButtonBoxListener;
   bool mIsHandlingKeyEvent;
-}; // class nsButtonBoxFrame
+};  // class nsButtonBoxFrame
 
 #endif /* nsButtonBoxFrame_h___ */

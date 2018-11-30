@@ -19,25 +19,20 @@ namespace dom {
  * LSDatabaseChild
  ******************************************************************************/
 
-LSDatabaseChild::LSDatabaseChild(LSDatabase* aDatabase)
-  : mDatabase(aDatabase)
-{
+LSDatabaseChild::LSDatabaseChild(LSDatabase* aDatabase) : mDatabase(aDatabase) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabase);
 
   MOZ_COUNT_CTOR(LSDatabaseChild);
 }
 
-LSDatabaseChild::~LSDatabaseChild()
-{
+LSDatabaseChild::~LSDatabaseChild() {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_DTOR(LSDatabaseChild);
 }
 
-void
-LSDatabaseChild::SendDeleteMeInternal()
-{
+void LSDatabaseChild::SendDeleteMeInternal() {
   AssertIsOnOwningThread();
 
   if (mDatabase) {
@@ -48,9 +43,7 @@ LSDatabaseChild::SendDeleteMeInternal()
   }
 }
 
-void
-LSDatabaseChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void LSDatabaseChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   if (mDatabase) {
@@ -61,9 +54,7 @@ LSDatabaseChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-mozilla::ipc::IPCResult
-LSDatabaseChild::RecvRequestAllowToClose()
-{
+mozilla::ipc::IPCResult LSDatabaseChild::RecvRequestAllowToClose() {
   AssertIsOnOwningThread();
 
   if (mDatabase) {
@@ -78,20 +69,15 @@ LSDatabaseChild::RecvRequestAllowToClose()
   return IPC_OK();
 }
 
-PBackgroundLSSnapshotChild*
-LSDatabaseChild::AllocPBackgroundLSSnapshotChild(const nsString& aDocumentURI,
-                                                 const bool& aIncreasePeakUsage,
-                                                 const int64_t& aRequestedSize,
-                                                 const int64_t& aMinSize,
-                                                 LSSnapshotInitInfo* aInitInfo)
-{
+PBackgroundLSSnapshotChild* LSDatabaseChild::AllocPBackgroundLSSnapshotChild(
+    const nsString& aDocumentURI, const bool& aIncreasePeakUsage,
+    const int64_t& aRequestedSize, const int64_t& aMinSize,
+    LSSnapshotInitInfo* aInitInfo) {
   MOZ_CRASH("PBackgroundLSSnapshotChild actor should be manually constructed!");
 }
 
-bool
-LSDatabaseChild::DeallocPBackgroundLSSnapshotChild(
-                                             PBackgroundLSSnapshotChild* aActor)
-{
+bool LSDatabaseChild::DeallocPBackgroundLSSnapshotChild(
+    PBackgroundLSSnapshotChild* aActor) {
   MOZ_ASSERT(aActor);
 
   delete aActor;
@@ -102,25 +88,20 @@ LSDatabaseChild::DeallocPBackgroundLSSnapshotChild(
  * LSObserverChild
  ******************************************************************************/
 
-LSObserverChild::LSObserverChild(LSObserver* aObserver)
-  : mObserver(aObserver)
-{
+LSObserverChild::LSObserverChild(LSObserver* aObserver) : mObserver(aObserver) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObserver);
 
   MOZ_COUNT_CTOR(LSObserverChild);
 }
 
-LSObserverChild::~LSObserverChild()
-{
+LSObserverChild::~LSObserverChild() {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_DTOR(LSObserverChild);
 }
 
-void
-LSObserverChild::SendDeleteMeInternal()
-{
+void LSObserverChild::SendDeleteMeInternal() {
   AssertIsOnOwningThread();
 
   if (mObserver) {
@@ -131,9 +112,7 @@ LSObserverChild::SendDeleteMeInternal()
   }
 }
 
-void
-LSObserverChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void LSObserverChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   if (mObserver) {
@@ -144,14 +123,10 @@ LSObserverChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-mozilla::ipc::IPCResult
-LSObserverChild::RecvObserve(const PrincipalInfo& aPrincipalInfo,
-                             const uint32_t& aPrivateBrowsingId,
-                             const nsString& aDocumentURI,
-                             const nsString& aKey,
-                             const nsString& aOldValue,
-                             const nsString& aNewValue)
-{
+mozilla::ipc::IPCResult LSObserverChild::RecvObserve(
+    const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
+    const nsString& aDocumentURI, const nsString& aKey,
+    const nsString& aOldValue, const nsString& aNewValue) {
   AssertIsOnOwningThread();
 
   if (!mObserver) {
@@ -160,18 +135,14 @@ LSObserverChild::RecvObserve(const PrincipalInfo& aPrincipalInfo,
 
   nsresult rv;
   nsCOMPtr<nsIPrincipal> principal =
-    PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
+      PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  Storage::NotifyChange(/* aStorage */ nullptr,
-                        principal,
-                        aKey,
-                        aOldValue,
+  Storage::NotifyChange(/* aStorage */ nullptr, principal, aKey, aOldValue,
                         aNewValue,
-                        /* aStorageType */ kLocalStorageType,
-                        aDocumentURI,
+                        /* aStorageType */ kLocalStorageType, aDocumentURI,
                         /* aIsPrivate */ !!aPrivateBrowsingId,
                         /* aImmediateDispatch */ true);
 
@@ -183,38 +154,30 @@ LSObserverChild::RecvObserve(const PrincipalInfo& aPrincipalInfo,
  ******************************************************************************/
 
 LSRequestChild::LSRequestChild(LSRequestChildCallback* aCallback)
-  : mCallback(aCallback)
-  , mFinishing(false)
-{
+    : mCallback(aCallback), mFinishing(false) {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_CTOR(LSRequestChild);
 }
 
-LSRequestChild::~LSRequestChild()
-{
+LSRequestChild::~LSRequestChild() {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_DTOR(LSRequestChild);
 }
 
-bool
-LSRequestChild::Finishing() const
-{
+bool LSRequestChild::Finishing() const {
   AssertIsOnOwningThread();
 
   return mFinishing;
 }
 
-void
-LSRequestChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void LSRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 }
 
-mozilla::ipc::IPCResult
-LSRequestChild::Recv__delete__(const LSRequestResponse& aResponse)
-{
+mozilla::ipc::IPCResult LSRequestChild::Recv__delete__(
+    const LSRequestResponse& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mCallback);
 
@@ -223,9 +186,7 @@ LSRequestChild::Recv__delete__(const LSRequestResponse& aResponse)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-LSRequestChild::RecvReady()
-{
+mozilla::ipc::IPCResult LSRequestChild::RecvReady() {
   AssertIsOnOwningThread();
 
   mFinishing = true;
@@ -240,31 +201,26 @@ LSRequestChild::RecvReady()
  ******************************************************************************/
 
 LSSimpleRequestChild::LSSimpleRequestChild(
-                                        LSSimpleRequestChildCallback* aCallback)
-  : mCallback(aCallback)
-{
+    LSSimpleRequestChildCallback* aCallback)
+    : mCallback(aCallback) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCallback);
 
   MOZ_COUNT_CTOR(LSSimpleRequestChild);
 }
 
-LSSimpleRequestChild::~LSSimpleRequestChild()
-{
+LSSimpleRequestChild::~LSSimpleRequestChild() {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_DTOR(LSSimpleRequestChild);
 }
 
-void
-LSSimpleRequestChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void LSSimpleRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 }
 
-mozilla::ipc::IPCResult
-LSSimpleRequestChild::Recv__delete__(const LSSimpleRequestResponse& aResponse)
-{
+mozilla::ipc::IPCResult LSSimpleRequestChild::Recv__delete__(
+    const LSSimpleRequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
   mCallback->OnResponse(aResponse);
@@ -276,25 +232,20 @@ LSSimpleRequestChild::Recv__delete__(const LSSimpleRequestResponse& aResponse)
  * LSSnapshotChild
  ******************************************************************************/
 
-LSSnapshotChild::LSSnapshotChild(LSSnapshot* aSnapshot)
-  : mSnapshot(aSnapshot)
-{
+LSSnapshotChild::LSSnapshotChild(LSSnapshot* aSnapshot) : mSnapshot(aSnapshot) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aSnapshot);
 
   MOZ_COUNT_CTOR(LSSnapshotChild);
 }
 
-LSSnapshotChild::~LSSnapshotChild()
-{
+LSSnapshotChild::~LSSnapshotChild() {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_DTOR(LSSnapshotChild);
 }
 
-void
-LSSnapshotChild::SendDeleteMeInternal()
-{
+void LSSnapshotChild::SendDeleteMeInternal() {
   AssertIsOnOwningThread();
 
   if (mSnapshot) {
@@ -305,9 +256,7 @@ LSSnapshotChild::SendDeleteMeInternal()
   }
 }
 
-void
-LSSnapshotChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void LSSnapshotChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   if (mSnapshot) {
@@ -318,9 +267,7 @@ LSSnapshotChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-mozilla::ipc::IPCResult
-LSSnapshotChild::RecvMarkDirty()
-{
+mozilla::ipc::IPCResult LSSnapshotChild::RecvMarkDirty() {
   AssertIsOnOwningThread();
 
   if (!mSnapshot) {
@@ -332,5 +279,5 @@ LSSnapshotChild::RecvMarkDirty()
   return IPC_OK();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

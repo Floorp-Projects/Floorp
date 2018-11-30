@@ -51,15 +51,13 @@ class SharedPrefMapBuilder;
 // Important: The mapped memory created by this class is persistent. Once an
 // instance has been initialized, the memory that it allocates can never be
 // freed before process shutdown. Do not use it for short-lived mappings.
-class SharedPrefMap
-{
+class SharedPrefMap {
   using FileDescriptor = mozilla::ipc::FileDescriptor;
 
   friend class SharedPrefMapBuilder;
 
   // Describes a block of memory within the shared memory region.
-  struct DataBlock
-  {
+  struct DataBlock {
     // The byte offset from the start of the shared memory region to the start
     // of the block.
     size_t mOffset;
@@ -232,8 +230,7 @@ class SharedPrefMap
   // |     10 | a\0                                                            |
   // |     12 | foo\0                                                          |
   // +--------+----------------------------------------------------------------+
-  struct Header
-  {
+  struct Header {
     // The number of entries in this map.
     uint32_t mEntryCount;
 
@@ -267,15 +264,9 @@ class SharedPrefMap
   // index into one of the above value arrays.
   union Value {
     Value(bool aDefaultValue, bool aUserValue)
-      : mDefaultBool(aDefaultValue)
-      , mUserBool(aUserValue)
-    {
-    }
+        : mDefaultBool(aDefaultValue), mUserBool(aUserValue) {}
 
-    MOZ_IMPLICIT Value(uint16_t aIndex)
-      : mIndex(aIndex)
-    {
-    }
+    MOZ_IMPLICIT Value(uint16_t aIndex) : mIndex(aIndex) {}
 
     // The index of this entry in the value arrays.
     //
@@ -286,8 +277,7 @@ class SharedPrefMap
     // array. This means that callers must only access value entries for entries
     // which claim to have a value of that type.
     uint16_t mIndex;
-    struct
-    {
+    struct {
       bool mDefaultBool;
       bool mUserBool;
     };
@@ -295,8 +285,7 @@ class SharedPrefMap
 
   // Represents a preference entry in the map, containing its name, type info,
   // flags, and a reference to its value.
-  struct Entry
-  {
+  struct Entry {
     // A pointer to the preference name in the KeyTable string table.
     StringTableEntry mKey;
 
@@ -323,7 +312,7 @@ class SharedPrefMap
     uint8_t mDefaultChanged : 1;
   };
 
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING(SharedPrefMap)
 
   // A temporary wrapper class for accessing entries in the array. Instances of
@@ -335,15 +324,13 @@ public:
   // meant to be cheaply returned by value from preference lookups and
   // iterators. All property accessors lazily fetch the appropriate values from
   // the shared memory region.
-  class MOZ_STACK_CLASS Pref final
-  {
-  public:
+  class MOZ_STACK_CLASS Pref final {
+   public:
     const char* Name() const { return mMap->KeyTable().GetBare(mEntry->mKey); }
 
     nsCString NameString() const { return mMap->KeyTable().Get(mEntry->mKey); }
 
-    PrefType Type() const
-    {
+    PrefType Type() const {
       MOZ_ASSERT(PrefType(mEntry->mType) != PrefType::None);
       return PrefType(mEntry->mType);
     }
@@ -354,8 +341,7 @@ public:
     bool IsLocked() const { return mEntry->mIsLocked; }
     bool IsSticky() const { return mEntry->mIsSticky; }
 
-    bool GetBoolValue(PrefValueKind aKind = PrefValueKind::User) const
-    {
+    bool GetBoolValue(PrefValueKind aKind = PrefValueKind::User) const {
       MOZ_ASSERT(Type() == PrefType::Bool);
       MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                  : HasUserValue());
@@ -364,38 +350,34 @@ public:
                                              : mEntry->mValue.mUserBool;
     }
 
-    int32_t GetIntValue(PrefValueKind aKind = PrefValueKind::User) const
-    {
+    int32_t GetIntValue(PrefValueKind aKind = PrefValueKind::User) const {
       MOZ_ASSERT(Type() == PrefType::Int);
       MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                  : HasUserValue());
 
       return aKind == PrefValueKind::Default
-               ? mMap->DefaultIntValues()[mEntry->mValue.mIndex]
-               : mMap->UserIntValues()[mEntry->mValue.mIndex];
+                 ? mMap->DefaultIntValues()[mEntry->mValue.mIndex]
+                 : mMap->UserIntValues()[mEntry->mValue.mIndex];
     }
 
-  private:
-    const StringTableEntry& GetStringEntry(PrefValueKind aKind) const
-    {
+   private:
+    const StringTableEntry& GetStringEntry(PrefValueKind aKind) const {
       MOZ_ASSERT(Type() == PrefType::String);
       MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                  : HasUserValue());
 
       return aKind == PrefValueKind::Default
-               ? mMap->DefaultStringValues()[mEntry->mValue.mIndex]
-               : mMap->UserStringValues()[mEntry->mValue.mIndex];
+                 ? mMap->DefaultStringValues()[mEntry->mValue.mIndex]
+                 : mMap->UserStringValues()[mEntry->mValue.mIndex];
     }
 
-  public:
-    nsCString GetStringValue(PrefValueKind aKind = PrefValueKind::User) const
-    {
+   public:
+    nsCString GetStringValue(PrefValueKind aKind = PrefValueKind::User) const {
       return mMap->ValueTable().Get(GetStringEntry(aKind));
     }
 
     const char* GetBareStringValue(
-      PrefValueKind aKind = PrefValueKind::User) const
-    {
+        PrefValueKind aKind = PrefValueKind::User) const {
       return mMap->ValueTable().GetBare(GetStringEntry(aKind));
     }
 
@@ -412,24 +394,20 @@ public:
 
     // Updates this wrapper to point to the next entry in the map. This should
     // not be attempted unless Index() is less than the map's Count().
-    Pref& operator++()
-    {
+    Pref& operator++() {
       mEntry++;
       return *this;
     }
 
     Pref(const Pref& aPref) = default;
 
-  protected:
+   protected:
     friend class SharedPrefMap;
 
     Pref(const SharedPrefMap* aPrefMap, const Entry* aEntry)
-      : mMap(aPrefMap)
-      , mEntry(aEntry)
-    {
-    }
+        : mMap(aPrefMap), mEntry(aEntry) {}
 
-  private:
+   private:
     const SharedPrefMap* const mMap;
     const Entry* mEntry;
   };
@@ -451,12 +429,12 @@ public:
 
   Maybe<const Pref> Get(const nsCString& aKey) const { return Get(aKey.get()); }
 
-private:
+ private:
   // Searches for an entry for the given key. If found, returns true, and
   // places its index in the entry array in aIndex.
   bool Find(const char* aKey, size_t* aIndex) const;
 
-public:
+ public:
   // Returns the number of entries in the map.
   uint32_t Count() const { return EntryCount(); }
 
@@ -467,8 +445,7 @@ public:
   //
   // The returned value is a literal string which references the mapped memory
   // region.
-  nsCString GetKeyAt(uint32_t aIndex) const
-  {
+  nsCString GetKeyAt(uint32_t aIndex) const {
     MOZ_ASSERT(aIndex < Count());
     return KeyTable().Get(Entries()[aIndex].mKey);
   }
@@ -478,25 +455,23 @@ public:
   // The given index *must* be less than the value returned by Count().
   //
   // The returned value is valid for the lifetime of this map instance.
-  const Pref GetValueAt(uint32_t aIndex) const
-  {
+  const Pref GetValueAt(uint32_t aIndex) const {
     MOZ_ASSERT(aIndex < Count());
     return UncheckedGetValueAt(aIndex);
   }
 
-private:
+ private:
   // Returns a wrapper with a pointer to an entry without checking its bounds.
   // This should only be used by range iterators, to check their end positions.
   //
   // Note: In debug builds, the RangePtr returned by entries will still assert
   // that aIndex is no more than 1 past the last element in the array, since it
   // also takes into account the ranged iteration use case.
-  Pref UncheckedGetValueAt(uint32_t aIndex) const
-  {
-    return { this, (Entries() + aIndex).get() };
+  Pref UncheckedGetValueAt(uint32_t aIndex) const {
+    return {this, (Entries() + aIndex).get()};
   }
 
-public:
+ public:
   // C++ range iterator protocol. begin() and end() return references to the
   // first and last entries in the array. The begin wrapper can be incremented
   // until it matches the last element in the array, at which point it becomes
@@ -520,59 +495,51 @@ public:
   // the constructor when mapping the shared region in another process.
   size_t MapSize() const { return mMap.size(); }
 
-protected:
+ protected:
   ~SharedPrefMap() = default;
 
-private:
-  template<typename T>
+ private:
+  template <typename T>
   using StringTable = mozilla::dom::ipc::StringTable<T>;
 
   // Type-safe getters for values in the shared memory region:
   const Header& GetHeader() const { return mMap.get<Header>()[0]; }
 
-  RangedPtr<const Entry> Entries() const
-  {
-    return { reinterpret_cast<const Entry*>(&GetHeader() + 1), EntryCount() };
+  RangedPtr<const Entry> Entries() const {
+    return {reinterpret_cast<const Entry*>(&GetHeader() + 1), EntryCount()};
   }
 
   uint32_t EntryCount() const { return GetHeader().mEntryCount; }
 
-  template<typename T>
-  RangedPtr<const T> GetBlock(const DataBlock& aBlock) const
-  {
+  template <typename T>
+  RangedPtr<const T> GetBlock(const DataBlock& aBlock) const {
     return RangedPtr<uint8_t>(&mMap.get<uint8_t>()[aBlock.mOffset],
                               aBlock.mSize)
-      .ReinterpretCast<const T>();
+        .ReinterpretCast<const T>();
   }
 
-  RangedPtr<const int32_t> DefaultIntValues() const
-  {
+  RangedPtr<const int32_t> DefaultIntValues() const {
     return GetBlock<int32_t>(GetHeader().mDefaultIntValues);
   }
-  RangedPtr<const int32_t> UserIntValues() const
-  {
+  RangedPtr<const int32_t> UserIntValues() const {
     return GetBlock<int32_t>(GetHeader().mUserIntValues);
   }
 
-  RangedPtr<const StringTableEntry> DefaultStringValues() const
-  {
+  RangedPtr<const StringTableEntry> DefaultStringValues() const {
     return GetBlock<StringTableEntry>(GetHeader().mDefaultStringValues);
   }
-  RangedPtr<const StringTableEntry> UserStringValues() const
-  {
+  RangedPtr<const StringTableEntry> UserStringValues() const {
     return GetBlock<StringTableEntry>(GetHeader().mUserStringValues);
   }
 
-  StringTable<nsCString> KeyTable() const
-  {
+  StringTable<nsCString> KeyTable() const {
     auto& block = GetHeader().mKeyStrings;
-    return { { &mMap.get<uint8_t>()[block.mOffset], block.mSize } };
+    return {{&mMap.get<uint8_t>()[block.mOffset], block.mSize}};
   }
 
-  StringTable<nsCString> ValueTable() const
-  {
+  StringTable<nsCString> ValueTable() const {
     auto& block = GetHeader().mValueStrings;
-    return { { &mMap.get<uint8_t>()[block.mOffset], block.mSize } };
+    return {{&mMap.get<uint8_t>()[block.mOffset], block.mSize}};
   }
 
   loader::AutoMemMap mMap;
@@ -581,14 +548,12 @@ private:
 // A helper class which builds the contiguous look-up table used by
 // SharedPrefMap. Each preference in the final map is added to the builder,
 // before it is finalized and transformed into a read-only snapshot.
-class MOZ_RAII SharedPrefMapBuilder
-{
-public:
+class MOZ_RAII SharedPrefMapBuilder {
+ public:
   SharedPrefMapBuilder() = default;
 
   // The set of flags for the preference, as documented in SharedPrefMap::Entry.
-  struct Flags
-  {
+  struct Flags {
     uint8_t mHasDefaultValue : 1;
     uint8_t mHasUserValue : 1;
     uint8_t mIsSticky : 1;
@@ -596,20 +561,14 @@ public:
     uint8_t mDefaultChanged : 1;
   };
 
-  void Add(const char* aKey,
-           const Flags& aFlags,
-           bool aDefaultValue,
+  void Add(const char* aKey, const Flags& aFlags, bool aDefaultValue,
            bool aUserValue);
 
-  void Add(const char* aKey,
-           const Flags& aFlags,
-           int32_t aDefaultValue,
+  void Add(const char* aKey, const Flags& aFlags, int32_t aDefaultValue,
            int32_t aUserValue);
 
-  void Add(const char* aKey,
-           const Flags& aFlags,
-           const nsCString& aDefaultValue,
-           const nsCString& aUserValue);
+  void Add(const char* aKey, const Flags& aFlags,
+           const nsCString& aDefaultValue, const nsCString& aUserValue);
 
   // Finalizes the binary representation of the map, writes it to a shared
   // memory region, and then initializes the given AutoMemMap with a reference
@@ -620,16 +579,15 @@ public:
   // constructor as a move reference.
   Result<Ok, nsresult> Finalize(loader::AutoMemMap& aMap);
 
-private:
+ private:
   using StringTableEntry = mozilla::dom::ipc::StringTableEntry;
-  template<typename T, typename U>
+  template <typename T, typename U>
   using StringTableBuilder = mozilla::dom::ipc::StringTableBuilder<T, U>;
 
   // An opaque descriptor of the index of a preference entry in a value array,
   // which can be converted numeric index after the ValueTableBuilder is
   // finalized.
-  struct ValueIdx
-  {
+  struct ValueIdx {
     // The relative index of the entry, based on its class. Entries for
     // preferences with user values appear at the value arrays. Entries with
     // only default values begin after the last entry with a user value.
@@ -659,44 +617,39 @@ private:
   // To deal with this, when entries are added, we return an opaque ValueIndex
   // struct, from which we can calculate the final index after the map has been
   // finalized.
-  template<typename HashKey, typename ValueType_>
-  class ValueTableBuilder
-  {
-  public:
+  template <typename HashKey, typename ValueType_>
+  class ValueTableBuilder {
+   public:
     using ValueType = ValueType_;
 
     // Adds an entry for a preference with only a default value to the array,
     // and returns an opaque descriptor for its index.
-    ValueIdx Add(const ValueType& aDefaultValue)
-    {
+    ValueIdx Add(const ValueType& aDefaultValue) {
       auto index = uint16_t(mDefaultEntries.Count());
 
       auto entry = mDefaultEntries.LookupForAdd(aDefaultValue).OrInsert([&]() {
-        return Entry{ index, false, aDefaultValue };
+        return Entry{index, false, aDefaultValue};
       });
 
-      return { entry.mIndex, false };
+      return {entry.mIndex, false};
     }
 
     // Adds an entry for a preference with a user value to the array. Regardless
     // of whether the preference has a default value, space must be allocated
     // for it. For preferences with no default value, the actual value which
     // appears in the array at its value index is ignored.
-    ValueIdx Add(const ValueType& aDefaultValue, const ValueType& aUserValue)
-    {
+    ValueIdx Add(const ValueType& aDefaultValue, const ValueType& aUserValue) {
       auto index = uint16_t(mUserEntries.Length());
 
-      mUserEntries.AppendElement(
-        Entry{ index, true, aDefaultValue, aUserValue });
+      mUserEntries.AppendElement(Entry{index, true, aDefaultValue, aUserValue});
 
-      return { index, true };
+      return {index, true};
     }
 
     // Returns the final index for an entry based on its opaque index
     // descriptor. This must only be called after the caller has finished adding
     // entries to the builder.
-    uint16_t GetIndex(const ValueIdx& aIndex) const
-    {
+    uint16_t GetIndex(const ValueIdx& aIndex) const {
       uint16_t base = aIndex.mHasUserValue ? 0 : UserCount();
       return base + aIndex.mIndex;
     }
@@ -704,8 +657,7 @@ private:
     // Writes out the array of default values at the block beginning at the
     // given pointer. The block must be at least as large as the value returned
     // by DefaultSize().
-    void WriteDefaultValues(const RangedPtr<uint8_t>& aBuffer) const
-    {
+    void WriteDefaultValues(const RangedPtr<uint8_t>& aBuffer) const {
       auto buffer = aBuffer.ReinterpretCast<ValueType>();
 
       for (const auto& entry : mUserEntries) {
@@ -722,8 +674,7 @@ private:
     // Writes out the array of user values at the block beginning at the
     // given pointer. The block must be at least as large as the value returned
     // by UserSize().
-    void WriteUserValues(const RangedPtr<uint8_t>& aBuffer) const
-    {
+    void WriteUserValues(const RangedPtr<uint8_t>& aBuffer) const {
       auto buffer = aBuffer.ReinterpretCast<ValueType>();
 
       for (const auto& entry : mUserEntries) {
@@ -733,8 +684,7 @@ private:
 
     // These return the number of entries in the default and user value arrays,
     // respectively.
-    uint32_t DefaultCount() const
-    {
+    uint32_t DefaultCount() const {
       return UserCount() + mDefaultEntries.Count();
     }
     uint32_t UserCount() const { return mUserEntries.Length(); }
@@ -744,17 +694,15 @@ private:
     uint32_t DefaultSize() const { return DefaultCount() * sizeof(ValueType); }
     uint32_t UserSize() const { return UserCount() * sizeof(ValueType); }
 
-    void Clear()
-    {
+    void Clear() {
       mUserEntries.Clear();
       mDefaultEntries.Clear();
     }
 
     static constexpr size_t Alignment() { return alignof(ValueType); }
 
-  private:
-    struct Entry
-    {
+   private:
+    struct Entry {
       uint16_t mIndex;
       bool mHasUserValue;
       ValueType mDefaultValue;
@@ -769,34 +717,27 @@ private:
   // A special-purpose string table builder for keys which are already
   // guaranteed to be unique. Duplicate values will not be detected or
   // de-duplicated.
-  template<typename CharType>
-  class UniqueStringTableBuilder
-  {
-  public:
+  template <typename CharType>
+  class UniqueStringTableBuilder {
+   public:
     using ElemType = CharType;
 
-    explicit UniqueStringTableBuilder(size_t aCapacity)
-      : mEntries(aCapacity)
-    {
-    }
+    explicit UniqueStringTableBuilder(size_t aCapacity) : mEntries(aCapacity) {}
 
-    StringTableEntry Add(const CharType* aKey)
-    {
+    StringTableEntry Add(const CharType* aKey) {
       auto entry =
-        mEntries.AppendElement(Entry{ mSize, uint32_t(strlen(aKey)), aKey });
+          mEntries.AppendElement(Entry{mSize, uint32_t(strlen(aKey)), aKey});
 
       mSize += entry->mLength + 1;
 
-      return { entry->mOffset, entry->mLength };
+      return {entry->mOffset, entry->mLength};
     }
 
-    void Write(const RangedPtr<uint8_t>& aBuffer)
-    {
+    void Write(const RangedPtr<uint8_t>& aBuffer) {
       auto buffer = aBuffer.ReinterpretCast<ElemType>();
 
       for (auto& entry : mEntries) {
-        memcpy(&buffer[entry.mOffset],
-               entry.mValue,
+        memcpy(&buffer[entry.mOffset], entry.mValue,
                sizeof(ElemType) * (entry.mLength + 1));
       }
     }
@@ -809,9 +750,8 @@ private:
 
     static constexpr size_t Alignment() { return alignof(ElemType); }
 
-  private:
-    struct Entry
-    {
+   private:
+    struct Entry {
       uint32_t mOffset;
       uint32_t mLength;
       const CharType* mValue;
@@ -826,19 +766,12 @@ private:
   // than a final value index.
   union Value {
     Value(bool aDefaultValue, bool aUserValue)
-      : mDefaultBool(aDefaultValue)
-      , mUserBool(aUserValue)
-    {
-    }
+        : mDefaultBool(aDefaultValue), mUserBool(aUserValue) {}
 
-    MOZ_IMPLICIT Value(const ValueIdx& aIndex)
-      : mIndex(aIndex)
-    {
-    }
+    MOZ_IMPLICIT Value(const ValueIdx& aIndex) : mIndex(aIndex) {}
 
     // For Bool preferences, their default and user bool values.
-    struct
-    {
+    struct {
       bool mDefaultBool;
       bool mUserBool;
     };
@@ -850,8 +783,7 @@ private:
 
   // A preference entry, to be converted to a SharedPrefMap::Entry struct during
   // serialization.
-  struct Entry
-  {
+  struct Entry {
     // The entry's preference name, as passed to Add(). The caller is
     // responsible for keeping this pointer alive until the builder is
     // finalized.
@@ -871,31 +803,30 @@ private:
   // Converts a builder Value struct to a SharedPrefMap::Value struct for
   // serialization. This must not be called before callers have finished adding
   // entries to the value array builders.
-  SharedPrefMap::Value GetValue(const Entry& aEntry) const
-  {
+  SharedPrefMap::Value GetValue(const Entry& aEntry) const {
     switch (PrefType(aEntry.mType)) {
       case PrefType::Bool:
-        return { aEntry.mValue.mDefaultBool, aEntry.mValue.mUserBool };
+        return {aEntry.mValue.mDefaultBool, aEntry.mValue.mUserBool};
       case PrefType::Int:
-        return { mIntValueTable.GetIndex(aEntry.mValue.mIndex) };
+        return {mIntValueTable.GetIndex(aEntry.mValue.mIndex)};
       case PrefType::String:
-        return { mStringValueTable.GetIndex(aEntry.mValue.mIndex) };
+        return {mStringValueTable.GetIndex(aEntry.mValue.mIndex)};
       default:
         MOZ_ASSERT_UNREACHABLE("Invalid pref type");
-        return { false, false };
+        return {false, false};
     }
   }
 
-  UniqueStringTableBuilder<char> mKeyTable{ kExpectedPrefCount };
+  UniqueStringTableBuilder<char> mKeyTable{kExpectedPrefCount};
   StringTableBuilder<nsCStringHashKey, nsCString> mValueStringTable;
 
   ValueTableBuilder<nsUint32HashKey, uint32_t> mIntValueTable;
   ValueTableBuilder<nsGenericHashKey<StringTableEntry>, StringTableEntry>
-    mStringValueTable;
+      mStringValueTable;
 
-  nsTArray<Entry> mEntries{ kExpectedPrefCount };
+  nsTArray<Entry> mEntries{kExpectedPrefCount};
 };
 
-} // mozilla
+}  // namespace mozilla
 
-#endif // dom_ipc_SharedPrefMap_h
+#endif  // dom_ipc_SharedPrefMap_h

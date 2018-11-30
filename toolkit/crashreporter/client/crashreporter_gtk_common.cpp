@@ -63,10 +63,9 @@ void DisableGUIAndSendReport();
 void TryInitGnome();
 void UpdateSubmit();
 
-static bool RestartApplication()
-{
+static bool RestartApplication() {
   char** argv = reinterpret_cast<char**>(
-    malloc(sizeof(char*) * (gRestartArgs.size() + 1)));
+      malloc(sizeof(char*) * (gRestartArgs.size() + 1)));
 
   if (!argv) return false;
 
@@ -80,8 +79,7 @@ static bool RestartApplication()
   if (pid == -1) {
     free(argv);
     return false;
-  }
-  else if (pid == 0) {
+  } else if (pid == 0) {
     (void)execv(argv[0], argv);
     _exit(1);
   }
@@ -92,8 +90,7 @@ static bool RestartApplication()
 }
 
 // Quit the app, used as a timeout callback
-static gboolean CloseApp(gpointer data)
-{
+static gboolean CloseApp(gpointer data) {
   if (!gAutoSubmit) {
     gtk_main_quit();
   }
@@ -101,11 +98,10 @@ static gboolean CloseApp(gpointer data)
   return FALSE;
 }
 
-static gboolean ReportCompleted(gpointer success)
-{
+static gboolean ReportCompleted(gpointer success) {
   gtk_widget_hide(gThrobber);
-  string str = success ? gStrings[ST_REPORTSUBMITSUCCESS]
-                       : gStrings[ST_SUBMITFAILED];
+  string str =
+      success ? gStrings[ST_REPORTSUBMITSUCCESS] : gStrings[ST_SUBMITFAILED];
   gtk_label_set_text(GTK_LABEL(gProgressLabel), str.c_str());
   g_timeout_add(5000, CloseApp, 0);
   return FALSE;
@@ -114,39 +110,35 @@ static gboolean ReportCompleted(gpointer success)
 #ifdef MOZ_ENABLE_GCONF
 #define HTTP_PROXY_DIR "/system/http_proxy"
 
-void LoadProxyinfo()
-{
+void LoadProxyinfo() {
   class GConfClient;
-  typedef GConfClient * (*_gconf_default_fn)();
-  typedef gboolean (*_gconf_bool_fn)(GConfClient *, const gchar *, GError **);
-  typedef gint (*_gconf_int_fn)(GConfClient *, const gchar *, GError **);
-  typedef gchar * (*_gconf_string_fn)(GConfClient *, const gchar *, GError **);
+  typedef GConfClient* (*_gconf_default_fn)();
+  typedef gboolean (*_gconf_bool_fn)(GConfClient*, const gchar*, GError**);
+  typedef gint (*_gconf_int_fn)(GConfClient*, const gchar*, GError**);
+  typedef gchar* (*_gconf_string_fn)(GConfClient*, const gchar*, GError**);
 
-  if (getenv ("http_proxy"))
-    return; // libcurl can use the value from the environment
+  if (getenv("http_proxy"))
+    return;  // libcurl can use the value from the environment
 
   static void* gconfLib = dlopen("libgconf-2.so.4", RTLD_LAZY);
-  if (!gconfLib)
-    return;
+  if (!gconfLib) return;
 
   _gconf_default_fn gconf_client_get_default =
-    (_gconf_default_fn)dlsym(gconfLib, "gconf_client_get_default");
+      (_gconf_default_fn)dlsym(gconfLib, "gconf_client_get_default");
   _gconf_bool_fn gconf_client_get_bool =
-    (_gconf_bool_fn)dlsym(gconfLib, "gconf_client_get_bool");
+      (_gconf_bool_fn)dlsym(gconfLib, "gconf_client_get_bool");
   _gconf_int_fn gconf_client_get_int =
-    (_gconf_int_fn)dlsym(gconfLib, "gconf_client_get_int");
+      (_gconf_int_fn)dlsym(gconfLib, "gconf_client_get_int");
   _gconf_string_fn gconf_client_get_string =
-    (_gconf_string_fn)dlsym(gconfLib, "gconf_client_get_string");
+      (_gconf_string_fn)dlsym(gconfLib, "gconf_client_get_string");
 
-  if(!(gconf_client_get_default &&
-       gconf_client_get_bool &&
-       gconf_client_get_int &&
-       gconf_client_get_string)) {
+  if (!(gconf_client_get_default && gconf_client_get_bool &&
+        gconf_client_get_int && gconf_client_get_string)) {
     dlclose(gconfLib);
     return;
   }
 
-  GConfClient *conf = gconf_client_get_default();
+  GConfClient* conf = gconf_client_get_default();
 
   if (gconf_client_get_bool(conf, HTTP_PROXY_DIR "/use_http_proxy", nullptr)) {
     gint port;
@@ -167,13 +159,10 @@ void LoadProxyinfo()
                               nullptr)) {
       gchar *user, *password, *auth = nullptr;
 
-      user = gconf_client_get_string(conf,
-                                     HTTP_PROXY_DIR "/authentication_user",
-                                     nullptr);
-      password = gconf_client_get_string(conf,
-                                         HTTP_PROXY_DIR
-                                         "/authentication_password",
-                                         nullptr);
+      user = gconf_client_get_string(
+          conf, HTTP_PROXY_DIR "/authentication_user", nullptr);
+      password = gconf_client_get_string(
+          conf, HTTP_PROXY_DIR "/authentication_password", nullptr);
 
       if (user && password) {
         auth = g_strdup_printf("%s:%s", user, password);
@@ -192,24 +181,16 @@ void LoadProxyinfo()
 }
 #endif
 
-gpointer SendThread(gpointer args)
-{
+gpointer SendThread(gpointer args) {
   string response, error;
   long response_code;
 
-  bool success = google_breakpad::HTTPUpload::SendRequest
-    (gSendURL,
-     gQueryParameters,
-     gFiles,
-     gHttpProxy, gAuth,
-     gCACertificateFile,
-     &response,
-     &response_code,
-     &error);
+  bool success = google_breakpad::HTTPUpload::SendRequest(
+      gSendURL, gQueryParameters, gFiles, gHttpProxy, gAuth, gCACertificateFile,
+      &response, &response_code, &error);
   if (success) {
     LogMessage("Crash report submitted successfully");
-  }
-  else {
+  } else {
     LogMessage("Crash report submission failed: " + error);
   }
 
@@ -225,19 +206,14 @@ gpointer SendThread(gpointer args)
   return nullptr;
 }
 
-gboolean WindowDeleted(GtkWidget* window,
-                       GdkEvent* event,
-                       gpointer userData)
-{
+gboolean WindowDeleted(GtkWidget* window, GdkEvent* event, gpointer userData) {
   SaveSettings();
   gtk_main_quit();
   return TRUE;
 }
 
-gboolean check_escape(GtkWidget* window,
-                      GdkEventKey* event,
-                      gpointer userData)
-{
+gboolean check_escape(GtkWidget* window, GdkEventKey* event,
+                      gpointer userData) {
   if (event->keyval == GDK_KEY_Escape) {
     gtk_main_quit();
     return TRUE;
@@ -245,8 +221,7 @@ gboolean check_escape(GtkWidget* window,
   return FALSE;
 }
 
-static void MaybeSubmitReport()
-{
+static void MaybeSubmitReport() {
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
     gDidTrySend = true;
     DisableGUIAndSendReport();
@@ -255,23 +230,18 @@ static void MaybeSubmitReport()
   }
 }
 
-void CloseClicked(GtkButton* button,
-                  gpointer userData)
-{
+void CloseClicked(GtkButton* button, gpointer userData) {
   SaveSettings();
   MaybeSubmitReport();
 }
 
-void RestartClicked(GtkButton* button,
-                    gpointer userData)
-{
+void RestartClicked(GtkButton* button, gpointer userData) {
   SaveSettings();
   RestartApplication();
   MaybeSubmitReport();
 }
 
-static void UpdateURL()
-{
+static void UpdateURL() {
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck))) {
     gQueryParameters["URL"] = gURLParameter;
   } else {
@@ -279,20 +249,15 @@ static void UpdateURL()
   }
 }
 
-void SubmitReportChecked(GtkButton* sender, gpointer userData)
-{
+void SubmitReportChecked(GtkButton* sender, gpointer userData) {
   UpdateSubmit();
 }
 
-void IncludeURLClicked(GtkButton* sender, gpointer userData)
-{
-  UpdateURL();
-}
+void IncludeURLClicked(GtkButton* sender, gpointer userData) { UpdateURL(); }
 
 /* === Crashreporter UI Functions === */
 
-bool UIInit()
-{
+bool UIInit() {
   // breakpad probably left us with blocked signals, unblock them here
   sigset_t signals, old;
   sigfillset(&signals);
@@ -304,8 +269,7 @@ bool UIInit()
   if (gtk_init_check(&gArgc, &gArgv)) {
     gInitialized = true;
 
-    if (gStrings.find("isRTL") != gStrings.end() &&
-        gStrings["isRTL"] == "yes")
+    if (gStrings.find("isRTL") != gStrings.end() && gStrings["isRTL"] == "yes")
       gtk_widget_set_default_direction(GTK_TEXT_DIR_RTL);
 
     return true;
@@ -314,21 +278,17 @@ bool UIInit()
   return false;
 }
 
-void UIShowDefaultUI()
-{
-  GtkWidget* errorDialog =
-    gtk_message_dialog_new(nullptr, GTK_DIALOG_MODAL,
-                           GTK_MESSAGE_ERROR,
-                           GTK_BUTTONS_CLOSE,
-                           "%s", gStrings[ST_CRASHREPORTERDEFAULT].c_str());
+void UIShowDefaultUI() {
+  GtkWidget* errorDialog = gtk_message_dialog_new(
+      nullptr, GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s",
+      gStrings[ST_CRASHREPORTERDEFAULT].c_str());
 
   gtk_window_set_title(GTK_WINDOW(errorDialog),
                        gStrings[ST_CRASHREPORTERTITLE].c_str());
   gtk_dialog_run(GTK_DIALOG(errorDialog));
 }
 
-void UIError_impl(const string& message)
-{
+void UIError_impl(const string& message) {
   if (!gInitialized) {
     // Didn't initialize, this is the best we can do
     printf("Error: %s\n", message.c_str());
@@ -336,18 +296,15 @@ void UIError_impl(const string& message)
   }
 
   GtkWidget* errorDialog =
-    gtk_message_dialog_new(nullptr, GTK_DIALOG_MODAL,
-                           GTK_MESSAGE_ERROR,
-                           GTK_BUTTONS_CLOSE,
-                           "%s", message.c_str());
+      gtk_message_dialog_new(nullptr, GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR,
+                             GTK_BUTTONS_CLOSE, "%s", message.c_str());
 
   gtk_window_set_title(GTK_WINDOW(errorDialog),
                        gStrings[ST_CRASHREPORTERTITLE].c_str());
   gtk_dialog_run(GTK_DIALOG(errorDialog));
 }
 
-bool UIGetIniPath(string& path)
-{
+bool UIGetIniPath(string& path) {
   path = gArgv[0];
   path.append(".ini");
 
@@ -358,36 +315,30 @@ bool UIGetIniPath(string& path)
  * Settings are stored in ~/.vendor/product, or
  * ~/.product if vendor is empty.
  */
-bool UIGetSettingsPath(const string& vendor,
-                       const string& product,
-                       string& settingsPath)
-{
+bool UIGetSettingsPath(const string& vendor, const string& product,
+                       string& settingsPath) {
   char* home = getenv("HOME");
 
-  if (!home)
-    return false;
+  if (!home) return false;
 
   settingsPath = home;
   settingsPath += "/.";
   if (!vendor.empty()) {
     string lc_vendor;
     std::transform(vendor.begin(), vendor.end(), back_inserter(lc_vendor),
-                   (int(*)(int)) std::tolower);
+                   (int (*)(int))std::tolower);
     settingsPath += lc_vendor + "/";
   }
   string lc_product;
   std::transform(product.begin(), product.end(), back_inserter(lc_product),
-                 (int(*)(int)) std::tolower);
+                 (int (*)(int))std::tolower);
   settingsPath += lc_product + "/Crash Reports";
   return true;
 }
 
-bool UIMoveFile(const string& file, const string& newfile)
-{
-  if (!rename(file.c_str(), newfile.c_str()))
-    return true;
-  if (errno != EXDEV)
-    return false;
+bool UIMoveFile(const string& file, const string& newfile) {
+  if (!rename(file.c_str(), newfile.c_str())) return true;
+  if (errno != EXDEV) return false;
 
   // use system /bin/mv instead, time to fork
   pid_t pID = vfork();
@@ -396,14 +347,9 @@ bool UIMoveFile(const string& file, const string& newfile)
     return false;
   }
   if (pID == 0) {
-    char* const args[4] = {
-      const_cast<char*>("mv"),
-      strdup(file.c_str()),
-      strdup(newfile.c_str()),
-      0
-    };
-    if (args[1] && args[2])
-      execve("/bin/mv", args, 0);
+    char* const args[4] = {const_cast<char*>("mv"), strdup(file.c_str()),
+                           strdup(newfile.c_str()), 0};
+    if (args[1] && args[2]) execve("/bin/mv", args, 0);
     free(args[1]);
     free(args[2]);
     exit(-1);

@@ -11,10 +11,8 @@
 namespace mozilla {
 namespace dom {
 
-nsresult
-CBOREncodePublicKeyObj(const CryptoBuffer& aPubKeyBuf,
-                       /* out */ CryptoBuffer& aPubKeyObj)
-{
+nsresult CBOREncodePublicKeyObj(const CryptoBuffer& aPubKeyBuf,
+                                /* out */ CryptoBuffer& aPubKeyObj) {
   mozilla::dom::CryptoBuffer xBuf, yBuf;
   nsresult rv = U2FDecomposeECKey(aPubKeyBuf, xBuf, yBuf);
   if (NS_FAILED(rv)) {
@@ -46,12 +44,10 @@ CBOREncodePublicKeyObj(const CryptoBuffer& aPubKeyBuf,
   return NS_OK;
 }
 
-nsresult
-CBOREncodeFidoU2FAttestationObj(const CryptoBuffer& aAuthDataBuf,
-                                const CryptoBuffer& aAttestationCertBuf,
-                                const CryptoBuffer& aSignatureBuf,
-                                /* out */ CryptoBuffer& aAttestationObj)
-{
+nsresult CBOREncodeFidoU2FAttestationObj(
+    const CryptoBuffer& aAuthDataBuf, const CryptoBuffer& aAttestationCertBuf,
+    const CryptoBuffer& aSignatureBuf,
+    /* out */ CryptoBuffer& aAttestationObj) {
   /*
   Attestation Object, encoded in CBOR (description is CDDL)
 
@@ -84,7 +80,8 @@ CBOREncodeFidoU2FAttestationObj(const CryptoBuffer& aAuthDataBuf,
       encoder.write_string("x5c");
       // U2F wire protocol can only deliver 1 certificate, so it's never a chain
       encoder.write_array(1);
-      encoder.write_bytes(aAttestationCertBuf.Elements(), aAttestationCertBuf.Length());
+      encoder.write_bytes(aAttestationCertBuf.Elements(),
+                          aAttestationCertBuf.Length());
     }
 
     encoder.write_string("authData");
@@ -97,10 +94,8 @@ CBOREncodeFidoU2FAttestationObj(const CryptoBuffer& aAuthDataBuf,
   return NS_OK;
 }
 
-nsresult
-CBOREncodeNoneAttestationObj(const CryptoBuffer& aAuthDataBuf,
-                             /* out */ CryptoBuffer& aAttestationObj)
-{
+nsresult CBOREncodeNoneAttestationObj(const CryptoBuffer& aAuthDataBuf,
+                                      /* out */ CryptoBuffer& aAttestationObj) {
   /*
   Attestation Object, encoded in CBOR (description is CDDL)
 
@@ -131,5 +126,5 @@ CBOREncodeNoneAttestationObj(const CryptoBuffer& aAuthDataBuf,
   return NS_OK;
 }
 
-}
-}
+}  // namespace dom
+}  // namespace mozilla

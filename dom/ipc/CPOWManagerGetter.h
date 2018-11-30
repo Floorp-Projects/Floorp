@@ -15,9 +15,8 @@ class CPOWManager;
 
 namespace dom {
 
-class CPOWManagerGetter
-{
-public:
+class CPOWManagerGetter {
+ public:
   virtual mozilla::jsipc::CPOWManager* GetCPOWManager() = 0;
 };
 

@@ -12,21 +12,18 @@
 namespace mozilla {
 namespace dom {
 
-class PlacesVisit final : public PlacesEvent
-{
-public:
+class PlacesVisit final : public PlacesEvent {
+ public:
   explicit PlacesVisit() : PlacesEvent(PlacesEventType::Page_visited) {}
 
-  static already_AddRefed<PlacesVisit>
-  Constructor(const GlobalObject& aGlobal,
-              ErrorResult& aRv) {
+  static already_AddRefed<PlacesVisit> Constructor(const GlobalObject& aGlobal,
+                                                   ErrorResult& aRv) {
     RefPtr<PlacesVisit> event = new PlacesVisit();
     return event.forget();
   }
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override {
     return PlacesVisit_Binding::Wrap(aCx, this, aGivenProto);
   }
 
@@ -41,7 +38,9 @@ public:
   bool Hidden() { return mHidden; }
   uint32_t VisitCount() { return mVisitCount; }
   uint32_t TypedCount() { return mTypedCount; }
-  void GetLastKnownTitle(nsString& aLastKnownTitle) { aLastKnownTitle = mLastKnownTitle; }
+  void GetLastKnownTitle(nsString& aLastKnownTitle) {
+    aLastKnownTitle = mLastKnownTitle;
+  }
 
   // It's convenient for these to be directly available in C++, so just expose
   // them. These are generally passed around with const qualifiers anyway, so
@@ -57,11 +56,11 @@ public:
   uint32_t mTypedCount;
   nsString mLastKnownTitle;
 
-private:
+ private:
   ~PlacesVisit() = default;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PlacesVisit_h
+#endif  // mozilla_dom_PlacesVisit_h

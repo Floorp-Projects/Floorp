@@ -19,7 +19,7 @@ class AutoStackArena;
 
 // Private helper class for AutoStackArena.
 class StackArena {
-private:
+ private:
   friend class AutoStackArena;
   StackArena();
   ~StackArena();
@@ -63,10 +63,8 @@ private:
 // bytes.
 //
 class MOZ_RAII AutoStackArena {
-public:
-  AutoStackArena()
-    : mOwnsStackArena(false)
-  {
+ public:
+  AutoStackArena() : mOwnsStackArena(false) {
     if (!gStackArena) {
       gStackArena = new StackArena();
       mOwnsStackArena = true;
@@ -82,15 +80,13 @@ public:
     }
   }
 
-  static void* Allocate(size_t aSize) {
-    return gStackArena->Allocate(aSize);
-  }
+  static void* Allocate(size_t aSize) { return gStackArena->Allocate(aSize); }
 
-private:
+ private:
   static StackArena* gStackArena;
   bool mOwnsStackArena;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

@@ -18,15 +18,14 @@ namespace mozilla {
  * must be supported, and it's desirable to prevent accidental dependency on
  * exact values.
  */
-template<typename T>
-class Opaque final
-{
+template <typename T>
+class Opaque final {
   static_assert(mozilla::IsIntegral<T>::value,
                 "mozilla::Opaque only supports integral types");
 
   T mValue;
 
-public:
+ public:
   Opaque() {}
   explicit Opaque(T aValue) : mValue(aValue) {}
 
@@ -34,11 +33,9 @@ public:
     return mValue == aOther.mValue;
   }
 
-  bool operator!=(const Opaque& aOther) const {
-    return !(*this == aOther);
-  }
+  bool operator!=(const Opaque& aOther) const { return !(*this == aOther); }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_Opaque_h */

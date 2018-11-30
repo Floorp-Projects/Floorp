@@ -15,10 +15,10 @@
 namespace mozilla {
 namespace dom {
 
-class PlacesWeakCallbackWrapper final : public nsWrapperCache
-                                      , public SupportsWeakPtr<PlacesWeakCallbackWrapper>
-{
-public:
+class PlacesWeakCallbackWrapper final
+    : public nsWrapperCache,
+      public SupportsWeakPtr<PlacesWeakCallbackWrapper> {
+ public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PlacesWeakCallbackWrapper)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PlacesWeakCallbackWrapper)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PlacesWeakCallbackWrapper)
@@ -26,24 +26,23 @@ public:
   explicit PlacesWeakCallbackWrapper(nsISupports* aParent,
                                      PlacesEventCallback& aCallback);
 
-  static already_AddRefed<PlacesWeakCallbackWrapper>
-  Constructor(const GlobalObject& aGlobal,
-              PlacesEventCallback& aCallback,
-              ErrorResult& rv);
+  static already_AddRefed<PlacesWeakCallbackWrapper> Constructor(
+      const GlobalObject& aGlobal, PlacesEventCallback& aCallback,
+      ErrorResult& rv);
 
   nsISupports* GetParentObject() const;
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-protected:
+ protected:
   friend class PlacesObservers;
   ~PlacesWeakCallbackWrapper();
   nsWeakPtr mParent;
   RefPtr<PlacesEventCallback> mCallback;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PlacesWeakCallbackWrapper_h
+#endif  // mozilla_dom_PlacesWeakCallbackWrapper_h

@@ -16,23 +16,21 @@
  * apply to this class
  */
 
-class nsAuthSASL final : public nsIAuthModule
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIAUTHMODULE
+class nsAuthSASL final : public nsIAuthModule {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIAUTHMODULE
 
-    nsAuthSASL();
+  nsAuthSASL();
 
-private:
-    ~nsAuthSASL() { Reset(); }
+ private:
+  ~nsAuthSASL() { Reset(); }
 
-    void Reset();
+  void Reset();
 
-    nsCOMPtr<nsIAuthModule> mInnerModule;
-    nsString       mUsername;
-    bool           mSASLReady;
+  nsCOMPtr<nsIAuthModule> mInnerModule;
+  nsString mUsername;
+  bool mSASLReady;
 };
 
 #endif /* nsAuthSASL_h__ */
-

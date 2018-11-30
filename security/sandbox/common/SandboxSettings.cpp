@@ -35,9 +35,7 @@ int GetEffectiveContentSandboxLevel() {
   return level;
 }
 
-bool IsContentSandboxEnabled() {
-  return GetEffectiveContentSandboxLevel() > 0;
-}
+bool IsContentSandboxEnabled() { return GetEffectiveContentSandboxLevel() > 0; }
 
 #if defined(XP_MACOSX)
 int ClampFlashSandboxLevel(const int aLevel) {
@@ -55,22 +53,21 @@ int ClampFlashSandboxLevel(const int aLevel) {
 }
 #endif
 
-class SandboxSettings final : public mozISandboxSettings
-{
-public:
+class SandboxSettings final : public mozISandboxSettings {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISANDBOXSETTINGS
 
-  SandboxSettings() { }
+  SandboxSettings() {}
 
-private:
-  ~SandboxSettings() { }
+ private:
+  ~SandboxSettings() {}
 };
 
 NS_IMPL_ISUPPORTS(SandboxSettings, mozISandboxSettings)
 
-NS_IMETHODIMP SandboxSettings::GetEffectiveContentSandboxLevel(int32_t *aRetVal)
-{
+NS_IMETHODIMP SandboxSettings::GetEffectiveContentSandboxLevel(
+    int32_t *aRetVal) {
   *aRetVal = mozilla::GetEffectiveContentSandboxLevel();
   return NS_OK;
 }
@@ -80,21 +77,15 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(SandboxSettings)
 NS_DEFINE_NAMED_CID(MOZ_SANDBOX_SETTINGS_CID);
 
 static const mozilla::Module::CIDEntry kSandboxSettingsCIDs[] = {
-  { &kMOZ_SANDBOX_SETTINGS_CID, false, nullptr, SandboxSettingsConstructor },
-  { nullptr }
-};
+    {&kMOZ_SANDBOX_SETTINGS_CID, false, nullptr, SandboxSettingsConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kSandboxSettingsContracts[] = {
-  { MOZ_SANDBOX_SETTINGS_CONTRACTID, &kMOZ_SANDBOX_SETTINGS_CID },
-  { nullptr }
-};
+    {MOZ_SANDBOX_SETTINGS_CONTRACTID, &kMOZ_SANDBOX_SETTINGS_CID}, {nullptr}};
 
 static const mozilla::Module kSandboxSettingsModule = {
-  mozilla::Module::kVersion,
-  kSandboxSettingsCIDs,
-  kSandboxSettingsContracts
-};
+    mozilla::Module::kVersion, kSandboxSettingsCIDs, kSandboxSettingsContracts};
 
 NSMODULE_DEFN(SandboxSettingsModule) = &kSandboxSettingsModule;
 
-} // namespace mozilla
+}  // namespace mozilla

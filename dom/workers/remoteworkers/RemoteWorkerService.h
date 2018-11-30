@@ -17,37 +17,31 @@ namespace dom {
 
 class RemoteWorkerServiceChild;
 
-class RemoteWorkerService final : public nsIObserver
-{
-public:
+class RemoteWorkerService final : public nsIObserver {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   // To be called when a process is initialized on main-thread.
-  static void
-  Initialize();
+  static void Initialize();
 
-  static nsIThread*
-  Thread();
+  static nsIThread* Thread();
 
-private:
+ private:
   RemoteWorkerService();
   ~RemoteWorkerService();
 
-  nsresult
-  InitializeOnMainThread();
+  nsresult InitializeOnMainThread();
 
-  void
-  InitializeOnTargetThread();
+  void InitializeOnTargetThread();
 
-  void
-  ShutdownOnTargetThread();
+  void ShutdownOnTargetThread();
 
   nsCOMPtr<nsIThread> mThread;
   RefPtr<RemoteWorkerServiceChild> mActor;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_RemoteWorkerService_h
+#endif  // mozilla_dom_RemoteWorkerService_h

@@ -29,191 +29,170 @@ namespace wasm {
 // Factor out common serialization, cloning and about:memory size-computation
 // functions for reuse when serializing wasm and asm.js modules.
 
-static inline uint8_t*
-WriteBytes(uint8_t* dst, const void* src, size_t nbytes)
-{
-    if (nbytes) {
-        memcpy(dst, src, nbytes);
-    }
-    return dst + nbytes;
-}
-
-static inline const uint8_t*
-ReadBytes(const uint8_t* src, void* dst, size_t nbytes)
-{
-    if (nbytes) {
-        memcpy(dst, src, nbytes);
-    }
-    return src + nbytes;
-}
-
-static inline const uint8_t*
-ReadBytesChecked(const uint8_t* src, size_t* remain, void* dst, size_t nbytes)
-{
-    if (*remain < nbytes) {
-        return nullptr;
-    }
+static inline uint8_t* WriteBytes(uint8_t* dst, const void* src,
+                                  size_t nbytes) {
+  if (nbytes) {
     memcpy(dst, src, nbytes);
-    *remain -= nbytes;
-    return src + nbytes;
+  }
+  return dst + nbytes;
+}
+
+static inline const uint8_t* ReadBytes(const uint8_t* src, void* dst,
+                                       size_t nbytes) {
+  if (nbytes) {
+    memcpy(dst, src, nbytes);
+  }
+  return src + nbytes;
+}
+
+static inline const uint8_t* ReadBytesChecked(const uint8_t* src,
+                                              size_t* remain, void* dst,
+                                              size_t nbytes) {
+  if (*remain < nbytes) {
+    return nullptr;
+  }
+  memcpy(dst, src, nbytes);
+  *remain -= nbytes;
+  return src + nbytes;
 }
 
 template <class T>
-static inline uint8_t*
-WriteScalar(uint8_t* dst, T t)
-{
-    memcpy(dst, &t, sizeof(t));
-    return dst + sizeof(t);
+static inline uint8_t* WriteScalar(uint8_t* dst, T t) {
+  memcpy(dst, &t, sizeof(t));
+  return dst + sizeof(t);
 }
 
 template <class T>
-static inline const uint8_t*
-ReadScalar(const uint8_t* src, T* dst)
-{
-    memcpy(dst, src, sizeof(*dst));
-    return src + sizeof(*dst);
+static inline const uint8_t* ReadScalar(const uint8_t* src, T* dst) {
+  memcpy(dst, src, sizeof(*dst));
+  return src + sizeof(*dst);
 }
 
 template <class T>
-static inline const uint8_t*
-ReadScalarChecked(const uint8_t* src, size_t* remain, T* dst)
-{
-    if (*remain < sizeof(*dst)) {
-        return nullptr;
-    }
-    memcpy(dst, src, sizeof(*dst));
-    *remain -= sizeof(*dst);
-    return src + sizeof(*dst);
+static inline const uint8_t* ReadScalarChecked(const uint8_t* src,
+                                               size_t* remain, T* dst) {
+  if (*remain < sizeof(*dst)) {
+    return nullptr;
+  }
+  memcpy(dst, src, sizeof(*dst));
+  *remain -= sizeof(*dst);
+  return src + sizeof(*dst);
 }
 
 template <class T, size_t N>
-static inline size_t
-SerializedVectorSize(const mozilla::Vector<T, N, SystemAllocPolicy>& vec)
-{
-    size_t size = sizeof(uint32_t);
-    for (size_t i = 0; i < vec.length(); i++) {
-        size += vec[i].serializedSize();
-    }
-    return size;
+static inline size_t SerializedVectorSize(
+    const mozilla::Vector<T, N, SystemAllocPolicy>& vec) {
+  size_t size = sizeof(uint32_t);
+  for (size_t i = 0; i < vec.length(); i++) {
+    size += vec[i].serializedSize();
+  }
+  return size;
 }
 
 template <class T, size_t N>
-static inline uint8_t*
-SerializeVector(uint8_t* cursor, const mozilla::Vector<T, N, SystemAllocPolicy>& vec)
-{
-    cursor = WriteScalar<uint32_t>(cursor, vec.length());
-    for (size_t i = 0; i < vec.length(); i++) {
-        cursor = vec[i].serialize(cursor);
-    }
-    return cursor;
+static inline uint8_t* SerializeVector(
+    uint8_t* cursor, const mozilla::Vector<T, N, SystemAllocPolicy>& vec) {
+  cursor = WriteScalar<uint32_t>(cursor, vec.length());
+  for (size_t i = 0; i < vec.length(); i++) {
+    cursor = vec[i].serialize(cursor);
+  }
+  return cursor;
 }
 
 template <class T, size_t N>
-static inline const uint8_t*
-DeserializeVector(const uint8_t* cursor, mozilla::Vector<T, N, SystemAllocPolicy>* vec)
-{
-    uint32_t length;
-    cursor = ReadScalar<uint32_t>(cursor, &length);
-    if (!vec->resize(length)) {
-        return nullptr;
+static inline const uint8_t* DeserializeVector(
+    const uint8_t* cursor, mozilla::Vector<T, N, SystemAllocPolicy>* vec) {
+  uint32_t length;
+  cursor = ReadScalar<uint32_t>(cursor, &length);
+  if (!vec->resize(length)) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < vec->length(); i++) {
+    if (!(cursor = (*vec)[i].deserialize(cursor))) {
+      return nullptr;
     }
-    for (size_t i = 0; i < vec->length(); i++) {
-        if (!(cursor = (*vec)[i].deserialize(cursor))) {
-            return nullptr;
-        }
-    }
-    return cursor;
+  }
+  return cursor;
 }
 
 template <class T, size_t N>
-static inline size_t
-SizeOfVectorExcludingThis(const mozilla::Vector<T, N, SystemAllocPolicy>& vec,
-                          MallocSizeOf mallocSizeOf)
-{
-    size_t size = vec.sizeOfExcludingThis(mallocSizeOf);
-    for (const T& t : vec) {
-        size += t.sizeOfExcludingThis(mallocSizeOf);
-    }
-    return size;
+static inline size_t SizeOfVectorExcludingThis(
+    const mozilla::Vector<T, N, SystemAllocPolicy>& vec,
+    MallocSizeOf mallocSizeOf) {
+  size_t size = vec.sizeOfExcludingThis(mallocSizeOf);
+  for (const T& t : vec) {
+    size += t.sizeOfExcludingThis(mallocSizeOf);
+  }
+  return size;
 }
 
 template <class T, size_t N>
-static inline size_t
-SerializedPodVectorSize(const mozilla::Vector<T, N, SystemAllocPolicy>& vec)
-{
-    return sizeof(uint32_t) +
-           vec.length() * sizeof(T);
+static inline size_t SerializedPodVectorSize(
+    const mozilla::Vector<T, N, SystemAllocPolicy>& vec) {
+  return sizeof(uint32_t) + vec.length() * sizeof(T);
 }
 
 template <class T, size_t N>
-static inline uint8_t*
-SerializePodVector(uint8_t* cursor, const mozilla::Vector<T, N, SystemAllocPolicy>& vec)
-{
-    // This binary format must not change without taking into consideration the
-    // constraints in Assumptions::serialize.
+static inline uint8_t* SerializePodVector(
+    uint8_t* cursor, const mozilla::Vector<T, N, SystemAllocPolicy>& vec) {
+  // This binary format must not change without taking into consideration the
+  // constraints in Assumptions::serialize.
 
-    cursor = WriteScalar<uint32_t>(cursor, vec.length());
-    cursor = WriteBytes(cursor, vec.begin(), vec.length() * sizeof(T));
-    return cursor;
+  cursor = WriteScalar<uint32_t>(cursor, vec.length());
+  cursor = WriteBytes(cursor, vec.begin(), vec.length() * sizeof(T));
+  return cursor;
 }
 
 template <class T, size_t N>
-static inline const uint8_t*
-DeserializePodVector(const uint8_t* cursor, mozilla::Vector<T, N, SystemAllocPolicy>* vec)
-{
-    uint32_t length;
-    cursor = ReadScalar<uint32_t>(cursor, &length);
-    if (!vec->initLengthUninitialized(length)) {
-        return nullptr;
-    }
-    cursor = ReadBytes(cursor, vec->begin(), length * sizeof(T));
-    return cursor;
+static inline const uint8_t* DeserializePodVector(
+    const uint8_t* cursor, mozilla::Vector<T, N, SystemAllocPolicy>* vec) {
+  uint32_t length;
+  cursor = ReadScalar<uint32_t>(cursor, &length);
+  if (!vec->initLengthUninitialized(length)) {
+    return nullptr;
+  }
+  cursor = ReadBytes(cursor, vec->begin(), length * sizeof(T));
+  return cursor;
 }
 
 template <class T, size_t N>
-static inline const uint8_t*
-DeserializePodVectorChecked(const uint8_t* cursor, size_t* remain, mozilla::Vector<T, N, SystemAllocPolicy>* vec)
-{
-    uint32_t length;
-    cursor = ReadScalarChecked<uint32_t>(cursor, remain, &length);
-    if (!cursor || !vec->initLengthUninitialized(length)) {
-        return nullptr;
-    }
-    cursor = ReadBytesChecked(cursor, remain, vec->begin(), length * sizeof(T));
-    return cursor;
+static inline const uint8_t* DeserializePodVectorChecked(
+    const uint8_t* cursor, size_t* remain,
+    mozilla::Vector<T, N, SystemAllocPolicy>* vec) {
+  uint32_t length;
+  cursor = ReadScalarChecked<uint32_t>(cursor, remain, &length);
+  if (!cursor || !vec->initLengthUninitialized(length)) {
+    return nullptr;
+  }
+  cursor = ReadBytesChecked(cursor, remain, vec->begin(), length * sizeof(T));
+  return cursor;
 }
 
 template <class T>
-inline size_t
-SerializableRefPtr<T>::serializedSize() const
-{
-    return (*this)->serializedSize();
+inline size_t SerializableRefPtr<T>::serializedSize() const {
+  return (*this)->serializedSize();
 }
 
 template <class T>
-inline uint8_t*
-SerializableRefPtr<T>::serialize(uint8_t* cursor) const
-{
-    return (*this)->serialize(cursor);
+inline uint8_t* SerializableRefPtr<T>::serialize(uint8_t* cursor) const {
+  return (*this)->serialize(cursor);
 }
 
 template <class T>
-inline const uint8_t*
-SerializableRefPtr<T>::deserialize(const uint8_t* cursor)
-{
-    auto* t = js_new<std::remove_const_t<T>>();
-    *this = t;
-    return t->deserialize(cursor);
+inline const uint8_t* SerializableRefPtr<T>::deserialize(
+    const uint8_t* cursor) {
+  auto* t = js_new<std::remove_const_t<T>>();
+  *this = t;
+  return t->deserialize(cursor);
 }
 
 template <class T>
-inline size_t
-SerializableRefPtr<T>::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-    return (*this)->sizeOfExcludingThis(mallocSizeOf);
+inline size_t SerializableRefPtr<T>::sizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  return (*this)->sizeOfExcludingThis(mallocSizeOf);
 }
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
-#endif // wasm_serialize_h
+#endif  // wasm_serialize_h

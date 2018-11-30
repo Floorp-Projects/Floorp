@@ -18,17 +18,14 @@ namespace mozilla {
 namespace Telemetry {
 
 /**
-* Allows taking a snapshot of a call stack on demand. Captured stacks are
-* indexed by a string key in a hash table. The stack is only captured Once
-* for each key. Consequent captures with the same key result in incrementing
-* capture counter without re-capturing the stack.
-*/
-class KeyedStackCapturer
-{
-public:
-  KeyedStackCapturer()
-    : mStackCapturerMutex("Telemetry::StackCapturerMutex")
-  {}
+ * Allows taking a snapshot of a call stack on demand. Captured stacks are
+ * indexed by a string key in a hash table. The stack is only captured Once
+ * for each key. Consequent captures with the same key result in incrementing
+ * capture counter without re-capturing the stack.
+ */
+class KeyedStackCapturer {
+ public:
+  KeyedStackCapturer() : mStackCapturerMutex("Telemetry::StackCapturerMutex") {}
 
   /**
    * Captures a stack for the given key.
@@ -38,8 +35,8 @@ public:
   /**
    * Transforms captured stacks into a JS object.
    */
-   NS_IMETHODIMP ReflectCapturedStacks(
-    JSContext *cx, JS::MutableHandle<JS::Value> ret);
+  NS_IMETHODIMP ReflectCapturedStacks(JSContext* cx,
+                                      JS::MutableHandle<JS::Value> ret);
 
   /**
    * Resets captured stacks and the information related to them.
@@ -48,7 +45,7 @@ public:
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
+ private:
   /**
    * Describes how often a stack was captured.
    */
@@ -59,19 +56,18 @@ private:
     uint32_t mIndex;
 
     StackFrequencyInfo(uint32_t aCount, uint32_t aIndex)
-      : mCount(aCount)
-      , mIndex(aIndex)
-    {}
+        : mCount(aCount), mIndex(aIndex) {}
   };
 
-  typedef nsClassHashtable<nsCStringHashKey, StackFrequencyInfo> FrequencyInfoMapType;
+  typedef nsClassHashtable<nsCStringHashKey, StackFrequencyInfo>
+      FrequencyInfoMapType;
 
   FrequencyInfoMapType mStackInfos;
   CombinedStacks mStacks;
   Mutex mStackCapturerMutex;
 };
 
-} // namespace Telemetry
-} // namespace mozilla
+}  // namespace Telemetry
+}  // namespace mozilla
 
-#endif // KeyedStackCapturer_h__
+#endif  // KeyedStackCapturer_h__

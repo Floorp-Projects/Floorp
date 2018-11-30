@@ -27,23 +27,17 @@ using namespace mozilla::a11y;
 // ImageAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-ImageAccessible::
-  ImageAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  LinkableAccessible(aContent, aDoc)
-{
+ImageAccessible::ImageAccessible(nsIContent* aContent, DocAccessible* aDoc)
+    : LinkableAccessible(aContent, aDoc) {
   mType = eImageType;
 }
 
-ImageAccessible::~ImageAccessible()
-{
-}
+ImageAccessible::~ImageAccessible() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible public
 
-uint64_t
-ImageAccessible::NativeState() const
-{
+uint64_t ImageAccessible::NativeState() const {
   // The state is a bitfield, get our inherited state, then logically OR it with
   // states::ANIMATED if this is an animated image.
 
@@ -57,30 +51,24 @@ ImageAccessible::NativeState() const
                         getter_AddRefs(imageRequest));
 
   nsCOMPtr<imgIContainer> imgContainer;
-  if (imageRequest)
-    imageRequest->GetImage(getter_AddRefs(imgContainer));
+  if (imageRequest) imageRequest->GetImage(getter_AddRefs(imgContainer));
 
   if (imgContainer) {
     bool animated = false;
     imgContainer->GetAnimated(&animated);
-    if (animated)
-      state |= states::ANIMATED;
+    if (animated) state |= states::ANIMATED;
   }
 
   return state;
 }
 
-ENameValueFlag
-ImageAccessible::NativeName(nsString& aName) const
-{
+ENameValueFlag ImageAccessible::NativeName(nsString& aName) const {
   bool hasAltAttrib =
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
-  if (!aName.IsEmpty())
-    return eNameOK;
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
+  if (!aName.IsEmpty()) return eNameOK;
 
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
-  if (!aName.IsEmpty())
-    return nameFlag;
+  if (!aName.IsEmpty()) return nameFlag;
 
   // No accessible name but empty 'alt' attribute is present. If further name
   // computation algorithm doesn't provide non empty name then it means
@@ -89,25 +77,17 @@ ImageAccessible::NativeName(nsString& aName) const
   return hasAltAttrib ? eNoNameOnPurpose : eNameOK;
 }
 
-role
-ImageAccessible::NativeRole() const
-{
-  return roles::GRAPHIC;
-}
+role ImageAccessible::NativeRole() const { return roles::GRAPHIC; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible
 
-uint8_t
-ImageAccessible::ActionCount() const
-{
+uint8_t ImageAccessible::ActionCount() const {
   uint8_t actionCount = LinkableAccessible::ActionCount();
   return HasLongDesc() ? actionCount + 1 : actionCount;
 }
 
-void
-ImageAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
-{
+void ImageAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   aName.Truncate();
   if (IsLongDescIndex(aIndex) && HasLongDesc())
     aName.AssignLiteral("showlongdesc");
@@ -115,16 +95,12 @@ ImageAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
     LinkableAccessible::ActionNameAt(aIndex, aName);
 }
 
-bool
-ImageAccessible::DoAction(uint8_t aIndex) const
-{
+bool ImageAccessible::DoAction(uint8_t aIndex) const {
   // Get the long description uri and open in a new window.
-  if (!IsLongDescIndex(aIndex))
-    return LinkableAccessible::DoAction(aIndex);
+  if (!IsLongDescIndex(aIndex)) return LinkableAccessible::DoAction(aIndex);
 
   nsCOMPtr<nsIURI> uri = GetLongDescURI();
-  if (!uri)
-    return false;
+  if (!uri) return false;
 
   nsAutoCString utf8spec;
   uri->GetSpec(utf8spec);
@@ -132,8 +108,7 @@ ImageAccessible::DoAction(uint8_t aIndex) const
 
   nsIDocument* document = mContent->OwnerDoc();
   nsCOMPtr<nsPIDOMWindowOuter> piWindow = document->GetWindow();
-  if (!piWindow)
-    return false;
+  if (!piWindow) return false;
 
   nsCOMPtr<nsPIDOMWindowOuter> tmp;
   return NS_SUCCEEDED(piWindow->Open(spec, EmptyString(), EmptyString(),
@@ -145,31 +120,22 @@ ImageAccessible::DoAction(uint8_t aIndex) const
 ////////////////////////////////////////////////////////////////////////////////
 // ImageAccessible
 
-nsIntPoint
-ImageAccessible::Position(uint32_t aCoordType)
-{
+nsIntPoint ImageAccessible::Position(uint32_t aCoordType) {
   nsIntPoint point = Bounds().TopLeft();
   nsAccUtils::ConvertScreenCoordsTo(&point.x, &point.y, aCoordType, this);
   return point;
 }
 
-nsIntSize
-ImageAccessible::Size()
-{
-  return Bounds().Size();
-}
+nsIntSize ImageAccessible::Size() { return Bounds().Size(); }
 
 // Accessible
-already_AddRefed<nsIPersistentProperties>
-ImageAccessible::NativeAttributes()
-{
+already_AddRefed<nsIPersistentProperties> ImageAccessible::NativeAttributes() {
   nsCOMPtr<nsIPersistentProperties> attributes =
-    LinkableAccessible::NativeAttributes();
+      LinkableAccessible::NativeAttributes();
 
   nsAutoString src;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
-  if (!src.IsEmpty())
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::src, src);
+  if (!src.IsEmpty()) nsAccUtils::SetAccAttr(attributes, nsGkAtoms::src, src);
 
   return attributes.forget();
 }
@@ -177,13 +143,12 @@ ImageAccessible::NativeAttributes()
 ////////////////////////////////////////////////////////////////////////////////
 // Private methods
 
-already_AddRefed<nsIURI>
-ImageAccessible::GetLongDescURI() const
-{
+already_AddRefed<nsIURI> ImageAccessible::GetLongDescURI() const {
   if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::longdesc)) {
     // To check if longdesc contains an invalid url.
     nsAutoString longdesc;
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::longdesc, longdesc);
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::longdesc,
+                                   longdesc);
     if (longdesc.FindChar(' ') != -1 || longdesc.FindChar('\t') != -1 ||
         longdesc.FindChar('\r') != -1 || longdesc.FindChar('\n') != -1) {
       return nullptr;
@@ -202,8 +167,7 @@ ImageAccessible::GetLongDescURI() const
       if ((target->IsHTMLElement(nsGkAtoms::a) ||
            target->IsHTMLElement(nsGkAtoms::area)) &&
           target->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
-        nsGenericHTMLElement* element =
-          nsGenericHTMLElement::FromNode(target);
+        nsGenericHTMLElement* element = nsGenericHTMLElement::FromNode(target);
 
         nsCOMPtr<nsIURI> uri;
         element->GetURIAttr(nsGkAtoms::href, nullptr, getter_AddRefs(uri));
@@ -215,9 +179,6 @@ ImageAccessible::GetLongDescURI() const
   return nullptr;
 }
 
-bool
-ImageAccessible::IsLongDescIndex(uint8_t aIndex) const
-{
+bool ImageAccessible::IsLongDescIndex(uint8_t aIndex) const {
   return aIndex == LinkableAccessible::ActionCount();
 }
-

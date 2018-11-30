@@ -14,53 +14,41 @@
 namespace mozilla {
 namespace glue {
 
-class MOZ_RAII AutoSharedLock final
-{
-public:
-  explicit AutoSharedLock(SRWLOCK& aLock)
-    : mLock(aLock)
-  {
+class MOZ_RAII AutoSharedLock final {
+ public:
+  explicit AutoSharedLock(SRWLOCK& aLock) : mLock(aLock) {
     ::AcquireSRWLockShared(&aLock);
   }
 
-  ~AutoSharedLock()
-  {
-    ::ReleaseSRWLockShared(&mLock);
-  }
+  ~AutoSharedLock() { ::ReleaseSRWLockShared(&mLock); }
 
   AutoSharedLock(const AutoSharedLock&) = delete;
   AutoSharedLock(AutoSharedLock&&) = delete;
   AutoSharedLock& operator=(const AutoSharedLock&) = delete;
   AutoSharedLock& operator=(AutoSharedLock&&) = delete;
 
-private:
+ private:
   SRWLOCK& mLock;
 };
 
-class MOZ_RAII AutoExclusiveLock final
-{
-public:
-  explicit AutoExclusiveLock(SRWLOCK& aLock)
-    : mLock(aLock)
-  {
+class MOZ_RAII AutoExclusiveLock final {
+ public:
+  explicit AutoExclusiveLock(SRWLOCK& aLock) : mLock(aLock) {
     ::AcquireSRWLockExclusive(&aLock);
   }
 
-  ~AutoExclusiveLock()
-  {
-    ::ReleaseSRWLockExclusive(&mLock);
-  }
+  ~AutoExclusiveLock() { ::ReleaseSRWLockExclusive(&mLock); }
 
   AutoExclusiveLock(const AutoExclusiveLock&) = delete;
   AutoExclusiveLock(AutoExclusiveLock&&) = delete;
   AutoExclusiveLock& operator=(const AutoExclusiveLock&) = delete;
   AutoExclusiveLock& operator=(AutoExclusiveLock&&) = delete;
 
-private:
+ private:
   SRWLOCK& mLock;
 };
 
-} // namespace glue
-} // namespace mozilla
+}  // namespace glue
+}  // namespace mozilla
 
-#endif //  mozilla_glue_MozglueUtils_h
+#endif  //  mozilla_glue_MozglueUtils_h

@@ -12,8 +12,7 @@
 namespace mozilla {
 
 DocumentStyleRootIterator::DocumentStyleRootIterator(nsINode* aStyleRoot)
-  : mPosition(0)
-{
+    : mPosition(0) {
   MOZ_COUNT_CTOR(DocumentStyleRootIterator);
   MOZ_ASSERT(aStyleRoot);
   if (aStyleRoot->IsElement()) {
@@ -26,13 +25,10 @@ DocumentStyleRootIterator::DocumentStyleRootIterator(nsINode* aStyleRoot)
   if (Element* root = doc->GetRootElement()) {
     mStyleRoots.AppendElement(root);
   }
-  nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
-      doc, mStyleRoots);
+  nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(doc, mStyleRoots);
 }
 
-Element*
-DocumentStyleRootIterator::GetNextStyleRoot()
-{
+Element* DocumentStyleRootIterator::GetNextStyleRoot() {
   for (;;) {
     if (mPosition >= mStyleRoots.Length()) {
       return nullptr;
@@ -47,4 +43,4 @@ DocumentStyleRootIterator::GetNextStyleRoot()
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -32,34 +32,32 @@ class nsPresContext;
  * @see http://www.w3.org/TR/CSS21/visudet.html#min-max-heights
  */
 template <class NumericType>
-NumericType
-NS_CSS_MINMAX(NumericType aValue, NumericType aMinValue, NumericType aMaxValue)
-{
+NumericType NS_CSS_MINMAX(NumericType aValue, NumericType aMinValue,
+                          NumericType aMaxValue) {
   NumericType result = aValue;
-  if (aMaxValue < result)
-    result = aMaxValue;
-  if (aMinValue > result)
-    result = aMinValue;
+  if (aMaxValue < result) result = aMaxValue;
+  if (aMinValue > result) result = aMinValue;
   return result;
 }
 
 /**
  * CSS Frame type. Included as part of the reflow state.
  */
-typedef uint32_t  nsCSSFrameType;
+typedef uint32_t nsCSSFrameType;
 
-#define NS_CSS_FRAME_TYPE_UNKNOWN         0
-#define NS_CSS_FRAME_TYPE_INLINE          1
-#define NS_CSS_FRAME_TYPE_BLOCK           2  /* block-level in normal flow */
-#define NS_CSS_FRAME_TYPE_FLOATING        3
-#define NS_CSS_FRAME_TYPE_ABSOLUTE        4
-#define NS_CSS_FRAME_TYPE_INTERNAL_TABLE  5  /* row group frame, row frame, cell frame, ... */
+#define NS_CSS_FRAME_TYPE_UNKNOWN 0
+#define NS_CSS_FRAME_TYPE_INLINE 1
+#define NS_CSS_FRAME_TYPE_BLOCK 2 /* block-level in normal flow */
+#define NS_CSS_FRAME_TYPE_FLOATING 3
+#define NS_CSS_FRAME_TYPE_ABSOLUTE 4
+#define NS_CSS_FRAME_TYPE_INTERNAL_TABLE \
+  5 /* row group frame, row frame, cell frame, ... */
 
 /**
  * Bit-flag that indicates whether the element is replaced. Applies to inline,
  * block-level, floating, and absolutely positioned elements
  */
-#define NS_CSS_FRAME_TYPE_REPLACED                0x08000
+#define NS_CSS_FRAME_TYPE_REPLACED 0x08000
 
 /**
  * Bit-flag that indicates that the element is replaced and contains a block
@@ -73,18 +71,17 @@ typedef uint32_t  nsCSSFrameType;
  * Helper macros for telling whether items are replaced
  */
 #define NS_FRAME_IS_REPLACED_NOBLOCK(_ft) \
-  (NS_CSS_FRAME_TYPE_REPLACED == ((_ft) & NS_CSS_FRAME_TYPE_REPLACED))
+  (NS_CSS_FRAME_TYPE_REPLACED == ((_ft)&NS_CSS_FRAME_TYPE_REPLACED))
 
-#define NS_FRAME_IS_REPLACED(_ft)            \
-  (NS_FRAME_IS_REPLACED_NOBLOCK(_ft) ||      \
+#define NS_FRAME_IS_REPLACED(_ft)       \
+  (NS_FRAME_IS_REPLACED_NOBLOCK(_ft) || \
    NS_FRAME_IS_REPLACED_CONTAINS_BLOCK(_ft))
 
-#define NS_FRAME_REPLACED(_ft) \
-  (NS_CSS_FRAME_TYPE_REPLACED | (_ft))
+#define NS_FRAME_REPLACED(_ft) (NS_CSS_FRAME_TYPE_REPLACED | (_ft))
 
-#define NS_FRAME_IS_REPLACED_CONTAINS_BLOCK(_ft)         \
-  (NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK ==         \
-   ((_ft) & NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK))
+#define NS_FRAME_IS_REPLACED_CONTAINS_BLOCK(_ft) \
+  (NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK ==  \
+   ((_ft)&NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK))
 
 #define NS_FRAME_REPLACED_CONTAINS_BLOCK(_ft) \
   (NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK | (_ft))
@@ -92,16 +89,16 @@ typedef uint32_t  nsCSSFrameType;
 /**
  * A macro to extract the type. Masks off the 'replaced' bit-flag
  */
-#define NS_FRAME_GET_TYPE(_ft)                           \
-  ((_ft) & ~(NS_CSS_FRAME_TYPE_REPLACED |                \
-             NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK))
+#define NS_FRAME_GET_TYPE(_ft) \
+  ((_ft) &                     \
+   ~(NS_CSS_FRAME_TYPE_REPLACED | NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK))
 
 namespace mozilla {
 
 // A base class of ReflowInput that computes only the padding,
 // border, and margin, since those values are needed more often.
 struct SizeComputationInput {
-public:
+ public:
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::LogicalMargin LogicalMargin;
 
@@ -112,117 +109,131 @@ public:
   gfxContext* mRenderingContext;
 
   const nsMargin& ComputedPhysicalMargin() const { return mComputedMargin; }
-  const nsMargin& ComputedPhysicalBorderPadding() const { return mComputedBorderPadding; }
+  const nsMargin& ComputedPhysicalBorderPadding() const {
+    return mComputedBorderPadding;
+  }
   const nsMargin& ComputedPhysicalPadding() const { return mComputedPadding; }
 
-  // We may need to eliminate the (few) users of these writable-reference accessors
-  // as part of migrating to logical coordinates.
+  // We may need to eliminate the (few) users of these writable-reference
+  // accessors as part of migrating to logical coordinates.
   nsMargin& ComputedPhysicalMargin() { return mComputedMargin; }
   nsMargin& ComputedPhysicalBorderPadding() { return mComputedBorderPadding; }
   nsMargin& ComputedPhysicalPadding() { return mComputedPadding; }
 
-  const LogicalMargin ComputedLogicalMargin() const
-    { return LogicalMargin(mWritingMode, mComputedMargin); }
-  const LogicalMargin ComputedLogicalBorderPadding() const
-    { return LogicalMargin(mWritingMode, mComputedBorderPadding); }
-  const LogicalMargin ComputedLogicalPadding() const
-    { return LogicalMargin(mWritingMode, mComputedPadding); }
+  const LogicalMargin ComputedLogicalMargin() const {
+    return LogicalMargin(mWritingMode, mComputedMargin);
+  }
+  const LogicalMargin ComputedLogicalBorderPadding() const {
+    return LogicalMargin(mWritingMode, mComputedBorderPadding);
+  }
+  const LogicalMargin ComputedLogicalPadding() const {
+    return LogicalMargin(mWritingMode, mComputedPadding);
+  }
 
   void SetComputedLogicalMargin(mozilla::WritingMode aWM,
-                                const LogicalMargin& aMargin)
-    { mComputedMargin = aMargin.GetPhysicalMargin(aWM); }
-  void SetComputedLogicalMargin(const LogicalMargin& aMargin)
-    { SetComputedLogicalMargin(mWritingMode, aMargin); }
+                                const LogicalMargin& aMargin) {
+    mComputedMargin = aMargin.GetPhysicalMargin(aWM);
+  }
+  void SetComputedLogicalMargin(const LogicalMargin& aMargin) {
+    SetComputedLogicalMargin(mWritingMode, aMargin);
+  }
 
   void SetComputedLogicalBorderPadding(mozilla::WritingMode aWM,
-                                       const LogicalMargin& aMargin)
-    { mComputedBorderPadding = aMargin.GetPhysicalMargin(aWM); }
-  void SetComputedLogicalBorderPadding(const LogicalMargin& aMargin)
-    { SetComputedLogicalBorderPadding(mWritingMode, aMargin); }
+                                       const LogicalMargin& aMargin) {
+    mComputedBorderPadding = aMargin.GetPhysicalMargin(aWM);
+  }
+  void SetComputedLogicalBorderPadding(const LogicalMargin& aMargin) {
+    SetComputedLogicalBorderPadding(mWritingMode, aMargin);
+  }
 
   void SetComputedLogicalPadding(mozilla::WritingMode aWM,
-                                 const LogicalMargin& aMargin)
-    { mComputedPadding = aMargin.GetPhysicalMargin(aWM); }
-  void SetComputedLogicalPadding(const LogicalMargin& aMargin)
-    { SetComputedLogicalPadding(mWritingMode, aMargin); }
+                                 const LogicalMargin& aMargin) {
+    mComputedPadding = aMargin.GetPhysicalMargin(aWM);
+  }
+  void SetComputedLogicalPadding(const LogicalMargin& aMargin) {
+    SetComputedLogicalPadding(mWritingMode, aMargin);
+  }
 
   WritingMode GetWritingMode() const { return mWritingMode; }
 
-protected:
+ protected:
   // cached copy of the frame's writing-mode, for logical coordinates
-  WritingMode      mWritingMode;
+  WritingMode mWritingMode;
 
   // These are PHYSICAL coordinates (for now).
   // Will probably become logical in due course.
 
   // Computed margin values
-  nsMargin         mComputedMargin;
+  nsMargin mComputedMargin;
 
   // Cached copy of the border + padding values
-  nsMargin         mComputedBorderPadding;
+  nsMargin mComputedBorderPadding;
 
   // Computed padding values
-  nsMargin         mComputedPadding;
+  nsMargin mComputedPadding;
 
-public:
+ public:
   // Callers using this constructor must call InitOffsets on their own.
-  SizeComputationInput(nsIFrame *aFrame, gfxContext *aRenderingContext)
-    : mFrame(aFrame)
-    , mRenderingContext(aRenderingContext)
-    , mWritingMode(aFrame->GetWritingMode())
-  {
-  }
+  SizeComputationInput(nsIFrame* aFrame, gfxContext* aRenderingContext)
+      : mFrame(aFrame),
+        mRenderingContext(aRenderingContext),
+        mWritingMode(aFrame->GetWritingMode()) {}
 
-  SizeComputationInput(nsIFrame *aFrame, gfxContext *aRenderingContext,
-                   mozilla::WritingMode aContainingBlockWritingMode,
-                   nscoord aContainingBlockISize);
+  SizeComputationInput(nsIFrame* aFrame, gfxContext* aRenderingContext,
+                       mozilla::WritingMode aContainingBlockWritingMode,
+                       nscoord aContainingBlockISize);
 
   struct ReflowInputFlags {
     ReflowInputFlags() { memset(this, 0, sizeof(*this)); }
-    bool mSpecialBSizeReflow : 1;    // used by tables to communicate special reflow (in process) to handle
-                                     // percent bsize frames inside cells which may not have computed bsizes
-    bool mNextInFlowUntouched : 1;   // nothing in the frame's next-in-flow (or its descendants)
-                                     // is changing
-    bool mIsTopOfPage : 1;           // Is the current context at the top of a
-                                     // page?  When true, we force something
-                                     // that's too tall for a page/column to
-                                     // fit anyway to avoid infinite loops.
-    bool mAssumingHScrollbar : 1;    // parent frame is an nsIScrollableFrame and it
-                                     // is assuming a horizontal scrollbar
-    bool mAssumingVScrollbar : 1;    // parent frame is an nsIScrollableFrame and it
-                                     // is assuming a vertical scrollbar
+    bool mSpecialBSizeReflow : 1;   // used by tables to communicate special
+                                    // reflow (in process) to handle percent
+                                    // bsize frames inside cells which may not
+                                    // have computed bsizes
+    bool mNextInFlowUntouched : 1;  // nothing in the frame's next-in-flow (or
+                                    // its descendants) is changing
+    bool mIsTopOfPage : 1;          // Is the current context at the top of a
+                                    // page?  When true, we force something
+                                    // that's too tall for a page/column to
+                                    // fit anyway to avoid infinite loops.
+    bool mAssumingHScrollbar : 1;   // parent frame is an nsIScrollableFrame and
+                                    // it is assuming a horizontal scrollbar
+    bool mAssumingVScrollbar : 1;   // parent frame is an nsIScrollableFrame and
+                                    // it is assuming a vertical scrollbar
 
-    bool mIsIResize : 1;             // Is frame (a) not dirty and (b) a
-                                     // different inline-size than before?
+    bool mIsIResize : 1;  // Is frame (a) not dirty and (b) a
+                          // different inline-size than before?
 
-    bool mIsBResize : 1;             // Is frame (a) not dirty and (b) a
-                                     // different block-size than before or
-                                     // (potentially) in a context where
-                                     // percent block-sizes have a different
-                                     // basis?
-    bool mTableIsSplittable : 1;     // tables are splittable, this should happen only inside a page
-                                     // and never insider a column frame
-    bool mHeightDependsOnAncestorCell : 1;     // Does frame height depend on
-                                               // an ancestor table-cell?
-    bool mIsColumnBalancing : 1;     // nsColumnSetFrame is balancing columns
-    bool mIsFlexContainerMeasuringBSize : 1;   // nsFlexContainerFrame is
-                                               // reflowing this child to
-                                               // measure its intrinsic BSize.
-    bool mDummyParentReflowInput : 1;   // a "fake" reflow state made
-                                        // in order to be the parent
-                                        // of a real one
-    bool mMustReflowPlaceholders : 1;   // Should this frame reflow its place-
-                                        // holder children? If the available
-                                        // height of this frame didn't change,
-                                        // but its in a paginated environment
-                                        // (e.g. columns), it should always
-                                        // reflow its placeholder children.
-    bool mShrinkWrap : 1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
-    bool mUseAutoBSize : 1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
-    bool mStaticPosIsCBOrigin : 1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
-    bool mIClampMarginBoxMinSize : 1; // the I_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
-    bool mBClampMarginBoxMinSize : 1; // the B_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
-    bool mApplyAutoMinSize : 1;       // the I_APPLY_AUTO_MIN_SIZE ctor flag
+    bool mIsBResize : 1;          // Is frame (a) not dirty and (b) a
+                                  // different block-size than before or
+                                  // (potentially) in a context where
+                                  // percent block-sizes have a different
+                                  // basis?
+    bool mTableIsSplittable : 1;  // tables are splittable, this should happen
+                                  // only inside a page and never insider a
+                                  // column frame
+    bool mHeightDependsOnAncestorCell : 1;  // Does frame height depend on
+                                            // an ancestor table-cell?
+    bool mIsColumnBalancing : 1;  // nsColumnSetFrame is balancing columns
+    bool mIsFlexContainerMeasuringBSize : 1;  // nsFlexContainerFrame is
+                                              // reflowing this child to
+                                              // measure its intrinsic BSize.
+    bool mDummyParentReflowInput : 1;         // a "fake" reflow state made
+                                              // in order to be the parent
+                                              // of a real one
+    bool mMustReflowPlaceholders : 1;  // Should this frame reflow its place-
+                                       // holder children? If the available
+                                       // height of this frame didn't change,
+                                       // but its in a paginated environment
+                                       // (e.g. columns), it should always
+                                       // reflow its placeholder children.
+    bool mShrinkWrap : 1;    // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
+    bool mUseAutoBSize : 1;  // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
+    bool mStaticPosIsCBOrigin : 1;     // the STATIC_POS_IS_CB_ORIGIN ctor flag
+    bool mIClampMarginBoxMinSize : 1;  // the I_CLAMP_MARGIN_BOX_MIN_SIZE ctor
+                                       // flag
+    bool mBClampMarginBoxMinSize : 1;  // the B_CLAMP_MARGIN_BOX_MIN_SIZE ctor
+                                       // flag
+    bool mApplyAutoMinSize : 1;        // the I_APPLY_AUTO_MIN_SIZE ctor flag
 
     // If set, the following two flags indicate that:
     // (1) this frame is absolutely-positioned (or fixed-positioned).
@@ -244,19 +255,18 @@ public:
 #ifdef DEBUG
   // Reflow trace methods.  Defined in nsFrame.cpp so they have access
   // to the display-reflow infrastructure.
-  static void* DisplayInitOffsetsEnter(
-                                     nsIFrame* aFrame,
-                                     SizeComputationInput* aState,
-                                     nscoord aPercentBasis,
-                                     WritingMode aCBWritingMode,
-                                     const nsMargin* aBorder,
-                                     const nsMargin* aPadding);
+  static void* DisplayInitOffsetsEnter(nsIFrame* aFrame,
+                                       SizeComputationInput* aState,
+                                       nscoord aPercentBasis,
+                                       WritingMode aCBWritingMode,
+                                       const nsMargin* aBorder,
+                                       const nsMargin* aPadding);
   static void DisplayInitOffsetsExit(nsIFrame* aFrame,
                                      SizeComputationInput* aState,
                                      void* aValue);
 #endif
 
-private:
+ private:
   /**
    * Computes margin values from the specified margin style information, and
    * fills in the mComputedMargin member.
@@ -267,8 +277,7 @@ private:
    *    for resolving percentage margin values in the inline and block axes.
    * @return true if the margin is dependent on the containing block size.
    */
-  bool ComputeMargin(mozilla::WritingMode aWM,
-                     nscoord aPercentBasis);
+  bool ComputeMargin(mozilla::WritingMode aWM, nscoord aPercentBasis);
 
   /**
    * Computes padding values from the specified padding style information, and
@@ -280,15 +289,12 @@ private:
    *    for resolving percentage padding values in the inline and block axes.
    * @return true if the padding is dependent on the containing block size.
    */
-  bool ComputePadding(mozilla::WritingMode aWM,
-                      nscoord aPercentBasis,
+  bool ComputePadding(mozilla::WritingMode aWM, nscoord aPercentBasis,
                       mozilla::LayoutFrameType aFrameType);
 
-protected:
-  void InitOffsets(mozilla::WritingMode aWM,
-                   nscoord aPercentBasis,
-                   mozilla::LayoutFrameType aFrameType,
-                   ReflowInputFlags aFlags,
+ protected:
+  void InitOffsets(mozilla::WritingMode aWM, nscoord aPercentBasis,
+                   mozilla::LayoutFrameType aFrameType, ReflowInputFlags aFlags,
                    const nsMargin* aBorder = nullptr,
                    const nsMargin* aPadding = nullptr,
                    const nsStyleDisplay* aDisplay = nullptr);
@@ -332,7 +338,7 @@ struct ReflowInput : public SizeComputationInput {
   nsFloatManager* mFloatManager;
 
   // LineLayout object (only for inline reflow; set to nullptr otherwise)
-  nsLineLayout*    mLineLayout;
+  nsLineLayout* mLineLayout;
 
   // The appropriate reflow state for the containing block (for
   // percentage widths, etc.) of this reflow state's frame.
@@ -341,7 +347,7 @@ struct ReflowInput : public SizeComputationInput {
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
   MOZ_INIT_OUTSIDE_CTOR
-  nsCSSFrameType   mFrameType;
+  nsCSSFrameType mFrameType;
 
   // The amount the in-flow position of the block is moving vertically relative
   // to its previous in-flow position (i.e. the amount the line containing the
@@ -389,73 +395,90 @@ struct ReflowInput : public SizeComputationInput {
   // ISize is the size in the writing mode's inline direction (which equates to
   // width in horizontal writing modes, height in vertical ones), and BSize is
   // the size in the block-progression direction.
-  nscoord AvailableISize() const
-    { return mWritingMode.IsVertical() ? mAvailableHeight : mAvailableWidth; }
-  nscoord AvailableBSize() const
-    { return mWritingMode.IsVertical() ? mAvailableWidth : mAvailableHeight; }
-  nscoord ComputedISize() const
-    { return mWritingMode.IsVertical() ? mComputedHeight : mComputedWidth; }
-  nscoord ComputedBSize() const
-    { return mWritingMode.IsVertical() ? mComputedWidth : mComputedHeight; }
-  nscoord ComputedMinISize() const
-    { return mWritingMode.IsVertical() ? mComputedMinHeight : mComputedMinWidth; }
-  nscoord ComputedMaxISize() const
-    { return mWritingMode.IsVertical() ? mComputedMaxHeight : mComputedMaxWidth; }
-  nscoord ComputedMinBSize() const
-    { return mWritingMode.IsVertical() ? mComputedMinWidth : mComputedMinHeight; }
-  nscoord ComputedMaxBSize() const
-    { return mWritingMode.IsVertical() ? mComputedMaxWidth : mComputedMaxHeight; }
+  nscoord AvailableISize() const {
+    return mWritingMode.IsVertical() ? mAvailableHeight : mAvailableWidth;
+  }
+  nscoord AvailableBSize() const {
+    return mWritingMode.IsVertical() ? mAvailableWidth : mAvailableHeight;
+  }
+  nscoord ComputedISize() const {
+    return mWritingMode.IsVertical() ? mComputedHeight : mComputedWidth;
+  }
+  nscoord ComputedBSize() const {
+    return mWritingMode.IsVertical() ? mComputedWidth : mComputedHeight;
+  }
+  nscoord ComputedMinISize() const {
+    return mWritingMode.IsVertical() ? mComputedMinHeight : mComputedMinWidth;
+  }
+  nscoord ComputedMaxISize() const {
+    return mWritingMode.IsVertical() ? mComputedMaxHeight : mComputedMaxWidth;
+  }
+  nscoord ComputedMinBSize() const {
+    return mWritingMode.IsVertical() ? mComputedMinWidth : mComputedMinHeight;
+  }
+  nscoord ComputedMaxBSize() const {
+    return mWritingMode.IsVertical() ? mComputedMaxWidth : mComputedMaxHeight;
+  }
 
-  nscoord& AvailableISize()
-    { return mWritingMode.IsVertical() ? mAvailableHeight : mAvailableWidth; }
-  nscoord& AvailableBSize()
-    { return mWritingMode.IsVertical() ? mAvailableWidth : mAvailableHeight; }
-  nscoord& ComputedISize()
-    { return mWritingMode.IsVertical() ? mComputedHeight : mComputedWidth; }
-  nscoord& ComputedBSize()
-    { return mWritingMode.IsVertical() ? mComputedWidth : mComputedHeight; }
-  nscoord& ComputedMinISize()
-    { return mWritingMode.IsVertical() ? mComputedMinHeight : mComputedMinWidth; }
-  nscoord& ComputedMaxISize()
-    { return mWritingMode.IsVertical() ? mComputedMaxHeight : mComputedMaxWidth; }
-  nscoord& ComputedMinBSize()
-    { return mWritingMode.IsVertical() ? mComputedMinWidth : mComputedMinHeight; }
-  nscoord& ComputedMaxBSize()
-    { return mWritingMode.IsVertical() ? mComputedMaxWidth : mComputedMaxHeight; }
+  nscoord& AvailableISize() {
+    return mWritingMode.IsVertical() ? mAvailableHeight : mAvailableWidth;
+  }
+  nscoord& AvailableBSize() {
+    return mWritingMode.IsVertical() ? mAvailableWidth : mAvailableHeight;
+  }
+  nscoord& ComputedISize() {
+    return mWritingMode.IsVertical() ? mComputedHeight : mComputedWidth;
+  }
+  nscoord& ComputedBSize() {
+    return mWritingMode.IsVertical() ? mComputedWidth : mComputedHeight;
+  }
+  nscoord& ComputedMinISize() {
+    return mWritingMode.IsVertical() ? mComputedMinHeight : mComputedMinWidth;
+  }
+  nscoord& ComputedMaxISize() {
+    return mWritingMode.IsVertical() ? mComputedMaxHeight : mComputedMaxWidth;
+  }
+  nscoord& ComputedMinBSize() {
+    return mWritingMode.IsVertical() ? mComputedMinWidth : mComputedMinHeight;
+  }
+  nscoord& ComputedMaxBSize() {
+    return mWritingMode.IsVertical() ? mComputedMaxWidth : mComputedMaxHeight;
+  }
 
   mozilla::LogicalSize AvailableSize() const {
-    return mozilla::LogicalSize(mWritingMode,
-                                AvailableISize(), AvailableBSize());
+    return mozilla::LogicalSize(mWritingMode, AvailableISize(),
+                                AvailableBSize());
   }
   mozilla::LogicalSize ComputedSize() const {
-    return mozilla::LogicalSize(mWritingMode,
-                                ComputedISize(), ComputedBSize());
+    return mozilla::LogicalSize(mWritingMode, ComputedISize(), ComputedBSize());
   }
   mozilla::LogicalSize ComputedMinSize() const {
-    return mozilla::LogicalSize(mWritingMode,
-                                ComputedMinISize(), ComputedMinBSize());
+    return mozilla::LogicalSize(mWritingMode, ComputedMinISize(),
+                                ComputedMinBSize());
   }
   mozilla::LogicalSize ComputedMaxSize() const {
-    return mozilla::LogicalSize(mWritingMode,
-                                ComputedMaxISize(), ComputedMaxBSize());
+    return mozilla::LogicalSize(mWritingMode, ComputedMaxISize(),
+                                ComputedMaxBSize());
   }
 
-  mozilla::LogicalSize AvailableSize(mozilla::WritingMode aWM) const
-  { return AvailableSize().ConvertTo(aWM, mWritingMode); }
-  mozilla::LogicalSize ComputedSize(mozilla::WritingMode aWM) const
-    { return ComputedSize().ConvertTo(aWM, mWritingMode); }
-  mozilla::LogicalSize ComputedMinSize(mozilla::WritingMode aWM) const
-    { return ComputedMinSize().ConvertTo(aWM, mWritingMode); }
-  mozilla::LogicalSize ComputedMaxSize(mozilla::WritingMode aWM) const
-    { return ComputedMaxSize().ConvertTo(aWM, mWritingMode); }
+  mozilla::LogicalSize AvailableSize(mozilla::WritingMode aWM) const {
+    return AvailableSize().ConvertTo(aWM, mWritingMode);
+  }
+  mozilla::LogicalSize ComputedSize(mozilla::WritingMode aWM) const {
+    return ComputedSize().ConvertTo(aWM, mWritingMode);
+  }
+  mozilla::LogicalSize ComputedMinSize(mozilla::WritingMode aWM) const {
+    return ComputedMinSize().ConvertTo(aWM, mWritingMode);
+  }
+  mozilla::LogicalSize ComputedMaxSize(mozilla::WritingMode aWM) const {
+    return ComputedMaxSize().ConvertTo(aWM, mWritingMode);
+  }
 
   mozilla::LogicalSize ComputedSizeWithPadding() const {
     mozilla::WritingMode wm = GetWritingMode();
-    return mozilla::LogicalSize(wm,
-                                ComputedISize() +
-                                ComputedLogicalPadding().IStartEnd(wm),
-                                ComputedBSize() +
-                                ComputedLogicalPadding().BStartEnd(wm));
+    return mozilla::LogicalSize(
+        wm, ComputedISize() + ComputedLogicalPadding().IStartEnd(wm),
+        ComputedBSize() + ComputedLogicalPadding().BStartEnd(wm));
   }
 
   mozilla::LogicalSize ComputedSizeWithPadding(mozilla::WritingMode aWM) const {
@@ -464,38 +487,33 @@ struct ReflowInput : public SizeComputationInput {
 
   mozilla::LogicalSize ComputedSizeWithBorderPadding() const {
     mozilla::WritingMode wm = GetWritingMode();
-    return mozilla::LogicalSize(wm,
-                                ComputedISize() +
-                                ComputedLogicalBorderPadding().IStartEnd(wm),
-                                ComputedBSize() +
-                                ComputedLogicalBorderPadding().BStartEnd(wm));
+    return mozilla::LogicalSize(
+        wm, ComputedISize() + ComputedLogicalBorderPadding().IStartEnd(wm),
+        ComputedBSize() + ComputedLogicalBorderPadding().BStartEnd(wm));
   }
 
-  mozilla::LogicalSize
-  ComputedSizeWithBorderPadding(mozilla::WritingMode aWM) const {
+  mozilla::LogicalSize ComputedSizeWithBorderPadding(
+      mozilla::WritingMode aWM) const {
     return ComputedSizeWithBorderPadding().ConvertTo(aWM, GetWritingMode());
   }
 
-  mozilla::LogicalSize
-  ComputedSizeWithMarginBorderPadding() const {
+  mozilla::LogicalSize ComputedSizeWithMarginBorderPadding() const {
     mozilla::WritingMode wm = GetWritingMode();
-    return mozilla::LogicalSize(wm,
-                                ComputedISize() +
-                                ComputedLogicalMargin().IStartEnd(wm) +
-                                ComputedLogicalBorderPadding().IStartEnd(wm),
-                                ComputedBSize() +
-                                ComputedLogicalMargin().BStartEnd(wm) +
-                                ComputedLogicalBorderPadding().BStartEnd(wm));
+    return mozilla::LogicalSize(
+        wm,
+        ComputedISize() + ComputedLogicalMargin().IStartEnd(wm) +
+            ComputedLogicalBorderPadding().IStartEnd(wm),
+        ComputedBSize() + ComputedLogicalMargin().BStartEnd(wm) +
+            ComputedLogicalBorderPadding().BStartEnd(wm));
   }
 
-  mozilla::LogicalSize
-  ComputedSizeWithMarginBorderPadding(mozilla::WritingMode aWM) const {
+  mozilla::LogicalSize ComputedSizeWithMarginBorderPadding(
+      mozilla::WritingMode aWM) const {
     return ComputedSizeWithMarginBorderPadding().ConvertTo(aWM,
                                                            GetWritingMode());
   }
 
-  nsSize
-  ComputedPhysicalSize() const {
+  nsSize ComputedPhysicalSize() const {
     return nsSize(ComputedWidth(), ComputedHeight());
   }
 
@@ -504,11 +522,13 @@ struct ReflowInput : public SizeComputationInput {
   const nsMargin& ComputedPhysicalOffsets() const { return mComputedOffsets; }
   nsMargin& ComputedPhysicalOffsets() { return mComputedOffsets; }
 
-  const LogicalMargin ComputedLogicalOffsets() const
-    { return LogicalMargin(mWritingMode, mComputedOffsets); }
+  const LogicalMargin ComputedLogicalOffsets() const {
+    return LogicalMargin(mWritingMode, mComputedOffsets);
+  }
 
-  void SetComputedLogicalOffsets(const LogicalMargin& aOffsets)
-    { mComputedOffsets = aOffsets.GetPhysicalMargin(mWritingMode); }
+  void SetComputedLogicalOffsets(const LogicalMargin& aOffsets) {
+    mComputedOffsets = aOffsets.GetPhysicalMargin(mWritingMode);
+  }
 
   // Return the state's computed size including border-padding, with
   // unconstrained dimensions replaced by zero.
@@ -516,17 +536,19 @@ struct ReflowInput : public SizeComputationInput {
     const nscoord wd = ComputedWidth();
     const nscoord ht = ComputedHeight();
     return nsSize(wd == NS_UNCONSTRAINEDSIZE
-                  ? 0 : wd + ComputedPhysicalBorderPadding().LeftRight(),
+                      ? 0
+                      : wd + ComputedPhysicalBorderPadding().LeftRight(),
                   ht == NS_UNCONSTRAINEDSIZE
-                  ? 0 : ht + ComputedPhysicalBorderPadding().TopBottom());
+                      ? 0
+                      : ht + ComputedPhysicalBorderPadding().TopBottom());
   }
 
-private:
+ private:
   // the available width in which to reflow the frame. The space
   // represents the amount of room for the frame's margin, border,
   // padding, and content area. The frame size you choose should fit
   // within the available width.
-  nscoord              mAvailableWidth;
+  nscoord mAvailableWidth;
 
   // A value of NS_UNCONSTRAINEDSIZE for the available height means
   // you can choose whatever size you want. In galley mode the
@@ -536,7 +558,7 @@ private:
   // element is complete after reflow then its bottom border, padding
   // and margin (and similar for its complete ancestors) will need to
   // fit in this height.
-  nscoord              mAvailableHeight;
+  nscoord mAvailableHeight;
 
   // The computed width specifies the frame's content area width, and it does
   // not apply to inline non-replaced elements
@@ -547,7 +569,7 @@ private:
   // For block-level frames, the computed width is based on the width of the
   // containing block, the margin/border/padding areas, and the min/max width.
   MOZ_INIT_OUTSIDE_CTOR
-  nscoord          mComputedWidth;
+  nscoord mComputedWidth;
 
   // The computed height specifies the frame's content height, and it does
   // not apply to inline non-replaced elements
@@ -563,40 +585,40 @@ private:
   // For replaced block-level frames, a value of NS_INTRINSICSIZE
   // means you use your intrinsic height as the computed height
   MOZ_INIT_OUTSIDE_CTOR
-  nscoord          mComputedHeight;
+  nscoord mComputedHeight;
 
   // Computed values for 'left/top/right/bottom' offsets. Only applies to
   // 'positioned' elements. These are PHYSICAL coordinates (for now).
-  nsMargin         mComputedOffsets;
+  nsMargin mComputedOffsets;
 
   // Computed values for 'min-width/max-width' and 'min-height/max-height'
   // XXXldb The width ones here should go; they should be needed only
   // internally.
   MOZ_INIT_OUTSIDE_CTOR
-  nscoord          mComputedMinWidth, mComputedMaxWidth;
+  nscoord mComputedMinWidth, mComputedMaxWidth;
   MOZ_INIT_OUTSIDE_CTOR
-  nscoord          mComputedMinHeight, mComputedMaxHeight;
+  nscoord mComputedMinHeight, mComputedMaxHeight;
 
-public:
+ public:
   // Our saved containing block dimensions.
   MOZ_INIT_OUTSIDE_CTOR
-  LogicalSize      mContainingBlockSize;
+  LogicalSize mContainingBlockSize;
 
   // Cached pointers to the various style structs used during intialization
   MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleDisplay*    mStyleDisplay;
+  const nsStyleDisplay* mStyleDisplay;
   MOZ_INIT_OUTSIDE_CTOR
   const nsStyleVisibility* mStyleVisibility;
   MOZ_INIT_OUTSIDE_CTOR
-  const nsStylePosition*   mStylePosition;
+  const nsStylePosition* mStylePosition;
   MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleBorder*     mStyleBorder;
+  const nsStyleBorder* mStyleBorder;
   MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleMargin*     mStyleMargin;
+  const nsStyleMargin* mStyleMargin;
   MOZ_INIT_OUTSIDE_CTOR
-  const nsStylePadding*    mStylePadding;
+  const nsStylePadding* mStylePadding;
   MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleText*       mStyleText;
+  const nsStyleText* mStyleText;
 
   bool IsFloating() const;
 
@@ -628,12 +650,8 @@ public:
   bool IsVResize() const {
     return mWritingMode.IsVertical() ? mFlags.mIsIResize : mFlags.mIsBResize;
   }
-  bool IsIResize() const {
-    return mFlags.mIsIResize;
-  }
-  bool IsBResize() const {
-    return mFlags.mIsBResize;
-  }
+  bool IsIResize() const { return mFlags.mIsIResize; }
+  bool IsBResize() const { return mFlags.mIsBResize; }
   bool IsBResizeForWM(mozilla::WritingMode aWM) const {
     return aWM.IsOrthogonalTo(mWritingMode) ? mFlags.mIsIResize
                                             : mFlags.mIsBResize;
@@ -652,12 +670,8 @@ public:
       mFlags.mIsBResize = aValue;
     }
   }
-  void SetIResize(bool aValue) {
-    mFlags.mIsIResize = aValue;
-  }
-  void SetBResize(bool aValue) {
-    mFlags.mIsBResize = aValue;
-  }
+  void SetIResize(bool aValue) { mFlags.mIsIResize = aValue; }
+  void SetBResize(bool aValue) { mFlags.mIsBResize = aValue; }
 
   // Note: The copy constructor is written by the compiler automatically. You
   // can use that and then override specific values if you want, or you can
@@ -674,11 +688,9 @@ public:
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
-  ReflowInput(nsPresContext*              aPresContext,
-              nsIFrame*                   aFrame,
-              gfxContext*                 aRenderingContext,
-              const mozilla::LogicalSize& aAvailableSpace,
-              uint32_t                    aFlags = 0);
+  ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
+              gfxContext* aRenderingContext,
+              const mozilla::LogicalSize& aAvailableSpace, uint32_t aFlags = 0);
 
   /**
    * Initialize a reflow state for a child frame's reflow. Some parts of the
@@ -696,59 +708,59 @@ public:
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
-  ReflowInput(nsPresContext*              aPresContext,
-              const ReflowInput&    aParentReflowInput,
-              nsIFrame*                   aFrame,
+  ReflowInput(nsPresContext* aPresContext,
+              const ReflowInput& aParentReflowInput, nsIFrame* aFrame,
               const mozilla::LogicalSize& aAvailableSpace,
               const mozilla::LogicalSize* aContainingBlockSize = nullptr,
-              uint32_t                    aFlags = 0);
+              uint32_t aFlags = 0);
 
   // Values for |aFlags| passed to constructor
   enum {
     // Indicates that the parent of this reflow state is "fake" (see
     // mDummyParentReflowInput in mFlags).
-    DUMMY_PARENT_REFLOW_STATE = (1<<0),
+    DUMMY_PARENT_REFLOW_STATE = (1 << 0),
 
     // Indicates that the calling function will initialize the reflow state, and
     // that the constructor should not call Init().
-    CALLER_WILL_INIT = (1<<1),
+    CALLER_WILL_INIT = (1 << 1),
 
     // The caller wants shrink-wrap behavior (i.e. ComputeSizeFlags::eShrinkWrap
     // will be passed to ComputeSize()).
-    COMPUTE_SIZE_SHRINK_WRAP = (1<<2),
+    COMPUTE_SIZE_SHRINK_WRAP = (1 << 2),
 
     // The caller wants 'auto' bsize behavior (ComputeSizeFlags::eUseAutoBSize
     // will be be passed to ComputeSize()).
-    COMPUTE_SIZE_USE_AUTO_BSIZE = (1<<3),
+    COMPUTE_SIZE_USE_AUTO_BSIZE = (1 << 3),
 
     // The caller wants the abs.pos. static-position resolved at the origin of
     // the containing block, i.e. at LogicalPoint(0, 0). (Note that this
     // doesn't necessarily mean that (0, 0) is the *correct* static position
     // for the frame in question.)
-    STATIC_POS_IS_CB_ORIGIN = (1<<4),
+    STATIC_POS_IS_CB_ORIGIN = (1 << 4),
 
     // Pass ComputeSizeFlags::eIClampMarginBoxMinSize to ComputeSize().
-    I_CLAMP_MARGIN_BOX_MIN_SIZE = (1<<5),
+    I_CLAMP_MARGIN_BOX_MIN_SIZE = (1 << 5),
 
     // Pass ComputeSizeFlags::eBClampMarginBoxMinSize to ComputeSize().
-    B_CLAMP_MARGIN_BOX_MIN_SIZE = (1<<6),
+    B_CLAMP_MARGIN_BOX_MIN_SIZE = (1 << 6),
 
     // Pass ComputeSizeFlags::eIApplyAutoMinSize to ComputeSize().
-    I_APPLY_AUTO_MIN_SIZE = (1<<7),
+    I_APPLY_AUTO_MIN_SIZE = (1 << 7),
   };
 
   // This method initializes various data members. It is automatically
   // called by the various constructors
-  void Init(nsPresContext*              aPresContext,
+  void Init(nsPresContext* aPresContext,
             const mozilla::LogicalSize* aContainingBlockSize = nullptr,
-            const nsMargin*             aBorder = nullptr,
-            const nsMargin*             aPadding = nullptr);
+            const nsMargin* aBorder = nullptr,
+            const nsMargin* aPadding = nullptr);
 
   /**
    * Find the content isize of our containing block for the given writing mode,
    * which need not be the same as the reflow state's mode.
    */
-  nscoord GetContainingBlockContentISize(mozilla::WritingMode aWritingMode) const;
+  nscoord GetContainingBlockContentISize(
+      mozilla::WritingMode aWritingMode) const;
 
   /**
    * Calculate the used line-height property. The return value will be >= 0.
@@ -771,13 +783,10 @@ public:
   static nscoord CalcLineHeight(nsIContent* aContent,
                                 ComputedStyle* aComputedStyle,
                                 nsPresContext* aPresContext,
-                                nscoord aBlockBSize,
-                                float aFontSizeInflation);
-
+                                nscoord aBlockBSize, float aFontSizeInflation);
 
   mozilla::LogicalSize ComputeContainingBlockRectangle(
-         nsPresContext*           aPresContext,
-         const ReflowInput* aContainingBlockRI) const;
+      nsPresContext* aPresContext, const ReflowInput* aContainingBlockRI) const;
 
   /**
    * Apply the mComputed(Min/Max)Width constraints to the content
@@ -828,8 +837,8 @@ public:
    * Apply the mComputed(Min/Max)BSize constraints to the content
    * size computed so far.
    *
-   * @param aBSize The block-size that we've computed an to which we want to apply
-   *        min/max constraints.
+   * @param aBSize The block-size that we've computed an to which we want to
+   * apply min/max constraints.
    * @param aConsumed The amount of the computed block-size that was consumed by
    *        our prev-in-flows.
    */
@@ -854,8 +863,7 @@ public:
     // were tested there along with NS_FRAME_CONTAINS_RELATIVE_BSIZE.
     // This would need to be combined with a slight change in which
     // frames NS_FRAME_CONTAINS_RELATIVE_BSIZE is marked on.
-    return (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) ||
-           IsIResize() ||
+    return (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) || IsIResize() ||
            (IsBResize() &&
             (mFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE));
   }
@@ -890,15 +898,15 @@ public:
     ComputedBSize() = aComputedBSize;
   }
 
-  void SetTruncated(const ReflowOutput& aMetrics, nsReflowStatus* aStatus) const;
+  void SetTruncated(const ReflowOutput& aMetrics,
+                    nsReflowStatus* aStatus) const;
 
   bool WillReflowAgainForClearance() const {
     return mDiscoveredClearance && *mDiscoveredClearance;
   }
 
   // Compute the offsets for a relative position element
-  static void ComputeRelativeOffsets(mozilla::WritingMode aWM,
-                                     nsIFrame* aFrame,
+  static void ComputeRelativeOffsets(mozilla::WritingMode aWM, nsIFrame* aFrame,
                                      const mozilla::LogicalSize& aCBSize,
                                      nsMargin& aComputedOffsets);
 
@@ -911,32 +919,28 @@ public:
     ApplyRelativePositioning(mFrame, ComputedPhysicalOffsets(), aPosition);
   }
 
-  static void
-  ApplyRelativePositioning(nsIFrame* aFrame,
-                           mozilla::WritingMode aWritingMode,
-                           const mozilla::LogicalMargin& aComputedOffsets,
-                           mozilla::LogicalPoint* aPosition,
-                           const nsSize& aContainerSize) {
+  static void ApplyRelativePositioning(
+      nsIFrame* aFrame, mozilla::WritingMode aWritingMode,
+      const mozilla::LogicalMargin& aComputedOffsets,
+      mozilla::LogicalPoint* aPosition, const nsSize& aContainerSize) {
     // Subtract the size of the frame from the container size that we
     // use for converting between the logical and physical origins of
     // the frame. This accounts for the fact that logical origins in RTL
     // coordinate systems are at the top right of the frame instead of
     // the top left.
     nsSize frameSize = aFrame->GetSize();
-    nsPoint pos = aPosition->GetPhysicalPoint(aWritingMode,
-                                              aContainerSize - frameSize);
-    ApplyRelativePositioning(aFrame,
-                             aComputedOffsets.GetPhysicalMargin(aWritingMode),
-                             &pos);
-    *aPosition = mozilla::LogicalPoint(aWritingMode, pos,
-                                       aContainerSize - frameSize);
+    nsPoint pos =
+        aPosition->GetPhysicalPoint(aWritingMode, aContainerSize - frameSize);
+    ApplyRelativePositioning(
+        aFrame, aComputedOffsets.GetPhysicalMargin(aWritingMode), &pos);
+    *aPosition =
+        mozilla::LogicalPoint(aWritingMode, pos, aContainerSize - frameSize);
   }
 
   void ApplyRelativePositioning(mozilla::LogicalPoint* aPosition,
                                 const nsSize& aContainerSize) const {
-    ApplyRelativePositioning(mFrame, mWritingMode,
-                             ComputedLogicalOffsets(), aPosition,
-                             aContainerSize);
+    ApplyRelativePositioning(mFrame, mWritingMode, ComputedLogicalOffsets(),
+                             aPosition, aContainerSize);
   }
 
 #ifdef DEBUG
@@ -944,21 +948,17 @@ public:
   // to the display-reflow infrastructure.
   static void* DisplayInitConstraintsEnter(nsIFrame* aFrame,
                                            ReflowInput* aState,
-                                           nscoord aCBISize,
-                                           nscoord aCBBSize,
+                                           nscoord aCBISize, nscoord aCBBSize,
                                            const nsMargin* aBorder,
                                            const nsMargin* aPadding);
-  static void DisplayInitConstraintsExit(nsIFrame* aFrame,
-                                         ReflowInput* aState,
+  static void DisplayInitConstraintsExit(nsIFrame* aFrame, ReflowInput* aState,
                                          void* aValue);
-  static void* DisplayInitFrameTypeEnter(nsIFrame* aFrame,
-                                         ReflowInput* aState);
-  static void DisplayInitFrameTypeExit(nsIFrame* aFrame,
-                                       ReflowInput* aState,
+  static void* DisplayInitFrameTypeEnter(nsIFrame* aFrame, ReflowInput* aState);
+  static void DisplayInitFrameTypeExit(nsIFrame* aFrame, ReflowInput* aState,
                                        void* aValue);
 #endif
 
-protected:
+ protected:
   void InitFrameType(LayoutFrameType aFrameType);
   void InitCBReflowInput();
   void InitResizeFlags(nsPresContext* aPresContext,
@@ -966,8 +966,7 @@ protected:
 
   void InitConstraints(nsPresContext* aPresContext,
                        const mozilla::LogicalSize& aContainingBlockSize,
-                       const nsMargin* aBorder,
-                       const nsMargin* aPadding,
+                       const nsMargin* aBorder, const nsMargin* aPadding,
                        mozilla::LayoutFrameType aFrameType);
 
   // Returns the nearest containing block or block frame (whether or not
@@ -1017,6 +1016,6 @@ protected:
   static void MarkFrameChildrenDirty(nsIFrame* aFrame);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ReflowInput_h
+#endif  // mozilla_ReflowInput_h

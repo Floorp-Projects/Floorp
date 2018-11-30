@@ -15,49 +15,48 @@
 namespace mozilla {
 namespace dom {
 
-#define NS_CONTENTFRAMEMESSAGEMANAGER_IID \
-{ 0x97e192a6, 0xab7a, 0x4c8f, \
-  { 0xb7, 0xdd, 0xf7, 0xec, 0x36, 0x38, 0x71, 0xb5 } }
+#define NS_CONTENTFRAMEMESSAGEMANAGER_IID            \
+  {                                                  \
+    0x97e192a6, 0xab7a, 0x4c8f, {                    \
+      0xb7, 0xdd, 0xf7, 0xec, 0x36, 0x38, 0x71, 0xb5 \
+    }                                                \
+  }
 
 /**
  * Base class for implementing the WebIDL ContentFrameMessageManager class.
  */
 class ContentFrameMessageManager : public DOMEventTargetHelper,
-                                   public MessageManagerGlobal
-{
-public:
+                                   public MessageManagerGlobal {
+ public:
   using DOMEventTargetHelper::AddRef;
   using DOMEventTargetHelper::Release;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CONTENTFRAMEMESSAGEMANAGER_IID)
 
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(ErrorResult& aError) = 0;
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(
+      ErrorResult& aError) = 0;
   virtual already_AddRefed<nsIDocShell> GetDocShell(ErrorResult& aError) = 0;
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() = 0;
   virtual uint64_t ChromeOuterWindowID() = 0;
 
-  nsFrameMessageManager* GetMessageManager()
-  {
-    return mMessageManager;
-  }
-  void DisconnectMessageManager()
-  {
+  nsFrameMessageManager* GetMessageManager() { return mMessageManager; }
+  void DisconnectMessageManager() {
     mMessageManager->Disconnect();
     mMessageManager = nullptr;
   }
 
   JSObject* GetOrCreateWrapper();
 
-protected:
+ protected:
   explicit ContentFrameMessageManager(nsFrameMessageManager* aMessageManager)
-    : DOMEventTargetHelper(xpc::NativeGlobal(xpc::PrivilegedJunkScope()))
-    , MessageManagerGlobal(aMessageManager)
-  {}
+      : DOMEventTargetHelper(xpc::NativeGlobal(xpc::PrivilegedJunkScope())),
+        MessageManagerGlobal(aMessageManager) {}
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(ContentFrameMessageManager, NS_CONTENTFRAMEMESSAGEMANAGER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(ContentFrameMessageManager,
+                              NS_CONTENTFRAMEMESSAGEMANAGER_IID)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ContentFrameMessageManager_h
+#endif  // mozilla_dom_ContentFrameMessageManager_h

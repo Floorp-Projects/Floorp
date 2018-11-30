@@ -25,35 +25,29 @@ using namespace mozilla;
 
 nsDOMCSSDeclaration::~nsDOMCSSDeclaration() = default;
 
-/* virtual */ JSObject*
-nsDOMCSSDeclaration::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* nsDOMCSSDeclaration::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return dom::CSS2Properties_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_QUERY_INTERFACE(nsDOMCSSDeclaration,
-                        nsICSSDeclaration)
+NS_IMPL_QUERY_INTERFACE(nsDOMCSSDeclaration, nsICSSDeclaration)
 
-nsresult
-nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
-                                      nsAString& aValue)
-{
+nsresult nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
+                                               nsAString& aValue) {
   MOZ_ASSERT(aPropID != eCSSProperty_UNKNOWN,
              "Should never pass eCSSProperty_UNKNOWN around");
 
   aValue.Truncate();
   if (DeclarationBlock* decl =
-        GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
+          GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
     decl->GetPropertyValueByID(aPropID, aValue);
   }
   return NS_OK;
 }
 
-nsresult
-nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
-                                      const nsAString& aValue,
-                                      nsIPrincipal* aSubjectPrincipal)
-{
+nsresult nsDOMCSSDeclaration::SetPropertyValue(
+    const nsCSSPropertyID aPropID, const nsAString& aValue,
+    nsIPrincipal* aSubjectPrincipal) {
   switch (aPropID) {
     case eCSSProperty_background_position:
     case eCSSProperty_background_position_x:
@@ -87,10 +81,7 @@ nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
   return ParsePropertyValue(aPropID, aValue, false, aSubjectPrincipal);
 }
 
-
-void
-nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
-{
+void nsDOMCSSDeclaration::GetCssText(nsAString& aCssText) {
   DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
   aCssText.Truncate();
 
@@ -99,16 +90,14 @@ nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
   }
 }
 
-void
-nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
-                                nsIPrincipal* aSubjectPrincipal,
-                                ErrorResult& aRv)
-{
+void nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
+                                     nsIPrincipal* aSubjectPrincipal,
+                                     ErrorResult& aRv) {
   // We don't need to *do* anything with the old declaration, but we need
   // to ensure that it exists, or else SetCSSDeclaration may crash.
   RefPtr<DeclarationBlock> created;
   DeclarationBlock* olddecl =
-    GetOrCreateCSSDeclaration(eOperation_Modify, getter_AddRefs(created));
+      GetOrCreateCSSDeclaration(eOperation_Modify, getter_AddRefs(created));
   if (!olddecl) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
@@ -124,8 +113,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
   MutationClosureData closureData;
   GetPropertyChangeClosure(&closure, &closureData);
 
-  ParsingEnvironment servoEnv =
-    GetParsingEnvironment(aSubjectPrincipal);
+  ParsingEnvironment servoEnv = GetParsingEnvironment(aSubjectPrincipal);
   if (!servoEnv.mUrlExtraData) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
@@ -138,16 +126,13 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
     closureData.mClosure(&closureData);
   }
 
-  RefPtr<DeclarationBlock> newdecl =
-    DeclarationBlock::FromCssText(aCssText, servoEnv.mUrlExtraData,
-                                  servoEnv.mCompatMode, servoEnv.mLoader);
+  RefPtr<DeclarationBlock> newdecl = DeclarationBlock::FromCssText(
+      aCssText, servoEnv.mUrlExtraData, servoEnv.mCompatMode, servoEnv.mLoader);
 
   aRv = SetCSSDeclaration(newdecl, &closureData);
 }
 
-uint32_t
-nsDOMCSSDeclaration::Length()
-{
+uint32_t nsDOMCSSDeclaration::Length() {
   DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
 
   if (decl) {
@@ -157,29 +142,25 @@ nsDOMCSSDeclaration::Length()
   return 0;
 }
 
-void
-nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName)
-{
+void nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound,
+                                        nsAString& aPropName) {
   DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
   aFound = decl && decl->GetNthProperty(aIndex, aPropName);
 }
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
-                                      nsAString& aReturn)
-{
+                                      nsAString& aReturn) {
   aReturn.Truncate();
   if (DeclarationBlock* decl =
-        GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
+          GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
     decl->GetPropertyValue(aPropertyName, aReturn);
   }
   return NS_OK;
 }
 
-void
-nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
-                                         nsAString& aPriority)
-{
+void nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
+                                              nsAString& aPriority) {
   DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
 
   aPriority.Truncate();
@@ -192,8 +173,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
                                  const nsAString& aValue,
                                  const nsAString& aPriority,
-                                 nsIPrincipal* aSubjectPrincipal)
-{
+                                 nsIPrincipal* aSubjectPrincipal) {
   if (aValue.IsEmpty()) {
     // If the new value of the property is an empty string we remove the
     // property.
@@ -226,45 +206,41 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
-                                    nsAString& aReturn)
-{
+                                    nsAString& aReturn) {
   nsresult rv = GetPropertyValue(aPropertyName, aReturn);
   NS_ENSURE_SUCCESS(rv, rv);
   return RemovePropertyInternal(aPropertyName);
 }
 
 /* static */ nsDOMCSSDeclaration::ParsingEnvironment
-nsDOMCSSDeclaration::GetParsingEnvironmentForRule(const css::Rule* aRule)
-{
+nsDOMCSSDeclaration::GetParsingEnvironmentForRule(const css::Rule* aRule) {
   StyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr;
   if (!sheet) {
-    return { nullptr, eCompatibility_FullStandards, nullptr };
+    return {nullptr, eCompatibility_FullStandards, nullptr};
   }
 
   if (nsIDocument* document = sheet->GetAssociatedDocument()) {
     return {
-      sheet->URLData(),
-      document->GetCompatibilityMode(),
-      document->CSSLoader(),
+        sheet->URLData(),
+        document->GetCompatibilityMode(),
+        document->CSSLoader(),
     };
   }
 
   return {
-    sheet->URLData(),
-    eCompatibility_FullStandards,
-    nullptr,
+      sheet->URLData(),
+      eCompatibility_FullStandards,
+      nullptr,
   };
 }
 
-template<typename Func>
-nsresult
-nsDOMCSSDeclaration::ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
-                                       MutationClosureData* aClosureData,
-                                       Func aFunc)
-{
+template <typename Func>
+nsresult nsDOMCSSDeclaration::ModifyDeclaration(
+    nsIPrincipal* aSubjectPrincipal, MutationClosureData* aClosureData,
+    Func aFunc) {
   RefPtr<DeclarationBlock> created;
   DeclarationBlock* olddecl =
-    GetOrCreateCSSDeclaration(eOperation_Modify, getter_AddRefs(created));
+      GetOrCreateCSSDeclaration(eOperation_Modify, getter_AddRefs(created));
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -278,8 +254,7 @@ nsDOMCSSDeclaration::ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
 
   bool changed;
-  ParsingEnvironment servoEnv =
-    GetParsingEnvironment(aSubjectPrincipal);
+  ParsingEnvironment servoEnv = GetParsingEnvironment(aSubjectPrincipal);
   if (!servoEnv.mUrlExtraData) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -294,33 +269,26 @@ nsDOMCSSDeclaration::ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
   return SetCSSDeclaration(decl, aClosureData);
 }
 
-nsresult
-nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
-                                        const nsAString& aPropValue,
-                                        bool aIsImportant,
-                                        nsIPrincipal* aSubjectPrincipal)
-{
+nsresult nsDOMCSSDeclaration::ParsePropertyValue(
+    const nsCSSPropertyID aPropID, const nsAString& aPropValue,
+    bool aIsImportant, nsIPrincipal* aSubjectPrincipal) {
   DeclarationBlockMutationClosure closure = {};
   MutationClosureData closureData;
   GetPropertyChangeClosure(&closure, &closureData);
 
   return ModifyDeclaration(
-    aSubjectPrincipal,
-    &closureData,
-    [&](DeclarationBlock* decl, ParsingEnvironment& env) {
-      NS_ConvertUTF16toUTF8 value(aPropValue);
-      return Servo_DeclarationBlock_SetPropertyById(
-        decl->Raw(), aPropID, &value, aIsImportant, env.mUrlExtraData,
-        ParsingMode::Default, env.mCompatMode, env.mLoader, closure);
-    });
+      aSubjectPrincipal, &closureData,
+      [&](DeclarationBlock* decl, ParsingEnvironment& env) {
+        NS_ConvertUTF16toUTF8 value(aPropValue);
+        return Servo_DeclarationBlock_SetPropertyById(
+            decl->Raw(), aPropID, &value, aIsImportant, env.mUrlExtraData,
+            ParsingMode::Default, env.mCompatMode, env.mLoader, closure);
+      });
 }
 
-nsresult
-nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
-                                              const nsAString& aPropValue,
-                                              bool aIsImportant,
-                                              nsIPrincipal* aSubjectPrincipal)
-{
+nsresult nsDOMCSSDeclaration::ParseCustomPropertyValue(
+    const nsAString& aPropertyName, const nsAString& aPropValue,
+    bool aIsImportant, nsIPrincipal* aSubjectPrincipal) {
   MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
 
   DeclarationBlockMutationClosure closure = {};
@@ -328,24 +296,21 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
   GetPropertyChangeClosure(&closure, &closureData);
 
   return ModifyDeclaration(
-    aSubjectPrincipal,
-    &closureData,
-    [&](DeclarationBlock* decl, ParsingEnvironment& env) {
-      NS_ConvertUTF16toUTF8 property(aPropertyName);
-      NS_ConvertUTF16toUTF8 value(aPropValue);
-      return Servo_DeclarationBlock_SetProperty(
-        decl->Raw(), &property, &value, aIsImportant, env.mUrlExtraData,
-        ParsingMode::Default, env.mCompatMode, env.mLoader, closure);
-    });
+      aSubjectPrincipal, &closureData,
+      [&](DeclarationBlock* decl, ParsingEnvironment& env) {
+        NS_ConvertUTF16toUTF8 property(aPropertyName);
+        NS_ConvertUTF16toUTF8 value(aPropValue);
+        return Servo_DeclarationBlock_SetProperty(
+            decl->Raw(), &property, &value, aIsImportant, env.mUrlExtraData,
+            ParsingMode::Default, env.mCompatMode, env.mLoader, closure);
+      });
 }
 
-nsresult
-nsDOMCSSDeclaration::RemovePropertyInternal(nsCSSPropertyID aPropID)
-{
+nsresult nsDOMCSSDeclaration::RemovePropertyInternal(nsCSSPropertyID aPropID) {
   DeclarationBlock* olddecl =
-    GetOrCreateCSSDeclaration(eOperation_RemoveProperty, nullptr);
+      GetOrCreateCSSDeclaration(eOperation_RemoveProperty, nullptr);
   if (!olddecl) {
-    return NS_OK; // no decl, so nothing to remove
+    return NS_OK;  // no decl, so nothing to remove
   }
 
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
@@ -366,13 +331,12 @@ nsDOMCSSDeclaration::RemovePropertyInternal(nsCSSPropertyID aPropID)
   return SetCSSDeclaration(decl, &closureData);
 }
 
-nsresult
-nsDOMCSSDeclaration::RemovePropertyInternal(const nsAString& aPropertyName)
-{
+nsresult nsDOMCSSDeclaration::RemovePropertyInternal(
+    const nsAString& aPropertyName) {
   DeclarationBlock* olddecl =
-    GetOrCreateCSSDeclaration(eOperation_RemoveProperty, nullptr);
+      GetOrCreateCSSDeclaration(eOperation_RemoveProperty, nullptr);
   if (!olddecl) {
-    return NS_OK; // no decl, so nothing to remove
+    return NS_OK;  // no decl, so nothing to remove
   }
 
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to

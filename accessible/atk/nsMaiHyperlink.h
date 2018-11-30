@@ -11,7 +11,7 @@
 #include "Accessible.h"
 
 struct _AtkHyperlink;
-typedef struct _AtkHyperlink                      AtkHyperlink;
+typedef struct _AtkHyperlink AtkHyperlink;
 
 namespace mozilla {
 namespace a11y {
@@ -20,36 +20,33 @@ namespace a11y {
  * MaiHyperlink is a auxiliary class for MaiInterfaceHyperText.
  */
 
-class MaiHyperlink
-{
-public:
+class MaiHyperlink {
+ public:
   explicit MaiHyperlink(AccessibleOrProxy aHyperLink);
   ~MaiHyperlink();
 
-public:
+ public:
   AtkHyperlink* GetAtkHyperlink() const { return mMaiAtkHyperlink; }
-  Accessible* GetAccHyperlink()
-    {
-      if (!mHyperlink.IsAccessible())
-        return nullptr;
+  Accessible* GetAccHyperlink() {
+    if (!mHyperlink.IsAccessible()) return nullptr;
 
-      Accessible* link = mHyperlink.AsAccessible();
-      if (!link) {
-        return nullptr;
-      }
-
-      NS_ASSERTION(link->IsLink(), "Why isn't it a link!");
-      return link;
+    Accessible* link = mHyperlink.AsAccessible();
+    if (!link) {
+      return nullptr;
     }
+
+    NS_ASSERTION(link->IsLink(), "Why isn't it a link!");
+    return link;
+  }
 
   ProxyAccessible* Proxy() const { return mHyperlink.AsProxy(); }
 
-protected:
+ protected:
   AccessibleOrProxy mHyperlink;
   AtkHyperlink* mMaiAtkHyperlink;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif /* __MAI_HYPERLINK_H__ */

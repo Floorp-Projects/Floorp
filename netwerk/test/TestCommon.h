@@ -11,13 +11,11 @@
 
 //-----------------------------------------------------------------------------
 
-class WaitForCondition final : public nsIRunnable
-{
-public:
+class WaitForCondition final : public nsIRunnable {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  void Wait(int pending)
-  {
+  void Wait(int pending) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mPending == 0);
 
@@ -26,12 +24,10 @@ public:
     NS_ProcessPendingEvents(nullptr);
   }
 
-  void Notify() {
-    NS_DispatchToMainThread(this);
-  }
+  void Notify() { NS_DispatchToMainThread(this); }
 
-private:
-  virtual ~WaitForCondition() { }
+ private:
+  virtual ~WaitForCondition() {}
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());

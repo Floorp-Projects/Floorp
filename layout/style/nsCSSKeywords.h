@@ -18,7 +18,7 @@
    To change the list of keywords, see nsCSSKeywordList.h
 
  */
-#define CSS_KEY(_name,_id) eCSSKeyword_##_id,
+#define CSS_KEY(_name, _id) eCSSKeyword_##_id,
 enum nsCSSKeyword : int16_t {
   eCSSKeyword_UNKNOWN = -1,
 #include "nsCSSKeywordList.h"
@@ -26,9 +26,8 @@ enum nsCSSKeyword : int16_t {
 };
 #undef CSS_KEY
 
-
 class nsCSSKeywords {
-public:
+ public:
   static void AddRefTable(void);
   static void ReleaseTable(void);
 

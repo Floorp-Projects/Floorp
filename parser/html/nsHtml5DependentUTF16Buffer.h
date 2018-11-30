@@ -8,9 +8,8 @@
 #include "nscore.h"
 #include "nsHtml5OwningUTF16Buffer.h"
 
-class MOZ_STACK_CLASS nsHtml5DependentUTF16Buffer : public nsHtml5UTF16Buffer
-{
-public:
+class MOZ_STACK_CLASS nsHtml5DependentUTF16Buffer : public nsHtml5UTF16Buffer {
+ public:
   /**
    * Wraps a string without taking ownership of the buffer. aToWrap MUST NOT
    * go away or be shortened while nsHtml5DependentUTF16Buffer is in use.
@@ -28,4 +27,4 @@ public:
   already_AddRefed<nsHtml5OwningUTF16Buffer> FalliblyCopyAsOwningBuffer();
 };
 
-#endif // nsHtml5DependentUTF16Buffer_h
+#endif  // nsHtml5DependentUTF16Buffer_h

@@ -14,8 +14,7 @@ namespace mozilla {
 // Returns true if all elements in the range [aFirst, aLast)
 // satisfy the predicate aPred.
 template <class Iter, class Pred>
-constexpr bool AllOf(Iter aFirst, Iter aLast, Pred aPred)
-{
+constexpr bool AllOf(Iter aFirst, Iter aLast, Pred aPred) {
   for (; aFirst != aLast; ++aFirst) {
     if (!aPred(*aFirst)) {
       return false;
@@ -24,6 +23,6 @@ constexpr bool AllOf(Iter aFirst, Iter aLast, Pred aPred)
   return true;
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_Algorithm_h
+#endif  // mozilla_Algorithm_h

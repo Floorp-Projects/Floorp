@@ -12,34 +12,27 @@
 class nsIFrame;
 
 nsresult NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
-                              nsPresContext* aPresContext,
-                              nsIFrame *aStart,
-                              nsIteratorType aType,
-                              bool aVisual,
-                              bool aLockInScrollView,
-                              bool aFollowOOFs,
+                              nsPresContext *aPresContext, nsIFrame *aStart,
+                              nsIteratorType aType, bool aVisual,
+                              bool aLockInScrollView, bool aFollowOOFs,
                               bool aSkipPopupChecks);
 
-nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
+nsresult NS_CreateFrameTraversal(nsIFrameTraversal **aResult);
 
-class nsFrameTraversal final : public nsIFrameTraversal
-{
-public:
+class nsFrameTraversal final : public nsIFrameTraversal {
+ public:
   nsFrameTraversal();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
-                               nsPresContext* aPresContext,
-                               nsIFrame *aStart,
-                               int32_t aType,
-                               bool aVisual,
-                               bool aLockInScrollView,
-                               bool aFollowOOFs,
+                               nsPresContext *aPresContext, nsIFrame *aStart,
+                               int32_t aType, bool aVisual,
+                               bool aLockInScrollView, bool aFollowOOFs,
                                bool aSkipPopupChecks) override;
 
-protected:
+ protected:
   virtual ~nsFrameTraversal();
 };
 
-#endif //NSFRAMETRAVERSAL_H
+#endif  // NSFRAMETRAVERSAL_H

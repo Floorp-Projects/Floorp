@@ -7,7 +7,8 @@
 #ifndef mozilla_dom_indexeddb_actorsparent_h__
 #define mozilla_dom_indexeddb_actorsparent_h__
 
-template <class> struct already_AddRefed;
+template <class>
+struct already_AddRefed;
 class nsIPrincipal;
 
 namespace mozilla {
@@ -20,7 +21,7 @@ namespace quota {
 
 class Client;
 
-} // namespace quota
+}  // namespace quota
 
 namespace indexedDB {
 
@@ -29,45 +30,36 @@ class PBackgroundIDBFactoryParent;
 class PBackgroundIndexedDBUtilsParent;
 class PIndexedDBPermissionRequestParent;
 
-PBackgroundIDBFactoryParent*
-AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo);
+PBackgroundIDBFactoryParent* AllocPBackgroundIDBFactoryParent(
+    const LoggingInfo& aLoggingInfo);
 
-bool
-RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor,
-                                     const LoggingInfo& aLoggingInfo);
+bool RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor,
+                                          const LoggingInfo& aLoggingInfo);
 
-bool
-DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor);
+bool DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor);
 
-PBackgroundIndexedDBUtilsParent*
-AllocPBackgroundIndexedDBUtilsParent();
+PBackgroundIndexedDBUtilsParent* AllocPBackgroundIndexedDBUtilsParent();
 
-bool
-DeallocPBackgroundIndexedDBUtilsParent(PBackgroundIndexedDBUtilsParent* aActor);
+bool DeallocPBackgroundIndexedDBUtilsParent(
+    PBackgroundIndexedDBUtilsParent* aActor);
 
-bool
-RecvFlushPendingFileDeletions();
+bool RecvFlushPendingFileDeletions();
 
-PIndexedDBPermissionRequestParent*
-AllocPIndexedDBPermissionRequestParent(Element* aOwnerElement,
-                                       nsIPrincipal* aPrincipal);
+PIndexedDBPermissionRequestParent* AllocPIndexedDBPermissionRequestParent(
+    Element* aOwnerElement, nsIPrincipal* aPrincipal);
 
-bool
-RecvPIndexedDBPermissionRequestConstructor(
-                                     PIndexedDBPermissionRequestParent* aActor);
+bool RecvPIndexedDBPermissionRequestConstructor(
+    PIndexedDBPermissionRequestParent* aActor);
 
-bool
-DeallocPIndexedDBPermissionRequestParent(
-                                     PIndexedDBPermissionRequestParent* aActor);
+bool DeallocPIndexedDBPermissionRequestParent(
+    PIndexedDBPermissionRequestParent* aActor);
 
-already_AddRefed<mozilla::dom::quota::Client>
-CreateQuotaClient();
+already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient();
 
-FileHandleThreadPool*
-GetFileHandleThreadPool();
+FileHandleThreadPool* GetFileHandleThreadPool();
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_actorsparent_h__
+#endif  // mozilla_dom_indexeddb_actorsparent_h__

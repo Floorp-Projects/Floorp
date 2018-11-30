@@ -27,29 +27,19 @@
 #define AF_LOCAL 1  // used for named pipe
 #endif
 
-#define IPv6ADDR_IS_LOOPBACK(a) \
-  (((a)->u32[0] == 0)     &&    \
-   ((a)->u32[1] == 0)     &&    \
-   ((a)->u32[2] == 0)     &&    \
-   ((a)->u8[12] == 0)     &&    \
-   ((a)->u8[13] == 0)     &&    \
-   ((a)->u8[14] == 0)     &&    \
+#define IPv6ADDR_IS_LOOPBACK(a)                                      \
+  (((a)->u32[0] == 0) && ((a)->u32[1] == 0) && ((a)->u32[2] == 0) && \
+   ((a)->u8[12] == 0) && ((a)->u8[13] == 0) && ((a)->u8[14] == 0) && \
    ((a)->u8[15] == 0x1U))
 
-#define IPv6ADDR_IS_V4MAPPED(a) \
-  (((a)->u32[0] == 0)     &&    \
-   ((a)->u32[1] == 0)     &&    \
-   ((a)->u8[8] == 0)      &&    \
-   ((a)->u8[9] == 0)      &&    \
-   ((a)->u8[10] == 0xff)  &&    \
-   ((a)->u8[11] == 0xff))
+#define IPv6ADDR_IS_V4MAPPED(a)                                     \
+  (((a)->u32[0] == 0) && ((a)->u32[1] == 0) && ((a)->u8[8] == 0) && \
+   ((a)->u8[9] == 0) && ((a)->u8[10] == 0xff) && ((a)->u8[11] == 0xff))
 
 #define IPv6ADDR_V4MAPPED_TO_IPADDR(a) ((a)->u32[3])
 
-#define IPv6ADDR_IS_UNSPECIFIED(a) \
-  (((a)->u32[0] == 0)  &&          \
-   ((a)->u32[1] == 0)  &&          \
-   ((a)->u32[2] == 0)  &&          \
+#define IPv6ADDR_IS_UNSPECIFIED(a)                                   \
+  (((a)->u32[0] == 0) && ((a)->u32[1] == 0) && ((a)->u32[2] == 0) && \
    ((a)->u32[3] == 0))
 
 namespace mozilla {
@@ -80,7 +70,7 @@ const int kNetAddrMaxCStrBufSize = kLocalCStrBufSize;
 // resolution library into the types below and use them in Gecko.
 
 union IPv6Addr {
-  uint8_t  u8[16];
+  uint8_t u8[16];
   uint16_t u16[8];
   uint32_t u32[4];
   uint64_t u64[2];
@@ -93,60 +83,62 @@ union IPv6Addr {
 // not be what you expect.
 union NetAddr {
   struct {
-    uint16_t family;                /* address family (0x00ff maskable) */
-    char data[14];                  /* raw address data */
+    uint16_t family; /* address family (0x00ff maskable) */
+    char data[14];   /* raw address data */
   } raw;
   struct {
-    uint16_t family;                /* address family (AF_INET) */
-    uint16_t port;                  /* port number */
-    uint32_t ip;                    /* The actual 32 bits of address */
+    uint16_t family; /* address family (AF_INET) */
+    uint16_t port;   /* port number */
+    uint32_t ip;     /* The actual 32 bits of address */
   } inet;
   struct {
-    uint16_t family;                /* address family (AF_INET6) */
-    uint16_t port;                  /* port number */
-    uint32_t flowinfo;              /* routing information */
-    IPv6Addr ip;                    /* the actual 128 bits of address */
-    uint32_t scope_id;              /* set of interfaces for a scope */
+    uint16_t family;   /* address family (AF_INET6) */
+    uint16_t port;     /* port number */
+    uint32_t flowinfo; /* routing information */
+    IPv6Addr ip;       /* the actual 128 bits of address */
+    uint32_t scope_id; /* set of interfaces for a scope */
   } inet6;
 #if defined(XP_UNIX) || defined(XP_WIN)
-  struct {                          /* Unix domain socket or
-                                       Windows Named Pipes address */
-    uint16_t family;                /* address family (AF_UNIX) */
-    char path[104];                 /* null-terminated pathname */
+  struct {           /* Unix domain socket or
+                        Windows Named Pipes address */
+    uint16_t family; /* address family (AF_UNIX) */
+    char path[104];  /* null-terminated pathname */
   } local;
 #endif
   // introduced to support nsTArray<NetAddr> comparisons and sorting
-  bool operator == (const NetAddr& other) const;
-  bool operator < (const NetAddr &other) const;
+  bool operator==(const NetAddr &other) const;
+  bool operator<(const NetAddr &other) const;
 };
 
 // This class wraps a NetAddr union to provide C++ linked list
 // capabilities and other methods. It is created from a PRNetAddr,
 // which is converted to a mozilla::dns::NetAddr.
 class NetAddrElement : public LinkedListElement<NetAddrElement> {
-public:
+ public:
   explicit NetAddrElement(const PRNetAddr *prNetAddr);
-  NetAddrElement(const NetAddrElement& netAddr);
+  NetAddrElement(const NetAddrElement &netAddr);
   ~NetAddrElement();
 
   NetAddr mAddress;
 };
 
 class AddrInfo {
-public:
+ public:
   // Creates an AddrInfo object.
-  explicit AddrInfo(const nsACString& host, const PRAddrInfo *prAddrInfo,
-           bool disableIPv4, bool filterNameCollision,
-           const nsACString& cname);
+  explicit AddrInfo(const nsACString &host, const PRAddrInfo *prAddrInfo,
+                    bool disableIPv4, bool filterNameCollision,
+                    const nsACString &cname);
 
-  // Creates a basic AddrInfo object (initialize only the host, cname and TRR type).
-  explicit AddrInfo(const nsACString& host, const nsACString& cname, unsigned int TRRType);
+  // Creates a basic AddrInfo object (initialize only the host, cname and TRR
+  // type).
+  explicit AddrInfo(const nsACString &host, const nsACString &cname,
+                    unsigned int TRRType);
 
   // Creates a basic AddrInfo object (initialize only the host and TRR status).
-  explicit AddrInfo(const nsACString& host, unsigned int TRRType);
+  explicit AddrInfo(const nsACString &host, unsigned int TRRType);
   ~AddrInfo();
 
-  explicit AddrInfo(const AddrInfo *src); // copy
+  explicit AddrInfo(const AddrInfo *src);  // copy
 
   void AddAddress(NetAddrElement *address);
 
@@ -155,11 +147,12 @@ public:
   nsCString mHostName;
   nsCString mCanonicalName;
   uint32_t ttl;
-  static const uint32_t NO_TTL_DATA = (uint32_t) -1;
+  static const uint32_t NO_TTL_DATA = (uint32_t)-1;
 
   LinkedList<NetAddrElement> mAddresses;
   unsigned int IsTRR() { return mFromTRR; }
-private:
+
+ private:
   unsigned int mFromTRR;
 };
 
@@ -183,7 +176,7 @@ bool IsIPAddrLocal(const NetAddr *addr);
 
 nsresult GetPort(const NetAddr *aAddr, uint16_t *aResult);
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // DNS_h_
+#endif  // DNS_h_

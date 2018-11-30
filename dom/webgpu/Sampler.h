@@ -14,18 +14,16 @@ namespace webgpu {
 
 class Device;
 
-class Sampler final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(Sampler)
+class Sampler final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(Sampler)
 
-private:
-    Sampler() = delete;
-    virtual ~Sampler();
+ private:
+  Sampler() = delete;
+  virtual ~Sampler();
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_SAMPLER_H_
+#endif  // WEBGPU_SAMPLER_H_

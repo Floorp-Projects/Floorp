@@ -20,25 +20,22 @@
 using namespace mozilla;
 using mozilla::intl::LocaleService;
 
-class XPCLocaleObserver : public nsIObserver
-{
-public:
+class XPCLocaleObserver : public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   void Init();
 
-private:
-  virtual ~XPCLocaleObserver() {};
+ private:
+  virtual ~XPCLocaleObserver(){};
 };
 
 NS_IMPL_ISUPPORTS(XPCLocaleObserver, nsIObserver);
 
-void
-XPCLocaleObserver::Init()
-{
+void XPCLocaleObserver::Init() {
   nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
+      mozilla::services::GetObserverService();
 
   observerService->AddObserver(this, "intl:app-locales-changed", false);
 
@@ -46,10 +43,11 @@ XPCLocaleObserver::Init()
 }
 
 NS_IMETHODIMP
-XPCLocaleObserver::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
-{
+XPCLocaleObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                           const char16_t* aData) {
   if (!strcmp(aTopic, "intl:app-locales-changed") ||
-      (!strcmp(aTopic, "nsPref:changed") && !NS_strcmp(aData, u"javascript.use_us_english_locale"))) {
+      (!strcmp(aTopic, "nsPref:changed") &&
+       !NS_strcmp(aData, u"javascript.use_us_english_locale"))) {
     JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
     if (!xpc_LocalizeRuntime(rt)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -66,10 +64,8 @@ XPCLocaleObserver::Observe(nsISupports* aSubject, const char* aTopic, const char
  * these XPCOM modules doesn't yet support this, so in practice
  * XPCLocaleCallbacks are limited to the main thread.
  */
-struct XPCLocaleCallbacks : public JSLocaleCallbacks
-{
-  XPCLocaleCallbacks()
-  {
+struct XPCLocaleCallbacks : public JSLocaleCallbacks {
+  XPCLocaleCallbacks() {
     MOZ_COUNT_CTOR(XPCLocaleCallbacks);
 
     // Disable the toLocaleUpper/Lower case hooks to use the standard,
@@ -86,8 +82,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
     locObs->Init();
   }
 
-  ~XPCLocaleCallbacks()
-  {
+  ~XPCLocaleCallbacks() {
     AssertThreadSafety();
     MOZ_COUNT_DTOR(XPCLocaleCallbacks);
   }
@@ -96,9 +91,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
    * Return the XPCLocaleCallbacks that's hidden away in |rt|. (This impl uses
    * the locale callbacks struct to store away its per-context data.)
    */
-  static XPCLocaleCallbacks*
-  This(JSRuntime* rt)
-  {
+  static XPCLocaleCallbacks* This(JSRuntime* rt) {
     // Locale information for |cx| was associated using xpc_LocalizeContext;
     // assert and double-check this.
     const JSLocaleCallbacks* lc = JS_GetLocaleCallbacks(rt);
@@ -113,18 +106,15 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
     return const_cast<XPCLocaleCallbacks*>(ths);
   }
 
-private:
-  void AssertThreadSafety() const
-  {
+ private:
+  void AssertThreadSafety() const {
     NS_ASSERT_OWNINGTHREAD(XPCLocaleCallbacks);
   }
 
   NS_DECL_OWNINGTHREAD
 };
 
-bool
-xpc_LocalizeRuntime(JSRuntime* rt)
-{
+bool xpc_LocalizeRuntime(JSRuntime* rt) {
   // We want to assign the locale callbacks only the first time we
   // localize the context.
   // All consequent calls to this function are result of language changes
@@ -150,9 +140,7 @@ xpc_LocalizeRuntime(JSRuntime* rt)
   return JS_SetDefaultLocale(rt, appLocaleStr.get());
 }
 
-void
-xpc_DelocalizeRuntime(JSRuntime* rt)
-{
+void xpc_DelocalizeRuntime(JSRuntime* rt) {
   const XPCLocaleCallbacks* lc = XPCLocaleCallbacks::This(rt);
   JS_SetLocaleCallbacks(rt, nullptr);
   delete lc;

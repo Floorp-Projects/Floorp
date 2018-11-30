@@ -46,37 +46,28 @@ typedef Observer<void_t> MIDIAccessDestructionObserver;
  * MIDIAccess objects are managed via MIDIAccessManager.
  */
 class MIDIAccess final : public DOMEventTargetHelper,
-                         public Observer<MIDIPortList>
-{
+                         public Observer<MIDIPortList> {
   // Use the Permission Request class in MIDIAccessManager for creating
   // MIDIAccess objects.
   friend class MIDIPermissionRequest;
   friend class MIDIAccessManager;
-public:
+
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MIDIAccess,
                                                          DOMEventTargetHelper)
-public:
+ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   // Return map of MIDI Input Ports
-  MIDIInputMap* Inputs() const
-  {
-    return mInputMap;
-  }
+  MIDIInputMap* Inputs() const { return mInputMap; }
 
   // Return map of MIDI Output Ports
-  MIDIOutputMap* Outputs() const
-  {
-    return mOutputMap;
-  }
+  MIDIOutputMap* Outputs() const { return mOutputMap; }
 
   // Returns true if sysex permissions were given
-  bool SysexEnabled() const
-  {
-    return mSysexEnabled;
-  }
+  bool SysexEnabled() const { return mSysexEnabled; }
 
   // Observer implementation for receiving port connection updates
   void Notify(const MIDIPortList& aEvent) override;
@@ -94,7 +85,8 @@ public:
   // alive, and detach from the MIDIAccessManager.
   void Shutdown();
   IMPL_EVENT_HANDLER(statechange);
-private:
+
+ private:
   MIDIAccess(nsPIDOMWindowInner* aWindow, bool aSysexEnabled,
              Promise* aAccessPromise);
   ~MIDIAccess();
@@ -118,7 +110,7 @@ private:
   bool mHasShutdown;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MIDIAccess_h
+#endif  // mozilla_dom_MIDIAccess_h

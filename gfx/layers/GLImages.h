@@ -10,18 +10,17 @@
 #include "AndroidSurfaceTexture.h"
 #include "GLContextTypes.h"
 #include "GLTypes.h"
-#include "ImageContainer.h"             // for Image
-#include "ImageTypes.h"                 // for ImageFormat::SHARED_GLTEXTURE
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "mozilla/gfx/Point.h"          // for IntSize
+#include "ImageContainer.h"     // for Image
+#include "ImageTypes.h"         // for ImageFormat::SHARED_GLTEXTURE
+#include "nsCOMPtr.h"           // for already_AddRefed
+#include "mozilla/gfx/Point.h"  // for IntSize
 
 namespace mozilla {
 namespace layers {
 
-class GLImage : public Image
-{
-public:
-  explicit GLImage(ImageFormat aFormat) : Image(nullptr, aFormat){}
+class GLImage : public Image {
+ public:
+  explicit GLImage(ImageFormat aFormat) : Image(nullptr, aFormat) {}
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
@@ -30,12 +29,10 @@ public:
 
 #ifdef MOZ_WIDGET_ANDROID
 
-class SurfaceTextureImage : public GLImage
-{
-public:
+class SurfaceTextureImage : public GLImage {
+ public:
   SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
-                      const gfx::IntSize& aSize,
-                      bool aContinuous,
+                      const gfx::IntSize& aSize, bool aContinuous,
                       gl::OriginPos aOriginPos);
 
   gfx::IntSize GetSize() const override { return mSize; }
@@ -43,8 +40,7 @@ public:
   bool GetContinuous() const { return mContinuous; }
   gl::OriginPos GetOriginPos() const { return mOriginPos; }
 
-  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
-  {
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override {
     // We can implement this, but currently don't want to because it will cause
     // the SurfaceTexture to be permanently bound to the snapshot readback
     // context.
@@ -53,16 +49,16 @@ public:
 
   SurfaceTextureImage* AsSurfaceTextureImage() override { return this; }
 
-private:
+ private:
   AndroidSurfaceTextureHandle mHandle;
   gfx::IntSize mSize;
   bool mContinuous;
   gl::OriginPos mOriginPos;
 };
 
-#endif // MOZ_WIDGET_ANDROID
+#endif  // MOZ_WIDGET_ANDROID
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // GFX_GLIMAGES_H
+#endif  // GFX_GLIMAGES_H

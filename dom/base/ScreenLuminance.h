@@ -16,9 +16,8 @@ class nsScreen;
 namespace mozilla {
 namespace dom {
 
-class ScreenLuminance final : public nsWrapperCache
-{
-public:
+class ScreenLuminance final : public nsWrapperCache {
+ public:
   // Ref counting and cycle collection
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ScreenLuminance)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ScreenLuminance)
@@ -29,22 +28,15 @@ public:
   double MaxAverage() const { return mMaxAverage; }
   // End WebIDL methods
 
-  ScreenLuminance(nsScreen* aScreen,
-                  double aMin,
-                  double aMax,
+  ScreenLuminance(nsScreen* aScreen, double aMin, double aMax,
                   double aMaxAverage)
-    : mScreen(aScreen)
-    , mMin(aMin)
-    , mMax(aMax)
-    , mMaxAverage(aMaxAverage)
-  {
-  }
+      : mScreen(aScreen), mMin(aMin), mMax(aMax), mMaxAverage(aMaxAverage) {}
 
   nsScreen* GetParentObject() const { return mScreen; }
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   virtual ~ScreenLuminance() {}
 
   RefPtr<nsScreen> mScreen;
@@ -53,7 +45,7 @@ private:
   double mMaxAverage;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ScreenLuminance_h
+#endif  // mozilla_dom_ScreenLuminance_h

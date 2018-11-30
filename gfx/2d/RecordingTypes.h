@@ -12,31 +12,26 @@
 namespace mozilla {
 namespace gfx {
 
-template<class S, class T>
-struct ElementStreamFormat
-{
-  static void Write(S &aStream, const T &aElement)
-  {
-    aStream.write(reinterpret_cast<const char*>(&aElement), sizeof(T));
+template <class S, class T>
+struct ElementStreamFormat {
+  static void Write(S &aStream, const T &aElement) {
+    aStream.write(reinterpret_cast<const char *>(&aElement), sizeof(T));
   }
-  static void Read(S &aStream, T &aElement)
-  {
+  static void Read(S &aStream, T &aElement) {
     aStream.read(reinterpret_cast<char *>(&aElement), sizeof(T));
   }
 };
 
-template<class S, class T>
-void WriteElement(S &aStream, const T &aElement)
-{
+template <class S, class T>
+void WriteElement(S &aStream, const T &aElement) {
   ElementStreamFormat<S, T>::Write(aStream, aElement);
 }
-template<class S, class T>
-void ReadElement(S &aStream, T &aElement)
-{
+template <class S, class T>
+void ReadElement(S &aStream, T &aElement) {
   ElementStreamFormat<S, T>::Read(aStream, aElement);
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_RECORDINGTYPES_H_ */

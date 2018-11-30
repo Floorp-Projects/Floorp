@@ -18,10 +18,8 @@
 
 #define MOZILLA_CT_ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
 
-struct DeleteHelper
-{
-  void operator()(CERTSubjectPublicKeyInfo* value)
-  {
+struct DeleteHelper {
+  void operator()(CERTSubjectPublicKeyInfo* value) {
     SECKEY_DestroySubjectPublicKeyInfo(value);
   }
   void operator()(PK11Context* value) { PK11_DestroyContext(value, true); }
@@ -31,10 +29,8 @@ struct DeleteHelper
 };
 
 template <class T>
-struct MaybeDeleteHelper
-{
-  void operator()(T* ptr)
-  {
+struct MaybeDeleteHelper {
+  void operator()(T* ptr) {
     if (ptr) {
       DeleteHelper del;
       del(ptr);
@@ -42,17 +38,19 @@ struct MaybeDeleteHelper
   }
 };
 
-typedef std::unique_ptr<CERTSubjectPublicKeyInfo, MaybeDeleteHelper<CERTSubjectPublicKeyInfo>>
-  UniqueCERTSubjectPublicKeyInfo;
+typedef std::unique_ptr<CERTSubjectPublicKeyInfo,
+                        MaybeDeleteHelper<CERTSubjectPublicKeyInfo>>
+    UniqueCERTSubjectPublicKeyInfo;
 typedef std::unique_ptr<PK11Context, MaybeDeleteHelper<PK11Context>>
-  UniquePK11Context;
+    UniquePK11Context;
 typedef std::unique_ptr<PK11SlotInfo, MaybeDeleteHelper<PK11SlotInfo>>
-  UniquePK11SlotInfo;
+    UniquePK11SlotInfo;
 typedef std::unique_ptr<SECKEYPublicKey, MaybeDeleteHelper<SECKEYPublicKey>>
-  UniqueSECKEYPublicKey;
+    UniqueSECKEYPublicKey;
 typedef std::unique_ptr<SECItem, MaybeDeleteHelper<SECItem>> UniqueSECItem;
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // Reads a TLS-encoded variable length unsigned integer from |in|.
 // The integer is expected to be in big-endian order, which is used by TLS.
@@ -68,6 +66,7 @@ template <size_t prefixLength>
 mozilla::pkix::Result ReadVariableBytes(mozilla::pkix::Reader& in,
                                         mozilla::pkix::Input& out);
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
-#endif //CTUtils_h
+#endif  // CTUtils_h

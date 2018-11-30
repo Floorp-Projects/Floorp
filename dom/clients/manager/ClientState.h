@@ -23,11 +23,10 @@ class IPCClientWorkerState;
 // This class defines the mutable nsGlobalWindow state we support querying
 // through the ClientManagerService.  It is a snapshot of the state and
 // is not live updated.
-class ClientWindowState final
-{
+class ClientWindowState final {
   UniquePtr<IPCClientWindowState> mData;
 
-public:
+ public:
   ClientWindowState(mozilla::dom::VisibilityState aVisibilityState,
                     const TimeStamp& aLastFocusTime,
                     nsContentUtils::StorageAccess aStorageAccess,
@@ -38,28 +37,21 @@ public:
   ClientWindowState(const ClientWindowState& aRight);
   ClientWindowState(ClientWindowState&& aRight);
 
-  ClientWindowState&
-  operator=(const ClientWindowState& aRight);
+  ClientWindowState& operator=(const ClientWindowState& aRight);
 
-  ClientWindowState&
-  operator=(ClientWindowState&& aRight);
+  ClientWindowState& operator=(ClientWindowState&& aRight);
 
   ~ClientWindowState();
 
-  mozilla::dom::VisibilityState
-  VisibilityState() const;
+  mozilla::dom::VisibilityState VisibilityState() const;
 
-  const TimeStamp&
-  LastFocusTime() const;
+  const TimeStamp& LastFocusTime() const;
 
-  bool
-  Focused() const;
+  bool Focused() const;
 
-  nsContentUtils::StorageAccess
-  GetStorageAccess() const;
+  nsContentUtils::StorageAccess GetStorageAccess() const;
 
-  const IPCClientWindowState&
-  ToIPC() const;
+  const IPCClientWindowState& ToIPC() const;
 };
 
 // This class defines the mutable worker state we support querying
@@ -68,11 +60,10 @@ public:
 // worker specific state values, but we may in the future.  This
 // class also services as a placeholder that the state is referring
 // to a worker in ClientState.
-class ClientWorkerState final
-{
+class ClientWorkerState final {
   UniquePtr<IPCClientWorkerState> mData;
 
-public:
+ public:
   explicit ClientWorkerState(nsContentUtils::StorageAccess aStorageAccess);
 
   explicit ClientWorkerState(const IPCClientWorkerState& aData);
@@ -80,29 +71,24 @@ public:
   ClientWorkerState(const ClientWorkerState& aRight);
   ClientWorkerState(ClientWorkerState&& aRight);
 
-  ClientWorkerState&
-  operator=(const ClientWorkerState& aRight);
+  ClientWorkerState& operator=(const ClientWorkerState& aRight);
 
-  ClientWorkerState&
-  operator=(ClientWorkerState&& aRight);
+  ClientWorkerState& operator=(ClientWorkerState&& aRight);
 
   ~ClientWorkerState();
 
-  nsContentUtils::StorageAccess
-  GetStorageAccess() const;
+  nsContentUtils::StorageAccess GetStorageAccess() const;
 
-  const IPCClientWorkerState&
-  ToIPC() const;
+  const IPCClientWorkerState& ToIPC() const;
 };
 
 // This is a union of the various types of mutable state we support
 // querying in ClientManagerService.  Right now it can contain either
 // window or worker states.
-class ClientState final
-{
+class ClientState final {
   Maybe<Variant<ClientWindowState, ClientWorkerState>> mData;
 
-public:
+ public:
   ClientState();
 
   explicit ClientState(const ClientWindowState& aWindowState);
@@ -113,37 +99,28 @@ public:
   ClientState(const ClientState& aRight) = default;
   ClientState(ClientState&& aRight);
 
-  ClientState&
-  operator=(const ClientState& aRight) = default;
+  ClientState& operator=(const ClientState& aRight) = default;
 
-  ClientState&
-  operator=(ClientState&& aRight);
+  ClientState& operator=(ClientState&& aRight);
 
   ~ClientState();
 
-  static ClientState
-  FromIPC(const IPCClientState& aData);
+  static ClientState FromIPC(const IPCClientState& aData);
 
-  bool
-  IsWindowState() const;
+  bool IsWindowState() const;
 
-  const ClientWindowState&
-  AsWindowState() const;
+  const ClientWindowState& AsWindowState() const;
 
-  bool
-  IsWorkerState() const;
+  bool IsWorkerState() const;
 
-  const ClientWorkerState&
-  AsWorkerState() const;
+  const ClientWorkerState& AsWorkerState() const;
 
-  nsContentUtils::StorageAccess
-  GetStorageAccess() const;
+  nsContentUtils::StorageAccess GetStorageAccess() const;
 
-  const IPCClientState
-  ToIPC() const;
+  const IPCClientState ToIPC() const;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientState_h
+#endif  // _mozilla_dom_ClientState_h

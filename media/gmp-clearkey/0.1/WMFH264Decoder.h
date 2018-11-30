@@ -22,14 +22,13 @@
 namespace wmf {
 
 class WMFH264Decoder {
-public:
+ public:
   WMFH264Decoder();
   ~WMFH264Decoder();
 
   HRESULT Init(int32_t aCoreCount);
 
-  HRESULT Input(const uint8_t* aData,
-                uint32_t aDataSize,
+  HRESULT Input(const uint8_t* aData, uint32_t aDataSize,
                 Microseconds aTimestamp);
 
   HRESULT Output(IMFSample** aOutput);
@@ -42,16 +41,13 @@ public:
 
   HRESULT Drain();
 
-private:
-
+ private:
   HRESULT SetDecoderInputType();
   HRESULT SetDecoderOutputType();
   HRESULT SendMFTMessage(MFT_MESSAGE_TYPE aMsg, UINT32 aData);
 
-  HRESULT CreateInputSample(const uint8_t* aData,
-                            uint32_t aDataSize,
-                            Microseconds aTimestamp,
-                            IMFSample** aOutSample);
+  HRESULT CreateInputSample(const uint8_t* aData, uint32_t aDataSize,
+                            Microseconds aTimestamp, IMFSample** aOutSample);
 
   HRESULT CreateOutputSample(IMFSample** aOutSample);
 
@@ -67,9 +63,8 @@ private:
   int32_t mVideoHeight;
   IntRect mPictureRegion;
   int32_t mStride;
-
 };
 
-} // namespace wmf
+}  // namespace wmf
 
 #endif

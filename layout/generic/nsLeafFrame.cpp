@@ -11,22 +11,16 @@
 
 using namespace mozilla;
 
-nsLeafFrame::~nsLeafFrame()
-{
-}
+nsLeafFrame::~nsLeafFrame() {}
 
-/* virtual */ nscoord
-nsLeafFrame::GetMinISize(gfxContext *aRenderingContext)
-{
+/* virtual */ nscoord nsLeafFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
   result = GetIntrinsicISize();
   return result;
 }
 
-/* virtual */ nscoord
-nsLeafFrame::GetPrefISize(gfxContext *aRenderingContext)
-{
+/* virtual */ nscoord nsLeafFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_PREF_INLINE_SIZE(this, result);
   result = GetIntrinsicISize();
@@ -34,32 +28,23 @@ nsLeafFrame::GetPrefISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */
-LogicalSize
-nsLeafFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
-                             WritingMode         aWM,
-                             const LogicalSize&  aCBSize,
-                             nscoord             aAvailableISize,
-                             const LogicalSize&  aMargin,
-                             const LogicalSize&  aBorder,
-                             const LogicalSize&  aPadding,
-                             ComputeSizeFlags    aFlags)
-{
+LogicalSize nsLeafFrame::ComputeAutoSize(
+    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
+    nscoord aAvailableISize, const LogicalSize& aMargin,
+    const LogicalSize& aBorder, const LogicalSize& aPadding,
+    ComputeSizeFlags aFlags) {
   const WritingMode wm = GetWritingMode();
   LogicalSize result(wm, GetIntrinsicISize(), GetIntrinsicBSize());
   return result.ConvertTo(aWM, wm);
 }
 
-nscoord
-nsLeafFrame::GetIntrinsicBSize()
-{
+nscoord nsLeafFrame::GetIntrinsicBSize() {
   MOZ_ASSERT_UNREACHABLE("Someone didn't override Reflow or ComputeAutoSize");
   return 0;
 }
 
-void
-nsLeafFrame::SizeToAvailSize(const ReflowInput& aReflowInput,
-                             ReflowOutput& aDesiredSize)
-{
+void nsLeafFrame::SizeToAvailSize(const ReflowInput& aReflowInput,
+                                  ReflowOutput& aDesiredSize) {
   aDesiredSize.SetSize(aReflowInput.GetWritingMode(),
                        aReflowInput.AvailableSize());
   aDesiredSize.SetOverflowAreasToDesiredBounds();

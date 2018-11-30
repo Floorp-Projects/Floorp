@@ -16,28 +16,20 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGFEDropShadowElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGFEDropShadowElement::WrapNode(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return SVGFEDropShadowElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::NumberInfo SVGFEDropShadowElement::sNumberInfo[2] =
-{
-  { nsGkAtoms::dx, 2, false },
-  { nsGkAtoms::dy, 2, false }
-};
+nsSVGElement::NumberInfo SVGFEDropShadowElement::sNumberInfo[2] = {
+    {nsGkAtoms::dx, 2, false}, {nsGkAtoms::dy, 2, false}};
 
-nsSVGElement::NumberPairInfo SVGFEDropShadowElement::sNumberPairInfo[1] =
-{
-  { nsGkAtoms::stdDeviation, 2, 2 }
-};
+nsSVGElement::NumberPairInfo SVGFEDropShadowElement::sNumberPairInfo[1] = {
+    {nsGkAtoms::stdDeviation, 2, 2}};
 
-nsSVGElement::StringInfo SVGFEDropShadowElement::sStringInfo[2] =
-{
-  { nsGkAtoms::result, kNameSpaceID_None, true },
-  { nsGkAtoms::in, kNameSpaceID_None, true }
-};
+nsSVGElement::StringInfo SVGFEDropShadowElement::sStringInfo[2] = {
+    {nsGkAtoms::result, kNameSpaceID_None, true},
+    {nsGkAtoms::in, kNameSpaceID_None, true}};
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -46,48 +38,38 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDropShadowElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedString>
-SVGFEDropShadowElement::In1()
-{
+already_AddRefed<SVGAnimatedString> SVGFEDropShadowElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
-SVGFEDropShadowElement::Dx()
-{
+already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::Dx() {
   return mNumberAttributes[DX].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
-SVGFEDropShadowElement::Dy()
-{
+already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::Dy() {
   return mNumberAttributes[DY].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
-SVGFEDropShadowElement::StdDeviationX()
-{
-  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(nsSVGNumberPair::eFirst, this);
+already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::StdDeviationX() {
+  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
+      nsSVGNumberPair::eFirst, this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
-SVGFEDropShadowElement::StdDeviationY()
-{
-  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(nsSVGNumberPair::eSecond, this);
+already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::StdDeviationY() {
+  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
+      nsSVGNumberPair::eSecond, this);
 }
 
-void
-SVGFEDropShadowElement::SetStdDeviation(float stdDeviationX, float stdDeviationY)
-{
-  mNumberPairAttributes[STD_DEV].SetBaseValues(stdDeviationX, stdDeviationY, this);
+void SVGFEDropShadowElement::SetStdDeviation(float stdDeviationX,
+                                             float stdDeviationY) {
+  mNumberPairAttributes[STD_DEV].SetBaseValues(stdDeviationX, stdDeviationY,
+                                               this);
 }
 
-FilterPrimitiveDescription
-SVGFEDropShadowElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
-                                                const IntRect& aFilterSubregion,
-                                                const nsTArray<bool>& aInputsAreTainted,
-                                                nsTArray<RefPtr<SourceSurface>>& aInputImages)
-{
+FilterPrimitiveDescription SVGFEDropShadowElement::GetPrimitiveDescription(
+    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    const nsTArray<bool>& aInputsAreTainted,
+    nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   float stdX = aInstance->GetPrimitiveNumber(SVGContentUtils::X,
                                              &mNumberPairAttributes[STD_DEV],
                                              nsSVGNumberPair::eFirst);
@@ -99,9 +81,9 @@ SVGFEDropShadowElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   }
 
   IntPoint offset(int32_t(aInstance->GetPrimitiveNumber(
-                            SVGContentUtils::X, &mNumberAttributes[DX])),
+                      SVGContentUtils::X, &mNumberAttributes[DX])),
                   int32_t(aInstance->GetPrimitiveNumber(
-                            SVGContentUtils::Y, &mNumberAttributes[DY])));
+                      SVGContentUtils::Y, &mNumberAttributes[DY])));
 
   DropShadowAttributes atts;
   atts.mStdDeviation = Size(stdX, stdY);
@@ -119,21 +101,18 @@ SVGFEDropShadowElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
-bool
-SVGFEDropShadowElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                  nsAtom* aAttribute) const
-{
-  return SVGFEDropShadowElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+bool SVGFEDropShadowElement::AttributeAffectsRendering(
+    int32_t aNameSpaceID, nsAtom* aAttribute) const {
+  return SVGFEDropShadowElementBase::AttributeAffectsRendering(aNameSpaceID,
+                                                               aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::stdDeviation ||
-           aAttribute == nsGkAtoms::dx ||
-           aAttribute == nsGkAtoms::dy));
+           aAttribute == nsGkAtoms::dx || aAttribute == nsGkAtoms::dy));
 }
 
-void
-SVGFEDropShadowElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
-{
+void SVGFEDropShadowElement::GetSourceImageNames(
+    nsTArray<nsSVGStringInfo>& aSources) {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
@@ -141,39 +120,31 @@ SVGFEDropShadowElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGFEDropShadowElement::IsAttributeMapped(const nsAtom* name) const
-{
-  static const MappedAttributeEntry* const map[] = {
-    sFEFloodMap
-  };
+SVGFEDropShadowElement::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {sFEFloodMap};
 
   return FindAttributeDependence(name, map) ||
-    SVGFEDropShadowElementBase::IsAttributeMapped(name);
+         SVGFEDropShadowElementBase::IsAttributeMapped(name);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-nsSVGElement::NumberAttributesInfo
-SVGFEDropShadowElement::GetNumberInfo()
-{
+nsSVGElement::NumberAttributesInfo SVGFEDropShadowElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::NumberPairAttributesInfo
-SVGFEDropShadowElement::GetNumberPairInfo()
-{
+SVGFEDropShadowElement::GetNumberPairInfo() {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                   ArrayLength(sNumberPairInfo));
 }
 
-nsSVGElement::StringAttributesInfo
-SVGFEDropShadowElement::GetStringInfo()
-{
+nsSVGElement::StringAttributesInfo SVGFEDropShadowElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

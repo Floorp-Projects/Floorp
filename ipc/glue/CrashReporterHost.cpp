@@ -20,30 +20,26 @@ namespace ipc {
 CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType,
                                      const Shmem& aShmem,
                                      CrashReporter::ThreadId aThreadId)
- : mProcessType(aProcessType),
-   mShmem(aShmem),
-   mThreadId(aThreadId),
-   mStartTime(::time(nullptr)),
-   mFinalized(false)
-{
-}
+    : mProcessType(aProcessType),
+      mShmem(aShmem),
+      mThreadId(aThreadId),
+      mStartTime(::time(nullptr)),
+      mFinalized(false) {}
 
-bool
-CrashReporterHost::GenerateCrashReport(base::ProcessId aPid)
-{
+bool CrashReporterHost::GenerateCrashReport(base::ProcessId aPid) {
   if (!TakeCrashedChildMinidump(aPid, nullptr)) {
     return false;
   }
   return FinalizeCrashReport();
 }
 
-RefPtr<nsIFile>
-CrashReporterHost::TakeCrashedChildMinidump(base::ProcessId aPid, uint32_t* aOutSequence)
-{
+RefPtr<nsIFile> CrashReporterHost::TakeCrashedChildMinidump(
+    base::ProcessId aPid, uint32_t* aOutSequence) {
   MOZ_ASSERT(!HasMinidump());
 
   RefPtr<nsIFile> crashDump;
-  if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump), aOutSequence)) {
+  if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump),
+                                aOutSequence)) {
     return nullptr;
   }
   if (!AdoptMinidump(crashDump)) {
@@ -52,31 +48,29 @@ CrashReporterHost::TakeCrashedChildMinidump(base::ProcessId aPid, uint32_t* aOut
   return crashDump.get();
 }
 
-bool
-CrashReporterHost::AdoptMinidump(nsIFile* aFile)
-{
+bool CrashReporterHost::AdoptMinidump(nsIFile* aFile) {
   return CrashReporter::GetIDFromMinidump(aFile, mDumpID);
 }
 
-int32_t
-CrashReporterHost::GetCrashType(const CrashReporter::AnnotationTable& aAnnotations)
-{
-  // RecordReplayHang is set in the middleman content process, so check aAnnotations.
-  if (aAnnotations[CrashReporter::Annotation::RecordReplayHang].EqualsLiteral("1")) {
+int32_t CrashReporterHost::GetCrashType(
+    const CrashReporter::AnnotationTable& aAnnotations) {
+  // RecordReplayHang is set in the middleman content process, so check
+  // aAnnotations.
+  if (aAnnotations[CrashReporter::Annotation::RecordReplayHang].EqualsLiteral(
+          "1")) {
     return nsICrashService::CRASH_TYPE_HANG;
   }
 
   // PluginHang is set in the parent process, so check mExtraAnnotations.
-  if (mExtraAnnotations[CrashReporter::Annotation::PluginHang].EqualsLiteral("1")) {
+  if (mExtraAnnotations[CrashReporter::Annotation::PluginHang].EqualsLiteral(
+          "1")) {
     return nsICrashService::CRASH_TYPE_HANG;
   }
 
   return nsICrashService::CRASH_TYPE_CRASH;
 }
 
-bool
-CrashReporterHost::FinalizeCrashReport()
-{
+bool CrashReporterHost::FinalizeCrashReport() {
   MOZ_ASSERT(!mFinalized);
   MOZ_ASSERT(HasMinidump());
 
@@ -106,7 +100,7 @@ CrashReporterHost::FinalizeCrashReport()
   char startTime[32];
   SprintfLiteral(startTime, "%lld", static_cast<long long>(mStartTime));
   annotations[CrashReporter::Annotation::StartupTime] =
-    nsDependentCString(startTime);
+      nsDependentCString(startTime);
 
   // We might not have shmem (for example, when running crashreporter tests).
   if (mShmem.IsReadable()) {
@@ -122,16 +116,15 @@ CrashReporterHost::FinalizeCrashReport()
   return true;
 }
 
-/* static */ void
-CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
-                                      int32_t aCrashType,
-                                      const nsString& aChildDumpID)
-{
+/* static */ void CrashReporterHost::NotifyCrashService(
+    GeckoProcessType aProcessType, int32_t aCrashType,
+    const nsString& aChildDumpID) {
   if (!NS_IsMainThread()) {
     RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "ipc::CrashReporterHost::NotifyCrashService", [&]() -> void {
-        CrashReporterHost::NotifyCrashService(aProcessType, aCrashType, aChildDumpID);
-      });
+        "ipc::CrashReporterHost::NotifyCrashService", [&]() -> void {
+          CrashReporterHost::NotifyCrashService(aProcessType, aCrashType,
+                                                aChildDumpID);
+        });
     RefPtr<nsIThread> mainThread = do_GetMainThread();
     SyncRunnable::DispatchToThread(mainThread, runnable);
     return;
@@ -140,7 +133,7 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
   MOZ_ASSERT(!aChildDumpID.IsEmpty());
 
   nsCOMPtr<nsICrashService> crashService =
-    do_GetService("@mozilla.org/crashservice;1");
+      do_GetService("@mozilla.org/crashservice;1");
   if (!crashService) {
     return;
   }
@@ -179,41 +172,36 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
   }
 
   RefPtr<Promise> promise;
-  crashService->AddCrash(processType, aCrashType, aChildDumpID, getter_AddRefs(promise));
-  Telemetry::Accumulate(Telemetry::SUBPROCESS_CRASHES_WITH_DUMP, telemetryKey, 1);
+  crashService->AddCrash(processType, aCrashType, aChildDumpID,
+                         getter_AddRefs(promise));
+  Telemetry::Accumulate(Telemetry::SUBPROCESS_CRASHES_WITH_DUMP, telemetryKey,
+                        1);
 }
 
-void
-CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey, bool aValue)
-{
-  mExtraAnnotations[aKey] = aValue ? NS_LITERAL_CSTRING("1")
-                                   : NS_LITERAL_CSTRING("0");
+void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
+                                      bool aValue) {
+  mExtraAnnotations[aKey] =
+      aValue ? NS_LITERAL_CSTRING("1") : NS_LITERAL_CSTRING("0");
 }
 
-void
-CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
-                                 int aValue)
-{
+void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
+                                      int aValue) {
   nsAutoCString valueString;
   valueString.AppendInt(aValue);
   mExtraAnnotations[aKey] = valueString;
 }
 
-void
-CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
-                                 unsigned int aValue)
-{
+void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
+                                      unsigned int aValue) {
   nsAutoCString valueString;
   valueString.AppendInt(aValue);
   mExtraAnnotations[aKey] = valueString;
 }
 
-void
-CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
-                                 const nsCString& aValue)
-{
+void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
+                                      const nsCString& aValue) {
   mExtraAnnotations[aKey] = aValue;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

@@ -15,17 +15,13 @@ namespace dom {
 using mozilla::ipc::PrincipalInfo;
 using mozilla::ipc::PrincipalInfoToPrincipal;
 
-ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
-                                                 uint64_t aRegistrationId,
-                                                 uint64_t aRegistrationVersion,
-                                                 nsIPrincipal* aPrincipal,
-                                                 const nsACString& aScope,
-                                                 const nsACString& aScriptURL,
-                                                 ServiceWorkerState aState)
-  : mData(MakeUnique<IPCServiceWorkerDescriptor>())
-{
+ServiceWorkerDescriptor::ServiceWorkerDescriptor(
+    uint64_t aId, uint64_t aRegistrationId, uint64_t aRegistrationVersion,
+    nsIPrincipal* aPrincipal, const nsACString& aScope,
+    const nsACString& aScriptURL, ServiceWorkerState aState)
+    : mData(MakeUnique<IPCServiceWorkerDescriptor>()) {
   MOZ_ALWAYS_SUCCEEDS(
-    PrincipalToPrincipalInfo(aPrincipal, &mData->principalInfo()));
+      PrincipalToPrincipalInfo(aPrincipal, &mData->principalInfo()));
 
   mData->id() = aId;
   mData->registrationId() = aRegistrationId;
@@ -35,34 +31,25 @@ ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
   mData->state() = aState;
 }
 
-ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
-                                                 uint64_t aRegistrationId,
-                                                 uint64_t aRegistrationVersion,
-                                                 const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                                                 const nsACString& aScope,
-                                                 const nsACString& aScriptURL,
-                                                 ServiceWorkerState aState)
-  : mData(MakeUnique<IPCServiceWorkerDescriptor>(aId, aRegistrationId,
-                                                 aRegistrationVersion,
-                                                 aPrincipalInfo,
-                                                 nsCString(aScriptURL),
-                                                 nsCString(aScope), aState))
-{
-}
+ServiceWorkerDescriptor::ServiceWorkerDescriptor(
+    uint64_t aId, uint64_t aRegistrationId, uint64_t aRegistrationVersion,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo, const nsACString& aScope,
+    const nsACString& aScriptURL, ServiceWorkerState aState)
+    : mData(MakeUnique<IPCServiceWorkerDescriptor>(
+          aId, aRegistrationId, aRegistrationVersion, aPrincipalInfo,
+          nsCString(aScriptURL), nsCString(aScope), aState)) {}
 
-ServiceWorkerDescriptor::ServiceWorkerDescriptor(const IPCServiceWorkerDescriptor& aDescriptor)
-  : mData(MakeUnique<IPCServiceWorkerDescriptor>(aDescriptor))
-{
-}
+ServiceWorkerDescriptor::ServiceWorkerDescriptor(
+    const IPCServiceWorkerDescriptor& aDescriptor)
+    : mData(MakeUnique<IPCServiceWorkerDescriptor>(aDescriptor)) {}
 
-ServiceWorkerDescriptor::ServiceWorkerDescriptor(const ServiceWorkerDescriptor& aRight)
-{
+ServiceWorkerDescriptor::ServiceWorkerDescriptor(
+    const ServiceWorkerDescriptor& aRight) {
   operator=(aRight);
 }
 
-ServiceWorkerDescriptor&
-ServiceWorkerDescriptor::operator=(const ServiceWorkerDescriptor& aRight)
-{
+ServiceWorkerDescriptor& ServiceWorkerDescriptor::operator=(
+    const ServiceWorkerDescriptor& aRight) {
   if (this == &aRight) {
     return *this;
   }
@@ -71,106 +58,76 @@ ServiceWorkerDescriptor::operator=(const ServiceWorkerDescriptor& aRight)
   return *this;
 }
 
-ServiceWorkerDescriptor::ServiceWorkerDescriptor(ServiceWorkerDescriptor&& aRight)
-  : mData(std::move(aRight.mData))
-{
-}
+ServiceWorkerDescriptor::ServiceWorkerDescriptor(
+    ServiceWorkerDescriptor&& aRight)
+    : mData(std::move(aRight.mData)) {}
 
-ServiceWorkerDescriptor&
-ServiceWorkerDescriptor::operator=(ServiceWorkerDescriptor&& aRight)
-{
+ServiceWorkerDescriptor& ServiceWorkerDescriptor::operator=(
+    ServiceWorkerDescriptor&& aRight) {
   mData.reset();
   mData = std::move(aRight.mData);
   return *this;
 }
 
-ServiceWorkerDescriptor::~ServiceWorkerDescriptor()
-{
-}
+ServiceWorkerDescriptor::~ServiceWorkerDescriptor() {}
 
-bool
-ServiceWorkerDescriptor::operator==(const ServiceWorkerDescriptor& aRight) const
-{
+bool ServiceWorkerDescriptor::operator==(
+    const ServiceWorkerDescriptor& aRight) const {
   return *mData == *aRight.mData;
 }
 
-uint64_t
-ServiceWorkerDescriptor::Id() const
-{
-  return mData->id();
-}
+uint64_t ServiceWorkerDescriptor::Id() const { return mData->id(); }
 
-uint64_t
-ServiceWorkerDescriptor::RegistrationId() const
-{
+uint64_t ServiceWorkerDescriptor::RegistrationId() const {
   return mData->registrationId();
 }
 
-uint64_t
-ServiceWorkerDescriptor::RegistrationVersion() const
-{
+uint64_t ServiceWorkerDescriptor::RegistrationVersion() const {
   return mData->registrationVersion();
 }
 
-const mozilla::ipc::PrincipalInfo&
-ServiceWorkerDescriptor::PrincipalInfo() const
-{
+const mozilla::ipc::PrincipalInfo& ServiceWorkerDescriptor::PrincipalInfo()
+    const {
   return mData->principalInfo();
 }
 
-nsCOMPtr<nsIPrincipal>
-ServiceWorkerDescriptor::GetPrincipal() const
-{
+nsCOMPtr<nsIPrincipal> ServiceWorkerDescriptor::GetPrincipal() const {
   AssertIsOnMainThread();
-  nsCOMPtr<nsIPrincipal> ref =  PrincipalInfoToPrincipal(mData->principalInfo());
+  nsCOMPtr<nsIPrincipal> ref = PrincipalInfoToPrincipal(mData->principalInfo());
   return ref;
 }
 
-const nsCString&
-ServiceWorkerDescriptor::Scope() const
-{
+const nsCString& ServiceWorkerDescriptor::Scope() const {
   return mData->scope();
 }
 
-const nsCString&
-ServiceWorkerDescriptor::ScriptURL() const
-{
+const nsCString& ServiceWorkerDescriptor::ScriptURL() const {
   return mData->scriptURL();
 }
 
-ServiceWorkerState
-ServiceWorkerDescriptor::State() const
-{
+ServiceWorkerState ServiceWorkerDescriptor::State() const {
   return mData->state();
 }
 
-void
-ServiceWorkerDescriptor::SetState(ServiceWorkerState aState)
-{
+void ServiceWorkerDescriptor::SetState(ServiceWorkerState aState) {
   mData->state() = aState;
 }
 
-void
-ServiceWorkerDescriptor::SetRegistrationVersion(uint64_t aVersion)
-{
+void ServiceWorkerDescriptor::SetRegistrationVersion(uint64_t aVersion) {
   MOZ_DIAGNOSTIC_ASSERT(aVersion > mData->registrationVersion());
   mData->registrationVersion() = aVersion;
 }
 
-bool
-ServiceWorkerDescriptor::Matches(const ServiceWorkerDescriptor& aDescriptor) const
-{
-  return Id() == aDescriptor.Id() &&
-         Scope() == aDescriptor.Scope() &&
+bool ServiceWorkerDescriptor::Matches(
+    const ServiceWorkerDescriptor& aDescriptor) const {
+  return Id() == aDescriptor.Id() && Scope() == aDescriptor.Scope() &&
          ScriptURL() == aDescriptor.ScriptURL() &&
          PrincipalInfo() == aDescriptor.PrincipalInfo();
 }
 
-const IPCServiceWorkerDescriptor&
-ServiceWorkerDescriptor::ToIPC() const
-{
+const IPCServiceWorkerDescriptor& ServiceWorkerDescriptor::ToIPC() const {
   return *mData;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

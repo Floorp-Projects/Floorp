@@ -30,42 +30,40 @@ using namespace mozilla::ipc;
 
 namespace {
 
-already_AddRefed<IDBFileRequest>
-GenerateFileRequest(IDBFileHandle* aFileHandle)
-{
+already_AddRefed<IDBFileRequest> GenerateFileRequest(
+    IDBFileHandle* aFileHandle) {
   MOZ_ASSERT(aFileHandle);
   aFileHandle->AssertIsOnOwningThread();
 
   RefPtr<IDBFileRequest> fileRequest =
-    IDBFileRequest::Create(aFileHandle, /* aWrapAsDOMRequest */ false);
+      IDBFileRequest::Create(aFileHandle, /* aWrapAsDOMRequest */ false);
   MOZ_ASSERT(fileRequest);
 
   return fileRequest.forget();
 }
 
-} // namespace
+}  // namespace
 
-IDBFileHandle::IDBFileHandle(IDBMutableFile* aMutableFile,
-                             FileMode aMode)
-  : mMutableFile(aMutableFile)
-  , mBackgroundActor(nullptr)
-  , mLocation(0)
-  , mPendingRequestCount(0)
-  , mReadyState(INITIAL)
-  , mMode(aMode)
-  , mAborted(false)
-  , mCreating(false)
+IDBFileHandle::IDBFileHandle(IDBMutableFile* aMutableFile, FileMode aMode)
+    : mMutableFile(aMutableFile),
+      mBackgroundActor(nullptr),
+      mLocation(0),
+      mPendingRequestCount(0),
+      mReadyState(INITIAL),
+      mMode(aMode),
+      mAborted(false),
+      mCreating(false)
 #ifdef DEBUG
-  , mSentFinishOrAbort(false)
-  , mFiredCompleteOrAbort(false)
+      ,
+      mSentFinishOrAbort(false),
+      mFiredCompleteOrAbort(false)
 #endif
 {
   MOZ_ASSERT(aMutableFile);
   aMutableFile->AssertIsOnOwningThread();
 }
 
-IDBFileHandle::~IDBFileHandle()
-{
+IDBFileHandle::~IDBFileHandle() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mPendingRequestCount);
   MOZ_ASSERT(!mCreating);
@@ -82,16 +80,13 @@ IDBFileHandle::~IDBFileHandle()
 }
 
 // static
-already_AddRefed<IDBFileHandle>
-IDBFileHandle::Create(IDBMutableFile* aMutableFile,
-                      FileMode aMode)
-{
+already_AddRefed<IDBFileHandle> IDBFileHandle::Create(
+    IDBMutableFile* aMutableFile, FileMode aMode) {
   MOZ_ASSERT(aMutableFile);
   aMutableFile->AssertIsOnOwningThread();
   MOZ_ASSERT(aMode == FileMode::Readonly || aMode == FileMode::Readwrite);
 
-  RefPtr<IDBFileHandle> fileHandle =
-    new IDBFileHandle(aMutableFile, aMode);
+  RefPtr<IDBFileHandle> fileHandle = new IDBFileHandle(aMutableFile, aMode);
 
   fileHandle->BindToOwner(aMutableFile);
 
@@ -109,13 +104,11 @@ IDBFileHandle::Create(IDBMutableFile* aMutableFile,
 }
 
 // static
-IDBFileHandle*
-IDBFileHandle::GetCurrent()
-{
+IDBFileHandle* IDBFileHandle::GetCurrent() {
   MOZ_ASSERT(BackgroundChild::GetForCurrentThread());
 
   BackgroundChildImpl::ThreadLocal* threadLocal =
-    BackgroundChildImpl::GetThreadLocalForCurrentThread();
+      BackgroundChildImpl::GetThreadLocalForCurrentThread();
   MOZ_ASSERT(threadLocal);
 
   return threadLocal->mCurrentFileHandle;
@@ -123,18 +116,14 @@ IDBFileHandle::GetCurrent()
 
 #ifdef DEBUG
 
-void
-IDBFileHandle::AssertIsOnOwningThread() const
-{
+void IDBFileHandle::AssertIsOnOwningThread() const {
   MOZ_ASSERT(mMutableFile);
   mMutableFile->AssertIsOnOwningThread();
 }
 
-#endif // DEBUG
+#endif  // DEBUG
 
-void
-IDBFileHandle::SetBackgroundActor(BackgroundFileHandleChild* aActor)
-{
+void IDBFileHandle::SetBackgroundActor(BackgroundFileHandleChild* aActor) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!mBackgroundActor);
@@ -142,16 +131,14 @@ IDBFileHandle::SetBackgroundActor(BackgroundFileHandleChild* aActor)
   mBackgroundActor = aActor;
 }
 
-void
-IDBFileHandle::StartRequest(IDBFileRequest* aFileRequest,
-                            const FileRequestParams& aParams)
-{
+void IDBFileHandle::StartRequest(IDBFileRequest* aFileRequest,
+                                 const FileRequestParams& aParams) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFileRequest);
   MOZ_ASSERT(aParams.type() != FileRequestParams::T__None);
 
   BackgroundFileRequestChild* actor =
-    new BackgroundFileRequestChild(aFileRequest);
+      new BackgroundFileRequestChild(aFileRequest);
 
   mBackgroundActor->SendPBackgroundFileRequestConstructor(actor, aParams);
 
@@ -159,9 +146,7 @@ IDBFileHandle::StartRequest(IDBFileRequest* aFileRequest,
   OnNewRequest();
 }
 
-void
-IDBFileHandle::OnNewRequest()
-{
+void IDBFileHandle::OnNewRequest() {
   AssertIsOnOwningThread();
 
   if (!mPendingRequestCount) {
@@ -172,9 +157,7 @@ IDBFileHandle::OnNewRequest()
   ++mPendingRequestCount;
 }
 
-void
-IDBFileHandle::OnRequestFinished(bool aActorDestroyedNormally)
-{
+void IDBFileHandle::OnRequestFinished(bool aActorDestroyedNormally) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mPendingRequestCount);
 
@@ -200,9 +183,7 @@ IDBFileHandle::OnRequestFinished(bool aActorDestroyedNormally)
   }
 }
 
-void
-IDBFileHandle::FireCompleteOrAbortEvents(bool aAborted)
-{
+void IDBFileHandle::FireCompleteOrAbortEvents(bool aAborted) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mFiredCompleteOrAbort);
 
@@ -231,9 +212,7 @@ IDBFileHandle::FireCompleteOrAbortEvents(bool aAborted)
   }
 }
 
-bool
-IDBFileHandle::IsOpen() const
-{
+bool IDBFileHandle::IsOpen() const {
   AssertIsOnOwningThread();
 
   // If we haven't started anything then we're open.
@@ -253,9 +232,7 @@ IDBFileHandle::IsOpen() const
   return false;
 }
 
-void
-IDBFileHandle::Abort()
-{
+void IDBFileHandle::Abort() {
   AssertIsOnOwningThread();
 
   if (IsFinishingOrDone()) {
@@ -283,10 +260,8 @@ IDBFileHandle::Abort()
   }
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::GetMetadata(const IDBFileMetadataParameters& aParameters,
-                           ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::GetMetadata(
+    const IDBFileMetadataParameters& aParameters, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   // Common state checking
@@ -300,7 +275,7 @@ IDBFileHandle::GetMetadata(const IDBFileMetadataParameters& aParameters,
     return nullptr;
   }
 
- // Do nothing if the window is closed
+  // Do nothing if the window is closed
   if (!CheckWindow()) {
     return nullptr;
   }
@@ -316,9 +291,8 @@ IDBFileHandle::GetMetadata(const IDBFileMetadataParameters& aParameters,
   return fileRequest.forget();
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::Truncate(
+    const Optional<uint64_t>& aSize, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   // State checking for write
@@ -359,9 +333,7 @@ IDBFileHandle::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
   return fileRequest.forget();
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::Flush(ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::Flush(ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   // State checking for write
@@ -383,9 +355,7 @@ IDBFileHandle::Flush(ErrorResult& aRv)
   return fileRequest.forget();
 }
 
-void
-IDBFileHandle::Abort(ErrorResult& aRv)
-{
+void IDBFileHandle::Abort(ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   // This method is special enough for not using generic state checking methods.
@@ -398,9 +368,7 @@ IDBFileHandle::Abort(ErrorResult& aRv)
   Abort();
 }
 
-bool
-IDBFileHandle::CheckState(ErrorResult& aRv)
-{
+bool IDBFileHandle::CheckState(ErrorResult& aRv) {
   if (!IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_INACTIVE_ERR);
     return false;
@@ -409,9 +377,8 @@ IDBFileHandle::CheckState(ErrorResult& aRv)
   return true;
 }
 
-bool
-IDBFileHandle::CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv)
-{
+bool IDBFileHandle::CheckStateAndArgumentsForRead(uint64_t aSize,
+                                                  ErrorResult& aRv) {
   // Common state checking
   if (!CheckState(aRv)) {
     return false;
@@ -432,9 +399,7 @@ IDBFileHandle::CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv)
   return true;
 }
 
-bool
-IDBFileHandle::CheckStateForWrite(ErrorResult& aRv)
-{
+bool IDBFileHandle::CheckStateForWrite(ErrorResult& aRv) {
   // Common state checking
   if (!CheckState(aRv)) {
     return false;
@@ -449,9 +414,7 @@ IDBFileHandle::CheckStateForWrite(ErrorResult& aRv)
   return true;
 }
 
-bool
-IDBFileHandle::CheckStateForWriteOrAppend(bool aAppend, ErrorResult& aRv)
-{
+bool IDBFileHandle::CheckStateForWriteOrAppend(bool aAppend, ErrorResult& aRv) {
   // State checking for write
   if (!CheckStateForWrite(aRv)) {
     return false;
@@ -466,18 +429,16 @@ IDBFileHandle::CheckStateForWriteOrAppend(bool aAppend, ErrorResult& aRv)
   return true;
 }
 
-bool
-IDBFileHandle::CheckWindow()
-{
+bool IDBFileHandle::CheckWindow() {
   AssertIsOnOwningThread();
 
   return GetOwner();
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::Read(uint64_t aSize, bool aHasEncoding,
-                    const nsAString& aEncoding, ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::Read(uint64_t aSize,
+                                                     bool aHasEncoding,
+                                                     const nsAString& aEncoding,
+                                                     ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   // State and argument checking for read
@@ -506,12 +467,9 @@ IDBFileHandle::Read(uint64_t aSize, bool aHasEncoding,
   return fileRequest.forget();
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::WriteOrAppend(
-                       const StringOrArrayBufferOrArrayBufferViewOrBlob& aValue,
-                       bool aAppend,
-                       ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::WriteOrAppend(
+    const StringOrArrayBufferOrArrayBufferViewOrBlob& aValue, bool aAppend,
+    ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if (aValue.IsString()) {
@@ -530,11 +488,8 @@ IDBFileHandle::WriteOrAppend(
   return WriteOrAppend(aValue.GetAsBlob(), aAppend, aRv);
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::WriteOrAppend(const nsAString& aValue,
-                             bool aAppend,
-                             ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::WriteOrAppend(
+    const nsAString& aValue, bool aAppend, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   // State checking for write or append
@@ -544,7 +499,8 @@ IDBFileHandle::WriteOrAppend(const nsAString& aValue,
 
   NS_ConvertUTF16toUTF8 cstr(aValue);
 
-  uint64_t dataLength = cstr.Length();;
+  uint64_t dataLength = cstr.Length();
+  ;
   if (!dataLength) {
     return nullptr;
   }
@@ -559,11 +515,8 @@ IDBFileHandle::WriteOrAppend(const nsAString& aValue,
   return WriteInternal(stringData, dataLength, aAppend, aRv);
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::WriteOrAppend(const ArrayBuffer& aValue,
-                             bool aAppend,
-                             ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::WriteOrAppend(
+    const ArrayBuffer& aValue, bool aAppend, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   // State checking for write or append
@@ -573,7 +526,8 @@ IDBFileHandle::WriteOrAppend(const ArrayBuffer& aValue,
 
   aValue.ComputeLengthAndData();
 
-  uint64_t dataLength = aValue.Length();;
+  uint64_t dataLength = aValue.Length();
+  ;
   if (!dataLength) {
     return nullptr;
   }
@@ -581,8 +535,8 @@ IDBFileHandle::WriteOrAppend(const ArrayBuffer& aValue,
   const char* data = reinterpret_cast<const char*>(aValue.Data());
 
   FileRequestStringData stringData;
-  if (NS_WARN_IF(!stringData.string().Assign(data, aValue.Length(),
-                                             fallible_t()))) {
+  if (NS_WARN_IF(
+          !stringData.string().Assign(data, aValue.Length(), fallible_t()))) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
   }
@@ -595,11 +549,8 @@ IDBFileHandle::WriteOrAppend(const ArrayBuffer& aValue,
   return WriteInternal(stringData, dataLength, aAppend, aRv);
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::WriteOrAppend(const ArrayBufferView& aValue,
-                             bool aAppend,
-                             ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::WriteOrAppend(
+    const ArrayBufferView& aValue, bool aAppend, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   // State checking for write or append
@@ -609,7 +560,8 @@ IDBFileHandle::WriteOrAppend(const ArrayBufferView& aValue,
 
   aValue.ComputeLengthAndData();
 
-  uint64_t dataLength = aValue.Length();;
+  uint64_t dataLength = aValue.Length();
+  ;
   if (!dataLength) {
     return nullptr;
   }
@@ -617,8 +569,8 @@ IDBFileHandle::WriteOrAppend(const ArrayBufferView& aValue,
   const char* data = reinterpret_cast<const char*>(aValue.Data());
 
   FileRequestStringData stringData;
-  if (NS_WARN_IF(!stringData.string().Assign(data, aValue.Length(),
-                                             fallible_t()))) {
+  if (NS_WARN_IF(
+          !stringData.string().Assign(data, aValue.Length(), fallible_t()))) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
   }
@@ -631,11 +583,8 @@ IDBFileHandle::WriteOrAppend(const ArrayBufferView& aValue,
   return WriteInternal(stringData, dataLength, aAppend, aRv);
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::WriteOrAppend(Blob& aValue,
-                             bool aAppend,
-                             ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::WriteOrAppend(
+    Blob& aValue, bool aAppend, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   // State checking for write or append
@@ -659,7 +608,7 @@ IDBFileHandle::WriteOrAppend(Blob& aValue,
 
   IPCBlob ipcBlob;
   nsresult rv =
-    IPCBlobUtils::Serialize(aValue.Impl(), backgroundActor, ipcBlob);
+      IPCBlobUtils::Serialize(aValue.Impl(), backgroundActor, ipcBlob);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
@@ -676,12 +625,9 @@ IDBFileHandle::WriteOrAppend(Blob& aValue,
   return WriteInternal(blobData, dataLength, aAppend, aRv);
 }
 
-already_AddRefed<IDBFileRequest>
-IDBFileHandle::WriteInternal(const FileRequestData& aData,
-                             uint64_t aDataLength,
-                             bool aAppend,
-                             ErrorResult& aRv)
-{
+already_AddRefed<IDBFileRequest> IDBFileHandle::WriteInternal(
+    const FileRequestData& aData, uint64_t aDataLength, bool aAppend,
+    ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   DebugOnly<ErrorResult> error;
@@ -702,17 +648,14 @@ IDBFileHandle::WriteInternal(const FileRequestData& aData,
 
   if (aAppend) {
     mLocation = UINT64_MAX;
-  }
-  else {
+  } else {
     mLocation += aDataLength;
   }
 
   return fileRequest.forget();
 }
 
-void
-IDBFileHandle::SendFinish()
-{
+void IDBFileHandle::SendFinish() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mAborted);
   MOZ_ASSERT(IsFinishingOrDone());
@@ -727,9 +670,7 @@ IDBFileHandle::SendFinish()
 #endif
 }
 
-void
-IDBFileHandle::SendAbort()
-{
+void IDBFileHandle::SendAbort() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mAborted);
   MOZ_ASSERT(IsFinishingOrDone());
@@ -764,8 +705,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBFileHandle,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMETHODIMP
-IDBFileHandle::Run()
-{
+IDBFileHandle::Run() {
   AssertIsOnOwningThread();
 
   // We're back at the event loop, no longer newborn.
@@ -781,9 +721,7 @@ IDBFileHandle::Run()
   return NS_OK;
 }
 
-void
-IDBFileHandle::GetEventTargetParent(EventChainPreVisitor& aVisitor)
-{
+void IDBFileHandle::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   AssertIsOnOwningThread();
 
   aVisitor.mCanHandle = true;
@@ -791,13 +729,12 @@ IDBFileHandle::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 }
 
 // virtual
-JSObject*
-IDBFileHandle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* IDBFileHandle::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   AssertIsOnOwningThread();
 
   return IDBFileHandle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

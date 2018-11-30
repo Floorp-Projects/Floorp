@@ -13,9 +13,8 @@
 namespace mozilla {
 
 // Obtains basic version info from a module image's version info resource.
-class ModuleVersionInfo
-{
-public:
+class ModuleVersionInfo {
+ public:
   // We favor English(US) for these fields, otherwise we take the first
   // translation provided in the version resource.
   nsString mCompanyName;
@@ -24,51 +23,38 @@ public:
   nsString mFileDescription;
 
   // Represents an A.B.C.D style version number, internally stored as a uint64_t
-  class VersionNumber
-  {
+  class VersionNumber {
     uint64_t mVersion64 = 0;
-  public:
+
+   public:
     VersionNumber() = default;
 
     VersionNumber(DWORD aMostSig, DWORD aLeastSig)
-      : mVersion64((uint64_t)aMostSig << 32 | aLeastSig)
-    {}
+        : mVersion64((uint64_t)aMostSig << 32 | aLeastSig) {}
 
-    uint16_t A() const
-    {
+    uint16_t A() const {
       return (uint16_t)((mVersion64 & 0xffff000000000000) >> 48);
     }
 
-    uint16_t B() const
-    {
+    uint16_t B() const {
       return (uint16_t)((mVersion64 & 0x0000ffff00000000) >> 32);
     }
 
-    uint16_t C() const
-    {
+    uint16_t C() const {
       return (uint16_t)((mVersion64 & 0x00000000ffff0000) >> 16);
     }
 
-    uint16_t D() const
-    {
-      return (uint16_t)(mVersion64 & 0x000000000000ffff);
-    }
+    uint16_t D() const { return (uint16_t)(mVersion64 & 0x000000000000ffff); }
 
-    uint64_t Version64() const
-    {
-      return mVersion64;
-    }
+    uint64_t Version64() const { return mVersion64; }
 
-    bool operator ==(const VersionNumber& aOther) const
-    {
+    bool operator==(const VersionNumber& aOther) const {
       return mVersion64 == aOther.mVersion64;
     }
 
-    nsCString ToString() const
-    {
+    nsCString ToString() const {
       nsCString ret;
-      ret.AppendPrintf("%d.%d.%d.%d",
-                       (int)A(), (int)B(), (int)C(), (int)D());
+      ret.AppendPrintf("%d.%d.%d.%d", (int)A(), (int)B(), (int)C(), (int)D());
       return ret;
     }
   };
@@ -80,6 +66,6 @@ public:
   bool GetFromImage(const nsAString& aPath);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ModuleVersionInfo_windows_h
+#endif  // mozilla_ModuleVersionInfo_windows_h

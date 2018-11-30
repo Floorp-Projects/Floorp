@@ -22,90 +22,83 @@
 
 class nsAuthSSPI;
 
-class nsDNSService final : public nsPIDNSService
-                         , public nsIObserver
-                         , public nsIMemoryReporter
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSPIDNSSERVICE
-    NS_DECL_NSIDNSSERVICE
-    NS_DECL_NSIOBSERVER
-    NS_DECL_NSIMEMORYREPORTER
+class nsDNSService final : public nsPIDNSService,
+                           public nsIObserver,
+                           public nsIMemoryReporter {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSPIDNSSERVICE
+  NS_DECL_NSIDNSSERVICE
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIMEMORYREPORTER
 
-    nsDNSService();
+  nsDNSService();
 
-    static already_AddRefed<nsIDNSService> GetXPCOMSingleton();
+  static already_AddRefed<nsIDNSService> GetXPCOMSingleton();
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-    bool GetOffline() const;
+  bool GetOffline() const;
 
-protected:
-    friend class nsAuthSSPI;
+ protected:
+  friend class nsAuthSSPI;
 
-    nsresult DeprecatedSyncResolve(const nsACString &aHostname,
-                                   uint32_t flags,
-                                   const mozilla::OriginAttributes &aOriginAttributes,
-                                   nsIDNSRecord **result);
-private:
-    ~nsDNSService();
+  nsresult DeprecatedSyncResolve(
+      const nsACString &aHostname, uint32_t flags,
+      const mozilla::OriginAttributes &aOriginAttributes,
+      nsIDNSRecord **result);
 
-    nsresult ReadPrefs(const char *name);
-    static already_AddRefed<nsDNSService> GetSingleton();
+ private:
+  ~nsDNSService();
 
-    uint16_t GetAFForLookup(const nsACString &host, uint32_t flags);
+  nsresult ReadPrefs(const char *name);
+  static already_AddRefed<nsDNSService> GetSingleton();
 
-    nsresult PreprocessHostname(bool              aLocalDomain,
-                                const nsACString &aInput,
-                                nsIIDNService    *aIDN,
-                                nsACString       &aACE);
+  uint16_t GetAFForLookup(const nsACString &host, uint32_t flags);
 
-    nsresult AsyncResolveInternal(const nsACString        &aHostname,
-                                  uint16_t                 type,
-                                  uint32_t                 flags,
-                                  nsIDNSListener          *aListener,
-                                  nsIEventTarget          *target_,
-                                  const mozilla::OriginAttributes  &aOriginAttributes,
-                                  nsICancelable          **result);
+  nsresult PreprocessHostname(bool aLocalDomain, const nsACString &aInput,
+                              nsIIDNService *aIDN, nsACString &aACE);
 
-    nsresult CancelAsyncResolveInternal(const nsACString       &aHostname,
-                                        uint16_t                aType,
-                                        uint32_t                aFlags,
-                                        nsIDNSListener         *aListener,
-                                        nsresult                aReason,
-                                        const mozilla::OriginAttributes &aOriginAttributes);
+  nsresult AsyncResolveInternal(
+      const nsACString &aHostname, uint16_t type, uint32_t flags,
+      nsIDNSListener *aListener, nsIEventTarget *target_,
+      const mozilla::OriginAttributes &aOriginAttributes,
+      nsICancelable **result);
 
-    nsresult ResolveInternal(const nsACString &aHostname,
-                             uint32_t flags,
-                             const mozilla::OriginAttributes &aOriginAttributes,
-                             nsIDNSRecord **result);
+  nsresult CancelAsyncResolveInternal(
+      const nsACString &aHostname, uint16_t aType, uint32_t aFlags,
+      nsIDNSListener *aListener, nsresult aReason,
+      const mozilla::OriginAttributes &aOriginAttributes);
 
-    RefPtr<nsHostResolver>  mResolver;
-    nsCOMPtr<nsIIDNService>   mIDN;
+  nsresult ResolveInternal(const nsACString &aHostname, uint32_t flags,
+                           const mozilla::OriginAttributes &aOriginAttributes,
+                           nsIDNSRecord **result);
 
-    // mLock protects access to mResolver, mLocalDomains and mIPv4OnlyDomains
-    mozilla::Mutex            mLock;
+  RefPtr<nsHostResolver> mResolver;
+  nsCOMPtr<nsIIDNService> mIDN;
 
-    // mIPv4OnlyDomains is a comma-separated list of domains for which only
-    // IPv4 DNS lookups are performed. This allows the user to disable IPv6 on
-    // a per-domain basis and work around broken DNS servers. See bug 68796.
-    nsCString                                 mIPv4OnlyDomains;
-    nsCString                                 mForceResolve;
-    bool                                      mDisableIPv6;
-    bool                                      mDisablePrefetch;
-    bool                                      mBlockDotOnion;
-    bool                                      mNotifyResolution;
-    bool                                      mOfflineLocalhost;
-    bool                                      mForceResolveOn;
-    uint32_t                                  mProxyType;
-    nsTHashtable<nsCStringHashKey>            mLocalDomains;
-    RefPtr<mozilla::net::TRRService>          mTrrService;
+  // mLock protects access to mResolver, mLocalDomains and mIPv4OnlyDomains
+  mozilla::Mutex mLock;
 
-    uint32_t                                  mResCacheEntries;
-    uint32_t                                  mResCacheExpiration;
-    uint32_t                                  mResCacheGrace;
-    bool                                      mResolverPrefsUpdated;
+  // mIPv4OnlyDomains is a comma-separated list of domains for which only
+  // IPv4 DNS lookups are performed. This allows the user to disable IPv6 on
+  // a per-domain basis and work around broken DNS servers. See bug 68796.
+  nsCString mIPv4OnlyDomains;
+  nsCString mForceResolve;
+  bool mDisableIPv6;
+  bool mDisablePrefetch;
+  bool mBlockDotOnion;
+  bool mNotifyResolution;
+  bool mOfflineLocalhost;
+  bool mForceResolveOn;
+  uint32_t mProxyType;
+  nsTHashtable<nsCStringHashKey> mLocalDomains;
+  RefPtr<mozilla::net::TRRService> mTrrService;
+
+  uint32_t mResCacheEntries;
+  uint32_t mResCacheExpiration;
+  uint32_t mResCacheGrace;
+  bool mResolverPrefsUpdated;
 };
 
-#endif //nsDNSService2_h__
+#endif  // nsDNSService2_h__

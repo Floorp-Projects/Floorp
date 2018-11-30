@@ -10,7 +10,8 @@
 #include <stdint.h>
 #include <vector>
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // Signed integer sufficient to store the numeric ID of CT log operators
 // as assigned at https://www.certificate-transparency.org/known-logs .
@@ -22,8 +23,7 @@ typedef std::vector<CTLogOperatorId> CTLogOperatorList;
 
 // Current status of a CT log in regard to its inclusion in the
 // Known Logs List such as https://www.certificate-transparency.org/known-logs
-enum class CTLogStatus
-{
+enum class CTLogStatus {
   // Status unknown or unavailable.
   Unknown,
   // Included in the list of known logs.
@@ -32,6 +32,7 @@ enum class CTLogStatus
   Disqualified,
 };
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
-#endif // CTLog_h
+#endif  // CTLog_h

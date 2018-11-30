@@ -9,67 +9,69 @@
 #include "nsIHttpChannel.h"
 #include "nsUnicharUtils.h"
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
 enum ReferrerPolicy {
   /* spec tokens: never no-referrer */
-  RP_No_Referrer                 = nsIHttpChannel::REFERRER_POLICY_NO_REFERRER,
+  RP_No_Referrer = nsIHttpChannel::REFERRER_POLICY_NO_REFERRER,
 
   /* spec tokens: origin */
-  RP_Origin                      = nsIHttpChannel::REFERRER_POLICY_ORIGIN,
+  RP_Origin = nsIHttpChannel::REFERRER_POLICY_ORIGIN,
 
   /* spec tokens: default no-referrer-when-downgrade */
-  RP_No_Referrer_When_Downgrade  = nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+  RP_No_Referrer_When_Downgrade =
+      nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
 
   /* spec tokens: origin-when-cross-origin */
-  RP_Origin_When_Crossorigin     = nsIHttpChannel::REFERRER_POLICY_ORIGIN_WHEN_XORIGIN,
+  RP_Origin_When_Crossorigin =
+      nsIHttpChannel::REFERRER_POLICY_ORIGIN_WHEN_XORIGIN,
 
   /* spec tokens: always unsafe-url */
-  RP_Unsafe_URL                  = nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL,
+  RP_Unsafe_URL = nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL,
 
   /* spec tokens: same-origin */
-  RP_Same_Origin                = nsIHttpChannel::REFERRER_POLICY_SAME_ORIGIN,
+  RP_Same_Origin = nsIHttpChannel::REFERRER_POLICY_SAME_ORIGIN,
 
   /* spec tokens: strict-origin */
-  RP_Strict_Origin               = nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN,
+  RP_Strict_Origin = nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN,
 
   /* spec tokens: strict-origin-when-cross-origin */
-  RP_Strict_Origin_When_Cross_Origin = nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN,
+  RP_Strict_Origin_When_Cross_Origin =
+      nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN,
 
   /* spec tokens: empty string */
   /* The empty string "" corresponds to no referrer policy, or unset policy */
-  RP_Unset                       = nsIHttpChannel::REFERRER_POLICY_UNSET,
+  RP_Unset = nsIHttpChannel::REFERRER_POLICY_UNSET,
 };
 
 // Referrer Policy spec tokens. Order matters here, make sure it matches the
 // order as in nsIHttpChannel.idl
 static const char* kReferrerPolicyString[] = {
-  "",                               // REFERRER_POLICY_UNSET
-  "no-referrer-when-downgrade",     // REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE
-  "no-referrer",                    // REFERRER_POLICY_NO_REFERRER
-  "origin",                         // REFERRER_POLICY_ORIGIN
-  "origin-when-cross-origin",       // REFERRER_POLICY_ORIGIN_WHEN_XORIGIN
-  "unsafe-url",                     // REFERRER_POLICY_UNSAFE_URL
-  "same-origin",                    // REFERRER_POLICY_SAME_ORIGIN
-  "strict-origin",                  // REFERRER_POLICY_STRICT_ORIGIN
-  "strict-origin-when-cross-origin" // REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN
+    "",                            // REFERRER_POLICY_UNSET
+    "no-referrer-when-downgrade",  // REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE
+    "no-referrer",                 // REFERRER_POLICY_NO_REFERRER
+    "origin",                      // REFERRER_POLICY_ORIGIN
+    "origin-when-cross-origin",    // REFERRER_POLICY_ORIGIN_WHEN_XORIGIN
+    "unsafe-url",                  // REFERRER_POLICY_UNSAFE_URL
+    "same-origin",                 // REFERRER_POLICY_SAME_ORIGIN
+    "strict-origin",               // REFERRER_POLICY_STRICT_ORIGIN
+    "strict-origin-when-cross-origin"  // REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN
 };
 
 /* spec tokens: never */
-const char kRPS_Never[]                       = "never";
+const char kRPS_Never[] = "never";
 
 /* spec tokens: default */
-const char kRPS_Default[]                     = "default";
+const char kRPS_Default[] = "default";
 
 /* spec tokens: origin-when-crossorigin */
-const char kRPS_Origin_When_Crossorigin[]     = "origin-when-crossorigin";
+const char kRPS_Origin_When_Crossorigin[] = "origin-when-crossorigin";
 
 /* spec tokens: always */
-const char kRPS_Always[]                      = "always";
+const char kRPS_Always[] = "always";
 
-inline ReferrerPolicy
-ReferrerPolicyFromString(const nsAString& content)
-{
+inline ReferrerPolicy ReferrerPolicyFromString(const nsAString& content) {
   if (content.IsEmpty()) {
     return RP_No_Referrer;
   }
@@ -80,7 +82,7 @@ ReferrerPolicyFromString(const nsAString& content)
   // specification, section "Determine token's Policy".
 
   uint16_t numStr =
-    (sizeof(kReferrerPolicyString) / sizeof(kReferrerPolicyString[0]));
+      (sizeof(kReferrerPolicyString) / sizeof(kReferrerPolicyString[0]));
   for (uint16_t i = 0; i < numStr; i++) {
     if (lowerContent.EqualsASCII(kReferrerPolicyString[i])) {
       return static_cast<ReferrerPolicy>(i);
@@ -101,14 +103,14 @@ ReferrerPolicyFromString(const nsAString& content)
   }
   // Spec says if none of the previous match, use empty string.
   return RP_Unset;
-
 }
 
-inline ReferrerPolicy
-AttributeReferrerPolicyFromString(const nsAString& content)
-{
-  // Specs : https://html.spec.whatwg.org/multipage/infrastructure.html#referrer-policy-attribute
-  // Spec says the empty string "" corresponds to no referrer policy, or RP_Unset
+inline ReferrerPolicy AttributeReferrerPolicyFromString(
+    const nsAString& content) {
+  // Specs :
+  // https://html.spec.whatwg.org/multipage/infrastructure.html#referrer-policy-attribute
+  // Spec says the empty string "" corresponds to no referrer policy, or
+  // RP_Unset
   if (content.IsEmpty()) {
     return RP_Unset;
   }
@@ -117,7 +119,7 @@ AttributeReferrerPolicyFromString(const nsAString& content)
   ToLowerCase(lowerContent);
 
   uint16_t numStr =
-    (sizeof(kReferrerPolicyString) / sizeof(kReferrerPolicyString[0]));
+      (sizeof(kReferrerPolicyString) / sizeof(kReferrerPolicyString[0]));
   for (uint16_t i = 0; i < numStr; i++) {
     if (lowerContent.EqualsASCII(kReferrerPolicyString[i])) {
       return static_cast<ReferrerPolicy>(i);
@@ -129,13 +131,11 @@ AttributeReferrerPolicyFromString(const nsAString& content)
   return RP_Unset;
 }
 
-inline const char*
-ReferrerPolicyToString(ReferrerPolicy aPolicy)
-{
+inline const char* ReferrerPolicyToString(ReferrerPolicy aPolicy) {
   return kReferrerPolicyString[static_cast<uint32_t>(aPolicy)];
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

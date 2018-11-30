@@ -18,31 +18,24 @@ extern "C" {
 #include "signaling/src/sdp/sipcc/sdp.h"
 }
 
-namespace mozilla
-{
+namespace mozilla {
 
 class SipccSdp;
 class SdpErrorHolder;
 
-class SipccSdpBandwidths final : public std::map<std::string, uint32_t>
-{
-public:
+class SipccSdpBandwidths final : public std::map<std::string, uint32_t> {
+ public:
   bool Load(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   void Serialize(std::ostream& os) const;
 };
 
-class SipccSdpMediaSection final : public SdpMediaSection
-{
+class SipccSdpMediaSection final : public SdpMediaSection {
   friend class SipccSdp;
 
-public:
+ public:
   ~SipccSdpMediaSection() {}
 
-  virtual MediaType
-  GetMediaType() const override
-  {
-    return mMediaType;
-  }
+  virtual MediaType GetMediaType() const override { return mMediaType; }
 
   virtual unsigned int GetPort() const override;
   virtual void SetPort(unsigned int port) override;
@@ -66,16 +59,14 @@ public:
 
   virtual void Serialize(std::ostream&) const override;
 
-private:
+ private:
   SipccSdpMediaSection(size_t level, const SipccSdpAttributeList* sessionLevel)
       : SdpMediaSection(level),
         mMediaType(static_cast<MediaType>(0)),
         mPort(0),
         mPortCount(0),
         mProtocol(static_cast<Protocol>(0)),
-        mAttributeList(sessionLevel)
-  {
-  }
+        mAttributeList(sessionLevel) {}
 
   bool Load(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   bool LoadConnection(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
@@ -84,10 +75,8 @@ private:
   bool ValidateSimulcast(sdp_t* sdp, uint16_t level,
                          SdpErrorHolder& errorHolder) const;
   bool ValidateSimulcastVersions(
-      sdp_t* sdp,
-      uint16_t level,
-      const SdpSimulcastAttribute::Versions& versions,
-      sdp::Direction direction,
+      sdp_t* sdp, uint16_t level,
+      const SdpSimulcastAttribute::Versions& versions, sdp::Direction direction,
       SdpErrorHolder& errorHolder) const;
 
   // the following values are cached on first get
@@ -102,6 +91,6 @@ private:
 
   SipccSdpAttributeList mAttributeList;
 };
-}
+}  // namespace mozilla
 
 #endif

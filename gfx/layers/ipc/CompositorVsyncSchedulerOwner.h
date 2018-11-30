@@ -11,20 +11,20 @@ namespace mozilla {
 
 namespace gfx {
 class DrawTarget;
-} // namespace gfx
+}  // namespace gfx
 
 namespace layers {
 
-class CompositorVsyncSchedulerOwner
-{
-public:
+class CompositorVsyncSchedulerOwner {
+ public:
   virtual bool IsPendingComposite() = 0;
   virtual void FinishPendingComposite() = 0;
-  virtual void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) = 0;
+  virtual void CompositeToTarget(gfx::DrawTarget* aTarget,
+                                 const gfx::IntRect* aRect = nullptr) = 0;
   virtual TimeDuration GetVsyncInterval() const = 0;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_CompositorVsyncSchedulerOwner_h
+#endif  // mozilla_layers_CompositorVsyncSchedulerOwner_h

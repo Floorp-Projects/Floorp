@@ -19,15 +19,13 @@ class nsChangeObserver;
 class nsIWidget;
 class nsIContent;
 
-class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver
-{
-public:
+class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
+ public:
   nsMenuGroupOwnerX();
 
   nsresult Create(mozilla::dom::Element* aContent);
 
-  void RegisterForContentChanges(nsIContent* aContent,
-                                 nsChangeObserver* aMenuObject);
+  void RegisterForContentChanges(nsIContent* aContent, nsChangeObserver* aMenuObject);
   void UnregisterForContentChanges(nsIContent* aContent);
   uint32_t RegisterForCommand(nsMenuItemX* aItem);
   void UnregisterCommand(uint32_t aCommandID);
@@ -37,19 +35,19 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER
 
-protected:
+ protected:
   virtual ~nsMenuGroupOwnerX();
 
   nsChangeObserver* LookupContentChangeObserver(nsIContent* aContent);
 
-  uint32_t  mCurrentCommandID;  // unique command id (per menu-bar) to
-                                // give to next item that asks
+  uint32_t mCurrentCommandID;  // unique command id (per menu-bar) to
+                               // give to next item that asks
 
   // stores observers for content change notification
-  nsDataHashtable<nsPtrHashKey<nsIContent>, nsChangeObserver *> mContentToObserverTable;
+  nsDataHashtable<nsPtrHashKey<nsIContent>, nsChangeObserver*> mContentToObserverTable;
 
   // stores mapping of command IDs to menu objects
-  nsDataHashtable<nsUint32HashKey, nsMenuItemX *> mCommandToMenuObjectTable;
+  nsDataHashtable<nsUint32HashKey, nsMenuItemX*> mCommandToMenuObjectTable;
 
   // Stores references to all the MenuItemInfo objects created with weak
   // references to us.  They may live longer than we do, so when we're
@@ -58,4 +56,4 @@ protected:
   NSMutableSet* mInfoSet;
 };
 
-#endif // nsMenuGroupOwner_h_
+#endif  // nsMenuGroupOwner_h_

@@ -75,7 +75,7 @@ enum StructuredCloneTags {
   SCTAG_DOM_STRUCTURED_CLONE_TESTER
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // StructuredCloneTags_h__
+#endif  // StructuredCloneTags_h__

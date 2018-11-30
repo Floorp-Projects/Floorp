@@ -15,40 +15,35 @@ namespace dom {
 class ClientHandle;
 class ClientInfo;
 
-template <typename ActorType> class ClientThing;
+template <typename ActorType>
+class ClientThing;
 
-class ClientHandleChild final : public PClientHandleChild
-{
+class ClientHandleChild final : public PClientHandleChild {
   ClientHandle* mHandle;
   bool mTeardownStarted;
 
   // PClientHandleChild interface
-  mozilla::ipc::IPCResult
-  RecvExecutionReady(const IPCClientInfo& aClientInfo) override;
+  mozilla::ipc::IPCResult RecvExecutionReady(
+      const IPCClientInfo& aClientInfo) override;
 
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-  PClientHandleOpChild*
-  AllocPClientHandleOpChild(const ClientOpConstructorArgs& aArgs) override;
+  PClientHandleOpChild* AllocPClientHandleOpChild(
+      const ClientOpConstructorArgs& aArgs) override;
 
-  bool
-  DeallocPClientHandleOpChild(PClientHandleOpChild* aActor) override;
+  bool DeallocPClientHandleOpChild(PClientHandleOpChild* aActor) override;
 
-public:
+ public:
   ClientHandleChild();
 
-  void
-  SetOwner(ClientThing<ClientHandleChild>* aThing);
+  void SetOwner(ClientThing<ClientHandleChild>* aThing);
 
-  void
-  RevokeOwner(ClientThing<ClientHandleChild>* aThing);
+  void RevokeOwner(ClientThing<ClientHandleChild>* aThing);
 
-  void
-  MaybeStartTeardown();
+  void MaybeStartTeardown();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientHandleChild_h
+#endif  // _mozilla_dom_ClientHandleChild_h

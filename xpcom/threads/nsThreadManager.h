@@ -13,9 +13,8 @@
 
 class nsIRunnable;
 
-class nsThreadManager : public nsIThreadManager
-{
-public:
+class nsThreadManager : public nsIThreadManager {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITHREADMANAGER
 
@@ -60,43 +59,35 @@ public:
 
   // This needs to be public in order to support static instantiation of this
   // class with older compilers (e.g., egcs-2.91.66).
-  ~nsThreadManager()
-  {
-  }
+  ~nsThreadManager() {}
 
   void EnableMainThreadEventPrioritization();
   void FlushInputEventPrioritization();
   void SuspendInputEventPrioritization();
   void ResumeInputEventPrioritization();
 
-private:
+ private:
   nsThreadManager()
-    : mCurThreadIndex(0)
-    , mMainPRThread(nullptr)
-    , mInitialized(false)
-  {
-  }
+      : mCurThreadIndex(0), mMainPRThread(nullptr), mInitialized(false) {}
 
-  nsresult
-  SpinEventLoopUntilInternal(nsINestedEventLoopCondition* aCondition,
-                             bool aCheckingShutdown);
+  nsresult SpinEventLoopUntilInternal(nsINestedEventLoopCondition* aCondition,
+                                      bool aCheckingShutdown);
 
   static void ReleaseThread(void* aData);
 
-  unsigned            mCurThreadIndex;  // thread-local-storage index
-  RefPtr<nsThread>  mMainThread;
-  PRThread*         mMainPRThread;
-  mozilla::Atomic<bool,
-                  mozilla::SequentiallyConsistent,
-                  mozilla::recordreplay::Behavior::DontPreserve> mInitialized;
+  unsigned mCurThreadIndex;  // thread-local-storage index
+  RefPtr<nsThread> mMainThread;
+  PRThread* mMainPRThread;
+  mozilla::Atomic<bool, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      mInitialized;
 };
 
-#define NS_THREADMANAGER_CID                       \
-{ /* 7a4204c6-e45a-4c37-8ebb-6709a22c917c */       \
-  0x7a4204c6,                                      \
-  0xe45a,                                          \
-  0x4c37,                                          \
-  {0x8e, 0xbb, 0x67, 0x09, 0xa2, 0x2c, 0x91, 0x7c} \
-}
+#define NS_THREADMANAGER_CID                         \
+  { /* 7a4204c6-e45a-4c37-8ebb-6709a22c917c */       \
+    0x7a4204c6, 0xe45a, 0x4c37, {                    \
+      0x8e, 0xbb, 0x67, 0x09, 0xa2, 0x2c, 0x91, 0x7c \
+    }                                                \
+  }
 
 #endif  // nsThreadManager_h__

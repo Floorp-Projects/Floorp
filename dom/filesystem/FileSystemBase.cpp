@@ -12,33 +12,21 @@
 namespace mozilla {
 namespace dom {
 
-FileSystemBase::FileSystemBase()
-  : mShutdown(false)
-{
-}
+FileSystemBase::FileSystemBase() : mShutdown(false) {}
 
-FileSystemBase::~FileSystemBase()
-{
-  AssertIsOnOwningThread();
-}
+FileSystemBase::~FileSystemBase() { AssertIsOnOwningThread(); }
 
-void
-FileSystemBase::Shutdown()
-{
+void FileSystemBase::Shutdown() {
   AssertIsOnOwningThread();
   mShutdown = true;
 }
 
-nsISupports*
-FileSystemBase::GetParentObject() const
-{
+nsISupports* FileSystemBase::GetParentObject() const {
   AssertIsOnOwningThread();
   return nullptr;
 }
 
-bool
-FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
-{
+bool FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFile, "aFile Should not be null.");
   MOZ_ASSERT(aPath);
@@ -60,24 +48,18 @@ FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
   return true;
 }
 
-bool
-FileSystemBase::IsSafeFile(nsIFile* aFile) const
-{
+bool FileSystemBase::IsSafeFile(nsIFile* aFile) const {
   AssertIsOnOwningThread();
   return false;
 }
 
-bool
-FileSystemBase::IsSafeDirectory(Directory* aDir) const
-{
+bool FileSystemBase::IsSafeDirectory(Directory* aDir) const {
   AssertIsOnOwningThread();
   return false;
 }
 
-void
-FileSystemBase::GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
-                                 ErrorResult& aRv) const
-{
+void FileSystemBase::GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
+                                      ErrorResult& aRv) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFile);
 
@@ -85,11 +67,8 @@ FileSystemBase::GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
   NS_WARNING_ASSERTION(!aRv.Failed(), "GetLeafName failed");
 }
 
-void
-FileSystemBase::GetDOMPath(nsIFile* aFile,
-                           nsAString& aRetval,
-                           ErrorResult& aRv) const
-{
+void FileSystemBase::GetDOMPath(nsIFile* aFile, nsAString& aRetval,
+                                ErrorResult& aRv) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFile);
 
@@ -155,11 +134,9 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
   }
 }
 
-void
-FileSystemBase::AssertIsOnOwningThread() const
-{
+void FileSystemBase::AssertIsOnOwningThread() const {
   NS_ASSERT_OWNINGTHREAD(FileSystemBase);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

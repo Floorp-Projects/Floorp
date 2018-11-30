@@ -11,23 +11,19 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(NullHttpChannel, nsINullChannel,
-                  nsIHttpChannel, nsITimedChannel)
+NS_IMPL_ISUPPORTS(NullHttpChannel, nsINullChannel, nsIHttpChannel,
+                  nsITimedChannel)
 
 NullHttpChannel::NullHttpChannel()
-  : mAllRedirectsSameOrigin(false)
-  , mAllRedirectsPassTimingAllowCheck(false)
-{
+    : mAllRedirectsSameOrigin(false), mAllRedirectsPassTimingAllowCheck(false) {
   mChannelCreationTime = PR_Now();
   mChannelCreationTimestamp = TimeStamp::Now();
   mAsyncOpenTime = TimeStamp::Now();
 }
 
-NullHttpChannel::NullHttpChannel(nsIHttpChannel * chan)
-  : mAllRedirectsSameOrigin(false)
-  , mAllRedirectsPassTimingAllowCheck(false)
-{
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+NullHttpChannel::NullHttpChannel(nsIHttpChannel *chan)
+    : mAllRedirectsSameOrigin(false), mAllRedirectsPassTimingAllowCheck(false) {
+  nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
   ssm->GetChannelURIPrincipal(chan, getter_AddRefs(mResourcePrincipal));
 
   Unused << chan->GetResponseHeader(NS_LITERAL_CSTRING("Timing-Allow-Origin"),
@@ -45,13 +41,9 @@ NullHttpChannel::NullHttpChannel(nsIHttpChannel * chan)
   }
 }
 
-nsresult
-NullHttpChannel::Init(nsIURI *aURI,
-                      uint32_t aCaps,
-                      nsProxyInfo *aProxyInfo,
-                      uint32_t aProxyResolveFlags,
-                      nsIURI *aProxyURI)
-{
+nsresult NullHttpChannel::Init(nsIURI *aURI, uint32_t aCaps,
+                               nsProxyInfo *aProxyInfo,
+                               uint32_t aProxyResolveFlags, nsIURI *aProxyURI) {
   mURI = aURI;
   mOriginalURI = aURI;
   return NS_OK;
@@ -62,275 +54,234 @@ NullHttpChannel::Init(nsIURI *aURI,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-NullHttpChannel::GetChannelId(uint64_t *aChannelId)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::SetChannelId(uint64_t aChannelId)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetTopLevelContentWindowId(uint64_t *aWindowId)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::SetTopLevelContentWindowId(uint64_t aWindowId)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetTopLevelOuterContentWindowId(uint64_t *aWindowId)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::SetTopLevelOuterContentWindowId(uint64_t aWindowId)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetIsTrackingResource(bool* aIsTrackingResource)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetIsThirdPartyTrackingResource(bool* aIsTrackingResource)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::OverrideTrackingFlagsForDocumentCookieAccessor(nsIHttpChannel* aDocumentChannel)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetTransferSize(uint64_t *aTransferSize)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetDecodedBodySize(uint64_t *aDecodedBodySize)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetRequestMethod(nsACString & aRequestMethod)
-{
+NullHttpChannel::GetChannelId(uint64_t *aChannelId) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetRequestMethod(const nsACString & aRequestMethod)
-{
+NullHttpChannel::SetChannelId(uint64_t aChannelId) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetReferrer(nsIURI * *aReferrer)
-{
+NullHttpChannel::GetTopLevelContentWindowId(uint64_t *aWindowId) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetReferrer(nsIURI *aReferrer)
-{
+NullHttpChannel::SetTopLevelContentWindowId(uint64_t aWindowId) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetReferrerPolicy(uint32_t *aReferrerPolicy)
-{
+NullHttpChannel::GetTopLevelOuterContentWindowId(uint64_t *aWindowId) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetReferrerWithPolicy(nsIURI *referrer, uint32_t referrerPolicy)
-{
+NullHttpChannel::SetTopLevelOuterContentWindowId(uint64_t aWindowId) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRequestHeader(const nsACString & aHeader, nsACString & _retval)
-{
+NullHttpChannel::GetIsTrackingResource(bool *aIsTrackingResource) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetIsThirdPartyTrackingResource(bool *aIsTrackingResource) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::OverrideTrackingFlagsForDocumentCookieAccessor(
+    nsIHttpChannel *aDocumentChannel) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetTransferSize(uint64_t *aTransferSize) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetDecodedBodySize(uint64_t *aDecodedBodySize) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetRequestMethod(nsACString &aRequestMethod) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetRequestMethod(const nsACString &aRequestMethod) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetReferrer(nsIURI **aReferrer) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetReferrer(nsIURI *aReferrer) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetReferrerPolicy(uint32_t *aReferrerPolicy) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetReferrerWithPolicy(nsIURI *referrer,
+                                       uint32_t referrerPolicy) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetRequestHeader(const nsACString &aHeader,
+                                  nsACString &_retval) {
   _retval.Truncate();
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetRequestHeader(const nsACString & aHeader, const nsACString & aValue, bool aMerge)
-{
+NullHttpChannel::SetRequestHeader(const nsACString &aHeader,
+                                  const nsACString &aValue, bool aMerge) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetEmptyRequestHeader(const nsACString & aHeader)
-{
+NullHttpChannel::SetEmptyRequestHeader(const nsACString &aHeader) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor)
-{
+NullHttpChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::VisitNonDefaultRequestHeaders(nsIHttpHeaderVisitor *aVisitor)
-{
+NullHttpChannel::VisitNonDefaultRequestHeaders(nsIHttpHeaderVisitor *aVisitor) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetAllowPipelining(bool *aAllowPipelining)
-{
+NullHttpChannel::GetAllowPipelining(bool *aAllowPipelining) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetAllowPipelining(bool aAllowPipelining)
-{
+NullHttpChannel::SetAllowPipelining(bool aAllowPipelining) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetAllowSTS(bool *aAllowSTS)
-{
+NullHttpChannel::GetAllowSTS(bool *aAllowSTS) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetAllowSTS(bool aAllowSTS)
-{
+NullHttpChannel::SetAllowSTS(bool aAllowSTS) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRedirectionLimit(uint32_t *aRedirectionLimit)
-{
+NullHttpChannel::GetRedirectionLimit(uint32_t *aRedirectionLimit) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetRedirectionLimit(uint32_t aRedirectionLimit)
-{
+NullHttpChannel::SetRedirectionLimit(uint32_t aRedirectionLimit) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetResponseStatus(uint32_t *aResponseStatus)
-{
+NullHttpChannel::GetResponseStatus(uint32_t *aResponseStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetResponseStatusText(nsACString & aResponseStatusText)
-{
+NullHttpChannel::GetResponseStatusText(nsACString &aResponseStatusText) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRequestSucceeded(bool *aRequestSucceeded)
-{
+NullHttpChannel::GetRequestSucceeded(bool *aRequestSucceeded) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetResponseHeader(const nsACString & header, nsACString & _retval)
-{
+NullHttpChannel::GetResponseHeader(const nsACString &header,
+                                   nsACString &_retval) {
   _retval.Truncate();
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetResponseHeader(const nsACString & header, const nsACString & value, bool merge)
-{
+NullHttpChannel::SetResponseHeader(const nsACString &header,
+                                   const nsACString &value, bool merge) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
-{
+NullHttpChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetOriginalResponseHeader(const nsACString & header,
-                                            nsIHttpHeaderVisitor *aVisitor)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::VisitOriginalResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::IsNoStoreResponse(bool *_retval)
-{
+NullHttpChannel::GetOriginalResponseHeader(const nsACString &header,
+                                           nsIHttpHeaderVisitor *aVisitor) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::IsNoCacheResponse(bool *_retval)
-{
+NullHttpChannel::VisitOriginalResponseHeaders(nsIHttpHeaderVisitor *aVisitor) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::IsPrivateResponse(bool *_retval)
-{
+NullHttpChannel::IsNoStoreResponse(bool *_retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::RedirectTo(nsIURI *aNewURI)
-{
+NullHttpChannel::IsNoCacheResponse(bool *_retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::UpgradeToSecure()
-{
+NullHttpChannel::IsPrivateResponse(bool *_retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRequestContextID(uint64_t *_retval)
-{
+NullHttpChannel::RedirectTo(nsIURI *aNewURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetRequestContextID(uint64_t rcID)
-{
+NullHttpChannel::UpgradeToSecure() { return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+NullHttpChannel::GetRequestContextID(uint64_t *_retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetProtocolVersion(nsACString& aProtocolVersion)
-{
+NullHttpChannel::SetRequestContextID(uint64_t rcID) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetEncodedBodySize(uint64_t *aEncodedBodySize)
-{
+NullHttpChannel::GetProtocolVersion(nsACString &aProtocolVersion) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetEncodedBodySize(uint64_t *aEncodedBodySize) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -339,161 +290,144 @@ NullHttpChannel::GetEncodedBodySize(uint64_t *aEncodedBodySize)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-NullHttpChannel::GetOriginalURI(nsIURI * *aOriginalURI)
-{
+NullHttpChannel::GetOriginalURI(nsIURI **aOriginalURI) {
   NS_IF_ADDREF(*aOriginalURI = mOriginalURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetOriginalURI(nsIURI *aOriginalURI)
-{
+NullHttpChannel::SetOriginalURI(nsIURI *aOriginalURI) {
   mOriginalURI = aOriginalURI;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetURI(nsIURI * *aURI)
-{
+NullHttpChannel::GetURI(nsIURI **aURI) {
   NS_IF_ADDREF(*aURI = mURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetOwner(nsISupports * *aOwner)
-{
+NullHttpChannel::GetOwner(nsISupports **aOwner) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetOwner(nsISupports *aOwner)
-{
+NullHttpChannel::SetOwner(nsISupports *aOwner) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks)
-{
+NullHttpChannel::GetNotificationCallbacks(
+    nsIInterfaceRequestor **aNotificationCallbacks) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aNotificationCallbacks)
-{
+NullHttpChannel::SetNotificationCallbacks(
+    nsIInterfaceRequestor *aNotificationCallbacks) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
-{
+NullHttpChannel::GetSecurityInfo(nsISupports **aSecurityInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetContentType(nsACString & aContentType)
-{
+NullHttpChannel::GetContentType(nsACString &aContentType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetContentType(const nsACString & aContentType)
-{
+NullHttpChannel::SetContentType(const nsACString &aContentType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetContentCharset(nsACString & aContentCharset)
-{
+NullHttpChannel::GetContentCharset(nsACString &aContentCharset) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetContentCharset(const nsACString & aContentCharset)
-{
+NullHttpChannel::SetContentCharset(const nsACString &aContentCharset) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetContentLength(int64_t *aContentLength)
-{
+NullHttpChannel::GetContentLength(int64_t *aContentLength) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetContentLength(int64_t aContentLength)
-{
+NullHttpChannel::SetContentLength(int64_t aContentLength) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::Open(nsIInputStream * *_retval)
-{
+NullHttpChannel::Open(nsIInputStream **_retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::Open2(nsIInputStream** aStream)
-{
+NullHttpChannel::Open2(nsIInputStream **aStream) {
   nsCOMPtr<nsIStreamListener> listener;
-  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
   return Open(aStream);
 }
 
 NS_IMETHODIMP
-NullHttpChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
-{
+NullHttpChannel::AsyncOpen(nsIStreamListener *aListener,
+                           nsISupports *aContext) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::AsyncOpen2(nsIStreamListener *aListener)
-{
+NullHttpChannel::AsyncOpen2(nsIStreamListener *aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
   return AsyncOpen(listener, nullptr);
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetContentDisposition(uint32_t *aContentDisposition)
-{
+NullHttpChannel::GetContentDisposition(uint32_t *aContentDisposition) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetContentDisposition(uint32_t aContentDisposition)
-{
+NullHttpChannel::SetContentDisposition(uint32_t aContentDisposition) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetContentDispositionFilename(nsAString & aContentDispositionFilename)
-{
+NullHttpChannel::GetContentDispositionFilename(
+    nsAString &aContentDispositionFilename) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetContentDispositionFilename(const nsAString & aContentDispositionFilename)
-{
+NullHttpChannel::SetContentDispositionFilename(
+    const nsAString &aContentDispositionFilename) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetContentDispositionHeader(nsACString & aContentDispositionHeader)
-{
+NullHttpChannel::GetContentDispositionHeader(
+    nsACString &aContentDispositionHeader) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetLoadInfo(nsILoadInfo * *aLoadInfo)
-{
+NullHttpChannel::GetLoadInfo(nsILoadInfo **aLoadInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetLoadInfo(nsILoadInfo *aLoadInfo)
-{
+NullHttpChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -502,68 +436,47 @@ NullHttpChannel::SetLoadInfo(nsILoadInfo *aLoadInfo)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-NullHttpChannel::GetName(nsACString & aName)
-{
+NullHttpChannel::GetName(nsACString &aName) { return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+NullHttpChannel::IsPending(bool *_retval) { return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+NullHttpChannel::GetStatus(nsresult *aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::IsPending(bool *_retval)
-{
+NullHttpChannel::Cancel(nsresult aStatus) { return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+NullHttpChannel::Suspend() { return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+NullHttpChannel::Resume() { return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+NullHttpChannel::GetLoadGroup(nsILoadGroup **aLoadGroup) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetStatus(nsresult *aStatus)
-{
+NullHttpChannel::SetLoadGroup(nsILoadGroup *aLoadGroup) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::Cancel(nsresult aStatus)
-{
+NullHttpChannel::GetLoadFlags(nsLoadFlags *aLoadFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::Suspend()
-{
+NullHttpChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::Resume()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::GetIsDocument(bool *aIsDocument)
-{
+NullHttpChannel::GetIsDocument(bool *aIsDocument) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -572,46 +485,39 @@ NullHttpChannel::GetIsDocument(bool *aIsDocument)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-NullHttpChannel::GetTimingEnabled(bool *aTimingEnabled)
-{
+NullHttpChannel::GetTimingEnabled(bool *aTimingEnabled) {
   // We don't want to report timing for null channels.
   *aTimingEnabled = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetTimingEnabled(bool aTimingEnabled)
-{
+NullHttpChannel::SetTimingEnabled(bool aTimingEnabled) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRedirectCount(uint8_t *aRedirectCount)
-{
+NullHttpChannel::GetRedirectCount(uint8_t *aRedirectCount) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetRedirectCount(uint8_t aRedirectCount)
-{
+NullHttpChannel::SetRedirectCount(uint8_t aRedirectCount) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetInternalRedirectCount(uint8_t *aRedirectCount)
-{
+NullHttpChannel::GetInternalRedirectCount(uint8_t *aRedirectCount) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetInternalRedirectCount(uint8_t aRedirectCount)
-{
+NullHttpChannel::SetInternalRedirectCount(uint8_t aRedirectCount) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetChannelCreation(mozilla::TimeStamp *aChannelCreation)
-{
+NullHttpChannel::GetChannelCreation(mozilla::TimeStamp *aChannelCreation) {
   *aChannelCreation = mChannelCreationTimestamp;
   return NS_OK;
 }
@@ -626,8 +532,7 @@ NullHttpChannel::SetChannelCreation(TimeStamp aValue) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetAsyncOpen(mozilla::TimeStamp *aAsyncOpen)
-{
+NullHttpChannel::GetAsyncOpen(mozilla::TimeStamp *aAsyncOpen) {
   *aAsyncOpen = mAsyncOpenTime;
   return NS_OK;
 }
@@ -640,221 +545,192 @@ NullHttpChannel::SetAsyncOpen(TimeStamp aValue) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetLaunchServiceWorkerStart(mozilla::TimeStamp *_retval)
-{
+NullHttpChannel::GetLaunchServiceWorkerStart(mozilla::TimeStamp *_retval) {
   MOZ_ASSERT(_retval);
   *_retval = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetLaunchServiceWorkerStart(mozilla::TimeStamp aTimeStamp)
-{
+NullHttpChannel::SetLaunchServiceWorkerStart(mozilla::TimeStamp aTimeStamp) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetLaunchServiceWorkerEnd(mozilla::TimeStamp *_retval)
-{
+NullHttpChannel::GetLaunchServiceWorkerEnd(mozilla::TimeStamp *_retval) {
   MOZ_ASSERT(_retval);
   *_retval = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetLaunchServiceWorkerEnd(mozilla::TimeStamp aTimeStamp)
-{
+NullHttpChannel::SetLaunchServiceWorkerEnd(mozilla::TimeStamp aTimeStamp) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetDispatchFetchEventStart(mozilla::TimeStamp *_retval)
-{
+NullHttpChannel::GetDispatchFetchEventStart(mozilla::TimeStamp *_retval) {
   MOZ_ASSERT(_retval);
   *_retval = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetDispatchFetchEventStart(mozilla::TimeStamp aTimeStamp)
-{
+NullHttpChannel::SetDispatchFetchEventStart(mozilla::TimeStamp aTimeStamp) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetDispatchFetchEventEnd(mozilla::TimeStamp *_retval)
-{
+NullHttpChannel::GetDispatchFetchEventEnd(mozilla::TimeStamp *_retval) {
   MOZ_ASSERT(_retval);
   *_retval = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetDispatchFetchEventEnd(mozilla::TimeStamp aTimeStamp)
-{
+NullHttpChannel::SetDispatchFetchEventEnd(mozilla::TimeStamp aTimeStamp) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetHandleFetchEventStart(mozilla::TimeStamp *_retval)
-{
+NullHttpChannel::GetHandleFetchEventStart(mozilla::TimeStamp *_retval) {
   MOZ_ASSERT(_retval);
   *_retval = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetHandleFetchEventStart(mozilla::TimeStamp aTimeStamp)
-{
+NullHttpChannel::SetHandleFetchEventStart(mozilla::TimeStamp aTimeStamp) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetHandleFetchEventEnd(mozilla::TimeStamp *_retval)
-{
+NullHttpChannel::GetHandleFetchEventEnd(mozilla::TimeStamp *_retval) {
   MOZ_ASSERT(_retval);
   *_retval = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetHandleFetchEventEnd(mozilla::TimeStamp aTimeStamp)
-{
+NullHttpChannel::SetHandleFetchEventEnd(mozilla::TimeStamp aTimeStamp) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetDomainLookupStart(mozilla::TimeStamp *aDomainLookupStart)
-{
+NullHttpChannel::GetDomainLookupStart(mozilla::TimeStamp *aDomainLookupStart) {
   *aDomainLookupStart = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetDomainLookupEnd(mozilla::TimeStamp *aDomainLookupEnd)
-{
+NullHttpChannel::GetDomainLookupEnd(mozilla::TimeStamp *aDomainLookupEnd) {
   *aDomainLookupEnd = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetConnectStart(mozilla::TimeStamp *aConnectStart)
-{
+NullHttpChannel::GetConnectStart(mozilla::TimeStamp *aConnectStart) {
   *aConnectStart = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetTcpConnectEnd(mozilla::TimeStamp *aTcpConnectEnd)
-{
+NullHttpChannel::GetTcpConnectEnd(mozilla::TimeStamp *aTcpConnectEnd) {
   *aTcpConnectEnd = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetSecureConnectionStart(mozilla::TimeStamp *aSecureConnectionStart)
-{
+NullHttpChannel::GetSecureConnectionStart(
+    mozilla::TimeStamp *aSecureConnectionStart) {
   *aSecureConnectionStart = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetConnectEnd(mozilla::TimeStamp *aConnectEnd)
-{
+NullHttpChannel::GetConnectEnd(mozilla::TimeStamp *aConnectEnd) {
   *aConnectEnd = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRequestStart(mozilla::TimeStamp *aRequestStart)
-{
+NullHttpChannel::GetRequestStart(mozilla::TimeStamp *aRequestStart) {
   *aRequestStart = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetResponseStart(mozilla::TimeStamp *aResponseStart)
-{
+NullHttpChannel::GetResponseStart(mozilla::TimeStamp *aResponseStart) {
   *aResponseStart = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetResponseEnd(mozilla::TimeStamp *aResponseEnd)
-{
+NullHttpChannel::GetResponseEnd(mozilla::TimeStamp *aResponseEnd) {
   *aResponseEnd = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRedirectStart(mozilla::TimeStamp *aRedirectStart)
-{
+NullHttpChannel::GetRedirectStart(mozilla::TimeStamp *aRedirectStart) {
   *aRedirectStart = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetRedirectStart(mozilla::TimeStamp aRedirectStart)
-{
+NullHttpChannel::SetRedirectStart(mozilla::TimeStamp aRedirectStart) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRedirectEnd(mozilla::TimeStamp *aRedirectEnd)
-{
+NullHttpChannel::GetRedirectEnd(mozilla::TimeStamp *aRedirectEnd) {
   *aRedirectEnd = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetRedirectEnd(mozilla::TimeStamp aRedirectEnd)
-{
+NullHttpChannel::SetRedirectEnd(mozilla::TimeStamp aRedirectEnd) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetInitiatorType(nsAString & aInitiatorType)
-{
+NullHttpChannel::GetInitiatorType(nsAString &aInitiatorType) {
   aInitiatorType = mInitiatorType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetInitiatorType(const nsAString & aInitiatorType)
-{
+NullHttpChannel::SetInitiatorType(const nsAString &aInitiatorType) {
   mInitiatorType = aInitiatorType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetAllRedirectsSameOrigin(bool *aAllRedirectsSameOrigin)
-{
+NullHttpChannel::GetAllRedirectsSameOrigin(bool *aAllRedirectsSameOrigin) {
   *aAllRedirectsSameOrigin = mAllRedirectsSameOrigin;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetAllRedirectsSameOrigin(bool aAllRedirectsSameOrigin)
-{
+NullHttpChannel::SetAllRedirectsSameOrigin(bool aAllRedirectsSameOrigin) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetAllRedirectsPassTimingAllowCheck(bool *aAllRedirectsPassTimingAllowCheck)
-{
+NullHttpChannel::GetAllRedirectsPassTimingAllowCheck(
+    bool *aAllRedirectsPassTimingAllowCheck) {
   *aAllRedirectsPassTimingAllowCheck = mAllRedirectsPassTimingAllowCheck;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetAllRedirectsPassTimingAllowCheck(bool aAllRedirectsPassTimingAllowCheck)
-{
+NullHttpChannel::SetAllRedirectsPassTimingAllowCheck(
+    bool aAllRedirectsPassTimingAllowCheck) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::TimingAllowCheck(nsIPrincipal *aOrigin, bool *_retval)
-{
+NullHttpChannel::TimingAllowCheck(nsIPrincipal *aOrigin, bool *_retval) {
   if (!mResourcePrincipal || !aOrigin) {
     *_retval = false;
     return NS_OK;
@@ -885,36 +761,31 @@ NullHttpChannel::TimingAllowCheck(nsIPrincipal *aOrigin, bool *_retval)
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetCacheReadStart(mozilla::TimeStamp *aCacheReadStart)
-{
+NullHttpChannel::GetCacheReadStart(mozilla::TimeStamp *aCacheReadStart) {
   *aCacheReadStart = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetCacheReadEnd(mozilla::TimeStamp *aCacheReadEnd)
-{
+NullHttpChannel::GetCacheReadEnd(mozilla::TimeStamp *aCacheReadEnd) {
   *aCacheReadEnd = mAsyncOpenTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetIsMainDocumentChannel(bool* aValue)
-{
+NullHttpChannel::GetIsMainDocumentChannel(bool *aValue) {
   *aValue = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetIsMainDocumentChannel(bool aValue)
-{
+NullHttpChannel::SetIsMainDocumentChannel(bool aValue) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                       const nsACString& aCategory)
-{
+NullHttpChannel::LogBlockedCORSRequest(const nsAString &aMessage,
+                                       const nsACString &aCategory) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -924,35 +795,35 @@ NullHttpChannel::SetReportResourceTiming(bool enabled) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetReportResourceTiming(bool* _retval) {
+NullHttpChannel::GetReportResourceTiming(bool *_retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetServerTiming(nsIArray **aServerTiming)
-{
+NullHttpChannel::GetServerTiming(nsIArray **aServerTiming) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetNativeServerTiming(nsTArray<nsCOMPtr<nsIServerTiming>>& aServerTiming)
-{
+NullHttpChannel::GetNativeServerTiming(
+    nsTArray<nsCOMPtr<nsIServerTiming>> &aServerTiming) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#define IMPL_TIMING_ATTR(name)                                 \
-NS_IMETHODIMP                                                  \
-NullHttpChannel::Get##name##Time(PRTime* _retval) {            \
-    TimeStamp stamp;                                           \
-    Get##name(&stamp);                                         \
-    if (stamp.IsNull()) {                                      \
-        *_retval = 0;                                          \
-        return NS_OK;                                          \
-    }                                                          \
-    *_retval = mChannelCreationTime +                          \
-        (PRTime) ((stamp - mChannelCreationTimestamp).ToSeconds() * 1e6); \
-    return NS_OK;                                              \
-}
+#define IMPL_TIMING_ATTR(name)                                           \
+  NS_IMETHODIMP                                                          \
+  NullHttpChannel::Get##name##Time(PRTime *_retval) {                    \
+    TimeStamp stamp;                                                     \
+    Get##name(&stamp);                                                   \
+    if (stamp.IsNull()) {                                                \
+      *_retval = 0;                                                      \
+      return NS_OK;                                                      \
+    }                                                                    \
+    *_retval =                                                           \
+        mChannelCreationTime +                                           \
+        (PRTime)((stamp - mChannelCreationTimestamp).ToSeconds() * 1e6); \
+    return NS_OK;                                                        \
+  }
 
 IMPL_TIMING_ATTR(ChannelCreation)
 IMPL_TIMING_ATTR(AsyncOpen)
@@ -978,5 +849,5 @@ IMPL_TIMING_ATTR(RedirectEnd)
 
 #undef IMPL_TIMING_ATTR
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

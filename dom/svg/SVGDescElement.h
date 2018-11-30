@@ -10,29 +10,29 @@
 #include "mozilla/Attributes.h"
 #include "nsSVGElement.h"
 
-nsresult NS_NewSVGDescElement(nsIContent **aResult,
-                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGDescElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 typedef nsSVGElement SVGDescElementBase;
 
 namespace mozilla {
 namespace dom {
 
-class SVGDescElement final : public SVGDescElementBase
-{
-protected:
-  friend nsresult (::NS_NewSVGDescElement(nsIContent **aResult,
-                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+class SVGDescElement final : public SVGDescElementBase {
+ protected:
+  friend nsresult(::NS_NewSVGDescElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGDescElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
-public:
+ public:
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGDescElement_h
-
+#endif  // mozilla_dom_SVGDescElement_h

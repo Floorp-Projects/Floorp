@@ -16,14 +16,14 @@ namespace mozilla {
 namespace layers {
 
 class AndroidFlingPhysics {
-public:
+ public:
   void Init(const ParentLayerPoint& aVelocity, float aPLPPI);
-  void Sample(const TimeDuration& aDelta,
-              ParentLayerPoint* aOutVelocity,
+  void Sample(const TimeDuration& aDelta, ParentLayerPoint* aOutVelocity,
               ParentLayerPoint* aOutOffset);
 
   static void InitializeGlobalState();
-private:
+
+ private:
   // Returns false if the animation should end.
   bool SampleImpl(const TimeDuration& aDelta, float* aOutVelocity);
 
@@ -35,12 +35,12 @@ private:
   ParentLayerPoint mLastPos;
   ParentLayerPoint mCurrentPos;
   ParentLayerCoord mTargetDistance;  // diagonal distance
-  ParentLayerPoint mTargetPos;  // really a target *offset* relative to the
-                                // start position, which we don't track
-  ParentLayerPoint mDeltaNorm;  // mTargetPos with length normalized to 1
+  ParentLayerPoint mTargetPos;       // really a target *offset* relative to the
+                                     // start position, which we don't track
+  ParentLayerPoint mDeltaNorm;       // mTargetPos with length normalized to 1
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_AndroidFlingPhysics_h_
+#endif  // mozilla_layers_AndroidFlingPhysics_h_

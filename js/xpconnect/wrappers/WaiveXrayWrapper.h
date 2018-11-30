@@ -14,34 +14,38 @@
 namespace xpc {
 
 class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
-  public:
-    explicit constexpr WaiveXrayWrapper(unsigned flags) : js::CrossCompartmentWrapper(flags) { }
+ public:
+  explicit constexpr WaiveXrayWrapper(unsigned flags)
+      : js::CrossCompartmentWrapper(flags) {}
 
-    virtual bool getOwnPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                                          JS::Handle<jsid> id,
-                                          JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
-    virtual bool getPrototype(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                              JS::MutableHandle<JSObject*> protop) const override;
-    virtual bool getPrototypeIfOrdinary(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                                        bool* isOrdinary,
-                                        JS::MutableHandle<JSObject*> protop) const override;
-    virtual bool get(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JS::Value> receiver,
-                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const override;
-    virtual bool call(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                      const JS::CallArgs& args) const override;
-    virtual bool construct(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                           const JS::CallArgs& args) const override;
+  virtual bool getOwnPropertyDescriptor(
+      JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
+      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+  virtual bool getPrototype(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                            JS::MutableHandle<JSObject*> protop) const override;
+  virtual bool getPrototypeIfOrdinary(
+      JSContext* cx, JS::Handle<JSObject*> wrapper, bool* isOrdinary,
+      JS::MutableHandle<JSObject*> protop) const override;
+  virtual bool get(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                   JS::Handle<JS::Value> receiver, JS::Handle<jsid> id,
+                   JS::MutableHandle<JS::Value> vp) const override;
+  virtual bool call(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                    const JS::CallArgs& args) const override;
+  virtual bool construct(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                         const JS::CallArgs& args) const override;
 
-    virtual JSObject* enumerate(JSContext* cx, JS::Handle<JSObject*> proxy) const override;
-    virtual bool nativeCall(JSContext* cx, JS::IsAcceptableThis test,
-                            JS::NativeImpl impl, const JS::CallArgs& args) const override;
-    virtual bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                                       JS::Handle<jsid> id,
-                                       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+  virtual JSObject* enumerate(JSContext* cx,
+                              JS::Handle<JSObject*> proxy) const override;
+  virtual bool nativeCall(JSContext* cx, JS::IsAcceptableThis test,
+                          JS::NativeImpl impl,
+                          const JS::CallArgs& args) const override;
+  virtual bool getPropertyDescriptor(
+      JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
+      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
 
-    static const WaiveXrayWrapper singleton;
+  static const WaiveXrayWrapper singleton;
 };
 
-} // namespace xpc
+}  // namespace xpc
 
 #endif

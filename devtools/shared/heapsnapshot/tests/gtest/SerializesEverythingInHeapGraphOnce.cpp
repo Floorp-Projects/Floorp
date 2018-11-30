@@ -8,30 +8,27 @@
 #include "DevTools.h"
 
 DEF_TEST(SerializesEverythingInHeapGraphOnce, {
-    FakeNode nodeA;
-    FakeNode nodeB;
-    FakeNode nodeC;
-    FakeNode nodeD;
+  FakeNode nodeA;
+  FakeNode nodeB;
+  FakeNode nodeC;
+  FakeNode nodeD;
 
-    AddEdge(nodeA, nodeB);
-    AddEdge(nodeB, nodeC);
-    AddEdge(nodeC, nodeD);
-    AddEdge(nodeD, nodeA);
+  AddEdge(nodeA, nodeB);
+  AddEdge(nodeB, nodeC);
+  AddEdge(nodeC, nodeD);
+  AddEdge(nodeD, nodeA);
 
-    ::testing::NiceMock<MockWriter> writer;
+  ::testing::NiceMock<MockWriter> writer;
 
-    // Should serialize each node once.
-    ExpectWriteNode(writer, nodeA);
-    ExpectWriteNode(writer, nodeB);
-    ExpectWriteNode(writer, nodeC);
-    ExpectWriteNode(writer, nodeD);
+  // Should serialize each node once.
+  ExpectWriteNode(writer, nodeA);
+  ExpectWriteNode(writer, nodeB);
+  ExpectWriteNode(writer, nodeC);
+  ExpectWriteNode(writer, nodeD);
 
-    JS::AutoCheckCannotGC noGC(cx);
+  JS::AutoCheckCannotGC noGC(cx);
 
-    ASSERT_TRUE(WriteHeapGraph(cx,
-                               JS::ubi::Node(&nodeA),
-                               writer,
-                               /* wantNames = */ false,
-                               /* zones = */ nullptr,
-                               noGC));
-  });
+  ASSERT_TRUE(WriteHeapGraph(cx, JS::ubi::Node(&nodeA), writer,
+                             /* wantNames = */ false,
+                             /* zones = */ nullptr, noGC));
+});

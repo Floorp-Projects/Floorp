@@ -15,30 +15,29 @@
 #include "nsIObserver.h"
 #include "nsString.h"
 
-class nsPrintProgress : public nsIPrintProgress
-{
-public:
-	NS_DECL_THREADSAFE_ISUPPORTS
+class nsPrintProgress : public nsIPrintProgress {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPRINTPROGRESS
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   explicit nsPrintProgress(nsIPrintSettings* aPrintSettings);
 
-protected:
-	virtual ~nsPrintProgress();
+ protected:
+  virtual ~nsPrintProgress();
 
-private:
+ private:
   nsresult ReleaseListeners();
 
-  bool                              m_closeProgress;
-  bool                              m_processCanceled;
-  nsString                          m_pendingStatus;
-  int32_t                           m_pendingStateFlags;
-  nsresult                          m_pendingStateValue;
-  nsCOMPtr<nsIDOMWindow>            m_dialog;
-  nsCOMArray<nsIWebProgressListener>        m_listenerList;
-  nsCOMPtr<nsIObserver>             m_observer;
-  nsCOMPtr<nsIPrintSettings>        m_PrintSetting;
+  bool m_closeProgress;
+  bool m_processCanceled;
+  nsString m_pendingStatus;
+  int32_t m_pendingStateFlags;
+  nsresult m_pendingStateValue;
+  nsCOMPtr<nsIDOMWindow> m_dialog;
+  nsCOMArray<nsIWebProgressListener> m_listenerList;
+  nsCOMPtr<nsIObserver> m_observer;
+  nsCOMPtr<nsIPrintSettings> m_PrintSetting;
 };
 
 #endif

@@ -15,9 +15,7 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-bool
-TableAccessible::IsProbablyLayoutTable()
-{
+bool TableAccessible::IsProbablyLayoutTable() {
   // Implement a heuristic to determine if table is most likely used for layout.
 
   // XXX do we want to look for rowspan or colspan, especialy that span all but
@@ -29,15 +27,16 @@ TableAccessible::IsProbablyLayoutTable()
   // the algorithm. Integrate it into Logging.
   // Change to |#define SHOW_LAYOUT_HEURISTIC DEBUG| before final release
 #ifdef SHOW_LAYOUT_HEURISTIC
-#define RETURN_LAYOUT_ANSWER(isLayout, heuristic) \
-  { \
-    mLayoutHeuristic = isLayout ? \
-      NS_LITERAL_STRING("layout table: " heuristic) : \
-      NS_LITERAL_STRING("data table: " heuristic); \
-    return isLayout; \
+#define RETURN_LAYOUT_ANSWER(isLayout, heuristic)                          \
+  {                                                                        \
+    mLayoutHeuristic = isLayout                                            \
+                           ? NS_LITERAL_STRING("layout table: " heuristic) \
+                           : NS_LITERAL_STRING("data table: " heuristic);  \
+    return isLayout;                                                       \
   }
 #else
-#define RETURN_LAYOUT_ANSWER(isLayout, heuristic) { return isLayout; }
+#define RETURN_LAYOUT_ANSWER(isLayout, heuristic) \
+  { return isLayout; }
 #endif
 
   Accessible* thisacc = AsAccessible();
@@ -77,20 +76,19 @@ TableAccessible::IsProbablyLayoutTable()
   // Check for legitimate data table elements.
   Accessible* caption = thisacc->FirstChild();
   if (caption && caption->IsHTMLCaption() && caption->HasChildren()) {
-    RETURN_LAYOUT_ANSWER(false, "Not empty caption -- legitimate table structures");
+    RETURN_LAYOUT_ANSWER(false,
+                         "Not empty caption -- legitimate table structures");
   }
 
   for (nsIContent* childElm = el->GetFirstChild(); childElm;
        childElm = childElm->GetNextSibling()) {
-    if (!childElm->IsHTMLElement())
-      continue;
+    if (!childElm->IsHTMLElement()) continue;
 
-    if (childElm->IsAnyOfHTMLElements(nsGkAtoms::col,
-                                      nsGkAtoms::colgroup,
-                                      nsGkAtoms::tfoot,
-                                      nsGkAtoms::thead)) {
-      RETURN_LAYOUT_ANSWER(false,
-                           "Has col, colgroup, tfoot or thead -- legitimate table structures");
+    if (childElm->IsAnyOfHTMLElements(nsGkAtoms::col, nsGkAtoms::colgroup,
+                                      nsGkAtoms::tfoot, nsGkAtoms::thead)) {
+      RETURN_LAYOUT_ANSWER(
+          false,
+          "Has col, colgroup, tfoot or thead -- legitimate table structures");
     }
 
     if (childElm->IsHTMLElement(nsGkAtoms::tbody)) {
@@ -100,17 +98,20 @@ TableAccessible::IsProbablyLayoutTable()
           for (nsIContent* cellElm = rowElm->GetFirstChild(); cellElm;
                cellElm = cellElm->GetNextSibling()) {
             if (cellElm->IsHTMLElement()) {
-
               if (cellElm->NodeInfo()->Equals(nsGkAtoms::th)) {
                 RETURN_LAYOUT_ANSWER(false,
                                      "Has th -- legitimate table structures");
               }
 
-              if (cellElm->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::headers) ||
-                  cellElm->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::scope) ||
-                  cellElm->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::abbr)) {
+              if (cellElm->AsElement()->HasAttr(kNameSpaceID_None,
+                                                nsGkAtoms::headers) ||
+                  cellElm->AsElement()->HasAttr(kNameSpaceID_None,
+                                                nsGkAtoms::scope) ||
+                  cellElm->AsElement()->HasAttr(kNameSpaceID_None,
+                                                nsGkAtoms::abbr)) {
                 RETURN_LAYOUT_ANSWER(false,
-                                     "Has headers, scope, or abbr attribute -- legitimate table structures");
+                                     "Has headers, scope, or abbr attribute -- "
+                                     "legitimate table structures");
               }
 
               Accessible* cell = thisacc->Document()->GetAccessible(cellElm);
@@ -128,7 +129,7 @@ TableAccessible::IsProbablyLayoutTable()
 
   // Check for nested tables.
   nsCOMPtr<nsIHTMLCollection> nestedTables =
-    el->GetElementsByTagName(NS_LITERAL_STRING("table"));
+      el->GetElementsByTagName(NS_LITERAL_STRING("table"));
   if (nestedTables->Length() > 0) {
     RETURN_LAYOUT_ANSWER(true, "Has a nested table within it");
   }
@@ -139,7 +140,7 @@ TableAccessible::IsProbablyLayoutTable()
     RETURN_LAYOUT_ANSWER(true, "Has only 1 column");
   }
   auto rowCount = RowCount();
-  if (rowCount <=1) {
+  if (rowCount <= 1) {
     RETURN_LAYOUT_ANSWER(true, "Has only 1 row");
   }
 
@@ -150,7 +151,8 @@ TableAccessible::IsProbablyLayoutTable()
 
   // Now we know there are 2-4 columns and 2 or more rows. Check to see if
   // there are visible borders on the cells.
-  // XXX currently, we just check the first cell -- do we really need to do more?
+  // XXX currently, we just check the first cell -- do we really need to do
+  // more?
   nsTableWrapperFrame* tableFrame = do_QueryFrame(el->GetPrimaryFrame());
   if (!tableFrame) {
     RETURN_LAYOUT_ANSWER(false, "table with no frame!");
@@ -188,16 +190,15 @@ TableAccessible::IsProbablyLayoutTable()
       rowColor = rowFrame->StyleBackground()->BackgroundColor(rowFrame);
 
       if (childIdx > 0 && prevRowColor != rowColor) {
-        RETURN_LAYOUT_ANSWER(
-          false, "2 styles of row background color, non-bordered"
-        );
+        RETURN_LAYOUT_ANSWER(false,
+                             "2 styles of row background color, non-bordered");
       }
     }
   }
 
   // Check for many rows.
   const uint32_t kMaxLayoutRows = 20;
-  if (rowCount > kMaxLayoutRows) { // A ton of rows, this is probably for data
+  if (rowCount > kMaxLayoutRows) {  // A ton of rows, this is probably for data
     RETURN_LAYOUT_ANSWER(false, ">= kMaxLayoutRows (20) and non-bordered");
   }
 
@@ -211,8 +212,7 @@ TableAccessible::IsProbablyLayoutTable()
       // 3-4 columns, no borders, not a lot of rows, and 95% of the doc's width
       // Probably for layout
       RETURN_LAYOUT_ANSWER(
-        true, "<= 4 columns, table width is 95% of document width"
-      );
+          true, "<= 4 columns, table width is 95% of document width");
     }
   }
 
@@ -221,28 +221,23 @@ TableAccessible::IsProbablyLayoutTable()
     RETURN_LAYOUT_ANSWER(true, "2-4 columns, 10 cells or less, non-bordered");
   }
 
-  static const nsLiteralString tags[] = {
-    NS_LITERAL_STRING("embed"),
-    NS_LITERAL_STRING("object"),
-    NS_LITERAL_STRING("iframe")
-  };
+  static const nsLiteralString tags[] = {NS_LITERAL_STRING("embed"),
+                                         NS_LITERAL_STRING("object"),
+                                         NS_LITERAL_STRING("iframe")};
   for (auto& tag : tags) {
     nsCOMPtr<nsIHTMLCollection> descendants = el->GetElementsByTagName(tag);
     if (descendants->Length() > 0) {
-      RETURN_LAYOUT_ANSWER(
-        true, "Has no borders, and has iframe, object or embed, typical of advertisements"
-      );
+      RETURN_LAYOUT_ANSWER(true,
+                           "Has no borders, and has iframe, object or embed, "
+                           "typical of advertisements");
     }
   }
 
-  RETURN_LAYOUT_ANSWER(
-    false, "No layout factor strong enough, so will guess data"
-  );
+  RETURN_LAYOUT_ANSWER(false,
+                       "No layout factor strong enough, so will guess data");
 }
 
-Accessible*
-TableAccessible::RowAt(int32_t aRow)
-{
+Accessible* TableAccessible::RowAt(int32_t aRow) {
   int32_t rowIdx = aRow;
 
   AccIterator rowIter(this->AsAccessible(), filters::GetRow);
@@ -255,14 +250,12 @@ TableAccessible::RowAt(int32_t aRow)
   return row;
 }
 
-Accessible*
-TableAccessible::CellInRowAt(Accessible* aRow, int32_t aColumn)
-{
+Accessible* TableAccessible::CellInRowAt(Accessible* aRow, int32_t aColumn) {
   int32_t colIdx = aColumn;
 
   AccIterator cellIter(aRow, filters::GetCell);
   Accessible* cell = nullptr;
-  
+
   while (colIdx >= 0 && (cell = cellIter.Next())) {
     MOZ_ASSERT(cell->IsTableCell(), "No table or grid cell!");
     colIdx -= cell->AsTableCell()->ColExtent();

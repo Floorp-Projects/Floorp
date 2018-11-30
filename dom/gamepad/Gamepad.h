@@ -35,24 +35,18 @@ const int kLeftStickYAxis = 1;
 const int kRightStickXAxis = 2;
 const int kRightStickYAxis = 3;
 
-
-class Gamepad final : public nsISupports,
-                      public nsWrapperCache
-{
-public:
-  Gamepad(nsISupports* aParent,
-          const nsAString& aID, uint32_t aIndex,
-          uint32_t aHashKey,
-          GamepadMappingType aMapping, GamepadHand aHand,
-          uint32_t aDisplayID, uint32_t aNumButtons,
-          uint32_t aNumAxes, uint32_t aNumHaptics);
+class Gamepad final : public nsISupports, public nsWrapperCache {
+ public:
+  Gamepad(nsISupports* aParent, const nsAString& aID, uint32_t aIndex,
+          uint32_t aHashKey, GamepadMappingType aMapping, GamepadHand aHand,
+          uint32_t aDisplayID, uint32_t aNumButtons, uint32_t aNumAxes,
+          uint32_t aNumHaptics);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
 
   void SetConnected(bool aConnected);
-  void SetButton(uint32_t aButton, bool aPressed,
-                 bool aTouched, double aValue);
+  void SetButton(uint32_t aButton, bool aPressed, bool aTouched, double aValue);
   void SetAxis(uint32_t aAxis, double aValue);
   void SetIndex(uint32_t aIndex);
   void SetPose(const GamepadPoseState& aPose);
@@ -65,78 +59,45 @@ public:
   // parented to aParent.
   already_AddRefed<Gamepad> Clone(nsISupports* aParent);
 
-  nsISupports* GetParentObject() const
-  {
-    return mParent;
-  }
+  nsISupports* GetParentObject() const { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  void GetId(nsAString& aID) const
-  {
-    aID = mID;
-  }
+  void GetId(nsAString& aID) const { aID = mID; }
 
-  DOMHighResTimeStamp Timestamp() const
-  {
-     return mTimestamp;
-  }
+  DOMHighResTimeStamp Timestamp() const { return mTimestamp; }
 
-  GamepadMappingType Mapping()
-  {
-    return mMapping;
-  }
+  GamepadMappingType Mapping() { return mMapping; }
 
-  uint32_t DisplayId() const
-  {
-    return mDisplayId;
-  }
+  uint32_t DisplayId() const { return mDisplayId; }
 
-  GamepadHand Hand()
-  {
-    return mHand;
-  }
+  GamepadHand Hand() { return mHand; }
 
-  bool Connected() const
-  {
-    return mConnected;
-  }
+  bool Connected() const { return mConnected; }
 
-  uint32_t Index() const
-  {
-    return mIndex;
-  }
+  uint32_t Index() const { return mIndex; }
 
-  uint32_t HashKey() const
-  {
-    return mHashKey;
-  }
+  uint32_t HashKey() const { return mHashKey; }
 
-  void GetButtons(nsTArray<RefPtr<GamepadButton>>& aButtons) const
-  {
+  void GetButtons(nsTArray<RefPtr<GamepadButton>>& aButtons) const {
     aButtons = mButtons;
   }
 
-  void GetAxes(nsTArray<double>& aAxes) const
-  {
-    aAxes = mAxes;
-  }
+  void GetAxes(nsTArray<double>& aAxes) const { aAxes = mAxes; }
 
-  GamepadPose* GetPose() const
-  {
-    return mPose;
-  }
+  GamepadPose* GetPose() const { return mPose; }
 
-  void GetHapticActuators(nsTArray<RefPtr<GamepadHapticActuator>>& aHapticActuators) const
-  {
+  void GetHapticActuators(
+      nsTArray<RefPtr<GamepadHapticActuator>>& aHapticActuators) const {
     aHapticActuators = mHapticActuators;
   }
 
-private:
+ private:
   virtual ~Gamepad() {}
   void UpdateTimestamp();
 
-protected:
+ protected:
   nsCOMPtr<nsISupports> mParent;
   nsString mID;
   uint32_t mIndex;
@@ -158,7 +119,7 @@ protected:
   nsTArray<RefPtr<GamepadHapticActuator>> mHapticActuators;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_gamepad_Gamepad_h
+#endif  // mozilla_dom_gamepad_Gamepad_h

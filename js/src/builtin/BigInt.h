@@ -16,42 +16,39 @@ namespace js {
 
 class GlobalObject;
 
-class BigIntObject : public NativeObject
-{
-    static const unsigned PRIMITIVE_VALUE_SLOT = 0;
-    static const unsigned RESERVED_SLOTS = 1;
+class BigIntObject : public NativeObject {
+  static const unsigned PRIMITIVE_VALUE_SLOT = 0;
+  static const unsigned RESERVED_SLOTS = 1;
 
-  public:
-    static const ClassSpec classSpec_;
-    static const Class class_;
-    static const Class protoClass_;
+ public:
+  static const ClassSpec classSpec_;
+  static const Class class_;
+  static const Class protoClass_;
 
-    static JSObject* create(JSContext* cx, JS::Handle<JS::BigInt*> bi);
+  static JSObject* create(JSContext* cx, JS::Handle<JS::BigInt*> bi);
 
-    // Methods defined on BigInt.prototype.
-    static bool valueOf_impl(JSContext* cx, const CallArgs& args);
-    static bool valueOf(JSContext* cx, unsigned argc, JS::Value* vp);
-    static bool toString_impl(JSContext* cx, const CallArgs& args);
-    static bool toString(JSContext* cx, unsigned argc, JS::Value* vp);
-    static bool toLocaleString_impl(JSContext* cx, const CallArgs& args);
-    static bool toLocaleString(JSContext* cx, unsigned argc, JS::Value* vp);
-    static bool asUintN(JSContext* cx, unsigned argc, JS::Value* vp);
-    static bool asIntN(JSContext* cx, unsigned argc, JS::Value* vp);
+  // Methods defined on BigInt.prototype.
+  static bool valueOf_impl(JSContext* cx, const CallArgs& args);
+  static bool valueOf(JSContext* cx, unsigned argc, JS::Value* vp);
+  static bool toString_impl(JSContext* cx, const CallArgs& args);
+  static bool toString(JSContext* cx, unsigned argc, JS::Value* vp);
+  static bool toLocaleString_impl(JSContext* cx, const CallArgs& args);
+  static bool toLocaleString(JSContext* cx, unsigned argc, JS::Value* vp);
+  static bool asUintN(JSContext* cx, unsigned argc, JS::Value* vp);
+  static bool asIntN(JSContext* cx, unsigned argc, JS::Value* vp);
 
-    JS::BigInt* unbox() const;
+  JS::BigInt* unbox() const;
 
-  private:
-    static const JSPropertySpec properties[];
-    static const JSFunctionSpec methods[];
-    static const JSFunctionSpec staticMethods[];
+ private:
+  static const JSPropertySpec properties[];
+  static const JSFunctionSpec methods[];
+  static const JSFunctionSpec staticMethods[];
 };
 
-extern JSObject*
-InitBigIntClass(JSContext* cx, Handle<GlobalObject*> global);
+extern JSObject* InitBigIntClass(JSContext* cx, Handle<GlobalObject*> global);
 
-extern bool
-intrinsic_ToBigInt(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool intrinsic_ToBigInt(JSContext* cx, unsigned argc, JS::Value* vp);
 
-} // namespace js
+}  // namespace js
 
 #endif

@@ -41,68 +41,68 @@ typedef std::complex<double> Complex;
 //    lowpass, highpass, shelving, parameteric, notch, allpass, ...
 
 class Biquad {
-public:
-    Biquad();
-    ~Biquad();
+ public:
+  Biquad();
+  ~Biquad();
 
-    void process(const float* sourceP, float* destP, size_t framesToProcess);
+  void process(const float* sourceP, float* destP, size_t framesToProcess);
 
-    // frequency is 0 - 1 normalized, resonance and dbGain are in decibels.
-    // Q is a unitless quality factor.
-    void setLowpassParams(double frequency, double resonance);
-    void setHighpassParams(double frequency, double resonance);
-    void setBandpassParams(double frequency, double Q);
-    void setLowShelfParams(double frequency, double dbGain);
-    void setHighShelfParams(double frequency, double dbGain);
-    void setPeakingParams(double frequency, double Q, double dbGain);
-    void setAllpassParams(double frequency, double Q);
-    void setNotchParams(double frequency, double Q);
+  // frequency is 0 - 1 normalized, resonance and dbGain are in decibels.
+  // Q is a unitless quality factor.
+  void setLowpassParams(double frequency, double resonance);
+  void setHighpassParams(double frequency, double resonance);
+  void setBandpassParams(double frequency, double Q);
+  void setLowShelfParams(double frequency, double dbGain);
+  void setHighShelfParams(double frequency, double dbGain);
+  void setPeakingParams(double frequency, double Q, double dbGain);
+  void setAllpassParams(double frequency, double Q);
+  void setNotchParams(double frequency, double Q);
 
-    // Set the biquad coefficients given a single zero (other zero will be conjugate)
-    // and a single pole (other pole will be conjugate)
-    void setZeroPolePairs(const Complex& zero, const Complex& pole);
+  // Set the biquad coefficients given a single zero (other zero will be
+  // conjugate) and a single pole (other pole will be conjugate)
+  void setZeroPolePairs(const Complex& zero, const Complex& pole);
 
-    // Set the biquad coefficients given a single pole (other pole will be conjugate)
-    // (The zeroes will be the inverse of the poles)
-    void setAllpassPole(const Complex& pole);
+  // Set the biquad coefficients given a single pole (other pole will be
+  // conjugate) (The zeroes will be the inverse of the poles)
+  void setAllpassPole(const Complex& pole);
 
-    // Return true iff the next output block will contain sound even with
-    // silent input.
-    bool hasTail() const { return m_y1 || m_y2 || m_x1 || m_x2; }
+  // Return true iff the next output block will contain sound even with
+  // silent input.
+  bool hasTail() const { return m_y1 || m_y2 || m_x1 || m_x2; }
 
-    // Resets filter state
-    void reset();
+  // Resets filter state
+  void reset();
 
-    // Filter response at a set of n frequencies. The magnitude and
-    // phase response are returned in magResponse and phaseResponse.
-    // The phase response is in radians.
-    void getFrequencyResponse(int nFrequencies,
-                              const float* frequency,
-                              float* magResponse,
-                              float* phaseResponse);
-private:
-    void setNormalizedCoefficients(double b0, double b1, double b2, double a0, double a1, double a2);
+  // Filter response at a set of n frequencies. The magnitude and
+  // phase response are returned in magResponse and phaseResponse.
+  // The phase response is in radians.
+  void getFrequencyResponse(int nFrequencies, const float* frequency,
+                            float* magResponse, float* phaseResponse);
 
-    // Filter coefficients. The filter is defined as
-    //
-    // y[n] + m_a1*y[n-1] + m_a2*y[n-2] = m_b0*x[n] + m_b1*x[n-1] + m_b2*x[n-2].
-    double m_b0;
-    double m_b1;
-    double m_b2;
-    double m_a1;
-    double m_a2;
+ private:
+  void setNormalizedCoefficients(double b0, double b1, double b2, double a0,
+                                 double a1, double a2);
 
-    // Filter memory
-    //
-    // Double precision for the output values is valuable because errors can
-    // accumulate.  Input values are also stored as double so they need not be
-    // converted again for computation.
-    double m_x1; // input delayed by 1 sample
-    double m_x2; // input delayed by 2 samples
-    double m_y1; // output delayed by 1 sample
-    double m_y2; // output delayed by 2 samples
+  // Filter coefficients. The filter is defined as
+  //
+  // y[n] + m_a1*y[n-1] + m_a2*y[n-2] = m_b0*x[n] + m_b1*x[n-1] + m_b2*x[n-2].
+  double m_b0;
+  double m_b1;
+  double m_b2;
+  double m_a1;
+  double m_a2;
+
+  // Filter memory
+  //
+  // Double precision for the output values is valuable because errors can
+  // accumulate.  Input values are also stored as double so they need not be
+  // converted again for computation.
+  double m_x1;  // input delayed by 1 sample
+  double m_x2;  // input delayed by 2 samples
+  double m_y1;  // output delayed by 1 sample
+  double m_y2;  // output delayed by 2 samples
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
-#endif // Biquad_h
+#endif  // Biquad_h

@@ -14,9 +14,8 @@
 namespace mozilla {
 namespace gfx {
 
-class SharedDIBWin : public SharedDIB
-{
-public:
+class SharedDIBWin : public SharedDIB {
+ public:
   SharedDIBWin();
   ~SharedDIBWin();
 
@@ -40,18 +39,18 @@ public:
   // Return the bitmap bits.
   void* GetBits() { return mBitmapBits; }
 
-private:
-  HDC                 mSharedHdc;
-  HBITMAP             mSharedBmp;
-  HGDIOBJ             mOldObj;
-  void*               mBitmapBits;
+ private:
+  HDC mSharedHdc;
+  HBITMAP mSharedBmp;
+  HGDIOBJ mOldObj;
+  void* mBitmapBits;
 
   uint32_t SetupBitmapHeader(uint32_t aWidth, uint32_t aHeight,
-                             bool aTransparent, BITMAPV4HEADER *aHeader);
-  nsresult SetupSurface(HDC aHdc, BITMAPV4HEADER *aHdr);
+                             bool aTransparent, BITMAPV4HEADER* aHeader);
+  nsresult SetupSurface(HDC aHdc, BITMAPV4HEADER* aHdr);
 };
 
-} // gfx
-} // mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

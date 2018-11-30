@@ -11,43 +11,40 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
-#include "nsIFrameInlines.h" // for methods used by IS_TRUE_OVERFLOW_CONTAINER
+#include "nsIFrameInlines.h"  // for methods used by IS_TRUE_OVERFLOW_CONTAINER
 
 /**
  * nsColumnSetFrame implements CSS multi-column layout.
  * @note nsColumnSetFrame keeps true overflow containers in the normal flow
  * child lists (i.e. the principal and overflow lists).
  */
-class nsColumnSetFrame final : public nsContainerFrame
-{
-public:
+class nsColumnSetFrame final : public nsContainerFrame {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsColumnSetFrame)
 
   explicit nsColumnSetFrame(ComputedStyle* aStyle);
 
-  virtual void Reflow(nsPresContext* aPresContext,
-                      ReflowOutput& aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG
-  virtual void SetInitialChildList(ChildListID     aListID,
-                                   nsFrameList&    aChildList) override;
-  virtual void AppendFrames(ChildListID     aListID,
-                            nsFrameList&    aFrameList) override;
-  virtual void InsertFrames(ChildListID     aListID,
-                            nsIFrame*       aPrevFrame,
-                            nsFrameList&    aFrameList) override;
-  virtual void RemoveFrame(ChildListID     aListID,
-                           nsIFrame*       aOldFrame) override;
+  virtual void SetInitialChildList(ChildListID aListID,
+                                   nsFrameList& aChildList) override;
+  virtual void AppendFrames(ChildListID aListID,
+                            nsFrameList& aFrameList) override;
+  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            nsFrameList& aFrameList) override;
+  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 #endif
 
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   /**
-   * Retrieve the available height for content of this frame. The available content
-   * height is the available height for the frame, minus borders and padding.
+   * Retrieve the available height for content of this frame. The available
+   * content height is the available height for the frame, minus borders and
+   * padding.
    */
   virtual nscoord GetAvailableContentBSize(const ReflowInput& aReflowInput);
 
@@ -55,19 +52,17 @@ public:
     nsIFrame* frame = PrincipalChildList().FirstChild();
 
     // if no children return nullptr
-    if (!frame)
-      return nullptr;
+    if (!frame) return nullptr;
 
     return frame->GetContentInsertionFrame();
   }
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-   {
-     return nsContainerFrame::IsFrameOfType(aFlags &
-              ~(nsIFrame::eCanContainOverflowContainers));
-   }
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+    return nsContainerFrame::IsFrameOfType(
+        aFlags & ~(nsIFrame::eCanContainOverflowContainers));
+  }
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
   /**
@@ -88,12 +83,11 @@ public:
 
   nsRect CalculateColumnRuleBounds(const nsPoint& aOffset);
   void CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRenderers,
-                             gfxContext* aCtx,
-                             const nsRect& aDirtyRect,
+                             gfxContext* aCtx, const nsRect& aDirtyRect,
                              const nsPoint& aPt);
 
-protected:
-  nscoord        mLastBalanceBSize;
+ protected:
+  nscoord mLastBalanceBSize;
   nsReflowStatus mLastFrameStatus;
 
   /**
@@ -170,10 +164,8 @@ protected:
 
   bool ReflowColumns(ReflowOutput& aDesiredSize,
                      const ReflowInput& aReflowInput,
-                     nsReflowStatus& aReflowStatus,
-                     ReflowConfig& aConfig,
-                     bool aLastColumnUnbounded,
-                     ColumnBalanceData& aColData);
+                     nsReflowStatus& aReflowStatus, ReflowConfig& aConfig,
+                     bool aLastColumnUnbounded, ColumnBalanceData& aColData);
 
   /**
    * The basic reflow strategy is to call this function repeatedly to
@@ -208,28 +200,25 @@ protected:
    *        an output parameter.
    */
   void FindBestBalanceBSize(const ReflowInput& aReflowInput,
-                            nsPresContext* aPresContext,
-                            ReflowConfig& aConfig,
+                            nsPresContext* aPresContext, ReflowConfig& aConfig,
                             ColumnBalanceData& aColData,
                             ReflowOutput& aDesiredSize,
-                            bool& aUnboundedLastColumn,
-                            bool& aRunWasFeasible,
+                            bool& aUnboundedLastColumn, bool& aRunWasFeasible,
                             nsReflowStatus& aStatus);
   /**
    * Reflow column children. Returns true iff the content that was reflowed
    * fit into the mColMaxBSize.
    */
   bool ReflowChildren(ReflowOutput& aDesiredSize,
-                        const ReflowInput& aReflowInput,
-                        nsReflowStatus& aStatus,
-                        const ReflowConfig& aConfig,
-                        bool aLastColumnUnbounded,
-                        ColumnBalanceData& aColData);
+                      const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
+                      const ReflowConfig& aConfig, bool aLastColumnUnbounded,
+                      ColumnBalanceData& aColData);
 
-  void ForEachColumnRule(const std::function<void(const nsRect& lineRect)>& aSetLineRect,
-                         const nsPoint& aPt);
+  void ForEachColumnRule(
+      const std::function<void(const nsRect& lineRect)>& aSetLineRect,
+      const nsPoint& aPt);
 
   static nscoord ClampUsedColumnWidth(const nsStyleCoord& aColumnWidth);
 };
 
-#endif // nsColumnSetFrame_h___
+#endif  // nsColumnSetFrame_h___

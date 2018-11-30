@@ -21,28 +21,22 @@ using gfx::IntRect;
 namespace image {
 
 Downscaler::Downscaler(const nsIntSize& aTargetSize)
-  : mTargetSize(aTargetSize)
-  , mOutputBuffer(nullptr)
-  , mWindowCapacity(0)
-  , mLinesInBuffer(0)
-  , mPrevInvalidatedLine(0)
-  , mCurrentOutLine(0)
-  , mCurrentInLine(0)
-  , mHasAlpha(true)
-  , mFlipVertically(false)
-{
+    : mTargetSize(aTargetSize),
+      mOutputBuffer(nullptr),
+      mWindowCapacity(0),
+      mLinesInBuffer(0),
+      mPrevInvalidatedLine(0),
+      mCurrentOutLine(0),
+      mCurrentInLine(0),
+      mHasAlpha(true),
+      mFlipVertically(false) {
   MOZ_ASSERT(mTargetSize.width > 0 && mTargetSize.height > 0,
              "Invalid target size");
 }
 
-Downscaler::~Downscaler()
-{
-  ReleaseWindow();
-}
+Downscaler::~Downscaler() { ReleaseWindow(); }
 
-void
-Downscaler::ReleaseWindow()
-{
+void Downscaler::ReleaseWindow() {
   if (!mWindow) {
     return;
   }
@@ -55,13 +49,10 @@ Downscaler::ReleaseWindow()
   mWindowCapacity = 0;
 }
 
-nsresult
-Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
-                       const Maybe<nsIntRect>& aFrameRect,
-                       uint8_t* aOutputBuffer,
-                       bool aHasAlpha,
-                       bool aFlipVertically /* = false */)
-{
+nsresult Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
+                                const Maybe<nsIntRect>& aFrameRect,
+                                uint8_t* aOutputBuffer, bool aHasAlpha,
+                                bool aFlipVertically /* = false */) {
   MOZ_ASSERT(aOutputBuffer);
   MOZ_ASSERT(mTargetSize != aOriginalSize,
              "Created a downscaler, but not downscaling?");
@@ -81,13 +72,13 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
 
   mFrameRect = aFrameRect.valueOr(nsIntRect(nsIntPoint(), aOriginalSize));
   MOZ_ASSERT(mFrameRect.X() >= 0 && mFrameRect.Y() >= 0 &&
-             mFrameRect.Width() >= 0 && mFrameRect.Height() >= 0,
+                 mFrameRect.Width() >= 0 && mFrameRect.Height() >= 0,
              "Frame rect must have non-negative components");
   MOZ_ASSERT(nsIntRect(0, 0, aOriginalSize.width, aOriginalSize.height)
-               .Contains(mFrameRect),
+                 .Contains(mFrameRect),
              "Frame rect must fit inside image");
   MOZ_ASSERT_IF(!nsIntRect(0, 0, aOriginalSize.width, aOriginalSize.height)
-                  .IsEqualEdges(mFrameRect),
+                     .IsEqualEdges(mFrameRect),
                 aHasAlpha);
 
   mOriginalSize = aOriginalSize;
@@ -100,15 +91,18 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
   ReleaseWindow();
 
   auto resizeMethod = gfx::ConvolutionFilter::ResizeMethod::LANCZOS3;
-  if (!mXFilter.ComputeResizeFilter(resizeMethod, mOriginalSize.width, mTargetSize.width) ||
-      !mYFilter.ComputeResizeFilter(resizeMethod, mOriginalSize.height, mTargetSize.height)) {
+  if (!mXFilter.ComputeResizeFilter(resizeMethod, mOriginalSize.width,
+                                    mTargetSize.width) ||
+      !mYFilter.ComputeResizeFilter(resizeMethod, mOriginalSize.height,
+                                    mTargetSize.height)) {
     NS_WARNING("Failed to compute filters for image downscaling");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Allocate the buffer, which contains scanlines of the original image.
   // pad to handle overreads by the simd code
-  size_t bufferLen = gfx::ConvolutionFilter::PadBytesForSIMD(mOriginalSize.width * sizeof(uint32_t));
+  size_t bufferLen = gfx::ConvolutionFilter::PadBytesForSIMD(
+      mOriginalSize.width * sizeof(uint32_t));
   mRowBuffer.reset(new (fallible) uint8_t[bufferLen]);
   if (MOZ_UNLIKELY(!mRowBuffer)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -128,7 +122,8 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
 
   bool anyAllocationFailed = false;
   // pad to handle overreads by the simd code
-  const size_t rowSize = gfx::ConvolutionFilter::PadBytesForSIMD(mTargetSize.width * sizeof(uint32_t));
+  const size_t rowSize = gfx::ConvolutionFilter::PadBytesForSIMD(
+      mTargetSize.width * sizeof(uint32_t));
   for (int32_t i = 0; i < mWindowCapacity; ++i) {
     mWindow[i] = new (fallible) uint8_t[rowSize];
     anyAllocationFailed = anyAllocationFailed || mWindow[i] == nullptr;
@@ -146,9 +141,7 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
   return NS_OK;
 }
 
-void
-Downscaler::SkipToRow(int32_t aRow)
-{
+void Downscaler::SkipToRow(int32_t aRow) {
   if (mCurrentInLine < aRow) {
     ClearRow();
     do {
@@ -157,9 +150,7 @@ Downscaler::SkipToRow(int32_t aRow)
   }
 }
 
-void
-Downscaler::ResetForNextProgressivePass()
-{
+void Downscaler::ResetForNextProgressivePass() {
   mPrevInvalidatedLine = 0;
   mCurrentOutLine = 0;
   mCurrentInLine = 0;
@@ -174,33 +165,31 @@ Downscaler::ResetForNextProgressivePass()
   }
 }
 
-void
-Downscaler::ClearRestOfRow(uint32_t aStartingAtCol)
-{
+void Downscaler::ClearRestOfRow(uint32_t aStartingAtCol) {
   MOZ_ASSERT(int64_t(aStartingAtCol) <= int64_t(mOriginalSize.width));
-  uint32_t bytesToClear = (mOriginalSize.width - aStartingAtCol)
-                        * sizeof(uint32_t);
-  memset(mRowBuffer.get() + (aStartingAtCol * sizeof(uint32_t)),
-         0, bytesToClear);
+  uint32_t bytesToClear =
+      (mOriginalSize.width - aStartingAtCol) * sizeof(uint32_t);
+  memset(mRowBuffer.get() + (aStartingAtCol * sizeof(uint32_t)), 0,
+         bytesToClear);
 }
 
-void
-Downscaler::CommitRow()
-{
+void Downscaler::CommitRow() {
   MOZ_ASSERT(mOutputBuffer, "Should have a current frame");
   MOZ_ASSERT(mCurrentInLine < mOriginalSize.height, "Past end of input");
 
   if (mCurrentOutLine < mTargetSize.height) {
     int32_t filterOffset = 0;
     int32_t filterLength = 0;
-    mYFilter.GetFilterOffsetAndLength(mCurrentOutLine,
-                                      &filterOffset, &filterLength);
+    mYFilter.GetFilterOffsetAndLength(mCurrentOutLine, &filterOffset,
+                                      &filterLength);
 
     int32_t inLineToRead = filterOffset + mLinesInBuffer;
     MOZ_ASSERT(mCurrentInLine <= inLineToRead, "Reading past end of input");
     if (mCurrentInLine == inLineToRead) {
-      MOZ_RELEASE_ASSERT(mLinesInBuffer < mWindowCapacity, "Need more rows than capacity!");
-      mXFilter.ConvolveHorizontally(mRowBuffer.get(), mWindow[mLinesInBuffer++], mHasAlpha);
+      MOZ_RELEASE_ASSERT(mLinesInBuffer < mWindowCapacity,
+                         "Need more rows than capacity!");
+      mXFilter.ConvolveHorizontally(mRowBuffer.get(), mWindow[mLinesInBuffer++],
+                                    mHasAlpha);
     }
 
     MOZ_ASSERT(mCurrentOutLine < mTargetSize.height,
@@ -213,8 +202,8 @@ Downscaler::CommitRow()
         break;  // We're done.
       }
 
-      mYFilter.GetFilterOffsetAndLength(mCurrentOutLine,
-                                        &filterOffset, &filterLength);
+      mYFilter.GetFilterOffsetAndLength(mCurrentOutLine, &filterOffset,
+                                        &filterLength);
     }
   }
 
@@ -227,15 +216,11 @@ Downscaler::CommitRow()
   }
 }
 
-bool
-Downscaler::HasInvalidation() const
-{
+bool Downscaler::HasInvalidation() const {
   return mCurrentOutLine > mPrevInvalidatedLine;
 }
 
-DownscalerInvalidRect
-Downscaler::TakeInvalidRect()
-{
+DownscalerInvalidRect Downscaler::TakeInvalidRect() {
   if (MOZ_UNLIKELY(!HasInvalidation())) {
     return DownscalerInvalidRect();
   }
@@ -247,12 +232,12 @@ Downscaler::TakeInvalidRect()
     // We need to flip it. This will implicitly flip the original size invalid
     // rect, since we compute it by scaling this rect.
     invalidRect.mTargetSizeRect =
-      IntRect(0, mTargetSize.height - mCurrentOutLine,
-              mTargetSize.width, mCurrentOutLine - mPrevInvalidatedLine);
+        IntRect(0, mTargetSize.height - mCurrentOutLine, mTargetSize.width,
+                mCurrentOutLine - mPrevInvalidatedLine);
   } else {
     invalidRect.mTargetSizeRect =
-      IntRect(0, mPrevInvalidatedLine,
-              mTargetSize.width, mCurrentOutLine - mPrevInvalidatedLine);
+        IntRect(0, mPrevInvalidatedLine, mTargetSize.width,
+                mCurrentOutLine - mPrevInvalidatedLine);
   }
 
   mPrevInvalidatedLine = mCurrentOutLine;
@@ -264,26 +249,25 @@ Downscaler::TakeInvalidRect()
   return invalidRect;
 }
 
-void
-Downscaler::DownscaleInputLine()
-{
+void Downscaler::DownscaleInputLine() {
   MOZ_ASSERT(mOutputBuffer);
   MOZ_ASSERT(mCurrentOutLine < mTargetSize.height,
              "Writing past end of output");
 
   int32_t filterOffset = 0;
   int32_t filterLength = 0;
-  mYFilter.GetFilterOffsetAndLength(mCurrentOutLine,
-                                    &filterOffset, &filterLength);
+  mYFilter.GetFilterOffsetAndLength(mCurrentOutLine, &filterOffset,
+                                    &filterLength);
 
   int32_t currentOutLine = mFlipVertically
-                         ? mTargetSize.height - (mCurrentOutLine + 1)
-                         : mCurrentOutLine;
+                               ? mTargetSize.height - (mCurrentOutLine + 1)
+                               : mCurrentOutLine;
   MOZ_ASSERT(currentOutLine >= 0);
 
   uint8_t* outputLine =
-    &mOutputBuffer[currentOutLine * mTargetSize.width * sizeof(uint32_t)];
-  mYFilter.ConvolveVertically(mWindow.get(), outputLine, mCurrentOutLine, mXFilter.NumValues(), mHasAlpha);
+      &mOutputBuffer[currentOutLine * mTargetSize.width * sizeof(uint32_t)];
+  mYFilter.ConvolveVertically(mWindow.get(), outputLine, mCurrentOutLine,
+                              mXFilter.NumValues(), mHasAlpha);
 
   mCurrentOutLine += 1;
 
@@ -294,8 +278,8 @@ Downscaler::DownscaleInputLine()
 
   int32_t newFilterOffset = 0;
   int32_t newFilterLength = 0;
-  mYFilter.GetFilterOffsetAndLength(mCurrentOutLine,
-                                    &newFilterOffset, &newFilterLength);
+  mYFilter.GetFilterOffsetAndLength(mCurrentOutLine, &newFilterOffset,
+                                    &newFilterLength);
 
   int diff = newFilterOffset - filterOffset;
   MOZ_ASSERT(diff >= 0, "Moving backwards in the filter?");
@@ -313,7 +297,5 @@ Downscaler::DownscaleInputLine()
   }
 }
 
-
-
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla

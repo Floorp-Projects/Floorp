@@ -18,7 +18,7 @@ class nsIURI;
 namespace mozilla {
 namespace ipc {
 class IPCChannelInfo;
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
@@ -39,25 +39,16 @@ namespace dom {
 // ResurrectInfoOnChannel().  This object cannot be initialized twice, and
 // ResurrectInfoOnChannel() cannot be called on it before it has been
 // initialized.  There are assertions ensuring these invariants.
-class ChannelInfo final
-{
-public:
+class ChannelInfo final {
+ public:
   typedef mozilla::ipc::IPCChannelInfo IPCChannelInfo;
 
-  ChannelInfo()
-    : mInited(false)
-  {
-  }
+  ChannelInfo() : mInited(false) {}
 
   ChannelInfo(const ChannelInfo& aRHS)
-    : mSecurityInfo(aRHS.mSecurityInfo)
-    , mInited(aRHS.mInited)
-  {
-  }
+      : mSecurityInfo(aRHS.mSecurityInfo), mInited(aRHS.mInited) {}
 
-  ChannelInfo&
-  operator=(const ChannelInfo& aRHS)
-  {
+  ChannelInfo& operator=(const ChannelInfo& aRHS) {
     mSecurityInfo = aRHS.mSecurityInfo;
     mInited = aRHS.mInited;
     return *this;
@@ -72,22 +63,19 @@ public:
   // object on a new one.
   nsresult ResurrectInfoOnChannel(nsIChannel* aChannel);
 
-  bool IsInitialized() const
-  {
-    return mInited;
-  }
+  bool IsInitialized() const { return mInited; }
 
   IPCChannelInfo AsIPCChannelInfo() const;
 
-private:
+ private:
   void SetSecurityInfo(nsISupports* aSecurityInfo);
 
-private:
+ private:
   nsCString mSecurityInfo;
   bool mInited;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ChannelInfo_h
+#endif  // mozilla_dom_ChannelInfo_h

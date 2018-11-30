@@ -14,21 +14,20 @@
 
 #include "mozilla/BasePrincipal.h"
 
-#define NS_SYSTEMPRINCIPAL_CID \
-{ 0x4a6212db, 0xaccb, 0x11d3, \
-{ 0xb7, 0x65, 0x0, 0x60, 0xb0, 0xb6, 0xce, 0xcb }}
+#define NS_SYSTEMPRINCIPAL_CID                      \
+  {                                                 \
+    0x4a6212db, 0xaccb, 0x11d3, {                   \
+      0xb7, 0x65, 0x0, 0x60, 0xb0, 0xb6, 0xce, 0xcb \
+    }                                               \
+  }
 #define NS_SYSTEMPRINCIPAL_CONTRACTID "@mozilla.org/systemprincipal;1"
 
 namespace mozilla {
 
-class SystemPrincipal final : public BasePrincipal
-{
-  SystemPrincipal()
-    : BasePrincipal(eSystemPrincipal)
-  {
-  }
+class SystemPrincipal final : public BasePrincipal {
+  SystemPrincipal() : BasePrincipal(eSystemPrincipal) {}
 
-public:
+ public:
   static already_AddRefed<SystemPrincipal> Create();
 
   static PrincipalKind Kind() { return eSystemPrincipal; }
@@ -41,34 +40,32 @@ public:
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
-  NS_IMETHOD EnsureCSP(nsIDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;
+  NS_IMETHOD EnsureCSP(nsIDocument* aDocument,
+                       nsIContentSecurityPolicy** aCSP) override;
   NS_IMETHOD GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP) override;
-  NS_IMETHOD EnsurePreloadCSP(nsIDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;
+  NS_IMETHOD EnsurePreloadCSP(nsIDocument* aDocument,
+                              nsIContentSecurityPolicy** aCSP) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
 
-  virtual nsresult GetScriptLocation(nsACString &aStr) override;
+  virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
   nsresult GetSiteIdentifier(SiteIdentifier& aSite) override {
     aSite.Init(this);
     return NS_OK;
   }
 
-protected:
+ protected:
   virtual ~SystemPrincipal(void) {}
 
-  bool SubsumesInternal(nsIPrincipal *aOther,
-                        DocumentDomainConsideration aConsideration) override
-  {
+  bool SubsumesInternal(nsIPrincipal* aOther,
+                        DocumentDomainConsideration aConsideration) override {
     return true;
   }
 
-  bool MayLoadInternal(nsIURI* aURI) override
-  {
-    return true;
-  }
+  bool MayLoadInternal(nsIURI* aURI) override { return true; }
 };
 
-} // mozilla namespace
+}  // namespace mozilla
 
-#endif // mozilla_SystemPrincipal_h
+#endif  // mozilla_SystemPrincipal_h

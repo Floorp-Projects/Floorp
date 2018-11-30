@@ -19,19 +19,16 @@ using namespace ipc;
 namespace dom {
 
 SharedWorkerParent::SharedWorkerParent()
-  : mBackgroundEventTarget(GetCurrentThreadEventTarget())
-  , mStatus(eInit)
-  , mSuspended(false)
-  , mFrozen(false)
-{
+    : mBackgroundEventTarget(GetCurrentThreadEventTarget()),
+      mStatus(eInit),
+      mSuspended(false),
+      mFrozen(false) {
   AssertIsOnBackgroundThread();
 }
 
 SharedWorkerParent::~SharedWorkerParent() = default;
 
-void
-SharedWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
-{
+void SharedWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason aReason) {
   AssertIsOnBackgroundThread();
 
   if (mWorkerManager) {
@@ -40,11 +37,9 @@ SharedWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
   }
 }
 
-void
-SharedWorkerParent::Initialize(const RemoteWorkerData& aData,
-                               uint64_t aWindowID,
-                               const MessagePortIdentifier& aPortIdentifier)
-{
+void SharedWorkerParent::Initialize(
+    const RemoteWorkerData& aData, uint64_t aWindowID,
+    const MessagePortIdentifier& aPortIdentifier) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mStatus == eInit);
 
@@ -58,9 +53,7 @@ SharedWorkerParent::Initialize(const RemoteWorkerData& aData,
   mService->GetOrCreateWorkerManager(this, aData, aWindowID, aPortIdentifier);
 }
 
-IPCResult
-SharedWorkerParent::RecvClose()
-{
+IPCResult SharedWorkerParent::RecvClose() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
 
@@ -75,9 +68,7 @@ SharedWorkerParent::RecvClose()
   return IPC_OK();
 }
 
-IPCResult
-SharedWorkerParent::RecvSuspend()
-{
+IPCResult SharedWorkerParent::RecvSuspend() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mSuspended);
   MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
@@ -92,9 +83,7 @@ SharedWorkerParent::RecvSuspend()
   return IPC_OK();
 }
 
-IPCResult
-SharedWorkerParent::RecvResume()
-{
+IPCResult SharedWorkerParent::RecvResume() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mSuspended);
   MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
@@ -109,9 +98,7 @@ SharedWorkerParent::RecvResume()
   return IPC_OK();
 }
 
-IPCResult
-SharedWorkerParent::RecvFreeze()
-{
+IPCResult SharedWorkerParent::RecvFreeze() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mFrozen);
   MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
@@ -126,9 +113,7 @@ SharedWorkerParent::RecvFreeze()
   return IPC_OK();
 }
 
-IPCResult
-SharedWorkerParent::RecvThaw()
-{
+IPCResult SharedWorkerParent::RecvThaw() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mFrozen);
   MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
@@ -143,9 +128,7 @@ SharedWorkerParent::RecvThaw()
   return IPC_OK();
 }
 
-void
-SharedWorkerParent::ManagerCreated(SharedWorkerManager* aWorkerManager)
-{
+void SharedWorkerParent::ManagerCreated(SharedWorkerManager* aWorkerManager) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aWorkerManager);
   MOZ_ASSERT(!mWorkerManager);
@@ -164,9 +147,7 @@ SharedWorkerParent::ManagerCreated(SharedWorkerManager* aWorkerManager)
   mWorkerManager->UpdateSuspend();
 }
 
-void
-SharedWorkerParent::ErrorPropagation(nsresult aError)
-{
+void SharedWorkerParent::ErrorPropagation(nsresult aError) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(NS_FAILED(aError));
   MOZ_ASSERT(mStatus == ePending || mStatus == eClosed);
@@ -179,5 +160,5 @@ SharedWorkerParent::ErrorPropagation(nsresult aError)
   Unused << SendError(aError);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

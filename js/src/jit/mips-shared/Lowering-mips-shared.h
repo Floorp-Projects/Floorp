@@ -12,60 +12,62 @@
 namespace js {
 namespace jit {
 
-class LIRGeneratorMIPSShared : public LIRGeneratorShared
-{
-  protected:
-    LIRGeneratorMIPSShared(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
-      : LIRGeneratorShared(gen, graph, lirGraph)
-    { }
+class LIRGeneratorMIPSShared : public LIRGeneratorShared {
+ protected:
+  LIRGeneratorMIPSShared(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
+      : LIRGeneratorShared(gen, graph, lirGraph) {}
 
-    // x86 has constraints on what registers can be formatted for 1-byte
-    // stores and loads; on MIPS all registers are okay.
-    LAllocation useByteOpRegister(MDefinition* mir);
-    LAllocation useByteOpRegisterAtStart(MDefinition* mir);
-    LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
-    LDefinition tempByteOpRegister();
+  // x86 has constraints on what registers can be formatted for 1-byte
+  // stores and loads; on MIPS all registers are okay.
+  LAllocation useByteOpRegister(MDefinition* mir);
+  LAllocation useByteOpRegisterAtStart(MDefinition* mir);
+  LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
+  LDefinition tempByteOpRegister();
 
-    bool needTempForPostBarrier() { return false; }
+  bool needTempForPostBarrier() { return false; }
 
-    void lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir, MDefinition* lhs,
-                       MDefinition* rhs);
-    void lowerUrshD(MUrsh* mir);
-
-    void lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
-                     MDefinition* input);
-    void lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
+  void lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
                      MDefinition* lhs, MDefinition* rhs);
+  void lowerUrshD(MUrsh* mir);
 
-    void lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
-                          MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
-    void lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs);
-    template<size_t Temps>
-    void lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
-                            MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
+  void lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
+                   MDefinition* input);
+  void lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
+                   MDefinition* lhs, MDefinition* rhs);
 
-    void lowerForFPU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
-                     MDefinition* src);
-    template<size_t Temps>
-    void lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefinition* mir,
-                     MDefinition* lhs, MDefinition* rhs);
+  void lowerForALUInt64(
+      LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
+      MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
+  void lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs,
+                        MDefinition* rhs);
+  template <size_t Temps>
+  void lowerForShiftInt64(
+      LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
+      MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
 
-    void lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction* mir,
-                                 MDefinition* lhs, MDefinition* rhs);
-    void lowerDivI(MDiv* div);
-    void lowerModI(MMod* mod);
-    void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
-    void lowerUDiv(MDiv* div);
-    void lowerUMod(MMod* mod);
+  void lowerForFPU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
+                   MDefinition* src);
+  template <size_t Temps>
+  void lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefinition* mir,
+                   MDefinition* lhs, MDefinition* rhs);
 
-    LTableSwitch* newLTableSwitch(const LAllocation& in, const LDefinition& inputCopy,
-                                  MTableSwitch* ins);
-    LTableSwitchV* newLTableSwitchV(MTableSwitch* ins);
+  void lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction* mir,
+                               MDefinition* lhs, MDefinition* rhs);
+  void lowerDivI(MDiv* div);
+  void lowerModI(MMod* mod);
+  void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
+  void lowerUDiv(MDiv* div);
+  void lowerUMod(MMod* mod);
 
-    void lowerPhi(MPhi* phi);
+  LTableSwitch* newLTableSwitch(const LAllocation& in,
+                                const LDefinition& inputCopy,
+                                MTableSwitch* ins);
+  LTableSwitchV* newLTableSwitchV(MTableSwitch* ins);
+
+  void lowerPhi(MPhi* phi);
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_mips_shared_Lowering_mips_shared_h */

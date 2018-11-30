@@ -14,10 +14,8 @@
 namespace mozilla {
 namespace gfx {
 
-class SFNTData final
-{
-public:
-
+class SFNTData final {
+ public:
   /**
    * Creates an SFNTData if the header is a format that we understand and
    * aDataLength is sufficient for the length information in the header data.
@@ -27,7 +25,7 @@ public:
    * @param aDataLength length
    * @return UniquePtr to a SFNTData or nullptr if the header is invalid.
    */
-  static UniquePtr<SFNTData> Create(const uint8_t *aFontData,
+  static UniquePtr<SFNTData> Create(const uint8_t* aFontData,
                                     uint32_t aDataLength);
 
   /**
@@ -37,7 +35,7 @@ public:
    * @param aDataLength length
    * @return unique key to be used for caching
    */
-  static uint64_t GetUniqueKey(const uint8_t *aFontData, uint32_t aDataLength,
+  static uint64_t GetUniqueKey(const uint8_t* aFontData, uint32_t aDataLength,
                                uint32_t aVarDataSize, const void* aVarData);
 
   ~SFNTData();
@@ -74,14 +72,13 @@ public:
    * @param aTruncatedLen length to truncate the compared font name to.
    * @return true if the full name is successfully read.
    */
-  bool GetIndexForU16Name(const mozilla::u16string& aU16FullName, uint32_t* aIndex,
-                          size_t aTruncatedLen = 0);
+  bool GetIndexForU16Name(const mozilla::u16string& aU16FullName,
+                          uint32_t* aIndex, size_t aTruncatedLen = 0);
 
-private:
-
+ private:
   SFNTData() {}
 
-  bool AddFont(const uint8_t *aFontData, uint32_t aDataLength,
+  bool AddFont(const uint8_t* aFontData, uint32_t aDataLength,
                uint32_t aOffset);
 
   // Internal representation of single font in font file.
@@ -90,7 +87,7 @@ private:
   Vector<Font*> mFonts;
 };
 
-} // gfx
-} // mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // mozilla_gfx_SFNTData_h
+#endif  // mozilla_gfx_SFNTData_h

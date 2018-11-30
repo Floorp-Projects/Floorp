@@ -13,7 +13,5 @@
 #include "nsIDivertableChannel.h"
 
 namespace mozilla {
-namespace net {
-
-} // namespace net
-} // namespace mozilla
+namespace net {}  // namespace net
+}  // namespace mozilla

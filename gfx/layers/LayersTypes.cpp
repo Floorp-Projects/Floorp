@@ -15,8 +15,7 @@ EventRegions::EventRegions(const nsIntRegion& aHitRegion,
                            const nsIntRegion& aNoActionRegion,
                            const nsIntRegion& aHorizontalPanRegion,
                            const nsIntRegion& aVerticalPanRegion,
-                           bool aDTCRequiresTargetConfirmation)
-{
+                           bool aDTCRequiresTargetConfirmation) {
   mHitRegion = aHitRegion;
   mNoActionRegion = aNoActionRegion;
   mHorizontalPanRegion = aHorizontalPanRegion;
@@ -31,6 +30,5 @@ EventRegions::EventRegions(const nsIntRegion& aHitRegion,
   mDTCRequiresTargetConfirmation = aDTCRequiresTargetConfirmation;
 }
 
-} // namespace layers
-} // namespace mozilla
-
+}  // namespace layers
+}  // namespace mozilla

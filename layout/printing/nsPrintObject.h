@@ -21,52 +21,47 @@ class nsIDocument;
 class nsPresContext;
 
 // nsPrintObject Document Type
-enum PrintObjectType  {eDoc = 0, eFrame = 1, eIFrame = 2, eFrameSet = 3};
+enum PrintObjectType { eDoc = 0, eFrame = 1, eIFrame = 2, eFrameSet = 3 };
 
 //---------------------------------------------------
 //-- nsPrintObject Class
 //---------------------------------------------------
-class nsPrintObject
-{
-
-public:
+class nsPrintObject {
+ public:
   nsPrintObject();
-  ~nsPrintObject(); // non-virtual
+  ~nsPrintObject();  // non-virtual
 
   // Methods
   nsresult Init(nsIDocShell* aDocShell, nsIDocument* aDoc, bool aPrintPreview);
 
-  bool IsPrintable()  { return !mDontPrint; }
-  void   DestroyPresentation();
+  bool IsPrintable() { return !mDontPrint; }
+  void DestroyPresentation();
 
   // Data Members
-  nsCOMPtr<nsIDocShell>    mDocShell;
+  nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIDocShellTreeOwner> mTreeOwner;
-  nsCOMPtr<nsIDocument>    mDocument;
+  nsCOMPtr<nsIDocument> mDocument;
 
-  RefPtr<nsPresContext>  mPresContext;
-  nsCOMPtr<nsIPresShell>   mPresShell;
+  RefPtr<nsPresContext> mPresContext;
+  nsCOMPtr<nsIPresShell> mPresShell;
   RefPtr<nsViewManager> mViewManager;
 
-  nsCOMPtr<nsIContent>     mContent;
-  PrintObjectType  mFrameType;
+  nsCOMPtr<nsIContent> mContent;
+  PrintObjectType mFrameType;
 
   nsTArray<mozilla::UniquePtr<nsPrintObject>> mKids;
-  nsPrintObject*   mParent; // This is a non-owning pointer.
-  bool             mHasBeenPrinted;
-  bool             mDontPrint;
-  bool             mPrintAsIs;
-  bool             mInvisible;        // Indicates PO is set to not visible by CSS
-  bool             mPrintPreview;
-  bool             mDidCreateDocShell;
-  float            mShrinkRatio;
-  float            mZoomRatio;
+  nsPrintObject* mParent;  // This is a non-owning pointer.
+  bool mHasBeenPrinted;
+  bool mDontPrint;
+  bool mPrintAsIs;
+  bool mInvisible;  // Indicates PO is set to not visible by CSS
+  bool mPrintPreview;
+  bool mDidCreateDocShell;
+  float mShrinkRatio;
+  float mZoomRatio;
 
-private:
+ private:
   nsPrintObject& operator=(const nsPrintObject& aOther) = delete;
 };
 
-
-
 #endif /* nsPrintObject_h___ */
-

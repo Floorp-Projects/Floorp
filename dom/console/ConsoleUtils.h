@@ -14,9 +14,8 @@
 namespace mozilla {
 namespace dom {
 
-class ConsoleUtils final
-{
-public:
+class ConsoleUtils final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(ConsoleUtils)
 
   enum Level {
@@ -26,36 +25,31 @@ public:
   };
 
   // Main-thread only, reports a console message from a ServiceWorker.
-  static void
-  ReportForServiceWorkerScope(const nsAString& aScope,
-                              const nsAString& aMessage,
-                              const nsAString& aFilename,
-                              uint32_t aLineNumber,
-                              uint32_t aColumnNumber,
-                              Level aLevel);
+  static void ReportForServiceWorkerScope(const nsAString& aScope,
+                                          const nsAString& aMessage,
+                                          const nsAString& aFilename,
+                                          uint32_t aLineNumber,
+                                          uint32_t aColumnNumber, Level aLevel);
 
-private:
+ private:
   ConsoleUtils();
   ~ConsoleUtils();
 
-  static ConsoleUtils*
-  GetOrCreate();
+  static ConsoleUtils* GetOrCreate();
 
-  JSObject*
-  GetOrCreateSandbox(JSContext* aCx);
+  JSObject* GetOrCreateSandbox(JSContext* aCx);
 
-  void
-  ReportForServiceWorkerScopeInternal(const nsAString& aScope,
-                                      const nsAString& aMessage,
-                                      const nsAString& aFilename,
-                                      uint32_t aLineNumber,
-                                      uint32_t aColumnNumber,
-                                      Level aLevel);
+  void ReportForServiceWorkerScopeInternal(const nsAString& aScope,
+                                           const nsAString& aMessage,
+                                           const nsAString& aFilename,
+                                           uint32_t aLineNumber,
+                                           uint32_t aColumnNumber,
+                                           Level aLevel);
 
   RefPtr<JSObjectHolder> mSandbox;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_ConsoleUtils_h */

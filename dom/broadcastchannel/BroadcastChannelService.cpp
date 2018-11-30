@@ -24,10 +24,9 @@ namespace {
 
 BroadcastChannelService* sInstance = nullptr;
 
-} // namespace
+}  // namespace
 
-BroadcastChannelService::BroadcastChannelService()
-{
+BroadcastChannelService::BroadcastChannelService() {
   AssertIsOnBackgroundThread();
 
   // sInstance is a raw BroadcastChannelService*.
@@ -35,8 +34,7 @@ BroadcastChannelService::BroadcastChannelService()
   sInstance = this;
 }
 
-BroadcastChannelService::~BroadcastChannelService()
-{
+BroadcastChannelService::~BroadcastChannelService() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(sInstance == this);
   MOZ_ASSERT(mAgents.Count() == 0);
@@ -46,8 +44,7 @@ BroadcastChannelService::~BroadcastChannelService()
 
 // static
 already_AddRefed<BroadcastChannelService>
-BroadcastChannelService::GetOrCreate()
-{
+BroadcastChannelService::GetOrCreate() {
   AssertIsOnBackgroundThread();
 
   RefPtr<BroadcastChannelService> instance = sInstance;
@@ -57,25 +54,22 @@ BroadcastChannelService::GetOrCreate()
   return instance.forget();
 }
 
-void
-BroadcastChannelService::RegisterActor(BroadcastChannelParent* aParent,
-                                       const nsAString& aOriginChannelKey)
-{
+void BroadcastChannelService::RegisterActor(
+    BroadcastChannelParent* aParent, const nsAString& aOriginChannelKey) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
 
   nsTArray<BroadcastChannelParent*>* parents =
-    mAgents.LookupForAdd(aOriginChannelKey).OrInsert(
-      [] () { return new nsTArray<BroadcastChannelParent*>(); });
+      mAgents.LookupForAdd(aOriginChannelKey).OrInsert([]() {
+        return new nsTArray<BroadcastChannelParent*>();
+      });
 
   MOZ_ASSERT(!parents->Contains(aParent));
   parents->AppendElement(aParent);
 }
 
-void
-BroadcastChannelService::UnregisterActor(BroadcastChannelParent* aParent,
-                                         const nsAString& aOriginChannelKey)
-{
+void BroadcastChannelService::UnregisterActor(
+    BroadcastChannelParent* aParent, const nsAString& aOriginChannelKey) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
 
@@ -90,11 +84,9 @@ BroadcastChannelService::UnregisterActor(BroadcastChannelParent* aParent,
   }
 }
 
-void
-BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
-                                     const ClonedMessageData& aData,
-                                     const nsAString& aOriginChannelKey)
-{
+void BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
+                                          const ClonedMessageData& aData,
+                                          const nsAString& aOriginChannelKey) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
 
@@ -144,5 +136,5 @@ BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

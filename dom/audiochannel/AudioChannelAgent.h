@@ -21,9 +21,8 @@ namespace dom {
 class AudioPlaybackConfig;
 
 /* Header file */
-class AudioChannelAgent : public nsIAudioChannelAgent
-{
-public:
+class AudioChannelAgent : public nsIAudioChannelAgent {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIAUDIOCHANNELAGENT
 
@@ -35,10 +34,7 @@ public:
   void WindowSuspendChanged(nsSuspendedTypes aSuspend);
   void WindowAudioCaptureChanged(uint64_t aInnerWindowID, bool aCapture);
 
-  nsPIDOMWindowOuter* Window() const
-  {
-    return mWindow;
-  }
+  nsPIDOMWindowOuter* Window() const { return mWindow; }
 
   uint64_t WindowID() const;
   uint64_t InnerWindowID() const;
@@ -46,7 +42,7 @@ public:
   bool IsPlayingStarted() const;
   bool ShouldBlockMedia() const;
 
-private:
+ private:
   virtual ~AudioChannelAgent();
 
   AudioPlaybackConfig GetMediaConfig();
@@ -73,8 +69,7 @@ private:
   bool mIsRegToService;
 };
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

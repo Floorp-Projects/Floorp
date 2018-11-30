@@ -15,80 +15,78 @@
 
 class nsIPersistentProperties;
 
+class nsStringBundleBase : public nsIStringBundle, public nsIMemoryReporter {
+ public:
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
-class nsStringBundleBase : public nsIStringBundle
-                         , public nsIMemoryReporter
-{
-public:
-    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+  nsresult ParseProperties(nsIPersistentProperties**);
 
-    nsresult ParseProperties(nsIPersistentProperties**);
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISTRINGBUNDLE
+  NS_DECL_NSIMEMORYREPORTER
 
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSISTRINGBUNDLE
-    NS_DECL_NSIMEMORYREPORTER
+  virtual nsresult LoadProperties() = 0;
 
-    virtual nsresult LoadProperties() = 0;
+  const nsCString& BundleURL() const { return mPropertiesURL; }
 
-    const nsCString& BundleURL() const { return mPropertiesURL; }
+  // Returns true if this bundle has more than one reference. If it has only
+  // a single reference, it is assumed to be held alive by the bundle cache.
+  bool IsShared() const { return mRefCnt > 1; }
 
-    // Returns true if this bundle has more than one reference. If it has only
-    // a single reference, it is assumed to be held alive by the bundle cache.
-    bool IsShared() const { return mRefCnt > 1; }
+  static nsStringBundleBase* Cast(nsIStringBundle* aBundle) {
+    return static_cast<nsStringBundleBase*>(aBundle);
+  }
 
-    static nsStringBundleBase* Cast(nsIStringBundle* aBundle)
-    {
-      return static_cast<nsStringBundleBase*>(aBundle);
-    }
+  template <typename T, typename... Args>
+  static already_AddRefed<T> Create(Args... args);
 
-    template <typename T, typename... Args>
-    static already_AddRefed<T> Create(Args... args);
+ protected:
+  nsStringBundleBase(const char* aURLSpec);
 
-protected:
-    nsStringBundleBase(const char* aURLSpec);
+  virtual ~nsStringBundleBase();
 
-    virtual ~nsStringBundleBase();
+  virtual nsresult GetStringImpl(const nsACString& aName,
+                                 nsAString& aResult) = 0;
 
-    virtual nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) = 0;
+  virtual nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) = 0;
 
-    virtual nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) = 0;
+  void RegisterMemoryReporter();
 
-    void RegisterMemoryReporter();
+  nsCString mPropertiesURL;
+  mozilla::Mutex mMutex;
+  bool mAttemptedLoad;
+  bool mLoaded;
 
-    nsCString mPropertiesURL;
-    mozilla::Mutex mMutex;
-    bool mAttemptedLoad;
-    bool mLoaded;
+  size_t SizeOfIncludingThisIfUnshared(
+      mozilla::MallocSizeOf aMallocSizeOf) const override;
 
-    size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
-
-public:
-    static nsresult FormatString(const char16_t *formatStr,
-                                 const char16_t **aParams, uint32_t aLength,
-                                 nsAString& aResult);
+ public:
+  static nsresult FormatString(const char16_t* formatStr,
+                               const char16_t** aParams, uint32_t aLength,
+                               nsAString& aResult);
 };
 
-class nsStringBundle : public nsStringBundleBase
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
+class nsStringBundle : public nsStringBundleBase {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
 
-    nsCOMPtr<nsIPersistentProperties> mProps;
+  nsCOMPtr<nsIPersistentProperties> mProps;
 
-    nsresult LoadProperties() override;
+  nsresult LoadProperties() override;
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const override;
 
-protected:
-    friend class nsStringBundleBase;
+ protected:
+  friend class nsStringBundleBase;
 
-    explicit nsStringBundle(const char* aURLSpec);
+  explicit nsStringBundle(const char* aURLSpec);
 
-    virtual ~nsStringBundle();
+  virtual ~nsStringBundle();
 
-    nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) override;
+  nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) override;
 
-    nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) override;
+  nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) override;
 };
 
 #endif

@@ -40,27 +40,25 @@ static const BigEndianUint16 LANG_ID_MICROSOFT_EN_US = 0x0409;
 #pragma pack(push, 1)
 
 // Name table has a header, followed by name records, followed by string data.
-struct NameHeader
-{
-  BigEndianUint16 format;       // Format selector (=0).
-  BigEndianUint16 count;        // Number of name records.
-  BigEndianUint16 stringOffset; // Offset to string storage from start of table.
+struct NameHeader {
+  BigEndianUint16 format;  // Format selector (=0).
+  BigEndianUint16 count;   // Number of name records.
+  BigEndianUint16
+      stringOffset;  // Offset to string storage from start of table.
 };
 
-struct NameRecord
-{
+struct NameRecord {
   BigEndianUint16 platformID;
-  BigEndianUint16 encodingID; // Platform-specific encoding ID
+  BigEndianUint16 encodingID;  // Platform-specific encoding ID
   BigEndianUint16 languageID;
   BigEndianUint16 nameID;
-  BigEndianUint16 length;     // String length in bytes.
-  BigEndianUint16 offset;     // String offset from start of storage in bytes.
+  BigEndianUint16 length;  // String length in bytes.
+  BigEndianUint16 offset;  // String offset from start of storage in bytes.
 };
 
 #pragma pack(pop)
 
-enum ENameDecoder : int
-{
+enum ENameDecoder : int {
   eNameDecoderUTF16,
 #if defined(XP_MACOSX)
   eNameDecoderMacRoman,
@@ -69,9 +67,8 @@ enum ENameDecoder : int
 };
 
 /* static */
-UniquePtr<SFNTNameTable>
-SFNTNameTable::Create(const uint8_t *aNameData, uint32_t aDataLength)
-{
+UniquePtr<SFNTNameTable> SFNTNameTable::Create(const uint8_t *aNameData,
+                                               uint32_t aDataLength) {
   MOZ_ASSERT(aNameData);
 
   if (aDataLength < sizeof(NameHeader)) {
@@ -79,7 +76,8 @@ SFNTNameTable::Create(const uint8_t *aNameData, uint32_t aDataLength)
     return nullptr;
   }
 
-  const NameHeader *nameHeader = reinterpret_cast<const NameHeader*>(aNameData);
+  const NameHeader *nameHeader =
+      reinterpret_cast<const NameHeader *>(aNameData);
   if (nameHeader->format != FORMAT_0) {
     gfxWarning() << "Only Name Table Format 0 is supported.";
     return nullptr;
@@ -99,23 +97,20 @@ SFNTNameTable::Create(const uint8_t *aNameData, uint32_t aDataLength)
   }
 
   return UniquePtr<SFNTNameTable>(
-    new SFNTNameTable(nameHeader, aNameData, aDataLength));
+      new SFNTNameTable(nameHeader, aNameData, aDataLength));
 }
 
 SFNTNameTable::SFNTNameTable(const NameHeader *aNameHeader,
                              const uint8_t *aNameData, uint32_t aDataLength)
-  : mFirstRecord(reinterpret_cast<const NameRecord*>(aNameData
-                                                     + sizeof(NameHeader)))
-  , mEndOfRecords(mFirstRecord + aNameHeader->count)
-  , mStringData(aNameData + aNameHeader->stringOffset)
-  , mStringDataLength(aDataLength - aNameHeader->stringOffset)
-{
-  MOZ_ASSERT(reinterpret_cast<const uint8_t*>(aNameHeader) == aNameData);
+    : mFirstRecord(
+          reinterpret_cast<const NameRecord *>(aNameData + sizeof(NameHeader))),
+      mEndOfRecords(mFirstRecord + aNameHeader->count),
+      mStringData(aNameData + aNameHeader->stringOffset),
+      mStringDataLength(aDataLength - aNameHeader->stringOffset) {
+  MOZ_ASSERT(reinterpret_cast<const uint8_t *>(aNameHeader) == aNameData);
 }
 
-static bool
-IsUTF16Encoding(const NameRecord *aNameRecord)
-{
+static bool IsUTF16Encoding(const NameRecord *aNameRecord) {
   if (aNameRecord->platformID == PLATFORM_ID_MICROSOFT &&
       (aNameRecord->encodingID == ENCODING_ID_MICROSOFT_UNICODEBMP ||
        aNameRecord->encodingID == ENCODING_ID_MICROSOFT_SYMBOL)) {
@@ -130,9 +125,7 @@ IsUTF16Encoding(const NameRecord *aNameRecord)
 }
 
 #if defined(XP_MACOSX)
-static bool
-IsMacRomanEncoding(const NameRecord *aNameRecord)
-{
+static bool IsMacRomanEncoding(const NameRecord *aNameRecord) {
   if (aNameRecord->platformID == PLATFORM_ID_MAC &&
       aNameRecord->encodingID == ENCODING_ID_MAC_ROMAN) {
     return true;
@@ -142,9 +135,8 @@ IsMacRomanEncoding(const NameRecord *aNameRecord)
 }
 #endif
 
-static NameRecordMatchers*
-CreateCanonicalMatchers(const BigEndianUint16& aNameID)
-{
+static NameRecordMatchers *CreateCanonicalMatchers(
+    const BigEndianUint16 &aNameID) {
   // For Windows, we return only Microsoft platform name record
   // matchers. On Mac, we return matchers for both Microsoft platform
   // records and Mac platform records.
@@ -152,38 +144,35 @@ CreateCanonicalMatchers(const BigEndianUint16& aNameID)
 
 #if defined(XP_MACOSX)
   // First, look for the English name.
-  if (!matchers->append(
-    [=](const NameRecord *aNameRecord) {
+  if (!matchers->append([=](const NameRecord *aNameRecord) {
         if (aNameRecord->nameID == aNameID &&
             aNameRecord->languageID == LANG_ID_MAC_ENGLISH &&
             aNameRecord->platformID == PLATFORM_ID_MAC &&
             IsMacRomanEncoding(aNameRecord)) {
           return eNameDecoderMacRoman;
-        } else  {
+        } else {
           return eNameDecoderNone;
         }
-    })) {
+      })) {
     MOZ_CRASH();
   }
 
   // Second, look for all languages.
-  if (!matchers->append(
-    [=](const NameRecord *aNameRecord) {
+  if (!matchers->append([=](const NameRecord *aNameRecord) {
         if (aNameRecord->nameID == aNameID &&
             aNameRecord->platformID == PLATFORM_ID_MAC &&
             IsMacRomanEncoding(aNameRecord)) {
           return eNameDecoderMacRoman;
-        } else  {
+        } else {
           return eNameDecoderNone;
         }
-    })) {
+      })) {
     MOZ_CRASH();
   }
 #endif /* defined(XP_MACOSX) */
 
   // First, look for the English name (this will normally succeed).
-  if (!matchers->append(
-    [=](const NameRecord *aNameRecord) {
+  if (!matchers->append([=](const NameRecord *aNameRecord) {
         if (aNameRecord->nameID == aNameID &&
             aNameRecord->languageID == LANG_ID_MICROSOFT_EN_US &&
             aNameRecord->platformID == PLATFORM_ID_MICROSOFT &&
@@ -192,13 +181,12 @@ CreateCanonicalMatchers(const BigEndianUint16& aNameID)
         } else {
           return eNameDecoderNone;
         }
-    })) {
+      })) {
     MOZ_CRASH();
   }
 
   // Second, look for all languages.
-  if (!matchers->append(
-    [=](const NameRecord *aNameRecord) {
+  if (!matchers->append([=](const NameRecord *aNameRecord) {
         if (aNameRecord->nameID == aNameID &&
             aNameRecord->platformID == PLATFORM_ID_MICROSOFT &&
             IsUTF16Encoding(aNameRecord)) {
@@ -206,40 +194,32 @@ CreateCanonicalMatchers(const BigEndianUint16& aNameID)
         } else {
           return eNameDecoderNone;
         }
-    })) {
+      })) {
     MOZ_CRASH();
   }
 
   return matchers;
 }
 
-static const NameRecordMatchers&
-FullNameMatchers()
-{
+static const NameRecordMatchers &FullNameMatchers() {
   static const NameRecordMatchers *sFullNameMatchers =
-    CreateCanonicalMatchers(NAME_ID_FULL);
+      CreateCanonicalMatchers(NAME_ID_FULL);
   return *sFullNameMatchers;
 }
 
-static const NameRecordMatchers&
-FamilyMatchers()
-{
+static const NameRecordMatchers &FamilyMatchers() {
   static const NameRecordMatchers *sFamilyMatchers =
-    CreateCanonicalMatchers(NAME_ID_FAMILY);
+      CreateCanonicalMatchers(NAME_ID_FAMILY);
   return *sFamilyMatchers;
 }
 
-static const NameRecordMatchers&
-StyleMatchers()
-{
+static const NameRecordMatchers &StyleMatchers() {
   static const NameRecordMatchers *sStyleMatchers =
-    CreateCanonicalMatchers(NAME_ID_STYLE);
+      CreateCanonicalMatchers(NAME_ID_STYLE);
   return *sStyleMatchers;
 }
 
-bool
-SFNTNameTable::GetU16FullName(mozilla::u16string& aU16FullName)
-{
+bool SFNTNameTable::GetU16FullName(mozilla::u16string &aU16FullName) {
   if (ReadU16Name(FullNameMatchers(), aU16FullName)) {
     return true;
   }
@@ -262,14 +242,12 @@ SFNTNameTable::GetU16FullName(mozilla::u16string& aU16FullName)
   return true;
 }
 
-bool
-SFNTNameTable::ReadU16Name(const NameRecordMatchers& aMatchers,
-                           mozilla::u16string& aU16Name)
-{
+bool SFNTNameTable::ReadU16Name(const NameRecordMatchers &aMatchers,
+                                mozilla::u16string &aU16Name) {
   MOZ_ASSERT(!aMatchers.empty());
 
   for (size_t i = 0; i < aMatchers.length(); ++i) {
-    const NameRecord* record = mFirstRecord;
+    const NameRecord *record = mFirstRecord;
     while (record != mEndOfRecords) {
       switch (aMatchers[i](record)) {
         case eNameDecoderUTF16:
@@ -291,10 +269,8 @@ SFNTNameTable::ReadU16Name(const NameRecordMatchers& aMatchers,
   return false;
 }
 
-bool
-SFNTNameTable::ReadU16NameFromU16Record(const NameRecord *aNameRecord,
-                                        mozilla::u16string& aU16Name)
-{
+bool SFNTNameTable::ReadU16NameFromU16Record(const NameRecord *aNameRecord,
+                                             mozilla::u16string &aU16Name) {
   uint32_t offset = aNameRecord->offset;
   uint32_t length = aNameRecord->length;
   if (mStringDataLength < offset + length) {
@@ -313,10 +289,8 @@ SFNTNameTable::ReadU16NameFromU16Record(const NameRecord *aNameRecord,
 }
 
 #if defined(XP_MACOSX)
-bool
-SFNTNameTable::ReadU16NameFromMacRomanRecord(const NameRecord *aNameRecord,
-                                             mozilla::u16string& aU16Name)
-{
+bool SFNTNameTable::ReadU16NameFromMacRomanRecord(
+    const NameRecord *aNameRecord, mozilla::u16string &aU16Name) {
   uint32_t offset = aNameRecord->offset;
   uint32_t length = aNameRecord->length;
   if (mStringDataLength < offset + length) {
@@ -347,11 +321,11 @@ SFNTNameTable::ReadU16NameFromMacRomanRecord(const NameRecord *aNameRecord,
 
   CFRelease(cfString);
 
-  aU16Name.assign(reinterpret_cast<char16_t*>(u16Buffer.get()), decodedLength);
+  aU16Name.assign(reinterpret_cast<char16_t *>(u16Buffer.get()), decodedLength);
 
   return true;
 }
 #endif
 
-} // gfx
-} // mozilla
+}  // namespace gfx
+}  // namespace mozilla

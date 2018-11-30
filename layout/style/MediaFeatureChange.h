@@ -15,8 +15,7 @@
 
 namespace mozilla {
 
-enum class MediaFeatureChangeReason
-{
+enum class MediaFeatureChangeReason {
   // The viewport size the document has used has changed.
   //
   // This affects size media queries like min-width.
@@ -47,28 +46,21 @@ enum class MediaFeatureChangeReason
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaFeatureChangeReason)
 
-struct MediaFeatureChange
-{
+struct MediaFeatureChange {
   nsRestyleHint mRestyleHint;
   nsChangeHint mChangeHint;
   MediaFeatureChangeReason mReason;
 
   MOZ_IMPLICIT MediaFeatureChange(MediaFeatureChangeReason aReason)
-    : MediaFeatureChange(nsRestyleHint(0), nsChangeHint(0), aReason)
-  {
-  }
+      : MediaFeatureChange(nsRestyleHint(0), nsChangeHint(0), aReason) {}
 
-  MediaFeatureChange(nsRestyleHint aRestyleHint,
-                     nsChangeHint aChangeHint,
+  MediaFeatureChange(nsRestyleHint aRestyleHint, nsChangeHint aChangeHint,
                      MediaFeatureChangeReason aReason)
-    : mRestyleHint(aRestyleHint)
-    , mChangeHint(aChangeHint)
-    , mReason(aReason)
-  {
-  }
+      : mRestyleHint(aRestyleHint),
+        mChangeHint(aChangeHint),
+        mReason(aReason) {}
 
-  inline MediaFeatureChange& operator|=(const MediaFeatureChange& aOther)
-  {
+  inline MediaFeatureChange& operator|=(const MediaFeatureChange& aOther) {
     mRestyleHint |= aOther.mRestyleHint;
     mChangeHint |= aOther.mChangeHint;
     mReason |= aOther.mReason;
@@ -76,6 +68,6 @@ struct MediaFeatureChange
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

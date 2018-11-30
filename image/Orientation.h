@@ -11,30 +11,19 @@
 namespace mozilla {
 namespace image {
 
-enum class Angle : uint8_t {
-  D0,
-  D90,
-  D180,
-  D270
-};
+enum class Angle : uint8_t { D0, D90, D180, D270 };
 
-enum class Flip : uint8_t {
-  Unflipped,
-  Horizontal
-};
+enum class Flip : uint8_t { Unflipped, Horizontal };
 
 /**
  * A struct that describes an image's orientation as a rotation optionally
  * followed by a reflection. This may be used to be indicate an image's inherent
  * orientation or a desired orientation for the image.
  */
-struct Orientation
-{
+struct Orientation {
   explicit Orientation(Angle aRotation = Angle::D0,
                        Flip mFlip = Flip::Unflipped)
-    : rotation(aRotation)
-    , flip(mFlip)
-  { }
+      : rotation(aRotation), flip(mFlip) {}
 
   bool IsIdentity() const {
     return (rotation == Angle::D0) && (flip == Flip::Unflipped);
@@ -53,10 +42,10 @@ struct Orientation
   }
 
   Angle rotation;
-  Flip  flip;
+  Flip flip;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_Orientation_h
+#endif  // mozilla_image_Orientation_h

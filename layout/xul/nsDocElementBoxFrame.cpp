@@ -26,28 +26,28 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class nsDocElementBoxFrame final : public nsBoxFrame
-                                 , public nsIAnonymousContentCreator
-{
-public:
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+class nsDocElementBoxFrame final : public nsBoxFrame,
+                                   public nsIAnonymousContentCreator {
+ public:
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                                   ComputedStyle* aStyle);
 
   explicit nsDocElementBoxFrame(ComputedStyle* aStyle)
-    :nsBoxFrame(aStyle, kClassID, true) {}
+      : nsBoxFrame(aStyle, kClassID, true) {}
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsDocElementBoxFrame)
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  virtual nsresult CreateAnonymousContent(
+      nsTArray<ContentInfo>& aElements) override;
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-  {
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
     // Override nsBoxFrame.
     if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
       return false;
@@ -57,44 +57,40 @@ public:
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
-private:
+ private:
   nsCOMPtr<Element> mPopupgroupContent;
   nsCOMPtr<Element> mTooltipContent;
 };
 
 //----------------------------------------------------------------------
 
-nsContainerFrame*
-NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsContainerFrame* NS_NewDocElementBoxFrame(nsIPresShell* aPresShell,
+                                           ComputedStyle* aStyle) {
   return new (aPresShell) nsDocElementBoxFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDocElementBoxFrame)
 
-void
-nsDocElementBoxFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
-{
+void nsDocElementBoxFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                       PostDestroyData& aPostDestroyData) {
   aPostDestroyData.AddAnonymousContent(mPopupgroupContent.forget());
   aPostDestroyData.AddAnonymousContent(mTooltipContent.forget());
   nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-nsresult
-nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
-{
+nsresult nsDocElementBoxFrame::CreateAnonymousContent(
+    nsTArray<ContentInfo>& aElements) {
   nsIDocument* doc = mContent->GetComposedDoc();
   if (!doc) {
     // The page is currently being torn down.  Why bother.
     return NS_ERROR_FAILURE;
   }
-  nsNodeInfoManager *nodeInfoManager = doc->NodeInfoManager();
+  nsNodeInfoManager* nodeInfoManager = doc->NodeInfoManager();
 
   // create the top-secret popupgroup node. shhhhh!
   RefPtr<NodeInfo> nodeInfo;
-  nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::popupgroup,
-                                          nullptr, kNameSpaceID_XUL,
-                                          nsINode::ELEMENT_NODE);
+  nodeInfo = nodeInfoManager->GetNodeInfo(
+      nsGkAtoms::popupgroup, nullptr, kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = NS_NewXULElement(getter_AddRefs(mPopupgroupContent),
@@ -105,9 +101,8 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // create the top-secret default tooltip node. shhhhh!
-  nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::tooltip, nullptr,
-                                          kNameSpaceID_XUL,
-                                          nsINode::ELEMENT_NODE);
+  nodeInfo = nodeInfoManager->GetNodeInfo(
+      nsGkAtoms::tooltip, nullptr, kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   rv = NS_NewXULElement(getter_AddRefs(mTooltipContent), nodeInfo.forget(),
@@ -117,16 +112,13 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_default,
                            NS_LITERAL_STRING("true"), false);
 
-  if (!aElements.AppendElement(mTooltipContent))
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!aElements.AppendElement(mTooltipContent)) return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
 
-void
-nsDocElementBoxFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                               uint32_t aFilter)
-{
+void nsDocElementBoxFrame::AppendAnonymousContentTo(
+    nsTArray<nsIContent*>& aElements, uint32_t aFilter) {
   if (mPopupgroupContent) {
     aElements.AppendElement(mPopupgroupContent);
   }
@@ -137,13 +129,11 @@ nsDocElementBoxFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 }
 
 NS_QUERYFRAME_HEAD(nsDocElementBoxFrame)
-  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG_FRAME_DUMP
-nsresult
-nsDocElementBoxFrame::GetFrameName(nsAString& aResult) const
-{
+nsresult nsDocElementBoxFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("DocElementBox"), aResult);
 }
 #endif

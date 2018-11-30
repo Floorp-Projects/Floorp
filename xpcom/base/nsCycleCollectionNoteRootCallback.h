@@ -10,25 +10,28 @@
 class nsCycleCollectionParticipant;
 class nsISupports;
 
-class nsCycleCollectionNoteRootCallback
-{
-public:
-  // aRoot must be canonical (ie the result of QIing to nsCycleCollectionISupports).
-  NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports* aRoot,
-                                  nsCycleCollectionParticipant* aParticipant) = 0;
+class nsCycleCollectionNoteRootCallback {
+ public:
+  // aRoot must be canonical (ie the result of QIing to
+  // nsCycleCollectionISupports).
+  NS_IMETHOD_(void)
+  NoteXPCOMRoot(nsISupports* aRoot,
+                nsCycleCollectionParticipant* aParticipant) = 0;
 
   NS_IMETHOD_(void) NoteJSRoot(JSObject* aRoot) = 0;
-  NS_IMETHOD_(void) NoteNativeRoot(void* aRoot,
-                                   nsCycleCollectionParticipant* aParticipant) = 0;
+  NS_IMETHOD_(void)
+  NoteNativeRoot(void* aRoot, nsCycleCollectionParticipant* aParticipant) = 0;
 
-  NS_IMETHOD_(void) NoteWeakMapping(JSObject* aMap, JS::GCCellPtr aKey,
-                                    JSObject* aKeyDelegate, JS::GCCellPtr aVal) = 0;
+  NS_IMETHOD_(void)
+  NoteWeakMapping(JSObject* aMap, JS::GCCellPtr aKey, JSObject* aKeyDelegate,
+                  JS::GCCellPtr aVal) = 0;
 
   bool WantAllTraces() const { return mWantAllTraces; }
-protected:
+
+ protected:
   nsCycleCollectionNoteRootCallback() : mWantAllTraces(false) {}
 
   bool mWantAllTraces;
 };
 
-#endif // nsCycleCollectionNoteRootCallback_h__
+#endif  // nsCycleCollectionNoteRootCallback_h__

@@ -8,29 +8,26 @@
 #include "common/mac/arch_utilities.h"
 #include "common/mac/file_id.h"
 
-//TODO: move this somewhere common, this is copied from dump_symbols.cc
+// TODO: move this somewhere common, this is copied from dump_symbols.cc
 // Format the Mach-O identifier in IDENTIFIER as a UUID with the
 // dashes removed.
-std::string FormatIdentifier(unsigned char identifier[16])
-{
+std::string FormatIdentifier(unsigned char identifier[16]) {
   char identifier_string[40];
-  google_breakpad::FileID::ConvertIdentifierToString(identifier, identifier_string,
-                                                     sizeof(identifier_string));
+  google_breakpad::FileID::ConvertIdentifierToString(
+      identifier, identifier_string, sizeof(identifier_string));
   std::string compacted(identifier_string);
-  for(size_t i = compacted.find('-'); i != std::string::npos;
-      i = compacted.find('-', i))
+  for (size_t i = compacted.find('-'); i != std::string::npos;
+       i = compacted.find('-', i))
     compacted.erase(i, 1);
   compacted += '0';
   return compacted;
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   if (argc != 2) {
     fprintf(stderr, "usage: fileid <object file>\n");
     return 1;
   }
-
 
   unsigned char identifier[16];
   google_breakpad::FileID file_id(argv[1]);
@@ -42,8 +39,7 @@ int main(int argc, char** argv)
   // and that's what our debug binaries will contain.
   if (!file_id.MachoIdentifier(CPU_TYPE_X86_64, CPU_SUBTYPE_MULTIPLE,
                                identifier)) {
-    fprintf(stderr, "%s: unable to generate file identifier\n",
-            argv[1]);
+    fprintf(stderr, "%s: unable to generate file identifier\n", argv[1]);
     return 1;
   }
 

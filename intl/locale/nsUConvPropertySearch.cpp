@@ -9,8 +9,7 @@
 
 namespace {
 
-struct PropertyComparator
-{
+struct PropertyComparator {
   const nsCString& mKey;
   explicit PropertyComparator(const nsCString& aKey) : mKey(aKey) {}
   int operator()(const nsUConvProp& aProperty) const {
@@ -18,15 +17,12 @@ struct PropertyComparator
   }
 };
 
-} // namespace
+}  // namespace
 
 // static
-nsresult
-nsUConvPropertySearch::SearchPropertyValue(const nsUConvProp aProperties[],
-                                           int32_t aNumberOfProperties,
-                                           const nsACString& aKey,
-                                           nsACString& aValue)
-{
+nsresult nsUConvPropertySearch::SearchPropertyValue(
+    const nsUConvProp aProperties[], int32_t aNumberOfProperties,
+    const nsACString& aKey, nsACString& aValue) {
   using mozilla::BinarySearchIf;
 
   const nsCString& flat = PromiseFlatCString(aKey);

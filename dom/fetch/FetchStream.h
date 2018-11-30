@@ -25,79 +25,64 @@ namespace dom {
 class FetchStreamHolder;
 class WeakWorkerRef;
 
-class FetchStream final : public nsIInputStreamCallback
-                        , public nsIObserver
-                        , public nsSupportsWeakReference
-                        , private JS::ReadableStreamUnderlyingSource
-{
-public:
+class FetchStream final : public nsIInputStreamCallback,
+                          public nsIObserver,
+                          public nsSupportsWeakReference,
+                          private JS::ReadableStreamUnderlyingSource {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIOBSERVER
 
-  static void
-  Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
-         nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
-         JS::MutableHandle<JSObject*> aStream, ErrorResult& aRv);
+  static void Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
+                     nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
+                     JS::MutableHandle<JSObject*> aStream, ErrorResult& aRv);
 
-  void
-  Close();
+  void Close();
 
-  static nsresult
-  RetrieveInputStream(JS::ReadableStreamUnderlyingSource* aUnderlyingReadableStreamSource,
-                      nsIInputStream** aInputStream);
+  static nsresult RetrieveInputStream(
+      JS::ReadableStreamUnderlyingSource* aUnderlyingReadableStreamSource,
+      nsIInputStream** aInputStream);
 
-private:
+ private:
   FetchStream(nsIGlobalObject* aGlobal, FetchStreamHolder* aStreamHolder,
               nsIInputStream* aInputStream);
   ~FetchStream();
 
 #ifdef DEBUG
-  void
-  AssertIsOnOwningThread();
+  void AssertIsOnOwningThread();
 #else
-  void
-  AssertIsOnOwningThread() {}
+  void AssertIsOnOwningThread() {}
 #endif
 
-  void
-  requestData(JSContext* aCx, JS::HandleObject aStream, size_t aDesiredSize) override;
+  void requestData(JSContext* aCx, JS::HandleObject aStream,
+                   size_t aDesiredSize) override;
 
-  void
-  writeIntoReadRequestBuffer(JSContext* aCx, JS::HandleObject aStream,
-                             void* aBuffer, size_t aLength,
-                             size_t* aBytesWritten) override;
+  void writeIntoReadRequestBuffer(JSContext* aCx, JS::HandleObject aStream,
+                                  void* aBuffer, size_t aLength,
+                                  size_t* aBytesWritten) override;
 
-  JS::Value
-  cancel(JSContext* aCx, JS::HandleObject aStream, JS::HandleValue aReason) override;
+  JS::Value cancel(JSContext* aCx, JS::HandleObject aStream,
+                   JS::HandleValue aReason) override;
 
-  void
-  onClosed(JSContext* aCx, JS::HandleObject aStream) override;
+  void onClosed(JSContext* aCx, JS::HandleObject aStream) override;
 
-  void
-  onErrored(JSContext* aCx, JS::HandleObject aStream, JS::HandleValue aReason) override;
+  void onErrored(JSContext* aCx, JS::HandleObject aStream,
+                 JS::HandleValue aReason) override;
 
-  void
-  finalize() override;
+  void finalize() override;
 
+  void ErrorPropagation(JSContext* aCx, const MutexAutoLock& aProofOfLock,
+                        JS::HandleObject aStream, nsresult aRv);
 
-  void
-  ErrorPropagation(JSContext* aCx,
-                   const MutexAutoLock& aProofOfLock,
-                   JS::HandleObject aStream, nsresult aRv);
-
-  void
-  CloseAndReleaseObjects(JSContext* aCx,
-                         const MutexAutoLock& aProofOfLock,
-                         JS::HandleObject aSteam);
+  void CloseAndReleaseObjects(JSContext* aCx, const MutexAutoLock& aProofOfLock,
+                              JS::HandleObject aSteam);
 
   class WorkerShutdown;
 
-  void
-  ReleaseObjects(const MutexAutoLock& aProofOfLock);
+  void ReleaseObjects(const MutexAutoLock& aProofOfLock);
 
-  void
-  ReleaseObjects();
+  void ReleaseObjects();
 
   // Common methods
 
@@ -145,7 +130,7 @@ private:
   RefPtr<WeakWorkerRef> mWorkerRef;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FetchStream_h
+#endif  // mozilla_dom_FetchStream_h

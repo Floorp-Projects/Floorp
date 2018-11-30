@@ -29,40 +29,33 @@ class PostMessageRunnable;
 class SharedMessagePortMessage;
 class StrongWorkerRef;
 
-class MessagePort final : public DOMEventTargetHelper
-{
+class MessagePort final : public DOMEventTargetHelper {
   friend class PostMessageRunnable;
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort,
-                                           DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort, DOMEventTargetHelper)
 
-  static already_AddRefed<MessagePort>
-  Create(nsIGlobalObject* aGlobal, const nsID& aUUID,
-         const nsID& aDestinationUUID, ErrorResult& aRv);
+  static already_AddRefed<MessagePort> Create(nsIGlobalObject* aGlobal,
+                                              const nsID& aUUID,
+                                              const nsID& aDestinationUUID,
+                                              ErrorResult& aRv);
 
-  static already_AddRefed<MessagePort>
-  Create(nsIGlobalObject* aGlobal,
-         const MessagePortIdentifier& aIdentifier,
-         ErrorResult& aRv);
+  static already_AddRefed<MessagePort> Create(
+      nsIGlobalObject* aGlobal, const MessagePortIdentifier& aIdentifier,
+      ErrorResult& aRv);
 
   // For IPC.
-  static void
-  ForceClose(const MessagePortIdentifier& aIdentifier);
+  static void ForceClose(const MessagePortIdentifier& aIdentifier);
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Sequence<JSObject*>& aTransferable,
-              ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
-  void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const PostMessageOptions& aOptions,
-              ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const PostMessageOptions& aOptions, ErrorResult& aRv);
 
   void Start();
 
@@ -78,10 +71,7 @@ public:
 
   void UnshippedEntangle(MessagePort* aEntangledPort);
 
-  bool CanBeCloned() const
-  {
-    return !mHasBeenTransferredOrClosed;
-  }
+  bool CanBeCloned() const { return !mHasBeenTransferredOrClosed; }
 
   void CloneAndDisentangle(MessagePortIdentifier& aIdentifier);
 
@@ -94,7 +84,7 @@ public:
   void StopSendingDataConfirmed();
   void Closed();
 
-private:
+ private:
   enum State {
     // When a port is created by a MessageChannel it is entangled with the
     // other. They both run on the same thread, same event loop and the
@@ -167,10 +157,7 @@ private:
   // We release the object when the port is closed or disentangled.
   void UpdateMustKeepAlive();
 
-  bool IsCertainlyAliveForCC() const override
-  {
-    return mIsKeptAlive;
-  }
+  bool IsCertainlyAliveForCC() const override { return mIsKeptAlive; }
 
   RefPtr<StrongWorkerRef> mWorkerRef;
 
@@ -198,7 +185,7 @@ private:
   bool mHasBeenTransferredOrClosed;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MessagePort_h
+#endif  // mozilla_dom_MessagePort_h

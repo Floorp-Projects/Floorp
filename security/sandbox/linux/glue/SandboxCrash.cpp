@@ -20,7 +20,7 @@
 #include "mozilla/dom/Exceptions.h"
 #include "nsContentUtils.h"
 #include "nsExceptionHandler.h"
-#include "nsIException.h" // for nsIStackFrame
+#include "nsIException.h"  // for nsIStackFrame
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
@@ -29,9 +29,7 @@ namespace mozilla {
 // Log JS stack info in the same place as the sandbox violation
 // message.  Useful in case the responsible code is JS and all we have
 // are logs and a minidump with the C++ stacks (e.g., on TBPL).
-static void
-SandboxLogJSStack(void)
-{
+static void SandboxLogJSStack(void) {
   if (!NS_IsMainThread()) {
     // This might be a worker thread... or it might be a non-JS
     // thread, or a non-NSPR thread.  There's isn't a good API for
@@ -47,7 +45,7 @@ SandboxLogJSStack(void)
   // If we got a stack, we must have a current JSContext.  This is icky.  :(
   // Would be better if GetCurrentJSStack() handed out the JSContext it ended up
   // using or something.
-  JSContext* cx = frame ? nsContentUtils::GetCurrentJSContext() : nullptr;
+  JSContext *cx = frame ? nsContentUtils::GetCurrentJSContext() : nullptr;
   for (int i = 0; frame != nullptr; ++i) {
     nsAutoString fileName, funName;
     int32_t lineNumber;
@@ -61,10 +59,11 @@ SandboxLogJSStack(void)
 
     if (!funName.IsVoid() || !fileName.IsVoid()) {
       SANDBOX_LOG_ERROR("JS frame %d: %s %s line %d", i,
-                        funName.IsVoid() ?
-                        "(anonymous)" : NS_ConvertUTF16toUTF8(funName).get(),
-                        fileName.IsVoid() ?
-                        "(no file)" : NS_ConvertUTF16toUTF8(fileName).get(),
+                        funName.IsVoid() ? "(anonymous)"
+                                         : NS_ConvertUTF16toUTF8(funName).get(),
+                        fileName.IsVoid()
+                            ? "(no file)"
+                            : NS_ConvertUTF16toUTF8(fileName).get(),
                         lineNumber);
     }
 
@@ -73,8 +72,7 @@ SandboxLogJSStack(void)
 }
 
 static void SandboxPrintStackFrame(uint32_t aFrameNumber, void *aPC, void *aSP,
-                                   void *aClosure)
-{
+                                   void *aClosure) {
   char buf[1024];
   MozCodeAddressDetails details;
 
@@ -83,9 +81,7 @@ static void SandboxPrintStackFrame(uint32_t aFrameNumber, void *aPC, void *aSP,
   SANDBOX_LOG_ERROR("frame %s", buf);
 }
 
-static void
-SandboxLogCStack()
-{
+static void SandboxLogCStack() {
   // Skip 3 frames: one for this module, one for the signal handler in
   // libmozsandbox, and one for the signal trampoline.
   //
@@ -97,15 +93,14 @@ SandboxLogCStack()
   SANDBOX_LOG_ERROR("end of stack.");
 }
 
-static void
-SandboxCrash(int nr, siginfo_t *info, void *void_context)
-{
+static void SandboxCrash(int nr, siginfo_t *info, void *void_context) {
   pid_t pid = getpid(), tid = syscall(__NR_gettid);
   bool dumped = CrashReporter::WriteMinidumpForSigInfo(nr, info, void_context);
 
   if (!dumped) {
-    SANDBOX_LOG_ERROR("crash reporter is disabled (or failed);"
-                      " trying stack trace:");
+    SANDBOX_LOG_ERROR(
+        "crash reporter is disabled (or failed);"
+        " trying stack trace:");
     SandboxLogCStack();
   }
 
@@ -119,10 +114,8 @@ SandboxCrash(int nr, siginfo_t *info, void *void_context)
   syscall(__NR_tgkill, pid, tid, nr);
 }
 
-static void __attribute__((constructor))
-SandboxSetCrashFunc()
-{
+static void __attribute__((constructor)) SandboxSetCrashFunc() {
   gSandboxCrashFunc = SandboxCrash;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

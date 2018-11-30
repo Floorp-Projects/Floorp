@@ -13,16 +13,15 @@
 namespace mozilla {
 namespace net {
 class nsSimpleURI;
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 /**
  * A wrapper for an nsIURI that can be used OMT, which has cached information
  * useful for the gfxUserFontSet.
  */
-class gfxFontSrcURI
-{
-public:
+class gfxFontSrcURI {
+ public:
   explicit gfxFontSrcURI(nsIURI* aURI);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxFontSrcURI)
@@ -37,7 +36,7 @@ public:
   bool InheritsSecurityContext() const { return mInheritsSecurityContext; }
   bool SyncLoadIsOK() const { return mSyncLoadIsOK; }
 
-private:
+ private:
   ~gfxFontSrcURI();
 
   // The URI.
@@ -64,4 +63,4 @@ private:
   bool mSyncLoadIsOK;
 };
 
-#endif // MOZILLA_GFX_FONTSRCURI_H
+#endif  // MOZILLA_GFX_FONTSRCURI_H

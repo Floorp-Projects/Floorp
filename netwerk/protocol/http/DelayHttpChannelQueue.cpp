@@ -15,9 +15,7 @@ namespace {
 StaticRefPtr<DelayHttpChannelQueue> sDelayHttpChannelQueue;
 }
 
-bool
-DelayHttpChannelQueue::AttemptQueueChannel(nsHttpChannel* aChannel)
-{
+bool DelayHttpChannelQueue::AttemptQueueChannel(nsHttpChannel* aChannel) {
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -34,26 +32,23 @@ DelayHttpChannelQueue::AttemptQueueChannel(nsHttpChannel* aChannel)
     sDelayHttpChannelQueue = queue;
   }
 
-  if (NS_WARN_IF(!sDelayHttpChannelQueue->mQueue.AppendElement(aChannel, fallible))) {
+  if (NS_WARN_IF(
+          !sDelayHttpChannelQueue->mQueue.AppendElement(aChannel, fallible))) {
     return false;
   }
 
   return true;
 }
 
-DelayHttpChannelQueue::DelayHttpChannelQueue()
-{
+DelayHttpChannelQueue::DelayHttpChannelQueue() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-DelayHttpChannelQueue::~DelayHttpChannelQueue()
-{
+DelayHttpChannelQueue::~DelayHttpChannelQueue() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-bool
-DelayHttpChannelQueue::Initialize()
-{
+bool DelayHttpChannelQueue::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -76,8 +71,7 @@ DelayHttpChannelQueue::Initialize()
 
 NS_IMETHODIMP
 DelayHttpChannelQueue::Observe(nsISupports* aSubject, const char* aTopic,
-                               const char16_t* aData)
-{
+                               const char16_t* aData) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!strcmp(aTopic, "fuzzyfox-fire-outbound")) {
@@ -98,16 +92,14 @@ DelayHttpChannelQueue::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-void
-DelayHttpChannelQueue::FireQueue()
-{
+void DelayHttpChannelQueue::FireQueue() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mQueue.IsEmpty()) {
     return;
   }
 
-  //TODO: get this from the DOM clock?
+  // TODO: get this from the DOM clock?
   TimeStamp ts = TimeStamp::Now();
 
   FallibleTArray<RefPtr<nsHttpChannel>> queue;

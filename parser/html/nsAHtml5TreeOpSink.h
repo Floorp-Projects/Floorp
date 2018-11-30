@@ -10,9 +10,8 @@
  * (main-thread case), a tree op stage (non-speculative off-the-main-thread
  * case) or a speculation (speculative case).
  */
-class nsAHtml5TreeOpSink
-{
-public:
+class nsAHtml5TreeOpSink {
+ public:
   /**
    * Flush the operations from the tree operations from the argument
    * queue into this sink unconditionally.

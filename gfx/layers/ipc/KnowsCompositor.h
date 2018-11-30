@@ -22,41 +22,37 @@ class ImageBridgeChild;
 /**
  * See ActiveResourceTracker below.
  */
-class ActiveResource
-{
-public:
- virtual void NotifyInactive() = 0;
+class ActiveResource {
+ public:
+  virtual void NotifyInactive() = 0;
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
   bool IsActivityTracked() { return mExpirationState.IsTracked(); }
-private:
+
+ private:
   nsExpirationState mExpirationState;
 };
 
 /**
  * A convenience class on top of nsExpirationTracker
  */
-class ActiveResourceTracker : public nsExpirationTracker<ActiveResource, 3>
-{
-public:
+class ActiveResourceTracker : public nsExpirationTracker<ActiveResource, 3> {
+ public:
   ActiveResourceTracker(uint32_t aExpirationCycle, const char* aName,
                         nsIEventTarget* aEventTarget)
-  : nsExpirationTracker(aExpirationCycle, aName, aEventTarget)
-  {}
+      : nsExpirationTracker(aExpirationCycle, aName, aEventTarget) {}
 
-  virtual void NotifyExpired(ActiveResource* aResource) override
-  {
+  virtual void NotifyExpired(ActiveResource* aResource) override {
     RemoveObject(aResource);
     aResource->NotifyInactive();
   }
 };
 
 /**
- * An abstract interface for classes that are tied to a specific Compositor across
- * IPDL and uses TextureFactoryIdentifier to describe this Compositor.
+ * An abstract interface for classes that are tied to a specific Compositor
+ * across IPDL and uses TextureFactoryIdentifier to describe this Compositor.
  */
-class KnowsCompositor
-{
-public:
+class KnowsCompositor {
+ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   KnowsCompositor();
@@ -66,14 +62,15 @@ public:
 
   SyncObjectClient* GetSyncObject() { return mSyncObject; }
 
-  /// And by "thread-safe" here we merely mean "okay to hold strong references to
-  /// from multiple threads". Not all methods actually are thread-safe.
+  /// And by "thread-safe" here we merely mean "okay to hold strong references
+  /// to from multiple threads". Not all methods actually are thread-safe.
   virtual bool IsThreadSafe() const { return true; }
 
-  virtual RefPtr<KnowsCompositor> GetForMedia() { return RefPtr<KnowsCompositor>(this); }
+  virtual RefPtr<KnowsCompositor> GetForMedia() {
+    return RefPtr<KnowsCompositor>(this);
+  }
 
-  int32_t GetMaxTextureSize() const
-  {
+  int32_t GetMaxTextureSize() const {
     return mTextureFactoryIdentifier.mMaxTextureSize;
   }
 
@@ -82,54 +79,45 @@ public:
    * We only don't allow changing the backend type at runtime so this value can
    * be queried once and will not change until Gecko is restarted.
    */
-  LayersBackend GetCompositorBackendType() const
-  {
+  LayersBackend GetCompositorBackendType() const {
     return mTextureFactoryIdentifier.mParentBackend;
   }
 
-  bool SupportsTextureBlitting() const
-  {
+  bool SupportsTextureBlitting() const {
     return mTextureFactoryIdentifier.mSupportsTextureBlitting;
   }
 
-  bool SupportsPartialUploads() const
-  {
+  bool SupportsPartialUploads() const {
     return mTextureFactoryIdentifier.mSupportsPartialUploads;
   }
 
-  bool SupportsComponentAlpha() const
-  {
+  bool SupportsComponentAlpha() const {
     return mTextureFactoryIdentifier.mSupportsComponentAlpha;
   }
 
-  bool SupportsTextureDirectMapping() const
-  {
+  bool SupportsTextureDirectMapping() const {
     return mTextureFactoryIdentifier.mSupportsTextureDirectMapping;
   }
 
-  bool SupportsD3D11() const
-  {
+  bool SupportsD3D11() const {
     return GetCompositorBackendType() == layers::LayersBackend::LAYERS_D3D11 ||
-           (GetCompositorBackendType() == layers::LayersBackend::LAYERS_WR && GetCompositorUseANGLE());
+           (GetCompositorBackendType() == layers::LayersBackend::LAYERS_WR &&
+            GetCompositorUseANGLE());
   }
 
-  bool GetCompositorUseANGLE() const
-  {
+  bool GetCompositorUseANGLE() const {
     return mTextureFactoryIdentifier.mCompositorUseANGLE;
   }
 
-  bool GetCompositorUseDComp() const
-  {
+  bool GetCompositorUseDComp() const {
     return mTextureFactoryIdentifier.mCompositorUseDComp;
   }
 
-  const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const
-  {
+  const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const {
     return mTextureFactoryIdentifier;
   }
 
-  bool DeviceCanReset() const
-  {
+  bool DeviceCanReset() const {
     return GetCompositorBackendType() != LayersBackend::LAYERS_BASIC;
   }
 
@@ -138,35 +126,30 @@ public:
   /**
    * Sends a synchronous ping to the compsoitor.
    *
-   * This is bad for performance and should only be called as a last resort if the
-   * compositor may be blocked for a long period of time, to avoid that the content
-   * process accumulates resource allocations that the compositor is not consuming
-   * and releasing.
+   * This is bad for performance and should only be called as a last resort if
+   * the compositor may be blocked for a long period of time, to avoid that the
+   * content process accumulates resource allocations that the compositor is not
+   * consuming and releasing.
    */
-  virtual void SyncWithCompositor()
-  {
-    MOZ_ASSERT_UNREACHABLE("Unimplemented");
-  }
+  virtual void SyncWithCompositor() { MOZ_ASSERT_UNREACHABLE("Unimplemented"); }
 
   /**
    * Helpers for finding other related interface. These are infallible.
    */
-   virtual TextureForwarder* GetTextureForwarder() = 0;
+  virtual TextureForwarder* GetTextureForwarder() = 0;
   virtual LayersIPCActor* GetLayersIPCActor() = 0;
-  virtual ActiveResourceTracker* GetActiveResourceTracker()
-  {
+  virtual ActiveResourceTracker* GetActiveResourceTracker() {
     MOZ_ASSERT_UNREACHABLE("Unimplemented");
     return nullptr;
   }
 
-protected:
+ protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
   RefPtr<SyncObjectClient> mSyncObject;
 
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;
 };
-
 
 /// Some implementations of KnowsCompositor can be used off their IPDL thread
 /// like the ImageBridgeChild, and others just can't. Instead of passing them
@@ -179,15 +162,14 @@ protected:
 ///
 /// This is really a band aid to what turned into a class hierarchy horror show.
 /// Hopefully we can come back and simplify this some way.
-class KnowsCompositorMediaProxy: public KnowsCompositor
-{
-public:
+class KnowsCompositorMediaProxy : public KnowsCompositor {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KnowsCompositorMediaProxy, override);
 
-  explicit KnowsCompositorMediaProxy(const TextureFactoryIdentifier& aIdentifier);
+  explicit KnowsCompositorMediaProxy(
+      const TextureFactoryIdentifier& aIdentifier);
 
   virtual TextureForwarder* GetTextureForwarder() override;
-
 
   virtual LayersIPCActor* GetLayersIPCActor() override;
 
@@ -195,13 +177,13 @@ public:
 
   virtual void SyncWithCompositor() override;
 
-protected:
+ protected:
   virtual ~KnowsCompositorMediaProxy();
 
   RefPtr<ImageBridgeChild> mThreadSafeAllocator;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

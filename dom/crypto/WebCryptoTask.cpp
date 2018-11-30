@@ -26,15 +26,13 @@
 // This (or SGN_EncodeDigestInfo) would ideally be exported
 // by NSS and until that happens we have to keep our own copy.
 const SEC_ASN1Template SGN_DigestInfoTemplate[] = {
-    { SEC_ASN1_SEQUENCE,
-      0, NULL, sizeof(SGNDigestInfo) },
-    { SEC_ASN1_INLINE,
-      offsetof(SGNDigestInfo,digestAlgorithm),
-      SEC_ASN1_GET(SECOID_AlgorithmIDTemplate) },
-    { SEC_ASN1_OCTET_STRING,
-      offsetof(SGNDigestInfo,digest) },
-    { 0, }
-};
+    {SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SGNDigestInfo)},
+    {SEC_ASN1_INLINE, offsetof(SGNDigestInfo, digestAlgorithm),
+     SEC_ASN1_GET(SECOID_AlgorithmIDTemplate)},
+    {SEC_ASN1_OCTET_STRING, offsetof(SGNDigestInfo, digest)},
+    {
+        0,
+    }};
 
 namespace mozilla {
 namespace dom {
@@ -42,103 +40,96 @@ namespace dom {
 // Pre-defined identifiers for telemetry histograms
 
 enum TelemetryMethod {
-  TM_ENCRYPT      = 0,
-  TM_DECRYPT      = 1,
-  TM_SIGN         = 2,
-  TM_VERIFY       = 3,
-  TM_DIGEST       = 4,
-  TM_GENERATEKEY  = 5,
-  TM_DERIVEKEY    = 6,
-  TM_DERIVEBITS   = 7,
-  TM_IMPORTKEY    = 8,
-  TM_EXPORTKEY    = 9,
-  TM_WRAPKEY      = 10,
-  TM_UNWRAPKEY    = 11
+  TM_ENCRYPT = 0,
+  TM_DECRYPT = 1,
+  TM_SIGN = 2,
+  TM_VERIFY = 3,
+  TM_DIGEST = 4,
+  TM_GENERATEKEY = 5,
+  TM_DERIVEKEY = 6,
+  TM_DERIVEBITS = 7,
+  TM_IMPORTKEY = 8,
+  TM_EXPORTKEY = 9,
+  TM_WRAPKEY = 10,
+  TM_UNWRAPKEY = 11
 };
 
 enum TelemetryAlgorithm {
   // Please make additions at the end of the list,
   // to preserve comparability of histograms over time
-  TA_UNKNOWN         = 0,
+  TA_UNKNOWN = 0,
   // encrypt / decrypt
-  TA_AES_CBC         = 1,
-  TA_AES_CFB         = 2,
-  TA_AES_CTR         = 3,
-  TA_AES_GCM         = 4,
-  TA_RSAES_PKCS1     = 5, // NB: This algorithm has been removed
-  TA_RSA_OAEP        = 6,
+  TA_AES_CBC = 1,
+  TA_AES_CFB = 2,
+  TA_AES_CTR = 3,
+  TA_AES_GCM = 4,
+  TA_RSAES_PKCS1 = 5,  // NB: This algorithm has been removed
+  TA_RSA_OAEP = 6,
   // sign/verify
-  TA_RSASSA_PKCS1    = 7,
-  TA_RSA_PSS         = 8,
-  TA_HMAC_SHA_1      = 9,
-  TA_HMAC_SHA_224    = 10,
-  TA_HMAC_SHA_256    = 11,
-  TA_HMAC_SHA_384    = 12,
-  TA_HMAC_SHA_512    = 13,
+  TA_RSASSA_PKCS1 = 7,
+  TA_RSA_PSS = 8,
+  TA_HMAC_SHA_1 = 9,
+  TA_HMAC_SHA_224 = 10,
+  TA_HMAC_SHA_256 = 11,
+  TA_HMAC_SHA_384 = 12,
+  TA_HMAC_SHA_512 = 13,
   // digest
-  TA_SHA_1           = 14,
-  TA_SHA_224         = 15,
-  TA_SHA_256         = 16,
-  TA_SHA_384         = 17,
-  TA_SHA_512         = 18,
+  TA_SHA_1 = 14,
+  TA_SHA_224 = 15,
+  TA_SHA_256 = 16,
+  TA_SHA_384 = 17,
+  TA_SHA_512 = 18,
   // Later additions
-  TA_AES_KW          = 19,
-  TA_ECDH            = 20,
-  TA_PBKDF2          = 21,
-  TA_ECDSA           = 22,
-  TA_HKDF            = 23,
+  TA_AES_KW = 19,
+  TA_ECDH = 20,
+  TA_PBKDF2 = 21,
+  TA_ECDSA = 22,
+  TA_HKDF = 23,
 };
 
 // Convenience functions for extracting / converting information
 
 // OOM-safe CryptoBuffer initialization, suitable for constructors
-#define ATTEMPT_BUFFER_INIT(dst, src) \
-  if (!dst.Assign(src)) { \
+#define ATTEMPT_BUFFER_INIT(dst, src)    \
+  if (!dst.Assign(src)) {                \
     mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR; \
-    return; \
+    return;                              \
   }
 
 // OOM-safe CryptoBuffer-to-SECItem copy, suitable for DoCrypto
 #define ATTEMPT_BUFFER_TO_SECITEM(arena, dst, src) \
-  if (!src.ToSECItem(arena, dst)) { \
-    return NS_ERROR_DOM_UNKNOWN_ERR; \
+  if (!src.ToSECItem(arena, dst)) {                \
+    return NS_ERROR_DOM_UNKNOWN_ERR;               \
   }
 
 // OOM-safe CryptoBuffer copy, suitable for DoCrypto
 #define ATTEMPT_BUFFER_ASSIGN(dst, src) \
-  if (!dst.Assign(src)) { \
-    return NS_ERROR_DOM_UNKNOWN_ERR; \
+  if (!dst.Assign(src)) {               \
+    return NS_ERROR_DOM_UNKNOWN_ERR;    \
   }
 
 // Safety check for algorithms that use keys, suitable for constructors
-#define CHECK_KEY_ALGORITHM(keyAlg, algName) \
-  { \
+#define CHECK_KEY_ALGORITHM(keyAlg, algName)         \
+  {                                                  \
     if (!NORMALIZED_EQUALS(keyAlg.mName, algName)) { \
-      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR; \
-      return; \
-    } \
+      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;    \
+      return;                                        \
+    }                                                \
   }
 
-class ClearException
-{
-public:
-  explicit ClearException(JSContext* aCx)
-    : mCx(aCx)
-  {}
+class ClearException {
+ public:
+  explicit ClearException(JSContext* aCx) : mCx(aCx) {}
 
-  ~ClearException()
-  {
-    JS_ClearPendingException(mCx);
-  }
+  ~ClearException() { JS_ClearPendingException(mCx); }
 
-private:
+ private:
   JSContext* mCx;
 };
 
-template<class OOS>
-static nsresult
-GetAlgorithmName(JSContext* aCx, const OOS& aAlgorithm, nsString& aName)
-{
+template <class OOS>
+static nsresult GetAlgorithmName(JSContext* aCx, const OOS& aAlgorithm,
+                                 nsString& aName) {
   ClearException ce(aCx);
 
   if (aAlgorithm.IsString()) {
@@ -163,10 +154,8 @@ GetAlgorithmName(JSContext* aCx, const OOS& aAlgorithm, nsString& aName)
   return NS_OK;
 }
 
-template<class T, class OOS>
-static nsresult
-Coerce(JSContext* aCx, T& aTarget, const OOS& aAlgorithm)
-{
+template <class T, class OOS>
+static nsresult Coerce(JSContext* aCx, T& aTarget, const OOS& aAlgorithm) {
   ClearException ce(aCx);
 
   if (!aAlgorithm.IsObject()) {
@@ -181,9 +170,7 @@ Coerce(JSContext* aCx, T& aTarget, const OOS& aAlgorithm)
   return NS_OK;
 }
 
-inline size_t
-MapHashAlgorithmNameToBlockSize(const nsString& aName)
-{
+inline size_t MapHashAlgorithmNameToBlockSize(const nsString& aName) {
   if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA1) ||
       aName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
     return 512;
@@ -197,10 +184,9 @@ MapHashAlgorithmNameToBlockSize(const nsString& aName)
   return 0;
 }
 
-inline nsresult
-GetKeyLengthForAlgorithm(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                         size_t& aLength)
-{
+inline nsresult GetKeyLengthForAlgorithm(JSContext* aCx,
+                                         const ObjectOrString& aAlgorithm,
+                                         size_t& aLength) {
   aLength = 0;
 
   // Extract algorithm name
@@ -219,8 +205,7 @@ GetKeyLengthForAlgorithm(JSContext* aCx, const ObjectOrString& aAlgorithm,
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
-    if (params.mLength != 128 &&
-        params.mLength != 192 &&
+    if (params.mLength != 128 && params.mLength != 192 &&
         params.mLength != 256) {
       return NS_ERROR_DOM_DATA_ERR;
     }
@@ -261,9 +246,7 @@ GetKeyLengthForAlgorithm(JSContext* aCx, const ObjectOrString& aAlgorithm,
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
-inline bool
-MapOIDTagToNamedCurve(SECOidTag aOIDTag, nsString& aResult)
-{
+inline bool MapOIDTagToNamedCurve(SECOidTag aOIDTag, nsString& aResult) {
   switch (aOIDTag) {
     case SEC_OID_SECG_EC_SECP256R1:
       aResult.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P256);
@@ -281,9 +264,7 @@ MapOIDTagToNamedCurve(SECOidTag aOIDTag, nsString& aResult)
   return true;
 }
 
-inline SECOidTag
-MapHashAlgorithmNameToOID(const nsString& aName)
-{
+inline SECOidTag MapHashAlgorithmNameToOID(const nsString& aName) {
   SECOidTag hashOID(SEC_OID_UNKNOWN);
 
   if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
@@ -299,8 +280,8 @@ MapHashAlgorithmNameToOID(const nsString& aName)
   return hashOID;
 }
 
-inline CK_MECHANISM_TYPE
-MapHashAlgorithmNameToMgfMechanism(const nsString& aName) {
+inline CK_MECHANISM_TYPE MapHashAlgorithmNameToMgfMechanism(
+    const nsString& aName) {
   CK_MECHANISM_TYPE mech(UNKNOWN_CK_MECHANISM);
 
   if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
@@ -318,9 +299,7 @@ MapHashAlgorithmNameToMgfMechanism(const nsString& aName) {
 
 // Implementation of WebCryptoTask methods
 
-void
-WebCryptoTask::DispatchWithPromise(Promise* aResultPromise)
-{
+void WebCryptoTask::DispatchWithPromise(Promise* aResultPromise) {
   mResultPromise = aResultPromise;
 
   // Fail if an error was set during the constructor
@@ -348,7 +327,7 @@ WebCryptoTask::DispatchWithPromise(Promise* aResultPromise)
     MOZ_ASSERT(workerPrivate);
 
     RefPtr<StrongWorkerRef> workerRef =
-      StrongWorkerRef::Create(workerPrivate, "WebCryptoTask");
+        StrongWorkerRef::Create(workerPrivate, "WebCryptoTask");
     if (NS_WARN_IF(!workerRef)) {
       mEarlyRv = NS_BINDING_ABORTED;
     } else {
@@ -363,8 +342,7 @@ WebCryptoTask::DispatchWithPromise(Promise* aResultPromise)
 }
 
 NS_IMETHODIMP
-WebCryptoTask::Run()
-{
+WebCryptoTask::Run() {
   // Run heavy crypto operations on the thread pool, off the original thread.
   if (!IsOnOriginalThread()) {
     mRv = CalculateResult();
@@ -384,17 +362,13 @@ WebCryptoTask::Run()
   return NS_OK;
 }
 
-nsresult
-WebCryptoTask::Cancel()
-{
+nsresult WebCryptoTask::Cancel() {
   MOZ_ASSERT(IsOnOriginalThread());
   FailWithError(NS_BINDING_ABORTED);
   return NS_OK;
 }
 
-void
-WebCryptoTask::FailWithError(nsresult aRv)
-{
+void WebCryptoTask::FailWithError(nsresult aRv) {
   MOZ_ASSERT(IsOnOriginalThread());
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_RESOLVED, false);
 
@@ -407,17 +381,13 @@ WebCryptoTask::FailWithError(nsresult aRv)
   Cleanup();
 }
 
-nsresult
-WebCryptoTask::CalculateResult()
-{
+nsresult WebCryptoTask::CalculateResult() {
   MOZ_ASSERT(!IsOnOriginalThread());
 
   return DoCrypto();
 }
 
-void
-WebCryptoTask::CallCallback(nsresult rv)
-{
+void WebCryptoTask::CallCallback(nsresult rv) {
   MOZ_ASSERT(IsOnOriginalThread());
   if (NS_FAILED(rv)) {
     FailWithError(rv);
@@ -440,76 +410,62 @@ WebCryptoTask::CallCallback(nsresult rv)
 
 // Some generic utility classes
 
-class FailureTask : public WebCryptoTask
-{
-public:
-  explicit FailureTask(nsresult aRv) {
-    mEarlyRv = aRv;
-  }
+class FailureTask : public WebCryptoTask {
+ public:
+  explicit FailureTask(nsresult aRv) { mEarlyRv = aRv; }
 };
 
-class ReturnArrayBufferViewTask : public WebCryptoTask
-{
-protected:
+class ReturnArrayBufferViewTask : public WebCryptoTask {
+ protected:
   CryptoBuffer mResult;
 
-private:
+ private:
   // Returns mResult as an ArrayBufferView, or an error
-  virtual void Resolve() override
-  {
+  virtual void Resolve() override {
     TypedArrayCreator<ArrayBuffer> ret(mResult);
     mResultPromise->MaybeResolve(ret);
   }
 };
 
-class DeferredData
-{
-public:
-  template<class T>
+class DeferredData {
+ public:
+  template <class T>
   void SetData(const T& aData) {
     mDataIsSet = mData.Assign(aData);
   }
 
-protected:
-  DeferredData()
-    : mDataIsSet(false)
-  {}
+ protected:
+  DeferredData() : mDataIsSet(false) {}
 
   CryptoBuffer mData;
   bool mDataIsSet;
 };
 
-class AesTask : public ReturnArrayBufferViewTask,
-                public DeferredData
-{
-public:
-  AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-          CryptoKey& aKey, bool aEncrypt)
-    : mMechanism(CKM_INVALID_MECHANISM)
-    , mSymKey(aKey.GetSymKey())
-    , mTagLength(0)
-    , mCounterLength(0)
-    , mEncrypt(aEncrypt)
-  {
+class AesTask : public ReturnArrayBufferViewTask, public DeferredData {
+ public:
+  AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+          bool aEncrypt)
+      : mMechanism(CKM_INVALID_MECHANISM),
+        mSymKey(aKey.GetSymKey()),
+        mTagLength(0),
+        mCounterLength(0),
+        mEncrypt(aEncrypt) {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
   }
 
-  AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-          CryptoKey& aKey, const CryptoOperationData& aData,
-          bool aEncrypt)
-    : mMechanism(CKM_INVALID_MECHANISM)
-    , mSymKey(aKey.GetSymKey())
-    , mTagLength(0)
-    , mCounterLength(0)
-    , mEncrypt(aEncrypt)
-  {
+  AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+          const CryptoOperationData& aData, bool aEncrypt)
+      : mMechanism(CKM_INVALID_MECHANISM),
+        mSymKey(aKey.GetSymKey()),
+        mTagLength(0),
+        mCounterLength(0),
+        mEncrypt(aEncrypt) {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
     SetData(aData);
   }
 
-  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm,
-            CryptoKey& aKey, bool aEncrypt)
-  {
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+            bool aEncrypt) {
     nsString algName;
     mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
     if (NS_FAILED(mEarlyRv)) {
@@ -517,10 +473,8 @@ public:
     }
 
     // Check that we got a reasonable key
-    if ((mSymKey.Length() != 16) &&
-        (mSymKey.Length() != 24) &&
-        (mSymKey.Length() != 32))
-    {
+    if ((mSymKey.Length() != 16) && (mSymKey.Length() != 24) &&
+        (mSymKey.Length() != 32)) {
       mEarlyRv = NS_ERROR_DOM_DATA_ERR;
       return;
     }
@@ -599,7 +553,7 @@ public:
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, telemetryAlg);
   }
 
-private:
+ private:
   CK_MECHANISM_TYPE mMechanism;
   CryptoBuffer mSymKey;
   CryptoBuffer mIv;   // Initialization vector
@@ -608,8 +562,7 @@ private:
   uint8_t mCounterLength;
   bool mEncrypt;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     nsresult rv;
 
     if (!mDataIsSet) {
@@ -622,7 +575,7 @@ private:
     }
 
     // Construct the parameters object depending on algorithm
-    SECItem param = { siBuffer, nullptr, 0 };
+    SECItem param = {siBuffer, nullptr, 0};
     CK_AES_CTR_PARAMS ctrParams;
     CK_GCM_PARAMS gcmParams;
     switch (mMechanism) {
@@ -634,8 +587,8 @@ private:
         MOZ_ASSERT(mIv.Length() == 16);
         memcpy(&ctrParams.cb, mIv.Elements(), 16);
         param.type = siBuffer;
-        param.data = (unsigned char*) &ctrParams;
-        param.len  = sizeof(ctrParams);
+        param.data = (unsigned char*)&ctrParams;
+        param.len = sizeof(ctrParams);
         break;
       case CKM_AES_GCM:
         gcmParams.pIv = mIv.Elements();
@@ -644,15 +597,15 @@ private:
         gcmParams.ulAADLen = mAad.Length();
         gcmParams.ulTagBits = mTagLength;
         param.type = siBuffer;
-        param.data = (unsigned char*) &gcmParams;
-        param.len  = sizeof(gcmParams);
+        param.data = (unsigned char*)&gcmParams;
+        param.len = sizeof(gcmParams);
         break;
       default:
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
     // Import the key
-    SECItem keyItem = { siBuffer, nullptr, 0 };
+    SECItem keyItem = {siBuffer, nullptr, 0};
     ATTEMPT_BUFFER_TO_SECITEM(arena.get(), &keyItem, mSymKey);
     UniquePK11SlotInfo slot(PK11_GetInternalSlot());
     MOZ_ASSERT(slot.get());
@@ -664,7 +617,8 @@ private:
     }
 
     // Check whether the integer addition would overflow.
-    if (std::numeric_limits<CryptoBuffer::size_type>::max() - 16 < mData.Length()) {
+    if (std::numeric_limits<CryptoBuffer::size_type>::max() - 16 <
+        mData.Length()) {
       return NS_ERROR_DOM_DATA_ERR;
     }
 
@@ -677,15 +631,13 @@ private:
 
     // Perform the encryption/decryption
     if (mEncrypt) {
-      rv = MapSECStatus(PK11_Encrypt(symKey.get(), mMechanism, &param,
-                                     mResult.Elements(), &outLen,
-                                     mResult.Length(), mData.Elements(),
-                                     mData.Length()));
+      rv = MapSECStatus(PK11_Encrypt(
+          symKey.get(), mMechanism, &param, mResult.Elements(), &outLen,
+          mResult.Length(), mData.Elements(), mData.Length()));
     } else {
-      rv = MapSECStatus(PK11_Decrypt(symKey.get(), mMechanism, &param,
-                                     mResult.Elements(), &outLen,
-                                     mResult.Length(), mData.Elements(),
-                                     mData.Length()));
+      rv = MapSECStatus(PK11_Decrypt(
+          symKey.get(), mMechanism, &param, mResult.Elements(), &outLen,
+          mResult.Length(), mData.Elements(), mData.Length()));
     }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
@@ -696,33 +648,27 @@ private:
 
 // This class looks like an encrypt/decrypt task, like AesTask,
 // but it is only exposed to wrapKey/unwrapKey, not encrypt/decrypt
-class AesKwTask : public ReturnArrayBufferViewTask,
-                  public DeferredData
-{
-public:
-  AesKwTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-            CryptoKey& aKey, bool aEncrypt)
-    : mMechanism(CKM_NSS_AES_KEY_WRAP)
-    , mSymKey(aKey.GetSymKey())
-    , mEncrypt(aEncrypt)
-  {
+class AesKwTask : public ReturnArrayBufferViewTask, public DeferredData {
+ public:
+  AesKwTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+            bool aEncrypt)
+      : mMechanism(CKM_NSS_AES_KEY_WRAP),
+        mSymKey(aKey.GetSymKey()),
+        mEncrypt(aEncrypt) {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
   }
 
-  AesKwTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-            CryptoKey& aKey, const CryptoOperationData& aData,
-            bool aEncrypt)
-    : mMechanism(CKM_NSS_AES_KEY_WRAP)
-    , mSymKey(aKey.GetSymKey())
-    , mEncrypt(aEncrypt)
-  {
+  AesKwTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+            const CryptoOperationData& aData, bool aEncrypt)
+      : mMechanism(CKM_NSS_AES_KEY_WRAP),
+        mSymKey(aKey.GetSymKey()),
+        mEncrypt(aEncrypt) {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
     SetData(aData);
   }
 
-  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm,
-            CryptoKey& aKey, bool aEncrypt)
-  {
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+            bool aEncrypt) {
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_AES_KW);
 
     nsString algName;
@@ -732,10 +678,8 @@ public:
     }
 
     // Check that we got a reasonable key
-    if ((mSymKey.Length() != 16) &&
-        (mSymKey.Length() != 24) &&
-        (mSymKey.Length() != 32))
-    {
+    if ((mSymKey.Length() != 16) && (mSymKey.Length() != 24) &&
+        (mSymKey.Length() != 32)) {
       mEarlyRv = NS_ERROR_DOM_DATA_ERR;
       return;
     }
@@ -743,13 +687,12 @@ public:
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_AES_KW);
   }
 
-private:
+ private:
   CK_MECHANISM_TYPE mMechanism;
   CryptoBuffer mSymKey;
   bool mEncrypt;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     nsresult rv;
 
     if (!mDataIsSet) {
@@ -767,7 +710,7 @@ private:
     }
 
     // Import the key
-    SECItem keyItem = { siBuffer, nullptr, 0 };
+    SECItem keyItem = {siBuffer, nullptr, 0};
     ATTEMPT_BUFFER_TO_SECITEM(arena.get(), &keyItem, mSymKey);
     UniquePK11SlotInfo slot(PK11_GetInternalSlot());
     MOZ_ASSERT(slot.get());
@@ -779,7 +722,7 @@ private:
     }
 
     // Import the data to a SECItem
-    SECItem dataItem = { siBuffer, nullptr, 0 };
+    SECItem dataItem = {siBuffer, nullptr, 0};
     ATTEMPT_BUFFER_TO_SECITEM(arena.get(), &dataItem, mData);
 
     // Parameters for the fake keys
@@ -788,9 +731,9 @@ private:
 
     if (mEncrypt) {
       // Import the data into a fake PK11SymKey structure
-      UniquePK11SymKey keyToWrap(PK11_ImportSymKey(slot.get(), fakeMechanism,
-                                                   PK11_OriginUnwrap, fakeOperation,
-                                                   &dataItem, nullptr));
+      UniquePK11SymKey keyToWrap(
+          PK11_ImportSymKey(slot.get(), fakeMechanism, PK11_OriginUnwrap,
+                            fakeOperation, &dataItem, nullptr));
       if (!keyToWrap) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
@@ -801,7 +744,7 @@ private:
         return NS_ERROR_DOM_OPERATION_ERR;
       }
       SECItem resultItem = {siBuffer, mResult.Elements(),
-                            (unsigned int) mResult.Length()};
+                            (unsigned int)mResult.Length()};
       rv = MapSECStatus(PK11_WrapSymKey(mMechanism, nullptr, symKey.get(),
                                         keyToWrap.get(), &resultItem));
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
@@ -810,8 +753,8 @@ private:
       // Unwrapped key should be 64 bits shorter
       int keySize = mData.Length() - 8;
       UniquePK11SymKey unwrappedKey(
-        PK11_UnwrapSymKey(symKey.get(), mMechanism, nullptr, &dataItem,
-                          fakeMechanism, fakeOperation, keySize));
+          PK11_UnwrapSymKey(symKey.get(), mMechanism, nullptr, &dataItem,
+                            fakeMechanism, fakeOperation, keySize));
       if (!unwrappedKey) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
@@ -828,33 +771,27 @@ private:
   }
 };
 
-class RsaOaepTask : public ReturnArrayBufferViewTask,
-                    public DeferredData
-{
-public:
-  RsaOaepTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-              CryptoKey& aKey, bool aEncrypt)
-    : mPrivKey(aKey.GetPrivateKey())
-    , mPubKey(aKey.GetPublicKey())
-    , mEncrypt(aEncrypt)
-  {
+class RsaOaepTask : public ReturnArrayBufferViewTask, public DeferredData {
+ public:
+  RsaOaepTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+              bool aEncrypt)
+      : mPrivKey(aKey.GetPrivateKey()),
+        mPubKey(aKey.GetPublicKey()),
+        mEncrypt(aEncrypt) {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
   }
 
-  RsaOaepTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-              CryptoKey& aKey, const CryptoOperationData& aData,
-              bool aEncrypt)
-    : mPrivKey(aKey.GetPrivateKey())
-    , mPubKey(aKey.GetPublicKey())
-    , mEncrypt(aEncrypt)
-  {
+  RsaOaepTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+              const CryptoOperationData& aData, bool aEncrypt)
+      : mPrivKey(aKey.GetPrivateKey()),
+        mPubKey(aKey.GetPublicKey()),
+        mEncrypt(aEncrypt) {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
     SetData(aData);
   }
 
-  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm,
-            CryptoKey& aKey, bool aEncrypt)
-  {
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+            bool aEncrypt) {
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSA_OAEP);
 
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_RSA_OAEP);
@@ -901,7 +838,7 @@ public:
     }
   }
 
-private:
+ private:
   CK_MECHANISM_TYPE mHashMechanism;
   CK_MECHANISM_TYPE mMgfMechanism;
   UniqueSECKEYPrivateKey mPrivKey;
@@ -910,8 +847,7 @@ private:
   uint32_t mStrength;
   bool mEncrypt;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     nsresult rv;
 
     if (!mDataIsSet) {
@@ -935,7 +871,7 @@ private:
 
     SECItem param;
     param.type = siBuffer;
-    param.data = (unsigned char*) &oaepParams;
+    param.data = (unsigned char*)&oaepParams;
     param.len = sizeof(oaepParams);
 
     uint32_t outLen = 0;
@@ -946,14 +882,12 @@ private:
       // output length in octets of the chosen hash function.
       // <https://tools.ietf.org/html/rfc3447#section-7.1>
       rv = MapSECStatus(PK11_PubEncrypt(
-             mPubKey.get(), CKM_RSA_PKCS_OAEP, &param,
-             mResult.Elements(), &outLen, mResult.Length(),
-             mData.Elements(), mData.Length(), nullptr));
+          mPubKey.get(), CKM_RSA_PKCS_OAEP, &param, mResult.Elements(), &outLen,
+          mResult.Length(), mData.Elements(), mData.Length(), nullptr));
     } else {
       rv = MapSECStatus(PK11_PrivDecrypt(
-             mPrivKey.get(), CKM_RSA_PKCS_OAEP, &param,
-             mResult.Elements(), &outLen, mResult.Length(),
-             mData.Elements(), mData.Length()));
+          mPrivKey.get(), CKM_RSA_PKCS_OAEP, &param, mResult.Elements(),
+          &outLen, mResult.Length(), mData.Elements(), mData.Length()));
     }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
@@ -962,18 +896,14 @@ private:
   }
 };
 
-class HmacTask : public WebCryptoTask
-{
-public:
-  HmacTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-           CryptoKey& aKey,
+class HmacTask : public WebCryptoTask {
+ public:
+  HmacTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
            const CryptoOperationData& aSignature,
-           const CryptoOperationData& aData,
-           bool aSign)
-    : mMechanism(aKey.Algorithm().Mechanism())
-    , mSymKey(aKey.GetSymKey())
-    , mSign(aSign)
-  {
+           const CryptoOperationData& aData, bool aSign)
+      : mMechanism(aKey.Algorithm().Mechanism()),
+        mSymKey(aKey.GetSymKey()),
+        mSign(aSign) {
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_HMAC);
 
     ATTEMPT_BUFFER_INIT(mData, aData);
@@ -989,17 +919,28 @@ public:
 
     TelemetryAlgorithm telemetryAlg;
     switch (mMechanism) {
-      case CKM_SHA_1_HMAC:  telemetryAlg = TA_HMAC_SHA_1; break;
-      case CKM_SHA224_HMAC: telemetryAlg = TA_HMAC_SHA_224; break;
-      case CKM_SHA256_HMAC: telemetryAlg = TA_HMAC_SHA_256; break;
-      case CKM_SHA384_HMAC: telemetryAlg = TA_HMAC_SHA_384; break;
-      case CKM_SHA512_HMAC: telemetryAlg = TA_HMAC_SHA_512; break;
-      default:              telemetryAlg = TA_UNKNOWN;
+      case CKM_SHA_1_HMAC:
+        telemetryAlg = TA_HMAC_SHA_1;
+        break;
+      case CKM_SHA224_HMAC:
+        telemetryAlg = TA_HMAC_SHA_224;
+        break;
+      case CKM_SHA256_HMAC:
+        telemetryAlg = TA_HMAC_SHA_256;
+        break;
+      case CKM_SHA384_HMAC:
+        telemetryAlg = TA_HMAC_SHA_384;
+        break;
+      case CKM_SHA512_HMAC:
+        telemetryAlg = TA_HMAC_SHA_512;
+        break;
+      default:
+        telemetryAlg = TA_UNKNOWN;
     }
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, telemetryAlg);
   }
 
-private:
+ private:
   CK_MECHANISM_TYPE mMechanism;
   CryptoBuffer mSymKey;
   CryptoBuffer mData;
@@ -1007,8 +948,7 @@ private:
   CryptoBuffer mResult;
   bool mSign;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     // Initialize the output buffer
     if (!mResult.SetLength(HASH_LENGTH_MAX, fallible)) {
       return NS_ERROR_DOM_UNKNOWN_ERR;
@@ -1021,7 +961,7 @@ private:
 
     // Import the key
     uint32_t outLen;
-    SECItem keyItem = { siBuffer, nullptr, 0 };
+    SECItem keyItem = {siBuffer, nullptr, 0};
     ATTEMPT_BUFFER_TO_SECITEM(arena.get(), &keyItem, mSymKey);
     UniquePK11SlotInfo slot(PK11_GetInternalSlot());
     MOZ_ASSERT(slot.get());
@@ -1033,18 +973,19 @@ private:
     }
 
     // Compute the MAC
-    SECItem param = { siBuffer, nullptr, 0 };
-    UniquePK11Context ctx(PK11_CreateContextBySymKey(mMechanism, CKA_SIGN,
-                                                     symKey.get(), &param));
+    SECItem param = {siBuffer, nullptr, 0};
+    UniquePK11Context ctx(
+        PK11_CreateContextBySymKey(mMechanism, CKA_SIGN, symKey.get(), &param));
     if (!ctx.get()) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
     nsresult rv = MapSECStatus(PK11_DigestBegin(ctx.get()));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
-    rv = MapSECStatus(PK11_DigestOp(ctx.get(), mData.Elements(), mData.Length()));
+    rv = MapSECStatus(
+        PK11_DigestOp(ctx.get(), mData.Elements(), mData.Length()));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
-    rv = MapSECStatus(PK11_DigestFinal(ctx.get(), mResult.Elements(),
-                                       &outLen, mResult.Length()));
+    rv = MapSECStatus(PK11_DigestFinal(ctx.get(), mResult.Elements(), &outLen,
+                                       mResult.Length()));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
     mResult.TruncateLength(outLen);
@@ -1052,8 +993,7 @@ private:
   }
 
   // Returns mResult as an ArrayBufferView, or an error
-  virtual void Resolve() override
-  {
+  virtual void Resolve() override {
     if (mSign) {
       // Return the computed MAC
       TypedArrayCreator<ArrayBuffer> ret(mResult);
@@ -1063,8 +1003,7 @@ private:
       // No truncation allowed
       bool equal = (mResult.Length() == mSignature.Length());
       if (equal) {
-        int cmp = NSS_SecureMemcmp(mSignature.Elements(),
-                                   mResult.Elements(),
+        int cmp = NSS_SecureMemcmp(mSignature.Elements(), mResult.Elements(),
                                    mSignature.Length());
         equal = (cmp == 0);
       }
@@ -1073,25 +1012,21 @@ private:
   }
 };
 
-class AsymmetricSignVerifyTask : public WebCryptoTask
-{
-public:
-  AsymmetricSignVerifyTask(JSContext* aCx,
-                           const ObjectOrString& aAlgorithm,
+class AsymmetricSignVerifyTask : public WebCryptoTask {
+ public:
+  AsymmetricSignVerifyTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                            CryptoKey& aKey,
                            const CryptoOperationData& aSignature,
-                           const CryptoOperationData& aData,
-                           bool aSign)
-    : mOidTag(SEC_OID_UNKNOWN)
-    , mHashMechanism(UNKNOWN_CK_MECHANISM)
-    , mMgfMechanism(UNKNOWN_CK_MECHANISM)
-    , mPrivKey(aKey.GetPrivateKey())
-    , mPubKey(aKey.GetPublicKey())
-    , mSaltLength(0)
-    , mSign(aSign)
-    , mVerified(false)
-    , mAlgorithm(Algorithm::UNKNOWN)
-  {
+                           const CryptoOperationData& aData, bool aSign)
+      : mOidTag(SEC_OID_UNKNOWN),
+        mHashMechanism(UNKNOWN_CK_MECHANISM),
+        mMgfMechanism(UNKNOWN_CK_MECHANISM),
+        mPrivKey(aKey.GetPrivateKey()),
+        mPubKey(aKey.GetPublicKey()),
+        mSaltLength(0),
+        mSign(aSign),
+        mVerified(false),
+        mAlgorithm(Algorithm::UNKNOWN) {
     ATTEMPT_BUFFER_INIT(mData, aData);
     if (!aSign) {
       ATTEMPT_BUFFER_INIT(mSignature, aSignature);
@@ -1175,7 +1110,7 @@ public:
     }
   }
 
-private:
+ private:
   SECOidTag mOidTag;
   CK_MECHANISM_TYPE mHashMechanism;
   CK_MECHANISM_TYPE mMgfMechanism;
@@ -1188,14 +1123,13 @@ private:
   bool mVerified;
 
   // The signature algorithm to use.
-  enum class Algorithm: uint8_t {ECDSA, RSA_PKCS1, RSA_PSS, UNKNOWN};
+  enum class Algorithm : uint8_t { ECDSA, RSA_PKCS1, RSA_PSS, UNKNOWN };
   Algorithm mAlgorithm;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     SECStatus rv;
-    UniqueSECItem hash(::SECITEM_AllocItem(nullptr, nullptr,
-                                           HASH_ResultLenByOidTag(mOidTag)));
+    UniqueSECItem hash(
+        ::SECITEM_AllocItem(nullptr, nullptr, HASH_ResultLenByOidTag(mOidTag)));
     if (!hash) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
@@ -1206,8 +1140,8 @@ private:
 
     // Wrap hash in a digest info template (RSA-PKCS1 only).
     if (mAlgorithm == Algorithm::RSA_PKCS1) {
-      UniqueSGNDigestInfo di(SGN_CreateDigestInfo(mOidTag, hash->data,
-                                                  hash->len));
+      UniqueSGNDigestInfo di(
+          SGN_CreateDigestInfo(mOidTag, hash->data, hash->len));
       if (!di) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
@@ -1221,11 +1155,13 @@ private:
     }
 
     SECItem* params = nullptr;
-    CK_MECHANISM_TYPE mech = PK11_MapSignKeyType((mSign ? mPrivKey->keyType :
-                                                          mPubKey->keyType));
+    CK_MECHANISM_TYPE mech =
+        PK11_MapSignKeyType((mSign ? mPrivKey->keyType : mPubKey->keyType));
 
     CK_RSA_PKCS_PSS_PARAMS rsaPssParams;
-    SECItem rsaPssParamsItem = { siBuffer, };
+    SECItem rsaPssParamsItem = {
+        siBuffer,
+    };
 
     // Set up parameters for RSA-PSS.
     if (mAlgorithm == Algorithm::RSA_PSS) {
@@ -1268,8 +1204,7 @@ private:
     return NS_OK;
   }
 
-  virtual void Resolve() override
-  {
+  virtual void Resolve() override {
     if (mSign) {
       TypedArrayCreator<ArrayBuffer> ret(mSignature);
       mResultPromise->MaybeResolve(ret);
@@ -1279,13 +1214,10 @@ private:
   }
 };
 
-class DigestTask : public ReturnArrayBufferViewTask
-{
-public:
-  DigestTask(JSContext* aCx,
-                   const ObjectOrString& aAlgorithm,
-                   const CryptoOperationData& aData)
-  {
+class DigestTask : public ReturnArrayBufferViewTask {
+ public:
+  DigestTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+             const CryptoOperationData& aData) {
     ATTEMPT_BUFFER_INIT(mData, aData);
 
     nsString algName;
@@ -1296,7 +1228,7 @@ public:
     }
 
     TelemetryAlgorithm telemetryAlg;
-    if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA1))   {
+    if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
       telemetryAlg = TA_SHA_1;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
       telemetryAlg = TA_SHA_224;
@@ -1312,12 +1244,11 @@ public:
     mOidTag = MapHashAlgorithmNameToOID(algName);
   }
 
-private:
+ private:
   SECOidTag mOidTag;
   CryptoBuffer mData;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     // Resize the result buffer
     uint32_t hashLen = HASH_ResultLenByOidTag(mOidTag);
     if (!mResult.SetLength(hashLen, fallible)) {
@@ -1335,13 +1266,11 @@ private:
   }
 };
 
-class ImportKeyTask : public WebCryptoTask
-{
-public:
-  void Init(nsIGlobalObject* aGlobal, JSContext* aCx,
-      const nsAString& aFormat, const ObjectOrString& aAlgorithm,
-      bool aExtractable, const Sequence<nsString>& aKeyUsages)
-  {
+class ImportKeyTask : public WebCryptoTask {
+ public:
+  void Init(nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
+            const ObjectOrString& aAlgorithm, bool aExtractable,
+            const Sequence<nsString>& aKeyUsages) {
     mFormat = aFormat;
     mDataIsSet = false;
     mDataIsJwk = false;
@@ -1364,11 +1293,9 @@ public:
     }
   }
 
-  static bool JwkCompatible(const JsonWebKey& aJwk, const CryptoKey* aKey)
-  {
+  static bool JwkCompatible(const JsonWebKey& aJwk, const CryptoKey* aKey) {
     // Check 'ext'
-    if (aKey->Extractable() &&
-        aJwk.mExt.WasPassed() && !aJwk.mExt.Value()) {
+    if (aKey->Extractable() && aJwk.mExt.WasPassed() && !aJwk.mExt.Value()) {
       return false;
     }
 
@@ -1393,8 +1320,7 @@ public:
     return true;
   }
 
-  void SetKeyData(JSContext* aCx, JS::Handle<JSObject*> aKeyData)
-  {
+  void SetKeyData(JSContext* aCx, JS::Handle<JSObject*> aKeyData) {
     mDataIsJwk = false;
 
     // Try ArrayBuffer
@@ -1426,8 +1352,7 @@ public:
     mDataIsJwk = true;
   }
 
-  void SetKeyDataMaybeParseJWK(const CryptoBuffer& aKeyData)
-  {
+  void SetKeyDataMaybeParseJWK(const CryptoBuffer& aKeyData) {
     if (!mKeyData.Assign(aKeyData)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
@@ -1436,9 +1361,9 @@ public:
     mDataIsJwk = false;
 
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
-      nsDependentCSubstring utf8((const char*) mKeyData.Elements(),
-                                 (const char*) (mKeyData.Elements() +
-                                                mKeyData.Length()));
+      nsDependentCSubstring utf8(
+          (const char*)mKeyData.Elements(),
+          (const char*)(mKeyData.Elements() + mKeyData.Length()));
       if (!IsUTF8(utf8)) {
         mEarlyRv = NS_ERROR_DOM_DATA_ERR;
         return;
@@ -1454,8 +1379,7 @@ public:
     }
   }
 
-  void SetRawKeyData(const CryptoBuffer& aKeyData)
-  {
+  void SetRawKeyData(const CryptoBuffer& aKeyData) {
     if (!mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
@@ -1469,7 +1393,7 @@ public:
     mDataIsJwk = false;
   }
 
-protected:
+ protected:
   nsString mFormat;
   RefPtr<CryptoKey> mKey;
   CryptoBuffer mKeyData;
@@ -1478,35 +1402,26 @@ protected:
   JsonWebKey mJwk;
   nsString mAlgName;
 
-private:
-  virtual void Resolve() override
-  {
-    mResultPromise->MaybeResolve(mKey);
-  }
+ private:
+  virtual void Resolve() override { mResultPromise->MaybeResolve(mKey); }
 
-  virtual void Cleanup() override
-  {
-    mKey = nullptr;
-  }
+  virtual void Cleanup() override { mKey = nullptr; }
 };
 
-
-class ImportSymmetricKeyTask : public ImportKeyTask
-{
-public:
+class ImportSymmetricKeyTask : public ImportKeyTask {
+ public:
   ImportSymmetricKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
-      const nsAString& aFormat,
-      const ObjectOrString& aAlgorithm, bool aExtractable,
-      const Sequence<nsString>& aKeyUsages)
-  {
+                         const nsAString& aFormat,
+                         const ObjectOrString& aAlgorithm, bool aExtractable,
+                         const Sequence<nsString>& aKeyUsages) {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
   }
 
   ImportSymmetricKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
-      const nsAString& aFormat, const JS::Handle<JSObject*> aKeyData,
-      const ObjectOrString& aAlgorithm, bool aExtractable,
-      const Sequence<nsString>& aKeyUsages)
-  {
+                         const nsAString& aFormat,
+                         const JS::Handle<JSObject*> aKeyData,
+                         const ObjectOrString& aAlgorithm, bool aExtractable,
+                         const Sequence<nsString>& aKeyUsages) {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
@@ -1521,10 +1436,10 @@ public:
   }
 
   void Init(nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
-      const ObjectOrString& aAlgorithm, bool aExtractable,
-      const Sequence<nsString>& aKeyUsages)
-  {
-    ImportKeyTask::Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+            const ObjectOrString& aAlgorithm, bool aExtractable,
+            const Sequence<nsString>& aKeyUsages) {
+    ImportKeyTask::Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable,
+                        aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
@@ -1552,8 +1467,7 @@ public:
     }
   }
 
-  virtual nsresult BeforeCrypto() override
-  {
+  virtual nsresult BeforeCrypto() override {
     nsresult rv;
 
     // If we're doing a JWK import, import the key data
@@ -1569,13 +1483,14 @@ public:
       }
     }
     // Check that we have valid key data.
-    if (mKeyData.Length() == 0 && !mAlgName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
+    if (mKeyData.Length() == 0 &&
+        !mAlgName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
       return NS_ERROR_DOM_DATA_ERR;
     }
 
     // Construct an appropriate KeyAlorithm,
     // and verify that usages are appropriate
-    uint32_t length = 8 * mKeyData.Length(); // bytes to bits
+    uint32_t length = 8 * mKeyData.Length();  // bytes to bits
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC) ||
         mAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR) ||
         mAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM) ||
@@ -1590,7 +1505,7 @@ public:
         return NS_ERROR_DOM_DATA_ERR;
       }
 
-      if ( (length != 128) && (length != 192) && (length != 256) ) {
+      if ((length != 128) && (length != 192) && (length != 256)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
       mKey->Algorithm().MakeAes(mAlgName, length);
@@ -1601,7 +1516,8 @@ public:
       }
     } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_HKDF) ||
                mAlgName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
-      if (mKey->HasUsageOtherThan(CryptoKey::DERIVEKEY | CryptoKey::DERIVEBITS)) {
+      if (mKey->HasUsageOtherThan(CryptoKey::DERIVEKEY |
+                                  CryptoKey::DERIVEBITS)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
       mKey->Algorithm().MakeAes(mAlgName, length);
@@ -1643,28 +1559,24 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   nsString mHashName;
 };
 
-class ImportRsaKeyTask : public ImportKeyTask
-{
-public:
+class ImportRsaKeyTask : public ImportKeyTask {
+ public:
   ImportRsaKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
-      const nsAString& aFormat,
-      const ObjectOrString& aAlgorithm, bool aExtractable,
-      const Sequence<nsString>& aKeyUsages)
-    : mModulusLength(0)
-  {
+                   const nsAString& aFormat, const ObjectOrString& aAlgorithm,
+                   bool aExtractable, const Sequence<nsString>& aKeyUsages)
+      : mModulusLength(0) {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
   }
 
   ImportRsaKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
-      const nsAString& aFormat, JS::Handle<JSObject*> aKeyData,
-      const ObjectOrString& aAlgorithm, bool aExtractable,
-      const Sequence<nsString>& aKeyUsages)
-    : mModulusLength(0)
-  {
+                   const nsAString& aFormat, JS::Handle<JSObject*> aKeyData,
+                   const ObjectOrString& aAlgorithm, bool aExtractable,
+                   const Sequence<nsString>& aKeyUsages)
+      : mModulusLength(0) {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
@@ -1678,12 +1590,11 @@ public:
     }
   }
 
-  void Init(nsIGlobalObject* aGlobal, JSContext* aCx,
-      const nsAString& aFormat,
-      const ObjectOrString& aAlgorithm, bool aExtractable,
-      const Sequence<nsString>& aKeyUsages)
-  {
-    ImportKeyTask::Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+  void Init(nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
+            const ObjectOrString& aAlgorithm, bool aExtractable,
+            const Sequence<nsString>& aKeyUsages) {
+    ImportKeyTask::Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable,
+                        aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
@@ -1715,13 +1626,12 @@ public:
     }
   }
 
-private:
+ private:
   nsString mHashName;
   uint32_t mModulusLength;
   CryptoBuffer mPublicExponent;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     // Import the key data itself
     UniqueSECKEYPublicKey pubKey;
     UniqueSECKEYPrivateKey privKey;
@@ -1745,8 +1655,8 @@ private:
 
       mKey->SetType(CryptoKey::PUBLIC);
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_PKCS8) ||
-        (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) &&
-         mJwk.mD.WasPassed())) {
+               (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) &&
+                mJwk.mD.WasPassed())) {
       // Private key import
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_PKCS8)) {
         privKey = CryptoKey::PrivateKeyFromPkcs8(mKeyData);
@@ -1781,14 +1691,14 @@ private:
     return NS_OK;
   }
 
-  virtual nsresult AfterCrypto() override
-  {
+  virtual nsresult AfterCrypto() override {
     // Check permissions for the requested operation
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
       if ((mKey->GetKeyType() == CryptoKey::PUBLIC &&
            mKey->HasUsageOtherThan(CryptoKey::ENCRYPT | CryptoKey::WRAPKEY)) ||
           (mKey->GetKeyType() == CryptoKey::PRIVATE &&
-           mKey->HasUsageOtherThan(CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY))) {
+           mKey->HasUsageOtherThan(CryptoKey::DECRYPT |
+                                   CryptoKey::UNWRAPKEY))) {
         return NS_ERROR_DOM_DATA_ERR;
       }
     } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
@@ -1802,8 +1712,8 @@ private:
     }
 
     // Set an appropriate KeyAlgorithm
-    if (!mKey->Algorithm().MakeRsa(mAlgName, mModulusLength,
-                                   mPublicExponent, mHashName)) {
+    if (!mKey->Algorithm().MakeRsa(mAlgName, mModulusLength, mPublicExponent,
+                                   mHashName)) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
 
@@ -1815,21 +1725,18 @@ private:
   }
 };
 
-class ImportEcKeyTask : public ImportKeyTask
-{
-public:
+class ImportEcKeyTask : public ImportKeyTask {
+ public:
   ImportEcKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
                   const nsAString& aFormat, const ObjectOrString& aAlgorithm,
-                  bool aExtractable, const Sequence<nsString>& aKeyUsages)
-  {
+                  bool aExtractable, const Sequence<nsString>& aKeyUsages) {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
   }
 
   ImportEcKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
                   const nsAString& aFormat, JS::Handle<JSObject*> aKeyData,
                   const ObjectOrString& aAlgorithm, bool aExtractable,
-                  const Sequence<nsString>& aKeyUsages)
-  {
+                  const Sequence<nsString>& aKeyUsages) {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
@@ -1841,9 +1748,9 @@ public:
 
   void Init(nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
             const ObjectOrString& aAlgorithm, bool aExtractable,
-            const Sequence<nsString>& aKeyUsages)
-  {
-    ImportKeyTask::Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+            const Sequence<nsString>& aKeyUsages) {
+    ImportKeyTask::Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable,
+                        aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
@@ -1863,16 +1770,16 @@ public:
     }
   }
 
-private:
+ private:
   nsString mNamedCurve;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     // Import the key data itself
     UniqueSECKEYPublicKey pubKey;
     UniqueSECKEYPrivateKey privKey;
 
-    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) && mJwk.mD.WasPassed()) {
+    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) &&
+        mJwk.mD.WasPassed()) {
       // Private key import
       privKey = CryptoKey::PrivateKeyFromJwk(mJwk);
       if (!privKey) {
@@ -1909,7 +1816,7 @@ private:
         }
 
         // Construct the OID tag.
-        SECItem oid = { siBuffer, nullptr, 0 };
+        SECItem oid = {siBuffer, nullptr, 0};
         oid.len = pubKey->u.ec.DEREncodedParams.data[1];
         oid.data = pubKey->u.ec.DEREncodedParams.data + 2;
 
@@ -1938,8 +1845,7 @@ private:
     return NS_OK;
   }
 
-  virtual nsresult AfterCrypto() override
-  {
+  virtual nsresult AfterCrypto() override {
     uint32_t privateAllowedUsages = 0, publicAllowedUsages = 0;
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
       privateAllowedUsages = CryptoKey::DERIVEBITS | CryptoKey::DERIVEKEY;
@@ -1954,8 +1860,8 @@ private:
          mKey->HasUsageOtherThan(privateAllowedUsages)) ||
         (mKey->GetKeyType() == CryptoKey::PUBLIC &&
          mKey->HasUsageOtherThan(publicAllowedUsages))) {
-       return NS_ERROR_DOM_DATA_ERR;
-     }
+      return NS_ERROR_DOM_DATA_ERR;
+    }
 
     mKey->Algorithm().MakeEc(mAlgName, mNamedCurve);
 
@@ -1967,21 +1873,18 @@ private:
   }
 };
 
-class ImportDhKeyTask : public ImportKeyTask
-{
-public:
+class ImportDhKeyTask : public ImportKeyTask {
+ public:
   ImportDhKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
                   const nsAString& aFormat, const ObjectOrString& aAlgorithm,
-                  bool aExtractable, const Sequence<nsString>& aKeyUsages)
-  {
+                  bool aExtractable, const Sequence<nsString>& aKeyUsages) {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
   }
 
   ImportDhKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
                   const nsAString& aFormat, JS::Handle<JSObject*> aKeyData,
                   const ObjectOrString& aAlgorithm, bool aExtractable,
-                  const Sequence<nsString>& aKeyUsages)
-  {
+                  const Sequence<nsString>& aKeyUsages) {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
     if (NS_SUCCEEDED(mEarlyRv)) {
       SetKeyData(aCx, aKeyData);
@@ -1991,9 +1894,9 @@ public:
 
   void Init(nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
             const ObjectOrString& aAlgorithm, bool aExtractable,
-            const Sequence<nsString>& aKeyUsages)
-  {
-    ImportKeyTask::Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+            const Sequence<nsString>& aKeyUsages) {
+    ImportKeyTask::Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable,
+                        aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
@@ -2014,12 +1917,11 @@ public:
     }
   }
 
-private:
+ private:
   CryptoBuffer mPrime;
   CryptoBuffer mGenerator;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     // Import the key data itself
     UniqueSECKEYPublicKey pubKey;
 
@@ -2055,8 +1957,7 @@ private:
     return NS_OK;
   }
 
-  virtual nsresult AfterCrypto() override
-  {
+  virtual nsresult AfterCrypto() override {
     // Check permissions for the requested operation
     if (mKey->HasUsageOtherThan(CryptoKey::DERIVEBITS | CryptoKey::DERIVEKEY)) {
       return NS_ERROR_DOM_DATA_ERR;
@@ -2069,23 +1970,20 @@ private:
   }
 };
 
-class ExportKeyTask : public WebCryptoTask
-{
-public:
+class ExportKeyTask : public WebCryptoTask {
+ public:
   ExportKeyTask(const nsAString& aFormat, CryptoKey& aKey)
-    : mFormat(aFormat)
-    , mSymKey(aKey.GetSymKey())
-    , mPrivateKey(aKey.GetPrivateKey())
-    , mPublicKey(aKey.GetPublicKey())
-    , mKeyType(aKey.GetKeyType())
-    , mExtractable(aKey.Extractable())
-    , mAlg(aKey.Algorithm().JwkAlg())
-  {
+      : mFormat(aFormat),
+        mSymKey(aKey.GetSymKey()),
+        mPrivateKey(aKey.GetPrivateKey()),
+        mPublicKey(aKey.GetPublicKey()),
+        mKeyType(aKey.GetKeyType()),
+        mExtractable(aKey.Extractable()),
+        mAlg(aKey.Algorithm().JwkAlg()) {
     aKey.GetUsages(mKeyUsages);
   }
 
-
-protected:
+ protected:
   nsString mFormat;
   CryptoBuffer mSymKey;
   UniqueSECKEYPrivateKey mPrivateKey;
@@ -2097,9 +1995,8 @@ protected:
   CryptoBuffer mResult;
   JsonWebKey mJwk;
 
-private:
-  virtual nsresult DoCrypto() override
-  {
+ private:
+  virtual nsresult DoCrypto() override {
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
       if (mPublicKey && mPublicKey->keyType == dhKey) {
         nsresult rv = CryptoKey::PublicDhKeyToRaw(mPublicKey.get(), mResult);
@@ -2130,7 +2027,8 @@ private:
 
       switch (mPrivateKey->keyType) {
         case rsaKey: {
-          nsresult rv = CryptoKey::PrivateKeyToPkcs8(mPrivateKey.get(), mResult);
+          nsresult rv =
+              CryptoKey::PrivateKeyToPkcs8(mPrivateKey.get(), mResult);
           if (NS_FAILED(rv)) {
             return NS_ERROR_DOM_OPERATION_ERR;
           }
@@ -2192,8 +2090,7 @@ private:
   }
 
   // Returns mResult as an ArrayBufferView or JWK, as appropriate
-  virtual void Resolve() override
-  {
+  virtual void Resolve() override {
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       mResultPromise->MaybeResolve(mJwk);
       return;
@@ -2204,13 +2101,11 @@ private:
   }
 };
 
-class GenerateSymmetricKeyTask : public WebCryptoTask
-{
-public:
+class GenerateSymmetricKeyTask : public WebCryptoTask {
+ public:
   GenerateSymmetricKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
-      const ObjectOrString& aAlgorithm, bool aExtractable,
-      const Sequence<nsString>& aKeyUsages)
-  {
+                           const ObjectOrString& aAlgorithm, bool aExtractable,
+                           const Sequence<nsString>& aKeyUsages) {
     // Create an empty key and set easy attributes
     mKey = new CryptoKey(aGlobal);
     mKey->SetExtractable(aExtractable);
@@ -2278,24 +2173,23 @@ public:
       }
     }
 
-    mLength = mLength >> 3; // bits to bytes
+    mLength = mLength >> 3;  // bits to bytes
     mMechanism = mKey->Algorithm().Mechanism();
     // SetSymKey done in Resolve, after we've done the keygen
   }
 
-private:
+ private:
   RefPtr<CryptoKey> mKey;
   size_t mLength;
   CK_MECHANISM_TYPE mMechanism;
   CryptoBuffer mKeyData;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     UniquePK11SlotInfo slot(PK11_GetInternalSlot());
     MOZ_ASSERT(slot.get());
 
-    UniquePK11SymKey symKey(PK11_KeyGen(slot.get(), mMechanism, nullptr,
-                                        mLength, nullptr));
+    UniquePK11SymKey symKey(
+        PK11_KeyGen(slot.get(), mMechanism, nullptr, mLength, nullptr));
     if (!symKey) {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
@@ -2312,8 +2206,7 @@ private:
     return NS_OK;
   }
 
-  virtual void Resolve() override
-  {
+  virtual void Resolve() override {
     if (NS_SUCCEEDED(mKey->SetSymKey(mKeyData))) {
       mResultPromise->MaybeResolve(mKey);
     } else {
@@ -2321,20 +2214,16 @@ private:
     }
   }
 
-  virtual void Cleanup() override
-  {
-    mKey = nullptr;
-  }
+  virtual void Cleanup() override { mKey = nullptr; }
 };
 
 GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     nsIGlobalObject* aGlobal, JSContext* aCx, const ObjectOrString& aAlgorithm,
     bool aExtractable, const Sequence<nsString>& aKeyUsages)
-  : mKeyPair(new CryptoKeyPair())
-  , mMechanism(CKM_INVALID_MECHANISM)
-  , mRsaParams()
-  , mDhParams()
-{
+    : mKeyPair(new CryptoKeyPair()),
+      mMechanism(CKM_INVALID_MECHANISM),
+      mRsaParams(),
+      mDhParams() {
   mArena = UniquePLArenaPool(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!mArena) {
     mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
@@ -2374,17 +2263,13 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     }
 
     // Create algorithm
-    if (!mKeyPair->mPublicKey.get()->Algorithm().MakeRsa(mAlgName,
-                                                         modulusLength,
-                                                         publicExponent,
-                                                         hashName)) {
+    if (!mKeyPair->mPublicKey.get()->Algorithm().MakeRsa(
+            mAlgName, modulusLength, publicExponent, hashName)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
     }
-    if (!mKeyPair->mPrivateKey.get()->Algorithm().MakeRsa(mAlgName,
-                                                          modulusLength,
-                                                          publicExponent,
-                                                          hashName)) {
+    if (!mKeyPair->mPrivateKey.get()->Algorithm().MakeRsa(
+            mAlgName, modulusLength, publicExponent, hashName)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
     }
@@ -2437,14 +2322,12 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     }
 
     // Create algorithm.
-    if (!mKeyPair->mPublicKey.get()->Algorithm().MakeDh(mAlgName,
-                                                        prime,
+    if (!mKeyPair->mPublicKey.get()->Algorithm().MakeDh(mAlgName, prime,
                                                         generator)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
     }
-    if (!mKeyPair->mPrivateKey.get()->Algorithm().MakeDh(mAlgName,
-                                                         prime,
+    if (!mKeyPair->mPrivateKey.get()->Algorithm().MakeDh(mAlgName, prime,
                                                          generator)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
@@ -2469,7 +2352,7 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     privateAllowedUsages = CryptoKey::DERIVEKEY | CryptoKey::DERIVEBITS;
     publicAllowedUsages = 0;
   } else {
-    MOZ_ASSERT(false); // This shouldn't happen.
+    MOZ_ASSERT(false);  // This shouldn't happen.
   }
 
   mKeyPair->mPrivateKey.get()->SetExtractable(aExtractable);
@@ -2480,15 +2363,15 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
 
   mKeyPair->mPrivateKey.get()->ClearUsages();
   mKeyPair->mPublicKey.get()->ClearUsages();
-  for (uint32_t i=0; i < aKeyUsages.Length(); ++i) {
-    mEarlyRv = mKeyPair->mPrivateKey.get()->AddUsageIntersecting(aKeyUsages[i],
-                                                                 privateAllowedUsages);
+  for (uint32_t i = 0; i < aKeyUsages.Length(); ++i) {
+    mEarlyRv = mKeyPair->mPrivateKey.get()->AddUsageIntersecting(
+        aKeyUsages[i], privateAllowedUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
 
-    mEarlyRv = mKeyPair->mPublicKey.get()->AddUsageIntersecting(aKeyUsages[i],
-                                                                publicAllowedUsages);
+    mEarlyRv = mKeyPair->mPublicKey.get()->AddUsageIntersecting(
+        aKeyUsages[i], publicAllowedUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
@@ -2502,9 +2385,7 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
   }
 }
 
-nsresult
-GenerateAsymmetricKeyTask::DoCrypto()
-{
+nsresult GenerateAsymmetricKeyTask::DoCrypto() {
   MOZ_ASSERT(mKeyPair);
 
   UniquePK11SlotInfo slot(PK11_GetInternalSlot());
@@ -2530,9 +2411,8 @@ GenerateAsymmetricKeyTask::DoCrypto()
   }
 
   SECKEYPublicKey* pubKey = nullptr;
-  mPrivateKey = UniqueSECKEYPrivateKey(
-    PK11_GenerateKeyPair(slot.get(), mMechanism, param, &pubKey, PR_FALSE,
-                         PR_FALSE, nullptr));
+  mPrivateKey = UniqueSECKEYPrivateKey(PK11_GenerateKeyPair(
+      slot.get(), mMechanism, param, &pubKey, PR_FALSE, PR_FALSE, nullptr));
   mPublicKey = UniqueSECKEYPublicKey(pubKey);
   pubKey = nullptr;
   if (!mPrivateKey.get() || !mPublicKey.get()) {
@@ -2554,36 +2434,26 @@ GenerateAsymmetricKeyTask::DoCrypto()
   return NS_OK;
 }
 
-void
-GenerateAsymmetricKeyTask::Resolve()
-{
+void GenerateAsymmetricKeyTask::Resolve() {
   mResultPromise->MaybeResolve(*mKeyPair);
 }
 
-void
-GenerateAsymmetricKeyTask::Cleanup()
-{
-  mKeyPair = nullptr;
-}
+void GenerateAsymmetricKeyTask::Cleanup() { mKeyPair = nullptr; }
 
-class DeriveHkdfBitsTask : public ReturnArrayBufferViewTask
-{
-public:
-  DeriveHkdfBitsTask(JSContext* aCx,
-      const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
-    : mSymKey(aKey.GetSymKey())
-    , mMechanism(CKM_INVALID_MECHANISM)
-  {
+class DeriveHkdfBitsTask : public ReturnArrayBufferViewTask {
+ public:
+  DeriveHkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                     CryptoKey& aKey, uint32_t aLength)
+      : mSymKey(aKey.GetSymKey()), mMechanism(CKM_INVALID_MECHANISM) {
     Init(aCx, aAlgorithm, aKey, aLength);
   }
 
   DeriveHkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                      CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
-    : mLengthInBits(0)
-    , mLengthInBytes(0)
-    , mSymKey(aKey.GetSymKey())
-    , mMechanism(CKM_INVALID_MECHANISM)
-  {
+                     CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
+      : mLengthInBits(0),
+        mLengthInBytes(0),
+        mSymKey(aKey.GetSymKey()),
+        mMechanism(CKM_INVALID_MECHANISM) {
     size_t length;
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);
 
@@ -2593,8 +2463,7 @@ public:
   }
 
   void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
-            uint32_t aLength)
-  {
+            uint32_t aLength) {
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_HKDF);
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_HKDF);
 
@@ -2626,10 +2495,18 @@ public:
 
     // Check the given hash algorithm.
     switch (MapAlgorithmNameToMechanism(hashName)) {
-      case CKM_SHA_1: mMechanism = CKM_NSS_HKDF_SHA1; break;
-      case CKM_SHA256: mMechanism = CKM_NSS_HKDF_SHA256; break;
-      case CKM_SHA384: mMechanism = CKM_NSS_HKDF_SHA384; break;
-      case CKM_SHA512: mMechanism = CKM_NSS_HKDF_SHA512; break;
+      case CKM_SHA_1:
+        mMechanism = CKM_NSS_HKDF_SHA1;
+        break;
+      case CKM_SHA256:
+        mMechanism = CKM_NSS_HKDF_SHA256;
+        break;
+      case CKM_SHA384:
+        mMechanism = CKM_NSS_HKDF_SHA384;
+        break;
+      case CKM_SHA512:
+        mMechanism = CKM_NSS_HKDF_SHA512;
+        break;
       default:
         mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         return;
@@ -2641,7 +2518,7 @@ public:
     mLengthInBits = aLength;
   }
 
-private:
+ private:
   size_t mLengthInBits;
   size_t mLengthInBytes;
   CryptoBuffer mSalt;
@@ -2649,15 +2526,14 @@ private:
   CryptoBuffer mSymKey;
   CK_MECHANISM_TYPE mMechanism;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
     if (!arena) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
 
     // Import the key
-    SECItem keyItem = { siBuffer, nullptr, 0 };
+    SECItem keyItem = {siBuffer, nullptr, 0};
     ATTEMPT_BUFFER_TO_SECITEM(arena.get(), &keyItem, mSymKey);
 
     UniquePK11SlotInfo slot(PK11_GetInternalSlot());
@@ -2672,15 +2548,15 @@ private:
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
     }
 
-    SECItem salt = { siBuffer, nullptr, 0 };
-    SECItem info = { siBuffer, nullptr, 0 };
+    SECItem salt = {siBuffer, nullptr, 0};
+    SECItem info = {siBuffer, nullptr, 0};
     ATTEMPT_BUFFER_TO_SECITEM(arena.get(), &salt, mSalt);
     ATTEMPT_BUFFER_TO_SECITEM(arena.get(), &info, mInfo);
 
-    CK_NSS_HKDFParams hkdfParams = { true, salt.data, salt.len,
-                                     true, info.data, info.len };
-    SECItem params = { siBuffer, (unsigned char*)&hkdfParams,
-                       sizeof(hkdfParams) };
+    CK_NSS_HKDFParams hkdfParams = {true, salt.data, salt.len,
+                                    true, info.data, info.len};
+    SECItem params = {siBuffer, (unsigned char*)&hkdfParams,
+                      sizeof(hkdfParams)};
 
     // CKM_SHA512_HMAC and CKA_SIGN are key type and usage attributes of the
     // derived symmetric key and don't matter because we ignore them anyway.
@@ -2720,24 +2596,20 @@ private:
   }
 };
 
-class DerivePbkdfBitsTask : public ReturnArrayBufferViewTask
-{
-public:
-  DerivePbkdfBitsTask(JSContext* aCx,
-      const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
-    : mSymKey(aKey.GetSymKey())
-    , mHashOidTag(SEC_OID_UNKNOWN)
-  {
+class DerivePbkdfBitsTask : public ReturnArrayBufferViewTask {
+ public:
+  DerivePbkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                      CryptoKey& aKey, uint32_t aLength)
+      : mSymKey(aKey.GetSymKey()), mHashOidTag(SEC_OID_UNKNOWN) {
     Init(aCx, aAlgorithm, aKey, aLength);
   }
 
   DerivePbkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                       CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
-    : mLength(0)
-    , mIterations(0)
-    , mSymKey(aKey.GetSymKey())
-    , mHashOidTag(SEC_OID_UNKNOWN)
-  {
+      : mLength(0),
+        mIterations(0),
+        mSymKey(aKey.GetSymKey()),
+        mHashOidTag(SEC_OID_UNKNOWN) {
     size_t length;
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);
 
@@ -2747,8 +2619,7 @@ public:
   }
 
   void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
-            uint32_t aLength)
-  {
+            uint32_t aLength) {
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_PBKDF2);
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_PBKDF2);
 
@@ -2774,35 +2645,42 @@ public:
 
     // Check the given hash algorithm.
     switch (MapAlgorithmNameToMechanism(hashName)) {
-      case CKM_SHA_1: mHashOidTag = SEC_OID_HMAC_SHA1; break;
-      case CKM_SHA256: mHashOidTag = SEC_OID_HMAC_SHA256; break;
-      case CKM_SHA384: mHashOidTag = SEC_OID_HMAC_SHA384; break;
-      case CKM_SHA512: mHashOidTag = SEC_OID_HMAC_SHA512; break;
+      case CKM_SHA_1:
+        mHashOidTag = SEC_OID_HMAC_SHA1;
+        break;
+      case CKM_SHA256:
+        mHashOidTag = SEC_OID_HMAC_SHA256;
+        break;
+      case CKM_SHA384:
+        mHashOidTag = SEC_OID_HMAC_SHA384;
+        break;
+      case CKM_SHA512:
+        mHashOidTag = SEC_OID_HMAC_SHA512;
+        break;
       default:
         mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         return;
     }
 
     ATTEMPT_BUFFER_INIT(mSalt, params.mSalt)
-    mLength = aLength >> 3; // bits to bytes
+    mLength = aLength >> 3;  // bits to bytes
     mIterations = params.mIterations;
   }
 
-private:
+ private:
   size_t mLength;
   size_t mIterations;
   CryptoBuffer mSalt;
   CryptoBuffer mSymKey;
   SECOidTag mHashOidTag;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
     if (!arena) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
 
-    SECItem salt = { siBuffer, nullptr, 0 };
+    SECItem salt = {siBuffer, nullptr, 0};
     ATTEMPT_BUFFER_TO_SECITEM(arena.get(), &salt, mSalt);
     // PK11_CreatePBEV2AlgorithmID will "helpfully" create PBKDF2 parameters
     // with a random salt if given a SECItem* that is either null or has a null
@@ -2812,7 +2690,7 @@ private:
     if (!salt.data) {
       MOZ_ASSERT(salt.len == 0);
       salt.data =
-        reinterpret_cast<unsigned char*>(PORT_ArenaAlloc(arena.get(), 1));
+          reinterpret_cast<unsigned char*>(PORT_ArenaAlloc(arena.get(), 1));
       if (!salt.data) {
         return NS_ERROR_DOM_UNKNOWN_ERR;
       }
@@ -2822,9 +2700,9 @@ private:
     // parameter is unused for key generation. It is currently only used
     // for PBKDF2 authentication or key (un)wrapping when specifying an
     // encryption algorithm (PBES2).
-    UniqueSECAlgorithmID algID(PK11_CreatePBEV2AlgorithmID(
-      SEC_OID_PKCS5_PBKDF2, SEC_OID_HMAC_SHA1, mHashOidTag,
-      mLength, mIterations, &salt));
+    UniqueSECAlgorithmID algID(
+        PK11_CreatePBEV2AlgorithmID(SEC_OID_PKCS5_PBKDF2, SEC_OID_HMAC_SHA1,
+                                    mHashOidTag, mLength, mIterations, &salt));
 
     if (!algID) {
       return NS_ERROR_DOM_OPERATION_ERR;
@@ -2835,11 +2713,11 @@ private:
       return NS_ERROR_DOM_OPERATION_ERR;
     }
 
-    SECItem keyItem = { siBuffer, nullptr, 0 };
+    SECItem keyItem = {siBuffer, nullptr, 0};
     ATTEMPT_BUFFER_TO_SECITEM(arena.get(), &keyItem, mSymKey);
 
-    UniquePK11SymKey symKey(PK11_PBEKeyGen(slot.get(), algID.get(), &keyItem,
-                                           false, nullptr));
+    UniquePK11SymKey symKey(
+        PK11_PBEKeyGen(slot.get(), algID.get(), &keyItem, false, nullptr));
     if (!symKey.get()) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
@@ -2857,16 +2735,14 @@ private:
   }
 };
 
-template<class DeriveBitsTask>
-class DeriveKeyTask : public DeriveBitsTask
-{
-public:
+template <class DeriveBitsTask>
+class DeriveKeyTask : public DeriveBitsTask {
+ public:
   DeriveKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
                 const ObjectOrString& aAlgorithm, CryptoKey& aBaseKey,
                 const ObjectOrString& aDerivedKeyType, bool aExtractable,
                 const Sequence<nsString>& aKeyUsages)
-    : DeriveBitsTask(aCx, aAlgorithm, aBaseKey, aDerivedKeyType)
-  {
+      : DeriveBitsTask(aCx, aAlgorithm, aBaseKey, aDerivedKeyType) {
     if (NS_FAILED(this->mEarlyRv)) {
       return;
     }
@@ -2876,44 +2752,36 @@ public:
                                        aExtractable, aKeyUsages);
   }
 
-protected:
+ protected:
   RefPtr<ImportSymmetricKeyTask> mTask;
 
-private:
+ private:
   virtual void Resolve() override {
     mTask->SetRawKeyData(this->mResult);
     mTask->DispatchWithPromise(this->mResultPromise);
   }
 
-  virtual void Cleanup() override
-  {
-    mTask = nullptr;
-  }
+  virtual void Cleanup() override { mTask = nullptr; }
 };
 
-class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask
-{
-public:
-  DeriveEcdhBitsTask(JSContext* aCx,
-      const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
-    : mLength(aLength),
-      mPrivKey(aKey.GetPrivateKey())
-  {
+class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask {
+ public:
+  DeriveEcdhBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                     CryptoKey& aKey, uint32_t aLength)
+      : mLength(aLength), mPrivKey(aKey.GetPrivateKey()) {
     Init(aCx, aAlgorithm, aKey);
   }
 
   DeriveEcdhBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                      CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
-    : mPrivKey(aKey.GetPrivateKey())
-  {
+      : mPrivKey(aKey.GetPrivateKey()) {
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, mLength);
     if (NS_SUCCEEDED(mEarlyRv)) {
       Init(aCx, aAlgorithm, aKey);
     }
   }
 
-  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey)
-  {
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey) {
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_ECDH);
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_ECDH);
 
@@ -2929,7 +2797,7 @@ public:
       return;
     }
 
-    mLength = mLength >> 3; // bits to bytes
+    mLength = mLength >> 3;  // bits to bytes
 
     // Retrieve the peer's public key.
     RootedDictionary<EcdhKeyDeriveParams> params(aCx);
@@ -2958,19 +2826,18 @@ public:
     }
   }
 
-private:
+ private:
   size_t mLength;
   UniqueSECKEYPrivateKey mPrivKey;
   UniqueSECKEYPublicKey mPubKey;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     // CKM_SHA512_HMAC and CKA_SIGN are key type and usage attributes of the
     // derived symmetric key and don't matter because we ignore them anyway.
-    UniquePK11SymKey symKey(PK11_PubDeriveWithKDF(
-      mPrivKey.get(), mPubKey.get(), PR_FALSE, nullptr, nullptr,
-      CKM_ECDH1_DERIVE, CKM_SHA512_HMAC, CKA_SIGN, 0, CKD_NULL, nullptr,
-      nullptr));
+    UniquePK11SymKey symKey(
+        PK11_PubDeriveWithKDF(mPrivKey.get(), mPubKey.get(), PR_FALSE, nullptr,
+                              nullptr, CKM_ECDH1_DERIVE, CKM_SHA512_HMAC,
+                              CKA_SIGN, 0, CKD_NULL, nullptr, nullptr));
 
     if (!symKey.get()) {
       return NS_ERROR_DOM_OPERATION_ERR;
@@ -2998,29 +2865,24 @@ private:
   }
 };
 
-class DeriveDhBitsTask : public ReturnArrayBufferViewTask
-{
-public:
-  DeriveDhBitsTask(JSContext* aCx,
-      const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
-    : mLength(aLength),
-      mPrivKey(aKey.GetPrivateKey())
-  {
+class DeriveDhBitsTask : public ReturnArrayBufferViewTask {
+ public:
+  DeriveDhBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                   CryptoKey& aKey, uint32_t aLength)
+      : mLength(aLength), mPrivKey(aKey.GetPrivateKey()) {
     Init(aCx, aAlgorithm, aKey);
   }
 
   DeriveDhBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                    CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
-    : mPrivKey(aKey.GetPrivateKey())
-  {
+      : mPrivKey(aKey.GetPrivateKey()) {
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, mLength);
     if (NS_SUCCEEDED(mEarlyRv)) {
       Init(aCx, aAlgorithm, aKey);
     }
   }
 
-  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey)
-  {
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey) {
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_DH);
 
     // Check that we have a private key.
@@ -3029,7 +2891,7 @@ public:
       return;
     }
 
-    mLength = mLength >> 3; // bits to bytes
+    mLength = mLength >> 3;  // bits to bytes
 
     // Retrieve the peer's public key.
     RootedDictionary<DhKeyDeriveParams> params(aCx);
@@ -3058,19 +2920,18 @@ public:
     }
   }
 
-private:
+ private:
   size_t mLength;
   UniqueSECKEYPrivateKey mPrivKey;
   UniqueSECKEYPublicKey mPubKey;
 
-  virtual nsresult DoCrypto() override
-  {
+  virtual nsresult DoCrypto() override {
     // CKM_SHA512_HMAC and CKA_SIGN are key type and usage attributes of the
     // derived symmetric key and don't matter because we ignore them anyway.
-    UniquePK11SymKey symKey(PK11_PubDeriveWithKDF(
-      mPrivKey.get(), mPubKey.get(), PR_FALSE, nullptr, nullptr,
-      CKM_DH_PKCS_DERIVE, CKM_SHA512_HMAC, CKA_SIGN, 0, CKD_NULL, nullptr,
-      nullptr));
+    UniquePK11SymKey symKey(
+        PK11_PubDeriveWithKDF(mPrivKey.get(), mPubKey.get(), PR_FALSE, nullptr,
+                              nullptr, CKM_DH_PKCS_DERIVE, CKM_SHA512_HMAC,
+                              CKA_SIGN, 0, CKD_NULL, nullptr, nullptr));
 
     if (!symKey.get()) {
       return NS_ERROR_DOM_OPERATION_ERR;
@@ -3098,17 +2959,12 @@ private:
   }
 };
 
-template<class KeyEncryptTask>
-class WrapKeyTask : public ExportKeyTask
-{
-public:
-  WrapKeyTask(JSContext* aCx,
-              const nsAString& aFormat,
-              CryptoKey& aKey,
-              CryptoKey& aWrappingKey,
-              const ObjectOrString& aWrapAlgorithm)
-    : ExportKeyTask(aFormat, aKey)
-  {
+template <class KeyEncryptTask>
+class WrapKeyTask : public ExportKeyTask {
+ public:
+  WrapKeyTask(JSContext* aCx, const nsAString& aFormat, CryptoKey& aKey,
+              CryptoKey& aWrappingKey, const ObjectOrString& aWrapAlgorithm)
+      : ExportKeyTask(aFormat, aKey) {
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
@@ -3116,7 +2972,7 @@ public:
     mTask = new KeyEncryptTask(aCx, aWrapAlgorithm, aWrappingKey, true);
   }
 
-private:
+ private:
   RefPtr<KeyEncryptTask> mTask;
 
   virtual nsresult AfterCrypto() override {
@@ -3128,7 +2984,7 @@ private:
       }
 
       NS_ConvertUTF16toUTF8 utf8(json);
-      if (!mResult.Assign((const uint8_t*) utf8.BeginReading(), utf8.Length())) {
+      if (!mResult.Assign((const uint8_t*)utf8.BeginReading(), utf8.Length())) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
     }
@@ -3136,44 +2992,33 @@ private:
     return NS_OK;
   }
 
-  virtual void Resolve() override
-  {
+  virtual void Resolve() override {
     mTask->SetData(mResult);
     mTask->DispatchWithPromise(mResultPromise);
   }
 
-  virtual void Cleanup() override
-  {
-    mTask = nullptr;
-  }
+  virtual void Cleanup() override { mTask = nullptr; }
 };
 
-template<class KeyEncryptTask>
-class UnwrapKeyTask : public KeyEncryptTask
-{
-public:
-  UnwrapKeyTask(JSContext* aCx,
-                const ArrayBufferViewOrArrayBuffer& aWrappedKey,
+template <class KeyEncryptTask>
+class UnwrapKeyTask : public KeyEncryptTask {
+ public:
+  UnwrapKeyTask(JSContext* aCx, const ArrayBufferViewOrArrayBuffer& aWrappedKey,
                 CryptoKey& aUnwrappingKey,
-                const ObjectOrString& aUnwrapAlgorithm,
-                ImportKeyTask* aTask)
-    : KeyEncryptTask(aCx, aUnwrapAlgorithm, aUnwrappingKey, aWrappedKey, false)
-    , mTask(aTask)
-  {}
+                const ObjectOrString& aUnwrapAlgorithm, ImportKeyTask* aTask)
+      : KeyEncryptTask(aCx, aUnwrapAlgorithm, aUnwrappingKey, aWrappedKey,
+                       false),
+        mTask(aTask) {}
 
-private:
+ private:
   RefPtr<ImportKeyTask> mTask;
 
-  virtual void Resolve() override
-  {
+  virtual void Resolve() override {
     mTask->SetKeyDataMaybeParseJWK(KeyEncryptTask::mResult);
     mTask->DispatchWithPromise(KeyEncryptTask::mResultPromise);
   }
 
-  virtual void Cleanup() override
-  {
-    mTask = nullptr;
-  }
+  virtual void Cleanup() override { mTask = nullptr; }
 };
 
 // Task creation methods for WebCryptoTask
@@ -3193,19 +3038,16 @@ private:
 // and thus slightly more steps being done synchronously than the spec calls
 // for.  But none of these steps is especially time-consuming.
 
-WebCryptoTask*
-WebCryptoTask::CreateEncryptDecryptTask(JSContext* aCx,
-                                        const ObjectOrString& aAlgorithm,
-                                        CryptoKey& aKey,
-                                        const CryptoOperationData& aData,
-                                        bool aEncrypt)
-{
-  TelemetryMethod method = (aEncrypt)? TM_ENCRYPT : TM_DECRYPT;
+WebCryptoTask* WebCryptoTask::CreateEncryptDecryptTask(
+    JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+    const CryptoOperationData& aData, bool aEncrypt) {
+  TelemetryMethod method = (aEncrypt) ? TM_ENCRYPT : TM_DECRYPT;
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, method);
-  Telemetry::Accumulate(Telemetry::WEBCRYPTO_EXTRACTABLE_ENC, aKey.Extractable());
+  Telemetry::Accumulate(Telemetry::WEBCRYPTO_EXTRACTABLE_ENC,
+                        aKey.Extractable());
 
   // Ensure key is usable for this operation
-  if ((aEncrypt  && !aKey.HasUsage(CryptoKey::ENCRYPT)) ||
+  if ((aEncrypt && !aKey.HasUsage(CryptoKey::ENCRYPT)) ||
       (!aEncrypt && !aKey.HasUsage(CryptoKey::DECRYPT))) {
     return new FailureTask(NS_ERROR_DOM_INVALID_ACCESS_ERR);
   }
@@ -3227,20 +3069,17 @@ WebCryptoTask::CreateEncryptDecryptTask(JSContext* aCx,
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
-WebCryptoTask*
-WebCryptoTask::CreateSignVerifyTask(JSContext* aCx,
-                                    const ObjectOrString& aAlgorithm,
-                                    CryptoKey& aKey,
-                                    const CryptoOperationData& aSignature,
-                                    const CryptoOperationData& aData,
-                                    bool aSign)
-{
-  TelemetryMethod method = (aSign)? TM_SIGN : TM_VERIFY;
+WebCryptoTask* WebCryptoTask::CreateSignVerifyTask(
+    JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+    const CryptoOperationData& aSignature, const CryptoOperationData& aData,
+    bool aSign) {
+  TelemetryMethod method = (aSign) ? TM_SIGN : TM_VERIFY;
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, method);
-  Telemetry::Accumulate(Telemetry::WEBCRYPTO_EXTRACTABLE_SIG, aKey.Extractable());
+  Telemetry::Accumulate(Telemetry::WEBCRYPTO_EXTRACTABLE_SIG,
+                        aKey.Extractable());
 
   // Ensure key is usable for this operation
-  if ((aSign  && !aKey.HasUsage(CryptoKey::SIGN)) ||
+  if ((aSign && !aKey.HasUsage(CryptoKey::SIGN)) ||
       (!aSign && !aKey.HasUsage(CryptoKey::VERIFY))) {
     return new FailureTask(NS_ERROR_DOM_INVALID_ACCESS_ERR);
   }
@@ -3263,11 +3102,9 @@ WebCryptoTask::CreateSignVerifyTask(JSContext* aCx,
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
-WebCryptoTask*
-WebCryptoTask::CreateDigestTask(JSContext* aCx,
-                                const ObjectOrString& aAlgorithm,
-                                const CryptoOperationData& aData)
-{
+WebCryptoTask* WebCryptoTask::CreateDigestTask(
+    JSContext* aCx, const ObjectOrString& aAlgorithm,
+    const CryptoOperationData& aData) {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_DIGEST);
 
   nsString algName;
@@ -3286,15 +3123,10 @@ WebCryptoTask::CreateDigestTask(JSContext* aCx,
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
-WebCryptoTask*
-WebCryptoTask::CreateImportKeyTask(nsIGlobalObject* aGlobal,
-                                   JSContext* aCx,
-                                   const nsAString& aFormat,
-                                   JS::Handle<JSObject*> aKeyData,
-                                   const ObjectOrString& aAlgorithm,
-                                   bool aExtractable,
-                                   const Sequence<nsString>& aKeyUsages)
-{
+WebCryptoTask* WebCryptoTask::CreateImportKeyTask(
+    nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
+    JS::Handle<JSObject*> aKeyData, const ObjectOrString& aAlgorithm,
+    bool aExtractable, const Sequence<nsString>& aKeyUsages) {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_IMPORTKEY);
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_EXTRACTABLE_IMPORT, aExtractable);
 
@@ -3345,10 +3177,8 @@ WebCryptoTask::CreateImportKeyTask(nsIGlobalObject* aGlobal,
   }
 }
 
-WebCryptoTask*
-WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
-                                   CryptoKey& aKey)
-{
+WebCryptoTask* WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
+                                                  CryptoKey& aKey) {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_EXPORTKEY);
 
   // Verify that the format is recognized
@@ -3386,15 +3216,12 @@ WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
-WebCryptoTask*
-WebCryptoTask::CreateGenerateKeyTask(nsIGlobalObject* aGlobal,
-                                     JSContext* aCx,
-                                     const ObjectOrString& aAlgorithm,
-                                     bool aExtractable,
-                                     const Sequence<nsString>& aKeyUsages)
-{
+WebCryptoTask* WebCryptoTask::CreateGenerateKeyTask(
+    nsIGlobalObject* aGlobal, JSContext* aCx, const ObjectOrString& aAlgorithm,
+    bool aExtractable, const Sequence<nsString>& aKeyUsages) {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_GENERATEKEY);
-  Telemetry::Accumulate(Telemetry::WEBCRYPTO_EXTRACTABLE_GENERATE, aExtractable);
+  Telemetry::Accumulate(Telemetry::WEBCRYPTO_EXTRACTABLE_GENERATE,
+                        aExtractable);
 
   // Verify that aKeyUsages does not contain an unrecognized value
   // SPEC-BUG: Spec says that this should be InvalidAccessError, but that
@@ -3429,15 +3256,10 @@ WebCryptoTask::CreateGenerateKeyTask(nsIGlobalObject* aGlobal,
   }
 }
 
-WebCryptoTask*
-WebCryptoTask::CreateDeriveKeyTask(nsIGlobalObject* aGlobal,
-                                   JSContext* aCx,
-                                   const ObjectOrString& aAlgorithm,
-                                   CryptoKey& aBaseKey,
-                                   const ObjectOrString& aDerivedKeyType,
-                                   bool aExtractable,
-                                   const Sequence<nsString>& aKeyUsages)
-{
+WebCryptoTask* WebCryptoTask::CreateDeriveKeyTask(
+    nsIGlobalObject* aGlobal, JSContext* aCx, const ObjectOrString& aAlgorithm,
+    CryptoKey& aBaseKey, const ObjectOrString& aDerivedKeyType,
+    bool aExtractable, const Sequence<nsString>& aKeyUsages) {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_DERIVEKEY);
 
   // Ensure baseKey is usable for this operation
@@ -3477,12 +3299,9 @@ WebCryptoTask::CreateDeriveKeyTask(nsIGlobalObject* aGlobal,
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
-WebCryptoTask*
-WebCryptoTask::CreateDeriveBitsTask(JSContext* aCx,
-                                    const ObjectOrString& aAlgorithm,
-                                    CryptoKey& aKey,
-                                    uint32_t aLength)
-{
+WebCryptoTask* WebCryptoTask::CreateDeriveBitsTask(
+    JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+    uint32_t aLength) {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_DERIVEBITS);
 
   // Ensure baseKey is usable for this operation
@@ -3515,13 +3334,9 @@ WebCryptoTask::CreateDeriveBitsTask(JSContext* aCx,
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
-WebCryptoTask*
-WebCryptoTask::CreateWrapKeyTask(JSContext* aCx,
-                                 const nsAString& aFormat,
-                                 CryptoKey& aKey,
-                                 CryptoKey& aWrappingKey,
-                                 const ObjectOrString& aWrapAlgorithm)
-{
+WebCryptoTask* WebCryptoTask::CreateWrapKeyTask(
+    JSContext* aCx, const nsAString& aFormat, CryptoKey& aKey,
+    CryptoKey& aWrappingKey, const ObjectOrString& aWrapAlgorithm) {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_WRAPKEY);
 
   // Verify that the format is recognized
@@ -3551,30 +3366,25 @@ WebCryptoTask::CreateWrapKeyTask(JSContext* aCx,
   if (wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC) ||
       wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR) ||
       wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
-    return new WrapKeyTask<AesTask>(aCx, aFormat, aKey,
-                                    aWrappingKey, aWrapAlgorithm);
+    return new WrapKeyTask<AesTask>(aCx, aFormat, aKey, aWrappingKey,
+                                    aWrapAlgorithm);
   } else if (wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_KW)) {
-    return new WrapKeyTask<AesKwTask>(aCx, aFormat, aKey,
-                                    aWrappingKey, aWrapAlgorithm);
+    return new WrapKeyTask<AesKwTask>(aCx, aFormat, aKey, aWrappingKey,
+                                      aWrapAlgorithm);
   } else if (wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
-    return new WrapKeyTask<RsaOaepTask>(aCx, aFormat, aKey,
-                                        aWrappingKey, aWrapAlgorithm);
+    return new WrapKeyTask<RsaOaepTask>(aCx, aFormat, aKey, aWrappingKey,
+                                        aWrapAlgorithm);
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
-WebCryptoTask*
-WebCryptoTask::CreateUnwrapKeyTask(nsIGlobalObject* aGlobal,
-                                   JSContext* aCx,
-                                   const nsAString& aFormat,
-                                   const ArrayBufferViewOrArrayBuffer& aWrappedKey,
-                                   CryptoKey& aUnwrappingKey,
-                                   const ObjectOrString& aUnwrapAlgorithm,
-                                   const ObjectOrString& aUnwrappedKeyAlgorithm,
-                                   bool aExtractable,
-                                   const Sequence<nsString>& aKeyUsages)
-{
+WebCryptoTask* WebCryptoTask::CreateUnwrapKeyTask(
+    nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
+    const ArrayBufferViewOrArrayBuffer& aWrappedKey, CryptoKey& aUnwrappingKey,
+    const ObjectOrString& aUnwrapAlgorithm,
+    const ObjectOrString& aUnwrappedKeyAlgorithm, bool aExtractable,
+    const Sequence<nsString>& aKeyUsages) {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_UNWRAPKEY);
 
   // Ensure key is usable for this operation
@@ -3606,9 +3416,9 @@ WebCryptoTask::CreateUnwrapKeyTask(nsIGlobalObject* aGlobal,
   } else if (keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
              keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP) ||
              keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSA_PSS)) {
-    importTask = new ImportRsaKeyTask(aGlobal, aCx, aFormat,
-                                      aUnwrappedKeyAlgorithm,
-                                      aExtractable, aKeyUsages);
+    importTask =
+        new ImportRsaKeyTask(aGlobal, aCx, aFormat, aUnwrappedKeyAlgorithm,
+                             aExtractable, aKeyUsages);
   } else {
     return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   }
@@ -3621,32 +3431,27 @@ WebCryptoTask::CreateUnwrapKeyTask(nsIGlobalObject* aGlobal,
   if (unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC) ||
       unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR) ||
       unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
-    return new UnwrapKeyTask<AesTask>(aCx, aWrappedKey,
-                                      aUnwrappingKey, aUnwrapAlgorithm,
-                                      importTask);
+    return new UnwrapKeyTask<AesTask>(aCx, aWrappedKey, aUnwrappingKey,
+                                      aUnwrapAlgorithm, importTask);
   } else if (unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_KW)) {
-    return new UnwrapKeyTask<AesKwTask>(aCx, aWrappedKey,
-                                      aUnwrappingKey, aUnwrapAlgorithm,
-                                      importTask);
+    return new UnwrapKeyTask<AesKwTask>(aCx, aWrappedKey, aUnwrappingKey,
+                                        aUnwrapAlgorithm, importTask);
   } else if (unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
-    return new UnwrapKeyTask<RsaOaepTask>(aCx, aWrappedKey,
-                                      aUnwrappingKey, aUnwrapAlgorithm,
-                                      importTask);
+    return new UnwrapKeyTask<RsaOaepTask>(aCx, aWrappedKey, aUnwrappingKey,
+                                          aUnwrapAlgorithm, importTask);
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
 WebCryptoTask::WebCryptoTask()
-  : CancelableRunnable("WebCryptoTask")
-  , mEarlyRv(NS_OK)
-  , mEarlyComplete(false)
-  , mOriginalEventTarget(nullptr)
-  , mRv(NS_ERROR_NOT_INITIALIZED)
-{
-}
+    : CancelableRunnable("WebCryptoTask"),
+      mEarlyRv(NS_OK),
+      mEarlyComplete(false),
+      mOriginalEventTarget(nullptr),
+      mRv(NS_ERROR_NOT_INITIALIZED) {}
 
 WebCryptoTask::~WebCryptoTask() = default;
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -12,19 +12,16 @@
 namespace mozilla {
 namespace dom {
 
-class XMLHttpRequestEventTarget : public DOMEventTargetHelper
-{
-protected:
+class XMLHttpRequestEventTarget : public DOMEventTargetHelper {
+ protected:
   explicit XMLHttpRequestEventTarget(DOMEventTargetHelper* aOwner)
-    : DOMEventTargetHelper(aOwner)
-  {}
+      : DOMEventTargetHelper(aOwner) {}
 
-  XMLHttpRequestEventTarget()
-  {}
+  XMLHttpRequestEventTarget() {}
 
   virtual ~XMLHttpRequestEventTarget() {}
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLHttpRequestEventTarget,
                                            DOMEventTargetHelper)
@@ -37,15 +34,12 @@ public:
   IMPL_EVENT_HANDLER(timeout)
   IMPL_EVENT_HANDLER(loadend)
 
-  nsISupports* GetParentObject() const
-  {
-    return GetOwner();
-  }
+  nsISupports* GetParentObject() const { return GetOwner(); }
 
   virtual void DisconnectFromOwner() override;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_XMLHttpRequestEventTarget_h
+#endif  // mozilla_dom_XMLHttpRequestEventTarget_h

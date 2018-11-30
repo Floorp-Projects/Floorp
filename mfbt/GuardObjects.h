@@ -75,19 +75,14 @@ namespace detail {
  * For more details, and examples of using these macros, see
  * https://developer.mozilla.org/en/Using_RAII_classes_in_Mozilla
  */
-class GuardObjectNotifier
-{
-private:
+class GuardObjectNotifier {
+ private:
   bool* mStatementDone;
 
-public:
-  GuardObjectNotifier()
-    : mStatementDone(reinterpret_cast<bool*>(MOZ_POISON))
-  {
-  }
+ public:
+  GuardObjectNotifier() : mStatementDone(reinterpret_cast<bool*>(MOZ_POISON)) {}
 
-  ~GuardObjectNotifier()
-  {
+  ~GuardObjectNotifier() {
     // Assert that the GuardObjectNotifier has been properly initialized by
     // using the |MOZ_GUARD_OBJECT_NOTIFIER_INIT| macro. A poison value is
     // used rather than a null check to appease static analyzers that were
@@ -96,19 +91,17 @@ public:
     *mStatementDone = true;
   }
 
-  void setStatementDone(bool* aStatementIsDone)
-  {
+  void setStatementDone(bool* aStatementIsDone) {
     mStatementDone = aStatementIsDone;
   }
 };
 
-class GuardObjectNotificationReceiver
-{
-private:
+class GuardObjectNotificationReceiver {
+ private:
   bool mStatementDone;
 
-public:
-  GuardObjectNotificationReceiver() : mStatementDone(false) { }
+ public:
+  GuardObjectNotificationReceiver() : mStatementDone(false) {}
 
   ~GuardObjectNotificationReceiver() {
     /*
@@ -116,11 +109,11 @@ public:
      * this assert might also fire if init is not called because the guard
      * object's implementation is not using the above macros correctly.)
      */
-    MOZ_ASSERT(mStatementDone, "Guard object should not be used as a temporary.");
+    MOZ_ASSERT(mStatementDone,
+               "Guard object should not be used as a temporary.");
   }
 
-  void init(GuardObjectNotifier& aNotifier)
-  {
+  void init(GuardObjectNotifier& aNotifier) {
     aNotifier.setStatementDone(&mStatementDone);
   }
 };
@@ -133,33 +126,35 @@ public:
 #endif /* DEBUG */
 
 #ifdef DEBUG
-#  define MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER \
-     ::mozilla::detail::GuardObjectNotificationReceiver _mCheckNotUsedAsTemporary;
-#  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM \
-     , ::mozilla::detail::GuardObjectNotifier&& _notifier = \
-         ::mozilla::detail::GuardObjectNotifier()
-#  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM \
-     ::mozilla::detail::GuardObjectNotifier&& _notifier = \
-         ::mozilla::detail::GuardObjectNotifier()
-#  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL \
-     , ::mozilla::detail::GuardObjectNotifier&& _notifier
-#  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL \
-     ::mozilla::detail::GuardObjectNotifier&& _notifier
-#  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT \
-     , ::std::move(_notifier)
-#  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT \
-       ::std::move(_notifier)
-#  define MOZ_GUARD_OBJECT_NOTIFIER_INIT \
-     do { _mCheckNotUsedAsTemporary.init(_notifier); } while (0)
+#define MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER \
+  ::mozilla::detail::GuardObjectNotificationReceiver _mCheckNotUsedAsTemporary;
+#define MOZ_GUARD_OBJECT_NOTIFIER_PARAM                  \
+  , ::mozilla::detail::GuardObjectNotifier&& _notifier = \
+        ::mozilla::detail::GuardObjectNotifier()
+#define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM           \
+  ::mozilla::detail::GuardObjectNotifier&& _notifier = \
+      ::mozilla::detail::GuardObjectNotifier()
+#define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL \
+  , ::mozilla::detail::GuardObjectNotifier&& _notifier
+#define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL \
+  ::mozilla::detail::GuardObjectNotifier&& _notifier
+#define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT , ::std::move(_notifier)
+#define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT ::std::move(_notifier)
+#define MOZ_GUARD_OBJECT_NOTIFIER_INIT         \
+  do {                                         \
+    _mCheckNotUsedAsTemporary.init(_notifier); \
+  } while (0)
 #else
-#  define MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-#  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM
-#  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM
-#  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL
-#  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL
-#  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT
-#  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT
-#  define MOZ_GUARD_OBJECT_NOTIFIER_INIT do { } while (0)
+#define MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+#define MOZ_GUARD_OBJECT_NOTIFIER_PARAM
+#define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM
+#define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL
+#define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL
+#define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT
+#define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT
+#define MOZ_GUARD_OBJECT_NOTIFIER_INIT \
+  do {                                 \
+  } while (0)
 #endif
 
 #endif /* __cplusplus */

@@ -12,8 +12,7 @@ NS_IMPL_ISUPPORTS(nsScriptableInputStream, nsIScriptableInputStream)
 
 // nsIScriptableInputStream methods
 NS_IMETHODIMP
-nsScriptableInputStream::Close()
-{
+nsScriptableInputStream::Close() {
   if (!mInputStream) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -21,8 +20,7 @@ nsScriptableInputStream::Close()
 }
 
 NS_IMETHODIMP
-nsScriptableInputStream::Init(nsIInputStream* aInputStream)
-{
+nsScriptableInputStream::Init(nsIInputStream* aInputStream) {
   if (!aInputStream) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -31,8 +29,7 @@ nsScriptableInputStream::Init(nsIInputStream* aInputStream)
 }
 
 NS_IMETHODIMP
-nsScriptableInputStream::Available(uint64_t* aResult)
-{
+nsScriptableInputStream::Available(uint64_t* aResult) {
   if (!mInputStream) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -40,8 +37,7 @@ nsScriptableInputStream::Available(uint64_t* aResult)
 }
 
 NS_IMETHODIMP
-nsScriptableInputStream::Read(uint32_t aCount, char** aResult)
-{
+nsScriptableInputStream::Read(uint32_t aCount, char** aResult) {
   nsresult rv = NS_OK;
   uint64_t count64 = 0;
   char* buffer = nullptr;
@@ -57,7 +53,7 @@ nsScriptableInputStream::Read(uint32_t aCount, char** aResult)
 
   // bug716556 - Ensure count+1 doesn't overflow
   uint32_t count =
-    XPCOM_MIN((uint32_t)XPCOM_MIN<uint64_t>(count64, aCount), UINT32_MAX - 1);
+      XPCOM_MIN((uint32_t)XPCOM_MIN<uint64_t>(count64, aCount), UINT32_MAX - 1);
   buffer = (char*)malloc(count + 1);  // make room for '\0'
   if (!buffer) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -75,8 +71,7 @@ nsScriptableInputStream::Read(uint32_t aCount, char** aResult)
 }
 
 NS_IMETHODIMP
-nsScriptableInputStream::ReadBytes(uint32_t aCount, nsACString& aResult)
-{
+nsScriptableInputStream::ReadBytes(uint32_t aCount, nsACString& aResult) {
   if (!mInputStream) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -94,15 +89,12 @@ nsScriptableInputStream::ReadBytes(uint32_t aCount, nsACString& aResult)
   return rv;
 }
 
-nsresult
-nsScriptableInputStream::ReadHelper(char* aBuffer, uint32_t aCount)
-{
+nsresult nsScriptableInputStream::ReadHelper(char* aBuffer, uint32_t aCount) {
   uint32_t totalBytesRead = 0;
   while (1) {
     uint32_t bytesRead;
     nsresult rv = mInputStream->Read(aBuffer + totalBytesRead,
-                                     aCount - totalBytesRead,
-                                     &bytesRead);
+                                     aCount - totalBytesRead, &bytesRead);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -116,15 +108,12 @@ nsScriptableInputStream::ReadHelper(char* aBuffer, uint32_t aCount)
     if (bytesRead == 0) {
       return NS_ERROR_FAILURE;
     }
-
   }
   return NS_OK;
 }
 
-nsresult
-nsScriptableInputStream::Create(nsISupports* aOuter, REFNSIID aIID,
-                                void** aResult)
-{
+nsresult nsScriptableInputStream::Create(nsISupports* aOuter, REFNSIID aIID,
+                                         void** aResult) {
   if (aOuter) {
     return NS_ERROR_NO_AGGREGATION;
   }

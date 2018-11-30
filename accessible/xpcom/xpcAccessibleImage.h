@@ -15,33 +15,33 @@ namespace mozilla {
 namespace a11y {
 
 class xpcAccessibleImage : public xpcAccessibleGeneric,
-                           public nsIAccessibleImage
-{
-public:
-  explicit xpcAccessibleImage(Accessible* aIntl) :
-    xpcAccessibleGeneric(aIntl) { }
+                           public nsIAccessibleImage {
+ public:
+  explicit xpcAccessibleImage(Accessible* aIntl)
+      : xpcAccessibleGeneric(aIntl) {}
 
-  xpcAccessibleImage(ProxyAccessible* aProxy, uint32_t aInterfaces) :
-    xpcAccessibleGeneric(aProxy, aInterfaces) {}
+  xpcAccessibleImage(ProxyAccessible* aProxy, uint32_t aInterfaces)
+      : xpcAccessibleGeneric(aProxy, aInterfaces) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetImagePosition(uint32_t aCoordType,
-                              int32_t* aX, int32_t* aY) final;
+  NS_IMETHOD GetImagePosition(uint32_t aCoordType, int32_t* aX,
+                              int32_t* aY) final;
   NS_IMETHOD GetImageSize(int32_t* aWidth, int32_t* aHeight) final;
 
-protected:
+ protected:
   virtual ~xpcAccessibleImage() {}
 
-private:
-  ImageAccessible* Intl()
-  { return mIntl.IsAccessible() ? mIntl.AsAccessible()->AsImage() : nullptr; }
+ private:
+  ImageAccessible* Intl() {
+    return mIntl.IsAccessible() ? mIntl.AsAccessible()->AsImage() : nullptr;
+  }
 
   xpcAccessibleImage(const xpcAccessibleImage&) = delete;
-  xpcAccessibleImage& operator =(const xpcAccessibleImage&) = delete;
+  xpcAccessibleImage& operator=(const xpcAccessibleImage&) = delete;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

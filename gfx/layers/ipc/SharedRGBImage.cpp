@@ -5,21 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedRGBImage.h"
-#include "ImageTypes.h"                 // for ImageFormat::SHARED_RGB, etc
-#include "Shmem.h"                      // for Shmem
-#include "gfx2DGlue.h"                  // for ImageFormatToSurfaceFormat, etc
-#include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
-#include "mozilla/gfx/Point.h"          // for IntSIze
+#include "ImageTypes.h"         // for ImageFormat::SHARED_RGB, etc
+#include "Shmem.h"              // for Shmem
+#include "gfx2DGlue.h"          // for ImageFormatToSurfaceFormat, etc
+#include "gfxPlatform.h"        // for gfxPlatform, gfxImageFormat
+#include "mozilla/gfx/Point.h"  // for IntSIze
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator, etc
-#include "mozilla/layers/ImageClient.h"  // for ImageClient
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
-#include "mozilla/layers/TextureClient.h"  // for BufferTextureClient, etc
-#include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
-#include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
-#include "nsISupportsImpl.h"            // for Image::AddRef, etc
-#include "nsRect.h"                     // for mozilla::gfx::IntRect
+#include "mozilla/layers/ImageClient.h"        // for ImageClient
+#include "mozilla/layers/LayersSurfaces.h"     // for SurfaceDescriptor, etc
+#include "mozilla/layers/TextureClient.h"      // for BufferTextureClient, etc
+#include "mozilla/layers/ImageBridgeChild.h"   // for ImageBridgeChild
+#include "mozilla/mozalloc.h"                  // for operator delete, etc
+#include "nsDebug.h"                           // for NS_WARNING, NS_ASSERTION
+#include "nsISupportsImpl.h"                   // for Image::AddRef, etc
+#include "nsRect.h"                            // for mozilla::gfx::IntRect
 
 // Just big enough for a 1080p RGBA32 frame
 #define MAX_FRAME_SIZE (16 * 1024 * 1024)
@@ -27,14 +27,12 @@
 namespace mozilla {
 namespace layers {
 
-already_AddRefed<Image>
-CreateSharedRGBImage(ImageContainer *aImageContainer,
-                     gfx::IntSize aSize,
-                     gfxImageFormat aImageFormat)
-{
+already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
+                                             gfx::IntSize aSize,
+                                             gfxImageFormat aImageFormat) {
   NS_ASSERTION(aImageFormat == gfx::SurfaceFormat::A8R8G8B8_UINT32 ||
-               aImageFormat == gfx::SurfaceFormat::X8R8G8B8_UINT32 ||
-               aImageFormat == gfx::SurfaceFormat::R5G6B5_UINT16,
+                   aImageFormat == gfx::SurfaceFormat::X8R8G8B8_UINT32 ||
+                   aImageFormat == gfx::SurfaceFormat::R5G6B5_UINT16,
                "RGB formats supported only");
 
   if (!aImageContainer) {
@@ -47,7 +45,8 @@ CreateSharedRGBImage(ImageContainer *aImageContainer,
     NS_WARNING("Failed to create SharedRGBImage");
     return nullptr;
   }
-  if (!rgbImage->Allocate(aSize, gfx::ImageFormatToSurfaceFormat(aImageFormat))) {
+  if (!rgbImage->Allocate(aSize,
+                          gfx::ImageFormatToSurfaceFormat(aImageFormat))) {
     NS_WARNING("Failed to allocate a shared image");
     return nullptr;
   }
@@ -55,30 +54,20 @@ CreateSharedRGBImage(ImageContainer *aImageContainer,
 }
 
 SharedRGBImage::SharedRGBImage(ImageClient* aCompositable)
-: Image(nullptr, ImageFormat::SHARED_RGB)
-, mCompositable(aCompositable)
-{
+    : Image(nullptr, ImageFormat::SHARED_RGB), mCompositable(aCompositable) {
   MOZ_COUNT_CTOR(SharedRGBImage);
 }
 
-SharedRGBImage::~SharedRGBImage()
-{
-  MOZ_COUNT_DTOR(SharedRGBImage);
-}
+SharedRGBImage::~SharedRGBImage() { MOZ_COUNT_DTOR(SharedRGBImage); }
 
-bool
-SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat)
-{
+bool SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
   mSize = aSize;
-  mTextureClient = mCompositable->CreateBufferTextureClient(aFormat, aSize,
-                                                            gfx::BackendType::NONE,
-                                                            TextureFlags::DEFAULT);
+  mTextureClient = mCompositable->CreateBufferTextureClient(
+      aFormat, aSize, gfx::BackendType::NONE, TextureFlags::DEFAULT);
   return !!mTextureClient;
 }
 
-uint8_t*
-SharedRGBImage::GetBuffer() const
-{
+uint8_t* SharedRGBImage::GetBuffer() const {
   MappedTextureData mapped;
   if (mTextureClient && mTextureClient->BorrowMappedData(mapped)) {
     return mapped.data;
@@ -86,29 +75,19 @@ SharedRGBImage::GetBuffer() const
   return 0;
 }
 
-gfx::IntSize
-SharedRGBImage::GetSize() const
-{
-  return mSize;
-}
+gfx::IntSize SharedRGBImage::GetSize() const { return mSize; }
 
-TextureClient*
-SharedRGBImage::GetTextureClient(KnowsCompositor* aForwarder)
-{
+TextureClient* SharedRGBImage::GetTextureClient(KnowsCompositor* aForwarder) {
   return mTextureClient.get();
 }
 
-static void
-ReleaseTextureClient(void* aData)
-{
+static void ReleaseTextureClient(void* aData) {
   RELEASE_MANUALLY(static_cast<TextureClient*>(aData));
 }
 
 static gfx::UserDataKey sTextureClientKey;
 
-already_AddRefed<gfx::SourceSurface>
-SharedRGBImage::GetAsSourceSurface()
-{
+already_AddRefed<gfx::SourceSurface> SharedRGBImage::GetAsSourceSurface() {
   NS_ASSERTION(NS_IsMainThread(), "Must be main thread");
 
   if (mSourceSurface) {
@@ -123,7 +102,7 @@ SharedRGBImage::GetAsSourceSurface()
     // know that the TextureClient is always wrapping a BufferTextureData and
     // therefore it won't go away underneath us.
     BufferTextureData* decoded_buffer =
-      mTextureClient->GetInternalData()->AsBufferTextureData();
+        mTextureClient->GetInternalData()->AsBufferTextureData();
     RefPtr<gfx::DrawTarget> drawTarget = decoded_buffer->BorrowDrawTarget();
 
     if (!drawTarget) {
@@ -137,10 +116,12 @@ SharedRGBImage::GetAsSourceSurface()
 
     // The surface may outlive the owning TextureClient. So, we need to ensure
     // that the surface keeps the TextureClient alive via a reference held in
-    // user data. The TextureClient's DrawTarget only has a weak reference to the
-    // surface, so we won't create any cycles by just referencing the TextureClient.
+    // user data. The TextureClient's DrawTarget only has a weak reference to
+    // the surface, so we won't create any cycles by just referencing the
+    // TextureClient.
     if (!surface->GetUserData(&sTextureClientKey)) {
-      surface->AddUserData(&sTextureClientKey, mTextureClient, ReleaseTextureClient);
+      surface->AddUserData(&sTextureClientKey, mTextureClient,
+                           ReleaseTextureClient);
       ADDREF_MANUALLY(mTextureClient);
     }
   }
@@ -149,5 +130,5 @@ SharedRGBImage::GetAsSourceSurface()
   return surface.forget();
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

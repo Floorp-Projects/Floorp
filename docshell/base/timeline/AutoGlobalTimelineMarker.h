@@ -27,8 +27,7 @@ namespace mozilla {
 //       cc->Collect();
 //       ...
 //     }
-class MOZ_RAII AutoGlobalTimelineMarker
-{
+class MOZ_RAII AutoGlobalTimelineMarker {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
   // The name of the marker we are adding.
@@ -36,16 +35,17 @@ class MOZ_RAII AutoGlobalTimelineMarker
   // Whether to capture the JS stack or not.
   MarkerStackRequest mStackRequest;
 
-public:
-  explicit AutoGlobalTimelineMarker(const char* aName,
-                                    MarkerStackRequest aStackRequest = MarkerStackRequest::STACK
-                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+ public:
+  explicit AutoGlobalTimelineMarker(
+      const char* aName,
+      MarkerStackRequest aStackRequest =
+          MarkerStackRequest::STACK MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~AutoGlobalTimelineMarker();
 
   AutoGlobalTimelineMarker(const AutoGlobalTimelineMarker& aOther) = delete;
   void operator=(const AutoGlobalTimelineMarker& aOther) = delete;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_AutoGlobalTimelineMarker_h_ */

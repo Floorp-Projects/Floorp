@@ -22,36 +22,35 @@ class ClientInfo;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerRegistrationDescriptor;
 
-typedef MozPromise<ServiceWorkerRegistrationDescriptor, CopyableErrorResult, false>
-        ServiceWorkerRegistrationPromise;
+typedef MozPromise<ServiceWorkerRegistrationDescriptor, CopyableErrorResult,
+                   false>
+    ServiceWorkerRegistrationPromise;
 
-typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>, CopyableErrorResult, false>
-        ServiceWorkerRegistrationListPromise;
+typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>,
+                   CopyableErrorResult, false>
+    ServiceWorkerRegistrationListPromise;
 
-typedef std::function<void (const ServiceWorkerRegistrationDescriptor&)>
-        ServiceWorkerRegistrationCallback;
+typedef std::function<void(const ServiceWorkerRegistrationDescriptor&)>
+    ServiceWorkerRegistrationCallback;
 
-typedef std::function<void (const nsTArray<ServiceWorkerRegistrationDescriptor>&)>
-        ServiceWorkerRegistrationListCallback;
+typedef std::function<void(
+    const nsTArray<ServiceWorkerRegistrationDescriptor>&)>
+    ServiceWorkerRegistrationListCallback;
 
-typedef std::function<void (bool)>
-        ServiceWorkerBoolCallback;
+typedef std::function<void(bool)> ServiceWorkerBoolCallback;
 
-typedef std::function<void (ErrorResult&)>
-        ServiceWorkerFailureCallback;
+typedef std::function<void(ErrorResult&)> ServiceWorkerFailureCallback;
 
-bool
-ServiceWorkerParentInterceptEnabled();
+bool ServiceWorkerParentInterceptEnabled();
 
-bool
-ServiceWorkerRegistrationDataIsValid(const ServiceWorkerRegistrationData& aData);
+bool ServiceWorkerRegistrationDataIsValid(
+    const ServiceWorkerRegistrationData& aData);
 
-nsresult
-ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
-                                    nsIURI* aScopeURI,
-                                    nsIURI* aScriptURI);
+nsresult ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
+                                             nsIURI* aScopeURI,
+                                             nsIURI* aScriptURI);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ServiceWorkerUtils_h
+#endif  // _mozilla_dom_ServiceWorkerUtils_h

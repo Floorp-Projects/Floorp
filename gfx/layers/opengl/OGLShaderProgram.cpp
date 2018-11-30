@@ -5,15 +5,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OGLShaderProgram.h"
-#include <stdint.h>                     // for uint32_t
-#include <sstream>                      // for ostringstream
+#include <stdint.h>  // for uint32_t
+#include <sstream>   // for ostringstream
 #include "gfxEnv.h"
-#include "gfxRect.h"                    // for gfxRect
+#include "gfxRect.h"  // for gfxRect
 #include "gfxUtils.h"
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/layers/Compositor.h"  // for BlendOpIsMixBlendMode
 #include "nsAString.h"
-#include "nsString.h"                   // for nsAutoCString
+#include "nsString.h"  // for nsAutoCString
 #include "Layers.h"
 #include "GLContext.h"
 
@@ -25,76 +25,66 @@ using namespace std;
 #define GAUSSIAN_KERNEL_HALF_WIDTH 11
 #define GAUSSIAN_KERNEL_STEP 0.2
 
-void
-AddUniforms(ProgramProfileOGL& aProfile)
-{
-    // This needs to be kept in sync with the KnownUniformName enum
-    static const char *sKnownUniformNames[] = {
-        "uLayerTransform",
-        "uLayerTransformInverse",
-        "uMaskTransform",
-        "uBackdropTransform",
-        "uLayerRects",
-        "uMatrixProj",
-        "uTextureTransform",
-        "uTextureRects",
-        "uRenderTargetOffset",
-        "uLayerOpacity",
-        "uTexture",
-        "uYTexture",
-        "uCbTexture",
-        "uCrTexture",
-        "uBlackTexture",
-        "uWhiteTexture",
-        "uMaskTexture",
-        "uBackdropTexture",
-        "uRenderColor",
-        "uTexCoordMultiplier",
-        "uCbCrTexCoordMultiplier",
-        "uMaskCoordMultiplier",
-        "uTexturePass2",
-        "uColorMatrix",
-        "uColorMatrixVector",
-        "uBlurRadius",
-        "uBlurOffset",
-        "uBlurAlpha",
-        "uBlurGaussianKernel",
-        "uSSEdges",
-        "uViewportSize",
-        "uVisibleCenter",
-        "uYuvColorMatrix",
-        nullptr
-    };
+void AddUniforms(ProgramProfileOGL &aProfile) {
+  // This needs to be kept in sync with the KnownUniformName enum
+  static const char *sKnownUniformNames[] = {"uLayerTransform",
+                                             "uLayerTransformInverse",
+                                             "uMaskTransform",
+                                             "uBackdropTransform",
+                                             "uLayerRects",
+                                             "uMatrixProj",
+                                             "uTextureTransform",
+                                             "uTextureRects",
+                                             "uRenderTargetOffset",
+                                             "uLayerOpacity",
+                                             "uTexture",
+                                             "uYTexture",
+                                             "uCbTexture",
+                                             "uCrTexture",
+                                             "uBlackTexture",
+                                             "uWhiteTexture",
+                                             "uMaskTexture",
+                                             "uBackdropTexture",
+                                             "uRenderColor",
+                                             "uTexCoordMultiplier",
+                                             "uCbCrTexCoordMultiplier",
+                                             "uMaskCoordMultiplier",
+                                             "uTexturePass2",
+                                             "uColorMatrix",
+                                             "uColorMatrixVector",
+                                             "uBlurRadius",
+                                             "uBlurOffset",
+                                             "uBlurAlpha",
+                                             "uBlurGaussianKernel",
+                                             "uSSEdges",
+                                             "uViewportSize",
+                                             "uVisibleCenter",
+                                             "uYuvColorMatrix",
+                                             nullptr};
 
-    for (int i = 0; sKnownUniformNames[i] != nullptr; ++i) {
-        aProfile.mUniforms[i].mNameString = sKnownUniformNames[i];
-        aProfile.mUniforms[i].mName = (KnownUniform::KnownUniformName) i;
-    }
-}
-
-void
-ShaderConfigOGL::SetRenderColor(bool aEnabled)
-{
-  SetFeature(ENABLE_RENDER_COLOR, aEnabled);
-}
-
-void
-ShaderConfigOGL::SetTextureTarget(GLenum aTarget)
-{
-  SetFeature(ENABLE_TEXTURE_EXTERNAL | ENABLE_TEXTURE_RECT, false);
-  switch (aTarget) {
-  case LOCAL_GL_TEXTURE_EXTERNAL:
-    SetFeature(ENABLE_TEXTURE_EXTERNAL, true);
-    break;
-  case LOCAL_GL_TEXTURE_RECTANGLE_ARB:
-    SetFeature(ENABLE_TEXTURE_RECT, true);
-    break;
+  for (int i = 0; sKnownUniformNames[i] != nullptr; ++i) {
+    aProfile.mUniforms[i].mNameString = sKnownUniformNames[i];
+    aProfile.mUniforms[i].mName = (KnownUniform::KnownUniformName)i;
   }
 }
 
-void
-ShaderConfigOGL::SetMaskTextureTarget(GLenum aTarget)
-{
+void ShaderConfigOGL::SetRenderColor(bool aEnabled) {
+  SetFeature(ENABLE_RENDER_COLOR, aEnabled);
+}
+
+void ShaderConfigOGL::SetTextureTarget(GLenum aTarget) {
+  SetFeature(ENABLE_TEXTURE_EXTERNAL | ENABLE_TEXTURE_RECT, false);
+  switch (aTarget) {
+    case LOCAL_GL_TEXTURE_EXTERNAL:
+      SetFeature(ENABLE_TEXTURE_EXTERNAL, true);
+      break;
+    case LOCAL_GL_TEXTURE_RECTANGLE_ARB:
+      SetFeature(ENABLE_TEXTURE_RECT, true);
+      break;
+  }
+}
+
+void ShaderConfigOGL::SetMaskTextureTarget(GLenum aTarget) {
   if (aTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB) {
     SetFeature(ENABLE_MASK_TEXTURE_RECT, true);
   } else {
@@ -103,96 +93,68 @@ ShaderConfigOGL::SetMaskTextureTarget(GLenum aTarget)
   }
 }
 
-void
-ShaderConfigOGL::SetRBSwap(bool aEnabled)
-{
+void ShaderConfigOGL::SetRBSwap(bool aEnabled) {
   SetFeature(ENABLE_TEXTURE_RB_SWAP, aEnabled);
 }
 
-void
-ShaderConfigOGL::SetNoAlpha(bool aEnabled)
-{
+void ShaderConfigOGL::SetNoAlpha(bool aEnabled) {
   SetFeature(ENABLE_TEXTURE_NO_ALPHA, aEnabled);
 }
 
-void
-ShaderConfigOGL::SetOpacity(bool aEnabled)
-{
+void ShaderConfigOGL::SetOpacity(bool aEnabled) {
   SetFeature(ENABLE_OPACITY, aEnabled);
 }
 
-void
-ShaderConfigOGL::SetYCbCr(bool aEnabled)
-{
+void ShaderConfigOGL::SetYCbCr(bool aEnabled) {
   SetFeature(ENABLE_TEXTURE_YCBCR, aEnabled);
   MOZ_ASSERT(!(mFeatures & ENABLE_TEXTURE_NV12));
 }
 
-void
-ShaderConfigOGL::SetColorMultiplier(uint32_t aMultiplier)
-{
-  MOZ_ASSERT(mFeatures & ENABLE_TEXTURE_YCBCR, "Multiplier only supported with YCbCr!");
+void ShaderConfigOGL::SetColorMultiplier(uint32_t aMultiplier) {
+  MOZ_ASSERT(mFeatures & ENABLE_TEXTURE_YCBCR,
+             "Multiplier only supported with YCbCr!");
   mMultiplier = aMultiplier;
 }
 
-void
-ShaderConfigOGL::SetNV12(bool aEnabled)
-{
+void ShaderConfigOGL::SetNV12(bool aEnabled) {
   SetFeature(ENABLE_TEXTURE_NV12, aEnabled);
   MOZ_ASSERT(!(mFeatures & ENABLE_TEXTURE_YCBCR));
 }
 
-void
-ShaderConfigOGL::SetComponentAlpha(bool aEnabled)
-{
+void ShaderConfigOGL::SetComponentAlpha(bool aEnabled) {
   SetFeature(ENABLE_TEXTURE_COMPONENT_ALPHA, aEnabled);
 }
 
-void
-ShaderConfigOGL::SetColorMatrix(bool aEnabled)
-{
+void ShaderConfigOGL::SetColorMatrix(bool aEnabled) {
   SetFeature(ENABLE_COLOR_MATRIX, aEnabled);
 }
 
-void
-ShaderConfigOGL::SetBlur(bool aEnabled)
-{
+void ShaderConfigOGL::SetBlur(bool aEnabled) {
   SetFeature(ENABLE_BLUR, aEnabled);
 }
 
-void
-ShaderConfigOGL::SetMask(bool aEnabled)
-{
+void ShaderConfigOGL::SetMask(bool aEnabled) {
   SetFeature(ENABLE_MASK, aEnabled);
 }
 
-void
-ShaderConfigOGL::SetNoPremultipliedAlpha()
-{
+void ShaderConfigOGL::SetNoPremultipliedAlpha() {
   SetFeature(ENABLE_NO_PREMUL_ALPHA, true);
 }
 
-void
-ShaderConfigOGL::SetDEAA(bool aEnabled)
-{
+void ShaderConfigOGL::SetDEAA(bool aEnabled) {
   SetFeature(ENABLE_DEAA, aEnabled);
 }
 
-void
-ShaderConfigOGL::SetCompositionOp(gfx::CompositionOp aOp)
-{
+void ShaderConfigOGL::SetCompositionOp(gfx::CompositionOp aOp) {
   mCompositionOp = aOp;
 }
 
-void
-ShaderConfigOGL::SetDynamicGeometry(bool aEnabled)
-{
+void ShaderConfigOGL::SetDynamicGeometry(bool aEnabled) {
   SetFeature(ENABLE_DYNAMIC_GEOMETRY, aEnabled);
 }
 
-/* static */ ProgramProfileOGL
-ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
-{
+/* static */ ProgramProfileOGL ProgramProfileOGL::GetProfileFor(
+    ShaderConfigOGL aConfig) {
   ProgramProfileOGL result;
   ostringstream fs, vs;
 
@@ -222,7 +184,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     vs << "attribute vec2 aCoord;" << endl;
   }
 
-  result.mAttributes.AppendElement(Pair<nsCString, GLuint> {"aCoord", 0});
+  result.mAttributes.AppendElement(Pair<nsCString, GLuint>{"aCoord", 0});
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
     vs << "uniform mat4 uTextureTransform;" << endl;
@@ -231,7 +193,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 
     if (aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY) {
       vs << "attribute vec2 aTexCoord;" << endl;
-      result.mAttributes.AppendElement(Pair<nsCString, GLuint> {"aTexCoord", 1});
+      result.mAttributes.AppendElement(Pair<nsCString, GLuint>{"aTexCoord", 1});
     }
   }
 
@@ -252,7 +214,9 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   } else {
     vs << "  int vertexID = int(aCoord.w);" << endl;
     vs << "  vec4 layerRect = uLayerRects[vertexID];" << endl;
-    vs << "  vec4 finalPosition = vec4(aCoord.xy * layerRect.zw + layerRect.xy, 0.0, 1.0);" << endl;
+    vs << "  vec4 finalPosition = vec4(aCoord.xy * layerRect.zw + "
+          "layerRect.xy, 0.0, 1.0);"
+       << endl;
   }
 
   vs << "  finalPosition = uLayerTransform * finalPosition;" << endl;
@@ -292,13 +256,18 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     // edges between tiles, as the pixels may be covered twice without clipping
     // against uSSEdges.  If all edges were dilated, it would result in
     // artifacts visible within semi-transparent layers with multiple tiles.
-    vs << "    vec4 visibleCenter = uLayerTransform * vec4(uVisibleCenter, 0.0, 1.0);" << endl;
-    vs << "    vec2 dilateDir = finalPosition.xy / finalPosition.w - visibleCenter.xy / visibleCenter.w;" << endl;
+    vs << "    vec4 visibleCenter = uLayerTransform * vec4(uVisibleCenter, "
+          "0.0, 1.0);"
+       << endl;
+    vs << "    vec2 dilateDir = finalPosition.xy / finalPosition.w - "
+          "visibleCenter.xy / visibleCenter.w;"
+       << endl;
     vs << "    vec2 offset = sign(dilateDir) * 0.5;" << endl;
     vs << "    finalPosition.xy += offset * finalPosition.w;" << endl;
     if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
       // We must adjust the texture coordinates to compensate for the dilation
-      vs << "    coordAdjusted = uLayerTransformInverse * finalPosition;" << endl;
+      vs << "    coordAdjusted = uLayerTransformInverse * finalPosition;"
+         << endl;
       vs << "    coordAdjusted /= coordAdjusted.w;" << endl;
 
       if (!(aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY)) {
@@ -310,26 +279,37 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 
     if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
       if (aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY) {
-        vs << "  vTexCoord = (uTextureTransform * vec4(aTexCoord, 0.0, 1.0)).xy;" << endl;
+        vs << "  vTexCoord = (uTextureTransform * vec4(aTexCoord, 0.0, "
+              "1.0)).xy;"
+           << endl;
       } else {
         vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
-        vs << "  vec2 texCoord = coordAdjusted.xy * textureRect.zw + textureRect.xy;" << endl;
-        vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
+        vs << "  vec2 texCoord = coordAdjusted.xy * textureRect.zw + "
+              "textureRect.xy;"
+           << endl;
+        vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;"
+           << endl;
       }
     }
   } else if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
     if (aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY) {
-      vs << "  vTexCoord = (uTextureTransform * vec4(aTexCoord, 0.0, 1.0)).xy;" << endl;
+      vs << "  vTexCoord = (uTextureTransform * vec4(aTexCoord, 0.0, 1.0)).xy;"
+         << endl;
     } else {
       vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
-      vs << "  vec2 texCoord = aCoord.xy * textureRect.zw + textureRect.xy;" << endl;
-      vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
+      vs << "  vec2 texCoord = aCoord.xy * textureRect.zw + textureRect.xy;"
+         << endl;
+      vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;"
+         << endl;
     }
   }
 
   if (aConfig.mFeatures & ENABLE_MASK) {
-    vs << "  vMaskCoord.xy = (uMaskTransform * (finalPosition / finalPosition.w)).xy;" << endl;
-    // correct for perspective correct interpolation, see comment in D3D11 shader
+    vs << "  vMaskCoord.xy = (uMaskTransform * (finalPosition / "
+          "finalPosition.w)).xy;"
+       << endl;
+    // correct for perspective correct interpolation, see comment in D3D11
+    // shader
     vs << "  vMaskCoord.z = 1.0;" << endl;
     vs << "  vMaskCoord *= finalPosition.w;" << endl;
   }
@@ -340,7 +320,9 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     // transform, then invert the y-axis.
     vs << "  vBackdropCoord.x = (finalPosition.x + 1.0) / 2.0;" << endl;
     vs << "  vBackdropCoord.y = 1.0 - (finalPosition.y + 1.0) / 2.0;" << endl;
-    vs << "  vBackdropCoord = (uBackdropTransform * vec4(vBackdropCoord.xy, 0.0, 1.0)).xy;" << endl;
+    vs << "  vBackdropCoord = (uBackdropTransform * vec4(vBackdropCoord.xy, "
+          "0.0, 1.0)).xy;"
+       << endl;
     vs << "  vBackdropCoord.y = 1.0 - vBackdropCoord.y;" << endl;
   }
   vs << "  gl_Position = finalPosition;" << endl;
@@ -369,7 +351,8 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
       fs << "uniform bool uBlurAlpha;" << endl;
       fs << "uniform vec2 uBlurRadius;" << endl;
       fs << "uniform vec2 uBlurOffset;" << endl;
-      fs << "uniform float uBlurGaussianKernel[" << GAUSSIAN_KERNEL_HALF_WIDTH << "];" << endl;
+      fs << "uniform float uBlurGaussianKernel[" << GAUSSIAN_KERNEL_HALF_WIDTH
+         << "];" << endl;
     }
     if (aConfig.mFeatures & ENABLE_COLOR_MATRIX) {
       fs << "uniform mat4 uColorMatrix;" << endl;
@@ -453,23 +436,35 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
         aConfig.mFeatures & ENABLE_TEXTURE_NV12) {
       if (aConfig.mFeatures & ENABLE_TEXTURE_YCBCR) {
         if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
-          fs << "  COLOR_PRECISION float y = " << texture2D << "(uYTexture, coord * uTexCoordMultiplier).r;" << endl;
-          fs << "  COLOR_PRECISION float cb = " << texture2D << "(uCbTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
-          fs << "  COLOR_PRECISION float cr = " << texture2D << "(uCrTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
+          fs << "  COLOR_PRECISION float y = " << texture2D
+             << "(uYTexture, coord * uTexCoordMultiplier).r;" << endl;
+          fs << "  COLOR_PRECISION float cb = " << texture2D
+             << "(uCbTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
+          fs << "  COLOR_PRECISION float cr = " << texture2D
+             << "(uCrTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
         } else {
-          fs << "  COLOR_PRECISION float y = " << texture2D << "(uYTexture, coord).r;" << endl;
-          fs << "  COLOR_PRECISION float cb = " << texture2D << "(uCbTexture, coord).r;" << endl;
-          fs << "  COLOR_PRECISION float cr = " << texture2D << "(uCrTexture, coord).r;" << endl;
+          fs << "  COLOR_PRECISION float y = " << texture2D
+             << "(uYTexture, coord).r;" << endl;
+          fs << "  COLOR_PRECISION float cb = " << texture2D
+             << "(uCbTexture, coord).r;" << endl;
+          fs << "  COLOR_PRECISION float cr = " << texture2D
+             << "(uCrTexture, coord).r;" << endl;
         }
       } else {
         if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
-          fs << "  COLOR_PRECISION float y = " << texture2D << "(uYTexture, coord * uTexCoordMultiplier).r;" << endl;
-          fs << "  COLOR_PRECISION float cb = " << texture2D << "(uCbTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
-          fs << "  COLOR_PRECISION float cr = " << texture2D << "(uCbTexture, coord * uCbCrTexCoordMultiplier).a;" << endl;
+          fs << "  COLOR_PRECISION float y = " << texture2D
+             << "(uYTexture, coord * uTexCoordMultiplier).r;" << endl;
+          fs << "  COLOR_PRECISION float cb = " << texture2D
+             << "(uCbTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
+          fs << "  COLOR_PRECISION float cr = " << texture2D
+             << "(uCbTexture, coord * uCbCrTexCoordMultiplier).a;" << endl;
         } else {
-          fs << "  COLOR_PRECISION float y = " << texture2D << "(uYTexture, coord).r;" << endl;
-          fs << "  COLOR_PRECISION float cb = " << texture2D << "(uCbTexture, coord).r;" << endl;
-          fs << "  COLOR_PRECISION float cr = " << texture2D << "(uCbTexture, coord).a;" << endl;
+          fs << "  COLOR_PRECISION float y = " << texture2D
+             << "(uYTexture, coord).r;" << endl;
+          fs << "  COLOR_PRECISION float cb = " << texture2D
+             << "(uCbTexture, coord).r;" << endl;
+          fs << "  COLOR_PRECISION float cr = " << texture2D
+             << "(uCbTexture, coord).a;" << endl;
         }
       }
       fs << "  vec3 yuv = vec3(y, cb, cr);" << endl;
@@ -482,20 +477,26 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
       fs << "  color.a = 1.0;" << endl;
     } else if (aConfig.mFeatures & ENABLE_TEXTURE_COMPONENT_ALPHA) {
       if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
-        fs << "  COLOR_PRECISION vec3 onBlack = " << texture2D << "(uBlackTexture, coord * uTexCoordMultiplier).rgb;" << endl;
-        fs << "  COLOR_PRECISION vec3 onWhite = " << texture2D << "(uWhiteTexture, coord * uTexCoordMultiplier).rgb;" << endl;
+        fs << "  COLOR_PRECISION vec3 onBlack = " << texture2D
+           << "(uBlackTexture, coord * uTexCoordMultiplier).rgb;" << endl;
+        fs << "  COLOR_PRECISION vec3 onWhite = " << texture2D
+           << "(uWhiteTexture, coord * uTexCoordMultiplier).rgb;" << endl;
       } else {
-        fs << "  COLOR_PRECISION vec3 onBlack = " << texture2D << "(uBlackTexture, coord).rgb;" << endl;
-        fs << "  COLOR_PRECISION vec3 onWhite = " << texture2D << "(uWhiteTexture, coord).rgb;" << endl;
+        fs << "  COLOR_PRECISION vec3 onBlack = " << texture2D
+           << "(uBlackTexture, coord).rgb;" << endl;
+        fs << "  COLOR_PRECISION vec3 onWhite = " << texture2D
+           << "(uWhiteTexture, coord).rgb;" << endl;
       }
-      fs << "  COLOR_PRECISION vec4 alphas = (1.0 - onWhite + onBlack).rgbg;" << endl;
+      fs << "  COLOR_PRECISION vec4 alphas = (1.0 - onWhite + onBlack).rgbg;"
+         << endl;
       fs << "  if (uTexturePass2)" << endl;
       fs << "    color = vec4(onBlack, alphas.a);" << endl;
       fs << "  else" << endl;
       fs << "    color = alphas;" << endl;
     } else {
       if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
-        fs << "  color = " << texture2D << "(uTexture, coord * uTexCoordMultiplier);" << endl;
+        fs << "  color = " << texture2D
+           << "(uTexture, coord * uTexCoordMultiplier);" << endl;
       } else {
         fs << "  color = " << texture2D << "(uTexture, coord);" << endl;
       }
@@ -512,13 +513,16 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
       fs << "vec4 sampleAtRadius(vec2 coord, float radius) {" << endl;
       fs << "  coord += uBlurOffset;" << endl;
       fs << "  coord += radius * uBlurRadius;" << endl;
-      fs << "  if (coord.x < 0. || coord.y < 0. || coord.x > 1. || coord.y > 1.)" << endl;
+      fs << "  if (coord.x < 0. || coord.y < 0. || coord.x > 1. || coord.y > "
+            "1.)"
+         << endl;
       fs << "    return vec4(0, 0, 0, 0);" << endl;
       fs << "  return sample(coord);" << endl;
       fs << "}" << endl;
       fs << "vec4 blur(vec4 color, vec2 coord) {" << endl;
       fs << "  vec4 total = color * uBlurGaussianKernel[0];" << endl;
-      fs << "  for (int i = 1; i < " << GAUSSIAN_KERNEL_HALF_WIDTH << "; ++i) {" << endl;
+      fs << "  for (int i = 1; i < " << GAUSSIAN_KERNEL_HALF_WIDTH << "; ++i) {"
+         << endl;
       fs << "    float r = float(i) * " << GAUSSIAN_KERNEL_STEP << ";" << endl;
       fs << "    float k = uBlurGaussianKernel[i];" << endl;
       fs << "    total += sampleAtRadius(coord, r) * k;" << endl;
@@ -542,7 +546,9 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
       fs << "  color = blur(color, vTexCoord);" << endl;
     }
     if (aConfig.mFeatures & ENABLE_COLOR_MATRIX) {
-      fs << "  color = uColorMatrix * vec4(color.rgb / color.a, color.a) + uColorMatrixVector;" << endl;
+      fs << "  color = uColorMatrix * vec4(color.rgb / color.a, color.a) + "
+            "uColorMatrixVector;"
+         << endl;
       fs << "  color.rgb *= color.a;" << endl;
     }
     if (aConfig.mFeatures & ENABLE_OPACITY) {
@@ -553,22 +559,26 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     // Calculate the sub-pixel coverage of the pixel and modulate its opacity
     // by that amount to perform DEAA.
     fs << "  vec3 ssPos = vec3(gl_FragCoord.xy, 1.0);" << endl;
-    fs << "  float deaaCoverage = clamp(dot(uSSEdges[0], ssPos), 0.0, 1.0);" << endl;
+    fs << "  float deaaCoverage = clamp(dot(uSSEdges[0], ssPos), 0.0, 1.0);"
+       << endl;
     fs << "  deaaCoverage *= clamp(dot(uSSEdges[1], ssPos), 0.0, 1.0);" << endl;
     fs << "  deaaCoverage *= clamp(dot(uSSEdges[2], ssPos), 0.0, 1.0);" << endl;
     fs << "  deaaCoverage *= clamp(dot(uSSEdges[3], ssPos), 0.0, 1.0);" << endl;
     fs << "  color *= deaaCoverage;" << endl;
   }
   if (BlendOpIsMixBlendMode(blendOp)) {
-    fs << "  vec4 backdrop = texture2D(uBackdropTexture, vBackdropCoord);" << endl;
+    fs << "  vec4 backdrop = texture2D(uBackdropTexture, vBackdropCoord);"
+       << endl;
     fs << "  color = mixAndBlend(backdrop, color);" << endl;
   }
   if (aConfig.mFeatures & ENABLE_MASK) {
     fs << "  vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;" << endl;
     if (aConfig.mFeatures & ENABLE_MASK_TEXTURE_RECT) {
-      fs << "  COLOR_PRECISION float mask = " << maskTexture2D << "(uMaskTexture, maskCoords * uMaskCoordMultiplier).r;" << endl;
+      fs << "  COLOR_PRECISION float mask = " << maskTexture2D
+         << "(uMaskTexture, maskCoords * uMaskCoordMultiplier).r;" << endl;
     } else {
-      fs << "  COLOR_PRECISION float mask = " << maskTexture2D << "(uMaskTexture, maskCoords).r;" << endl;
+      fs << "  COLOR_PRECISION float mask = " << maskTexture2D
+         << "(uMaskTexture, maskCoords).r;" << endl;
     }
     fs << "  color *= mask;" << endl;
   } else {
@@ -604,190 +614,192 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   return result;
 }
 
-void
-ProgramProfileOGL::BuildMixBlender(const ShaderConfigOGL& aConfig, std::ostringstream& fs)
-{
+void ProgramProfileOGL::BuildMixBlender(const ShaderConfigOGL &aConfig,
+                                        std::ostringstream &fs) {
   // From the "Compositing and Blending Level 1" spec.
   // Generate helper functions first.
   switch (aConfig.mCompositionOp) {
-  case gfx::CompositionOp::OP_OVERLAY:
-  case gfx::CompositionOp::OP_HARD_LIGHT:
-    // Note: we substitute (2*src-1) into the screen formula below.
-    fs << "float hardlight(float dest, float src) {" << endl;
-    fs << "  if (src <= 0.5) {" << endl;
-    fs << "    return dest * (2.0 * src);" << endl;
-    fs << "  } else {" << endl;
-    fs << "    return 2.0*dest + 2.0*src - 1.0 - 2.0*dest*src;" << endl;
-    fs << "  }" << endl;
-    fs << "}" << endl;
-    break;
-  case gfx::CompositionOp::OP_COLOR_DODGE:
-    fs << "float dodge(float dest, float src) {" << endl;
-    fs << "  if (dest == 0.0) {" << endl;
-    fs << "    return 0.0;" << endl;
-    fs << "  } else if (src == 1.0) {" << endl;
-    fs << "    return 1.0;" << endl;
-    fs << "  } else {" << endl;
-    fs << "    return min(1.0, dest / (1.0 - src));" << endl;
-    fs << "  }" << endl;
-    fs << "}" << endl;
-    break;
-  case gfx::CompositionOp::OP_COLOR_BURN:
-    fs << "float burn(float dest, float src) {" << endl;
-    fs << "  if (dest == 1.0) {" << endl;
-    fs << "    return 1.0;" << endl;
-    fs << "  } else if (src == 0.0) {" << endl;
-    fs << "    return 0.0;" << endl;
-    fs << "  } else {" << endl;
-    fs << "    return 1.0 - min(1.0, (1.0 - dest) / src);" << endl;
-    fs << "  }" << endl;
-    fs << "}" << endl;
-    break;
-  case gfx::CompositionOp::OP_SOFT_LIGHT:
-    fs << "float darken(float dest) {" << endl;
-    fs << "  if (dest <= 0.25) {" << endl;
-    fs << "    return ((16.0 * dest - 12.0) * dest + 4.0) * dest;" << endl;
-    fs << "  } else {" << endl;
-    fs << "    return sqrt(dest);" << endl;
-    fs << "  }" << endl;
-    fs << "}" << endl;
-    fs << "float softlight(float dest, float src) {" << endl;
-    fs << "  if (src <= 0.5) {" << endl;
-    fs << "    return dest - (1.0 - 2.0 * src) * dest * (1.0 - dest);" << endl;
-    fs << "  } else {" << endl;
-    fs << "    return dest + (2.0 * src - 1.0) * (darken(dest) - dest);" << endl;
-    fs << "  }" << endl;
-    fs << "}" << endl;
-    break;
-  case gfx::CompositionOp::OP_HUE:
-  case gfx::CompositionOp::OP_SATURATION:
-  case gfx::CompositionOp::OP_COLOR:
-  case gfx::CompositionOp::OP_LUMINOSITY:
-    fs << "float Lum(vec3 c) {" << endl;
-    fs << "  return dot(vec3(0.3, 0.59, 0.11), c);" << endl;
-    fs << "}" << endl;
-    fs << "vec3 ClipColor(vec3 c) {" << endl;
-    fs << "  float L = Lum(c);" << endl;
-    fs << "  float n = min(min(c.r, c.g), c.b);" << endl;
-    fs << "  float x = max(max(c.r, c.g), c.b);" << endl;
-    fs << "  if (n < 0.0) {" << endl;
-    fs << "    c = L + (((c - L) * L) / (L - n));" << endl;
-    fs << "  }" << endl;
-    fs << "  if (x > 1.0) {" << endl;
-    fs << "    c = L + (((c - L) * (1.0 - L)) / (x - L));" << endl;
-    fs << "  }" << endl;
-    fs << "  return c;" << endl;
-    fs << "}" << endl;
-    fs << "vec3 SetLum(vec3 c, float L) {" << endl;
-    fs << "  float d = L - Lum(c);" << endl;
-    fs << "  return ClipColor(vec3(" << endl;
-    fs << "    c.r + d," << endl;
-    fs << "    c.g + d," << endl;
-    fs << "    c.b + d));" << endl;
-    fs << "}" << endl;
-    fs << "float Sat(vec3 c) {" << endl;
-    fs << "  return max(max(c.r, c.g), c.b) - min(min(c.r, c.g), c.b);" << endl;
-    fs << "}" << endl;
+    case gfx::CompositionOp::OP_OVERLAY:
+    case gfx::CompositionOp::OP_HARD_LIGHT:
+      // Note: we substitute (2*src-1) into the screen formula below.
+      fs << "float hardlight(float dest, float src) {" << endl;
+      fs << "  if (src <= 0.5) {" << endl;
+      fs << "    return dest * (2.0 * src);" << endl;
+      fs << "  } else {" << endl;
+      fs << "    return 2.0*dest + 2.0*src - 1.0 - 2.0*dest*src;" << endl;
+      fs << "  }" << endl;
+      fs << "}" << endl;
+      break;
+    case gfx::CompositionOp::OP_COLOR_DODGE:
+      fs << "float dodge(float dest, float src) {" << endl;
+      fs << "  if (dest == 0.0) {" << endl;
+      fs << "    return 0.0;" << endl;
+      fs << "  } else if (src == 1.0) {" << endl;
+      fs << "    return 1.0;" << endl;
+      fs << "  } else {" << endl;
+      fs << "    return min(1.0, dest / (1.0 - src));" << endl;
+      fs << "  }" << endl;
+      fs << "}" << endl;
+      break;
+    case gfx::CompositionOp::OP_COLOR_BURN:
+      fs << "float burn(float dest, float src) {" << endl;
+      fs << "  if (dest == 1.0) {" << endl;
+      fs << "    return 1.0;" << endl;
+      fs << "  } else if (src == 0.0) {" << endl;
+      fs << "    return 0.0;" << endl;
+      fs << "  } else {" << endl;
+      fs << "    return 1.0 - min(1.0, (1.0 - dest) / src);" << endl;
+      fs << "  }" << endl;
+      fs << "}" << endl;
+      break;
+    case gfx::CompositionOp::OP_SOFT_LIGHT:
+      fs << "float darken(float dest) {" << endl;
+      fs << "  if (dest <= 0.25) {" << endl;
+      fs << "    return ((16.0 * dest - 12.0) * dest + 4.0) * dest;" << endl;
+      fs << "  } else {" << endl;
+      fs << "    return sqrt(dest);" << endl;
+      fs << "  }" << endl;
+      fs << "}" << endl;
+      fs << "float softlight(float dest, float src) {" << endl;
+      fs << "  if (src <= 0.5) {" << endl;
+      fs << "    return dest - (1.0 - 2.0 * src) * dest * (1.0 - dest);"
+         << endl;
+      fs << "  } else {" << endl;
+      fs << "    return dest + (2.0 * src - 1.0) * (darken(dest) - dest);"
+         << endl;
+      fs << "  }" << endl;
+      fs << "}" << endl;
+      break;
+    case gfx::CompositionOp::OP_HUE:
+    case gfx::CompositionOp::OP_SATURATION:
+    case gfx::CompositionOp::OP_COLOR:
+    case gfx::CompositionOp::OP_LUMINOSITY:
+      fs << "float Lum(vec3 c) {" << endl;
+      fs << "  return dot(vec3(0.3, 0.59, 0.11), c);" << endl;
+      fs << "}" << endl;
+      fs << "vec3 ClipColor(vec3 c) {" << endl;
+      fs << "  float L = Lum(c);" << endl;
+      fs << "  float n = min(min(c.r, c.g), c.b);" << endl;
+      fs << "  float x = max(max(c.r, c.g), c.b);" << endl;
+      fs << "  if (n < 0.0) {" << endl;
+      fs << "    c = L + (((c - L) * L) / (L - n));" << endl;
+      fs << "  }" << endl;
+      fs << "  if (x > 1.0) {" << endl;
+      fs << "    c = L + (((c - L) * (1.0 - L)) / (x - L));" << endl;
+      fs << "  }" << endl;
+      fs << "  return c;" << endl;
+      fs << "}" << endl;
+      fs << "vec3 SetLum(vec3 c, float L) {" << endl;
+      fs << "  float d = L - Lum(c);" << endl;
+      fs << "  return ClipColor(vec3(" << endl;
+      fs << "    c.r + d," << endl;
+      fs << "    c.g + d," << endl;
+      fs << "    c.b + d));" << endl;
+      fs << "}" << endl;
+      fs << "float Sat(vec3 c) {" << endl;
+      fs << "  return max(max(c.r, c.g), c.b) - min(min(c.r, c.g), c.b);"
+         << endl;
+      fs << "}" << endl;
 
-    // To use this helper, re-arrange rgb such that r=min, g=mid, and b=max.
-    fs << "vec3 SetSatInner(vec3 c, float s) {" << endl;
-    fs << "  if (c.b > c.r) {" << endl;
-    fs << "    c.g = (((c.g - c.r) * s) / (c.b - c.r));" << endl;
-    fs << "    c.b = s;" << endl;
-    fs << "  } else {" << endl;
-    fs << "    c.gb = vec2(0.0, 0.0);" << endl;
-    fs << "  }" << endl;
-    fs << "  return vec3(0.0, c.gb);" << endl;
-    fs << "}" << endl;
+      // To use this helper, re-arrange rgb such that r=min, g=mid, and b=max.
+      fs << "vec3 SetSatInner(vec3 c, float s) {" << endl;
+      fs << "  if (c.b > c.r) {" << endl;
+      fs << "    c.g = (((c.g - c.r) * s) / (c.b - c.r));" << endl;
+      fs << "    c.b = s;" << endl;
+      fs << "  } else {" << endl;
+      fs << "    c.gb = vec2(0.0, 0.0);" << endl;
+      fs << "  }" << endl;
+      fs << "  return vec3(0.0, c.gb);" << endl;
+      fs << "}" << endl;
 
-    fs << "vec3 SetSat(vec3 c, float s) {" << endl;
-    fs << "  if (c.r <= c.g) {" << endl;
-    fs << "    if (c.g <= c.b) {" << endl;
-    fs << "      c.rgb = SetSatInner(c.rgb, s);" << endl;
-    fs << "    } else if (c.r <= c.b) {" << endl;
-    fs << "      c.rbg = SetSatInner(c.rbg, s);" << endl;
-    fs << "    } else {" << endl;
-    fs << "      c.brg = SetSatInner(c.brg, s);" << endl;
-    fs << "    }" << endl;
-    fs << "  } else if (c.r <= c.b) {" << endl;
-    fs << "    c.grb = SetSatInner(c.grb, s);" << endl;
-    fs << "  } else if (c.g <= c.b) {" << endl;
-    fs << "    c.gbr = SetSatInner(c.gbr, s);" << endl;
-    fs << "  } else {" << endl;
-    fs << "    c.bgr = SetSatInner(c.bgr, s);" << endl;
-    fs << "  }" << endl;
-    fs << "  return c;" << endl;
-    fs << "}" << endl;
-    break;
-  default:
-    break;
+      fs << "vec3 SetSat(vec3 c, float s) {" << endl;
+      fs << "  if (c.r <= c.g) {" << endl;
+      fs << "    if (c.g <= c.b) {" << endl;
+      fs << "      c.rgb = SetSatInner(c.rgb, s);" << endl;
+      fs << "    } else if (c.r <= c.b) {" << endl;
+      fs << "      c.rbg = SetSatInner(c.rbg, s);" << endl;
+      fs << "    } else {" << endl;
+      fs << "      c.brg = SetSatInner(c.brg, s);" << endl;
+      fs << "    }" << endl;
+      fs << "  } else if (c.r <= c.b) {" << endl;
+      fs << "    c.grb = SetSatInner(c.grb, s);" << endl;
+      fs << "  } else if (c.g <= c.b) {" << endl;
+      fs << "    c.gbr = SetSatInner(c.gbr, s);" << endl;
+      fs << "  } else {" << endl;
+      fs << "    c.bgr = SetSatInner(c.bgr, s);" << endl;
+      fs << "  }" << endl;
+      fs << "  return c;" << endl;
+      fs << "}" << endl;
+      break;
+    default:
+      break;
   }
 
   // Generate the main blending helper.
   fs << "vec3 blend(vec3 dest, vec3 src) {" << endl;
   switch (aConfig.mCompositionOp) {
-  case gfx::CompositionOp::OP_MULTIPLY:
-    fs << "  return dest * src;" << endl;
-    break;
-  case gfx::CompositionOp::OP_SCREEN:
-    fs << "  return dest + src - (dest * src);" << endl;
-    break;
-  case gfx::CompositionOp::OP_OVERLAY:
-    fs << "  return vec3(" << endl;
-    fs << "    hardlight(src.r, dest.r)," << endl;
-    fs << "    hardlight(src.g, dest.g)," << endl;
-    fs << "    hardlight(src.b, dest.b));" << endl;
-    break;
-  case gfx::CompositionOp::OP_DARKEN:
-    fs << "  return min(dest, src);" << endl;
-    break;
-  case gfx::CompositionOp::OP_LIGHTEN:
-    fs << "  return max(dest, src);" << endl;
-    break;
-  case gfx::CompositionOp::OP_COLOR_DODGE:
-    fs << "  return vec3(" << endl;
-    fs << "    dodge(dest.r, src.r)," << endl;
-    fs << "    dodge(dest.g, src.g)," << endl;
-    fs << "    dodge(dest.b, src.b));" << endl;
-    break;
-  case gfx::CompositionOp::OP_COLOR_BURN:
-    fs << "  return vec3(" << endl;
-    fs << "    burn(dest.r, src.r)," << endl;
-    fs << "    burn(dest.g, src.g)," << endl;
-    fs << "    burn(dest.b, src.b));" << endl;
-    break;
-  case gfx::CompositionOp::OP_HARD_LIGHT:
-    fs << "  return vec3(" << endl;
-    fs << "    hardlight(dest.r, src.r)," << endl;
-    fs << "    hardlight(dest.g, src.g)," << endl;
-    fs << "    hardlight(dest.b, src.b));" << endl;
-    break;
-  case gfx::CompositionOp::OP_SOFT_LIGHT:
-    fs << "  return vec3(" << endl;
-    fs << "    softlight(dest.r, src.r)," << endl;
-    fs << "    softlight(dest.g, src.g)," << endl;
-    fs << "    softlight(dest.b, src.b));" << endl;
-    break;
-  case gfx::CompositionOp::OP_DIFFERENCE:
-    fs << "  return abs(dest - src);" << endl;
-    break;
-  case gfx::CompositionOp::OP_EXCLUSION:
-    fs << "  return dest + src - 2.0*dest*src;" << endl;
-    break;
-  case gfx::CompositionOp::OP_HUE:
-    fs << "  return SetLum(SetSat(src, Sat(dest)), Lum(dest));" << endl;
-    break;
-  case gfx::CompositionOp::OP_SATURATION:
-    fs << "  return SetLum(SetSat(dest, Sat(src)), Lum(dest));" << endl;
-    break;
-  case gfx::CompositionOp::OP_COLOR:
-    fs << "  return SetLum(src, Lum(dest));" << endl;
-    break;
-  case gfx::CompositionOp::OP_LUMINOSITY:
-    fs << "  return SetLum(dest, Lum(src));" << endl;
-    break;
-  default:
-    MOZ_ASSERT_UNREACHABLE("unknown blend mode");
+    case gfx::CompositionOp::OP_MULTIPLY:
+      fs << "  return dest * src;" << endl;
+      break;
+    case gfx::CompositionOp::OP_SCREEN:
+      fs << "  return dest + src - (dest * src);" << endl;
+      break;
+    case gfx::CompositionOp::OP_OVERLAY:
+      fs << "  return vec3(" << endl;
+      fs << "    hardlight(src.r, dest.r)," << endl;
+      fs << "    hardlight(src.g, dest.g)," << endl;
+      fs << "    hardlight(src.b, dest.b));" << endl;
+      break;
+    case gfx::CompositionOp::OP_DARKEN:
+      fs << "  return min(dest, src);" << endl;
+      break;
+    case gfx::CompositionOp::OP_LIGHTEN:
+      fs << "  return max(dest, src);" << endl;
+      break;
+    case gfx::CompositionOp::OP_COLOR_DODGE:
+      fs << "  return vec3(" << endl;
+      fs << "    dodge(dest.r, src.r)," << endl;
+      fs << "    dodge(dest.g, src.g)," << endl;
+      fs << "    dodge(dest.b, src.b));" << endl;
+      break;
+    case gfx::CompositionOp::OP_COLOR_BURN:
+      fs << "  return vec3(" << endl;
+      fs << "    burn(dest.r, src.r)," << endl;
+      fs << "    burn(dest.g, src.g)," << endl;
+      fs << "    burn(dest.b, src.b));" << endl;
+      break;
+    case gfx::CompositionOp::OP_HARD_LIGHT:
+      fs << "  return vec3(" << endl;
+      fs << "    hardlight(dest.r, src.r)," << endl;
+      fs << "    hardlight(dest.g, src.g)," << endl;
+      fs << "    hardlight(dest.b, src.b));" << endl;
+      break;
+    case gfx::CompositionOp::OP_SOFT_LIGHT:
+      fs << "  return vec3(" << endl;
+      fs << "    softlight(dest.r, src.r)," << endl;
+      fs << "    softlight(dest.g, src.g)," << endl;
+      fs << "    softlight(dest.b, src.b));" << endl;
+      break;
+    case gfx::CompositionOp::OP_DIFFERENCE:
+      fs << "  return abs(dest - src);" << endl;
+      break;
+    case gfx::CompositionOp::OP_EXCLUSION:
+      fs << "  return dest + src - 2.0*dest*src;" << endl;
+      break;
+    case gfx::CompositionOp::OP_HUE:
+      fs << "  return SetLum(SetSat(src, Sat(dest)), Lum(dest));" << endl;
+      break;
+    case gfx::CompositionOp::OP_SATURATION:
+      fs << "  return SetLum(SetSat(dest, Sat(src)), Lum(dest));" << endl;
+      break;
+    case gfx::CompositionOp::OP_COLOR:
+      fs << "  return SetLum(src, Lum(dest));" << endl;
+      break;
+    case gfx::CompositionOp::OP_LUMINOSITY:
+      fs << "  return SetLum(dest, Lum(src));" << endl;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown blend mode");
   }
   fs << "}" << endl;
 
@@ -811,22 +823,19 @@ ProgramProfileOGL::BuildMixBlender(const ShaderConfigOGL& aConfig, std::ostrings
     fs << "  color.rgb /= color.a;" << endl;
   }
   fs << "  vec3 blended = blend(backdrop.rgb, color.rgb);" << endl;
-  fs << "  color.rgb = (1.0 - backdrop.a) * color.rgb + backdrop.a * blended.rgb;" << endl;
+  fs << "  color.rgb = (1.0 - backdrop.a) * color.rgb + backdrop.a * "
+        "blended.rgb;"
+     << endl;
   fs << "  color.rgb *= color.a;" << endl;
   fs << "  return color;" << endl;
   fs << "}" << endl;
 }
 
-ShaderProgramOGL::ShaderProgramOGL(GLContext* aGL, const ProgramProfileOGL& aProfile)
-  : mGL(aGL)
-  , mProgram(0)
-  , mProfile(aProfile)
-  , mProgramState(STATE_NEW)
-{
-}
+ShaderProgramOGL::ShaderProgramOGL(GLContext *aGL,
+                                   const ProgramProfileOGL &aProfile)
+    : mGL(aGL), mProgram(0), mProfile(aProfile), mProgramState(STATE_NEW) {}
 
-ShaderProgramOGL::~ShaderProgramOGL()
-{
+ShaderProgramOGL::~ShaderProgramOGL() {
   if (mProgram <= 0) {
     return;
   }
@@ -839,10 +848,9 @@ ShaderProgramOGL::~ShaderProgramOGL()
   ctx->fDeleteProgram(mProgram);
 }
 
-bool
-ShaderProgramOGL::Initialize()
-{
-  NS_ASSERTION(mProgramState == STATE_NEW, "Shader program has already been initialised");
+bool ShaderProgramOGL::Initialize() {
+  NS_ASSERTION(mProgramState == STATE_NEW,
+               "Shader program has already been initialised");
 
   ostringstream vs, fs;
   for (uint32_t i = 0; i < mProfile.mDefines.Length(); ++i) {
@@ -861,22 +869,21 @@ ShaderProgramOGL::Initialize()
 
   for (uint32_t i = 0; i < KnownUniform::KnownUniformCount; ++i) {
     mProfile.mUniforms[i].mLocation =
-      mGL->fGetUniformLocation(mProgram, mProfile.mUniforms[i].mNameString);
+        mGL->fGetUniformLocation(mProgram, mProfile.mUniforms[i].mNameString);
   }
 
   return true;
 }
 
-GLint
-ShaderProgramOGL::CreateShader(GLenum aShaderType, const char *aShaderSource)
-{
+GLint ShaderProgramOGL::CreateShader(GLenum aShaderType,
+                                     const char *aShaderSource) {
   GLint success, len = 0;
 
   GLint sh = mGL->fCreateShader(aShaderType);
-  mGL->fShaderSource(sh, 1, (const GLchar**)&aShaderSource, nullptr);
+  mGL->fShaderSource(sh, 1, (const GLchar **)&aShaderSource, nullptr);
   mGL->fCompileShader(sh);
   mGL->fGetShaderiv(sh, LOCAL_GL_COMPILE_STATUS, &success);
-  mGL->fGetShaderiv(sh, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
+  mGL->fGetShaderiv(sh, LOCAL_GL_INFO_LOG_LENGTH, (GLint *)&len);
   /* Even if compiling is successful, there may still be warnings.  Print them
    * in a debug build.  The > 10 is to catch silly compilers that might put
    * some whitespace in the log but otherwise leave it empty.
@@ -885,11 +892,10 @@ ShaderProgramOGL::CreateShader(GLenum aShaderType, const char *aShaderSource)
 #ifdef DEBUG
       || (len > 10 && gfxEnv::DebugShaders())
 #endif
-      )
-  {
+  ) {
     nsAutoCString log;
     log.SetCapacity(len);
-    mGL->fGetShaderInfoLog(sh, len, (GLint*) &len, (char*) log.BeginWriting());
+    mGL->fGetShaderInfoLog(sh, len, (GLint *)&len, (char *)log.BeginWriting());
     log.SetLength(len);
 
     if (!success) {
@@ -898,9 +904,9 @@ ShaderProgramOGL::CreateShader(GLenum aShaderType, const char *aShaderSource)
       printf_stderr("=== SHADER COMPILATION WARNINGS ===\n");
     }
 
-      printf_stderr("=== Source:\n%s\n", aShaderSource);
-      printf_stderr("=== Log:\n%s\n", log.get());
-      printf_stderr("============\n");
+    printf_stderr("=== Source:\n%s\n", aShaderSource);
+    printf_stderr("=== Log:\n%s\n", log.get());
+    printf_stderr("============\n");
 
     if (!success) {
       mGL->fDeleteShader(sh);
@@ -911,21 +917,20 @@ ShaderProgramOGL::CreateShader(GLenum aShaderType, const char *aShaderSource)
   return sh;
 }
 
-bool
-ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
-                                const char *aFragmentShaderString)
-{
-  GLuint vertexShader = CreateShader(LOCAL_GL_VERTEX_SHADER, aVertexShaderString);
-  GLuint fragmentShader = CreateShader(LOCAL_GL_FRAGMENT_SHADER, aFragmentShaderString);
+bool ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
+                                     const char *aFragmentShaderString) {
+  GLuint vertexShader =
+      CreateShader(LOCAL_GL_VERTEX_SHADER, aVertexShaderString);
+  GLuint fragmentShader =
+      CreateShader(LOCAL_GL_FRAGMENT_SHADER, aFragmentShaderString);
 
-  if (!vertexShader || !fragmentShader)
-    return false;
+  if (!vertexShader || !fragmentShader) return false;
 
   GLint result = mGL->fCreateProgram();
   mGL->fAttachShader(result, vertexShader);
   mGL->fAttachShader(result, fragmentShader);
 
-  for (Pair<nsCString, GLuint>& attribute : mProfile.mAttributes) {
+  for (Pair<nsCString, GLuint> &attribute : mProfile.mAttributes) {
     mGL->fBindAttribLocation(result, attribute.second(),
                              attribute.first().get());
   }
@@ -934,7 +939,7 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
 
   GLint success, len;
   mGL->fGetProgramiv(result, LOCAL_GL_LINK_STATUS, &success);
-  mGL->fGetProgramiv(result, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
+  mGL->fGetProgramiv(result, LOCAL_GL_INFO_LOG_LENGTH, (GLint *)&len);
   /* Even if linking is successful, there may still be warnings.  Print them
    * in a debug build.  The > 10 is to catch silly compilers that might put
    * some whitespace in the log but otherwise leave it empty.
@@ -943,11 +948,11 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
 #ifdef DEBUG
       || (len > 10 && gfxEnv::DebugShaders())
 #endif
-      )
-  {
+  ) {
     nsAutoCString log;
     log.SetLength(len);
-    mGL->fGetProgramInfoLog(result, len, (GLint*) &len, (char*) log.BeginWriting());
+    mGL->fGetProgramInfoLog(result, len, (GLint *)&len,
+                            (char *)log.BeginWriting());
 
     if (!success) {
       printf_stderr("=== PROGRAM LINKING FAILED ===\n");
@@ -972,21 +977,18 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
   return true;
 }
 
-GLuint
-ShaderProgramOGL::GetProgram()
-{
+GLuint ShaderProgramOGL::GetProgram() {
   if (mProgramState == STATE_NEW) {
     if (!Initialize()) {
       NS_WARNING("Shader could not be initialised");
     }
   }
-  MOZ_ASSERT(HasInitialized(), "Attempting to get a program that's not been initialized!");
+  MOZ_ASSERT(HasInitialized(),
+             "Attempting to get a program that's not been initialized!");
   return mProgram;
 }
 
-void
-ShaderProgramOGL::SetBlurRadius(float aRX, float aRY)
-{
+void ShaderProgramOGL::SetBlurRadius(float aRX, float aRY) {
   float f[] = {aRX, aRY};
   SetUniform(KnownUniform::BlurRadius, 2, f);
 
@@ -995,21 +997,22 @@ ShaderProgramOGL::SetBlurRadius(float aRX, float aRY)
   for (int i = 0; i < GAUSSIAN_KERNEL_HALF_WIDTH; i++) {
     float x = i * GAUSSIAN_KERNEL_STEP;
     float sigma = 1.0f;
-    gaussianKernel[i] = exp(-x * x / (2 * sigma * sigma)) / sqrt(2 * M_PI * sigma * sigma);
+    gaussianKernel[i] =
+        exp(-x * x / (2 * sigma * sigma)) / sqrt(2 * M_PI * sigma * sigma);
     sum += gaussianKernel[i] * (i == 0 ? 1 : 2);
   }
   for (int i = 0; i < GAUSSIAN_KERNEL_HALF_WIDTH; i++) {
     gaussianKernel[i] /= sum;
   }
-  SetArrayUniform(KnownUniform::BlurGaussianKernel, GAUSSIAN_KERNEL_HALF_WIDTH, gaussianKernel);
+  SetArrayUniform(KnownUniform::BlurGaussianKernel, GAUSSIAN_KERNEL_HALF_WIDTH,
+                  gaussianKernel);
 }
 
-void
-ShaderProgramOGL::SetYUVColorSpace(YUVColorSpace aYUVColorSpace)
-{
-  const float* yuvToRgb = gfxUtils::YuvToRgbMatrix3x3ColumnMajor(aYUVColorSpace);
+void ShaderProgramOGL::SetYUVColorSpace(YUVColorSpace aYUVColorSpace) {
+  const float *yuvToRgb =
+      gfxUtils::YuvToRgbMatrix3x3ColumnMajor(aYUVColorSpace);
   SetMatrix3fvUniform(KnownUniform::YuvColorMatrix, yuvToRgb);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

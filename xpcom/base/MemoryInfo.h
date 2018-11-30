@@ -19,11 +19,9 @@
 
 namespace mozilla {
 
-class MemoryInfo final
-{
-public:
-  enum class Perm : uint8_t
-  {
+class MemoryInfo final {
+ public:
+  enum class Perm : uint8_t {
     Read,
     Write,
     Execute,
@@ -32,8 +30,7 @@ public:
     NoCache,
     WriteCombine,
   };
-  enum class PageType : uint8_t
-  {
+  enum class PageType : uint8_t {
     Image,
     Mapped,
     Private,
@@ -64,7 +61,7 @@ public:
   // single allocation. This restriction is enforced in debug builds.
   static MemoryInfo Get(const void* aPtr, size_t aSize);
 
-private:
+ private:
   uintptr_t mStart = 0;
   uintptr_t mEnd = 0;
 
@@ -78,6 +75,6 @@ private:
   PermSet mPerms{};
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_MemoryInfo_h
+#endif  // mozilla_MemoryInfo_h

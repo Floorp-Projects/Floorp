@@ -15,8 +15,7 @@ namespace a11y {
 
 typedef class ImageAccessible ImageAccessibleWrap;
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

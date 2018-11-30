@@ -17,9 +17,8 @@ namespace gfx {
 class NativeFontResourceFontconfig;
 class UnscaledFontFontconfig;
 
-class ScaledFontFontconfig : public ScaledFontBase
-{
-public:
+class ScaledFontFontconfig : public ScaledFontBase {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontFontconfig, override)
   ScaledFontFontconfig(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
                        const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
@@ -35,25 +34,25 @@ public:
 
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
 
-  bool GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
-                                Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
-                                std::vector<FontVariation>* aOutVariations) override;
+  bool GetWRFontInstanceOptions(
+      Maybe<wr::FontInstanceOptions>* aOutOptions,
+      Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
+      std::vector<FontVariation>* aOutVariations) override;
 
   bool HasVariationSettings() override;
 
-private:
+ private:
   friend class NativeFontResourceFontconfig;
   friend class UnscaledFontFontconfig;
 
-  struct InstanceData
-  {
+  struct InstanceData {
     enum {
-      ANTIALIAS       = 1 << 0,
-      AUTOHINT        = 1 << 1,
+      ANTIALIAS = 1 << 0,
+      AUTOHINT = 1 << 1,
       EMBEDDED_BITMAP = 1 << 2,
-      EMBOLDEN        = 1 << 3,
+      EMBOLDEN = 1 << 3,
       VERTICAL_LAYOUT = 1 << 4,
-      HINT_METRICS    = 1 << 5
+      HINT_METRICS = 1 << 5
     };
 
     InstanceData(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern);
@@ -72,7 +71,7 @@ private:
   FcPattern* mPattern;
 };
 
-}
-}
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_SCALEDFONTFONTCONFIG_H_ */

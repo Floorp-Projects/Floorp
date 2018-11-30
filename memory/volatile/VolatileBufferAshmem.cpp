@@ -22,20 +22,16 @@ extern "C" int posix_memalign(void** memptr, size_t alignment, size_t size);
 namespace mozilla {
 
 VolatileBuffer::VolatileBuffer()
-  : mMutex("VolatileBuffer")
-  , mBuf(nullptr)
-  , mSize(0)
-  , mLockCount(0)
-  , mFd(-1)
-{
-}
+    : mMutex("VolatileBuffer"),
+      mBuf(nullptr),
+      mSize(0),
+      mLockCount(0),
+      mFd(-1) {}
 
-bool
-VolatileBuffer::Init(size_t aSize, size_t aAlignment)
-{
+bool VolatileBuffer::Init(size_t aSize, size_t aAlignment) {
   MOZ_ASSERT(!mSize && !mBuf, "Init called twice");
-  MOZ_ASSERT(!(aAlignment % sizeof(void *)),
-         "Alignment must be multiple of pointer size");
+  MOZ_ASSERT(!(aAlignment % sizeof(void*)),
+             "Alignment must be multiple of pointer size");
 
   mSize = aSize;
   if (aSize < MIN_VOLATILE_ALLOC_SIZE) {
@@ -71,8 +67,7 @@ heap_alloc:
   return !!mBuf;
 }
 
-VolatileBuffer::~VolatileBuffer()
-{
+VolatileBuffer::~VolatileBuffer() {
   MOZ_ASSERT(mLockCount == 0, "Being destroyed with non-zero lock count?");
 
   if (OnHeap()) {
@@ -83,9 +78,7 @@ VolatileBuffer::~VolatileBuffer()
   }
 }
 
-bool
-VolatileBuffer::Lock(void** aBuf)
-{
+bool VolatileBuffer::Lock(void** aBuf) {
   MutexAutoLock lock(mMutex);
 
   MOZ_ASSERT(mBuf, "Attempting to lock an uninitialized VolatileBuffer");
@@ -96,13 +89,11 @@ VolatileBuffer::Lock(void** aBuf)
   }
 
   // Zero offset and zero length means we want to pin/unpin the entire thing.
-  struct ashmem_pin pin = { 0, 0 };
+  struct ashmem_pin pin = {0, 0};
   return ioctl(mFd, ASHMEM_PIN, &pin) == ASHMEM_NOT_PURGED;
 }
 
-void
-VolatileBuffer::Unlock()
-{
+void VolatileBuffer::Unlock() {
   MutexAutoLock lock(mMutex);
 
   MOZ_ASSERT(mLockCount > 0, "VolatileBuffer unlocked too many times!");
@@ -110,25 +101,18 @@ VolatileBuffer::Unlock()
     return;
   }
 
-  struct ashmem_pin pin = { 0, 0 };
+  struct ashmem_pin pin = {0, 0};
   ioctl(mFd, ASHMEM_UNPIN, &pin);
 }
 
-bool
-VolatileBuffer::OnHeap() const
-{
-  return mFd < 0;
-}
+bool VolatileBuffer::OnHeap() const { return mFd < 0; }
 
-size_t
-VolatileBuffer::HeapSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t VolatileBuffer::HeapSizeOfExcludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   return OnHeap() ? aMallocSizeOf(mBuf) : 0;
 }
 
-size_t
-VolatileBuffer::NonHeapSizeOfExcludingThis() const
-{
+size_t VolatileBuffer::NonHeapSizeOfExcludingThis() const {
   if (OnHeap()) {
     return 0;
   }
@@ -136,4 +120,4 @@ VolatileBuffer::NonHeapSizeOfExcludingThis() const
   return (mSize + (PAGE_SIZE - 1)) & PAGE_MASK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

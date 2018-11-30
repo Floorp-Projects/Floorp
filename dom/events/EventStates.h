@@ -19,34 +19,25 @@ namespace mozilla {
  * informing the layout/style engine of the change.
  * Event states are associated with pseudo-classes.
  */
-class EventStates
-{
-public:
+class EventStates {
+ public:
   typedef uint64_t InternalType;
   typedef uint64_t ServoType;
 
-  constexpr EventStates()
-    : mStates(0)
-  {
-  }
+  constexpr EventStates() : mStates(0) {}
 
   // NOTE: the ideal scenario would be to have the default constructor public
   // setting mStates to 0 and this constructor (without = 0) private.
   // In that case, we could be sure that only macros at the end were creating
   // EventStates instances with mStates set to something else than 0.
   // Unfortunately, this constructor is needed at at least two places now.
-  explicit constexpr EventStates(InternalType aStates)
-    : mStates(aStates)
-  {
-  }
+  explicit constexpr EventStates(InternalType aStates) : mStates(aStates) {}
 
-  EventStates constexpr operator|(const EventStates& aEventStates) const
-  {
+  EventStates constexpr operator|(const EventStates& aEventStates) const {
     return EventStates(mStates | aEventStates.mStates);
   }
 
-  EventStates& operator|=(const EventStates& aEventStates)
-  {
+  EventStates& operator|=(const EventStates& aEventStates) {
     mStates |= aEventStates.mStates;
     return *this;
   }
@@ -54,39 +45,30 @@ public:
   // NOTE: calling if (eventStates1 & eventStates2) will not build.
   // This might work correctly if operator bool() is defined
   // but using HasState, HasAllStates or HasAtLeastOneOfStates is recommended.
-  EventStates constexpr operator&(const EventStates& aEventStates) const
-  {
+  EventStates constexpr operator&(const EventStates& aEventStates) const {
     return EventStates(mStates & aEventStates.mStates);
   }
 
-  EventStates& operator&=(const EventStates& aEventStates)
-  {
+  EventStates& operator&=(const EventStates& aEventStates) {
     mStates &= aEventStates.mStates;
     return *this;
   }
 
-  bool operator==(const EventStates& aEventStates) const
-  {
+  bool operator==(const EventStates& aEventStates) const {
     return mStates == aEventStates.mStates;
   }
 
-  bool operator!=(const EventStates& aEventStates) const
-  {
+  bool operator!=(const EventStates& aEventStates) const {
     return mStates != aEventStates.mStates;
   }
 
-  EventStates operator~() const
-  {
-    return EventStates(~mStates);
-  }
+  EventStates operator~() const { return EventStates(~mStates); }
 
-  EventStates operator^(const EventStates& aEventStates) const
-  {
+  EventStates operator^(const EventStates& aEventStates) const {
     return EventStates(mStates ^ aEventStates.mStates);
   }
 
-  EventStates& operator^=(const EventStates& aEventStates)
-  {
+  EventStates& operator^=(const EventStates& aEventStates) {
     mStates ^= aEventStates.mStates;
     return *this;
   }
@@ -97,10 +79,7 @@ public:
    *
    * @return Whether if the object is empty.
    */
-  bool IsEmpty() const
-  {
-    return mStates == 0;
-  }
+  bool IsEmpty() const { return mStates == 0; }
 
   /**
    * Returns true if the EventStates instance contains the state
@@ -111,16 +90,16 @@ public:
    *
    * @return Whether the object has the state from aEventStates
    */
-  bool HasState(EventStates aEventStates) const
-  {
+  bool HasState(EventStates aEventStates) const {
 #ifdef DEBUG
     // If aEventStates.mStates is a power of two, it contains only one state
     // (or none, but we don't really care).
     if ((aEventStates.mStates & (aEventStates.mStates - 1))) {
-      NS_ERROR("When calling HasState, "
-               "EventStates object has to contain only one state!");
+      NS_ERROR(
+          "When calling HasState, "
+          "EventStates object has to contain only one state!");
     }
-#endif // DEBUG
+#endif  // DEBUG
     return mStates & aEventStates.mStates;
   }
 
@@ -132,8 +111,7 @@ public:
    *
    * @return Whether the object has at least one state from aEventStates
    */
-  bool HasAtLeastOneOfStates(EventStates aEventStates) const
-  {
+  bool HasAtLeastOneOfStates(EventStates aEventStates) const {
     return mStates & aEventStates.mStates;
   }
 
@@ -145,31 +123,25 @@ public:
    *
    * @return Whether the object has all states from aEventStates
    */
-  bool HasAllStates(EventStates aEventStates) const
-  {
+  bool HasAllStates(EventStates aEventStates) const {
     return (mStates & aEventStates.mStates) == aEventStates.mStates;
   }
 
   // We only need that method for InspectorUtils::GetContentState.
   // If InspectorUtils::GetContentState is removed, this method should
   // be removed.
-  InternalType GetInternalValue() const {
-    return mStates;
-  }
+  InternalType GetInternalValue() const { return mStates; }
 
   /**
    * Method used to get the appropriate state representation for Servo.
    */
-  ServoType ServoValue() const
-  {
-    return mStates;
-  }
+  ServoType ServoValue() const { return mStates; }
 
-private:
+ private:
   InternalType mStates;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 /**
  * The following macros are creating EventStates instance with different
@@ -179,7 +151,7 @@ private:
  */
 
 // Helper to define a new EventStates macro.
-#define NS_DEFINE_EVENT_STATE_MACRO(_val)               \
+#define NS_DEFINE_EVENT_STATE_MACRO(_val) \
   (mozilla::EventStates(mozilla::EventStates::InternalType(1) << _val))
 
 /*
@@ -192,47 +164,48 @@ private:
  * the infrastructure to statically-assert that these match up. If you
  * need to change these, please notify somebody involved with Stylo.
  *
- * [1] https://github.com/servo/servo/blob/master/components/style/element_state.rs
+ * [1]
+ * https://github.com/servo/servo/blob/master/components/style/element_state.rs
  */
 
 // Mouse is down on content.
-#define NS_EVENT_STATE_ACTIVE        NS_DEFINE_EVENT_STATE_MACRO(0)
+#define NS_EVENT_STATE_ACTIVE NS_DEFINE_EVENT_STATE_MACRO(0)
 // Content has focus.
-#define NS_EVENT_STATE_FOCUS         NS_DEFINE_EVENT_STATE_MACRO(1)
+#define NS_EVENT_STATE_FOCUS NS_DEFINE_EVENT_STATE_MACRO(1)
 // Mouse is hovering over content.
-#define NS_EVENT_STATE_HOVER         NS_DEFINE_EVENT_STATE_MACRO(2)
+#define NS_EVENT_STATE_HOVER NS_DEFINE_EVENT_STATE_MACRO(2)
 // Content is enabled (and can be disabled).
-#define NS_EVENT_STATE_ENABLED       NS_DEFINE_EVENT_STATE_MACRO(3)
+#define NS_EVENT_STATE_ENABLED NS_DEFINE_EVENT_STATE_MACRO(3)
 // Content is disabled.
-#define NS_EVENT_STATE_DISABLED      NS_DEFINE_EVENT_STATE_MACRO(4)
+#define NS_EVENT_STATE_DISABLED NS_DEFINE_EVENT_STATE_MACRO(4)
 // Content is checked.
-#define NS_EVENT_STATE_CHECKED       NS_DEFINE_EVENT_STATE_MACRO(5)
+#define NS_EVENT_STATE_CHECKED NS_DEFINE_EVENT_STATE_MACRO(5)
 // Content is in the indeterminate state.
 #define NS_EVENT_STATE_INDETERMINATE NS_DEFINE_EVENT_STATE_MACRO(6)
 // Content shows its placeholder
 #define NS_EVENT_STATE_PLACEHOLDERSHOWN NS_DEFINE_EVENT_STATE_MACRO(7)
 // Content is URL's target (ref).
-#define NS_EVENT_STATE_URLTARGET     NS_DEFINE_EVENT_STATE_MACRO(8)
+#define NS_EVENT_STATE_URLTARGET NS_DEFINE_EVENT_STATE_MACRO(8)
 // Content is the full screen element, or a frame containing the
 // current fullscreen element.
-#define NS_EVENT_STATE_FULLSCREEN    NS_DEFINE_EVENT_STATE_MACRO(9)
+#define NS_EVENT_STATE_FULLSCREEN NS_DEFINE_EVENT_STATE_MACRO(9)
 // Content is valid (and can be invalid).
-#define NS_EVENT_STATE_VALID         NS_DEFINE_EVENT_STATE_MACRO(10)
+#define NS_EVENT_STATE_VALID NS_DEFINE_EVENT_STATE_MACRO(10)
 // Content is invalid.
-#define NS_EVENT_STATE_INVALID       NS_DEFINE_EVENT_STATE_MACRO(11)
+#define NS_EVENT_STATE_INVALID NS_DEFINE_EVENT_STATE_MACRO(11)
 // UI friendly version of :valid pseudo-class.
 #define NS_EVENT_STATE_MOZ_UI_VALID NS_DEFINE_EVENT_STATE_MACRO(12)
 // UI friendly version of :invalid pseudo-class.
 #define NS_EVENT_STATE_MOZ_UI_INVALID NS_DEFINE_EVENT_STATE_MACRO(13)
 // Content could not be rendered (image/object/etc).
-#define NS_EVENT_STATE_BROKEN        NS_DEFINE_EVENT_STATE_MACRO(14)
+#define NS_EVENT_STATE_BROKEN NS_DEFINE_EVENT_STATE_MACRO(14)
 // Content disabled by the user (images turned off, say).
-#define NS_EVENT_STATE_USERDISABLED  NS_DEFINE_EVENT_STATE_MACRO(15)
+#define NS_EVENT_STATE_USERDISABLED NS_DEFINE_EVENT_STATE_MACRO(15)
 // Content suppressed by the user (ad blocking, etc).
-#define NS_EVENT_STATE_SUPPRESSED    NS_DEFINE_EVENT_STATE_MACRO(16)
+#define NS_EVENT_STATE_SUPPRESSED NS_DEFINE_EVENT_STATE_MACRO(16)
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet).
-#define NS_EVENT_STATE_LOADING       NS_DEFINE_EVENT_STATE_MACRO(17)
+#define NS_EVENT_STATE_LOADING NS_DEFINE_EVENT_STATE_MACRO(17)
 // Handler for the content has been blocked.
 #define NS_EVENT_STATE_HANDLER_BLOCKED NS_DEFINE_EVENT_STATE_MACRO(18)
 // Handler for the content has been disabled.
@@ -240,28 +213,28 @@ private:
 // Handler for the content has crashed
 #define NS_EVENT_STATE_HANDLER_CRASHED NS_DEFINE_EVENT_STATE_MACRO(20)
 // Content is required.
-#define NS_EVENT_STATE_REQUIRED      NS_DEFINE_EVENT_STATE_MACRO(21)
+#define NS_EVENT_STATE_REQUIRED NS_DEFINE_EVENT_STATE_MACRO(21)
 // Content is optional (and can be required).
-#define NS_EVENT_STATE_OPTIONAL      NS_DEFINE_EVENT_STATE_MACRO(22)
+#define NS_EVENT_STATE_OPTIONAL NS_DEFINE_EVENT_STATE_MACRO(22)
 // Element is either a defined custom element or uncustomized element.
-#define NS_EVENT_STATE_DEFINED       NS_DEFINE_EVENT_STATE_MACRO(23)
+#define NS_EVENT_STATE_DEFINED NS_DEFINE_EVENT_STATE_MACRO(23)
 // Link has been visited.
-#define NS_EVENT_STATE_VISITED       NS_DEFINE_EVENT_STATE_MACRO(24)
+#define NS_EVENT_STATE_VISITED NS_DEFINE_EVENT_STATE_MACRO(24)
 // Link hasn't been visited.
-#define NS_EVENT_STATE_UNVISITED     NS_DEFINE_EVENT_STATE_MACRO(25)
+#define NS_EVENT_STATE_UNVISITED NS_DEFINE_EVENT_STATE_MACRO(25)
 // Drag is hovering over content.
-#define NS_EVENT_STATE_DRAGOVER      NS_DEFINE_EVENT_STATE_MACRO(26)
+#define NS_EVENT_STATE_DRAGOVER NS_DEFINE_EVENT_STATE_MACRO(26)
 // Content value is in-range (and can be out-of-range).
-#define NS_EVENT_STATE_INRANGE       NS_DEFINE_EVENT_STATE_MACRO(27)
+#define NS_EVENT_STATE_INRANGE NS_DEFINE_EVENT_STATE_MACRO(27)
 // Content value is out-of-range.
-#define NS_EVENT_STATE_OUTOFRANGE    NS_DEFINE_EVENT_STATE_MACRO(28)
+#define NS_EVENT_STATE_OUTOFRANGE NS_DEFINE_EVENT_STATE_MACRO(28)
 // These two are temporary (see bug 302188)
 // Content is read-only.
-#define NS_EVENT_STATE_MOZ_READONLY  NS_DEFINE_EVENT_STATE_MACRO(29)
+#define NS_EVENT_STATE_MOZ_READONLY NS_DEFINE_EVENT_STATE_MACRO(29)
 // Content is editable.
 #define NS_EVENT_STATE_MOZ_READWRITE NS_DEFINE_EVENT_STATE_MACRO(30)
 // Content is the default one (meaning depends of the context).
-#define NS_EVENT_STATE_DEFAULT       NS_DEFINE_EVENT_STATE_MACRO(31)
+#define NS_EVENT_STATE_DEFAULT NS_DEFINE_EVENT_STATE_MACRO(31)
 // Content is a submit control and the form isn't valid.
 #define NS_EVENT_STATE_MOZ_SUBMITINVALID NS_DEFINE_EVENT_STATE_MACRO(32)
 // Content is in the optimum region.
@@ -276,7 +249,7 @@ private:
 #define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(37)
 #define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(38)
 // Content has focus and should show a ring.
-#define NS_EVENT_STATE_FOCUSRING     NS_DEFINE_EVENT_STATE_MACRO(39)
+#define NS_EVENT_STATE_FOCUSRING NS_DEFINE_EVENT_STATE_MACRO(39)
 // Handler for click to play plugin
 #define NS_EVENT_STATE_TYPE_CLICK_TO_PLAY NS_DEFINE_EVENT_STATE_MACRO(40)
 // Handler for click to play plugin (vulnerable w/update)
@@ -324,10 +297,9 @@ private:
 
 #define DIRECTION_STATES (NS_EVENT_STATE_LTR | NS_EVENT_STATE_RTL)
 
-#define DIR_ATTR_STATES (NS_EVENT_STATE_HAS_DIR_ATTR |          \
-                         NS_EVENT_STATE_DIR_ATTR_LTR |          \
-                         NS_EVENT_STATE_DIR_ATTR_RTL |          \
-                         NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO)
+#define DIR_ATTR_STATES                                        \
+  (NS_EVENT_STATE_HAS_DIR_ATTR | NS_EVENT_STATE_DIR_ATTR_LTR | \
+   NS_EVENT_STATE_DIR_ATTR_RTL | NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO)
 
 #define DISABLED_STATES (NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED)
 
@@ -340,31 +312,20 @@ private:
 // setting or clearing the bit when an Element is added or removed from a
 // document (e.g. in BindToTree and UnbindFromTree), if that is an
 // appropriate thing to do for your state bit.
-#define MANUALLY_MANAGED_STATES (             \
-  NS_EVENT_STATE_AUTOFILL |                   \
-  NS_EVENT_STATE_AUTOFILL_PREVIEW             \
-)
+#define MANUALLY_MANAGED_STATES \
+  (NS_EVENT_STATE_AUTOFILL | NS_EVENT_STATE_AUTOFILL_PREVIEW)
 
 // Event states that are managed externally to an element (by the
 // EventStateManager, or by other code).  As opposed to those in
 // INTRINSIC_STATES, which are are computed by the element itself
 // and returned from Element::IntrinsicState.
-#define EXTERNALLY_MANAGED_STATES (           \
-  MANUALLY_MANAGED_STATES |                   \
-  DIR_ATTR_STATES |                           \
-  DISABLED_STATES |                           \
-  REQUIRED_STATES |                           \
-  NS_EVENT_STATE_ACTIVE |                     \
-  NS_EVENT_STATE_DEFINED |                    \
-  NS_EVENT_STATE_DRAGOVER |                   \
-  NS_EVENT_STATE_FOCUS |                      \
-  NS_EVENT_STATE_FOCUSRING |                  \
-  NS_EVENT_STATE_FOCUS_WITHIN |               \
-  NS_EVENT_STATE_FULLSCREEN |                 \
-  NS_EVENT_STATE_HOVER |                      \
-  NS_EVENT_STATE_URLTARGET                    \
-)
+#define EXTERNALLY_MANAGED_STATES                                              \
+  (MANUALLY_MANAGED_STATES | DIR_ATTR_STATES | DISABLED_STATES |               \
+   REQUIRED_STATES | NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_DEFINED |          \
+   NS_EVENT_STATE_DRAGOVER | NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING | \
+   NS_EVENT_STATE_FOCUS_WITHIN | NS_EVENT_STATE_FULLSCREEN |                   \
+   NS_EVENT_STATE_HOVER | NS_EVENT_STATE_URLTARGET)
 
 #define INTRINSIC_STATES (~EXTERNALLY_MANAGED_STATES)
 
-#endif // mozilla_EventStates_h_
+#endif  // mozilla_EventStates_h_

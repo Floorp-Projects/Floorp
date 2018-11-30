@@ -27,7 +27,6 @@ void* samples[kSamplesCapacity];
 std::atomic_int num_samples;
 std::atomic_int done;
 
-
 // Symbolize the samples and write them to disk.
 void dump(void*) {
   HMODULE dbghelp = LoadLibraryA("dbghelp.dll");
@@ -66,8 +65,7 @@ void dump(void*) {
 
   for (void* sample : samples) {
     // Only print the first call of a function.
-    if (seen.count(sample))
-      continue;
+    if (seen.count(sample)) continue;
     seen.insert(sample);
 
     SYMBOL_INFO* symbol = reinterpret_cast<SYMBOL_INFO*>(sym_buf);
@@ -78,10 +76,8 @@ void dump(void*) {
     if (sym_from_addr(::GetCurrentProcess(), reinterpret_cast<DWORD64>(sample),
                       &offset, symbol)) {
       const char* name = symbol->Name;
-      if (name[0] == '_')
-        name++;
-      if (seen_names.count(name))
-        continue;
+      if (name[0] == '_') name++;
+      if (seen_names.count(name)) continue;
       seen_names.insert(name);
 
       fprintf(f, "%s\n", name);
@@ -95,10 +91,9 @@ void dump(void*) {
 
 extern "C" {
 
-MOZ_EXPORT void
-__cyg_profile_func_enter(void* this_fn, void* call_site_unused) {
-  if (done)
-    return;
+MOZ_EXPORT void __cyg_profile_func_enter(void* this_fn,
+                                         void* call_site_unused) {
+  if (done) return;
 
   // Get our index for the samples array atomically.
   int n = num_samples++;
@@ -115,7 +110,6 @@ __cyg_profile_func_enter(void* this_fn, void* call_site_unused) {
   }
 }
 
-MOZ_EXPORT void
-__cyg_profile_func_exit(void* this_fn, void* call_site) {}
+MOZ_EXPORT void __cyg_profile_func_exit(void* this_fn, void* call_site) {}
 
 }  // extern "C"

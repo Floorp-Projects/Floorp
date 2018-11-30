@@ -18,9 +18,8 @@ class MacIOSurface;
 namespace mozilla {
 namespace gfx {
 
-class VRSession
-{
-public:
+class VRSession {
+ public:
   VRSession();
   virtual ~VRSession() = default;
 
@@ -37,7 +36,7 @@ public:
   bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer);
   bool ShouldQuit() const;
 
-protected:
+ protected:
   bool mShouldQuit;
 #if defined(XP_WIN)
   virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
@@ -53,10 +52,11 @@ protected:
   virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
                            const VRLayerTextureHandle& aTexture) = 0;
 #endif
-  void UpdateTrigger(VRControllerState& aState, uint32_t aButtonIndex, float aValue, float aThreshold);
+  void UpdateTrigger(VRControllerState& aState, uint32_t aButtonIndex,
+                     float aValue, float aThreshold);
 };
 
-} // namespace mozilla
-} // namespace gfx
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // GFX_VR_SERVICE_VRSESSION_H
+#endif  // GFX_VR_SERVICE_VRSESSION_H

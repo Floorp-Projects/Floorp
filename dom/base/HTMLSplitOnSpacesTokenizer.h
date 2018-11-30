@@ -11,6 +11,6 @@
 #include "nsContentUtils.h"
 
 typedef nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
-                                                    HTMLSplitOnSpacesTokenizer;
+    HTMLSplitOnSpacesTokenizer;
 
 #endif

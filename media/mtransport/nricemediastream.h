@@ -57,7 +57,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "m_cpp_utils.h"
 
-
 namespace mozilla {
 
 typedef struct nr_ice_ctx_ nr_ice_ctx;
@@ -75,19 +74,9 @@ struct NrIceAddr {
 /* A summary of a candidate, for use in asking which candidate
    pair is active */
 struct NrIceCandidate {
-  enum Type {
-    ICE_HOST,
-    ICE_SERVER_REFLEXIVE,
-    ICE_PEER_REFLEXIVE,
-    ICE_RELAYED
-  };
+  enum Type { ICE_HOST, ICE_SERVER_REFLEXIVE, ICE_PEER_REFLEXIVE, ICE_RELAYED };
 
-  enum TcpType {
-    ICE_NONE,
-    ICE_ACTIVE,
-    ICE_PASSIVE,
-    ICE_SO
-  };
+  enum TcpType { ICE_NONE, ICE_ACTIVE, ICE_PASSIVE, ICE_SO };
 
   NrIceAddr cand_addr;
   NrIceAddr local_addr;
@@ -100,7 +89,6 @@ struct NrIceCandidate {
 };
 
 struct NrIceCandidatePair {
-
   enum State {
     STATE_FROZEN,
     STATE_WAITING,
@@ -138,16 +126,13 @@ struct NrIceCandidatePair {
 
 class NrIceMediaStream {
  public:
-  NrIceMediaStream(NrIceCtx *ctx,
-                   const std::string& id,
-                   const std::string& name,
-                   size_t components);
+  NrIceMediaStream(NrIceCtx* ctx, const std::string& id,
+                   const std::string& name, size_t components);
 
   nsresult SetIceCredentials(const std::string& ufrag, const std::string& pwd);
-  nsresult ConnectToPeer(const std::string& ufrag,
-                         const std::string& pwd,
+  nsresult ConnectToPeer(const std::string& ufrag, const std::string& pwd,
                          const std::vector<std::string>& peer_attrs);
-  enum State { ICE_CONNECTING, ICE_OPEN, ICE_CLOSED};
+  enum State { ICE_CONNECTING, ICE_OPEN, ICE_CLOSED };
 
   State state() const { return state_; }
 
@@ -174,23 +159,22 @@ class NrIceMediaStream {
 
   // Get the candidate pair currently active. It's the
   // caller's responsibility to free these.
-  nsresult GetActivePair(int component,
-                         UniquePtr<NrIceCandidate>* local,
+  nsresult GetActivePair(int component, UniquePtr<NrIceCandidate>* local,
                          UniquePtr<NrIceCandidate>* remote);
 
   // Get the current ICE consent send status plus the timeval of the last
   // consent update time.
-  nsresult GetConsentStatus(int component, bool *can_send, struct timeval *ts);
+  nsresult GetConsentStatus(int component, bool* can_send, struct timeval* ts);
 
   // The number of components
   size_t components() const { return components_; }
 
-  bool HasStream(nr_ice_media_stream *stream) const;
+  bool HasStream(nr_ice_media_stream* stream) const;
   // Signals to indicate events. API users can (and should)
   // register for these.
 
   // Send a packet
-  nsresult SendPacket(int component_id, const unsigned char *data, size_t len);
+  nsresult SendPacket(int component_id, const unsigned char* data, size_t len);
 
   // Set your state to ready. Called by the NrIceCtx;
   void Ready();
@@ -206,13 +190,13 @@ class NrIceMediaStream {
   // the candidate belongs to.
   const std::string& GetId() const { return id_; }
 
-  sigslot::signal2<NrIceMediaStream *, const std::string& >
-  SignalCandidate;  // A new ICE candidate:
+  sigslot::signal2<NrIceMediaStream*, const std::string&>
+      SignalCandidate;  // A new ICE candidate:
 
-  sigslot::signal1<NrIceMediaStream *> SignalReady;  // Candidate pair ready.
-  sigslot::signal1<NrIceMediaStream *> SignalFailed;  // Candidate pair failed.
-  sigslot::signal4<NrIceMediaStream *, int, const unsigned char *, int>
-  SignalPacketReceived;  // Incoming packet
+  sigslot::signal1<NrIceMediaStream*> SignalReady;   // Candidate pair ready.
+  sigslot::signal1<NrIceMediaStream*> SignalFailed;  // Candidate pair failed.
+  sigslot::signal4<NrIceMediaStream*, int, const unsigned char*, int>
+      SignalPacketReceived;  // Incoming packet
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceMediaStream)
 
@@ -221,19 +205,18 @@ class NrIceMediaStream {
 
   DISALLOW_COPY_ASSIGN(NrIceMediaStream);
 
-  void CloseStream(nr_ice_media_stream **stream);
-  void DeferredCloseOldStream(const nr_ice_media_stream *old);
+  void CloseStream(nr_ice_media_stream** stream);
+  void DeferredCloseOldStream(const nr_ice_media_stream* old);
 
   State state_;
-  nr_ice_ctx *ctx_;
-  nr_ice_peer_ctx *ctx_peer_;
+  nr_ice_ctx* ctx_;
+  nr_ice_peer_ctx* ctx_peer_;
   const std::string name_;
   const size_t components_;
-  nr_ice_media_stream *stream_;
-  nr_ice_media_stream *old_stream_;
+  nr_ice_media_stream* stream_;
+  nr_ice_media_stream* old_stream_;
   const std::string id_;
 };
 
-
-}  // close namespace
+}  // namespace mozilla
 #endif

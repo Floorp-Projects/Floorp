@@ -23,11 +23,10 @@ class SVGMatrix;
 class SVGIRect;
 struct SVGBoundingBoxOptions;
 
-class SVGTransformableElement : public nsSVGElement
-{
-public:
+class SVGTransformableElement : public nsSVGElement {
+ public:
   explicit SVGTransformableElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
-    : nsSVGElement(std::move(aNodeInfo)) {}
+      : nsSVGElement(std::move(aNodeInfo)) {}
   virtual ~SVGTransformableElement() {}
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
@@ -41,8 +40,8 @@ public:
                                      ErrorResult& rv);
   already_AddRefed<SVGMatrix> GetCTM();
   already_AddRefed<SVGMatrix> GetScreenCTM();
-  already_AddRefed<SVGMatrix> GetTransformToElement(SVGGraphicsElement& aElement,
-                                                    ErrorResult& rv);
+  already_AddRefed<SVGMatrix> GetTransformToElement(
+      SVGGraphicsElement& aElement, ErrorResult& rv);
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
@@ -50,26 +49,24 @@ public:
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
 
-
   // nsSVGElement overrides
   virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
-
   virtual gfxMatrix PrependLocalTransformsTo(
-    const gfxMatrix &aMatrix,
-    SVGTransformTypes aWhich = eAllTransforms) const override;
+      const gfxMatrix& aMatrix,
+      SVGTransformTypes aWhich = eAllTransforms) const override;
   virtual const gfx::Matrix* GetAnimateMotionTransform() const override;
   virtual void SetAnimateMotionTransform(const gfx::Matrix* aMatrix) override;
 
-  virtual nsSVGAnimatedTransformList*
-    GetAnimatedTransformList(uint32_t aFlags = 0) override;
+  virtual nsSVGAnimatedTransformList* GetAnimatedTransformList(
+      uint32_t aFlags = 0) override;
   virtual nsStaticAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::transform;
   }
 
   virtual bool IsTransformable() override { return true; }
 
-protected:
+ protected:
   /**
    * Helper for overrides of PrependLocalTransformsTo.  If both arguments are
    * provided they are multiplied in the order in which the arguments appear,
@@ -78,8 +75,8 @@ protected:
    * returned.
    */
   static gfxMatrix GetUserToParentTransform(
-                     const gfx::Matrix* aAnimateMotionTransform,
-                     const nsSVGAnimatedTransformList* aTransforms);
+      const gfx::Matrix* aAnimateMotionTransform,
+      const nsSVGAnimatedTransformList* aTransforms);
 
   nsAutoPtr<nsSVGAnimatedTransformList> mTransforms;
 
@@ -87,7 +84,7 @@ protected:
   nsAutoPtr<gfx::Matrix> mAnimateMotionTransform;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // SVGTransformableElement_h
+#endif  // SVGTransformableElement_h

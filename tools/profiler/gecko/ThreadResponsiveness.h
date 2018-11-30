@@ -16,7 +16,7 @@ class nsIEventTarget;
 
 // This class should only be used for the main thread.
 class ThreadResponsiveness {
-public:
+ public:
   explicit ThreadResponsiveness(nsIEventTarget* aThread, bool aIsMainThread);
 
   ~ThreadResponsiveness();
@@ -29,10 +29,9 @@ public:
     return aStartToNow_ms - *mStartToPrevTracer_ms;
   }
 
-  bool HasData() const {
-    return mStartToPrevTracer_ms.isSome();
-  }
-private:
+  bool HasData() const { return mStartToPrevTracer_ms.isSome(); }
+
+ private:
   RefPtr<CheckResponsivenessTask> mActiveTracerEvent;
   // The time at which the last CheckResponsivenessTask was processed, in
   // milliseconds since process start (i.e. what you get from profiler_time()).
@@ -40,4 +39,3 @@ private:
 };
 
 #endif
-

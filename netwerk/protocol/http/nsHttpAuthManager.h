@@ -13,23 +13,22 @@ namespace net {
 
 class nsHttpAuthCache;
 
-class nsHttpAuthManager : public nsIHttpAuthManager
-{
-public:
+class nsHttpAuthManager : public nsIHttpAuthManager {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHTTPAUTHMANAGER
 
   nsHttpAuthManager();
   MOZ_MUST_USE nsresult Init();
 
-protected:
+ protected:
   virtual ~nsHttpAuthManager() = default;
 
   nsHttpAuthCache *mAuthCache;
   nsHttpAuthCache *mPrivateAuthCache;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // nsHttpAuthManager_h__
+#endif  // nsHttpAuthManager_h__

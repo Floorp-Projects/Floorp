@@ -35,10 +35,9 @@ class nsXBLProtoImplField;
 // Instances of this class are owned by the nsXBLDocumentInfo object returned
 // by XBLDocumentInfo().  Consumers who want to refcount things should refcount
 // that.
-class nsXBLPrototypeBinding final :
-  public mozilla::SupportsWeakPtr<nsXBLPrototypeBinding>
-{
-public:
+class nsXBLPrototypeBinding final
+    : public mozilla::SupportsWeakPtr<nsXBLPrototypeBinding> {
+ public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsXBLPrototypeBinding)
 
   mozilla::dom::Element* GetBindingElement() const { return mBinding; }
@@ -67,22 +66,22 @@ public:
   void SetInheritsStyle(bool aInheritStyle) { mInheritStyle = aInheritStyle; }
 
   nsXBLPrototypeHandler* GetPrototypeHandlers() { return mPrototypeHandler; }
-  void SetPrototypeHandlers(nsXBLPrototypeHandler* aHandler) { mPrototypeHandler = aHandler; }
+  void SetPrototypeHandlers(nsXBLPrototypeHandler* aHandler) {
+    mPrototypeHandler = aHandler;
+  }
 
   nsXBLProtoImplAnonymousMethod* GetConstructor();
   nsresult SetConstructor(nsXBLProtoImplAnonymousMethod* aConstructor);
   nsXBLProtoImplAnonymousMethod* GetDestructor();
   nsresult SetDestructor(nsXBLProtoImplAnonymousMethod* aDestructor);
 
-  nsXBLProtoImplField* FindField(const nsString& aFieldName) const
-  {
+  nsXBLProtoImplField* FindField(const nsString& aFieldName) const {
     return mImplementation ? mImplementation->FindField(aFieldName) : nullptr;
   }
 
   // Resolve all the fields for this binding on the object |obj|.
   // False return means a JS exception was set.
-  bool ResolveAllFields(JSContext* cx, JS::Handle<JSObject*> obj) const
-  {
+  bool ResolveAllFields(JSContext* cx, JS::Handle<JSObject*> obj) const {
     return !mImplementation || mImplementation->ResolveAllFields(cx, obj);
   }
 
@@ -100,8 +99,7 @@ public:
 
   nsresult InitClass(const nsString& aClassName, JSContext* aContext,
                      JS::Handle<JSObject*> aScriptObject,
-                     JS::MutableHandle<JSObject*> aClassObject,
-                     bool* aNew);
+                     JS::MutableHandle<JSObject*> aClassObject, bool* aNew);
 
   nsresult ConstructInterfaceTable(const nsAString& aImpls);
 
@@ -132,27 +130,22 @@ public:
   bool HasStyleSheets() const;
   void AppendStyleSheetsTo(nsTArray<mozilla::StyleSheet*>& aResult) const;
 
-
-  const RawServoAuthorStyles* GetServoStyles() const
-  {
+  const RawServoAuthorStyles* GetServoStyles() const {
     return mResources ? mResources->GetServoStyles() : nullptr;
   }
 
-  void SyncServoStyles()
-  {
+  void SyncServoStyles() {
     MOZ_ASSERT(mResources);
     mResources->SyncServoStyles();
   }
 
-  RawServoAuthorStyles* GetServoStyles()
-  {
+  RawServoAuthorStyles* GetServoStyles() {
     return mResources
-      ? const_cast<RawServoAuthorStyles*>(mResources->GetServoStyles())
-      : nullptr;
+               ? const_cast<RawServoAuthorStyles*>(mResources->GetServoStyles())
+               : nullptr;
   }
 
-  mozilla::ServoStyleRuleMap* GetServoStyleRuleMap()
-  {
+  mozilla::ServoStyleRuleMap* GetServoStyleRuleMap() {
     return mResources ? mResources->GetServoStyleRuleMap() : nullptr;
   }
 
@@ -169,8 +162,7 @@ public:
 
   nsresult ResolveBaseBinding();
 
-  const nsCOMArray<nsXBLKeyEventHandler>* GetKeyEventHandlers()
-  {
+  const nsCOMArray<nsXBLKeyEventHandler>* GetKeyEventHandlers() {
     if (!mKeyHandlersRegistered) {
       CreateKeyHandlers();
       mKeyHandlersRegistered = true;
@@ -179,11 +171,9 @@ public:
     return &mKeyHandlers;
   }
 
-private:
-  nsresult Read(nsIObjectInputStream* aStream,
-                nsXBLDocumentInfo* aDocInfo,
-                nsIDocument* aDocument,
-                uint8_t aFlags);
+ private:
+  nsresult Read(nsIObjectInputStream* aStream, nsXBLDocumentInfo* aDocInfo,
+                nsIDocument* aDocument, uint8_t aFlags);
 
   /**
    * Read a new binding from the stream aStream into the xbl document aDocument.
@@ -196,11 +186,10 @@ private:
    * XBLBinding_Serialize_BindToUntrustedContent indicates that
    * nsXBLPrototypeBinding::mBindToUntrustedContent should be true.
    */
-public:
+ public:
   static nsresult ReadNewBinding(nsIObjectInputStream* aStream,
                                  nsXBLDocumentInfo* aDocInfo,
-                                 nsIDocument* aDocument,
-                                 uint8_t aFlags);
+                                 nsIDocument* aDocument, uint8_t aFlags);
 
   /**
    * Write this binding to the stream.
@@ -213,24 +202,20 @@ public:
    * the child will be inserted into.
    */
   nsresult ReadContentNode(nsIObjectInputStream* aStream,
-                           nsIDocument* aDocument,
-                           nsNodeInfoManager* aNim,
+                           nsIDocument* aDocument, nsNodeInfoManager* aNim,
                            nsIContent** aChild);
 
   /**
    * Write the content node aNode to aStream.
    *
-   * This method is called recursively for each child descendant. For the topmost
-   * call, aNode must be an element.
+   * This method is called recursively for each child descendant. For the
+   * topmost call, aNode must be an element.
    *
    * Text, CDATA and comment nodes are serialized as:
-   *   the constant XBLBinding_Serialize_TextNode, XBLBinding_Serialize_CDATANode
-   *     or XBLBinding_Serialize_CommentNode
-   *   the text for the node
-   * Elements are serialized in the following format:
-   *   node's namespace, written with WriteNamespace
-   *   node's namespace prefix
-   *   node's tag
+   *   the constant XBLBinding_Serialize_TextNode,
+   * XBLBinding_Serialize_CDATANode or XBLBinding_Serialize_CommentNode the text
+   * for the node Elements are serialized in the following format: node's
+   * namespace, written with WriteNamespace node's namespace prefix node's tag
    *   32-bit attribute count
    *   table of attributes:
    *     attribute's namespace, written with WriteNamespace
@@ -251,14 +236,15 @@ public:
 
   /**
    * Read or write a namespace id from or to aStream. If the namespace matches
-   * one of the built-in ones defined in nsNameSpaceManager.h, it will be written as
-   * a single byte with that value. Otherwise, XBLBinding_Serialize_CustomNamespace is
-   * written out, followed by a string written with writeWStringZ.
+   * one of the built-in ones defined in nsNameSpaceManager.h, it will be
+   * written as a single byte with that value. Otherwise,
+   * XBLBinding_Serialize_CustomNamespace is written out, followed by a string
+   * written with writeWStringZ.
    */
   nsresult ReadNamespace(nsIObjectInputStream* aStream, int32_t& aNameSpaceID);
   nsresult WriteNamespace(nsIObjectOutputStream* aStream, int32_t aNameSpaceID);
 
-public:
+ public:
   nsXBLPrototypeBinding();
   ~nsXBLPrototypeBinding();
 
@@ -266,19 +252,17 @@ public:
   // binding.  It may well throw errors (eg on out-of-memory).  Do not confuse
   // this with the Initialize() method, which must be called after the
   // binding's handlers, properties, etc are all set.
-  nsresult Init(const nsACString& aRef,
-                nsXBLDocumentInfo* aInfo,
-                mozilla::dom::Element* aElement,
-                bool aFirstBinding = false);
+  nsresult Init(const nsACString& aRef, nsXBLDocumentInfo* aInfo,
+                mozilla::dom::Element* aElement, bool aFirstBinding = false);
 
-  void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+  void Traverse(nsCycleCollectionTraversalCallback& cb) const;
   void Unlink();
-  void Trace(const TraceCallbacks& aCallbacks, void *aClosure) const;
+  void Trace(const TraceCallbacks& aCallbacks, void* aClosure) const;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-// Internal member functions.
-public:
+  // Internal member functions.
+ public:
   /**
    * GetImmediateChild locates the immediate child of our binding element which
    * has the localname given by aTag and is in the XBL namespace.
@@ -293,9 +277,10 @@ public:
   bool SimpleScopeChain() const { return mSimpleScopeChain; }
   bool BindToUntrustedContent() const { return mBindToUntrustedContent; }
 
-  typedef nsClassHashtable<nsRefPtrHashKey<nsAtom>, nsXBLAttributeEntry> InnerAttributeTable;
+  typedef nsClassHashtable<nsRefPtrHashKey<nsAtom>, nsXBLAttributeEntry>
+      InnerAttributeTable;
 
-protected:
+ protected:
   // Ensure that mAttributeTable has been created.
   void EnsureAttributeTable();
   // Ad an entry to the attribute table
@@ -305,21 +290,26 @@ protected:
   void ConstructAttributeTable(mozilla::dom::Element* aElement);
   void CreateKeyHandlers();
 
-private:
+ private:
   void EnsureResources();
 
-// MEMBER VARIABLES
-protected:
+  // MEMBER VARIABLES
+ protected:
   nsCOMPtr<nsIURI> mBindingURI;
-  nsCOMPtr<nsIURI> mAlternateBindingURI; // Alternate id-less URI that is only non-null on the first binding.
-  RefPtr<mozilla::dom::Element> mBinding; // Strong. We own a ref to our content element in the binding doc.
-  nsAutoPtr<nsXBLPrototypeHandler> mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
+  nsCOMPtr<nsIURI> mAlternateBindingURI;  // Alternate id-less URI that is only
+                                          // non-null on the first binding.
+  RefPtr<mozilla::dom::Element>
+      mBinding;  // Strong. We own a ref to our content element in the binding
+                 // doc.
+  nsAutoPtr<nsXBLPrototypeHandler>
+      mPrototypeHandler;  // Strong. DocInfo owns us, and we own the handlers.
 
   // the url of the base binding
   nsCOMPtr<nsIURI> mBaseBindingURI;
 
-  nsXBLProtoImpl* mImplementation; // Our prototype implementation (includes methods, properties, fields,
-                                   // the constructor, and the destructor).
+  nsXBLProtoImpl* mImplementation;  // Our prototype implementation (includes
+                                    // methods, properties, fields, the
+                                    // constructor, and the destructor).
 
   // Weak.  The docinfo will own our base binding.
   mozilla::WeakPtr<nsXBLPrototypeBinding> mBaseBinding;
@@ -332,58 +322,49 @@ protected:
   // chain for parent elements and go directly to the document.
   bool mSimpleScopeChain;
 
-  nsAutoPtr<nsXBLPrototypeResources> mResources; // If we have any resources, this will be non-null.
+  nsAutoPtr<nsXBLPrototypeResources>
+      mResources;  // If we have any resources, this will be non-null.
 
-  nsXBLDocumentInfo* mXBLDocInfoWeak; // A pointer back to our doc info.  Weak, since it owns us.
+  nsXBLDocumentInfo* mXBLDocInfoWeak;  // A pointer back to our doc info.  Weak,
+                                       // since it owns us.
 
   // A table for attribute containers. Namespace IDs are used as
   // keys in the table. Containers are InnerAttributeTables.
   // This table is used to efficiently handle attribute changes.
-  nsAutoPtr<nsClassHashtable<nsUint32HashKey, InnerAttributeTable>> mAttributeTable;
+  nsAutoPtr<nsClassHashtable<nsUint32HashKey, InnerAttributeTable>>
+      mAttributeTable;
 
-  class IIDHashKey : public PLDHashEntryHdr
-  {
-  public:
+  class IIDHashKey : public PLDHashEntryHdr {
+   public:
     typedef const nsIID& KeyType;
     typedef const nsIID* KeyTypePointer;
 
-    explicit IIDHashKey(const nsIID* aKey)
-      : mKey(*aKey)
-    {}
-    IIDHashKey(const IIDHashKey& aOther)
-      : mKey(aOther.GetKey())
-    {}
-    ~IIDHashKey()
-    {}
+    explicit IIDHashKey(const nsIID* aKey) : mKey(*aKey) {}
+    IIDHashKey(const IIDHashKey& aOther) : mKey(aOther.GetKey()) {}
+    ~IIDHashKey() {}
 
-    KeyType GetKey() const
-    {
-      return mKey;
-    }
-    bool KeyEquals(const KeyTypePointer aKey) const
-    {
+    KeyType GetKey() const { return mKey; }
+    bool KeyEquals(const KeyTypePointer aKey) const {
       return mKey.Equals(*aKey);
     }
 
-    static KeyTypePointer KeyToPointer(KeyType aKey)
-    {
-      return &aKey;
-    }
-    static PLDHashNumber HashKey(const KeyTypePointer aKey)
-    {
+    static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+    static PLDHashNumber HashKey(const KeyTypePointer aKey) {
       // Just use the 32-bit m0 field.
       return aKey->m0;
     }
 
     enum { ALLOW_MEMMOVE = true };
 
-  private:
+   private:
     nsIID mKey;
   };
-  nsInterfaceHashtable<IIDHashKey, nsIContent> mInterfaceTable; // A table of cached interfaces that we support.
+  nsInterfaceHashtable<IIDHashKey, nsIContent>
+      mInterfaceTable;  // A table of cached interfaces that we support.
 
-  int32_t mBaseNameSpaceID;    // If we extend a tagname/namespace, then that information will
-  RefPtr<nsAtom> mBaseTag;  // be stored in here.
+  int32_t mBaseNameSpaceID;  // If we extend a tagname/namespace, then that
+                             // information will
+  RefPtr<nsAtom> mBaseTag;   // be stored in here.
 
   nsCOMArray<nsXBLKeyEventHandler> mKeyHandlers;
 };

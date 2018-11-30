@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef CodeAddressService_h__
 #define CodeAddressService_h__
@@ -29,11 +29,8 @@ namespace mozilla {
 // |DescribeCodeAddressLock| is needed when the callers may be holding a lock
 // used by MozDescribeCodeAddress.  |DescribeCodeAddressLock| must implement
 // static methods IsLocked(), Unlock() and Lock().
-template <class StringTable,
-          class StringAlloc,
-          class DescribeCodeAddressLock>
-class CodeAddressService
-{
+template <class StringTable, class StringAlloc, class DescribeCodeAddressLock>
+class CodeAddressService {
   // GetLocation() is the key function in this class.  It's basically a wrapper
   // around MozDescribeCodeAddress.
   //
@@ -54,33 +51,34 @@ class CodeAddressService
 
   StringTable mLibraryStrings;
 
-  struct Entry
-  {
+  struct Entry {
     const void* mPc;
-    char*       mFunction;  // owned by the Entry;  may be null
-    const char* mLibrary;   // owned by mLibraryStrings;  never null
-                            //   in a non-empty entry is in use
-    ptrdiff_t   mLOffset;
-    char*       mFileName;  // owned by the Entry; may be null
-    uint32_t    mLineNo:31;
-    uint32_t    mInUse:1;   // is the entry used?
+    char* mFunction;       // owned by the Entry;  may be null
+    const char* mLibrary;  // owned by mLibraryStrings;  never null
+                           //   in a non-empty entry is in use
+    ptrdiff_t mLOffset;
+    char* mFileName;  // owned by the Entry; may be null
+    uint32_t mLineNo : 31;
+    uint32_t mInUse : 1;  // is the entry used?
 
     Entry()
-      : mPc(0), mFunction(nullptr), mLibrary(nullptr), mLOffset(0),
-        mFileName(nullptr), mLineNo(0), mInUse(0)
-    {}
+        : mPc(0),
+          mFunction(nullptr),
+          mLibrary(nullptr),
+          mLOffset(0),
+          mFileName(nullptr),
+          mLineNo(0),
+          mInUse(0) {}
 
-    ~Entry()
-    {
+    ~Entry() {
       // We don't free mLibrary because it's externally owned.
       StringAlloc::free(mFunction);
       StringAlloc::free(mFileName);
     }
 
-    void Replace(const void* aPc, const char* aFunction,
-                 const char* aLibrary, ptrdiff_t aLOffset,
-                 const char* aFileName, unsigned long aLineNo)
-    {
+    void Replace(const void* aPc, const char* aFunction, const char* aLibrary,
+                 ptrdiff_t aLOffset, const char* aFileName,
+                 unsigned long aLineNo) {
       mPc = aPc;
 
       // Convert "" to nullptr.  Otherwise, make a copy of the name.
@@ -96,8 +94,7 @@ class CodeAddressService
       mInUse = 1;
     }
 
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-    {
+    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
       // Don't measure mLibrary because it's externally owned.
       size_t n = 0;
       n += aMallocSizeOf(mFunction);
@@ -119,15 +116,11 @@ class CodeAddressService
   size_t mNumCacheHits;
   size_t mNumCacheMisses;
 
-public:
-  CodeAddressService()
-    : mEntries(), mNumCacheHits(0), mNumCacheMisses(0)
-  {
-  }
+ public:
+  CodeAddressService() : mEntries(), mNumCacheHits(0), mNumCacheMisses(0) {}
 
   void GetLocation(uint32_t aFrameNumber, const void* aPc, char* aBuf,
-                   size_t aBufLen)
-  {
+                   size_t aBufLen) {
     MOZ_ASSERT(DescribeCodeAddressLock::IsLocked());
 
     uint32_t index = HashGeneric(aPc) & kMask;
@@ -164,8 +157,7 @@ public:
                          entry.mFileName, entry.mLineNo);
   }
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     size_t n = aMallocSizeOf(this);
     for (uint32_t i = 0; i < kNumEntries; i++) {
       n += mEntries[i].SizeOfExcludingThis(aMallocSizeOf);
@@ -178,8 +170,7 @@ public:
 
   size_t CacheCapacity() const { return kNumEntries; }
 
-  size_t CacheCount() const
-  {
+  size_t CacheCount() const {
     size_t n = 0;
     for (size_t i = 0; i < kNumEntries; i++) {
       if (mEntries[i].mInUse) {
@@ -189,10 +180,10 @@ public:
     return n;
   }
 
-  size_t NumCacheHits()   const { return mNumCacheHits; }
+  size_t NumCacheHits() const { return mNumCacheHits; }
   size_t NumCacheMisses() const { return mNumCacheMisses; }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // CodeAddressService_h__
+#endif  // CodeAddressService_h__

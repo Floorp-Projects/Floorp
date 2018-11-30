@@ -11,8 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedNumber,
-                                               mSVGElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedNumber, mSVGElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGAnimatedNumber)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGAnimatedNumber)
@@ -22,11 +21,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedNumber)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-JSObject*
-SVGAnimatedNumber::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGAnimatedNumber::WrapObject(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedNumber_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

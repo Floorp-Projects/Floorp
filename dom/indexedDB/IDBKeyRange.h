@@ -29,12 +29,10 @@ class GlobalObject;
 
 namespace indexedDB {
 class SerializedKeyRange;
-} // namespace indexedDB
+}  // namespace indexedDB
 
-class IDBKeyRange
-  : public nsISupports
-{
-protected:
+class IDBKeyRange : public nsISupports {
+ protected:
   nsCOMPtr<nsISupports> mGlobal;
   indexedDB::Key mLower;
   indexedDB::Key mUpper;
@@ -48,164 +46,102 @@ protected:
   bool mHaveCachedUpperVal : 1;
   bool mRooted : 1;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBKeyRange)
 
   // aCx is allowed to be null, but only if aVal.isUndefined().
-  static nsresult
-  FromJSVal(JSContext* aCx,
-            JS::Handle<JS::Value> aVal,
-            IDBKeyRange** aKeyRange);
+  static nsresult FromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal,
+                            IDBKeyRange** aKeyRange);
 
-  static already_AddRefed<IDBKeyRange>
-  FromSerialized(const indexedDB::SerializedKeyRange& aKeyRange);
+  static already_AddRefed<IDBKeyRange> FromSerialized(
+      const indexedDB::SerializedKeyRange& aKeyRange);
 
-  static already_AddRefed<IDBKeyRange>
-  Only(const GlobalObject& aGlobal,
-       JS::Handle<JS::Value> aValue,
-       ErrorResult& aRv);
+  static already_AddRefed<IDBKeyRange> Only(const GlobalObject& aGlobal,
+                                            JS::Handle<JS::Value> aValue,
+                                            ErrorResult& aRv);
 
-  static already_AddRefed<IDBKeyRange>
-  LowerBound(const GlobalObject& aGlobal,
-             JS::Handle<JS::Value> aValue,
-             bool aOpen,
-             ErrorResult& aRv);
+  static already_AddRefed<IDBKeyRange> LowerBound(const GlobalObject& aGlobal,
+                                                  JS::Handle<JS::Value> aValue,
+                                                  bool aOpen, ErrorResult& aRv);
 
-  static already_AddRefed<IDBKeyRange>
-  UpperBound(const GlobalObject& aGlobal,
-             JS::Handle<JS::Value> aValue,
-             bool aOpen,
-             ErrorResult& aRv);
+  static already_AddRefed<IDBKeyRange> UpperBound(const GlobalObject& aGlobal,
+                                                  JS::Handle<JS::Value> aValue,
+                                                  bool aOpen, ErrorResult& aRv);
 
-  static already_AddRefed<IDBKeyRange>
-  Bound(const GlobalObject& aGlobal,
-        JS::Handle<JS::Value> aLower,
-        JS::Handle<JS::Value> aUpper,
-        bool aLowerOpen,
-        bool aUpperOpen,
-        ErrorResult& aRv);
+  static already_AddRefed<IDBKeyRange> Bound(const GlobalObject& aGlobal,
+                                             JS::Handle<JS::Value> aLower,
+                                             JS::Handle<JS::Value> aUpper,
+                                             bool aLowerOpen, bool aUpperOpen,
+                                             ErrorResult& aRv);
 
-  void
-  AssertIsOnOwningThread() const
-  {
-    NS_ASSERT_OWNINGTHREAD(IDBKeyRange);
-  }
+  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(IDBKeyRange); }
 
-  void
-  ToSerialized(indexedDB::SerializedKeyRange& aKeyRange) const;
+  void ToSerialized(indexedDB::SerializedKeyRange& aKeyRange) const;
 
-  const indexedDB::Key&
-  Lower() const
-  {
-    return mLower;
-  }
+  const indexedDB::Key& Lower() const { return mLower; }
 
-  indexedDB::Key&
-  Lower()
-  {
-    return mLower;
-  }
+  indexedDB::Key& Lower() { return mLower; }
 
-  const indexedDB::Key&
-  Upper() const
-  {
-    return mIsOnly ? mLower : mUpper;
-  }
+  const indexedDB::Key& Upper() const { return mIsOnly ? mLower : mUpper; }
 
-  indexedDB::Key&
-  Upper()
-  {
-    return mIsOnly ? mLower : mUpper;
-  }
+  indexedDB::Key& Upper() { return mIsOnly ? mLower : mUpper; }
 
-  bool
-  Includes(JSContext* aCx,
-           JS::Handle<JS::Value> aKey,
-           ErrorResult& aRv) const;
+  bool Includes(JSContext* aCx, JS::Handle<JS::Value> aKey,
+                ErrorResult& aRv) const;
 
-  bool
-  IsOnly() const
-  {
-    return mIsOnly;
-  }
+  bool IsOnly() const { return mIsOnly; }
 
-  void
-  GetBindingClause(const nsACString& aKeyColumnName,
-                   nsACString& _retval) const;
+  void GetBindingClause(const nsACString& aKeyColumnName,
+                        nsACString& _retval) const;
 
-  nsresult
-  BindToStatement(mozIStorageStatement* aStatement) const;
+  nsresult BindToStatement(mozIStorageStatement* aStatement) const;
 
-  void
-  DropJSObjects();
+  void DropJSObjects();
 
   // WebIDL
-  bool
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aReflector);
 
-  nsISupports*
-  GetParentObject() const
-  {
-    return mGlobal;
-  }
+  nsISupports* GetParentObject() const { return mGlobal; }
 
-  void
-  GetLower(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
-           ErrorResult& aRv);
+  void GetLower(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                ErrorResult& aRv);
 
-  void
-  GetUpper(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
-           ErrorResult& aRv);
+  void GetUpper(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                ErrorResult& aRv);
 
-  bool
-  LowerOpen() const
-  {
-    return mLowerOpen;
-  }
+  bool LowerOpen() const { return mLowerOpen; }
 
-  bool
-  UpperOpen() const
-  {
-    return mUpperOpen;
-  }
+  bool UpperOpen() const { return mUpperOpen; }
 
-protected:
-  IDBKeyRange(nsISupports* aGlobal,
-              bool aLowerOpen,
-              bool aUpperOpen,
+ protected:
+  IDBKeyRange(nsISupports* aGlobal, bool aLowerOpen, bool aUpperOpen,
               bool aIsOnly);
 
   virtual ~IDBKeyRange();
 };
 
-class IDBLocaleAwareKeyRange final
-  : public IDBKeyRange
-{
-  IDBLocaleAwareKeyRange(nsISupports* aGlobal,
-                         bool aLowerOpen,
-                         bool aUpperOpen,
+class IDBLocaleAwareKeyRange final : public IDBKeyRange {
+  IDBLocaleAwareKeyRange(nsISupports* aGlobal, bool aLowerOpen, bool aUpperOpen,
                          bool aIsOnly);
 
   ~IDBLocaleAwareKeyRange();
 
-public:
-  static already_AddRefed<IDBLocaleAwareKeyRange>
-  Bound(const GlobalObject& aGlobal,
-        JS::Handle<JS::Value> aLower,
-        JS::Handle<JS::Value> aUpper,
-        bool aLowerOpen,
-        bool aUpperOpen,
-        ErrorResult& aRv);
+ public:
+  static already_AddRefed<IDBLocaleAwareKeyRange> Bound(
+      const GlobalObject& aGlobal, JS::Handle<JS::Value> aLower,
+      JS::Handle<JS::Value> aUpper, bool aLowerOpen, bool aUpperOpen,
+      ErrorResult& aRv);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(IDBLocaleAwareKeyRange, IDBKeyRange)
 
   // WebIDL
-  bool
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aReflector);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_idbkeyrange_h__
+#endif  // mozilla_dom_idbkeyrange_h__

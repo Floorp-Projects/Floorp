@@ -70,39 +70,34 @@
 #include "mozilla/Assertions.h"
 #include "Utils.h"
 
-enum NodeColor
-{
+enum NodeColor {
   Black = 0,
   Red = 1,
 };
 
 // Node structure.
-template<typename T>
-class RedBlackTreeNode
-{
+template <typename T>
+class RedBlackTreeNode {
   T* mLeft;
   // The lowest bit is the color
   T* mRightAndColor;
 
-public:
+ public:
   T* Left() { return mLeft; }
 
   void SetLeft(T* aValue) { mLeft = aValue; }
 
-  T* Right()
-  {
+  T* Right() {
     return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(mRightAndColor) &
                                 uintptr_t(~1));
   }
 
-  void SetRight(T* aValue)
-  {
+  void SetRight(T* aValue) {
     mRightAndColor = reinterpret_cast<T*>(
-      (reinterpret_cast<uintptr_t>(aValue) & uintptr_t(~1)) | Color());
+        (reinterpret_cast<uintptr_t>(aValue) & uintptr_t(~1)) | Color());
   }
 
-  NodeColor Color()
-  {
+  NodeColor Color() {
     return static_cast<NodeColor>(reinterpret_cast<uintptr_t>(mRightAndColor) &
                                   1);
   }
@@ -111,18 +106,16 @@ public:
 
   bool IsRed() { return Color() == NodeColor::Red; }
 
-  void SetColor(NodeColor aColor)
-  {
+  void SetColor(NodeColor aColor) {
     mRightAndColor = reinterpret_cast<T*>(
-      (reinterpret_cast<uintptr_t>(mRightAndColor) & uintptr_t(~1)) | aColor);
+        (reinterpret_cast<uintptr_t>(mRightAndColor) & uintptr_t(~1)) | aColor);
   }
 };
 
 // Tree structure.
-template<typename T, typename Trait>
-class RedBlackTree
-{
-public:
+template <typename T, typename Trait>
+class RedBlackTree {
+ public:
   void Init() { mRoot = nullptr; }
 
   T* First(T* aStart = nullptr) { return First(TreeNode(aStart)).Get(); }
@@ -148,49 +141,36 @@ public:
   // visual noise. Practically speaking TreeNode(nullptr) acts as a virtual
   // sentinel, that loops back to itself for Left() and Right() and is always
   // black.
-  class TreeNode
-  {
-  public:
-    constexpr TreeNode()
-      : mNode(nullptr)
-    {
-    }
+  class TreeNode {
+   public:
+    constexpr TreeNode() : mNode(nullptr) {}
 
-    MOZ_IMPLICIT TreeNode(T* aNode)
-      : mNode(aNode)
-    {
-    }
+    MOZ_IMPLICIT TreeNode(T* aNode) : mNode(aNode) {}
 
-    TreeNode& operator=(TreeNode aOther)
-    {
+    TreeNode& operator=(TreeNode aOther) {
       mNode = aOther.mNode;
       return *this;
     }
 
-    TreeNode Left()
-    {
+    TreeNode Left() {
       return TreeNode(mNode ? Trait::GetTreeNode(mNode).Left() : nullptr);
     }
 
-    void SetLeft(TreeNode aNode)
-    {
+    void SetLeft(TreeNode aNode) {
       MOZ_RELEASE_ASSERT(mNode);
       Trait::GetTreeNode(mNode).SetLeft(aNode.mNode);
     }
 
-    TreeNode Right()
-    {
+    TreeNode Right() {
       return TreeNode(mNode ? Trait::GetTreeNode(mNode).Right() : nullptr);
     }
 
-    void SetRight(TreeNode aNode)
-    {
+    void SetRight(TreeNode aNode) {
       MOZ_RELEASE_ASSERT(mNode);
       Trait::GetTreeNode(mNode).SetRight(aNode.mNode);
     }
 
-    NodeColor Color()
-    {
+    NodeColor Color() {
       return mNode ? Trait::GetTreeNode(mNode).Color() : NodeColor::Black;
     }
 
@@ -198,8 +178,7 @@ public:
 
     bool IsBlack() { return Color() == NodeColor::Black; }
 
-    void SetColor(NodeColor aColor)
-    {
+    void SetColor(NodeColor aColor) {
       MOZ_RELEASE_ASSERT(mNode);
       Trait::GetTreeNode(mNode).SetColor(aColor);
     }
@@ -210,33 +189,30 @@ public:
 
     bool operator==(TreeNode& aOther) { return mNode == aOther.mNode; }
 
-  private:
+   private:
     T* mNode;
   };
 
-private:
+ private:
   // Ideally we'd use a TreeNode for mRoot, but we need RedBlackTree to stay
   // a POD type to avoid a static initializer for gArenas.
   T* mRoot;
 
-  TreeNode First(TreeNode aStart)
-  {
+  TreeNode First(TreeNode aStart) {
     TreeNode ret;
     for (ret = aStart ? aStart : mRoot; ret.Left(); ret = ret.Left()) {
     }
     return ret;
   }
 
-  TreeNode Last(TreeNode aStart)
-  {
+  TreeNode Last(TreeNode aStart) {
     TreeNode ret;
     for (ret = aStart ? aStart : mRoot; ret.Right(); ret = ret.Right()) {
     }
     return ret;
   }
 
-  TreeNode Next(TreeNode aNode)
-  {
+  TreeNode Next(TreeNode aNode) {
     TreeNode ret;
     if (aNode.Right()) {
       ret = First(aNode.Right());
@@ -260,8 +236,7 @@ private:
     return ret;
   }
 
-  TreeNode Prev(TreeNode aNode)
-  {
+  TreeNode Prev(TreeNode aNode) {
     TreeNode ret;
     if (aNode.Left()) {
       ret = Last(aNode.Left());
@@ -285,12 +260,11 @@ private:
     return ret;
   }
 
-  TreeNode Search(TreeNode aKey)
-  {
+  TreeNode Search(TreeNode aKey) {
     TreeNode ret = mRoot;
     Order rbp_se_cmp;
     while (ret && (rbp_se_cmp = Trait::Compare(aKey.Get(), ret.Get())) !=
-                    Order::eEqual) {
+                      Order::eEqual) {
       if (rbp_se_cmp == Order::eLess) {
         ret = ret.Left();
       } else {
@@ -300,8 +274,7 @@ private:
     return ret;
   }
 
-  TreeNode SearchOrNext(TreeNode aKey)
-  {
+  TreeNode SearchOrNext(TreeNode aKey) {
     TreeNode ret = nullptr;
     TreeNode rbp_ns_t = mRoot;
     while (rbp_ns_t) {
@@ -319,8 +292,7 @@ private:
     return ret;
   }
 
-  void Insert(TreeNode aNode)
-  {
+  void Insert(TreeNode aNode) {
     // rbp_i_s is only used as a placeholder for its RedBlackTreeNode. Use
     // AlignedStorage2 to avoid running the TreeNode base class constructor.
     mozilla::AlignedStorage2<T> rbp_i_s;
@@ -406,8 +378,7 @@ private:
     mRoot = root.Get();
   }
 
-  void Remove(TreeNode aNode)
-  {
+  void Remove(TreeNode aNode) {
     // rbp_r_s is only used as a placeholder for its RedBlackTreeNode. Use
     // AlignedStorage2 to avoid running the TreeNode base class constructor.
     mozilla::AlignedStorage2<T> rbp_r_s;
@@ -457,7 +428,7 @@ private:
           // successor. Record enough information to do the
           // swap later. rbp_r_xp is the aNode's parent.
           rbp_r_xp = rbp_r_p;
-          rbp_r_cmp = Order::eGreater; // Note that deletion is incomplete.
+          rbp_r_cmp = Order::eGreater;  // Note that deletion is incomplete.
         }
       }
       if (rbp_r_cmp == Order::eGreater) {
@@ -577,24 +548,21 @@ private:
     mRoot = TreeNode(rbp_r_s.addr()).Left().Get();
   }
 
-  TreeNode RotateLeft(TreeNode aNode)
-  {
+  TreeNode RotateLeft(TreeNode aNode) {
     TreeNode node = aNode.Right();
     aNode.SetRight(node.Left());
     node.SetLeft(aNode);
     return node;
   }
 
-  TreeNode RotateRight(TreeNode aNode)
-  {
+  TreeNode RotateRight(TreeNode aNode) {
     TreeNode node = aNode.Left();
     aNode.SetLeft(node.Right());
     node.SetRight(aNode);
     return node;
   }
 
-  TreeNode LeanLeft(TreeNode aNode)
-  {
+  TreeNode LeanLeft(TreeNode aNode) {
     TreeNode node = RotateLeft(aNode);
     NodeColor color = aNode.Color();
     node.SetColor(color);
@@ -602,8 +570,7 @@ private:
     return node;
   }
 
-  TreeNode LeanRight(TreeNode aNode)
-  {
+  TreeNode LeanRight(TreeNode aNode) {
     TreeNode node = RotateRight(aNode);
     NodeColor color = aNode.Color();
     node.SetColor(color);
@@ -611,8 +578,7 @@ private:
     return node;
   }
 
-  TreeNode MoveRedLeft(TreeNode aNode)
-  {
+  TreeNode MoveRedLeft(TreeNode aNode) {
     TreeNode node;
     TreeNode rbp_mrl_t, rbp_mrl_u;
     rbp_mrl_t = aNode.Left();
@@ -639,8 +605,7 @@ private:
     return node;
   }
 
-  TreeNode MoveRedRight(TreeNode aNode)
-  {
+  TreeNode MoveRedRight(TreeNode aNode) {
     TreeNode node;
     TreeNode rbp_mrr_t;
     rbp_mrr_t = aNode.Left();
@@ -701,16 +666,13 @@ private:
   //
   // This works out to a maximum depth of 87 and 180 for 32- and 64-bit
   // systems, respectively (approximately 348 and 1440 bytes, respectively).
-public:
-  class Iterator
-  {
+ public:
+  class Iterator {
     TreeNode mPath[3 * ((sizeof(void*) << 3) - (LOG2(sizeof(void*)) + 1))];
     unsigned mDepth;
 
-  public:
-    explicit Iterator(RedBlackTree<T, Trait>* aTree)
-      : mDepth(0)
-    {
+   public:
+    explicit Iterator(RedBlackTree<T, Trait>* aTree) : mDepth(0) {
       // Initialize the path to contain the left spine.
       if (aTree->mRoot) {
         TreeNode node;
@@ -721,43 +683,35 @@ public:
       }
     }
 
-    template<typename Iterator>
-    class Item
-    {
+    template <typename Iterator>
+    class Item {
       Iterator* mIterator;
       T* mItem;
 
-    public:
+     public:
       Item(Iterator* aIterator, T* aItem)
-        : mIterator(aIterator)
-        , mItem(aItem)
-      {
-      }
+          : mIterator(aIterator), mItem(aItem) {}
 
-      bool operator!=(const Item& aOther) const
-      {
+      bool operator!=(const Item& aOther) const {
         return (mIterator != aOther.mIterator) || (mItem != aOther.mItem);
       }
 
       T* operator*() const { return mItem; }
 
-      const Item& operator++()
-      {
+      const Item& operator++() {
         mItem = mIterator->Next();
         return *this;
       }
     };
 
-    Item<Iterator> begin()
-    {
+    Item<Iterator> begin() {
       return Item<Iterator>(this,
                             mDepth > 0 ? mPath[mDepth - 1].Get() : nullptr);
     }
 
     Item<Iterator> end() { return Item<Iterator>(this, nullptr); }
 
-    T* Next()
-    {
+    T* Next() {
       TreeNode node;
       if ((node = mPath[mDepth - 1].Right())) {
         // The successor is the left-most node in the right subtree.
@@ -781,4 +735,4 @@ public:
   Iterator iter() { return Iterator(this); }
 };
 
-#endif // RB_H_
+#endif  // RB_H_

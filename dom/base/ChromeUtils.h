@@ -16,7 +16,7 @@ namespace mozilla {
 
 namespace devtools {
 class HeapSnapshot;
-} // namespace devtools
+}  // namespace devtools
 
 namespace dom {
 
@@ -28,90 +28,74 @@ class MozQueryInterface;
 class PrecompiledScript;
 class Promise;
 
-class ChromeUtils
-{
-private:
+class ChromeUtils {
+ private:
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static void SaveHeapSnapshotShared(GlobalObject& global,
                                      const HeapSnapshotBoundaries& boundaries,
-                                     nsAString& filePath,
-                                     nsAString& snapshotId,
+                                     nsAString& filePath, nsAString& snapshotId,
                                      ErrorResult& rv);
 
-public:
+ public:
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static void SaveHeapSnapshot(GlobalObject& global,
                                const HeapSnapshotBoundaries& boundaries,
-                               nsAString& filePath,
-                               ErrorResult& rv);
+                               nsAString& filePath, ErrorResult& rv);
 
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static void SaveHeapSnapshotGetId(GlobalObject& global,
                                     const HeapSnapshotBoundaries& boundaries,
-                                    nsAString& snapshotId,
-                                    ErrorResult& rv);
+                                    nsAString& snapshotId, ErrorResult& rv);
 
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
-  static already_AddRefed<devtools::HeapSnapshot> ReadHeapSnapshot(GlobalObject& global,
-                                                                   const nsAString& filePath,
-                                                                   ErrorResult& rv);
+  static already_AddRefed<devtools::HeapSnapshot> ReadHeapSnapshot(
+      GlobalObject& global, const nsAString& filePath, ErrorResult& rv);
 
-  static void NondeterministicGetWeakMapKeys(GlobalObject& aGlobal,
-                                             JS::Handle<JS::Value> aMap,
-                                             JS::MutableHandle<JS::Value> aRetval,
-                                             ErrorResult& aRv);
+  static void NondeterministicGetWeakMapKeys(
+      GlobalObject& aGlobal, JS::Handle<JS::Value> aMap,
+      JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
 
-  static void NondeterministicGetWeakSetKeys(GlobalObject& aGlobal,
-                                             JS::Handle<JS::Value> aSet,
-                                             JS::MutableHandle<JS::Value> aRetval,
-                                             ErrorResult& aRv);
+  static void NondeterministicGetWeakSetKeys(
+      GlobalObject& aGlobal, JS::Handle<JS::Value> aSet,
+      JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
 
   static void Base64URLEncode(GlobalObject& aGlobal,
                               const ArrayBufferViewOrArrayBuffer& aSource,
                               const Base64URLEncodeOptions& aOptions,
-                              nsACString& aResult,
-                              ErrorResult& aRv);
+                              nsACString& aResult, ErrorResult& aRv);
 
-  static void Base64URLDecode(GlobalObject& aGlobal,
-                              const nsACString& aString,
+  static void Base64URLDecode(GlobalObject& aGlobal, const nsACString& aString,
                               const Base64URLDecodeOptions& aOptions,
                               JS::MutableHandle<JSObject*> aRetval,
                               ErrorResult& aRv);
 
-  static void
-  OriginAttributesToSuffix(GlobalObject& aGlobal,
-                           const dom::OriginAttributesDictionary& aAttrs,
-                           nsCString& aSuffix);
+  static void OriginAttributesToSuffix(
+      GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
+      nsCString& aSuffix);
 
-  static bool
-  OriginAttributesMatchPattern(dom::GlobalObject& aGlobal,
-                               const dom::OriginAttributesDictionary& aAttrs,
-                               const dom::OriginAttributesPatternDictionary& aPattern);
+  static bool OriginAttributesMatchPattern(
+      dom::GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
+      const dom::OriginAttributesPatternDictionary& aPattern);
 
-  static void
-  CreateOriginAttributesFromOrigin(dom::GlobalObject& aGlobal,
-                                   const nsAString& aOrigin,
-                                   dom::OriginAttributesDictionary& aAttrs,
-                                   ErrorResult& aRv);
+  static void CreateOriginAttributesFromOrigin(
+      dom::GlobalObject& aGlobal, const nsAString& aOrigin,
+      dom::OriginAttributesDictionary& aAttrs, ErrorResult& aRv);
 
-  static void
-  FillNonDefaultOriginAttributes(dom::GlobalObject& aGlobal,
-                                 const dom::OriginAttributesDictionary& aAttrs,
-                                 dom::OriginAttributesDictionary& aNewAttrs);
+  static void FillNonDefaultOriginAttributes(
+      dom::GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
+      dom::OriginAttributesDictionary& aNewAttrs);
 
-  static bool
-  IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
-                          const dom::OriginAttributesDictionary& aA,
-                          const dom::OriginAttributesDictionary& aB);
+  static bool IsOriginAttributesEqual(
+      dom::GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aA,
+      const dom::OriginAttributesDictionary& aB);
 
-  static bool
-  IsOriginAttributesEqual(const dom::OriginAttributesDictionary& aA,
-                          const dom::OriginAttributesDictionary& aB);
+  static bool IsOriginAttributesEqual(
+      const dom::OriginAttributesDictionary& aA,
+      const dom::OriginAttributesDictionary& aB);
 
-  static bool
-  IsOriginAttributesEqualIgnoringFPD(const dom::OriginAttributesDictionary& aA,
-                                     const dom::OriginAttributesDictionary& aB)
-  {
+  static bool IsOriginAttributesEqualIgnoringFPD(
+      const dom::OriginAttributesDictionary& aA,
+      const dom::OriginAttributesDictionary& aB) {
     return aA.mAppId == aB.mAppId &&
            aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
            aA.mUserContextId == aB.mUserContextId &&
@@ -119,41 +103,30 @@ public:
   }
 
   // Implemented in js/xpconnect/loader/ChromeScriptLoader.cpp
-  static already_AddRefed<Promise>
-  CompileScript(GlobalObject& aGlobal,
-                const nsAString& aUrl,
-                const dom::CompileScriptOptionsDictionary& aOptions,
-                ErrorResult& aRv);
+  static already_AddRefed<Promise> CompileScript(
+      GlobalObject& aGlobal, const nsAString& aUrl,
+      const dom::CompileScriptOptionsDictionary& aOptions, ErrorResult& aRv);
 
-  static MozQueryInterface*
-  GenerateQI(const GlobalObject& global, const Sequence<JS::Value>& interfaces,
-             ErrorResult& aRv);
+  static MozQueryInterface* GenerateQI(const GlobalObject& global,
+                                       const Sequence<JS::Value>& interfaces,
+                                       ErrorResult& aRv);
 
-  static void WaiveXrays(GlobalObject& aGlobal,
-                         JS::HandleValue aVal,
-                         JS::MutableHandleValue aRetval,
-                         ErrorResult& aRv);
+  static void WaiveXrays(GlobalObject& aGlobal, JS::HandleValue aVal,
+                         JS::MutableHandleValue aRetval, ErrorResult& aRv);
 
-  static void UnwaiveXrays(GlobalObject& aGlobal,
-                           JS::HandleValue aVal,
-                           JS::MutableHandleValue aRetval,
-                           ErrorResult& aRv);
+  static void UnwaiveXrays(GlobalObject& aGlobal, JS::HandleValue aVal,
+                           JS::MutableHandleValue aRetval, ErrorResult& aRv);
 
-  static void GetClassName(GlobalObject& aGlobal,
-                           JS::HandleObject aObj,
-                           bool aUnwrap,
-                           nsAString& aRetval);
+  static void GetClassName(GlobalObject& aGlobal, JS::HandleObject aObj,
+                           bool aUnwrap, nsAString& aRetval);
 
-  static void ShallowClone(GlobalObject& aGlobal,
-                           JS::HandleObject aObj,
+  static void ShallowClone(GlobalObject& aGlobal, JS::HandleObject aObj,
                            JS::HandleObject aTarget,
-                           JS::MutableHandleObject aRetval,
-                           ErrorResult& aRv);
+                           JS::MutableHandleObject aRetval, ErrorResult& aRv);
 
   static void IdleDispatch(const GlobalObject& global,
                            IdleRequestCallback& callback,
-                           const IdleRequestOptions& options,
-                           ErrorResult& aRv);
+                           const IdleRequestOptions& options, ErrorResult& aRv);
 
   static void GetRecentJSDevError(GlobalObject& aGlobal,
                                   JS::MutableHandleValue aRetval,
@@ -161,15 +134,12 @@ public:
 
   static void ClearRecentJSDevError(GlobalObject& aGlobal);
 
-  static already_AddRefed<Promise>
-  RequestPerformanceMetrics(GlobalObject& aGlobal,
-                            ErrorResult& aRv);
+  static already_AddRefed<Promise> RequestPerformanceMetrics(
+      GlobalObject& aGlobal, ErrorResult& aRv);
 
-  static void Import(const GlobalObject& aGlobal,
-                     const nsAString& aResourceURI,
+  static void Import(const GlobalObject& aGlobal, const nsAString& aResourceURI,
                      const Optional<JS::Handle<JSObject*>>& aTargetObj,
-                     JS::MutableHandle<JSObject*> aRetval,
-                     ErrorResult& aRv);
+                     JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv);
 
   static void DefineModuleGetter(const GlobalObject& global,
                                  JS::Handle<JSObject*> target,
@@ -177,27 +147,27 @@ public:
                                  const nsAString& resourceURI,
                                  ErrorResult& aRv);
 
-  static void
-  GetCallerLocation(const GlobalObject& global, nsIPrincipal* principal,
-                    JS::MutableHandle<JSObject*> aRetval);
+  static void GetCallerLocation(const GlobalObject& global,
+                                nsIPrincipal* principal,
+                                JS::MutableHandle<JSObject*> aRetval);
 
-  static void
-  CreateError(const GlobalObject& global, const nsAString& message,
-              JS::Handle<JSObject*> stack,
-              JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv);
+  static void CreateError(const GlobalObject& global, const nsAString& message,
+                          JS::Handle<JSObject*> stack,
+                          JS::MutableHandle<JSObject*> aRetVal,
+                          ErrorResult& aRv);
 
-  static already_AddRefed<Promise>
-  RequestIOActivity(GlobalObject& aGlobal, ErrorResult& aRv);
+  static already_AddRefed<Promise> RequestIOActivity(GlobalObject& aGlobal,
+                                                     ErrorResult& aRv);
 
-  static already_AddRefed<BrowsingContext>
-  GetBrowsingContext(GlobalObject& aGlobal, uint64_t id);
+  static already_AddRefed<BrowsingContext> GetBrowsingContext(
+      GlobalObject& aGlobal, uint64_t id);
 
-  static void
-  GetRootBrowsingContexts(GlobalObject& aGlobal,
-                          nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
+  static void GetRootBrowsingContexts(
+      GlobalObject& aGlobal,
+      nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ChromeUtils__
+#endif  // mozilla_dom_ChromeUtils__

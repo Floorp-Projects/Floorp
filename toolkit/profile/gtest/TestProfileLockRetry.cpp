@@ -13,10 +13,9 @@
 #include "nsProfileLock.h"
 #include "nsString.h"
 
-TEST(ProfileLock, RetryLock)
-{
+TEST(ProfileLock, RetryLock) {
   char templ[] = "/tmp/profilelocktest.XXXXXX";
-  char * tmpdir = mkdtemp(templ);
+  char* tmpdir = mkdtemp(templ);
   ASSERT_NE(tmpdir, nullptr);
 
   nsProfileLock myLock;
@@ -63,8 +62,7 @@ TEST(ProfileLock, RetryLock)
     EXPECT_EQ(0, eventfd_write(eventfd_fd, 1));
 
     // parent will kill us
-    for (;;)
-      sleep(1);
+    for (;;) sleep(1);
   }
 
   close(eventfd_fd);

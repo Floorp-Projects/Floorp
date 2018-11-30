@@ -20,22 +20,21 @@ class nsITimer;
 namespace mozilla {
 namespace dom {
 class Link;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 namespace mozilla {
 namespace net {
 class NeckoParent;
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-class nsHTMLDNSPrefetch
-{
-public:
-  // The required aDocument parameter is the context requesting the prefetch - under
-  // certain circumstances (e.g. headers, or security context) associated with
-  // the context the prefetch will not be performed.
-  static bool     IsAllowed(nsIDocument *aDocument);
+class nsHTMLDNSPrefetch {
+ public:
+  // The required aDocument parameter is the context requesting the prefetch -
+  // under certain circumstances (e.g. headers, or security context) associated
+  // with the context the prefetch will not be performed.
+  static bool IsAllowed(nsIDocument *aDocument);
 
   static nsresult Initialize();
   static nsresult Shutdown();
@@ -51,51 +50,52 @@ public:
   static nsresult PrefetchHigh(mozilla::dom::Link *aElement);
   static nsresult PrefetchMedium(mozilla::dom::Link *aElement);
   static nsresult PrefetchLow(mozilla::dom::Link *aElement);
-  static nsresult PrefetchHigh(const nsAString &host, bool isHttps,
-                               const mozilla::OriginAttributes &aOriginAttributes);
-  static nsresult PrefetchMedium(const nsAString &host, bool isHttps,
-                                 const mozilla::OriginAttributes &aOriginAttributes);
-  static nsresult PrefetchLow(const nsAString &host, bool isHttps,
-                              const mozilla::OriginAttributes &aOriginAttributes);
-  static nsresult CancelPrefetchLow(const nsAString &host, bool isHttps,
-                                    const mozilla::OriginAttributes &aOriginAttributes,
-                                    nsresult aReason);
+  static nsresult PrefetchHigh(
+      const nsAString &host, bool isHttps,
+      const mozilla::OriginAttributes &aOriginAttributes);
+  static nsresult PrefetchMedium(
+      const nsAString &host, bool isHttps,
+      const mozilla::OriginAttributes &aOriginAttributes);
+  static nsresult PrefetchLow(
+      const nsAString &host, bool isHttps,
+      const mozilla::OriginAttributes &aOriginAttributes);
+  static nsresult CancelPrefetchLow(
+      const nsAString &host, bool isHttps,
+      const mozilla::OriginAttributes &aOriginAttributes, nsresult aReason);
   static nsresult CancelPrefetchLow(mozilla::dom::Link *aElement,
                                     nsresult aReason);
 
-  static void LinkDestroyed(mozilla::dom::Link* aLink);
+  static void LinkDestroyed(mozilla::dom::Link *aLink);
 
-private:
+ private:
   static nsresult Prefetch(const nsAString &host, bool isHttps,
                            const mozilla::OriginAttributes &aOriginAttributes,
                            uint16_t flags);
   static nsresult Prefetch(mozilla::dom::Link *aElement, uint16_t flags);
-  static nsresult CancelPrefetch(const nsAString &hostname, bool isHttps,
-                                 const mozilla::OriginAttributes &aOriginAttributes,
-                                 uint16_t flags,
-                                 nsresult aReason);
-  static nsresult CancelPrefetch(mozilla::dom::Link *aElement,
-                                 uint16_t flags,
+  static nsresult CancelPrefetch(
+      const nsAString &hostname, bool isHttps,
+      const mozilla::OriginAttributes &aOriginAttributes, uint16_t flags,
+      nsresult aReason);
+  static nsresult CancelPrefetch(mozilla::dom::Link *aElement, uint16_t flags,
                                  nsresult aReason);
 
-public:
-  class nsListener final : public nsIDNSListener
-  {
+ public:
+  class nsListener final : public nsIDNSListener {
     // This class exists to give a safe callback no-op DNSListener
-  public:
+   public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
 
-    nsListener()  {}
-  private:
+    nsListener() {}
+
+   private:
     ~nsListener() {}
   };
 
-  class nsDeferrals final: public nsIWebProgressListener
-                         , public nsSupportsWeakReference
-                         , public nsIObserver
-  {
-  public:
+  class nsDeferrals final : public nsIWebProgressListener,
+                            public nsSupportsWeakReference,
+                            public nsIObserver {
+   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSIOBSERVER
@@ -107,28 +107,27 @@ public:
 
     void RemoveUnboundLinks();
 
-  private:
+   private:
     ~nsDeferrals();
     void Flush();
 
     void SubmitQueue();
 
-    uint16_t                  mHead;
-    uint16_t                  mTail;
-    uint32_t                  mActiveLoaderCount;
+    uint16_t mHead;
+    uint16_t mTail;
+    uint32_t mActiveLoaderCount;
 
-    nsCOMPtr<nsITimer>        mTimer;
-    bool                      mTimerArmed;
+    nsCOMPtr<nsITimer> mTimer;
+    bool mTimerArmed;
     static void Tick(nsITimer *aTimer, void *aClosure);
 
-    static const int          sMaxDeferred = 512;  // keep power of 2 for masking
-    static const int          sMaxDeferredMask = (sMaxDeferred - 1);
+    static const int sMaxDeferred = 512;  // keep power of 2 for masking
+    static const int sMaxDeferredMask = (sMaxDeferred - 1);
 
-    struct deferred_entry
-    {
-      uint16_t                         mFlags;
+    struct deferred_entry {
+      uint16_t mFlags;
       // Link implementation clears this raw pointer in its destructor.
-      mozilla::dom::Link*              mElement;
+      mozilla::dom::Link *mElement;
     } mEntries[sMaxDeferred];
   };
 

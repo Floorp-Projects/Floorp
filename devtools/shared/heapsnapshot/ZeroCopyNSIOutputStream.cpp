@@ -12,40 +12,28 @@ namespace mozilla {
 namespace devtools {
 
 ZeroCopyNSIOutputStream::ZeroCopyNSIOutputStream(nsCOMPtr<nsIOutputStream>& out)
-  : out(out)
-  , result_(NS_OK)
-  , amountUsed(0)
-  , writtenCount(0)
-{
+    : out(out), result_(NS_OK), amountUsed(0), writtenCount(0) {
   DebugOnly<bool> nonBlocking = false;
   MOZ_ASSERT(out->IsNonBlocking(&nonBlocking) == NS_OK);
   MOZ_ASSERT(!nonBlocking);
 }
 
-ZeroCopyNSIOutputStream::~ZeroCopyNSIOutputStream()
-{
-  if (!failed())
-    Unused << NS_WARN_IF(NS_FAILED(writeBuffer()));
+ZeroCopyNSIOutputStream::~ZeroCopyNSIOutputStream() {
+  if (!failed()) Unused << NS_WARN_IF(NS_FAILED(writeBuffer()));
 }
 
-nsresult
-ZeroCopyNSIOutputStream::writeBuffer()
-{
-  if (failed())
-    return result_;
+nsresult ZeroCopyNSIOutputStream::writeBuffer() {
+  if (failed()) return result_;
 
-  if (amountUsed == 0)
-    return NS_OK;
+  if (amountUsed == 0) return NS_OK;
 
   int32_t amountWritten = 0;
   while (amountWritten < amountUsed) {
     uint32_t justWritten = 0;
 
-    result_ = out->Write(buffer + amountWritten,
-                         amountUsed - amountWritten,
+    result_ = out->Write(buffer + amountWritten, amountUsed - amountWritten,
                          &justWritten);
-    if (NS_WARN_IF(NS_FAILED(result_)))
-      return result_;
+    if (NS_WARN_IF(NS_FAILED(result_))) return result_;
 
     amountWritten += justWritten;
   }
@@ -57,18 +45,14 @@ ZeroCopyNSIOutputStream::writeBuffer()
 
 // ZeroCopyOutputStream Interface
 
-bool
-ZeroCopyNSIOutputStream::Next(void** data, int* size)
-{
+bool ZeroCopyNSIOutputStream::Next(void** data, int* size) {
   MOZ_ASSERT(data != nullptr);
   MOZ_ASSERT(size != nullptr);
 
-  if (failed())
-    return false;
+  if (failed()) return false;
 
   if (amountUsed == BUFFER_SIZE) {
-    if (NS_FAILED(writeBuffer()))
-      return false;
+    if (NS_FAILED(writeBuffer())) return false;
   }
 
   *data = buffer + amountUsed;
@@ -77,11 +61,8 @@ ZeroCopyNSIOutputStream::Next(void** data, int* size)
   return true;
 }
 
-void
-ZeroCopyNSIOutputStream::BackUp(int count)
-{
-  MOZ_ASSERT(count >= 0,
-             "Cannot back up a negative amount of bytes.");
+void ZeroCopyNSIOutputStream::BackUp(int count) {
+  MOZ_ASSERT(count >= 0, "Cannot back up a negative amount of bytes.");
   MOZ_ASSERT(amountUsed == BUFFER_SIZE,
              "Can only call BackUp directly after calling Next.");
   MOZ_ASSERT(count <= amountUsed,
@@ -90,11 +71,9 @@ ZeroCopyNSIOutputStream::BackUp(int count)
   amountUsed -= count;
 }
 
-::google::protobuf::int64
-ZeroCopyNSIOutputStream::ByteCount() const
-{
+::google::protobuf::int64 ZeroCopyNSIOutputStream::ByteCount() const {
   return writtenCount + amountUsed;
 }
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla

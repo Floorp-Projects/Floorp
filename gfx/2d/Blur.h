@@ -15,7 +15,7 @@ namespace mozilla {
 namespace gfx {
 
 #ifdef _MSC_VER
-#pragma warning( disable : 4251 )
+#pragma warning(disable : 4251)
 #endif
 
 /**
@@ -36,10 +36,8 @@ namespace gfx {
  * A spread N makes each output pixel the maximum value of all source
  * pixels within a square of side length 2N+1 centered on the output pixel.
  */
-class GFX2D_API AlphaBoxBlur
-{
-public:
-
+class GFX2D_API AlphaBoxBlur {
+ public:
   /** Constructs a box blur and computes the backing surface size.
    *
    * @param aRect The coordinates of the surface to create in device units.
@@ -47,34 +45,28 @@ public:
    * @param aBlurRadius The blur radius in pixels.  This is the radius of the
    *   entire (triple) kernel function.  Each individual box blur has radius
    *   approximately 1/3 this value, or diameter approximately 2/3 this value.
-   *   This parameter should nearly always be computed using CalculateBlurRadius,
-   *   below.
+   *   This parameter should nearly always be computed using
+   * CalculateBlurRadius, below.
    *
    * @param aDirtyRect A pointer to a dirty rect, measured in device units, if
    *   available.  This will be used for optimizing the blur operation. It is
    *   safe to pass nullptr here.
    *
    * @param aSkipRect A pointer to a rect, measured in device units, that
-   *   represents an area where blurring is unnecessary and shouldn't be done for
-   *   speed reasons. It is safe to pass nullptr here.
+   *   represents an area where blurring is unnecessary and shouldn't be done
+   * for speed reasons. It is safe to pass nullptr here.
    */
-  AlphaBoxBlur(const Rect& aRect,
-               const IntSize& aSpreadRadius,
-               const IntSize& aBlurRadius,
-               const Rect* aDirtyRect,
+  AlphaBoxBlur(const Rect& aRect, const IntSize& aSpreadRadius,
+               const IntSize& aBlurRadius, const Rect* aDirtyRect,
                const Rect* aSkipRect);
 
-  AlphaBoxBlur(const Rect& aRect,
-               int32_t aStride,
-               float aSigmaX,
+  AlphaBoxBlur(const Rect& aRect, int32_t aStride, float aSigmaX,
                float aSigmaY);
 
   AlphaBoxBlur();
 
-  void Init(const Rect& aRect,
-            const IntSize& aSpreadRadius,
-            const IntSize& aBlurRadius,
-            const Rect* aDirtyRect,
+  void Init(const Rect& aRect, const IntSize& aSpreadRadius,
+            const IntSize& aBlurRadius, const Rect* aDirtyRect,
             const Rect* aSkipRect);
 
   ~AlphaBoxBlur();
@@ -95,8 +87,8 @@ public:
   IntRect GetRect() const;
 
   /**
-   * Return a pointer to a dirty rect, as passed in to the constructor, or nullptr
-   * if none was passed in.
+   * Return a pointer to a dirty rect, as passed in to the constructor, or
+   * nullptr if none was passed in.
    */
   Rect* GetDirtyRect();
 
@@ -114,7 +106,7 @@ public:
    * Return the minimum buffer size that should be given to Blur() method.  If
    * zero, the class is not properly setup for blurring.  Note that this
    * includes the extra three bytes on top of the stride*width, where something
-   * like gfxImageSurface::GetDataSize() would report without it, even if it 
+   * like gfxImageSurface::GetDataSize() would report without it, even if it
    * happens to have the extra bytes.
    */
   size_t GetSurfaceAllocationSize() const;
@@ -135,23 +127,24 @@ public:
   static IntSize CalculateBlurRadius(const Point& aStandardDeviation);
   static Float CalculateBlurSigma(int32_t aBlurRadius);
 
-private:
-
-  void BoxBlur_C(uint8_t* aData,
-                 int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                 int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride) const;
-  void BoxBlur_SSE2(uint8_t* aData,
-                    int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride) const;
+ private:
+  void BoxBlur_C(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
+                 int32_t aTopLobe, int32_t aBottomLobe,
+                 uint32_t* aIntegralImage, size_t aIntegralImageStride) const;
+  void BoxBlur_SSE2(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
+                    int32_t aTopLobe, int32_t aBottomLobe,
+                    uint32_t* aIntegralImage,
+                    size_t aIntegralImageStride) const;
 #ifdef BUILD_ARM_NEON
-  void BoxBlur_NEON(uint8_t* aData,
-                    int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride) const;
+  void BoxBlur_NEON(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
+                    int32_t aTopLobe, int32_t aBottomLobe,
+                    uint32_t* aIntegralImage,
+                    size_t aIntegralImageStride) const;
 #endif
 #ifdef _MIPS_ARCH_LOONGSON3A
-  void BoxBlur_LS3(uint8_t* aData,
-                    int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride) const;
+  void BoxBlur_LS3(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
+                   int32_t aTopLobe, int32_t aBottomLobe,
+                   uint32_t* aIntegralImage, size_t aIntegralImageStride) const;
 #endif
 
   static CheckedInt<int32_t> RoundUpToMultipleOf4(int32_t aVal);
@@ -168,8 +161,8 @@ private:
   IntRect mRect;
 
   /**
-   * A copy of the dirty rect passed to the constructor. This will only be valid if
-   * mHasDirtyRect is true.
+   * A copy of the dirty rect passed to the constructor. This will only be valid
+   * if mHasDirtyRect is true.
    */
   Rect mDirtyRect;
 
@@ -199,7 +192,7 @@ private:
   bool mHasDirtyRect;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_BLUR_H_ */

@@ -17,26 +17,23 @@
 
 namespace CrashReporter {
 
-  extern MinidumpAnalyzerOptions gMinidumpAnalyzerOptions;
+extern MinidumpAnalyzerOptions gMinidumpAnalyzerOptions;
 
-  using google_breakpad::CFIFrameInfo;
+using google_breakpad::CFIFrameInfo;
 
-MozStackFrameSymbolizer::MozStackFrameSymbolizer() :
-  StackFrameSymbolizer(nullptr, nullptr)
-{
-}
+MozStackFrameSymbolizer::MozStackFrameSymbolizer()
+    : StackFrameSymbolizer(nullptr, nullptr) {}
 
 MozStackFrameSymbolizer::SymbolizerResult
 MozStackFrameSymbolizer::FillSourceLineInfo(const CodeModules* modules,
                                             const CodeModules* unloaded_modules,
                                             const SystemInfo* system_info,
-                                            StackFrame* stack_frame)
-{
+                                            StackFrame* stack_frame) {
   SymbolizerResult ret = StackFrameSymbolizer::FillSourceLineInfo(
-    modules, unloaded_modules, system_info, stack_frame);
+      modules, unloaded_modules, system_info, stack_frame);
 
   if (ret == kNoError && this->HasImplementation() &&
-    stack_frame->function_name.empty()) {
+      stack_frame->function_name.empty()) {
     // Breakpad's Stackwalker::InstructionAddressSeemsValid only considers an
     // address valid if it has associated symbols.
     //
@@ -52,9 +49,8 @@ MozStackFrameSymbolizer::FillSourceLineInfo(const CodeModules* modules,
   return ret;
 }
 
-CFIFrameInfo*
-MozStackFrameSymbolizer::FindCFIFrameInfo(const StackFrame* frame)
-{
+CFIFrameInfo* MozStackFrameSymbolizer::FindCFIFrameInfo(
+    const StackFrame* frame) {
   std::string modulePath;
 
   // For unit testing, support loading a specified module instead of
@@ -116,6 +112,6 @@ MozStackFrameSymbolizer::FindCFIFrameInfo(const StackFrame* frame)
   return rules.release();
 }
 
-} // namespace CrashReporter
+}  // namespace CrashReporter
 
-#endif // XP_WIN && HAVE_64BIT_BUILD
+#endif  // XP_WIN && HAVE_64BIT_BUILD

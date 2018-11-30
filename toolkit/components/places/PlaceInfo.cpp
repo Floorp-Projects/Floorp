@@ -15,35 +15,28 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// PlaceInfo
 
-PlaceInfo::PlaceInfo(int64_t aId,
-                     const nsCString& aGUID,
-                     already_AddRefed<nsIURI> aURI,
-                     const nsString& aTitle,
+PlaceInfo::PlaceInfo(int64_t aId, const nsCString& aGUID,
+                     already_AddRefed<nsIURI> aURI, const nsString& aTitle,
                      int64_t aFrecency)
-: mId(aId)
-, mGUID(aGUID)
-, mURI(aURI)
-, mTitle(aTitle)
-, mFrecency(aFrecency)
-, mVisitsAvailable(false)
-{
+    : mId(aId),
+      mGUID(aGUID),
+      mURI(aURI),
+      mTitle(aTitle),
+      mFrecency(aFrecency),
+      mVisitsAvailable(false) {
   MOZ_ASSERT(mURI, "Must provide a non-null uri!");
 }
 
-PlaceInfo::PlaceInfo(int64_t aId,
-                     const nsCString& aGUID,
-                     already_AddRefed<nsIURI> aURI,
-                     const nsString& aTitle,
-                     int64_t aFrecency,
-                     const VisitsArray& aVisits)
-: mId(aId)
-, mGUID(aGUID)
-, mURI(aURI)
-, mTitle(aTitle)
-, mFrecency(aFrecency)
-, mVisits(aVisits)
-, mVisitsAvailable(true)
-{
+PlaceInfo::PlaceInfo(int64_t aId, const nsCString& aGUID,
+                     already_AddRefed<nsIURI> aURI, const nsString& aTitle,
+                     int64_t aFrecency, const VisitsArray& aVisits)
+    : mId(aId),
+      mGUID(aGUID),
+      mURI(aURI),
+      mTitle(aTitle),
+      mFrecency(aFrecency),
+      mVisits(aVisits),
+      mVisitsAvailable(true) {
   MOZ_ASSERT(mURI, "Must provide a non-null uri!");
 }
 
@@ -51,44 +44,38 @@ PlaceInfo::PlaceInfo(int64_t aId,
 //// mozIPlaceInfo
 
 NS_IMETHODIMP
-PlaceInfo::GetPlaceId(int64_t* _placeId)
-{
+PlaceInfo::GetPlaceId(int64_t* _placeId) {
   *_placeId = mId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PlaceInfo::GetGuid(nsACString& _guid)
-{
+PlaceInfo::GetGuid(nsACString& _guid) {
   _guid = mGUID;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PlaceInfo::GetUri(nsIURI** _uri)
-{
+PlaceInfo::GetUri(nsIURI** _uri) {
   NS_ADDREF(*_uri = mURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PlaceInfo::GetTitle(nsAString& _title)
-{
+PlaceInfo::GetTitle(nsAString& _title) {
   _title = mTitle;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PlaceInfo::GetFrecency(int64_t* _frecency)
-{
+PlaceInfo::GetFrecency(int64_t* _frecency) {
   *_frecency = mFrecency;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PlaceInfo::GetVisits(JSContext* aContext,
-                     JS::MutableHandle<JS::Value> _visits)
-{
+                     JS::MutableHandle<JS::Value> _visits) {
   // If the visits data was not provided, return null rather
   // than an empty array to distinguish this case from the case
   // of a place without any visit.
@@ -99,8 +86,7 @@ PlaceInfo::GetVisits(JSContext* aContext,
 
   // TODO bug 625913 when we use this in situations that have more than one
   // visit here, we will likely want to make this cache the value.
-  JS::Rooted<JSObject*> visits(aContext,
-                               JS_NewArrayObject(aContext, 0));
+  JS::Rooted<JSObject*> visits(aContext, JS_NewArrayObject(aContext, 0));
   NS_ENSURE_TRUE(visits, NS_ERROR_OUT_OF_MEMORY);
 
   JS::Rooted<JSObject*> global(aContext, JS::CurrentGlobalOrNull(aContext));
@@ -111,8 +97,7 @@ PlaceInfo::GetVisits(JSContext* aContext,
   for (VisitsArray::size_type idx = 0; idx < mVisits.Length(); idx++) {
     JS::RootedObject jsobj(aContext);
     nsresult rv = xpc->WrapNative(aContext, global, mVisits[idx],
-                                  NS_GET_IID(mozIVisitInfo),
-                                  jsobj.address());
+                                  NS_GET_IID(mozIVisitInfo), jsobj.address());
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_STATE(jsobj);
 
@@ -127,10 +112,7 @@ PlaceInfo::GetVisits(JSContext* aContext,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
-NS_IMPL_ISUPPORTS(
-  PlaceInfo
-, mozIPlaceInfo
-)
+NS_IMPL_ISUPPORTS(PlaceInfo, mozIPlaceInfo)
 
-} // namespace places
-} // namespace mozilla
+}  // namespace places
+}  // namespace mozilla

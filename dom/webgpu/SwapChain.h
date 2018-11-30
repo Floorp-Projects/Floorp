@@ -12,30 +12,28 @@
 namespace mozilla {
 namespace dom {
 struct WebGPUSwapChainDescriptor;
-} // namespace dom
+}  // namespace dom
 
 namespace webgpu {
 
 class Device;
 class Texture;
 
-class SwapChain final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(SwapChain)
+class SwapChain final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(SwapChain)
 
-private:
-    SwapChain() = delete;
-    virtual ~SwapChain();
+ private:
+  SwapChain() = delete;
+  virtual ~SwapChain();
 
-public:
-    void Configure(const dom::WebGPUSwapChainDescriptor& desc) const;
-    already_AddRefed<Texture> GetNextTexture() const;
-    void Present() const;
+ public:
+  void Configure(const dom::WebGPUSwapChainDescriptor& desc) const;
+  already_AddRefed<Texture> GetNextTexture() const;
+  void Present() const;
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_SwapChain_H_
+#endif  // WEBGPU_SwapChain_H_

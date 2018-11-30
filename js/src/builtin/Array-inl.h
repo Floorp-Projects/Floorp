@@ -17,25 +17,25 @@
 
 namespace js {
 
-inline bool
-GetElement(JSContext* cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
-{
-    if (obj->isNative() && index < obj->as<NativeObject>().getDenseInitializedLength()) {
-        vp.set(obj->as<NativeObject>().getDenseElement(index));
-        if (!vp.isMagic(JS_ELEMENTS_HOLE)) {
-            return true;
-        }
+inline bool GetElement(JSContext* cx, HandleObject obj, uint32_t index,
+                       MutableHandleValue vp) {
+  if (obj->isNative() &&
+      index < obj->as<NativeObject>().getDenseInitializedLength()) {
+    vp.set(obj->as<NativeObject>().getDenseElement(index));
+    if (!vp.isMagic(JS_ELEMENTS_HOLE)) {
+      return true;
     }
+  }
 
-    if (obj->is<ArgumentsObject>()) {
-        if (obj->as<ArgumentsObject>().maybeGetElement(index, vp)) {
-            return true;
-        }
+  if (obj->is<ArgumentsObject>()) {
+    if (obj->as<ArgumentsObject>().maybeGetElement(index, vp)) {
+      return true;
     }
+  }
 
-    return GetElement(cx, obj, obj, index, vp);
+  return GetElement(cx, obj, obj, index, vp);
 }
 
-} // namespace js
+}  // namespace js
 
-#endif // builtin_Array_inl_h
+#endif  // builtin_Array_inl_h

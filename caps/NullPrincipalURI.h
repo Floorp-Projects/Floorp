@@ -22,19 +22,21 @@
 #include "nsIURIMutator.h"
 
 // {51fcd543-3b52-41f7-b91b-6b54102236e6}
-#define NS_NULLPRINCIPALURI_IMPLEMENTATION_CID \
-  {0x51fcd543, 0x3b52, 0x41f7, \
-    {0xb9, 0x1b, 0x6b, 0x54, 0x10, 0x22, 0x36, 0xe6} }
+#define NS_NULLPRINCIPALURI_IMPLEMENTATION_CID       \
+  {                                                  \
+    0x51fcd543, 0x3b52, 0x41f7, {                    \
+      0xb9, 0x1b, 0x6b, 0x54, 0x10, 0x22, 0x36, 0xe6 \
+    }                                                \
+  }
 
 namespace mozilla {
 
 class Encoding;
 
-class NullPrincipalURI final : public nsIURI
-                             , public nsISizeOf
-                             , public nsIIPCSerializableURI
-{
-public:
+class NullPrincipalURI final : public nsIURI,
+                               public nsISizeOf,
+                               public nsIIPCSerializableURI {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
   NS_DECL_NSIIPCSERIALIZABLEURI
@@ -46,9 +48,9 @@ public:
   // Returns null on failure.
   static already_AddRefed<NullPrincipalURI> Create();
 
-private:
+ private:
   NullPrincipalURI();
-  NullPrincipalURI(const NullPrincipalURI& aOther);
+  NullPrincipalURI(const NullPrincipalURI &aOther);
 
   ~NullPrincipalURI() {}
 
@@ -56,7 +58,7 @@ private:
 
   nsAutoCStringN<NSID_LENGTH> mPath;
 
-  nsresult Clone(nsIURI** aURI);
+  nsresult Clone(nsIURI **aURI);
   nsresult SetSpecInternal(const nsACString &input);
   nsresult SetScheme(const nsACString &input);
   nsresult SetUserPass(const nsACString &input);
@@ -69,30 +71,27 @@ private:
   nsresult SetRef(const nsACString &input);
   nsresult SetFilePath(const nsACString &input);
   nsresult SetQuery(const nsACString &input);
-  nsresult SetQueryWithEncoding(const nsACString &input, const Encoding* encoding);
-  bool Deserialize(const mozilla::ipc::URIParams&);
+  nsresult SetQueryWithEncoding(const nsACString &input,
+                                const Encoding *encoding);
+  bool Deserialize(const mozilla::ipc::URIParams &);
 
-public:
-  class Mutator final
-      : public nsIURIMutator
-      , public BaseURIMutator<NullPrincipalURI>
-  {
+ public:
+  class Mutator final : public nsIURIMutator,
+                        public BaseURIMutator<NullPrincipalURI> {
     NS_DECL_ISUPPORTS
     NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
 
-    NS_IMETHOD Deserialize(const mozilla::ipc::URIParams& aParams) override
-    {
+    NS_IMETHOD Deserialize(const mozilla::ipc::URIParams &aParams) override {
       return InitFromIPCParams(aParams);
     }
 
-    NS_IMETHOD Finalize(nsIURI** aURI) override
-    {
+    NS_IMETHOD Finalize(nsIURI **aURI) override {
       mURI.forget(aURI);
       return NS_OK;
     }
 
-    NS_IMETHOD SetSpec(const nsACString & aSpec, nsIURIMutator** aMutator) override
-    {
+    NS_IMETHOD SetSpec(const nsACString &aSpec,
+                       nsIURIMutator **aMutator) override {
       if (aMutator) {
         nsCOMPtr<nsIURIMutator> mutator = this;
         mutator.forget(aMutator);
@@ -100,9 +99,10 @@ public:
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    explicit Mutator() { }
-  private:
-    virtual ~Mutator() { }
+    explicit Mutator() {}
+
+   private:
+    virtual ~Mutator() {}
 
     friend class NullPrincipalURI;
   };
@@ -110,6 +110,6 @@ public:
   friend class BaseURIMutator<NullPrincipalURI>;
 };
 
-} // mozilla namespace
+}  // namespace mozilla
 
-#endif // mozilla_NullPrincipalURI_h
+#endif  // mozilla_NullPrincipalURI_h

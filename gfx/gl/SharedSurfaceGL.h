@@ -16,151 +16,129 @@
 #include <queue>
 
 namespace mozilla {
-    namespace gl {
-        class GLContext;
-    } // namespace gl
-    namespace gfx {
-        class DataSourceSurface;
-    } // namespace gfx
-} // namespace mozilla
+namespace gl {
+class GLContext;
+}  // namespace gl
+namespace gfx {
+class DataSourceSurface;
+}  // namespace gfx
+}  // namespace mozilla
 
 namespace mozilla {
 namespace gl {
 
 // For readback and bootstrapping:
-class SharedSurface_Basic
-    : public SharedSurface
-{
-public:
-    static UniquePtr<SharedSurface_Basic> Create(GLContext* gl,
-                                                 const GLFormats& formats,
-                                                 const gfx::IntSize& size,
-                                                 bool hasAlpha);
-
-    static UniquePtr<SharedSurface_Basic> Wrap(GLContext* gl,
+class SharedSurface_Basic : public SharedSurface {
+ public:
+  static UniquePtr<SharedSurface_Basic> Create(GLContext* gl,
+                                               const GLFormats& formats,
                                                const gfx::IntSize& size,
-                                               bool hasAlpha,
-                                               GLuint tex);
+                                               bool hasAlpha);
 
-    static SharedSurface_Basic* Cast(SharedSurface* surf) {
-        MOZ_ASSERT(surf->mType == SharedSurfaceType::Basic);
+  static UniquePtr<SharedSurface_Basic> Wrap(GLContext* gl,
+                                             const gfx::IntSize& size,
+                                             bool hasAlpha, GLuint tex);
 
-        return (SharedSurface_Basic*)surf;
-    }
+  static SharedSurface_Basic* Cast(SharedSurface* surf) {
+    MOZ_ASSERT(surf->mType == SharedSurfaceType::Basic);
 
-protected:
-    const GLuint mTex;
-    const bool mOwnsTex;
-    GLuint mFB;
+    return (SharedSurface_Basic*)surf;
+  }
 
-    SharedSurface_Basic(GLContext* gl,
-                        const gfx::IntSize& size,
-                        bool hasAlpha,
-                        GLuint tex,
-                        bool ownsTex);
+ protected:
+  const GLuint mTex;
+  const bool mOwnsTex;
+  GLuint mFB;
 
-public:
-    virtual ~SharedSurface_Basic();
+  SharedSurface_Basic(GLContext* gl, const gfx::IntSize& size, bool hasAlpha,
+                      GLuint tex, bool ownsTex);
 
-    virtual void LockProdImpl() override {}
-    virtual void UnlockProdImpl() override {}
+ public:
+  virtual ~SharedSurface_Basic();
 
-    virtual void ProducerAcquireImpl() override {}
-    virtual void ProducerReleaseImpl() override {}
+  virtual void LockProdImpl() override {}
+  virtual void UnlockProdImpl() override {}
 
-    virtual GLuint ProdTexture() override {
-        return mTex;
-    }
+  virtual void ProducerAcquireImpl() override {}
+  virtual void ProducerReleaseImpl() override {}
 
-    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override {
-        MOZ_CRASH("GFX: ToSurfaceDescriptor");
-        return false;
-    }
+  virtual GLuint ProdTexture() override { return mTex; }
+
+  virtual bool ToSurfaceDescriptor(
+      layers::SurfaceDescriptor* const out_descriptor) override {
+    MOZ_CRASH("GFX: ToSurfaceDescriptor");
+    return false;
+  }
 };
 
-class SurfaceFactory_Basic
-    : public SurfaceFactory
-{
-public:
-    SurfaceFactory_Basic(GLContext* gl, const SurfaceCaps& caps,
-                         const layers::TextureFlags& flags);
+class SurfaceFactory_Basic : public SurfaceFactory {
+ public:
+  SurfaceFactory_Basic(GLContext* gl, const SurfaceCaps& caps,
+                       const layers::TextureFlags& flags);
 
-    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
-        bool hasAlpha = mReadCaps.alpha;
-        return SharedSurface_Basic::Create(mGL, mFormats, size, hasAlpha);
-    }
+  virtual UniquePtr<SharedSurface> CreateShared(
+      const gfx::IntSize& size) override {
+    bool hasAlpha = mReadCaps.alpha;
+    return SharedSurface_Basic::Create(mGL, mFormats, size, hasAlpha);
+  }
 };
-
 
 // Using shared GL textures:
-class SharedSurface_GLTexture
-    : public SharedSurface
-{
-public:
-    static UniquePtr<SharedSurface_GLTexture> Create(GLContext* prodGL,
-                                                     const GLFormats& formats,
-                                                     const gfx::IntSize& size,
-                                                     bool hasAlpha);
+class SharedSurface_GLTexture : public SharedSurface {
+ public:
+  static UniquePtr<SharedSurface_GLTexture> Create(GLContext* prodGL,
+                                                   const GLFormats& formats,
+                                                   const gfx::IntSize& size,
+                                                   bool hasAlpha);
 
-    static SharedSurface_GLTexture* Cast(SharedSurface* surf) {
-        MOZ_ASSERT(surf->mType == SharedSurfaceType::SharedGLTexture);
+  static SharedSurface_GLTexture* Cast(SharedSurface* surf) {
+    MOZ_ASSERT(surf->mType == SharedSurfaceType::SharedGLTexture);
 
-        return (SharedSurface_GLTexture*)surf;
-    }
+    return (SharedSurface_GLTexture*)surf;
+  }
 
-protected:
-    const GLuint mTex;
-    GLsync mSync;
+ protected:
+  const GLuint mTex;
+  GLsync mSync;
 
-    SharedSurface_GLTexture(GLContext* prodGL,
-                            const gfx::IntSize& size,
-                            bool hasAlpha,
-                            GLuint tex)
-        : SharedSurface(SharedSurfaceType::SharedGLTexture,
-                        AttachmentType::GLTexture,
-                        prodGL,
-                        size,
-                        hasAlpha, true)
-        , mTex(tex)
-        , mSync(0)
-    {
-    }
+  SharedSurface_GLTexture(GLContext* prodGL, const gfx::IntSize& size,
+                          bool hasAlpha, GLuint tex)
+      : SharedSurface(SharedSurfaceType::SharedGLTexture,
+                      AttachmentType::GLTexture, prodGL, size, hasAlpha, true),
+        mTex(tex),
+        mSync(0) {}
 
-public:
-    virtual ~SharedSurface_GLTexture();
+ public:
+  virtual ~SharedSurface_GLTexture();
 
-    virtual void LockProdImpl() override {}
-    virtual void UnlockProdImpl() override {}
+  virtual void LockProdImpl() override {}
+  virtual void UnlockProdImpl() override {}
 
-    virtual void ProducerAcquireImpl() override {}
-    virtual void ProducerReleaseImpl() override;
+  virtual void ProducerAcquireImpl() override {}
+  virtual void ProducerReleaseImpl() override;
 
-    virtual GLuint ProdTexture() override {
-        return mTex;
-    }
+  virtual GLuint ProdTexture() override { return mTex; }
 
-    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
+  virtual bool ToSurfaceDescriptor(
+      layers::SurfaceDescriptor* const out_descriptor) override;
 };
 
-class SurfaceFactory_GLTexture
-    : public SurfaceFactory
-{
-public:
-    SurfaceFactory_GLTexture(GLContext* prodGL,
-                             const SurfaceCaps& caps,
-                             const RefPtr<layers::LayersIPCChannel>& allocator,
-                             const layers::TextureFlags& flags)
-        : SurfaceFactory(SharedSurfaceType::SharedGLTexture, prodGL, caps, allocator, flags)
-    {
-    }
+class SurfaceFactory_GLTexture : public SurfaceFactory {
+ public:
+  SurfaceFactory_GLTexture(GLContext* prodGL, const SurfaceCaps& caps,
+                           const RefPtr<layers::LayersIPCChannel>& allocator,
+                           const layers::TextureFlags& flags)
+      : SurfaceFactory(SharedSurfaceType::SharedGLTexture, prodGL, caps,
+                       allocator, flags) {}
 
-    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
-        bool hasAlpha = mReadCaps.alpha;
-        return SharedSurface_GLTexture::Create(mGL, mFormats, size, hasAlpha);
-    }
+  virtual UniquePtr<SharedSurface> CreateShared(
+      const gfx::IntSize& size) override {
+    bool hasAlpha = mReadCaps.alpha;
+    return SharedSurface_GLTexture::Create(mGL, mFormats, size, hasAlpha);
+  }
 };
 
-} // namespace gl
+}  // namespace gl
 
 } /* namespace mozilla */
 

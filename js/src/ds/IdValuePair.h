@@ -16,25 +16,18 @@
 
 namespace js {
 
-struct IdValuePair
-{
-    Value value;
-    jsid id;
+struct IdValuePair {
+  Value value;
+  jsid id;
 
-    IdValuePair()
-      : value(UndefinedValue()), id(JSID_EMPTY)
-    {}
-    explicit IdValuePair(jsid idArg)
-      : value(UndefinedValue()), id(idArg)
-    {}
-    IdValuePair(jsid idArg, const Value& valueArg)
-      : value(valueArg), id(idArg)
-    {}
+  IdValuePair() : value(UndefinedValue()), id(JSID_EMPTY) {}
+  explicit IdValuePair(jsid idArg) : value(UndefinedValue()), id(idArg) {}
+  IdValuePair(jsid idArg, const Value& valueArg) : value(valueArg), id(idArg) {}
 
-    void trace(JSTracer* trc) {
-        TraceRoot(trc, &value, "IdValuePair::value");
-        TraceRoot(trc, &id, "IdValuePair::id");
-    }
+  void trace(JSTracer* trc) {
+    TraceRoot(trc, &value, "IdValuePair::value");
+    TraceRoot(trc, &id, "IdValuePair::id");
+  }
 };
 
 using IdValueVector = JS::GCVector<IdValuePair, 8>;

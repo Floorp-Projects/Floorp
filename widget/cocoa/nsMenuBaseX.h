@@ -23,13 +23,12 @@ enum nsMenuObjectTypeX {
 // All other objects are memory-managed based on the DOM.
 // Content removal deletes them immediately and nothing else should.
 // Do not attempt to hold strong references to them or delete them.
-class nsMenuObjectX
-{
-public:
-  virtual ~nsMenuObjectX() { }
-  virtual nsMenuObjectTypeX MenuObjectType()=0;
-  virtual void*             NativeData()=0;
-  nsIContent*               Content() { return mContent; }
+class nsMenuObjectX {
+ public:
+  virtual ~nsMenuObjectX() {}
+  virtual nsMenuObjectTypeX MenuObjectType() = 0;
+  virtual void *NativeData() = 0;
+  nsIContent *Content() { return mContent; }
 
   /**
    * Called when an icon of a menu item somewhere in this menu has updated.
@@ -38,10 +37,9 @@ public:
    */
   virtual void IconUpdated() {}
 
-protected:
+ protected:
   nsCOMPtr<nsIContent> mContent;
 };
-
 
 //
 // Object stored as "representedObject" for all menu items
@@ -49,31 +47,29 @@ protected:
 
 class nsMenuGroupOwnerX;
 
-@interface MenuItemInfo : NSObject
-{
-  nsMenuGroupOwnerX * mMenuGroupOwner;
+@interface MenuItemInfo : NSObject {
+  nsMenuGroupOwnerX *mMenuGroupOwner;
 }
 
-- (id) initWithMenuGroupOwner:(nsMenuGroupOwnerX *)aMenuGroupOwner;
-- (nsMenuGroupOwnerX *) menuGroupOwner;
-- (void) setMenuGroupOwner:(nsMenuGroupOwnerX *)aMenuGroupOwner;
+- (id)initWithMenuGroupOwner:(nsMenuGroupOwnerX *)aMenuGroupOwner;
+- (nsMenuGroupOwnerX *)menuGroupOwner;
+- (void)setMenuGroupOwner:(nsMenuGroupOwnerX *)aMenuGroupOwner;
 
 @end
-
 
 // Special command IDs that we know Mac OS X does not use for anything else.
 // We use these in place of carbon's IDs for these commands in order to stop
 // Carbon from messing with our event handlers. See bug 346883.
 
 enum {
-  eCommand_ID_About      = 1,
-  eCommand_ID_Prefs      = 2,
-  eCommand_ID_Quit       = 3,
-  eCommand_ID_HideApp    = 4,
+  eCommand_ID_About = 1,
+  eCommand_ID_Prefs = 2,
+  eCommand_ID_Quit = 3,
+  eCommand_ID_HideApp = 4,
   eCommand_ID_HideOthers = 5,
-  eCommand_ID_ShowAll    = 6,
-  eCommand_ID_Update     = 7,
-  eCommand_ID_Last       = 8
+  eCommand_ID_ShowAll = 6,
+  eCommand_ID_Update = 7,
+  eCommand_ID_Last = 8
 };
 
-#endif // nsMenuBaseX_h_
+#endif  // nsMenuBaseX_h_

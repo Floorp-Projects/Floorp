@@ -26,32 +26,32 @@ using namespace mozilla::gfx;
 
 static float SimplePseudoRandom(int aStep, int aCount) {
   srand(aStep * 1000 + aCount);
-  return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+  return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }
 
 class BenchTest {
-public:
-  BenchTest(const char* aTestName)
-    : mTestName(aTestName)
-  {}
+ public:
+  BenchTest(const char* aTestName) : mTestName(aTestName) {}
 
   virtual ~BenchTest() {}
 
   virtual void Setup(Compositor* aCompositor, size_t aStep) {}
   virtual void Teardown(Compositor* aCompositor) {}
-  virtual void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep) = 0;
+  virtual void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect,
+                         size_t aStep) = 0;
 
   const char* ToString() { return mTestName; }
-private:
+
+ private:
   const char* mTestName;
 };
 
-static void
-DrawFrameTrivialQuad(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep, const EffectChain& effects) {
+static void DrawFrameTrivialQuad(Compositor* aCompositor,
+                                 const gfx::Rect& aScreenRect, size_t aStep,
+                                 const EffectChain& effects) {
   for (size_t i = 0; i < aStep * 10; i++) {
     const gfx::Rect& rect = gfx::Rect(i % (int)aScreenRect.width,
-                                      (int)(i / aScreenRect.height),
-                                      1, 1);
+                                      (int)(i / aScreenRect.height), 1, 1);
     const gfx::Rect& clipRect = aScreenRect;
 
     float opacity = 1.f;
@@ -64,14 +64,15 @@ DrawFrameTrivialQuad(Compositor* aCompositor, const gfx::Rect& aScreenRect, size
   }
 }
 
-static void
-DrawFrameStressQuad(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep, const EffectChain& effects)
-{
+static void DrawFrameStressQuad(Compositor* aCompositor,
+                                const gfx::Rect& aScreenRect, size_t aStep,
+                                const EffectChain& effects) {
   for (size_t i = 0; i < aStep * 10; i++) {
-    const gfx::Rect& rect = gfx::Rect(aScreenRect.width * SimplePseudoRandom(i, 0),
-                                      aScreenRect.height * SimplePseudoRandom(i, 1),
-                                      aScreenRect.width * SimplePseudoRandom(i, 2),
-                                      aScreenRect.height * SimplePseudoRandom(i, 3));
+    const gfx::Rect& rect =
+        gfx::Rect(aScreenRect.width * SimplePseudoRandom(i, 0),
+                  aScreenRect.height * SimplePseudoRandom(i, 1),
+                  aScreenRect.width * SimplePseudoRandom(i, 2),
+                  aScreenRect.height * SimplePseudoRandom(i, 3));
     const gfx::Rect& clipRect = aScreenRect;
 
     float opacity = 1.f;
@@ -86,12 +87,13 @@ DrawFrameStressQuad(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_
 }
 
 class EffectSolidColorBench : public BenchTest {
-public:
+ public:
   EffectSolidColorBench()
-    : BenchTest("EffectSolidColorBench (clear frame with EffectSolidColor)")
-  {}
+      : BenchTest("EffectSolidColorBench (clear frame with EffectSolidColor)") {
+  }
 
-  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep) {
+  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect,
+                 size_t aStep) {
     float tmp;
     float red = modff(aStep * 0.03f, &tmp);
     EffectChain effects;
@@ -109,12 +111,12 @@ public:
 };
 
 class EffectSolidColorTrivialBench : public BenchTest {
-public:
+ public:
   EffectSolidColorTrivialBench()
-    : BenchTest("EffectSolidColorTrivialBench (10s 1x1 EffectSolidColor)")
-  {}
+      : BenchTest("EffectSolidColorTrivialBench (10s 1x1 EffectSolidColor)") {}
 
-  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep) {
+  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect,
+                 size_t aStep) {
     EffectChain effects;
     effects.mPrimaryEffect = CreateEffect(aStep);
 
@@ -122,20 +124,21 @@ public:
   }
 
   already_AddRefed<Effect> CreateEffect(size_t i) {
-      float tmp;
-      float red = modff(i * 0.03f, &tmp);
-      EffectChain effects;
-      return MakeAndAddRef<EffectSolidColor>(gfx::Color(red, 0.4f, 0.4f, 1.0f));
+    float tmp;
+    float red = modff(i * 0.03f, &tmp);
+    EffectChain effects;
+    return MakeAndAddRef<EffectSolidColor>(gfx::Color(red, 0.4f, 0.4f, 1.0f));
   }
 };
 
 class EffectSolidColorStressBench : public BenchTest {
-public:
+ public:
   EffectSolidColorStressBench()
-    : BenchTest("EffectSolidColorStressBench (10s various EffectSolidColor)")
-  {}
+      : BenchTest(
+            "EffectSolidColorStressBench (10s various EffectSolidColor)") {}
 
-  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep) {
+  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect,
+                 size_t aStep) {
     EffectChain effects;
     effects.mPrimaryEffect = CreateEffect(aStep);
 
@@ -143,18 +146,16 @@ public:
   }
 
   already_AddRefed<Effect> CreateEffect(size_t i) {
-      float tmp;
-      float red = modff(i * 0.03f, &tmp);
-      EffectChain effects;
-      return MakeAndAddRef<EffectSolidColor>(gfx::Color(red, 0.4f, 0.4f, 1.0f));
+    float tmp;
+    float red = modff(i * 0.03f, &tmp);
+    EffectChain effects;
+    return MakeAndAddRef<EffectSolidColor>(gfx::Color(red, 0.4f, 0.4f, 1.0f));
   }
 };
 
 class UploadBench : public BenchTest {
-public:
-  UploadBench()
-    : BenchTest("Upload Bench (10s 256x256 upload)")
-  {}
+ public:
+  UploadBench() : BenchTest("Upload Bench (10s 256x256 upload)") {}
 
   uint32_t* mBuf;
   RefPtr<DataSourceSurface> mSurface;
@@ -164,10 +165,11 @@ public:
     int bytesPerPixel = 4;
     int w = 256;
     int h = 256;
-    mBuf = (uint32_t *) malloc(w * h * sizeof(uint32_t));
+    mBuf = (uint32_t*)malloc(w * h * sizeof(uint32_t));
 
     mSurface = Factory::CreateWrappingDataSourceSurface(
-      reinterpret_cast<uint8_t*>(mBuf), w * bytesPerPixel, IntSize(w, h), SurfaceFormat::B8G8R8A8);
+        reinterpret_cast<uint8_t*>(mBuf), w * bytesPerPixel, IntSize(w, h),
+        SurfaceFormat::B8G8R8A8);
     mTexture = aCompositor->CreateDataTextureSource();
   }
 
@@ -177,7 +179,8 @@ public:
     free(mBuf);
   }
 
-  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep) {
+  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect,
+                 size_t aStep) {
     for (size_t i = 0; i < aStep * 10; i++) {
       mTexture->Update(mSurface);
     }
@@ -185,10 +188,9 @@ public:
 };
 
 class TrivialTexturedQuadBench : public BenchTest {
-public:
+ public:
   TrivialTexturedQuadBench()
-    : BenchTest("Trvial Textured Quad (10s 256x256 quads)")
-  {}
+      : BenchTest("Trvial Textured Quad (10s 256x256 quads)") {}
 
   uint32_t* mBuf;
   RefPtr<DataSourceSurface> mSurface;
@@ -198,18 +200,20 @@ public:
     int bytesPerPixel = 4;
     size_t w = 256;
     size_t h = 256;
-    mBuf = (uint32_t *) malloc(w * h * sizeof(uint32_t));
+    mBuf = (uint32_t*)malloc(w * h * sizeof(uint32_t));
     for (size_t i = 0; i < w * h; i++) {
       mBuf[i] = 0xFF00008F;
     }
 
     mSurface = Factory::CreateWrappingDataSourceSurface(
-      reinterpret_cast<uint8_t*>(mBuf), w * bytesPerPixel, IntSize(w, h), SurfaceFormat::B8G8R8A8);
+        reinterpret_cast<uint8_t*>(mBuf), w * bytesPerPixel, IntSize(w, h),
+        SurfaceFormat::B8G8R8A8);
     mTexture = aCompositor->CreateDataTextureSource();
     mTexture->Update(mSurface);
   }
 
-  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep) {
+  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect,
+                 size_t aStep) {
     EffectChain effects;
     effects.mPrimaryEffect = CreateEffect(aStep);
 
@@ -229,10 +233,9 @@ public:
 };
 
 class StressTexturedQuadBench : public BenchTest {
-public:
+ public:
   StressTexturedQuadBench()
-    : BenchTest("Stress Textured Quad (10s 256x256 quads)")
-  {}
+      : BenchTest("Stress Textured Quad (10s 256x256 quads)") {}
 
   uint32_t* mBuf;
   RefPtr<DataSourceSurface> mSurface;
@@ -242,18 +245,20 @@ public:
     int bytesPerPixel = 4;
     size_t w = 256;
     size_t h = 256;
-    mBuf = (uint32_t *) malloc(w * h * sizeof(uint32_t));
+    mBuf = (uint32_t*)malloc(w * h * sizeof(uint32_t));
     for (size_t i = 0; i < w * h; i++) {
       mBuf[i] = 0xFF00008F;
     }
 
     mSurface = Factory::CreateWrappingDataSourceSurface(
-      reinterpret_cast<uint8_t*>(mBuf), w * bytesPerPixel, IntSize(w, h), SurfaceFormat::B8G8R8A8);
+        reinterpret_cast<uint8_t*>(mBuf), w * bytesPerPixel, IntSize(w, h),
+        SurfaceFormat::B8G8R8A8);
     mTexture = aCompositor->CreateDataTextureSource();
     mTexture->Update(mSurface);
   }
 
-  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep) {
+  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect,
+                 size_t aStep) {
     EffectChain effects;
     effects.mPrimaryEffect = CreateEffect(aStep);
 
@@ -272,8 +277,8 @@ public:
   }
 };
 
-static void RunCompositorBench(Compositor* aCompositor, const gfx::Rect& aScreenRect)
-{
+static void RunCompositorBench(Compositor* aCompositor,
+                               const gfx::Rect& aScreenRect) {
   std::vector<BenchTest*> tests;
 
   tests.push_back(new EffectSolidColorBench());
@@ -292,12 +297,11 @@ static void RunCompositorBench(Compositor* aCompositor, const gfx::Rect& aScreen
       test->Setup(aCompositor, j);
 
       TimeStamp start = TimeStamp::Now();
-      IntRect screenRect(aScreenRect.x, aScreenRect.y,
-                           aScreenRect.width, aScreenRect.height);
-      aCompositor->BeginFrame(
-        IntRect(screenRect.x, screenRect.y,
-                  screenRect.width, screenRect.height),
-        nullptr, aScreenRect, nullptr, nullptr);
+      IntRect screenRect(aScreenRect.x, aScreenRect.y, aScreenRect.width,
+                         aScreenRect.height);
+      aCompositor->BeginFrame(IntRect(screenRect.x, screenRect.y,
+                                      screenRect.width, screenRect.height),
+                              nullptr, aScreenRect, nullptr, nullptr);
 
       test->DrawFrame(aCompositor, aScreenRect, j);
 
@@ -329,8 +333,7 @@ static void RunCompositorBench(Compositor* aCompositor, const gfx::Rect& aScreen
   }
 }
 
-void CompositorBench(Compositor* aCompositor, const gfx::IntRect& aScreenRect)
-{
+void CompositorBench(Compositor* aCompositor, const gfx::IntRect& aScreenRect) {
   static bool sRanBenchmark = false;
   bool wantBenchmark = gfxPrefs::LayersBenchEnabled();
   if (wantBenchmark && !sRanBenchmark) {
@@ -339,8 +342,7 @@ void CompositorBench(Compositor* aCompositor, const gfx::IntRect& aScreenRect)
   sRanBenchmark = wantBenchmark;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif
-

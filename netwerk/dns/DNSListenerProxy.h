@@ -18,80 +18,71 @@ class nsICancelable;
 namespace mozilla {
 namespace net {
 
-class DNSListenerProxy final
-    : public nsIDNSListener
-    , public nsIDNSListenerProxy
-{
-public:
+class DNSListenerProxy final : public nsIDNSListener,
+                               public nsIDNSListenerProxy {
+ public:
   DNSListenerProxy(nsIDNSListener* aListener, nsIEventTarget* aTargetThread)
-    // Sometimes aListener is a main-thread only object like XPCWrappedJS, and
-    // sometimes it's a threadsafe object like nsSOCKSSocketInfo. Use a main-
-    // thread pointer holder, but disable strict enforcement of thread invariants.
-    // The AddRef implementation of XPCWrappedJS will assert if we go wrong here.
-    : mListener(new nsMainThreadPtrHolder<nsIDNSListener>(
-        "DNSListenerProxy::mListener", aListener, false))
-    , mTargetThread(aTargetThread)
-  { }
+      // Sometimes aListener is a main-thread only object like XPCWrappedJS, and
+      // sometimes it's a threadsafe object like nsSOCKSSocketInfo. Use a main-
+      // thread pointer holder, but disable strict enforcement of thread
+      // invariants. The AddRef implementation of XPCWrappedJS will assert if we
+      // go wrong here.
+      : mListener(new nsMainThreadPtrHolder<nsIDNSListener>(
+            "DNSListenerProxy::mListener", aListener, false)),
+        mTargetThread(aTargetThread) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
   NS_DECL_NSIDNSLISTENERPROXY
 
-  class OnLookupCompleteRunnable : public Runnable
-  {
-  public:
-    OnLookupCompleteRunnable(const nsMainThreadPtrHandle<nsIDNSListener>& aListener,
-                             nsICancelable* aRequest,
-                             nsIDNSRecord* aRecord,
-                             nsresult aStatus)
-      : Runnable("DNSListenerProxy::OnLookupCompleteRunnable")
-      , mListener(aListener)
-      , mRequest(aRequest)
-      , mRecord(aRecord)
-      , mStatus(aStatus)
-    { }
+  class OnLookupCompleteRunnable : public Runnable {
+   public:
+    OnLookupCompleteRunnable(
+        const nsMainThreadPtrHandle<nsIDNSListener>& aListener,
+        nsICancelable* aRequest, nsIDNSRecord* aRecord, nsresult aStatus)
+        : Runnable("DNSListenerProxy::OnLookupCompleteRunnable"),
+          mListener(aListener),
+          mRequest(aRequest),
+          mRecord(aRecord),
+          mStatus(aStatus) {}
 
     NS_DECL_NSIRUNNABLE
 
-  private:
+   private:
     nsMainThreadPtrHandle<nsIDNSListener> mListener;
     nsCOMPtr<nsICancelable> mRequest;
     nsCOMPtr<nsIDNSRecord> mRecord;
     nsresult mStatus;
   };
 
-  class OnLookupByTypeCompleteRunnable : public Runnable
-  {
-  public:
-    OnLookupByTypeCompleteRunnable(const nsMainThreadPtrHandle<nsIDNSListener> &aListener,
-                                   nsICancelable *aRequest,
-                                   nsIDNSByTypeRecord *aRes,
-                                   nsresult aStatus)
-      : Runnable("DNSListenerProxy::OnLookupByTypeCompleteRunnable")
-      , mListener(aListener)
-      , mRequest(aRequest)
-      , mResult(aRes)
-      , mStatus(aStatus)
-    { }
+  class OnLookupByTypeCompleteRunnable : public Runnable {
+   public:
+    OnLookupByTypeCompleteRunnable(
+        const nsMainThreadPtrHandle<nsIDNSListener>& aListener,
+        nsICancelable* aRequest, nsIDNSByTypeRecord* aRes, nsresult aStatus)
+        : Runnable("DNSListenerProxy::OnLookupByTypeCompleteRunnable"),
+          mListener(aListener),
+          mRequest(aRequest),
+          mResult(aRes),
+          mStatus(aStatus) {}
 
     NS_DECL_NSIRUNNABLE
 
-  private:
+   private:
     nsMainThreadPtrHandle<nsIDNSListener> mListener;
     nsCOMPtr<nsICancelable> mRequest;
     nsCOMPtr<nsIDNSByTypeRecord> mResult;
     nsresult mStatus;
   };
 
-private:
+ private:
   ~DNSListenerProxy() {}
 
   nsMainThreadPtrHandle<nsIDNSListener> mListener;
   nsCOMPtr<nsIEventTarget> mTargetThread;
 };
 
+}  // namespace net
+}  // namespace mozilla
 
-} // namespace net
-} // namespace mozilla
-
-#endif // DNSListenerProxy_h__
+#endif  // DNSListenerProxy_h__

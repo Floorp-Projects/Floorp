@@ -64,19 +64,17 @@ namespace net {
 
 class EventTokenBucket;
 
-class ATokenBucketEvent
-{
-public:
+class ATokenBucketEvent {
+ public:
   virtual void OnTokenBucketAdmitted() = 0;
 };
 
 class TokenBucketCancelable;
 
-class EventTokenBucket : public nsITimerCallback
-                       , public nsINamed
-                       , public ARefBase
-{
-public:
+class EventTokenBucket : public nsITimerCallback,
+                         public nsINamed,
+                         public ARefBase {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
@@ -98,7 +96,7 @@ public:
   // The returned cancelable event can only be canceled from the socket thread
   nsresult SubmitEvent(ATokenBucketEvent *event, nsICancelable **cancelable);
 
-private:
+ private:
   virtual ~EventTokenBucket();
   void CleanupTimers();
 
@@ -112,18 +110,19 @@ private:
   void UpdateTimer();
   void UpdateCredits();
 
-  const static uint64_t kUsecPerSec =  1000000;
+  const static uint64_t kUsecPerSec = 1000000;
   const static uint64_t kUsecPerMsec = 1000;
   const static uint64_t kMaxHz = 10000;
 
-  uint64_t mUnitCost;   // usec of credit needed for 1 event (from eventsPerSecond)
-  uint64_t mMaxCredit; // usec mCredit limit (from busrtSize)
-  uint64_t mCredit; // usec of accumulated credit.
+  uint64_t
+      mUnitCost;  // usec of credit needed for 1 event (from eventsPerSecond)
+  uint64_t mMaxCredit;  // usec mCredit limit (from busrtSize)
+  uint64_t mCredit;     // usec of accumulated credit.
 
-  bool     mPaused;
-  bool     mStopped;
-  nsDeque  mEvents;
-  bool     mTimerArmed;
+  bool mPaused;
+  bool mStopped;
+  nsDeque mEvents;
+  bool mTimerArmed;
   TimeStamp mLastUpdate;
 
   // The timer is created on the main thread, but is armed and executes Notify()
@@ -134,14 +133,14 @@ private:
 #ifdef XP_WIN
   // Windows timers are 15ms granularity by default. When we have active events
   // that need to be dispatched at 50ms  or less granularity we change the OS
-  // granularity to 1ms. 90 seconds after that need has elapsed we will change it
-  // back
-  const static uint64_t kCostFineGrainThreshold =  50 * kUsecPerMsec;
+  // granularity to 1ms. 90 seconds after that need has elapsed we will change
+  // it back
+  const static uint64_t kCostFineGrainThreshold = 50 * kUsecPerMsec;
 
-  void FineGrainTimers(); // get 1ms granularity
-  void NormalTimers(); // reset to default granularity
-  void WantNormalTimers(); // reset after 90 seconds if not needed in interim
-  void FineGrainResetTimerNotify(); // delayed callback to reset
+  void FineGrainTimers();   // get 1ms granularity
+  void NormalTimers();      // reset to default granularity
+  void WantNormalTimers();  // reset after 90 seconds if not needed in interim
+  void FineGrainResetTimerNotify();  // delayed callback to reset
 
   TimeStamp mLastFineGrainTimerUse;
   bool mFineGrainTimerInUse;
@@ -150,7 +149,7 @@ private:
 #endif
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

@@ -19,9 +19,8 @@ class MLGBuffer;
 class MLGDevice;
 
 // Cache MLGBuffers based on how long ago they were last used.
-class BufferCache
-{
-public:
+class BufferCache {
+ public:
   explicit BufferCache(MLGDevice* aDevice);
   ~BufferCache();
 
@@ -32,7 +31,7 @@ public:
   // Age out old buffers after a frame has been completed.
   void EndFrame();
 
-private:
+ private:
   // Not RefPtr since this would create a cycle.
   MLGDevice* mDevice;
 
@@ -51,27 +50,22 @@ private:
   // But since buffers use tiny amounts of memory, and they are only mapped
   // while drawing, it shouldn't be a big deal.
   struct CacheEntry {
-    CacheEntry() : mLastUsedFrame(0)
-    {}
+    CacheEntry() : mLastUsedFrame(0) {}
     CacheEntry(const CacheEntry& aEntry)
-     : mLastUsedFrame(aEntry.mLastUsedFrame),
-       mBuffer(aEntry.mBuffer)
-    {}
+        : mLastUsedFrame(aEntry.mLastUsedFrame), mBuffer(aEntry.mBuffer) {}
     CacheEntry(CacheEntry&& aEntry)
-     : mLastUsedFrame(aEntry.mLastUsedFrame),
-       mBuffer(std::move(aEntry.mBuffer))
-    {}
+        : mLastUsedFrame(aEntry.mLastUsedFrame),
+          mBuffer(std::move(aEntry.mBuffer)) {}
     CacheEntry(size_t aLastUsedFrame, MLGBuffer* aBuffer)
-     : mLastUsedFrame(aLastUsedFrame),
-       mBuffer(aBuffer)
-    {}
+        : mLastUsedFrame(aLastUsedFrame), mBuffer(aBuffer) {}
 
     uint64_t mLastUsedFrame;
     RefPtr<MLGBuffer> mBuffer;
   };
   typedef std::deque<CacheEntry> CachePool;
 
-  // We track how many frames have occurred to determine the age of cache entries.
+  // We track how many frames have occurred to determine the age of cache
+  // entries.
   uint64_t mFrameNumber;
 
   // To avoid doing too much work in one frame, we only shrink one size class
@@ -83,7 +77,7 @@ private:
   std::vector<CachePool> mCaches;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_mlgpu_BufferCache_h
+#endif  // mozilla_gfx_layers_mlgpu_BufferCache_h

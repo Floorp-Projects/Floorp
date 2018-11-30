@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /* We need this because Solaris' version of qsort is broken and
  * causes array bounds reads.
  */
@@ -31,8 +30,7 @@ extern "C" {
  *  5. extra data to pass to comparison function
  */
 void NS_QuickSort(void*, unsigned int, unsigned int,
-                  int (*)(const void*, const void*, void*),
-                  void*);
+                  int (*)(const void*, const void*, void*), void*);
 
 #ifdef __cplusplus
 }

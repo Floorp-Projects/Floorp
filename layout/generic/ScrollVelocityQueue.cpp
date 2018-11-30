@@ -13,14 +13,13 @@
 namespace mozilla {
 namespace layout {
 
-void
-ScrollVelocityQueue::Sample(const nsPoint& aScrollPosition)
-{
+void ScrollVelocityQueue::Sample(const nsPoint& aScrollPosition) {
   float flingSensitivity = gfxPrefs::ScrollSnapPredictionSensitivity();
   int maxVelocity = gfxPrefs::ScrollSnapPredictionMaxVelocity();
   maxVelocity = nsPresContext::CSSPixelsToAppUnits(maxVelocity);
   int maxOffset = maxVelocity * flingSensitivity;
-  TimeStamp currentRefreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
+  TimeStamp currentRefreshTime =
+      mPresContext->RefreshDriver()->MostRecentRefresh();
   if (mSampleTime.IsNull()) {
     mAccumulator = nsPoint();
   } else {
@@ -43,15 +42,14 @@ ScrollVelocityQueue::Sample(const nsPoint& aScrollPosition)
   TrimQueue();
 }
 
-void
-ScrollVelocityQueue::TrimQueue()
-{
+void ScrollVelocityQueue::TrimQueue() {
   if (mSampleTime.IsNull()) {
     // There are no samples, nothing to do here.
     return;
   }
 
-  TimeStamp currentRefreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
+  TimeStamp currentRefreshTime =
+      mPresContext->RefreshDriver()->MostRecentRefresh();
   nsPoint velocity;
   uint32_t timeDelta = (currentRefreshTime - mSampleTime).ToMilliseconds();
   for (int i = mQueue.Length() - 1; i >= 0; i--) {
@@ -65,9 +63,7 @@ ScrollVelocityQueue::TrimQueue()
   }
 }
 
-void
-ScrollVelocityQueue::Reset()
-{
+void ScrollVelocityQueue::Reset() {
   mAccumulator = nsPoint();
   mSampleTime = TimeStamp();
   mQueue.Clear();
@@ -76,9 +72,7 @@ ScrollVelocityQueue::Reset()
 /**
   Calculate the velocity of the scroll frame, in appunits / second.
 */
-nsPoint
-ScrollVelocityQueue::GetVelocity()
-{
+nsPoint ScrollVelocityQueue::GetVelocity() {
   TrimQueue();
   if (mQueue.Length() == 0) {
     // If getting the scroll velocity before any scrolling has occurred,
@@ -89,9 +83,9 @@ ScrollVelocityQueue::GetVelocity()
   for (int i = mQueue.Length() - 1; i >= 0; i--) {
     velocity += mQueue[i].second;
   }
-  return velocity / mQueue.Length();;
+  return velocity / mQueue.Length();
+  ;
 }
 
-} // namespace layout
-} // namespace mozilla
-
+}  // namespace layout
+}  // namespace mozilla

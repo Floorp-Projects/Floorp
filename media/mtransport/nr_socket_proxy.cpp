@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /*
+/*
 Copyright (c) 2007, Adobe Systems, Incorporated
 Copyright (c) 2013, Mozilla
 
@@ -15,16 +15,16 @@ modification, are permitted provided that the following conditions are
 met:
 
 * Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
+ notice, this list of conditions and the following disclaimer.
 
 * Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
+ notice, this list of conditions and the following disclaimer in the
+ documentation and/or other materials provided with the distribution.
 
 * Neither the name of Adobe Systems, Network Resonance, Mozilla nor
-  the names of its contributors may be used to endorse or promote
-  products derived from this software without specific prior written
-  permission.
+ the names of its contributors may be used to endorse or promote
+ products derived from this software without specific prior written
+ permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -45,54 +45,40 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "WebrtcProxyChannelWrapper.h"
 
-namespace mozilla
-{
+namespace mozilla {
 using namespace net;
 
 using std::shared_ptr;
 
-class NrSocketProxyData
-{
-public:
-  explicit NrSocketProxyData(nsTArray<uint8_t>&& aData)
-    : mData(aData)
-  {
+class NrSocketProxyData {
+ public:
+  explicit NrSocketProxyData(nsTArray<uint8_t>&& aData) : mData(aData) {
     MOZ_COUNT_CTOR(NrSocketProxyData);
   }
 
-  ~NrSocketProxyData()
-  {
-    MOZ_COUNT_DTOR(NrSocketProxyData);
-  }
+  ~NrSocketProxyData() { MOZ_COUNT_DTOR(NrSocketProxyData); }
 
-  const nsTArray<uint8_t>& GetData() const
-  {
-    return mData;
-  }
+  const nsTArray<uint8_t>& GetData() const { return mData; }
 
-private:
+ private:
   nsTArray<uint8_t> mData;
 };
 
 NrSocketProxy::NrSocketProxy(const shared_ptr<NrSocketProxyConfig>& aConfig)
-  : mClosed(false)
-  , mReadOffset(0)
-  , mConfig(aConfig)
-  , mWebrtcProxyChannel(nullptr)
-{
-  r_log(LOG_GENERIC,LOG_DEBUG,"NrSocketProxy::NrSocketProxy %p\n", this);
+    : mClosed(false),
+      mReadOffset(0),
+      mConfig(aConfig),
+      mWebrtcProxyChannel(nullptr) {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::NrSocketProxy %p\n", this);
   MOZ_ASSERT(mConfig, "config should not be null");
 }
 
-NrSocketProxy::~NrSocketProxy()
-{
-  r_log(LOG_GENERIC,LOG_DEBUG,"NrSocketProxy::~NrSocketProxy %p\n", this);
+NrSocketProxy::~NrSocketProxy() {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::~NrSocketProxy %p\n", this);
   MOZ_ASSERT(!mWebrtcProxyChannel, "webrtc proxy channel not null");
 }
 
-int
-NrSocketProxy::create(nr_transport_addr* aAddr)
-{
+int NrSocketProxy::create(nr_transport_addr* aAddr) {
   int32_t port;
   nsCString host;
 
@@ -108,10 +94,8 @@ NrSocketProxy::create(nr_transport_addr* aAddr)
   return 0;
 }
 
-int
-NrSocketProxy::connect(nr_transport_addr* aAddr)
-{
-  r_log(LOG_GENERIC,LOG_DEBUG,"NrSocketProxy::Connect %p\n", this);
+int NrSocketProxy::connect(nr_transport_addr* aAddr) {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::Connect %p\n", this);
 
   nsCString host;
   int port;
@@ -128,10 +112,8 @@ NrSocketProxy::connect(nr_transport_addr* aAddr)
   return R_WOULDBLOCK;
 }
 
-void
-NrSocketProxy::close()
-{
-  r_log(LOG_GENERIC,LOG_DEBUG,"NrSocketProxy::Close %p\n", this);
+void NrSocketProxy::close() {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::Close %p\n", this);
 
   if (mClosed) {
     return;
@@ -146,12 +128,8 @@ NrSocketProxy::close()
   }
 }
 
-int
-NrSocketProxy::write(const void* aBuffer, size_t aCount, size_t* aWrote)
-{
-  r_log(LOG_GENERIC,LOG_DEBUG,
-        "NrSocketProxy::Write %p count=%zu\n",
-        this,
+int NrSocketProxy::write(const void* aBuffer, size_t aCount, size_t* aWrote) {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::Write %p count=%zu\n", this,
         aCount);
 
   if (mClosed) {
@@ -175,10 +153,8 @@ NrSocketProxy::write(const void* aBuffer, size_t aCount, size_t* aWrote)
   return 0;
 }
 
-int
-NrSocketProxy::read(void* aBuffer, size_t aCount, size_t* aRead)
-{
-  r_log(LOG_GENERIC,LOG_DEBUG,"NrSocketProxy::Read %p\n", this);
+int NrSocketProxy::read(void* aBuffer, size_t aCount, size_t* aRead) {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::Read %p\n", this);
 
   if (mClosed) {
     return R_FAILED;
@@ -194,7 +170,7 @@ NrSocketProxy::read(void* aBuffer, size_t aCount, size_t* aRead)
     return R_WOULDBLOCK;
   }
 
-  while(aCount > 0 && !mReadQueue.empty()) {
+  while (aCount > 0 && !mReadQueue.empty()) {
     const NrSocketProxyData& data = mReadQueue.front();
 
     size_t remainingCount = data.GetData().Length() - mReadOffset;
@@ -217,80 +193,52 @@ NrSocketProxy::read(void* aBuffer, size_t aCount, size_t* aRead)
   return 0;
 }
 
-int
-NrSocketProxy::getaddr(nr_transport_addr* aAddr)
-{
-  r_log(LOG_GENERIC,LOG_DEBUG,"NrSocketProxy::GetAddr %p\n", this);
+int NrSocketProxy::getaddr(nr_transport_addr* aAddr) {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::GetAddr %p\n", this);
   return nr_transport_addr_copy(aAddr, &my_addr_);
 }
 
-int
-NrSocketProxy::sendto(const void* aBuffer,
-                      size_t aCount,
-                      int aFlags,
-                      nr_transport_addr* aAddr)
-{
+int NrSocketProxy::sendto(const void* aBuffer, size_t aCount, int aFlags,
+                          nr_transport_addr* aAddr) {
   // never call this
   MOZ_ASSERT(0);
   return R_FAILED;
 }
 
-int
-NrSocketProxy::recvfrom(void* aBuffer,
-                        size_t aCount,
-                        size_t* aRead,
-                        int aFlags,
-                        nr_transport_addr* aAddr)
-{
+int NrSocketProxy::recvfrom(void* aBuffer, size_t aCount, size_t* aRead,
+                            int aFlags, nr_transport_addr* aAddr) {
   // never call this
   MOZ_ASSERT(0);
   return R_FAILED;
 }
 
-int
-NrSocketProxy::listen(int aBacklog)
-{
-  return R_INTERNAL;
-}
+int NrSocketProxy::listen(int aBacklog) { return R_INTERNAL; }
 
-int
-NrSocketProxy::accept(nr_transport_addr* aAddr, nr_socket** aSocket)
-{
+int NrSocketProxy::accept(nr_transport_addr* aAddr, nr_socket** aSocket) {
   return R_INTERNAL;
 }
 
 // WebrtcProxyChannelCallback
-void
-NrSocketProxy::OnClose(nsresult aReason)
-{
+void NrSocketProxy::OnClose(nsresult aReason) {
   nsCString errorName;
   GetErrorName(aReason, errorName);
 
-  r_log(LOG_GENERIC,LOG_ERR,
-        "NrSocketProxy::OnClose %p reason=%u name=%s\n",
-        this,
-        static_cast<uint32_t>(aReason),
-        errorName.get());
+  r_log(LOG_GENERIC, LOG_ERR, "NrSocketProxy::OnClose %p reason=%u name=%s\n",
+        this, static_cast<uint32_t>(aReason), errorName.get());
 
   close();
 
   DoCallbacks();
 }
 
-void
-NrSocketProxy::OnConnected()
-{
-  r_log(LOG_GENERIC,LOG_DEBUG,"NrSocketProxy::OnConnected %p\n", this);
+void NrSocketProxy::OnConnected() {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::OnConnected %p\n", this);
 
   DoCallbacks();
 }
 
-void
-NrSocketProxy::OnRead(nsTArray<uint8_t>&& aReadData)
-{
-  r_log(LOG_GENERIC,LOG_DEBUG,
-        "NrSocketProxy::OnRead %p read=%zu\n",
-        this,
+void NrSocketProxy::OnRead(nsTArray<uint8_t>&& aReadData) {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrSocketProxy::OnRead %p read=%zu\n", this,
         aReadData.Length());
 
   mReadQueue.emplace_back(std::move(aReadData));
@@ -298,9 +246,7 @@ NrSocketProxy::OnRead(nsTArray<uint8_t>&& aReadData)
   DoCallbacks();
 }
 
-void
-NrSocketProxy::DoCallbacks()
-{
+void NrSocketProxy::DoCallbacks() {
   size_t lastCount = -1;
   size_t currentCount = 0;
   while ((poll_flags() & PR_POLL_READ) != 0 &&
@@ -319,12 +265,10 @@ NrSocketProxy::DoCallbacks()
   }
 }
 
-size_t
-NrSocketProxy::CountUnreadBytes() const
-{
+size_t NrSocketProxy::CountUnreadBytes() const {
   size_t count = 0;
 
-  for(const NrSocketProxyData& data : mReadQueue) {
+  for (const NrSocketProxyData& data : mReadQueue) {
     count += data.GetData().Length();
   }
 
@@ -335,9 +279,9 @@ NrSocketProxy::CountUnreadBytes() const
   return count;
 }
 
-void
-NrSocketProxy::AssignChannel_DoNotUse(WebrtcProxyChannelWrapper* aWrapper) {
+void NrSocketProxy::AssignChannel_DoNotUse(
+    WebrtcProxyChannelWrapper* aWrapper) {
   mWebrtcProxyChannel = aWrapper;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -16,9 +16,7 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame*
-NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsSVGUseFrame(aStyle);
 }
 
@@ -27,25 +25,19 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGUseFrame)
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
-void
-nsSVGUseFrame::Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow)
-{
+void nsSVGUseFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                         nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::use),
                "Content is not an SVG use!");
 
   mHasValidDimensions =
-    static_cast<SVGUseElement*>(aContent)->HasValidDimensions();
+      static_cast<SVGUseElement*>(aContent)->HasValidDimensions();
 
   nsSVGGFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
-nsresult
-nsSVGUseFrame::AttributeChanged(int32_t aNamespaceID,
-                                nsAtom* aAttribute,
-                                int32_t aModType)
-{
+nsresult nsSVGUseFrame::AttributeChanged(int32_t aNamespaceID,
+                                         nsAtom* aAttribute, int32_t aModType) {
   // Currently our SMIL implementation does not modify the DOM attributes. Once
   // we implement the SVG 2 SMIL behaviour this can be removed
   // SVGUseElement::AfterSetAttr's implementation will be sufficient.
@@ -57,22 +49,17 @@ nsSVGUseFrame::AttributeChanged(int32_t aNamespaceID,
   return nsSVGGFrame::AttributeChanged(aNamespaceID, aAttribute, aModType);
 }
 
-void
-nsSVGUseFrame::PositionAttributeChanged()
-{
+void nsSVGUseFrame::PositionAttributeChanged() {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nullptr;
-  nsLayoutUtils::PostRestyleEvent(
-    GetContent()->AsElement(), nsRestyleHint(0),
-    nsChangeHint_InvalidateRenderingObservers);
+  nsLayoutUtils::PostRestyleEvent(GetContent()->AsElement(), nsRestyleHint(0),
+                                  nsChangeHint_InvalidateRenderingObservers);
   nsSVGUtils::ScheduleReflowSVG(this);
   nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
 }
 
-void
-nsSVGUseFrame::DimensionAttributeChanged(bool aHadValidDimensions,
-                                         bool aAttributeIsUsed)
-{
+void nsSVGUseFrame::DimensionAttributeChanged(bool aHadValidDimensions,
+                                              bool aAttributeIsUsed) {
   bool invalidate = aAttributeIsUsed;
   if (mHasValidDimensions != aHadValidDimensions) {
     mHasValidDimensions = !mHasValidDimensions;
@@ -80,37 +67,31 @@ nsSVGUseFrame::DimensionAttributeChanged(bool aHadValidDimensions,
   }
 
   if (invalidate) {
-    nsLayoutUtils::PostRestyleEvent(
-      GetContent()->AsElement(), nsRestyleHint(0),
-      nsChangeHint_InvalidateRenderingObservers);
+    nsLayoutUtils::PostRestyleEvent(GetContent()->AsElement(), nsRestyleHint(0),
+                                    nsChangeHint_InvalidateRenderingObservers);
     nsSVGUtils::ScheduleReflowSVG(this);
   }
 }
 
-void
-nsSVGUseFrame::HrefChanged()
-{
-  nsLayoutUtils::PostRestyleEvent(
-    GetContent()->AsElement(), nsRestyleHint(0),
-    nsChangeHint_InvalidateRenderingObservers);
+void nsSVGUseFrame::HrefChanged() {
+  nsLayoutUtils::PostRestyleEvent(GetContent()->AsElement(), nsRestyleHint(0),
+                                  nsChangeHint_InvalidateRenderingObservers);
   nsSVGUtils::ScheduleReflowSVG(this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGDisplayableFrame methods
 
-void
-nsSVGUseFrame::ReflowSVG()
-{
+void nsSVGUseFrame::ReflowSVG() {
   // We only handle x/y offset here, since any width/height that is in force is
   // handled by the nsSVGOuterSVGFrame for the anonymous <svg> that will be
   // created for that purpose.
   float x, y;
-  static_cast<SVGUseElement*>(GetContent())->
-    GetAnimatedLengthValues(&x, &y, nullptr);
-  mRect.MoveTo(nsLayoutUtils::RoundGfxRectToAppRect(
-                 gfxRect(x, y, 0.0, 0.0),
-                 AppUnitsPerCSSPixel()).TopLeft());
+  static_cast<SVGUseElement*>(GetContent())
+      ->GetAnimatedLengthValues(&x, &y, nullptr);
+  mRect.MoveTo(nsLayoutUtils::RoundGfxRectToAppRect(gfxRect(x, y, 0.0, 0.0),
+                                                    AppUnitsPerCSSPixel())
+                   .TopLeft());
 
   // If we have a filter, we need to invalidate ourselves because filter
   // output can change even if none of our descendants need repainting.
@@ -121,14 +102,11 @@ nsSVGUseFrame::ReflowSVG()
   nsSVGGFrame::ReflowSVG();
 }
 
-void
-nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags)
-{
-  if (aFlags & COORD_CONTEXT_CHANGED &&
-      !(aFlags & TRANSFORM_CHANGED)) {
+void nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags) {
+  if (aFlags & COORD_CONTEXT_CHANGED && !(aFlags & TRANSFORM_CHANGED)) {
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y'
-    SVGUseElement *use = static_cast<SVGUseElement*>(GetContent());
+    SVGUseElement* use = static_cast<SVGUseElement*>(GetContent());
     if (use->mLengthAttributes[SVGUseElement::ATTR_X].IsPercentage() ||
         use->mLengthAttributes[SVGUseElement::ATTR_Y].IsPercentage()) {
       aFlags |= TRANSFORM_CHANGED;

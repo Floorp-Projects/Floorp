@@ -28,24 +28,22 @@
 #include <stdint.h>
 
 #ifdef _MSC_VER
-#pragma warning( disable : 4800 )
+#pragma warning(disable : 4800)
 #endif
 
 namespace mozilla {
 
 typedef gfxImageFormat PixelFormat;
 
-} // namespace
+}  // namespace mozilla
 
 namespace IPC {
 
-template<>
-struct ParamTraits<mozilla::gfx::Matrix>
-{
+template <>
+struct ParamTraits<mozilla::gfx::Matrix> {
   typedef mozilla::gfx::Matrix paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam._11);
     WriteParam(aMsg, aParam._12);
     WriteParam(aMsg, aParam._21);
@@ -54,8 +52,8 @@ struct ParamTraits<mozilla::gfx::Matrix>
     WriteParam(aMsg, aParam._32);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (ReadParam(aMsg, aIter, &aResult->_11) &&
         ReadParam(aMsg, aIter, &aResult->_12) &&
         ReadParam(aMsg, aIter, &aResult->_21) &&
@@ -67,98 +65,115 @@ struct ParamTraits<mozilla::gfx::Matrix>
     return false;
   }
 
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"[[%g %g] [%g %g] [%g %g]]", aParam._11, aParam._12, aParam._21, aParam._22,
-                                                            aParam._31, aParam._32));
+  static void Log(const paramType& aParam, std::wstring* aLog) {
+    aLog->append(StringPrintf(L"[[%g %g] [%g %g] [%g %g]]", aParam._11,
+                              aParam._12, aParam._21, aParam._22, aParam._31,
+                              aParam._32));
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::Matrix4x4>
-{
+template <>
+struct ParamTraits<mozilla::gfx::Matrix4x4> {
   typedef mozilla::gfx::Matrix4x4 paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
-#define Wr(_f)  WriteParam(msg, param. _f)
-    Wr(_11); Wr(_12); Wr(_13); Wr(_14);
-    Wr(_21); Wr(_22); Wr(_23); Wr(_24);
-    Wr(_31); Wr(_32); Wr(_33); Wr(_34);
-    Wr(_41); Wr(_42); Wr(_43); Wr(_44);
+  static void Write(Message* msg, const paramType& param) {
+#define Wr(_f) WriteParam(msg, param._f)
+    Wr(_11);
+    Wr(_12);
+    Wr(_13);
+    Wr(_14);
+    Wr(_21);
+    Wr(_22);
+    Wr(_23);
+    Wr(_24);
+    Wr(_31);
+    Wr(_32);
+    Wr(_33);
+    Wr(_34);
+    Wr(_41);
+    Wr(_42);
+    Wr(_43);
+    Wr(_44);
 #undef Wr
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
-#define Rd(_f)  ReadParam(msg, iter, &result-> _f)
-    return (Rd(_11) && Rd(_12) && Rd(_13) && Rd(_14) &&
-            Rd(_21) && Rd(_22) && Rd(_23) && Rd(_24) &&
-            Rd(_31) && Rd(_32) && Rd(_33) && Rd(_34) &&
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
+#define Rd(_f) ReadParam(msg, iter, &result->_f)
+    return (Rd(_11) && Rd(_12) && Rd(_13) && Rd(_14) && Rd(_21) && Rd(_22) &&
+            Rd(_23) && Rd(_24) && Rd(_31) && Rd(_32) && Rd(_33) && Rd(_34) &&
             Rd(_41) && Rd(_42) && Rd(_43) && Rd(_44));
 #undef Rd
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::Matrix5x4>
-{
+template <>
+struct ParamTraits<mozilla::gfx::Matrix5x4> {
   typedef mozilla::gfx::Matrix5x4 paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
-#define Wr(_f)  WriteParam(msg, param. _f)
-    Wr(_11); Wr(_12); Wr(_13); Wr(_14);
-    Wr(_21); Wr(_22); Wr(_23); Wr(_24);
-    Wr(_31); Wr(_32); Wr(_33); Wr(_34);
-    Wr(_41); Wr(_42); Wr(_43); Wr(_44);
-    Wr(_51); Wr(_52); Wr(_53); Wr(_54);
+  static void Write(Message* msg, const paramType& param) {
+#define Wr(_f) WriteParam(msg, param._f)
+    Wr(_11);
+    Wr(_12);
+    Wr(_13);
+    Wr(_14);
+    Wr(_21);
+    Wr(_22);
+    Wr(_23);
+    Wr(_24);
+    Wr(_31);
+    Wr(_32);
+    Wr(_33);
+    Wr(_34);
+    Wr(_41);
+    Wr(_42);
+    Wr(_43);
+    Wr(_44);
+    Wr(_51);
+    Wr(_52);
+    Wr(_53);
+    Wr(_54);
 #undef Wr
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
-#define Rd(_f)  ReadParam(msg, iter, &result-> _f)
-    return (Rd(_11) && Rd(_12) && Rd(_13) && Rd(_14) &&
-            Rd(_21) && Rd(_22) && Rd(_23) && Rd(_24) &&
-            Rd(_31) && Rd(_32) && Rd(_33) && Rd(_34) &&
-            Rd(_41) && Rd(_42) && Rd(_43) && Rd(_44) &&
-            Rd(_51) && Rd(_52) && Rd(_53) && Rd(_54));
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
+#define Rd(_f) ReadParam(msg, iter, &result->_f)
+    return (Rd(_11) && Rd(_12) && Rd(_13) && Rd(_14) && Rd(_21) && Rd(_22) &&
+            Rd(_23) && Rd(_24) && Rd(_31) && Rd(_32) && Rd(_33) && Rd(_34) &&
+            Rd(_41) && Rd(_42) && Rd(_43) && Rd(_44) && Rd(_51) && Rd(_52) &&
+            Rd(_53) && Rd(_54));
 #undef Rd
   }
 };
 
-template<>
-struct ParamTraits<gfxPoint>
-{
+template <>
+struct ParamTraits<gfxPoint> {
   typedef gfxPoint paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.x);
     WriteParam(aMsg, aParam.y);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->x) &&
             ReadParam(aMsg, aIter, &aResult->y));
- }
+  }
 };
 
-template<>
-struct ParamTraits<gfxSize>
-{
+template <>
+struct ParamTraits<gfxSize> {
   typedef gfxSize paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.width);
     WriteParam(aMsg, aParam.height);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (ReadParam(aMsg, aIter, &aResult->width) &&
         ReadParam(aMsg, aIter, &aResult->height))
       return true;
@@ -167,30 +182,26 @@ struct ParamTraits<gfxSize>
   }
 };
 
-template<>
-struct ParamTraits<gfxRect>
-{
+template <>
+struct ParamTraits<gfxRect> {
   typedef gfxRect paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.X());
     WriteParam(aMsg, aParam.Y());
     WriteParam(aMsg, aParam.Width());
     WriteParam(aMsg, aParam.Height());
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     auto x = aResult->X();
     auto y = aResult->Y();
     auto w = aResult->Width();
     auto h = aResult->Height();
 
-    bool retVal = (ReadParam(aMsg, aIter, &x) &&
-                   ReadParam(aMsg, aIter, &y) &&
-                   ReadParam(aMsg, aIter, &w) &&
-                   ReadParam(aMsg, aIter, &h));
+    bool retVal = (ReadParam(aMsg, aIter, &x) && ReadParam(aMsg, aIter, &y) &&
+                   ReadParam(aMsg, aIter, &w) && ReadParam(aMsg, aIter, &h));
     aResult->SetRect(x, y, w, h);
     return retVal;
   }
@@ -198,75 +209,58 @@ struct ParamTraits<gfxRect>
 
 template <>
 struct ParamTraits<gfxContentType>
-  : public ContiguousEnumSerializer<
-             gfxContentType,
-             gfxContentType::COLOR,
-             gfxContentType::SENTINEL>
-{};
+    : public ContiguousEnumSerializer<gfxContentType, gfxContentType::COLOR,
+                                      gfxContentType::SENTINEL> {};
 
 template <>
 struct ParamTraits<gfxSurfaceType>
-  : public ContiguousEnumSerializer<
-             gfxSurfaceType,
-             gfxSurfaceType::Image,
-             gfxSurfaceType::Max>
-{};
+    : public ContiguousEnumSerializer<gfxSurfaceType, gfxSurfaceType::Image,
+                                      gfxSurfaceType::Max> {};
 
 template <>
 struct ParamTraits<mozilla::gfx::SamplingFilter>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::SamplingFilter,
-             mozilla::gfx::SamplingFilter::GOOD,
-             mozilla::gfx::SamplingFilter::SENTINEL>
-{};
+    : public ContiguousEnumSerializer<mozilla::gfx::SamplingFilter,
+                                      mozilla::gfx::SamplingFilter::GOOD,
+                                      mozilla::gfx::SamplingFilter::SENTINEL> {
+};
 
 template <>
 struct ParamTraits<mozilla::gfx::BackendType>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::BackendType,
-             mozilla::gfx::BackendType::NONE,
-             mozilla::gfx::BackendType::BACKEND_LAST>
-{};
+    : public ContiguousEnumSerializer<mozilla::gfx::BackendType,
+                                      mozilla::gfx::BackendType::NONE,
+                                      mozilla::gfx::BackendType::BACKEND_LAST> {
+};
 
 template <>
 struct ParamTraits<mozilla::gfx::Feature>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::Feature,
-             mozilla::gfx::Feature::HW_COMPOSITING,
-             mozilla::gfx::Feature::NumValues>
-{};
+    : public ContiguousEnumSerializer<mozilla::gfx::Feature,
+                                      mozilla::gfx::Feature::HW_COMPOSITING,
+                                      mozilla::gfx::Feature::NumValues> {};
 
 template <>
 struct ParamTraits<mozilla::gfx::Fallback>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::Fallback,
-             mozilla::gfx::Fallback::NO_CONSTANT_BUFFER_OFFSETTING,
-             mozilla::gfx::Fallback::NumValues>
-{};
+    : public ContiguousEnumSerializer<
+          mozilla::gfx::Fallback,
+          mozilla::gfx::Fallback::NO_CONSTANT_BUFFER_OFFSETTING,
+          mozilla::gfx::Fallback::NumValues> {};
 
 template <>
 struct ParamTraits<mozilla::gfx::FeatureStatus>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::FeatureStatus,
-             mozilla::gfx::FeatureStatus::Unused,
-             mozilla::gfx::FeatureStatus::LAST>
-{};
+    : public ContiguousEnumSerializer<mozilla::gfx::FeatureStatus,
+                                      mozilla::gfx::FeatureStatus::Unused,
+                                      mozilla::gfx::FeatureStatus::LAST> {};
 
 template <>
 struct ParamTraits<mozilla::gfx::LightType>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::LightType,
-             mozilla::gfx::LightType::None,
-             mozilla::gfx::LightType::Max>
-{};
+    : public ContiguousEnumSerializer<mozilla::gfx::LightType,
+                                      mozilla::gfx::LightType::None,
+                                      mozilla::gfx::LightType::Max> {};
 
 template <>
 struct ParamTraits<mozilla::gfx::ColorSpace>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::ColorSpace,
-             mozilla::gfx::ColorSpace::SRGB,
-             mozilla::gfx::ColorSpace::Max>
-{};
+    : public ContiguousEnumSerializer<mozilla::gfx::ColorSpace,
+                                      mozilla::gfx::ColorSpace::SRGB,
+                                      mozilla::gfx::ColorSpace::Max> {};
 
 /*
 template <>
@@ -277,90 +271,78 @@ struct ParamTraits<mozilla::PixelFormat>
 {};
 */
 
-template<>
-struct ParamTraits<mozilla::gfx::Color>
-{
+template <>
+struct ParamTraits<mozilla::gfx::Color> {
   typedef mozilla::gfx::Color paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.r);
     WriteParam(msg, param.g);
     WriteParam(msg, param.b);
     WriteParam(msg, param.a);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
-    return (ReadParam(msg, iter, &result->r) &&
-            ReadParam(msg, iter, &result->g) &&
-            ReadParam(msg, iter, &result->b) &&
-            ReadParam(msg, iter, &result->a));
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
+    return (
+        ReadParam(msg, iter, &result->r) && ReadParam(msg, iter, &result->g) &&
+        ReadParam(msg, iter, &result->b) && ReadParam(msg, iter, &result->a));
   }
 };
 
-template<>
-struct ParamTraits<nsPoint>
-{
+template <>
+struct ParamTraits<nsPoint> {
   typedef nsPoint paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.x);
     WriteParam(msg, param.y);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->x) &&
             ReadParam(msg, iter, &result->y));
   }
 };
 
-template<>
-struct ParamTraits<nsIntPoint>
-{
+template <>
+struct ParamTraits<nsIntPoint> {
   typedef nsIntPoint paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.x);
     WriteParam(msg, param.y);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->x) &&
             ReadParam(msg, iter, &result->y));
   }
 };
 
-template<typename T>
-struct ParamTraits<mozilla::gfx::IntSizeTyped<T> >
-{
+template <typename T>
+struct ParamTraits<mozilla::gfx::IntSizeTyped<T>> {
   typedef mozilla::gfx::IntSizeTyped<T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.width);
     WriteParam(msg, param.height);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->width) &&
             ReadParam(msg, iter, &result->height));
   }
 };
 
-template<typename Region, typename Rect, typename Iter>
-struct RegionParamTraits
-{
+template <typename Region, typename Rect, typename Iter>
+struct RegionParamTraits {
   typedef Region paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
-
+  static void Write(Message* msg, const paramType& param) {
     for (auto iter = param.RectIter(); !iter.Done(); iter.Next()) {
       const Rect& r = iter.Get();
       MOZ_RELEASE_ASSERT(!r.IsEmpty(), "GFX: rect is empty.");
@@ -371,8 +353,8 @@ struct RegionParamTraits
     WriteParam(msg, Rect());
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     RegionBuilder<Region> builder;
     Rect rect;
     while (ReadParam(msg, iter, &rect)) {
@@ -387,244 +369,216 @@ struct RegionParamTraits
   }
 };
 
-template<class Units>
+template <class Units>
 struct ParamTraits<mozilla::gfx::IntRegionTyped<Units>>
-  : RegionParamTraits<mozilla::gfx::IntRegionTyped<Units>,
-                      mozilla::gfx::IntRectTyped<Units>,
-                      typename mozilla::gfx::IntRegionTyped<Units>::RectIterator>
-{};
+    : RegionParamTraits<
+          mozilla::gfx::IntRegionTyped<Units>,
+          mozilla::gfx::IntRectTyped<Units>,
+          typename mozilla::gfx::IntRegionTyped<Units>::RectIterator> {};
 
-template<>
-struct ParamTraits<mozilla::gfx::IntSize>
-{
+template <>
+struct ParamTraits<mozilla::gfx::IntSize> {
   typedef mozilla::gfx::IntSize paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.width);
     WriteParam(msg, param.height);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->width) &&
             ReadParam(msg, iter, &result->height));
   }
 };
 
-template<class T>
-struct ParamTraits< mozilla::gfx::CoordTyped<T> >
-{
+template <class T>
+struct ParamTraits<mozilla::gfx::CoordTyped<T>> {
   typedef mozilla::gfx::CoordTyped<T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.value);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->value));
   }
 };
 
-template<class T>
-struct ParamTraits< mozilla::gfx::IntCoordTyped<T> >
-{
+template <class T>
+struct ParamTraits<mozilla::gfx::IntCoordTyped<T>> {
   typedef mozilla::gfx::IntCoordTyped<T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.value);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->value));
   }
 };
 
-template<class T, class U>
-struct ParamTraits< mozilla::gfx::ScaleFactor<T, U> >
-{
+template <class T, class U>
+struct ParamTraits<mozilla::gfx::ScaleFactor<T, U>> {
   typedef mozilla::gfx::ScaleFactor<T, U> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.scale);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->scale));
   }
 };
 
-template<class T, class U>
-struct ParamTraits< mozilla::gfx::ScaleFactors2D<T, U> >
-{
+template <class T, class U>
+struct ParamTraits<mozilla::gfx::ScaleFactors2D<T, U>> {
   typedef mozilla::gfx::ScaleFactors2D<T, U> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.xScale);
     WriteParam(msg, param.yScale);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->xScale) &&
             ReadParam(msg, iter, &result->yScale));
   }
 };
 
-template<class T>
-struct ParamTraits< mozilla::gfx::PointTyped<T> >
-{
+template <class T>
+struct ParamTraits<mozilla::gfx::PointTyped<T>> {
   typedef mozilla::gfx::PointTyped<T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.x);
     WriteParam(msg, param.y);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->x) &&
             ReadParam(msg, iter, &result->y));
   }
 };
 
-template<class F, class T>
-struct ParamTraits< mozilla::gfx::Point3DTyped<F, T> >
-{
+template <class F, class T>
+struct ParamTraits<mozilla::gfx::Point3DTyped<F, T>> {
   typedef mozilla::gfx::Point3DTyped<F, T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.x);
     WriteParam(msg, param.y);
     WriteParam(msg, param.z);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->x) &&
             ReadParam(msg, iter, &result->y) &&
             ReadParam(msg, iter, &result->z));
   }
 };
 
-template<class T>
-struct ParamTraits< mozilla::gfx::IntPointTyped<T> >
-{
+template <class T>
+struct ParamTraits<mozilla::gfx::IntPointTyped<T>> {
   typedef mozilla::gfx::IntPointTyped<T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.x);
     WriteParam(msg, param.y);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->x) &&
             ReadParam(msg, iter, &result->y));
   }
 };
 
-template<class T>
-struct ParamTraits< mozilla::gfx::SizeTyped<T> >
-{
+template <class T>
+struct ParamTraits<mozilla::gfx::SizeTyped<T>> {
   typedef mozilla::gfx::SizeTyped<T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.width);
     WriteParam(msg, param.height);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->width) &&
             ReadParam(msg, iter, &result->height));
   }
 };
 
-template<class T>
-struct ParamTraits< mozilla::gfx::RectTyped<T> >
-{
+template <class T>
+struct ParamTraits<mozilla::gfx::RectTyped<T>> {
   typedef mozilla::gfx::RectTyped<T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.X());
     WriteParam(msg, param.Y());
     WriteParam(msg, param.Width());
     WriteParam(msg, param.Height());
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     auto x = result->X();
     auto y = result->Y();
     auto w = result->Width();
     auto h = result->Height();
 
-    bool retVal = (ReadParam(msg, iter, &x) &&
-                   ReadParam(msg, iter, &y) &&
-                   ReadParam(msg, iter, &w) &&
-                   ReadParam(msg, iter, &h));
+    bool retVal = (ReadParam(msg, iter, &x) && ReadParam(msg, iter, &y) &&
+                   ReadParam(msg, iter, &w) && ReadParam(msg, iter, &h));
     result->SetRect(x, y, w, h);
     return retVal;
   }
 };
 
-template<class T>
-struct ParamTraits< mozilla::gfx::IntRectTyped<T> >
-{
+template <class T>
+struct ParamTraits<mozilla::gfx::IntRectTyped<T>> {
   typedef mozilla::gfx::IntRectTyped<T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.X());
     WriteParam(msg, param.Y());
     WriteParam(msg, param.Width());
     WriteParam(msg, param.Height());
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     auto x = result->X();
     auto y = result->Y();
     auto w = result->Width();
     auto h = result->Height();
 
-    bool retVal = (ReadParam(msg, iter, &x) &&
-                   ReadParam(msg, iter, &y) &&
-                   ReadParam(msg, iter, &w) &&
-                   ReadParam(msg, iter, &h));
+    bool retVal = (ReadParam(msg, iter, &x) && ReadParam(msg, iter, &y) &&
+                   ReadParam(msg, iter, &w) && ReadParam(msg, iter, &h));
     result->SetRect(x, y, w, h);
     return retVal;
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::Margin>
-{
+template <>
+struct ParamTraits<mozilla::gfx::Margin> {
   typedef mozilla::gfx::Margin paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.top);
     WriteParam(msg, param.right);
     WriteParam(msg, param.bottom);
     WriteParam(msg, param.left);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->top) &&
             ReadParam(msg, iter, &result->right) &&
             ReadParam(msg, iter, &result->bottom) &&
@@ -632,21 +586,19 @@ struct ParamTraits<mozilla::gfx::Margin>
   }
 };
 
-template<class T>
-struct ParamTraits< mozilla::gfx::MarginTyped<T> >
-{
+template <class T>
+struct ParamTraits<mozilla::gfx::MarginTyped<T>> {
   typedef mozilla::gfx::MarginTyped<T> paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.top);
     WriteParam(msg, param.right);
     WriteParam(msg, param.bottom);
     WriteParam(msg, param.left);
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     return (ReadParam(msg, iter, &result->top) &&
             ReadParam(msg, iter, &result->right) &&
             ReadParam(msg, iter, &result->bottom) &&
@@ -654,175 +606,142 @@ struct ParamTraits< mozilla::gfx::MarginTyped<T> >
   }
 };
 
-template<>
-struct ParamTraits<nsRect>
-{
+template <>
+struct ParamTraits<nsRect> {
   typedef nsRect paramType;
 
-  static void Write(Message* msg, const paramType& param)
-  {
+  static void Write(Message* msg, const paramType& param) {
     WriteParam(msg, param.X());
     WriteParam(msg, param.Y());
     WriteParam(msg, param.Width());
     WriteParam(msg, param.Height());
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
-  {
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
     auto x = result->X();
     auto y = result->Y();
     auto w = result->Width();
     auto h = result->Height();
-    bool retVal = (ReadParam(msg, iter, &x) &&
-                   ReadParam(msg, iter, &y) &&
-                   ReadParam(msg, iter, &w) &&
-                   ReadParam(msg, iter, &h));
+    bool retVal = (ReadParam(msg, iter, &x) && ReadParam(msg, iter, &y) &&
+                   ReadParam(msg, iter, &w) && ReadParam(msg, iter, &h));
     result->SetRect(x, y, w, h);
     return retVal;
   }
 };
 
-template<>
+template <>
 struct ParamTraits<nsRegion>
-  : RegionParamTraits<nsRegion, nsRect, nsRegion::RectIterator>
-{};
+    : RegionParamTraits<nsRegion, nsRect, nsRegion::RectIterator> {};
 
-template<>
+template <>
 struct ParamTraits<GeckoProcessType>
-  : public ContiguousEnumSerializer<
-             GeckoProcessType,
-             GeckoProcessType_Default,
-             GeckoProcessType_End>
-{};
+    : public ContiguousEnumSerializer<
+          GeckoProcessType, GeckoProcessType_Default, GeckoProcessType_End> {};
 
 template <>
 struct ParamTraits<mozilla::gfx::SurfaceFormat>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::SurfaceFormat,
-             mozilla::gfx::SurfaceFormat::B8G8R8A8,
-             mozilla::gfx::SurfaceFormat::UNKNOWN>
-{};
+    : public ContiguousEnumSerializer<mozilla::gfx::SurfaceFormat,
+                                      mozilla::gfx::SurfaceFormat::B8G8R8A8,
+                                      mozilla::gfx::SurfaceFormat::UNKNOWN> {};
 
 template <>
 struct ParamTraits<mozilla::gfx::ColorDepth>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::ColorDepth,
-             mozilla::gfx::ColorDepth::COLOR_8,
-             mozilla::gfx::ColorDepth::UNKNOWN>
-{};
+    : public ContiguousEnumSerializer<mozilla::gfx::ColorDepth,
+                                      mozilla::gfx::ColorDepth::COLOR_8,
+                                      mozilla::gfx::ColorDepth::UNKNOWN> {};
 
 template <>
 struct ParamTraits<mozilla::StereoMode>
-  : public ContiguousEnumSerializer<
-             mozilla::StereoMode,
-             mozilla::StereoMode::MONO,
-             mozilla::StereoMode::MAX>
-{};
+    : public ContiguousEnumSerializer<mozilla::StereoMode,
+                                      mozilla::StereoMode::MONO,
+                                      mozilla::StereoMode::MAX> {};
 
 template <>
 struct ParamTraits<mozilla::YUVColorSpace>
-  : public ContiguousEnumSerializer<
-             mozilla::YUVColorSpace,
-             mozilla::YUVColorSpace::BT601,
-             mozilla::YUVColorSpace::UNKNOWN>
-{};
+    : public ContiguousEnumSerializer<mozilla::YUVColorSpace,
+                                      mozilla::YUVColorSpace::BT601,
+                                      mozilla::YUVColorSpace::UNKNOWN> {};
 
 template <>
 struct ParamTraits<mozilla::gfx::ImplicitlyCopyableFloatArray>
-  : public ParamTraits<nsTArray<float>>
-{
+    : public ParamTraits<nsTArray<float>> {
   typedef mozilla::gfx::ImplicitlyCopyableFloatArray paramType;
 };
 
 template <>
-struct ParamTraits<mozilla::gfx::EmptyAttributes>
-{
+struct ParamTraits<mozilla::gfx::EmptyAttributes> {
   typedef mozilla::gfx::EmptyAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-  }
+  static void Write(Message* aMsg, const paramType& aParam) {}
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return true;
   }
 };
 
 template <>
-struct ParamTraits<mozilla::gfx::MergeAttributes>
-{
+struct ParamTraits<mozilla::gfx::MergeAttributes> {
   typedef mozilla::gfx::MergeAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-  }
+  static void Write(Message* aMsg, const paramType& aParam) {}
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return true;
   }
 };
 
 template <>
-struct ParamTraits<mozilla::gfx::ToAlphaAttributes>
-{
+struct ParamTraits<mozilla::gfx::ToAlphaAttributes> {
   typedef mozilla::gfx::ToAlphaAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-  }
+  static void Write(Message* aMsg, const paramType& aParam) {}
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return true;
   }
 };
 
 template <>
-struct ParamTraits<mozilla::gfx::TileAttributes>
-{
+struct ParamTraits<mozilla::gfx::TileAttributes> {
   typedef mozilla::gfx::TileAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-  }
+  static void Write(Message* aMsg, const paramType& aParam) {}
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return true;
   }
 };
 
 template <>
-struct ParamTraits<mozilla::gfx::BlendAttributes>
-{
+struct ParamTraits<mozilla::gfx::BlendAttributes> {
   typedef mozilla::gfx::BlendAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mBlendMode);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mBlendMode);
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::MorphologyAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::MorphologyAttributes> {
   typedef mozilla::gfx::MorphologyAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mOperator);
     WriteParam(aMsg, aParam.mRadii);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mOperator) ||
         !ReadParam(aMsg, aIter, &aResult->mRadii)) {
       return false;
@@ -831,18 +750,16 @@ struct ParamTraits<mozilla::gfx::MorphologyAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::FloodAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::FloodAttributes> {
   typedef mozilla::gfx::FloodAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mColor);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mColor)) {
       return false;
     }
@@ -850,18 +767,16 @@ struct ParamTraits<mozilla::gfx::FloodAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::OpacityAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::OpacityAttributes> {
   typedef mozilla::gfx::OpacityAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mOpacity);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mOpacity)) {
       return false;
     }
@@ -869,18 +784,16 @@ struct ParamTraits<mozilla::gfx::OpacityAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::OffsetAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::OffsetAttributes> {
   typedef mozilla::gfx::OffsetAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mValue);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mValue)) {
       return false;
     }
@@ -888,36 +801,32 @@ struct ParamTraits<mozilla::gfx::OffsetAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::DisplacementMapAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::DisplacementMapAttributes> {
   typedef mozilla::gfx::DisplacementMapAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mScale);
     WriteParam(aMsg, aParam.mXChannel);
     WriteParam(aMsg, aParam.mYChannel);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mScale) ||
         !ReadParam(aMsg, aIter, &aResult->mXChannel) ||
         !ReadParam(aMsg, aIter, &aResult->mYChannel)) {
       return false;
-  }
-  return true;
+    }
+    return true;
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::TurbulenceAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::TurbulenceAttributes> {
   typedef mozilla::gfx::TurbulenceAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mOffset);
     WriteParam(aMsg, aParam.mBaseFrequency);
     WriteParam(aMsg, aParam.mSeed);
@@ -926,8 +835,8 @@ struct ParamTraits<mozilla::gfx::TurbulenceAttributes>
     WriteParam(aMsg, aParam.mType);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mOffset) ||
         !ReadParam(aMsg, aIter, &aResult->mBaseFrequency) ||
         !ReadParam(aMsg, aIter, &aResult->mSeed) ||
@@ -940,20 +849,18 @@ struct ParamTraits<mozilla::gfx::TurbulenceAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::ImageAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::ImageAttributes> {
   typedef mozilla::gfx::ImageAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mFilter);
     WriteParam(aMsg, aParam.mInputIndex);
     WriteParam(aMsg, aParam.mTransform);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mFilter) ||
         !ReadParam(aMsg, aIter, &aResult->mInputIndex) ||
         !ReadParam(aMsg, aIter, &aResult->mTransform)) {
@@ -963,18 +870,16 @@ struct ParamTraits<mozilla::gfx::ImageAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::GaussianBlurAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::GaussianBlurAttributes> {
   typedef mozilla::gfx::GaussianBlurAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mStdDeviation);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mStdDeviation)) {
       return false;
     }
@@ -982,20 +887,18 @@ struct ParamTraits<mozilla::gfx::GaussianBlurAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::DropShadowAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::DropShadowAttributes> {
   typedef mozilla::gfx::DropShadowAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mStdDeviation);
     WriteParam(aMsg, aParam.mOffset);
     WriteParam(aMsg, aParam.mColor);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mStdDeviation) ||
         !ReadParam(aMsg, aIter, &aResult->mOffset) ||
         !ReadParam(aMsg, aIter, &aResult->mColor)) {
@@ -1005,19 +908,17 @@ struct ParamTraits<mozilla::gfx::DropShadowAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::ColorMatrixAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::ColorMatrixAttributes> {
   typedef mozilla::gfx::ColorMatrixAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mType);
     WriteParam(aMsg, aParam.mValues);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mType) ||
         !ReadParam(aMsg, aIter, &aResult->mValues)) {
       return false;
@@ -1026,13 +927,11 @@ struct ParamTraits<mozilla::gfx::ColorMatrixAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::ComponentTransferAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::ComponentTransferAttributes> {
   typedef mozilla::gfx::ComponentTransferAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     for (int i = 0; i < 4; ++i) {
       WriteParam(aMsg, aParam.mTypes[i]);
     }
@@ -1041,15 +940,15 @@ struct ParamTraits<mozilla::gfx::ComponentTransferAttributes>
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     for (int i = 0; i < 4; ++i) {
       if (!ReadParam(aMsg, aIter, &aResult->mTypes[i])) {
         return false;
       }
     }
     for (int i = 0; i < 4; ++i) {
-      if (!ReadParam(aMsg, aIter, &aResult->mValues[i])){
+      if (!ReadParam(aMsg, aIter, &aResult->mValues[i])) {
         return false;
       }
     }
@@ -1057,13 +956,11 @@ struct ParamTraits<mozilla::gfx::ComponentTransferAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::ConvolveMatrixAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::ConvolveMatrixAttributes> {
   typedef mozilla::gfx::ConvolveMatrixAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mKernelSize);
     WriteParam(aMsg, aParam.mKernelMatrix);
     WriteParam(aMsg, aParam.mDivisor);
@@ -1074,8 +971,8 @@ struct ParamTraits<mozilla::gfx::ConvolveMatrixAttributes>
     WriteParam(aMsg, aParam.mPreserveAlpha);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mKernelSize) ||
         !ReadParam(aMsg, aIter, &aResult->mKernelMatrix) ||
         !ReadParam(aMsg, aIter, &aResult->mDivisor) ||
@@ -1090,13 +987,11 @@ struct ParamTraits<mozilla::gfx::ConvolveMatrixAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::DiffuseLightingAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::DiffuseLightingAttributes> {
   typedef mozilla::gfx::DiffuseLightingAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mLightType);
     WriteParam(aMsg, aParam.mLightValues);
     WriteParam(aMsg, aParam.mSurfaceScale);
@@ -1106,8 +1001,8 @@ struct ParamTraits<mozilla::gfx::DiffuseLightingAttributes>
     WriteParam(aMsg, aParam.mSpecularExponent);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mLightType) ||
         !ReadParam(aMsg, aIter, &aResult->mLightValues) ||
         !ReadParam(aMsg, aIter, &aResult->mSurfaceScale) ||
@@ -1121,13 +1016,11 @@ struct ParamTraits<mozilla::gfx::DiffuseLightingAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::SpecularLightingAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::SpecularLightingAttributes> {
   typedef mozilla::gfx::SpecularLightingAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mLightType);
     WriteParam(aMsg, aParam.mLightValues);
     WriteParam(aMsg, aParam.mSurfaceScale);
@@ -1137,8 +1030,8 @@ struct ParamTraits<mozilla::gfx::SpecularLightingAttributes>
     WriteParam(aMsg, aParam.mSpecularExponent);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mLightType) ||
         !ReadParam(aMsg, aIter, &aResult->mLightValues) ||
         !ReadParam(aMsg, aIter, &aResult->mSurfaceScale) ||
@@ -1152,19 +1045,17 @@ struct ParamTraits<mozilla::gfx::SpecularLightingAttributes>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::CompositeAttributes>
-{
+template <>
+struct ParamTraits<mozilla::gfx::CompositeAttributes> {
   typedef mozilla::gfx::CompositeAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mOperator);
     WriteParam(aMsg, aParam.mCoefficients);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mOperator) ||
         !ReadParam(aMsg, aIter, &aResult->mCoefficients)) {
       return false;
@@ -1174,12 +1065,10 @@ struct ParamTraits<mozilla::gfx::CompositeAttributes>
 };
 
 template <>
-struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
-{
+struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription> {
   typedef mozilla::gfx::FilterPrimitiveDescription paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.PrimitiveSubregion());
     WriteParam(aMsg, aParam.FilterSpaceBounds());
     WriteParam(aMsg, aParam.IsTainted());
@@ -1192,8 +1081,8 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
     WriteParam(aMsg, aParam.Attributes());
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     mozilla::gfx::IntRect primitiveSubregion;
     mozilla::gfx::IntRect filterSpaceBounds;
     bool isTainted = false;
@@ -1228,40 +1117,36 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
 };
 
 template <>
-struct ParamTraits<mozilla::gfx::FilterDescription>
-{
+struct ParamTraits<mozilla::gfx::FilterDescription> {
   typedef mozilla::gfx::FilterDescription paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mPrimitives);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->mPrimitives));
   }
 };
 
 template <>
-struct ParamTraits<mozilla::gfx::Glyph>
-{
+struct ParamTraits<mozilla::gfx::Glyph> {
   typedef mozilla::gfx::Glyph paramType;
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mIndex);
     WriteParam(aMsg, aParam.mPosition);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->mIndex) &&
-            ReadParam(aMsg, aIter, &aResult->mPosition)
-      );
+            ReadParam(aMsg, aIter, &aResult->mPosition));
   }
 };
 
-template<typename T, size_t Length>
-struct ParamTraits<mozilla::Array<T, Length>>
-{
+template <typename T, size_t Length>
+struct ParamTraits<mozilla::Array<T, Length>> {
   typedef mozilla::Array<T, Length> paramType;
   static void Write(Message* aMsg, const paramType& aParam) {
     for (size_t i = 0; i < Length; i++) {
@@ -1269,7 +1154,8 @@ struct ParamTraits<mozilla::Array<T, Length>>
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     for (size_t i = 0; i < Length; i++) {
       if (!ReadParam<T>(aMsg, aIter, &aResult->operator[](i))) {
         return false;
@@ -1279,9 +1165,8 @@ struct ParamTraits<mozilla::Array<T, Length>>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::PaintFragment>
-{
+template <>
+struct ParamTraits<mozilla::gfx::PaintFragment> {
   typedef mozilla::gfx::PaintFragment paramType;
   static void Write(Message* aMsg, paramType& aParam) {
     WriteParam(aMsg, aParam.mSize);
@@ -1289,7 +1174,8 @@ struct ParamTraits<mozilla::gfx::PaintFragment>
     WriteParam(aMsg, aParam.mDependencies);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mSize) &&
            ReadParam(aMsg, aIter, &aResult->mRecording) &&
            ReadParam(aMsg, aIter, &aResult->mDependencies);

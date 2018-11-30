@@ -16,31 +16,23 @@
 // a constructor/destructor or any instance members. Please don't add
 // instance member variables, only static member variables.
 
-class nsMemoryImpl : public nsIMemory
-{
-public:
+class nsMemoryImpl : public nsIMemory {
+ public:
   // We don't use the generic macros because we are a special static object
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) override;
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override
-  {
-    return 1;
-  }
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) override
-  {
-    return 1;
-  }
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override { return 1; }
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) override { return 1; }
 
   NS_DECL_NSIMEMORY
 
-  static nsresult Create(nsISupports* aOuter,
-                         const nsIID& aIID, void** aResult);
+  static nsresult Create(nsISupports* aOuter, const nsIID& aIID,
+                         void** aResult);
 
   nsresult FlushMemory(const char16_t* aReason, bool aImmediate);
   nsresult RunFlushers(const char16_t* aReason);
 
-protected:
-  struct FlushEvent : public nsIRunnable
-  {
+ protected:
+  struct FlushEvent : public nsIRunnable {
     constexpr FlushEvent() : mReason(nullptr) {}
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIRUNNABLE
@@ -52,4 +44,4 @@ protected:
   static PRIntervalTime sLastFlushTime;
 };
 
-#endif // nsMemoryImpl_h__
+#endif  // nsMemoryImpl_h__

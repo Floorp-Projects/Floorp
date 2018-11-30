@@ -15,144 +15,78 @@ namespace recordreplay {
 
 namespace child {
 
-void
-InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
-{
+void InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv) {
   // This is called from all child processes, and is a no-op if not
   // recording or replaying.
 }
 
-char*
-PrefsShmemContents(size_t aPrefsLen)
-{
+char* PrefsShmemContents(size_t aPrefsLen) { MOZ_CRASH(); }
+
+base::ProcessId MiddlemanProcessId() { MOZ_CRASH(); }
+
+base::ProcessId ParentProcessId() { MOZ_CRASH(); }
+
+void CreateCheckpoint() { MOZ_CRASH(); }
+
+void SetVsyncObserver(VsyncObserver* aObserver) { MOZ_CRASH(); }
+
+bool OnVsync() { MOZ_CRASH(); }
+
+void NotifyPaintStart() { MOZ_CRASH(); }
+
+void NotifyPaintComplete() { MOZ_CRASH(); }
+
+already_AddRefed<gfx::DrawTarget> DrawTargetForRemoteDrawing(
+    LayoutDeviceIntSize aSize) {
   MOZ_CRASH();
 }
 
-base::ProcessId
-MiddlemanProcessId()
-{
-  MOZ_CRASH();
-}
-
-base::ProcessId
-ParentProcessId()
-{
-  MOZ_CRASH();
-}
-
-void CreateCheckpoint()
-{
-  MOZ_CRASH();
-}
-
-void
-SetVsyncObserver(VsyncObserver* aObserver)
-{
-  MOZ_CRASH();
-}
-
-bool
-OnVsync()
-{
-  MOZ_CRASH();
-}
-
-void
-NotifyPaintStart()
-{
-  MOZ_CRASH();
-}
-
-void
-NotifyPaintComplete()
-{
-  MOZ_CRASH();
-}
-
-already_AddRefed<gfx::DrawTarget>
-DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
-{
-  MOZ_CRASH();
-}
-
-} // namespace child
+}  // namespace child
 
 namespace parent {
 
-void
-InitializeUIProcess(int aArgc, char** aArgv)
-{
+void InitializeUIProcess(int aArgc, char** aArgv) {
   // This is called from UI processes, and has no state to initialize if
   // recording/replaying is disabled on this platform.
 }
 
-const char*
-SaveAllRecordingsDirectory()
-{
+const char* SaveAllRecordingsDirectory() {
   // This is called from UI processes, and recordings are never saved if
   // recording/replaying is disabled on this platform.
   return nullptr;
 }
 
-void
-SaveRecording(const ipc::FileDescriptor& aFile)
-{
+void SaveRecording(const ipc::FileDescriptor& aFile) { MOZ_CRASH(); }
+
+ipc::MessageChannel* ChannelToUIProcess() { MOZ_CRASH(); }
+
+void InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
+                         const base::SharedMemoryHandle& aPrefsHandle,
+                         const ipc::FileDescriptor& aPrefMapHandle) {
   MOZ_CRASH();
 }
 
-ipc::MessageChannel*
-ChannelToUIProcess()
-{
+void NotePrefsShmemContents(char* aPrefs, size_t aPrefsLen) { MOZ_CRASH(); }
+
+void OpenChannel(base::ProcessId aMiddlemanPid, uint32_t aChannelId,
+                 ipc::FileDescriptor* aConnection) {
   MOZ_CRASH();
 }
 
-void
-InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
-                    const base::SharedMemoryHandle& aPrefsHandle,
-                    const ipc::FileDescriptor& aPrefMapHandle)
-{
+void GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid,
+                                 uint32_t aChannelId,
+                                 const char* aRecordingFile, bool aRecording,
+                                 std::vector<std::string>& aExtraArgs) {
   MOZ_CRASH();
 }
 
-void
-NotePrefsShmemContents(char* aPrefs, size_t aPrefsLen)
-{
-  MOZ_CRASH();
-}
+base::ProcessId ParentProcessId() { MOZ_CRASH(); }
 
-void
-OpenChannel(base::ProcessId aMiddlemanPid, uint32_t aChannelId, ipc::FileDescriptor* aConnection)
-{
-  MOZ_CRASH();
-}
+bool IsMiddlemanWithRecordingChild() { return false; }
 
-void
-GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid, uint32_t aChannelId,
-                            const char* aRecordingFile, bool aRecording,
-                            std::vector<std::string>& aExtraArgs)
-{
-  MOZ_CRASH();
-}
+bool DebuggerRunsInMiddleman() { MOZ_CRASH(); }
 
-base::ProcessId
-ParentProcessId()
-{
-  MOZ_CRASH();
-}
+}  // namespace parent
 
-bool
-IsMiddlemanWithRecordingChild()
-{
-  return false;
-}
-
-bool
-DebuggerRunsInMiddleman()
-{
-  MOZ_CRASH();
-}
-
-} // namespace parent
-
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla

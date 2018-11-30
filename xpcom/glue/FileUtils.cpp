@@ -41,9 +41,7 @@
 
 #include "nsString.h"
 
-bool
-mozilla::fallocate(PRFileDesc* aFD, int64_t aLength)
-{
+bool mozilla::fallocate(PRFileDesc* aFD, int64_t aLength) {
 #if defined(HAVE_POSIX_FALLOCATE)
   return posix_fallocate(PR_FileDesc2NativeHandle(aFD), 0, aLength) == 0;
 #elif defined(XP_WIN)
@@ -107,8 +105,9 @@ mozilla::fallocate(PRFileDesc* aFD, int64_t aLength)
     return false;
   }
 
-  int nWrite; // Return value from write()
-  int64_t iWrite = ((buf.st_size + 2 * nBlk - 1) / nBlk) * nBlk - 1; // Next offset to write to
+  int nWrite;  // Return value from write()
+  int64_t iWrite = ((buf.st_size + 2 * nBlk - 1) / nBlk) * nBlk -
+                   1;  // Next offset to write to
   while (iWrite < aLength) {
     nWrite = 0;
     if (PR_Seek64(aFD, iWrite, PR_SEEK_SET) == iWrite) {
@@ -126,9 +125,7 @@ mozilla::fallocate(PRFileDesc* aFD, int64_t aLength)
   return false;
 }
 
-void
-mozilla::ReadAheadLib(nsIFile* aFile)
-{
+void mozilla::ReadAheadLib(nsIFile* aFile) {
 #if defined(XP_WIN)
   nsAutoString path;
   if (!aFile || NS_FAILED(aFile->GetPath(path))) {
@@ -144,10 +141,8 @@ mozilla::ReadAheadLib(nsIFile* aFile)
 #endif
 }
 
-void
-mozilla::ReadAheadFile(nsIFile* aFile, const size_t aOffset,
-                       const size_t aCount, mozilla::filedesc_t* aOutFd)
-{
+void mozilla::ReadAheadFile(nsIFile* aFile, const size_t aOffset,
+                            const size_t aCount, mozilla::filedesc_t* aOutFd) {
 #if defined(XP_WIN)
   nsAutoString path;
   if (!aFile || NS_FAILED(aFile->GetPath(path))) {
@@ -163,9 +158,8 @@ mozilla::ReadAheadFile(nsIFile* aFile, const size_t aOffset,
 #endif
 }
 
-mozilla::PathString
-mozilla::GetLibraryName(mozilla::pathstr_t aDirectory, const char* aLib)
-{
+mozilla::PathString mozilla::GetLibraryName(mozilla::pathstr_t aDirectory,
+                                            const char* aLib) {
 #ifdef XP_WIN
   nsAutoString fullName;
   if (aDirectory) {
@@ -188,9 +182,8 @@ mozilla::GetLibraryName(mozilla::pathstr_t aDirectory, const char* aLib)
 #endif
 }
 
-mozilla::PathString
-mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName, PRFuncPtr aAddr)
-{
+mozilla::PathString mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName,
+                                                    PRFuncPtr aAddr) {
 #ifdef XP_WIN
   HMODULE handle = GetModuleHandleW(char16ptr_t(aName));
   if (!handle) {
@@ -213,12 +206,12 @@ mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName, PRFuncPtr aAddr)
     return EmptyCString();
   }
   nsAutoCString path(temp);
-  PR_Free(temp); // PR_GetLibraryFilePathname() uses PR_Malloc().
+  PR_Free(temp);  // PR_GetLibraryFilePathname() uses PR_Malloc().
   return std::move(path);
 #endif
 }
 
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #if defined(LINUX) && !defined(ANDROID)
 
@@ -261,12 +254,9 @@ static const uint32_t CPU_TYPE = CPU_TYPE_POWERPC64;
 #define cpu_mach_header mach_header
 #endif
 
-class ScopedMMap
-{
-public:
-  explicit ScopedMMap(const char* aFilePath)
-    : buf(nullptr)
-  {
+class ScopedMMap {
+ public:
+  explicit ScopedMMap(const char* aFilePath) : buf(nullptr) {
     fd = open(aFilePath, O_RDONLY);
     if (fd < 0) {
       return;
@@ -278,8 +268,7 @@ public:
     size = st.st_size;
     buf = (char*)mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
   }
-  ~ScopedMMap()
-  {
+  ~ScopedMMap() {
     if (buf) {
       munmap(buf, size);
     }
@@ -289,17 +278,16 @@ public:
   }
   operator char*() { return buf; }
   int getFd() { return fd; }
-private:
+
+ private:
   int fd;
   char* buf;
   size_t size;
 };
 #endif
 
-void
-mozilla::ReadAhead(mozilla::filedesc_t aFd, const size_t aOffset,
-                   const size_t aCount)
-{
+void mozilla::ReadAhead(mozilla::filedesc_t aFd, const size_t aOffset,
+                        const size_t aCount) {
 #if defined(XP_WIN)
 
   LARGE_INTEGER fpOriginal;
@@ -334,9 +322,10 @@ mozilla::ReadAhead(mozilla::filedesc_t aFd, const size_t aOffset,
   char buf[64 * 1024];
   size_t totalBytesRead = 0;
   DWORD dwBytesRead;
-  // Do dummy reads to trigger kernel-side readhead via FILE_FLAG_SEQUENTIAL_SCAN.
-  // Abort when underfilling because during testing the buffers are read fully
-  // A buffer that's not keeping up would imply that readahead isn't working right
+  // Do dummy reads to trigger kernel-side readhead via
+  // FILE_FLAG_SEQUENTIAL_SCAN. Abort when underfilling because during testing
+  // the buffers are read fully A buffer that's not keeping up would imply that
+  // readahead isn't working right
   while (totalBytesRead < aCount &&
          ReadFile(aFd, buf, sizeof(buf), &dwBytesRead, nullptr) &&
          dwBytesRead == sizeof(buf)) {
@@ -361,9 +350,7 @@ mozilla::ReadAhead(mozilla::filedesc_t aFd, const size_t aOffset,
 #endif
 }
 
-void
-mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath)
-{
+void mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath) {
   if (!aFilePath) {
     return;
   }
@@ -375,8 +362,7 @@ mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath)
     return;
   }
 
-  union
-  {
+  union {
     char buf[bufsize];
     Elf_Ehdr ehdr;
   } elf;
@@ -384,14 +370,14 @@ mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath)
   // We check that the ELF magic is found, that the ELF class matches
   // our own, and that the program header table as defined in the ELF
   // headers fits in the buffer we read.
-  if ((read(fd, elf.buf, bufsize) <= 0) ||
-      (memcmp(elf.buf, ELFMAG, 4)) ||
+  if ((read(fd, elf.buf, bufsize) <= 0) || (memcmp(elf.buf, ELFMAG, 4)) ||
       (elf.ehdr.e_ident[EI_CLASS] != ELFCLASS) ||
       // Upcast e_phentsize so the multiplication is done in the same precision
       // as the subsequent addition, to satisfy static analyzers and avoid
       // issues with abnormally large program header tables.
-      (elf.ehdr.e_phoff + (static_cast<Elf_Off>(elf.ehdr.e_phentsize) *
-                           elf.ehdr.e_phnum) >= bufsize)) {
+      (elf.ehdr.e_phoff +
+           (static_cast<Elf_Off>(elf.ehdr.e_phentsize) * elf.ehdr.e_phnum) >=
+       bufsize)) {
     close(fd);
     return;
   }
@@ -403,8 +389,7 @@ mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath)
   Elf_Phdr* phdr = (Elf_Phdr*)&elf.buf[elf.ehdr.e_phoff];
   Elf_Off end = 0;
   for (int phnum = elf.ehdr.e_phnum; phnum; phdr++, phnum--) {
-    if ((phdr->p_type == PT_LOAD) &&
-        (end < phdr->p_offset + phdr->p_filesz)) {
+    if ((phdr->p_type == PT_LOAD) && (end < phdr->p_offset + phdr->p_filesz)) {
       end = phdr->p_offset + phdr->p_filesz;
     }
   }
@@ -473,10 +458,8 @@ mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath)
 #endif
 }
 
-void
-mozilla::ReadAheadFile(mozilla::pathstr_t aFilePath, const size_t aOffset,
-                       const size_t aCount, mozilla::filedesc_t* aOutFd)
-{
+void mozilla::ReadAheadFile(mozilla::pathstr_t aFilePath, const size_t aOffset,
+                            const size_t aCount, mozilla::filedesc_t* aOutFd) {
 #if defined(XP_WIN)
   if (!aFilePath) {
     if (aOutFd) {
@@ -529,4 +512,3 @@ mozilla::ReadAheadFile(mozilla::pathstr_t aFilePath, const size_t aOffset,
   }
 #endif
 }
-

@@ -84,9 +84,8 @@
  */
 class nsWindowMemoryReporter final : public nsIMemoryReporter,
                                      public nsIObserver,
-                                     public nsSupportsWeakReference
-{
-public:
+                                     public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
   NS_DECL_NSIOBSERVER
@@ -106,7 +105,7 @@ public:
 
   static int64_t GhostWindowsDistinguishedAmount();
 
-private:
+ private:
   ~nsWindowMemoryReporter();
 
   // Protect ctor, use Init() instead.
@@ -133,7 +132,8 @@ private:
    * This is called asynchronously after we observe a DOM window being detached
    * from its docshell, and also right before we generate a memory report.
    */
-  void CheckForGhostWindows(nsTHashtable<nsUint64HashKey> *aOutGhostIDs = nullptr);
+  void CheckForGhostWindows(
+      nsTHashtable<nsUint64HashKey>* aOutGhostIDs = nullptr);
 
   /**
    * Eventually do a check for ghost windows, if we haven't done one recently
@@ -175,5 +175,4 @@ private:
   int64_t mGhostWindowCount;
 };
 
-#endif // nsWindowMemoryReporter_h__
-
+#endif  // nsWindowMemoryReporter_h__

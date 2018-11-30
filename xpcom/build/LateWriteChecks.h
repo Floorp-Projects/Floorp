@@ -15,11 +15,10 @@
 namespace mozilla {
 
 /** Different shutdown check modes */
-enum ShutdownChecksMode
-{
-  SCM_CRASH,      /** Crash on shutdown check failure */
-  SCM_RECORD,     /** Record shutdown check violations */
-  SCM_NOTHING     /** Don't attempt any shutdown checks */
+enum ShutdownChecksMode {
+  SCM_CRASH,  /** Crash on shutdown check failure */
+  SCM_RECORD, /** Record shutdown check violations */
+  SCM_NOTHING /** Don't attempt any shutdown checks */
 };
 
 /**
@@ -55,6 +54,6 @@ void BeginLateWriteChecks();
  */
 void StopLateWriteChecks();
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_LateWriteChecks_h
+#endif  // mozilla_LateWriteChecks_h

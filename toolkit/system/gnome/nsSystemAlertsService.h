@@ -12,9 +12,8 @@
 
 class nsAlertsIconListener;
 
-class nsSystemAlertsService : public nsIAlertsService
-{
-public:
+class nsSystemAlertsService : public nsIAlertsService {
+ public:
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_ISUPPORTS
 
@@ -27,7 +26,7 @@ public:
   void RemoveListener(const nsAString& aAlertName,
                       nsAlertsIconListener* aListener);
 
-protected:
+ protected:
   virtual ~nsSystemAlertsService();
 
   void AddListener(const nsAString& aAlertName,

@@ -48,15 +48,14 @@ import NEWEST_IA2_IDL;
 namespace mozilla {
 namespace a11y {
 
-class AccessibleHandler final : public mscom::Handler
-                              , public NEWEST_IA2_INTERFACE
-                              , public IServiceProvider
-                              , public IProvideClassInfo
-                              , public IAccessibleHyperlink
-                              , public IAccessibleTableCell
-                              , public IAccessibleHypertext2
-{
-public:
+class AccessibleHandler final : public mscom::Handler,
+                                public NEWEST_IA2_INTERFACE,
+                                public IServiceProvider,
+                                public IProvideClassInfo,
+                                public IAccessibleHyperlink,
+                                public IAccessibleTableCell,
+                                public IAccessibleHypertext2 {
+ public:
   static HRESULT Create(IUnknown* aOuter, REFIID aIid, void** aOutInterface);
 
   // mscom::Handler
@@ -77,38 +76,40 @@ public:
   STDMETHODIMP_(ULONG) Release() override;
 
   // IDispatch
-  STDMETHODIMP GetTypeInfoCount(UINT *pctinfo) override;
-  STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) override;
-  STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames,
-                             LCID lcid, DISPID *rgDispId) override;
+  STDMETHODIMP GetTypeInfoCount(UINT* pctinfo) override;
+  STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid,
+                           ITypeInfo** ppTInfo) override;
+  STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames,
+                             LCID lcid, DISPID* rgDispId) override;
   STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags,
-                      DISPPARAMS *pDispParams, VARIANT *pVarResult,
-                      EXCEPINFO *pExcepInfo, UINT *puArgErr) override;
+                      DISPPARAMS* pDispParams, VARIANT* pVarResult,
+                      EXCEPINFO* pExcepInfo, UINT* puArgErr) override;
 
   // IAccessible
-  STDMETHODIMP get_accParent(IDispatch **ppdispParent) override;
-  STDMETHODIMP get_accChildCount(long *pcountChildren) override;
-  STDMETHODIMP get_accChild(VARIANT varChild, IDispatch **ppdispChild) override;
-  STDMETHODIMP get_accName(VARIANT varChild, BSTR *pszName) override;
-  STDMETHODIMP get_accValue(VARIANT varChild, BSTR *pszValue) override;
-  STDMETHODIMP get_accDescription(VARIANT varChild, BSTR *pszDescription) override;
-  STDMETHODIMP get_accRole(VARIANT varChild, VARIANT *pvarRole) override;
-  STDMETHODIMP get_accState(VARIANT varChild, VARIANT *pvarState) override;
-  STDMETHODIMP get_accHelp(VARIANT varChild, BSTR *pszHelp) override;
-  STDMETHODIMP get_accHelpTopic(BSTR *pszHelpFile, VARIANT varChild,
-                                long *pidTopic) override;
+  STDMETHODIMP get_accParent(IDispatch** ppdispParent) override;
+  STDMETHODIMP get_accChildCount(long* pcountChildren) override;
+  STDMETHODIMP get_accChild(VARIANT varChild, IDispatch** ppdispChild) override;
+  STDMETHODIMP get_accName(VARIANT varChild, BSTR* pszName) override;
+  STDMETHODIMP get_accValue(VARIANT varChild, BSTR* pszValue) override;
+  STDMETHODIMP get_accDescription(VARIANT varChild,
+                                  BSTR* pszDescription) override;
+  STDMETHODIMP get_accRole(VARIANT varChild, VARIANT* pvarRole) override;
+  STDMETHODIMP get_accState(VARIANT varChild, VARIANT* pvarState) override;
+  STDMETHODIMP get_accHelp(VARIANT varChild, BSTR* pszHelp) override;
+  STDMETHODIMP get_accHelpTopic(BSTR* pszHelpFile, VARIANT varChild,
+                                long* pidTopic) override;
   STDMETHODIMP get_accKeyboardShortcut(VARIANT varChild,
-                                       BSTR *pszKeyboardShortcut) override;
-  STDMETHODIMP get_accFocus(VARIANT *pvarChild) override;
-  STDMETHODIMP get_accSelection(VARIANT *pvarChildren) override;
+                                       BSTR* pszKeyboardShortcut) override;
+  STDMETHODIMP get_accFocus(VARIANT* pvarChild) override;
+  STDMETHODIMP get_accSelection(VARIANT* pvarChildren) override;
   STDMETHODIMP get_accDefaultAction(VARIANT varChild,
-                                    BSTR *pszDefaultAction) override;
+                                    BSTR* pszDefaultAction) override;
   STDMETHODIMP accSelect(long flagsSelect, VARIANT varChild) override;
-  STDMETHODIMP accLocation(long *pxLeft, long *pyTop, long *pcxWidth,
-                           long *pcyHeight, VARIANT varChild) override;
+  STDMETHODIMP accLocation(long* pxLeft, long* pyTop, long* pcxWidth,
+                           long* pcyHeight, VARIANT varChild) override;
   STDMETHODIMP accNavigate(long navDir, VARIANT varStart,
-                           VARIANT *pvarEndUpAt) override;
-  STDMETHODIMP accHitTest( long xLeft, long yTop, VARIANT *pvarChild) override;
+                           VARIANT* pvarEndUpAt) override;
+  STDMETHODIMP accHitTest(long xLeft, long yTop, VARIANT* pvarChild) override;
   STDMETHODIMP accDoDefaultAction(VARIANT varChild) override;
   STDMETHODIMP put_accName(VARIANT varChild, BSTR szName) override;
   STDMETHODIMP put_accValue(VARIANT varChild, BSTR szValue) override;
@@ -131,9 +132,9 @@ public:
   STDMETHODIMP get_nExtendedStates(long* nExtendedStates) override;
   STDMETHODIMP get_extendedStates(long maxExtendedStates, BSTR** extendedStates,
                                   long* nExtendedStates) override;
-  STDMETHODIMP get_localizedExtendedStates(long maxLocalizedExtendedStates,
-                                           BSTR** localizedExtendedStates,
-                                           long* nLocalizedExtendedStates) override;
+  STDMETHODIMP get_localizedExtendedStates(
+      long maxLocalizedExtendedStates, BSTR** localizedExtendedStates,
+      long* nLocalizedExtendedStates) override;
   STDMETHODIMP get_uniqueID(long* uniqueID) override;
   STDMETHODIMP get_windowHandle(HWND* windowHandle) override;
   STDMETHODIMP get_indexInParent(long* indexInParent) override;
@@ -162,10 +163,8 @@ public:
   STDMETHODIMP nActions(long* nActions) override;
   STDMETHODIMP doAction(long actionIndex) override;
   STDMETHODIMP get_description(long actionIndex, BSTR* description) override;
-  STDMETHODIMP get_keyBinding(long actionIndex,
-                              long nMaxBindings,
-                              BSTR** keyBindings,
-                              long* nBindings) override;
+  STDMETHODIMP get_keyBinding(long actionIndex, long nMaxBindings,
+                              BSTR** keyBindings, long* nBindings) override;
   STDMETHODIMP get_name(long actionIndex, BSTR* name) override;
   STDMETHODIMP get_localizedName(long actionIndex,
                                  BSTR* localizedName) override;
@@ -187,62 +186,64 @@ public:
                                   long* nRowHeaderCells) override;
   STDMETHODIMP get_rowIndex(long* rowIndex) override;
   STDMETHODIMP get_isSelected(boolean* isSelected) override;
-  STDMETHODIMP get_rowColumnExtents(long* row, long* column,
-                                    long* rowExtents, long* columnExtents,
+  STDMETHODIMP get_rowColumnExtents(long* row, long* column, long* rowExtents,
+                                    long* columnExtents,
                                     boolean* isSelected) override;
   STDMETHODIMP get_table(IUnknown** table) override;
 
   // IAccessibleText
   STDMETHODIMP addSelection(long startOffset, long endOffset) override;
-  STDMETHODIMP get_attributes(long offset, long *startOffset, long *endOffset,
-                              BSTR *textAttributes) override;
-  STDMETHODIMP get_caretOffset(long *offset) override;
+  STDMETHODIMP get_attributes(long offset, long* startOffset, long* endOffset,
+                              BSTR* textAttributes) override;
+  STDMETHODIMP get_caretOffset(long* offset) override;
   STDMETHODIMP get_characterExtents(long offset,
-                                    enum IA2CoordinateType coordType, long *x,
-                                    long *y, long *width, long *height) override;
-  STDMETHODIMP get_nSelections(long *nSelections) override;
+                                    enum IA2CoordinateType coordType, long* x,
+                                    long* y, long* width,
+                                    long* height) override;
+  STDMETHODIMP get_nSelections(long* nSelections) override;
   STDMETHODIMP get_offsetAtPoint(long x, long y,
                                  enum IA2CoordinateType coordType,
-                                 long *offset) override;
-  STDMETHODIMP get_selection(long selectionIndex, long *startOffset,
-                             long *endOffset) override;
-  STDMETHODIMP get_text(long startOffset, long endOffset, BSTR *text) override;
+                                 long* offset) override;
+  STDMETHODIMP get_selection(long selectionIndex, long* startOffset,
+                             long* endOffset) override;
+  STDMETHODIMP get_text(long startOffset, long endOffset, BSTR* text) override;
   STDMETHODIMP get_textBeforeOffset(long offset,
                                     enum IA2TextBoundaryType boundaryType,
-                                    long *startOffset, long *endOffset,
-                                    BSTR *text) override;
+                                    long* startOffset, long* endOffset,
+                                    BSTR* text) override;
   STDMETHODIMP get_textAfterOffset(long offset,
                                    enum IA2TextBoundaryType boundaryType,
-                                   long *startOffset, long *endOffset,
-                                   BSTR *text) override;
+                                   long* startOffset, long* endOffset,
+                                   BSTR* text) override;
   STDMETHODIMP get_textAtOffset(long offset,
                                 enum IA2TextBoundaryType boundaryType,
-                                long *startOffset, long *endOffset,
-                                BSTR *text) override;
+                                long* startOffset, long* endOffset,
+                                BSTR* text) override;
   STDMETHODIMP removeSelection(long selectionIndex) override;
   STDMETHODIMP setCaretOffset(long offset) override;
   STDMETHODIMP setSelection(long selectionIndex, long startOffset,
                             long endOffset) override;
-  STDMETHODIMP get_nCharacters(long *nCharacters) override;
+  STDMETHODIMP get_nCharacters(long* nCharacters) override;
   STDMETHODIMP scrollSubstringTo(long startIndex, long endIndex,
                                  enum IA2ScrollType scrollType) override;
   STDMETHODIMP scrollSubstringToPoint(long startIndex, long endIndex,
                                       enum IA2CoordinateType coordinateType,
                                       long x, long y) override;
-  STDMETHODIMP get_newText(IA2TextSegment *newText) override;
-  STDMETHODIMP get_oldText(IA2TextSegment *oldText) override;
+  STDMETHODIMP get_newText(IA2TextSegment* newText) override;
+  STDMETHODIMP get_oldText(IA2TextSegment* oldText) override;
 
   // IAccessibleHypertext
-  STDMETHODIMP get_nHyperlinks(long *hyperlinkCount) override;
+  STDMETHODIMP get_nHyperlinks(long* hyperlinkCount) override;
   STDMETHODIMP get_hyperlink(long index,
-                             IAccessibleHyperlink **hyperlink) override;
-  STDMETHODIMP get_hyperlinkIndex(long charIndex, long *hyperlinkIndex) override;
+                             IAccessibleHyperlink** hyperlink) override;
+  STDMETHODIMP get_hyperlinkIndex(long charIndex,
+                                  long* hyperlinkIndex) override;
 
   // IAccessibleHypertext2
   STDMETHODIMP get_hyperlinks(IAccessibleHyperlink*** hyperlinks,
                               long* nHyperlinks) override;
 
-private:
+ private:
   AccessibleHandler(IUnknown* aOuter, HRESULT* aResult);
   virtual ~AccessibleHandler();
 
@@ -257,7 +258,7 @@ private:
   HRESULT GetRelationsInfo();
   void ClearRelationCache();
 
-  RefPtr<IUnknown>                  mDispatchUnk;
+  RefPtr<IUnknown> mDispatchUnk;
   /**
    * Handlers aggregate their proxies. This means that their proxies delegate
    * their IUnknown implementation to us.
@@ -277,38 +278,36 @@ private:
    * It is safe for us to use these raw pointers because the aggregated
    * objects's lifetimes are proper subsets of our own lifetime.
    */
-  IDispatch*                        mDispatch;         // weak
-  NEWEST_IA2_INTERFACE*             mIA2PassThru;      // weak
-  IServiceProvider*                 mServProvPassThru; // weak
-  IAccessibleHyperlink*             mIAHyperlinkPassThru; // weak
-  IAccessibleTableCell*             mIATableCellPassThru; // weak
-  IAccessibleHypertext2*             mIAHypertextPassThru; // weak
-  IA2Payload                        mCachedData;
-  UniquePtr<mscom::StructToStream>  mSerializer;
-  uint32_t                          mCacheGen;
-  IAccessibleHyperlink**            mCachedHyperlinks;
-  long                              mCachedNHyperlinks;
-  IA2TextSegment*                   mCachedTextAttribRuns;
-  long                              mCachedNTextAttribRuns;
-  IARelationData*                   mCachedRelations;
-  long                              mCachedNRelations;
+  IDispatch* mDispatch;                         // weak
+  NEWEST_IA2_INTERFACE* mIA2PassThru;           // weak
+  IServiceProvider* mServProvPassThru;          // weak
+  IAccessibleHyperlink* mIAHyperlinkPassThru;   // weak
+  IAccessibleTableCell* mIATableCellPassThru;   // weak
+  IAccessibleHypertext2* mIAHypertextPassThru;  // weak
+  IA2Payload mCachedData;
+  UniquePtr<mscom::StructToStream> mSerializer;
+  uint32_t mCacheGen;
+  IAccessibleHyperlink** mCachedHyperlinks;
+  long mCachedNHyperlinks;
+  IA2TextSegment* mCachedTextAttribRuns;
+  long mCachedNTextAttribRuns;
+  IARelationData* mCachedRelations;
+  long mCachedNRelations;
 };
 
-inline static BSTR
-CopyBSTR(BSTR aSrc)
-{
+inline static BSTR CopyBSTR(BSTR aSrc) {
   if (!aSrc) {
     return nullptr;
-  }      
-  
+  }
+
   return ::SysAllocStringLen(aSrc, ::SysStringLen(aSrc));
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif // !defined(MOZILLA_INTERNAL_API)
+#endif  // !defined(MOZILLA_INTERNAL_API)
 
-#endif // defined(__midl)
+#endif  // defined(__midl)
 
-#endif // mozilla_a11y_AccessibleHandler_h
+#endif  // mozilla_a11y_AccessibleHandler_h

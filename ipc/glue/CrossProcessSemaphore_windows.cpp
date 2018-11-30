@@ -17,22 +17,21 @@ using base::ProcessHandle;
 
 namespace mozilla {
 
-/* static */ CrossProcessSemaphore*
-CrossProcessSemaphore::Create(const char*, uint32_t aInitialValue)
-{
+/* static */ CrossProcessSemaphore* CrossProcessSemaphore::Create(
+    const char*, uint32_t aInitialValue) {
   // We explicitly share this using DuplicateHandle, we do -not- want this to
   // be inherited by child processes by default! So no security attributes are
   // given.
-  HANDLE semaphore = ::CreateSemaphoreA(nullptr, aInitialValue, 0x7fffffff, nullptr);
+  HANDLE semaphore =
+      ::CreateSemaphoreA(nullptr, aInitialValue, 0x7fffffff, nullptr);
   if (!semaphore) {
     return nullptr;
   }
   return new CrossProcessSemaphore(semaphore);
 }
 
-/* static */ CrossProcessSemaphore*
-CrossProcessSemaphore::Create(CrossProcessSemaphoreHandle aHandle)
-{
+/* static */ CrossProcessSemaphore* CrossProcessSemaphore::Create(
+    CrossProcessSemaphoreHandle aHandle) {
   DWORD flags;
   if (!::GetHandleInformation(aHandle, &flags)) {
     return nullptr;
@@ -42,41 +41,33 @@ CrossProcessSemaphore::Create(CrossProcessSemaphoreHandle aHandle)
 }
 
 CrossProcessSemaphore::CrossProcessSemaphore(HANDLE aSemaphore)
-  : mSemaphore(aSemaphore)
-{
+    : mSemaphore(aSemaphore) {
   MOZ_COUNT_CTOR(CrossProcessSemaphore);
 }
 
-CrossProcessSemaphore::~CrossProcessSemaphore()
-{
+CrossProcessSemaphore::~CrossProcessSemaphore() {
   MOZ_ASSERT(mSemaphore, "Improper construction of semaphore or double free.");
   ::CloseHandle(mSemaphore);
   MOZ_COUNT_DTOR(CrossProcessSemaphore);
 }
 
-bool
-CrossProcessSemaphore::Wait(const Maybe<TimeDuration>& aWaitTime)
-{
+bool CrossProcessSemaphore::Wait(const Maybe<TimeDuration>& aWaitTime) {
   MOZ_ASSERT(mSemaphore, "Improper construction of semaphore.");
-  HRESULT hr = ::WaitForSingleObject(mSemaphore, aWaitTime.isSome() ?
-                                                 aWaitTime->ToMilliseconds() :
-                                                 INFINITE);
+  HRESULT hr = ::WaitForSingleObject(
+      mSemaphore, aWaitTime.isSome() ? aWaitTime->ToMilliseconds() : INFINITE);
   return hr == WAIT_OBJECT_0;
 }
 
-void
-CrossProcessSemaphore::Signal()
-{
+void CrossProcessSemaphore::Signal() {
   MOZ_ASSERT(mSemaphore, "Improper construction of semaphore.");
   ::ReleaseSemaphore(mSemaphore, 1, nullptr);
 }
 
-CrossProcessSemaphoreHandle
-CrossProcessSemaphore::ShareToProcess(base::ProcessId aTargetPid)
-{
+CrossProcessSemaphoreHandle CrossProcessSemaphore::ShareToProcess(
+    base::ProcessId aTargetPid) {
   HANDLE newHandle;
-  bool succeeded = ipc::DuplicateHandle(mSemaphore, aTargetPid, &newHandle,
-                                        0, DUPLICATE_SAME_ACCESS);
+  bool succeeded = ipc::DuplicateHandle(mSemaphore, aTargetPid, &newHandle, 0,
+                                        DUPLICATE_SAME_ACCESS);
 
   if (!succeeded) {
     return nullptr;
@@ -85,9 +76,6 @@ CrossProcessSemaphore::ShareToProcess(base::ProcessId aTargetPid)
   return newHandle;
 }
 
-void
-CrossProcessSemaphore::CloseHandle()
-{
-}
+void CrossProcessSemaphore::CloseHandle() {}
 
-}
+}  // namespace mozilla

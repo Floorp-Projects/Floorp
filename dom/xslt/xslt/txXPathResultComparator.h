@@ -18,79 +18,71 @@ class txIEvalContext;
 /*
  * Result comparators
  */
-class txXPathResultComparator
-{
-public:
-    virtual ~txXPathResultComparator()
-    {
-    }
+class txXPathResultComparator {
+ public:
+  virtual ~txXPathResultComparator() {}
 
-    /*
-     * Compares two XPath results. Returns -1 if val1 < val2,
-     * 1 if val1 > val2 and 0 if val1 == val2.
-     */
-    virtual int compareValues(txObject* val1, txObject* val2) = 0;
+  /*
+   * Compares two XPath results. Returns -1 if val1 < val2,
+   * 1 if val1 > val2 and 0 if val1 == val2.
+   */
+  virtual int compareValues(txObject* val1, txObject* val2) = 0;
 
-    /*
-     * Create a sortable value.
-     */
-    virtual nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                         txObject *&aResult) = 0;
+  /*
+   * Create a sortable value.
+   */
+  virtual nsresult createSortableValue(Expr* aExpr, txIEvalContext* aContext,
+                                       txObject*& aResult) = 0;
 };
 
 /*
  * Compare results as stings (data-type="text")
  */
-class txResultStringComparator : public txXPathResultComparator
-{
-public:
-    txResultStringComparator(bool aAscending, bool aUpperFirst,
-                             const nsString& aLanguage);
+class txResultStringComparator : public txXPathResultComparator {
+ public:
+  txResultStringComparator(bool aAscending, bool aUpperFirst,
+                           const nsString& aLanguage);
 
-    int compareValues(txObject* aVal1, txObject* aVal2) override;
-    nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                 txObject *&aResult) override;
-private:
-    nsCOMPtr<nsICollation> mCollation;
-    nsresult init(const nsString& aLanguage);
-    nsresult createRawSortKey(const int32_t aStrength,
-                              const nsString& aString,
-                              uint8_t** aKey,
-                              uint32_t* aLength);
-    int mSorting;
+  int compareValues(txObject* aVal1, txObject* aVal2) override;
+  nsresult createSortableValue(Expr* aExpr, txIEvalContext* aContext,
+                               txObject*& aResult) override;
 
-    class StringValue : public txObject
-    {
-    public:
-        StringValue();
-        ~StringValue();
+ private:
+  nsCOMPtr<nsICollation> mCollation;
+  nsresult init(const nsString& aLanguage);
+  nsresult createRawSortKey(const int32_t aStrength, const nsString& aString,
+                            uint8_t** aKey, uint32_t* aLength);
+  int mSorting;
 
-        uint8_t* mKey;
-        void* mCaseKey;
-        uint32_t mLength, mCaseLength;
-    };
+  class StringValue : public txObject {
+   public:
+    StringValue();
+    ~StringValue();
+
+    uint8_t* mKey;
+    void* mCaseKey;
+    uint32_t mLength, mCaseLength;
+  };
 };
 
 /*
  * Compare results as numbers (data-type="number")
  */
-class txResultNumberComparator : public txXPathResultComparator
-{
-public:
-    explicit txResultNumberComparator(bool aAscending);
+class txResultNumberComparator : public txXPathResultComparator {
+ public:
+  explicit txResultNumberComparator(bool aAscending);
 
-    int compareValues(txObject* aVal1, txObject* aVal2) override;
-    nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                 txObject *&aResult) override;
+  int compareValues(txObject* aVal1, txObject* aVal2) override;
+  nsresult createSortableValue(Expr* aExpr, txIEvalContext* aContext,
+                               txObject*& aResult) override;
 
-private:
-    int mAscending;
+ private:
+  int mAscending;
 
-    class NumberValue : public txObject
-    {
-    public:
-        double mVal;
-    };
+  class NumberValue : public txObject {
+   public:
+    double mVal;
+  };
 };
 
 #endif

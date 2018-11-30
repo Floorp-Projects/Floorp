@@ -12,24 +12,23 @@
 namespace mozilla {
 namespace devtools {
 
-class HeapSnapshotTempFileHelperParent : public PHeapSnapshotTempFileHelperParent
-{
-    explicit HeapSnapshotTempFileHelperParent() { }
-    void ActorDestroy(ActorDestroyReason why) override { }
-    mozilla::ipc::IPCResult RecvOpenHeapSnapshotTempFile(OpenHeapSnapshotTempFileResponse* outResponse)
-        override;
+class HeapSnapshotTempFileHelperParent
+    : public PHeapSnapshotTempFileHelperParent {
+  explicit HeapSnapshotTempFileHelperParent() {}
+  void ActorDestroy(ActorDestroyReason why) override {}
+  mozilla::ipc::IPCResult RecvOpenHeapSnapshotTempFile(
+      OpenHeapSnapshotTempFileResponse* outResponse) override;
 
-  public:
-    static inline PHeapSnapshotTempFileHelperParent* Create();
+ public:
+  static inline PHeapSnapshotTempFileHelperParent* Create();
 };
 
 /* static */ inline PHeapSnapshotTempFileHelperParent*
-HeapSnapshotTempFileHelperParent::Create()
-{
-    return new HeapSnapshotTempFileHelperParent();
+HeapSnapshotTempFileHelperParent::Create() {
+  return new HeapSnapshotTempFileHelperParent();
 }
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla
 
-#endif // mozilla_devtools_HeapSnapshotTempFileHelperParent_h
+#endif  // mozilla_devtools_HeapSnapshotTempFileHelperParent_h

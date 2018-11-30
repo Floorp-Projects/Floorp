@@ -26,42 +26,36 @@ class nsSVGAnimatedTransformList;
 namespace dom {
 class SVGLinearGradientElement;
 class SVGRadialGradientElement;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsSVGGradientFrame : public nsSVGPaintServerFrame
-{
+class nsSVGGradientFrame : public nsSVGPaintServerFrame {
   typedef mozilla::gfx::ExtendMode ExtendMode;
 
-protected:
+ protected:
   nsSVGGradientFrame(ComputedStyle* aStyle, ClassID aID);
 
-public:
+ public:
   NS_DECL_ABSTRACT_FRAME(nsSVGGradientFrame)
 
   // nsSVGPaintServerFrame methods:
-  virtual already_AddRefed<gfxPattern>
-    GetPaintServerPattern(nsIFrame *aSource,
-                          const DrawTarget* aDrawTarget,
-                          const gfxMatrix& aContextMatrix,
-                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                          float aOpacity,
-                          imgDrawingParams& aImgParams,
-                          const gfxRect* aOverrideBounds) override;
+  virtual already_AddRefed<gfxPattern> GetPaintServerPattern(
+      nsIFrame* aSource, const DrawTarget* aDrawTarget,
+      const gfxMatrix& aContextMatrix,
+      nsStyleSVGPaint nsStyleSVG::*aFillOrStroke, float aOpacity,
+      imgDrawingParams& aImgParams, const gfxRect* aOverrideBounds) override;
 
   // nsIFrame interface:
-  virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsAtom*        aAttribute,
-                                    int32_t         aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGGradient"), aResult);
   }
-#endif // DEBUG
+#endif  // DEBUG
 
-private:
+ private:
   /**
    * Parses this frame's href and - if it references another gradient - returns
    * it.  It also makes this frame a rendering observer of the specified ID.
@@ -72,19 +66,18 @@ private:
   void GetStopFrames(nsTArray<nsIFrame*>* aStopFrames);
 
   const mozilla::nsSVGAnimatedTransformList* GetGradientTransformList(
-    nsIContent* aDefault);
+      nsIContent* aDefault);
   // Will be singular for gradientUnits="objectBoundingBox" with an empty bbox.
-  gfxMatrix GetGradientTransform(nsIFrame *aSource,
-                                 const gfxRect *aOverrideBounds);
+  gfxMatrix GetGradientTransform(nsIFrame* aSource,
+                                 const gfxRect* aOverrideBounds);
 
-protected:
+ protected:
   virtual bool GradientVectorLengthIsZero() = 0;
   virtual already_AddRefed<gfxPattern> CreateGradient() = 0;
 
   // Accessors to lookup gradient attributes
-  uint16_t GetEnumValue(uint32_t aIndex, nsIContent *aDefault);
-  uint16_t GetEnumValue(uint32_t aIndex)
-  {
+  uint16_t GetEnumValue(uint32_t aIndex, nsIContent* aDefault);
+  uint16_t GetEnumValue(uint32_t aIndex) {
     return GetEnumValue(aIndex, mContent);
   }
   uint16_t GetGradientUnits();
@@ -92,63 +85,59 @@ protected:
 
   // Gradient-type-specific lookups since the length values differ between
   // linear and radial gradients
-  virtual mozilla::dom::SVGLinearGradientElement * GetLinearGradientWithLength(
-    uint32_t aIndex, mozilla::dom::SVGLinearGradientElement* aDefault);
-  virtual mozilla::dom::SVGRadialGradientElement * GetRadialGradientWithLength(
-    uint32_t aIndex, mozilla::dom::SVGRadialGradientElement* aDefault);
+  virtual mozilla::dom::SVGLinearGradientElement* GetLinearGradientWithLength(
+      uint32_t aIndex, mozilla::dom::SVGLinearGradientElement* aDefault);
+  virtual mozilla::dom::SVGRadialGradientElement* GetRadialGradientWithLength(
+      uint32_t aIndex, mozilla::dom::SVGRadialGradientElement* aDefault);
 
   // The frame our gradient is (currently) being applied to
-  nsIFrame*                              mSource;
+  nsIFrame* mSource;
 
-private:
+ private:
   // Flag to mark this frame as "in use" during recursive calls along our
   // gradient's reference chain so we can detect reference loops. See:
   // http://www.w3.org/TR/SVG11/pservers.html#LinearGradientElementHrefAttribute
-  bool                                   mLoopFlag;
+  bool mLoopFlag;
   // Gradients often don't reference other gradients, so here we cache
   // the fact that that isn't happening.
-  bool                                   mNoHRefURI;
+  bool mNoHRefURI;
 };
-
 
 // -------------------------------------------------------------------------
 // Linear Gradients
 // -------------------------------------------------------------------------
 
-class nsSVGLinearGradientFrame final : public nsSVGGradientFrame
-{
+class nsSVGLinearGradientFrame final : public nsSVGGradientFrame {
   friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
                                                 ComputedStyle* aStyle);
-protected:
-  explicit nsSVGLinearGradientFrame(ComputedStyle* aStyle)
-    : nsSVGGradientFrame(aStyle, kClassID)
-  {}
 
-public:
+ protected:
+  explicit nsSVGLinearGradientFrame(ComputedStyle* aStyle)
+      : nsSVGGradientFrame(aStyle, kClassID) {}
+
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGLinearGradientFrame)
 
   // nsIFrame interface:
 #ifdef DEBUG
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 #endif
 
-  virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsAtom*        aAttribute,
-                                    int32_t         aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGLinearGradient"), aResult);
   }
-#endif // DEBUG
+#endif  // DEBUG
 
-protected:
+ protected:
   float GetLengthValue(uint32_t aIndex);
   virtual mozilla::dom::SVGLinearGradientElement* GetLinearGradientWithLength(
-    uint32_t aIndex, mozilla::dom::SVGLinearGradientElement* aDefault) override;
+      uint32_t aIndex,
+      mozilla::dom::SVGLinearGradientElement* aDefault) override;
   virtual bool GradientVectorLengthIsZero() override;
   virtual already_AddRefed<gfxPattern> CreateGradient() override;
 };
@@ -157,46 +146,42 @@ protected:
 // Radial Gradients
 // -------------------------------------------------------------------------
 
-class nsSVGRadialGradientFrame final : public nsSVGGradientFrame
-{
+class nsSVGRadialGradientFrame final : public nsSVGGradientFrame {
   friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
                                                 ComputedStyle* aStyle);
-protected:
-  explicit nsSVGRadialGradientFrame(ComputedStyle* aStyle)
-    : nsSVGGradientFrame(aStyle, kClassID)
-  {}
 
-public:
+ protected:
+  explicit nsSVGRadialGradientFrame(ComputedStyle* aStyle)
+      : nsSVGGradientFrame(aStyle, kClassID) {}
+
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGRadialGradientFrame)
 
   // nsIFrame interface:
 #ifdef DEBUG
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 #endif
 
-  virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsAtom*        aAttribute,
-                                    int32_t         aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGRadialGradient"), aResult);
   }
-#endif // DEBUG
+#endif  // DEBUG
 
-protected:
+ protected:
   float GetLengthValue(uint32_t aIndex);
   float GetLengthValue(uint32_t aIndex, float aDefaultValue);
-  float GetLengthValueFromElement(uint32_t aIndex,
-                                  mozilla::dom::SVGRadialGradientElement& aElement);
+  float GetLengthValueFromElement(
+      uint32_t aIndex, mozilla::dom::SVGRadialGradientElement& aElement);
   virtual mozilla::dom::SVGRadialGradientElement* GetRadialGradientWithLength(
-    uint32_t aIndex, mozilla::dom::SVGRadialGradientElement* aDefault) override;
+      uint32_t aIndex,
+      mozilla::dom::SVGRadialGradientElement* aDefault) override;
   virtual bool GradientVectorLengthIsZero() override;
   virtual already_AddRefed<gfxPattern> CreateGradient() override;
 };
 
-#endif // __NS_SVGGRADIENTFRAME_H__
-
+#endif  // __NS_SVGGRADIENTFRAME_H__

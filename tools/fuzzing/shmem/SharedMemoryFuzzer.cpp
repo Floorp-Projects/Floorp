@@ -13,9 +13,9 @@
 #define SHMEM_FUZZER_DEFAULT_MUTATION_PROBABILITY 2
 #define SHMEM_FUZZER_DEFAULT_MUTATION_FACTOR 500
 #define SHMEM_FUZZER_LOG(fmt, args...)                       \
- if (SharedMemoryFuzzer::IsLoggingEnabled()) {               \
-   printf_stderr("[SharedMemoryFuzzer] " fmt "\n", ## args); \
- }
+  if (SharedMemoryFuzzer::IsLoggingEnabled()) {              \
+    printf_stderr("[SharedMemoryFuzzer] " fmt "\n", ##args); \
+  }
 
 namespace mozilla {
 namespace ipc {
@@ -23,9 +23,7 @@ namespace ipc {
 using namespace fuzzing;
 
 /* static */
-bool
-SharedMemoryFuzzer::IsLoggingEnabled()
-{
+bool SharedMemoryFuzzer::IsLoggingEnabled() {
   static bool sInitialized = false;
   static bool sIsLoggingEnabled = false;
 
@@ -37,9 +35,7 @@ SharedMemoryFuzzer::IsLoggingEnabled()
 }
 
 /* static */
-bool
-SharedMemoryFuzzer::IsEnabled()
-{
+bool SharedMemoryFuzzer::IsEnabled() {
   static bool sInitialized = false;
   static bool sIsFuzzerEnabled = false;
 
@@ -50,9 +46,7 @@ SharedMemoryFuzzer::IsEnabled()
 }
 
 /* static */
-uint64_t
-SharedMemoryFuzzer::MutationProbability()
-{
+uint64_t SharedMemoryFuzzer::MutationProbability() {
   static uint64_t sPropValue = SHMEM_FUZZER_DEFAULT_MUTATION_PROBABILITY;
   static bool sInitialized = false;
 
@@ -73,9 +67,7 @@ SharedMemoryFuzzer::MutationProbability()
 }
 
 /* static */
-uint64_t
-SharedMemoryFuzzer::MutationFactor()
-{
+uint64_t SharedMemoryFuzzer::MutationFactor() {
   static uint64_t sPropValue = SHMEM_FUZZER_DEFAULT_MUTATION_FACTOR;
   static bool sInitialized = false;
 
@@ -96,9 +88,7 @@ SharedMemoryFuzzer::MutationFactor()
 }
 
 /* static */
-void*
-SharedMemoryFuzzer::MutateSharedMemory(void* aMemory, size_t aSize)
-{
+void* SharedMemoryFuzzer::MutateSharedMemory(void* aMemory, size_t aSize) {
   if (!IsEnabled()) {
     return aMemory;
   }
@@ -128,5 +118,5 @@ SharedMemoryFuzzer::MutateSharedMemory(void* aMemory, size_t aSize)
   return aMemory;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

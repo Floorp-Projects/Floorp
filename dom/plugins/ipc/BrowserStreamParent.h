@@ -16,14 +16,12 @@ namespace plugins {
 
 class PluginInstanceParent;
 
-class BrowserStreamParent : public PBrowserStreamParent, public AStream
-{
+class BrowserStreamParent : public PBrowserStreamParent, public AStream {
   friend class PluginModuleParent;
   friend class PluginInstanceParent;
 
-public:
-  BrowserStreamParent(PluginInstanceParent* npp,
-                      NPStream* stream);
+ public:
+  BrowserStreamParent(PluginInstanceParent* npp, NPStream* stream);
   virtual ~BrowserStreamParent();
 
   virtual bool IsBrowserStream() override { return true; }
@@ -37,14 +35,13 @@ public:
 
   void NPP_DestroyStream(NPReason reason);
 
-  void SetAlive()
-  {
+  void SetAlive() {
     if (mState == INITIALIZING) {
       mState = ALIVE;
     }
   }
 
-private:
+ private:
   using PBrowserStreamParent::SendNPP_DestroyStream;
 
   PluginInstanceParent* mNPP;
@@ -52,16 +49,10 @@ private:
   nsCOMPtr<nsISupports> mStreamPeer;
   RefPtr<nsNPAPIPluginStreamListener> mStreamListener;
 
-  enum {
-    INITIALIZING,
-    DEFERRING_DESTROY,
-    ALIVE,
-    DYING,
-    DELETING
-  } mState;
+  enum { INITIALIZING, DEFERRING_DESTROY, ALIVE, DYING, DELETING } mState;
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
 #endif

@@ -8,14 +8,18 @@
 
 #include "nsString.h"
 
-#define XMLPARSER_PROPERTIES "chrome://global/locale/layout/xmlparser.properties"
+#define XMLPARSER_PROPERTIES \
+  "chrome://global/locale/layout/xmlparser.properties"
 
 class nsParserMsgUtils {
-  nsParserMsgUtils();  // Currently this is not meant to be created, use the static methods
-  ~nsParserMsgUtils(); // If perf required, change this to cache values etc.
-public:
-  static nsresult GetLocalizedStringByName(const char * aPropFileName, const char* aKey, nsString& aVal);
-  static nsresult GetLocalizedStringByID(const char * aPropFileName, uint32_t aID, nsString& aVal);
+  nsParserMsgUtils();   // Currently this is not meant to be created, use the
+                        // static methods
+  ~nsParserMsgUtils();  // If perf required, change this to cache values etc.
+ public:
+  static nsresult GetLocalizedStringByName(const char* aPropFileName,
+                                           const char* aKey, nsString& aVal);
+  static nsresult GetLocalizedStringByID(const char* aPropFileName,
+                                         uint32_t aID, nsString& aVal);
 };
 
 #endif

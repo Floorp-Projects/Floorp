@@ -12,38 +12,36 @@
 namespace js {
 namespace jit {
 
-class LIRGeneratorMIPS : public LIRGeneratorMIPSShared
-{
-  protected:
-    LIRGeneratorMIPS(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
-      : LIRGeneratorMIPSShared(gen, graph, lirGraph)
-    { }
+class LIRGeneratorMIPS : public LIRGeneratorMIPSShared {
+ protected:
+  LIRGeneratorMIPS(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
+      : LIRGeneratorMIPSShared(gen, graph, lirGraph) {}
 
-    // Returns a box allocation with type set to reg1 and payload set to reg2.
-    LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
-                               bool useAtStart = false);
+  // Returns a box allocation with type set to reg1 and payload set to reg2.
+  LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
+                             bool useAtStart = false);
 
-    inline LDefinition tempToUnbox() {
-        return LDefinition::BogusTemp();
-    }
+  inline LDefinition tempToUnbox() { return LDefinition::BogusTemp(); }
 
-    void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
+  void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block,
+                            size_t lirIndex);
 
-    void lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
-    void defineInt64Phi(MPhi* phi, size_t lirIndex);
+  void lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block,
+                          size_t lirIndex);
+  void defineInt64Phi(MPhi* phi, size_t lirIndex);
 
-    void lowerTruncateDToInt32(MTruncateToInt32* ins);
-    void lowerTruncateFToInt32(MTruncateToInt32* ins);
+  void lowerTruncateDToInt32(MTruncateToInt32* ins);
+  void lowerTruncateFToInt32(MTruncateToInt32* ins);
 
-    void lowerDivI64(MDiv* div);
-    void lowerModI64(MMod* mod);
-    void lowerUDivI64(MDiv* div);
-    void lowerUModI64(MMod* mod);
+  void lowerDivI64(MDiv* div);
+  void lowerModI64(MMod* mod);
+  void lowerUDivI64(MDiv* div);
+  void lowerUModI64(MMod* mod);
 };
 
 typedef LIRGeneratorMIPS LIRGeneratorSpecific;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_mips32_Lowering_mips32_h */

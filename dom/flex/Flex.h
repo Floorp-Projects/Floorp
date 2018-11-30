@@ -19,37 +19,33 @@ namespace dom {
 
 class FlexLineValues;
 
-class Flex : public nsISupports
-           , public nsWrapperCache
-{
-public:
+class Flex : public nsISupports, public nsWrapperCache {
+ public:
   explicit Flex(Element* aParent, nsFlexContainerFrame* aFrame);
 
-protected:
+ protected:
   virtual ~Flex() = default;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Flex)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-  Element* GetParentObject()
-  {
-    return mParent;
-  }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+  Element* GetParentObject() { return mParent; }
 
   void GetLines(nsTArray<RefPtr<FlexLineValues>>& aResult);
   FlexPhysicalDirection MainAxisDirection() const;
   FlexPhysicalDirection CrossAxisDirection() const;
 
-protected:
+ protected:
   nsCOMPtr<Element> mParent;
   nsTArray<RefPtr<FlexLineValues>> mLines;
   FlexPhysicalDirection mMainAxisDirection;
   FlexPhysicalDirection mCrossAxisDirection;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_Flex_h */

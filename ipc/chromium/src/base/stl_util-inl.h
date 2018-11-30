@@ -20,7 +20,8 @@
 // Clear internal memory of an STL object.
 // STL clear()/reserve(0) does not always free internal memory allocated
 // This function uses swap/destructor to ensure the internal memory is freed.
-template<class T> void STLClearObject(T* obj) {
+template <class T>
+void STLClearObject(T* obj) {
   T tmp;
   tmp.swap(*obj);
   obj->reserve(0);  // this is because sometimes "T tmp" allocates objects with
@@ -30,7 +31,8 @@ template<class T> void STLClearObject(T* obj) {
 
 // Reduce memory usage on behalf of object if it is using more than
 // "bytes" bytes of space.  By default, we clear objects over 1MB.
-template <class T> inline void STLClearIfBig(T* obj, size_t limit = 1<<20) {
+template <class T>
+inline void STLClearIfBig(T* obj, size_t limit = 1 << 20) {
   if (obj->capacity() >= limit) {
     STLClearObject(obj);
   } else {
@@ -41,8 +43,9 @@ template <class T> inline void STLClearIfBig(T* obj, size_t limit = 1<<20) {
 // Reserve space for STL object.
 // STL's reserve() will always copy.
 // This function avoid the copy if we already have capacity
-template<class T> void STLReserveIfNeeded(T* obj, int new_size) {
-  if (obj->capacity() < new_size)   // increase capacity
+template <class T>
+void STLReserveIfNeeded(T* obj, int new_size) {
+  if (obj->capacity() < new_size)  // increase capacity
     obj->reserve(new_size);
   else if (obj->size() > new_size)  // reduce size
     obj->resize(new_size);
@@ -59,8 +62,7 @@ template<class T> void STLReserveIfNeeded(T* obj, int new_size) {
 // advanced, which could result in the hash function trying to deference a
 // stale pointer.
 template <class ForwardIterator>
-void STLDeleteContainerPointers(ForwardIterator begin,
-                                ForwardIterator end) {
+void STLDeleteContainerPointers(ForwardIterator begin, ForwardIterator end) {
   while (begin != end) {
     ForwardIterator temp = begin;
     ++begin;
@@ -113,12 +115,10 @@ void STLDeleteContainerPairSecondPointers(ForwardIterator begin,
   }
 }
 
-template<typename T>
-inline void STLAssignToVector(std::vector<T>* vec,
-                              const T* ptr,
-                              size_t n) {
+template <typename T>
+inline void STLAssignToVector(std::vector<T>* vec, const T* ptr, size_t n) {
   vec->resize(n);
-  memcpy(&vec->front(), ptr, n*sizeof(T));
+  memcpy(&vec->front(), ptr, n * sizeof(T));
 }
 
 /***** Hack to allow faster assignment to a vector *****/
@@ -130,8 +130,7 @@ inline void STLAssignToVector(std::vector<T>* vec,
 //      STLAssignToVectorChar(&vec, ptr, size);
 //      STLAssignToString(&str, ptr, size);
 
-inline void STLAssignToVectorChar(std::vector<char>* vec,
-                                  const char* ptr,
+inline void STLAssignToVectorChar(std::vector<char>* vec, const char* ptr,
                                   size_t n) {
   STLAssignToVector(vec, ptr, n);
 }
@@ -150,22 +149,22 @@ inline void STLAssignToString(std::string* str, const char* ptr, size_t n) {
 // everywhere.  If our STL implementation changes, we will need to
 // change this as well.
 
-template<typename T>
+template <typename T>
 inline T* vector_as_array(std::vector<T>* v) {
-# ifdef NDEBUG
+#ifdef NDEBUG
   return &*v->begin();
-# else
+#else
   return v->empty() ? NULL : &*v->begin();
-# endif
+#endif
 }
 
-template<typename T>
+template <typename T>
 inline const T* vector_as_array(const std::vector<T>* v) {
-# ifdef NDEBUG
+#ifdef NDEBUG
   return &*v->begin();
-# else
+#else
   return v->empty() ? NULL : &*v->begin();
-# endif
+#endif
 }
 
 // Return a mutable char* pointing to a string's internal buffer,
@@ -192,26 +191,20 @@ inline char* string_as_array(std::string* str) {
 // differed.
 
 template <class HashSet>
-inline bool
-HashSetEquality(const HashSet& set_a,
-                const HashSet& set_b) {
+inline bool HashSetEquality(const HashSet& set_a, const HashSet& set_b) {
   if (set_a.size() != set_b.size()) return false;
-  for (typename HashSet::const_iterator i = set_a.begin();
-       i != set_a.end();
+  for (typename HashSet::const_iterator i = set_a.begin(); i != set_a.end();
        ++i) {
-    if (set_b.find(*i) == set_b.end())
-      return false;
+    if (set_b.find(*i) == set_b.end()) return false;
   }
   return true;
 }
 
 template <class HashMap>
-inline bool
-HashMapEquality(const HashMap& map_a,
-                const HashMap& map_b) {
+inline bool HashMapEquality(const HashMap& map_a, const HashMap& map_b) {
   if (map_a.size() != map_b.size()) return false;
-  for (typename HashMap::const_iterator i = map_a.begin();
-       i != map_a.end(); ++i) {
+  for (typename HashMap::const_iterator i = map_a.begin(); i != map_a.end();
+       ++i) {
     typename HashMap::const_iterator j = map_b.find(i->first);
     if (j == map_b.end()) return false;
     if (i->second != j->second) return false;
@@ -233,7 +226,7 @@ HashMapEquality(const HashMap& map_a,
 // STLElementDeleter (defined below), which ensures that your container's
 // elements are deleted when the STLElementDeleter goes out of scope.
 template <class T>
-void STLDeleteElements(T *container) {
+void STLDeleteElements(T* container) {
   if (!container) return;
   STLDeleteContainerPointers(container->begin(), container->end());
   container->clear();
@@ -244,14 +237,13 @@ void STLDeleteElements(T *container) {
 // in the case it's given a NULL pointer.
 
 template <class T>
-void STLDeleteValues(T *v) {
+void STLDeleteValues(T* v) {
   if (!v) return;
   for (typename T::iterator i = v->begin(); i != v->end(); ++i) {
     delete i->second;
   }
   v->clear();
 }
-
 
 // The following classes provide a convenient way to delete all elements or
 // values from STL containers when they goes out of scope.  This greatly
@@ -267,25 +259,28 @@ void STLDeleteValues(T *v) {
 // Given a pointer to an STL container this class will delete all the element
 // pointers when it goes out of scope.
 
-template<class STLContainer> class STLElementDeleter {
+template <class STLContainer>
+class STLElementDeleter {
  public:
-  explicit STLElementDeleter(STLContainer *ptr) : container_ptr_(ptr) {}
+  explicit STLElementDeleter(STLContainer* ptr) : container_ptr_(ptr) {}
   ~STLElementDeleter() { STLDeleteElements(container_ptr_); }
+
  private:
-  STLContainer *container_ptr_;
+  STLContainer* container_ptr_;
 };
 
 // Given a pointer to an STL container this class will delete all the value
 // pointers when it goes out of scope.
 
-template<class STLContainer> class STLValueDeleter {
+template <class STLContainer>
+class STLValueDeleter {
  public:
-  explicit STLValueDeleter(STLContainer *ptr) : container_ptr_(ptr) {}
+  explicit STLValueDeleter(STLContainer* ptr) : container_ptr_(ptr) {}
   ~STLValueDeleter() { STLDeleteValues(container_ptr_); }
- private:
-  STLContainer *container_ptr_;
-};
 
+ private:
+  STLContainer* container_ptr_;
+};
 
 // Forward declare some callback classes in callback.h for STLBinaryFunction
 template <class R, class T1, class T2>
@@ -303,14 +298,11 @@ class STLBinaryFunction : public std::binary_function<Arg1, Arg2, Result> {
  public:
   typedef ResultCallback2<Result, Arg1, Arg2> Callback;
 
-  explicit STLBinaryFunction(Callback* callback)
-    : callback_(callback) {
+  explicit STLBinaryFunction(Callback* callback) : callback_(callback) {
     assert(callback_);
   }
 
-  Result operator() (Arg1 arg1, Arg2 arg2) {
-    return callback_->Run(arg1, arg2);
-  }
+  Result operator()(Arg1 arg1, Arg2 arg2) { return callback_->Run(arg1, arg2); }
 
  private:
   Callback* callback_;
@@ -328,8 +320,7 @@ class STLBinaryPredicate : public STLBinaryFunction<bool, Arg, Arg> {
  public:
   typedef typename STLBinaryPredicate<Arg>::Callback Callback;
   explicit STLBinaryPredicate(Callback* callback)
-    : STLBinaryFunction<bool, Arg, Arg>(callback) {
-  }
+      : STLBinaryFunction<bool, Arg, Arg>(callback) {}
 };
 
 // Functors that compose arbitrary unary and binary functions with a
@@ -346,15 +337,13 @@ class STLBinaryPredicate : public STLBinaryFunction<bool, Arg, Arg> {
 // A typical usage for these functions would be when iterating over
 // the contents of an STL map. For other sample usage, see the unittest.
 
-template<typename Pair, typename UnaryOp>
+template <typename Pair, typename UnaryOp>
 class UnaryOperateOnFirst
     : public std::unary_function<Pair, typename UnaryOp::result_type> {
  public:
-  UnaryOperateOnFirst() {
-  }
+  UnaryOperateOnFirst() {}
 
-  explicit UnaryOperateOnFirst(const UnaryOp& f) : f_(f) {
-  }
+  explicit UnaryOperateOnFirst(const UnaryOp& f) : f_(f) {}
 
   typename UnaryOp::result_type operator()(const Pair& p) const {
     return f_(p.first);
@@ -364,20 +353,18 @@ class UnaryOperateOnFirst
   UnaryOp f_;
 };
 
-template<typename Pair, typename UnaryOp>
+template <typename Pair, typename UnaryOp>
 UnaryOperateOnFirst<Pair, UnaryOp> UnaryOperate1st(const UnaryOp& f) {
   return UnaryOperateOnFirst<Pair, UnaryOp>(f);
 }
 
-template<typename Pair, typename UnaryOp>
+template <typename Pair, typename UnaryOp>
 class UnaryOperateOnSecond
     : public std::unary_function<Pair, typename UnaryOp::result_type> {
  public:
-  UnaryOperateOnSecond() {
-  }
+  UnaryOperateOnSecond() {}
 
-  explicit UnaryOperateOnSecond(const UnaryOp& f) : f_(f) {
-  }
+  explicit UnaryOperateOnSecond(const UnaryOp& f) : f_(f) {}
 
   typename UnaryOp::result_type operator()(const Pair& p) const {
     return f_(p.second);
@@ -387,20 +374,18 @@ class UnaryOperateOnSecond
   UnaryOp f_;
 };
 
-template<typename Pair, typename UnaryOp>
+template <typename Pair, typename UnaryOp>
 UnaryOperateOnSecond<Pair, UnaryOp> UnaryOperate2nd(const UnaryOp& f) {
   return UnaryOperateOnSecond<Pair, UnaryOp>(f);
 }
 
-template<typename Pair, typename BinaryOp>
+template <typename Pair, typename BinaryOp>
 class BinaryOperateOnFirst
     : public std::binary_function<Pair, Pair, typename BinaryOp::result_type> {
  public:
-  BinaryOperateOnFirst() {
-  }
+  BinaryOperateOnFirst() {}
 
-  explicit BinaryOperateOnFirst(const BinaryOp& f) : f_(f) {
-  }
+  explicit BinaryOperateOnFirst(const BinaryOp& f) : f_(f) {}
 
   typename BinaryOp::result_type operator()(const Pair& p1,
                                             const Pair& p2) const {
@@ -411,20 +396,18 @@ class BinaryOperateOnFirst
   BinaryOp f_;
 };
 
-template<typename Pair, typename BinaryOp>
+template <typename Pair, typename BinaryOp>
 BinaryOperateOnFirst<Pair, BinaryOp> BinaryOperate1st(const BinaryOp& f) {
   return BinaryOperateOnFirst<Pair, BinaryOp>(f);
 }
 
-template<typename Pair, typename BinaryOp>
+template <typename Pair, typename BinaryOp>
 class BinaryOperateOnSecond
     : public std::binary_function<Pair, Pair, typename BinaryOp::result_type> {
  public:
-  BinaryOperateOnSecond() {
-  }
+  BinaryOperateOnSecond() {}
 
-  explicit BinaryOperateOnSecond(const BinaryOp& f) : f_(f) {
-  }
+  explicit BinaryOperateOnSecond(const BinaryOp& f) : f_(f) {}
 
   typename BinaryOp::result_type operator()(const Pair& p1,
                                             const Pair& p2) const {
@@ -435,13 +418,13 @@ class BinaryOperateOnSecond
   BinaryOp f_;
 };
 
-template<typename Pair, typename BinaryOp>
+template <typename Pair, typename BinaryOp>
 BinaryOperateOnSecond<Pair, BinaryOp> BinaryOperate2nd(const BinaryOp& f) {
   return BinaryOperateOnSecond<Pair, BinaryOp>(f);
 }
 
 // Translates a set into a vector.
-template<typename T>
+template <typename T>
 std::vector<T> SetToVector(const std::set<T>& values) {
   std::vector<T> result;
   result.reserve(values.size());

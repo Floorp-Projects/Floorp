@@ -20,12 +20,10 @@ using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
-NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessibleWrap,
-                             ApplicationAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessibleWrap, ApplicationAccessible)
 
 already_AddRefed<nsIPersistentProperties>
-ApplicationAccessibleWrap::NativeAttributes()
-{
+ApplicationAccessibleWrap::NativeAttributes() {
   RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
@@ -34,8 +32,8 @@ ApplicationAccessibleWrap::NativeAttributes()
     gfxInfo->GetD2DEnabled(&isD2DEnabled);
     nsAutoString unused;
     attributes->SetStringProperty(
-      NS_LITERAL_CSTRING("D2D"),
-      isD2DEnabled ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"),
+        NS_LITERAL_CSTRING("D2D"),
+        isD2DEnabled ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"),
         unused);
   }
 
@@ -46,10 +44,8 @@ ApplicationAccessibleWrap::NativeAttributes()
 // IUnknown
 
 STDMETHODIMP
-ApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
-{
-  if (!ppv)
-    return E_INVALIDARG;
+ApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv) {
+  if (!ppv) return E_INVALIDARG;
 
   *ppv = nullptr;
 
@@ -66,80 +62,63 @@ ApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleApplication
 
 STDMETHODIMP
-ApplicationAccessibleWrap::get_appName(BSTR* aName)
-{
-  if (!aName)
-    return E_INVALIDARG;
+ApplicationAccessibleWrap::get_appName(BSTR* aName) {
+  if (!aName) return E_INVALIDARG;
 
   *aName = nullptr;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString name;
   AppName(name);
-  if (name.IsEmpty())
-    return S_FALSE;
+  if (name.IsEmpty()) return S_FALSE;
 
   *aName = ::SysAllocStringLen(name.get(), name.Length());
   return *aName ? S_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
-ApplicationAccessibleWrap::get_appVersion(BSTR* aVersion)
-{
-  if (!aVersion)
-    return E_INVALIDARG;
+ApplicationAccessibleWrap::get_appVersion(BSTR* aVersion) {
+  if (!aVersion) return E_INVALIDARG;
 
   *aVersion = nullptr;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString version;
   AppVersion(version);
-  if (version.IsEmpty())
-    return S_FALSE;
+  if (version.IsEmpty()) return S_FALSE;
 
   *aVersion = ::SysAllocStringLen(version.get(), version.Length());
   return *aVersion ? S_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
-ApplicationAccessibleWrap::get_toolkitName(BSTR* aName)
-{
-  if (!aName)
-    return E_INVALIDARG;
+ApplicationAccessibleWrap::get_toolkitName(BSTR* aName) {
+  if (!aName) return E_INVALIDARG;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString name;
   PlatformName(name);
-  if (name.IsEmpty())
-    return S_FALSE;
+  if (name.IsEmpty()) return S_FALSE;
 
   *aName = ::SysAllocStringLen(name.get(), name.Length());
   return *aName ? S_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
-ApplicationAccessibleWrap::get_toolkitVersion(BSTR* aVersion)
-{
-  if (!aVersion)
-    return E_INVALIDARG;
+ApplicationAccessibleWrap::get_toolkitVersion(BSTR* aVersion) {
+  if (!aVersion) return E_INVALIDARG;
 
   *aVersion = nullptr;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString version;
   PlatformVersion(version);
-  if (version.IsEmpty())
-    return S_FALSE;
+  if (version.IsEmpty()) return S_FALSE;
 
   *aVersion = ::SysAllocStringLen(version.get(), version.Length());
   return *aVersion ? S_OK : E_OUTOFMEMORY;
 }
-

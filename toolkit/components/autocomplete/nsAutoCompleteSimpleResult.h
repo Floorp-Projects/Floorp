@@ -15,9 +15,8 @@
 
 struct AutoCompleteSimpleResultMatch;
 
-class nsAutoCompleteSimpleResult final : public nsIAutoCompleteSimpleResult
-{
-public:
+class nsAutoCompleteSimpleResult final : public nsIAutoCompleteSimpleResult {
+ public:
   nsAutoCompleteSimpleResult();
 
   NS_DECL_ISUPPORTS
@@ -26,12 +25,12 @@ public:
 
   nsresult AppendResult(nsIAutoCompleteResult* aResult);
 
-private:
+ private:
   ~nsAutoCompleteSimpleResult() {}
 
-protected:
+ protected:
   typedef nsTArray<AutoCompleteSimpleResultMatch> MatchesArray;
-   MatchesArray mMatches;
+  MatchesArray mMatches;
 
   nsString mSearchString;
   nsString mErrorDescription;
@@ -41,4 +40,4 @@ protected:
   nsCOMPtr<nsIAutoCompleteSimpleResultListener> mListener;
 };
 
-#endif // __nsAutoCompleteSimpleResult__
+#endif  // __nsAutoCompleteSimpleResult__

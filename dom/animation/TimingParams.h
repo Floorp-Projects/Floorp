@@ -9,14 +9,14 @@
 
 #include "nsStringFwd.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/UnionTypes.h" // For OwningUnrestrictedDoubleOrString
+#include "mozilla/dom/UnionTypes.h"  // For OwningUnrestrictedDoubleOrString
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StickyTimeDuration.h"
-#include "mozilla/TimeStamp.h" // for TimeDuration
+#include "mozilla/TimeStamp.h"  // for TimeDuration
 
-#include "mozilla/dom/AnimationEffectBinding.h" // for FillMode
-                                                // and PlaybackDirection
+#include "mozilla/dom/AnimationEffectBinding.h"  // for FillMode
+                                                 // and PlaybackDirection
 
 class nsIDocument;
 
@@ -25,60 +25,47 @@ namespace mozilla {
 namespace dom {
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 class UnrestrictedDoubleOrKeyframeAnimationOptions;
-}
+}  // namespace dom
 
-struct TimingParams
-{
+struct TimingParams {
   TimingParams() = default;
 
-  TimingParams(float aDuration, float aDelay,
-               float aIterationCount,
-               dom::PlaybackDirection aDirection,
-               dom::FillMode aFillMode)
-    : mIterations(aIterationCount)
-    , mDirection(aDirection)
-    , mFill(aFillMode)
-  {
+  TimingParams(float aDuration, float aDelay, float aIterationCount,
+               dom::PlaybackDirection aDirection, dom::FillMode aFillMode)
+      : mIterations(aIterationCount), mDirection(aDirection), mFill(aFillMode) {
     mDuration.emplace(StickyTimeDuration::FromMilliseconds(aDuration));
     mDelay = TimeDuration::FromMilliseconds(aDelay);
     Update();
   }
 
-  TimingParams(const TimeDuration& aDuration,
-               const TimeDuration& aDelay,
-               const TimeDuration& aEndDelay,
-               float aIterations,
-               float aIterationStart,
-               dom::PlaybackDirection aDirection,
+  TimingParams(const TimeDuration& aDuration, const TimeDuration& aDelay,
+               const TimeDuration& aEndDelay, float aIterations,
+               float aIterationStart, dom::PlaybackDirection aDirection,
                dom::FillMode aFillMode,
                Maybe<ComputedTimingFunction>&& aFunction)
-    : mDelay(aDelay)
-    , mEndDelay(aEndDelay)
-    , mIterations(aIterations)
-    , mIterationStart(aIterationStart)
-    , mDirection(aDirection)
-    , mFill(aFillMode)
-    , mFunction(aFunction)
-  {
+      : mDelay(aDelay),
+        mEndDelay(aEndDelay),
+        mIterations(aIterations),
+        mIterationStart(aIterationStart),
+        mDirection(aDirection),
+        mFill(aFillMode),
+        mFunction(aFunction) {
     mDuration.emplace(aDuration);
     Update();
   }
 
   template <class OptionsType>
-  static TimingParams FromOptionsType(
-    const OptionsType& aOptions,
-    nsIDocument* aDocument,
-    ErrorResult& aRv);
+  static TimingParams FromOptionsType(const OptionsType& aOptions,
+                                      nsIDocument* aDocument, ErrorResult& aRv);
   static TimingParams FromOptionsUnion(
-    const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
-    nsIDocument* aDocument, ErrorResult& aRv);
+      const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+      nsIDocument* aDocument, ErrorResult& aRv);
   static TimingParams FromOptionsUnion(
-    const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-    nsIDocument* aDocument, ErrorResult& aRv);
-  static TimingParams FromEffectTiming(
-    const dom::EffectTiming& aEffectTiming,
-    nsIDocument* aDocument,
-    ErrorResult& aRv);
+      const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+      nsIDocument* aDocument, ErrorResult& aRv);
+  static TimingParams FromEffectTiming(const dom::EffectTiming& aEffectTiming,
+                                       nsIDocument* aDocument,
+                                       ErrorResult& aRv);
   // Returns a copy of |aSource| where each timing property in |aSource| that
   // is also specified in |aEffectTiming| is replaced with the value from
   // |aEffectTiming|.
@@ -86,10 +73,9 @@ struct TimingParams
   // If any of the values in |aEffectTiming| are invalid, |aRv.Failed()| will be
   // true and an unmodified copy of |aSource| will be returned.
   static TimingParams MergeOptionalEffectTiming(
-    const TimingParams& aSource,
-    const dom::OptionalEffectTiming& aEffectTiming,
-    nsIDocument* aDocument,
-    ErrorResult& aRv);
+      const TimingParams& aSource,
+      const dom::OptionalEffectTiming& aEffectTiming, nsIDocument* aDocument,
+      ErrorResult& aRv);
 
   // Range-checks and validates an UnrestrictedDoubleOrString or
   // OwningUnrestrictedDoubleOrString object and converts to a
@@ -97,8 +83,7 @@ struct TimingParams
   // Caller must check aRv.Failed().
   template <class DoubleOrString>
   static Maybe<StickyTimeDuration> ParseDuration(DoubleOrString& aDuration,
-                                                 ErrorResult& aRv)
-  {
+                                                 ErrorResult& aRv) {
     Maybe<StickyTimeDuration> result;
     if (aDuration.IsUnrestrictedDouble()) {
       double durationInMs = aDuration.GetAsUnrestrictedDouble();
@@ -106,29 +91,26 @@ struct TimingParams
         result.emplace(StickyTimeDuration::FromMilliseconds(durationInMs));
       } else {
         aRv.ThrowTypeError<dom::MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
-          NS_LITERAL_STRING("duration"));
+            NS_LITERAL_STRING("duration"));
       }
     } else if (!aDuration.GetAsString().EqualsLiteral("auto")) {
       aRv.ThrowTypeError<dom::MSG_INVALID_DURATION_ERROR>(
-        aDuration.GetAsString());
+          aDuration.GetAsString());
     }
     return result;
   }
 
-  static void ValidateIterationStart(double aIterationStart,
-                                     ErrorResult& aRv)
-  {
+  static void ValidateIterationStart(double aIterationStart, ErrorResult& aRv) {
     if (aIterationStart < 0) {
       aRv.ThrowTypeError<dom::MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
-        NS_LITERAL_STRING("iterationStart"));
+          NS_LITERAL_STRING("iterationStart"));
     }
   }
 
-  static void ValidateIterations(double aIterations, ErrorResult& aRv)
-  {
+  static void ValidateIterations(double aIterations, ErrorResult& aRv) {
     if (IsNaN(aIterations) || aIterations < 0) {
       aRv.ThrowTypeError<dom::MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
-        NS_LITERAL_STRING("iterations"));
+          NS_LITERAL_STRING("iterations"));
     }
   }
 
@@ -137,9 +119,7 @@ struct TimingParams
                                                    ErrorResult& aRv);
 
   static StickyTimeDuration CalcActiveDuration(
-    const Maybe<StickyTimeDuration>& aDuration,
-    double aIterations)
-  {
+      const Maybe<StickyTimeDuration>& aDuration, double aIterations) {
     // If either the iteration duration or iteration count is zero,
     // Web Animations says that the active duration is zero. This is to
     // ensure that the result is defined when the other argument is Infinity.
@@ -152,15 +132,13 @@ struct TimingParams
   }
   // Return the duration of the active interval calculated by duration and
   // iteration count.
-  StickyTimeDuration ActiveDuration() const
-  {
+  StickyTimeDuration ActiveDuration() const {
     MOZ_ASSERT(CalcActiveDuration(mDuration, mIterations) == mActiveDuration,
                "Cached value of active duration should be up to date");
     return mActiveDuration;
   }
 
-  StickyTimeDuration EndTime() const
-  {
+  StickyTimeDuration EndTime() const {
     MOZ_ASSERT(mEndTime == std::max(mDelay + ActiveDuration() + mEndDelay,
                                     StickyTimeDuration()),
                "Cached value of end time should be up to date");
@@ -168,80 +146,67 @@ struct TimingParams
   }
 
   bool operator==(const TimingParams& aOther) const;
-  bool operator!=(const TimingParams& aOther) const
-  {
+  bool operator!=(const TimingParams& aOther) const {
     return !(*this == aOther);
   }
 
-  void SetDuration(Maybe<StickyTimeDuration>&& aDuration)
-  {
+  void SetDuration(Maybe<StickyTimeDuration>&& aDuration) {
     mDuration = std::move(aDuration);
     Update();
   }
   const Maybe<StickyTimeDuration>& Duration() const { return mDuration; }
 
-  void SetDelay(const TimeDuration& aDelay)
-  {
+  void SetDelay(const TimeDuration& aDelay) {
     mDelay = aDelay;
     Update();
   }
   const TimeDuration& Delay() const { return mDelay; }
 
-  void SetEndDelay(const TimeDuration& aEndDelay)
-  {
+  void SetEndDelay(const TimeDuration& aEndDelay) {
     mEndDelay = aEndDelay;
     Update();
   }
   const TimeDuration& EndDelay() const { return mEndDelay; }
 
-  void SetIterations(double aIterations)
-  {
+  void SetIterations(double aIterations) {
     mIterations = aIterations;
     Update();
   }
   double Iterations() const { return mIterations; }
 
-  void SetIterationStart(double aIterationStart)
-  {
+  void SetIterationStart(double aIterationStart) {
     mIterationStart = aIterationStart;
   }
   double IterationStart() const { return mIterationStart; }
 
-  void SetDirection(dom::PlaybackDirection aDirection)
-  {
+  void SetDirection(dom::PlaybackDirection aDirection) {
     mDirection = aDirection;
   }
   dom::PlaybackDirection Direction() const { return mDirection; }
 
-  void SetFill(dom::FillMode aFill)
-  {
-    mFill = aFill;
-  }
+  void SetFill(dom::FillMode aFill) { mFill = aFill; }
   dom::FillMode Fill() const { return mFill; }
 
-  void SetTimingFunction(Maybe<ComputedTimingFunction>&& aFunction)
-  {
+  void SetTimingFunction(Maybe<ComputedTimingFunction>&& aFunction) {
     mFunction = std::move(aFunction);
   }
-  const Maybe<ComputedTimingFunction>& TimingFunction() const
-  {
+  const Maybe<ComputedTimingFunction>& TimingFunction() const {
     return mFunction;
   }
 
-private:
-  void Update()
-  {
+ private:
+  void Update() {
     mActiveDuration = CalcActiveDuration(mDuration, mIterations);
 
-    mEndTime = std::max(mDelay + mActiveDuration + mEndDelay,
-                        StickyTimeDuration());
+    mEndTime =
+        std::max(mDelay + mActiveDuration + mEndDelay, StickyTimeDuration());
   }
 
   // mDuration.isNothing() represents the "auto" value
   Maybe<StickyTimeDuration> mDuration;
-  TimeDuration mDelay;      // Initializes to zero
+  TimeDuration mDelay;  // Initializes to zero
   TimeDuration mEndDelay;
-  double mIterations = 1.0; // Can be NaN, negative, +/-Infinity
+  double mIterations = 1.0;  // Can be NaN, negative, +/-Infinity
   double mIterationStart = 0.0;
   dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
   dom::FillMode mFill = dom::FillMode::Auto;
@@ -250,6 +215,6 @@ private:
   StickyTimeDuration mEndTime = StickyTimeDuration();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_TimingParams_h
+#endif  // mozilla_TimingParams_h

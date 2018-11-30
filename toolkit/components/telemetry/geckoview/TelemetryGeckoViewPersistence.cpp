@@ -10,7 +10,7 @@
 #include "core/TelemetryScalar.h"
 #include "jsapi.h"
 #include "js/JSON.h"
-#include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
+#include "mozilla/dom/ScriptSettings.h"  // for AutoJSAPI
 #include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/JSONWriter.h"
@@ -56,16 +56,16 @@ using PathCharPtr = const PathChar*;
 // If we're building for other platforms (e.g. for running test coverage), try
 // to print something anyway.
 #define ANDROID_LOG(...) printf_stderr("\n**** TELEMETRY: " __VA_ARGS__)
-#endif // MOZ_WIDGET_ANDROID
+#endif  // MOZ_WIDGET_ANDROID
 #else
 // No-op on Release builds.
 #define ANDROID_LOG(...)
-#endif // DEBUG
+#endif  // DEBUG
 
 // The Gecko runtime can be killed at anytime. Moreover, we can
 // have very short lived sessions. The persistence timeout governs
 // how frequently measurements are saved to disk.
-const uint32_t kDefaultPersistenceTimeoutMs = 60 * 1000; // 60s
+const uint32_t kDefaultPersistenceTimeoutMs = 60 * 1000;  // 60s
 
 // The name of the persistence file used for saving the
 // measurements.
@@ -89,19 +89,17 @@ void PersistenceThreadPersist();
 + * The helper class used by mozilla::JSONWriter to
 + * serialize the JSON structure to a file.
 + */
-class StreamingJSONWriter : public mozilla::JSONWriteFunc
-{
-public:
-  nsresult Open(nsCOMPtr<nsIFile> aOutFile)
-  {
+class StreamingJSONWriter : public mozilla::JSONWriteFunc {
+ public:
+  nsresult Open(nsCOMPtr<nsIFile> aOutFile) {
     MOZ_ASSERT(!mStream, "Open must not be called twice");
-    nsresult rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(mStream), aOutFile);
+    nsresult rv =
+        NS_NewSafeLocalFileOutputStream(getter_AddRefs(mStream), aOutFile);
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 
-  nsresult Close()
-  {
+  nsresult Close() {
     MOZ_ASSERT(mStream, "Close must be called on an already opened stream");
     // We don't need to care too much about checking if count matches
     // the length of aData: Finish() will do that for us and fail if
@@ -113,13 +111,12 @@ public:
     return safeStream->Finish();
   }
 
-  void Write(const char* aStr) override
-  {
+  void Write(const char* aStr) override {
     uint32_t count;
     mozilla::Unused << mStream->Write(aStr, strlen(aStr), &count);
   }
 
-private:
+ private:
   nsCOMPtr<nsIOutputStream> mStream;
 };
 
@@ -130,15 +127,15 @@ private:
  * @return {nsresult} NS_OK if the data dir path was found, a failure value
  *                    otherwise.
  */
-nsresult
-GetAndroidDataDir(nsTString<PathChar>& aOutDir)
-{
+nsresult GetAndroidDataDir(nsTString<PathChar>& aOutDir) {
   // This relies on the Java environment to set the location of the
   // cache directory. If that happens, the following variable is set.
   // This should always be the case.
-  const char *dataDir = PR_GetEnv("MOZ_ANDROID_DATA_DIR");
+  const char* dataDir = PR_GetEnv("MOZ_ANDROID_DATA_DIR");
   if (!dataDir || !*dataDir) {
-    ANDROID_LOG("GetAndroidDataDir - Cannot find the data directory in the environment.");
+    ANDROID_LOG(
+        "GetAndroidDataDir - Cannot find the data directory in the "
+        "environment.");
     return NS_ERROR_FAILURE;
   }
 
@@ -154,9 +151,7 @@ GetAndroidDataDir(nsTString<PathChar>& aOutDir)
  * @return {nsresult} NS_OK if the persistence file was found, a failure value
  *                          otherwise.
  */
-nsresult
-GetPersistenceFile(nsCOMPtr<nsIFile>& aOutFile)
-{
+nsresult GetPersistenceFile(nsCOMPtr<nsIFile>& aOutFile) {
   nsTString<PathChar> dataDir;
   nsresult rv = GetAndroidDataDir(dataDir);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -179,9 +174,7 @@ GetPersistenceFile(nsCOMPtr<nsIFile>& aOutFile)
  * @return {nsresult} NS_OK if the file was correctly read, an error code
  *                          otherwise.
  */
-nsresult
-ReadFromFile(const nsCOMPtr<nsIFile>& aFile, nsACString& fileContent)
-{
+nsresult ReadFromFile(const nsCOMPtr<nsIFile>& aFile, nsACString& fileContent) {
   int64_t fileSize = 0;
   nsresult rv = aFile->GetFileSize(&fileSize);
   if (NS_FAILED(rv)) {
@@ -189,9 +182,7 @@ ReadFromFile(const nsCOMPtr<nsIFile>& aFile, nsACString& fileContent)
   }
 
   nsCOMPtr<nsIInputStream> inStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream),
-                                  aFile,
-                                  PR_RDONLY);
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream), aFile, PR_RDONLY);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make sure to close the stream.
@@ -207,9 +198,7 @@ ReadFromFile(const nsCOMPtr<nsIFile>& aFile, nsACString& fileContent)
  * Arms the persistence timer and instructs to run the persistence
  * task off the main thread.
  */
-void
-MainThreadArmPersistenceTimer()
-{
+void MainThreadArmPersistenceTimer() {
   MOZ_ASSERT(NS_IsMainThread());
   ANDROID_LOG("MainThreadArmPersistenceTimer");
 
@@ -217,48 +206,48 @@ MainThreadArmPersistenceTimer()
   // care of that.
   if (!gPersistenceTimer) {
     gPersistenceTimer =
-      NS_NewTimer(SystemGroup::EventTargetFor(TaskCategory::Other)).take();
+        NS_NewTimer(SystemGroup::EventTargetFor(TaskCategory::Other)).take();
     if (!gPersistenceTimer) {
       ANDROID_LOG("MainThreadArmPersistenceTimer - Timer creation failed.");
       return;
     }
   }
 
-  // Define the callback for the persistence timer: it will dispatch the persistence
-  // task off the main thread. Once finished, it will trigger the timer again.
+  // Define the callback for the persistence timer: it will dispatch the
+  // persistence task off the main thread. Once finished, it will trigger the
+  // timer again.
   nsTimerCallbackFunc timerCallback = [](nsITimer* aTimer, void* aClosure) {
-    gPersistenceThread->Dispatch(NS_NewRunnableFunction("PersistenceThreadPersist",
-      []() -> void { ::PersistenceThreadPersist(); }));
+    gPersistenceThread->Dispatch(
+        NS_NewRunnableFunction("PersistenceThreadPersist",
+                               []() -> void { ::PersistenceThreadPersist(); }));
   };
 
-  uint32_t timeout = Preferences::GetUint("toolkit.telemetry.geckoPersistenceTimeout",
-                                          kDefaultPersistenceTimeoutMs);
+  uint32_t timeout =
+      Preferences::GetUint("toolkit.telemetry.geckoPersistenceTimeout",
+                           kDefaultPersistenceTimeoutMs);
 
   // Schedule the timer to automatically run and reschedule
   // every |kPersistenceTimeoutMs|.
-  gPersistenceTimer->InitWithNamedFuncCallback(timerCallback,
-                                               nullptr,
-                                               timeout,
-                                               nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-                                               "TelemetryGeckoViewPersistence::Persist");
+  gPersistenceTimer->InitWithNamedFuncCallback(
+      timerCallback, nullptr, timeout, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+      "TelemetryGeckoViewPersistence::Persist");
 }
 
 /**
  * Parse the string data into a JSON structure, using
  * the native JS JSON parser.
  */
-void
-MainThreadParsePersistedProbes(const nsACString& aProbeData)
-{
+void MainThreadParsePersistedProbes(const nsACString& aProbeData) {
   // We're required to run on the main thread since we're using JS.
   MOZ_ASSERT(NS_IsMainThread());
   ANDROID_LOG("MainThreadParsePersistedProbes");
 
   // We need a JS context to run the parsing stuff in.
   JSObject* cleanGlobal =
-    SimpleGlobalObject::Create(SimpleGlobalObject::GlobalType::BindingDetail);
+      SimpleGlobalObject::Create(SimpleGlobalObject::GlobalType::BindingDetail);
   if (!cleanGlobal) {
-    ANDROID_LOG("MainThreadParsePersistedProbes - Failed to create a JS global object");
+    ANDROID_LOG(
+        "MainThreadParsePersistedProbes - Failed to create a JS global object");
     return;
   }
 
@@ -271,8 +260,10 @@ MainThreadParsePersistedProbes(const nsACString& aProbeData)
   // Parse the JSON using the JS API.
   JS::RootedValue data(jsapi.cx());
   NS_ConvertUTF8toUTF16 utf16Content(aProbeData);
-  if (!JS_ParseJSON(jsapi.cx(), utf16Content.BeginReading(), utf16Content.Length(), &data)) {
-    ANDROID_LOG("MainThreadParsePersistedProbes - Failed to parse the persisted JSON");
+  if (!JS_ParseJSON(jsapi.cx(), utf16Content.BeginReading(),
+                    utf16Content.Length(), &data)) {
+    ANDROID_LOG(
+        "MainThreadParsePersistedProbes - Failed to parse the persisted JSON");
     return;
   }
 
@@ -282,10 +273,13 @@ MainThreadParsePersistedProbes(const nsACString& aProbeData)
   if (JS_GetProperty(jsapi.cx(), dataObj, "scalars", &scalarData)) {
     // If the data is an object, try to parse its properties. If not,
     // silently skip and try to load the other sections.
-    if (!scalarData.isObject()
-        || NS_FAILED(TelemetryScalar::DeserializePersistedScalars(jsapi.cx(), scalarData))) {
-      ANDROID_LOG("MainThreadParsePersistedProbes - Failed to parse 'scalars'.");
-      MOZ_ASSERT(!JS_IsExceptionPending(jsapi.cx()), "Parsers must suppress exceptions themselves");
+    if (!scalarData.isObject() ||
+        NS_FAILED(TelemetryScalar::DeserializePersistedScalars(jsapi.cx(),
+                                                               scalarData))) {
+      ANDROID_LOG(
+          "MainThreadParsePersistedProbes - Failed to parse 'scalars'.");
+      MOZ_ASSERT(!JS_IsExceptionPending(jsapi.cx()),
+                 "Parsers must suppress exceptions themselves");
     }
   } else {
     // Getting the "scalars" property failed, suppress the exception
@@ -297,10 +291,13 @@ MainThreadParsePersistedProbes(const nsACString& aProbeData)
   if (JS_GetProperty(jsapi.cx(), dataObj, "keyedScalars", &keyedScalarData)) {
     // If the data is an object, try to parse its properties. If not,
     // silently skip and try to load the other sections.
-    if (!keyedScalarData.isObject()
-        || NS_FAILED(TelemetryScalar::DeserializePersistedKeyedScalars(jsapi.cx(), keyedScalarData))) {
-      ANDROID_LOG("MainThreadParsePersistedProbes - Failed to parse 'keyedScalars'.");
-      MOZ_ASSERT(!JS_IsExceptionPending(jsapi.cx()), "Parsers must suppress exceptions themselves");
+    if (!keyedScalarData.isObject() ||
+        NS_FAILED(TelemetryScalar::DeserializePersistedKeyedScalars(
+            jsapi.cx(), keyedScalarData))) {
+      ANDROID_LOG(
+          "MainThreadParsePersistedProbes - Failed to parse 'keyedScalars'.");
+      MOZ_ASSERT(!JS_IsExceptionPending(jsapi.cx()),
+                 "Parsers must suppress exceptions themselves");
     }
   } else {
     // Getting the "keyedScalars" property failed, suppress the exception
@@ -314,13 +311,16 @@ MainThreadParsePersistedProbes(const nsACString& aProbeData)
     // If the data is an object, try to parse its properties. If not,
     // silently skip and try to load the other sections.
     nsresult rv = NS_OK;
-    if (!histogramData.isObject()
-        || NS_FAILED(rv = TelemetryHistogram::DeserializeHistograms(jsapi.cx(), histogramData))) {
+    if (!histogramData.isObject() ||
+        NS_FAILED(rv = TelemetryHistogram::DeserializeHistograms(
+                      jsapi.cx(), histogramData))) {
       nsAutoCString errorName;
       GetErrorName(rv, errorName);
-      ANDROID_LOG("MainThreadParsePersistedProbes - Failed to parse 'histograms', %s.",
-                  errorName.get());
-      MOZ_ASSERT(!JS_IsExceptionPending(jsapi.cx()), "Parsers must suppress exceptions themselves");
+      ANDROID_LOG(
+          "MainThreadParsePersistedProbes - Failed to parse 'histograms', %s.",
+          errorName.get());
+      MOZ_ASSERT(!JS_IsExceptionPending(jsapi.cx()),
+                 "Parsers must suppress exceptions themselves");
     }
   } else {
     // Getting the "histogramData" property failed, suppress the exception
@@ -330,18 +330,22 @@ MainThreadParsePersistedProbes(const nsACString& aProbeData)
 
   // Get the data for the keyed histograms.
   JS::RootedValue keyedHistogramData(jsapi.cx());
-  if (JS_GetProperty(jsapi.cx(), dataObj, "keyedHistograms", &keyedHistogramData)) {
+  if (JS_GetProperty(jsapi.cx(), dataObj, "keyedHistograms",
+                     &keyedHistogramData)) {
     // If the data is an object, try to parse its properties. If not,
     // silently skip and try to load the other sections.
     nsresult rv = NS_OK;
-    if (!keyedHistogramData.isObject()
-        || NS_FAILED(rv = TelemetryHistogram::DeserializeKeyedHistograms(jsapi.cx(),
-                                                                         keyedHistogramData))) {
+    if (!keyedHistogramData.isObject() ||
+        NS_FAILED(rv = TelemetryHistogram::DeserializeKeyedHistograms(
+                      jsapi.cx(), keyedHistogramData))) {
       nsAutoCString errorName;
       GetErrorName(rv, errorName);
-      ANDROID_LOG("MainThreadParsePersistedProbes - Failed to parse 'keyedHistograms', %s.",
-                  errorName.get());
-      MOZ_ASSERT(!JS_IsExceptionPending(jsapi.cx()), "Parsers must suppress exceptions themselves");
+      ANDROID_LOG(
+          "MainThreadParsePersistedProbes - Failed to parse 'keyedHistograms', "
+          "%s.",
+          errorName.get());
+      MOZ_ASSERT(!JS_IsExceptionPending(jsapi.cx()),
+                 "Parsers must suppress exceptions themselves");
     }
   } else {
     // Getting the "keyedHistogramData" property failed, suppress the exception
@@ -353,35 +357,39 @@ MainThreadParsePersistedProbes(const nsACString& aProbeData)
 /**
  * The persistence worker function, meant to be run off the main thread.
  */
-void
-PersistenceThreadPersist()
-{
-  MOZ_ASSERT(XRE_IsParentProcess(), "We must only persist from the parent process.");
-  MOZ_ASSERT(!NS_IsMainThread(), "This function must be called off the main thread.");
+void PersistenceThreadPersist() {
+  MOZ_ASSERT(XRE_IsParentProcess(),
+             "We must only persist from the parent process.");
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "This function must be called off the main thread.");
   ANDROID_LOG("PersistenceThreadPersist");
 
-  // If the function completes or fails, make sure to spin up the persistence timer again.
+  // If the function completes or fails, make sure to spin up the persistence
+  // timer again.
   auto scopedArmTimer = MakeScopeExit([&] {
-    NS_DispatchToMainThread(
-      NS_NewRunnableFunction("MainThreadArmPersistenceTimer", []() -> void {
-        MainThreadArmPersistenceTimer();
-      }));
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "MainThreadArmPersistenceTimer",
+        []() -> void { MainThreadArmPersistenceTimer(); }));
   });
 
-  TelemetryScalar::Add(mozilla::Telemetry::ScalarID::TELEMETRY_PERSISTENCE_TIMER_HIT_COUNT, 1);
+  TelemetryScalar::Add(
+      mozilla::Telemetry::ScalarID::TELEMETRY_PERSISTENCE_TIMER_HIT_COUNT, 1);
 
   nsCOMPtr<nsIFile> persistenceFile;
   if (NS_FAILED(GetPersistenceFile(persistenceFile))) {
-    ANDROID_LOG("PersistenceThreadPersist - Failed to get the persistence file.");
+    ANDROID_LOG(
+        "PersistenceThreadPersist - Failed to get the persistence file.");
     return;
   }
 
   // Open the persistence file.
   mozilla::UniquePtr<StreamingJSONWriter> jsonWriter =
-    mozilla::MakeUnique<StreamingJSONWriter>();
+      mozilla::MakeUnique<StreamingJSONWriter>();
 
   if (!jsonWriter || NS_FAILED(jsonWriter->Open(persistenceFile))) {
-    ANDROID_LOG("PersistenceThreadPersist - There was an error opening the persistence file.");
+    ANDROID_LOG(
+        "PersistenceThreadPersist - There was an error opening the persistence "
+        "file.");
     return;
   }
 
@@ -419,10 +427,13 @@ PersistenceThreadPersist()
   // Android can kill us while we are writing to disk and, if that happens,
   // we end up with a corrupted json overwriting the old session data.
   // Luckily, |StreamingJSONWriter::Close| is smart enough to write to a
-  // temporary file and only overwrite the original file if nothing bad happened.
+  // temporary file and only overwrite the original file if nothing bad
+  // happened.
   nsresult rv = static_cast<StreamingJSONWriter*>(w.WriteFunc())->Close();
   if (NS_FAILED(rv)) {
-    ANDROID_LOG("PersistenceThreadPersist - There was an error writing to the persistence file.");
+    ANDROID_LOG(
+        "PersistenceThreadPersist - There was an error writing to the "
+        "persistence file.");
     return;
   }
 }
@@ -435,64 +446,61 @@ PersistenceThreadPersist()
  * Please note that this function is meant to be run off the
  * main-thread.
  */
-void
-PersistenceThreadLoadData()
-{
-  MOZ_ASSERT(XRE_IsParentProcess(), "We must only persist from the parent process.");
+void PersistenceThreadLoadData() {
+  MOZ_ASSERT(XRE_IsParentProcess(),
+             "We must only persist from the parent process.");
   MOZ_ASSERT(!NS_IsMainThread(), "We must perform I/O off the main thread.");
   ANDROID_LOG("PersistenceThreadLoadData");
 
-  // If the function completes or fails, make sure to spin up the persistence timer.
+  // If the function completes or fails, make sure to spin up the persistence
+  // timer.
   nsAutoCString fileContent;
   auto scopedArmTimer = MakeScopeExit([&] {
-    NS_DispatchToMainThread(
-      NS_NewRunnableFunction("MainThreadArmPersistenceTimer", [fileContent]() -> void {
-        // Try to parse the probes if the file was not empty.
-        if (!fileContent.IsEmpty()) {
-          MainThreadParsePersistedProbes(fileContent);
-        }
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "MainThreadArmPersistenceTimer", [fileContent]() -> void {
+          // Try to parse the probes if the file was not empty.
+          if (!fileContent.IsEmpty()) {
+            MainThreadParsePersistedProbes(fileContent);
+          }
 
-        TelemetryScalar::ApplyPendingOperations();
+          TelemetryScalar::ApplyPendingOperations();
 
-        // Arm the timer.
-        MainThreadArmPersistenceTimer();
-        // Notify that we're good to take snapshots!
-        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-        if (os) {
-          os->NotifyObservers(nullptr, kLoadCompleteTopic, nullptr);
-        }
-      }));
+          // Arm the timer.
+          MainThreadArmPersistenceTimer();
+          // Notify that we're good to take snapshots!
+          nsCOMPtr<nsIObserverService> os =
+              mozilla::services::GetObserverService();
+          if (os) {
+            os->NotifyObservers(nullptr, kLoadCompleteTopic, nullptr);
+          }
+        }));
   });
 
   // Attempt to load the persistence file. This could fail if we're not able
   // to allocate enough memory for the content. See bug 1460911.
   nsCOMPtr<nsIFile> persistenceFile;
-  if (NS_FAILED(GetPersistenceFile(persistenceFile))
-      || NS_FAILED(ReadFromFile(persistenceFile, fileContent))) {
+  if (NS_FAILED(GetPersistenceFile(persistenceFile)) ||
+      NS_FAILED(ReadFromFile(persistenceFile, fileContent))) {
     ANDROID_LOG("PersistenceThreadLoadData - Failed to load cache file at %s",
                 persistenceFile->HumanReadablePath().get());
     return;
   }
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 // This namespace exposes testing only helpers to simplify writing
 // gtest cases.
 namespace TelemetryGeckoViewTesting {
 
-void
-TestDispatchPersist()
-{
-  gPersistenceThread->Dispatch(NS_NewRunnableFunction("Persist",
-    []() -> void { ::PersistenceThreadPersist(); }));
+void TestDispatchPersist() {
+  gPersistenceThread->Dispatch(NS_NewRunnableFunction(
+      "Persist", []() -> void { ::PersistenceThreadPersist(); }));
 }
 
-} // GeckoViewTesting
+}  // namespace TelemetryGeckoViewTesting
 
-void
-TelemetryGeckoViewPersistence::InitPersistence()
-{
+void TelemetryGeckoViewPersistence::InitPersistence() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (gPersistenceThread) {
@@ -512,8 +520,7 @@ TelemetryGeckoViewPersistence::InitPersistence()
   // Spawn a new thread for handling GeckoView Telemetry persistence I/O.
   // We just spawn it once and re-use it later.
   nsCOMPtr<nsIThread> thread;
-  nsresult rv =
-    NS_NewNamedThread("TelemetryGVIO", getter_AddRefs(thread));
+  nsresult rv = NS_NewNamedThread("TelemetryGVIO", getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ANDROID_LOG("InitPersistence -  Failed to instantiate the worker thread.");
     return;
@@ -526,13 +533,11 @@ TelemetryGeckoViewPersistence::InitPersistence()
 
   // Trigger the loading of the persistence data. After the function
   // completes it will automatically arm the persistence timer.
-  gPersistenceThread->Dispatch(
-    NS_NewRunnableFunction("PersistenceThreadLoadData", &PersistenceThreadLoadData));
+  gPersistenceThread->Dispatch(NS_NewRunnableFunction(
+      "PersistenceThreadLoadData", &PersistenceThreadLoadData));
 }
 
-void
-TelemetryGeckoViewPersistence::DeInitPersistence()
-{
+void TelemetryGeckoViewPersistence::DeInitPersistence() {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Bail out if this is not the parent process.
@@ -558,9 +563,7 @@ TelemetryGeckoViewPersistence::DeInitPersistence()
   }
 }
 
-void
-TelemetryGeckoViewPersistence::ClearPersistenceData()
-{
+void TelemetryGeckoViewPersistence::ClearPersistenceData() {
   // This can be run on any thread, as we just dispatch the persistence
   // task to the persistence thread.
   MOZ_ASSERT(gPersistenceThread);
@@ -568,13 +571,14 @@ TelemetryGeckoViewPersistence::ClearPersistenceData()
   ANDROID_LOG("ClearPersistenceData");
 
   // Trigger clearing the persisted measurements off the main thread.
-  gPersistenceThread->Dispatch(NS_NewRunnableFunction("ClearPersistedData",
-    []() -> void {
-      nsCOMPtr<nsIFile> persistenceFile;
-      if (NS_FAILED(GetPersistenceFile(persistenceFile)) ||
-          NS_FAILED(persistenceFile->Remove(false))) {
-        ANDROID_LOG("ClearPersistenceData - Failed to remove the persistence file.");
-        return;
-      }
-    }));
+  gPersistenceThread->Dispatch(
+      NS_NewRunnableFunction("ClearPersistedData", []() -> void {
+        nsCOMPtr<nsIFile> persistenceFile;
+        if (NS_FAILED(GetPersistenceFile(persistenceFile)) ||
+            NS_FAILED(persistenceFile->Remove(false))) {
+          ANDROID_LOG(
+              "ClearPersistenceData - Failed to remove the persistence file.");
+          return;
+        }
+      }));
 }

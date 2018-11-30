@@ -6,7 +6,7 @@
 
 #ifndef DEBUG
 static_assert(false, "This should not be compiled in !DEBUG");
-#endif // DEBUG
+#endif  // DEBUG
 
 #include "nsAutoLayoutPhase.h"
 #include "nsPresContext.h"
@@ -14,28 +14,24 @@ static_assert(false, "This should not be compiled in !DEBUG");
 
 nsAutoLayoutPhase::nsAutoLayoutPhase(nsPresContext* aPresContext,
                                      nsLayoutPhase aPhase)
-  : mPresContext(aPresContext)
-  , mPhase(aPhase)
-  , mCount(0)
-{
+    : mPresContext(aPresContext), mPhase(aPhase), mCount(0) {
   Enter();
 }
 
-nsAutoLayoutPhase::~nsAutoLayoutPhase()
-{
+nsAutoLayoutPhase::~nsAutoLayoutPhase() {
   Exit();
   MOZ_ASSERT(mCount == 0, "imbalanced");
 }
 
-void
-nsAutoLayoutPhase::Enter()
-{
+void nsAutoLayoutPhase::Enter() {
   switch (mPhase) {
     case eLayoutPhase_Paint:
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
                  "recurring into paint");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] == 0,
-                 "recurring into paint from display list building");
+      MOZ_ASSERT(
+          mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] ==
+              0,
+          "recurring into paint from display list building");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
                  "painting in the middle of reflow");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
@@ -43,8 +39,10 @@ nsAutoLayoutPhase::Enter()
       break;
     case eLayoutPhase_DisplayListBuilding:
       // It's fine and expected to be in a paint here.
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] == 0,
-                 "recurring into display list building");
+      MOZ_ASSERT(
+          mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] ==
+              0,
+          "recurring into display list building");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
                  "display list building in the middle of reflow");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
@@ -53,8 +51,10 @@ nsAutoLayoutPhase::Enter()
     case eLayoutPhase_Reflow:
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
                  "reflowing in the middle of a paint");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] == 0,
-                 "reflowing in the middle of a display list building");
+      MOZ_ASSERT(
+          mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] ==
+              0,
+          "reflowing in the middle of a display list building");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
                  "recurring into reflow");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
@@ -63,8 +63,10 @@ nsAutoLayoutPhase::Enter()
     case eLayoutPhase_FrameC:
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
                  "constructing frames in the middle of a paint");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] == 0,
-                 "constructing frames in the middle of a display list building");
+      MOZ_ASSERT(
+          mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] ==
+              0,
+          "constructing frames in the middle of a display list building");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
                  "constructing frames in the middle of reflow");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
@@ -80,9 +82,7 @@ nsAutoLayoutPhase::Enter()
   ++mCount;
 }
 
-void
-nsAutoLayoutPhase::Exit()
-{
+void nsAutoLayoutPhase::Exit() {
   MOZ_ASSERT(mCount > 0 && mPresContext->mLayoutPhaseCount[mPhase] > 0,
              "imbalanced");
   --(mPresContext->mLayoutPhaseCount[mPhase]);

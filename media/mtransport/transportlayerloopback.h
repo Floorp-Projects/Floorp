@@ -16,12 +16,10 @@
 #include <memory>
 #include <queue>
 
-
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsINamed.h"
 #include "nsITimer.h"
-
 
 #include "m_cpp_utils.h"
 #include "transportflow.h"
@@ -32,13 +30,13 @@ namespace mozilla {
 
 class TransportLayerLoopback : public TransportLayer {
  public:
-  TransportLayerLoopback() :
-      peer_(nullptr),
-      timer_(nullptr),
-      packets_(),
-      packets_lock_(nullptr),
-      deliverer_(nullptr),
-      combinePackets_(false) {}
+  TransportLayerLoopback()
+      : peer_(nullptr),
+        timer_(nullptr),
+        packets_(),
+        packets_lock_(nullptr),
+        deliverer_(nullptr),
+        combinePackets_(false) {}
 
   ~TransportLayerLoopback() {
     while (!packets_.empty()) {
@@ -57,7 +55,7 @@ class TransportLayerLoopback : public TransportLayer {
   nsresult Init();
 
   // Connect to the other side
-  void Connect(TransportLayerLoopback* peer);
+  void Connect(TransportLayerLoopback *peer);
 
   // Disconnect
   void Disconnect() {
@@ -72,7 +70,7 @@ class TransportLayerLoopback : public TransportLayer {
   void CombinePackets(bool combine) { combinePackets_ = combine; }
 
   // Overrides for TransportLayer
-  TransportResult SendPacket(MediaPacket& packet) override;
+  TransportResult SendPacket(MediaPacket &packet) override;
 
   // Deliver queued packets
   void DeliverPackets();
@@ -84,22 +82,17 @@ class TransportLayerLoopback : public TransportLayer {
 
   // A timer to deliver packets if some are available
   // Fires every 100 ms
-  class Deliverer : public nsITimerCallback
-                  , public nsINamed {
+  class Deliverer : public nsITimerCallback, public nsINamed {
    public:
-    explicit Deliverer(TransportLayerLoopback *layer) :
-        layer_(layer) {}
-    void Detach() {
-      layer_ = nullptr;
-    }
+    explicit Deliverer(TransportLayerLoopback *layer) : layer_(layer) {}
+    void Detach() { layer_ = nullptr; }
 
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITIMERCALLBACK
     NS_DECL_NSINAMED
 
- private:
-    virtual ~Deliverer() {
-    }
+   private:
+    virtual ~Deliverer() {}
 
     DISALLOW_COPY_ASSIGN(Deliverer);
 
@@ -107,9 +100,9 @@ class TransportLayerLoopback : public TransportLayer {
   };
 
   // Queue a packet for delivery
-  nsresult QueuePacket(MediaPacket& packet);
+  nsresult QueuePacket(MediaPacket &packet);
 
-  TransportLayerLoopback* peer_;
+  TransportLayerLoopback *peer_;
   nsCOMPtr<nsITimer> timer_;
   std::queue<MediaPacket *> packets_;
   PRLock *packets_lock_;
@@ -117,5 +110,5 @@ class TransportLayerLoopback : public TransportLayer {
   bool combinePackets_;
 };
 
-}  // close namespace
+}  // namespace mozilla
 #endif

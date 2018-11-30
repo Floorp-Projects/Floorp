@@ -11,23 +11,22 @@
 
 namespace mozilla {
 
-class PaintWorkletImpl final : public WorkletImpl
-{
-public:
+class PaintWorkletImpl final : public WorkletImpl {
+ public:
   // Methods for parent thread only:
 
-  static already_AddRefed<dom::Worklet>
-  CreateWorklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
+  static already_AddRefed<dom::Worklet> CreateWorklet(
+      nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
 
-protected:
+ protected:
   // Execution thread only.
   already_AddRefed<dom::WorkletGlobalScope> ConstructGlobalScope() override;
 
-private:
+ private:
   PaintWorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
   ~PaintWorkletImpl();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // PaintWorkletImpl_h
+#endif  // PaintWorkletImpl_h

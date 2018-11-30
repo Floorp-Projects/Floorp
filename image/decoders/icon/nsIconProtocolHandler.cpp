@@ -17,67 +17,55 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-nsIconProtocolHandler::nsIconProtocolHandler()
-{ }
+nsIconProtocolHandler::nsIconProtocolHandler() {}
 
-nsIconProtocolHandler::~nsIconProtocolHandler()
-{ }
+nsIconProtocolHandler::~nsIconProtocolHandler() {}
 
 NS_IMPL_ISUPPORTS(nsIconProtocolHandler, nsIProtocolHandler,
                   nsISupportsWeakReference)
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsIconProtocolHandler::GetScheme(nsACString& result)
-{
+nsIconProtocolHandler::GetScheme(nsACString& result) {
   result = "moz-icon";
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconProtocolHandler::GetDefaultPort(int32_t* result)
-{
+nsIconProtocolHandler::GetDefaultPort(int32_t* result) {
   *result = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconProtocolHandler::AllowPort(int32_t port,
-                                 const char* scheme,
-                                 bool* _retval)
-{
-    // don't override anything.
-    *_retval = false;
-    return NS_OK;
+nsIconProtocolHandler::AllowPort(int32_t port, const char* scheme,
+                                 bool* _retval) {
+  // don't override anything.
+  *_retval = false;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconProtocolHandler::GetProtocolFlags(uint32_t* result)
-{
-  *result = URI_NORELATIVE | URI_NOAUTH | URI_IS_UI_RESOURCE |
-            URI_IS_LOCAL_RESOURCE;
+nsIconProtocolHandler::GetProtocolFlags(uint32_t* result) {
+  *result =
+      URI_NORELATIVE | URI_NOAUTH | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIconProtocolHandler::NewURI(const nsACString& aSpec,
-                              const char* aOriginCharset, // ignored
-                              nsIURI* aBaseURI,
-                              nsIURI** result)
-{
+                              const char* aOriginCharset,  // ignored
+                              nsIURI* aBaseURI, nsIURI** result) {
   return NS_MutateURI(new nsMozIconURI::Mutator())
-    .SetSpec(aSpec)
-    .Finalize(result);
+      .SetSpec(aSpec)
+      .Finalize(result);
 }
 
 NS_IMETHODIMP
-nsIconProtocolHandler::NewChannel2(nsIURI* url,
-                                   nsILoadInfo* aLoadInfo,
-                                   nsIChannel** result)
-{
+nsIconProtocolHandler::NewChannel2(nsIURI* url, nsILoadInfo* aLoadInfo,
+                                   nsIChannel** result) {
   NS_ENSURE_ARG_POINTER(url);
   nsIconChannel* channel = new nsIconChannel;
   if (!channel) {
@@ -103,8 +91,7 @@ nsIconProtocolHandler::NewChannel2(nsIURI* url,
 }
 
 NS_IMETHODIMP
-nsIconProtocolHandler::NewChannel(nsIURI* url, nsIChannel** result)
-{
+nsIconProtocolHandler::NewChannel(nsIURI* url, nsIChannel** result) {
   return NewChannel2(url, nullptr, result);
 }
 

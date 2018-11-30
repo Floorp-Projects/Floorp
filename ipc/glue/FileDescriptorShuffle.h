@@ -30,9 +30,8 @@
 namespace mozilla {
 namespace ipc {
 
-class FileDescriptorShuffle
-{
-public:
+class FileDescriptorShuffle {
+ public:
   FileDescriptorShuffle() = default;
   ~FileDescriptorShuffle();
 
@@ -50,7 +49,7 @@ public:
   // Can be used to close other fds after performing the dup2()s.
   bool MapsTo(int aFd) const;
 
-private:
+ private:
   nsTArray<std::pair<int, int>> mMapping;
   nsTArray<int> mTempFds;
   int mMaxDst;
@@ -59,7 +58,7 @@ private:
   void operator=(const FileDescriptorShuffle&) = delete;
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_FileDescriptorShuffle_h
+#endif  // mozilla_ipc_FileDescriptorShuffle_h

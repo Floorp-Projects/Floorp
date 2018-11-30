@@ -13,29 +13,19 @@
 
 namespace mozilla {
 
-class TransactionStackDeallocator final : public nsDequeFunctor
-{
-  virtual void operator()(void* aObject) override
-  {
+class TransactionStackDeallocator final : public nsDequeFunctor {
+  virtual void operator()(void* aObject) override {
     RefPtr<TransactionItem> releaseMe =
-      dont_AddRef(static_cast<TransactionItem*>(aObject));
+        dont_AddRef(static_cast<TransactionItem*>(aObject));
   }
 };
 
 TransactionStack::TransactionStack(Type aType)
-  : nsDeque(new TransactionStackDeallocator())
-  , mType(aType)
-{
-}
+    : nsDeque(new TransactionStackDeallocator()), mType(aType) {}
 
-TransactionStack::~TransactionStack()
-{
-  Clear();
-}
+TransactionStack::~TransactionStack() { Clear(); }
 
-void
-TransactionStack::Push(TransactionItem* aTransactionItem)
-{
+void TransactionStack::Push(TransactionItem* aTransactionItem) {
   if (!aTransactionItem) {
     return;
   }
@@ -44,9 +34,8 @@ TransactionStack::Push(TransactionItem* aTransactionItem)
   Push(item.forget());
 }
 
-void
-TransactionStack::Push(already_AddRefed<TransactionItem> aTransactionItem)
-{
+void TransactionStack::Push(
+    already_AddRefed<TransactionItem> aTransactionItem) {
   RefPtr<TransactionItem> item(aTransactionItem);
   if (!item) {
     return;
@@ -55,53 +44,39 @@ TransactionStack::Push(already_AddRefed<TransactionItem> aTransactionItem)
   nsDeque::Push(item.forget().take());
 }
 
-already_AddRefed<TransactionItem>
-TransactionStack::Pop()
-{
+already_AddRefed<TransactionItem> TransactionStack::Pop() {
   RefPtr<TransactionItem> item =
-    dont_AddRef(static_cast<TransactionItem*>(nsDeque::Pop()));
+      dont_AddRef(static_cast<TransactionItem*>(nsDeque::Pop()));
   return item.forget();
 }
 
-already_AddRefed<TransactionItem>
-TransactionStack::PopBottom()
-{
+already_AddRefed<TransactionItem> TransactionStack::PopBottom() {
   RefPtr<TransactionItem> item =
-    dont_AddRef(static_cast<TransactionItem*>(nsDeque::PopFront()));
+      dont_AddRef(static_cast<TransactionItem*>(nsDeque::PopFront()));
   return item.forget();
 }
 
-already_AddRefed<TransactionItem>
-TransactionStack::Peek()
-{
-  RefPtr<TransactionItem> item =
-    static_cast<TransactionItem*>(nsDeque::Peek());
+already_AddRefed<TransactionItem> TransactionStack::Peek() {
+  RefPtr<TransactionItem> item = static_cast<TransactionItem*>(nsDeque::Peek());
   return item.forget();
 }
 
-already_AddRefed<TransactionItem>
-TransactionStack::GetItem(int32_t aIndex)
-{
+already_AddRefed<TransactionItem> TransactionStack::GetItem(int32_t aIndex) {
   if (aIndex < 0 || aIndex >= static_cast<int32_t>(nsDeque::GetSize())) {
     return nullptr;
   }
   RefPtr<TransactionItem> item =
-    static_cast<TransactionItem*>(nsDeque::ObjectAt(aIndex));
+      static_cast<TransactionItem*>(nsDeque::ObjectAt(aIndex));
   return item.forget();
 }
 
-void
-TransactionStack::Clear()
-{
+void TransactionStack::Clear() {
   while (GetSize() != 0) {
-    RefPtr<TransactionItem> item =
-      mType == FOR_UNDO ? Pop() : PopBottom();
+    RefPtr<TransactionItem> item = mType == FOR_UNDO ? Pop() : PopBottom();
   }
 }
 
-void
-TransactionStack::DoTraverse(nsCycleCollectionTraversalCallback &cb)
-{
+void TransactionStack::DoTraverse(nsCycleCollectionTraversalCallback& cb) {
   size_t size = GetSize();
   for (size_t i = 0; i < size; ++i) {
     TransactionItem* item = static_cast<TransactionItem*>(nsDeque::ObjectAt(i));
@@ -113,4 +88,4 @@ TransactionStack::DoTraverse(nsCycleCollectionTraversalCallback &cb)
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

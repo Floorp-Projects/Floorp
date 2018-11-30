@@ -13,9 +13,10 @@
 MOZ_BEGIN_EXTERN_C
 
 /** Register file handle to be ignored by poisoning IO interposer. This function
- * and the corresponding UnRegister function are necessary for exchange of handles
- * between binaries not using the same CRT on Windows (which happens when one of
- * them links the static CRT). In such cases, giving file descriptors or FILEs
+ * and the corresponding UnRegister function are necessary for exchange of
+ * handles between binaries not using the same CRT on Windows (which happens
+ * when one of them links the static CRT). In such cases, giving file
+ * descriptors or FILEs
  * doesn't work because _get_osfhandle fails with "invalid parameter". */
 void MozillaRegisterDebugHandle(intptr_t aHandle);
 
@@ -70,7 +71,7 @@ void OnlyReportDirtyWrites();
  */
 void ClearPoisonIOInterposer();
 
-} // namespace mozilla
+}  // namespace mozilla
 #endif /* __cplusplus */
 
 #else /* defined(XP_MACOSX) || (defined(XP_WIN) && !defined(__MINGW32__)) */
@@ -83,9 +84,9 @@ inline void ClearPoisonIOInterposer() {}
 #ifdef XP_MACOSX
 inline void OnlyReportDirtyWrites() {}
 #endif /* XP_MACOSX */
-} // namespace mozilla
+}  // namespace mozilla
 #endif /* __cplusplus */
 
 #endif /* XP_WIN || XP_MACOSX */
 
-#endif // mozilla_PoisonIOInterposer_h
+#endif  // mozilla_PoisonIOInterposer_h

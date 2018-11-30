@@ -6,9 +6,8 @@
 #ifndef RemoteUtils_h__
 #define RemoteUtils_h__
 
-char*
-ConstructCommandLine(int32_t argc, char **argv,
-                     const char* aDesktopStartupID,
-                     int *aCommandLineLength);
+char* ConstructCommandLine(int32_t argc, char** argv,
+                           const char* aDesktopStartupID,
+                           int* aCommandLineLength);
 
-#endif // RemoteUtils_h__
+#endif  // RemoteUtils_h__

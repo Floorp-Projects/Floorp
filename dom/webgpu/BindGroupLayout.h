@@ -14,18 +14,16 @@ namespace webgpu {
 
 class Device;
 
-class BindGroupLayout final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(BindGroupLayout)
+class BindGroupLayout final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(BindGroupLayout)
 
-private:
-    BindGroupLayout() = delete;
-    virtual ~BindGroupLayout();
+ private:
+  BindGroupLayout() = delete;
+  virtual ~BindGroupLayout();
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_BindGroupLayout_H_
+#endif  // WEBGPU_BindGroupLayout_H_

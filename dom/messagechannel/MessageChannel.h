@@ -21,41 +21,27 @@ namespace dom {
 
 class MessagePort;
 
-class MessageChannel final : public nsISupports
-                           , public nsWrapperCache
-{
-public:
+class MessageChannel final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MessageChannel)
 
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mGlobal;
-  }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<MessageChannel>
-  Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+  static already_AddRefed<MessageChannel> Constructor(
+      const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  static already_AddRefed<MessageChannel>
-  Constructor(nsIGlobalObject* aGlobal, ErrorResult& aRv);
+  static already_AddRefed<MessageChannel> Constructor(nsIGlobalObject* aGlobal,
+                                                      ErrorResult& aRv);
 
-  MessagePort*
-  Port1() const
-  {
-    return mPort1;
-  }
+  MessagePort* Port1() const { return mPort1; }
 
-  MessagePort*
-  Port2() const
-  {
-    return mPort2;
-  }
+  MessagePort* Port2() const { return mPort2; }
 
-private:
+ private:
   explicit MessageChannel(nsIGlobalObject* aGlobal);
   ~MessageChannel();
 
@@ -65,7 +51,7 @@ private:
   RefPtr<MessagePort> mPort2;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MessageChannel_h
+#endif  // mozilla_dom_MessageChannel_h

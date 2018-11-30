@@ -15,57 +15,44 @@
 #include "mozilla/gfx/Point.h"          // for IntSize, IntSizeTyped
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
 #include "mozilla/layers/Compositor.h"  // for SurfaceInitMode, etc
-#include "mozilla/layers/TextureHost.h" // for CompositingRenderTarget
+#include "mozilla/layers/TextureHost.h"    // for CompositingRenderTarget
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
-#include "mozilla/mozalloc.h"           // for operator new
+#include "mozilla/mozalloc.h"              // for operator new
 #include "nsAString.h"
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_ERROR, NS_WARNING
-#include "nsString.h"                   // for nsAutoCString
-
+#include "nsCOMPtr.h"  // for already_AddRefed
+#include "nsDebug.h"   // for NS_ERROR, NS_WARNING
+#include "nsString.h"  // for nsAutoCString
 
 namespace mozilla {
 namespace gl {
-  class BindableTexture;
-} // namespace gl
+class BindableTexture;
+}  // namespace gl
 namespace gfx {
-  class DataSourceSurface;
-} // namespace gfx
+class DataSourceSurface;
+}  // namespace gfx
 
 namespace layers {
 
 class TextureSource;
 
-class CompositingRenderTargetOGL : public CompositingRenderTarget
-{
+class CompositingRenderTargetOGL : public CompositingRenderTarget {
   typedef mozilla::gl::GLContext GLContext;
 
   friend class CompositorOGL;
 
   // For lazy initialisation of the GL stuff
-  struct InitParams
-  {
+  struct InitParams {
     InitParams()
-      : mStatus(NO_PARAMS)
-      , mFBOTextureTarget(0)
-      , mInit(INIT_MODE_NONE)
-    {}
-    InitParams(const gfx::IntSize& aSize,
-               const gfx::IntSize& aPhySize,
-               GLenum aFBOTextureTarget,
-               SurfaceInitMode aInit)
-      : mStatus(READY)
-      , mSize(aSize)
-      , mPhySize(aPhySize)
-      , mFBOTextureTarget(aFBOTextureTarget)
-      , mInit(aInit)
-    {}
+        : mStatus(NO_PARAMS), mFBOTextureTarget(0), mInit(INIT_MODE_NONE) {}
+    InitParams(const gfx::IntSize& aSize, const gfx::IntSize& aPhySize,
+               GLenum aFBOTextureTarget, SurfaceInitMode aInit)
+        : mStatus(READY),
+          mSize(aSize),
+          mPhySize(aPhySize),
+          mFBOTextureTarget(aFBOTextureTarget),
+          mInit(aInit) {}
 
-    enum {
-      NO_PARAMS,
-      READY,
-      INITIALIZED
-    } mStatus;
+    enum { NO_PARAMS, READY, INITIALIZED } mStatus;
     /*
      * Users of render target would draw in logical size, but it is
      * actually drawn to a surface in physical size.  GL surfaces have
@@ -73,39 +60,39 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget
      * allocated for the render target if the caller requests in a
      * size too big.
      */
-    gfx::IntSize mSize; // Logical size, the expected by callers.
-    gfx::IntSize mPhySize; // Physical size, the real size of the surface.
+    gfx::IntSize mSize;     // Logical size, the expected by callers.
+    gfx::IntSize mPhySize;  // Physical size, the real size of the surface.
     GLenum mFBOTextureTarget;
     SurfaceInitMode mInit;
   };
 
-public:
-  CompositingRenderTargetOGL(CompositorOGL* aCompositor, const gfx::IntPoint& aOrigin,
-                             GLuint aTexure, GLuint aFBO)
-    : CompositingRenderTarget(aOrigin)
-    , mInitParams()
-    , mCompositor(aCompositor)
-    , mGL(aCompositor->gl())
-    , mTextureHandle(aTexure)
-    , mFBO(aFBO)
-  {
+ public:
+  CompositingRenderTargetOGL(CompositorOGL* aCompositor,
+                             const gfx::IntPoint& aOrigin, GLuint aTexure,
+                             GLuint aFBO)
+      : CompositingRenderTarget(aOrigin),
+        mInitParams(),
+        mCompositor(aCompositor),
+        mGL(aCompositor->gl()),
+        mTextureHandle(aTexure),
+        mFBO(aFBO) {
     MOZ_ASSERT(mGL);
   }
 
   ~CompositingRenderTargetOGL();
 
-  virtual const char* Name() const override { return "CompositingRenderTargetOGL"; }
+  virtual const char* Name() const override {
+    return "CompositingRenderTargetOGL";
+  }
 
   /**
    * Create a render target around the default FBO, for rendering straight to
    * the window.
    */
-  static already_AddRefed<CompositingRenderTargetOGL>
-  RenderTargetForWindow(CompositorOGL* aCompositor,
-                        const gfx::IntSize& aSize)
-  {
-    RefPtr<CompositingRenderTargetOGL> result
-      = new CompositingRenderTargetOGL(aCompositor, gfx::IntPoint(), 0, 0);
+  static already_AddRefed<CompositingRenderTargetOGL> RenderTargetForWindow(
+      CompositorOGL* aCompositor, const gfx::IntSize& aSize) {
+    RefPtr<CompositingRenderTargetOGL> result =
+        new CompositingRenderTargetOGL(aCompositor, gfx::IntPoint(), 0, 0);
     result->mInitParams = InitParams(aSize, aSize, 0, INIT_MODE_NONE);
     result->mInitParams.mStatus = InitParams::INITIALIZED;
     return result.forget();
@@ -117,12 +104,10 @@ public:
    * compositor we do not have to re-bind the FBO after unbinding it, or
    * alternatively leave the FBO bound after creation.
    */
-  void Initialize(const gfx::IntSize& aSize,
-                  const gfx::IntSize& aPhySize,
-                  GLenum aFBOTextureTarget,
-                  SurfaceInitMode aInit)
-  {
-    MOZ_ASSERT(mInitParams.mStatus == InitParams::NO_PARAMS, "Initialized twice?");
+  void Initialize(const gfx::IntSize& aSize, const gfx::IntSize& aPhySize,
+                  GLenum aFBOTextureTarget, SurfaceInitMode aInit) {
+    MOZ_ASSERT(mInitParams.mStatus == InitParams::NO_PARAMS,
+               "Initialized twice?");
     // postpone initialization until we actually want to use this render target
     mInitParams = InitParams(aSize, aPhySize, aFBOTextureTarget, aInit);
   }
@@ -136,46 +121,40 @@ public:
 
   bool IsWindow() { return GetFBO() == 0; }
 
-  GLuint GetFBO() const
-  {
+  GLuint GetFBO() const {
     MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
     return mFBO;
   }
 
-  GLuint GetTextureHandle() const
-  {
+  GLuint GetTextureHandle() const {
     MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
     return mTextureHandle;
   }
 
   // TextureSourceOGL
-  TextureSourceOGL* AsSourceOGL() override
-  {
+  TextureSourceOGL* AsSourceOGL() override {
     // XXX - Bug 900770
-    MOZ_ASSERT(false, "CompositingRenderTargetOGL should not be used as a TextureSource");
+    MOZ_ASSERT(
+        false,
+        "CompositingRenderTargetOGL should not be used as a TextureSource");
     return nullptr;
   }
-  gfx::IntSize GetSize() const override
-  {
-    return mInitParams.mSize;
-  }
+  gfx::IntSize GetSize() const override { return mInitParams.mSize; }
 
-  gfx::SurfaceFormat GetFormat() const override
-  {
+  gfx::SurfaceFormat GetFormat() const override {
     // XXX - Should it be implemented ? is the above assert true ?
     MOZ_ASSERT(false, "Not implemented");
     return gfx::SurfaceFormat::UNKNOWN;
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual already_AddRefed<gfx::DataSourceSurface> Dump(Compositor* aCompositor) override;
+  virtual already_AddRefed<gfx::DataSourceSurface> Dump(
+      Compositor* aCompositor) override;
 #endif
 
-  const gfx::IntSize& GetInitSize() const {
-    return mInitParams.mSize;
-  }
+  const gfx::IntSize& GetInitSize() const { return mInitParams.mSize; }
 
-private:
+ private:
   /**
    * Actually do the initialisation. Note that we leave our FBO bound, and so
    * calling this method is only suitable when about to use this render target.
@@ -194,7 +173,7 @@ private:
   GLuint mFBO;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_SURFACEOGL_H */

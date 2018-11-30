@@ -15,12 +15,11 @@
 namespace mozilla {
 namespace ipc {
 
-class CrashReporterMetadataShmem
-{
+class CrashReporterMetadataShmem {
   typedef mozilla::ipc::Shmem Shmem;
   typedef CrashReporter::AnnotationTable AnnotationTable;
 
-public:
+ public:
   explicit CrashReporterMetadataShmem(const Shmem& aShmem);
   ~CrashReporterMetadataShmem();
 
@@ -32,17 +31,17 @@ public:
   static void ReadAppNotes(const Shmem& aShmem,
                            CrashReporter::AnnotationTable& aNotes);
 
-private:
+ private:
   void SyncNotesToShmem();
 
-private:
+ private:
   Shmem mShmem;
 
   AnnotationTable mAnnotations;
   nsCString mAppNotes;
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_CrashReporterMetadataShmem_h
+#endif  // mozilla_ipc_CrashReporterMetadataShmem_h

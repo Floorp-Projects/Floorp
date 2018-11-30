@@ -14,42 +14,32 @@ namespace dom {
 
 using namespace SVGViewElement_Binding;
 
-JSObject*
-SVGViewElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGViewElement::WrapNode(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return SVGViewElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGEnumMapping SVGViewElement::sZoomAndPanMap[] = {
-  {nsGkAtoms::disable, SVG_ZOOMANDPAN_DISABLE},
-  {nsGkAtoms::magnify, SVG_ZOOMANDPAN_MAGNIFY},
-  {nullptr, 0}
-};
+    {nsGkAtoms::disable, SVG_ZOOMANDPAN_DISABLE},
+    {nsGkAtoms::magnify, SVG_ZOOMANDPAN_MAGNIFY},
+    {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGViewElement::sEnumInfo[1] =
-{
-  { nsGkAtoms::zoomAndPan,
-    sZoomAndPanMap,
-    SVG_ZOOMANDPAN_MAGNIFY
-  }
-};
+nsSVGElement::EnumInfo SVGViewElement::sEnumInfo[1] = {
+    {nsGkAtoms::zoomAndPan, sZoomAndPanMap, SVG_ZOOMANDPAN_MAGNIFY}};
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGViewElement::SVGViewElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGViewElementBase(std::move(aNodeInfo))
-{
-}
+SVGViewElement::SVGViewElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGViewElementBase(std::move(aNodeInfo)) {}
 
 //----------------------------------------------------------------------
 // nsINode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGViewElement)
 
-void
-SVGViewElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv)
-{
+void SVGViewElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv) {
   if (aZoomAndPan == SVG_ZOOMANDPAN_DISABLE ||
       aZoomAndPan == SVG_ZOOMANDPAN_MAGNIFY) {
     mEnumAttributes[ZOOMANDPAN].SetBaseValue(aZoomAndPan, this);
@@ -61,39 +51,27 @@ SVGViewElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedRect>
-SVGViewElement::ViewBox()
-{
+already_AddRefed<SVGAnimatedRect> SVGViewElement::ViewBox() {
   return mViewBox.ToSVGAnimatedRect(this);
 }
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
-SVGViewElement::PreserveAspectRatio()
-{
+SVGViewElement::PreserveAspectRatio() {
   return mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-nsSVGElement::EnumAttributesInfo
-SVGViewElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            ArrayLength(sEnumInfo));
+nsSVGElement::EnumAttributesInfo SVGViewElement::GetEnumInfo() {
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGViewBox *
-SVGViewElement::GetViewBox()
-{
-  return &mViewBox;
-}
+nsSVGViewBox* SVGViewElement::GetViewBox() { return &mViewBox; }
 
-SVGAnimatedPreserveAspectRatio *
-SVGViewElement::GetPreserveAspectRatio()
-{
+SVGAnimatedPreserveAspectRatio* SVGViewElement::GetPreserveAspectRatio() {
   return &mPreserveAspectRatio;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -15,8 +15,7 @@
 
 namespace mozilla {
 
-class InputEventStatistics
-{
+class InputEventStatistics {
   // The default amount of time (milliseconds) required for handling a input
   // event.
   static const uint16_t sDefaultInputDuration = 1;
@@ -30,18 +29,15 @@ class InputEventStatistics
   static const uint16_t sMaxReservedTimeForHandlingInput = 8;
   static const uint16_t sMinReservedTimeForHandlingInput = 1;
 
-  class TimeDurationCircularBuffer
-  {
+  class TimeDurationCircularBuffer {
     int16_t mSize;
     int16_t mCurrentIndex;
     nsTArray<TimeDuration> mBuffer;
     TimeDuration mTotal;
 
-  public:
+   public:
     TimeDurationCircularBuffer(uint32_t aSize, TimeDuration& aDefaultValue)
-      : mSize(aSize)
-      , mCurrentIndex(0)
-    {
+        : mSize(aSize), mCurrentIndex(0) {
       mSize = mSize == 0 ? sInputCountForPrediction : mSize;
       for (int16_t index = 0; index < mSize; ++index) {
         mBuffer.AppendElement(aDefaultValue);
@@ -49,8 +45,7 @@ class InputEventStatistics
       }
     }
 
-    void Insert(TimeDuration& aDuration)
-    {
+    void Insert(TimeDuration& aDuration) {
       mTotal += (aDuration - mBuffer[mCurrentIndex]);
       mBuffer[mCurrentIndex++] = aDuration;
       if (mCurrentIndex == mSize) {
@@ -73,16 +68,13 @@ class InputEventStatistics
   // nobody else can construct an InputEventStatistics.
   struct ConstructorCookie {};
 
-public:
+ public:
   explicit InputEventStatistics(ConstructorCookie&&);
-  ~InputEventStatistics()
-  {
-  }
+  ~InputEventStatistics() {}
 
   static InputEventStatistics& Get();
 
-  void UpdateInputDuration(TimeDuration aDuration)
-  {
+  void UpdateInputDuration(TimeDuration aDuration) {
     if (!mEnable) {
       return;
     }
@@ -91,29 +83,22 @@ public:
 
   TimeStamp GetInputHandlingStartTime(uint32_t aInputCount);
 
-  void SetEnable(bool aEnable)
-  {
-    mEnable = aEnable;
-  }
+  void SetEnable(bool aEnable) { mEnable = aEnable; }
 };
 
-class MOZ_RAII AutoTimeDurationHelper final
-{
-public:
-  AutoTimeDurationHelper()
-  {
-    mStartTime = TimeStamp::Now();
+class MOZ_RAII AutoTimeDurationHelper final {
+ public:
+  AutoTimeDurationHelper() { mStartTime = TimeStamp::Now(); }
+
+  ~AutoTimeDurationHelper() {
+    InputEventStatistics::Get().UpdateInputDuration(TimeStamp::Now() -
+                                                    mStartTime);
   }
 
-  ~AutoTimeDurationHelper()
-  {
-    InputEventStatistics::Get().UpdateInputDuration(TimeStamp::Now() - mStartTime);
-  }
-
-private:
+ private:
   TimeStamp mStartTime;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // InputEventStatistics_h_
+#endif  // InputEventStatistics_h_

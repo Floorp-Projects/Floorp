@@ -32,48 +32,39 @@
  * of instance times available before committing to a new interval. Once an
  * interval is entered, the begin time is fixed.
  */
-class nsSMILMilestone
-{
-public:
+class nsSMILMilestone {
+ public:
   nsSMILMilestone(nsSMILTime aTime, bool aIsEnd)
-    : mTime(aTime), mIsEnd(aIsEnd)
-  { }
+      : mTime(aTime), mIsEnd(aIsEnd) {}
 
-  nsSMILMilestone()
-    : mTime(0), mIsEnd(false)
-  { }
+  nsSMILMilestone() : mTime(0), mIsEnd(false) {}
 
-  bool operator==(const nsSMILMilestone& aOther) const
-  {
+  bool operator==(const nsSMILMilestone& aOther) const {
     return mTime == aOther.mTime && mIsEnd == aOther.mIsEnd;
   }
 
-  bool operator!=(const nsSMILMilestone& aOther) const
-  {
+  bool operator!=(const nsSMILMilestone& aOther) const {
     return !(*this == aOther);
   }
 
-  bool operator<(const nsSMILMilestone& aOther) const
-  {
+  bool operator<(const nsSMILMilestone& aOther) const {
     // Earlier times sort first, and for equal times end milestones sort first
     return mTime < aOther.mTime ||
-          (mTime == aOther.mTime && mIsEnd && !aOther.mIsEnd);
+           (mTime == aOther.mTime && mIsEnd && !aOther.mIsEnd);
   }
 
-  bool operator<=(const nsSMILMilestone& aOther) const
-  {
+  bool operator<=(const nsSMILMilestone& aOther) const {
     return *this == aOther || *this < aOther;
   }
 
-  bool operator>=(const nsSMILMilestone& aOther) const
-  {
+  bool operator>=(const nsSMILMilestone& aOther) const {
     return !(*this < aOther);
   }
 
-  nsSMILTime   mTime;  // The milestone time. This may be in container time or
-                       // parent container time depending on where it is used.
-  bool mIsEnd; // true if this milestone corresponds to an interval
-                       // end, false otherwise.
+  nsSMILTime mTime;  // The milestone time. This may be in container time or
+                     // parent container time depending on where it is used.
+  bool mIsEnd;       // true if this milestone corresponds to an interval
+                     // end, false otherwise.
 };
 
-#endif // NS_SMILMILESTONE_H_
+#endif  // NS_SMILMILESTONE_H_

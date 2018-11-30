@@ -13,33 +13,26 @@
 
 using namespace mozilla;
 
-FileMgr::FileMgr(const char* aFilename, const char* aKey)
-{
+FileMgr::FileMgr(const char* aFilename, const char* aKey) {
   DebugOnly<Result<Ok, nsresult>> result = Open(nsDependentCString(aFilename));
   NS_WARNING_ASSERTION(result.value.isOk(), "Failed to open Hunspell file");
 }
 
-Result<Ok, nsresult>
-FileMgr::Open(const nsACString& aPath)
-{
+Result<Ok, nsresult> FileMgr::Open(const nsACString& aPath) {
   nsCOMPtr<nsIURI> uri;
   MOZ_TRY(NS_NewURI(getter_AddRefs(uri), aPath));
 
   nsCOMPtr<nsIChannel> channel;
-  MOZ_TRY(NS_NewChannel(
-    getter_AddRefs(channel),
-    uri,
-    nsContentUtils::GetSystemPrincipal(),
-    nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
-    nsIContentPolicy::TYPE_OTHER));
+  MOZ_TRY(NS_NewChannel(getter_AddRefs(channel), uri,
+                        nsContentUtils::GetSystemPrincipal(),
+                        nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
+                        nsIContentPolicy::TYPE_OTHER));
 
   MOZ_TRY(channel->Open2(getter_AddRefs(mStream)));
   return Ok();
 }
 
-Result<Ok, nsresult>
-FileMgr::ReadLine(nsACString& aLine)
-{
+Result<Ok, nsresult> FileMgr::ReadLine(nsACString& aLine) {
   if (!mStream) {
     return Err(NS_ERROR_NOT_INITIALIZED);
   }
@@ -54,9 +47,7 @@ FileMgr::ReadLine(nsACString& aLine)
   return Ok();
 }
 
-bool
-FileMgr::getline(std::string& aResult)
-{
+bool FileMgr::getline(std::string& aResult) {
   nsAutoCString line;
   auto res = ReadLine(line);
   if (res.isErr()) {

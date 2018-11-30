@@ -19,9 +19,7 @@ StaticRefPtr<ConsoleUtils> gConsoleUtilsService;
 
 }
 
-/* static */ ConsoleUtils*
-ConsoleUtils::GetOrCreate()
-{
+/* static */ ConsoleUtils* ConsoleUtils::GetOrCreate() {
   if (!gConsoleUtilsService) {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -35,14 +33,10 @@ ConsoleUtils::GetOrCreate()
 ConsoleUtils::ConsoleUtils() = default;
 ConsoleUtils::~ConsoleUtils() = default;
 
-/* static */ void
-ConsoleUtils::ReportForServiceWorkerScope(const nsAString& aScope,
-                                          const nsAString& aMessage,
-                                          const nsAString& aFilename,
-                                          uint32_t aLineNumber,
-                                          uint32_t aColumnNumber,
-                                          Level aLevel)
-{
+/* static */ void ConsoleUtils::ReportForServiceWorkerScope(
+    const nsAString& aScope, const nsAString& aMessage,
+    const nsAString& aFilename, uint32_t aLineNumber, uint32_t aColumnNumber,
+    Level aLevel) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ConsoleUtils> service = ConsoleUtils::GetOrCreate();
@@ -50,19 +44,14 @@ ConsoleUtils::ReportForServiceWorkerScope(const nsAString& aScope,
     return;
   }
 
-  service->ReportForServiceWorkerScopeInternal(aScope, aMessage, aFilename,
-                                               aLineNumber, aColumnNumber,
-                                               aLevel);
+  service->ReportForServiceWorkerScopeInternal(
+      aScope, aMessage, aFilename, aLineNumber, aColumnNumber, aLevel);
 }
 
-void
-ConsoleUtils::ReportForServiceWorkerScopeInternal(const nsAString& aScope,
-                                                  const nsAString& aMessage,
-                                                  const nsAString& aFilename,
-                                                  uint32_t aLineNumber,
-                                                  uint32_t aColumnNumber,
-                                                  Level aLevel)
-{
+void ConsoleUtils::ReportForServiceWorkerScopeInternal(
+    const nsAString& aScope, const nsAString& aMessage,
+    const nsAString& aFilename, uint32_t aLineNumber, uint32_t aColumnNumber,
+    Level aLevel) {
   MOZ_ASSERT(NS_IsMainThread());
 
   AutoJSAPI jsapi;
@@ -120,7 +109,7 @@ ConsoleUtils::ReportForServiceWorkerScopeInternal(const nsAString& aScope,
   }
 
   nsCOMPtr<nsIConsoleAPIStorage> storage =
-    do_GetService("@mozilla.org/consoleAPI-storage;1");
+      do_GetService("@mozilla.org/consoleAPI-storage;1");
 
   if (NS_WARN_IF(!storage)) {
     return;
@@ -141,16 +130,15 @@ ConsoleUtils::ReportForServiceWorkerScopeInternal(const nsAString& aScope,
   storage->RecordEvent(NS_LITERAL_STRING("ServiceWorker"), aScope, eventValue);
 }
 
-JSObject*
-ConsoleUtils::GetOrCreateSandbox(JSContext* aCx)
-{
+JSObject* ConsoleUtils::GetOrCreateSandbox(JSContext* aCx) {
   AssertIsOnMainThread();
 
   if (!mSandbox) {
     nsIXPConnect* xpc = nsContentUtils::XPConnect();
     MOZ_ASSERT(xpc, "This should never be null!");
 
-    RefPtr<NullPrincipal> nullPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
+    RefPtr<NullPrincipal> nullPrincipal =
+        NullPrincipal::CreateWithoutOriginAttributes();
 
     JS::Rooted<JSObject*> sandbox(aCx);
     nsresult rv = xpc->CreateSandbox(aCx, nullPrincipal, sandbox.address());
@@ -164,5 +152,5 @@ ConsoleUtils::GetOrCreateSandbox(JSContext* aCx)
   return mSandbox->GetJSObject();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

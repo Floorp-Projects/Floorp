@@ -20,57 +20,51 @@
 
 namespace mozilla {
 
-#define STYLE_STRUCT(name_)                                 \
-const nsStyle##name_ *                                      \
-ComputedStyle::Style##name_() {                             \
-  return DoGetStyle##name_<true>();                         \
-}                                                           \
-const nsStyle##name_ *                                      \
-ComputedStyle::ThreadsafeStyle##name_() {                   \
-  if (mozilla::IsInServoTraversal()) {                      \
-    return ComputedData()->GetStyle##name_();               \
-  }                                                         \
-  return Style##name_();                                    \
-}                                                           \
-const nsStyle##name_ * ComputedStyle::PeekStyle##name_() {  \
-  return DoGetStyle##name_<false>();                        \
-}
+#define STYLE_STRUCT(name_)                                       \
+  const nsStyle##name_* ComputedStyle::Style##name_() {           \
+    return DoGetStyle##name_<true>();                             \
+  }                                                               \
+  const nsStyle##name_* ComputedStyle::ThreadsafeStyle##name_() { \
+    if (mozilla::IsInServoTraversal()) {                          \
+      return ComputedData()->GetStyle##name_();                   \
+    }                                                             \
+    return Style##name_();                                        \
+  }                                                               \
+  const nsStyle##name_* ComputedStyle::PeekStyle##name_() {       \
+    return DoGetStyle##name_<false>();                            \
+  }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
 // Helper functions for GetStyle* and PeekStyle*
-#define STYLE_STRUCT(name_)                                                 \
-template<bool aComputeData>                                                 \
-const nsStyle##name_* ComputedStyle::DoGetStyle##name_() {                  \
-  const auto kStructID = StyleStructID::name_;                              \
-  const bool needToCompute = !HasRequestedStruct(kStructID);                \
-  if (!aComputeData && needToCompute) {                                     \
-    return nullptr;                                                         \
-  }                                                                         \
-  const nsStyle##name_* data = ComputedData()->GetStyle##name_();           \
-  /* perform any remaining main thread work on the struct */                \
-  if (needToCompute) {                                                      \
-    MOZ_ASSERT(NS_IsMainThread());                                          \
-    MOZ_ASSERT(!mozilla::IsInServoTraversal());                             \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, nullptr);  \
-    /* the ComputedStyle owns the struct */                                 \
-    SetRequestedStruct(kStructID);                                          \
-  }                                                                         \
-  return data;                                                              \
-}
+#define STYLE_STRUCT(name_)                                                  \
+  template <bool aComputeData>                                               \
+  const nsStyle##name_* ComputedStyle::DoGetStyle##name_() {                 \
+    const auto kStructID = StyleStructID::name_;                             \
+    const bool needToCompute = !HasRequestedStruct(kStructID);               \
+    if (!aComputeData && needToCompute) {                                    \
+      return nullptr;                                                        \
+    }                                                                        \
+    const nsStyle##name_* data = ComputedData()->GetStyle##name_();          \
+    /* perform any remaining main thread work on the struct */               \
+    if (needToCompute) {                                                     \
+      MOZ_ASSERT(NS_IsMainThread());                                         \
+      MOZ_ASSERT(!mozilla::IsInServoTraversal());                            \
+      const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, nullptr); \
+      /* the ComputedStyle owns the struct */                                \
+      SetRequestedStruct(kStructID);                                         \
+    }                                                                        \
+    return data;                                                             \
+  }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-void
-ComputedStyle::StartBackgroundImageLoads()
-{
+void ComputedStyle::StartBackgroundImageLoads() {
   // Just get our background struct; that should do the trick
   StyleBackground();
 }
 
-void
-ComputedStyle::ResolveSameStructsAs(const ComputedStyle* aOther)
-{
+void ComputedStyle::ResolveSameStructsAs(const ComputedStyle* aOther) {
   // Only resolve structs that are not already resolved in this struct.
   auto newBits = aOther->mRequestedStructs & ~mRequestedStructs;
 
@@ -87,7 +81,6 @@ ComputedStyle::ResolveSameStructsAs(const ComputedStyle* aOther)
   mRequestedStructs |= newBits;
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-
-#endif // ComputedStyleInlines_h
+#endif  // ComputedStyleInlines_h

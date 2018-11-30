@@ -12,15 +12,14 @@
 namespace mozilla {
 namespace dom {
 
-class PlacesBookmarkAddition final : public PlacesBookmark
-{
-public:
-  explicit PlacesBookmarkAddition() : PlacesBookmark(PlacesEventType::Bookmark_added) {}
+class PlacesBookmarkAddition final : public PlacesBookmark {
+ public:
+  explicit PlacesBookmarkAddition()
+      : PlacesBookmark(PlacesEventType::Bookmark_added) {}
 
-  static already_AddRefed<PlacesBookmarkAddition>
-  Constructor(const GlobalObject& aGlobal,
-              const PlacesBookmarkAdditionInit& aInitDict,
-              ErrorResult& aRv) {
+  static already_AddRefed<PlacesBookmarkAddition> Constructor(
+      const GlobalObject& aGlobal, const PlacesBookmarkAdditionInit& aInitDict,
+      ErrorResult& aRv) {
     RefPtr<PlacesBookmarkAddition> event = new PlacesBookmarkAddition();
     event->mItemType = aInitDict.mItemType;
     event->mId = aInitDict.mId;
@@ -36,13 +35,14 @@ public:
     return event.forget();
   }
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override {
     return PlacesBookmarkAddition_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  const PlacesBookmarkAddition* AsPlacesBookmarkAddition() const override { return this; }
+  const PlacesBookmarkAddition* AsPlacesBookmarkAddition() const override {
+    return this;
+  }
 
   int32_t Index() { return mIndex; }
   void GetTitle(nsString& aTitle) { aTitle = mTitle; }
@@ -52,11 +52,11 @@ public:
   nsString mTitle;
   uint64_t mDateAdded;
 
-private:
+ private:
   ~PlacesBookmarkAddition() = default;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PlacesBookmarkAddition_h
+#endif  // mozilla_dom_PlacesBookmarkAddition_h

@@ -10,19 +10,14 @@
 #include "nsThreadUtils.h"
 #include "mozilla/dom/DocGroup.h"
 
-class nsHtml5StreamParserReleaser : public mozilla::Runnable
-{
-private:
+class nsHtml5StreamParserReleaser : public mozilla::Runnable {
+ private:
   nsHtml5StreamParser* mPtr;
 
-public:
+ public:
   explicit nsHtml5StreamParserReleaser(nsHtml5StreamParser* aPtr)
-    : mozilla::Runnable("nsHtml5StreamParserReleaser")
-    , mPtr(aPtr)
-  {
-  }
-  NS_IMETHOD Run() override
-  {
+      : mozilla::Runnable("nsHtml5StreamParserReleaser"), mPtr(aPtr) {}
+  NS_IMETHOD Run() override {
     mPtr->Release();
     return NS_OK;
   }
@@ -32,63 +27,51 @@ public:
  * Like nsRefPtr except release is proxied to the main
  * thread. Mostly copied from nsRefPtr.
  */
-class nsHtml5StreamParserPtr
-{
-private:
-  void assign_with_AddRef(nsHtml5StreamParser* rawPtr)
-  {
-    if (rawPtr)
-      rawPtr->AddRef();
+class nsHtml5StreamParserPtr {
+ private:
+  void assign_with_AddRef(nsHtml5StreamParser* rawPtr) {
+    if (rawPtr) rawPtr->AddRef();
     assign_assuming_AddRef(rawPtr);
   }
-  void** begin_assignment()
-  {
+  void** begin_assignment() {
     assign_assuming_AddRef(0);
     return reinterpret_cast<void**>(&mRawPtr);
   }
-  void assign_assuming_AddRef(nsHtml5StreamParser* newPtr)
-  {
+  void assign_assuming_AddRef(nsHtml5StreamParser* newPtr) {
     nsHtml5StreamParser* oldPtr = mRawPtr;
     mRawPtr = newPtr;
-    if (oldPtr)
-      release(oldPtr);
+    if (oldPtr) release(oldPtr);
   }
-  void release(nsHtml5StreamParser* aPtr)
-  {
+  void release(nsHtml5StreamParser* aPtr) {
     nsCOMPtr<nsIRunnable> releaser = new nsHtml5StreamParserReleaser(aPtr);
     if (NS_FAILED(aPtr->DispatchToMain(releaser.forget()))) {
       NS_WARNING("Failed to dispatch releaser event.");
     }
   }
 
-private:
+ private:
   nsHtml5StreamParser* mRawPtr;
 
-public:
-  ~nsHtml5StreamParserPtr()
-  {
-    if (mRawPtr)
-      release(mRawPtr);
+ public:
+  ~nsHtml5StreamParserPtr() {
+    if (mRawPtr) release(mRawPtr);
   }
   // Constructors
   nsHtml5StreamParserPtr()
-    : mRawPtr(0)
+      : mRawPtr(0)
   // default constructor
-  {
-  }
+  {}
   nsHtml5StreamParserPtr(const nsHtml5StreamParserPtr& aSmartPtr)
-    : mRawPtr(aSmartPtr.mRawPtr)
+      : mRawPtr(aSmartPtr.mRawPtr)
   // copy-constructor
   {
-    if (mRawPtr)
-      mRawPtr->AddRef();
+    if (mRawPtr) mRawPtr->AddRef();
   }
   explicit nsHtml5StreamParserPtr(nsHtml5StreamParser* aRawPtr)
-    : mRawPtr(aRawPtr)
+      : mRawPtr(aRawPtr)
   // construct from a raw pointer (of the right type)
   {
-    if (mRawPtr)
-      mRawPtr->AddRef();
+    if (mRawPtr) mRawPtr->AddRef();
   }
   // Assignment operators
   nsHtml5StreamParserPtr& operator=(const nsHtml5StreamParserPtr& rhs)
@@ -118,7 +101,7 @@ public:
     rhs = mRawPtr;
     mRawPtr = temp;
   }
-  template<typename I>
+  template <typename I>
   void forget(I** rhs)
   // Set the target of rhs to the value of mRawPtr and null out mRawPtr.
   // Useful to avoid unnecessary AddRef/Release pairs with "out"
@@ -149,11 +132,10 @@ public:
   {
     return get();
   }
-  nsHtml5StreamParser* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
-  {
-    MOZ_ASSERT(
-      mRawPtr != 0,
-      "You can't dereference a NULL nsHtml5StreamParserPtr with operator->().");
+  nsHtml5StreamParser* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN {
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsHtml5StreamParserPtr with "
+               "operator->().");
     return get();
   }
   nsHtml5StreamParserPtr* get_address()
@@ -169,16 +151,14 @@ public:
     return this;
   }
 
-public:
-  nsHtml5StreamParser& operator*() const
-  {
-    MOZ_ASSERT(
-      mRawPtr != 0,
-      "You can't dereference a NULL nsHtml5StreamParserPtr with operator*().");
+ public:
+  nsHtml5StreamParser& operator*() const {
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsHtml5StreamParserPtr with "
+               "operator*().");
     return *get();
   }
-  nsHtml5StreamParser** StartAssignment()
-  {
+  nsHtml5StreamParser** StartAssignment() {
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
     return reinterpret_cast<nsHtml5StreamParser**>(begin_assignment());
 #else
@@ -188,15 +168,12 @@ public:
   }
 };
 
-inline nsHtml5StreamParserPtr*
-address_of(nsHtml5StreamParserPtr& aPtr)
-{
+inline nsHtml5StreamParserPtr* address_of(nsHtml5StreamParserPtr& aPtr) {
   return aPtr.get_address();
 }
 
-inline const nsHtml5StreamParserPtr*
-address_of(const nsHtml5StreamParserPtr& aPtr)
-{
+inline const nsHtml5StreamParserPtr* address_of(
+    const nsHtml5StreamParserPtr& aPtr) {
   return aPtr.get_address();
 }
 
@@ -214,29 +191,26 @@ class nsHtml5StreamParserPtrGetterAddRefs
    should be a nested class inside |nsHtml5StreamParserPtr<T>|.
     */
 {
-public:
+ public:
   explicit nsHtml5StreamParserPtrGetterAddRefs(
-    nsHtml5StreamParserPtr& aSmartPtr)
-    : mTargetSmartPtr(aSmartPtr)
-  {
+      nsHtml5StreamParserPtr& aSmartPtr)
+      : mTargetSmartPtr(aSmartPtr) {
     // nothing else to do
   }
-  operator void**()
-  {
+  operator void**() {
     return reinterpret_cast<void**>(mTargetSmartPtr.StartAssignment());
   }
   operator nsHtml5StreamParser**() { return mTargetSmartPtr.StartAssignment(); }
-  nsHtml5StreamParser*& operator*()
-  {
+  nsHtml5StreamParser*& operator*() {
     return *(mTargetSmartPtr.StartAssignment());
   }
 
-private:
+ private:
   nsHtml5StreamParserPtr& mTargetSmartPtr;
 };
 
-inline nsHtml5StreamParserPtrGetterAddRefs
-getter_AddRefs(nsHtml5StreamParserPtr& aSmartPtr)
+inline nsHtml5StreamParserPtrGetterAddRefs getter_AddRefs(
+    nsHtml5StreamParserPtr& aSmartPtr)
 /*
       Used around a |nsHtml5StreamParserPtr| when
       ...makes the class |nsHtml5StreamParserPtrGetterAddRefs| invisible.
@@ -247,28 +221,20 @@ getter_AddRefs(nsHtml5StreamParserPtr& aSmartPtr)
 
 // Comparing an |nsHtml5StreamParserPtr| to |0|
 
-inline bool
-operator==(const nsHtml5StreamParserPtr& lhs, decltype(nullptr))
-{
+inline bool operator==(const nsHtml5StreamParserPtr& lhs, decltype(nullptr)) {
   return lhs.get() == nullptr;
 }
 
-inline bool
-operator==(decltype(nullptr), const nsHtml5StreamParserPtr& rhs)
-{
+inline bool operator==(decltype(nullptr), const nsHtml5StreamParserPtr& rhs) {
   return nullptr == rhs.get();
 }
 
-inline bool
-operator!=(const nsHtml5StreamParserPtr& lhs, decltype(nullptr))
-{
+inline bool operator!=(const nsHtml5StreamParserPtr& lhs, decltype(nullptr)) {
   return lhs.get() != nullptr;
 }
 
-inline bool
-operator!=(decltype(nullptr), const nsHtml5StreamParserPtr& rhs)
-{
+inline bool operator!=(decltype(nullptr), const nsHtml5StreamParserPtr& rhs) {
   return nullptr != rhs.get();
 }
 
-#endif // !defined(nsHtml5StreamParserPtr_h)
+#endif  // !defined(nsHtml5StreamParserPtr_h)

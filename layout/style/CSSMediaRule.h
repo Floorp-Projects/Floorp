@@ -13,14 +13,10 @@
 namespace mozilla {
 namespace dom {
 
-class CSSMediaRule final : public css::ConditionRule
-{
-public:
-  CSSMediaRule(RefPtr<RawServoMediaRule> aRawRule,
-               StyleSheet* aSheet,
-               css::Rule* aParentRule,
-               uint32_t aLine,
-               uint32_t aColumn);
+class CSSMediaRule final : public css::ConditionRule {
+ public:
+  CSSMediaRule(RefPtr<RawServoMediaRule> aRawRule, StyleSheet* aSheet,
+               css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSMediaRule, css::ConditionRule)
@@ -42,20 +38,20 @@ public:
                         ErrorResult& aRv) final;
   dom::MediaList* Media();
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const override;
+  size_t SizeOfIncludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const override;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   virtual ~CSSMediaRule();
 
   RefPtr<RawServoMediaRule> mRawRule;
   RefPtr<dom::MediaList> mMediaList;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CSSMediaRule_h
+#endif  // mozilla_dom_CSSMediaRule_h

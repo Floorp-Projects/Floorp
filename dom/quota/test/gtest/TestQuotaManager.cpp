@@ -17,21 +17,17 @@ struct OriginTest {
   bool mMatch;
 };
 
-void
-CheckOriginScopeMatchesOrigin(const OriginScope& aOriginScope,
-                              const char* aOrigin,
-                              bool aMatch)
-{
-  bool result =
-    aOriginScope.Matches(OriginScope::FromOrigin(nsDependentCString(aOrigin)));
+void CheckOriginScopeMatchesOrigin(const OriginScope& aOriginScope,
+                                   const char* aOrigin, bool aMatch) {
+  bool result = aOriginScope.Matches(
+      OriginScope::FromOrigin(nsDependentCString(aOrigin)));
 
   EXPECT_TRUE(result == aMatch);
 }
 
-} // namespace
+}  // namespace
 
-TEST(QuotaManager, OriginScope)
-{
+TEST(QuotaManager, OriginScope) {
   OriginScope originScope;
 
   // Sanity checks.
@@ -69,8 +65,8 @@ TEST(QuotaManager, OriginScope)
     originScope.SetFromOrigin(NS_LITERAL_CSTRING("http://www.mozilla.org"));
 
     static const OriginTest tests[] = {
-      { "http://www.mozilla.org", true },
-      { "http://www.example.org", false },
+        {"http://www.mozilla.org", true},
+        {"http://www.example.org", false},
     };
 
     for (const auto& test : tests) {
@@ -82,9 +78,9 @@ TEST(QuotaManager, OriginScope)
     originScope.SetFromPrefix(NS_LITERAL_CSTRING("http://www.mozilla.org"));
 
     static const OriginTest tests[] = {
-      { "http://www.mozilla.org", true },
-      { "http://www.mozilla.org^userContextId=1", true },
-      { "http://www.example.org^userContextId=1", false },
+        {"http://www.mozilla.org", true},
+        {"http://www.mozilla.org^userContextId=1", true},
+        {"http://www.example.org^userContextId=1", false},
     };
 
     for (const auto& test : tests) {
@@ -96,9 +92,9 @@ TEST(QuotaManager, OriginScope)
     originScope.SetFromJSONPattern(NS_LITERAL_STRING("{\"appId\":1007}"));
 
     static const OriginTest tests[] = {
-      { "http+++www.mozilla.org^appId=1007", true },
-      { "http+++www.example.org^appId=1007", true },
-      { "http+++www.example.org^appId=1008", false },
+        {"http+++www.mozilla.org^appId=1007", true},
+        {"http+++www.example.org^appId=1007", true},
+        {"http+++www.example.org^appId=1008", false},
     };
 
     for (const auto& test : tests) {
@@ -110,12 +106,12 @@ TEST(QuotaManager, OriginScope)
     originScope.SetFromNull();
 
     static const OriginTest tests[] = {
-      { "http://www.mozilla.org", true },
-      { "http://www.mozilla.org^userContextId=1", true },
-      { "http://www.example.org^userContextId=1", true },
-      { "http+++www.mozilla.org^appId=1007", true },
-      { "http+++www.example.org^appId=1007", true },
-      { "http+++www.example.org^appId=1008", true },
+        {"http://www.mozilla.org", true},
+        {"http://www.mozilla.org^userContextId=1", true},
+        {"http://www.example.org^userContextId=1", true},
+        {"http+++www.mozilla.org^appId=1007", true},
+        {"http+++www.example.org^appId=1007", true},
+        {"http+++www.example.org^appId=1008", true},
     };
 
     for (const auto& test : tests) {

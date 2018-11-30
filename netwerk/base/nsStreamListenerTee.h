@@ -15,29 +15,28 @@
 namespace mozilla {
 namespace net {
 
-class nsStreamListenerTee : public nsIStreamListenerTee
-                          , public nsIThreadRetargetableStreamListener
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
-    NS_DECL_NSISTREAMLISTENERTEE
+class nsStreamListenerTee : public nsIStreamListenerTee,
+                            public nsIThreadRetargetableStreamListener {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
+  NS_DECL_NSISTREAMLISTENERTEE
 
-    nsStreamListenerTee() = default;
+  nsStreamListenerTee() = default;
 
-private:
-    virtual ~nsStreamListenerTee() = default;
+ private:
+  virtual ~nsStreamListenerTee() = default;
 
-    nsCOMPtr<nsIInputStreamTee>  mInputTee;
-    nsCOMPtr<nsIOutputStream>    mSink;
-    nsCOMPtr<nsIStreamListener>  mListener;
-    nsCOMPtr<nsIRequestObserver> mObserver;
-    nsCOMPtr<nsIEventTarget>     mEventTarget;
+  nsCOMPtr<nsIInputStreamTee> mInputTee;
+  nsCOMPtr<nsIOutputStream> mSink;
+  nsCOMPtr<nsIStreamListener> mListener;
+  nsCOMPtr<nsIRequestObserver> mObserver;
+  nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

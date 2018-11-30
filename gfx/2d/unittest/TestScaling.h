@@ -8,9 +8,8 @@
 
 #include "TestBase.h"
 
-class TestScaling : public TestBase
-{
-public:
+class TestScaling : public TestBase {
+ public:
   TestScaling();
 
   void BasicHalfScale();

@@ -18,36 +18,32 @@
 
 namespace mozilla {
 
-template<typename T, size_t Length>
-class Array
-{
+template <typename T, size_t Length>
+class Array {
   T mArr[Length];
 
-public:
+ public:
   Array() {}
 
   template <typename... Args>
   MOZ_IMPLICIT constexpr Array(Args&&... aArgs)
-    : mArr{std::forward<Args>(aArgs)...}
-  {
+      : mArr{std::forward<Args>(aArgs)...} {
     static_assert(sizeof...(aArgs) == Length,
-                  "The number of arguments should be equal to the template parameter Length");
+                  "The number of arguments should be equal to the template "
+                  "parameter Length");
   }
 
-  T& operator[](size_t aIndex)
-  {
+  T& operator[](size_t aIndex) {
     MOZ_ASSERT(aIndex < Length);
     return mArr[aIndex];
   }
 
-  const T& operator[](size_t aIndex) const
-  {
+  const T& operator[](size_t aIndex) const {
     MOZ_ASSERT(aIndex < Length);
     return mArr[aIndex];
   }
 
-  bool operator==(const Array<T, Length>& aOther) const
-  {
+  bool operator==(const Array<T, Length>& aOther) const {
     for (size_t i = 0; i < Length; i++) {
       if (mArr[i] != aOther[i]) {
         return false;
@@ -56,9 +52,9 @@ public:
     return true;
   }
 
-  typedef T*                        iterator;
-  typedef const T*                  const_iterator;
-  typedef ReverseIterator<T*>       reverse_iterator;
+  typedef T* iterator;
+  typedef const T* const_iterator;
+  typedef ReverseIterator<T*> reverse_iterator;
   typedef ReverseIterator<const T*> const_reverse_iterator;
 
   // Methods for range-based for loops.
@@ -71,28 +67,27 @@ public:
 
   // Methods for reverse iterating.
   reverse_iterator rbegin() { return reverse_iterator(end()); }
-  const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+  const_reverse_iterator rbegin() const {
+    return const_reverse_iterator(end());
+  }
   const_reverse_iterator crbegin() const { return rbegin(); }
   reverse_iterator rend() { return reverse_iterator(begin()); }
-  const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+  const_reverse_iterator rend() const {
+    return const_reverse_iterator(begin());
+  }
   const_reverse_iterator crend() const { return rend(); }
 };
 
-template<typename T>
-class Array<T, 0>
-{
-public:
-  T& operator[](size_t aIndex)
-  {
-    MOZ_CRASH("indexing into zero-length array");
-  }
+template <typename T>
+class Array<T, 0> {
+ public:
+  T& operator[](size_t aIndex) { MOZ_CRASH("indexing into zero-length array"); }
 
-  const T& operator[](size_t aIndex) const
-  {
+  const T& operator[](size_t aIndex) const {
     MOZ_CRASH("indexing into zero-length array");
   }
 };
 
-}  /* namespace mozilla */
+} /* namespace mozilla */
 
 #endif /* mozilla_Array_h */

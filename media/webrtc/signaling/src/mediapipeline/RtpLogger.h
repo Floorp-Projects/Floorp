@@ -19,12 +19,11 @@ namespace mozilla {
  *     text2pcap -D -n -l 1 -i 17 -u 1234,1235 -t '%H:%M:%S.' - rtp.pcap
  */
 class RtpLogger {
-public:
+ public:
   static bool IsPacketLoggingOn();
   static void LogPacket(const MediaPacket& packet, bool input,
                         std::string desc);
 };
 
-}  // End of namespace
+}  // namespace mozilla
 #endif
-

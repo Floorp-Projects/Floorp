@@ -19,21 +19,17 @@ namespace gfx {
 /**
  * A simple triangle data structure.
  */
-template<class Units, class F = Float>
-struct TriangleTyped
-{
+template <class Units, class F = Float>
+struct TriangleTyped {
   PointTyped<Units, F> p1, p2, p3;
 
-  TriangleTyped()
-    : p1(), p2(), p3() {}
+  TriangleTyped() : p1(), p2(), p3() {}
 
-  TriangleTyped(PointTyped<Units, F> aP1,
-                PointTyped<Units, F> aP2,
+  TriangleTyped(PointTyped<Units, F> aP1, PointTyped<Units, F> aP2,
                 PointTyped<Units, F> aP3)
-    : p1(aP1), p2(aP2), p3(aP3) {}
+      : p1(aP1), p2(aP2), p3(aP3) {}
 
-  RectTyped<Units, F> BoundingBox() const
-  {
+  RectTyped<Units, F> BoundingBox() const {
     F minX = std::min(std::min(p1.x, p2.x), p3.x);
     F maxX = std::max(std::max(p1.x, p2.x), p3.x);
 
@@ -46,21 +42,20 @@ struct TriangleTyped
 
 typedef TriangleTyped<UnknownUnits, Float> Triangle;
 
-template<class Units, class F = Float>
-struct TexturedTriangleTyped : public TriangleTyped<Units, F>
-{
+template <class Units, class F = Float>
+struct TexturedTriangleTyped : public TriangleTyped<Units, F> {
   explicit TexturedTriangleTyped(const TriangleTyped<Units, F>& aTriangle)
-    : TriangleTyped<Units, F>(aTriangle) {}
+      : TriangleTyped<Units, F>(aTriangle) {}
 
   explicit TexturedTriangleTyped(TriangleTyped<Units, F>&& aTriangle)
-    : TriangleTyped<Units, F>(std::move(aTriangle)) {}
+      : TriangleTyped<Units, F>(std::move(aTriangle)) {}
 
   TriangleTyped<Units, F> textureCoords;
 };
 
 typedef TexturedTriangleTyped<UnknownUnits, Float> TexturedTriangle;
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_TRIANGLE_H */

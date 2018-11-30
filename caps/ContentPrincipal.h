@@ -18,9 +18,8 @@
 
 namespace mozilla {
 
-class ContentPrincipal final : public BasePrincipal
-{
-public:
+class ContentPrincipal final : public BasePrincipal {
+ public:
   NS_DECL_NSISERIALIZABLE
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   uint32_t GetHashValue() override;
@@ -37,38 +36,40 @@ public:
   static PrincipalKind Kind() { return eCodebasePrincipal; }
 
   // Init() must be called before the principal is in a usable state.
-  nsresult Init(nsIURI* aCodebase,
-                const OriginAttributes& aOriginAttributes,
+  nsresult Init(nsIURI* aCodebase, const OriginAttributes& aOriginAttributes,
                 const nsACString& aOriginNoSuffix);
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
   nsresult GetSiteIdentifier(SiteIdentifier& aSite) override;
 
-  static nsresult
-  GenerateOriginNoSuffixFromURI(nsIURI* aURI, nsACString& aOrigin);
+  static nsresult GenerateOriginNoSuffixFromURI(nsIURI* aURI,
+                                                nsACString& aOrigin);
 
   extensions::WebExtensionPolicy* AddonPolicy();
 
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
 
-protected:
+ protected:
   virtual ~ContentPrincipal();
 
   bool SubsumesInternal(nsIPrincipal* aOther,
                         DocumentDomainConsideration aConsideration) override;
   bool MayLoadInternal(nsIURI* aURI) override;
 
-private:
+ private:
   Maybe<WeakPtr<extensions::WebExtensionPolicy>> mAddon;
 };
 
-} // mozilla namespace
+}  // namespace mozilla
 
 #define NS_PRINCIPAL_CONTRACTID "@mozilla.org/principal;1"
-#define NS_PRINCIPAL_CID \
-{ 0x653e0e4d, 0x3ee4, 0x45fa, \
-  { 0xb2, 0x72, 0x97, 0xc2, 0x0b, 0xc0, 0x1e, 0xb8 } }
+#define NS_PRINCIPAL_CID                             \
+  {                                                  \
+    0x653e0e4d, 0x3ee4, 0x45fa, {                    \
+      0xb2, 0x72, 0x97, 0xc2, 0x0b, 0xc0, 0x1e, 0xb8 \
+    }                                                \
+  }
 
-#endif // mozilla_ContentPrincipal_h
+#endif  // mozilla_ContentPrincipal_h

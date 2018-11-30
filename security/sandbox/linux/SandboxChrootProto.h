@@ -16,6 +16,6 @@ static const char kSandboxChrootRequest = 'C';
 static const char kSandboxChrootResponse = 'O';
 static const char kSandboxChrootEnvFlag[] = "MOZ_SANDBOX_USE_CHROOT";
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SandboxChrootProto_h
+#endif  // mozilla_SandboxChrootProto_h

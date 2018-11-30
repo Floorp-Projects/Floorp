@@ -13,13 +13,11 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(TransportProviderParent,
-                  nsITransportProvider,
+NS_IMPL_ISUPPORTS(TransportProviderParent, nsITransportProvider,
                   nsIHttpUpgradeListener)
 
 NS_IMETHODIMP
-TransportProviderParent::SetListener(nsIHttpUpgradeListener* aListener)
-{
+TransportProviderParent::SetListener(nsIHttpUpgradeListener* aListener) {
   MOZ_ASSERT(aListener);
   mListener = aListener;
 
@@ -29,18 +27,17 @@ TransportProviderParent::SetListener(nsIHttpUpgradeListener* aListener)
 }
 
 NS_IMETHODIMP
-TransportProviderParent::GetIPCChild(mozilla::net::PTransportProviderChild** aChild)
-{
+TransportProviderParent::GetIPCChild(
+    mozilla::net::PTransportProviderChild** aChild) {
   MOZ_CRASH("Don't call this in parent process");
   *aChild = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TransportProviderParent::OnTransportAvailable(nsISocketTransport* aTransport,
-                                              nsIAsyncInputStream* aSocketIn,
-                                              nsIAsyncOutputStream* aSocketOut)
-{
+TransportProviderParent::OnTransportAvailable(
+    nsISocketTransport* aTransport, nsIAsyncInputStream* aSocketIn,
+    nsIAsyncOutputStream* aSocketOut) {
   MOZ_ASSERT(aTransport && aSocketOut && aSocketOut);
   mTransport = aTransport;
   mSocketIn = aSocketIn;
@@ -51,41 +48,32 @@ TransportProviderParent::OnTransportAvailable(nsISocketTransport* aTransport,
   return NS_OK;
 }
 
-void
-TransportProviderParent::MaybeNotify()
-{
+void TransportProviderParent::MaybeNotify() {
   if (!mListener || !mTransport) {
     return;
   }
 
-  DebugOnly<nsresult> rv = mListener->OnTransportAvailable(mTransport,
-                                                           mSocketIn,
-                                                           mSocketOut);
+  DebugOnly<nsresult> rv =
+      mListener->OnTransportAvailable(mTransport, mSocketIn, mSocketOut);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
+NS_IMPL_ISUPPORTS(TransportProviderChild, nsITransportProvider)
 
-NS_IMPL_ISUPPORTS(TransportProviderChild,
-                  nsITransportProvider)
-
-TransportProviderChild::~TransportProviderChild()
-{
-  Send__delete__(this);
-}
+TransportProviderChild::~TransportProviderChild() { Send__delete__(this); }
 
 NS_IMETHODIMP
-TransportProviderChild::SetListener(nsIHttpUpgradeListener* aListener)
-{
+TransportProviderChild::SetListener(nsIHttpUpgradeListener* aListener) {
   MOZ_CRASH("Don't call this in child process");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TransportProviderChild::GetIPCChild(mozilla::net::PTransportProviderChild** aChild)
-{
+TransportProviderChild::GetIPCChild(
+    mozilla::net::PTransportProviderChild** aChild) {
   *aChild = this;
   return NS_OK;
 }
 
-} // net
-} // mozilla
+}  // namespace net
+}  // namespace mozilla

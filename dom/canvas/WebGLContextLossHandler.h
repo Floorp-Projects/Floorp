@@ -15,30 +15,31 @@ class nsITimer;
 namespace mozilla {
 class WebGLContext;
 
-class WebGLContextLossHandler final : public SupportsWeakPtr<WebGLContextLossHandler>
-{
-    WebGLContext* const mWebGL;
-    const nsCOMPtr<nsITimer> mTimer; // If we don't hold a ref to the timer, it will think
-    bool mTimerPending;              // that it's been discarded, and be canceled 'for our
-    bool mShouldRunTimerAgain;       // convenience'.
+class WebGLContextLossHandler final
+    : public SupportsWeakPtr<WebGLContextLossHandler> {
+  WebGLContext* const mWebGL;
+  const nsCOMPtr<nsITimer>
+      mTimer;          // If we don't hold a ref to the timer, it will think
+  bool mTimerPending;  // that it's been discarded, and be canceled 'for our
+  bool mShouldRunTimerAgain;  // convenience'.
 #ifdef DEBUG
-    nsISerialEventTarget* const mEventTarget;
+  nsISerialEventTarget* const mEventTarget;
 #endif
 
-    friend class WatchdogTimerEvent;
+  friend class WatchdogTimerEvent;
 
-public:
-    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLContextLossHandler)
+ public:
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLContextLossHandler)
 
-    explicit WebGLContextLossHandler(WebGLContext* webgl);
-    ~WebGLContextLossHandler();
+  explicit WebGLContextLossHandler(WebGLContext* webgl);
+  ~WebGLContextLossHandler();
 
-    void RunTimer();
+  void RunTimer();
 
-private:
-    void TimerCallback();
+ private:
+  void TimerCallback();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WEBGL_CONTEXT_LOSS_HANDLER_H_
+#endif  // WEBGL_CONTEXT_LOSS_HANDLER_H_

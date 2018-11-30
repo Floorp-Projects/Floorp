@@ -13,25 +13,24 @@ using namespace mozilla;
 // Keep this in sync with the declaration in Preferences.cpp.
 //
 // It's declared here to avoid polluting Preferences.h with test-only stuff.
-void
-TestParseError(PrefValueKind aKind, const char* aText, nsCString& aErrorMsg);
+void TestParseError(PrefValueKind aKind, const char* aText,
+                    nsCString& aErrorMsg);
 
-TEST(PrefsParser, Errors)
-{
+TEST(PrefsParser, Errors) {
   nsAutoCStringN<128> actualErrorMsg;
 
 // Use a macro rather than a function so that the line number reported by
 // gtest on failure is useful.
-#define P(kind_, text_, expectedErrorMsg_)                                     \
-  do {                                                                         \
-    TestParseError(kind_, text_, actualErrorMsg);                              \
-    ASSERT_STREQ(expectedErrorMsg_, actualErrorMsg.get());                     \
+#define P(kind_, text_, expectedErrorMsg_)                 \
+  do {                                                     \
+    TestParseError(kind_, text_, actualErrorMsg);          \
+    ASSERT_STREQ(expectedErrorMsg_, actualErrorMsg.get()); \
   } while (0)
 
-#define DEFAULT(text_, expectedErrorMsg_)                                      \
+#define DEFAULT(text_, expectedErrorMsg_) \
   P(PrefValueKind::Default, text_, expectedErrorMsg_)
 
-#define USER(text_, expectedErrorMsg_)                                         \
+#define USER(text_, expectedErrorMsg_) \
   P(PrefValueKind::User, text_, expectedErrorMsg_)
 
   // clang-format off

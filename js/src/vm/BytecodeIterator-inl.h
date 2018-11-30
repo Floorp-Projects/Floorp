@@ -13,20 +13,17 @@
 namespace js {
 
 BytecodeIterator::BytecodeIterator(const JSScript* script)
-  : current_(script, script->code())
-{}
+    : current_(script, script->code()) {}
 
 // AllBytecodesIterable
 
-inline BytecodeIterator
-AllBytecodesIterable::begin() {
-    return BytecodeIterator(script_);
+inline BytecodeIterator AllBytecodesIterable::begin() {
+  return BytecodeIterator(script_);
 }
 
-inline BytecodeIterator
-AllBytecodesIterable::end() {
-    return BytecodeIterator(BytecodeLocation(script_, script_->codeEnd()));
+inline BytecodeIterator AllBytecodesIterable::end() {
+  return BytecodeIterator(BytecodeLocation(script_, script_->codeEnd()));
 }
 
-}
+}  // namespace js
 #endif

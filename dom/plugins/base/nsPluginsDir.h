@@ -15,26 +15,26 @@
  */
 
 class nsPluginsDir {
-public:
-	/**
-	 * Determines whether or not the given file is actually a plugin file.
-	 */
-	static bool IsPluginFile(nsIFile* file);
+ public:
+  /**
+   * Determines whether or not the given file is actually a plugin file.
+   */
+  static bool IsPluginFile(nsIFile* file);
 };
 
 struct PRLibrary;
 
 struct nsPluginInfo {
-	char* fName;				// name of the plugin
-	char* fDescription;			// etc.
-	uint32_t fVariantCount;
-	char** fMimeTypeArray;
-	char** fMimeDescriptionArray;
-	char** fExtensionArray;
-	char* fFileName;
-	char* fFullPath;
-	char* fVersion;
-	bool fSupportsAsyncRender;
+  char* fName;         // name of the plugin
+  char* fDescription;  // etc.
+  uint32_t fVariantCount;
+  char** fMimeTypeArray;
+  char** fMimeDescriptionArray;
+  char** fExtensionArray;
+  char* fFileName;
+  char* fFullPath;
+  char* fVersion;
+  bool fSupportsAsyncRender;
 };
 
 /**
@@ -46,31 +46,33 @@ struct nsPluginInfo {
 class nsPluginFile {
   PRLibrary* pLibrary;
   nsCOMPtr<nsIFile> mPlugin;
-public:
-	/**
-	 * If spec corresponds to a valid plugin file, constructs a reference
-	 * to a plugin file on disk. Plugins are typically located using the
-	 * nsPluginsDir class.
-	 */
-	explicit nsPluginFile(nsIFile* spec);
-	virtual ~nsPluginFile();
 
-	/**
-	 * Loads the plugin into memory using NSPR's shared-library loading
-	 * mechanism. Handles platform differences in loading shared libraries.
-	 */
-	nsresult LoadPlugin(PRLibrary **outLibrary);
-
-	/**
-	 * Obtains all of the information currently available for this plugin.
-	 * Has a library outparam which will be non-null if a library load was required.
-	 */
-	nsresult GetPluginInfo(nsPluginInfo &outPluginInfo, PRLibrary **outLibrary);
+ public:
+  /**
+   * If spec corresponds to a valid plugin file, constructs a reference
+   * to a plugin file on disk. Plugins are typically located using the
+   * nsPluginsDir class.
+   */
+  explicit nsPluginFile(nsIFile* spec);
+  virtual ~nsPluginFile();
 
   /**
-	 * Should be called after GetPluginInfo to free all allocated stuff
-	 */
-	nsresult FreePluginInfo(nsPluginInfo &PluginInfo);
+   * Loads the plugin into memory using NSPR's shared-library loading
+   * mechanism. Handles platform differences in loading shared libraries.
+   */
+  nsresult LoadPlugin(PRLibrary** outLibrary);
+
+  /**
+   * Obtains all of the information currently available for this plugin.
+   * Has a library outparam which will be non-null if a library load was
+   * required.
+   */
+  nsresult GetPluginInfo(nsPluginInfo& outPluginInfo, PRLibrary** outLibrary);
+
+  /**
+   * Should be called after GetPluginInfo to free all allocated stuff
+   */
+  nsresult FreePluginInfo(nsPluginInfo& PluginInfo);
 };
 
 #endif /* nsPluginsDir_h_ */

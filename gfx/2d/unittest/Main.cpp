@@ -20,22 +20,16 @@ struct TestObject {
   std::string name;
 };
 
-
 using namespace std;
 
-int
-main()
-{
-  TestObject tests[] = 
-  {
-    { new SanityChecks(), "Sanity Checks" },
-  #ifdef WIN32
-    { new TestDrawTargetD2D(), "DrawTarget (D2D)" },
-  #endif
-    { new TestPoint(), "Point Tests" },
-    { new TestScaling(), "Scaling Tests" }
-    { new TestBugs(), "Bug Tests" }
-  };
+int main() {
+  TestObject tests[] = {
+      {new SanityChecks(), "Sanity Checks"},
+#ifdef WIN32
+      {new TestDrawTargetD2D(), "DrawTarget (D2D)"},
+#endif
+      {new TestPoint(), "Point Tests"},
+      {new TestScaling(), "Scaling Tests"} {new TestBugs(), "Bug Tests"}};
 
   int totalFailures = 0;
   int totalTests = 0;
@@ -51,7 +45,9 @@ main()
     // Done with this test!
     delete tests[i].test;
   }
-  message << "------ FINISHED RUNNING TESTS ------\nTests run: " << totalTests << " - Passes: " << totalTests - totalFailures << " - Failures: " << totalFailures << "\n";
+  message << "------ FINISHED RUNNING TESTS ------\nTests run: " << totalTests
+          << " - Passes: " << totalTests - totalFailures
+          << " - Failures: " << totalFailures << "\n";
   printf(message.str().c_str());
   return totalFailures;
 }

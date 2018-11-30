@@ -11,27 +11,25 @@
 
 class txStylesheetCompilerState;
 
-class txPatternParser : public txExprParser
-{
-public:
-    static nsresult createPattern(const nsString& aPattern,
-                                  txIParseContext* aContext,
-                                  txPattern** aResult);
-protected:
-    static nsresult createUnionPattern(txExprLexer& aLexer,
-                                       txIParseContext* aContext,
-                                       txPattern*& aPattern);
-    static nsresult createLocPathPattern(txExprLexer& aLexer,
-                                         txIParseContext* aContext,
-                                         txPattern*& aPattern);
-    static nsresult createIdPattern(txExprLexer& aLexer,
-                                    txPattern*& aPattern);
-    static nsresult createKeyPattern(txExprLexer& aLexer,
+class txPatternParser : public txExprParser {
+ public:
+  static nsresult createPattern(const nsString& aPattern,
+                                txIParseContext* aContext, txPattern** aResult);
+
+ protected:
+  static nsresult createUnionPattern(txExprLexer& aLexer,
                                      txIParseContext* aContext,
                                      txPattern*& aPattern);
-    static nsresult createStepPattern(txExprLexer& aLexer,
-                                      txIParseContext* aContext,
-                                      txPattern*& aPattern);
+  static nsresult createLocPathPattern(txExprLexer& aLexer,
+                                       txIParseContext* aContext,
+                                       txPattern*& aPattern);
+  static nsresult createIdPattern(txExprLexer& aLexer, txPattern*& aPattern);
+  static nsresult createKeyPattern(txExprLexer& aLexer,
+                                   txIParseContext* aContext,
+                                   txPattern*& aPattern);
+  static nsresult createStepPattern(txExprLexer& aLexer,
+                                    txIParseContext* aContext,
+                                    txPattern*& aPattern);
 };
 
-#endif // TX_PATTERNPARSER_H
+#endif  // TX_PATTERNPARSER_H

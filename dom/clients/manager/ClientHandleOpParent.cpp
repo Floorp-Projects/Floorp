@@ -13,25 +13,20 @@
 namespace mozilla {
 namespace dom {
 
-ClientSourceParent*
-ClientHandleOpParent::GetSource() const
-{
+ClientSourceParent* ClientHandleOpParent::GetSource() const {
   auto handle = static_cast<ClientHandleParent*>(Manager());
   return handle->GetSource();
 }
 
-void
-ClientHandleOpParent::ActorDestroy(ActorDestroyReason aReason)
-{
+void ClientHandleOpParent::ActorDestroy(ActorDestroyReason aReason) {
   mPromiseRequestHolder.DisconnectIfExists();
 }
 
-void
-ClientHandleOpParent::Init(const ClientOpConstructorArgs& aArgs)
-{
+void ClientHandleOpParent::Init(const ClientOpConstructorArgs& aArgs) {
   ClientSourceParent* source = GetSource();
   if (!source) {
-    Unused << PClientHandleOpParent::Send__delete__(this, NS_ERROR_DOM_ABORT_ERR);
+    Unused << PClientHandleOpParent::Send__delete__(this,
+                                                    NS_ERROR_DOM_ABORT_ERR);
     return;
   }
 
@@ -49,9 +44,10 @@ ClientHandleOpParent::Init(const ClientOpConstructorArgs& aArgs)
 
     StructuredCloneData data;
     data.BorrowFromClonedMessageDataForBackgroundParent(orig.clonedData());
-    if (!data.BuildClonedMessageDataForBackgroundParent(source->Manager()->Manager(),
-                                                        rebuild.clonedData())) {
-      Unused << PClientHandleOpParent::Send__delete__(this, NS_ERROR_DOM_ABORT_ERR);
+    if (!data.BuildClonedMessageDataForBackgroundParent(
+            source->Manager()->Manager(), rebuild.clonedData())) {
+      Unused << PClientHandleOpParent::Send__delete__(this,
+                                                      NS_ERROR_DOM_ABORT_ERR);
       return;
     }
 
@@ -67,15 +63,16 @@ ClientHandleOpParent::Init(const ClientOpConstructorArgs& aArgs)
   // ActorDestroy() which ensures neither lambda is called if the actor
   // is destroyed before the source operation completes.
   p->Then(GetCurrentThreadSerialEventTarget(), __func__,
-    [this] (const ClientOpResult& aResult) {
-      mPromiseRequestHolder.Complete();
-      Unused << PClientHandleOpParent::Send__delete__(this, aResult);
-    },
-    [this] (nsresult aRv) {
-      mPromiseRequestHolder.Complete();
-      Unused << PClientHandleOpParent::Send__delete__(this, aRv);
-    })->Track(mPromiseRequestHolder);
+          [this](const ClientOpResult& aResult) {
+            mPromiseRequestHolder.Complete();
+            Unused << PClientHandleOpParent::Send__delete__(this, aResult);
+          },
+          [this](nsresult aRv) {
+            mPromiseRequestHolder.Complete();
+            Unused << PClientHandleOpParent::Send__delete__(this, aRv);
+          })
+      ->Track(mPromiseRequestHolder);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

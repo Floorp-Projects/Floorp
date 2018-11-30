@@ -11,29 +11,23 @@
 #define ENSURE_TRUE_VOID(x)   \
   do {                        \
     if (MOZ_UNLIKELY(!(x))) { \
-       return;                \
+      return;                 \
     }                         \
-  } while(0)
+  } while (0)
 
 namespace mozilla {
 namespace tasktracer {
 
 TracedTaskCommon::TracedTaskCommon()
-  : mSourceEventType(SourceEventType::Unknown)
-  , mSourceEventId(0)
-  , mParentTaskId(0)
-  , mTaskId(0)
-  , mIsTraceInfoInit(false)
-{
-}
+    : mSourceEventType(SourceEventType::Unknown),
+      mSourceEventId(0),
+      mParentTaskId(0),
+      mTaskId(0),
+      mIsTraceInfoInit(false) {}
 
-TracedTaskCommon::~TracedTaskCommon()
-{
-}
+TracedTaskCommon::~TracedTaskCommon() {}
 
-void
-TracedTaskCommon::Init()
-{
+void TracedTaskCommon::Init() {
   // Keep the following line before GetOrCreateTraceInfo() to avoid a
   // deadlock.
   uint64_t taskid = GenNewUniqueTaskId();
@@ -48,16 +42,12 @@ TracedTaskCommon::Init()
   mIsTraceInfoInit = true;
 }
 
-void
-TracedTaskCommon::DispatchTask(int aDelayTimeMs)
-{
+void TracedTaskCommon::DispatchTask(int aDelayTimeMs) {
   LogDispatch(mTaskId, mParentTaskId, mSourceEventId, mSourceEventType,
               aDelayTimeMs);
 }
 
-void
-TracedTaskCommon::DoGetTLSTraceInfo()
-{
+void TracedTaskCommon::DoGetTLSTraceInfo() {
   TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
   MOZ_ASSERT(!mIsTraceInfoInit);
@@ -68,9 +58,7 @@ TracedTaskCommon::DoGetTLSTraceInfo()
   mIsTraceInfoInit = true;
 }
 
-void
-TracedTaskCommon::DoSetTLSTraceInfo()
-{
+void TracedTaskCommon::DoSetTLSTraceInfo() {
   TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
@@ -81,9 +69,7 @@ TracedTaskCommon::DoSetTLSTraceInfo()
   }
 }
 
-void
-TracedTaskCommon::ClearTLSTraceInfo()
-{
+void TracedTaskCommon::ClearTLSTraceInfo() {
   TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
@@ -99,20 +85,16 @@ TracedTaskCommon::ClearTLSTraceInfo()
 NS_IMPL_ISUPPORTS(TracedRunnable, nsIRunnable);
 
 TracedRunnable::TracedRunnable(already_AddRefed<nsIRunnable>&& aOriginalObj)
-  : TracedTaskCommon()
-  , mOriginalObj(std::move(aOriginalObj))
-{
+    : TracedTaskCommon(), mOriginalObj(std::move(aOriginalObj)) {
   Init();
-  LogVirtualTablePtr(mTaskId, mSourceEventId, *reinterpret_cast<uintptr_t**>(mOriginalObj.get()));
+  LogVirtualTablePtr(mTaskId, mSourceEventId,
+                     *reinterpret_cast<uintptr_t**>(mOriginalObj.get()));
 }
 
-TracedRunnable::~TracedRunnable()
-{
-}
+TracedRunnable::~TracedRunnable() {}
 
 NS_IMETHODIMP
-TracedRunnable::Run()
-{
+TracedRunnable::Run() {
   SetTLSTraceInfo();
   LogBegin(mTaskId, mSourceEventId);
   nsresult rv = mOriginalObj->Run();
@@ -126,25 +108,20 @@ TracedRunnable::Run()
  * CreateTracedRunnable() returns a TracedRunnable wrapping the original
  * nsIRunnable object, aRunnable.
  */
-already_AddRefed<nsIRunnable>
-CreateTracedRunnable(already_AddRefed<nsIRunnable>&& aRunnable)
-{
+already_AddRefed<nsIRunnable> CreateTracedRunnable(
+    already_AddRefed<nsIRunnable>&& aRunnable) {
   RefPtr<nsIRunnable> runnable = new TracedRunnable(std::move(aRunnable));
   return runnable.forget();
 }
 
-void
-VirtualTask::AutoRunTask::StartScope(VirtualTask* aTask)
-{
+void VirtualTask::AutoRunTask::StartScope(VirtualTask* aTask) {
   mTask->SetTLSTraceInfo();
   LogBegin(mTask->mTaskId, mTask->mSourceEventId);
 }
 
-void
-VirtualTask::AutoRunTask::StopScope()
-{
+void VirtualTask::AutoRunTask::StopScope() {
   LogEnd(mTask->mTaskId, mTask->mSourceEventId);
 }
 
-} // namespace tasktracer
-} // namespace mozilla
+}  // namespace tasktracer
+}  // namespace mozilla

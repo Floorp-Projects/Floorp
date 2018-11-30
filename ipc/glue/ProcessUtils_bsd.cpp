@@ -15,8 +15,7 @@
 namespace mozilla {
 namespace ipc {
 
-void SetThisProcessName(const char *aName)
-{
+void SetThisProcessName(const char *aName) {
 #if defined(OS_NETBSD)
   pthread_setname_np(pthread_self(), "%s", (void *)aName);
 #else
@@ -24,5 +23,5 @@ void SetThisProcessName(const char *aName)
 #endif
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

@@ -19,33 +19,24 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedRect, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedRect, Release)
 
 SVGAnimatedRect::SVGAnimatedRect(nsSVGViewBox* aVal, nsSVGElement* aSVGElement)
-  : mVal(aVal)
-  , mSVGElement(aSVGElement)
-{
-}
+    : mVal(aVal), mSVGElement(aSVGElement) {}
 
-SVGAnimatedRect::~SVGAnimatedRect()
-{
+SVGAnimatedRect::~SVGAnimatedRect() {
   nsSVGViewBox::sSVGAnimatedRectTearoffTable.RemoveTearoff(mVal);
 }
 
-already_AddRefed<SVGIRect>
-SVGAnimatedRect::GetBaseVal()
-{
+already_AddRefed<SVGIRect> SVGAnimatedRect::GetBaseVal() {
   return mVal->ToDOMBaseVal(mSVGElement);
 }
 
-already_AddRefed<SVGIRect>
-SVGAnimatedRect::GetAnimVal()
-{
+already_AddRefed<SVGIRect> SVGAnimatedRect::GetAnimVal() {
   return mVal->ToDOMAnimVal(mSVGElement);
 }
 
-JSObject*
-SVGAnimatedRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGAnimatedRect::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedRect_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

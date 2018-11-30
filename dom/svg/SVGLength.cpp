@@ -22,9 +22,7 @@ using namespace mozilla;
 static void GetUnitString(nsAString& unit, uint16_t unitType);
 static uint16_t GetUnitTypeForString(const nsAString& unitStr);
 
-void
-SVGLength::GetValueAsString(nsAString &aValue) const
-{
+void SVGLength::GetValueAsString(nsAString& aValue) const {
   nsTextFormatter::ssprintf(aValue, u"%g", (double)mValue);
 
   nsAutoString unitString;
@@ -32,13 +30,10 @@ SVGLength::GetValueAsString(nsAString &aValue) const
   aValue.Append(unitString);
 }
 
-bool
-SVGLength::SetValueFromString(const nsAString &aString)
-{
-  RangedPtr<const char16_t> iter =
-    SVGContentUtils::GetStartRangedPtr(aString);
+bool SVGLength::SetValueFromString(const nsAString& aString) {
+  RangedPtr<const char16_t> iter = SVGContentUtils::GetStartRangedPtr(aString);
   const RangedPtr<const char16_t> end =
-    SVGContentUtils::GetEndRangedPtr(aString);
+      SVGContentUtils::GetEndRangedPtr(aString);
 
   float value;
 
@@ -56,9 +51,7 @@ SVGLength::SetValueFromString(const nsAString &aString)
   return true;
 }
 
-inline static bool
-IsAbsoluteUnit(uint8_t aUnit)
-{
+inline static bool IsAbsoluteUnit(uint8_t aUnit) {
   return aUnit >= SVGLength_Binding::SVG_LENGTHTYPE_CM &&
          aUnit <= SVGLength_Binding::SVG_LENGTHTYPE_PC;
 }
@@ -74,33 +67,32 @@ IsAbsoluteUnit(uint8_t aUnit)
  *   GetAbsUnitsPerAbsUnit(SVGLength_Binding::SVG_LENGTHTYPE_CM,
  *                         SVGLength_Binding::SVG_LENGTHTYPE_IN)
  */
-inline static float GetAbsUnitsPerAbsUnit(uint8_t aUnits, uint8_t aPerUnit)
-{
+inline static float GetAbsUnitsPerAbsUnit(uint8_t aUnits, uint8_t aPerUnit) {
   MOZ_ASSERT(IsAbsoluteUnit(aUnits), "Not a CSS absolute unit");
   MOZ_ASSERT(IsAbsoluteUnit(aPerUnit), "Not a CSS absolute unit");
 
-  float CSSAbsoluteUnitConversionFactors[5][5] = { // columns: cm, mm, in, pt, pc
-    // cm per...:
-    { 1.0f, 0.1f, 2.54f, 0.035277777777777778f, 0.42333333333333333f },
-    // mm per...:
-    { 10.0f, 1.0f, 25.4f, 0.35277777777777778f, 4.2333333333333333f },
-    // in per...:
-    { 0.39370078740157481f, 0.039370078740157481f, 1.0f, 0.013888888888888889f, 0.16666666666666667f },
-    // pt per...:
-    { 28.346456692913386f, 2.8346456692913386f, 72.0f, 1.0f, 12.0f },
-    // pc per...:
-    { 2.3622047244094489f, 0.23622047244094489f, 6.0f, 0.083333333333333333f, 1.0f }
-  };
+  float CSSAbsoluteUnitConversionFactors[5][5] = {
+      // columns: cm, mm, in, pt, pc
+      // cm per...:
+      {1.0f, 0.1f, 2.54f, 0.035277777777777778f, 0.42333333333333333f},
+      // mm per...:
+      {10.0f, 1.0f, 25.4f, 0.35277777777777778f, 4.2333333333333333f},
+      // in per...:
+      {0.39370078740157481f, 0.039370078740157481f, 1.0f, 0.013888888888888889f,
+       0.16666666666666667f},
+      // pt per...:
+      {28.346456692913386f, 2.8346456692913386f, 72.0f, 1.0f, 12.0f},
+      // pc per...:
+      {2.3622047244094489f, 0.23622047244094489f, 6.0f, 0.083333333333333333f,
+       1.0f}};
 
   // First absolute unit is SVG_LENGTHTYPE_CM = 6
   return CSSAbsoluteUnitConversionFactors[aUnits - 6][aPerUnit - 6];
 }
 
-float
-SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
-                                   const nsSVGElement *aElement,
-                                   uint8_t aAxis) const
-{
+float SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
+                                         const nsSVGElement* aElement,
+                                         uint8_t aAxis) const {
   if (aUnit == mUnit) {
     return mValue;
   }
@@ -120,13 +112,12 @@ SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
 
   float userUnitsPerCurrentUnit = GetUserUnitsPerUnit(aElement, aAxis);
   float userUnitsPerNewUnit =
-    SVGLength(0.0f, aUnit).GetUserUnitsPerUnit(aElement, aAxis);
+      SVGLength(0.0f, aUnit).GetUserUnitsPerUnit(aElement, aAxis);
 
-  NS_ASSERTION(userUnitsPerCurrentUnit >= 0 ||
-               !IsFinite(userUnitsPerCurrentUnit),
-               "bad userUnitsPerCurrentUnit");
-  NS_ASSERTION(userUnitsPerNewUnit >= 0 ||
-               !IsFinite(userUnitsPerNewUnit),
+  NS_ASSERTION(
+      userUnitsPerCurrentUnit >= 0 || !IsFinite(userUnitsPerCurrentUnit),
+      "bad userUnitsPerCurrentUnit");
+  NS_ASSERTION(userUnitsPerNewUnit >= 0 || !IsFinite(userUnitsPerNewUnit),
                "bad userUnitsPerNewUnit");
 
   float value = mValue * userUnitsPerCurrentUnit / userUnitsPerNewUnit;
@@ -142,9 +133,8 @@ SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
 #define INCHES_PER_MM_FLOAT float(0.0393700787)
 #define INCHES_PER_CM_FLOAT float(0.393700787)
 
-float
-SVGLength::GetUserUnitsPerUnit(const nsSVGElement *aElement, uint8_t aAxis) const
-{
+float SVGLength::GetUserUnitsPerUnit(const nsSVGElement* aElement,
+                                     uint8_t aAxis) const {
   switch (mUnit) {
     case SVGLength_Binding::SVG_LENGTHTYPE_NUMBER:
     case SVGLength_Binding::SVG_LENGTHTYPE_PX:
@@ -156,26 +146,26 @@ SVGLength::GetUserUnitsPerUnit(const nsSVGElement *aElement, uint8_t aAxis) cons
     case SVGLength_Binding::SVG_LENGTHTYPE_IN:
       return GetUserUnitsPerInch();
     case SVGLength_Binding::SVG_LENGTHTYPE_PT:
-      return (1.0f/POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch();
+      return (1.0f / POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch();
     case SVGLength_Binding::SVG_LENGTHTYPE_PC:
-      return (12.0f/POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch();
+      return (12.0f / POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch();
     case SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE:
       return GetUserUnitsPerPercent(aElement, aAxis);
     case SVGLength_Binding::SVG_LENGTHTYPE_EMS:
       return SVGContentUtils::GetFontSize(const_cast<nsSVGElement*>(aElement));
     case SVGLength_Binding::SVG_LENGTHTYPE_EXS:
-      return SVGContentUtils::GetFontXHeight(const_cast<nsSVGElement*>(aElement));
+      return SVGContentUtils::GetFontXHeight(
+          const_cast<nsSVGElement*>(aElement));
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown unit type");
       return std::numeric_limits<float>::quiet_NaN();
   }
 }
 
-/* static */ float
-SVGLength::GetUserUnitsPerPercent(const nsSVGElement *aElement, uint8_t aAxis)
-{
+/* static */ float SVGLength::GetUserUnitsPerPercent(
+    const nsSVGElement* aElement, uint8_t aAxis) {
   if (aElement) {
-    dom::SVGViewportElement *viewportElement = aElement->GetCtx();
+    dom::SVGViewportElement* viewportElement = aElement->GetCtx();
     if (viewportElement) {
       return std::max(viewportElement->GetLength(aAxis) / 100.0f, 0.0f);
     }
@@ -186,44 +176,38 @@ SVGLength::GetUserUnitsPerPercent(const nsSVGElement *aElement, uint8_t aAxis)
 // Helpers:
 
 // These items must be at the same index as the SVGLength constants!
-static const nsStaticAtom* const unitMap[] =
-{
-  nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
-  nullptr, /* SVG_LENGTHTYPE_NUMBER */
-  nsGkAtoms::percentage,
-  nsGkAtoms::em,
-  nsGkAtoms::ex,
-  nsGkAtoms::px,
-  nsGkAtoms::cm,
-  nsGkAtoms::mm,
-  nsGkAtoms::in,
-  nsGkAtoms::pt,
-  nsGkAtoms::pc
-};
+static const nsStaticAtom* const unitMap[] = {
+    nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
+    nullptr, /* SVG_LENGTHTYPE_NUMBER */
+    nsGkAtoms::percentage,
+    nsGkAtoms::em,
+    nsGkAtoms::ex,
+    nsGkAtoms::px,
+    nsGkAtoms::cm,
+    nsGkAtoms::mm,
+    nsGkAtoms::in,
+    nsGkAtoms::pt,
+    nsGkAtoms::pc};
 
-static void
-GetUnitString(nsAString& unit, uint16_t unitType)
-{
+static void GetUnitString(nsAString& unit, uint16_t unitType) {
   if (SVGLength::IsValidUnitType(unitType)) {
     if (unitMap[unitType]) {
       unitMap[unitType]->ToString(unit);
     }
     return;
   }
-  MOZ_ASSERT_UNREACHABLE("Unknown unit type! Someone's using an SVGLength "
-                         "with an invalid unit?");
+  MOZ_ASSERT_UNREACHABLE(
+      "Unknown unit type! Someone's using an SVGLength "
+      "with an invalid unit?");
 }
 
-static uint16_t
-GetUnitTypeForString(const nsAString& unitStr)
-{
-  if (unitStr.IsEmpty())
-    return SVGLength_Binding::SVG_LENGTHTYPE_NUMBER;
+static uint16_t GetUnitTypeForString(const nsAString& unitStr) {
+  if (unitStr.IsEmpty()) return SVGLength_Binding::SVG_LENGTHTYPE_NUMBER;
 
   nsAtom* unitAtom = NS_GetStaticAtom(unitStr);
 
   if (unitAtom) {
-    for (uint32_t i = 1 ; i < ArrayLength(unitMap) ; i++) {
+    for (uint32_t i = 1; i < ArrayLength(unitMap); i++) {
       if (unitMap[i] == unitAtom) {
         return i;
       }
@@ -232,4 +216,4 @@ GetUnitTypeForString(const nsAString& unitStr)
   return SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

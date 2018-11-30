@@ -22,129 +22,123 @@ using namespace mozilla;
 JS::PersistentRootedObject gGlobal;
 JSContext* gCx = nullptr;
 
-static const JSClass*
-getGlobalClass()
-{
-    static const JSClassOps cOps = {
-        nullptr, nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr, nullptr,
-        nullptr, nullptr,
-        JS_GlobalObjectTraceHook
-    };
-    static const JSClass c = {
-        "global", JSCLASS_GLOBAL_FLAGS,
-        &cOps
-    };
-    return &c;
+static const JSClass* getGlobalClass() {
+  static const JSClassOps cOps = {nullptr,
+                                  nullptr,
+                                  nullptr,
+                                  nullptr,
+                                  nullptr,
+                                  nullptr,
+                                  nullptr,
+                                  nullptr,
+                                  nullptr,
+                                  nullptr,
+                                  JS_GlobalObjectTraceHook};
+  static const JSClass c = {"global", JSCLASS_GLOBAL_FLAGS, &cOps};
+  return &c;
 }
 
-static JSObject*
-jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals)
-{
-    /* Create the global object. */
-    JS::RootedObject newGlobal(cx);
-    JS::RealmOptions options;
-    options.creationOptions().setStreamsEnabled(true);
+static JSObject* jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals) {
+  /* Create the global object. */
+  JS::RootedObject newGlobal(cx);
+  JS::RealmOptions options;
+  options.creationOptions().setStreamsEnabled(true);
 #ifdef ENABLE_BIGINT
-    options.creationOptions().setBigIntEnabled(true);
+  options.creationOptions().setBigIntEnabled(true);
 #endif
-    newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals, JS::FireOnNewGlobalHook,
-                                   options);
-    if (!newGlobal) {
-        return nullptr;
-    }
+  newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals,
+                                 JS::FireOnNewGlobalHook, options);
+  if (!newGlobal) {
+    return nullptr;
+  }
 
-    JSAutoRealm ar(cx, newGlobal);
+  JSAutoRealm ar(cx, newGlobal);
 
-    // Populate the global object with the standard globals like Object and
-    // Array.
-    if (!JS::InitRealmStandardClasses(cx)) {
-        return nullptr;
-    }
+  // Populate the global object with the standard globals like Object and
+  // Array.
+  if (!JS::InitRealmStandardClasses(cx)) {
+    return nullptr;
+  }
 
-    return newGlobal;
+  return newGlobal;
 }
 
-static bool
-jsfuzz_init(JSContext** cx, JS::PersistentRootedObject* global)
-{
-    *cx = JS_NewContext(8L * 1024 * 1024);
-    if (!*cx) {
-        return false;
-    }
+static bool jsfuzz_init(JSContext** cx, JS::PersistentRootedObject* global) {
+  *cx = JS_NewContext(8L * 1024 * 1024);
+  if (!*cx) {
+    return false;
+  }
 
-    const size_t MAX_STACK_SIZE = 500000;
+  const size_t MAX_STACK_SIZE = 500000;
 
-    JS_SetNativeStackQuota(*cx, MAX_STACK_SIZE);
+  JS_SetNativeStackQuota(*cx, MAX_STACK_SIZE);
 
-    js::UseInternalJobQueues(*cx);
-    if (!JS::InitSelfHostedCode(*cx)) {
-        return false;
-    }
-    global->init(*cx);
-    *global = jsfuzz_createGlobal(*cx, nullptr);
-    if (!*global) {
-        return false;
-    }
-    JS::EnterRealm(*cx, *global);
-    return true;
+  js::UseInternalJobQueues(*cx);
+  if (!JS::InitSelfHostedCode(*cx)) {
+    return false;
+  }
+  global->init(*cx);
+  *global = jsfuzz_createGlobal(*cx, nullptr);
+  if (!*global) {
+    return false;
+  }
+  JS::EnterRealm(*cx, *global);
+  return true;
 }
 
-static void
-jsfuzz_uninit(JSContext* cx)
-{
-    if (cx) {
-        JS_DestroyContext(cx);
-        cx = nullptr;
-    }
+static void jsfuzz_uninit(JSContext* cx) {
+  if (cx) {
+    JS_DestroyContext(cx);
+    cx = nullptr;
+  }
 }
 
-int
-main(int argc, char* argv[])
-{
-    if (!JS_Init()) {
-        fprintf(stderr, "Error: Call to jsfuzz_init() failed\n");
-        return 1;
-    }
+int main(int argc, char* argv[]) {
+  if (!JS_Init()) {
+    fprintf(stderr, "Error: Call to jsfuzz_init() failed\n");
+    return 1;
+  }
 
-    if (!jsfuzz_init(&gCx, &gGlobal)) {
-        fprintf(stderr, "Error: Call to jsfuzz_init() failed\n");
-        return 1;
-    }
+  if (!jsfuzz_init(&gCx, &gGlobal)) {
+    fprintf(stderr, "Error: Call to jsfuzz_init() failed\n");
+    return 1;
+  }
 
-    const char* fuzzerEnv = getenv("FUZZER");
-    if (!fuzzerEnv) {
-        fprintf(stderr, "Must specify fuzzing target in FUZZER environment variable\n");
-        return 1;
-    }
+  const char* fuzzerEnv = getenv("FUZZER");
+  if (!fuzzerEnv) {
+    fprintf(stderr,
+            "Must specify fuzzing target in FUZZER environment variable\n");
+    return 1;
+  }
 
-    std::string moduleNameStr(getenv("FUZZER"));
+  std::string moduleNameStr(getenv("FUZZER"));
 
-    FuzzerFunctions funcs = FuzzerRegistry::getInstance().getModuleFunctions(moduleNameStr);
-    FuzzerInitFunc initFunc = funcs.first;
-    FuzzerTestingFunc testingFunc = funcs.second;
-    if (initFunc) {
-        int ret = initFunc(&argc, &argv);
-        if (ret) {
-            fprintf(stderr, "Fuzzing Interface: Error: Initialize callback failed\n");
-            return ret;
-        }
+  FuzzerFunctions funcs =
+      FuzzerRegistry::getInstance().getModuleFunctions(moduleNameStr);
+  FuzzerInitFunc initFunc = funcs.first;
+  FuzzerTestingFunc testingFunc = funcs.second;
+  if (initFunc) {
+    int ret = initFunc(&argc, &argv);
+    if (ret) {
+      fprintf(stderr, "Fuzzing Interface: Error: Initialize callback failed\n");
+      return ret;
     }
+  }
 
-    if (!testingFunc) {
-        fprintf(stderr, "Fuzzing Interface: Error: No testing callback found\n");
-        return 1;
-    }
+  if (!testingFunc) {
+    fprintf(stderr, "Fuzzing Interface: Error: No testing callback found\n");
+    return 1;
+  }
 
 #ifdef LIBFUZZER
-    fuzzer::FuzzerDriver(&argc, &argv, testingFunc);
+  fuzzer::FuzzerDriver(&argc, &argv, testingFunc);
 #elif __AFL_COMPILER
-    testingFunc(nullptr, 0);
+  testingFunc(nullptr, 0);
 #endif
 
-    jsfuzz_uninit(gCx);
+  jsfuzz_uninit(gCx);
 
-    JS_ShutDown();
+  JS_ShutDown();
 
-    return 0;
+  return 0;
 }

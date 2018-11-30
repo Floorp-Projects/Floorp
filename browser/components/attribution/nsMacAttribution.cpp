@@ -18,12 +18,10 @@ NS_IMPL_ISUPPORTS(nsMacAttributionService, nsIMacAttributionService)
 
 NS_IMETHODIMP
 nsMacAttributionService::GetReferrerUrl(const nsACString& aFilePath,
-                                              nsAString& aReferrer)
-{
+                                        nsAString& aReferrer) {
   const nsCString& flat = PromiseFlatCString(aFilePath);
-  CFStringRef filePath = ::CFStringCreateWithCString(kCFAllocatorDefault,
-                                                     flat.get(),
-                                                     kCFStringEncodingUTF8);
+  CFStringRef filePath = ::CFStringCreateWithCString(
+      kCFAllocatorDefault, flat.get(), kCFStringEncodingUTF8);
 
   CocoaFileUtils::CopyQuarantineReferrerUrl(filePath, aReferrer);
 
@@ -34,32 +32,26 @@ nsMacAttributionService::GetReferrerUrl(const nsACString& aFilePath,
 NS_IMETHODIMP
 nsMacAttributionService::SetReferrerUrl(const nsACString& aFilePath,
                                         const nsACString& aReferrerUrl,
-                                        const bool aCreate)
-{
+                                        const bool aCreate) {
   const nsCString& flat = PromiseFlatCString(aFilePath);
-  CFStringRef filePath = ::CFStringCreateWithCString(kCFAllocatorDefault,
-                                                     flat.get(),
-                                                     kCFStringEncodingUTF8);
+  CFStringRef filePath = ::CFStringCreateWithCString(
+      kCFAllocatorDefault, flat.get(), kCFStringEncodingUTF8);
 
   if (!filePath) {
     return NS_ERROR_UNEXPECTED;
   }
 
   const nsCString& flatReferrer = PromiseFlatCString(aReferrerUrl);
-  CFStringRef referrer = ::CFStringCreateWithCString(kCFAllocatorDefault,
-                                                     flatReferrer.get(),
-                                                     kCFStringEncodingUTF8);
+  CFStringRef referrer = ::CFStringCreateWithCString(
+      kCFAllocatorDefault, flatReferrer.get(), kCFStringEncodingUTF8);
   if (!referrer) {
     ::CFRelease(filePath);
     return NS_ERROR_UNEXPECTED;
   }
-  CFURLRef referrerURL = ::CFURLCreateWithString(kCFAllocatorDefault,
-                                                 referrer, nullptr);
+  CFURLRef referrerURL =
+      ::CFURLCreateWithString(kCFAllocatorDefault, referrer, nullptr);
 
-  CocoaFileUtils::AddQuarantineMetadataToFile(filePath,
-                                              NULL,
-                                              referrerURL,
-                                              true,
+  CocoaFileUtils::AddQuarantineMetadataToFile(filePath, NULL, referrerURL, true,
                                               aCreate);
 
   ::CFRelease(filePath);

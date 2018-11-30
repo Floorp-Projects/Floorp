@@ -20,21 +20,19 @@ NS_DEFINE_NAMED_CID(NS_APPSHELLSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_WINDOWMEDIATOR_CID);
 
 static const mozilla::Module::CIDEntry kAppShellCIDs[] = {
-  { &kNS_APPSHELLSERVICE_CID, false, nullptr, nsAppShellServiceConstructor },
-  { &kNS_WINDOWMEDIATOR_CID, false, nullptr, nsWindowMediatorConstructor },
-  { nullptr }
-};
+    {&kNS_APPSHELLSERVICE_CID, false, nullptr, nsAppShellServiceConstructor},
+    {&kNS_WINDOWMEDIATOR_CID, false, nullptr, nsWindowMediatorConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kAppShellContracts[] = {
-  { NS_APPSHELLSERVICE_CONTRACTID, &kNS_APPSHELLSERVICE_CID },
-  { NS_WINDOWMEDIATOR_CONTRACTID, &kNS_WINDOWMEDIATOR_CID },
-  { nullptr }
-};
+    {NS_APPSHELLSERVICE_CONTRACTID, &kNS_APPSHELLSERVICE_CID},
+    {NS_WINDOWMEDIATOR_CONTRACTID, &kNS_WINDOWMEDIATOR_CID},
+    {nullptr}};
 
 static const mozilla::Module kAppShellModule = {
-  mozilla::Module::kVersion,
-  kAppShellCIDs,
-  kAppShellContracts,
+    mozilla::Module::kVersion,
+    kAppShellCIDs,
+    kAppShellContracts,
 };
 
 NSMODULE_DEFN(appshell) = &kAppShellModule;

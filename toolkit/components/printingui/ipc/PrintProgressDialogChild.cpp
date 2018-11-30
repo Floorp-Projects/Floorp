@@ -14,20 +14,14 @@ using mozilla::Unused;
 namespace mozilla {
 namespace embedding {
 
-NS_IMPL_ISUPPORTS(PrintProgressDialogChild,
-                  nsIWebProgressListener,
+NS_IMPL_ISUPPORTS(PrintProgressDialogChild, nsIWebProgressListener,
                   nsIPrintProgressParams)
 
 PrintProgressDialogChild::PrintProgressDialogChild(
-  nsIObserver* aOpenObserver,
-  nsIPrintSettings* aPrintSettings) :
-  mOpenObserver(aOpenObserver),
-  mPrintSettings(aPrintSettings)
-{
-}
+    nsIObserver* aOpenObserver, nsIPrintSettings* aPrintSettings)
+    : mOpenObserver(aOpenObserver), mPrintSettings(aPrintSettings) {}
 
-PrintProgressDialogChild::~PrintProgressDialogChild()
-{
+PrintProgressDialogChild::~PrintProgressDialogChild() {
   // When the printing engine stops supplying information about printing
   // progress, it'll drop references to us and destroy us. We need to signal
   // the parent to decrement its refcount, as well as prevent it from attempting
@@ -35,9 +29,7 @@ PrintProgressDialogChild::~PrintProgressDialogChild()
   Unused << Send__delete__(this);
 }
 
-mozilla::ipc::IPCResult
-PrintProgressDialogChild::RecvDialogOpened()
-{
+mozilla::ipc::IPCResult PrintProgressDialogChild::RecvDialogOpened() {
   // nsPrintJob's observer, which we're reporting to here, doesn't care
   // what gets passed as the subject, topic or data, so we'll just send
   // nullptrs.
@@ -45,9 +37,7 @@ PrintProgressDialogChild::RecvDialogOpened()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PrintProgressDialogChild::RecvCancelledCurrentJob()
-{
+mozilla::ipc::IPCResult PrintProgressDialogChild::RecvCancelledCurrentJob() {
   if (mPrintSettings) {
     mPrintSettings->SetIsCancelled(true);
   }
@@ -60,20 +50,18 @@ NS_IMETHODIMP
 PrintProgressDialogChild::OnStateChange(nsIWebProgress* aProgress,
                                         nsIRequest* aRequest,
                                         uint32_t aStateFlags,
-                                        nsresult aStatus)
-{
+                                        nsresult aStatus) {
   Unused << SendStateChange(aStateFlags, aStatus);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PrintProgressDialogChild::OnProgressChange(nsIWebProgress * aProgress,
-                                           nsIRequest * aRequest,
+PrintProgressDialogChild::OnProgressChange(nsIWebProgress* aProgress,
+                                           nsIRequest* aRequest,
                                            int32_t aCurSelfProgress,
                                            int32_t aMaxSelfProgress,
                                            int32_t aCurTotalProgress,
-                                           int32_t aMaxTotalProgress)
-{
+                                           int32_t aMaxTotalProgress) {
   Unused << SendProgressChange(aCurSelfProgress, aMaxSelfProgress,
                                aCurTotalProgress, aMaxTotalProgress);
   return NS_OK;
@@ -81,63 +69,52 @@ PrintProgressDialogChild::OnProgressChange(nsIWebProgress * aProgress,
 
 NS_IMETHODIMP
 PrintProgressDialogChild::OnLocationChange(nsIWebProgress* aProgress,
-                                           nsIRequest* aRequest,
-                                           nsIURI* aURI,
-                                           uint32_t aFlags)
-{
+                                           nsIRequest* aRequest, nsIURI* aURI,
+                                           uint32_t aFlags) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PrintProgressDialogChild::OnStatusChange(nsIWebProgress* aProgress,
-                                         nsIRequest* aRequest,
-                                         nsresult aStatus,
-                                         const char16_t* aMessage)
-{
+                                         nsIRequest* aRequest, nsresult aStatus,
+                                         const char16_t* aMessage) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PrintProgressDialogChild::OnSecurityChange(nsIWebProgress* aProgress,
-                                           nsIRequest* aRequest,
-                                           uint32_t aOldState,
-                                           uint32_t aState,
-                                           const nsAString& aContentBlockingLogJSON)
-{
+PrintProgressDialogChild::OnSecurityChange(
+    nsIWebProgress* aProgress, nsIRequest* aRequest, uint32_t aOldState,
+    uint32_t aState, const nsAString& aContentBlockingLogJSON) {
   return NS_OK;
 }
 
 // nsIPrintProgressParams
 
 NS_IMETHODIMP
-PrintProgressDialogChild::GetDocTitle(nsAString& aDocTitle)
-{
+PrintProgressDialogChild::GetDocTitle(nsAString& aDocTitle) {
   aDocTitle = mDocTitle;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PrintProgressDialogChild::SetDocTitle(const nsAString& aDocTitle)
-{
+PrintProgressDialogChild::SetDocTitle(const nsAString& aDocTitle) {
   mDocTitle = aDocTitle;
   Unused << SendDocTitleChange(PromiseFlatString(aDocTitle));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PrintProgressDialogChild::GetDocURL(nsAString& aDocURL)
-{
+PrintProgressDialogChild::GetDocURL(nsAString& aDocURL) {
   aDocURL = mDocURL;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PrintProgressDialogChild::SetDocURL(const nsAString& aDocURL)
-{
+PrintProgressDialogChild::SetDocURL(const nsAString& aDocURL) {
   mDocURL = aDocURL;
   Unused << SendDocURLChange(PromiseFlatString(aDocURL));
   return NS_OK;
 }
 
-} // namespace embedding
-} // namespace mozilla
+}  // namespace embedding
+}  // namespace mozilla

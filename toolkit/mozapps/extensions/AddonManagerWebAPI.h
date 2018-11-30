@@ -12,7 +12,7 @@
 namespace mozilla {
 
 class AddonManagerWebAPI {
-public:
+ public:
   static bool IsAPIEnabled(JSContext* aCx, JSObject* aGlobal);
 
   static bool IsValidSite(nsIURI* uri);
@@ -21,12 +21,12 @@ public:
 namespace dom {
 
 class AddonManagerPermissions {
-public:
+ public:
   static bool IsHostPermitted(const GlobalObject&, const nsAString& host);
 };
 
-} // namespace mozilla::dom
+}  // namespace dom
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // addonmanagerwebapi_h_
+#endif  // addonmanagerwebapi_h_

@@ -18,9 +18,8 @@
 nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
                                       mozilla::ComputedStyle* aStyle);
 
-class nsRubyTextFrame final : public nsRubyContentFrame
-{
-public:
+class nsRubyTextFrame final : public nsRubyContentFrame {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsRubyTextFrame)
   NS_DECL_QUERYFRAME
 
@@ -31,25 +30,22 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual void Reflow(nsPresContext* aPresContext,
-                      ReflowOutput& aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  bool IsAutoHidden() const
-  {
+  bool IsAutoHidden() const {
     return GetStateBits() & NS_RUBY_TEXT_FRAME_AUTOHIDE;
   }
 
-protected:
+ protected:
   friend nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
                                                ComputedStyle* aStyle);
   explicit nsRubyTextFrame(ComputedStyle* aStyle)
-    : nsRubyContentFrame(aStyle, kClassID)
-  {}
+      : nsRubyContentFrame(aStyle, kClassID) {}
 };
 
 #endif /* nsRubyTextFrame_h___ */

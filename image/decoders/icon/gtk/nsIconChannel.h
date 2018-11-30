@@ -16,28 +16,28 @@
 /// This class is the gnome implementation of nsIconChannel. It basically asks
 /// gtk/gnome for an icon, saves it as a tmp icon, and creates a new channel for
 /// that file to which all calls will be proxied.
-class nsIconChannel final : public nsIChannel
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_FORWARD_NSIREQUEST(mRealChannel->)
-    NS_FORWARD_NSICHANNEL(mRealChannel->)
+class nsIconChannel final : public nsIChannel {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_NSIREQUEST(mRealChannel->)
+  NS_FORWARD_NSICHANNEL(mRealChannel->)
 
-    nsIconChannel() { }
+  nsIconChannel() {}
 
-    static void Shutdown();
+  static void Shutdown();
 
-    /// Called by nsIconProtocolHandler after it creates this channel.
-    /// Must be called before calling any other function on this object.
-    /// If this method fails, no other function must be called on this object.
-    nsresult Init(nsIURI* aURI);
-  private:
-    ~nsIconChannel() { }
-    /// The channel to the temp icon file (e.g. to /tmp/2qy9wjqw.html).
-    /// Will always be non-null after a successful Init.
-    nsCOMPtr<nsIChannel> mRealChannel;
+  /// Called by nsIconProtocolHandler after it creates this channel.
+  /// Must be called before calling any other function on this object.
+  /// If this method fails, no other function must be called on this object.
+  nsresult Init(nsIURI* aURI);
 
-    nsresult InitWithGIO(nsIMozIconURI* aIconURI);
+ private:
+  ~nsIconChannel() {}
+  /// The channel to the temp icon file (e.g. to /tmp/2qy9wjqw.html).
+  /// Will always be non-null after a successful Init.
+  nsCOMPtr<nsIChannel> mRealChannel;
+
+  nsresult InitWithGIO(nsIMozIconURI* aIconURI);
 };
 
-#endif // mozilla_image_decoders_icon_gtk_nsIconChannel_h
+#endif  // mozilla_image_decoders_icon_gtk_nsIconChannel_h

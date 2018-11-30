@@ -4,4 +4,5 @@
 
 const char *sPluginName = "Shockwave Flash";
 const char *sPluginDescription = "Flash plug-in for testing purposes.";
-const char *sMimeDescription = "application/x-shockwave-flash-test:swf:Flash test type";
+const char *sMimeDescription =
+    "application/x-shockwave-flash-test:swf:Flash test type";

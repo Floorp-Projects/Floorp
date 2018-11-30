@@ -13,13 +13,8 @@ using namespace mozilla::a11y;
 // DocAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-DocAccessibleWrap::
-  DocAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell) :
-  DocAccessible(aDocument, aPresShell), mActivated(false)
-{
-}
+DocAccessibleWrap::DocAccessibleWrap(nsIDocument* aDocument,
+                                     nsIPresShell* aPresShell)
+    : DocAccessible(aDocument, aPresShell), mActivated(false) {}
 
-DocAccessibleWrap::~DocAccessibleWrap()
-{
-}
-
+DocAccessibleWrap::~DocAccessibleWrap() {}

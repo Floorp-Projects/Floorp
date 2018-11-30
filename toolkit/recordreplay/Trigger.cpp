@@ -19,8 +19,7 @@ namespace mozilla {
 namespace recordreplay {
 
 // Information about each trigger.
-struct TriggerInfo
-{
+struct TriggerInfo {
   // ID of the thread which registered this trigger.
   size_t mThreadId;
 
@@ -31,8 +30,7 @@ struct TriggerInfo
   size_t mRegisterCount;
 
   TriggerInfo(size_t aThreadId, const std::function<void()>& aCallback)
-    : mThreadId(aThreadId), mCallback(aCallback), mRegisterCount(1)
-  {}
+      : mThreadId(aThreadId), mCallback(aCallback), mRegisterCount(1) {}
 };
 
 // All registered triggers.
@@ -46,18 +44,15 @@ static StaticInfallibleVector<size_t> gActivatedTriggers;
 
 static StaticMutexNotRecorded gTriggersMutex;
 
-void
-InitializeTriggers()
-{
+void InitializeTriggers() {
   gTriggers = new ValueIndex();
   gTriggerInfoMap = new TriggerInfoMap();
 }
 
 extern "C" {
 
-MOZ_EXPORT void
-RecordReplayInterface_RegisterTrigger(void* aObj, const std::function<void()>& aCallback)
-{
+MOZ_EXPORT void RecordReplayInterface_RegisterTrigger(
+    void* aObj, const std::function<void()>& aCallback) {
   MOZ_RELEASE_ASSERT(aObj);
   MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
 
@@ -92,9 +87,7 @@ RecordReplayInterface_RegisterTrigger(void* aObj, const std::function<void()>& a
   thread->Events().CheckInput(id);
 }
 
-MOZ_EXPORT void
-RecordReplayInterface_UnregisterTrigger(void* aObj)
-{
+MOZ_EXPORT void RecordReplayInterface_UnregisterTrigger(void* aObj) {
   MOZ_ASSERT(IsRecordingOrReplaying());
   MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
 
@@ -108,9 +101,7 @@ RecordReplayInterface_UnregisterTrigger(void* aObj)
   }
 }
 
-MOZ_EXPORT void
-RecordReplayInterface_ActivateTrigger(void* aObj)
-{
+MOZ_EXPORT void RecordReplayInterface_ActivateTrigger(void* aObj) {
   if (!IsRecording()) {
     return;
   }
@@ -121,9 +112,7 @@ RecordReplayInterface_ActivateTrigger(void* aObj)
   gActivatedTriggers.emplaceBack(id);
 }
 
-static void
-InvokeTriggerCallback(size_t aId)
-{
+static void InvokeTriggerCallback(size_t aId) {
   void* obj;
   std::function<void()> callback;
   {
@@ -140,9 +129,7 @@ InvokeTriggerCallback(size_t aId)
   callback();
 }
 
-static Maybe<size_t>
-RemoveTriggerCallbackForThreadId(size_t aThreadId)
-{
+static Maybe<size_t> RemoveTriggerCallbackForThreadId(size_t aThreadId) {
   StaticMutexAutoLock lock(gTriggersMutex);
   for (size_t i = 0; i < gActivatedTriggers.length(); i++) {
     size_t id = gActivatedTriggers[i];
@@ -157,9 +144,7 @@ RemoveTriggerCallbackForThreadId(size_t aThreadId)
   return Nothing();
 }
 
-MOZ_EXPORT void
-RecordReplayInterface_ExecuteTriggers()
-{
+MOZ_EXPORT void RecordReplayInterface_ExecuteTriggers() {
   Thread* thread = Thread::Current();
   RecordingEventSection res(thread);
   if (!res.CanAccessEvents()) {
@@ -175,16 +160,16 @@ RecordReplayInterface_ExecuteTriggers()
         break;
       }
 
-      thread->Events().WriteScalar((size_t) ThreadEvent::ExecuteTrigger);
+      thread->Events().WriteScalar((size_t)ThreadEvent::ExecuteTrigger);
       thread->Events().WriteScalar(id.ref());
       InvokeTriggerCallback(id.ref());
     }
-    thread->Events().WriteScalar((size_t) ThreadEvent::ExecuteTriggersFinished);
+    thread->Events().WriteScalar((size_t)ThreadEvent::ExecuteTriggersFinished);
   } else {
     // Execute the same callbacks which were executed at this point while
     // recording.
     while (true) {
-      ThreadEvent ev = (ThreadEvent) thread->Events().ReadScalar();
+      ThreadEvent ev = (ThreadEvent)thread->Events().ReadScalar();
       if (ev != ThreadEvent::ExecuteTrigger) {
         if (ev != ThreadEvent::ExecuteTriggersFinished) {
           child::ReportFatalError(Nothing(), "ExecuteTrigger Mismatch");
@@ -198,7 +183,7 @@ RecordReplayInterface_ExecuteTriggers()
   }
 }
 
-} // extern "C"
+}  // extern "C"
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla

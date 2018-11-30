@@ -15,18 +15,15 @@
 // <munderover> -- attach an underscript-overscript pair to a base
 //
 
-class nsMathMLmunderoverFrame final
-  : public nsMathMLContainerFrame
-  , public nsIReflowCallback
-{
-
-public:
+class nsMathMLmunderoverFrame final : public nsMathMLContainerFrame,
+                                      public nsIReflowCallback {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmunderoverFrame)
 
-  friend nsIFrame* NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell,
+                                               ComputedStyle* aStyle);
 
-  nsresult Place(DrawTarget* aDrawTarget,
-                 bool aPlaceOrigin,
+  nsresult Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
                  ReflowOutput& aDesiredSize) override;
 
   NS_IMETHOD InheritAutomaticData(nsIFrame* aParent) override;
@@ -38,8 +35,7 @@ public:
 
   void DestroyFrom(nsIFrame* aRoot, PostDestroyData& aPostDestroyData) override;
 
-  nsresult AttributeChanged(int32_t aNameSpaceID,
-                            nsAtom* aAttribute,
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                             int32_t aModType) override;
 
   uint8_t ScriptIncrement(nsIFrame* aFrame) override;
@@ -48,16 +44,15 @@ public:
   bool ReflowFinished() override;
   void ReflowCallbackCanceled() override;
 
-protected:
+ protected:
   explicit nsMathMLmunderoverFrame(ComputedStyle* aStyle)
-    : nsMathMLContainerFrame(aStyle, kClassID)
-    , mIncrementUnder(false)
-    , mIncrementOver(false)
-  {}
+      : nsMathMLContainerFrame(aStyle, kClassID),
+        mIncrementUnder(false),
+        mIncrementOver(false) {}
 
   virtual ~nsMathMLmunderoverFrame();
 
-private:
+ private:
   // Helper to set the "increment script level" flag on the element belonging
   // to a child frame given by aChildIndex.
   //
@@ -76,15 +71,13 @@ private:
   bool mIncrementUnder;
   bool mIncrementOver;
 
-  struct SetIncrementScriptLevelCommand
-  {
+  struct SetIncrementScriptLevelCommand {
     uint32_t mChildIndex;
     bool mDoIncrement;
   };
 
   nsTArray<SetIncrementScriptLevelCommand>
-    mPostReflowIncrementScriptLevelCommands;
+      mPostReflowIncrementScriptLevelCommands;
 };
-
 
 #endif /* nsMathMLmunderoverFrame_h___ */

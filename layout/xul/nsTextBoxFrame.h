@@ -13,9 +13,8 @@ class nsAccessKeyInfo;
 class nsAsyncAccesskeyUpdate;
 class nsFontMetrics;
 
-class nsTextBoxFrame final : public nsLeafBoxFrame
-{
-public:
+class nsTextBoxFrame final : public nsLeafBoxFrame {
+ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsTextBoxFrame)
 
@@ -27,35 +26,31 @@ public:
 
   enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter, CropAuto };
 
-  friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell,
+                                      ComputedStyle* aStyle);
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         asPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* asPrevInFlow) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
-  virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsAtom*        aAttribute,
-                                    int32_t         aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  void UpdateAttributes(nsAtom*         aAttribute,
-                        bool&          aResize,
-                        bool&          aRedraw);
+  void UpdateAttributes(nsAtom* aAttribute, bool& aResize, bool& aRedraw);
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
   virtual ~nsTextBoxFrame();
 
-  void PaintTitle(gfxContext&          aRenderingContext,
-                  const nsRect&        aDirtyRect,
-                  nsPoint              aPt,
-                  const nscolor*       aOverrideColor);
+  void PaintTitle(gfxContext& aRenderingContext, const nsRect& aDirtyRect,
+                  nsPoint aPt, const nscolor* aOverrideColor);
 
   nsRect GetComponentAlphaBounds() const;
 
@@ -65,7 +60,7 @@ public:
 
   virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
-protected:
+ protected:
   friend class nsAsyncAccesskeyUpdate;
   friend class nsDisplayXULTextBox;
   // Should be called only by nsAsyncAccesskeyUpdate.
@@ -79,37 +74,30 @@ protected:
   void RecomputeTitle();
 
   // REVIEW: SORRY! Couldn't resist devirtualizing these
-  void LayoutTitle(nsPresContext*      aPresContext,
-                   gfxContext&          aRenderingContext,
-                   const nsRect&        aRect);
+  void LayoutTitle(nsPresContext* aPresContext, gfxContext& aRenderingContext,
+                   const nsRect& aRect);
 
   void CalculateUnderline(DrawTarget* aDrawTarget, nsFontMetrics& aFontMetrics);
 
   void CalcTextSize(nsBoxLayoutState& aBoxLayoutState);
 
-  void CalcDrawRect(gfxContext &aRenderingContext);
+  void CalcDrawRect(gfxContext& aRenderingContext);
 
   explicit nsTextBoxFrame(ComputedStyle* aStyle);
 
-  nscoord CalculateTitleForWidth(gfxContext&          aRenderingContext,
-                                 nscoord              aWidth);
+  nscoord CalculateTitleForWidth(gfxContext& aRenderingContext, nscoord aWidth);
 
-  void GetTextSize(gfxContext&          aRenderingContext,
-                   const nsString&      aString,
-                   nsSize&              aSize,
-                   nscoord&             aAscent);
+  void GetTextSize(gfxContext& aRenderingContext, const nsString& aString,
+                   nsSize& aSize, nscoord& aAscent);
 
   nsresult RegUnregAccessKey(bool aDoReg);
 
-private:
-
+ private:
   bool AlwaysAppendAccessKey();
   bool InsertSeparatorBeforeAccessKey();
 
-  void DrawText(gfxContext&         aRenderingContext,
-                const nsRect&       aDirtyRect,
-                const nsRect&       aTextRect,
-                const nscolor*      aOverrideColor);
+  void DrawText(gfxContext& aRenderingContext, const nsRect& aDirtyRect,
+                const nsRect& aTextRect, const nscolor* aOverrideColor);
 
   nsString mTitle;
   nsString mCroppedTitle;
@@ -128,6 +116,6 @@ private:
   static bool gInsertSeparatorBeforeAccessKey;
   static bool gInsertSeparatorPrefInitialized;
 
-}; // class nsTextBoxFrame
+};  // class nsTextBoxFrame
 
 #endif /* nsTextBoxFrame_h___ */

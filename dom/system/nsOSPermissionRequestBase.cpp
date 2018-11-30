@@ -12,15 +12,12 @@ using namespace mozilla;
 
 using mozilla::dom::Promise;
 
-NS_IMPL_ISUPPORTS(
-    nsOSPermissionRequestBase,
-    nsIOSPermissionRequest,
-    nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsOSPermissionRequestBase, nsIOSPermissionRequest,
+                  nsISupportsWeakReference)
 
 NS_IMETHODIMP
-nsOSPermissionRequestBase::GetMediaCapturePermissionState(uint16_t* aCamera,
-                                                          uint16_t* aMicrophone)
-{
+nsOSPermissionRequestBase::GetMediaCapturePermissionState(
+    uint16_t* aCamera, uint16_t* aMicrophone) {
   nsresult rv = GetVideoCapturePermissionState(aCamera);
   if (NS_FAILED(rv)) {
     return rv;
@@ -29,25 +26,21 @@ nsOSPermissionRequestBase::GetMediaCapturePermissionState(uint16_t* aCamera,
 }
 
 NS_IMETHODIMP
-nsOSPermissionRequestBase::GetAudioCapturePermissionState(uint16_t* aAudio)
-{
+nsOSPermissionRequestBase::GetAudioCapturePermissionState(uint16_t* aAudio) {
   MOZ_ASSERT(aAudio);
   *aAudio = PERMISSION_STATE_AUTHORIZED;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOSPermissionRequestBase::GetVideoCapturePermissionState(uint16_t* aVideo)
-{
+nsOSPermissionRequestBase::GetVideoCapturePermissionState(uint16_t* aVideo) {
   MOZ_ASSERT(aVideo);
   *aVideo = PERMISSION_STATE_AUTHORIZED;
   return NS_OK;
 }
 
-nsresult
-nsOSPermissionRequestBase::GetPromise(JSContext* aCx,
-                                      RefPtr<Promise>& aPromiseOut)
-{
+nsresult nsOSPermissionRequestBase::GetPromise(JSContext* aCx,
+                                               RefPtr<Promise>& aPromiseOut) {
   nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
   if (NS_WARN_IF(!globalObject)) {
     return NS_ERROR_UNEXPECTED;
@@ -63,9 +56,8 @@ nsOSPermissionRequestBase::GetPromise(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-nsOSPermissionRequestBase::RequestVideoCapturePermission(JSContext* aCx,
-                                                         Promise** aPromiseOut)
-{
+nsOSPermissionRequestBase::RequestVideoCapturePermission(
+    JSContext* aCx, Promise** aPromiseOut) {
   RefPtr<Promise> promiseHandle;
   nsresult rv = GetPromise(aCx, promiseHandle);
   if (NS_FAILED(rv)) {
@@ -78,9 +70,8 @@ nsOSPermissionRequestBase::RequestVideoCapturePermission(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-nsOSPermissionRequestBase::RequestAudioCapturePermission(JSContext* aCx,
-                                                         Promise** aPromiseOut)
-{
+nsOSPermissionRequestBase::RequestAudioCapturePermission(
+    JSContext* aCx, Promise** aPromiseOut) {
   RefPtr<Promise> promiseHandle;
   nsresult rv = GetPromise(aCx, promiseHandle);
   if (NS_FAILED(rv)) {

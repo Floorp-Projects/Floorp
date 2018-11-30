@@ -11,9 +11,8 @@
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 
-class nsInterfaceRequestorAgg final : public nsIInterfaceRequestor
-{
-public:
+class nsInterfaceRequestorAgg final : public nsIInterfaceRequestor {
+ public:
   // XXX This needs to support threadsafe refcounting until we fix bug 243591.
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -21,16 +20,13 @@ public:
   nsInterfaceRequestorAgg(nsIInterfaceRequestor* aFirst,
                           nsIInterfaceRequestor* aSecond,
                           nsIEventTarget* aConsumerTarget = nullptr)
-    : mFirst(aFirst)
-    , mSecond(aSecond)
-    , mConsumerTarget(aConsumerTarget)
-  {
+      : mFirst(aFirst), mSecond(aSecond), mConsumerTarget(aConsumerTarget) {
     if (!mConsumerTarget) {
       mConsumerTarget = GetCurrentThreadEventTarget();
     }
   }
 
-private:
+ private:
   ~nsInterfaceRequestorAgg();
 
   nsCOMPtr<nsIInterfaceRequestor> mFirst, mSecond;
@@ -40,8 +36,7 @@ private:
 NS_IMPL_ISUPPORTS(nsInterfaceRequestorAgg, nsIInterfaceRequestor)
 
 NS_IMETHODIMP
-nsInterfaceRequestorAgg::GetInterface(const nsIID& aIID, void** aResult)
-{
+nsInterfaceRequestorAgg::GetInterface(const nsIID& aIID, void** aResult) {
   nsresult rv = NS_ERROR_NO_INTERFACE;
   if (mFirst) {
     rv = mFirst->GetInterface(aIID, aResult);
@@ -52,19 +47,16 @@ nsInterfaceRequestorAgg::GetInterface(const nsIID& aIID, void** aResult)
   return rv;
 }
 
-nsInterfaceRequestorAgg::~nsInterfaceRequestorAgg()
-{
-  NS_ProxyRelease(
-    "nsInterfaceRequestorAgg::mFirst", mConsumerTarget, mFirst.forget());
-  NS_ProxyRelease(
-    "nsInterfaceRequestorAgg::mSecond", mConsumerTarget, mSecond.forget());
+nsInterfaceRequestorAgg::~nsInterfaceRequestorAgg() {
+  NS_ProxyRelease("nsInterfaceRequestorAgg::mFirst", mConsumerTarget,
+                  mFirst.forget());
+  NS_ProxyRelease("nsInterfaceRequestorAgg::mSecond", mConsumerTarget,
+                  mSecond.forget());
 }
 
-nsresult
-NS_NewInterfaceRequestorAggregation(nsIInterfaceRequestor* aFirst,
-                                    nsIInterfaceRequestor* aSecond,
-                                    nsIInterfaceRequestor** aResult)
-{
+nsresult NS_NewInterfaceRequestorAggregation(nsIInterfaceRequestor* aFirst,
+                                             nsIInterfaceRequestor* aSecond,
+                                             nsIInterfaceRequestor** aResult) {
   *aResult = new nsInterfaceRequestorAgg(aFirst, aSecond);
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -73,12 +65,10 @@ NS_NewInterfaceRequestorAggregation(nsIInterfaceRequestor* aFirst,
   return NS_OK;
 }
 
-nsresult
-NS_NewInterfaceRequestorAggregation(nsIInterfaceRequestor* aFirst,
-                                    nsIInterfaceRequestor* aSecond,
-                                    nsIEventTarget* aTarget,
-                                    nsIInterfaceRequestor** aResult)
-{
+nsresult NS_NewInterfaceRequestorAggregation(nsIInterfaceRequestor* aFirst,
+                                             nsIInterfaceRequestor* aSecond,
+                                             nsIEventTarget* aTarget,
+                                             nsIInterfaceRequestor** aResult) {
   *aResult = new nsInterfaceRequestorAgg(aFirst, aSecond, aTarget);
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;

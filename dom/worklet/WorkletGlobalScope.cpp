@@ -37,28 +37,22 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletGlobalScope)
 NS_INTERFACE_MAP_END
 
 WorkletGlobalScope::WorkletGlobalScope()
-  : mCreationTimeStamp(TimeStamp::Now())
-{
-}
+    : mCreationTimeStamp(TimeStamp::Now()) {}
 
 WorkletGlobalScope::~WorkletGlobalScope() = default;
 
-JSObject*
-WorkletGlobalScope::WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* WorkletGlobalScope::WrapObject(JSContext* aCx,
+                                         JS::Handle<JSObject*> aGivenProto) {
   MOZ_CRASH("We should never get here!");
   return nullptr;
 }
 
-already_AddRefed<Console>
-WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
-{
+already_AddRefed<Console> WorkletGlobalScope::GetConsole(JSContext* aCx,
+                                                         ErrorResult& aRv) {
   if (!mConsole) {
     MOZ_ASSERT(Impl());
     const WorkletLoadInfo& loadInfo = Impl()->LoadInfo();
-    mConsole = Console::CreateForWorklet(aCx, this,
-                                         loadInfo.OuterWindowID(),
+    mConsole = Console::CreateForWorklet(aCx, this, loadInfo.OuterWindowID(),
                                          loadInfo.InnerWindowID(), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -69,9 +63,7 @@ WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
   return console.forget();
 }
 
-void
-WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const
-{
+void WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const {
   WorkletThread::AssertIsOnWorkletThread();
 
   if (!StaticPrefs::browser_dom_window_dump_enabled()) {
@@ -92,5 +84,5 @@ WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const
   fflush(stdout);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

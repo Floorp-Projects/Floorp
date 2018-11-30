@@ -13,7 +13,7 @@ namespace mozilla {
 namespace widget {
 
 class InputDeviceUtils {
-public:
+ public:
   static HDEVNOTIFY RegisterNotification(HWND aHwnd);
   static void UnregisterNotification(HDEVNOTIFY aHandle);
 
@@ -21,6 +21,6 @@ public:
   static DWORD CountMouseDevices();
 };
 
-} // namespace widget
-} // namespace mozilla
-#endif // mozilla_widget_InputDeviceUtils_h__
+}  // namespace widget
+}  // namespace mozilla
+#endif  // mozilla_widget_InputDeviceUtils_h__

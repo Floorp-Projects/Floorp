@@ -19,26 +19,22 @@ namespace dom {
 
 namespace {
 
-class RegisterDebuggerMainThreadRunnable final : public mozilla::Runnable
-{
+class RegisterDebuggerMainThreadRunnable final : public mozilla::Runnable {
   WorkerPrivate* mWorkerPrivate;
   bool mNotifyListeners;
 
-public:
+ public:
   RegisterDebuggerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
                                      bool aNotifyListeners)
-    : mozilla::Runnable("RegisterDebuggerMainThreadRunnable")
-    , mWorkerPrivate(aWorkerPrivate)
-    , mNotifyListeners(aNotifyListeners)
-  { }
+      : mozilla::Runnable("RegisterDebuggerMainThreadRunnable"),
+        mWorkerPrivate(aWorkerPrivate),
+        mNotifyListeners(aNotifyListeners) {}
 
-private:
-  ~RegisterDebuggerMainThreadRunnable()
-  { }
+ private:
+  ~RegisterDebuggerMainThreadRunnable() {}
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     WorkerDebuggerManager* manager = WorkerDebuggerManager::Get();
     MOZ_ASSERT(manager);
 
@@ -47,23 +43,19 @@ private:
   }
 };
 
-class UnregisterDebuggerMainThreadRunnable final : public mozilla::Runnable
-{
+class UnregisterDebuggerMainThreadRunnable final : public mozilla::Runnable {
   WorkerPrivate* mWorkerPrivate;
 
-public:
+ public:
   explicit UnregisterDebuggerMainThreadRunnable(WorkerPrivate* aWorkerPrivate)
-    : mozilla::Runnable("UnregisterDebuggerMainThreadRunnable")
-    , mWorkerPrivate(aWorkerPrivate)
-  { }
+      : mozilla::Runnable("UnregisterDebuggerMainThreadRunnable"),
+        mWorkerPrivate(aWorkerPrivate) {}
 
-private:
-  ~UnregisterDebuggerMainThreadRunnable()
-  { }
+ private:
+  ~UnregisterDebuggerMainThreadRunnable() {}
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     WorkerDebuggerManager* manager = WorkerDebuggerManager::Get();
     MOZ_ASSERT(manager);
 
@@ -76,39 +68,33 @@ static StaticRefPtr<WorkerDebuggerManager> gWorkerDebuggerManager;
 
 } /* anonymous namespace */
 
-class WorkerDebuggerEnumerator final : public nsSimpleEnumerator
-{
+class WorkerDebuggerEnumerator final : public nsSimpleEnumerator {
   nsTArray<RefPtr<WorkerDebugger>> mDebuggers;
   uint32_t mIndex;
 
-public:
+ public:
   explicit WorkerDebuggerEnumerator(
-                             const nsTArray<RefPtr<WorkerDebugger>>& aDebuggers)
-  : mDebuggers(aDebuggers), mIndex(0)
-  {
-  }
+      const nsTArray<RefPtr<WorkerDebugger>>& aDebuggers)
+      : mDebuggers(aDebuggers), mIndex(0) {}
 
   NS_DECL_NSISIMPLEENUMERATOR
 
-  const nsID& DefaultInterface() override
-  {
+  const nsID& DefaultInterface() override {
     return NS_GET_IID(nsIWorkerDebugger);
   }
 
-private:
+ private:
   ~WorkerDebuggerEnumerator() override = default;
 };
 
 NS_IMETHODIMP
-WorkerDebuggerEnumerator::HasMoreElements(bool* aResult)
-{
+WorkerDebuggerEnumerator::HasMoreElements(bool* aResult) {
   *aResult = mIndex < mDebuggers.Length();
   return NS_OK;
 };
 
 NS_IMETHODIMP
-WorkerDebuggerEnumerator::GetNext(nsISupports** aResult)
-{
+WorkerDebuggerEnumerator::GetNext(nsISupports** aResult) {
   if (mIndex == mDebuggers.Length()) {
     return NS_ERROR_FAILURE;
   }
@@ -118,28 +104,20 @@ WorkerDebuggerEnumerator::GetNext(nsISupports** aResult)
 };
 
 WorkerDebuggerManager::WorkerDebuggerManager()
-: mMutex("WorkerDebuggerManager::mMutex")
-{
+    : mMutex("WorkerDebuggerManager::mMutex") {
   AssertIsOnMainThread();
 }
 
-WorkerDebuggerManager::~WorkerDebuggerManager()
-{
-  AssertIsOnMainThread();
-}
+WorkerDebuggerManager::~WorkerDebuggerManager() { AssertIsOnMainThread(); }
 
 // static
-already_AddRefed<WorkerDebuggerManager>
-WorkerDebuggerManager::GetInstance()
-{
+already_AddRefed<WorkerDebuggerManager> WorkerDebuggerManager::GetInstance() {
   RefPtr<WorkerDebuggerManager> manager = WorkerDebuggerManager::GetOrCreate();
   return manager.forget();
 }
 
 // static
-WorkerDebuggerManager*
-WorkerDebuggerManager::GetOrCreate()
-{
+WorkerDebuggerManager* WorkerDebuggerManager::GetOrCreate() {
   AssertIsOnMainThread();
 
   if (!gWorkerDebuggerManager) {
@@ -156,9 +134,7 @@ WorkerDebuggerManager::GetOrCreate()
   return gWorkerDebuggerManager;
 }
 
-WorkerDebuggerManager*
-WorkerDebuggerManager::Get()
-{
+WorkerDebuggerManager* WorkerDebuggerManager::Get() {
   MOZ_ASSERT(gWorkerDebuggerManager);
   return gWorkerDebuggerManager;
 }
@@ -167,8 +143,7 @@ NS_IMPL_ISUPPORTS(WorkerDebuggerManager, nsIObserver, nsIWorkerDebuggerManager);
 
 NS_IMETHODIMP
 WorkerDebuggerManager::Observe(nsISupports* aSubject, const char* aTopic,
-                               const char16_t* aData)
-{
+                               const char16_t* aData) {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     Shutdown();
     return NS_OK;
@@ -180,19 +155,18 @@ WorkerDebuggerManager::Observe(nsISupports* aSubject, const char* aTopic,
 
 NS_IMETHODIMP
 WorkerDebuggerManager::GetWorkerDebuggerEnumerator(
-                                                  nsISimpleEnumerator** aResult)
-{
+    nsISimpleEnumerator** aResult) {
   AssertIsOnMainThread();
 
   RefPtr<WorkerDebuggerEnumerator> enumerator =
-    new WorkerDebuggerEnumerator(mDebuggers);
+      new WorkerDebuggerEnumerator(mDebuggers);
   enumerator.forget(aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-WorkerDebuggerManager::AddListener(nsIWorkerDebuggerManagerListener* aListener)
-{
+WorkerDebuggerManager::AddListener(
+    nsIWorkerDebuggerManagerListener* aListener) {
   AssertIsOnMainThread();
 
   MutexAutoLock lock(mMutex);
@@ -207,8 +181,7 @@ WorkerDebuggerManager::AddListener(nsIWorkerDebuggerManagerListener* aListener)
 
 NS_IMETHODIMP
 WorkerDebuggerManager::RemoveListener(
-                                    nsIWorkerDebuggerManagerListener* aListener)
-{
+    nsIWorkerDebuggerManagerListener* aListener) {
   AssertIsOnMainThread();
 
   MutexAutoLock lock(mMutex);
@@ -221,9 +194,7 @@ WorkerDebuggerManager::RemoveListener(
   return NS_OK;
 }
 
-nsresult
-WorkerDebuggerManager::Init()
-{
+nsresult WorkerDebuggerManager::Init() {
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
 
@@ -233,9 +204,7 @@ WorkerDebuggerManager::Init()
   return NS_OK;
 }
 
-void
-WorkerDebuggerManager::Shutdown()
-{
+void WorkerDebuggerManager::Shutdown() {
   AssertIsOnMainThread();
 
   MutexAutoLock lock(mMutex);
@@ -243,9 +212,7 @@ WorkerDebuggerManager::Shutdown()
   mListeners.Clear();
 }
 
-void
-WorkerDebuggerManager::RegisterDebugger(WorkerPrivate* aWorkerPrivate)
-{
+void WorkerDebuggerManager::RegisterDebugger(WorkerPrivate* aWorkerPrivate) {
   aWorkerPrivate->AssertIsOnParentThread();
 
   if (NS_IsMainThread()) {
@@ -277,7 +244,7 @@ WorkerDebuggerManager::RegisterDebugger(WorkerPrivate* aWorkerPrivate)
     }
 
     nsCOMPtr<nsIRunnable> runnable =
-      new RegisterDebuggerMainThreadRunnable(aWorkerPrivate, hasListeners);
+        new RegisterDebuggerMainThreadRunnable(aWorkerPrivate, hasListeners);
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL));
 
     if (hasListeners) {
@@ -286,26 +253,22 @@ WorkerDebuggerManager::RegisterDebugger(WorkerPrivate* aWorkerPrivate)
   }
 }
 
-void
-WorkerDebuggerManager::UnregisterDebugger(WorkerPrivate* aWorkerPrivate)
-{
+void WorkerDebuggerManager::UnregisterDebugger(WorkerPrivate* aWorkerPrivate) {
   aWorkerPrivate->AssertIsOnParentThread();
 
   if (NS_IsMainThread()) {
     UnregisterDebuggerMainThread(aWorkerPrivate);
   } else {
     nsCOMPtr<nsIRunnable> runnable =
-      new UnregisterDebuggerMainThreadRunnable(aWorkerPrivate);
+        new UnregisterDebuggerMainThreadRunnable(aWorkerPrivate);
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL));
 
     aWorkerPrivate->WaitForIsDebuggerRegistered(false);
   }
 }
 
-void
-WorkerDebuggerManager::RegisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate,
-                                                  bool aNotifyListeners)
-{
+void WorkerDebuggerManager::RegisterDebuggerMainThread(
+    WorkerPrivate* aWorkerPrivate, bool aNotifyListeners) {
   AssertIsOnMainThread();
 
   RefPtr<WorkerDebugger> debugger = new WorkerDebugger(aWorkerPrivate);
@@ -329,10 +292,8 @@ WorkerDebuggerManager::RegisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate,
   aWorkerPrivate->SetIsDebuggerRegistered(true);
 }
 
-void
-WorkerDebuggerManager::UnregisterDebuggerMainThread(
-                                                  WorkerPrivate* aWorkerPrivate)
-{
+void WorkerDebuggerManager::UnregisterDebuggerMainThread(
+    WorkerPrivate* aWorkerPrivate) {
   AssertIsOnMainThread();
 
   // There is nothing to do here if the debugger was never succesfully
@@ -363,17 +324,13 @@ WorkerDebuggerManager::UnregisterDebuggerMainThread(
   aWorkerPrivate->SetIsDebuggerRegistered(false);
 }
 
-uint32_t
-WorkerDebuggerManager::GetDebuggersLength() const
-{
+uint32_t WorkerDebuggerManager::GetDebuggersLength() const {
   return mDebuggers.Length();
 }
 
-WorkerDebugger*
-WorkerDebuggerManager::GetDebuggerAt(uint32_t aIndex) const
-{
+WorkerDebugger* WorkerDebuggerManager::GetDebuggerAt(uint32_t aIndex) const {
   return mDebuggers.SafeElementAt(aIndex, nullptr);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

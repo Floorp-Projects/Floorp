@@ -13,14 +13,13 @@
 // Weird color computing code stolen from winfe which was stolen
 // from the xfe which was written originally by Eric Bina. So there.
 
-#define RED_LUMINOSITY        299
-#define GREEN_LUMINOSITY      587
-#define BLUE_LUMINOSITY       114
-#define INTENSITY_FACTOR      25
-#define LUMINOSITY_FACTOR     75
+#define RED_LUMINOSITY 299
+#define GREEN_LUMINOSITY 587
+#define BLUE_LUMINOSITY 114
+#define INTENSITY_FACTOR 25
+#define LUMINOSITY_FACTOR 75
 
-void NS_GetSpecial3DColors(nscolor aResult[2], nscolor aBorderColor)
-{
+void NS_GetSpecial3DColors(nscolor aResult[2], nscolor aBorderColor) {
   const float kDarkerScale = 2.0f / 3.0f;
 
   uint8_t r = NS_GET_R(aBorderColor);
@@ -35,26 +34,21 @@ void NS_GetSpecial3DColors(nscolor aResult[2], nscolor aBorderColor)
     return;
   }
 
-  aResult[0] = NS_RGBA(uint8_t(r * kDarkerScale),
-                       uint8_t(g * kDarkerScale),
-                       uint8_t(b * kDarkerScale),
-                       a);
+  aResult[0] = NS_RGBA(uint8_t(r * kDarkerScale), uint8_t(g * kDarkerScale),
+                       uint8_t(b * kDarkerScale), a);
   aResult[1] = aBorderColor;
 }
 
-int NS_GetBrightness(uint8_t aRed, uint8_t aGreen, uint8_t aBlue)
-{
-
+int NS_GetBrightness(uint8_t aRed, uint8_t aGreen, uint8_t aBlue) {
   uint8_t intensity = (aRed + aGreen + aBlue) / 3;
 
   uint8_t luminosity = NS_GetLuminosity(NS_RGB(aRed, aGreen, aBlue)) / 1000;
 
-  return ((intensity * INTENSITY_FACTOR) +
-          (luminosity * LUMINOSITY_FACTOR)) / 100;
+  return ((intensity * INTENSITY_FACTOR) + (luminosity * LUMINOSITY_FACTOR)) /
+         100;
 }
 
-int32_t NS_GetLuminosity(nscolor aColor)
-{
+int32_t NS_GetLuminosity(nscolor aColor) {
   // When aColor is not opaque, the perceived luminosity will depend
   // on what color(s) aColor is ultimately drawn on top of, which we
   // do not know.
@@ -71,17 +65,16 @@ int32_t NS_GetLuminosity(nscolor aColor)
 // Saturation is defined from 0 to 255.  The higher the number.. the deeper
 // the color Value is the brightness of the color. 0 is black, 255 is white.
 void NS_RGB2HSV(nscolor aColor, uint16_t &aHue, uint16_t &aSat,
-                uint16_t &aValue, uint8_t &aAlpha)
-{
+                uint16_t &aValue, uint8_t &aAlpha) {
   uint8_t r, g, b;
   int16_t delta, min, max, r1, b1, g1;
-  float   hue;
+  float hue;
 
   r = NS_GET_R(aColor);
   g = NS_GET_G(aColor);
   b = NS_GET_B(aColor);
 
-  if (r>g) {
+  if (r > g) {
     max = r;
     min = g;
   } else {
@@ -89,40 +82,40 @@ void NS_RGB2HSV(nscolor aColor, uint16_t &aHue, uint16_t &aSat,
     min = r;
   }
 
-  if (b>max) {
+  if (b > max) {
     max = b;
   }
-  if (b<min) {
+  if (b < min) {
     min = b;
   }
 
   // value or brightness will always be the max of all the colors(RGB)
   aValue = max;
-  delta = max-min;
-  aSat = (max!=0)?((delta*255)/max):0;
+  delta = max - min;
+  aSat = (max != 0) ? ((delta * 255) / max) : 0;
   r1 = r;
   b1 = b;
   g1 = g;
 
-  if (aSat==0) {
+  if (aSat == 0) {
     hue = 1000;
   } else {
-    if(r==max){
-      hue=(float)(g1-b1)/(float)delta;
-    } else if (g1==max) {
-      hue= 2.0f+(float)(b1-r1)/(float)delta;
+    if (r == max) {
+      hue = (float)(g1 - b1) / (float)delta;
+    } else if (g1 == max) {
+      hue = 2.0f + (float)(b1 - r1) / (float)delta;
     } else {
-      hue = 4.0f+(float)(r1-g1)/(float)delta;
+      hue = 4.0f + (float)(r1 - g1) / (float)delta;
     }
   }
 
-  if(hue<999) {
-    hue*=60;
-    if(hue<0){
-      hue+=360;
+  if (hue < 999) {
+    hue *= 60;
+    if (hue < 0) {
+      hue += 360;
     }
   } else {
-    hue=0;
+    hue = 0;
   }
 
   aHue = (uint16_t)hue;
@@ -135,13 +128,12 @@ void NS_RGB2HSV(nscolor aColor, uint16_t &aHue, uint16_t &aSat,
 // Saturation is defined from 0 to 255.  The higher the number.. the deeper
 // the color Value is the brightness of the color. 0 is black, 255 is white.
 void NS_HSV2RGB(nscolor &aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
-                uint8_t aAlpha)
-{
-  uint16_t  r = 0, g = 0, b = 0;
-  uint16_t  i, p, q, t;
-  double    h, f, percent;
+                uint8_t aAlpha) {
+  uint16_t r = 0, g = 0, b = 0;
+  uint16_t i, p, q, t;
+  double h, f, percent;
 
-  if ( aSat == 0 ){
+  if (aSat == 0) {
     // achromatic color, no hue is defined
     r = aValue;
     g = aValue;
@@ -157,22 +149,47 @@ void NS_HSV2RGB(nscolor &aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
     // areas define how the saturation and value define the color.
     // reds behave differently than the blues
     h = (double)aHue / 60.0;
-    i = (uint16_t) floor(h);
-    f = h-(double)i;
-    percent = ((double)aValue/255.0);   // this needs to be a value from 0 to 1, so a percentage
-                                        // can be calculated of the saturation.
-    p = (uint16_t)(percent*(255-aSat));
-    q = (uint16_t)(percent*(255-(aSat*f)));
-    t = (uint16_t)(percent*(255-(aSat*(1.0-f))));
+    i = (uint16_t)floor(h);
+    f = h - (double)i;
+    percent = ((double)aValue /
+               255.0);  // this needs to be a value from 0 to 1, so a percentage
+                        // can be calculated of the saturation.
+    p = (uint16_t)(percent * (255 - aSat));
+    q = (uint16_t)(percent * (255 - (aSat * f)));
+    t = (uint16_t)(percent * (255 - (aSat * (1.0 - f))));
 
     // i is guaranteed to never be larger than 5.
-    switch(i){
-      case 0: r = aValue; g = t; b = p;break;
-      case 1: r = q; g = aValue; b = p;break;
-      case 2: r = p; g = aValue; b = t;break;
-      case 3: r = p; g = q; b = aValue;break;
-      case 4: r = t; g = p; b = aValue;break;
-      case 5: r = aValue; g = p; b = q;break;
+    switch (i) {
+      case 0:
+        r = aValue;
+        g = t;
+        b = p;
+        break;
+      case 1:
+        r = q;
+        g = aValue;
+        b = p;
+        break;
+      case 2:
+        r = p;
+        g = aValue;
+        b = t;
+        break;
+      case 3:
+        r = p;
+        g = q;
+        b = aValue;
+        break;
+      case 4:
+        r = t;
+        g = p;
+        b = aValue;
+        break;
+      case 5:
+        r = aValue;
+        g = p;
+        b = q;
+        break;
     }
   }
   aColor = NS_RGBA(r, g, b, aAlpha);

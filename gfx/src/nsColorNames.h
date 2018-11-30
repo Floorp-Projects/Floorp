@@ -7,9 +7,8 @@
 #ifndef nsColorNames_h___
 #define nsColorNames_h___
 
-
 class nsColorNames {
-public:
+ public:
   static void AddRefTable(void);
   static void ReleaseTable(void);
 };

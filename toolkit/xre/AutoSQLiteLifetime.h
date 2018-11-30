@@ -8,17 +8,17 @@
 
 namespace mozilla {
 
-class AutoSQLiteLifetime final
-{
-private:
-    static int sSingletonEnforcer;
-    static int sResult;
-public:
-    AutoSQLiteLifetime();
-    ~AutoSQLiteLifetime();
-    static int getInitResult() { return AutoSQLiteLifetime::sResult; }
+class AutoSQLiteLifetime final {
+ private:
+  static int sSingletonEnforcer;
+  static int sResult;
+
+ public:
+  AutoSQLiteLifetime();
+  ~AutoSQLiteLifetime();
+  static int getInitResult() { return AutoSQLiteLifetime::sResult; }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

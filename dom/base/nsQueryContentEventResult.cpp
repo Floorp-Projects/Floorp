@@ -17,24 +17,19 @@ using namespace mozilla;
  * (valid) with the event message.
  ******************************************************************************/
 
-static bool IsNotFoundPropertyAvailable(EventMessage aEventMessage)
-{
+static bool IsNotFoundPropertyAvailable(EventMessage aEventMessage) {
   return aEventMessage == eQuerySelectedText ||
          aEventMessage == eQueryCharacterAtPoint;
 }
 
-static bool IsOffsetPropertyAvailable(EventMessage aEventMessage)
-{
+static bool IsOffsetPropertyAvailable(EventMessage aEventMessage) {
   return aEventMessage == eQueryTextContent ||
-         aEventMessage == eQueryTextRect ||
-         aEventMessage == eQueryCaretRect ||
+         aEventMessage == eQueryTextRect || aEventMessage == eQueryCaretRect ||
          IsNotFoundPropertyAvailable(aEventMessage);
 }
 
-static bool IsRectRelatedPropertyAvailable(EventMessage aEventMessage)
-{
-  return aEventMessage == eQueryCaretRect ||
-         aEventMessage == eQueryTextRect ||
+static bool IsRectRelatedPropertyAvailable(EventMessage aEventMessage) {
+  return aEventMessage == eQueryCaretRect || aEventMessage == eQueryTextRect ||
          aEventMessage == eQueryEditorRect ||
          aEventMessage == eQueryCharacterAtPoint;
 }
@@ -51,27 +46,24 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsQueryContentEventResult)
 NS_IMPL_RELEASE(nsQueryContentEventResult)
 
-nsQueryContentEventResult::nsQueryContentEventResult(mozilla::WidgetQueryContentEvent &aEvent)
-  : mEventMessage(aEvent.mMessage)
-  , mOffset(aEvent.mReply.mOffset)
-  , mTentativeCaretOffset(aEvent.mReply.mTentativeCaretOffset)
-  , mString(aEvent.mReply.mString)
-  , mRect(aEvent.mReply.mRect)
-  , mRectArray(std::move(aEvent.mReply.mRectArray))
-  , mSucceeded(aEvent.mSucceeded)
-  , mReversed(aEvent.mReply.mReversed)
-{
+nsQueryContentEventResult::nsQueryContentEventResult(
+    mozilla::WidgetQueryContentEvent& aEvent)
+    : mEventMessage(aEvent.mMessage),
+      mOffset(aEvent.mReply.mOffset),
+      mTentativeCaretOffset(aEvent.mReply.mTentativeCaretOffset),
+      mString(aEvent.mReply.mString),
+      mRect(aEvent.mReply.mRect),
+      mRectArray(std::move(aEvent.mReply.mRectArray)),
+      mSucceeded(aEvent.mSucceeded),
+      mReversed(aEvent.mReply.mReversed) {
   // Mark as result that is longer used.
   aEvent.mSucceeded = false;
 }
 
-nsQueryContentEventResult::~nsQueryContentEventResult()
-{
-}
+nsQueryContentEventResult::~nsQueryContentEventResult() {}
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetOffset(uint32_t* aOffset)
-{
+nsQueryContentEventResult::GetOffset(uint32_t* aOffset) {
   if (NS_WARN_IF(!mSucceeded)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -88,7 +80,7 @@ nsQueryContentEventResult::GetOffset(uint32_t* aOffset)
     bool notFound;
     nsresult rv = GetNotFound(&notFound);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv; // Just an unexpected case...
+      return rv;  // Just an unexpected case...
     }
     // As said above, if mOffset means "not found", offset property shouldn't
     // return its value without any errors.
@@ -102,8 +94,7 @@ nsQueryContentEventResult::GetOffset(uint32_t* aOffset)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetTentativeCaretOffset(uint32_t* aOffset)
-{
+nsQueryContentEventResult::GetTentativeCaretOffset(uint32_t* aOffset) {
   bool notFound;
   nsresult rv = GetTentativeCaretOffsetNotFound(&notFound);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -117,8 +108,7 @@ nsQueryContentEventResult::GetTentativeCaretOffset(uint32_t* aOffset)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetReversed(bool *aReversed)
-{
+nsQueryContentEventResult::GetReversed(bool* aReversed) {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mEventMessage == eQuerySelectedText, NS_ERROR_NOT_AVAILABLE);
   *aReversed = mReversed;
@@ -126,8 +116,7 @@ nsQueryContentEventResult::GetReversed(bool *aReversed)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetLeft(int32_t *aLeft)
-{
+nsQueryContentEventResult::GetLeft(int32_t* aLeft) {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectRelatedPropertyAvailable(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
@@ -136,8 +125,7 @@ nsQueryContentEventResult::GetLeft(int32_t *aLeft)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetWidth(int32_t *aWidth)
-{
+nsQueryContentEventResult::GetWidth(int32_t* aWidth) {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectRelatedPropertyAvailable(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
@@ -146,8 +134,7 @@ nsQueryContentEventResult::GetWidth(int32_t *aWidth)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetTop(int32_t *aTop)
-{
+nsQueryContentEventResult::GetTop(int32_t* aTop) {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectRelatedPropertyAvailable(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
@@ -156,8 +143,7 @@ nsQueryContentEventResult::GetTop(int32_t *aTop)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetHeight(int32_t *aHeight)
-{
+nsQueryContentEventResult::GetHeight(int32_t* aHeight) {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectRelatedPropertyAvailable(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
@@ -166,28 +152,25 @@ nsQueryContentEventResult::GetHeight(int32_t *aHeight)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetText(nsAString &aText)
-{
+nsQueryContentEventResult::GetText(nsAString& aText) {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mEventMessage == eQuerySelectedText ||
-                 mEventMessage == eQueryTextContent ||
-                 mEventMessage == eQueryTextRect,
+                     mEventMessage == eQueryTextContent ||
+                     mEventMessage == eQueryTextRect,
                  NS_ERROR_NOT_AVAILABLE);
   aText = mString;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetSucceeded(bool *aSucceeded)
-{
+nsQueryContentEventResult::GetSucceeded(bool* aSucceeded) {
   NS_ENSURE_TRUE(mEventMessage != eVoidEvent, NS_ERROR_NOT_INITIALIZED);
   *aSucceeded = mSucceeded;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetNotFound(bool* aNotFound)
-{
+nsQueryContentEventResult::GetNotFound(bool* aNotFound) {
   if (NS_WARN_IF(!mSucceeded) ||
       NS_WARN_IF(!IsNotFoundPropertyAvailable(mEventMessage))) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -197,8 +180,7 @@ nsQueryContentEventResult::GetNotFound(bool* aNotFound)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetTentativeCaretOffsetNotFound(bool* aNotFound)
-{
+nsQueryContentEventResult::GetTentativeCaretOffsetNotFound(bool* aNotFound) {
   if (NS_WARN_IF(!mSucceeded)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -210,13 +192,11 @@ nsQueryContentEventResult::GetTentativeCaretOffsetNotFound(bool* aNotFound)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetCharacterRect(int32_t aOffset,
-                                            int32_t* aLeft, int32_t* aTop,
-                                            int32_t* aWidth, int32_t* aHeight)
-{
+nsQueryContentEventResult::GetCharacterRect(int32_t aOffset, int32_t* aLeft,
+                                            int32_t* aTop, int32_t* aWidth,
+                                            int32_t* aHeight) {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_TRUE(mEventMessage == eQueryTextRectArray,
-                 NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mEventMessage == eQueryTextRectArray, NS_ERROR_NOT_AVAILABLE);
 
   if (NS_WARN_IF(mRectArray.Length() <= static_cast<uint32_t>(aOffset))) {
     return NS_ERROR_FAILURE;
@@ -230,11 +210,9 @@ nsQueryContentEventResult::GetCharacterRect(int32_t aOffset,
   return NS_OK;
 }
 
-void
-nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget)
-{
-  if (!IsRectRelatedPropertyAvailable(mEventMessage) ||
-      !aWidget || !mSucceeded) {
+void nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget) {
+  if (!IsRectRelatedPropertyAvailable(mEventMessage) || !aWidget ||
+      !mSucceeded) {
     return;
   }
 
@@ -245,7 +223,7 @@ nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget)
 
   // Convert the top widget related coordinates to the given widget's.
   LayoutDeviceIntPoint offset =
-    aWidget->WidgetToScreenOffset() - topWidget->WidgetToScreenOffset();
+      aWidget->WidgetToScreenOffset() - topWidget->WidgetToScreenOffset();
   mRect.MoveBy(-offset);
   for (size_t i = 0; i < mRectArray.Length(); i++) {
     mRectArray[i].MoveBy(-offset);

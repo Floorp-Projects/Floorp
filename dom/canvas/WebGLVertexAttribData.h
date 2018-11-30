@@ -14,74 +14,72 @@ namespace mozilla {
 
 class WebGLBuffer;
 
-class WebGLVertexAttribData final
-{
-public:
-    uint32_t mDivisor;
-    bool mEnabled;
+class WebGLVertexAttribData final {
+ public:
+  uint32_t mDivisor;
+  bool mEnabled;
 
-private:
-    bool mIntegerFunc;
-public:
-    WebGLRefPtr<WebGLBuffer> mBuf;
-private:
-    GLenum mType;
-    webgl::AttribBaseType mBaseType = webgl::AttribBaseType::Float;
-    uint8_t mSize; // num of mType vals per vert
-    uint8_t mBytesPerVertex;
-    bool mNormalized;
-    uint32_t mStride; // bytes
-    uint32_t mExplicitStride;
-    uint64_t mByteOffset;
+ private:
+  bool mIntegerFunc;
 
-public:
+ public:
+  WebGLRefPtr<WebGLBuffer> mBuf;
 
-#define GETTER(X) const decltype(m##X)& X() const { return m##X; }
+ private:
+  GLenum mType;
+  webgl::AttribBaseType mBaseType = webgl::AttribBaseType::Float;
+  uint8_t mSize;  // num of mType vals per vert
+  uint8_t mBytesPerVertex;
+  bool mNormalized;
+  uint32_t mStride;  // bytes
+  uint32_t mExplicitStride;
+  uint64_t mByteOffset;
 
-    GETTER(IntegerFunc)
-    GETTER(Type)
-    GETTER(BaseType)
-    GETTER(Size)
-    GETTER(BytesPerVertex)
-    GETTER(Normalized)
-    GETTER(Stride)
-    GETTER(ExplicitStride)
-    GETTER(ByteOffset)
+ public:
+#define GETTER(X) \
+  const decltype(m##X)& X() const { return m##X; }
+
+  GETTER(IntegerFunc)
+  GETTER(Type)
+  GETTER(BaseType)
+  GETTER(Size)
+  GETTER(BytesPerVertex)
+  GETTER(Normalized)
+  GETTER(Stride)
+  GETTER(ExplicitStride)
+  GETTER(ByteOffset)
 
 #undef GETTER
 
-    // note that these initial values are what GL initializes vertex attribs to
-    WebGLVertexAttribData()
-        : mDivisor(0)
-        , mEnabled(false)
-        , mIntegerFunc(false)
-        , mType(0)
-        , mSize(0)
-        , mBytesPerVertex(0)
-        , mNormalized(false)
-        , mStride(0)
-        , mExplicitStride(0)
-        , mByteOffset(0)
-    {
-        VertexAttribPointer(false, nullptr, 4, LOCAL_GL_FLOAT, false, 0, 0);
-    }
+  // note that these initial values are what GL initializes vertex attribs to
+  WebGLVertexAttribData()
+      : mDivisor(0),
+        mEnabled(false),
+        mIntegerFunc(false),
+        mType(0),
+        mSize(0),
+        mBytesPerVertex(0),
+        mNormalized(false),
+        mStride(0),
+        mExplicitStride(0),
+        mByteOffset(0) {
+    VertexAttribPointer(false, nullptr, 4, LOCAL_GL_FLOAT, false, 0, 0);
+  }
 
-    void VertexAttribPointer(bool integerFunc, WebGLBuffer* buf, uint8_t size,
-                             GLenum type, bool normalized, uint32_t stride,
-                             uint64_t byteOffset);
+  void VertexAttribPointer(bool integerFunc, WebGLBuffer* buf, uint8_t size,
+                           GLenum type, bool normalized, uint32_t stride,
+                           uint64_t byteOffset);
 
-    void DoVertexAttribPointer(gl::GLContext* gl, GLuint index) const;
+  void DoVertexAttribPointer(gl::GLContext* gl, GLuint index) const;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
-                            mozilla::WebGLVertexAttribData& field,
-                            const char* name,
-                            uint32_t flags = 0)
-{
-    CycleCollectionNoteChild(callback, field.mBuf.get(), name, flags);
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& callback,
+    mozilla::WebGLVertexAttribData& field, const char* name,
+    uint32_t flags = 0) {
+  CycleCollectionNoteChild(callback, field.mBuf.get(), name, flags);
 }
 
-#endif // WEBGL_VERTEX_ATTRIB_DATA_H_
+#endif  // WEBGL_VERTEX_ATTRIB_DATA_H_

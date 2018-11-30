@@ -8,21 +8,14 @@
 namespace mozilla {
 
 WebGLExtensionBase::WebGLExtensionBase(WebGLContext* context)
-    : WebGLContextBoundObject(context)
-    , mIsLost(false)
-{
-}
+    : WebGLContextBoundObject(context), mIsLost(false) {}
 
-WebGLExtensionBase::~WebGLExtensionBase()
-{
-}
+WebGLExtensionBase::~WebGLExtensionBase() {}
 
-void
-WebGLExtensionBase::MarkLost()
-{
-    mIsLost = true;
+void WebGLExtensionBase::MarkLost() {
+  mIsLost = true;
 
-    OnMarkLost();
+  OnMarkLost();
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLExtensionBase)
@@ -30,4 +23,4 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLExtensionBase)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLExtensionBase, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLExtensionBase, Release)
 
-} // namespace mozilla
+}  // namespace mozilla

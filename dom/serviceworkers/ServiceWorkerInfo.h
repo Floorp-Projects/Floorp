@@ -8,7 +8,7 @@
 #define mozilla_dom_serviceworkerinfo_h
 
 #include "MainThreadUtils.h"
-#include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState
+#include "mozilla/dom/ServiceWorkerBinding.h"  // For ServiceWorkerState
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/OriginAttributes.h"
 #include "nsIServiceWorkerManager.h"
@@ -27,9 +27,8 @@ class ServiceWorkerPrivate;
  * _GetNewestWorker(serviceWorkerRegistration)", we represent the description
  * by this class and spawn a ServiceWorker in the right global when required.
  */
-class ServiceWorkerInfo final : public nsIServiceWorkerInfo
-{
-private:
+class ServiceWorkerInfo final : public nsIServiceWorkerInfo {
+ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   ServiceWorkerDescriptor mDescriptor;
   const nsString mCacheName;
@@ -58,157 +57,93 @@ private:
   RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   bool mSkipWaitingFlag;
 
-  enum {
-    Unknown,
-    Enabled,
-    Disabled
-  } mHandlesFetch;
+  enum { Unknown, Enabled, Disabled } mHandlesFetch;
 
   ~ServiceWorkerInfo();
 
   // Generates a unique id for the service worker, with zero being treated as
   // invalid.
-  uint64_t
-  GetNextID() const;
+  uint64_t GetNextID() const;
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERINFO
 
-  void
-  PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
-              const ClientInfo& aClientInfo,
-              const ClientState& aClientState);
+  void PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
+                   const ClientInfo& aClientInfo,
+                   const ClientState& aClientState);
 
-  class ServiceWorkerPrivate*
-  WorkerPrivate() const
-  {
+  class ServiceWorkerPrivate* WorkerPrivate() const {
     MOZ_ASSERT(mServiceWorkerPrivate);
     return mServiceWorkerPrivate;
   }
 
-  nsIPrincipal*
-  Principal() const
-  {
-    return mPrincipal;
-  }
+  nsIPrincipal* Principal() const { return mPrincipal; }
 
-  const nsCString&
-  ScriptSpec() const
-  {
-    return mDescriptor.ScriptURL();
-  }
+  const nsCString& ScriptSpec() const { return mDescriptor.ScriptURL(); }
 
-  const nsCString&
-  Scope() const
-  {
-    return mDescriptor.Scope();
-  }
+  const nsCString& Scope() const { return mDescriptor.Scope(); }
 
-  bool SkipWaitingFlag() const
-  {
+  bool SkipWaitingFlag() const {
     MOZ_ASSERT(NS_IsMainThread());
     return mSkipWaitingFlag;
   }
 
-  void SetSkipWaitingFlag()
-  {
+  void SetSkipWaitingFlag() {
     MOZ_ASSERT(NS_IsMainThread());
     mSkipWaitingFlag = true;
   }
 
-  ServiceWorkerInfo(nsIPrincipal* aPrincipal,
-                    const nsACString& aScope,
-                    uint64_t aRegistrationId,
-                    uint64_t aRegistrationVersion,
-                    const nsACString& aScriptSpec,
-                    const nsAString& aCacheName,
+  ServiceWorkerInfo(nsIPrincipal* aPrincipal, const nsACString& aScope,
+                    uint64_t aRegistrationId, uint64_t aRegistrationVersion,
+                    const nsACString& aScriptSpec, const nsAString& aCacheName,
                     nsLoadFlags aLoadFlags);
 
-  ServiceWorkerState
-  State() const
-  {
-    return mDescriptor.State();
-  }
+  ServiceWorkerState State() const { return mDescriptor.State(); }
 
-  const OriginAttributes&
-  GetOriginAttributes() const
-  {
+  const OriginAttributes& GetOriginAttributes() const {
     return mOriginAttributes;
   }
 
-  const nsString&
-  CacheName() const
-  {
-    return mCacheName;
-  }
+  const nsString& CacheName() const { return mCacheName; }
 
-  nsLoadFlags
-  GetImportsLoadFlags() const
-  {
-    return mImportsLoadFlags;
-  }
+  nsLoadFlags GetImportsLoadFlags() const { return mImportsLoadFlags; }
 
-  uint64_t
-  ID() const
-  {
-    return mDescriptor.Id();
-  }
+  uint64_t ID() const { return mDescriptor.Id(); }
 
-  const ServiceWorkerDescriptor&
-  Descriptor() const
-  {
-    return mDescriptor;
-  }
+  const ServiceWorkerDescriptor& Descriptor() const { return mDescriptor; }
 
-  void
-  UpdateState(ServiceWorkerState aState);
+  void UpdateState(ServiceWorkerState aState);
 
   // Only used to set initial state when loading from disk!
-  void
-  SetActivateStateUncheckedWithoutEvent(ServiceWorkerState aState)
-  {
+  void SetActivateStateUncheckedWithoutEvent(ServiceWorkerState aState) {
     MOZ_ASSERT(NS_IsMainThread());
     mDescriptor.SetState(aState);
   }
 
-  void
-  SetHandlesFetch(bool aHandlesFetch)
-  {
+  void SetHandlesFetch(bool aHandlesFetch) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(mHandlesFetch == Unknown);
     mHandlesFetch = aHandlesFetch ? Enabled : Disabled;
   }
 
-  void
-  SetRegistrationVersion(uint64_t aVersion);
+  void SetRegistrationVersion(uint64_t aVersion);
 
-  bool
-  HandlesFetch() const
-  {
+  bool HandlesFetch() const {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(mHandlesFetch != Unknown);
     return mHandlesFetch != Disabled;
   }
 
-  void
-  UpdateInstalledTime();
+  void UpdateInstalledTime();
 
-  void
-  UpdateActivatedTime();
+  void UpdateActivatedTime();
 
-  void
-  UpdateRedundantTime();
+  void UpdateRedundantTime();
 
-  int64_t
-  GetInstalledTime() const
-  {
-    return mInstalledTime;
-  }
+  int64_t GetInstalledTime() const { return mInstalledTime; }
 
-  void
-  SetInstalledTime(const int64_t aTime)
-  {
+  void SetInstalledTime(const int64_t aTime) {
     if (aTime == 0) {
       return;
     }
@@ -216,15 +151,9 @@ public:
     mInstalledTime = aTime;
   }
 
-  int64_t
-  GetActivatedTime() const
-  {
-    return mActivatedTime;
-  }
+  int64_t GetActivatedTime() const { return mActivatedTime; }
 
-  void
-  SetActivatedTime(const int64_t aTime)
-  {
+  void SetActivatedTime(const int64_t aTime) {
     if (aTime == 0) {
       return;
     }
@@ -233,7 +162,7 @@ public:
   }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_serviceworkerinfo_h
+#endif  // mozilla_dom_serviceworkerinfo_h

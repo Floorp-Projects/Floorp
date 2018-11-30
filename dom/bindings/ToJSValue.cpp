@@ -16,14 +16,12 @@
 namespace mozilla {
 namespace dom {
 
-bool
-ToJSValue(JSContext* aCx, const nsAString& aArgument,
-          JS::MutableHandle<JS::Value> aValue)
-{
+bool ToJSValue(JSContext* aCx, const nsAString& aArgument,
+               JS::MutableHandle<JS::Value> aValue) {
   // Make sure we're called in a compartment
   MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
 
-// XXXkhuey I'd love to use xpc::NonVoidStringToJsval here, but it requires
+  // XXXkhuey I'd love to use xpc::NonVoidStringToJsval here, but it requires
   // a non-const nsAString for silly reasons.
   nsStringBuffer* sharedBuffer;
   if (!XPCStringConvert::ReadableToJSVal(aCx, aArgument, &sharedBuffer,
@@ -38,37 +36,29 @@ ToJSValue(JSContext* aCx, const nsAString& aArgument,
   return true;
 }
 
-
-bool
-ToJSValue(JSContext* aCx,
-          nsresult aArgument,
-          JS::MutableHandle<JS::Value> aValue)
-{
+bool ToJSValue(JSContext* aCx, nsresult aArgument,
+               JS::MutableHandle<JS::Value> aValue) {
   RefPtr<Exception> exception = CreateException(aArgument);
   return ToJSValue(aCx, exception, aValue);
 }
 
-bool
-ToJSValue(JSContext* aCx,
-          ErrorResult& aArgument,
-          JS::MutableHandle<JS::Value> aValue)
-{
+bool ToJSValue(JSContext* aCx, ErrorResult& aArgument,
+               JS::MutableHandle<JS::Value> aValue) {
   MOZ_ASSERT(aArgument.Failed());
-  MOZ_ASSERT(!aArgument.IsUncatchableException(),
-             "Doesn't make sense to convert uncatchable exception to a JS value!");
+  MOZ_ASSERT(
+      !aArgument.IsUncatchableException(),
+      "Doesn't make sense to convert uncatchable exception to a JS value!");
   MOZ_ALWAYS_TRUE(aArgument.MaybeSetPendingException(aCx));
   MOZ_ALWAYS_TRUE(JS_GetPendingException(aCx, aValue));
   JS_ClearPendingException(aCx);
   return true;
 }
 
-bool
-ToJSValue(JSContext* aCx, Promise& aArgument,
-          JS::MutableHandle<JS::Value> aValue)
-{
+bool ToJSValue(JSContext* aCx, Promise& aArgument,
+               JS::MutableHandle<JS::Value> aValue) {
   aValue.setObject(*aArgument.PromiseObj());
   return MaybeWrapObjectValue(aCx, aValue);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

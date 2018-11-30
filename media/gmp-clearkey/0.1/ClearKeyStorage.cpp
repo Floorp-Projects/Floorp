@@ -30,67 +30,54 @@
 using namespace cdm;
 using namespace std;
 
-class WriteRecordClient : public FileIOClient
-{
-public:
+class WriteRecordClient : public FileIOClient {
+ public:
   /*
    * This function will take the memory ownership of the parameters and
    * delete them when done.
    */
-  static void Write(Host_9* aHost,
-                    string& aRecordName,
-                    const vector<uint8_t>& aData,
-                    function<void()>&& aOnSuccess,
-                    function<void()>&& aOnFailure)
-{
-    WriteRecordClient* client = new WriteRecordClient(aData,
-                                                      move(aOnSuccess),
-                                                      move(aOnFailure));
+  static void Write(Host_9* aHost, string& aRecordName,
+                    const vector<uint8_t>& aData, function<void()>&& aOnSuccess,
+                    function<void()>&& aOnFailure) {
+    WriteRecordClient* client =
+        new WriteRecordClient(aData, move(aOnSuccess), move(aOnFailure));
     client->Do(aRecordName, aHost);
   }
 
-  void OnOpenComplete(Status aStatus) override
-  {
+  void OnOpenComplete(Status aStatus) override {
     // If we hit an error, fail.
     if (aStatus != Status::kSuccess) {
       Done(aStatus);
-    } else if (mFileIO) { // Otherwise, write our data to the file.
+    } else if (mFileIO) {  // Otherwise, write our data to the file.
       mFileIO->Write(&mData[0], mData.size());
     }
   }
 
-  void OnReadComplete(Status aStatus,
-                      const uint8_t* aData,
-                      uint32_t aDataSize) override
-  {
+  void OnReadComplete(Status aStatus, const uint8_t* aData,
+                      uint32_t aDataSize) override {
     // This function should never be called, we only ever write data with this
     // client.
     assert(false);
   }
 
-  void OnWriteComplete(Status aStatus) override
-  {
-    Done(aStatus);
-  }
+  void OnWriteComplete(Status aStatus) override { Done(aStatus); }
 
-private:
+ private:
   explicit WriteRecordClient(const vector<uint8_t>& aData,
                              function<void()>&& aOnSuccess,
                              function<void()>&& aOnFailure)
-    : mFileIO(nullptr)
-    , mOnSuccess(move(aOnSuccess))
-    , mOnFailure(move(aOnFailure))
-    , mData(aData) {}
+      : mFileIO(nullptr),
+        mOnSuccess(move(aOnSuccess)),
+        mOnFailure(move(aOnFailure)),
+        mData(aData) {}
 
-  void Do(const string& aName, Host_9* aHost)
-  {
+  void Do(const string& aName, Host_9* aHost) {
     // Initialize the FileIO.
     mFileIO = aHost->CreateFileIO(this);
     mFileIO->Open(aName.c_str(), aName.size());
   }
 
-  void Done(cdm::FileIOClient::Status aStatus)
-  {
+  void Done(cdm::FileIOClient::Status aStatus) {
     // Note: Call Close() before running continuation, in case the
     // continuation tries to open the same record; if we call Close()
     // after running the continuation, the Close() call will arrive
@@ -117,39 +104,26 @@ private:
   const vector<uint8_t> mData;
 };
 
-void
-WriteData(Host_9* aHost,
-          string& aRecordName,
-          const vector<uint8_t>& aData,
-          function<void()>&& aOnSuccess,
-          function<void()>&& aOnFailure)
-{
-  WriteRecordClient::Write(aHost,
-                           aRecordName,
-                           aData,
-                           move(aOnSuccess),
+void WriteData(Host_9* aHost, string& aRecordName, const vector<uint8_t>& aData,
+               function<void()>&& aOnSuccess, function<void()>&& aOnFailure) {
+  WriteRecordClient::Write(aHost, aRecordName, aData, move(aOnSuccess),
                            move(aOnFailure));
 }
 
-class ReadRecordClient : public FileIOClient
-{
-public:
+class ReadRecordClient : public FileIOClient {
+ public:
   /*
    * This function will take the memory ownership of the parameters and
    * delete them when done.
    */
-  static void Read(Host_9* aHost,
-                   string& aRecordName,
+  static void Read(Host_9* aHost, string& aRecordName,
                    function<void(const uint8_t*, uint32_t)>&& aOnSuccess,
-                   function<void()>&& aOnFailure)
-  {
-
-    (new ReadRecordClient(move(aOnSuccess), move(aOnFailure)))->
-      Do(aRecordName, aHost);
+                   function<void()>&& aOnFailure) {
+    (new ReadRecordClient(move(aOnSuccess), move(aOnFailure)))
+        ->Do(aRecordName, aHost);
   }
 
-  void OnOpenComplete(Status aStatus) override
-  {
+  void OnOpenComplete(Status aStatus) override {
     auto err = aStatus;
     if (aStatus != Status::kSuccess) {
       Done(err, nullptr, 0);
@@ -158,37 +132,31 @@ public:
     }
   }
 
-  void OnReadComplete(Status aStatus,
-                      const uint8_t* aData,
-                      uint32_t aDataSize) override
-  {
+  void OnReadComplete(Status aStatus, const uint8_t* aData,
+                      uint32_t aDataSize) override {
     Done(aStatus, aData, aDataSize);
   }
 
-  void OnWriteComplete(Status aStatus) override
-  {
+  void OnWriteComplete(Status aStatus) override {
     // We should never reach here, this client only ever reads data.
     assert(false);
   }
 
-private:
-  explicit ReadRecordClient(function<void(const uint8_t*, uint32_t)>&& aOnSuccess,
-                            function<void()>&& aOnFailure)
-    : mFileIO(nullptr)
-    , mOnSuccess(move(aOnSuccess))
-    , mOnFailure(move(aOnFailure))
-  {}
+ private:
+  explicit ReadRecordClient(
+      function<void(const uint8_t*, uint32_t)>&& aOnSuccess,
+      function<void()>&& aOnFailure)
+      : mFileIO(nullptr),
+        mOnSuccess(move(aOnSuccess)),
+        mOnFailure(move(aOnFailure)) {}
 
-  void Do(const string& aName, Host_9* aHost)
-  {
+  void Do(const string& aName, Host_9* aHost) {
     mFileIO = aHost->CreateFileIO(this);
     mFileIO->Open(aName.c_str(), aName.size());
   }
 
-  void Done(cdm::FileIOClient::Status aStatus,
-            const uint8_t* aData,
-            uint32_t aDataSize)
-  {
+  void Done(cdm::FileIOClient::Status aStatus, const uint8_t* aData,
+            uint32_t aDataSize) {
     // Note: Call Close() before running continuation, in case the
     // continuation tries to open the same record; if we call Close()
     // after running the continuation, the Close() call will arrive
@@ -213,14 +181,9 @@ private:
   function<void()> mOnFailure;
 };
 
-void
-ReadData(Host_9* mHost,
-         string& aRecordName,
-         function<void(const uint8_t*, uint32_t)>&& aOnSuccess,
-         function<void()>&& aOnFailure)
-{
-  ReadRecordClient::Read(mHost,
-                         aRecordName,
-                         move(aOnSuccess),
+void ReadData(Host_9* mHost, string& aRecordName,
+              function<void(const uint8_t*, uint32_t)>&& aOnSuccess,
+              function<void()>&& aOnFailure) {
+  ReadRecordClient::Read(mHost, aRecordName, move(aOnSuccess),
                          move(aOnFailure));
 }

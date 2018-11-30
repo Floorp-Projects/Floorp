@@ -13,17 +13,11 @@ int posix_memalign(void** memptr, size_t alignment, size_t size);
 namespace mozilla {
 
 VolatileBuffer::VolatileBuffer()
-  : mMutex("VolatileBuffer")
-  , mBuf(nullptr)
-  , mSize(0)
-  , mLockCount(0)
-{
-}
+    : mMutex("VolatileBuffer"), mBuf(nullptr), mSize(0), mLockCount(0) {}
 
-bool VolatileBuffer::Init(size_t aSize, size_t aAlignment)
-{
+bool VolatileBuffer::Init(size_t aSize, size_t aAlignment) {
   MOZ_ASSERT(!mSize && !mBuf, "Init called twice");
-  MOZ_ASSERT(!(aAlignment % sizeof(void *)),
+  MOZ_ASSERT(!(aAlignment % sizeof(void*)),
              "Alignment must be multiple of pointer size");
 
   mSize = aSize;
@@ -37,16 +31,13 @@ bool VolatileBuffer::Init(size_t aSize, size_t aAlignment)
   return !!mBuf;
 }
 
-VolatileBuffer::~VolatileBuffer()
-{
+VolatileBuffer::~VolatileBuffer() {
   MOZ_ASSERT(mLockCount == 0, "Being destroyed with non-zero lock count?");
 
   free(mBuf);
 }
 
-bool
-VolatileBuffer::Lock(void** aBuf)
-{
+bool VolatileBuffer::Lock(void** aBuf) {
   MutexAutoLock lock(mMutex);
 
   MOZ_ASSERT(mBuf, "Attempting to lock an uninitialized VolatileBuffer");
@@ -57,31 +48,20 @@ VolatileBuffer::Lock(void** aBuf)
   return true;
 }
 
-void
-VolatileBuffer::Unlock()
-{
+void VolatileBuffer::Unlock() {
   MutexAutoLock lock(mMutex);
 
   mLockCount--;
   MOZ_ASSERT(mLockCount >= 0, "VolatileBuffer unlocked too many times!");
 }
 
-bool
-VolatileBuffer::OnHeap() const
-{
-  return true;
-}
+bool VolatileBuffer::OnHeap() const { return true; }
 
-size_t
-VolatileBuffer::HeapSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t VolatileBuffer::HeapSizeOfExcludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(mBuf);
 }
 
-size_t
-VolatileBuffer::NonHeapSizeOfExcludingThis() const
-{
-  return 0;
-}
+size_t VolatileBuffer::NonHeapSizeOfExcludingThis() const { return 0; }
 
-} // namespace mozilla
+}  // namespace mozilla

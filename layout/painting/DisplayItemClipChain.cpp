@@ -10,10 +10,8 @@
 
 namespace mozilla {
 
-/* static */ const DisplayItemClip*
-DisplayItemClipChain::ClipForASR(const DisplayItemClipChain* aClipChain,
-                                 const ActiveScrolledRoot* aASR)
-{
+/* static */ const DisplayItemClip* DisplayItemClipChain::ClipForASR(
+    const DisplayItemClipChain* aClipChain, const ActiveScrolledRoot* aASR) {
   while (aClipChain &&
          !ActiveScrolledRoot::IsAncestor(aClipChain->mASR, aASR)) {
     aClipChain = aClipChain->mParent;
@@ -22,10 +20,8 @@ DisplayItemClipChain::ClipForASR(const DisplayItemClipChain* aClipChain,
                                                   : nullptr;
 }
 
-bool
-DisplayItemClipChain::Equal(const DisplayItemClipChain* aClip1,
-                            const DisplayItemClipChain* aClip2)
-{
+bool DisplayItemClipChain::Equal(const DisplayItemClipChain* aClip1,
+                                 const DisplayItemClipChain* aClip2) {
   if (aClip1 == aClip2) {
     return true;
   }
@@ -42,9 +38,7 @@ DisplayItemClipChain::Equal(const DisplayItemClipChain* aClip1,
   return ret;
 }
 
-uint32_t
-DisplayItemClipChain::Hash(const DisplayItemClipChain* aClip)
-{
+uint32_t DisplayItemClipChain::Hash(const DisplayItemClipChain* aClip) {
   if (!aClip) {
     return 0;
   }
@@ -68,15 +62,12 @@ DisplayItemClipChain::Hash(const DisplayItemClipChain* aClip)
   return hash;
 }
 
-/* static */ nsCString
-DisplayItemClipChain::ToString(const DisplayItemClipChain* aClipChain)
-{
+/* static */ nsCString DisplayItemClipChain::ToString(
+    const DisplayItemClipChain* aClipChain) {
   nsAutoCString str;
   for (auto* sc = aClipChain; sc; sc = sc->mParent) {
     if (sc->mASR) {
-      str.AppendPrintf("0x%p <%s> [0x%p]",
-                       sc,
-                       sc->mClip.ToString().get(),
+      str.AppendPrintf("0x%p <%s> [0x%p]", sc, sc->mClip.ToString().get(),
                        sc->mASR->mScrollableFrame);
     } else {
       str.AppendPrintf("0x%p <%s> [root asr]", sc, sc->mClip.ToString().get());
@@ -88,11 +79,9 @@ DisplayItemClipChain::ToString(const DisplayItemClipChain* aClipChain)
   return std::move(str);
 }
 
-bool
-DisplayItemClipChain::HasRoundedCorners() const
-{
+bool DisplayItemClipChain::HasRoundedCorners() const {
   return mClip.GetRoundedRectCount() > 0 ||
          (mParent && mParent->HasRoundedCorners());
 }
 
-} // namespace mozilla
+}  // namespace mozilla

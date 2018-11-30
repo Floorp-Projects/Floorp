@@ -91,55 +91,50 @@ bool FinalizeObject(JSObject* obj);
 void DTraceEnterJSFun(JSContext* cx, JSFunction* fun, JSScript* script);
 void DTraceExitJSFun(JSContext* cx, JSFunction* fun, JSScript* script);
 
-} // namespace probes
-
+}  // namespace probes
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 static const char* ObjectClassname(JSObject* obj) {
-    if (!obj) {
-        return "(null object)";
-    }
+  if (!obj) {
+    return "(null object)";
+  }
+  const Class* clasp = obj->getClass();
+  if (!clasp) {
+    return "(null)";
+  }
+  const char* class_name = clasp->name;
+  if (!class_name) {
+    return "(null class name)";
+  }
+  return class_name;
+}
+#endif
+
+inline bool probes::CreateObject(JSContext* cx, JSObject* obj) {
+  bool ok = true;
+
+#ifdef INCLUDE_MOZILLA_DTRACE
+  if (JAVASCRIPT_OBJECT_CREATE_ENABLED()) {
+    JAVASCRIPT_OBJECT_CREATE(ObjectClassname(obj), (uintptr_t)obj);
+  }
+#endif
+
+  return ok;
+}
+
+inline bool probes::FinalizeObject(JSObject* obj) {
+  bool ok = true;
+
+#ifdef INCLUDE_MOZILLA_DTRACE
+  if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED()) {
     const Class* clasp = obj->getClass();
-    if (!clasp) {
-        return "(null)";
-    }
-    const char* class_name = clasp->name;
-    if (!class_name) {
-        return "(null class name)";
-    }
-    return class_name;
-}
+
+    /* the first arg is nullptr - reserved for future use (filename?) */
+    JAVASCRIPT_OBJECT_FINALIZE(nullptr, (char*)clasp->name, (uintptr_t)obj);
+  }
 #endif
 
-inline bool
-probes::CreateObject(JSContext* cx, JSObject* obj)
-{
-    bool ok = true;
-
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_CREATE_ENABLED()) {
-        JAVASCRIPT_OBJECT_CREATE(ObjectClassname(obj), (uintptr_t)obj);
-    }
-#endif
-
-    return ok;
-}
-
-inline bool
-probes::FinalizeObject(JSObject* obj)
-{
-    bool ok = true;
-
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED()) {
-        const Class* clasp = obj->getClass();
-
-        /* the first arg is nullptr - reserved for future use (filename?) */
-        JAVASCRIPT_OBJECT_FINALIZE(nullptr, (char*)clasp->name, (uintptr_t)obj);
-    }
-#endif
-
-    return ok;
+  return ok;
 }
 
 } /* namespace js */

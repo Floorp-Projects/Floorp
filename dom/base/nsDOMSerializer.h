@@ -14,36 +14,27 @@
 class nsINode;
 class nsIOutputStream;
 
-class nsDOMSerializer final : public mozilla::dom::NonRefcountedDOMObject
-{
-public:
+class nsDOMSerializer final : public mozilla::dom::NonRefcountedDOMObject {
+ public:
   nsDOMSerializer();
 
   // WebIDL API
-  static nsDOMSerializer*
-  Constructor(const mozilla::dom::GlobalObject& aOwner,
-              mozilla::ErrorResult& rv)
-  {
+  static nsDOMSerializer* Constructor(const mozilla::dom::GlobalObject& aOwner,
+                                      mozilla::ErrorResult& rv) {
     return new nsDOMSerializer();
   }
 
-  void
-  SerializeToString(nsINode& aRoot, nsAString& aStr,
-                    mozilla::ErrorResult& rv);
+  void SerializeToString(nsINode& aRoot, nsAString& aStr,
+                         mozilla::ErrorResult& rv);
 
-  void
-  SerializeToStream(nsINode& aRoot, nsIOutputStream* aStream,
-                    const nsAString& aCharset,
-                    mozilla::ErrorResult& aRv);
+  void SerializeToStream(nsINode& aRoot, nsIOutputStream* aStream,
+                         const nsAString& aCharset, mozilla::ErrorResult& aRv);
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
-                  JS::MutableHandle<JSObject*> aReflector)
-  {
+                  JS::MutableHandle<JSObject*> aReflector) {
     return mozilla::dom::XMLSerializer_Binding::Wrap(aCx, this, aGivenProto,
-                                                    aReflector);
+                                                     aReflector);
   }
 };
 
-
 #endif
-

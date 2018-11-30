@@ -12,44 +12,44 @@ namespace mozilla {
 namespace plugins {
 
 int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
-                                     const nsCString& aPluginFilename)
-{
-    int quirks = 0;
+                                     const nsCString& aPluginFilename) {
+  int quirks = 0;
 
-    nsPluginHost::SpecialType specialType = nsPluginHost::GetSpecialType(aMimeType);
+  nsPluginHost::SpecialType specialType =
+      nsPluginHost::GetSpecialType(aMimeType);
 
-    if (specialType == nsPluginHost::eSpecialType_Flash) {
-        quirks |= QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN;
+  if (specialType == nsPluginHost::eSpecialType_Flash) {
+    quirks |= QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN;
 #ifdef OS_WIN
-        quirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
-        quirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS;
-        quirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
-        quirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
-        quirks |= QUIRK_FLASH_FIXUP_MOUSE_CAPTURE;
-        quirks |= QUIRK_WINLESS_HOOK_IME;
+    quirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
+    quirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS;
+    quirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
+    quirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
+    quirks |= QUIRK_FLASH_FIXUP_MOUSE_CAPTURE;
+    quirks |= QUIRK_WINLESS_HOOK_IME;
 #if defined(_M_X64) || defined(__x86_64__)
-        quirks |= QUIRK_FLASH_HOOK_GETKEYSTATE;
-        quirks |= QUIRK_FLASH_HOOK_PRINTDLGW;
-        quirks |= QUIRK_FLASH_HOOK_SSL;
-        quirks |= QUIRK_FLASH_HOOK_CREATEMUTEXW;
+    quirks |= QUIRK_FLASH_HOOK_GETKEYSTATE;
+    quirks |= QUIRK_FLASH_HOOK_PRINTDLGW;
+    quirks |= QUIRK_FLASH_HOOK_SSL;
+    quirks |= QUIRK_FLASH_HOOK_CREATEMUTEXW;
 #endif
 #endif
-    }
+  }
 
 #ifdef XP_MACOSX
-    // Whitelist Flash to support offline renderer.
-    if (specialType == nsPluginHost::eSpecialType_Flash) {
-        quirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
-    }
+  // Whitelist Flash to support offline renderer.
+  if (specialType == nsPluginHost::eSpecialType_Flash) {
+    quirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
+  }
 #endif
 
 #ifdef OS_WIN
-    if (specialType == nsPluginHost::eSpecialType_Test) {
-        quirks |= QUIRK_WINLESS_HOOK_IME;
-    }
+  if (specialType == nsPluginHost::eSpecialType_Test) {
+    quirks |= QUIRK_WINLESS_HOOK_IME;
+  }
 #endif
 
-    return quirks;
+  return quirks;
 }
 
 } /* namespace plugins */

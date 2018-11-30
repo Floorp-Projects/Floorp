@@ -16,9 +16,12 @@
 class nsIScriptGlobalObject;
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
-#define NS_ISCRIPTCONTEXT_IID \
-{ 0x54cbe9cf, 0x7282, 0x421a, \
- { 0x91, 0x6f, 0xd0, 0x70, 0x73, 0xde, 0xb8, 0xc0 } }
+#define NS_ISCRIPTCONTEXT_IID                        \
+  {                                                  \
+    0x54cbe9cf, 0x7282, 0x421a, {                    \
+      0x91, 0x6f, 0xd0, 0x70, 0x73, 0xde, 0xb8, 0xc0 \
+    }                                                \
+  }
 
 class nsIOffThreadScriptReceiver;
 
@@ -26,16 +29,15 @@ class nsIOffThreadScriptReceiver;
  * It is used by the application to initialize a runtime and run scripts.
  * A script runtime would implement this interface.
  */
-class nsIScriptContext : public nsISupports
-{
-public:
+class nsIScriptContext : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
 
   /**
    * Return the global object.
    *
    **/
-  virtual nsIScriptGlobalObject *GetGlobalObject() = 0;
+  virtual nsIScriptGlobalObject* GetGlobalObject() = 0;
 
   /**
    * Initialize the context generally. Does not create a global object.
@@ -81,7 +83,8 @@ public:
   virtual void DidInitializeContext() = 0;
 
   /**
-   * Access the Window Proxy. The setter should only be called by nsGlobalWindow.
+   * Access the Window Proxy. The setter should only be called by
+   * nsGlobalWindow.
    */
   virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) = 0;
   virtual JSObject* GetWindowProxy() = 0;
@@ -89,13 +92,15 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContext, NS_ISCRIPTCONTEXT_IID)
 
-#define NS_IOFFTHREADSCRIPTRECEIVER_IID \
-{0x3a980010, 0x878d, 0x46a9,            \
-  {0x93, 0xad, 0xbc, 0xfd, 0xd3, 0x8e, 0xa0, 0xc2}}
+#define NS_IOFFTHREADSCRIPTRECEIVER_IID              \
+  {                                                  \
+    0x3a980010, 0x878d, 0x46a9, {                    \
+      0x93, 0xad, 0xbc, 0xfd, 0xd3, 0x8e, 0xa0, 0xc2 \
+    }                                                \
+  }
 
-class nsIOffThreadScriptReceiver : public nsISupports
-{
-public:
+class nsIOffThreadScriptReceiver : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOFFTHREADSCRIPTRECEIVER_IID)
 
   /**
@@ -106,6 +111,7 @@ public:
   NS_IMETHOD OnScriptCompileComplete(JSScript* aScript, nsresult aStatus) = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIOffThreadScriptReceiver, NS_IOFFTHREADSCRIPTRECEIVER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIOffThreadScriptReceiver,
+                              NS_IOFFTHREADSCRIPTRECEIVER_IID)
 
-#endif // nsIScriptContext_h__
+#endif  // nsIScriptContext_h__

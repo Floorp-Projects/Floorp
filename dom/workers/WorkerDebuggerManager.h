@@ -16,9 +16,12 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
-#define WORKERDEBUGGERMANAGER_CID \
-  { 0x62ec8731, 0x55ad, 0x4246, \
-    { 0xb2, 0xea, 0xf2, 0x6c, 0x1f, 0xe1, 0x9d, 0x2d } }
+#define WORKERDEBUGGERMANAGER_CID                    \
+  {                                                  \
+    0x62ec8731, 0x55ad, 0x4246, {                    \
+      0xb2, 0xea, 0xf2, 0x6c, 0x1f, 0xe1, 0x9d, 0x2d \
+    }                                                \
+  }
 #define WORKERDEBUGGERMANAGER_CONTRACTID \
   "@mozilla.org/dom/workers/workerdebuggermanager;1"
 
@@ -29,8 +32,7 @@ class WorkerDebugger;
 class WorkerPrivate;
 
 class WorkerDebuggerManager final : public nsIObserver,
-                                    public nsIWorkerDebuggerManager
-{
+                                    public nsIWorkerDebuggerManager {
   Mutex mMutex;
 
   // Protected by mMutex.
@@ -39,15 +41,12 @@ class WorkerDebuggerManager final : public nsIObserver,
   // Only touched on the main thread.
   nsTArray<RefPtr<WorkerDebugger>> mDebuggers;
 
-public:
-  static already_AddRefed<WorkerDebuggerManager>
-  GetInstance();
+ public:
+  static already_AddRefed<WorkerDebuggerManager> GetInstance();
 
-  static WorkerDebuggerManager*
-  GetOrCreate();
+  static WorkerDebuggerManager* GetOrCreate();
 
-  static WorkerDebuggerManager*
-  Get();
+  static WorkerDebuggerManager* Get();
 
   WorkerDebuggerManager();
 
@@ -55,38 +54,28 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIWORKERDEBUGGERMANAGER
 
-  nsresult
-  Init();
+  nsresult Init();
 
-  void
-  Shutdown();
+  void Shutdown();
 
-  void
-  RegisterDebugger(WorkerPrivate* aWorkerPrivate);
+  void RegisterDebugger(WorkerPrivate* aWorkerPrivate);
 
-  void
-  RegisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate,
-                             bool aNotifyListeners);
+  void RegisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate,
+                                  bool aNotifyListeners);
 
-  void
-  UnregisterDebugger(WorkerPrivate* aWorkerPrivate);
+  void UnregisterDebugger(WorkerPrivate* aWorkerPrivate);
 
-  void
-  UnregisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate);
+  void UnregisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate);
 
-  uint32_t
-  GetDebuggersLength() const;
+  uint32_t GetDebuggersLength() const;
 
-  WorkerDebugger*
-  GetDebuggerAt(uint32_t aIndex) const;
+  WorkerDebugger* GetDebuggerAt(uint32_t aIndex) const;
 
-private:
+ private:
   virtual ~WorkerDebuggerManager();
 };
 
-inline nsresult
-RegisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
-{
+inline nsresult RegisterWorkerDebugger(WorkerPrivate* aWorkerPrivate) {
   WorkerDebuggerManager* manager;
 
   if (NS_IsMainThread()) {
@@ -95,8 +84,7 @@ RegisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
       NS_WARNING("Failed to create worker debugger manager!");
       return NS_ERROR_FAILURE;
     }
-  }
-  else {
+  } else {
     manager = WorkerDebuggerManager::Get();
   }
 
@@ -104,9 +92,7 @@ RegisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
   return NS_OK;
 }
 
-inline nsresult
-UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
-{
+inline nsresult UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate) {
   WorkerDebuggerManager* manager;
 
   if (NS_IsMainThread()) {
@@ -115,8 +101,7 @@ UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
       NS_WARNING("Failed to create worker debugger manager!");
       return NS_ERROR_FAILURE;
     }
-  }
-  else {
+  } else {
     manager = WorkerDebuggerManager::Get();
   }
 
@@ -124,7 +109,7 @@ UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
   return NS_OK;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_workers_workerdebuggermanager_h
+#endif  // mozilla_dom_workers_workerdebuggermanager_h

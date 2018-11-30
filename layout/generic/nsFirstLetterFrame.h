@@ -13,67 +13,59 @@
 #include "nsContainerFrame.h"
 
 class nsFirstLetterFrame final : public nsContainerFrame {
-public:
+ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsFirstLetterFrame)
 
   explicit nsFirstLetterFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID)
-  {}
+      : nsContainerFrame(aStyle, kClassID) {}
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
-  virtual void SetInitialChildList(ChildListID     aListID,
-                                   nsFrameList&    aChildList) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
+  virtual void SetInitialChildList(ChildListID aListID,
+                                   nsFrameList& aChildList) override;
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   bool IsFloating() const { return GetStateBits() & NS_FRAME_OUT_OF_FLOW; }
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-  {
-    if (!IsFloating())
-      aFlags = aFlags & ~(nsIFrame::eLineParticipant);
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+    if (!IsFloating()) aFlags = aFlags & ~(nsIFrame::eLineParticipant);
     return nsContainerFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eBidiInlineContainer));
+                                           ~(nsIFrame::eBidiInlineContainer));
   }
 
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
-  virtual void AddInlineMinISize(gfxContext *aRenderingContext,
-                                 InlineMinISizeData *aData) override;
-  virtual void AddInlinePrefISize(gfxContext *aRenderingContext,
-                                  InlinePrefISizeData *aData) override;
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  virtual void AddInlineMinISize(gfxContext* aRenderingContext,
+                                 InlineMinISizeData* aData) override;
+  virtual void AddInlinePrefISize(gfxContext* aRenderingContext,
+                                  InlinePrefISizeData* aData) override;
 
-  virtual mozilla::LogicalSize
-  ComputeSize(gfxContext *aRenderingContext,
-              mozilla::WritingMode aWritingMode,
-              const mozilla::LogicalSize& aCBSize,
-              nscoord aAvailableISize,
-              const mozilla::LogicalSize& aMargin,
-              const mozilla::LogicalSize& aBorder,
-              const mozilla::LogicalSize& aPadding,
-              ComputeSizeFlags aFlags) override;
+  virtual mozilla::LogicalSize ComputeSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWritingMode,
+      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
+      const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
+      const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+                      nsReflowStatus& aStatus) override;
 
   virtual bool CanContinueTextRun() const override;
-  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
-  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
+  virtual nscoord GetLogicalBaseline(
+      mozilla::WritingMode aWritingMode) const override;
+  virtual LogicalSides GetLogicalSkipSides(
+      const ReflowInput* aReflowInput = nullptr) const override;
 
-//override of nsFrame method
-  virtual nsresult GetChildFrameContainingOffset(int32_t inContentOffset,
-                                                 bool inHint,
-                                                 int32_t* outFrameContentOffset,
-                                                 nsIFrame** outChildFrame) override;
+  // override of nsFrame method
+  virtual nsresult GetChildFrameContainingOffset(
+      int32_t inContentOffset, bool inHint, int32_t* outFrameContentOffset,
+      nsIFrame** outChildFrame) override;
 
   nscoord GetFirstLetterBaseline() const { return mBaseline; }
 
@@ -86,7 +78,7 @@ public:
                                                nsIFrame** aContinuation,
                                                bool aIsFluid);
 
-protected:
+ protected:
   nscoord mBaseline;
 
   void DrainOverflowFrames(nsPresContext* aPresContext);

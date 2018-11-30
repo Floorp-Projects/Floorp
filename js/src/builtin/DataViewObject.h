@@ -23,125 +23,126 @@ namespace js {
 // should not be exposed without sharedness information accompanying
 // it.
 
-class DataViewObject : public ArrayBufferViewObject
-{
-  private:
-    static const ClassSpec classSpec_;
+class DataViewObject : public ArrayBufferViewObject {
+ private:
+  static const ClassSpec classSpec_;
 
-    static JSObject* CreatePrototype(JSContext* cx, JSProtoKey key);
+  static JSObject* CreatePrototype(JSContext* cx, JSProtoKey key);
 
-    static bool is(HandleValue v) {
-        return v.isObject() && v.toObject().hasClass(&class_);
-    }
+  static bool is(HandleValue v) {
+    return v.isObject() && v.toObject().hasClass(&class_);
+  }
 
-    template <typename NativeType>
-    static SharedMem<uint8_t*>
-    getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, uint64_t offset, bool* isSharedMemory);
+  template <typename NativeType>
+  static SharedMem<uint8_t*> getDataPointer(JSContext* cx,
+                                            Handle<DataViewObject*> obj,
+                                            uint64_t offset,
+                                            bool* isSharedMemory);
 
-    static bool bufferGetterImpl(JSContext* cx, const CallArgs& args);
-    static bool bufferGetter(JSContext* cx, unsigned argc, Value* vp);
+  static bool bufferGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool bufferGetter(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
-    static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
+  static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool byteOffsetGetterImpl(JSContext* cx, const CallArgs& args);
-    static bool byteOffsetGetter(JSContext* cx, unsigned argc, Value* vp);
+  static bool byteOffsetGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool byteOffsetGetter(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool
-    getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj, const CallArgs& args,
-                               uint32_t* byteOffset, uint32_t* byteLength);
-    static bool constructSameCompartment(JSContext* cx, HandleObject bufobj, const CallArgs& args);
-    static bool constructWrapped(JSContext* cx, HandleObject bufobj, const CallArgs& args);
+  static bool getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj,
+                                         const CallArgs& args,
+                                         uint32_t* byteOffset,
+                                         uint32_t* byteLength);
+  static bool constructSameCompartment(JSContext* cx, HandleObject bufobj,
+                                       const CallArgs& args);
+  static bool constructWrapped(JSContext* cx, HandleObject bufobj,
+                               const CallArgs& args);
 
-    static DataViewObject*
-    create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
-           Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
+  static DataViewObject* create(
+      JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
+      Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
 
-  public:
-    static const Class class_;
-    static const Class protoClass_;
+ public:
+  static const Class class_;
+  static const Class protoClass_;
 
-    static Value byteOffsetValue(const DataViewObject* view) {
-        Value v = view->getFixedSlot(BYTEOFFSET_SLOT);
-        MOZ_ASSERT(v.toInt32() >= 0);
-        return v;
-    }
+  static Value byteOffsetValue(const DataViewObject* view) {
+    Value v = view->getFixedSlot(BYTEOFFSET_SLOT);
+    MOZ_ASSERT(v.toInt32() >= 0);
+    return v;
+  }
 
-    static Value byteLengthValue(const DataViewObject* view) {
-        Value v = view->getFixedSlot(LENGTH_SLOT);
-        MOZ_ASSERT(v.toInt32() >= 0);
-        return v;
-    }
+  static Value byteLengthValue(const DataViewObject* view) {
+    Value v = view->getFixedSlot(LENGTH_SLOT);
+    MOZ_ASSERT(v.toInt32() >= 0);
+    return v;
+  }
 
-    uint32_t byteOffset() const {
-        return byteOffsetValue(this).toInt32();
-    }
+  uint32_t byteOffset() const { return byteOffsetValue(this).toInt32(); }
 
-    uint32_t byteLength() const {
-        return byteLengthValue(this).toInt32();
-    }
+  uint32_t byteLength() const { return byteLengthValue(this).toInt32(); }
 
-    static bool construct(JSContext* cx, unsigned argc, Value* vp);
+  static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getInt8Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_getInt8(JSContext* cx, unsigned argc, Value* vp);
+  static bool getInt8Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_getInt8(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getUint8Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_getUint8(JSContext* cx, unsigned argc, Value* vp);
+  static bool getUint8Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_getUint8(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getInt16Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_getInt16(JSContext* cx, unsigned argc, Value* vp);
+  static bool getInt16Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_getInt16(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getUint16Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_getUint16(JSContext* cx, unsigned argc, Value* vp);
+  static bool getUint16Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_getUint16(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getInt32Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_getInt32(JSContext* cx, unsigned argc, Value* vp);
+  static bool getInt32Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_getInt32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getUint32Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_getUint32(JSContext* cx, unsigned argc, Value* vp);
+  static bool getUint32Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_getUint32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getFloat32Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_getFloat32(JSContext* cx, unsigned argc, Value* vp);
+  static bool getFloat32Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_getFloat32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getFloat64Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_getFloat64(JSContext* cx, unsigned argc, Value* vp);
+  static bool getFloat64Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_getFloat64(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setInt8Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_setInt8(JSContext* cx, unsigned argc, Value* vp);
+  static bool setInt8Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_setInt8(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setUint8Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_setUint8(JSContext* cx, unsigned argc, Value* vp);
+  static bool setUint8Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_setUint8(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setInt16Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_setInt16(JSContext* cx, unsigned argc, Value* vp);
+  static bool setInt16Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_setInt16(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setUint16Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_setUint16(JSContext* cx, unsigned argc, Value* vp);
+  static bool setUint16Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_setUint16(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setInt32Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_setInt32(JSContext* cx, unsigned argc, Value* vp);
+  static bool setInt32Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_setInt32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setUint32Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_setUint32(JSContext* cx, unsigned argc, Value* vp);
+  static bool setUint32Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_setUint32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setFloat32Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_setFloat32(JSContext* cx, unsigned argc, Value* vp);
+  static bool setFloat32Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_setFloat32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setFloat64Impl(JSContext* cx, const CallArgs& args);
-    static bool fun_setFloat64(JSContext* cx, unsigned argc, Value* vp);
+  static bool setFloat64Impl(JSContext* cx, const CallArgs& args);
+  static bool fun_setFloat64(JSContext* cx, unsigned argc, Value* vp);
 
-    template<typename NativeType>
-    static bool read(JSContext* cx, Handle<DataViewObject*> obj, const CallArgs& args,
-                     NativeType* val);
-    template<typename NativeType>
-    static bool write(JSContext* cx, Handle<DataViewObject*> obj, const CallArgs& args);
+  template <typename NativeType>
+  static bool read(JSContext* cx, Handle<DataViewObject*> obj,
+                   const CallArgs& args, NativeType* val);
+  template <typename NativeType>
+  static bool write(JSContext* cx, Handle<DataViewObject*> obj,
+                    const CallArgs& args);
 
-  private:
-    static const JSFunctionSpec methods[];
-    static const JSPropertySpec properties[];
+ private:
+  static const JSFunctionSpec methods[];
+  static const JSPropertySpec properties[];
 };
 
-} // namespace js
+}  // namespace js
 
 #endif /* vm_DataViewObject_h */

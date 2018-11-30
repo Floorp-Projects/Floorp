@@ -17,26 +17,19 @@ namespace shell {
 struct RCFile;
 
 /* Define an os object on the given global object. */
-bool
-DefineOS(JSContext* cx, JS::HandleObject global,
-         bool fuzzingSafe,
-         RCFile** shellOut, RCFile** shellErr);
+bool DefineOS(JSContext* cx, JS::HandleObject global, bool fuzzingSafe,
+              RCFile** shellOut, RCFile** shellErr);
 
-enum PathResolutionMode {
-    RootRelative,
-    ScriptRelative
-};
+enum PathResolutionMode { RootRelative, ScriptRelative };
 
-JSString*
-ResolvePath(JSContext* cx, JS::HandleString filenameStr, PathResolutionMode resolveMode);
+JSString* ResolvePath(JSContext* cx, JS::HandleString filenameStr,
+                      PathResolutionMode resolveMode);
 
-JSObject*
-FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr);
+JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr);
 
-JS::UniqueChars
-GetCWD();
+JS::UniqueChars GetCWD();
 
-} // namespace shell
-} // namespace js
+}  // namespace shell
+}  // namespace js
 
 #endif /* shell_OSObject_h */

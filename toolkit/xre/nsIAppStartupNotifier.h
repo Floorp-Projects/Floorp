@@ -41,8 +41,7 @@
 */
 
 #define APPSTARTUP_CATEGORY "app-startup"
-#define APPSTARTUP_TOPIC    "app-startup"
-
+#define APPSTARTUP_TOPIC "app-startup"
 
 /*
  Please note that there's not a new interface in this file.

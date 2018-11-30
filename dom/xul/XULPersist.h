@@ -12,10 +12,8 @@ class nsIXULStore;
 namespace mozilla {
 namespace dom {
 
-class XULPersist final : public nsStubDocumentObserver
-{
-
-public:
+class XULPersist final : public nsStubDocumentObserver {
+ public:
   NS_DECL_ISUPPORTS
 
   explicit XULPersist(nsIDocument* aDocument);
@@ -24,17 +22,15 @@ public:
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
-protected:
-
-  void Persist(mozilla::dom::Element* aElement,
-               int32_t aNameSpaceID,
+ protected:
+  void Persist(mozilla::dom::Element* aElement, int32_t aNameSpaceID,
                nsAtom* aAttribute);
 
-private:
+ private:
   ~XULPersist();
   nsresult ApplyPersistentAttributes();
   nsresult ApplyPersistentAttributesInternal();
-  nsresult ApplyPersistentAttributesToElements(const nsAString &aID,
+  nsresult ApplyPersistentAttributesToElements(const nsAString& aID,
                                                nsCOMArray<Element>& aElements);
 
   nsCOMPtr<nsIXULStore> mLocalStore;
@@ -42,8 +38,7 @@ private:
   nsIDocument* MOZ_NON_OWNING_REF mDocument;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-
-#endif // mozilla_dom_XULPersist_h
+#endif  // mozilla_dom_XULPersist_h

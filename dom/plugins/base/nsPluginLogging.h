@@ -18,15 +18,15 @@
 // Choose the <name> and <level> from this list (no quotes):
 
 // Log Names            <name>
-#define NPN_LOG_NAME    "PluginNPN"
-#define NPP_LOG_NAME    "PluginNPP"
+#define NPN_LOG_NAME "PluginNPN"
+#define NPP_LOG_NAME "PluginNPP"
 #define PLUGIN_LOG_NAME "Plugin"
 
 // Levels                <level>
 #define PLUGIN_LOG_ALWAYS mozilla::LogLevel::Error
-#define PLUGIN_LOG_BASIC  mozilla::LogLevel::Info
+#define PLUGIN_LOG_BASIC mozilla::LogLevel::Info
 #define PLUGIN_LOG_NORMAL mozilla::LogLevel::Debug
-#define PLUGIN_LOG_NOISY  mozilla::LogLevel::Verbose
+#define PLUGIN_LOG_NOISY mozilla::LogLevel::Verbose
 
 // 2. You can combine logs and levels by separating them with a comma:
 //    My favorite Win32 Example: SET MOZ_LOG=Plugin:5,PluginNPP:5,PluginNPN:5
@@ -39,12 +39,10 @@
 // 4. For complete information see the Gecko Developer guide:
 // https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Gecko_Logging
 
-
-class nsPluginLogging
-{
-public:
-  static mozilla::LazyLogModule gNPNLog;  // 4.x NP API, calls into navigator
-  static mozilla::LazyLogModule gNPPLog;  // 4.x NP API, calls into plugin
+class nsPluginLogging {
+ public:
+  static mozilla::LazyLogModule gNPNLog;     // 4.x NP API, calls into navigator
+  static mozilla::LazyLogModule gNPPLog;     // 4.x NP API, calls into plugin
   static mozilla::LazyLogModule gPluginLog;  // general plugin log
 };
 
@@ -53,5 +51,4 @@ public:
 #define NPP_PLUGIN_LOG(a, b) MOZ_LOG(nsPluginLogging::gNPPLog, a, b)
 #define PLUGIN_LOG(a, b) MOZ_LOG(nsPluginLogging::gPluginLog, a, b)
 
-#endif   // nsPluginLogging_h__
-
+#endif  // nsPluginLogging_h__

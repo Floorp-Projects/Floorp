@@ -19,58 +19,39 @@
 namespace mozilla {
 namespace dom {
 
-class ImageData final : public nsISupports
-{
-  ~ImageData()
-  {
-    DropData();
-  }
+class ImageData final : public nsISupports {
+  ~ImageData() { DropData(); }
 
-public:
+ public:
   ImageData(uint32_t aWidth, uint32_t aHeight, JSObject& aData)
-    : mWidth(aWidth)
-    , mHeight(aHeight)
-    , mData(&aData)
-  {
+      : mWidth(aWidth), mHeight(aHeight), mData(&aData) {
     HoldData();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageData)
 
-  static already_AddRefed<ImageData>
-    Constructor(const GlobalObject& aGlobal,
-                const uint32_t aWidth,
-                const uint32_t aHeight,
-                ErrorResult& aRv);
+  static already_AddRefed<ImageData> Constructor(const GlobalObject& aGlobal,
+                                                 const uint32_t aWidth,
+                                                 const uint32_t aHeight,
+                                                 ErrorResult& aRv);
 
-  static already_AddRefed<ImageData>
-    Constructor(const GlobalObject& aGlobal,
-                const Uint8ClampedArray& aData,
-                const uint32_t aWidth,
-                const Optional<uint32_t>& aHeight,
-                ErrorResult& aRv);
+  static already_AddRefed<ImageData> Constructor(
+      const GlobalObject& aGlobal, const Uint8ClampedArray& aData,
+      const uint32_t aWidth, const Optional<uint32_t>& aHeight,
+      ErrorResult& aRv);
 
-  uint32_t Width() const
-  {
-    return mWidth;
-  }
-  uint32_t Height() const
-  {
-    return mHeight;
-  }
-  void GetData(JSContext* cx, JS::MutableHandle<JSObject*> aData) const
-  {
+  uint32_t Width() const { return mWidth; }
+  uint32_t Height() const { return mHeight; }
+  void GetData(JSContext* cx, JS::MutableHandle<JSObject*> aData) const {
     aData.set(GetDataObject());
   }
-  JSObject* GetDataObject() const
-  {
-    return mData;
-  }
+  JSObject* GetDataObject() const { return mData; }
 
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aReflector);
 
-private:
+ private:
   void HoldData();
   void DropData();
 
@@ -80,7 +61,7 @@ private:
   JS::Heap<JSObject*> mData;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ImageData_h
+#endif  // mozilla_dom_ImageData_h

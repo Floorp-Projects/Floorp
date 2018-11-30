@@ -6,24 +6,24 @@
 
 #include "CopyableCanvasRenderer.h"
 
-#include "BasicLayersImpl.h"            // for FillWithMask, etc
-#include "GLContext.h"                  // for GLContext
-#include "GLScreenBuffer.h"             // for GLScreenBuffer
-#include "SharedSurface.h"              // for SharedSurface
-#include "SharedSurfaceGL.h"              // for SharedSurface
-#include "gfxPattern.h"                 // for gfxPattern, etc
-#include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
-#include "gfxRect.h"                    // for gfxRect
-#include "gfxUtils.h"                   // for gfxUtils
-#include "gfx2DGlue.h"                  // for thebes --> moz2d transition
-#include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "BasicLayersImpl.h"       // for FillWithMask, etc
+#include "GLContext.h"             // for GLContext
+#include "GLScreenBuffer.h"        // for GLScreenBuffer
+#include "SharedSurface.h"         // for SharedSurface
+#include "SharedSurfaceGL.h"       // for SharedSurface
+#include "gfxPattern.h"            // for gfxPattern, etc
+#include "gfxPlatform.h"           // for gfxPlatform, gfxImageFormat
+#include "gfxRect.h"               // for gfxRect
+#include "gfxUtils.h"              // for gfxUtils
+#include "gfx2DGlue.h"             // for thebes --> moz2d transition
+#include "mozilla/gfx/BaseSize.h"  // for BaseSize
 #include "mozilla/gfx/Tools.h"
-#include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/layers/PersistentBufferProvider.h"
-#include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
-#include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
-#include "nsRect.h"                     // for mozilla::gfx::IntRect
+#include "nsDebug.h"          // for NS_ASSERTION, NS_WARNING, etc
+#include "nsISupportsImpl.h"  // for gfxContext::AddRef, etc
+#include "nsRect.h"           // for mozilla::gfx::IntRect
 #include "gfxUtils.h"
 #include "client/TextureClientSharedSurface.h"
 
@@ -34,27 +34,23 @@ using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
 CopyableCanvasRenderer::CopyableCanvasRenderer()
-  : mGLContext(nullptr)
-  , mBufferProvider(nullptr)
-  , mGLFrontbuffer(nullptr)
-  , mAsyncRenderer(nullptr)
-  , mIsAlphaPremultiplied(true)
-  , mOriginPos(gl::OriginPos::TopLeft)
-  , mOpaque(true)
-  , mCachedTempSurface(nullptr)
-{
+    : mGLContext(nullptr),
+      mBufferProvider(nullptr),
+      mGLFrontbuffer(nullptr),
+      mAsyncRenderer(nullptr),
+      mIsAlphaPremultiplied(true),
+      mOriginPos(gl::OriginPos::TopLeft),
+      mOpaque(true),
+      mCachedTempSurface(nullptr) {
   MOZ_COUNT_CTOR(CopyableCanvasRenderer);
 }
 
-CopyableCanvasRenderer::~CopyableCanvasRenderer()
-{
+CopyableCanvasRenderer::~CopyableCanvasRenderer() {
   Destroy();
   MOZ_COUNT_DTOR(CopyableCanvasRenderer);
 }
 
-void
-CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData)
-{
+void CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData) {
   CanvasRenderer::Initialize(aData);
 
   if (aData.mGLContext) {
@@ -66,8 +62,8 @@ CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData)
 
     if (aData.mFrontbufferGLTex) {
       gfx::IntSize size(aData.mSize.width, aData.mSize.height);
-      mGLFrontbuffer = SharedSurface_Basic::Wrap(aData.mGLContext, size, aData.mHasAlpha,
-                                                 aData.mFrontbufferGLTex);
+      mGLFrontbuffer = SharedSurface_Basic::Wrap(
+          aData.mGLContext, size, aData.mHasAlpha, aData.mFrontbufferGLTex);
       mBufferProvider = aData.mBufferProvider;
     }
   } else if (aData.mBufferProvider) {
@@ -76,21 +72,20 @@ CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData)
     mAsyncRenderer = aData.mRenderer;
     mOriginPos = gl::OriginPos::BottomLeft;
   } else {
-    MOZ_CRASH("GFX: CanvasRenderer created without BufferProvider, DrawTarget or GLContext?");
+    MOZ_CRASH(
+        "GFX: CanvasRenderer created without BufferProvider, DrawTarget or "
+        "GLContext?");
   }
 
   mOpaque = !aData.mHasAlpha;
 }
 
-bool
-CopyableCanvasRenderer::IsDataValid(const CanvasInitializeData& aData)
-{
-  return mGLContext == aData.mGLContext && mBufferProvider == aData.mBufferProvider;
+bool CopyableCanvasRenderer::IsDataValid(const CanvasInitializeData& aData) {
+  return mGLContext == aData.mGLContext &&
+         mBufferProvider == aData.mBufferProvider;
 }
 
-void
-CopyableCanvasRenderer::ClearCachedResources()
-{
+void CopyableCanvasRenderer::ClearCachedResources() {
   SetDirty();
 
   if (mBufferProvider) {
@@ -100,9 +95,7 @@ CopyableCanvasRenderer::ClearCachedResources()
   mCachedTempSurface = nullptr;
 }
 
-void
-CopyableCanvasRenderer::Destroy()
-{
+void CopyableCanvasRenderer::Destroy() {
   if (mBufferProvider) {
     mBufferProvider->ClearCachedResources();
   }
@@ -111,18 +104,14 @@ CopyableCanvasRenderer::Destroy()
   mCachedTempSurface = nullptr;
 }
 
-already_AddRefed<SourceSurface>
-CopyableCanvasRenderer::ReadbackSurface()
-{
+already_AddRefed<SourceSurface> CopyableCanvasRenderer::ReadbackSurface() {
   struct ScopedFireTransactionCallback {
     explicit ScopedFireTransactionCallback(CopyableCanvasRenderer* aRenderer)
-      : mRenderer(aRenderer)
-    {
+        : mRenderer(aRenderer) {
       mRenderer->FirePreTransactionCallback();
     }
 
-    ~ScopedFireTransactionCallback()
-    {
+    ~ScopedFireTransactionCallback() {
       mRenderer->FireDidTransactionCallback();
     }
 
@@ -180,21 +169,19 @@ CopyableCanvasRenderer::ReadbackSurface()
   return resultSurf.forget();
 }
 
-DataSourceSurface*
-CopyableCanvasRenderer::GetTempSurface(const IntSize& aSize,
-                                    const SurfaceFormat aFormat)
-{
-  if (!mCachedTempSurface ||
-      aSize != mCachedTempSurface->GetSize() ||
-      aFormat != mCachedTempSurface->GetFormat())
-  {
-    // Create a surface aligned to 8 bytes since that's the highest alignment WebGL can handle.
+DataSourceSurface* CopyableCanvasRenderer::GetTempSurface(
+    const IntSize& aSize, const SurfaceFormat aFormat) {
+  if (!mCachedTempSurface || aSize != mCachedTempSurface->GetSize() ||
+      aFormat != mCachedTempSurface->GetFormat()) {
+    // Create a surface aligned to 8 bytes since that's the highest alignment
+    // WebGL can handle.
     uint32_t stride = GetAlignedStride<8>(aSize.width, BytesPerPixel(aFormat));
-    mCachedTempSurface = Factory::CreateDataSourceSurfaceWithStride(aSize, aFormat, stride);
+    mCachedTempSurface =
+        Factory::CreateDataSourceSurfaceWithStride(aSize, aFormat, stride);
   }
 
   return mCachedTempSurface;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

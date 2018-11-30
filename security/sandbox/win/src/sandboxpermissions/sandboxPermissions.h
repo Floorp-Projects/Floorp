@@ -13,16 +13,15 @@
 namespace mozilla {
 
 namespace sandboxing {
-  class PermissionsService;
+class PermissionsService;
 }
 
 /*
  * This object wraps a PermissionsService object.  This object is available
  * in libXUL but PermissionsService is not.
  */
-class SandboxPermissions
-{
-public:
+class SandboxPermissions {
+ public:
   /*
    * Type of callback function that the sandbox uses to report file
    * accesses that were denied.
@@ -48,10 +47,10 @@ public:
    */
   void RemovePermissionsForProcess(uint32_t aProcessId);
 
-private:
+ private:
   static sandboxing::PermissionsService* sPermissionsService;
 };
 
-} // mozilla
+}  // namespace mozilla
 
 #endif  // mozilla_sandboxing_sandboxPermissions_h

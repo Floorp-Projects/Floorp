@@ -21,10 +21,11 @@ namespace dom {
 class HTMLMediaElement;
 
 class CompareTextTracks {
-private:
+ private:
   HTMLMediaElement* mMediaElement;
   int32_t TrackChildPosition(TextTrack* aTrack) const;
-public:
+
+ public:
   explicit CompareTextTracks(HTMLMediaElement* aMediaElement);
   bool Equals(TextTrack* aOne, TextTrack* aTwo) const;
   bool LessThan(TextTrack* aOne, TextTrack* aTwo) const;
@@ -33,11 +34,10 @@ public:
 class TextTrack;
 class TextTrackCue;
 
-class TextTrackManager final : public nsIDOMEventListener
-{
+class TextTrackManager final : public nsIDOMEventListener {
   ~TextTrackManager();
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(TextTrackManager)
 
@@ -94,18 +94,15 @@ public:
   void TimeMarchesOn();
   void DispatchUpdateCueDisplay();
 
-  void NotifyShutdown()
-  {
-    mShutdown = true;
-  }
+  void NotifyShutdown() { mShutdown = true; }
 
-  void NotifyCueUpdated(TextTrackCue *aCue);
+  void NotifyCueUpdated(TextTrackCue* aCue);
 
   void NotifyReset();
 
   bool IsLoaded();
 
-private:
+ private:
   /**
    * Converts the TextTrackCue's cuetext into a tree of DOM objects
    * and attaches it to a div on its owning TrackElement's
@@ -141,7 +138,7 @@ private:
   void HonorUserPreferencesForTrackSelection();
   // Performs track selection for a single TextTrackKind.
   void PerformTrackSelection(TextTrackKind aTextTrackKind);
-  //Performs track selection for a set of TextTrackKinds, for example,
+  // Performs track selection for a set of TextTrackKinds, for example,
   // 'subtitles' and 'captions' should be selected together.
   void PerformTrackSelection(TextTrackKind aTextTrackKinds[], uint32_t size);
   void GetTextTracksOfKinds(TextTrackKind aTextTrackKinds[], uint32_t size,
@@ -159,19 +156,17 @@ private:
   // report the usage of cue to Telemetry.
   bool mCueTelemetryReported;
 
-  class ShutdownObserverProxy final : public nsIObserver
-  {
+  class ShutdownObserverProxy final : public nsIObserver {
     NS_DECL_ISUPPORTS
 
-  public:
+   public:
     explicit ShutdownObserverProxy(TextTrackManager* aManager)
-      : mManager(aManager)
-    {
+        : mManager(aManager) {
       nsContentUtils::RegisterShutdownObserver(this);
     }
 
-    NS_IMETHODIMP Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
-    {
+    NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
+                          const char16_t* aData) override {
       MOZ_ASSERT(NS_IsMainThread());
       if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
         if (mManager) {
@@ -184,8 +179,8 @@ private:
 
     void Unregister();
 
-  private:
-    ~ShutdownObserverProxy() {};
+   private:
+    ~ShutdownObserverProxy(){};
     TextTrackManager* mManager;
   };
 
@@ -193,7 +188,7 @@ private:
   bool mShutdown;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TextTrackManager_h
+#endif  // mozilla_dom_TextTrackManager_h

@@ -9,18 +9,26 @@
 
 #include "nscore.h"
 
-#define NS_LOCAL_FILE_CID {0x2e23e220, 0x60be, 0x11d3, {0x8c, 0x4a, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
+#define NS_LOCAL_FILE_CID                            \
+  {                                                  \
+    0x2e23e220, 0x60be, 0x11d3, {                    \
+      0x8c, 0x4a, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 \
+    }                                                \
+  }
 
-#define NS_DECL_NSLOCALFILE_UNICODE_METHODS                                                      \
-  nsresult AppendUnicode(const char16_t *aNode);                                              \
-  nsresult GetUnicodeLeafName(char16_t **aLeafName);                                          \
-  nsresult SetUnicodeLeafName(const char16_t *aLeafName);                                     \
-  nsresult CopyToUnicode(nsIFile *aNewParentDir, const char16_t *aNewLeafName);               \
-  nsresult CopyToFollowingLinksUnicode(nsIFile *aNewParentDir, const char16_t *aNewLeafName); \
-  nsresult MoveToUnicode(nsIFile *aNewParentDir, const char16_t *aNewLeafName);               \
-  nsresult GetUnicodeTarget(char16_t **aTarget);                                              \
-  nsresult GetUnicodePath(char16_t **aPath);                                                  \
-  nsresult InitWithUnicodePath(const char16_t *aPath);                                        \
+#define NS_DECL_NSLOCALFILE_UNICODE_METHODS                           \
+  nsresult AppendUnicode(const char16_t *aNode);                      \
+  nsresult GetUnicodeLeafName(char16_t **aLeafName);                  \
+  nsresult SetUnicodeLeafName(const char16_t *aLeafName);             \
+  nsresult CopyToUnicode(nsIFile *aNewParentDir,                      \
+                         const char16_t *aNewLeafName);               \
+  nsresult CopyToFollowingLinksUnicode(nsIFile *aNewParentDir,        \
+                                       const char16_t *aNewLeafName); \
+  nsresult MoveToUnicode(nsIFile *aNewParentDir,                      \
+                         const char16_t *aNewLeafName);               \
+  nsresult GetUnicodeTarget(char16_t **aTarget);                      \
+  nsresult GetUnicodePath(char16_t **aPath);                          \
+  nsresult InitWithUnicodePath(const char16_t *aPath);                \
   nsresult AppendRelativeUnicodePath(const char16_t *aRelativePath);
 
 // XPCOMInit needs to know about how we are implemented,
@@ -40,25 +48,23 @@
 
 #define NSRESULT_FOR_RETURN(ret) (((ret) < 0) ? NSRESULT_FOR_ERRNO() : NS_OK)
 
-inline nsresult
-nsresultForErrno(int aErr)
-{
+inline nsresult nsresultForErrno(int aErr) {
   switch (aErr) {
     case 0:
       return NS_OK;
 #ifdef EDQUOT
     case EDQUOT: /* Quota exceeded */
-      // FALLTHROUGH to return NS_ERROR_FILE_DISK_FULL
+                 // FALLTHROUGH to return NS_ERROR_FILE_DISK_FULL
 #endif
     case ENOSPC:
       return NS_ERROR_FILE_DISK_FULL;
 #ifdef EISDIR
-    case EISDIR:    /*      Is a directory. */
+    case EISDIR: /*      Is a directory. */
       return NS_ERROR_FILE_IS_DIRECTORY;
 #endif
     case ENAMETOOLONG:
       return NS_ERROR_FILE_NAME_TOO_LONG;
-    case ENOEXEC:  /*     Executable file format error. */
+    case ENOEXEC: /*     Executable file format error. */
       return NS_ERROR_FILE_EXECUTION_FAILED;
     case ENOENT:
       return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
@@ -83,11 +89,11 @@ nsresultForErrno(int aErr)
     case EROFS: /*     Read-only file system. */
       return NS_ERROR_FILE_READ_ONLY;
 #endif
-    /*
-     * On AIX 4.3, ENOTEMPTY is defined as EEXIST,
-     * so there can't be cases for both without
-     * preprocessing.
-     */
+      /*
+       * On AIX 4.3, ENOTEMPTY is defined as EEXIST,
+       * so there can't be cases for both without
+       * preprocessing.
+       */
 #if ENOTEMPTY != EEXIST
     case ENOTEMPTY:
       return NS_ERROR_FILE_DIR_NOT_EMPTY;

@@ -10,36 +10,31 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-void
-NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
-                        uint8_t* aBreakBefore)
-{
+void NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
+                             uint8_t* aBreakBefore) {
   NS_ASSERTION(aText, "aText shouldn't be null");
 
   memset(aBreakBefore, false, aLength * sizeof(uint8_t));
 
   AutoTArray<PangoLogAttr, 2000> attrBuffer;
-  if (!attrBuffer.AppendElements(aLength + 1))
-    return;
+  if (!attrBuffer.AppendElements(aLength + 1)) return;
 
   NS_ConvertUTF16toUTF8 aUTF8(aText, aLength);
 
   const gchar* p = aUTF8.Data();
   const gchar* end = p + aUTF8.Length();
-  uint32_t     u16Offset = 0;
+  uint32_t u16Offset = 0;
 
   static PangoLanguage* language = pango_language_from_string("en");
 
-  while (p < end)
-  {
+  while (p < end) {
     PangoLogAttr* attr = attrBuffer.Elements();
     pango_get_log_attrs(p, end - p, -1, language, attr, attrBuffer.Length());
 
-    while (p < end)
-    {
+    while (p < end) {
       aBreakBefore[u16Offset] = attr->is_line_break;
       if (NS_IS_LOW_SURROGATE(aText[u16Offset]))
-        aBreakBefore[++u16Offset] = false; // Skip high surrogate
+        aBreakBefore[++u16Offset] = false;  // Skip high surrogate
       ++u16Offset;
 
       // We're iterating over text obtained from NS_ConvertUTF16toUTF8,
@@ -59,4 +54,3 @@ NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
     }
   }
 }
-

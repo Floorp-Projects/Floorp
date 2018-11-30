@@ -36,13 +36,12 @@ extern mozilla::LazyLogModule gCertVerifierLog;
 
 using namespace mozilla::pkix;
 
-namespace mozilla { namespace psm {
+namespace mozilla {
+namespace psm {
 
 typedef mozilla::pkix::Result Result;
 
-static SECStatus
-DigestLength(UniquePK11Context& context, uint32_t length)
-{
+static SECStatus DigestLength(UniquePK11Context& context, uint32_t length) {
   // Restrict length to 2 bytes because it should be big enough for all
   // inputs this code will actually see and that it is well-defined and
   // type-size-independent.
@@ -76,10 +75,8 @@ DigestLength(UniquePK11Context& context, uint32_t length)
 // important because as a result it is computationally infeasible to find
 // collisions that would subvert this cache (given that SHA384 is a
 // cryptographically-secure hash function).
-static SECStatus
-CertIDHash(SHA384Buffer& buf, const CertID& certID,
-           const OriginAttributes& originAttributes)
-{
+static SECStatus CertIDHash(SHA384Buffer& buf, const CertID& certID,
+                            const OriginAttributes& originAttributes) {
   UniquePK11Context context(PK11_CreateDigestContext(SEC_OID_SHA384));
   if (!context) {
     return SECFailure;
@@ -94,14 +91,13 @@ CertIDHash(SHA384Buffer& buf, const CertID& certID,
     return rv;
   }
   SECItem certIDIssuerSubjectPublicKeyInfo =
-    UnsafeMapInputToSECItem(certID.issuerSubjectPublicKeyInfo);
+      UnsafeMapInputToSECItem(certID.issuerSubjectPublicKeyInfo);
   rv = PK11_DigestOp(context.get(), certIDIssuerSubjectPublicKeyInfo.data,
                      certIDIssuerSubjectPublicKeyInfo.len);
   if (rv != SECSuccess) {
     return rv;
   }
-  SECItem certIDSerialNumber =
-    UnsafeMapInputToSECItem(certID.serialNumber);
+  SECItem certIDSerialNumber = UnsafeMapInputToSECItem(certID.serialNumber);
   rv = DigestLength(context, certIDSerialNumber.len);
   if (rv != SECSuccess) {
     return rv;
@@ -119,9 +115,10 @@ CertIDHash(SHA384Buffer& buf, const CertID& certID,
     if (rv != SECSuccess) {
       return rv;
     }
-    rv = PK11_DigestOp(context.get(),
-                       BitwiseCast<const unsigned char*>(firstPartyDomain.get()),
-                       firstPartyDomain.Length());
+    rv =
+        PK11_DigestOp(context.get(),
+                      BitwiseCast<const unsigned char*>(firstPartyDomain.get()),
+                      firstPartyDomain.Length());
     if (rv != SECSuccess) {
       return rv;
     }
@@ -134,10 +131,8 @@ CertIDHash(SHA384Buffer& buf, const CertID& certID,
   return rv;
 }
 
-Result
-OCSPCache::Entry::Init(const CertID& aCertID,
-                       const OriginAttributes& aOriginAttributes)
-{
+Result OCSPCache::Entry::Init(const CertID& aCertID,
+                              const OriginAttributes& aOriginAttributes) {
   SECStatus srv = CertIDHash(mIDHash, aCertID, aOriginAttributes);
   if (srv != SECSuccess) {
     return MapPRErrorCodeToResult(PR_GetError());
@@ -145,24 +140,16 @@ OCSPCache::Entry::Init(const CertID& aCertID,
   return Success;
 }
 
-OCSPCache::OCSPCache()
-  : mMutex("OCSPCache-mutex")
-{
-}
+OCSPCache::OCSPCache() : mMutex("OCSPCache-mutex") {}
 
-OCSPCache::~OCSPCache()
-{
-  Clear();
-}
+OCSPCache::~OCSPCache() { Clear(); }
 
 // Returns false with index in an undefined state if no matching entry was
 // found.
-bool
-OCSPCache::FindInternal(const CertID& aCertID,
-                        const OriginAttributes& aOriginAttributes,
-                        /*out*/ size_t& index,
-                        const MutexAutoLock& /* aProofOfLock */)
-{
+bool OCSPCache::FindInternal(const CertID& aCertID,
+                             const OriginAttributes& aOriginAttributes,
+                             /*out*/ size_t& index,
+                             const MutexAutoLock& /* aProofOfLock */) {
   if (mEntries.length() == 0) {
     return false;
   }
@@ -185,19 +172,15 @@ OCSPCache::FindInternal(const CertID& aCertID,
   return false;
 }
 
-static inline void
-LogWithCertID(const char* aMessage, const CertID& aCertID,
-              const OriginAttributes& aOriginAttributes)
-{
+static inline void LogWithCertID(const char* aMessage, const CertID& aCertID,
+                                 const OriginAttributes& aOriginAttributes) {
   NS_ConvertUTF16toUTF8 firstPartyDomain(aOriginAttributes.mFirstPartyDomain);
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           (aMessage, &aCertID, firstPartyDomain.get()));
 }
 
-void
-OCSPCache::MakeMostRecentlyUsed(size_t aIndex,
-                                const MutexAutoLock& /* aProofOfLock */)
-{
+void OCSPCache::MakeMostRecentlyUsed(size_t aIndex,
+                                     const MutexAutoLock& /* aProofOfLock */) {
   Entry* entry = mEntries[aIndex];
   // Since mEntries is sorted with the most-recently-used entry at the end,
   // aIndex is likely to be near the end, so this is likely to be fast.
@@ -207,11 +190,9 @@ OCSPCache::MakeMostRecentlyUsed(size_t aIndex,
   MOZ_RELEASE_ASSERT(mEntries.append(entry));
 }
 
-bool
-OCSPCache::Get(const CertID& aCertID,
-               const OriginAttributes& aOriginAttributes,
-               Result& aResult, Time& aValidThrough)
-{
+bool OCSPCache::Get(const CertID& aCertID,
+                    const OriginAttributes& aOriginAttributes, Result& aResult,
+                    Time& aValidThrough) {
   MutexAutoLock lock(mMutex);
 
   size_t index;
@@ -228,19 +209,19 @@ OCSPCache::Get(const CertID& aCertID,
   return true;
 }
 
-Result
-OCSPCache::Put(const CertID& aCertID,
-               const OriginAttributes& aOriginAttributes,
-               Result aResult, Time aThisUpdate, Time aValidThrough)
-{
+Result OCSPCache::Put(const CertID& aCertID,
+                      const OriginAttributes& aOriginAttributes, Result aResult,
+                      Time aThisUpdate, Time aValidThrough) {
   MutexAutoLock lock(mMutex);
 
   size_t index;
   if (FindInternal(aCertID, aOriginAttributes, index, lock)) {
     // Never replace an entry indicating a revoked certificate.
     if (mEntries[index]->mResult == Result::ERROR_REVOKED_CERTIFICATE) {
-      LogWithCertID("OCSPCache::Put(%p, \"%s\") already in cache as revoked - "
-                    "not replacing", aCertID, aOriginAttributes);
+      LogWithCertID(
+          "OCSPCache::Put(%p, \"%s\") already in cache as revoked - "
+          "not replacing",
+          aCertID, aOriginAttributes);
       MakeMostRecentlyUsed(index, lock);
       return Success;
     }
@@ -249,21 +230,22 @@ OCSPCache::Put(const CertID& aCertID,
     // indicates a revoked certificate, which we want to remember.
     if (mEntries[index]->mThisUpdate > aThisUpdate &&
         aResult != Result::ERROR_REVOKED_CERTIFICATE) {
-      LogWithCertID("OCSPCache::Put(%p, \"%s\") already in cache with more "
-                    "recent validity - not replacing", aCertID,
-                    aOriginAttributes);
+      LogWithCertID(
+          "OCSPCache::Put(%p, \"%s\") already in cache with more "
+          "recent validity - not replacing",
+          aCertID, aOriginAttributes);
       MakeMostRecentlyUsed(index, lock);
       return Success;
     }
 
     // Only known good responses or responses indicating an unknown
     // or revoked certificate should replace previously known responses.
-    if (aResult != Success &&
-        aResult != Result::ERROR_OCSP_UNKNOWN_CERT &&
+    if (aResult != Success && aResult != Result::ERROR_OCSP_UNKNOWN_CERT &&
         aResult != Result::ERROR_REVOKED_CERTIFICATE) {
-      LogWithCertID("OCSPCache::Put(%p, \"%s\") already in cache - not "
-                    "replacing with less important status", aCertID,
-                    aOriginAttributes);
+      LogWithCertID(
+          "OCSPCache::Put(%p, \"%s\") already in cache - not "
+          "replacing with less important status",
+          aCertID, aOriginAttributes);
       MakeMostRecentlyUsed(index, lock);
       return Success;
     }
@@ -303,8 +285,8 @@ OCSPCache::Put(const CertID& aCertID,
     }
   }
 
-  Entry* newEntry = new (std::nothrow) Entry(aResult, aThisUpdate,
-                                             aValidThrough);
+  Entry* newEntry =
+      new (std::nothrow) Entry(aResult, aThisUpdate, aValidThrough);
   // Normally we don't have to do this in Gecko, because OOM is fatal.
   // However, if we want to embed this in another project, OOM might not
   // be fatal, so handle this case.
@@ -325,19 +307,18 @@ OCSPCache::Put(const CertID& aCertID,
   return Success;
 }
 
-void
-OCSPCache::Clear()
-{
+void OCSPCache::Clear() {
   MutexAutoLock lock(mMutex);
-  MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("OCSPCache::Clear: clearing cache"));
+  MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+          ("OCSPCache::Clear: clearing cache"));
   // First go through and delete the memory being pointed to by the pointers
   // in the vector.
-  for (Entry** entry = mEntries.begin(); entry < mEntries.end();
-       entry++) {
+  for (Entry** entry = mEntries.begin(); entry < mEntries.end(); entry++) {
     delete *entry;
   }
   // Then remove the pointers themselves.
   mEntries.clearAndFree();
 }
 
-} } // namespace mozilla::psm
+}  // namespace psm
+}  // namespace mozilla

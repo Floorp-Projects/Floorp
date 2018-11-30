@@ -17,23 +17,21 @@ nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext,
                                    gfxContext* aRenderingContext,
                                    const ReflowInput* aOuterReflowInput,
                                    uint16_t aReflowDepth)
-  : mPresContext(aPresContext)
-  , mRenderingContext(aRenderingContext)
-  , mOuterReflowInput(aOuterReflowInput)
-  , mLayoutFlags(0)
-  , mReflowDepth(aReflowDepth)
-  , mPaintingDisabled(false)
-{
+    : mPresContext(aPresContext),
+      mRenderingContext(aRenderingContext),
+      mOuterReflowInput(aOuterReflowInput),
+      mLayoutFlags(0),
+      mReflowDepth(aReflowDepth),
+      mPaintingDisabled(false) {
   NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
 
 nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
-  : mPresContext(aState.mPresContext)
-  , mRenderingContext(aState.mRenderingContext)
-  , mOuterReflowInput(aState.mOuterReflowInput)
-  , mLayoutFlags(aState.mLayoutFlags)
-  , mReflowDepth(aState.mReflowDepth + 1)
-  , mPaintingDisabled(aState.mPaintingDisabled)
-{
+    : mPresContext(aState.mPresContext),
+      mRenderingContext(aState.mRenderingContext),
+      mOuterReflowInput(aState.mOuterReflowInput),
+      mLayoutFlags(aState.mLayoutFlags),
+      mReflowDepth(aState.mReflowDepth + 1),
+      mPaintingDisabled(aState.mPaintingDisabled) {
   NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }

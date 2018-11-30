@@ -25,38 +25,27 @@ namespace net {
 // This dance is needed to make CacheEntryTable declarable-only in headers
 // w/o exporting CacheEntry.h file to make nsNetModule.cpp compilable.
 typedef nsRefPtrHashtable<nsCStringHashKey, CacheEntry> TCacheEntryTable;
-class CacheEntryTable : public TCacheEntryTable
-{
-public:
-  enum EType
-  {
-    MEMORY_ONLY,
-    ALL_ENTRIES
-  };
+class CacheEntryTable : public TCacheEntryTable {
+ public:
+  enum EType { MEMORY_ONLY, ALL_ENTRIES };
 
-  explicit CacheEntryTable(EType aType) : mType(aType) { }
-  EType Type() const
-  {
-    return mType;
-  }
-private:
+  explicit CacheEntryTable(EType aType) : mType(aType) {}
+  EType Type() const { return mType; }
+
+ private:
   EType const mType;
   CacheEntryTable() = delete;
 };
 
-class CacheStorage : public nsICacheStorage
-{
+class CacheStorage : public nsICacheStorage {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICACHESTORAGE
 
-public:
-  CacheStorage(nsILoadContextInfo* aInfo,
-               bool aAllowDisk,
-               bool aLookupAppCache,
-               bool aSkipSizeCheck,
-               bool aPinning);
+ public:
+  CacheStorage(nsILoadContextInfo* aInfo, bool aAllowDisk, bool aLookupAppCache,
+               bool aSkipSizeCheck, bool aPinning);
 
-protected:
+ protected:
   virtual ~CacheStorage() = default;
 
   nsresult ChooseApplicationCache(nsIURI* aURI, nsIApplicationCache** aCache);
@@ -64,18 +53,20 @@ protected:
   RefPtr<LoadContextInfo> mLoadContextInfo;
   bool mWriteToDisk : 1;
   bool mLookupAppCache : 1;
-  bool mSkipSizeCheck: 1;
+  bool mSkipSizeCheck : 1;
   bool mPinning : 1;
 
-public:
+ public:
   nsILoadContextInfo* LoadInfo() const { return mLoadContextInfo; }
-  bool WriteToDisk() const { return mWriteToDisk && !mLoadContextInfo->IsPrivate(); }
+  bool WriteToDisk() const {
+    return mWriteToDisk && !mLoadContextInfo->IsPrivate();
+  }
   bool LookupAppCache() const { return mLookupAppCache; }
   bool SkipSizeCheck() const { return mSkipSizeCheck; }
   bool Pinning() const { return mPinning; }
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

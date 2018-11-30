@@ -20,9 +20,8 @@ namespace dom {
 class WakeLock;
 class VideoPlaybackQuality;
 
-class HTMLVideoElement final : public HTMLMediaElement
-{
-public:
+class HTMLVideoElement final : public HTMLMediaElement {
+ public:
   typedef mozilla::dom::NodeInfo NodeInfo;
 
   explicit HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo);
@@ -31,12 +30,9 @@ public:
 
   using HTMLMediaElement::GetPaused;
 
-  virtual bool IsVideo() const override {
-    return true;
-  }
+  virtual bool IsVideo() const override { return true; }
 
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsAtom* aAttribute,
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
@@ -44,7 +40,8 @@ public:
 
   static void Init();
 
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
 
   virtual nsresult Clone(NodeInfo*, nsINode** aResult) const override;
 
@@ -59,28 +56,19 @@ public:
 
   // WebIDL
 
-  uint32_t Width() const
-  {
-    return GetIntAttr(nsGkAtoms::width, 0);
-  }
+  uint32_t Width() const { return GetIntAttr(nsGkAtoms::width, 0); }
 
-  void SetWidth(uint32_t aValue, ErrorResult& aRv)
-  {
+  void SetWidth(uint32_t aValue, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::width, aValue, 0, aRv);
   }
 
-  uint32_t Height() const
-  {
-    return GetIntAttr(nsGkAtoms::height, 0);
-  }
+  uint32_t Height() const { return GetIntAttr(nsGkAtoms::height, 0); }
 
-  void SetHeight(uint32_t aValue, ErrorResult& aRv)
-  {
+  void SetHeight(uint32_t aValue, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::height, aValue, 0, aRv);
   }
 
-  uint32_t VideoWidth() const
-  {
+  uint32_t VideoWidth() const {
     if (mMediaInfo.HasVideo()) {
       if (mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_90 ||
           mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_270) {
@@ -91,8 +79,7 @@ public:
     return 0;
   }
 
-  uint32_t VideoHeight() const
-  {
+  uint32_t VideoHeight() const {
     if (mMediaInfo.HasVideo()) {
       if (mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_90 ||
           mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_270) {
@@ -103,17 +90,14 @@ public:
     return 0;
   }
 
-  VideoInfo::Rotation RotationDegrees() const
-  {
+  VideoInfo::Rotation RotationDegrees() const {
     return mMediaInfo.mVideo.mRotation;
   }
 
-  void GetPoster(nsAString& aValue)
-  {
+  void GetPoster(nsAString& aValue) {
     GetURIAttr(nsGkAtoms::poster, nullptr, aValue);
   }
-  void SetPoster(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetPoster(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::poster, aValue, aRv);
   }
 
@@ -134,26 +118,19 @@ public:
 
   already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
-
-  bool MozOrientationLockEnabled() const
-  {
+  bool MozOrientationLockEnabled() const {
     return StaticPrefs::MediaVideocontrolsLockVideoOrientation();
   }
 
-  bool MozIsOrientationLocked() const
-  {
-    return mIsOrientationLocked;
-  }
+  bool MozIsOrientationLocked() const { return mIsOrientationLocked; }
 
-  void SetMozIsOrientationLocked(bool aLock)
-  {
-    mIsOrientationLocked = aLock;
-  }
+  void SetMozIsOrientationLocked(bool aLock) { mIsOrientationLocked = aLock; }
 
-protected:
+ protected:
   virtual ~HTMLVideoElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   /**
    * We create video wakelock when the video is playing and release it when
@@ -172,7 +149,7 @@ protected:
 
   bool mIsOrientationLocked;
 
-private:
+ private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
 
@@ -180,7 +157,7 @@ private:
   double TotalPlayTime() const;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLVideoElement_h
+#endif  // mozilla_dom_HTMLVideoElement_h

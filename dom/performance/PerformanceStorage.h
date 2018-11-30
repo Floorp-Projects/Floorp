@@ -17,19 +17,18 @@ namespace dom {
 
 class PerformanceTimingData;
 
-class PerformanceStorage
-{
-public:
+class PerformanceStorage {
+ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   virtual void AddEntry(nsIHttpChannel* aChannel,
                         nsITimedChannel* aTimedChannel) = 0;
 
-protected:
+ protected:
   virtual ~PerformanceStorage() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PerformanceStorage_h
+#endif  // mozilla_dom_PerformanceStorage_h

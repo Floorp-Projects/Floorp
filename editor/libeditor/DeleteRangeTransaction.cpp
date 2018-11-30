@@ -26,22 +26,17 @@ using namespace dom;
 
 DeleteRangeTransaction::DeleteRangeTransaction(EditorBase& aEditorBase,
                                                nsRange& aRangeToDelete)
-  : mEditorBase(&aEditorBase)
-  , mRangeToDelete(aRangeToDelete.CloneRange())
-{
-}
+    : mEditorBase(&aEditorBase), mRangeToDelete(aRangeToDelete.CloneRange()) {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteRangeTransaction,
-                                   EditAggregateTransaction,
-                                   mEditorBase,
+                                   EditAggregateTransaction, mEditorBase,
                                    mRangeToDelete)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditAggregateTransaction)
 
 NS_IMETHODIMP
-DeleteRangeTransaction::DoTransaction()
-{
+DeleteRangeTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mRangeToDelete)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -107,22 +102,17 @@ DeleteRangeTransaction::DoTransaction()
 }
 
 NS_IMETHODIMP
-DeleteRangeTransaction::UndoTransaction()
-{
+DeleteRangeTransaction::UndoTransaction() {
   return EditAggregateTransaction::UndoTransaction();
 }
 
 NS_IMETHODIMP
-DeleteRangeTransaction::RedoTransaction()
-{
+DeleteRangeTransaction::RedoTransaction() {
   return EditAggregateTransaction::RedoTransaction();
 }
 
-nsresult
-DeleteRangeTransaction::CreateTxnsToDeleteBetween(
-                          const RawRangeBoundary& aStart,
-                          const RawRangeBoundary& aEnd)
-{
+nsresult DeleteRangeTransaction::CreateTxnsToDeleteBetween(
+    const RawRangeBoundary& aStart, const RawRangeBoundary& aEnd) {
   if (NS_WARN_IF(!aStart.IsSetAndValid()) ||
       NS_WARN_IF(!aEnd.IsSetAndValid()) ||
       NS_WARN_IF(aStart.Container() != aEnd.Container())) {
@@ -135,7 +125,7 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
 
   // see what kind of node we have
   if (RefPtr<CharacterData> charDataNode =
-        CharacterData::FromNode(aStart.Container())) {
+          CharacterData::FromNode(aStart.Container())) {
     // if the node is a chardata node, then delete chardata content
     int32_t numToDel;
     if (aStart == aEnd) {
@@ -146,8 +136,8 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
     }
 
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
-      DeleteTextTransaction::MaybeCreate(*mEditorBase, *charDataNode,
-                                         aStart.Offset(), numToDel);
+        DeleteTextTransaction::MaybeCreate(*mEditorBase, *charDataNode,
+                                           aStart.Offset(), numToDel);
     // If the text node isn't editable, it should be never undone/redone.
     // So, the transaction shouldn't be recorded.
     if (NS_WARN_IF(!deleteTextTransaction)) {
@@ -163,7 +153,7 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
        child && child != aEnd.GetChildAtOffset();
        child = child->GetNextSibling()) {
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      DeleteNodeTransaction::MaybeCreate(*mEditorBase, *child);
+        DeleteNodeTransaction::MaybeCreate(*mEditorBase, *child);
     // XXX This is odd handling.  Even if some children are not editable,
     //     editor should append transactions because they could be editable
     //     at undoing/redoing.  Additionally, if the transaction needs to
@@ -176,11 +166,8 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
   return NS_OK;
 }
 
-nsresult
-DeleteRangeTransaction::CreateTxnsToDeleteContent(
-                          const RawRangeBoundary& aPoint,
-                          nsIEditor::EDirection aAction)
-{
+nsresult DeleteRangeTransaction::CreateTxnsToDeleteContent(
+    const RawRangeBoundary& aPoint, nsIEditor::EDirection aAction) {
   if (NS_WARN_IF(!aPoint.IsSetAndValid())) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -209,8 +196,8 @@ DeleteRangeTransaction::CreateTxnsToDeleteContent(
   }
 
   RefPtr<DeleteTextTransaction> deleteTextTransaction =
-    DeleteTextTransaction::MaybeCreate(*mEditorBase, *dataNode,
-                                       startOffset, numToDelete);
+      DeleteTextTransaction::MaybeCreate(*mEditorBase, *dataNode, startOffset,
+                                         numToDelete);
   // If the text node isn't editable, it should be never undone/redone.
   // So, the transaction shouldn't be recorded.
   if (NS_WARN_IF(!deleteTextTransaction)) {
@@ -221,9 +208,8 @@ DeleteRangeTransaction::CreateTxnsToDeleteContent(
   return NS_OK;
 }
 
-nsresult
-DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(nsRange* aRangeToDelete)
-{
+nsresult DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(
+    nsRange* aRangeToDelete) {
   if (NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -240,7 +226,7 @@ DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(nsRange* aRangeToDelete)
     }
 
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      DeleteNodeTransaction::MaybeCreate(*mEditorBase, *node);
+        DeleteNodeTransaction::MaybeCreate(*mEditorBase, *node);
     // XXX This is odd handling.  Even if some nodes in the range are not
     //     editable, editor should append transactions because they could
     //     at undoing/redoing.  Additionally, if the transaction needs to
@@ -255,4 +241,4 @@ DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(nsRange* aRangeToDelete)
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

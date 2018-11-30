@@ -12,63 +12,82 @@
 namespace js {
 namespace jit {
 
-class LIRGeneratorNone : public LIRGeneratorShared
-{
-  protected:
-    LIRGeneratorNone(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
-      : LIRGeneratorShared(gen, graph, lirGraph)
-    {
-        MOZ_CRASH();
-    }
+class LIRGeneratorNone : public LIRGeneratorShared {
+ protected:
+  LIRGeneratorNone(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
+      : LIRGeneratorShared(gen, graph, lirGraph) {
+    MOZ_CRASH();
+  }
 
-    LBoxAllocation useBoxFixed(MDefinition*, Register, Register, bool useAtStart = false) { MOZ_CRASH(); }
+  LBoxAllocation useBoxFixed(MDefinition*, Register, Register,
+                             bool useAtStart = false) {
+    MOZ_CRASH();
+  }
 
-    LAllocation useByteOpRegister(MDefinition*) { MOZ_CRASH(); }
-    LAllocation useByteOpRegisterAtStart(MDefinition*) { MOZ_CRASH(); }
-    LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition*) { MOZ_CRASH(); }
-    LDefinition tempByteOpRegister() { MOZ_CRASH(); }
-    LDefinition tempToUnbox() { MOZ_CRASH(); }
-    bool needTempForPostBarrier() { MOZ_CRASH(); }
-    void lowerUntypedPhiInput(MPhi*, uint32_t, LBlock*, size_t) { MOZ_CRASH(); }
-    void lowerInt64PhiInput(MPhi*, uint32_t, LBlock*, size_t) { MOZ_CRASH(); }
-    void defineInt64Phi(MPhi*, size_t) { MOZ_CRASH(); }
-    void lowerForShift(LInstructionHelper<1, 2, 0>*, MDefinition*, MDefinition*, MDefinition*) {
-        MOZ_CRASH();
-    }
-    void lowerUrshD(MUrsh*) { MOZ_CRASH(); }
-    template <typename T>
-    void lowerForALU(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
-    template <typename T>
-    void lowerForFPU(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
-    template <typename T>
-    void lowerForALUInt64(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
-    void lowerForMulInt64(LMulI64*, MMul*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
-    template <typename T>
-    void lowerForShiftInt64(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
-    void lowerForBitAndAndBranch(LBitAndAndBranch*, MInstruction*,
-                                 MDefinition*, MDefinition*) {
-        MOZ_CRASH();
-    }
+  LAllocation useByteOpRegister(MDefinition*) { MOZ_CRASH(); }
+  LAllocation useByteOpRegisterAtStart(MDefinition*) { MOZ_CRASH(); }
+  LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition*) {
+    MOZ_CRASH();
+  }
+  LDefinition tempByteOpRegister() { MOZ_CRASH(); }
+  LDefinition tempToUnbox() { MOZ_CRASH(); }
+  bool needTempForPostBarrier() { MOZ_CRASH(); }
+  void lowerUntypedPhiInput(MPhi*, uint32_t, LBlock*, size_t) { MOZ_CRASH(); }
+  void lowerInt64PhiInput(MPhi*, uint32_t, LBlock*, size_t) { MOZ_CRASH(); }
+  void defineInt64Phi(MPhi*, size_t) { MOZ_CRASH(); }
+  void lowerForShift(LInstructionHelper<1, 2, 0>*, MDefinition*, MDefinition*,
+                     MDefinition*) {
+    MOZ_CRASH();
+  }
+  void lowerUrshD(MUrsh*) { MOZ_CRASH(); }
+  template <typename T>
+  void lowerForALU(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) {
+    MOZ_CRASH();
+  }
+  template <typename T>
+  void lowerForFPU(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) {
+    MOZ_CRASH();
+  }
+  template <typename T>
+  void lowerForALUInt64(T, MDefinition*, MDefinition*,
+                        MDefinition* v = nullptr) {
+    MOZ_CRASH();
+  }
+  void lowerForMulInt64(LMulI64*, MMul*, MDefinition*,
+                        MDefinition* v = nullptr) {
+    MOZ_CRASH();
+  }
+  template <typename T>
+  void lowerForShiftInt64(T, MDefinition*, MDefinition*,
+                          MDefinition* v = nullptr) {
+    MOZ_CRASH();
+  }
+  void lowerForBitAndAndBranch(LBitAndAndBranch*, MInstruction*, MDefinition*,
+                               MDefinition*) {
+    MOZ_CRASH();
+  }
 
-    void lowerConstantDouble(double, MInstruction*) { MOZ_CRASH(); }
-    void lowerConstantFloat32(float, MInstruction*) { MOZ_CRASH(); }
-    void lowerTruncateDToInt32(MTruncateToInt32*) { MOZ_CRASH(); }
-    void lowerTruncateFToInt32(MTruncateToInt32*) { MOZ_CRASH(); }
-    void lowerDivI(MDiv*) { MOZ_CRASH(); }
-    void lowerModI(MMod*) { MOZ_CRASH(); }
-    void lowerDivI64(MDiv*) { MOZ_CRASH(); }
-    void lowerModI64(MMod*) { MOZ_CRASH(); }
-    void lowerMulI(MMul*, MDefinition*, MDefinition*) { MOZ_CRASH(); }
-    void lowerUDiv(MDiv*) { MOZ_CRASH(); }
-    void lowerUMod(MMod*) { MOZ_CRASH(); }
+  void lowerConstantDouble(double, MInstruction*) { MOZ_CRASH(); }
+  void lowerConstantFloat32(float, MInstruction*) { MOZ_CRASH(); }
+  void lowerTruncateDToInt32(MTruncateToInt32*) { MOZ_CRASH(); }
+  void lowerTruncateFToInt32(MTruncateToInt32*) { MOZ_CRASH(); }
+  void lowerDivI(MDiv*) { MOZ_CRASH(); }
+  void lowerModI(MMod*) { MOZ_CRASH(); }
+  void lowerDivI64(MDiv*) { MOZ_CRASH(); }
+  void lowerModI64(MMod*) { MOZ_CRASH(); }
+  void lowerMulI(MMul*, MDefinition*, MDefinition*) { MOZ_CRASH(); }
+  void lowerUDiv(MDiv*) { MOZ_CRASH(); }
+  void lowerUMod(MMod*) { MOZ_CRASH(); }
 
-    LTableSwitch* newLTableSwitch(LAllocation, LDefinition, MTableSwitch*) { MOZ_CRASH(); }
-    LTableSwitchV* newLTableSwitchV(MTableSwitch*) { MOZ_CRASH(); }
+  LTableSwitch* newLTableSwitch(LAllocation, LDefinition, MTableSwitch*) {
+    MOZ_CRASH();
+  }
+  LTableSwitchV* newLTableSwitchV(MTableSwitch*) { MOZ_CRASH(); }
 };
 
 typedef LIRGeneratorNone LIRGeneratorSpecific;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_none_Lowering_none_h */

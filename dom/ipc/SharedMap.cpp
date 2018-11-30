@@ -28,42 +28,27 @@ namespace ipc {
 // necessary, though.
 constexpr size_t kStructuredCloneAlign = sizeof(uintptr_t);
 
-
-static inline void
-AlignTo(size_t* aOffset, size_t aAlign)
-{
+static inline void AlignTo(size_t* aOffset, size_t aAlign) {
   if (auto mod = *aOffset % aAlign) {
     *aOffset += aAlign - mod;
   }
 }
 
-
-SharedMap::SharedMap()
-  : DOMEventTargetHelper()
-{}
+SharedMap::SharedMap() : DOMEventTargetHelper() {}
 
 SharedMap::SharedMap(nsIGlobalObject* aGlobal, const FileDescriptor& aMapFile,
                      size_t aMapSize, nsTArray<RefPtr<BlobImpl>>&& aBlobs)
-  : DOMEventTargetHelper(aGlobal)
-  , mBlobImpls(std::move(aBlobs))
-{
+    : DOMEventTargetHelper(aGlobal), mBlobImpls(std::move(aBlobs)) {
   mMapFile.reset(new FileDescriptor(aMapFile));
   mMapSize = aMapSize;
 }
 
-
-bool
-SharedMap::Has(const nsACString& aName)
-{
+bool SharedMap::Has(const nsACString& aName) {
   return mEntries.Contains(aName);
 }
 
-void
-SharedMap::Get(JSContext* aCx,
-               const nsACString& aName,
-               JS::MutableHandleValue aRetVal,
-               ErrorResult& aRv)
-{
+void SharedMap::Get(JSContext* aCx, const nsACString& aName,
+                    JS::MutableHandleValue aRetVal, ErrorResult& aRv) {
   auto res = MaybeRebuild();
   if (res.isErr()) {
     aRv.Throw(res.unwrapErr());
@@ -79,11 +64,8 @@ SharedMap::Get(JSContext* aCx,
   entry->Read(aCx, aRetVal, aRv);
 }
 
-void
-SharedMap::Entry::Read(JSContext* aCx,
-                       JS::MutableHandleValue aRetVal,
-                       ErrorResult& aRv)
-{
+void SharedMap::Entry::Read(JSContext* aCx, JS::MutableHandleValue aRetVal,
+                            ErrorResult& aRv) {
   if (mData.is<StructuredCloneData>()) {
     // We have a temporary buffer for a key that was changed after the last
     // snapshot. Just decode it directly.
@@ -107,20 +89,16 @@ SharedMap::Entry::Read(JSContext* aCx,
   holder.Read(aCx, aRetVal, aRv);
 }
 
-FileDescriptor
-SharedMap::CloneMapFile() const
-{
+FileDescriptor SharedMap::CloneMapFile() const {
   if (mMap.initialized()) {
     return mMap.cloneHandle();
   }
   return *mMapFile;
 }
 
-void
-SharedMap::Update(const FileDescriptor& aMapFile, size_t aMapSize,
-                  nsTArray<RefPtr<BlobImpl>>&& aBlobs,
-                  nsTArray<nsCString>&& aChangedKeys)
-{
+void SharedMap::Update(const FileDescriptor& aMapFile, size_t aMapSize,
+                       nsTArray<RefPtr<BlobImpl>>&& aBlobs,
+                       nsTArray<nsCString>&& aChangedKeys) {
   MOZ_DIAGNOSTIC_ASSERT(!mWritable);
 
   mMap.reset();
@@ -135,7 +113,6 @@ SharedMap::Update(const FileDescriptor& aMapFile, size_t aMapSize,
 
   mBlobImpls = std::move(aBlobs);
 
-
   AutoEntryScript aes(GetParentObject(), "SharedMap change event");
   JSContext* cx = aes.cx();
 
@@ -149,17 +126,14 @@ SharedMap::Update(const FileDescriptor& aMapFile, size_t aMapSize,
                                               fallible);
   }
 
-  RefPtr<SharedMapChangeEvent> event =
-    SharedMapChangeEvent::Constructor(this, NS_LITERAL_STRING("change"), init);
+  RefPtr<SharedMapChangeEvent> event = SharedMapChangeEvent::Constructor(
+      this, NS_LITERAL_STRING("change"), init);
   event->SetTrusted(true);
 
   DispatchEvent(*event);
 }
 
-
-const nsTArray<SharedMap::Entry*>&
-SharedMap::EntryArray() const
-{
+const nsTArray<SharedMap::Entry*>& SharedMap::EntryArray() const {
   if (mEntryArray.isNothing()) {
     MaybeRebuild();
 
@@ -173,16 +147,12 @@ SharedMap::EntryArray() const
   return mEntryArray.ref();
 }
 
-const nsString
-SharedMap::GetKeyAtIndex(uint32_t aIndex) const
-{
+const nsString SharedMap::GetKeyAtIndex(uint32_t aIndex) const {
   return NS_ConvertUTF8toUTF16(EntryArray()[aIndex]->Name());
 }
 
-bool
-SharedMap::GetValueAtIndex(JSContext* aCx, uint32_t aIndex,
-                           JS::MutableHandle<JS::Value> aResult) const
-{
+bool SharedMap::GetValueAtIndex(JSContext* aCx, uint32_t aIndex,
+                                JS::MutableHandle<JS::Value> aResult) const {
   ErrorResult rv;
   EntryArray()[aIndex]->Read(aCx, aResult, rv);
   if (rv.MaybeSetPendingException(aCx)) {
@@ -191,24 +161,21 @@ SharedMap::GetValueAtIndex(JSContext* aCx, uint32_t aIndex,
   return true;
 }
 
-void
-SharedMap::Entry::TakeData(StructuredCloneData&& aHolder)
-{
+void SharedMap::Entry::TakeData(StructuredCloneData&& aHolder) {
   mData = AsVariant(std::move(aHolder));
 
   mSize = Holder().Data().Size();
   mBlobCount = Holder().BlobImpls().Length();
 }
 
-void
-SharedMap::Entry::ExtractData(char* aDestPtr, uint32_t aNewOffset, uint16_t aNewBlobOffset)
-{
+void SharedMap::Entry::ExtractData(char* aDestPtr, uint32_t aNewOffset,
+                                   uint16_t aNewBlobOffset) {
   if (mData.is<StructuredCloneData>()) {
     char* ptr = aDestPtr;
     Holder().Data().ForEachDataChunk([&](const char* aData, size_t aSize) {
-        memcpy(ptr, aData, aSize);
-        ptr += aSize;
-        return true;
+      memcpy(ptr, aData, aSize);
+      ptr += aSize;
+      return true;
     });
     MOZ_ASSERT(uint32_t(ptr - aDestPtr) == mSize);
   } else {
@@ -219,9 +186,7 @@ SharedMap::Entry::ExtractData(char* aDestPtr, uint32_t aNewOffset, uint16_t aNew
   mBlobOffset = aNewBlobOffset;
 }
 
-Result<Ok, nsresult>
-SharedMap::MaybeRebuild()
-{
+Result<Ok, nsresult> SharedMap::MaybeRebuild() {
   if (!mMapFile) {
     return Ok();
   }
@@ -264,15 +229,11 @@ SharedMap::MaybeRebuild()
   return Ok();
 }
 
-void
-SharedMap::MaybeRebuild() const
-{
+void SharedMap::MaybeRebuild() const {
   Unused << const_cast<SharedMap*>(this)->MaybeRebuild();
 }
 
-WritableSharedMap::WritableSharedMap()
-  : SharedMap()
-{
+WritableSharedMap::WritableSharedMap() : SharedMap() {
   mWritable = true;
   // Serialize the initial empty contents of the map immediately so that we
   // always have a file descriptor to send to callers of CloneMapFile().
@@ -280,20 +241,17 @@ WritableSharedMap::WritableSharedMap()
   MOZ_RELEASE_ASSERT(mMap.initialized());
 }
 
-SharedMap*
-WritableSharedMap::GetReadOnly()
-{
+SharedMap* WritableSharedMap::GetReadOnly() {
   if (!mReadOnly) {
     nsTArray<RefPtr<BlobImpl>> blobs(mBlobImpls);
-    mReadOnly = new SharedMap(ContentProcessMessageManager::Get()->GetParentObject(),
-                              CloneMapFile(), MapSize(), std::move(blobs));
+    mReadOnly =
+        new SharedMap(ContentProcessMessageManager::Get()->GetParentObject(),
+                      CloneMapFile(), MapSize(), std::move(blobs));
   }
   return mReadOnly;
 }
 
-Result<Ok, nsresult>
-WritableSharedMap::Serialize()
-{
+Result<Ok, nsresult> WritableSharedMap::Serialize() {
   // Serializes a new snapshot of the map, initializes a new read-only shared
   // memory region with its contents, and updates all entries to point to that
   // new snapshot.
@@ -377,26 +335,22 @@ WritableSharedMap::Serialize()
   return Ok();
 }
 
-void
-WritableSharedMap::SendTo(ContentParent* aParent) const
-{
-    nsTArray<IPCBlob> blobs(mBlobImpls.Length());
+void WritableSharedMap::SendTo(ContentParent* aParent) const {
+  nsTArray<IPCBlob> blobs(mBlobImpls.Length());
 
-    for (auto& blobImpl : mBlobImpls) {
-      nsresult rv = IPCBlobUtils::Serialize(blobImpl, aParent,
-                                            *blobs.AppendElement());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        continue;
-      }
+  for (auto& blobImpl : mBlobImpls) {
+    nsresult rv =
+        IPCBlobUtils::Serialize(blobImpl, aParent, *blobs.AppendElement());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
     }
+  }
 
-    Unused << aParent->SendUpdateSharedData(CloneMapFile(), mMap.size(),
-                                            blobs, mChangedKeys);
+  Unused << aParent->SendUpdateSharedData(CloneMapFile(), mMap.size(), blobs,
+                                          mChangedKeys);
 }
 
-void
-WritableSharedMap::BroadcastChanges()
-{
+void WritableSharedMap::BroadcastChanges() {
   if (mChangedKeys.IsEmpty()) {
     return;
   }
@@ -413,28 +367,21 @@ WritableSharedMap::BroadcastChanges()
 
   if (mReadOnly) {
     nsTArray<RefPtr<BlobImpl>> blobImpls(mBlobImpls);
-    mReadOnly->Update(CloneMapFile(), mMap.size(),
-                      std::move(blobImpls),
+    mReadOnly->Update(CloneMapFile(), mMap.size(), std::move(blobImpls),
                       std::move(mChangedKeys));
   }
 
   mChangedKeys.Clear();
 }
 
-void
-WritableSharedMap::Delete(const nsACString& aName)
-{
+void WritableSharedMap::Delete(const nsACString& aName) {
   if (mEntries.Remove(aName)) {
     KeyChanged(aName);
   }
 }
 
-void
-WritableSharedMap::Set(JSContext* aCx,
-                       const nsACString& aName,
-                       JS::HandleValue aValue,
-                       ErrorResult& aRv)
-{
+void WritableSharedMap::Set(JSContext* aCx, const nsACString& aName,
+                            JS::HandleValue aValue, ErrorResult& aRv) {
   StructuredCloneData holder;
 
   holder.Write(aCx, aValue, aRv);
@@ -453,55 +400,40 @@ WritableSharedMap::Set(JSContext* aCx,
   KeyChanged(aName);
 }
 
-void
-WritableSharedMap::Flush()
-{
-  BroadcastChanges();
-}
+void WritableSharedMap::Flush() { BroadcastChanges(); }
 
-void
-WritableSharedMap::IdleFlush()
-{
+void WritableSharedMap::IdleFlush() {
   mPendingFlush = false;
   Flush();
 }
 
-nsresult
-WritableSharedMap::KeyChanged(const nsACString& aName)
-{
+nsresult WritableSharedMap::KeyChanged(const nsACString& aName) {
   if (!mChangedKeys.ContainsSorted(aName)) {
     mChangedKeys.InsertElementSorted(aName);
   }
   mEntryArray.reset();
 
   if (!mPendingFlush) {
-      MOZ_TRY(NS_IdleDispatchToCurrentThread(
-        NewRunnableMethod("WritableSharedMap::IdleFlush",
-                          this,
-                          &WritableSharedMap::IdleFlush)));
-      mPendingFlush = true;
+    MOZ_TRY(NS_IdleDispatchToCurrentThread(NewRunnableMethod(
+        "WritableSharedMap::IdleFlush", this, &WritableSharedMap::IdleFlush)));
+    mPendingFlush = true;
   }
   return NS_OK;
 }
 
-
-JSObject*
-SharedMap::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
-{
+JSObject* SharedMap::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) {
   return MozSharedMap_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-JSObject*
-WritableSharedMap::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
-{
+JSObject* WritableSharedMap::WrapObject(JSContext* aCx,
+                                        JS::HandleObject aGivenProto) {
   return MozWritableSharedMap_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ already_AddRefed<SharedMapChangeEvent>
 SharedMapChangeEvent::Constructor(EventTarget* aEventTarget,
                                   const nsAString& aType,
-                                  const MozSharedMapChangeEventInit& aInit)
-{
+                                  const MozSharedMapChangeEventInit& aInit) {
   RefPtr<SharedMapChangeEvent> event = new SharedMapChangeEvent(aEventTarget);
 
   bool trusted = event->Init(aEventTarget);
@@ -522,6 +454,6 @@ NS_INTERFACE_MAP_END_INHERITING(SharedMap)
 NS_IMPL_ADDREF_INHERITED(WritableSharedMap, SharedMap)
 NS_IMPL_RELEASE_INHERITED(WritableSharedMap, SharedMap)
 
-} // ipc
-} // dom
-} // mozilla
+}  // namespace ipc
+}  // namespace dom
+}  // namespace mozilla

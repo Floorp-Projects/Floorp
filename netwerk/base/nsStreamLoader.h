@@ -17,10 +17,9 @@ class nsIRequest;
 namespace mozilla {
 namespace net {
 
-class nsStreamLoader final : public nsIStreamLoader
-                           , public nsIThreadRetargetableStreamListener
-{
-public:
+class nsStreamLoader final : public nsIStreamLoader,
+                             public nsIThreadRetargetableStreamListener {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLOADER
   NS_DECL_NSIREQUESTOBSERVER
@@ -29,10 +28,9 @@ public:
 
   nsStreamLoader();
 
-  static nsresult
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-protected:
+ protected:
   ~nsStreamLoader() = default;
 
   static nsresult WriteSegmentFun(nsIInputStream *, void *, const char *,
@@ -43,16 +41,16 @@ protected:
   void ReleaseData();
 
   nsCOMPtr<nsIStreamLoaderObserver> mObserver;
-  nsCOMPtr<nsISupports>             mContext;  // the observer's context
-  nsCOMPtr<nsIRequest>              mRequest;
-  nsCOMPtr<nsIRequestObserver>      mRequestObserver;
+  nsCOMPtr<nsISupports> mContext;  // the observer's context
+  nsCOMPtr<nsIRequest> mRequest;
+  nsCOMPtr<nsIRequestObserver> mRequestObserver;
 
   // Buffer to accumulate incoming data. We preallocate if contentSize is
   // available.
   mozilla::Vector<uint8_t, 0> mData;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // nsStreamLoader_h__
+#endif  // nsStreamLoader_h__

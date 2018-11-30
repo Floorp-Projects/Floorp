@@ -21,12 +21,10 @@
 // Find out, in a platform-dependent way, where the code modules got
 // mapped in the process' virtual address space, and get |aLUL| to
 // load unwind info for them.
-void
-read_procmaps(lul::LUL* aLUL)
-{
+void read_procmaps(lul::LUL* aLUL) {
   MOZ_ASSERT(aLUL->CountMappings() == 0);
 
-# if defined(GP_OS_linux) || defined(GP_OS_android)
+#if defined(GP_OS_linux) || defined(GP_OS_android)
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
 
   for (size_t i = 0; i < info.GetSize(); i++) {
@@ -34,21 +32,21 @@ read_procmaps(lul::LUL* aLUL)
 
     std::string nativePath = lib.GetNativeDebugPath();
 
-#   if defined(GP_OS_android)
+#if defined(GP_OS_android)
     // We're using faulty.lib.  Use a special-case object mapper.
     AutoObjectMapperFaultyLib mapper(aLUL->mLog);
-#   else
+#else
     // We can use the standard POSIX-based mapper.
     AutoObjectMapperPOSIX mapper(aLUL->mLog);
-#   endif
+#endif
 
     // Ask |mapper| to map the object.  Then hand its mapped address
     // to NotifyAfterMap().
-    void*  image = nullptr;
-    size_t size  = 0;
+    void* image = nullptr;
+    size_t size = 0;
     bool ok = mapper.Map(&image, &size, nativePath);
     if (ok && image && size > 0) {
-      aLUL->NotifyAfterMap(lib.GetStart(), lib.GetEnd()-lib.GetStart(),
+      aLUL->NotifyAfterMap(lib.GetStart(), lib.GetEnd() - lib.GetStart(),
                            nativePath.c_str(), image);
     } else if (!ok && lib.GetDebugName().IsEmpty()) {
       // The object has no name and (as a consequence) the mapper failed to map
@@ -57,22 +55,20 @@ read_procmaps(lul::LUL* aLUL)
       // lack of knowledge about the mapped area inhibits LUL's special
       // __kernel_syscall handling.  Hence notify |aLUL| at least of the
       // mapping, even though it can't read any unwind information for the area.
-      aLUL->NotifyExecutableArea(lib.GetStart(), lib.GetEnd()-lib.GetStart());
+      aLUL->NotifyExecutableArea(lib.GetStart(), lib.GetEnd() - lib.GetStart());
     }
 
     // |mapper| goes out of scope at this point and so its destructor
     // unmaps the object.
   }
 
-# else
-#  error "Unknown platform"
-# endif
+#else
+#error "Unknown platform"
+#endif
 }
 
 // LUL needs a callback for its logging sink.
-void
-logging_sink_for_LUL(const char* str)
-{
+void logging_sink_for_LUL(const char* str) {
   // These are only printed when Verbose logging is enabled (e.g. with
   // MOZ_LOG="prof:5"). This is because LUL's logging is much more verbose than
   // the rest of the profiler's logging, which occurs at the Info (3) and Debug

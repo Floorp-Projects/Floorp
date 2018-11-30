@@ -13,9 +13,10 @@
 namespace mozilla {
 namespace layers {
 
-template <typename T> static inline bool
-WaitForGPUQuery(ID3D11Device* aDevice, ID3D11DeviceContext* aContext, ID3D11Query* aQuery, T* aOut)
-{
+template <typename T>
+static inline bool WaitForGPUQuery(ID3D11Device* aDevice,
+                                   ID3D11DeviceContext* aContext,
+                                   ID3D11Query* aQuery, T* aOut) {
   TimeStamp start = TimeStamp::Now();
   while (aContext->GetData(aQuery, aOut, sizeof(*aOut), 0) != S_OK) {
     if (aDevice->GetDeviceRemovedReason() != S_OK) {
@@ -29,7 +30,7 @@ WaitForGPUQuery(ID3D11Device* aDevice, ID3D11DeviceContext* aContext, ID3D11Quer
   return true;
 }
 
-} // namespace layers
-} // namespace gfx
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_d3d11_HelpersD3D11_h
+#endif  // mozilla_gfx_layers_d3d11_HelpersD3D11_h

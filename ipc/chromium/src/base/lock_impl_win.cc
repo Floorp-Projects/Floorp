@@ -13,17 +13,11 @@ LockImpl::LockImpl() : native_handle_(SRWLOCK_INIT) {}
 
 LockImpl::~LockImpl() = default;
 
-bool LockImpl::Try() {
-  return !!::TryAcquireSRWLockExclusive(&native_handle_);
-}
+bool LockImpl::Try() { return !!::TryAcquireSRWLockExclusive(&native_handle_); }
 
-void LockImpl::Lock() {
-  ::AcquireSRWLockExclusive(&native_handle_);
-}
+void LockImpl::Lock() { ::AcquireSRWLockExclusive(&native_handle_); }
 
-void LockImpl::Unlock() {
-  ::ReleaseSRWLockExclusive(&native_handle_);
-}
+void LockImpl::Unlock() { ::ReleaseSRWLockExclusive(&native_handle_); }
 
 }  // namespace internal
 }  // namespace base

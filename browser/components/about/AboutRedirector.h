@@ -11,26 +11,24 @@
 namespace mozilla {
 namespace browser {
 
-class AboutRedirector : public nsIAboutModule
-{
-public:
+class AboutRedirector : public nsIAboutModule {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIABOUTMODULE
 
   AboutRedirector() {}
 
-  static nsresult
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-protected:
+ protected:
   virtual ~AboutRedirector() {}
 
-private:
+ private:
   static bool sNewTabPageEnabled;
   static bool sNewCertErrorPageEnabled;
 };
 
-} // namespace browser
-} // namespace mozilla
+}  // namespace browser
+}  // namespace mozilla
 
-#endif // AboutRedirector_h__
+#endif  // AboutRedirector_h__

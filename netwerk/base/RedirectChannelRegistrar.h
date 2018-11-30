@@ -16,28 +16,26 @@
 namespace mozilla {
 namespace net {
 
-class RedirectChannelRegistrar final : public nsIRedirectChannelRegistrar
-{
+class RedirectChannelRegistrar final : public nsIRedirectChannelRegistrar {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREDIRECTCHANNELREGISTRAR
 
   RedirectChannelRegistrar();
 
-private:
+ private:
   ~RedirectChannelRegistrar() = default;
 
-public:
+ public:
   // Singleton accessor
   static already_AddRefed<nsIRedirectChannelRegistrar> GetOrCreate();
 
   // Cleanup the singleton instance on shutdown
   static void Shutdown();
 
-protected:
-  typedef nsInterfaceHashtable<nsUint32HashKey, nsIChannel>
-          ChannelHashtable;
+ protected:
+  typedef nsInterfaceHashtable<nsUint32HashKey, nsIChannel> ChannelHashtable;
   typedef nsInterfaceHashtable<nsUint32HashKey, nsIParentChannel>
-          ParentChannelHashtable;
+      ParentChannelHashtable;
 
   ChannelHashtable mRealChannels;
   ParentChannelHashtable mParentChannels;
@@ -47,7 +45,7 @@ protected:
   static StaticRefPtr<RedirectChannelRegistrar> gSingleton;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

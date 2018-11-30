@@ -15,11 +15,10 @@ namespace dom {
 
 /* static */
 StaticAutoPtr<ControllerConnectionCollection>
-ControllerConnectionCollection::sSingleton;
+    ControllerConnectionCollection::sSingleton;
 
 /* static */ ControllerConnectionCollection*
-ControllerConnectionCollection::GetSingleton()
-{
+ControllerConnectionCollection::GetSingleton() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sSingleton) {
@@ -30,21 +29,16 @@ ControllerConnectionCollection::GetSingleton()
   return sSingleton;
 }
 
-ControllerConnectionCollection::ControllerConnectionCollection()
-{
+ControllerConnectionCollection::ControllerConnectionCollection() {
   MOZ_COUNT_CTOR(ControllerConnectionCollection);
 }
 
-ControllerConnectionCollection::~ControllerConnectionCollection()
-{
+ControllerConnectionCollection::~ControllerConnectionCollection() {
   MOZ_COUNT_DTOR(ControllerConnectionCollection);
 }
 
-void
-ControllerConnectionCollection::AddConnection(
-  PresentationConnection* aConnection,
-  const uint8_t aRole)
-{
+void ControllerConnectionCollection::AddConnection(
+    PresentationConnection* aConnection, const uint8_t aRole) {
   MOZ_ASSERT(NS_IsMainThread());
   if (aRole != nsIPresentationService::ROLE_CONTROLLER) {
     MOZ_ASSERT(false, "This is allowed only to be called at controller side.");
@@ -63,11 +57,8 @@ ControllerConnectionCollection::AddConnection(
   mConnections.AppendElement(connection);
 }
 
-void
-ControllerConnectionCollection::RemoveConnection(
-  PresentationConnection* aConnection,
-  const uint8_t aRole)
-{
+void ControllerConnectionCollection::RemoveConnection(
+    PresentationConnection* aConnection, const uint8_t aRole) {
   MOZ_ASSERT(NS_IsMainThread());
   if (aRole != nsIPresentationService::ROLE_CONTROLLER) {
     MOZ_ASSERT(false, "This is allowed only to be called at controller side.");
@@ -83,11 +74,9 @@ ControllerConnectionCollection::RemoveConnection(
 }
 
 already_AddRefed<PresentationConnection>
-ControllerConnectionCollection::FindConnection(
-  uint64_t aWindowId,
-  const nsAString& aId,
-  const uint8_t aRole)
-{
+ControllerConnectionCollection::FindConnection(uint64_t aWindowId,
+                                               const nsAString& aId,
+                                               const uint8_t aRole) {
   MOZ_ASSERT(NS_IsMainThread());
   if (aRole != nsIPresentationService::ROLE_CONTROLLER) {
     MOZ_ASSERT(false, "This is allowed only to be called at controller side.");
@@ -112,5 +101,5 @@ ControllerConnectionCollection::FindConnection(
   return nullptr;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

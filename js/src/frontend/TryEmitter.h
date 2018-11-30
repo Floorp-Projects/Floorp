@@ -56,169 +56,162 @@ struct BytecodeEmitter;
 //     emit(finally_block);
 //     tryCatch.emitEnd();
 //
-class MOZ_STACK_CLASS TryEmitter
-{
-  public:
-    enum class Kind {
-        TryCatch,
-        TryCatchFinally,
-        TryFinally
-    };
+class MOZ_STACK_CLASS TryEmitter {
+ public:
+  enum class Kind { TryCatch, TryCatchFinally, TryFinally };
 
-    // Syntactic try-catch-finally and internally used non-syntactic
-    // try-catch-finally behave differently for 2 points.
-    //
-    // The first one is whether TryFinallyControl is used or not.
-    // See the comment for `controlInfo_`.
-    //
-    // The second one is whether the catch and finally blocks handle the frame's
-    // return value.  For syntactic try-catch-finally, the bytecode marked with
-    // "*" are emitted to clear return value with `undefined` before the catch
-    // block and the finally block, and also to save/restore the return value
-    // before/after the finally block.
-    //
-    //     JSOP_TRY
-    //
-    //     try_body...
-    //
-    //     JSOP_GOSUB finally
-    //     JSOP_JUMPTARGET
-    //     JSOP_GOTO end:
-    //
-    //   catch:
-    //     JSOP_JUMPTARGET
-    //   * JSOP_UNDEFINED
-    //   * JSOP_SETRVAL
-    //
-    //     catch_body...
-    //
-    //     JSOP_GOSUB finally
-    //     JSOP_JUMPTARGET
-    //     JSOP_GOTO end
-    //
-    //   finally:
-    //     JSOP_JUMPTARGET
-    //   * JSOP_GETRVAL
-    //   * JSOP_UNDEFINED
-    //   * JSOP_SETRVAL
-    //
-    //     finally_body...
-    //
-    //   * JSOP_SETRVAL
-    //     JSOP_NOP
-    //
-    //   end:
-    //     JSOP_JUMPTARGET
-    //
-    // For syntactic try-catch-finally, Syntactic should be used.
-    // For non-syntactic try-catch-finally, NonSyntactic should be used.
-    enum class ControlKind {
-        Syntactic,
-        NonSyntactic
-    };
+  // Syntactic try-catch-finally and internally used non-syntactic
+  // try-catch-finally behave differently for 2 points.
+  //
+  // The first one is whether TryFinallyControl is used or not.
+  // See the comment for `controlInfo_`.
+  //
+  // The second one is whether the catch and finally blocks handle the frame's
+  // return value.  For syntactic try-catch-finally, the bytecode marked with
+  // "*" are emitted to clear return value with `undefined` before the catch
+  // block and the finally block, and also to save/restore the return value
+  // before/after the finally block.
+  //
+  //     JSOP_TRY
+  //
+  //     try_body...
+  //
+  //     JSOP_GOSUB finally
+  //     JSOP_JUMPTARGET
+  //     JSOP_GOTO end:
+  //
+  //   catch:
+  //     JSOP_JUMPTARGET
+  //   * JSOP_UNDEFINED
+  //   * JSOP_SETRVAL
+  //
+  //     catch_body...
+  //
+  //     JSOP_GOSUB finally
+  //     JSOP_JUMPTARGET
+  //     JSOP_GOTO end
+  //
+  //   finally:
+  //     JSOP_JUMPTARGET
+  //   * JSOP_GETRVAL
+  //   * JSOP_UNDEFINED
+  //   * JSOP_SETRVAL
+  //
+  //     finally_body...
+  //
+  //   * JSOP_SETRVAL
+  //     JSOP_NOP
+  //
+  //   end:
+  //     JSOP_JUMPTARGET
+  //
+  // For syntactic try-catch-finally, Syntactic should be used.
+  // For non-syntactic try-catch-finally, NonSyntactic should be used.
+  enum class ControlKind { Syntactic, NonSyntactic };
 
-  private:
-    BytecodeEmitter* bce_;
-    Kind kind_;
-    ControlKind controlKind_;
+ private:
+  BytecodeEmitter* bce_;
+  Kind kind_;
+  ControlKind controlKind_;
 
-    // Track jumps-over-catches and gosubs-to-finally for later fixup.
-    //
-    // When a finally block is active, non-local jumps (including
-    // jumps-over-catches) result in a GOSUB being written into the bytecode
-    // stream and fixed-up later.
-    //
-    // For non-syntactic try-catch-finally, all that handling is skipped.
-    // The non-syntactic try-catch-finally must:
-    //   * have only one catch block
-    //   * have JSOP_GOTO at the end of catch-block
-    //   * have no non-local-jump
-    //   * don't use finally block for normal completion of try-block and
-    //     catch-block
-    //
-    // Additionally, a finally block may be emitted for non-syntactic
-    // try-catch-finally, even if the kind is TryCatch, because GOSUBs are not
-    // emitted.
-    mozilla::Maybe<TryFinallyControl> controlInfo_;
+  // Track jumps-over-catches and gosubs-to-finally for later fixup.
+  //
+  // When a finally block is active, non-local jumps (including
+  // jumps-over-catches) result in a GOSUB being written into the bytecode
+  // stream and fixed-up later.
+  //
+  // For non-syntactic try-catch-finally, all that handling is skipped.
+  // The non-syntactic try-catch-finally must:
+  //   * have only one catch block
+  //   * have JSOP_GOTO at the end of catch-block
+  //   * have no non-local-jump
+  //   * don't use finally block for normal completion of try-block and
+  //     catch-block
+  //
+  // Additionally, a finally block may be emitted for non-syntactic
+  // try-catch-finally, even if the kind is TryCatch, because GOSUBs are not
+  // emitted.
+  mozilla::Maybe<TryFinallyControl> controlInfo_;
 
-    // The stack depth before emitting JSOP_TRY.
-    int depth_;
+  // The stack depth before emitting JSOP_TRY.
+  int depth_;
 
-    // The source note index for SRC_TRY.
-    unsigned noteIndex_;
+  // The source note index for SRC_TRY.
+  unsigned noteIndex_;
 
-    // The offset after JSOP_TRY.
-    ptrdiff_t tryStart_;
+  // The offset after JSOP_TRY.
+  ptrdiff_t tryStart_;
 
-    // JSOP_JUMPTARGET after the entire try-catch-finally block.
-    JumpList catchAndFinallyJump_;
+  // JSOP_JUMPTARGET after the entire try-catch-finally block.
+  JumpList catchAndFinallyJump_;
 
-    // The offset of JSOP_GOTO at the end of the try block.
-    JumpTarget tryEnd_;
+  // The offset of JSOP_GOTO at the end of the try block.
+  JumpTarget tryEnd_;
 
-    // The offset of JSOP_JUMPTARGET at the beginning of the finally block.
-    JumpTarget finallyStart_;
+  // The offset of JSOP_JUMPTARGET at the beginning of the finally block.
+  JumpTarget finallyStart_;
 
 #ifdef DEBUG
-    // The state of this emitter.
-    //
-    // +-------+ emitTry +-----+   emitCatch +-------+      emitEnd  +-----+
-    // | Start |-------->| Try |-+---------->| Catch |-+->+--------->| End |
-    // +-------+         +-----+ |           +-------+ |  ^          +-----+
-    //                           |                     |  |
-    //                           |  +------------------+  +----+
-    //                           |  |                          |
-    //                           |  v emitFinally +---------+  |
-    //                           +->+------------>| Finally |--+
-    //                                            +---------+
-    enum class State {
-        // The initial state.
-        Start,
+  // The state of this emitter.
+  //
+  // +-------+ emitTry +-----+   emitCatch +-------+      emitEnd  +-----+
+  // | Start |-------->| Try |-+---------->| Catch |-+->+--------->| End |
+  // +-------+         +-----+ |           +-------+ |  ^          +-----+
+  //                           |                     |  |
+  //                           |  +------------------+  +----+
+  //                           |  |                          |
+  //                           |  v emitFinally +---------+  |
+  //                           +->+------------>| Finally |--+
+  //                                            +---------+
+  enum class State {
+    // The initial state.
+    Start,
 
-        // After calling emitTry.
-        Try,
+    // After calling emitTry.
+    Try,
 
-        // After calling emitCatch.
-        Catch,
+    // After calling emitCatch.
+    Catch,
 
-        // After calling emitFinally.
-        Finally,
+    // After calling emitFinally.
+    Finally,
 
-        // After calling emitEnd.
-        End
-    };
-    State state_;
+    // After calling emitEnd.
+    End
+  };
+  State state_;
 #endif
 
-    bool hasCatch() const {
-        return kind_ == Kind::TryCatch || kind_ == Kind::TryCatchFinally;
-    }
-    bool hasFinally() const {
-        return kind_ == Kind::TryCatchFinally || kind_ == Kind::TryFinally;
-    }
+  bool hasCatch() const {
+    return kind_ == Kind::TryCatch || kind_ == Kind::TryCatchFinally;
+  }
+  bool hasFinally() const {
+    return kind_ == Kind::TryCatchFinally || kind_ == Kind::TryFinally;
+  }
 
-  public:
-    TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind);
+ public:
+  TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind);
 
-    // Emits JSOP_GOTO to the end of try-catch-finally.
-    // Used in `yield*`.
-    MOZ_MUST_USE bool emitJumpOverCatchAndFinally();
+  // Emits JSOP_GOTO to the end of try-catch-finally.
+  // Used in `yield*`.
+  MOZ_MUST_USE bool emitJumpOverCatchAndFinally();
 
-    MOZ_MUST_USE bool emitTry();
-    MOZ_MUST_USE bool emitCatch();
+  MOZ_MUST_USE bool emitTry();
+  MOZ_MUST_USE bool emitCatch();
 
-    // If `finallyPos` is specified, it's an offset of the finally block's
-    // "{" character in the source code text, to improve line:column number in
-    // the error reporting.
-    // For non-syntactic try-catch-finally, `finallyPos` can be omitted.
-    MOZ_MUST_USE bool emitFinally(const mozilla::Maybe<uint32_t>& finallyPos = mozilla::Nothing());
+  // If `finallyPos` is specified, it's an offset of the finally block's
+  // "{" character in the source code text, to improve line:column number in
+  // the error reporting.
+  // For non-syntactic try-catch-finally, `finallyPos` can be omitted.
+  MOZ_MUST_USE bool emitFinally(
+      const mozilla::Maybe<uint32_t>& finallyPos = mozilla::Nothing());
 
-    MOZ_MUST_USE bool emitEnd();
+  MOZ_MUST_USE bool emitEnd();
 
-  private:
-    MOZ_MUST_USE bool emitTryEnd();
-    MOZ_MUST_USE bool emitCatchEnd();
-    MOZ_MUST_USE bool emitFinallyEnd();
+ private:
+  MOZ_MUST_USE bool emitTryEnd();
+  MOZ_MUST_USE bool emitCatchEnd();
+  MOZ_MUST_USE bool emitFinallyEnd();
 };
 
 } /* namespace frontend */

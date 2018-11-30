@@ -10,35 +10,31 @@
 namespace js {
 namespace jit {
 
-void
-FrameInfo::pop(StackAdjustment adjust)
-{
-    spIndex--;
-    StackValue* popped = &stack[spIndex];
+void FrameInfo::pop(StackAdjustment adjust) {
+  spIndex--;
+  StackValue* popped = &stack[spIndex];
 
-    if (adjust == AdjustStack && popped->kind() == StackValue::Stack) {
-        masm.addToStackPtr(Imm32(sizeof(Value)));
-    }
-    // Assert when anything uses this value.
-    popped->reset();
+  if (adjust == AdjustStack && popped->kind() == StackValue::Stack) {
+    masm.addToStackPtr(Imm32(sizeof(Value)));
+  }
+  // Assert when anything uses this value.
+  popped->reset();
 }
 
-void
-FrameInfo::popn(uint32_t n, StackAdjustment adjust)
-{
-    uint32_t poppedStack = 0;
-    for (uint32_t i = 0; i < n; i++) {
-        if (peek(-1)->kind() == StackValue::Stack) {
-            poppedStack++;
-        }
-        pop(DontAdjustStack);
+void FrameInfo::popn(uint32_t n, StackAdjustment adjust) {
+  uint32_t poppedStack = 0;
+  for (uint32_t i = 0; i < n; i++) {
+    if (peek(-1)->kind() == StackValue::Stack) {
+      poppedStack++;
     }
-    if (adjust == AdjustStack && poppedStack > 0) {
-        masm.addToStackPtr(Imm32(sizeof(Value) * poppedStack));
-    }
+    pop(DontAdjustStack);
+  }
+  if (adjust == AdjustStack && poppedStack > 0) {
+    masm.addToStackPtr(Imm32(sizeof(Value) * poppedStack));
+  }
 }
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_BaselineFrameInfo_inl_h */

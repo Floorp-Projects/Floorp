@@ -15,48 +15,38 @@
 namespace mozilla {
 namespace dom {
 
-class Credential : public nsISupports
-                 , public nsWrapperCache
-{
-public:
+class Credential : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Credential)
 
-public:
+ public:
   explicit Credential(nsPIDOMWindowInner* aParent);
 
-protected:
+ protected:
   virtual ~Credential();
 
-public:
-  nsISupports*
-  GetParentObject() const
-  {
-    return mParent;
-  }
+ public:
+  nsISupports* GetParentObject() const { return mParent; }
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  GetId(nsAString& aId) const;
+  void GetId(nsAString& aId) const;
 
-  void
-  GetType(nsAString& aType) const;
+  void GetType(nsAString& aType) const;
 
-  void
-  SetId(const nsAString& aId);
+  void SetId(const nsAString& aId);
 
-  void
-  SetType(const nsAString& aType);
+  void SetType(const nsAString& aType);
 
-private:
+ private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsAutoString mId;
   nsAutoString mType;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Credential_h
+#endif  // mozilla_dom_Credential_h

@@ -28,9 +28,8 @@ class WeakReferenceSupport;
 
 namespace detail {
 
-class SharedRef final
-{
-public:
+class SharedRef final {
+ public:
   explicit SharedRef(WeakReferenceSupport* aSupport);
   void Lock();
   void Unlock();
@@ -46,45 +45,39 @@ public:
   SharedRef& operator=(const SharedRef&) = delete;
   SharedRef& operator=(SharedRef&&) = delete;
 
-private:
+ private:
   ~SharedRef();
 
-private:
+ private:
   CRITICAL_SECTION mCS;
   WeakReferenceSupport* mSupport;
 };
 
-} // namespace detail
+}  // namespace detail
 
 // {F841AEFA-064C-49A4-B73D-EBD14A90F012}
-DEFINE_GUID(IID_IWeakReference,
-0xf841aefa, 0x64c, 0x49a4, 0xb7, 0x3d, 0xeb, 0xd1, 0x4a, 0x90, 0xf0, 0x12);
+DEFINE_GUID(IID_IWeakReference, 0xf841aefa, 0x64c, 0x49a4, 0xb7, 0x3d, 0xeb,
+            0xd1, 0x4a, 0x90, 0xf0, 0x12);
 
-struct IWeakReference : public IUnknown
-{
-  virtual STDMETHODIMP ToStrongRef(IWeakReferenceSource** aOutStrongReference) = 0;
+struct IWeakReference : public IUnknown {
+  virtual STDMETHODIMP ToStrongRef(
+      IWeakReferenceSource** aOutStrongReference) = 0;
   virtual STDMETHODIMP Resolve(REFIID aIid, void** aOutStrongReference) = 0;
 };
 
 // {87611F0C-9BBB-4F78-9D43-CAC5AD432CA1}
-DEFINE_GUID(IID_IWeakReferenceSource,
-0x87611f0c, 0x9bbb, 0x4f78, 0x9d, 0x43, 0xca, 0xc5, 0xad, 0x43, 0x2c, 0xa1);
+DEFINE_GUID(IID_IWeakReferenceSource, 0x87611f0c, 0x9bbb, 0x4f78, 0x9d, 0x43,
+            0xca, 0xc5, 0xad, 0x43, 0x2c, 0xa1);
 
-struct IWeakReferenceSource : public IUnknown
-{
+struct IWeakReferenceSource : public IUnknown {
   virtual STDMETHODIMP GetWeakReference(IWeakReference** aOutWeakRef) = 0;
 };
 
 class WeakRef;
 
-class WeakReferenceSupport : public IWeakReferenceSource
-{
-public:
-  enum class Flags
-  {
-    eNone = 0,
-    eDestroyOnMainThread = 1
-  };
+class WeakReferenceSupport : public IWeakReferenceSource {
+ public:
+  enum class Flags { eNone = 0, eDestroyOnMainThread = 1 };
 
   // IUnknown
   STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override;
@@ -94,16 +87,15 @@ public:
   // IWeakReferenceSource
   STDMETHODIMP GetWeakReference(IWeakReference** aOutWeakRef) override;
 
-protected:
+ protected:
   explicit WeakReferenceSupport(Flags aFlags);
   virtual ~WeakReferenceSupport() = default;
 
   virtual HRESULT WeakRefQueryInterface(REFIID aIid,
                                         IUnknown** aOutInterface) = 0;
 
-  class MOZ_RAII StabilizeRefCount final
-  {
-  public:
+  class MOZ_RAII StabilizeRefCount final {
+   public:
     explicit StabilizeRefCount(WeakReferenceSupport& aObject);
     ~StabilizeRefCount();
 
@@ -112,21 +104,20 @@ protected:
     StabilizeRefCount& operator=(const StabilizeRefCount&) = delete;
     StabilizeRefCount& operator=(StabilizeRefCount&&) = delete;
 
-  private:
+   private:
     WeakReferenceSupport& mObject;
   };
 
   friend class StabilizeRefCount;
 
-private:
+ private:
   RefPtr<detail::SharedRef> mSharedRef;
-  ULONG                     mRefCnt;
-  Flags                     mFlags;
+  ULONG mRefCnt;
+  Flags mFlags;
 };
 
-class WeakRef final : public IWeakReference
-{
-public:
+class WeakRef final : public IWeakReference {
+ public:
   // IUnknown
   STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override;
   STDMETHODIMP_(ULONG) AddRef() override;
@@ -138,15 +129,14 @@ public:
 
   explicit WeakRef(RefPtr<detail::SharedRef>& aSharedRef);
 
-private:
+ private:
   ~WeakRef() = default;
 
-  Atomic<ULONG>             mRefCnt;
+  Atomic<ULONG> mRefCnt;
   RefPtr<detail::SharedRef> mSharedRef;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_WeakRef_h
-
+#endif  // mozilla_mscom_WeakRef_h

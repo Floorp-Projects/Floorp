@@ -7,13 +7,13 @@
 #ifndef mozilla_layers_KeyboardMap_h
 #define mozilla_layers_KeyboardMap_h
 
-#include <stdint.h> // for uint32_t
+#include <stdint.h>  // for uint32_t
 
-#include "InputData.h"          // for KeyboardInput
-#include "nsIScrollableFrame.h" // for nsIScrollableFrame::ScrollUnit
-#include "nsTArray.h"           // for nsTArray
-#include "mozilla/Maybe.h"      // for mozilla::Maybe
-#include "KeyboardScrollAction.h" // for KeyboardScrollAction
+#include "InputData.h"             // for KeyboardInput
+#include "nsIScrollableFrame.h"    // for nsIScrollableFrame::ScrollUnit
+#include "nsTArray.h"              // for nsTArray
+#include "mozilla/Maybe.h"         // for mozilla::Maybe
+#include "KeyboardScrollAction.h"  // for KeyboardScrollAction
 
 namespace mozilla {
 
@@ -26,9 +26,8 @@ class KeyboardMap;
 /**
  * This class is an off main-thread <xul:handler> for scrolling commands.
  */
-class KeyboardShortcut final
-{
-public:
+class KeyboardShortcut final {
+ public:
   KeyboardShortcut();
 
   /**
@@ -36,9 +35,7 @@ public:
    * the specified keyboard action.
    */
   KeyboardShortcut(KeyboardInput::KeyboardEventType aEventType,
-                   uint32_t aKeyCode,
-                   uint32_t aCharCode,
-                   Modifiers aModifiers,
+                   uint32_t aKeyCode, uint32_t aCharCode, Modifiers aModifiers,
                    Modifiers aModifiersMask,
                    const KeyboardScrollAction& aAction);
 
@@ -47,9 +44,7 @@ public:
    * the keyboard event and dispatching it to content.
    */
   KeyboardShortcut(KeyboardInput::KeyboardEventType aEventType,
-                   uint32_t aKeyCode,
-                   uint32_t aCharCode,
-                   Modifiers aModifiers,
+                   uint32_t aKeyCode, uint32_t aCharCode, Modifiers aModifiers,
                    Modifiers aModifiersMask);
 
   /**
@@ -59,20 +54,19 @@ public:
    */
   static void AppendHardcodedShortcuts(nsTArray<KeyboardShortcut>& aShortcuts);
 
-protected:
+ protected:
   friend mozilla::layers::KeyboardMap;
 
-  bool Matches(const KeyboardInput& aInput,
-               const IgnoreModifierState& aIgnore,
+  bool Matches(const KeyboardInput& aInput, const IgnoreModifierState& aIgnore,
                uint32_t aOverrideCharCode = 0) const;
 
-private:
+ private:
   bool MatchesKey(const KeyboardInput& aInput,
                   uint32_t aOverrideCharCode) const;
   bool MatchesModifiers(const KeyboardInput& aInput,
                         const IgnoreModifierState& aIgnore) const;
 
-public:
+ public:
   // The action to perform when this shortcut is matched,
   // and not flagged to be dispatched to content
   KeyboardScrollAction mAction;
@@ -97,28 +91,28 @@ public:
 /**
  * A keyboard map is an off main-thread <xul:binding> for scrolling commands.
  */
-class KeyboardMap final
-{
-public:
+class KeyboardMap final {
+ public:
   KeyboardMap();
   explicit KeyboardMap(nsTArray<KeyboardShortcut>&& aShortcuts);
 
   const nsTArray<KeyboardShortcut>& Shortcuts() const { return mShortcuts; }
 
   /**
-   * Search through the internal list of shortcuts for a match for the input event
+   * Search through the internal list of shortcuts for a match for the input
+   * event
    */
   Maybe<KeyboardShortcut> FindMatch(const KeyboardInput& aEvent) const;
 
-private:
-  Maybe<KeyboardShortcut> FindMatchInternal(const KeyboardInput& aEvent,
-                                            const IgnoreModifierState& aIgnore,
-                                            uint32_t aOverrideCharCode = 0) const;
+ private:
+  Maybe<KeyboardShortcut> FindMatchInternal(
+      const KeyboardInput& aEvent, const IgnoreModifierState& aIgnore,
+      uint32_t aOverrideCharCode = 0) const;
 
   nsTArray<KeyboardShortcut> mShortcuts;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_KeyboardMap_h
+#endif  // mozilla_layers_KeyboardMap_h

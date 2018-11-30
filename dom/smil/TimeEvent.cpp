@@ -14,13 +14,11 @@
 namespace mozilla {
 namespace dom {
 
-TimeEvent::TimeEvent(EventTarget* aOwner,
-                     nsPresContext* aPresContext,
+TimeEvent::TimeEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                      InternalSMILTimeEvent* aEvent)
-  : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalSMILTimeEvent(false, eVoidEvent))
-  , mDetail(mEvent->AsSMILTimeEvent()->mDetail)
-{
+    : Event(aOwner, aPresContext,
+            aEvent ? aEvent : new InternalSMILTimeEvent(false, eVoidEvent)),
+      mDetail(mEvent->AsSMILTimeEvent()->mDetail) {
   if (aEvent) {
     mEventIsInternal = false;
   } else {
@@ -35,15 +33,12 @@ TimeEvent::TimeEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(TimeEvent, Event,
-                                   mView)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(TimeEvent, Event, mView)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(TimeEvent, Event)
 
-void
-TimeEvent::InitTimeEvent(const nsAString& aType, nsGlobalWindowInner* aView,
-                         int32_t aDetail)
-{
+void TimeEvent::InitTimeEvent(const nsAString& aType,
+                              nsGlobalWindowInner* aView, int32_t aDetail) {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
   Event::InitEvent(aType, false /*doesn't bubble*/, false /*can't cancel*/);
@@ -51,17 +46,15 @@ TimeEvent::InitTimeEvent(const nsAString& aType, nsGlobalWindowInner* aView,
   mView = aView ? aView->GetOuterWindow() : nullptr;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-already_AddRefed<TimeEvent>
-NS_NewDOMTimeEvent(EventTarget* aOwner,
-                   nsPresContext* aPresContext,
-                   InternalSMILTimeEvent* aEvent)
-{
+already_AddRefed<TimeEvent> NS_NewDOMTimeEvent(EventTarget* aOwner,
+                                               nsPresContext* aPresContext,
+                                               InternalSMILTimeEvent* aEvent) {
   RefPtr<TimeEvent> it = new TimeEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

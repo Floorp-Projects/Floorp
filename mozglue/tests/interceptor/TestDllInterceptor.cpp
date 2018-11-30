@@ -18,38 +18,36 @@
 
 NTSTATUS NTAPI NtFlushBuffersFile(HANDLE, PIO_STATUS_BLOCK);
 NTSTATUS NTAPI NtReadFile(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
-                          PIO_STATUS_BLOCK, PVOID, ULONG,
-                          PLARGE_INTEGER, PULONG);
+                          PIO_STATUS_BLOCK, PVOID, ULONG, PLARGE_INTEGER,
+                          PULONG);
 NTSTATUS NTAPI NtReadFileScatter(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
                                  PIO_STATUS_BLOCK, PFILE_SEGMENT_ELEMENT, ULONG,
                                  PLARGE_INTEGER, PULONG);
 NTSTATUS NTAPI NtWriteFile(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
-                           PIO_STATUS_BLOCK, PVOID, ULONG,
-                           PLARGE_INTEGER, PULONG);
+                           PIO_STATUS_BLOCK, PVOID, ULONG, PLARGE_INTEGER,
+                           PULONG);
 NTSTATUS NTAPI NtWriteFileGather(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
                                  PIO_STATUS_BLOCK, PFILE_SEGMENT_ELEMENT, ULONG,
                                  PLARGE_INTEGER, PULONG);
 NTSTATUS NTAPI NtQueryFullAttributesFile(POBJECT_ATTRIBUTES, PVOID);
-NTSTATUS NTAPI LdrLoadDll(PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
+NTSTATUS NTAPI LdrLoadDll(PWCHAR filePath, PULONG flags,
+                          PUNICODE_STRING moduleFileName, PHANDLE handle);
 NTSTATUS NTAPI LdrUnloadDll(HMODULE);
 
-enum SECTION_INHERIT
-{
-  ViewShare = 1,
-  ViewUnmap = 2
-};
+enum SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 };
 
-NTSTATUS NTAPI
-NtMapViewOfSection(HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress,
-                   ULONG_PTR aZeroBits, SIZE_T aCommitSize,
-                   PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
-                   SECTION_INHERIT aInheritDisposition, ULONG aAllocationType,
-                   ULONG aProtectionFlags);
+NTSTATUS NTAPI NtMapViewOfSection(
+    HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress, ULONG_PTR aZeroBits,
+    SIZE_T aCommitSize, PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
+    SECTION_INHERIT aInheritDisposition, ULONG aAllocationType,
+    ULONG aProtectionFlags);
 
 // These pointers are disguised as PVOID to avoid pulling in obscure headers
 PVOID NTAPI LdrResolveDelayLoadedAPI(PVOID, PVOID, PVOID, PVOID, PVOID, ULONG);
-void CALLBACK ProcessCaretEvents(HWINEVENTHOOK, DWORD, HWND, LONG, LONG, DWORD, DWORD);
-void __fastcall BaseThreadInitThunk(BOOL aIsInitialThread, void* aStartAddress, void* aThreadParam);
+void CALLBACK ProcessCaretEvents(HWINEVENTHOOK, DWORD, HWND, LONG, LONG, DWORD,
+                                 DWORD);
+void __fastcall BaseThreadInitThunk(BOOL aIsInitialThread, void* aStartAddress,
+                                    void* aThreadParam);
 
 using namespace mozilla;
 
@@ -58,14 +56,13 @@ struct payload {
   UINT64 b;
   UINT64 c;
 
-  bool operator==(const payload &other) const {
-    return (a == other.a &&
-            b == other.b &&
-            c == other.c);
+  bool operator==(const payload& other) const {
+    return (a == other.a && b == other.b && c == other.c);
   }
 };
 
-extern "C" __declspec(dllexport) __declspec(noinline) payload rotatePayload(payload p) {
+extern "C" __declspec(dllexport) __declspec(noinline) payload
+    rotatePayload(payload p) {
   UINT64 tmp = p.a;
   p.a = p.b;
   p.b = p.c;
@@ -76,48 +73,56 @@ extern "C" __declspec(dllexport) __declspec(noinline) payload rotatePayload(payl
 static bool patched_func_called = false;
 
 static WindowsDllInterceptor::FuncHookType<decltype(&rotatePayload)>
-  orig_rotatePayload;
+    orig_rotatePayload;
 
-static payload
-patched_rotatePayload(payload p)
-{
+static payload patched_rotatePayload(payload p) {
   patched_func_called = true;
   return orig_rotatePayload(p);
 }
 
 // Invoke aFunc by taking aArg's contents and using them as aFunc's arguments
-template <typename CallableT, typename... Args, typename ArgTuple = Tuple<Args...>, size_t... Indices>
-decltype(auto) Apply(CallableT&& aFunc, ArgTuple&& aArgs, std::index_sequence<Indices...>)
-{
-  return std::forward<CallableT>(aFunc)(Get<Indices>(std::forward<ArgTuple>(aArgs))...);
+template <typename CallableT, typename... Args,
+          typename ArgTuple = Tuple<Args...>, size_t... Indices>
+decltype(auto) Apply(CallableT&& aFunc, ArgTuple&& aArgs,
+                     std::index_sequence<Indices...>) {
+  return std::forward<CallableT>(aFunc)(
+      Get<Indices>(std::forward<ArgTuple>(aArgs))...);
 }
 
 template <typename CallableT>
 bool TestFunction(CallableT aFunc);
 
-#define DEFINE_TEST_FUNCTION(calling_convention) \
-  template <template <typename I, typename F> class FuncHookT, typename InterceptorT, typename R, typename... Args, typename... TestArgs> \
-  bool TestFunction(FuncHookT<InterceptorT, R (calling_convention *)(Args...)>&& aFunc, \
-                    bool (* aPred)(R), TestArgs... aArgs) \
-  { \
-    using FuncHookType = FuncHookT<InterceptorT, R (calling_convention *)(Args...)>; \
-    using ArgTuple = Tuple<Args...>; \
-    using Indices = std::index_sequence_for<Args...>; \
-    ArgTuple fakeArgs{ std::forward<TestArgs>(aArgs)... }; \
-    return aPred(Apply(std::forward<FuncHookType>(aFunc), std::forward<ArgTuple>(fakeArgs), Indices())); \
-  } \
-  \
-  /* Specialization for functions returning void */ \
-  template <template <typename I, typename F> class FuncHookT, typename InterceptorT, typename... Args, typename PredicateT, typename... TestArgs> \
-  bool TestFunction(FuncHookT<InterceptorT, void (calling_convention *)(Args...)>&& aFunc, \
-                    PredicateT&& aPred, TestArgs... aArgs) \
-  { \
-    using FuncHookType = FuncHookT<InterceptorT, void (calling_convention *)(Args...)>; \
-    using ArgTuple = Tuple<Args...>; \
-    using Indices = std::index_sequence_for<Args...>; \
-    ArgTuple fakeArgs{ std::forward<TestArgs>(aArgs)... }; \
-    Apply(std::forward<FuncHookType>(aFunc), std::forward<ArgTuple>(fakeArgs), Indices()); \
-    return true; \
+#define DEFINE_TEST_FUNCTION(calling_convention)                               \
+  template <template <typename I, typename F> class FuncHookT,                 \
+            typename InterceptorT, typename R, typename... Args,               \
+            typename... TestArgs>                                              \
+  bool TestFunction(                                                           \
+      FuncHookT<InterceptorT, R(calling_convention*)(Args...)>&& aFunc,        \
+      bool (*aPred)(R), TestArgs... aArgs) {                                   \
+    using FuncHookType =                                                       \
+        FuncHookT<InterceptorT, R(calling_convention*)(Args...)>;              \
+    using ArgTuple = Tuple<Args...>;                                           \
+    using Indices = std::index_sequence_for<Args...>;                          \
+    ArgTuple fakeArgs{std::forward<TestArgs>(aArgs)...};                       \
+    return aPred(Apply(std::forward<FuncHookType>(aFunc),                      \
+                       std::forward<ArgTuple>(fakeArgs), Indices()));          \
+  }                                                                            \
+                                                                               \
+  /* Specialization for functions returning void */                            \
+  template <template <typename I, typename F> class FuncHookT,                 \
+            typename InterceptorT, typename... Args, typename PredicateT,      \
+            typename... TestArgs>                                              \
+  bool TestFunction(                                                           \
+      FuncHookT<InterceptorT, void(calling_convention*)(Args...)>&& aFunc,     \
+      PredicateT&& aPred, TestArgs... aArgs) {                                 \
+    using FuncHookType =                                                       \
+        FuncHookT<InterceptorT, void(calling_convention*)(Args...)>;           \
+    using ArgTuple = Tuple<Args...>;                                           \
+    using Indices = std::index_sequence_for<Args...>;                          \
+    ArgTuple fakeArgs{std::forward<TestArgs>(aArgs)...};                       \
+    Apply(std::forward<FuncHookType>(aFunc), std::forward<ArgTuple>(fakeArgs), \
+          Indices());                                                          \
+    return true;                                                               \
   }
 
 // C++11 allows empty arguments to macros. clang works just fine. MSVC does the
@@ -131,29 +136,34 @@ DEFINE_TEST_FUNCTION()
 #ifdef _M_IX86
 DEFINE_TEST_FUNCTION(__stdcall)
 DEFINE_TEST_FUNCTION(__fastcall)
-#endif // _M_IX86
+#endif  // _M_IX86
 
 // Test the hooked function against the supplied predicate
 template <typename OrigFuncT, typename PredicateT, typename... Args>
-bool CheckHook(OrigFuncT &aOrigFunc,
-               const char* aDllName, const char* aFuncName, PredicateT&& aPred,
-               Args... aArgs)
-{
-  if (TestFunction(std::forward<OrigFuncT>(aOrigFunc), std::forward<PredicateT>(aPred), std::forward<Args>(aArgs)...)) {
-    printf("TEST-PASS | WindowsDllInterceptor | "
-           "Executed hooked function %s from %s\n", aFuncName, aDllName);
+bool CheckHook(OrigFuncT& aOrigFunc, const char* aDllName,
+               const char* aFuncName, PredicateT&& aPred, Args... aArgs) {
+  if (TestFunction(std::forward<OrigFuncT>(aOrigFunc),
+                   std::forward<PredicateT>(aPred),
+                   std::forward<Args>(aArgs)...)) {
+    printf(
+        "TEST-PASS | WindowsDllInterceptor | "
+        "Executed hooked function %s from %s\n",
+        aFuncName, aDllName);
     return true;
   }
-  printf("TEST-FAILED | WindowsDllInterceptor | "
-         "Failed to execute hooked function %s from %s\n", aFuncName, aDllName);
+  printf(
+      "TEST-FAILED | WindowsDllInterceptor | "
+      "Failed to execute hooked function %s from %s\n",
+      aFuncName, aDllName);
   return false;
 }
 
 // Hook the function and optionally attempt calling it
 template <typename OrigFuncT, size_t N, typename PredicateT, typename... Args>
-bool TestHook(const char (&dll)[N], const char *func, PredicateT&& aPred, Args... aArgs)
-{
-  auto orig_func(mozilla::MakeUnique<WindowsDllInterceptor::FuncHookType<OrigFuncT>>());
+bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
+              Args... aArgs) {
+  auto orig_func(
+      mozilla::MakeUnique<WindowsDllInterceptor::FuncHookType<OrigFuncT>>());
 
   bool successful = false;
   {
@@ -163,25 +173,32 @@ bool TestHook(const char (&dll)[N], const char *func, PredicateT&& aPred, Args..
   }
 
   if (successful) {
-    printf("TEST-PASS | WindowsDllInterceptor | Could hook %s from %s\n", func, dll);
+    printf("TEST-PASS | WindowsDllInterceptor | Could hook %s from %s\n", func,
+           dll);
     if (!aPred) {
-      printf("TEST-SKIPPED | WindowsDllInterceptor | "
-             "Will not attempt to execute patched %s.\n", func);
+      printf(
+          "TEST-SKIPPED | WindowsDllInterceptor | "
+          "Will not attempt to execute patched %s.\n",
+          func);
       return true;
     }
 
-    return CheckHook(*orig_func, dll, func, std::forward<PredicateT>(aPred), std::forward<Args>(aArgs)...);
+    return CheckHook(*orig_func, dll, func, std::forward<PredicateT>(aPred),
+                     std::forward<Args>(aArgs)...);
   } else {
-    printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to hook %s from %s\n", func, dll);
+    printf(
+        "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to hook %s from "
+        "%s\n",
+        func, dll);
     return false;
   }
 }
 
 // Detour the function and optionally attempt calling it
 template <typename OrigFuncT, size_t N, typename PredicateT>
-bool TestDetour(const char (&dll)[N], const char *func, PredicateT&& aPred)
-{
-  auto orig_func(mozilla::MakeUnique<WindowsDllInterceptor::FuncHookType<OrigFuncT>>());
+bool TestDetour(const char (&dll)[N], const char* func, PredicateT&& aPred) {
+  auto orig_func(
+      mozilla::MakeUnique<WindowsDllInterceptor::FuncHookType<OrigFuncT>>());
 
   bool successful = false;
   {
@@ -191,16 +208,22 @@ bool TestDetour(const char (&dll)[N], const char *func, PredicateT&& aPred)
   }
 
   if (successful) {
-    printf("TEST-PASS | WindowsDllInterceptor | Could detour %s from %s\n", func, dll);
+    printf("TEST-PASS | WindowsDllInterceptor | Could detour %s from %s\n",
+           func, dll);
     if (!aPred) {
-      printf("TEST-SKIPPED | WindowsDllInterceptor | "
-             "Will not attempt to execute patched %s.\n", func);
+      printf(
+          "TEST-SKIPPED | WindowsDllInterceptor | "
+          "Will not attempt to execute patched %s.\n",
+          func);
       return true;
     }
 
     return CheckHook(*orig_func, dll, func, std::forward<PredicateT>(aPred));
   } else {
-    printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to detour %s from %s\n", func, dll);
+    printf(
+        "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to detour %s "
+        "from %s\n",
+        func, dll);
     return false;
   }
 }
@@ -208,76 +231,65 @@ bool TestDetour(const char (&dll)[N], const char *func, PredicateT&& aPred)
 // If a function pointer's type returns void*, this template converts that type
 // to return uintptr_t instead, for the purposes of predicates.
 template <typename FuncT>
-struct SubstituteForVoidPtr
-{
+struct SubstituteForVoidPtr {
   using Type = FuncT;
 };
 
 template <typename... Args>
-struct SubstituteForVoidPtr<void* (*)(Args...)>
-{
+struct SubstituteForVoidPtr<void* (*)(Args...)> {
   using Type = uintptr_t (*)(Args...);
 };
 
 #ifdef _M_IX86
 template <typename... Args>
-struct SubstituteForVoidPtr<void* (__stdcall*)(Args...)>
-{
-  using Type = uintptr_t (__stdcall*)(Args...);
+struct SubstituteForVoidPtr<void*(__stdcall*)(Args...)> {
+  using Type = uintptr_t(__stdcall*)(Args...);
 };
 
 template <typename... Args>
-struct SubstituteForVoidPtr<void* (__fastcall*)(Args...)>
-{
-  using Type = uintptr_t (__fastcall*)(Args...);
+struct SubstituteForVoidPtr<void*(__fastcall*)(Args...)> {
+  using Type = uintptr_t(__fastcall*)(Args...);
 };
-#endif // _M_IX86
+#endif  // _M_IX86
 
 // Determines the function's return type
 template <typename FuncT>
 struct ReturnType;
 
 template <typename R, typename... Args>
-struct ReturnType<R (*)(Args...)>
-{
+struct ReturnType<R (*)(Args...)> {
   using Type = R;
 };
 
 #ifdef _M_IX86
 template <typename R, typename... Args>
-struct ReturnType<R (__stdcall*)(Args...)>
-{
+struct ReturnType<R(__stdcall*)(Args...)> {
   using Type = R;
 };
 
 template <typename R, typename... Args>
-struct ReturnType<R (__fastcall*)(Args...)>
-{
+struct ReturnType<R(__fastcall*)(Args...)> {
   using Type = R;
 };
-#endif // _M_IX86
+#endif  // _M_IX86
 
 // Predicates that may be supplied during tests
 template <typename FuncT>
-struct Predicates
-{
+struct Predicates {
   using ArgType = typename ReturnType<FuncT>::Type;
 
   template <ArgType CompVal>
-  static bool Equals(ArgType aValue)
-  {
+  static bool Equals(ArgType aValue) {
     return CompVal == aValue;
   }
 
   template <ArgType CompVal>
-  static bool NotEquals(ArgType aValue)
-  {
+  static bool NotEquals(ArgType aValue) {
     return CompVal != aValue;
   }
 
   template <ArgType CompVal>
-  static bool Ignore(ArgType aValue)
-  {
+  static bool Ignore(ArgType aValue) {
     return true;
   }
 };
@@ -285,36 +297,30 @@ struct Predicates
 // Functions that return void should be ignored, so we specialize the
 // Ignore predicate for that case. Use nullptr as the value to compare against.
 template <typename... Args>
-struct Predicates<void (*)(Args...)>
-{
+struct Predicates<void (*)(Args...)> {
   template <nullptr_t DummyVal>
-  static bool Ignore()
-  {
+  static bool Ignore() {
     return true;
   }
 };
 
 #ifdef _M_IX86
 template <typename... Args>
-struct Predicates<void (__stdcall*)(Args...)>
-{
+struct Predicates<void(__stdcall*)(Args...)> {
   template <nullptr_t DummyVal>
-  static bool Ignore()
-  {
+  static bool Ignore() {
     return true;
   }
 };
 
 template <typename... Args>
-struct Predicates<void (__fastcall*)(Args...)>
-{
+struct Predicates<void(__fastcall*)(Args...)> {
   template <nullptr_t DummyVal>
-  static bool Ignore()
-  {
+  static bool Ignore() {
     return true;
   }
 };
-#endif // _M_IX86
+#endif  // _M_IX86
 
 // The standard test. Hook |func|, and then try executing it with all zero
 // arguments, using |pred| and |comp| to determine whether the call successfully
@@ -325,61 +331,84 @@ struct Predicates<void (__fastcall*)(Args...)>
 // Note: When |func| returns void, you must supply |Ignore| and |nullptr| as the
 // |pred| and |comp| arguments, respectively.
 #define TEST_HOOK(dll, func, pred, comp) \
-  TestHook<decltype(&func)>(#dll, #func, &Predicates<decltype(&func)>::pred<comp>)
+  TestHook<decltype(&func)>(#dll, #func, \
+                            &Predicates<decltype(&func)>::pred<comp>)
 
 // We need to special-case functions that return INVALID_HANDLE_VALUE
 // (ie, CreateFile). Our template machinery for comparing values doesn't work
 // with integer constants passed as pointers (well, it works on MSVC, but not
 // clang, because that is not standard-compliant).
-#define TEST_HOOK_FOR_INVALID_HANDLE_VALUE(dll, func) \
-  TestHook<SubstituteForVoidPtr<decltype(&func)>::Type>(#dll, #func, &Predicates<SubstituteForVoidPtr<decltype(&func)>::Type>::Equals<uintptr_t(-1)>)
+#define TEST_HOOK_FOR_INVALID_HANDLE_VALUE(dll, func)                   \
+  TestHook<SubstituteForVoidPtr<decltype(&func)>::Type>(                \
+      #dll, #func,                                                      \
+      &Predicates<SubstituteForVoidPtr<decltype(&func)>::Type>::Equals< \
+          uintptr_t(-1)>)
 
 // This variant allows you to explicitly supply arguments to the hooked function
-// during testing. You want to provide arguments that produce the conditions that
-// induce the function to return a value that is accepted by your predicate.
+// during testing. You want to provide arguments that produce the conditions
+// that induce the function to return a value that is accepted by your
+// predicate.
 #define TEST_HOOK_PARAMS(dll, func, pred, comp, ...) \
-  TestHook<decltype(&func)>(#dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
+  TestHook<decltype(&func)>(                         \
+      #dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
 
 // This is for cases when we want to hook |func|, but it is unsafe to attempt
 // to execute the function in the context of a test.
-#define TEST_HOOK_SKIP_EXEC(dll, func) \
-  TestHook<decltype(&func)>(#dll, #func, reinterpret_cast<bool (*)(typename ReturnType<decltype(&func)>::Type)>(NULL))
+#define TEST_HOOK_SKIP_EXEC(dll, func)                                        \
+  TestHook<decltype(&func)>(                                                  \
+      #dll, #func,                                                            \
+      reinterpret_cast<bool (*)(typename ReturnType<decltype(&func)>::Type)>( \
+          NULL))
 
 // The following three variants are identical to the previous macros,
 // however the forcibly use a Detour on 32-bit Windows. On 64-bit Windows,
 // these macros are identical to their TEST_HOOK variants.
 #define TEST_DETOUR(dll, func, pred, comp) \
-  TestDetour<decltype(&func)>(#dll, #func, &Predicates<decltype(&func)>::pred<comp>)
+  TestDetour<decltype(&func)>(#dll, #func, \
+                              &Predicates<decltype(&func)>::pred<comp>)
 
 #define TEST_DETOUR_PARAMS(dll, func, pred, comp, ...) \
-  TestDetour<decltype(&func)>(#dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
+  TestDetour<decltype(&func)>(                         \
+      #dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
 
-#define TEST_DETOUR_SKIP_EXEC(dll, func) \
-  TestDetour<decltype(&func)>(#dll, #func, reinterpret_cast<bool (*)(typename ReturnType<decltype(&func)>::Type)>(NULL))
+#define TEST_DETOUR_SKIP_EXEC(dll, func)                                      \
+  TestDetour<decltype(&func)>(                                                \
+      #dll, #func,                                                            \
+      reinterpret_cast<bool (*)(typename ReturnType<decltype(&func)>::Type)>( \
+          NULL))
 
 template <typename OrigFuncT, size_t N, typename PredicateT, typename... Args>
-bool MaybeTestHook(const bool cond, const char (&dll)[N], const char *func, PredicateT&& aPred, Args... aArgs)
-{
+bool MaybeTestHook(const bool cond, const char (&dll)[N], const char* func,
+                   PredicateT&& aPred, Args... aArgs) {
   if (!cond) {
-    printf("TEST-SKIPPED | WindowsDllInterceptor | Skipped hook test for %s from %s\n", func, dll);
+    printf(
+        "TEST-SKIPPED | WindowsDllInterceptor | Skipped hook test for %s from "
+        "%s\n",
+        func, dll);
     return true;
   }
 
-  return TestHook<OrigFuncT>(dll, func, std::forward<PredicateT>(aPred), std::forward<Args>(aArgs)...);
+  return TestHook<OrigFuncT>(dll, func, std::forward<PredicateT>(aPred),
+                             std::forward<Args>(aArgs)...);
 }
 
 // Like TEST_HOOK, but the test is only executed when cond is true.
 #define MAYBE_TEST_HOOK(cond, dll, func, pred, comp) \
-  MaybeTestHook<decltype(&func)>(cond, #dll, #func, &Predicates<decltype(&func)>::pred<comp>)
+  MaybeTestHook<decltype(&func)>(cond, #dll, #func,  \
+                                 &Predicates<decltype(&func)>::pred<comp>)
 
-#define MAYBE_TEST_HOOK_PARAMS(cond, dll, func, pred, comp, ...) \
-  MaybeTestHook<decltype(&func)>(cond, #dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
+#define MAYBE_TEST_HOOK_PARAMS(cond, dll, func, pred, comp, ...)           \
+  MaybeTestHook<decltype(&func)>(cond, #dll, #func,                        \
+                                 &Predicates<decltype(&func)>::pred<comp>, \
+                                 __VA_ARGS__)
 
-#define MAYBE_TEST_HOOK_SKIP_EXEC(cond, dll, func) \
-  MaybeTestHook<decltype(&func)>(cond, #dll, #func, reinterpret_cast<bool (*)(typename ReturnType<decltype(&func)>::Type)>(NULL))
+#define MAYBE_TEST_HOOK_SKIP_EXEC(cond, dll, func)                            \
+  MaybeTestHook<decltype(&func)>(                                             \
+      cond, #dll, #func,                                                      \
+      reinterpret_cast<bool (*)(typename ReturnType<decltype(&func)>::Type)>( \
+          NULL))
 
-bool ShouldTestTipTsf()
-{
+bool ShouldTestTipTsf() {
   if (!IsWin8OrLater()) {
     return false;
   }
@@ -389,7 +418,9 @@ bool ShouldTestTipTsf()
     return true;
   }
 
-  auto pSHGetKnownFolderPath = reinterpret_cast<decltype(&SHGetKnownFolderPath)>(GetProcAddress(shell32, "SHGetKnownFolderPath"));
+  auto pSHGetKnownFolderPath =
+      reinterpret_cast<decltype(&SHGetKnownFolderPath)>(
+          GetProcAddress(shell32, "SHGetKnownFolderPath"));
   if (!pSHGetKnownFolderPath) {
     return true;
   }
@@ -417,69 +448,72 @@ bool ShouldTestTipTsf()
 
 // Use VMSharingPolicyUnique for the TenByteInterceptor, as it needs to
 // reserve its trampoline memory in a special location.
-using TenByteInterceptor =
-  mozilla::interceptor::WindowsDllInterceptor<
+using TenByteInterceptor = mozilla::interceptor::WindowsDllInterceptor<
     mozilla::interceptor::VMSharingPolicyUnique<
-      mozilla::interceptor::MMPolicyInProcess,
-      mozilla::interceptor::kDefaultTrampolineSize>>;
+        mozilla::interceptor::MMPolicyInProcess,
+        mozilla::interceptor::kDefaultTrampolineSize>>;
 
 static TenByteInterceptor::FuncHookType<decltype(&::NtMapViewOfSection)>
-  orig_NtMapViewOfSection;
+    orig_NtMapViewOfSection;
 
-#endif // defined(_M_X64)
+#endif  // defined(_M_X64)
 
-bool
-TestTenByteDetour()
-{
+bool TestTenByteDetour() {
 #if defined(_M_X64)
-  auto pNtMapViewOfSection =
-    reinterpret_cast<decltype(&::NtMapViewOfSection)>(
+  auto pNtMapViewOfSection = reinterpret_cast<decltype(&::NtMapViewOfSection)>(
       ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"), "NtMapViewOfSection"));
   if (!pNtMapViewOfSection) {
-    printf("TEST-FAILED | WindowsDllInterceptor | "
-           "Failed to resolve ntdll!NtMapViewOfSection\n");
+    printf(
+        "TEST-FAILED | WindowsDllInterceptor | "
+        "Failed to resolve ntdll!NtMapViewOfSection\n");
     return false;
   }
 
-  { // Scope for tenByteInterceptor
+  {  // Scope for tenByteInterceptor
     TenByteInterceptor tenByteInterceptor;
-    tenByteInterceptor.TestOnlyDetourInit(L"ntdll.dll",
-      mozilla::interceptor::DetourFlags::eTestOnlyForce10BytePatch);
+    tenByteInterceptor.TestOnlyDetourInit(
+        L"ntdll.dll",
+        mozilla::interceptor::DetourFlags::eTestOnlyForce10BytePatch);
     if (!orig_NtMapViewOfSection.SetDetour(tenByteInterceptor,
                                            "NtMapViewOfSection", nullptr)) {
-      printf("TEST-FAILED | WindowsDllInterceptor | "
-             "Failed to hook ntdll!NtMapViewOfSection via 10-byte patch\n");
+      printf(
+          "TEST-FAILED | WindowsDllInterceptor | "
+          "Failed to hook ntdll!NtMapViewOfSection via 10-byte patch\n");
       return false;
     }
 
-    auto pred = &Predicates<decltype(&::NtMapViewOfSection)>::Ignore<((NTSTATUS)0)>;
+    auto pred =
+        &Predicates<decltype(&::NtMapViewOfSection)>::Ignore<((NTSTATUS)0)>;
 
-    if (!CheckHook(orig_NtMapViewOfSection, "ntdll.dll", "NtMapViewOfSection", pred)) {
+    if (!CheckHook(orig_NtMapViewOfSection, "ntdll.dll", "NtMapViewOfSection",
+                   pred)) {
       // CheckHook has already printed the error message for us
       return false;
     }
   }
 
   // Now ensure that our hook cleanup worked
-  NTSTATUS status = pNtMapViewOfSection(nullptr, nullptr, nullptr, 0, 0, nullptr,
-                                        nullptr, ((SECTION_INHERIT)0), 0, 0);
+  NTSTATUS status =
+      pNtMapViewOfSection(nullptr, nullptr, nullptr, 0, 0, nullptr, nullptr,
+                          ((SECTION_INHERIT)0), 0, 0);
   if (NT_SUCCESS(status)) {
-    printf("TEST-FAILED | WindowsDllInterceptor | "
-           "Unexpected successful call to ntdll!NtMapViewOfSection after removing 10-byte hook\n");
+    printf(
+        "TEST-FAILED | WindowsDllInterceptor | "
+        "Unexpected successful call to ntdll!NtMapViewOfSection after removing "
+        "10-byte hook\n");
     return false;
   }
 
-  printf("TEST-PASS | WindowsDllInterceptor | "
-         "Successfully unhooked ntdll!NtMapViewOfSection via 10-byte patch\n");
+  printf(
+      "TEST-PASS | WindowsDllInterceptor | "
+      "Successfully unhooked ntdll!NtMapViewOfSection via 10-byte patch\n");
   return true;
 #else
   return true;
 #endif
 }
 
-extern "C"
-int wmain(int argc, wchar_t* argv[])
-{
+extern "C" int wmain(int argc, wchar_t* argv[]) {
   LARGE_INTEGER start;
   QueryPerformanceCounter(&start);
 
@@ -487,7 +521,7 @@ int wmain(int argc, wchar_t* argv[])
   // injects code in rotatePayload in a way that WindowsDllInterceptor doesn't
   // understand.
 #ifndef MOZ_CODE_COVERAGE
-  payload initial = { 0x12345678, 0xfc4e9d31, 0x87654321 };
+  payload initial = {0x12345678, 0xfc4e9d31, 0x87654321};
   payload p0, p1;
   ZeroMemory(&p0, sizeof(p0));
   ZeroMemory(&p1, sizeof(p1));
@@ -497,10 +531,13 @@ int wmain(int argc, wchar_t* argv[])
   {
     WindowsDllInterceptor ExeIntercept;
     ExeIntercept.Init("TestDllInterceptor.exe");
-    if (orig_rotatePayload.Set(ExeIntercept, "rotatePayload", &patched_rotatePayload)) {
+    if (orig_rotatePayload.Set(ExeIntercept, "rotatePayload",
+                               &patched_rotatePayload)) {
       printf("TEST-PASS | WindowsDllInterceptor | Hook added\n");
     } else {
-      printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to add hook\n");
+      printf(
+          "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to add "
+          "hook\n");
       return 1;
     }
 
@@ -509,14 +546,18 @@ int wmain(int argc, wchar_t* argv[])
     if (patched_func_called) {
       printf("TEST-PASS | WindowsDllInterceptor | Hook called\n");
     } else {
-      printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook was not called\n");
+      printf(
+          "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook was not "
+          "called\n");
       return 1;
     }
 
     if (p0 == p1) {
       printf("TEST-PASS | WindowsDllInterceptor | Hook works properly\n");
     } else {
-      printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook didn't return the right information\n");
+      printf(
+          "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook didn't return "
+          "the right information\n");
       return 1;
     }
   }
@@ -527,16 +568,24 @@ int wmain(int argc, wchar_t* argv[])
   p1 = rotatePayload(initial);
 
   if (!patched_func_called) {
-    printf("TEST-PASS | WindowsDllInterceptor | Hook was not called after unregistration\n");
+    printf(
+        "TEST-PASS | WindowsDllInterceptor | Hook was not called after "
+        "unregistration\n");
   } else {
-    printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook was still called after unregistration\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook was still called "
+        "after unregistration\n");
     return 1;
   }
 
   if (p0 == p1) {
-    printf("TEST-PASS | WindowsDllInterceptor | Original function worked properly\n");
+    printf(
+        "TEST-PASS | WindowsDllInterceptor | Original function worked "
+        "properly\n");
   } else {
-    printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Original function didn't return the right information\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Original function "
+        "didn't return the right information\n");
     return 1;
   }
 #endif
@@ -562,7 +611,8 @@ int wmain(int argc, wchar_t* argv[])
       TEST_HOOK(ntdll.dll, NtQueryFullAttributesFile, NotEquals, 0) &&
 #ifndef MOZ_ASAN
       // Bug 733892: toolkit/crashreporter/nsExceptionHandler.cpp
-      // This fails on ASan because the ASan runtime already hooked this function
+      // This fails on ASan because the ASan runtime already hooked this
+      // function
       TEST_HOOK(kernel32.dll, SetUnhandledExceptionFilter, Ignore, nullptr) &&
 #endif
 #ifdef _M_IX86
@@ -579,19 +629,23 @@ int wmain(int argc, wchar_t* argv[])
       TEST_HOOK(comdlg32.dll, GetSaveFileNameW, Ignore, FALSE) &&
       TEST_HOOK(comdlg32.dll, GetOpenFileNameW, Ignore, FALSE) &&
 #ifdef _M_X64
-      TEST_HOOK(user32.dll, GetKeyState, Ignore, 0) &&    // see Bug 1316415
+      TEST_HOOK(user32.dll, GetKeyState, Ignore, 0) &&  // see Bug 1316415
       TEST_HOOK(ntdll.dll, LdrUnloadDll, NotEquals, 0) &&
-      MAYBE_TEST_HOOK_SKIP_EXEC(IsWin8OrLater(), ntdll.dll, LdrResolveDelayLoadedAPI) &&
-      MAYBE_TEST_HOOK(!IsWin8OrLater(), kernel32.dll, RtlInstallFunctionTableCallback, Equals, FALSE) &&
+      MAYBE_TEST_HOOK_SKIP_EXEC(IsWin8OrLater(), ntdll.dll,
+                                LdrResolveDelayLoadedAPI) &&
+      MAYBE_TEST_HOOK(!IsWin8OrLater(), kernel32.dll,
+                      RtlInstallFunctionTableCallback, Equals, FALSE) &&
       TEST_HOOK(comdlg32.dll, PrintDlgW, Ignore, 0) &&
 #endif
-      MAYBE_TEST_HOOK(ShouldTestTipTsf(), tiptsf.dll, ProcessCaretEvents, Ignore, nullptr) &&
+      MAYBE_TEST_HOOK(ShouldTestTipTsf(), tiptsf.dll, ProcessCaretEvents,
+                      Ignore, nullptr) &&
 #ifdef _M_IX86
       TEST_HOOK(user32.dll, SendMessageTimeoutW, Equals, 0) &&
 #endif
       TEST_HOOK(user32.dll, SetCursorPos, NotEquals, FALSE) &&
       TEST_HOOK(kernel32.dll, TlsAlloc, NotEquals, TLS_OUT_OF_INDEXES) &&
-      TEST_HOOK_PARAMS(kernel32.dll, TlsFree, Equals, FALSE, TLS_OUT_OF_INDEXES) &&
+      TEST_HOOK_PARAMS(kernel32.dll, TlsFree, Equals, FALSE,
+                       TLS_OUT_OF_INDEXES) &&
       TEST_HOOK(kernel32.dll, CloseHandle, Equals, FALSE) &&
       TEST_HOOK(kernel32.dll, DuplicateHandle, Equals, FALSE) &&
 
@@ -611,12 +665,12 @@ int wmain(int argc, wchar_t* argv[])
       TEST_HOOK(wininet.dll, InternetQueryOptionA, Equals, FALSE) &&
 
       TEST_HOOK(sspicli.dll, AcquireCredentialsHandleA, NotEquals, SEC_E_OK) &&
-      TEST_HOOK(sspicli.dll, QueryCredentialsAttributesA, NotEquals, SEC_E_OK) &&
+      TEST_HOOK(sspicli.dll, QueryCredentialsAttributesA, NotEquals,
+                SEC_E_OK) &&
       TEST_HOOK(sspicli.dll, FreeCredentialsHandle, NotEquals, SEC_E_OK) &&
 
       TEST_DETOUR_SKIP_EXEC(kernel32.dll, BaseThreadInitThunk) &&
-      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) &&
-      TestTenByteDetour()) {
+      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) && TestTenByteDetour()) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
 
     LARGE_INTEGER end, freq;

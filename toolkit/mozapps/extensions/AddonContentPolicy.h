@@ -8,12 +8,11 @@
 #include "nsIAddonPolicyService.h"
 
 class AddonContentPolicy : public nsIContentPolicy,
-                           public nsIAddonContentPolicy
-{
-protected:
+                           public nsIAddonContentPolicy {
+ protected:
   virtual ~AddonContentPolicy();
 
-public:
+ public:
   AddonContentPolicy();
 
   NS_DECL_ISUPPORTS

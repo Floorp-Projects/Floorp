@@ -15,47 +15,45 @@
 namespace mozilla {
 namespace dom {
 
-class CSSFontFeatureValuesRule final : public css::Rule
-{
-public:
+class CSSFontFeatureValuesRule final : public css::Rule {
+ public:
   CSSFontFeatureValuesRule(RefPtr<RawServoFontFeatureValuesRule> aRawRule,
-                           StyleSheet* aSheet,
-                           css::Rule* aParentRule,
-                           uint32_t aLine,
-                           uint32_t aColumn)
-    : css::Rule(aSheet, aParentRule, aLine, aColumn)
-    , mRawRule(std::move(aRawRule))
-  {
-  }
+                           StyleSheet* aSheet, css::Rule* aParentRule,
+                           uint32_t aLine, uint32_t aColumn)
+      : css::Rule(aSheet, aParentRule, aLine, aColumn),
+        mRawRule(std::move(aRawRule)) {}
 
   virtual bool IsCCLeaf() const override;
 
   RawServoFontFeatureValuesRule* Raw() const { return mRawRule; }
 
   // WebIDL interfaces
-  uint16_t Type() const final { return CSSRule_Binding::FONT_FEATURE_VALUES_RULE; }
+  uint16_t Type() const final {
+    return CSSRule_Binding::FONT_FEATURE_VALUES_RULE;
+  }
   void GetCssText(nsAString& aCssText) const override;
   void GetFontFamily(nsAString& aFamily);
   void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv);
   void GetValueText(nsAString& aValueText);
   void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv);
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   ~CSSFontFeatureValuesRule() = default;
 
   RefPtr<RawServoFontFeatureValuesRule> mRawRule;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CSSFontFeatureValuesRule_h
+#endif  // mozilla_dom_CSSFontFeatureValuesRule_h

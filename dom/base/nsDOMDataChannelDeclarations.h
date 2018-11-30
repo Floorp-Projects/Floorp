@@ -13,15 +13,14 @@
 #include "nsCOMPtr.h"
 
 namespace mozilla {
-   class DataChannel;
+class DataChannel;
 }
 
 class nsDOMDataChannel;
 class nsPIDOMWindowInner;
 
-nsresult
-NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel>&& dataChannel,
-                     nsPIDOMWindowInner* aWindow,
-                     nsDOMDataChannel** domDataChannel);
+nsresult NS_NewDOMDataChannel(
+    already_AddRefed<mozilla::DataChannel>&& dataChannel,
+    nsPIDOMWindowInner* aWindow, nsDOMDataChannel** domDataChannel);
 
-#endif // nsDOMDataChannelDeclarations_h
+#endif  // nsDOMDataChannelDeclarations_h

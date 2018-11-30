@@ -6,5 +6,5 @@
 
 #include "nsSMILRepeatCount.h"
 
-/*static*/ const double nsSMILRepeatCount::kNotSet     = -1.0;
+/*static*/ const double nsSMILRepeatCount::kNotSet = -1.0;
 /*static*/ const double nsSMILRepeatCount::kIndefinite = -2.0;

@@ -16,8 +16,7 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS(TimeoutExecutor, nsIRunnable, nsITimerCallback, nsINamed)
 
-TimeoutExecutor::~TimeoutExecutor()
-{
+TimeoutExecutor::~TimeoutExecutor() {
   // The TimeoutManager should keep the Executor alive until its destroyed,
   // and then call Shutdown() explicitly.
   MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::Shutdown);
@@ -25,16 +24,14 @@ TimeoutExecutor::~TimeoutExecutor()
   MOZ_DIAGNOSTIC_ASSERT(!mTimer);
 }
 
-nsresult
-TimeoutExecutor::ScheduleImmediate(const TimeStamp& aDeadline,
-                                   const TimeStamp& aNow)
-{
+nsresult TimeoutExecutor::ScheduleImmediate(const TimeStamp& aDeadline,
+                                            const TimeStamp& aNow) {
   MOZ_DIAGNOSTIC_ASSERT(mDeadline.IsNull());
   MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::None);
   MOZ_DIAGNOSTIC_ASSERT(aDeadline <= (aNow + mAllowedEarlyFiringTime));
 
   nsresult rv =
-    mOwner->EventTarget()->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+      mOwner->EventTarget()->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mMode = Mode::Immediate;
@@ -43,11 +40,9 @@ TimeoutExecutor::ScheduleImmediate(const TimeStamp& aDeadline,
   return NS_OK;
 }
 
-nsresult
-TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
-                                 const TimeStamp& aNow,
-                                 const TimeDuration& aMinDelay)
-{
+nsresult TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
+                                          const TimeStamp& aNow,
+                                          const TimeDuration& aMinDelay) {
   MOZ_DIAGNOSTIC_ASSERT(mDeadline.IsNull());
   MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::None);
   MOZ_DIAGNOSTIC_ASSERT(!aMinDelay.IsZero() ||
@@ -60,7 +55,8 @@ TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
     NS_ENSURE_TRUE(mTimer, NS_ERROR_OUT_OF_MEMORY);
 
     uint32_t earlyMicros = 0;
-    MOZ_ALWAYS_SUCCEEDS(mTimer->GetAllowedEarlyFiringMicroseconds(&earlyMicros));
+    MOZ_ALWAYS_SUCCEEDS(
+        mTimer->GetAllowedEarlyFiringMicroseconds(&earlyMicros));
     mAllowedEarlyFiringTime = TimeDuration::FromMicroseconds(earlyMicros);
   } else {
     // Always call Cancel() in case we are re-using a timer.
@@ -105,10 +101,8 @@ TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
   return NS_OK;
 }
 
-nsresult
-TimeoutExecutor::Schedule(const TimeStamp& aDeadline,
-                          const TimeDuration& aMinDelay)
-{
+nsresult TimeoutExecutor::Schedule(const TimeStamp& aDeadline,
+                                   const TimeDuration& aMinDelay) {
   TimeStamp now(TimeStamp::Now());
 
   // Schedule an immediate runnable if the desired deadline has passed
@@ -121,13 +115,10 @@ TimeoutExecutor::Schedule(const TimeStamp& aDeadline,
   return ScheduleDelayed(aDeadline, now, aMinDelay);
 }
 
-nsresult
-TimeoutExecutor::MaybeReschedule(const TimeStamp& aDeadline,
-                                 const TimeDuration& aMinDelay)
-{
+nsresult TimeoutExecutor::MaybeReschedule(const TimeStamp& aDeadline,
+                                          const TimeDuration& aMinDelay) {
   MOZ_DIAGNOSTIC_ASSERT(!mDeadline.IsNull());
-  MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::Immediate ||
-                        mMode == Mode::Delayed);
+  MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::Immediate || mMode == Mode::Delayed);
 
   if (aDeadline >= mDeadline) {
     return NS_OK;
@@ -144,9 +135,7 @@ TimeoutExecutor::MaybeReschedule(const TimeStamp& aDeadline,
   return Schedule(aDeadline, aMinDelay);
 }
 
-void
-TimeoutExecutor::MaybeExecute()
-{
+void TimeoutExecutor::MaybeExecute() {
   MOZ_DIAGNOSTIC_ASSERT(mMode != Mode::Shutdown && mMode != Mode::None);
   MOZ_DIAGNOSTIC_ASSERT(mOwner);
   MOZ_DIAGNOSTIC_ASSERT(!mDeadline.IsNull());
@@ -169,15 +158,11 @@ TimeoutExecutor::MaybeExecute()
 }
 
 TimeoutExecutor::TimeoutExecutor(TimeoutManager* aOwner)
-  : mOwner(aOwner)
-  , mMode(Mode::None)
-{
+    : mOwner(aOwner), mMode(Mode::None) {
   MOZ_DIAGNOSTIC_ASSERT(mOwner);
 }
 
-void
-TimeoutExecutor::Shutdown()
-{
+void TimeoutExecutor::Shutdown() {
   mOwner = nullptr;
 
   if (mTimer) {
@@ -189,10 +174,8 @@ TimeoutExecutor::Shutdown()
   mDeadline = TimeStamp();
 }
 
-nsresult
-TimeoutExecutor::MaybeSchedule(const TimeStamp& aDeadline,
-                               const TimeDuration& aMinDelay)
-{
+nsresult TimeoutExecutor::MaybeSchedule(const TimeStamp& aDeadline,
+                                        const TimeDuration& aMinDelay) {
   MOZ_DIAGNOSTIC_ASSERT(!aDeadline.IsNull());
 
   if (mMode == Mode::Shutdown) {
@@ -206,9 +189,7 @@ TimeoutExecutor::MaybeSchedule(const TimeStamp& aDeadline,
   return Schedule(aDeadline, aMinDelay);
 }
 
-void
-TimeoutExecutor::Cancel()
-{
+void TimeoutExecutor::Cancel() {
   if (mTimer) {
     mTimer->Cancel();
   }
@@ -217,8 +198,7 @@ TimeoutExecutor::Cancel()
 }
 
 NS_IMETHODIMP
-TimeoutExecutor::Run()
-{
+TimeoutExecutor::Run() {
   // If the executor is canceled and then rescheduled its possible to get
   // spurious executions here.  Ignore these unless our current mode matches.
   if (mMode == Mode::Immediate) {
@@ -228,8 +208,7 @@ TimeoutExecutor::Run()
 }
 
 NS_IMETHODIMP
-TimeoutExecutor::Notify(nsITimer* aTimer)
-{
+TimeoutExecutor::Notify(nsITimer* aTimer) {
   // If the executor is canceled and then rescheduled its possible to get
   // spurious executions here.  Ignore these unless our current mode matches.
   if (mMode == Mode::Delayed) {
@@ -239,11 +218,10 @@ TimeoutExecutor::Notify(nsITimer* aTimer)
 }
 
 NS_IMETHODIMP
-TimeoutExecutor::GetName(nsACString& aNameOut)
-{
+TimeoutExecutor::GetName(nsACString& aNameOut) {
   aNameOut.AssignLiteral("TimeoutExecutor Runnable");
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

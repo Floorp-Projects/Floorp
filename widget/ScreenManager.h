@@ -18,22 +18,20 @@ namespace mozilla {
 namespace dom {
 class ContentParent;
 class ScreenDetails;
-}
-}
+}  // namespace dom
+}  // namespace mozilla
 
 namespace mozilla {
 namespace widget {
 
-class ScreenManager final : public nsIScreenManager
-{
-public:
-  class Helper
-  {
-  public:
+class ScreenManager final : public nsIScreenManager {
+ public:
+  class Helper {
+   public:
     virtual ~Helper() {}
   };
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREENMANAGER
 
@@ -45,11 +43,11 @@ public:
   void Refresh(nsTArray<mozilla::dom::ScreenDetails>&& aScreens);
   void CopyScreensToRemote(mozilla::dom::ContentParent* aContentParent);
 
-private:
+ private:
   ScreenManager();
   virtual ~ScreenManager();
 
-  template<class Range>
+  template <class Range>
   void CopyScreensToRemoteRange(Range aRemoteRange);
   void CopyScreensToAllRemotesIfIsParent();
 
@@ -57,8 +55,7 @@ private:
   UniquePtr<Helper> mHelper;
 };
 
+}  // namespace widget
+}  // namespace mozilla
 
-} // namespace widget
-} // namespace mozilla
-
-#endif // mozilla_widget_ScreenManager_h
+#endif  // mozilla_widget_ScreenManager_h

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /*
+/*
 Copyright (c) 2007, Adobe Systems, Incorporated
 Copyright (c) 2013, Mozilla
 
@@ -15,16 +15,16 @@ modification, are permitted provided that the following conditions are
 met:
 
 * Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
+ notice, this list of conditions and the following disclaimer.
 
 * Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
+ notice, this list of conditions and the following disclaimer in the
+ documentation and/or other materials provided with the distribution.
 
 * Neither the name of Adobe Systems, Network Resonance, Mozilla nor
-  the names of its contributors may be used to endorse or promote
-  products derived from this software without specific prior written
-  permission.
+ the names of its contributors may be used to endorse or promote
+ products derived from this software without specific prior written
+ permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -56,43 +56,32 @@ extern "C" {
 
 #include "nr_socket_prsock.h"
 
-namespace mozilla
-{
+namespace mozilla {
 using namespace net;
 
-namespace net
-{
+namespace net {
 class WebrtcProxyChannelWrapper;
-} // namespace net
+}  // namespace net
 
 class NrSocketProxyData;
 class NrSocketProxyConfig;
 
-class NrSocketProxy : public NrSocketBase,
-                      public WebrtcProxyChannelCallback
-{
-public:
+class NrSocketProxy : public NrSocketBase, public WebrtcProxyChannelCallback {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrSocketProxy, override)
 
   explicit NrSocketProxy(const std::shared_ptr<NrSocketProxyConfig>& aConfig);
 
   // NrSocketBase
-  int create(nr_transport_addr *aAddr) override;
-  int connect(nr_transport_addr *aAddr) override;
+  int create(nr_transport_addr* aAddr) override;
+  int connect(nr_transport_addr* aAddr) override;
   void close() override;
-  int write(const void* aBuffer,
-            size_t aCount,
-            size_t* aWrote) override;
+  int write(const void* aBuffer, size_t aCount, size_t* aWrote) override;
   int read(void* aBuffer, size_t aCount, size_t* aRead) override;
   int getaddr(nr_transport_addr* aAddr) override;
-  int sendto(const void* aBuffer,
-             size_t aCount,
-             int aFlags,
+  int sendto(const void* aBuffer, size_t aCount, int aFlags,
              nr_transport_addr* aAddr) override;
-  int recvfrom(void* aBuffer,
-               size_t aCount,
-               size_t* aRead,
-               int aFlags,
+  int recvfrom(void* aBuffer, size_t aCount, size_t* aRead, int aFlags,
                nr_transport_addr* aAddr) override;
   int listen(int aBacklog) override;
   int accept(nr_transport_addr* aAddr, nr_socket** aSocket) override;
@@ -107,22 +96,22 @@ public:
   // for gtests
   void AssignChannel_DoNotUse(WebrtcProxyChannelWrapper* aWrapper);
 
-protected:
+ protected:
   virtual ~NrSocketProxy();
 
-private:
+ private:
   void DoCallbacks();
 
   bool mClosed;
 
-  size_t                        mReadOffset;
-  std::list<NrSocketProxyData>  mReadQueue;
+  size_t mReadOffset;
+  std::list<NrSocketProxyData> mReadQueue;
 
   std::shared_ptr<NrSocketProxyConfig> mConfig;
 
   RefPtr<WebrtcProxyChannelWrapper> mWebrtcProxyChannel;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // nr_socket_proxy_h__
+#endif  // nr_socket_proxy_h__

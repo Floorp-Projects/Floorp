@@ -21,13 +21,12 @@ class AsyncStatementParams;
  * 'params' helper.  We do not expose 'row' or 'step' as they do not apply to
  * us.
  */
-class AsyncStatementJSHelper : public nsIXPCScriptable
-{
-public:
+class AsyncStatementJSHelper : public nsIXPCScriptable {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSCRIPTABLE
 
-private:
+ private:
   nsresult getParams(AsyncStatement *, JSContext *, JSObject *, JS::Value *);
 };
 
@@ -37,26 +36,24 @@ private:
  * so it is important we do this.
  */
 class AsyncStatementParamsHolder final : public nsISupports {
-public:
+ public:
   NS_DECL_ISUPPORTS
 
-  explicit AsyncStatementParamsHolder(AsyncStatementParams* aParams)
-    : mParams(aParams)
-  {
-  }
+  explicit AsyncStatementParamsHolder(AsyncStatementParams *aParams)
+      : mParams(aParams) {}
 
-  AsyncStatementParams* Get() const {
+  AsyncStatementParams *Get() const {
     MOZ_ASSERT(mParams);
     return mParams;
   }
 
-private:
+ private:
   virtual ~AsyncStatementParamsHolder();
 
   RefPtr<AsyncStatementParams> mParams;
 };
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla
 
-#endif // mozilla_storage_mozStorageAsyncStatementJSHelper_h_
+#endif  // mozilla_storage_mozStorageAsyncStatementJSHelper_h_

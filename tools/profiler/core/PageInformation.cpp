@@ -8,26 +8,19 @@
 
 PageInformation::PageInformation(const nsID& aDocShellId,
                                  uint32_t aDocShellHistoryId,
-                                 const nsCString& aUrl,
-                                 bool aIsSubFrame)
-  : mDocShellId(aDocShellId)
-  , mDocShellHistoryId(aDocShellHistoryId)
-  , mUrl(aUrl)
-  , mIsSubFrame(aIsSubFrame)
-{
+                                 const nsCString& aUrl, bool aIsSubFrame)
+    : mDocShellId(aDocShellId),
+      mDocShellHistoryId(aDocShellHistoryId),
+      mUrl(aUrl),
+      mIsSubFrame(aIsSubFrame) {}
+
+bool PageInformation::Equals(PageInformation* aOtherPageInfo) {
+  return DocShellHistoryId() == aOtherPageInfo->DocShellHistoryId() &&
+         DocShellId().Equals(aOtherPageInfo->DocShellId()) &&
+         IsSubFrame() == aOtherPageInfo->IsSubFrame();
 }
 
-bool
-PageInformation::Equals(PageInformation* aOtherPageInfo)
-{
-return DocShellHistoryId() == aOtherPageInfo->DocShellHistoryId() &&
-  DocShellId().Equals(aOtherPageInfo->DocShellId()) &&
-  IsSubFrame() == aOtherPageInfo->IsSubFrame();
-}
-
-void
-PageInformation::StreamJSON(SpliceableJSONWriter& aWriter)
-{
+void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) {
   aWriter.StartObjectElement();
   aWriter.StringProperty("docshellId", nsIDToCString(DocShellId()).get());
   aWriter.DoubleProperty("historyId", DocShellHistoryId());
@@ -36,9 +29,7 @@ PageInformation::StreamJSON(SpliceableJSONWriter& aWriter)
   aWriter.EndObject();
 }
 
-size_t
-PageInformation::SizeOfIncludingThis(
-  mozilla::MallocSizeOf aMallocSizeOf) const
-{
+size_t PageInformation::SizeOfIncludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }

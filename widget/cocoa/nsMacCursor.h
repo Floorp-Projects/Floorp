@@ -16,13 +16,12 @@
                 are implemented, in particular the details of managing an
                 animated cursor are hidden.
 */
-@interface nsMacCursor : NSObject
-{
-  @private
+@interface nsMacCursor : NSObject {
+ @private
   NSTimer *mTimer;
-  @protected
+ @protected
   nsCursor mType;
-  int mFrameCounter;    
+  int mFrameCounter;
 }
 
 /*! @method     cursorWithCursor:
@@ -33,7 +32,7 @@
     @result     an autoreleased instance of <code>nsMacCursor</code>
                 representing the given <code>NSCursor</code>
  */
-+ (nsMacCursor *) cursorWithCursor: (NSCursor *) aCursor type: (nsCursor) aType;
++ (nsMacCursor *)cursorWithCursor:(NSCursor *)aCursor type:(nsCursor)aType;
 
 /*! @method     cursorWithImageNamed:hotSpot:type:
     @abstract   Create a cursor by specifying the name of an image resource to
@@ -48,9 +47,12 @@
     @param      aCursor the name of the image to use for the cursor
     @param      aPoint the point within the cursor to use as the hotspot
     @param      aType the corresponding <code>nsCursor</code> constant
-    @result     an autoreleased instance of <code>nsMacCursor</code> that uses the given image and hotspot
+    @result     an autoreleased instance of <code>nsMacCursor</code> that uses the given image and
+   hotspot
  */
-+ (nsMacCursor *) cursorWithImageNamed: (NSString *) aCursorImage hotSpot: (NSPoint) aPoint type: (nsCursor) aType;
++ (nsMacCursor *)cursorWithImageNamed:(NSString *)aCursorImage
+                              hotSpot:(NSPoint)aPoint
+                                 type:(nsCursor)aType;
 
 /*! @method     cursorWithFrames:type:
     @abstract   Create an animated cursor by specifying the frames to use for
@@ -65,7 +67,7 @@
     @result     an autoreleased instance of <code>nsMacCursor</code> that will
                 animate the given cursor frames
  */
-+ (nsMacCursor *) cursorWithFrames: (NSArray *) aCursorFrames type: (nsCursor) aType;
++ (nsMacCursor *)cursorWithFrames:(NSArray *)aCursorFrames type:(nsCursor)aType;
 
 /*! @method     cocoaCursorWithImageNamed:hotSpot:
     @abstract   Create a Cocoa NSCursor object with a Gecko image resource name
@@ -78,7 +80,7 @@
     @result     an autoreleased instance of <code>nsMacCursor</code> that will
                 animate the given cursor frames
  */
-+ (NSCursor *) cocoaCursorWithImageNamed: (NSString *) imageName hotSpot: (NSPoint) aPoint;
++ (NSCursor *)cocoaCursorWithImageNamed:(NSString *)imageName hotSpot:(NSPoint)aPoint;
 
 /*! @method     isSet
     @abstract   Determines whether this cursor is currently active.
@@ -86,14 +88,14 @@
                 influenced without going through nsCursorManager.
     @result     whether the cursor is currently set
  */
-- (BOOL) isSet;
+- (BOOL)isSet;
 
 /*! @method     set
     @abstract   Set the cursor.
     @discussion Makes this cursor the current cursor. If the cursor is
                 animated, the animation is started.
  */
-- (void) set;
+- (void)set;
 
 /*! @method     unset
     @abstract   Unset the cursor. The cursor will return to the default
@@ -101,7 +103,7 @@
     @discussion Unsets the cursor. If the cursor is animated, the animation is
                 stopped.
  */
-- (void) unset;
+- (void)unset;
 
 /*! @method     isAnimated
     @abstract   Tests whether this cursor is animated.
@@ -109,7 +111,7 @@
     @result     YES if the cursor is animated (has more than one frame), NO if
                 it is a simple static cursor.
  */
-- (BOOL) isAnimated;
+- (BOOL)isAnimated;
 
 /** @method     cursorType
     @abstract   Get the cursor type for this cursor
@@ -120,7 +122,7 @@
                 nsCursor's 'eCursorCount' if the cursor is a custom cursor
                 loaded from a URI
  */
-- (nsCursor) type;
+- (nsCursor)type;
 @end
 
-#endif // nsMacCursor_h_
+#endif  // nsMacCursor_h_

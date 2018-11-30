@@ -171,7 +171,7 @@ class MessagePumpForUI : public MessagePumpWin {
   // queue can provide, up to some fixed number (to avoid any infinite loops).
   void PumpOutPendingPaintMessages();
 
-protected:
+ protected:
   virtual void DoRunLoop();
 
   bool ProcessNextWindowsMessage();
@@ -186,8 +186,8 @@ protected:
   HWND message_hwnd_;
 
  private:
-  static LRESULT CALLBACK WndProcThunk(
-      HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
+  static LRESULT CALLBACK WndProcThunk(HWND hwnd, UINT message, WPARAM wparam,
+                                       LPARAM lparam);
 };
 
 //-----------------------------------------------------------------------------

@@ -14,13 +14,12 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS(ServiceWorkerInterceptController, nsINetworkInterceptController)
+NS_IMPL_ISUPPORTS(ServiceWorkerInterceptController,
+                  nsINetworkInterceptController)
 
 NS_IMETHODIMP
-ServiceWorkerInterceptController::ShouldPrepareForIntercept(nsIURI* aURI,
-                                                            nsIChannel* aChannel,
-                                                            bool* aShouldIntercept)
-{
+ServiceWorkerInterceptController::ShouldPrepareForIntercept(
+    nsIURI* aURI, nsIChannel* aChannel, bool* aShouldIntercept) {
   *aShouldIntercept = false;
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
@@ -33,7 +32,8 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(nsIURI* aURI,
   // access should have been set before the initial navigation created the
   // window.
   if (!nsContentUtils::IsNonSubresourceRequest(aChannel)) {
-    const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
+    const Maybe<ServiceWorkerDescriptor>& controller =
+        loadInfo->GetController();
     *aShouldIntercept = controller.isSome();
     return NS_OK;
   }
@@ -43,9 +43,8 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(nsIURI* aURI,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(aURI,
-                                           loadInfo->GetOriginAttributes());
+  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateCodebasePrincipal(
+      aURI, loadInfo->GetOriginAttributes());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
@@ -59,8 +58,8 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(nsIURI* aURI,
 }
 
 NS_IMETHODIMP
-ServiceWorkerInterceptController::ChannelIntercepted(nsIInterceptedChannel* aChannel)
-{
+ServiceWorkerInterceptController::ChannelIntercepted(
+    nsIInterceptedChannel* aChannel) {
   // Note, do not cancel the interception here.  The caller will try to
   // ResetInterception() on error.
 
@@ -78,5 +77,5 @@ ServiceWorkerInterceptController::ChannelIntercepted(nsIInterceptedChannel* aCha
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

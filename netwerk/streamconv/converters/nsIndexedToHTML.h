@@ -11,51 +11,51 @@
 #include "nsIStreamConverter.h"
 #include "nsIDirIndexListener.h"
 
-#define NS_NSINDEXEDTOHTMLCONVERTER_CID \
-{ 0xcf0f71fd, 0xfafd, 0x4e2b, {0x9f, 0xdc, 0x13, 0x4d, 0x97, 0x2e, 0x16, 0xe2} }
+#define NS_NSINDEXEDTOHTMLCONVERTER_CID              \
+  {                                                  \
+    0xcf0f71fd, 0xfafd, 0x4e2b, {                    \
+      0x9f, 0xdc, 0x13, 0x4d, 0x97, 0x2e, 0x16, 0xe2 \
+    }                                                \
+  }
 
 class nsIStringBundle;
 class nsITextToSubURI;
 
-class nsIndexedToHTML : public nsIStreamConverter,
-                        public nsIDirIndexListener
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMCONVERTER
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSIDIRINDEXLISTENER
+class nsIndexedToHTML : public nsIStreamConverter, public nsIDirIndexListener {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMCONVERTER
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIDIRINDEXLISTENER
 
-    nsIndexedToHTML();
+  nsIndexedToHTML();
 
-    nsresult Init(nsIStreamListener *aListener);
+  nsresult Init(nsIStreamListener *aListener);
 
-    static nsresult
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-protected:
+ protected:
+  void FormatSizeString(int64_t inSize, nsCString &outSizeString);
+  nsresult SendToListener(nsIRequest *aRequest, nsISupports *aContext,
+                          const nsACString &aBuffer);
+  // Helper to properly implement OnStartRequest
+  nsresult DoOnStartRequest(nsIRequest *request, nsISupports *aContext,
+                            nsCString &aBuffer);
 
-    void FormatSizeString(int64_t inSize, nsCString& outSizeString);
-    nsresult SendToListener(nsIRequest* aRequest, nsISupports *aContext, const nsACString &aBuffer);
-    // Helper to properly implement OnStartRequest
-    nsresult DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
-                              nsCString& aBuffer);
+ protected:
+  nsCOMPtr<nsIDirIndexParser> mParser;
+  nsCOMPtr<nsIStreamListener> mListener;  // final listener (consumer)
 
-protected:
-    nsCOMPtr<nsIDirIndexParser>     mParser;
-    nsCOMPtr<nsIStreamListener>     mListener; // final listener (consumer)
+  nsCOMPtr<nsIStringBundle> mBundle;
 
-    nsCOMPtr<nsIStringBundle> mBundle;
+  nsCOMPtr<nsITextToSubURI> mTextToSubURI;
 
-    nsCOMPtr<nsITextToSubURI> mTextToSubURI;
+ private:
+  // Expecting absolute locations, given by 201 lines.
+  bool mExpectAbsLoc;
 
-private:
-    // Expecting absolute locations, given by 201 lines.
-    bool mExpectAbsLoc;
-
-    virtual ~nsIndexedToHTML() = default;
+  virtual ~nsIndexedToHTML() = default;
 };
 
 #endif
-

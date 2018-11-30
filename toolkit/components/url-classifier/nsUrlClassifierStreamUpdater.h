@@ -21,15 +21,15 @@
 // Forward declare pointers
 class nsIURI;
 
-class nsUrlClassifierStreamUpdater final : public nsIUrlClassifierStreamUpdater,
-                                           public nsIUrlClassifierUpdateObserver,
-                                           public nsIStreamListener,
-                                           public nsIObserver,
-                                           public nsIInterfaceRequestor,
-                                           public nsITimerCallback,
-                                           public nsINamed
-{
-public:
+class nsUrlClassifierStreamUpdater final
+    : public nsIUrlClassifierStreamUpdater,
+      public nsIUrlClassifierUpdateObserver,
+      public nsIStreamListener,
+      public nsIObserver,
+      public nsIInterfaceRequestor,
+      public nsITimerCallback,
+      public nsINamed {
+ public:
   nsUrlClassifierStreamUpdater();
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -42,7 +42,7 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
-private:
+ private:
   // No subclassing
   ~nsUrlClassifierStreamUpdater() {}
 
@@ -51,20 +51,16 @@ private:
   void DownloadDone();
 
   // Disallow copy constructor
-  nsUrlClassifierStreamUpdater(nsUrlClassifierStreamUpdater&);
+  nsUrlClassifierStreamUpdater(nsUrlClassifierStreamUpdater &);
 
   nsresult AddRequestBody(const nsACString &aRequestBody);
 
   // Fetches an update for a single table.
-  nsresult FetchUpdate(nsIURI *aURI,
-                       const nsACString &aRequest,
-                       bool aIsPostRequest,
-                       const nsACString &aTable);
+  nsresult FetchUpdate(nsIURI *aURI, const nsACString &aRequest,
+                       bool aIsPostRequest, const nsACString &aTable);
   // Dumb wrapper so we don't have to create URIs.
-  nsresult FetchUpdate(const nsACString &aURI,
-                       const nsACString &aRequest,
-                       bool aIsPostRequest,
-                       const nsACString &aTable);
+  nsresult FetchUpdate(const nsACString &aURI, const nsACString &aRequest,
+                       bool aIsPostRequest, const nsACString &aTable);
 
   // Fetches the next table, from mPendingUpdates.
   nsresult FetchNext();
@@ -81,15 +77,13 @@ private:
     nsCOMPtr<nsIUrlClassifierCallback> mDownloadErrorCallback;
   };
   // Utility function to create an update request.
-  void
-  BuildUpdateRequest(const nsACString &aRequestTables,
-                     const nsACString &aRequestPayload,
-                     bool aIsPostRequest,
-                     const nsACString &aUpdateUrl,
-                     nsIUrlClassifierCallback *aSuccessCallback,
-                     nsIUrlClassifierCallback *aUpdateErrorCallback,
-                     nsIUrlClassifierCallback *aDownloadErrorCallback,
-                     UpdateRequest* aRequest);
+  void BuildUpdateRequest(const nsACString &aRequestTables,
+                          const nsACString &aRequestPayload,
+                          bool aIsPostRequest, const nsACString &aUpdateUrl,
+                          nsIUrlClassifierCallback *aSuccessCallback,
+                          nsIUrlClassifierCallback *aUpdateErrorCallback,
+                          nsIUrlClassifierCallback *aDownloadErrorCallback,
+                          UpdateRequest *aRequest);
 
   bool mIsUpdating;
   bool mInitialized;
@@ -128,11 +122,10 @@ private:
   };
   nsTArray<PendingUpdate> mPendingUpdates;
 
-
-  // The provider for current update request and should be only used by telemetry
-  // since it would show up as "other" for any other providers.
+  // The provider for current update request and should be only used by
+  // telemetry since it would show up as "other" for any other providers.
   nsCString mTelemetryProvider;
   PRIntervalTime mTelemetryClockStart;
 };
 
-#endif // nsUrlClassifierStreamUpdater_h_
+#endif  // nsUrlClassifierStreamUpdater_h_

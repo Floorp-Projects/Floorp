@@ -40,10 +40,8 @@ namespace intl {
  * notify apps about changes, new OS-level settings may not be reflected
  * in the app until it is relaunched.
  */
-class OSPreferences: public mozIOSPreferences
-{
-
-public:
+class OSPreferences : public mozIOSPreferences {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZIOSPREFERENCES
 
@@ -75,11 +73,9 @@ public:
    * Return an addRef'd pointer to the singleton instance. This is used by the
    * XPCOM constructor that exists to support usage from JS.
    */
-  static already_AddRefed<OSPreferences> GetInstanceAddRefed()
-  {
+  static already_AddRefed<OSPreferences> GetInstanceAddRefed() {
     return RefPtr<OSPreferences>(GetInstance()).forget();
   }
-
 
   static bool GetDateTimeConnectorPattern(const nsACString& aLocale,
                                           nsAString& aRetVal);
@@ -97,11 +93,11 @@ public:
    */
   void Refresh();
 
-protected:
+ protected:
   nsTArray<nsCString> mSystemLocales;
   nsTArray<nsCString> mRegionalPrefsLocales;
 
-private:
+ private:
   virtual ~OSPreferences();
 
   static StaticRefPtr<OSPreferences> sInstance;
@@ -123,8 +119,7 @@ private:
                                    nsAString& aRetVal);
 
   bool GetPatternForSkeleton(const nsAString& aSkeleton,
-                             const nsACString& aLocale,
-                             nsAString& aRetVal);
+                             const nsACString& aLocale, nsAString& aRetVal);
 
   /**
    * This is a host environment specific method that will be implemented
@@ -154,11 +149,10 @@ private:
    */
   bool ReadDateTimePattern(DateTimeFormatStyle aDateFormatStyle,
                            DateTimeFormatStyle aTimeFormatStyle,
-                           const nsACString& aLocale,
-                           nsAString& aRetVal);
+                           const nsACString& aLocale, nsAString& aRetVal);
 };
 
-} // intl
-} // namespace mozilla
+}  // namespace intl
+}  // namespace mozilla
 
 #endif /* mozilla_intl_IntlOSPreferences_h__ */

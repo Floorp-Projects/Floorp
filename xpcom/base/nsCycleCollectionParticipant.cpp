@@ -8,15 +8,13 @@
 #include "nsCOMPtr.h"
 
 NS_IMETHODIMP_(void)
-nsXPCOMCycleCollectionParticipant::Root(void* aPtr)
-{
+nsXPCOMCycleCollectionParticipant::Root(void* aPtr) {
   nsISupports* s = static_cast<nsISupports*>(aPtr);
   NS_ADDREF(s);
 }
 
 NS_IMETHODIMP_(void)
-nsXPCOMCycleCollectionParticipant::Unroot(void* aPtr)
-{
+nsXPCOMCycleCollectionParticipant::Unroot(void* aPtr) {
   nsISupports* s = static_cast<nsISupports*>(aPtr);
   NS_RELEASE(s);
 }
@@ -25,13 +23,10 @@ nsXPCOMCycleCollectionParticipant::Unroot(void* aPtr)
 // to trace anything, so it is okay for them not to define one.
 NS_IMETHODIMP_(void)
 nsXPCOMCycleCollectionParticipant::Trace(void* aPtr, const TraceCallbacks& aCb,
-                                         void* aClosure)
-{
-}
+                                         void* aClosure) {}
 
-bool
-nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports* aSupports)
-{
+bool nsXPCOMCycleCollectionParticipant::CheckForRightISupports(
+    nsISupports* aSupports) {
   nsISupports* foo;
   aSupports->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
                             reinterpret_cast<void**>(&foo));

@@ -22,20 +22,19 @@ struct OpaqueWithSilentFailing;
 #define ChromeObjectWrapperBase \
   FilteringWrapper<js::CrossCompartmentSecurityWrapper, OpaqueWithSilentFailing>
 
-class ChromeObjectWrapper : public ChromeObjectWrapperBase
-{
-  public:
-    constexpr ChromeObjectWrapper() : ChromeObjectWrapperBase(0) {}
+class ChromeObjectWrapper : public ChromeObjectWrapperBase {
+ public:
+  constexpr ChromeObjectWrapper() : ChromeObjectWrapperBase(0) {}
 
-    virtual bool defineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                                JS::Handle<jsid> id,
-                                JS::Handle<JS::PropertyDescriptor> desc,
-                                JS::ObjectOpResult& result) const override;
-    virtual bool set(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-                     JS::HandleValue v, JS::HandleValue receiver,
-                     JS::ObjectOpResult& result) const override;
+  virtual bool defineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                              JS::Handle<jsid> id,
+                              JS::Handle<JS::PropertyDescriptor> desc,
+                              JS::ObjectOpResult& result) const override;
+  virtual bool set(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
+                   JS::HandleValue v, JS::HandleValue receiver,
+                   JS::ObjectOpResult& result) const override;
 
-    static const ChromeObjectWrapper singleton;
+  static const ChromeObjectWrapper singleton;
 };
 
 } /* namespace xpc */

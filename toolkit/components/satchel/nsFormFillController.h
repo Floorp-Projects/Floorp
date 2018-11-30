@@ -34,17 +34,16 @@ class nsPIDOMWindowOuter;
 namespace mozilla {
 namespace dom {
 class HTMLInputElement;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 class nsFormFillController final : public nsIFormFillController,
                                    public nsIAutoCompleteInput,
                                    public nsIAutoCompleteSearch,
                                    public nsIDOMEventListener,
                                    public nsIFormAutoCompleteObserver,
-                                   public nsIMutationObserver
-{
-public:
+                                   public nsIMutationObserver {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIFORMFILLCONTROLLER
   NS_DECL_NSIAUTOCOMPLETESEARCH
@@ -53,7 +52,8 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIMUTATIONOBSERVER
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormFillController, nsIFormFillController)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormFillController,
+                                           nsIFormFillController)
 
   nsresult Focus(mozilla::dom::Event* aEvent);
   nsresult KeyDown(mozilla::dom::Event* aKeyEvent);
@@ -62,7 +62,7 @@ public:
 
   nsFormFillController();
 
-protected:
+ protected:
   virtual ~nsFormFillController();
 
   void AddWindowListeners(nsPIDOMWindowOuter* aWindow);
@@ -71,7 +71,7 @@ protected:
   void AddKeyListener(nsINode* aInput);
   void RemoveKeyListener();
 
-  void StartControllingInput(mozilla::dom::HTMLInputElement *aInput);
+  void StartControllingInput(mozilla::dom::HTMLInputElement* aInput);
   void StopControllingInput();
   /**
    * Checks that aElement is a type of element we want to fill, then calls
@@ -83,11 +83,13 @@ protected:
                                         nsIAutoCompleteResult** aResult);
 
   void RevalidateDataList();
-  bool RowMatch(nsFormHistory *aHistory, uint32_t aIndex, const nsAString &aInputName, const nsAString &aInputValue);
+  bool RowMatch(nsFormHistory* aHistory, uint32_t aIndex,
+                const nsAString& aInputName, const nsAString& aInputValue);
 
-  inline nsIDocShell *GetDocShellForInput(mozilla::dom::HTMLInputElement *aInput);
-  inline nsPIDOMWindowOuter *GetWindowForDocShell(nsIDocShell *aDocShell);
-  inline int32_t GetIndexOfDocShell(nsIDocShell *aDocShell);
+  inline nsIDocShell* GetDocShellForInput(
+      mozilla::dom::HTMLInputElement* aInput);
+  inline nsPIDOMWindowOuter* GetWindowForDocShell(nsIDocShell* aDocShell);
+  inline int32_t GetIndexOfDocShell(nsIDocShell* aDocShell);
 
   void MaybeRemoveMutationObserver(nsINode* aNode);
 
@@ -95,7 +97,7 @@ protected:
 
   bool IsTextControl(nsINode* aNode);
 
-  nsresult StartQueryLoginReputation(mozilla::dom::HTMLInputElement *aInput);
+  nsresult StartQueryLoginReputation(mozilla::dom::HTMLInputElement* aInput);
 
   // members //////////////////////////////////////////
 
@@ -104,8 +106,8 @@ protected:
   nsCOMPtr<nsILoginReputationService> mLoginReputationService;
   mozilla::dom::HTMLInputElement* mFocusedInput;
 
-  // mListNode is a <datalist> element which, is set, has the form fill controller
-  // as a mutation observer for it.
+  // mListNode is a <datalist> element which, is set, has the form fill
+  // controller as a mutation observer for it.
   nsINode* mListNode;
   nsCOMPtr<nsIAutoCompletePopup> mFocusedPopup;
 
@@ -135,4 +137,4 @@ protected:
   bool mSuppressOnInput;
 };
 
-#endif // __nsFormFillController__
+#endif  // __nsFormFillController__

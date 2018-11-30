@@ -15,41 +15,37 @@
 namespace mozilla {
 namespace layers {
 
-class ImageLayerMLGPU final : public ImageLayer
-                            , public TexturedLayerMLGPU
-{
-public:
+class ImageLayerMLGPU final : public ImageLayer, public TexturedLayerMLGPU {
+ public:
   explicit ImageLayerMLGPU(LayerManagerMLGPU* aManager);
-
 
   Layer* GetLayer() override { return this; }
   HostLayer* AsHostLayer() override { return this; }
   ImageLayerMLGPU* AsImageLayerMLGPU() override { return this; }
 
-  void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override;
+  void ComputeEffectiveTransforms(
+      const gfx::Matrix4x4& aTransformToSurface) override;
   void SetRenderRegion(LayerIntRegion&& aRegion) override;
   gfx::SamplingFilter GetSamplingFilter() override;
   void ClearCachedResources() override;
   bool IsContentOpaque() override;
   void Disconnect() override;
 
-  Maybe<gfx::Size> GetPictureScale() const override {
-    return mScale;
-  }
+  Maybe<gfx::Size> GetPictureScale() const override { return mScale; }
 
   MOZ_LAYER_DECL_NAME("ImageLayerMLGPU", TYPE_IMAGE)
 
-protected:
+ protected:
   ~ImageLayerMLGPU() override;
 
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
   void CleanupResources();
 
-private:
+ private:
   Maybe<gfx::Size> mScale;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

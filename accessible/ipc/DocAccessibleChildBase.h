@@ -18,17 +18,13 @@ namespace a11y {
 class Accessible;
 class AccShowEvent;
 
-class DocAccessibleChildBase : public PDocAccessibleChild
-{
-public:
-  explicit DocAccessibleChildBase(DocAccessible* aDoc)
-    : mDoc(aDoc)
-  {
+class DocAccessibleChildBase : public PDocAccessibleChild {
+ public:
+  explicit DocAccessibleChildBase(DocAccessible* aDoc) : mDoc(aDoc) {
     MOZ_COUNT_CTOR(DocAccessibleChildBase);
   }
 
-  ~DocAccessibleChildBase()
-  {
+  ~DocAccessibleChildBase() {
     // Shutdown() should have been called, but maybe it isn't if the process is
     // killed?
     MOZ_ASSERT(!mDoc);
@@ -39,8 +35,7 @@ public:
     MOZ_COUNT_DTOR(DocAccessibleChildBase);
   }
 
-  virtual void Shutdown()
-  {
+  virtual void Shutdown() {
     DetachDocument();
     SendShutdown();
   }
@@ -48,12 +43,11 @@ public:
   /**
    * Serializes a shown tree and sends it to the chrome process.
    */
-  void InsertIntoIpcTree(Accessible* aParent,
-                         Accessible* aChild, uint32_t aIdxInParent);
+  void InsertIntoIpcTree(Accessible* aParent, Accessible* aChild,
+                         uint32_t aIdxInParent);
   void ShowEvent(AccShowEvent* aShowEvent);
 
-  virtual void ActorDestroy(ActorDestroyReason) override
-  {
+  virtual void ActorDestroy(ActorDestroyReason) override {
     if (!mDoc) {
       return;
     }
@@ -62,25 +56,25 @@ public:
     mDoc = nullptr;
   }
 
-protected:
+ protected:
   static uint32_t InterfacesFor(Accessible* aAcc);
   static void SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree);
 
-  virtual void MaybeSendShowEvent(ShowEventData& aData, bool aFromUser)
-  { Unused << SendShowEvent(aData, aFromUser); }
+  virtual void MaybeSendShowEvent(ShowEventData& aData, bool aFromUser) {
+    Unused << SendShowEvent(aData, aFromUser);
+  }
 
-  void DetachDocument()
-  {
+  void DetachDocument() {
     if (mDoc) {
       mDoc->SetIPCDoc(nullptr);
       mDoc = nullptr;
     }
   }
 
-  DocAccessible*  mDoc;
+  DocAccessible* mDoc;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif // mozilla_a11y_DocAccessibleChildBase_h
+#endif  // mozilla_a11y_DocAccessibleChildBase_h

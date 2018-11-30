@@ -21,8 +21,7 @@
 
 namespace mozilla {
 
-enum CPUUsageWatcherError : uint8_t
-{
+enum CPUUsageWatcherError : uint8_t {
   ClockGetTimeError,
   GetNumberOfProcessorsError,
   GetProcessTimesError,
@@ -31,27 +30,22 @@ enum CPUUsageWatcherError : uint8_t
   ProcStatError,
 };
 
-class CPUUsageHangAnnotator
-  : public BackgroundHangAnnotator
-{
-public:
+class CPUUsageHangAnnotator : public BackgroundHangAnnotator {
+ public:
 };
 
-class CPUUsageWatcher
-  : public BackgroundHangAnnotator
-{
-public:
+class CPUUsageWatcher : public BackgroundHangAnnotator {
+ public:
 #ifdef CPU_USAGE_WATCHER_ACTIVE
   CPUUsageWatcher()
-    : mInitialized(false)
-    , mExternalUsageThreshold(0)
-    , mExternalUsageRatio(0)
-    , mProcessUsageTime(0)
-    , mProcessUpdateTime(0)
-    , mGlobalUsageTime(0)
-    , mGlobalUpdateTime(0)
-    , mNumCPUs(0)
-  {}
+      : mInitialized(false),
+        mExternalUsageThreshold(0),
+        mExternalUsageRatio(0),
+        mProcessUsageTime(0),
+        mProcessUpdateTime(0),
+        mGlobalUsageTime(0),
+        mGlobalUpdateTime(0),
+        mNumCPUs(0) {}
 #endif
 
   Result<Ok, CPUUsageWatcherError> Init();
@@ -64,7 +58,8 @@ public:
   Result<Ok, CPUUsageWatcherError> CollectCPUUsage();
 
   void AnnotateHang(BackgroundHangAnnotations& aAnnotations) final;
-private:
+
+ private:
 #ifdef CPU_USAGE_WATCHER_ACTIVE
   bool mInitialized;
   // The threshold above which we will mark a hang as occurring under high
@@ -90,6 +85,6 @@ private:
 #endif
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_CPUUsageWatcher_h
+#endif  // mozilla_CPUUsageWatcher_h

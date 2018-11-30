@@ -19,9 +19,8 @@ namespace mozilla {
 class TransactionManager;
 class TransactionStack;
 
-class TransactionItem final
-{
-public:
+class TransactionItem final {
+ public:
   explicit TransactionItem(nsITransaction* aTransaction);
   NS_METHOD_(MozExternalRefCountType) AddRef();
   NS_METHOD_(MozExternalRefCountType) Release();
@@ -30,20 +29,17 @@ public:
 
   nsresult AddChild(TransactionItem* aTransactionItem);
   already_AddRefed<nsITransaction> GetTransaction();
-  nsresult GetIsBatch(bool *aIsBatch);
-  nsresult GetNumberOfChildren(int32_t *aNumChildren);
+  nsresult GetIsBatch(bool* aIsBatch);
+  nsresult GetNumberOfChildren(int32_t* aNumChildren);
   nsresult GetChild(int32_t aIndex, TransactionItem** aChild);
 
   nsresult DoTransaction();
   nsresult UndoTransaction(TransactionManager* aTransactionManager);
   nsresult RedoTransaction(TransactionManager* aTransactionManager);
 
-  nsCOMArray<nsISupports>& GetData()
-  {
-    return mData;
-  }
+  nsCOMArray<nsISupports>& GetData() { return mData; }
 
-private:
+ private:
   nsresult UndoChildren(TransactionManager* aTransactionManager);
   nsresult RedoChildren(TransactionManager* aTransactionManager);
 
@@ -66,6 +62,6 @@ private:
   TransactionStack* mRedoStack;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef TransactionItem_h
+#endif  // #ifndef TransactionItem_h

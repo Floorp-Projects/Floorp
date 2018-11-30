@@ -11,5 +11,5 @@ namespace dom {
 
 const char* kPrefSimpleDBEnabled = "dom.simpleDB.enabled";
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

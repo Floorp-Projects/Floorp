@@ -18,43 +18,31 @@
 
 using mozilla::ipc::ScopedXREEmbed;
 
-ScopedXREEmbed::ScopedXREEmbed()
-: mShouldKillEmbedding(false)
-{
-  NS_LogInit();
-}
+ScopedXREEmbed::ScopedXREEmbed() : mShouldKillEmbedding(false) { NS_LogInit(); }
 
-ScopedXREEmbed::~ScopedXREEmbed()
-{
+ScopedXREEmbed::~ScopedXREEmbed() {
   Stop();
   NS_LogTerm();
 }
 
-void
-ScopedXREEmbed::SetAppDir(const nsACString& aPath)
-{
+void ScopedXREEmbed::SetAppDir(const nsACString& aPath) {
   bool flag;
   nsresult rv =
-    XRE_GetFileFromPath(aPath.BeginReading(), getter_AddRefs(mAppDir));
-  if (NS_FAILED(rv) ||
-      NS_FAILED(mAppDir->Exists(&flag)) || !flag) {
+      XRE_GetFileFromPath(aPath.BeginReading(), getter_AddRefs(mAppDir));
+  if (NS_FAILED(rv) || NS_FAILED(mAppDir->Exists(&flag)) || !flag) {
     NS_WARNING("Invalid application directory passed to content process.");
     mAppDir = nullptr;
   }
 }
 
-void
-ScopedXREEmbed::Start()
-{
+void ScopedXREEmbed::Start() {
   nsCOMPtr<nsIFile> localFile;
   nsresult rv = XRE_GetBinaryPath(getter_AddRefs(localFile));
-  if (NS_FAILED(rv))
-    return;
+  if (NS_FAILED(rv)) return;
 
   nsCOMPtr<nsIFile> parent;
   rv = localFile->GetParent(getter_AddRefs(parent));
-  if (NS_FAILED(rv))
-    return;
+  if (NS_FAILED(rv)) return;
 
   localFile = parent;
   NS_ENSURE_TRUE_VOID(localFile);
@@ -64,22 +52,19 @@ ScopedXREEmbed::Start()
     // We're an XPCOM-using subprocess.  Walk out of
     // [subprocess].app/Contents/MacOS to the real GRE dir.
     rv = localFile->GetParent(getter_AddRefs(parent));
-    if (NS_FAILED(rv))
-      return;
+    if (NS_FAILED(rv)) return;
 
     localFile = parent;
     NS_ENSURE_TRUE_VOID(localFile);
 
     rv = localFile->GetParent(getter_AddRefs(parent));
-    if (NS_FAILED(rv))
-      return;
+    if (NS_FAILED(rv)) return;
 
     localFile = parent;
     NS_ENSURE_TRUE_VOID(localFile);
 
     rv = localFile->GetParent(getter_AddRefs(parent));
-    if (NS_FAILED(rv))
-      return;
+    if (NS_FAILED(rv)) return;
 
     localFile = parent;
     NS_ENSURE_TRUE_VOID(localFile);
@@ -95,15 +80,12 @@ ScopedXREEmbed::Start()
     rv = XRE_InitEmbedding2(localFile, mAppDir, nullptr);
   else
     rv = XRE_InitEmbedding2(localFile, localFile, nullptr);
-  if (NS_FAILED(rv))
-    return;
+  if (NS_FAILED(rv)) return;
 
   mShouldKillEmbedding = true;
 }
 
-void
-ScopedXREEmbed::Stop()
-{
+void ScopedXREEmbed::Stop() {
   if (mShouldKillEmbedding) {
     XRE_TermEmbedding();
     mShouldKillEmbedding = false;

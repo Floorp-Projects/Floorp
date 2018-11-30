@@ -16,29 +16,24 @@ class nsIURI;
 namespace mozilla {
 namespace net {
 
-class TrackingDummyChannelParent final : public PTrackingDummyChannelParent
-{
-public:
+class TrackingDummyChannelParent final : public PTrackingDummyChannelParent {
+ public:
   NS_INLINE_DECL_REFCOUNTING(TrackingDummyChannelParent)
 
   TrackingDummyChannelParent();
 
-  void
-  Init(nsIURI* aURI,
-       nsIURI* aTopWindowURI,
-       nsresult aTopWindowURIResult,
-       nsILoadInfo* aLoadInfo);
+  void Init(nsIURI* aURI, nsIURI* aTopWindowURI, nsresult aTopWindowURIResult,
+            nsILoadInfo* aLoadInfo);
 
-private:
+ private:
   ~TrackingDummyChannelParent();
 
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   bool mIPCActive;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_TrackingDummyChannelParent_h
+#endif  // mozilla_net_TrackingDummyChannelParent_h

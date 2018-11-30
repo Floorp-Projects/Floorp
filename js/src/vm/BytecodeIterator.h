@@ -11,64 +11,51 @@
 
 namespace js {
 
-class BytecodeIterator
-{
-    BytecodeLocation current_;
+class BytecodeIterator {
+  BytecodeLocation current_;
 
-  public:
+ public:
+  explicit BytecodeIterator(const JSScript* script);
 
-    explicit BytecodeIterator(const JSScript* script);
+  explicit BytecodeIterator(BytecodeLocation loc) : current_(loc) {}
 
-    explicit BytecodeIterator(BytecodeLocation loc)
-      : current_(loc)
-    {}
+  bool operator==(const BytecodeIterator& other) const {
+    return other.current_ == current_;
+  }
 
-    bool operator==(const BytecodeIterator& other) const {
-        return other.current_ == current_;
-    }
+  bool operator!=(const BytecodeIterator& other) const {
+    return !(other.current_ == current_);
+  }
 
-    bool operator!=(const BytecodeIterator& other) const {
-        return !(other.current_ == current_);
-    }
+  const BytecodeLocation& operator*() const { return current_; }
 
-    const BytecodeLocation& operator*() const {
-        return current_;
-    }
+  const BytecodeLocation* operator->() const { return &current_; }
 
-    const BytecodeLocation* operator->() const {
-        return &current_;
-    }
+  // Pre-increment
+  BytecodeIterator& operator++() {
+    current_ = current_.next();
+    return *this;
+  }
 
-    // Pre-increment
-    BytecodeIterator& operator++() {
-        current_ = current_.next();
-        return *this;
-    }
-
-    // Post-increment
-    BytecodeIterator operator++(int) {
-        current_ = current_.next();
-        return *this;
-    }
-
+  // Post-increment
+  BytecodeIterator operator++(int) {
+    current_ = current_.next();
+    return *this;
+  }
 };
 
 // Given a JSScript, allow the construction of a range based for-loop
 // that will visit all script locations in that script.
-class AllBytecodesIterable
-{
+class AllBytecodesIterable {
+  const JSScript* script_;
 
-    const JSScript* script_;
-  public:
+ public:
+  explicit AllBytecodesIterable(const JSScript* script) : script_(script) {}
 
-    explicit AllBytecodesIterable(const JSScript* script)
-      : script_(script)
-    {}
-
-    BytecodeIterator begin();
-    BytecodeIterator end();
+  BytecodeIterator begin();
+  BytecodeIterator end();
 };
 
-}
+}  // namespace js
 
 #endif

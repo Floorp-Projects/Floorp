@@ -7,149 +7,139 @@
 
 #include "jsapi-tests/tests.h"
 
-static bool
-constructHook(JSContext* cx, unsigned argc, JS::Value* vp)
-{
-    JS::CallArgs args = CallArgsFromVp(argc, vp);
+static bool constructHook(JSContext* cx, unsigned argc, JS::Value* vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
 
-    // Check that arguments were passed properly from JS_New.
+  // Check that arguments were passed properly from JS_New.
 
-    JS::RootedObject obj(cx, JS_NewPlainObject(cx));
-    if (!obj) {
-        JS_ReportErrorASCII(cx, "test failed, could not construct object");
-        return false;
-    }
-    if (strcmp(JS_GetClass(obj)->name, "Object") != 0) {
-        JS_ReportErrorASCII(cx, "test failed, wrong class for 'this'");
-        return false;
-    }
-    if (args.length() != 3) {
-        JS_ReportErrorASCII(cx, "test failed, argc == %d", args.length());
-        return false;
-    }
-    if (!args[0].isInt32() || args[2].toInt32() != 2) {
-        JS_ReportErrorASCII(cx, "test failed, wrong value in args[2]");
-        return false;
-    }
-    if (!args.isConstructing()) {
-        JS_ReportErrorASCII(cx, "test failed, not constructing");
-        return false;
-    }
+  JS::RootedObject obj(cx, JS_NewPlainObject(cx));
+  if (!obj) {
+    JS_ReportErrorASCII(cx, "test failed, could not construct object");
+    return false;
+  }
+  if (strcmp(JS_GetClass(obj)->name, "Object") != 0) {
+    JS_ReportErrorASCII(cx, "test failed, wrong class for 'this'");
+    return false;
+  }
+  if (args.length() != 3) {
+    JS_ReportErrorASCII(cx, "test failed, argc == %d", args.length());
+    return false;
+  }
+  if (!args[0].isInt32() || args[2].toInt32() != 2) {
+    JS_ReportErrorASCII(cx, "test failed, wrong value in args[2]");
+    return false;
+  }
+  if (!args.isConstructing()) {
+    JS_ReportErrorASCII(cx, "test failed, not constructing");
+    return false;
+  }
 
-    // Perform a side-effect to indicate that this hook was actually called.
-    JS::RootedValue value(cx, args[0]);
-    JS::RootedObject callee(cx, &args.callee());
-    if (!JS_SetElement(cx, callee, 0, value)) {
-        return false;
-    }
+  // Perform a side-effect to indicate that this hook was actually called.
+  JS::RootedValue value(cx, args[0]);
+  JS::RootedObject callee(cx, &args.callee());
+  if (!JS_SetElement(cx, callee, 0, value)) {
+    return false;
+  }
 
-    args.rval().setObject(*obj);
+  args.rval().setObject(*obj);
 
-    // trash the argv, perversely
-    args[0].setUndefined();
-    args[1].setUndefined();
-    args[2].setUndefined();
+  // trash the argv, perversely
+  args[0].setUndefined();
+  args[1].setUndefined();
+  args[2].setUndefined();
 
-    return true;
+  return true;
 }
 
-BEGIN_TEST(testNewObject_1)
-{
-    static const size_t N = 1000;
-    JS::AutoValueVector argv(cx);
-    CHECK(argv.resize(N));
+BEGIN_TEST(testNewObject_1) {
+  static const size_t N = 1000;
+  JS::AutoValueVector argv(cx);
+  CHECK(argv.resize(N));
 
-    JS::RootedValue v(cx);
-    EVAL("Array", &v);
-    JS::RootedObject Array(cx, v.toObjectOrNull());
+  JS::RootedValue v(cx);
+  EVAL("Array", &v);
+  JS::RootedObject Array(cx, v.toObjectOrNull());
 
-    bool isArray;
+  bool isArray;
 
-    // With no arguments.
-    JS::RootedObject obj(cx, JS_New(cx, Array, JS::HandleValueArray::empty()));
-    CHECK(obj);
-    JS::RootedValue rt(cx, JS::ObjectValue(*obj));
-    CHECK(JS_IsArrayObject(cx, obj, &isArray));
-    CHECK(isArray);
-    uint32_t len;
-    CHECK(JS_GetArrayLength(cx, obj, &len));
-    CHECK_EQUAL(len, 0u);
+  // With no arguments.
+  JS::RootedObject obj(cx, JS_New(cx, Array, JS::HandleValueArray::empty()));
+  CHECK(obj);
+  JS::RootedValue rt(cx, JS::ObjectValue(*obj));
+  CHECK(JS_IsArrayObject(cx, obj, &isArray));
+  CHECK(isArray);
+  uint32_t len;
+  CHECK(JS_GetArrayLength(cx, obj, &len));
+  CHECK_EQUAL(len, 0u);
 
-    // With one argument.
-    argv[0].setInt32(4);
-    obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, 1));
-    CHECK(obj);
-    rt = JS::ObjectValue(*obj);
-    CHECK(JS_IsArrayObject(cx, obj, &isArray));
-    CHECK(isArray);
-    CHECK(JS_GetArrayLength(cx, obj, &len));
-    CHECK_EQUAL(len, 4u);
+  // With one argument.
+  argv[0].setInt32(4);
+  obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, 1));
+  CHECK(obj);
+  rt = JS::ObjectValue(*obj);
+  CHECK(JS_IsArrayObject(cx, obj, &isArray));
+  CHECK(isArray);
+  CHECK(JS_GetArrayLength(cx, obj, &len));
+  CHECK_EQUAL(len, 4u);
 
-    // With N arguments.
-    for (size_t i = 0; i < N; i++) {
-        argv[i].setInt32(i);
-    }
-    obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, N));
-    CHECK(obj);
-    rt = JS::ObjectValue(*obj);
-    CHECK(JS_IsArrayObject(cx, obj, &isArray));
-    CHECK(isArray);
-    CHECK(JS_GetArrayLength(cx, obj, &len));
-    CHECK_EQUAL(len, N);
-    CHECK(JS_GetElement(cx, obj, N - 1, &v));
-    CHECK(v.isInt32(N - 1));
+  // With N arguments.
+  for (size_t i = 0; i < N; i++) {
+    argv[i].setInt32(i);
+  }
+  obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, N));
+  CHECK(obj);
+  rt = JS::ObjectValue(*obj);
+  CHECK(JS_IsArrayObject(cx, obj, &isArray));
+  CHECK(isArray);
+  CHECK(JS_GetArrayLength(cx, obj, &len));
+  CHECK_EQUAL(len, N);
+  CHECK(JS_GetElement(cx, obj, N - 1, &v));
+  CHECK(v.isInt32(N - 1));
 
-    // With JSClass.construct.
-    static const JSClassOps clsOps = {
-        nullptr, nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr, nullptr,
-        nullptr, constructHook
-    };
-    static const JSClass cls = {
-        "testNewObject_1",
-        0,
-        &clsOps
-    };
-    JS::RootedObject ctor(cx, JS_NewObject(cx, &cls));
-    CHECK(ctor);
-    JS::RootedValue rt2(cx, JS::ObjectValue(*ctor));
-    obj = JS_New(cx, ctor, JS::HandleValueArray::subarray(argv, 0, 3));
-    CHECK(obj);
-    CHECK(JS_GetElement(cx, ctor, 0, &v));
-    CHECK(v.isInt32(0));
+  // With JSClass.construct.
+  static const JSClassOps clsOps = {nullptr, nullptr,      nullptr, nullptr,
+                                    nullptr, nullptr,      nullptr, nullptr,
+                                    nullptr, constructHook};
+  static const JSClass cls = {"testNewObject_1", 0, &clsOps};
+  JS::RootedObject ctor(cx, JS_NewObject(cx, &cls));
+  CHECK(ctor);
+  JS::RootedValue rt2(cx, JS::ObjectValue(*ctor));
+  obj = JS_New(cx, ctor, JS::HandleValueArray::subarray(argv, 0, 3));
+  CHECK(obj);
+  CHECK(JS_GetElement(cx, ctor, 0, &v));
+  CHECK(v.isInt32(0));
 
-    return true;
+  return true;
 }
 END_TEST(testNewObject_1)
 
-BEGIN_TEST(testNewObject_IsMapObject)
-{
-    // Test IsMapObject and IsSetObject
+BEGIN_TEST(testNewObject_IsMapObject) {
+  // Test IsMapObject and IsSetObject
 
-    JS::RootedValue vMap(cx);
-    EVAL("Map", &vMap);
-    JS::RootedObject Map(cx, vMap.toObjectOrNull());
+  JS::RootedValue vMap(cx);
+  EVAL("Map", &vMap);
+  JS::RootedObject Map(cx, vMap.toObjectOrNull());
 
-    bool isMap = false;
-    bool isSet = false;
-    JS::RootedObject mapObj(cx, JS_New(cx, Map, JS::HandleValueArray::empty()));
-    CHECK(mapObj);
-    CHECK(JS::IsMapObject(cx, mapObj, &isMap));
-    CHECK(isMap);
-    CHECK(JS::IsSetObject(cx, mapObj, &isSet));
-    CHECK(!isSet);
+  bool isMap = false;
+  bool isSet = false;
+  JS::RootedObject mapObj(cx, JS_New(cx, Map, JS::HandleValueArray::empty()));
+  CHECK(mapObj);
+  CHECK(JS::IsMapObject(cx, mapObj, &isMap));
+  CHECK(isMap);
+  CHECK(JS::IsSetObject(cx, mapObj, &isSet));
+  CHECK(!isSet);
 
-    JS::RootedValue vSet(cx);
-    EVAL("Set", &vSet);
-    JS::RootedObject Set(cx, vSet.toObjectOrNull());
+  JS::RootedValue vSet(cx);
+  EVAL("Set", &vSet);
+  JS::RootedObject Set(cx, vSet.toObjectOrNull());
 
-    JS::RootedObject setObj(cx, JS_New(cx, Set, JS::HandleValueArray::empty()));
-    CHECK(setObj);
-    CHECK(JS::IsMapObject(cx, setObj, &isMap));
-    CHECK(!isMap);
-    CHECK(JS::IsSetObject(cx, setObj, &isSet));
-    CHECK(isSet);
+  JS::RootedObject setObj(cx, JS_New(cx, Set, JS::HandleValueArray::empty()));
+  CHECK(setObj);
+  CHECK(JS::IsMapObject(cx, setObj, &isMap));
+  CHECK(!isMap);
+  CHECK(JS::IsSetObject(cx, setObj, &isSet));
+  CHECK(isSet);
 
-    return true;
+  return true;
 }
 END_TEST(testNewObject_IsMapObject)

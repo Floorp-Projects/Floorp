@@ -11,16 +11,15 @@
 #include "nsString.h"
 #include "nsNativeThemeCocoa.h"
 
-class nsMacDockSupport : public nsIMacDockSupport, public nsITaskbarProgress
-{
-public:
+class nsMacDockSupport : public nsIMacDockSupport, public nsITaskbarProgress {
+ public:
   nsMacDockSupport();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMACDOCKSUPPORT
   NS_DECL_NSITASKBARPROGRESS
 
-protected:
+ protected:
   virtual ~nsMacDockSupport();
 
   nsCOMPtr<nsIStandaloneNativeMenu> mDockMenu;

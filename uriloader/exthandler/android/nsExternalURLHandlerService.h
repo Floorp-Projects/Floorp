@@ -9,19 +9,22 @@
 #include "nsIExternalURLHandlerService.h"
 
 // {4BF1F8EF-D947-4BA3-9CD3-8C9A54A63A1C}
-#define NS_EXTERNALURLHANDLERSERVICE_CID \
-    {0x4bf1f8ef, 0xd947, 0x4ba3, {0x9c, 0xd3, 0x8c, 0x9a, 0x54, 0xa6, 0x3a, 0x1c}}
+#define NS_EXTERNALURLHANDLERSERVICE_CID             \
+  {                                                  \
+    0x4bf1f8ef, 0xd947, 0x4ba3, {                    \
+      0x9c, 0xd3, 0x8c, 0x9a, 0x54, 0xa6, 0x3a, 0x1c \
+    }                                                \
+  }
 
-class nsExternalURLHandlerService final
-  : public nsIExternalURLHandlerService
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIEXTERNALURLHANDLERSERVICE
+class nsExternalURLHandlerService final : public nsIExternalURLHandlerService {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIEXTERNALURLHANDLERSERVICE
 
-    nsExternalURLHandlerService();
-private:
-    ~nsExternalURLHandlerService();
+  nsExternalURLHandlerService();
+
+ private:
+  ~nsExternalURLHandlerService();
 };
 
-#endif // NSEXTERNALURLHANDLERSERVICE_H
+#endif  // NSEXTERNALURLHANDLERSERVICE_H

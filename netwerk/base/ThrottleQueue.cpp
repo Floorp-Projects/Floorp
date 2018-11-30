@@ -15,12 +15,9 @@ namespace net {
 
 //-----------------------------------------------------------------------------
 
-class ThrottleInputStream final
-  : public nsIAsyncInputStream
-  , public nsISeekableStream
-{
-public:
-
+class ThrottleInputStream final : public nsIAsyncInputStream,
+                                  public nsISeekableStream {
+ public:
   ThrottleInputStream(nsIInputStream* aStream, ThrottleQueue* aQueue);
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -31,8 +28,7 @@ public:
 
   void AllowInput();
 
-private:
-
+ private:
   ~ThrottleInputStream();
 
   nsCOMPtr<nsIInputStream> mStream;
@@ -46,22 +42,16 @@ private:
 NS_IMPL_ISUPPORTS(ThrottleInputStream, nsIAsyncInputStream, nsIInputStream,
                   nsITellableStream, nsISeekableStream)
 
-ThrottleInputStream::ThrottleInputStream(nsIInputStream *aStream, ThrottleQueue* aQueue)
-  : mStream(aStream)
-  , mQueue(aQueue)
-  , mClosedStatus(NS_OK)
-{
+ThrottleInputStream::ThrottleInputStream(nsIInputStream* aStream,
+                                         ThrottleQueue* aQueue)
+    : mStream(aStream), mQueue(aQueue), mClosedStatus(NS_OK) {
   MOZ_ASSERT(aQueue != nullptr);
 }
 
-ThrottleInputStream::~ThrottleInputStream()
-{
-  Close();
-}
+ThrottleInputStream::~ThrottleInputStream() { Close(); }
 
 NS_IMETHODIMP
-ThrottleInputStream::Close()
-{
+ThrottleInputStream::Close() {
   if (NS_FAILED(mClosedStatus)) {
     return mClosedStatus;
   }
@@ -75,8 +65,7 @@ ThrottleInputStream::Close()
 }
 
 NS_IMETHODIMP
-ThrottleInputStream::Available(uint64_t* aResult)
-{
+ThrottleInputStream::Available(uint64_t* aResult) {
   if (NS_FAILED(mClosedStatus)) {
     return mClosedStatus;
   }
@@ -85,8 +74,7 @@ ThrottleInputStream::Available(uint64_t* aResult)
 }
 
 NS_IMETHODIMP
-ThrottleInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult)
-{
+ThrottleInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult) {
   if (NS_FAILED(mClosedStatus)) {
     return mClosedStatus;
   }
@@ -110,8 +98,7 @@ ThrottleInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult)
 
 NS_IMETHODIMP
 ThrottleInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-                                  uint32_t aCount, uint32_t* aResult)
-{
+                                  uint32_t aCount, uint32_t* aResult) {
   if (NS_FAILED(mClosedStatus)) {
     return mClosedStatus;
   }
@@ -134,15 +121,13 @@ ThrottleInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
 }
 
 NS_IMETHODIMP
-ThrottleInputStream::IsNonBlocking(bool* aNonBlocking)
-{
+ThrottleInputStream::IsNonBlocking(bool* aNonBlocking) {
   *aNonBlocking = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ThrottleInputStream::Seek(int32_t aWhence, int64_t aOffset)
-{
+ThrottleInputStream::Seek(int32_t aWhence, int64_t aOffset) {
   if (NS_FAILED(mClosedStatus)) {
     return mClosedStatus;
   }
@@ -156,8 +141,7 @@ ThrottleInputStream::Seek(int32_t aWhence, int64_t aOffset)
 }
 
 NS_IMETHODIMP
-ThrottleInputStream::Tell(int64_t* aResult)
-{
+ThrottleInputStream::Tell(int64_t* aResult) {
   if (NS_FAILED(mClosedStatus)) {
     return mClosedStatus;
   }
@@ -171,8 +155,7 @@ ThrottleInputStream::Tell(int64_t* aResult)
 }
 
 NS_IMETHODIMP
-ThrottleInputStream::SetEOF()
-{
+ThrottleInputStream::SetEOF() {
   if (NS_FAILED(mClosedStatus)) {
     return mClosedStatus;
   }
@@ -186,8 +169,7 @@ ThrottleInputStream::SetEOF()
 }
 
 NS_IMETHODIMP
-ThrottleInputStream::CloseWithStatus(nsresult aStatus)
-{
+ThrottleInputStream::CloseWithStatus(nsresult aStatus) {
   if (NS_FAILED(mClosedStatus)) {
     // Already closed, ignore.
     return NS_OK;
@@ -204,11 +186,9 @@ ThrottleInputStream::CloseWithStatus(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-ThrottleInputStream::AsyncWait(nsIInputStreamCallback *aCallback,
-                               uint32_t aFlags,
-                               uint32_t aRequestedCount,
-                               nsIEventTarget *aEventTarget)
-{
+ThrottleInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
+                               uint32_t aFlags, uint32_t aRequestedCount,
+                               nsIEventTarget* aEventTarget) {
   if (aFlags != 0) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -223,13 +203,10 @@ ThrottleInputStream::AsyncWait(nsIInputStreamCallback *aCallback,
   return NS_OK;
 }
 
-void
-ThrottleInputStream::AllowInput()
-{
+void ThrottleInputStream::AllowInput() {
   MOZ_ASSERT(mCallback);
-  nsCOMPtr<nsIInputStreamCallback> callbackEvent =
-    NS_NewInputStreamReadyEvent("ThrottleInputStream::AllowInput",
-                                mCallback, mEventTarget);
+  nsCOMPtr<nsIInputStreamCallback> callbackEvent = NS_NewInputStreamReadyEvent(
+      "ThrottleInputStream::AllowInput", mCallback, mEventTarget);
   mCallback = nullptr;
   mEventTarget = nullptr;
   callbackEvent->OnInputStreamReady(this);
@@ -237,25 +214,23 @@ ThrottleInputStream::AllowInput()
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(ThrottleQueue, nsIInputChannelThrottleQueue, nsITimerCallback, nsINamed)
+NS_IMPL_ISUPPORTS(ThrottleQueue, nsIInputChannelThrottleQueue, nsITimerCallback,
+                  nsINamed)
 
 ThrottleQueue::ThrottleQueue()
-  : mMeanBytesPerSecond(0)
-  , mMaxBytesPerSecond(0)
-  , mBytesProcessed(0)
-  , mTimerArmed(false)
-{
+    : mMeanBytesPerSecond(0),
+      mMaxBytesPerSecond(0),
+      mBytesProcessed(0),
+      mTimerArmed(false) {
   nsresult rv;
   nsCOMPtr<nsIEventTarget> sts;
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   if (NS_SUCCEEDED(rv))
     sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv))
-    mTimer = NS_NewTimer(sts);
+  if (NS_SUCCEEDED(rv)) mTimer = NS_NewTimer(sts);
 }
 
-ThrottleQueue::~ThrottleQueue()
-{
+ThrottleQueue::~ThrottleQueue() {
   if (mTimer && mTimerArmed) {
     mTimer->Cancel();
   }
@@ -263,8 +238,7 @@ ThrottleQueue::~ThrottleQueue()
 }
 
 NS_IMETHODIMP
-ThrottleQueue::RecordRead(uint32_t aBytesRead)
-{
+ThrottleQueue::RecordRead(uint32_t aBytesRead) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   ThrottleEntry entry;
   entry.mTime = TimeStamp::Now();
@@ -275,8 +249,7 @@ ThrottleQueue::RecordRead(uint32_t aBytesRead)
 }
 
 NS_IMETHODIMP
-ThrottleQueue::Available(uint32_t aRemaining, uint32_t* aAvailable)
-{
+ThrottleQueue::Available(uint32_t aRemaining, uint32_t* aAvailable) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   TimeStamp now = TimeStamp::Now();
   TimeStamp oneSecondAgo = now - TimeDuration::FromSeconds(1);
@@ -297,8 +270,8 @@ ThrottleQueue::Available(uint32_t aRemaining, uint32_t* aAvailable)
 
   uint32_t spread = mMaxBytesPerSecond - mMeanBytesPerSecond;
   double prob = static_cast<double>(rand()) / RAND_MAX;
-  uint32_t thisSliceBytes = mMeanBytesPerSecond - spread +
-    static_cast<uint32_t>(2 * spread * prob);
+  uint32_t thisSliceBytes =
+      mMeanBytesPerSecond - spread + static_cast<uint32_t>(2 * spread * prob);
 
   if (totalBytes >= thisSliceBytes) {
     *aAvailable = 0;
@@ -309,10 +282,10 @@ ThrottleQueue::Available(uint32_t aRemaining, uint32_t* aAvailable)
 }
 
 NS_IMETHODIMP
-ThrottleQueue::Init(uint32_t aMeanBytesPerSecond, uint32_t aMaxBytesPerSecond)
-{
+ThrottleQueue::Init(uint32_t aMeanBytesPerSecond, uint32_t aMaxBytesPerSecond) {
   // Can be called on any thread.
-  if (aMeanBytesPerSecond == 0 || aMaxBytesPerSecond == 0 || aMaxBytesPerSecond < aMeanBytesPerSecond) {
+  if (aMeanBytesPerSecond == 0 || aMaxBytesPerSecond == 0 ||
+      aMaxBytesPerSecond < aMeanBytesPerSecond) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -322,23 +295,22 @@ ThrottleQueue::Init(uint32_t aMeanBytesPerSecond, uint32_t aMaxBytesPerSecond)
 }
 
 NS_IMETHODIMP
-ThrottleQueue::BytesProcessed(uint64_t* aResult)
-{
+ThrottleQueue::BytesProcessed(uint64_t* aResult) {
   *aResult = mBytesProcessed;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ThrottleQueue::WrapStream(nsIInputStream* aInputStream, nsIAsyncInputStream** aResult)
-{
-  nsCOMPtr<nsIAsyncInputStream> result = new ThrottleInputStream(aInputStream, this);
+ThrottleQueue::WrapStream(nsIInputStream* aInputStream,
+                          nsIAsyncInputStream** aResult) {
+  nsCOMPtr<nsIAsyncInputStream> result =
+      new ThrottleInputStream(aInputStream, this);
   result.forget(aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ThrottleQueue::Notify(nsITimer* aTimer)
-{
+ThrottleQueue::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   // A notified reader may need to push itself back on the queue.
   // Swap out the list of readers so that this works properly.
@@ -356,15 +328,12 @@ ThrottleQueue::Notify(nsITimer* aTimer)
 }
 
 NS_IMETHODIMP
-ThrottleQueue::GetName(nsACString& aName)
-{
+ThrottleQueue::GetName(nsACString& aName) {
   aName.AssignLiteral("net::ThrottleQueue");
   return NS_OK;
 }
 
-void
-ThrottleQueue::QueueStream(ThrottleInputStream* aStream)
-{
+void ThrottleQueue::QueueStream(ThrottleInputStream* aStream) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (mAsyncEvents.IndexOf(aStream) == mAsyncEvents.NoIndex) {
     mAsyncEvents.AppendElement(aStream);
@@ -382,19 +351,18 @@ ThrottleQueue::QueueStream(ThrottleInputStream* aStream)
         }
       }
 
-      if (NS_SUCCEEDED(mTimer->InitWithCallback(this, ms, nsITimer::TYPE_ONE_SHOT))) {
+      if (NS_SUCCEEDED(
+              mTimer->InitWithCallback(this, ms, nsITimer::TYPE_ONE_SHOT))) {
         mTimerArmed = true;
       }
     }
   }
 }
 
-void
-ThrottleQueue::DequeueStream(ThrottleInputStream* aStream)
-{
+void ThrottleQueue::DequeueStream(ThrottleInputStream* aStream) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mAsyncEvents.RemoveElement(aStream);
 }
 
-}
-}
+}  // namespace net
+}  // namespace mozilla

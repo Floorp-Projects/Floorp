@@ -41,14 +41,10 @@ using namespace mozilla;
 
 NS_IMETHODIMP
 nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                  nsISupports* aData, bool aAnonymize)
-{
-  struct SuspectObserver
-  {
+                                  nsISupports* aData, bool aAnonymize) {
+  struct SuspectObserver {
     SuspectObserver(const char* aTopic, size_t aReferentCount)
-      : mTopic(aTopic)
-      , mReferentCount(aReferentCount)
-    {}
+        : mTopic(aTopic), mReferentCount(aReferentCount) {}
     const char* mTopic;
     size_t mReferentCount;
   };
@@ -101,31 +97,31 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
     nsPrintfCString suspectPath("observer-service-suspect/referent(topic=%s)",
                                 suspect.mTopic);
     aHandleReport->Callback(
-      /* process */ EmptyCString(),
-      suspectPath, KIND_OTHER, UNITS_COUNT, suspect.mReferentCount,
-      NS_LITERAL_CSTRING("A topic with a suspiciously large number of "
-                         "referents.  This may be symptomatic of a leak "
-                         "if the number of referents is high with "
-                         "respect to the number of windows."),
-      aData);
+        /* process */ EmptyCString(), suspectPath, KIND_OTHER, UNITS_COUNT,
+        suspect.mReferentCount,
+        NS_LITERAL_CSTRING("A topic with a suspiciously large number of "
+                           "referents.  This may be symptomatic of a leak "
+                           "if the number of referents is high with "
+                           "respect to the number of windows."),
+        aData);
   }
 
   MOZ_COLLECT_REPORT(
-    "observer-service/referent/strong", KIND_OTHER, UNITS_COUNT,
-    totalNumStrong,
-    "The number of strong references held by the observer service.");
+      "observer-service/referent/strong", KIND_OTHER, UNITS_COUNT,
+      totalNumStrong,
+      "The number of strong references held by the observer service.");
 
   MOZ_COLLECT_REPORT(
-    "observer-service/referent/weak/alive", KIND_OTHER, UNITS_COUNT,
-    totalNumWeakAlive,
-    "The number of weak references held by the observer service that are "
-    "still alive.");
+      "observer-service/referent/weak/alive", KIND_OTHER, UNITS_COUNT,
+      totalNumWeakAlive,
+      "The number of weak references held by the observer service that are "
+      "still alive.");
 
   MOZ_COLLECT_REPORT(
-    "observer-service/referent/weak/dead", KIND_OTHER, UNITS_COUNT,
-    totalNumWeakDead,
-    "The number of weak references held by the observer service that are "
-    "dead.");
+      "observer-service/referent/weak/dead", KIND_OTHER, UNITS_COUNT,
+      totalNumWeakDead,
+      "The number of weak references held by the observer service that are "
+      "dead.");
 
   return NS_OK;
 }
@@ -133,30 +129,16 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
 ////////////////////////////////////////////////////////////////////////////////
 // nsObserverService Implementation
 
-NS_IMPL_ISUPPORTS(nsObserverService,
-                  nsIObserverService,
-                  nsObserverService,
+NS_IMPL_ISUPPORTS(nsObserverService, nsIObserverService, nsObserverService,
                   nsIMemoryReporter)
 
-nsObserverService::nsObserverService()
-  : mShuttingDown(false)
-{
-}
+nsObserverService::nsObserverService() : mShuttingDown(false) {}
 
-nsObserverService::~nsObserverService(void)
-{
-  Shutdown();
-}
+nsObserverService::~nsObserverService(void) { Shutdown(); }
 
-void
-nsObserverService::RegisterReporter()
-{
-  RegisterWeakMemoryReporter(this);
-}
+void nsObserverService::RegisterReporter() { RegisterWeakMemoryReporter(this); }
 
-void
-nsObserverService::Shutdown()
-{
+void nsObserverService::Shutdown() {
   if (mShuttingDown) {
     return;
   }
@@ -166,10 +148,8 @@ nsObserverService::Shutdown()
   mObserverTopicTable.Clear();
 }
 
-nsresult
-nsObserverService::Create(nsISupports* aOuter, const nsIID& aIID,
-                          void** aInstancePtr)
-{
+nsresult nsObserverService::Create(nsISupports* aOuter, const nsIID& aIID,
+                                   void** aInstancePtr) {
   LOG(("nsObserverService::Create()"));
 
   RefPtr<nsObserverService> os = new nsObserverService();
@@ -182,15 +162,13 @@ nsObserverService::Create(nsISupports* aOuter, const nsIID& aIID,
   // the nsMemoryReporterManager may attempt to get the nsObserverService
   // during initialization, causing a recursive GetService.
   NS_DispatchToCurrentThread(
-    NewRunnableMethod("nsObserverService::RegisterReporter",
-                      os,
-                      &nsObserverService::RegisterReporter));
+      NewRunnableMethod("nsObserverService::RegisterReporter", os,
+                        &nsObserverService::RegisterReporter));
 
   return os->QueryInterface(aIID, aInstancePtr);
 }
 
-nsresult
-nsObserverService::EnsureValidCall() const {
+nsresult nsObserverService::EnsureValidCall() const {
   if (!NS_IsMainThread()) {
     MOZ_CRASH("Using observer service off the main thread!");
     return NS_ERROR_UNEXPECTED;
@@ -204,20 +182,20 @@ nsObserverService::EnsureValidCall() const {
   return NS_OK;
 }
 
-nsresult
-nsObserverService::FilterHttpOnTopics(const char* aTopic)
-{
+nsresult nsObserverService::FilterHttpOnTopics(const char* aTopic) {
   // Specifically allow http-on-opening-request and http-on-stop-request in the
   // child process; see bug 1269765.
   if (mozilla::net::IsNeckoChild() && !strncmp(aTopic, "http-on-", 8) &&
       strcmp(aTopic, "http-on-opening-request") &&
       strcmp(aTopic, "http-on-stop-request")) {
-    nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-    nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-    error->Init(NS_LITERAL_STRING("http-on-* observers only work in the parent process"),
-                EmptyString(), EmptyString(), 0, 0,
-                nsIScriptError::warningFlag, "chrome javascript",
-                false /* from private window */);
+    nsCOMPtr<nsIConsoleService> console(
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+    nsCOMPtr<nsIScriptError> error(
+        do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+    error->Init(NS_LITERAL_STRING(
+                    "http-on-* observers only work in the parent process"),
+                EmptyString(), EmptyString(), 0, 0, nsIScriptError::warningFlag,
+                "chrome javascript", false /* from private window */);
     console->LogMessage(error);
 
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -228,10 +206,9 @@ nsObserverService::FilterHttpOnTopics(const char* aTopic)
 
 NS_IMETHODIMP
 nsObserverService::AddObserver(nsIObserver* aObserver, const char* aTopic,
-                               bool aOwnsWeak)
-{
-  LOG(("nsObserverService::AddObserver(%p: %s, %s)",
-       (void*)aObserver, aTopic, aOwnsWeak ? "weak" : "strong"));
+                               bool aOwnsWeak) {
+  LOG(("nsObserverService::AddObserver(%p: %s, %s)", (void*)aObserver, aTopic,
+       aOwnsWeak ? "weak" : "strong"));
 
   MOZ_TRY(EnsureValidCall());
   if (NS_WARN_IF(!aObserver) || NS_WARN_IF(!aTopic)) {
@@ -249,10 +226,8 @@ nsObserverService::AddObserver(nsIObserver* aObserver, const char* aTopic,
 }
 
 NS_IMETHODIMP
-nsObserverService::RemoveObserver(nsIObserver* aObserver, const char* aTopic)
-{
-  LOG(("nsObserverService::RemoveObserver(%p: %s)",
-       (void*)aObserver, aTopic));
+nsObserverService::RemoveObserver(nsIObserver* aObserver, const char* aTopic) {
+  LOG(("nsObserverService::RemoveObserver(%p: %s)", (void*)aObserver, aTopic));
 
   MOZ_TRY(EnsureValidCall());
   if (NS_WARN_IF(!aObserver) || NS_WARN_IF(!aTopic)) {
@@ -273,10 +248,8 @@ nsObserverService::RemoveObserver(nsIObserver* aObserver, const char* aTopic)
 
 NS_IMETHODIMP
 nsObserverService::EnumerateObservers(const char* aTopic,
-                                      nsISimpleEnumerator** anEnumerator)
-{
-  LOG(("nsObserverService::EnumerateObservers(%s)",
-       aTopic));
+                                      nsISimpleEnumerator** anEnumerator) {
+  LOG(("nsObserverService::EnumerateObservers(%s)", aTopic));
 
   MOZ_TRY(EnsureValidCall());
   if (NS_WARN_IF(!anEnumerator) || NS_WARN_IF(!aTopic)) {
@@ -295,8 +268,7 @@ nsObserverService::EnumerateObservers(const char* aTopic,
 // Enumerate observers of aTopic and call Observe on each.
 NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
                                                  const char* aTopic,
-                                                 const char16_t* aSomeData)
-{
+                                                 const char16_t* aSomeData) {
   LOG(("nsObserverService::NotifyObservers(%s)", aTopic));
 
   MOZ_TRY(EnsureValidCall());
@@ -306,8 +278,8 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
 
   mozilla::TimeStamp start = TimeStamp::Now();
 
-  AUTO_PROFILER_LABEL_DYNAMIC_CSTR(
-    "nsObserverService::NotifyObservers", OTHER, aTopic);
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("nsObserverService::NotifyObservers", OTHER,
+                                   aTopic);
 
   nsObserverList* observerList = mObserverTopicTable.GetEntry(aTopic);
   if (observerList) {
@@ -317,16 +289,14 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
   uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
   if (latencyMs >= kMinTelemetryNotifyObserversLatencyMs) {
     Telemetry::Accumulate(Telemetry::NOTIFY_OBSERVERS_LATENCY_MS,
-                          nsDependentCString(aTopic),
-                          latencyMs);
+                          nsDependentCString(aTopic), latencyMs);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsObserverService::UnmarkGrayStrongObservers()
-{
+nsObserverService::UnmarkGrayStrongObservers() {
   MOZ_TRY(EnsureValidCall());
 
   nsCOMArray<nsIObserver> strongObservers;

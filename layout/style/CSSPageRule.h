@@ -20,29 +20,28 @@ namespace dom {
 class DocGroup;
 class CSSPageRule;
 
-class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration
-{
-public:
+class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   css::Rule* GetParentRule() final;
   nsINode* GetParentObject() final;
 
-protected:
+ protected:
   mozilla::DeclarationBlock* GetOrCreateCSSDeclaration(
-    Operation aOperation, mozilla::DeclarationBlock** aCreated) final;
+      Operation aOperation, mozilla::DeclarationBlock** aCreated) final;
   nsresult SetCSSDeclaration(DeclarationBlock* aDecl,
                              MutationClosureData* aClosureData) final;
   nsIDocument* DocToUpdate() final;
-  nsDOMCSSDeclaration::ParsingEnvironment
-  GetParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+  nsDOMCSSDeclaration::ParsingEnvironment GetParsingEnvironment(
+      nsIPrincipal* aSubjectPrincipal) const final;
 
-private:
+ private:
   // For accessing the constructor.
   friend class CSSPageRule;
 
   explicit CSSPageRuleDeclaration(
-    already_AddRefed<RawServoDeclarationBlock> aDecls);
+      already_AddRefed<RawServoDeclarationBlock> aDecls);
   ~CSSPageRuleDeclaration();
 
   inline CSSPageRule* Rule();
@@ -51,19 +50,13 @@ private:
   RefPtr<DeclarationBlock> mDecls;
 };
 
-class CSSPageRule final : public css::Rule
-{
-public:
-  CSSPageRule(RefPtr<RawServoPageRule> aRawRule,
-              StyleSheet* aSheet,
-              css::Rule* aParentRule,
-              uint32_t aLine,
-              uint32_t aColumn);
+class CSSPageRule final : public css::Rule {
+ public:
+  CSSPageRule(RefPtr<RawServoPageRule> aRawRule, StyleSheet* aSheet,
+              css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
-    CSSPageRule, css::Rule
-  )
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CSSPageRule, css::Rule)
 
   bool IsCCLeaf() const final;
 
@@ -74,17 +67,15 @@ public:
   void GetCssText(nsAString& aCssText) const final;
   nsICSSDeclaration* Style();
 
-  size_t
-  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
-private:
+ private:
   ~CSSPageRule() = default;
 
   // For computing the offset of mDecls.
@@ -94,21 +85,17 @@ private:
   CSSPageRuleDeclaration mDecls;
 };
 
-CSSPageRule*
-CSSPageRuleDeclaration::Rule()
-{
-  return reinterpret_cast<CSSPageRule*>(
-    reinterpret_cast<uint8_t*>(this) - offsetof(CSSPageRule, mDecls));
+CSSPageRule* CSSPageRuleDeclaration::Rule() {
+  return reinterpret_cast<CSSPageRule*>(reinterpret_cast<uint8_t*>(this) -
+                                        offsetof(CSSPageRule, mDecls));
 }
 
-const CSSPageRule*
-CSSPageRuleDeclaration::Rule() const
-{
+const CSSPageRule* CSSPageRuleDeclaration::Rule() const {
   return reinterpret_cast<const CSSPageRule*>(
-    reinterpret_cast<const uint8_t*>(this) - offsetof(CSSPageRule, mDecls));
+      reinterpret_cast<const uint8_t*>(this) - offsetof(CSSPageRule, mDecls));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CSSPageRule_h
+#endif  // mozilla_dom_CSSPageRule_h

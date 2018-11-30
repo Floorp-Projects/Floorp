@@ -13,36 +13,35 @@
 // IPDL causes this file to be #included all over.
 typedef struct DXGI_ADAPTER_DESC DXGI_ADAPTER_DESC;
 
-struct DxgiAdapterDesc
-{
+struct DxgiAdapterDesc {
 #if defined(XP_WIN)
-    WCHAR Description[128];
-    UINT VendorId;
-    UINT DeviceId;
-    UINT SubSysId;
-    UINT Revision;
-    SIZE_T DedicatedVideoMemory;
-    SIZE_T DedicatedSystemMemory;
-    SIZE_T SharedSystemMemory;
-    LUID AdapterLuid;
+  WCHAR Description[128];
+  UINT VendorId;
+  UINT DeviceId;
+  UINT SubSysId;
+  UINT Revision;
+  SIZE_T DedicatedVideoMemory;
+  SIZE_T DedicatedSystemMemory;
+  SIZE_T SharedSystemMemory;
+  LUID AdapterLuid;
 
-    static const DxgiAdapterDesc& From(const DXGI_ADAPTER_DESC& aDesc);
-    const DXGI_ADAPTER_DESC& ToDesc() const;
+  static const DxgiAdapterDesc& From(const DXGI_ADAPTER_DESC& aDesc);
+  const DXGI_ADAPTER_DESC& ToDesc() const;
 #endif
 
-    bool operator ==(const DxgiAdapterDesc& aOther) const;
+  bool operator==(const DxgiAdapterDesc& aOther) const;
 };
 
 namespace IPC {
 
 template <>
-struct ParamTraits<DxgiAdapterDesc>
-{
+struct ParamTraits<DxgiAdapterDesc> {
   typedef DxgiAdapterDesc paramType;
   static void Write(Message* aMsg, const paramType& aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult);
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult);
 };
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // _include_gfx_ipc_D3DMessageUtils_h__
+#endif  // _include_gfx_ipc_D3DMessageUtils_h__

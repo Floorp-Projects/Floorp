@@ -28,7 +28,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 #include "HashStore.h"
 #include "nsICryptoHash.h"
 #include "nsISeekableStream.h"
@@ -98,8 +97,10 @@
 
 // MOZ_LOG=UrlClassifierDbService:5
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
-#define LOG(args) MOZ_LOG(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug, args)
-#define LOG_ENABLED() MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
+#define LOG(args) \
+  MOZ_LOG(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug, args)
+#define LOG_ENABLED() \
+  MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
 
 namespace mozilla {
 namespace safebrowsing {
@@ -107,20 +108,17 @@ namespace safebrowsing {
 const uint32_t STORE_MAGIC = 0x1231af3b;
 const uint32_t CURRENT_VERSION = 3;
 
-nsresult
-TableUpdateV2::NewAddPrefix(uint32_t aAddChunk, const Prefix& aHash)
-{
-  AddPrefix *add = mAddPrefixes.AppendElement(fallible);
+nsresult TableUpdateV2::NewAddPrefix(uint32_t aAddChunk, const Prefix& aHash) {
+  AddPrefix* add = mAddPrefixes.AppendElement(fallible);
   if (!add) return NS_ERROR_OUT_OF_MEMORY;
   add->addChunk = aAddChunk;
   add->prefix = aHash;
   return NS_OK;
 }
 
-nsresult
-TableUpdateV2::NewSubPrefix(uint32_t aAddChunk, const Prefix& aHash, uint32_t aSubChunk)
-{
-  SubPrefix *sub = mSubPrefixes.AppendElement(fallible);
+nsresult TableUpdateV2::NewSubPrefix(uint32_t aAddChunk, const Prefix& aHash,
+                                     uint32_t aSubChunk) {
+  SubPrefix* sub = mSubPrefixes.AppendElement(fallible);
   if (!sub) return NS_ERROR_OUT_OF_MEMORY;
   sub->addChunk = aAddChunk;
   sub->prefix = aHash;
@@ -128,20 +126,19 @@ TableUpdateV2::NewSubPrefix(uint32_t aAddChunk, const Prefix& aHash, uint32_t aS
   return NS_OK;
 }
 
-nsresult
-TableUpdateV2::NewAddComplete(uint32_t aAddChunk, const Completion& aHash)
-{
-  AddComplete *add = mAddCompletes.AppendElement(fallible);
+nsresult TableUpdateV2::NewAddComplete(uint32_t aAddChunk,
+                                       const Completion& aHash) {
+  AddComplete* add = mAddCompletes.AppendElement(fallible);
   if (!add) return NS_ERROR_OUT_OF_MEMORY;
   add->addChunk = aAddChunk;
   add->complete = aHash;
   return NS_OK;
 }
 
-nsresult
-TableUpdateV2::NewSubComplete(uint32_t aAddChunk, const Completion& aHash, uint32_t aSubChunk)
-{
-  SubComplete *sub = mSubCompletes.AppendElement(fallible);
+nsresult TableUpdateV2::NewSubComplete(uint32_t aAddChunk,
+                                       const Completion& aHash,
+                                       uint32_t aSubChunk) {
+  SubComplete* sub = mSubCompletes.AppendElement(fallible);
   if (!sub) return NS_ERROR_OUT_OF_MEMORY;
   sub->addChunk = aAddChunk;
   sub->complete = aHash;
@@ -149,17 +146,13 @@ TableUpdateV2::NewSubComplete(uint32_t aAddChunk, const Completion& aHash, uint3
   return NS_OK;
 }
 
-nsresult
-TableUpdateV2::NewMissPrefix(const Prefix& aPrefix)
-{
-  Prefix *prefix = mMissPrefixes.AppendElement(aPrefix, fallible);
+nsresult TableUpdateV2::NewMissPrefix(const Prefix& aPrefix) {
+  Prefix* prefix = mMissPrefixes.AppendElement(aPrefix, fallible);
   if (!prefix) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 
-void
-TableUpdateV4::NewPrefixes(int32_t aSize, const nsACString& aPrefixes)
-{
+void TableUpdateV4::NewPrefixes(int32_t aSize, const nsACString& aPrefixes) {
   NS_ENSURE_TRUE_VOID(aSize >= 4 && aSize <= COMPLETE_SIZE);
   NS_ENSURE_TRUE_VOID(aPrefixes.Length() % aSize == 0);
   NS_ENSURE_TRUE_VOID(!mPrefixesMap.Get(aSize));
@@ -176,7 +169,7 @@ TableUpdateV4::NewPrefixes(int32_t aSize, const nsACString& aPrefixes)
 #endif
   } else if (LOG_ENABLED()) {
     const uint32_t* p =
-      reinterpret_cast<const uint32_t*>(ToNewCString(aPrefixes));
+        reinterpret_cast<const uint32_t*>(ToNewCString(aPrefixes));
 
     // Dump the first/last 10 fixed-length prefixes for debugging.
     LOG(("* The first 10 (maximum) fixed-length prefixes: "));
@@ -191,16 +184,17 @@ TableUpdateV4::NewPrefixes(int32_t aSize, const nsACString& aPrefixes)
       LOG(("%.2X%.2X%.2X%.2X", c[0], c[1], c[2], c[3]));
     }
 
-    LOG(("---- %u fixed-length prefixes in total.", aPrefixes.Length() / aSize));
+    LOG(("---- %u fixed-length prefixes in total.",
+         aPrefixes.Length() / aSize));
   }
 
   mPrefixesMap.Put(aSize, new nsCString(aPrefixes));
 }
 
-nsresult
-TableUpdateV4::NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices)
-{
-  MOZ_ASSERT(mRemovalIndiceArray.IsEmpty(), "mRemovalIndiceArray must be empty");
+nsresult TableUpdateV4::NewRemovalIndices(const uint32_t* aIndices,
+                                          size_t aNumOfIndices) {
+  MOZ_ASSERT(mRemovalIndiceArray.IsEmpty(),
+             "mRemovalIndiceArray must be empty");
 
   if (!mRemovalIndiceArray.SetCapacity(aNumOfIndices, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -212,18 +206,14 @@ TableUpdateV4::NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices)
   return NS_OK;
 }
 
-void
-TableUpdateV4::NewChecksum(const std::string& aChecksum)
-{
+void TableUpdateV4::NewChecksum(const std::string& aChecksum) {
   mChecksum.Assign(aChecksum.data(), aChecksum.size());
 }
 
-nsresult
-TableUpdateV4::NewFullHashResponse(const Prefix& aPrefix,
-                                   const CachedFullHashResponse& aResponse)
-{
+nsresult TableUpdateV4::NewFullHashResponse(
+    const Prefix& aPrefix, const CachedFullHashResponse& aResponse) {
   CachedFullHashResponse* response =
-    mFullHashResponseMap.LookupOrAdd(aPrefix.ToUint32());
+      mFullHashResponseMap.LookupOrAdd(aPrefix.ToUint32());
   if (!response) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -231,29 +221,20 @@ TableUpdateV4::NewFullHashResponse(const Prefix& aPrefix,
   return NS_OK;
 }
 
-HashStore::HashStore(const nsACString& aTableName,
-                     const nsACString& aProvider,
+HashStore::HashStore(const nsACString& aTableName, const nsACString& aProvider,
                      nsIFile* aRootStoreDir)
-  : mTableName(aTableName)
-  , mInUpdate(false)
-  , mFileSize(0)
-{
-  nsresult rv = Classifier::GetPrivateStoreDirectory(aRootStoreDir,
-                                                     aTableName,
-                                                     aProvider,
-                                                     getter_AddRefs(mStoreDirectory));
+    : mTableName(aTableName), mInUpdate(false), mFileSize(0) {
+  nsresult rv = Classifier::GetPrivateStoreDirectory(
+      aRootStoreDir, aTableName, aProvider, getter_AddRefs(mStoreDirectory));
   if (NS_FAILED(rv)) {
     LOG(("Failed to get private store directory for %s", mTableName.get()));
     mStoreDirectory = aRootStoreDir;
   }
 }
 
-HashStore::~HashStore()
-= default;
+HashStore::~HashStore() = default;
 
-nsresult
-HashStore::Reset()
-{
+nsresult HashStore::Reset() {
   LOG(("HashStore resetting"));
 
   nsCOMPtr<nsIFile> storeFile;
@@ -271,9 +252,7 @@ HashStore::Reset()
   return NS_OK;
 }
 
-nsresult
-HashStore::CheckChecksum(uint32_t aFileSize)
-{
+nsresult HashStore::CheckChecksum(uint32_t aFileSize) {
   if (!mInputStream) {
     return NS_OK;
   }
@@ -309,9 +288,7 @@ HashStore::CheckChecksum(uint32_t aFileSize)
   return NS_OK;
 }
 
-nsresult
-HashStore::Open()
-{
+nsresult HashStore::Open() {
   nsCOMPtr<nsIFile> storeFile;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -351,9 +328,7 @@ HashStore::Open()
   return NS_OK;
 }
 
-nsresult
-HashStore::ReadHeader()
-{
+nsresult HashStore::ReadHeader() {
   if (!mInputStream) {
     UpdateHeader();
     return NS_OK;
@@ -363,18 +338,14 @@ HashStore::ReadHeader()
   nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  void *buffer = &mHeader;
-  rv = NS_ReadInputStreamToBuffer(mInputStream,
-                                  &buffer,
-                                  sizeof(Header));
+  void* buffer = &mHeader;
+  rv = NS_ReadInputStreamToBuffer(mInputStream, &buffer, sizeof(Header));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
-nsresult
-HashStore::SanityCheck() const
-{
+nsresult HashStore::SanityCheck() const {
   if (mHeader.magic != STORE_MAGIC || mHeader.version != CURRENT_VERSION) {
     NS_WARNING("Unexpected header data in the store.");
     return NS_ERROR_FAILURE;
@@ -383,18 +354,17 @@ HashStore::SanityCheck() const
   return NS_OK;
 }
 
-nsresult
-HashStore::CalculateChecksum(nsAutoCString& aChecksum,
-                             uint32_t aFileSize,
-                             bool aChecksumPresent)
-{
+nsresult HashStore::CalculateChecksum(nsAutoCString& aChecksum,
+                                      uint32_t aFileSize,
+                                      bool aChecksumPresent) {
   aChecksum.Truncate();
 
   // Reset mInputStream to start
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
   nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
 
-  nsCOMPtr<nsICryptoHash> hash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  nsCOMPtr<nsICryptoHash> hash =
+      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Size of MD5 hash in bytes
@@ -424,9 +394,7 @@ HashStore::CalculateChecksum(nsAutoCString& aChecksum,
   return NS_OK;
 }
 
-void
-HashStore::UpdateHeader()
-{
+void HashStore::UpdateHeader() {
   mHeader.magic = STORE_MAGIC;
   mHeader.version = CURRENT_VERSION;
 
@@ -438,32 +406,29 @@ HashStore::UpdateHeader()
   mHeader.numSubCompletes = mSubCompletes.Length();
 }
 
-nsresult
-HashStore::ReadChunkNumbers()
-{
+nsresult HashStore::ReadChunkNumbers() {
   if (!mInputStream || AlreadyReadChunkNumbers()) {
     return NS_OK;
   }
 
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
-  nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                               sizeof(Header));
+  nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, sizeof(Header));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mAddChunks.Read(mInputStream, mHeader.numAddChunks);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(mAddChunks.Length() == mHeader.numAddChunks, "Read the right amount of add chunks.");
+  NS_ASSERTION(mAddChunks.Length() == mHeader.numAddChunks,
+               "Read the right amount of add chunks.");
 
   rv = mSubChunks.Read(mInputStream, mHeader.numSubChunks);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(mSubChunks.Length() == mHeader.numSubChunks, "Read the right amount of sub chunks.");
+  NS_ASSERTION(mSubChunks.Length() == mHeader.numSubChunks,
+               "Read the right amount of sub chunks.");
 
   return NS_OK;
 }
 
-nsresult
-HashStore::ReadHashes()
-{
+nsresult HashStore::ReadHashes() {
   if (!mInputStream) {
     // BeginUpdate has been called but Open hasn't initialized mInputStream,
     // because the existing HashStore is empty.
@@ -497,10 +462,7 @@ HashStore::ReadHashes()
   return NS_OK;
 }
 
-
-nsresult
-HashStore::ReadCompletions()
-{
+nsresult HashStore::ReadCompletions() {
   if (!mInputStream || AlreadyReadCompletions()) {
     return NS_OK;
   }
@@ -531,9 +493,7 @@ HashStore::ReadCompletions()
   return NS_OK;
 }
 
-nsresult
-HashStore::PrepareForUpdate()
-{
+nsresult HashStore::PrepareForUpdate() {
   nsresult rv = CheckChecksum(mFileSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -546,9 +506,7 @@ HashStore::PrepareForUpdate()
   return NS_OK;
 }
 
-nsresult
-HashStore::BeginUpdate()
-{
+nsresult HashStore::BeginUpdate() {
   // Check wether the file is corrupted and read the rest of the store
   // in memory.
   nsresult rv = PrepareForUpdate();
@@ -566,14 +524,11 @@ HashStore::BeginUpdate()
   return NS_OK;
 }
 
-template<class T>
-static nsresult
-Merge(ChunkSet* aStoreChunks,
-      FallibleTArray<T>* aStorePrefixes,
-      const ChunkSet& aUpdateChunks,
-      FallibleTArray<T>& aUpdatePrefixes,
-      bool aAllowMerging = false)
-{
+template <class T>
+static nsresult Merge(ChunkSet* aStoreChunks, FallibleTArray<T>* aStorePrefixes,
+                      const ChunkSet& aUpdateChunks,
+                      FallibleTArray<T>& aUpdatePrefixes,
+                      bool aAllowMerging = false) {
   EntrySort(aUpdatePrefixes);
 
   auto storeIter = aStorePrefixes->begin();
@@ -588,8 +543,7 @@ Merge(ChunkSet* aStoreChunks,
     // merging completions, in which case we'll always already
     // have the chunk from the original prefix
     if (aStoreChunks->Has(updatePrefix.Chunk()))
-      if (!aAllowMerging)
-        continue;
+      if (!aAllowMerging) continue;
     // XXX: binary search for insertion point might be faster in common
     // case?
     while (storeIter < storeEnd && (storeIter->Compare(updatePrefix) < 0)) {
@@ -597,8 +551,7 @@ Merge(ChunkSet* aStoreChunks,
       storeIter++;
     }
     // no match, add
-    if (storeIter == storeEnd
-        || storeIter->Compare(updatePrefix) != 0) {
+    if (storeIter == storeEnd || storeIter->Compare(updatePrefix) != 0) {
       if (!adds.AppendElement(updatePrefix, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -617,9 +570,7 @@ Merge(ChunkSet* aStoreChunks,
   return NS_OK;
 }
 
-nsresult
-HashStore::ApplyUpdate(RefPtr<TableUpdateV2> aUpdate)
-{
+nsresult HashStore::ApplyUpdate(RefPtr<TableUpdateV2> aUpdate) {
   MOZ_ASSERT(mTableName.Equals(aUpdate->TableName()));
 
   nsresult rv = mAddExpirations.Merge(aUpdate->AddExpirations());
@@ -631,28 +582,26 @@ HashStore::ApplyUpdate(RefPtr<TableUpdateV2> aUpdate)
   rv = Expire();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = Merge(&mAddChunks, &mAddPrefixes,
-             aUpdate->AddChunks(), aUpdate->AddPrefixes());
+  rv = Merge(&mAddChunks, &mAddPrefixes, aUpdate->AddChunks(),
+             aUpdate->AddPrefixes());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = Merge(&mAddChunks, &mAddCompletes,
-             aUpdate->AddChunks(), aUpdate->AddCompletes(), true);
+  rv = Merge(&mAddChunks, &mAddCompletes, aUpdate->AddChunks(),
+             aUpdate->AddCompletes(), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = Merge(&mSubChunks, &mSubPrefixes,
-             aUpdate->SubChunks(), aUpdate->SubPrefixes());
+  rv = Merge(&mSubChunks, &mSubPrefixes, aUpdate->SubChunks(),
+             aUpdate->SubPrefixes());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = Merge(&mSubChunks, &mSubCompletes,
-             aUpdate->SubChunks(), aUpdate->SubCompletes(), true);
+  rv = Merge(&mSubChunks, &mSubCompletes, aUpdate->SubChunks(),
+             aUpdate->SubCompletes(), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
-nsresult
-HashStore::Rebuild()
-{
+nsresult HashStore::Rebuild() {
   NS_ASSERTION(mInUpdate, "Must be in update to rebuild.");
 
   nsresult rv = ProcessSubs();
@@ -663,9 +612,7 @@ HashStore::Rebuild()
   return NS_OK;
 }
 
-void
-HashStore::ClearCompletes()
-{
+void HashStore::ClearCompletes() {
   NS_ASSERTION(mInUpdate, "Must be in update to clear completes.");
 
   mAddCompletes.Clear();
@@ -674,10 +621,8 @@ HashStore::ClearCompletes()
   UpdateHeader();
 }
 
-template<class T>
-static void
-ExpireEntries(FallibleTArray<T>* aEntries, ChunkSet& aExpirations)
-{
+template <class T>
+static void ExpireEntries(FallibleTArray<T>* aEntries, ChunkSet& aExpirations) {
   auto addIter = aEntries->begin();
 
   for (const auto& entry : *aEntries) {
@@ -690,9 +635,7 @@ ExpireEntries(FallibleTArray<T>* aEntries, ChunkSet& aExpirations)
   aEntries->TruncateLength(addIter - aEntries->begin());
 }
 
-nsresult
-HashStore::Expire()
-{
+nsresult HashStore::Expire() {
   ExpireEntries(&mAddPrefixes, mAddExpirations);
   ExpireEntries(&mAddCompletes, mAddExpirations);
   ExpireEntries(&mSubPrefixes, mSubExpirations);
@@ -707,9 +650,8 @@ HashStore::Expire()
   return NS_OK;
 }
 
-template<class T>
-nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn)
-{
+template <class T>
+nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn) {
   uLongf insize = aIn.Length() * sizeof(T);
   uLongf outsize = compressBound(insize);
   FallibleTArray<char> outBuff;
@@ -717,10 +659,8 @@ nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  int zerr = compress(reinterpret_cast<Bytef*>(outBuff.Elements()),
-                      &outsize,
-                      reinterpret_cast<const Bytef*>(aIn.Elements()),
-                      insize);
+  int zerr = compress(reinterpret_cast<Bytef*>(outBuff.Elements()), &outsize,
+                      reinterpret_cast<const Bytef*>(aIn.Elements()), insize);
   if (zerr != Z_OK) {
     return NS_ERROR_FAILURE;
   }
@@ -731,7 +671,8 @@ nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn)
   // Length of compressed data stream
   uint32_t dataLen = outBuff.Length();
   uint32_t written;
-  nsresult rv = aStream->Write(reinterpret_cast<char*>(&dataLen), sizeof(dataLen), &written);
+  nsresult rv = aStream->Write(reinterpret_cast<char*>(&dataLen),
+                               sizeof(dataLen), &written);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(written == sizeof(dataLen), "Error writing deflate length");
@@ -743,14 +684,13 @@ nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn)
   return NS_OK;
 }
 
-template<class T>
+template <class T>
 nsresult InflateReadTArray(nsIInputStream* aStream, FallibleTArray<T>* aOut,
-                           uint32_t aExpectedSize)
-{
-
+                           uint32_t aExpectedSize) {
   uint32_t inLen;
   uint32_t read;
-  nsresult rv = aStream->Read(reinterpret_cast<char*>(&inLen), sizeof(inLen), &read);
+  nsresult rv =
+      aStream->Read(reinterpret_cast<char*>(&inLen), sizeof(inLen), &read);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(read == sizeof(inLen), "Error reading inflate length");
@@ -769,23 +709,22 @@ nsresult InflateReadTArray(nsIInputStream* aStream, FallibleTArray<T>* aOut,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  int zerr = uncompress(reinterpret_cast<Bytef*>(aOut->Elements()),
-                        &outsize,
-                        reinterpret_cast<const Bytef*>(inBuff.Elements()),
-                        insize);
+  int zerr =
+      uncompress(reinterpret_cast<Bytef*>(aOut->Elements()), &outsize,
+                 reinterpret_cast<const Bytef*>(inBuff.Elements()), insize);
   if (zerr != Z_OK) {
     return NS_ERROR_FAILURE;
   }
   LOG(("InflateReadTArray: %lu in %lu out", insize, outsize));
 
-  NS_ASSERTION(outsize == aExpectedSize * sizeof(T), "Decompression size mismatch");
+  NS_ASSERTION(outsize == aExpectedSize * sizeof(T),
+               "Decompression size mismatch");
 
   return NS_OK;
 }
 
-static nsresult
-ByteSliceWrite(nsIOutputStream* aOut, nsTArray<uint32_t>& aData)
-{
+static nsresult ByteSliceWrite(nsIOutputStream* aOut,
+                               nsTArray<uint32_t>& aData) {
   nsTArray<uint8_t> slice;
   uint32_t count = aData.Length();
 
@@ -831,9 +770,8 @@ ByteSliceWrite(nsIOutputStream* aOut, nsTArray<uint32_t>& aData)
   return NS_OK;
 }
 
-static nsresult
-ByteSliceRead(nsIInputStream* aInStream, FallibleTArray<uint32_t>* aData, uint32_t count)
-{
+static nsresult ByteSliceRead(nsIInputStream* aInStream,
+                              FallibleTArray<uint32_t>* aData, uint32_t count) {
   FallibleTArray<uint8_t> slice1;
   FallibleTArray<uint8_t> slice2;
   FallibleTArray<uint8_t> slice3;
@@ -856,19 +794,15 @@ ByteSliceRead(nsIInputStream* aInStream, FallibleTArray<uint32_t>* aData, uint32
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    aData->AppendElement((slice1[i] << 24) |
-                           (slice2[i] << 16) |
-                           (slice3[i] << 8) |
-                           (slice4[i]),
-                         fallible);
+    aData->AppendElement(
+        (slice1[i] << 24) | (slice2[i] << 16) | (slice3[i] << 8) | (slice4[i]),
+        fallible);
   }
 
   return NS_OK;
 }
 
-nsresult
-HashStore::ReadAddPrefixes()
-{
+nsresult HashStore::ReadAddPrefixes() {
   FallibleTArray<uint32_t> chunks;
   uint32_t count = mHeader.numAddPrefixes;
 
@@ -879,7 +813,7 @@ HashStore::ReadAddPrefixes()
     return NS_ERROR_OUT_OF_MEMORY;
   }
   for (uint32_t i = 0; i < count; i++) {
-    AddPrefix *add = mAddPrefixes.AppendElement(fallible);
+    AddPrefix* add = mAddPrefixes.AppendElement(fallible);
     add->prefix.FromUint32(0);
     add->addChunk = chunks[i];
   }
@@ -887,9 +821,7 @@ HashStore::ReadAddPrefixes()
   return NS_OK;
 }
 
-nsresult
-HashStore::ReadSubPrefixes()
-{
+nsresult HashStore::ReadSubPrefixes() {
   FallibleTArray<uint32_t> addchunks;
   FallibleTArray<uint32_t> subchunks;
   FallibleTArray<uint32_t> prefixes;
@@ -908,7 +840,7 @@ HashStore::ReadSubPrefixes()
     return NS_ERROR_OUT_OF_MEMORY;
   }
   for (uint32_t i = 0; i < count; i++) {
-    SubPrefix *sub = mSubPrefixes.AppendElement(fallible);
+    SubPrefix* sub = mSubPrefixes.AppendElement(fallible);
     sub->addChunk = addchunks[i];
     sub->prefix.FromUint32(prefixes[i]);
     sub->subChunk = subchunks[i];
@@ -918,9 +850,7 @@ HashStore::ReadSubPrefixes()
 }
 
 // Split up PrefixArray back into the constituents
-nsresult
-HashStore::WriteAddPrefixes(nsIOutputStream* aOut)
-{
+nsresult HashStore::WriteAddPrefixes(nsIOutputStream* aOut) {
   nsTArray<uint32_t> chunks;
   uint32_t count = mAddPrefixes.Length();
   if (!chunks.SetCapacity(count, fallible)) {
@@ -937,9 +867,7 @@ HashStore::WriteAddPrefixes(nsIOutputStream* aOut)
   return NS_OK;
 }
 
-nsresult
-HashStore::WriteSubPrefixes(nsIOutputStream* aOut)
-{
+nsresult HashStore::WriteSubPrefixes(nsIOutputStream* aOut) {
   nsTArray<uint32_t> addchunks;
   nsTArray<uint32_t> subchunks;
   nsTArray<uint32_t> prefixes;
@@ -968,9 +896,7 @@ HashStore::WriteSubPrefixes(nsIOutputStream* aOut)
   return NS_OK;
 }
 
-nsresult
-HashStore::WriteFile()
-{
+nsresult HashStore::WriteFile() {
   NS_ASSERTION(mInUpdate, "Must be in update to write database.");
   if (nsUrlClassifierDBService::ShutdownHasStarted()) {
     return NS_ERROR_ABORT;
@@ -1020,11 +946,9 @@ HashStore::WriteFile()
 }
 
 template <class T>
-static void
-Erase(FallibleTArray<T>* array,
-      typename nsTArray<T>::iterator& iterStart,
-      typename nsTArray<T>::iterator& iterEnd)
-{
+static void Erase(FallibleTArray<T>* array,
+                  typename nsTArray<T>::iterator& iterStart,
+                  typename nsTArray<T>::iterator& iterEnd) {
   uint32_t start = iterStart - array->begin();
   uint32_t count = iterEnd - iterStart;
 
@@ -1041,10 +965,9 @@ Erase(FallibleTArray<T>* array,
 //
 // |predAS| provides add < sub, |predSA| provides sub < add, for the
 // tightest compare appropriate (see calls in SBProcessSubs).
-template<class TSub, class TAdd>
-static void
-KnockoutSubs(FallibleTArray<TSub>* aSubs, FallibleTArray<TAdd>* aAdds)
-{
+template <class TSub, class TAdd>
+static void KnockoutSubs(FallibleTArray<TSub>* aSubs,
+                         FallibleTArray<TAdd>* aAdds) {
   // Keep a pair of output iterators for writing kept items.  Due to
   // deletions, these may lag the main iterators.  Using erase() on
   // individual items would result in O(N^2) copies.  Using a list
@@ -1085,9 +1008,8 @@ KnockoutSubs(FallibleTArray<TSub>* aSubs, FallibleTArray<TAdd>* aAdds)
 // Remove items in |removes| from |fullHashes|.  |fullHashes| and
 // |removes| should be ordered by SBAddPrefix component.
 template <class T>
-static void
-RemoveMatchingPrefixes(const SubPrefixArray& aSubs, FallibleTArray<T>* aFullHashes)
-{
+static void RemoveMatchingPrefixes(const SubPrefixArray& aSubs,
+                                   FallibleTArray<T>* aFullHashes) {
   // Where to store kept items.
   auto out = aFullHashes->begin();
   auto hashIter = aFullHashes->begin();
@@ -1110,17 +1032,14 @@ RemoveMatchingPrefixes(const SubPrefixArray& aSubs, FallibleTArray<T>* aFullHash
       // Drop equal items, there may be multiple hits.
       do {
         ++hashIter;
-      } while (hashIter != hashEnd &&
-               !(removeIter->CompareAlt(*hashIter) < 0));
+      } while (hashIter != hashEnd && !(removeIter->CompareAlt(*hashIter) < 0));
       ++removeIter;
     }
   }
   Erase(aFullHashes, out, hashIter);
 }
 
-static void
-RemoveDeadSubPrefixes(SubPrefixArray& aSubs, ChunkSet& aAddChunks)
-{
+static void RemoveDeadSubPrefixes(SubPrefixArray& aSubs, ChunkSet& aAddChunks) {
   auto subIter = aSubs.begin();
 
   for (const auto& sub : aSubs) {
@@ -1140,8 +1059,7 @@ RemoveDeadSubPrefixes(SubPrefixArray& aSubs, ChunkSet& aAddChunks)
 
 #ifdef DEBUG
 template <class T>
-static void EnsureSorted(FallibleTArray<T>* aArray)
-{
+static void EnsureSorted(FallibleTArray<T>* aArray) {
   auto start = aArray->begin();
   auto end = aArray->end();
   auto iter = start;
@@ -1159,9 +1077,7 @@ static void EnsureSorted(FallibleTArray<T>* aArray)
 }
 #endif
 
-nsresult
-HashStore::ProcessSubs()
-{
+nsresult HashStore::ProcessSubs() {
 #ifdef DEBUG
   EnsureSorted(&mAddPrefixes);
   EnsureSorted(&mSubPrefixes);
@@ -1193,9 +1109,7 @@ HashStore::ProcessSubs()
   return NS_OK;
 }
 
-nsresult
-HashStore::AugmentAdds(const nsTArray<uint32_t>& aPrefixes)
-{
+nsresult HashStore::AugmentAdds(const nsTArray<uint32_t>& aPrefixes) {
   uint32_t cnt = aPrefixes.Length();
   if (cnt != mAddPrefixes.Length()) {
     LOG(("Amount of prefixes in cache not consistent with store (%zu vs %zu)",
@@ -1208,41 +1122,31 @@ HashStore::AugmentAdds(const nsTArray<uint32_t>& aPrefixes)
   return NS_OK;
 }
 
-ChunkSet&
-HashStore::AddChunks()
-{
+ChunkSet& HashStore::AddChunks() {
   ReadChunkNumbers();
 
   return mAddChunks;
 }
 
-ChunkSet&
-HashStore::SubChunks()
-{
+ChunkSet& HashStore::SubChunks() {
   ReadChunkNumbers();
 
   return mSubChunks;
 }
 
-AddCompleteArray&
-HashStore::AddCompletes()
-{
+AddCompleteArray& HashStore::AddCompletes() {
   ReadCompletions();
 
   return mAddCompletes;
 }
 
-SubCompleteArray&
-HashStore::SubCompletes()
-{
+SubCompleteArray& HashStore::SubCompletes() {
   ReadCompletions();
 
   return mSubCompletes;
 }
 
-bool
-HashStore::AlreadyReadChunkNumbers() const
-{
+bool HashStore::AlreadyReadChunkNumbers() const {
   // If there are chunks but chunk set not yet contains any data
   // Then we haven't read chunk numbers.
   if ((mHeader.numAddChunks != 0 && mAddChunks.Length() == 0) ||
@@ -1252,9 +1156,7 @@ HashStore::AlreadyReadChunkNumbers() const
   return true;
 }
 
-bool
-HashStore::AlreadyReadCompletions() const
-{
+bool HashStore::AlreadyReadCompletions() const {
   // If there are completions but completion set not yet contains any data
   // Then we haven't read completions.
   if ((mHeader.numAddCompletes != 0 && mAddCompletes.Length() == 0) ||
@@ -1264,5 +1166,5 @@ HashStore::AlreadyReadCompletions() const
   return true;
 }
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla

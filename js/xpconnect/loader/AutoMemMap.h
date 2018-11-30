@@ -18,90 +18,85 @@ class nsIFile;
 
 namespace mozilla {
 namespace ipc {
-  class FileDescriptor;
+class FileDescriptor;
 }
 
 namespace loader {
 
 using mozilla::ipc::FileDescriptor;
 
-class AutoMemMap
-{
-    public:
-        AutoMemMap() = default;
+class AutoMemMap {
+ public:
+  AutoMemMap() = default;
 
-        ~AutoMemMap();
+  ~AutoMemMap();
 
-        Result<Ok, nsresult>
-        init(nsIFile* file, int flags = PR_RDONLY, int mode = 0,
-             PRFileMapProtect prot = PR_PROT_READONLY);
+  Result<Ok, nsresult> init(nsIFile* file, int flags = PR_RDONLY, int mode = 0,
+                            PRFileMapProtect prot = PR_PROT_READONLY);
 
-        Result<Ok, nsresult>
-        init(const ipc::FileDescriptor& file,
-             PRFileMapProtect prot = PR_PROT_READONLY,
-             size_t expectedSize = 0);
+  Result<Ok, nsresult> init(const ipc::FileDescriptor& file,
+                            PRFileMapProtect prot = PR_PROT_READONLY,
+                            size_t expectedSize = 0);
 
-        // Initializes the mapped memory with a shared memory handle. On
-        // Unix-like systems, this is identical to the above init() method. On
-        // Windows, the FileDescriptor must be a handle for a file mapping,
-        // rather than a file descriptor.
-        Result<Ok, nsresult>
-        initWithHandle(const ipc::FileDescriptor& file, size_t size,
-                       PRFileMapProtect prot = PR_PROT_READONLY);
+  // Initializes the mapped memory with a shared memory handle. On
+  // Unix-like systems, this is identical to the above init() method. On
+  // Windows, the FileDescriptor must be a handle for a file mapping,
+  // rather than a file descriptor.
+  Result<Ok, nsresult> initWithHandle(const ipc::FileDescriptor& file,
+                                      size_t size,
+                                      PRFileMapProtect prot = PR_PROT_READONLY);
 
-        void reset();
+  void reset();
 
-        bool initialized() const { return addr; }
+  bool initialized() const { return addr; }
 
-        uint32_t size() const { return size_; }
+  uint32_t size() const { return size_; }
 
-        template<typename T = void>
-        RangedPtr<T> get()
-        {
-            MOZ_ASSERT(addr);
-            return { static_cast<T*>(addr), size_ };
-        }
+  template <typename T = void>
+  RangedPtr<T> get() {
+    MOZ_ASSERT(addr);
+    return {static_cast<T*>(addr), size_};
+  }
 
-        template<typename T = void>
-        const RangedPtr<T> get() const
-        {
-            MOZ_ASSERT(addr);
-            return { static_cast<T*>(addr), size_ };
-        }
+  template <typename T = void>
+  const RangedPtr<T> get() const {
+    MOZ_ASSERT(addr);
+    return {static_cast<T*>(addr), size_};
+  }
 
-        size_t nonHeapSizeOfExcludingThis() { return size_; }
+  size_t nonHeapSizeOfExcludingThis() { return size_; }
 
-        FileDescriptor cloneFileDescriptor() const;
-        FileDescriptor cloneHandle() const;
+  FileDescriptor cloneFileDescriptor() const;
+  FileDescriptor cloneHandle() const;
 
-        // Makes this mapping persistent. After calling this, the mapped memory
-        // will remained mapped, even after this instance is destroyed.
-        void setPersistent() { persistent_ = true; }
+  // Makes this mapping persistent. After calling this, the mapped memory
+  // will remained mapped, even after this instance is destroyed.
+  void setPersistent() { persistent_ = true; }
 
-    private:
-        Result<Ok, nsresult> initInternal(PRFileMapProtect prot = PR_PROT_READONLY,
-                                          size_t expectedSize = 0);
+ private:
+  Result<Ok, nsresult> initInternal(PRFileMapProtect prot = PR_PROT_READONLY,
+                                    size_t expectedSize = 0);
 
-        AutoFDClose fd;
-        PRFileMap* fileMap = nullptr;
+  AutoFDClose fd;
+  PRFileMap* fileMap = nullptr;
 
 #ifdef XP_WIN
-        // We can't include windows.h in this header, since it gets included
-        // by some binding headers (which are explicitly incompatible with
-        // windows.h). So we can't use the HANDLE type here.
-        void* handle_ = nullptr;
+  // We can't include windows.h in this header, since it gets included
+  // by some binding headers (which are explicitly incompatible with
+  // windows.h). So we can't use the HANDLE type here.
+  void* handle_ = nullptr;
 #endif
 
-        uint32_t size_ = 0;
-        void* addr = nullptr;
+  uint32_t size_ = 0;
+  void* addr = nullptr;
 
-        bool persistent_ = 0;
+  bool persistent_ = 0;
 
-        AutoMemMap(const AutoMemMap&) = delete;
-        void operator=(const AutoMemMap&) = delete;
+  AutoMemMap(const AutoMemMap&) = delete;
+  void operator=(const AutoMemMap&) = delete;
 };
 
-} // namespace loader
-} // namespace mozilla
+}  // namespace loader
+}  // namespace mozilla
 
-#endif // loader_AutoMemMap_h
+#endif  // loader_AutoMemMap_h

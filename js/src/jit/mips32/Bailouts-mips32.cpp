@@ -14,38 +14,39 @@ using namespace js::jit;
 
 BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
                                    BailoutStack* bailout)
-  : machine_(bailout->machine())
-{
-    uint8_t* sp = bailout->parentStackPointer();
-    framePointer_ = sp + bailout->frameSize();
-    topFrameSize_ = framePointer_ - sp;
+    : machine_(bailout->machine()) {
+  uint8_t* sp = bailout->parentStackPointer();
+  framePointer_ = sp + bailout->frameSize();
+  topFrameSize_ = framePointer_ - sp;
 
-    JSScript* script = ScriptFromCalleeToken(((JitFrameLayout*) framePointer_)->calleeToken());
-    JitActivation* activation = activations.activation()->asJit();
-    topIonScript_ = script->ionScript();
+  JSScript* script =
+      ScriptFromCalleeToken(((JitFrameLayout*)framePointer_)->calleeToken());
+  JitActivation* activation = activations.activation()->asJit();
+  topIonScript_ = script->ionScript();
 
-    attachOnJitActivation(activations);
+  attachOnJitActivation(activations);
 
-    if (bailout->frameClass() == FrameSizeClass::None()) {
-        snapshotOffset_ = bailout->snapshotOffset();
-        return;
-    }
+  if (bailout->frameClass() == FrameSizeClass::None()) {
+    snapshotOffset_ = bailout->snapshotOffset();
+    return;
+  }
 
-    // Compute the snapshot offset from the bailout ID.
-    JSRuntime* rt = activation->compartment()->runtimeFromMainThread();
-    TrampolinePtr code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
+  // Compute the snapshot offset from the bailout ID.
+  JSRuntime* rt = activation->compartment()->runtimeFromMainThread();
+  TrampolinePtr code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
 #ifdef DEBUG
-    uint32_t tableSize = rt->jitRuntime()->getBailoutTableSize(bailout->frameClass());
+  uint32_t tableSize =
+      rt->jitRuntime()->getBailoutTableSize(bailout->frameClass());
 #endif
-    uintptr_t tableOffset = bailout->tableOffset();
-    uintptr_t tableStart = reinterpret_cast<uintptr_t>(code.value);
+  uintptr_t tableOffset = bailout->tableOffset();
+  uintptr_t tableStart = reinterpret_cast<uintptr_t>(code.value);
 
-    MOZ_ASSERT(tableOffset >= tableStart &&
-               tableOffset < tableStart + tableSize);
-    MOZ_ASSERT((tableOffset - tableStart) % BAILOUT_TABLE_ENTRY_SIZE == 0);
+  MOZ_ASSERT(tableOffset >= tableStart && tableOffset < tableStart + tableSize);
+  MOZ_ASSERT((tableOffset - tableStart) % BAILOUT_TABLE_ENTRY_SIZE == 0);
 
-    uint32_t bailoutId = ((tableOffset - tableStart) / BAILOUT_TABLE_ENTRY_SIZE) - 1;
-    MOZ_ASSERT(bailoutId < BAILOUT_TABLE_SIZE);
+  uint32_t bailoutId =
+      ((tableOffset - tableStart) / BAILOUT_TABLE_ENTRY_SIZE) - 1;
+  MOZ_ASSERT(bailoutId < BAILOUT_TABLE_SIZE);
 
-    snapshotOffset_ = topIonScript_->bailoutToSnapshot(bailoutId);
+  snapshotOffset_ = topIonScript_->bailoutToSnapshot(bailoutId);
 }

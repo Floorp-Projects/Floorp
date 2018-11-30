@@ -34,11 +34,9 @@ namespace {
 StaticMutex sRemoteWorkerServiceMutex;
 StaticRefPtr<RemoteWorkerService> sRemoteWorkerService;
 
-} // anonymous
+}  // namespace
 
-/* static */ void
-RemoteWorkerService::Initialize()
-{
+/* static */ void RemoteWorkerService::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
 
   StaticMutexAutoLock lock(sRemoteWorkerServiceMutex);
@@ -69,22 +67,17 @@ RemoteWorkerService::Initialize()
   sRemoteWorkerService = service;
 }
 
-/* static */ nsIThread*
-RemoteWorkerService::Thread()
-{
+/* static */ nsIThread* RemoteWorkerService::Thread() {
   StaticMutexAutoLock lock(sRemoteWorkerServiceMutex);
   MOZ_ASSERT(sRemoteWorkerService);
   MOZ_ASSERT(sRemoteWorkerService->mThread);
   return sRemoteWorkerService->mThread;
 }
 
-nsresult
-RemoteWorkerService::InitializeOnMainThread()
-{
+nsresult RemoteWorkerService::InitializeOnMainThread() {
   // I would like to call this thread "DOM Remote Worker Launcher", but the max
   // length is 16 chars.
-  nsresult rv = NS_NewNamedThread("Worker Launcher",
-                                  getter_AddRefs(mThread));
+  nsresult rv = NS_NewNamedThread("Worker Launcher", getter_AddRefs(mThread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -94,18 +87,14 @@ RemoteWorkerService::InitializeOnMainThread()
     return NS_ERROR_FAILURE;
   }
 
-  rv = obs->AddObserver(this,
-                        NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                        false);
+  rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   RefPtr<RemoteWorkerService> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("InitializeThread", [self] () {
-    self->InitializeOnTargetThread();
-  });
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "InitializeThread", [self]() { self->InitializeOnTargetThread(); });
 
   rv = mThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -115,27 +104,20 @@ RemoteWorkerService::InitializeOnMainThread()
   return NS_OK;
 }
 
-RemoteWorkerService::RemoteWorkerService()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-}
+RemoteWorkerService::RemoteWorkerService() { MOZ_ASSERT(NS_IsMainThread()); }
 
 RemoteWorkerService::~RemoteWorkerService() = default;
 
-void
-RemoteWorkerService::InitializeOnTargetThread()
-{
+void RemoteWorkerService::InitializeOnTargetThread() {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mThread->IsOnCurrentThread());
 
-  PBackgroundChild* actorChild =
-    BackgroundChild::GetOrCreateForCurrentThread();
+  PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actorChild)) {
     return;
   }
 
-  RemoteWorkerServiceChild* actor =
-    static_cast<RemoteWorkerServiceChild*>(
+  RemoteWorkerServiceChild* actor = static_cast<RemoteWorkerServiceChild*>(
       actorChild->SendPRemoteWorkerServiceConstructor());
   if (NS_WARN_IF(!actor)) {
     return;
@@ -145,9 +127,7 @@ RemoteWorkerService::InitializeOnTargetThread()
   mActor = actor;
 }
 
-void
-RemoteWorkerService::ShutdownOnTargetThread()
-{
+void RemoteWorkerService::ShutdownOnTargetThread() {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mThread->IsOnCurrentThread());
   MOZ_ASSERT(mActor);
@@ -159,21 +139,19 @@ RemoteWorkerService::ShutdownOnTargetThread()
   // Then we can terminate the thread on the main-thread.
   RefPtr<RemoteWorkerService> self = this;
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("ShutdownOnMainThread", [self] () {
-    self->mThread->Shutdown();
-    self->mThread = nullptr;
-  });
+      NS_NewRunnableFunction("ShutdownOnMainThread", [self]() {
+        self->mThread->Shutdown();
+        self->mThread = nullptr;
+      });
 
   nsCOMPtr<nsIEventTarget> target =
-    SystemGroup::EventTargetFor(TaskCategory::Other);
+      SystemGroup::EventTargetFor(TaskCategory::Other);
   target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
-RemoteWorkerService::Observe(nsISupports* aSubject,
-                             const char* aTopic,
-                             const char16_t* aData)
-{
+RemoteWorkerService::Observe(nsISupports* aSubject, const char* aTopic,
+                             const char16_t* aData) {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     MOZ_ASSERT(mThread);
 
@@ -183,10 +161,8 @@ RemoteWorkerService::Observe(nsISupports* aSubject,
     }
 
     RefPtr<RemoteWorkerService> self = this;
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction("ShutdownThread", [self] () {
-      self->ShutdownOnTargetThread();
-    });
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        "ShutdownThread", [self]() { self->ShutdownOnTargetThread(); });
 
     mThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 
@@ -208,5 +184,5 @@ RemoteWorkerService::Observe(nsISupports* aSubject,
 
 NS_IMPL_ISUPPORTS(RemoteWorkerService, nsIObserver)
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

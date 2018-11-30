@@ -20,68 +20,51 @@ namespace net {
 using std::shared_ptr;
 
 WebrtcProxyChannelWrapper::WebrtcProxyChannelWrapper(
-  WebrtcProxyChannelCallback* aCallbacks)
-  : mProxyCallbacks(aCallbacks)
-  , mWebrtcProxyChannel(nullptr)
-  , mMainThread(nullptr)
-  , mSocketThread(nullptr)
-{
+    WebrtcProxyChannelCallback* aCallbacks)
+    : mProxyCallbacks(aCallbacks),
+      mWebrtcProxyChannel(nullptr),
+      mMainThread(nullptr),
+      mSocketThread(nullptr) {
   mMainThread = GetMainThreadEventTarget();
   mSocketThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
   MOZ_RELEASE_ASSERT(mMainThread, "no main thread");
   MOZ_RELEASE_ASSERT(mSocketThread, "no socket thread");
 }
 
-WebrtcProxyChannelWrapper::~WebrtcProxyChannelWrapper()
-{
+WebrtcProxyChannelWrapper::~WebrtcProxyChannelWrapper() {
   MOZ_ASSERT(!mWebrtcProxyChannel, "webrtc proxy channel non-null");
 
   // If we're never opened then we never get an OnClose from our parent process.
   // We need to release our callbacks here safely.
-  NS_ProxyRelease("WebrtcProxyChannelWrapper::CleanUpCallbacks",
-                  mSocketThread,
+  NS_ProxyRelease("WebrtcProxyChannelWrapper::CleanUpCallbacks", mSocketThread,
                   mProxyCallbacks.forget());
 }
 
-void
-WebrtcProxyChannelWrapper::AsyncOpen(
-  const nsCString& aHost,
-  const int& aPort,
-  const shared_ptr<NrSocketProxyConfig>& aConfig)
-{
+void WebrtcProxyChannelWrapper::AsyncOpen(
+    const nsCString& aHost, const int& aPort,
+    const shared_ptr<NrSocketProxyConfig>& aConfig) {
   if (!NS_IsMainThread()) {
     MOZ_ALWAYS_SUCCEEDS(mMainThread->Dispatch(
-      NewRunnableMethod<const nsCString,
-                        const int,
-                        const shared_ptr<NrSocketProxyConfig>>(
-        "WebrtcProxyChannelWrapper::AsyncOpen",
-        this,
-        &WebrtcProxyChannelWrapper::AsyncOpen,
-        aHost,
-        aPort,
-        aConfig)));
+        NewRunnableMethod<const nsCString, const int,
+                          const shared_ptr<NrSocketProxyConfig>>(
+            "WebrtcProxyChannelWrapper::AsyncOpen", this,
+            &WebrtcProxyChannelWrapper::AsyncOpen, aHost, aPort, aConfig)));
     return;
   }
 
   MOZ_ASSERT(!mWebrtcProxyChannel, "wrapper already open");
   mWebrtcProxyChannel = new WebrtcProxyChannelChild(this);
-  mWebrtcProxyChannel->AsyncOpen(aHost,
-                                 aPort,
-                                 aConfig->GetBrowser(),
+  mWebrtcProxyChannel->AsyncOpen(aHost, aPort, aConfig->GetBrowser(),
                                  nsContentUtils::GetSystemPrincipal(),
                                  aConfig->GetAlpn());
 }
 
-void
-WebrtcProxyChannelWrapper::SendWrite(nsTArray<uint8_t>&& aReadData)
-{
+void WebrtcProxyChannelWrapper::SendWrite(nsTArray<uint8_t>&& aReadData) {
   if (!NS_IsMainThread()) {
-    MOZ_ALWAYS_SUCCEEDS(mMainThread->Dispatch(
-      NewRunnableMethod<nsTArray<uint8_t>&&>(
-        "WebrtcProxyChannelWrapper::SendWrite",
-        this,
-        &WebrtcProxyChannelWrapper::SendWrite,
-        std::move(aReadData))));
+    MOZ_ALWAYS_SUCCEEDS(
+        mMainThread->Dispatch(NewRunnableMethod<nsTArray<uint8_t>&&>(
+            "WebrtcProxyChannelWrapper::SendWrite", this,
+            &WebrtcProxyChannelWrapper::SendWrite, std::move(aReadData))));
     return;
   }
 
@@ -89,14 +72,11 @@ WebrtcProxyChannelWrapper::SendWrite(nsTArray<uint8_t>&& aReadData)
   mWebrtcProxyChannel->SendWrite(aReadData);
 }
 
-void
-WebrtcProxyChannelWrapper::Close()
-{
+void WebrtcProxyChannelWrapper::Close() {
   if (!NS_IsMainThread()) {
     MOZ_ALWAYS_SUCCEEDS(mMainThread->Dispatch(
-      NewRunnableMethod("WebrtcProxyChannelWrapper::Close",
-                        this,
-                        &WebrtcProxyChannelWrapper::Close)));
+        NewRunnableMethod("WebrtcProxyChannelWrapper::Close", this,
+                          &WebrtcProxyChannelWrapper::Close)));
     return;
   }
 
@@ -108,48 +88,36 @@ WebrtcProxyChannelWrapper::Close()
   }
 }
 
-void
-WebrtcProxyChannelWrapper::OnClose(nsresult aReason)
-{
+void WebrtcProxyChannelWrapper::OnClose(nsresult aReason) {
   MOZ_ASSERT(NS_IsMainThread(), "not on main thread");
   MOZ_ASSERT(mProxyCallbacks, "webrtc proxy callbacks should be non-null");
 
-  MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(
-    NewRunnableMethod<nsresult>("WebrtcProxyChannelWrapper::OnClose",
-                                mProxyCallbacks,
-                                &WebrtcProxyChannelCallback::OnClose,
-                                aReason)));
+  MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(NewRunnableMethod<nsresult>(
+      "WebrtcProxyChannelWrapper::OnClose", mProxyCallbacks,
+      &WebrtcProxyChannelCallback::OnClose, aReason)));
 
-  NS_ProxyRelease("WebrtcProxyChannelWrapper::CleanUpCallbacks",
-                  mSocketThread,
+  NS_ProxyRelease("WebrtcProxyChannelWrapper::CleanUpCallbacks", mSocketThread,
                   mProxyCallbacks.forget());
 }
 
-void
-WebrtcProxyChannelWrapper::OnRead(nsTArray<uint8_t>&& aReadData)
-{
+void WebrtcProxyChannelWrapper::OnRead(nsTArray<uint8_t>&& aReadData) {
   MOZ_ASSERT(NS_IsMainThread(), "not on main thread");
   MOZ_ASSERT(mProxyCallbacks, "webrtc proxy callbacks should be non-null");
 
-  MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(
-    NewRunnableMethod<nsTArray<uint8_t>&&>(
-      "WebrtcProxyChannelWrapper::OnRead",
-      mProxyCallbacks,
-      &WebrtcProxyChannelCallback::OnRead,
-      std::move(aReadData))));
+  MOZ_ALWAYS_SUCCEEDS(
+      mSocketThread->Dispatch(NewRunnableMethod<nsTArray<uint8_t>&&>(
+          "WebrtcProxyChannelWrapper::OnRead", mProxyCallbacks,
+          &WebrtcProxyChannelCallback::OnRead, std::move(aReadData))));
 }
 
-void
-WebrtcProxyChannelWrapper::OnConnected()
-{
+void WebrtcProxyChannelWrapper::OnConnected() {
   MOZ_ASSERT(NS_IsMainThread(), "not on main thread");
   MOZ_ASSERT(mProxyCallbacks, "webrtc proxy callbacks should be non-null");
 
-  MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(
-    NewRunnableMethod("WebrtcProxyChannelWrapper::OnConnected",
-                      mProxyCallbacks,
-                      &WebrtcProxyChannelCallback::OnConnected)));
+  MOZ_ALWAYS_SUCCEEDS(mSocketThread->Dispatch(NewRunnableMethod(
+      "WebrtcProxyChannelWrapper::OnConnected", mProxyCallbacks,
+      &WebrtcProxyChannelCallback::OnConnected)));
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

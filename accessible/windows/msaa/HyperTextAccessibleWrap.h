@@ -14,18 +14,19 @@
 #include "IUnknownImpl.h"
 
 namespace mozilla {
-template<class T> class StaticAutoPtr;
-template<class T> class StaticRefPtr;
+template <class T>
+class StaticAutoPtr;
+template <class T>
+class StaticRefPtr;
 
 namespace a11y {
 
 class HyperTextAccessibleWrap : public HyperTextAccessible,
                                 public ia2AccessibleHypertext,
-                                public ia2AccessibleEditableText
-{
-public:
-  HyperTextAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    HyperTextAccessible(aContent, aDoc) {}
+                                public ia2AccessibleEditableText {
+ public:
+  HyperTextAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
+      : HyperTextAccessible(aContent, aDoc) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
@@ -36,11 +37,11 @@ public:
   // Accessible
   virtual nsresult HandleAccEvent(AccEvent* aEvent);
 
-protected:
+ protected:
   ~HyperTextAccessibleWrap() {}
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

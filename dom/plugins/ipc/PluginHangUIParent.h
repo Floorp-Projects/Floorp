@@ -32,9 +32,8 @@ class PluginModuleChromeParent;
  *       PluginHangUIParent and PluginHangUIChild are a matched pair.
  * @see PluginHangUIChild
  */
-class PluginHangUIParent : public MiniShmObserver
-{
-public:
+class PluginHangUIParent : public MiniShmObserver {
+ public:
   PluginHangUIParent(PluginModuleChromeParent* aModule,
                      const int32_t aHangUITimeoutPref,
                      const int32_t aChildTimeoutPref);
@@ -48,8 +47,7 @@ public:
    * @return true if the plugin hang ui process was successfully launched,
    *         otherwise false.
    */
-  bool
-  Init(const nsString& aPluginName);
+  bool Init(const nsString& aPluginName);
 
   /**
    * If the Plugin Hang UI is being shown, send a cancel notification to the
@@ -58,16 +56,14 @@ public:
    * @return true if the UI was shown and the cancel command was successfully
    *              sent to the child process, otherwise false.
    */
-  bool
-  Cancel();
+  bool Cancel();
 
   /**
    * Returns whether the Plugin Hang UI is currently being displayed.
    *
    * @return true if the Plugin Hang UI is showing, otherwise false.
    */
-  bool
-  IsShowing() const { return mIsShowing; }
+  bool IsShowing() const { return mIsShowing; }
 
   /**
    * Returns whether this Plugin Hang UI instance has been shown. Note
@@ -75,16 +71,14 @@ public:
    *
    * @return true if the Plugin Hang UI has shown, otherwise false.
    */
-  bool
-  WasShown() const { return mIsShowing || mLastUserResponse != 0; }
+  bool WasShown() const { return mIsShowing || mLastUserResponse != 0; }
 
   /**
    * Returns whether the user checked the "Don't ask me again" checkbox.
    *
    * @return true if the user does not want to see the Hang UI again.
    */
-  bool
-  DontShowAgain() const;
+  bool DontShowAgain() const;
 
   /**
    * Returns whether the user clicked stop during the last time that the
@@ -93,47 +87,37 @@ public:
    * @return true if the UI was shown and the user chose to stop the
    *         plugin, otherwise false
    */
-  bool
-  WasLastHangStopped() const;
+  bool WasLastHangStopped() const;
 
   /**
    * @return unsigned int containing the response bits from the last
    * time the Plugin Hang UI ran.
    */
-  unsigned int
-  LastUserResponse() const { return mLastUserResponse; }
+  unsigned int LastUserResponse() const { return mLastUserResponse; }
 
   /**
    * @return unsigned int containing the number of milliseconds that
    * the Plugin Hang UI was displayed before the user responded.
    * Returns 0 if the Plugin Hang UI has not been shown or was cancelled.
    */
-  unsigned int
-  LastShowDurationMs() const;
+  unsigned int LastShowDurationMs() const;
 
-  virtual void
-  OnMiniShmEvent(MiniShmBase* aMiniShmObj) override;
+  virtual void OnMiniShmEvent(MiniShmBase* aMiniShmObj) override;
 
-  virtual void
-  OnMiniShmConnect(MiniShmBase* aMiniShmObj) override;
+  virtual void OnMiniShmConnect(MiniShmBase* aMiniShmObj) override;
 
-private:
-  nsresult
-  GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle);
+ private:
+  nsresult GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle);
 
-  bool
-  SendCancel();
+  bool SendCancel();
 
-  bool
-  RecvUserResponse(const unsigned int& aResponse);
+  bool RecvUserResponse(const unsigned int& aResponse);
 
-  bool
-  UnwatchHangUIChildProcess(bool aWait);
+  bool UnwatchHangUIChildProcess(bool aWait);
 
-  static
-  VOID CALLBACK SOnHangUIProcessExit(PVOID aContext, BOOLEAN aIsTimer);
+  static VOID CALLBACK SOnHangUIProcessExit(PVOID aContext, BOOLEAN aIsTimer);
 
-private:
+ private:
   Mutex mMutex;
   PluginModuleChromeParent* mModule;
   const uint32_t mTimeoutPrefMs;
@@ -152,8 +136,7 @@ private:
   DISALLOW_COPY_AND_ASSIGN(PluginHangUIParent);
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif // mozilla_plugins_PluginHangUIParent_h
-
+#endif  // mozilla_plugins_PluginHangUIParent_h

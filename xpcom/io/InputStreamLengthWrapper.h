@@ -22,14 +22,13 @@ namespace mozilla {
 // This class can be used for nsIInputStreams that do not implement
 // nsIInputStreamLength.
 
-class InputStreamLengthWrapper final : public nsIAsyncInputStream
-                                     , public nsICloneableInputStream
-                                     , public nsIIPCSerializableInputStream
-                                     , public nsISeekableStream
-                                     , public nsIInputStreamCallback
-                                     , public nsIInputStreamLength
-{
-public:
+class InputStreamLengthWrapper final : public nsIAsyncInputStream,
+                                       public nsICloneableInputStream,
+                                       public nsIIPCSerializableInputStream,
+                                       public nsISeekableStream,
+                                       public nsIInputStreamCallback,
+                                       public nsIInputStreamLength {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
@@ -47,9 +46,8 @@ public:
   // InputStreamLengthHelper is not able to retrieve the length. This
   // method will make such streams ready to be used with
   // InputStreamLengthHelper.
-  static already_AddRefed<nsIInputStream>
-  MaybeWrap(already_AddRefed<nsIInputStream> aInputStream,
-            int64_t aLength);
+  static already_AddRefed<nsIInputStream> MaybeWrap(
+      already_AddRefed<nsIInputStream> aInputStream, int64_t aLength);
 
   // The length here will be used when nsIInputStreamLength::Length() is called.
   InputStreamLengthWrapper(already_AddRefed<nsIInputStream> aInputStream,
@@ -58,11 +56,10 @@ public:
   // This CTOR is meant to be used just for IPC.
   InputStreamLengthWrapper();
 
-private:
+ private:
   ~InputStreamLengthWrapper();
 
-  void
-  SetSourceStream(already_AddRefed<nsIInputStream> aInputStream);
+  void SetSourceStream(already_AddRefed<nsIInputStream> aInputStream);
 
   nsCOMPtr<nsIInputStream> mInputStream;
 
@@ -82,6 +79,6 @@ private:
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
 };
 
-} // mozilla namespace
+}  // namespace mozilla
 
-#endif // InputStreamLengthWrapper_h
+#endif  // InputStreamLengthWrapper_h

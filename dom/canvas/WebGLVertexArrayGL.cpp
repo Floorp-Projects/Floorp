@@ -11,32 +11,23 @@
 namespace mozilla {
 
 WebGLVertexArrayGL::WebGLVertexArrayGL(WebGLContext* webgl)
-    : WebGLVertexArray(webgl,
-                       [&]() {
-                           GLuint ret = 0;
-                           webgl->gl->fGenVertexArrays(1, &ret);
-                           return ret;
-                       }())
-{ }
+    : WebGLVertexArray(webgl, [&]() {
+        GLuint ret = 0;
+        webgl->gl->fGenVertexArrays(1, &ret);
+        return ret;
+      }()) {}
 
-WebGLVertexArrayGL::~WebGLVertexArrayGL()
-{
-    DeleteOnce();
+WebGLVertexArrayGL::~WebGLVertexArrayGL() { DeleteOnce(); }
+
+void WebGLVertexArrayGL::DeleteImpl() {
+  mElementArrayBuffer = nullptr;
+
+  mContext->gl->fDeleteVertexArrays(1, &mGLName);
 }
 
-void
-WebGLVertexArrayGL::DeleteImpl()
-{
-    mElementArrayBuffer = nullptr;
-
-    mContext->gl->fDeleteVertexArrays(1, &mGLName);
+void WebGLVertexArrayGL::BindVertexArray() {
+  mContext->mBoundVertexArray = this;
+  mContext->gl->fBindVertexArray(mGLName);
 }
 
-void
-WebGLVertexArrayGL::BindVertexArray()
-{
-    mContext->mBoundVertexArray = this;
-    mContext->gl->fBindVertexArray(mGLName);
-}
-
-} // namespace mozilla
+}  // namespace mozilla

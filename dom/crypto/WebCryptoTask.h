@@ -53,113 +53,95 @@ Cleanup should execute regardless of what else happens.
 */
 
 #define MAYBE_EARLY_FAIL(rv) \
-if (NS_FAILED(rv)) { \
-  FailWithError(rv); \
-  return; \
-}
+  if (NS_FAILED(rv)) {       \
+    FailWithError(rv);       \
+    return;                  \
+  }
 
-class WebCryptoTask : public CancelableRunnable
-{
-public:
+class WebCryptoTask : public CancelableRunnable {
+ public:
   virtual void DispatchWithPromise(Promise* aResultPromise);
 
-protected:
-  static WebCryptoTask* CreateEncryptDecryptTask(JSContext* aCx,
-                           const ObjectOrString& aAlgorithm,
-                           CryptoKey& aKey,
-                           const CryptoOperationData& aData,
-                           bool aEncrypt);
+ protected:
+  static WebCryptoTask* CreateEncryptDecryptTask(
+      JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+      const CryptoOperationData& aData, bool aEncrypt);
 
-  static WebCryptoTask* CreateSignVerifyTask(JSContext* aCx,
-                          const ObjectOrString& aAlgorithm,
-                          CryptoKey& aKey,
-                          const CryptoOperationData& aSignature,
-                          const CryptoOperationData& aData,
-                          bool aSign);
+  static WebCryptoTask* CreateSignVerifyTask(
+      JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+      const CryptoOperationData& aSignature, const CryptoOperationData& aData,
+      bool aSign);
 
-public:
+ public:
   static WebCryptoTask* CreateEncryptTask(JSContext* aCx,
-                          const ObjectOrString& aAlgorithm,
-                          CryptoKey& aKey,
-                          const CryptoOperationData& aData)
-  {
+                                          const ObjectOrString& aAlgorithm,
+                                          CryptoKey& aKey,
+                                          const CryptoOperationData& aData) {
     return CreateEncryptDecryptTask(aCx, aAlgorithm, aKey, aData, true);
   }
 
   static WebCryptoTask* CreateDecryptTask(JSContext* aCx,
-                          const ObjectOrString& aAlgorithm,
-                          CryptoKey& aKey,
-                          const CryptoOperationData& aData)
-  {
+                                          const ObjectOrString& aAlgorithm,
+                                          CryptoKey& aKey,
+                                          const CryptoOperationData& aData) {
     return CreateEncryptDecryptTask(aCx, aAlgorithm, aKey, aData, false);
   }
 
   static WebCryptoTask* CreateSignTask(JSContext* aCx,
-                          const ObjectOrString& aAlgorithm,
-                          CryptoKey& aKey,
-                          const CryptoOperationData& aData)
-  {
+                                       const ObjectOrString& aAlgorithm,
+                                       CryptoKey& aKey,
+                                       const CryptoOperationData& aData) {
     CryptoOperationData dummy;
     dummy.SetAsArrayBuffer(aCx);
     return CreateSignVerifyTask(aCx, aAlgorithm, aKey, dummy, aData, true);
   }
 
   static WebCryptoTask* CreateVerifyTask(JSContext* aCx,
-                          const ObjectOrString& aAlgorithm,
-                          CryptoKey& aKey,
-                          const CryptoOperationData& aSignature,
-                          const CryptoOperationData& aData)
-  {
-    return CreateSignVerifyTask(aCx, aAlgorithm, aKey, aSignature, aData, false);
+                                         const ObjectOrString& aAlgorithm,
+                                         CryptoKey& aKey,
+                                         const CryptoOperationData& aSignature,
+                                         const CryptoOperationData& aData) {
+    return CreateSignVerifyTask(aCx, aAlgorithm, aKey, aSignature, aData,
+                                false);
   }
 
   static WebCryptoTask* CreateDigestTask(JSContext* aCx,
-                          const ObjectOrString& aAlgorithm,
-                          const CryptoOperationData& aData);
+                                         const ObjectOrString& aAlgorithm,
+                                         const CryptoOperationData& aData);
 
-  static WebCryptoTask* CreateImportKeyTask(nsIGlobalObject* aGlobal,
-                          JSContext* aCx,
-                          const nsAString& aFormat,
-                          JS::Handle<JSObject*> aKeyData,
-                          const ObjectOrString& aAlgorithm,
-                          bool aExtractable,
-                          const Sequence<nsString>& aKeyUsages);
+  static WebCryptoTask* CreateImportKeyTask(
+      nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
+      JS::Handle<JSObject*> aKeyData, const ObjectOrString& aAlgorithm,
+      bool aExtractable, const Sequence<nsString>& aKeyUsages);
   static WebCryptoTask* CreateExportKeyTask(const nsAString& aFormat,
-                          CryptoKey& aKey);
-  static WebCryptoTask* CreateGenerateKeyTask(nsIGlobalObject* aGlobal,
-                          JSContext* aCx,
-                          const ObjectOrString& aAlgorithm,
-                          bool aExtractable,
-                          const Sequence<nsString>& aKeyUsages);
+                                            CryptoKey& aKey);
+  static WebCryptoTask* CreateGenerateKeyTask(
+      nsIGlobalObject* aGlobal, JSContext* aCx,
+      const ObjectOrString& aAlgorithm, bool aExtractable,
+      const Sequence<nsString>& aKeyUsages);
 
-  static WebCryptoTask* CreateDeriveKeyTask(nsIGlobalObject* aGlobal,
-                          JSContext* aCx,
-                          const ObjectOrString& aAlgorithm,
-                          CryptoKey& aBaseKey,
-                          const ObjectOrString& aDerivedKeyType,
-                          bool extractable,
-                          const Sequence<nsString>& aKeyUsages);
+  static WebCryptoTask* CreateDeriveKeyTask(
+      nsIGlobalObject* aGlobal, JSContext* aCx,
+      const ObjectOrString& aAlgorithm, CryptoKey& aBaseKey,
+      const ObjectOrString& aDerivedKeyType, bool extractable,
+      const Sequence<nsString>& aKeyUsages);
   static WebCryptoTask* CreateDeriveBitsTask(JSContext* aCx,
-                          const ObjectOrString& aAlgorithm,
-                          CryptoKey& aKey,
-                          uint32_t aLength);
+                                             const ObjectOrString& aAlgorithm,
+                                             CryptoKey& aKey, uint32_t aLength);
 
   static WebCryptoTask* CreateWrapKeyTask(JSContext* aCx,
-                          const nsAString& aFormat,
-                          CryptoKey& aKey,
-                          CryptoKey& aWrappingKey,
-                          const ObjectOrString& aWrapAlgorithm);
-  static WebCryptoTask* CreateUnwrapKeyTask(nsIGlobalObject* aGlobal,
-                          JSContext* aCx,
-                          const nsAString& aFormat,
-                          const ArrayBufferViewOrArrayBuffer& aWrappedKey,
-                          CryptoKey& aUnwrappingKey,
-                          const ObjectOrString& aUnwrapAlgorithm,
-                          const ObjectOrString& aUnwrappedKeyAlgorithm,
-                          bool aExtractable,
-                          const Sequence<nsString>& aKeyUsages);
+                                          const nsAString& aFormat,
+                                          CryptoKey& aKey,
+                                          CryptoKey& aWrappingKey,
+                                          const ObjectOrString& aWrapAlgorithm);
+  static WebCryptoTask* CreateUnwrapKeyTask(
+      nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
+      const ArrayBufferViewOrArrayBuffer& aWrappedKey,
+      CryptoKey& aUnwrappingKey, const ObjectOrString& aUnwrapAlgorithm,
+      const ObjectOrString& aUnwrappedKeyAlgorithm, bool aExtractable,
+      const Sequence<nsString>& aKeyUsages);
 
-protected:
+ protected:
   RefPtr<Promise> mResultPromise;
   nsresult mEarlyRv;
   bool mEarlyComplete;
@@ -185,7 +167,7 @@ protected:
 
   void CallCallback(nsresult rv);
 
-private:
+ private:
   NS_IMETHOD Run() final;
   nsresult Cancel() final;
 
@@ -195,13 +177,13 @@ private:
 };
 
 // XXX This class is declared here (unlike others) to enable reuse by WebRTC.
-class GenerateAsymmetricKeyTask : public WebCryptoTask
-{
-public:
+class GenerateAsymmetricKeyTask : public WebCryptoTask {
+ public:
   GenerateAsymmetricKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
                             const ObjectOrString& aAlgorithm, bool aExtractable,
                             const Sequence<nsString>& aKeyUsages);
-protected:
+
+ protected:
   UniquePLArenaPool mArena;
   UniquePtr<CryptoKeyPair> mKeyPair;
   nsString mAlgName;
@@ -214,12 +196,12 @@ protected:
   virtual void Resolve() override;
   virtual void Cleanup() override;
 
-private:
+ private:
   UniqueSECKEYPublicKey mPublicKey;
   UniqueSECKEYPrivateKey mPrivateKey;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WebCryptoTask_h
+#endif  // mozilla_dom_WebCryptoTask_h

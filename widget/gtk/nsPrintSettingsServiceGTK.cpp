@@ -8,11 +8,9 @@
 
 using namespace mozilla::embedding;
 
-static void
-serialize_gtk_printsettings_to_printdata(const gchar *key,
-                                         const gchar *value,
-                                         gpointer aData)
-{
+static void serialize_gtk_printsettings_to_printdata(const gchar* key,
+                                                     const gchar* value,
+                                                     gpointer aData) {
   PrintData* data = (PrintData*)aData;
   CStringKeyValue pair;
   pair.key() = key;
@@ -23,9 +21,9 @@ serialize_gtk_printsettings_to_printdata(const gchar *key,
 NS_IMETHODIMP
 nsPrintSettingsServiceGTK::SerializeToPrintData(nsIPrintSettings* aSettings,
                                                 nsIWebBrowserPrint* aWBP,
-                                                PrintData* data)
-{
-  nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, aWBP, data);
+                                                PrintData* data) {
+  nsresult rv =
+      nsPrintSettingsService::SerializeToPrintData(aSettings, aWBP, data);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPrintSettingsGTK> settingsGTK(do_QueryInterface(aSettings));
@@ -34,22 +32,20 @@ nsPrintSettingsServiceGTK::SerializeToPrintData(nsIPrintSettings* aSettings,
   GtkPrintSettings* gtkPrintSettings = settingsGTK->GetGtkPrintSettings();
   NS_ENSURE_STATE(gtkPrintSettings);
 
-  gtk_print_settings_foreach(
-    gtkPrintSettings,
-    serialize_gtk_printsettings_to_printdata,
-    data);
+  gtk_print_settings_foreach(gtkPrintSettings,
+                             serialize_gtk_printsettings_to_printdata, data);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsServiceGTK::DeserializeToPrintSettings(const PrintData& data,
-                                                      nsIPrintSettings* settings)
-{
+nsPrintSettingsServiceGTK::DeserializeToPrintSettings(
+    const PrintData& data, nsIPrintSettings* settings) {
   nsCOMPtr<nsPrintSettingsGTK> settingsGTK(do_QueryInterface(settings));
   NS_ENSURE_STATE(settingsGTK);
 
-  nsresult rv = nsPrintSettingsService::DeserializeToPrintSettings(data, settings);
+  nsresult rv =
+      nsPrintSettingsService::DeserializeToPrintSettings(data, settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Instead of re-using the GtkPrintSettings that nsIPrintSettings is
@@ -59,8 +55,7 @@ nsPrintSettingsServiceGTK::DeserializeToPrintSettings(const PrintData& data,
 
   for (uint32_t i = 0; i < data.GTKPrintSettings().Length(); ++i) {
     CStringKeyValue pair = data.GTKPrintSettings()[i];
-    gtk_print_settings_set(newGtkPrintSettings,
-                           pair.key().get(),
+    gtk_print_settings_set(newGtkPrintSettings, pair.key().get(),
                            pair.value().get());
   }
 
@@ -72,14 +67,14 @@ nsPrintSettingsServiceGTK::DeserializeToPrintSettings(const PrintData& data,
   return NS_OK;
 }
 
-nsresult nsPrintSettingsServiceGTK::_CreatePrintSettings(nsIPrintSettings** _retval)
-{
+nsresult nsPrintSettingsServiceGTK::_CreatePrintSettings(
+    nsIPrintSettings** _retval) {
   *_retval = nullptr;
-  nsPrintSettingsGTK* printSettings = new nsPrintSettingsGTK(); // does not initially ref count
+  nsPrintSettingsGTK* printSettings =
+      new nsPrintSettingsGTK();  // does not initially ref count
   NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ADDREF(*_retval = printSettings); // ref count
+  NS_ADDREF(*_retval = printSettings);  // ref count
 
   return NS_OK;
 }
-

@@ -15,14 +15,13 @@
 namespace mozilla {
 namespace mscom {
 
-class DispatchForwarder final : public IDispatch
-{
-public:
-  static HRESULT Create(IInterceptor* aInterceptor,
-                        STAUniquePtr<IDispatch>& aTarget, IUnknown** aOutput);
+class DispatchForwarder final : public IDispatch {
+ public:
+  static HRESULT Create(IInterceptor *aInterceptor,
+                        STAUniquePtr<IDispatch> &aTarget, IUnknown **aOutput);
 
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override;
+  STDMETHODIMP QueryInterface(REFIID riid, void **ppv) override;
   STDMETHODIMP_(ULONG) AddRef() override;
   STDMETHODIMP_(ULONG) Release() override;
 
@@ -38,35 +37,35 @@ public:
   STDMETHODIMP GetIDsOfNames(
       /* [in] */ __RPC__in REFIID riid,
       /* [size_is][in] */ __RPC__in_ecount_full(cNames) LPOLESTR *rgszNames,
-      /* [range][in] */ __RPC__in_range(0,16384) UINT cNames,
+      /* [range][in] */ __RPC__in_range(0, 16384) UINT cNames,
       /* [in] */ LCID lcid,
       /* [size_is][out] */ __RPC__out_ecount_full(cNames) DISPID *rgDispId)
-    override;
+      override;
 
   STDMETHODIMP Invoke(
       /* [annotation][in] */
-      _In_  DISPID dispIdMember,
+      _In_ DISPID dispIdMember,
       /* [annotation][in] */
-      _In_  REFIID riid,
+      _In_ REFIID riid,
       /* [annotation][in] */
-      _In_  LCID lcid,
+      _In_ LCID lcid,
       /* [annotation][in] */
-      _In_  WORD wFlags,
+      _In_ WORD wFlags,
       /* [annotation][out][in] */
-      _In_  DISPPARAMS *pDispParams,
+      _In_ DISPPARAMS *pDispParams,
       /* [annotation][out] */
-      _Out_opt_  VARIANT *pVarResult,
+      _Out_opt_ VARIANT *pVarResult,
       /* [annotation][out] */
-      _Out_opt_  EXCEPINFO *pExcepInfo,
+      _Out_opt_ EXCEPINFO *pExcepInfo,
       /* [annotation][out] */
-      _Out_opt_  UINT *puArgErr) override;
+      _Out_opt_ UINT *puArgErr) override;
 
-private:
-  DispatchForwarder(IInterceptor* aInterceptor,
-                    STAUniquePtr<IDispatch>& aTarget);
+ private:
+  DispatchForwarder(IInterceptor *aInterceptor,
+                    STAUniquePtr<IDispatch> &aTarget);
   ~DispatchForwarder();
 
-private:
+ private:
   ULONG mRefCnt;
   RefPtr<IInterceptor> mInterceptor;
   STAUniquePtr<IDispatch> mTarget;
@@ -74,8 +73,7 @@ private:
   RefPtr<IUnknown> mInterface;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_DispatchForwarder_h
-
+#endif  // mozilla_mscom_DispatchForwarder_h

@@ -12,13 +12,11 @@
 
 namespace mozilla {
 
-class Authenticode
-{
-public:
+class Authenticode {
+ public:
   virtual UniquePtr<wchar_t[]> GetBinaryOrgName(const wchar_t* aFilePath) = 0;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_Authenticode_h
-
+#endif  // mozilla_Authenticode_h

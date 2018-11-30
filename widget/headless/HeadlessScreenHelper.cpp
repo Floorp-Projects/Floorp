@@ -13,10 +13,8 @@
 namespace mozilla {
 namespace widget {
 
-/* static */ LayoutDeviceIntRect
-HeadlessScreenHelper::GetScreenRect()
-{
-  char *ev = PR_GetEnv("MOZ_HEADLESS_WIDTH");
+/* static */ LayoutDeviceIntRect HeadlessScreenHelper::GetScreenRect() {
+  char* ev = PR_GetEnv("MOZ_HEADLESS_WIDTH");
   int width = 1366;
   if (ev) {
     width = atoi(ev);
@@ -29,19 +27,16 @@ HeadlessScreenHelper::GetScreenRect()
   return LayoutDeviceIntRect(0, 0, width, height);
 }
 
-HeadlessScreenHelper::HeadlessScreenHelper()
-{
+HeadlessScreenHelper::HeadlessScreenHelper() {
   AutoTArray<RefPtr<Screen>, 1> screenList;
   LayoutDeviceIntRect rect = GetScreenRect();
-  RefPtr<Screen> ret = new Screen(rect, rect,
-                                  24, 24,
-                                  DesktopToLayoutDeviceScale(),
-                                  CSSToLayoutDeviceScale(),
-                                  96.0f);
+  RefPtr<Screen> ret =
+      new Screen(rect, rect, 24, 24, DesktopToLayoutDeviceScale(),
+                 CSSToLayoutDeviceScale(), 96.0f);
   screenList.AppendElement(ret.forget());
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.Refresh(std::move(screenList));
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

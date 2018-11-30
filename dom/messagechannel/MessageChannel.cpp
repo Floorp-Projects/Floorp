@@ -28,32 +28,25 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MessageChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MessageChannel::MessageChannel(nsIGlobalObject* aGlobal)
-  : mGlobal(aGlobal)
-{
+MessageChannel::MessageChannel(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
   MOZ_ASSERT(aGlobal);
 }
 
-MessageChannel::~MessageChannel()
-{
-}
+MessageChannel::~MessageChannel() {}
 
-JSObject*
-MessageChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MessageChannel::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return MessageChannel_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<MessageChannel>
-MessageChannel::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<MessageChannel> MessageChannel::Constructor(
+    const GlobalObject& aGlobal, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(global, aRv);
 }
 
-/* static */ already_AddRefed<MessageChannel>
-MessageChannel::Constructor(nsIGlobalObject* aGlobal, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<MessageChannel> MessageChannel::Constructor(
+    nsIGlobalObject* aGlobal, ErrorResult& aRv) {
   MOZ_ASSERT(aGlobal);
 
   nsID portUUID1;
@@ -86,5 +79,5 @@ MessageChannel::Constructor(nsIGlobalObject* aGlobal, ErrorResult& aRv)
   return channel.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

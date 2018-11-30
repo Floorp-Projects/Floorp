@@ -6,20 +6,20 @@
 #ifndef mozilla_HTMLEditorController_h__
 #define mozilla_HTMLEditorController_h__
 
-
-#include "nscore.h"                     // for nsresult
+#include "nscore.h"  // for nsresult
 
 class nsIControllerCommandTable;
 
 namespace mozilla {
 
-class HTMLEditorController final
-{
-public:
-  static nsresult RegisterEditorDocStateCommands(nsIControllerCommandTable* inCommandTable);
-  static nsresult RegisterHTMLEditorCommands(nsIControllerCommandTable* inCommandTable);
+class HTMLEditorController final {
+ public:
+  static nsresult RegisterEditorDocStateCommands(
+      nsIControllerCommandTable* inCommandTable);
+  static nsresult RegisterHTMLEditorCommands(
+      nsIControllerCommandTable* inCommandTable);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozllla_HTMLEditorController_h__ */

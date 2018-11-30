@@ -22,12 +22,11 @@ constexpr uint32_t FNV_PRIME = 16777619;
 /**
  * Basic FNV hasher function used by perfecthash. Generic over the unit type.
  */
-template<typename C>
-inline uint32_t
-Hash(uint32_t aBasis, const C* aKey, size_t aLen)
-{
+template <typename C>
+inline uint32_t Hash(uint32_t aBasis, const C* aKey, size_t aLen) {
   for (size_t i = 0; i < aLen; ++i) {
-    aBasis = (aBasis ^ static_cast<typename MakeUnsigned<C>::Type>(aKey[i])) * FNV_PRIME;
+    aBasis = (aBasis ^ static_cast<typename MakeUnsigned<C>::Type>(aKey[i])) *
+             FNV_PRIME;
   }
   return aBasis;
 }
@@ -36,18 +35,16 @@ Hash(uint32_t aBasis, const C* aKey, size_t aLen)
  * Helper method for getting the index from a perfect hash.
  * Called by code generated from |perfecthash.py|.
  */
-template<typename C, typename Base, size_t NBases,
-         typename Entry, size_t NEntries>
-inline const Entry&
-Lookup(const C* aKey, size_t aLen,
-       const Base(& aTable)[NBases],
-       const Entry(& aEntries)[NEntries])
-{
+template <typename C, typename Base, size_t NBases, typename Entry,
+          size_t NEntries>
+inline const Entry& Lookup(const C* aKey, size_t aLen,
+                           const Base (&aTable)[NBases],
+                           const Entry (&aEntries)[NEntries]) {
   uint32_t basis = aTable[Hash(FNV_OFFSET_BASIS, aKey, aLen) % NBases];
   return aEntries[Hash(basis, aKey, aLen) % NEntries];
 }
 
-} // namespace perfecthash
-} // namespace mozilla
+}  // namespace perfecthash
+}  // namespace mozilla
 
-#endif // !defined(mozilla_PerfectHash_h)
+#endif  // !defined(mozilla_PerfectHash_h)

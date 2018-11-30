@@ -22,7 +22,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsDataHashtable.h"
-#include "jsfriendapi.h" // For js::ExpandoAndGeneration
+#include "jsfriendapi.h"  // For js::ExpandoAndGeneration
 
 class nsIMutableArray;
 class nsIURI;
@@ -37,18 +37,16 @@ class HTMLImageElement;
 class HTMLFormElement final : public nsGenericHTMLElement,
                               public nsIWebProgressListener,
                               public nsIForm,
-                              public nsIRadioGroupContainer
-{
+                              public nsIRadioGroupContainer {
   friend class HTMLFormControlsCollection;
 
-public:
+ public:
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLFormElement, form)
 
-  explicit HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  explicit HTMLFormElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  enum {
-    FORM_CONTROL_LIST_HASHTABLE_LENGTH = 8
-  };
+  enum { FORM_CONTROL_LIST_HASHTABLE_LENGTH = 8 };
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -66,8 +64,7 @@ public:
   void SetCurrentRadioButton(const nsAString& aName,
                              HTMLInputElement* aRadio) override;
   HTMLInputElement* GetCurrentRadioButton(const nsAString& aName) override;
-  NS_IMETHOD GetNextRadioButton(const nsAString& aName,
-                                const bool aPrevious,
+  NS_IMETHOD GetNextRadioButton(const nsAString& aName, const bool aPrevious,
                                 HTMLInputElement* aFocusedRadio,
                                 HTMLInputElement** aRadioOut) override;
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
@@ -80,7 +77,8 @@ public:
   virtual void RadioRequiredWillChange(const nsAString& aName,
                                        bool aRequiredAdded) override;
   virtual bool GetValueMissingState(const nsAString& aName) const override;
-  virtual void SetValueMissingState(const nsAString& aName, bool aValue) override;
+  virtual void SetValueMissingState(const nsAString& aName,
+                                    bool aValue) override;
 
   virtual EventStates IntrinsicState() const override;
 
@@ -88,15 +86,13 @@ public:
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
   // nsIContent
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                nsAttrValue& aResult) override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   void WillHandleEvent(EventChainPostVisitor& aVisitor) override;
-  virtual nsresult PostHandleEvent(
-                     EventChainPostVisitor& aVisitor) override;
+  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
@@ -188,7 +184,7 @@ public:
    * @return NS_OK if the element was successfully removed.
    */
   nsresult RemoveImageElementFromTable(HTMLImageElement* aElement,
-                                      const nsAString& aName);
+                                       const nsAString& aName);
   /**
    * Add an image element to the end of this form's list of image elements
    *
@@ -207,18 +203,18 @@ public:
   nsresult AddImageElementToTable(HTMLImageElement* aChild,
                                   const nsAString& aName);
 
-   /**
-    * Returns true if implicit submission of this form is disabled. For more
-    * on implicit submission see:
-    *
-    * http://www.whatwg.org/specs/web-apps/current-work/multipage/association-of-controls-and-forms.html#implicit-submission
-    */
+  /**
+   * Returns true if implicit submission of this form is disabled. For more
+   * on implicit submission see:
+   *
+   * http://www.whatwg.org/specs/web-apps/current-work/multipage/association-of-controls-and-forms.html#implicit-submission
+   */
   bool ImplicitSubmissionIsDisabled() const;
 
   /**
-  * Check whether a given nsIFormControl is the last single line input control
-  * that is not disabled. aControl is expected to not be null.
-  */
+   * Check whether a given nsIFormControl is the last single line input control
+   * that is not disabled. aControl is expected to not be null.
+   */
   bool IsLastActiveElement(const nsIFormControl* aControl) const;
 
   /**
@@ -255,7 +251,8 @@ public:
   /**
    * Returns the form validity based on the last UpdateValidity() call.
    *
-   * @return Whether the form was valid the last time UpdateValidity() was called.
+   * @return Whether the form was valid the last time UpdateValidity() was
+   * called.
    *
    * @note This method may not return the *current* validity state!
    */
@@ -302,81 +299,59 @@ public:
    * Implements form[name]. Returns form controls in this form with the correct
    * value of the name attribute.
    */
-  already_AddRefed<nsISupports>
-  FindNamedItem(const nsAString& aName, nsWrapperCache** aCache);
+  already_AddRefed<nsISupports> FindNamedItem(const nsAString& aName,
+                                              nsWrapperCache** aCache);
 
   // WebIDL
 
-  void GetAcceptCharset(DOMString& aValue)
-  {
+  void GetAcceptCharset(DOMString& aValue) {
     GetHTMLAttr(nsGkAtoms::acceptcharset, aValue);
   }
 
-  void SetAcceptCharset(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetAcceptCharset(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::acceptcharset, aValue, aRv);
   }
 
   void GetAction(nsString& aValue);
-  void SetAction(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetAction(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::action, aValue, aRv);
   }
 
   void GetAutocomplete(nsAString& aValue);
-  void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
   }
 
   void GetEnctype(nsAString& aValue);
-  void SetEnctype(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetEnctype(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::enctype, aValue, aRv);
   }
 
-  void GetEncoding(nsAString& aValue)
-  {
-    GetEnctype(aValue);
-  }
-  void SetEncoding(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void GetEncoding(nsAString& aValue) { GetEnctype(aValue); }
+  void SetEncoding(const nsAString& aValue, ErrorResult& aRv) {
     SetEnctype(aValue, aRv);
   }
 
   void GetMethod(nsAString& aValue);
-  void SetMethod(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetMethod(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::method, aValue, aRv);
   }
 
-  void GetName(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::name, aValue);
-  }
+  void GetName(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::name, aValue); }
 
-  void SetName(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetName(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
   }
 
-  bool NoValidate() const
-  {
-    return GetBoolAttr(nsGkAtoms::novalidate);
-  }
+  bool NoValidate() const { return GetBoolAttr(nsGkAtoms::novalidate); }
 
-  void SetNoValidate(bool aValue, ErrorResult& aRv)
-  {
+  void SetNoValidate(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::novalidate, aValue, aRv);
   }
 
-  void GetTarget(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::target, aValue);
-  }
+  void GetTarget(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::target, aValue); }
 
-  void SetTarget(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetTarget(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::target, aValue, aRv);
   }
 
@@ -389,40 +364,33 @@ public:
   void Submit(ErrorResult& aRv);
   void Reset();
 
-  bool CheckValidity()
-  {
-    return CheckFormValidity(nullptr);
-  }
+  bool CheckValidity() { return CheckFormValidity(nullptr); }
 
-  bool ReportValidity()
-  {
-    return CheckValidFormSubmission();
-  }
+  bool ReportValidity() { return CheckValidFormSubmission(); }
 
-  Element*
-  IndexedGetter(uint32_t aIndex, bool &aFound);
+  Element* IndexedGetter(uint32_t aIndex, bool& aFound);
 
-  already_AddRefed<nsISupports>
-  NamedGetter(const nsAString& aName, bool &aFound);
+  already_AddRefed<nsISupports> NamedGetter(const nsAString& aName,
+                                            bool& aFound);
 
   void GetSupportedNames(nsTArray<nsString>& aRetval);
 
-  static int32_t
-  CompareFormControlPosition(Element* aElement1, Element* aElement2,
-                             const nsIContent* aForm);
+  static int32_t CompareFormControlPosition(Element* aElement1,
+                                            Element* aElement2,
+                                            const nsIContent* aForm);
 #ifdef DEBUG
-  static void
-  AssertDocumentOrder(const nsTArray<nsGenericHTMLFormElement*>& aControls,
-                      nsIContent* aForm);
-  static void
-  AssertDocumentOrder(const nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls,
-                      nsIContent* aForm);
+  static void AssertDocumentOrder(
+      const nsTArray<nsGenericHTMLFormElement*>& aControls, nsIContent* aForm);
+  static void AssertDocumentOrder(
+      const nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls,
+      nsIContent* aForm);
 #endif
 
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
-protected:
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+ protected:
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   void PostPasswordEvent();
 
@@ -432,23 +400,21 @@ protected:
   friend class RemoveElementRunnable;
 
   class RemoveElementRunnable : public Runnable {
-  public:
+   public:
     explicit RemoveElementRunnable(HTMLFormElement* aForm)
-      : Runnable("dom::HTMLFormElement::RemoveElementRunnable")
-      , mForm(aForm)
-    {}
+        : Runnable("dom::HTMLFormElement::RemoveElementRunnable"),
+          mForm(aForm) {}
 
     NS_IMETHOD Run() override {
       mForm->HandleDefaultSubmitRemoval();
       return NS_OK;
     }
 
-  private:
+   private:
     RefPtr<HTMLFormElement> mForm;
   };
 
-  nsresult DoSubmitOrReset(WidgetEvent* aEvent,
-                           EventMessage aMessage);
+  nsresult DoSubmitOrReset(WidgetEvent* aEvent, EventMessage aMessage);
   nsresult DoReset();
 
   // Async callback to handle removal of our default submit
@@ -506,7 +472,8 @@ protected:
    * Find form controls in this form with the correct value in the name
    * attribute.
    */
-  already_AddRefed<nsISupports> DoResolveName(const nsAString& aName, bool aFlushContent);
+  already_AddRefed<nsISupports> DoResolveName(const nsAString& aName,
+                                              bool aFlushContent);
 
   /**
    * Check the form validity following this algorithm:
@@ -529,17 +496,15 @@ protected:
   // nsGenericHTMLFormElement or HTMLImageElement.
   void RemoveElementFromPastNamesMap(Element* aElement);
 
-  nsresult
-  AddElementToTableInternal(
-    nsInterfaceHashtable<nsStringHashKey,nsISupports>& aTable,
-    nsIContent* aChild, const nsAString& aName);
+  nsresult AddElementToTableInternal(
+      nsInterfaceHashtable<nsStringHashKey, nsISupports>& aTable,
+      nsIContent* aChild, const nsAString& aName);
 
-  nsresult
-  RemoveElementFromTableInternal(
-    nsInterfaceHashtable<nsStringHashKey,nsISupports>& aTable,
-    nsIContent* aChild, const nsAString& aName);
+  nsresult RemoveElementFromTableInternal(
+      nsInterfaceHashtable<nsStringHashKey, nsISupports>& aTable,
+      nsIContent* aChild, const nsAString& aName);
 
-public:
+ public:
   /**
    * Flush a possible pending submission. If there was a scripted submission
    * triggered by a button or image, the submission was defered. This method
@@ -552,11 +517,12 @@ public:
    * Get the full URL to submit to.  Do not submit if the returned URL is null.
    *
    * @param aActionURL the full, unadulterated URL you'll be submitting to [OUT]
-   * @param aOriginatingElement the originating element of the form submission [IN]
+   * @param aOriginatingElement the originating element of the form submission
+   * [IN]
    */
   nsresult GetActionURL(nsIURI** aActionURL, Element* aOriginatingElement);
-protected:
 
+ protected:
   //
   // Data members
   //
@@ -565,9 +531,11 @@ protected:
   /** The currently selected radio button of each group */
   nsRefPtrHashtable<nsStringHashKey, HTMLInputElement> mSelectedRadioButtons;
   /** The number of required radio button of each group */
-  nsDataHashtable<nsStringCaseInsensitiveHashKey,uint32_t> mRequiredRadioButtonCounts;
+  nsDataHashtable<nsStringCaseInsensitiveHashKey, uint32_t>
+      mRequiredRadioButtonCounts;
   /** The value missing state of each group */
-  nsDataHashtable<nsStringCaseInsensitiveHashKey,bool> mValueMissingRadioGroups;
+  nsDataHashtable<nsStringCaseInsensitiveHashKey, bool>
+      mValueMissingRadioGroups;
 
   /** The pending submission object */
   nsAutoPtr<HTMLFormSubmission> mPendingSubmission;
@@ -597,12 +565,12 @@ protected:
   // holds on to a list of named HTMLImageElement(s) the list has weak
   // references to the HTMLImageElement.
 
-  nsInterfaceHashtable<nsStringHashKey,nsISupports> mImageNameLookupTable;
+  nsInterfaceHashtable<nsStringHashKey, nsISupports> mImageNameLookupTable;
 
   // A map from names to elements that were gotten by those names from this
   // form in that past.  See "past names map" in the HTML5 specification.
 
-  nsInterfaceHashtable<nsStringHashKey,nsISupports> mPastNameLookupTable;
+  nsInterfaceHashtable<nsStringHashKey, nsISupports> mPastNameLookupTable;
 
   /** Keep track of what the popup state was when the submit was initiated */
   PopupControlState mSubmitPopupState;
@@ -634,18 +602,18 @@ protected:
    */
   bool mEverTriedInvalidSubmit;
 
-protected:
+ protected:
   /** Detection of first form to notify observers */
   static bool gFirstFormSubmitted;
   /** Detection of first password input to initialize the password manager */
   static bool gPasswordManagerInitialized;
 
-private:
+ private:
   ~HTMLFormElement();
 };
 
-} // namespace dom
+}  // namespace dom
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLFormElement_h
+#endif  // mozilla_dom_HTMLFormElement_h

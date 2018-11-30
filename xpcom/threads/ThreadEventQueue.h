@@ -21,7 +21,7 @@ namespace mozilla {
 
 class EventQueue;
 
-template<typename InnerQueueT>
+template <typename InnerQueueT>
 class PrioritizedEventQueue;
 
 class LabeledEventQueue;
@@ -33,10 +33,9 @@ class ThreadEventTarget;
 // PopEventQueue for workers (see the documentation below for an explanation of
 // those). All threads use a ThreadEventQueue as their event queue. InnerQueueT
 // is a template parameter to avoid virtual dispatch overhead.
-template<class InnerQueueT>
-class ThreadEventQueue final : public SynchronizedEventQueue
-{
-public:
+template <class InnerQueueT>
+class ThreadEventQueue final : public SynchronizedEventQueue {
+ public:
   explicit ThreadEventQueue(UniquePtr<InnerQueueT> aQueue);
 
   bool PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
@@ -83,29 +82,26 @@ public:
 
   Mutex& MutexRef() { return mLock; }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfExcludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const override;
 
-private:
+ private:
   class NestedSink;
 
   virtual ~ThreadEventQueue();
 
   bool PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
-                        EventPriority aPriority,
-                        NestedSink* aQueue);
+                        EventPriority aPriority, NestedSink* aQueue);
 
   UniquePtr<InnerQueueT> mBaseQueue;
 
-  struct NestedQueueItem
-  {
+  struct NestedQueueItem {
     UniquePtr<EventQueue> mQueue;
     RefPtr<ThreadEventTarget> mEventTarget;
 
     NestedQueueItem(UniquePtr<EventQueue> aQueue,
                     ThreadEventTarget* aEventTarget)
-      : mQueue(std::move(aQueue))
-      , mEventTarget(aEventTarget)
-    {}
+        : mQueue(std::move(aQueue)), mEventTarget(aEventTarget) {}
   };
 
   nsTArray<NestedQueueItem> mNestedQueues;
@@ -119,8 +115,9 @@ private:
 
 extern template class ThreadEventQueue<EventQueue>;
 extern template class ThreadEventQueue<PrioritizedEventQueue<EventQueue>>;
-extern template class ThreadEventQueue<PrioritizedEventQueue<LabeledEventQueue>>;
+extern template class ThreadEventQueue<
+    PrioritizedEventQueue<LabeledEventQueue>>;
 
-}; // namespace mozilla
+};  // namespace mozilla
 
-#endif // mozilla_ThreadEventQueue_h
+#endif  // mozilla_ThreadEventQueue_h

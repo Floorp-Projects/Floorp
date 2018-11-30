@@ -38,8 +38,8 @@ class nsIWebProgressListener;
 //
 //------------------------------------------------------------------------
 class nsPrintData {
-public:
-  typedef enum {eIsPrinting, eIsPrintPreview } ePrintDataType;
+ public:
+  typedef enum { eIsPrinting, eIsPrintPreview } ePrintDataType;
 
   explicit nsPrintData(ePrintDataType aType);
 
@@ -48,52 +48,49 @@ public:
   // Listener Helper Methods
   void OnEndPrinting();
   void OnStartPrinting();
-  void DoOnProgressChange(int32_t      aProgress,
-                          int32_t      aMaxProgress,
-                          bool         aDoStartStop,
-                          int32_t      aFlag);
+  void DoOnProgressChange(int32_t aProgress, int32_t aMaxProgress,
+                          bool aDoStartStop, int32_t aFlag);
 
   void DoOnStatusChange(nsresult aStatus);
 
-
-  ePrintDataType               mType;            // the type of data this is (Printing or Print Preview)
-  RefPtr<nsDeviceContext>   mPrintDC;
+  ePrintDataType mType;  // the type of data this is (Printing or Print Preview)
+  RefPtr<nsDeviceContext> mPrintDC;
 
   mozilla::UniquePtr<nsPrintObject> mPrintObject;
 
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
   nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
 
-  nsCOMPtr<nsPIDOMWindowOuter> mCurrentFocusWin; // cache a pointer to the currently focused window
+  nsCOMPtr<nsPIDOMWindowOuter>
+      mCurrentFocusWin;  // cache a pointer to the currently focused window
 
   // Array of non-owning pointers to all the nsPrintObjects owned by this
   // nsPrintData. This includes this->mPrintObject, as well as all of its
   // mKids (and their mKids, etc.)
-  nsTArray<nsPrintObject*>    mPrintDocList;
+  nsTArray<nsPrintObject*> mPrintDocList;
 
-  bool                        mIsIFrameSelected;
-  bool                        mIsParentAFrameSet;
-  bool                        mOnStartSent;
-  bool                        mIsAborted;           // tells us the document is being aborted
-  bool                        mPreparingForPrint;   // see comments above
-  bool                        mDocWasToBeDestroyed; // see comments above
-  bool                        mShrinkToFit;
-  int16_t                     mPrintFrameType;
-  int32_t                     mNumPrintablePages;
-  int32_t                     mNumPagesPrinted;
-  float                       mShrinkRatio;
+  bool mIsIFrameSelected;
+  bool mIsParentAFrameSet;
+  bool mOnStartSent;
+  bool mIsAborted;            // tells us the document is being aborted
+  bool mPreparingForPrint;    // see comments above
+  bool mDocWasToBeDestroyed;  // see comments above
+  bool mShrinkToFit;
+  int16_t mPrintFrameType;
+  int32_t mNumPrintablePages;
+  int32_t mNumPagesPrinted;
+  float mShrinkRatio;
 
-  nsCOMPtr<nsIPrintSettings>  mPrintSettings;
-  nsPrintPreviewListener*     mPPEventListeners;
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  nsPrintPreviewListener* mPPEventListeners;
 
-  nsString                    mBrandName; //  needed as a substitute name for a document
+  nsString mBrandName;  //  needed as a substitute name for a document
 
-private:
+ private:
   nsPrintData() = delete;
   nsPrintData& operator=(const nsPrintData& aOther) = delete;
 
-  ~nsPrintData(); // non-virtual
+  ~nsPrintData();  // non-virtual
 };
 
 #endif /* nsPrintData_h___ */
-

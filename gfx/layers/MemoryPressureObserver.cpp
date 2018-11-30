@@ -9,26 +9,25 @@
 namespace mozilla {
 namespace layers {
 
-MemoryPressureObserver::MemoryPressureObserver(MemoryPressureListener* aListener)
-: mListener(aListener)
-{}
+MemoryPressureObserver::MemoryPressureObserver(
+    MemoryPressureListener* aListener)
+    : mListener(aListener) {}
 
-MemoryPressureObserver::~MemoryPressureObserver()
-{
+MemoryPressureObserver::~MemoryPressureObserver() {
   // If this assertion is hit we probably forgot to unregister the observer.
   MOZ_ASSERT(!mListener);
 }
 
-already_AddRefed<MemoryPressureObserver>
-MemoryPressureObserver::Create(MemoryPressureListener* aListener)
-{
+already_AddRefed<MemoryPressureObserver> MemoryPressureObserver::Create(
+    MemoryPressureListener* aListener) {
   nsCOMPtr<nsIObserverService> service = services::GetObserverService();
 
   if (!service) {
     return nullptr;
   }
 
-  RefPtr<MemoryPressureObserver> observer = new MemoryPressureObserver(aListener);
+  RefPtr<MemoryPressureObserver> observer =
+      new MemoryPressureObserver(aListener);
 
   bool useWeakRef = false;
   service->AddObserver(observer, "memory-pressure", useWeakRef);
@@ -36,9 +35,7 @@ MemoryPressureObserver::Create(MemoryPressureListener* aListener)
   return observer.forget();
 }
 
-void
-MemoryPressureObserver::Unregister()
-{
+void MemoryPressureObserver::Unregister() {
   if (!mListener) {
     return;
   }
@@ -52,17 +49,17 @@ MemoryPressureObserver::Unregister()
 }
 
 NS_IMETHODIMP
-MemoryPressureObserver::Observe(nsISupports* aSubject,
-                                const char* aTopic,
-                                const char16_t* aData)
-{
+MemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                                const char16_t* aData) {
   if (mListener && strcmp(aTopic, "memory-pressure") == 0) {
     MemoryPressureReason reason = MemoryPressureReason::LOW_MEMORY;
     auto reason_string = nsDependentString(aData);
-    if (StringBeginsWith(reason_string, NS_LITERAL_STRING("low-memory-ongoing"))) {
-        reason = MemoryPressureReason::LOW_MEMORY_ONGOING;
-    } else if (StringBeginsWith(reason_string, NS_LITERAL_STRING("heap-minimize"))) {
-        reason = MemoryPressureReason::HEAP_MINIMIZE;
+    if (StringBeginsWith(reason_string,
+                         NS_LITERAL_STRING("low-memory-ongoing"))) {
+      reason = MemoryPressureReason::LOW_MEMORY_ONGOING;
+    } else if (StringBeginsWith(reason_string,
+                                NS_LITERAL_STRING("heap-minimize"))) {
+      reason = MemoryPressureReason::HEAP_MINIMIZE;
     }
     mListener->OnMemoryPressure(reason);
   }
@@ -72,5 +69,5 @@ MemoryPressureObserver::Observe(nsISupports* aSubject,
 
 NS_IMPL_ISUPPORTS(MemoryPressureObserver, nsIObserver)
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

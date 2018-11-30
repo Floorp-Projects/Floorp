@@ -27,41 +27,32 @@ MESSAGEMANAGER_FUZZER_STRINGSFILE=<path> (optional)
 MESSAGEMANAGER_FUZZER_BLACKLIST=<path> (optional)
 */
 
-class MessageManagerFuzzer
-{
-public:
-  static void TryMutate(
-    JSContext* aCx,
-    const nsAString& aMessageName,
-    ipc::StructuredCloneData* aData,
-    const JS::Value& aTransfer);
+class MessageManagerFuzzer {
+ public:
+  static void TryMutate(JSContext* aCx, const nsAString& aMessageName,
+                        ipc::StructuredCloneData* aData,
+                        const JS::Value& aTransfer);
 
-private:
-  static void ReadFile(const char* path, nsTArray<nsCString> &aArray);
+ private:
+  static void ReadFile(const char* path, nsTArray<nsCString>& aArray);
   static nsCString GetFuzzValueFromFile();
   static bool IsMessageNameBlacklisted(const nsAString& aMessageName);
-  static bool Mutate(
-    JSContext* aCx,
-    const nsAString& aMessageName,
-    ipc::StructuredCloneData* aData,
-  const JS::Value& aTransfer);
+  static bool Mutate(JSContext* aCx, const nsAString& aMessageName,
+                     ipc::StructuredCloneData* aData,
+                     const JS::Value& aTransfer);
   static void Mutate(JSContext* aCx, JS::Rooted<JS::Value>& aMutation);
-  static void MutateObject(
-    JSContext* aCx,
-    JS::HandleValue aValue,
-    unsigned short int aRecursionCounter);
-  static bool MutateValue(
-    JSContext* aCx,
-    JS::HandleValue aValue,
-    JS::MutableHandleValue aOutMutationValue,
-    unsigned short int aRecursionCounter);
+  static void MutateObject(JSContext* aCx, JS::HandleValue aValue,
+                           unsigned short int aRecursionCounter);
+  static bool MutateValue(JSContext* aCx, JS::HandleValue aValue,
+                          JS::MutableHandleValue aOutMutationValue,
+                          unsigned short int aRecursionCounter);
   static unsigned int DefaultMutationProbability();
   static nsAutoString ReadJSON(JSContext* aCx, const JS::Value& aJSON);
   static bool IsEnabled();
   static bool IsLoggingEnabled();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

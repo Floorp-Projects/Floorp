@@ -11,29 +11,26 @@
 using namespace mozilla::psm;
 using namespace mozilla::pkix;
 
-Result
-BRNameMatchingPolicy::FallBackToCommonName(
-  Time notBefore,
-  /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName)
-{
+Result BRNameMatchingPolicy::FallBackToCommonName(
+    Time notBefore,
+    /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) {
   // (new Date("2015-08-23T00:00:00Z")).getTime() / 1000
   static const Time AUGUST_23_2015 = TimeFromEpochInSeconds(1440288000);
   // (new Date("2016-08-23T00:00:00Z")).getTime() / 1000
   static const Time AUGUST_23_2016 = TimeFromEpochInSeconds(1471910400);
-  switch (mMode)
-  {
+  switch (mMode) {
     case Mode::Enforce:
       fallBackToCommonName = FallBackToSearchWithinSubject::No;
       break;
     case Mode::EnforceAfter23August2015:
       fallBackToCommonName = notBefore > AUGUST_23_2015
-                           ? FallBackToSearchWithinSubject::No
-                           : FallBackToSearchWithinSubject::Yes;
+                                 ? FallBackToSearchWithinSubject::No
+                                 : FallBackToSearchWithinSubject::Yes;
       break;
     case Mode::EnforceAfter23August2016:
       fallBackToCommonName = notBefore > AUGUST_23_2016
-                           ? FallBackToSearchWithinSubject::No
-                           : FallBackToSearchWithinSubject::Yes;
+                                 ? FallBackToSearchWithinSubject::No
+                                 : FallBackToSearchWithinSubject::Yes;
       break;
     case Mode::DoNotEnforce:
       fallBackToCommonName = FallBackToSearchWithinSubject::Yes;

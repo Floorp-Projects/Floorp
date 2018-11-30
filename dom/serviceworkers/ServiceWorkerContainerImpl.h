@@ -13,49 +13,42 @@ namespace mozilla {
 namespace dom {
 
 // Lightweight serviceWorker APIs collection.
-class ServiceWorkerContainerImpl final : public ServiceWorkerContainer::Inner
-{
+class ServiceWorkerContainerImpl final : public ServiceWorkerContainer::Inner {
   ServiceWorkerContainer* mOuter;
 
   ~ServiceWorkerContainerImpl();
 
-public:
+ public:
   ServiceWorkerContainerImpl();
 
-  void
-  AddContainer(ServiceWorkerContainer* aOuter) override;
+  void AddContainer(ServiceWorkerContainer* aOuter) override;
 
-  void
-  RemoveContainer(ServiceWorkerContainer* aOuter) override;
+  void RemoveContainer(ServiceWorkerContainer* aOuter) override;
 
-  void
-  Register(const ClientInfo& aClientInfo,
-           const nsACString& aScopeURL,
-           const nsACString& aScriptURL,
-           ServiceWorkerUpdateViaCache aUpdateViaCache,
-           ServiceWorkerRegistrationCallback&& aSuccessCB,
-           ServiceWorkerFailureCallback&& aFailureCB) const override;
+  void Register(const ClientInfo& aClientInfo, const nsACString& aScopeURL,
+                const nsACString& aScriptURL,
+                ServiceWorkerUpdateViaCache aUpdateViaCache,
+                ServiceWorkerRegistrationCallback&& aSuccessCB,
+                ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  void
-  GetRegistration(const ClientInfo& aClientInfo,
-                  const nsACString& aURL,
-                  ServiceWorkerRegistrationCallback&& aSuccessCB,
-                  ServiceWorkerFailureCallback&& aFailureCB) const override;
+  void GetRegistration(
+      const ClientInfo& aClientInfo, const nsACString& aURL,
+      ServiceWorkerRegistrationCallback&& aSuccessCB,
+      ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  void
-  GetRegistrations(const ClientInfo& aClientInfo,
-                   ServiceWorkerRegistrationListCallback&& aSuccessCB,
-                   ServiceWorkerFailureCallback&& aFailureCB) const override;
+  void GetRegistrations(
+      const ClientInfo& aClientInfo,
+      ServiceWorkerRegistrationListCallback&& aSuccessCB,
+      ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  void
-  GetReady(const ClientInfo& aClientInfo,
-           ServiceWorkerRegistrationCallback&& aSuccessCB,
-           ServiceWorkerFailureCallback&& aFailureCB) const override;
+  void GetReady(const ClientInfo& aClientInfo,
+                ServiceWorkerRegistrationCallback&& aSuccessCB,
+                ServiceWorkerFailureCallback&& aFailureCB) const override;
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerContainerImpl, override)
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_serviceworkercontainerimpl_h__ */

@@ -20,4 +20,4 @@
 class nsSMILCompositor;
 typedef nsTHashtable<nsSMILCompositor> nsSMILCompositorTable;
 
-#endif // NS_SMILCOMPOSITORTABLE_H_
+#endif  // NS_SMILCOMPOSITORTABLE_H_

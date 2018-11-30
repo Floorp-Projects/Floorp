@@ -14,11 +14,10 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ScreenLuminance, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScreenLuminance, Release)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ScreenLuminance, mScreen)
 
-JSObject*
-ScreenLuminance::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ScreenLuminance::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return ScreenLuminance_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

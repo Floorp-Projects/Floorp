@@ -23,6 +23,6 @@ void InitNSPRIOInterposing();
  */
 void ClearNSPRIOInterposing();
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // NSPRINTERPOSER_H_
+#endif  // NSPRINTERPOSER_H_

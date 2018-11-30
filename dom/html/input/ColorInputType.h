@@ -10,19 +10,16 @@
 #include "InputType.h"
 
 // input type=color
-class ColorInputType : public ::InputType
-{
-public:
-  static InputType*
-  Create(mozilla::dom::HTMLInputElement* aInputElement, void* aMemory)
-  {
+class ColorInputType : public ::InputType {
+ public:
+  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
+                           void* aMemory) {
     return new (aMemory) ColorInputType(aInputElement);
   }
 
-private:
+ private:
   explicit ColorInputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : InputType(aInputElement)
-  {}
+      : InputType(aInputElement) {}
 };
 
 #endif /* ColorInputType_h__ */

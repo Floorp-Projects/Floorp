@@ -14,23 +14,24 @@
 namespace mozilla {
 namespace widget {
 
-class TaskbarTabPreview : public nsITaskbarTabPreview,
-                          public TaskbarPreview
-{
+class TaskbarTabPreview : public nsITaskbarTabPreview, public TaskbarPreview {
   virtual ~TaskbarTabPreview();
 
-public:
-  TaskbarTabPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewController *aController, HWND aHWND, nsIDocShell *aShell);
+ public:
+  TaskbarTabPreview(ITaskbarList4 *aTaskbar,
+                    nsITaskbarPreviewController *aController, HWND aHWND,
+                    nsIDocShell *aShell);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITASKBARTABPREVIEW
   NS_FORWARD_NSITASKBARPREVIEW(TaskbarPreview::)
 
-private:
+ private:
   virtual nsresult ShowActive(bool active);
   virtual HWND &PreviewWindow();
   virtual LRESULT WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
-  static LRESULT CALLBACK GlobalWndProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
+  static LRESULT CALLBACK GlobalWndProc(HWND hWnd, UINT nMsg, WPARAM wParam,
+                                        LPARAM lParam);
 
   virtual nsresult UpdateTaskbarProperties();
   virtual nsresult Enable();
@@ -38,10 +39,8 @@ private:
   virtual void DetachFromNSWindow();
 
   // WindowHook procedure for hooking mWnd
-  static bool MainWindowHook(void *aContext,
-                               HWND hWnd, UINT nMsg,
-                               WPARAM wParam, LPARAM lParam,
-                               LRESULT *aResult);
+  static bool MainWindowHook(void *aContext, HWND hWnd, UINT nMsg,
+                             WPARAM wParam, LPARAM lParam, LRESULT *aResult);
 
   // Bug 520807 - we need to update the proxy window style based on the main
   // window's style to workaround a bug with the way the DWM displays the
@@ -53,18 +52,18 @@ private:
   nsresult UpdateNext();
 
   // Handle to the toplevel proxy window
-  HWND                    mProxyWindow;
-  nsString                mTitle;
+  HWND mProxyWindow;
+  nsString mTitle;
   nsCOMPtr<imgIContainer> mIconImage;
   // Cached Windows icon of mIconImage
-  HICON                   mIcon;
+  HICON mIcon;
   // Preview that follows this preview in the taskbar (left-to-right order)
   nsCOMPtr<nsITaskbarTabPreview> mNext;
   // True if this preview has been registered with the taskbar
-  bool                    mRegistered;
+  bool mRegistered;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 #endif /* __mozilla_widget_TaskbarTabPreview_h__ */

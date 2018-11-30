@@ -17,14 +17,11 @@
 namespace mozilla {
 namespace dom {
 
-OSFileSystem::OSFileSystem(const nsAString& aRootDir)
-{
+OSFileSystem::OSFileSystem(const nsAString& aRootDir) {
   mLocalRootPath = aRootDir;
 }
 
-already_AddRefed<FileSystemBase>
-OSFileSystem::Clone()
-{
+already_AddRefed<FileSystemBase> OSFileSystem::Clone() {
   AssertIsOnOwningThread();
 
   RefPtr<OSFileSystem> fs = new OSFileSystem(mLocalRootPath);
@@ -35,9 +32,7 @@ OSFileSystem::Clone()
   return fs.forget();
 }
 
-void
-OSFileSystem::Init(nsISupports* aParent)
-{
+void OSFileSystem::Init(nsISupports* aParent) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mParent, "No duple Init() calls");
   MOZ_ASSERT(aParent);
@@ -50,16 +45,12 @@ OSFileSystem::Init(nsISupports* aParent)
 #endif
 }
 
-nsISupports*
-OSFileSystem::GetParentObject() const
-{
+nsISupports* OSFileSystem::GetParentObject() const {
   AssertIsOnOwningThread();
   return mParent;
 }
 
-bool
-OSFileSystem::IsSafeFile(nsIFile* aFile) const
-{
+bool OSFileSystem::IsSafeFile(nsIFile* aFile) const {
   // The concept of "safe files" is specific to the Device Storage API where
   // files are only "safe" if they're of a type that is appropriate for the
   // area of device storage that is being used.
@@ -67,9 +58,7 @@ OSFileSystem::IsSafeFile(nsIFile* aFile) const
   return true;
 }
 
-bool
-OSFileSystem::IsSafeDirectory(Directory* aDir) const
-{
+bool OSFileSystem::IsSafeDirectory(Directory* aDir) const {
   // The concept of "safe directory" is specific to the Device Storage API
   // where a directory is only "safe" if it belongs to the area of device
   // storage that it is being used with.
@@ -77,25 +66,19 @@ OSFileSystem::IsSafeDirectory(Directory* aDir) const
   return true;
 }
 
-void
-OSFileSystem::Unlink()
-{
+void OSFileSystem::Unlink() {
   AssertIsOnOwningThread();
   mParent = nullptr;
 }
 
-void
-OSFileSystem::Traverse(nsCycleCollectionTraversalCallback &cb)
-{
+void OSFileSystem::Traverse(nsCycleCollectionTraversalCallback& cb) {
   AssertIsOnOwningThread();
 
   OSFileSystem* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent);
 }
 
-void
-OSFileSystem::SerializeDOMPath(nsAString& aOutput) const
-{
+void OSFileSystem::SerializeDOMPath(nsAString& aOutput) const {
   AssertIsOnOwningThread();
   aOutput = mLocalRootPath;
 }
@@ -104,10 +87,9 @@ OSFileSystem::SerializeDOMPath(nsAString& aOutput) const
  * OSFileSystemParent
  */
 
-OSFileSystemParent::OSFileSystemParent(const nsAString& aRootDir)
-{
+OSFileSystemParent::OSFileSystemParent(const nsAString& aRootDir) {
   mLocalRootPath = aRootDir;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

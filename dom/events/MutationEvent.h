@@ -15,17 +15,15 @@
 namespace mozilla {
 namespace dom {
 
-class MutationEvent : public Event
-{
-public:
-  MutationEvent(EventTarget* aOwner,
-                nsPresContext* aPresContext,
+class MutationEvent : public Event {
+ public:
+  MutationEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                 InternalMutationEvent* aEvent);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(MutationEvent, Event)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return MutationEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
@@ -37,25 +35,21 @@ public:
 
   uint16_t AttrChange();
 
-  void InitMutationEvent(const nsAString& aType,
-                         bool aCanBubble, bool aCancelable,
-                         nsINode* aRelatedNode,
+  void InitMutationEvent(const nsAString& aType, bool aCanBubble,
+                         bool aCancelable, nsINode* aRelatedNode,
                          const nsAString& aPrevValue,
-                         const nsAString& aNewValue,
-                         const nsAString& aAttrName,
-                         uint16_t& aAttrChange,
-                         ErrorResult& aRv);
+                         const nsAString& aNewValue, const nsAString& aAttrName,
+                         uint16_t& aAttrChange, ErrorResult& aRv);
 
-protected:
+ protected:
   ~MutationEvent() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::MutationEvent>
-NS_NewDOMMutationEvent(mozilla::dom::EventTarget* aOwner,
-                       nsPresContext* aPresContext,
-                       mozilla::InternalMutationEvent* aEvent);
+already_AddRefed<mozilla::dom::MutationEvent> NS_NewDOMMutationEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::InternalMutationEvent* aEvent);
 
-#endif // mozilla_dom_MutationEvent_h_
+#endif  // mozilla_dom_MutationEvent_h_

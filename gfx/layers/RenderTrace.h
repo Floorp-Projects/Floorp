@@ -24,9 +24,12 @@ namespace layers {
 
 class Layer;
 
-void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 aRootTransform = gfx::Matrix4x4(), bool aReset = true);
+void RenderTraceLayers(Layer *aLayer, const char *aColor,
+                       const gfx::Matrix4x4 aRootTransform = gfx::Matrix4x4(),
+                       bool aReset = true);
 
-void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const gfx::IntRect aRect);
+void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor,
+                                const gfx::IntRect aRect);
 void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor);
 
 void renderTraceEventStart(const char *aComment, const char *aColor);
@@ -34,43 +37,37 @@ void renderTraceEventEnd(const char *aComment, const char *aColor);
 void renderTraceEventEnd(const char *aColor);
 
 struct RenderTraceScope {
-public:
+ public:
   RenderTraceScope(const char *aComment, const char *aColor)
-    : mComment(aComment)
-    , mColor(aColor)
-  {
+      : mComment(aComment), mColor(aColor) {
     renderTraceEventStart(mComment, mColor);
   }
-  ~RenderTraceScope() {
-    renderTraceEventEnd(mComment, mColor);
-  }
-private:
+  ~RenderTraceScope() { renderTraceEventEnd(mComment, mColor); }
+
+ private:
   const char *mComment;
   const char *mColor;
 };
 
 #ifndef MOZ_RENDERTRACE
-inline void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 aRootTransform, bool aReset)
-{}
+inline void RenderTraceLayers(Layer *aLayer, const char *aColor,
+                              const gfx::Matrix4x4 aRootTransform,
+                              bool aReset) {}
 
-inline void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const gfx::IntRect aRect)
-{}
+inline void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor,
+                                       const gfx::IntRect aRect) {}
 
-inline void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor)
-{}
+inline void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor) {}
 
-inline void renderTraceEventStart(const char *aComment, const char *aColor)
-{}
+inline void renderTraceEventStart(const char *aComment, const char *aColor) {}
 
-inline void renderTraceEventEnd(const char *aComment, const char *aColor)
-{}
+inline void renderTraceEventEnd(const char *aComment, const char *aColor) {}
 
-inline void renderTraceEventEnd(const char *aColor)
-{}
+inline void renderTraceEventEnd(const char *aColor) {}
 
-#endif // MOZ_RENDERTRACE
+#endif  // MOZ_RENDERTRACE
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif //GFX_RENDERTRACE_H
+#endif  // GFX_RENDERTRACE_H

@@ -24,7 +24,7 @@ struct iovec;
 namespace mozilla {
 
 class SandboxBrokerCommon {
-public:
+ public:
   enum Operation {
     SANDBOX_FILE_OPEN,
     SANDBOX_FILE_ACCESS,
@@ -71,6 +71,6 @@ public:
                             int aPassedFd);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SandboxBrokerCommon_h
+#endif  // mozilla_SandboxBrokerCommon_h

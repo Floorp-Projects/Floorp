@@ -15,31 +15,25 @@
 namespace mozilla {
 
 // A hash entry that uses a RefPtr<dom::Element>, CSSPseudoElementType pair
-class PseudoElementHashEntry : public PLDHashEntryHdr
-{
-public:
+class PseudoElementHashEntry : public PLDHashEntryHdr {
+ public:
   typedef NonOwningAnimationTarget KeyType;
   typedef const NonOwningAnimationTarget* KeyTypePointer;
 
   explicit PseudoElementHashEntry(KeyTypePointer aKey)
-    : mElement(aKey->mElement)
-    , mPseudoType(aKey->mPseudoType) { }
+      : mElement(aKey->mElement), mPseudoType(aKey->mPseudoType) {}
   PseudoElementHashEntry(PseudoElementHashEntry&& aOther) = default;
 
   ~PseudoElementHashEntry() = default;
 
-  KeyType GetKey() const { return { mElement, mPseudoType }; }
-  bool KeyEquals(KeyTypePointer aKey) const
-  {
-    return mElement == aKey->mElement &&
-           mPseudoType == aKey->mPseudoType;
+  KeyType GetKey() const { return {mElement, mPseudoType}; }
+  bool KeyEquals(KeyTypePointer aKey) const {
+    return mElement == aKey->mElement && mPseudoType == aKey->mPseudoType;
   }
 
   static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  {
-    if (!aKey)
-      return 0;
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    if (!aKey) return 0;
 
     // Convert the scoped enum into an integer while adding it to hash.
     // Note: CSSPseudoElementTypeBase is uint8_t, so we convert it into
@@ -53,6 +47,6 @@ public:
   CSSPseudoElementType mPseudoType;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_PseudoElementHashEntry_h
+#endif  // mozilla_PseudoElementHashEntry_h

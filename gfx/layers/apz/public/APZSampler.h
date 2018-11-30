@@ -9,8 +9,8 @@
 
 #include <unordered_map>
 
-#include "base/platform_thread.h" // for PlatformThreadId
-#include "mozilla/layers/AsyncCompositionManager.h" // for AsyncTransform
+#include "base/platform_thread.h"                    // for PlatformThreadId
+#include "mozilla/layers/AsyncCompositionManager.h"  // for AsyncTransform
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -26,7 +26,7 @@ struct Transaction;
 class TransactionWrapper;
 struct WrTransformProperty;
 struct WrWindowId;
-} // namespace wr
+}  // namespace wr
 
 namespace layers {
 
@@ -42,9 +42,8 @@ struct ScrollbarData;
 class APZSampler {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZSampler)
 
-public:
-  APZSampler(const RefPtr<APZCTreeManager>& aApz,
-             bool aIsUsingWebRender);
+ public:
+  APZSampler(const RefPtr<APZCTreeManager>& aApz, bool aIsUsingWebRender);
 
   void SetWebRenderWindowId(const wr::WindowId& aWindowId);
 
@@ -77,17 +76,20 @@ public:
    */
   LayerToParentLayerMatrix4x4 ComputeTransformForScrollThumb(
       const LayerToParentLayerMatrix4x4& aCurrentTransform,
-      const LayerMetricsWrapper& aContent,
-      const ScrollbarData& aThumbData,
+      const LayerMetricsWrapper& aContent, const ScrollbarData& aThumbData,
       bool aScrollbarIsDescendant,
       AsyncTransformComponentMatrix* aOutClipTransform);
 
   CSSRect GetCurrentAsyncLayoutViewport(const LayerMetricsWrapper& aLayer);
-  ParentLayerPoint GetCurrentAsyncScrollOffset(const LayerMetricsWrapper& aLayer);
+  ParentLayerPoint GetCurrentAsyncScrollOffset(
+      const LayerMetricsWrapper& aLayer);
   AsyncTransform GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer);
-  AsyncTransform GetCurrentAsyncTransformForFixedAdjustment(const LayerMetricsWrapper& aLayer);
-  AsyncTransformComponentMatrix GetOverscrollTransform(const LayerMetricsWrapper& aLayer);
-  AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(const LayerMetricsWrapper& aLayer);
+  AsyncTransform GetCurrentAsyncTransformForFixedAdjustment(
+      const LayerMetricsWrapper& aLayer);
+  AsyncTransformComponentMatrix GetOverscrollTransform(
+      const LayerMetricsWrapper& aLayer);
+  AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(
+      const LayerMetricsWrapper& aLayer);
 
   void MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer);
   bool HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer);
@@ -104,21 +106,22 @@ public:
    */
   bool IsSamplerThread() const;
 
-protected:
+ protected:
   virtual ~APZSampler();
 
-  static already_AddRefed<APZSampler> GetSampler(const wr::WrWindowId& aWindowId);
+  static already_AddRefed<APZSampler> GetSampler(
+      const wr::WrWindowId& aWindowId);
 
-private:
+ private:
   RefPtr<APZCTreeManager> mApz;
   bool mIsUsingWebRender;
 
-  // Used to manage the mapping from a WR window id to APZSampler. These are only
-  // used if WebRender is enabled. Both sWindowIdMap and mWindowId should only
-  // be used while holding the sWindowIdLock. Note that we use a StaticAutoPtr
-  // wrapper on sWindowIdMap to avoid a static initializer for the unordered_map.
-  // This also avoids the initializer/memory allocation in cases where we're
-  // not using WebRender.
+  // Used to manage the mapping from a WR window id to APZSampler. These are
+  // only used if WebRender is enabled. Both sWindowIdMap and mWindowId should
+  // only be used while holding the sWindowIdLock. Note that we use a
+  // StaticAutoPtr wrapper on sWindowIdMap to avoid a static initializer for the
+  // unordered_map. This also avoids the initializer/memory allocation in cases
+  // where we're not using WebRender.
   static StaticMutex sWindowIdLock;
   static StaticAutoPtr<std::unordered_map<uint64_t, APZSampler*>> sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
@@ -135,7 +138,7 @@ private:
   TimeStamp mSampleTime;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_APZSampler_h
+#endif  // mozilla_layers_APZSampler_h

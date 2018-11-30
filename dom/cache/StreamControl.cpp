@@ -10,40 +10,31 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-void
-StreamControl::AddReadStream(ReadStream::Controllable* aReadStream)
-{
+void StreamControl::AddReadStream(ReadStream::Controllable* aReadStream) {
   AssertOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aReadStream);
   MOZ_ASSERT(!mReadStreamList.Contains(aReadStream));
   mReadStreamList.AppendElement(aReadStream);
 }
 
-void
-StreamControl::ForgetReadStream(ReadStream::Controllable* aReadStream)
-{
+void StreamControl::ForgetReadStream(ReadStream::Controllable* aReadStream) {
   AssertOwningThread();
   MOZ_ALWAYS_TRUE(mReadStreamList.RemoveElement(aReadStream));
 }
 
-void
-StreamControl::NoteClosed(ReadStream::Controllable* aReadStream,
-                          const nsID& aId)
-{
+void StreamControl::NoteClosed(ReadStream::Controllable* aReadStream,
+                               const nsID& aId) {
   AssertOwningThread();
   ForgetReadStream(aReadStream);
   NoteClosedAfterForget(aId);
 }
 
-StreamControl::~StreamControl()
-{
+StreamControl::~StreamControl() {
   // owning thread only, but can't call virtual AssertOwningThread in destructor
   MOZ_DIAGNOSTIC_ASSERT(mReadStreamList.IsEmpty());
 }
 
-void
-StreamControl::CloseReadStreams(const nsID& aId)
-{
+void StreamControl::CloseReadStreams(const nsID& aId) {
   AssertOwningThread();
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   uint32_t closedCount = 0;
@@ -63,9 +54,7 @@ StreamControl::CloseReadStreams(const nsID& aId)
   MOZ_DIAGNOSTIC_ASSERT(closedCount > 0);
 }
 
-void
-StreamControl::CloseAllReadStreams()
-{
+void StreamControl::CloseAllReadStreams() {
   AssertOwningThread();
 
   ReadStreamList::ForwardIterator iter(mReadStreamList);
@@ -74,9 +63,7 @@ StreamControl::CloseAllReadStreams()
   }
 }
 
-void
-StreamControl::CloseAllReadStreamsWithoutReporting()
-{
+void StreamControl::CloseAllReadStreamsWithoutReporting() {
   AssertOwningThread();
 
   ReadStreamList::ForwardIterator iter(mReadStreamList);
@@ -88,9 +75,7 @@ StreamControl::CloseAllReadStreamsWithoutReporting()
   }
 }
 
-bool
-StreamControl::HasEverBeenRead() const
-{
+bool StreamControl::HasEverBeenRead() const {
   ReadStreamList::ForwardIterator iter(mReadStreamList);
   while (iter.HasMore()) {
     if (iter.GetNext()->HasEverBeenRead()) {
@@ -100,6 +85,6 @@ StreamControl::HasEverBeenRead() const
   return false;
 }
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

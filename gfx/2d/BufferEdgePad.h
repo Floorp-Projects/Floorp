@@ -14,9 +14,10 @@ namespace gfx {
 
 class DrawTarget;
 
-void PadDrawTargetOutFromRegion(DrawTarget* aDrawTarget, const nsIntRegion &aRegion);
+void PadDrawTargetOutFromRegion(DrawTarget* aDrawTarget,
+                                const nsIntRegion& aRegion);
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_BUFFER_EDGE_PAD_H
+#endif  // MOZILLA_GFX_BUFFER_EDGE_PAD_H

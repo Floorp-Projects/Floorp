@@ -14,121 +14,110 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS(nsConverterOutputStream,
-                  nsIUnicharOutputStream,
+NS_IMPL_ISUPPORTS(nsConverterOutputStream, nsIUnicharOutputStream,
                   nsIConverterOutputStream)
 
-nsConverterOutputStream::~nsConverterOutputStream()
-{
-    Close();
-}
+nsConverterOutputStream::~nsConverterOutputStream() { Close(); }
 
 NS_IMETHODIMP
 nsConverterOutputStream::Init(nsIOutputStream* aOutStream,
-                              const char* aCharset)
-{
-    MOZ_ASSERT(aOutStream, "Null output stream!");
+                              const char* aCharset) {
+  MOZ_ASSERT(aOutStream, "Null output stream!");
 
-    const Encoding* encoding;
-    if (!aCharset) {
-      encoding = UTF_8_ENCODING;
-    } else {
-      encoding = Encoding::ForLabelNoReplacement(MakeStringSpan(aCharset));
-      if (!encoding || encoding == UTF_16LE_ENCODING ||
-          encoding == UTF_16BE_ENCODING) {
-        return NS_ERROR_UCONV_NOCONV;
-      }
+  const Encoding* encoding;
+  if (!aCharset) {
+    encoding = UTF_8_ENCODING;
+  } else {
+    encoding = Encoding::ForLabelNoReplacement(MakeStringSpan(aCharset));
+    if (!encoding || encoding == UTF_16LE_ENCODING ||
+        encoding == UTF_16BE_ENCODING) {
+      return NS_ERROR_UCONV_NOCONV;
     }
+  }
 
-    mConverter = encoding->NewEncoder();
+  mConverter = encoding->NewEncoder();
 
-    mOutStream = aOutStream;
+  mOutStream = aOutStream;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsConverterOutputStream::Write(uint32_t aCount, const char16_t* aChars,
-                               bool* aSuccess)
-{
-    if (!mOutStream) {
-        NS_ASSERTION(!mConverter, "Closed streams shouldn't have converters");
-        return NS_BASE_STREAM_CLOSED;
-    }
-    MOZ_ASSERT(mConverter, "Must have a converter when not closed");
-    uint8_t buffer[4096];
-    auto dst = MakeSpan(buffer);
-    auto src = MakeSpan(aChars, aCount);
-    for (;;) {
-      uint32_t result;
-      size_t read;
-      size_t written;
-      bool hadErrors;
-      Tie(result, read, written, hadErrors) =
-        mConverter->EncodeFromUTF16(src, dst, false);
-      Unused << hadErrors;
-      src = src.From(read);
-      uint32_t streamWritten;
-      nsresult rv = mOutStream->Write(
-        reinterpret_cast<char*>(dst.Elements()), written, &streamWritten);
-      *aSuccess = NS_SUCCEEDED(rv) && written == streamWritten;
-      if (!(*aSuccess)) {
-        return rv;
-      }
-      if (result == kInputEmpty) {
-        return NS_OK;
-      }
-    }
-}
-
-NS_IMETHODIMP
-nsConverterOutputStream::WriteString(const nsAString& aString, bool* aSuccess)
-{
-    int32_t inLen = aString.Length();
-    nsAString::const_iterator i;
-    aString.BeginReading(i);
-    return Write(inLen, i.get(), aSuccess);
-}
-
-NS_IMETHODIMP
-nsConverterOutputStream::Flush()
-{
-    if (!mOutStream)
-        return NS_OK; // Already closed.
-
-    // If we are encoding to ISO-2022-JP, potentially
-    // transition back to the ASCII state. The buffer
-    // needs to be large enough for an additional NCR,
-    // though.
-    uint8_t buffer[12];
-    auto dst = MakeSpan(buffer);
-    Span<char16_t> src(nullptr);
+                               bool* aSuccess) {
+  if (!mOutStream) {
+    NS_ASSERTION(!mConverter, "Closed streams shouldn't have converters");
+    return NS_BASE_STREAM_CLOSED;
+  }
+  MOZ_ASSERT(mConverter, "Must have a converter when not closed");
+  uint8_t buffer[4096];
+  auto dst = MakeSpan(buffer);
+  auto src = MakeSpan(aChars, aCount);
+  for (;;) {
     uint32_t result;
     size_t read;
     size_t written;
     bool hadErrors;
     Tie(result, read, written, hadErrors) =
-      mConverter->EncodeFromUTF16(src, dst, true);
+        mConverter->EncodeFromUTF16(src, dst, false);
     Unused << hadErrors;
-    MOZ_ASSERT(result == kInputEmpty);
+    src = src.From(read);
     uint32_t streamWritten;
-    if (!written) {
+    nsresult rv = mOutStream->Write(reinterpret_cast<char*>(dst.Elements()),
+                                    written, &streamWritten);
+    *aSuccess = NS_SUCCEEDED(rv) && written == streamWritten;
+    if (!(*aSuccess)) {
+      return rv;
+    }
+    if (result == kInputEmpty) {
       return NS_OK;
     }
-    return mOutStream->Write(
-      reinterpret_cast<char*>(dst.Elements()), written, &streamWritten);
+  }
 }
 
 NS_IMETHODIMP
-nsConverterOutputStream::Close()
-{
-    if (!mOutStream)
-        return NS_OK; // Already closed.
+nsConverterOutputStream::WriteString(const nsAString& aString, bool* aSuccess) {
+  int32_t inLen = aString.Length();
+  nsAString::const_iterator i;
+  aString.BeginReading(i);
+  return Write(inLen, i.get(), aSuccess);
+}
 
-    nsresult rv1 = Flush();
+NS_IMETHODIMP
+nsConverterOutputStream::Flush() {
+  if (!mOutStream) return NS_OK;  // Already closed.
 
-    nsresult rv2 = mOutStream->Close();
-    mOutStream = nullptr;
-    mConverter = nullptr;
-    return NS_FAILED(rv1) ? rv1 : rv2;
+  // If we are encoding to ISO-2022-JP, potentially
+  // transition back to the ASCII state. The buffer
+  // needs to be large enough for an additional NCR,
+  // though.
+  uint8_t buffer[12];
+  auto dst = MakeSpan(buffer);
+  Span<char16_t> src(nullptr);
+  uint32_t result;
+  size_t read;
+  size_t written;
+  bool hadErrors;
+  Tie(result, read, written, hadErrors) =
+      mConverter->EncodeFromUTF16(src, dst, true);
+  Unused << hadErrors;
+  MOZ_ASSERT(result == kInputEmpty);
+  uint32_t streamWritten;
+  if (!written) {
+    return NS_OK;
+  }
+  return mOutStream->Write(reinterpret_cast<char*>(dst.Elements()), written,
+                           &streamWritten);
+}
+
+NS_IMETHODIMP
+nsConverterOutputStream::Close() {
+  if (!mOutStream) return NS_OK;  // Already closed.
+
+  nsresult rv1 = Flush();
+
+  nsresult rv2 = mOutStream->Close();
+  mOutStream = nullptr;
+  mConverter = nullptr;
+  return NS_FAILED(rv1) ? rv1 : rv2;
 }

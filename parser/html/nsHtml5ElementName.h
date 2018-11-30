@@ -54,9 +54,8 @@ class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
 
-class nsHtml5ElementName
-{
-public:
+class nsHtml5ElementName {
+ public:
   static const int32_t GROUP_MASK = 127;
 
   static const int32_t NOT_INTERNED = (1 << 30);
@@ -75,24 +74,23 @@ public:
 
   static const int32_t OPTIONAL_END_TAG = (1 << 23);
 
-private:
+ private:
   RefPtr<nsAtom> name;
   RefPtr<nsAtom> camelCaseName;
   mozilla::dom::HTMLContentCreatorFunction htmlCreator;
   mozilla::dom::SVGContentCreatorFunction svgCreator;
-public:
+
+ public:
   int32_t flags;
   inline nsAtom* getName() { return name; }
 
   inline nsAtom* getCamelCaseName() { return camelCaseName; }
 
-  inline mozilla::dom::HTMLContentCreatorFunction getHtmlCreator()
-  {
+  inline mozilla::dom::HTMLContentCreatorFunction getHtmlCreator() {
     return htmlCreator;
   }
 
-  inline mozilla::dom::SVGContentCreatorFunction getSvgCreator()
-  {
+  inline mozilla::dom::SVGContentCreatorFunction getSvgCreator() {
     return svgCreator;
   }
 
@@ -100,14 +98,12 @@ public:
 
   inline int32_t getGroup() { return flags & nsHtml5ElementName::GROUP_MASK; }
 
-  inline bool isInterned()
-  {
+  inline bool isInterned() {
     return !(flags & nsHtml5ElementName::NOT_INTERNED);
   }
 
   inline static int32_t levelOrderBinarySearch(jArray<int32_t, int32_t> data,
-                                               int32_t key)
-  {
+                                               int32_t key) {
     int32_t n = data.length;
     int32_t i = 0;
     while (i < n) {
@@ -123,9 +119,8 @@ public:
     return -1;
   }
 
-  inline static nsHtml5ElementName*
-  elementNameByBuffer(char16_t* buf, int32_t length, nsHtml5AtomTable* interner)
-  {
+  inline static nsHtml5ElementName* elementNameByBuffer(
+      char16_t* buf, int32_t length, nsHtml5AtomTable* interner) {
     uint32_t hash = nsHtml5ElementName::bufToHash(buf, length);
     jArray<int32_t, int32_t> hashes;
     hashes = nsHtml5ElementName::ELEMENT_HASHES;
@@ -134,7 +129,7 @@ public:
       return nullptr;
     } else {
       nsHtml5ElementName* elementName =
-        nsHtml5ElementName::ELEMENT_NAMES[index];
+          nsHtml5ElementName::ELEMENT_NAMES[index];
       nsAtom* name = elementName->name;
       if (!nsHtml5Portability::localEqualsBuffer(name, buf, length)) {
         return nullptr;
@@ -143,9 +138,8 @@ public:
     }
   }
 
-private:
-  inline static uint32_t bufToHash(char16_t* buf, int32_t length)
-  {
+ private:
+  inline static uint32_t bufToHash(char16_t* buf, int32_t length) {
     uint32_t len = length;
     uint32_t first = buf[0];
     first <<= 19;
@@ -174,17 +168,15 @@ private:
     return len + first + second + third + fourth + fifth;
   }
 
-  nsHtml5ElementName(nsAtom* name,
-                     nsAtom* camelCaseName,
+  nsHtml5ElementName(nsAtom* name, nsAtom* camelCaseName,
                      mozilla::dom::HTMLContentCreatorFunction htmlCreator,
                      mozilla::dom::SVGContentCreatorFunction svgCreator,
                      int32_t flags);
 
-public:
+ public:
   nsHtml5ElementName();
   ~nsHtml5ElementName();
-  inline void setNameForNonInterned(nsAtom* name, bool custom)
-  {
+  inline void setNameForNonInterned(nsAtom* name, bool custom) {
     this->name = name;
     this->camelCaseName = name;
     if (custom) {
@@ -405,10 +397,12 @@ public:
   static nsHtml5ElementName* ELT_RUBY;
   static nsHtml5ElementName* ELT_SUMMARY;
   static nsHtml5ElementName* ELT_TBODY;
-private:
+
+ private:
   static nsHtml5ElementName** ELEMENT_NAMES;
   static staticJArray<int32_t, int32_t> ELEMENT_HASHES;
-public:
+
+ public:
   static void initializeStatics();
   static void releaseStatics();
 };

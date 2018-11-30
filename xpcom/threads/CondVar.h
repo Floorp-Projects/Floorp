@@ -13,7 +13,7 @@
 
 #ifdef MOZILLA_INTERNAL_API
 #include "GeckoProfiler.h"
-#endif //MOZILLA_INTERNAL_API
+#endif  // MOZILLA_INTERNAL_API
 
 namespace mozilla {
 
@@ -23,9 +23,8 @@ namespace mozilla {
  * you want to intentionally "leak" a CondVar until shutdown; in these cases,
  * OffTheBooksCondVar is for you.
  */
-class OffTheBooksCondVar : BlockingResourceBase
-{
-public:
+class OffTheBooksCondVar : BlockingResourceBase {
+ public:
   /**
    * OffTheBooksCondVar
    *
@@ -38,37 +37,30 @@ public:
    *          by Monitor::DestroyMonitor()
    **/
   OffTheBooksCondVar(OffTheBooksMutex& aLock, const char* aName)
-    : BlockingResourceBase(aName, eCondVar)
-    , mLock(&aLock)
-  {
-  }
+      : BlockingResourceBase(aName, eCondVar), mLock(&aLock) {}
 
   /**
    * ~OffTheBooksCondVar
    * Clean up after this OffTheBooksCondVar, but NOT its associated Mutex.
    **/
-  ~OffTheBooksCondVar()
-  {
-  }
+  ~OffTheBooksCondVar() {}
 
   /**
    * Wait
    * @see prcvar.h
    **/
 #ifndef DEBUG
-  void Wait()
-  {
+  void Wait() {
 #ifdef MOZILLA_INTERNAL_API
     AUTO_PROFILER_THREAD_SLEEP;
-#endif //MOZILLA_INTERNAL_API
+#endif  // MOZILLA_INTERNAL_API
     mImpl.wait(*mLock);
   }
 
-  CVStatus Wait(TimeDuration aDuration)
-  {
+  CVStatus Wait(TimeDuration aDuration) {
 #ifdef MOZILLA_INTERNAL_API
     AUTO_PROFILER_THREAD_SLEEP;
-#endif //MOZILLA_INTERNAL_API
+#endif  // MOZILLA_INTERNAL_API
     return mImpl.wait_for(*mLock, aDuration);
   }
 #else
@@ -81,8 +73,7 @@ public:
    * Notify
    * @see prcvar.h
    **/
-  nsresult Notify()
-  {
+  nsresult Notify() {
     mImpl.notify_one();
     return NS_OK;
   }
@@ -91,8 +82,7 @@ public:
    * NotifyAll
    * @see prcvar.h
    **/
-  nsresult NotifyAll()
-  {
+  nsresult NotifyAll() {
     mImpl.notify_all();
     return NS_OK;
   }
@@ -102,17 +92,13 @@ public:
    * AssertCurrentThreadOwnsMutex
    * @see Mutex::AssertCurrentThreadOwns
    **/
-  void AssertCurrentThreadOwnsMutex()
-  {
-    mLock->AssertCurrentThreadOwns();
-  }
+  void AssertCurrentThreadOwnsMutex() { mLock->AssertCurrentThreadOwns(); }
 
   /**
    * AssertNotCurrentThreadOwnsMutex
    * @see Mutex::AssertNotCurrentThreadOwns
    **/
-  void AssertNotCurrentThreadOwnsMutex()
-  {
+  void AssertNotCurrentThreadOwnsMutex() {
     mLock->AssertNotCurrentThreadOwns();
   }
 
@@ -122,7 +108,7 @@ public:
 
 #endif  // ifdef DEBUG
 
-private:
+ private:
   OffTheBooksCondVar();
   OffTheBooksCondVar(const OffTheBooksCondVar&) = delete;
   OffTheBooksCondVar& operator=(const OffTheBooksCondVar&) = delete;
@@ -136,27 +122,21 @@ private:
  * Vanilla condition variable.  Please don't use this unless you have a
  * compelling reason --- Monitor provides a simpler API.
  */
-class CondVar : public OffTheBooksCondVar
-{
-public:
+class CondVar : public OffTheBooksCondVar {
+ public:
   CondVar(OffTheBooksMutex& aLock, const char* aName)
-    : OffTheBooksCondVar(aLock, aName)
-  {
+      : OffTheBooksCondVar(aLock, aName) {
     MOZ_COUNT_CTOR(CondVar);
   }
 
-  ~CondVar()
-  {
-    MOZ_COUNT_DTOR(CondVar);
-  }
+  ~CondVar() { MOZ_COUNT_DTOR(CondVar); }
 
-private:
+ private:
   CondVar();
   CondVar(const CondVar&);
   CondVar& operator=(const CondVar&);
 };
 
-} // namespace mozilla
-
+}  // namespace mozilla
 
 #endif  // ifndef mozilla_CondVar_h

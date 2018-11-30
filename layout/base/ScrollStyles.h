@@ -8,8 +8,8 @@
 #define mozilla_ScrollStyles_h
 
 #include <stdint.h>
-#include "nsStyleConsts.h" // for NS_STYLE_SCROLL_SNAP_*
-#include "nsStyleCoord.h" // for nsStyleCoord
+#include "nsStyleConsts.h"  // for NS_STYLE_SCROLL_SNAP_*
+#include "nsStyleCoord.h"   // for nsStyleCoord
 #include "mozilla/dom/WindowBinding.h"
 
 // Forward declarations
@@ -17,8 +17,7 @@ struct nsStyleDisplay;
 
 namespace mozilla {
 
-struct ScrollStyles
-{
+struct ScrollStyles {
   // Always one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
   // or NS_STYLE_OVERFLOW_AUTO.
   uint8_t mHorizontal;
@@ -38,15 +37,15 @@ struct ScrollStyles
   nsStyleCoord::CalcValue mScrollSnapDestinationY;
 
   ScrollStyles(uint8_t aH, uint8_t aV)
-    : mHorizontal(aH), mVertical(aV),
-      mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
-      mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
-      mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
-      mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE),
-      mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE),
-      mScrollSnapPointsX(nsStyleCoord(eStyleUnit_None)),
-      mScrollSnapPointsY(nsStyleCoord(eStyleUnit_None)) {
-
+      : mHorizontal(aH),
+        mVertical(aV),
+        mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
+        mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
+        mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
+        mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE),
+        mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE),
+        mScrollSnapPointsX(nsStyleCoord(eStyleUnit_None)),
+        mScrollSnapPointsY(nsStyleCoord(eStyleUnit_None)) {
     mScrollSnapDestinationX.mPercent = 0;
     mScrollSnapDestinationX.mLength = nscoord(0.0f);
     mScrollSnapDestinationX.mHasPercent = false;
@@ -58,7 +57,8 @@ struct ScrollStyles
   explicit ScrollStyles(const nsStyleDisplay* aDisplay);
   ScrollStyles(uint8_t aH, uint8_t aV, const nsStyleDisplay* aDisplay);
   bool operator==(const ScrollStyles& aStyles) const {
-    return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical &&
+    return aStyles.mHorizontal == mHorizontal &&
+           aStyles.mVertical == mVertical &&
            aStyles.mScrollBehavior == mScrollBehavior &&
            aStyles.mOverscrollBehaviorX == mOverscrollBehaviorX &&
            aStyles.mOverscrollBehaviorY == mOverscrollBehaviorY &&
@@ -78,11 +78,11 @@ struct ScrollStyles
   }
   bool IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
     return aBehavior == dom::ScrollBehavior::Smooth ||
-             (aBehavior == dom::ScrollBehavior::Auto &&
-               mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
+           (aBehavior == dom::ScrollBehavior::Auto &&
+            mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ScrollStyles_h
+#endif  // mozilla_ScrollStyles_h

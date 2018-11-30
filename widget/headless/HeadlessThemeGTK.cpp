@@ -9,26 +9,21 @@
 #include "nsStyleConsts.h"
 #include "nsIFrame.h"
 
-
 namespace mozilla {
 namespace widget {
 
 NS_IMPL_ISUPPORTS_INHERITED(HeadlessThemeGTK, nsNativeTheme, nsITheme)
 
 NS_IMETHODIMP
-HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext,
-                                       nsIFrame* aFrame,
+HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
                                        const nsRect& aRect,
-                                       const nsRect& aDirtyRect)
-{
+                                       const nsRect& aDirtyRect) {
   return NS_OK;
 }
 
-LayoutDeviceIntMargin
-HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                  StyleAppearance aAppearance)
-{
+LayoutDeviceIntMargin HeadlessThemeGTK::GetWidgetBorder(
+    nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
   if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
     aAppearance = StyleAppearance::Menulist;
@@ -119,12 +114,10 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
   return result;
 }
 
-bool
-HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
-                                   nsIFrame* aFrame,
-                                   StyleAppearance aAppearance,
-                                   LayoutDeviceIntMargin* aResult)
-{
+bool HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
+                                        nsIFrame* aFrame,
+                                        StyleAppearance aAppearance,
+                                        LayoutDeviceIntMargin* aResult) {
   if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
     aAppearance = StyleAppearance::Menulist;
@@ -169,14 +162,12 @@ HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
   return false;
 }
 
-
 NS_IMETHODIMP
 HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
                                        LayoutDeviceIntSize* aResult,
-                                       bool* aIsOverridable)
-{
+                                       bool* aIsOverridable) {
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
 
@@ -319,32 +310,25 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 NS_IMETHODIMP
 HeadlessThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
                                      StyleAppearance aAppearance,
-                                     nsAtom* aAttribute,
-                                     bool* aShouldRepaint,
-                                     const nsAttrValue* aOldValue)
-{
+                                     nsAtom* aAttribute, bool* aShouldRepaint,
+                                     const nsAttrValue* aOldValue) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HeadlessThemeGTK::ThemeChanged()
-{
-  return NS_OK;
-}
+HeadlessThemeGTK::ThemeChanged() { return NS_OK; }
 
-static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, uint32_t aNamespace)
-{
-  nsIContent *content = aFrame ? aFrame->GetContent() : nullptr;
-  if (!content)
-    return false;
+static bool IsFrameContentNodeInNamespace(nsIFrame* aFrame,
+                                          uint32_t aNamespace) {
+  nsIContent* content = aFrame ? aFrame->GetContent() : nullptr;
+  if (!content) return false;
   return content->IsInNamespace(aNamespace);
 }
 
 NS_IMETHODIMP_(bool)
 HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
-                                      StyleAppearance aAppearance)
-{
+                                      StyleAppearance aAppearance) {
   if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
     aAppearance = StyleAppearance::Menulist;
@@ -430,8 +414,9 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
-      return (!aFrame || IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) &&
-              !IsWidgetStyled(aPresContext, aFrame, aAppearance);
+      return (!aFrame ||
+              IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) &&
+             !IsWidgetStyled(aPresContext, aFrame, aAppearance);
     default:
       break;
   }
@@ -439,47 +424,38 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP_(bool)
-HeadlessThemeGTK::WidgetIsContainer(StyleAppearance aAppearance)
-{
+HeadlessThemeGTK::WidgetIsContainer(StyleAppearance aAppearance) {
   if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
     aAppearance = StyleAppearance::Menulist;
   }
 
-    if (aAppearance == StyleAppearance::MenulistButton ||
-        aAppearance == StyleAppearance::MozMenulistButton ||
-        aAppearance == StyleAppearance::Radio ||
-        aAppearance == StyleAppearance::RangeThumb ||
-        aAppearance == StyleAppearance::Checkbox ||
-        aAppearance == StyleAppearance::TabScrollArrowBack ||
-        aAppearance == StyleAppearance::TabScrollArrowForward ||
-        aAppearance == StyleAppearance::ButtonArrowUp ||
-        aAppearance == StyleAppearance::ButtonArrowDown ||
-        aAppearance == StyleAppearance::ButtonArrowNext ||
-        aAppearance == StyleAppearance::ButtonArrowPrevious) {
-
+  if (aAppearance == StyleAppearance::MenulistButton ||
+      aAppearance == StyleAppearance::MozMenulistButton ||
+      aAppearance == StyleAppearance::Radio ||
+      aAppearance == StyleAppearance::RangeThumb ||
+      aAppearance == StyleAppearance::Checkbox ||
+      aAppearance == StyleAppearance::TabScrollArrowBack ||
+      aAppearance == StyleAppearance::TabScrollArrowForward ||
+      aAppearance == StyleAppearance::ButtonArrowUp ||
+      aAppearance == StyleAppearance::ButtonArrowDown ||
+      aAppearance == StyleAppearance::ButtonArrowNext ||
+      aAppearance == StyleAppearance::ButtonArrowPrevious) {
     return false;
   }
   return true;
 }
 
-bool
-HeadlessThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aAppearance)
-{
-   if (aAppearance == StyleAppearance::Menulist ||
-       aAppearance == StyleAppearance::Button ||
-       aAppearance == StyleAppearance::Treeheadercell) {
+bool HeadlessThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
+  if (aAppearance == StyleAppearance::Menulist ||
+      aAppearance == StyleAppearance::Button ||
+      aAppearance == StyleAppearance::Treeheadercell) {
     return true;
   }
   return false;
 }
 
-bool
-HeadlessThemeGTK::ThemeNeedsComboboxDropmarker()
-{
-  return false;
-}
+bool HeadlessThemeGTK::ThemeNeedsComboboxDropmarker() { return false; }
 
-
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

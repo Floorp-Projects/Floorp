@@ -12,27 +12,26 @@
 namespace mozilla {
 namespace widget {
 
-class CompositorWidgetParent final
- : public PCompositorWidgetParent,
-   public GtkCompositorWidget
-{
-public:
+class CompositorWidgetParent final : public PCompositorWidgetParent,
+                                     public GtkCompositorWidget {
+ public:
   explicit CompositorWidgetParent(const CompositorWidgetInitData& aInitData,
                                   const layers::CompositorOptions& aOptions);
   ~CompositorWidgetParent() override;
 
-  void ActorDestroy(ActorDestroyReason aWhy) override { }
+  void ActorDestroy(ActorDestroyReason aWhy) override {}
 
   void ObserveVsync(VsyncObserver* aObserver) override;
   RefPtr<VsyncObserver> GetVsyncObserver() const override;
 
-  mozilla::ipc::IPCResult RecvNotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
+  mozilla::ipc::IPCResult RecvNotifyClientSizeChanged(
+      const LayoutDeviceIntSize& aClientSize) override;
 
-private:
+ private:
   RefPtr<VsyncObserver> mVsyncObserver;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // widget_gtk_CompositorWidgetParent_h
+#endif  // widget_gtk_CompositorWidgetParent_h

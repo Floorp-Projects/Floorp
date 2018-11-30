@@ -26,27 +26,21 @@
  * ASCII case-insensitive comparator.  (for Unicode case-insensitive
  * comparision, see nsUnicharUtils.h)
  */
-class nsCaseInsensitiveCStringComparator
-  : public nsCStringComparator
-{
-public:
-  nsCaseInsensitiveCStringComparator()
-  {
-  }
+class nsCaseInsensitiveCStringComparator : public nsCStringComparator {
+ public:
+  nsCaseInsensitiveCStringComparator() {}
   typedef char char_type;
 
-  virtual int operator()(const char_type*, const char_type*,
-                         uint32_t, uint32_t) const override;
+  virtual int operator()(const char_type*, const char_type*, uint32_t,
+                         uint32_t) const override;
 };
 
-class nsCaseInsensitiveCStringArrayComparator
-{
-public:
-  template<class A, class B>
-  bool Equals(const A& aStrA, const B& aStrB) const
-  {
+class nsCaseInsensitiveCStringArrayComparator {
+ public:
+  template <class A, class B>
+  bool Equals(const A& aStrA, const B& aStrB) const {
     return aStrA.Equals(aStrB, nsCaseInsensitiveCStringComparator());
   }
 };
 
-#endif // !defined(nsAString_h___)
+#endif  // !defined(nsAString_h___)

@@ -14,34 +14,18 @@ namespace mozilla {
 
 using namespace gfx;
 
-static inline Float
-Square(Float x)
-{
-  return x * x;
-}
+static inline Float Square(Float x) { return x * x; }
 
-static Point
-PointRotateCCW90(const Point& aP)
-{
-  return Point(aP.y, -aP.x);
-}
+static Point PointRotateCCW90(const Point& aP) { return Point(aP.y, -aP.x); }
 
-struct BestOverlap
-{
+struct BestOverlap {
   Float overlap;
   size_t count;
 
-  BestOverlap()
-    : overlap(0.0f)
-    , count(0)
-  {
-  }
+  BestOverlap() : overlap(0.0f), count(0) {}
 
   BestOverlap(Float aOverlap, size_t aCount)
-    : overlap(aOverlap)
-    , count(aCount)
-  {
-  }
+      : overlap(aOverlap), count(aCount) {}
 };
 
 static const size_t DottedCornerCacheSize = 256;
@@ -49,34 +33,29 @@ nsDataHashtable<FourFloatsHashKey, BestOverlap> DottedCornerCache;
 
 DottedCornerFinder::DottedCornerFinder(const Bezier& aOuterBezier,
                                        const Bezier& aInnerBezier,
-                                       Corner aCorner,
-                                       Float aBorderRadiusX,
-                                       Float aBorderRadiusY,
-                                       const Point& aC0,
-                                       Float aR0,
-                                       const Point& aCn,
-                                       Float aRn,
+                                       Corner aCorner, Float aBorderRadiusX,
+                                       Float aBorderRadiusY, const Point& aC0,
+                                       Float aR0, const Point& aCn, Float aRn,
                                        const Size& aCornerDim)
-  : mOuterBezier(aOuterBezier)
-  , mInnerBezier(aInnerBezier)
-  , mCorner(aCorner)
-  , mNormalSign((aCorner == C_TL || aCorner == C_BR) ? -1.0f : 1.0f)
-  , mC0(aC0)
-  , mCn(aCn)
-  , mR0(aR0)
-  , mRn(aRn)
-  , mMaxR(std::max(aR0, aRn))
-  , mCenterCurveOrigin(mC0.x, mCn.y)
-  , mCenterCurveR(0.0)
-  , mInnerCurveOrigin(mInnerBezier.mPoints[0].x, mInnerBezier.mPoints[3].y)
-  , mBestOverlap(0.0f)
-  , mHasZeroBorderWidth(false)
-  , mHasMore(true)
-  , mMaxCount(aCornerDim.width + aCornerDim.height)
-  , mType(OTHER)
-  , mI(0)
-  , mCount(0)
-{
+    : mOuterBezier(aOuterBezier),
+      mInnerBezier(aInnerBezier),
+      mCorner(aCorner),
+      mNormalSign((aCorner == C_TL || aCorner == C_BR) ? -1.0f : 1.0f),
+      mC0(aC0),
+      mCn(aCn),
+      mR0(aR0),
+      mRn(aRn),
+      mMaxR(std::max(aR0, aRn)),
+      mCenterCurveOrigin(mC0.x, mCn.y),
+      mCenterCurveR(0.0),
+      mInnerCurveOrigin(mInnerBezier.mPoints[0].x, mInnerBezier.mPoints[3].y),
+      mBestOverlap(0.0f),
+      mHasZeroBorderWidth(false),
+      mHasMore(true),
+      mMaxCount(aCornerDim.width + aCornerDim.height),
+      mType(OTHER),
+      mI(0),
+      mCount(0) {
   NS_ASSERTION(mR0 > 0.0f || mRn > 0.0f,
                "At least one side should have non-zero radius.");
 
@@ -88,19 +67,14 @@ DottedCornerFinder::DottedCornerFinder(const Bezier& aOuterBezier,
   Reset();
 }
 
-static bool
-IsSingleCurve(Float aMinR,
-              Float aMaxR,
-              Float aMinBorderRadius,
-              Float aMaxBorderRadius)
-{
+static bool IsSingleCurve(Float aMinR, Float aMaxR, Float aMinBorderRadius,
+                          Float aMaxBorderRadius) {
   return aMinR > 0.0f && aMinBorderRadius > aMaxR * 4.0f &&
          aMinBorderRadius / aMaxBorderRadius > 0.5f;
 }
 
-void
-DottedCornerFinder::DetermineType(Float aBorderRadiusX, Float aBorderRadiusY)
-{
+void DottedCornerFinder::DetermineType(Float aBorderRadiusX,
+                                       Float aBorderRadiusY) {
   // Calculate parameters for the center curve before swap.
   Float centerCurveWidth = fabs(mC0.x - mCn.x);
   Float centerCurveHeight = fabs(mC0.y - mCn.y);
@@ -135,7 +109,7 @@ DottedCornerFinder::DetermineType(Float aBorderRadiusX, Float aBorderRadiusY)
       } else {
         mType = SINGLE_CURVE_AND_RADIUS;
         borderLength =
-          GetQuarterEllipticArcLength(centerCurveWidth, centerCurveHeight);
+            GetQuarterEllipticArcLength(centerCurveWidth, centerCurveHeight);
       }
 
       Float diameter = mR0 * 2.0f;
@@ -170,9 +144,7 @@ DottedCornerFinder::DetermineType(Float aBorderRadiusX, Float aBorderRadiusY)
   }
 }
 
-bool
-DottedCornerFinder::HasMore(void) const
-{
+bool DottedCornerFinder::HasMore(void) const {
   if (mHasZeroBorderWidth) {
     return mI < mMaxCount && mHasMore;
   }
@@ -180,9 +152,7 @@ DottedCornerFinder::HasMore(void) const
   return mI < mCount;
 }
 
-DottedCornerFinder::Result
-DottedCornerFinder::Next(void)
-{
+DottedCornerFinder::Result DottedCornerFinder::Next(void) {
   mI++;
 
   if (mType == PERFECT) {
@@ -211,22 +181,16 @@ DottedCornerFinder::Next(void)
   return Result(mLastC, mLastR);
 }
 
-void
-DottedCornerFinder::Reset(void)
-{
+void DottedCornerFinder::Reset(void) {
   mLastC = mC0;
   mLastR = mR0;
   mLastT = 0.0f;
   mHasMore = true;
 }
 
-void
-DottedCornerFinder::FindPointAndRadius(Point& C,
-                                       Float& r,
-                                       const Point& innerTangent,
-                                       const Point& normal,
-                                       Float t)
-{
+void DottedCornerFinder::FindPointAndRadius(Point& C, Float& r,
+                                            const Point& innerTangent,
+                                            const Point& normal, Float t) {
   // Find radius for the given tangent point on the inner curve such that the
   // circle is also tangent to the outer curve.
 
@@ -252,9 +216,7 @@ DottedCornerFinder::FindPointAndRadius(Point& C,
   }
 }
 
-Float
-DottedCornerFinder::FindNext(Float overlap)
-{
+Float DottedCornerFinder::FindNext(Float overlap) {
   Float lower = mLastT;
   Float upper = 1.0f;
   Float t;
@@ -305,8 +267,8 @@ DottedCornerFinder::FindNext(Float overlap)
       }
 
       Point normal = PointRotateCCW90(Diff / DiffLength) * (-mNormalSign);
-      r = CalculateDistanceToEllipticArc(
-        C, normal, mInnerCurveOrigin, mInnerWidth, mInnerHeight);
+      r = CalculateDistanceToEllipticArc(C, normal, mInnerCurveOrigin,
+                                         mInnerWidth, mInnerHeight);
 
       // Check overlap along arc.
       circlesDist = GetBezierLength(mCenterBezier, mLastT, t);
@@ -391,11 +353,8 @@ DottedCornerFinder::FindNext(Float overlap)
   return 1.0f - circlesDist * factor / expectedDist;
 }
 
-void
-DottedCornerFinder::FindBestOverlap(Float aMinR,
-                                    Float aMinBorderRadius,
-                                    Float aMaxBorderRadius)
-{
+void DottedCornerFinder::FindBestOverlap(Float aMinR, Float aMinBorderRadius,
+                                         Float aMaxBorderRadius) {
   // If overlap is not calculateable, find it with binary search,
   // such that there exists i that C_i == C_n with the given overlap.
 
@@ -552,11 +511,8 @@ DottedCornerFinder::FindBestOverlap(Float aMinR,
   DottedCornerCache.Put(key, BestOverlap(mBestOverlap, mCount));
 }
 
-bool
-DottedCornerFinder::GetCountAndLastOverlap(Float aOverlap,
-                                           size_t* aCount,
-                                           Float* aActualOverlap)
-{
+bool DottedCornerFinder::GetCountAndLastOverlap(Float aOverlap, size_t* aCount,
+                                                Float* aActualOverlap) {
   // Return the number of circles and the last circles' overlap for the
   // given overlap.
 
@@ -578,4 +534,4 @@ DottedCornerFinder::GetCountAndLastOverlap(Float aOverlap,
   return false;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

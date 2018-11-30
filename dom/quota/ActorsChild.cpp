@@ -20,9 +20,10 @@ namespace quota {
  ******************************************************************************/
 
 QuotaChild::QuotaChild(QuotaManagerService* aService)
-  : mService(aService)
+    : mService(aService)
 #ifdef DEBUG
-  , mOwningThread(GetCurrentThreadEventTarget())
+      ,
+      mOwningThread(GetCurrentThreadEventTarget())
 #endif
 {
   AssertIsOnOwningThread();
@@ -31,8 +32,7 @@ QuotaChild::QuotaChild(QuotaManagerService* aService)
   MOZ_COUNT_CTOR(quota::QuotaChild);
 }
 
-QuotaChild::~QuotaChild()
-{
+QuotaChild::~QuotaChild() {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_DTOR(quota::QuotaChild);
@@ -40,9 +40,7 @@ QuotaChild::~QuotaChild()
 
 #ifdef DEBUG
 
-void
-QuotaChild::AssertIsOnOwningThread() const
-{
+void QuotaChild::AssertIsOnOwningThread() const {
   MOZ_ASSERT(mOwningThread);
 
   bool current;
@@ -50,11 +48,9 @@ QuotaChild::AssertIsOnOwningThread() const
   MOZ_ASSERT(current);
 }
 
-#endif // DEBUG
+#endif  // DEBUG
 
-void
-QuotaChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void QuotaChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   if (mService) {
@@ -65,17 +61,15 @@ QuotaChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-PQuotaUsageRequestChild*
-QuotaChild::AllocPQuotaUsageRequestChild(const UsageRequestParams& aParams)
-{
+PQuotaUsageRequestChild* QuotaChild::AllocPQuotaUsageRequestChild(
+    const UsageRequestParams& aParams) {
   AssertIsOnOwningThread();
 
   MOZ_CRASH("PQuotaUsageRequestChild actors should be manually constructed!");
 }
 
-bool
-QuotaChild::DeallocPQuotaUsageRequestChild(PQuotaUsageRequestChild* aActor)
-{
+bool QuotaChild::DeallocPQuotaUsageRequestChild(
+    PQuotaUsageRequestChild* aActor) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
 
@@ -83,17 +77,14 @@ QuotaChild::DeallocPQuotaUsageRequestChild(PQuotaUsageRequestChild* aActor)
   return true;
 }
 
-PQuotaRequestChild*
-QuotaChild::AllocPQuotaRequestChild(const RequestParams& aParams)
-{
+PQuotaRequestChild* QuotaChild::AllocPQuotaRequestChild(
+    const RequestParams& aParams) {
   AssertIsOnOwningThread();
 
   MOZ_CRASH("PQuotaRequestChild actors should be manually constructed!");
 }
 
-bool
-QuotaChild::DeallocPQuotaRequestChild(PQuotaRequestChild* aActor)
-{
+bool QuotaChild::DeallocPQuotaRequestChild(PQuotaRequestChild* aActor) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
 
@@ -106,15 +97,13 @@ QuotaChild::DeallocPQuotaRequestChild(PQuotaRequestChild* aActor)
  ******************************************************************************/
 
 QuotaUsageRequestChild::QuotaUsageRequestChild(UsageRequest* aRequest)
-  : mRequest(aRequest)
-{
+    : mRequest(aRequest) {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_CTOR(quota::QuotaUsageRequestChild);
 }
 
-QuotaUsageRequestChild::~QuotaUsageRequestChild()
-{
+QuotaUsageRequestChild::~QuotaUsageRequestChild() {
   // Can't assert owning thread here because the request is cleared.
 
   MOZ_COUNT_DTOR(quota::QuotaUsageRequestChild);
@@ -122,18 +111,14 @@ QuotaUsageRequestChild::~QuotaUsageRequestChild()
 
 #ifdef DEBUG
 
-void
-QuotaUsageRequestChild::AssertIsOnOwningThread() const
-{
+void QuotaUsageRequestChild::AssertIsOnOwningThread() const {
   MOZ_ASSERT(mRequest);
   mRequest->AssertIsOnOwningThread();
 }
 
-#endif // DEBUG
+#endif  // DEBUG
 
-void
-QuotaUsageRequestChild::HandleResponse(nsresult aResponse)
-{
+void QuotaUsageRequestChild::HandleResponse(nsresult aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_FAILED(aResponse));
   MOZ_ASSERT(mRequest);
@@ -141,9 +126,8 @@ QuotaUsageRequestChild::HandleResponse(nsresult aResponse)
   mRequest->SetError(aResponse);
 }
 
-void
-QuotaUsageRequestChild::HandleResponse(const nsTArray<OriginUsage>& aResponse)
-{
+void QuotaUsageRequestChild::HandleResponse(
+    const nsTArray<OriginUsage>& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
@@ -161,33 +145,28 @@ QuotaUsageRequestChild::HandleResponse(const nsTArray<OriginUsage>& aResponse)
     for (uint32_t index = 0; index < count; index++) {
       auto& originUsage = aResponse[index];
 
-      RefPtr<UsageResult> usageResult = new UsageResult(originUsage.origin(),
-                                                        originUsage.persisted(),
-                                                        originUsage.usage(),
-                                                        originUsage.lastAccessed());
+      RefPtr<UsageResult> usageResult =
+          new UsageResult(originUsage.origin(), originUsage.persisted(),
+                          originUsage.usage(), originUsage.lastAccessed());
 
       usageResults.AppendElement(usageResult.forget());
     }
 
     variant->SetAsArray(nsIDataType::VTYPE_INTERFACE_IS,
-                        &NS_GET_IID(nsIQuotaUsageResult),
-                        usageResults.Length(),
+                        &NS_GET_IID(nsIQuotaUsageResult), usageResults.Length(),
                         static_cast<void*>(usageResults.Elements()));
   }
 
   mRequest->SetResult(variant);
 }
 
-void
-QuotaUsageRequestChild::HandleResponse(const OriginUsageResponse& aResponse)
-{
+void QuotaUsageRequestChild::HandleResponse(
+    const OriginUsageResponse& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
-  RefPtr<OriginUsageResult> result =
-    new OriginUsageResult(aResponse.usage(),
-                          aResponse.fileUsage(),
-                          aResponse.limit());
+  RefPtr<OriginUsageResult> result = new OriginUsageResult(
+      aResponse.usage(), aResponse.fileUsage(), aResponse.limit());
 
   RefPtr<nsVariant> variant = new nsVariant();
   variant->SetAsInterface(NS_GET_IID(nsIQuotaOriginUsageResult), result);
@@ -195,9 +174,7 @@ QuotaUsageRequestChild::HandleResponse(const OriginUsageResponse& aResponse)
   mRequest->SetResult(variant);
 }
 
-void
-QuotaUsageRequestChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void QuotaUsageRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   if (mRequest) {
@@ -208,9 +185,8 @@ QuotaUsageRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-mozilla::ipc::IPCResult
-QuotaUsageRequestChild::Recv__delete__(const UsageRequestResponse& aResponse)
-{
+mozilla::ipc::IPCResult QuotaUsageRequestChild::Recv__delete__(
+    const UsageRequestResponse& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
@@ -238,16 +214,13 @@ QuotaUsageRequestChild::Recv__delete__(const UsageRequestResponse& aResponse)
  * QuotaRequestChild
  ******************************************************************************/
 
-QuotaRequestChild::QuotaRequestChild(Request* aRequest)
-  : mRequest(aRequest)
-{
+QuotaRequestChild::QuotaRequestChild(Request* aRequest) : mRequest(aRequest) {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_CTOR(quota::QuotaRequestChild);
 }
 
-QuotaRequestChild::~QuotaRequestChild()
-{
+QuotaRequestChild::~QuotaRequestChild() {
   AssertIsOnOwningThread();
 
   MOZ_COUNT_DTOR(quota::QuotaRequestChild);
@@ -255,18 +228,14 @@ QuotaRequestChild::~QuotaRequestChild()
 
 #ifdef DEBUG
 
-void
-QuotaRequestChild::AssertIsOnOwningThread() const
-{
+void QuotaRequestChild::AssertIsOnOwningThread() const {
   MOZ_ASSERT(mRequest);
   mRequest->AssertIsOnOwningThread();
 }
 
-#endif // DEBUG
+#endif  // DEBUG
 
-void
-QuotaRequestChild::HandleResponse(nsresult aResponse)
-{
+void QuotaRequestChild::HandleResponse(nsresult aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_FAILED(aResponse));
   MOZ_ASSERT(mRequest);
@@ -274,9 +243,7 @@ QuotaRequestChild::HandleResponse(nsresult aResponse)
   mRequest->SetError(aResponse);
 }
 
-void
-QuotaRequestChild::HandleResponse()
-{
+void QuotaRequestChild::HandleResponse() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
@@ -286,9 +253,7 @@ QuotaRequestChild::HandleResponse()
   mRequest->SetResult(variant);
 }
 
-void
-QuotaRequestChild::HandleResponse(bool aResponse)
-{
+void QuotaRequestChild::HandleResponse(bool aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
@@ -298,15 +263,12 @@ QuotaRequestChild::HandleResponse(bool aResponse)
   mRequest->SetResult(variant);
 }
 
-void
-QuotaRequestChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void QuotaRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 }
 
-mozilla::ipc::IPCResult
-QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
-{
+mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
+    const RequestResponse& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
@@ -341,6 +303,6 @@ QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
   return IPC_OK();
 }
 
-} // namespace quota
-} // namespace dom
-} // namespace mozilla
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla

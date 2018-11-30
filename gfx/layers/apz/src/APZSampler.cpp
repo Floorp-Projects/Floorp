@@ -21,22 +21,20 @@ namespace mozilla {
 namespace layers {
 
 StaticMutex APZSampler::sWindowIdLock;
-StaticAutoPtr<std::unordered_map<uint64_t, APZSampler*>> APZSampler::sWindowIdMap;
-
+StaticAutoPtr<std::unordered_map<uint64_t, APZSampler*>>
+    APZSampler::sWindowIdMap;
 
 APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz,
                        bool aIsUsingWebRender)
-  : mApz(aApz)
-  , mIsUsingWebRender(aIsUsingWebRender)
-  , mThreadIdLock("APZSampler::mThreadIdLock")
-  , mSampleTimeLock("APZSampler::mSampleTimeLock")
-{
+    : mApz(aApz),
+      mIsUsingWebRender(aIsUsingWebRender),
+      mThreadIdLock("APZSampler::mThreadIdLock"),
+      mSampleTimeLock("APZSampler::mSampleTimeLock") {
   MOZ_ASSERT(aApz);
   mApz->SetSampler(this);
 }
 
-APZSampler::~APZSampler()
-{
+APZSampler::~APZSampler() {
   mApz->SetSampler(nullptr);
 
   StaticMutexAutoLock lock(sWindowIdLock);
@@ -46,56 +44,43 @@ APZSampler::~APZSampler()
   }
 }
 
-void
-APZSampler::SetWebRenderWindowId(const wr::WindowId& aWindowId)
-{
+void APZSampler::SetWebRenderWindowId(const wr::WindowId& aWindowId) {
   StaticMutexAutoLock lock(sWindowIdLock);
   MOZ_ASSERT(!mWindowId);
   mWindowId = Some(aWindowId);
   if (!sWindowIdMap) {
     sWindowIdMap = new std::unordered_map<uint64_t, APZSampler*>();
-    NS_DispatchToMainThread(
-      NS_NewRunnableFunction("APZUpdater::ClearOnShutdown", [] {
-        ClearOnShutdown(&sWindowIdMap);
-      }
-    ));
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "APZUpdater::ClearOnShutdown", [] { ClearOnShutdown(&sWindowIdMap); }));
   }
   (*sWindowIdMap)[wr::AsUint64(aWindowId)] = this;
 }
 
-/*static*/ void
-APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId)
-{
+/*static*/ void APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId) {
   if (RefPtr<APZSampler> sampler = GetSampler(aWindowId)) {
     MutexAutoLock lock(sampler->mThreadIdLock);
     sampler->mSamplerThreadId = Some(PlatformThread::CurrentId());
   }
 }
 
-/*static*/ void
-APZSampler::SampleForWebRender(const wr::WrWindowId& aWindowId,
-                               wr::Transaction* aTransaction)
-{
+/*static*/ void APZSampler::SampleForWebRender(const wr::WrWindowId& aWindowId,
+                                               wr::Transaction* aTransaction) {
   if (RefPtr<APZSampler> sampler = GetSampler(aWindowId)) {
     wr::TransactionWrapper txn(aTransaction);
     sampler->SampleForWebRender(txn);
   }
 }
 
-void
-APZSampler::SetSampleTime(const TimeStamp& aSampleTime)
-{
+void APZSampler::SetSampleTime(const TimeStamp& aSampleTime) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MutexAutoLock lock(mSampleTimeLock);
   mSampleTime = aSampleTime;
 }
 
-void
-APZSampler::SampleForWebRender(wr::TransactionWrapper& aTxn)
-{
+void APZSampler::SampleForWebRender(wr::TransactionWrapper& aTxn) {
   AssertOnSamplerThread();
   TimeStamp sampleTime;
-  { // scope lock
+  {  // scope lock
     MutexAutoLock lock(mSampleTimeLock);
 
     // If mSampleTime is null we're in a startup phase where the
@@ -107,10 +92,8 @@ APZSampler::SampleForWebRender(wr::TransactionWrapper& aTxn)
   mApz->SampleForWebRender(aTxn, sampleTime);
 }
 
-bool
-APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
-                             const TimeStamp& aSampleTime)
-{
+bool APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
+                                  const TimeStamp& aSampleTime) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
@@ -119,101 +102,95 @@ APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
 
   bool activeAnimations = false;
 
-  ForEachNodePostOrder<ForwardIterator>(aLayer,
-      [&activeAnimations, &aSampleTime](LayerMetricsWrapper aLayerMetrics)
-      {
+  ForEachNodePostOrder<ForwardIterator>(
+      aLayer,
+      [&activeAnimations, &aSampleTime](LayerMetricsWrapper aLayerMetrics) {
         if (AsyncPanZoomController* apzc = aLayerMetrics.GetApzc()) {
           apzc->ReportCheckerboard(aSampleTime);
           activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
         }
-      }
-  );
+      });
 
   return activeAnimations;
 }
 
-LayerToParentLayerMatrix4x4
-APZSampler::ComputeTransformForScrollThumb(const LayerToParentLayerMatrix4x4& aCurrentTransform,
-                                           const LayerMetricsWrapper& aContent,
-                                           const ScrollbarData& aThumbData,
-                                           bool aScrollbarIsDescendant,
-                                           AsyncTransformComponentMatrix* aOutClipTransform)
-{
+LayerToParentLayerMatrix4x4 APZSampler::ComputeTransformForScrollThumb(
+    const LayerToParentLayerMatrix4x4& aCurrentTransform,
+    const LayerMetricsWrapper& aContent, const ScrollbarData& aThumbData,
+    bool aScrollbarIsDescendant,
+    AsyncTransformComponentMatrix* aOutClipTransform) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
-  return mApz->ComputeTransformForScrollThumb(aCurrentTransform,
-                                              aContent.GetTransform(),
-                                              aContent.GetApzc(),
-                                              aContent.Metrics(),
-                                              aThumbData,
-                                              aScrollbarIsDescendant,
-                                              aOutClipTransform);
+  return mApz->ComputeTransformForScrollThumb(
+      aCurrentTransform, aContent.GetTransform(), aContent.GetApzc(),
+      aContent.Metrics(), aThumbData, aScrollbarIsDescendant,
+      aOutClipTransform);
 }
 
-CSSRect
-APZSampler::GetCurrentAsyncLayoutViewport(const LayerMetricsWrapper& aLayer)
-{
+CSSRect APZSampler::GetCurrentAsyncLayoutViewport(
+    const LayerMetricsWrapper& aLayer) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   MOZ_ASSERT(aLayer.GetApzc());
-  return aLayer.GetApzc()->GetCurrentAsyncLayoutViewport(AsyncPanZoomController::eForCompositing);
+  return aLayer.GetApzc()->GetCurrentAsyncLayoutViewport(
+      AsyncPanZoomController::eForCompositing);
 }
 
-ParentLayerPoint
-APZSampler::GetCurrentAsyncScrollOffset(const LayerMetricsWrapper& aLayer)
-{
+ParentLayerPoint APZSampler::GetCurrentAsyncScrollOffset(
+    const LayerMetricsWrapper& aLayer) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   MOZ_ASSERT(aLayer.GetApzc());
-  return aLayer.GetApzc()->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForCompositing);
+  return aLayer.GetApzc()->GetCurrentAsyncScrollOffset(
+      AsyncPanZoomController::eForCompositing);
 }
 
-AsyncTransform
-APZSampler::GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer)
-{
+AsyncTransform APZSampler::GetCurrentAsyncTransform(
+    const LayerMetricsWrapper& aLayer) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   MOZ_ASSERT(aLayer.GetApzc());
-  return aLayer.GetApzc()->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);
+  return aLayer.GetApzc()->GetCurrentAsyncTransform(
+      AsyncPanZoomController::eForCompositing);
 }
 
-AsyncTransform
-APZSampler::GetCurrentAsyncTransformForFixedAdjustment(const LayerMetricsWrapper& aLayer)
-{
+AsyncTransform APZSampler::GetCurrentAsyncTransformForFixedAdjustment(
+    const LayerMetricsWrapper& aLayer) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   MOZ_ASSERT(aLayer.GetApzc());
-  return aLayer.GetApzc()->GetCurrentAsyncTransformForFixedAdjustment(AsyncPanZoomController::eForCompositing);
+  return aLayer.GetApzc()->GetCurrentAsyncTransformForFixedAdjustment(
+      AsyncPanZoomController::eForCompositing);
+}
+
+AsyncTransformComponentMatrix APZSampler::GetOverscrollTransform(
+    const LayerMetricsWrapper& aLayer) {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
+  MOZ_ASSERT(aLayer.GetApzc());
+  return aLayer.GetApzc()->GetOverscrollTransform(
+      AsyncPanZoomController::eForCompositing);
 }
 
 AsyncTransformComponentMatrix
-APZSampler::GetOverscrollTransform(const LayerMetricsWrapper& aLayer)
-{
+APZSampler::GetCurrentAsyncTransformWithOverscroll(
+    const LayerMetricsWrapper& aLayer) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   MOZ_ASSERT(aLayer.GetApzc());
-  return aLayer.GetApzc()->GetOverscrollTransform(AsyncPanZoomController::eForCompositing);
+  return aLayer.GetApzc()->GetCurrentAsyncTransformWithOverscroll(
+      AsyncPanZoomController::eForCompositing);
 }
 
-AsyncTransformComponentMatrix
-APZSampler::GetCurrentAsyncTransformWithOverscroll(const LayerMetricsWrapper& aLayer)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AssertOnSamplerThread();
-
-  MOZ_ASSERT(aLayer.GetApzc());
-  return aLayer.GetApzc()->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::eForCompositing);
-}
-
-void
-APZSampler::MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer)
-{
+void APZSampler::MarkAsyncTransformAppliedToContent(
+    const LayerMetricsWrapper& aLayer) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
@@ -221,29 +198,25 @@ APZSampler::MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer
   aLayer.GetApzc()->MarkAsyncTransformAppliedToContent();
 }
 
-bool
-APZSampler::HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer)
-{
+bool APZSampler::HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   AsyncPanZoomController* apzc = aLayer.GetApzc();
-  return apzc
-      && !apzc->GetAsyncTransformAppliedToContent()
-      && !AsyncTransformComponentMatrix(apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing)).IsIdentity();
+  return apzc && !apzc->GetAsyncTransformAppliedToContent() &&
+         !AsyncTransformComponentMatrix(
+              apzc->GetCurrentAsyncTransform(
+                  AsyncPanZoomController::eForCompositing))
+              .IsIdentity();
 }
 
-void
-APZSampler::AssertOnSamplerThread() const
-{
+void APZSampler::AssertOnSamplerThread() const {
   if (APZThreadUtils::GetThreadAssertionsEnabled()) {
     MOZ_ASSERT(IsSamplerThread());
   }
 }
 
-bool
-APZSampler::IsSamplerThread() const
-{
+bool APZSampler::IsSamplerThread() const {
   if (mIsUsingWebRender) {
     // If the sampler thread id isn't set yet then we cannot be running on the
     // sampler thread (because we will have the thread id before we run any
@@ -255,9 +228,8 @@ APZSampler::IsSamplerThread() const
   return CompositorThreadHolder::IsInCompositorThread();
 }
 
-/*static*/ already_AddRefed<APZSampler>
-APZSampler::GetSampler(const wr::WrWindowId& aWindowId)
-{
+/*static*/ already_AddRefed<APZSampler> APZSampler::GetSampler(
+    const wr::WrWindowId& aWindowId) {
   RefPtr<APZSampler> sampler;
   StaticMutexAutoLock lock(sWindowIdLock);
   if (sWindowIdMap) {
@@ -269,23 +241,16 @@ APZSampler::GetSampler(const wr::WrWindowId& aWindowId)
   return sampler.forget();
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-void
-apz_register_sampler(mozilla::wr::WrWindowId aWindowId)
-{
+void apz_register_sampler(mozilla::wr::WrWindowId aWindowId) {
   mozilla::layers::APZSampler::SetSamplerThread(aWindowId);
 }
 
-void
-apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
-                      mozilla::wr::Transaction *aTransaction)
-{
+void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
+                           mozilla::wr::Transaction* aTransaction) {
   mozilla::layers::APZSampler::SampleForWebRender(aWindowId, aTransaction);
 }
 
-void
-apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId)
-{
-}
+void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId) {}

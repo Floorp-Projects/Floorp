@@ -16,17 +16,13 @@
 namespace mozilla {
 bool ProcessNextEvent();
 void NotifyEvent();
-}
+}  // namespace mozilla
 
 namespace base {
 
-MessagePumpForUI::MessagePumpForUI()
-  : state_(NULL)
-{
-}
+MessagePumpForUI::MessagePumpForUI() : state_(NULL) {}
 
-MessagePumpForUI::~MessagePumpForUI() {
-}
+MessagePumpForUI::~MessagePumpForUI() {}
 
 void MessagePumpForUI::Run(Delegate* delegate) {
   RunState state;
@@ -62,31 +58,24 @@ void MessagePumpForUI::HandleDispatch() {
   // We should only ever have a single message on the wakeup pipe, since we
   // are only signaled when the queue went from empty to non-empty.  The qApp
   // poll will tell us whether there was data, so this read shouldn't block.
-  if (state_->should_quit)
-    return;
+  if (state_->should_quit) return;
 
   state_->more_work_is_plausible = false;
 
-  if (state_->delegate->DoWork())
-    state_->more_work_is_plausible = true;
+  if (state_->delegate->DoWork()) state_->more_work_is_plausible = true;
 
-  if (state_->should_quit)
-    return;
+  if (state_->should_quit) return;
 
   if (state_->delegate->DoDelayedWork(&delayed_work_time_))
     state_->more_work_is_plausible = true;
-  if (state_->should_quit)
-    return;
+  if (state_->should_quit) return;
 
   // Don't do idle work if we think there are more important things
   // that we could be doing.
-  if (state_->more_work_is_plausible)
-    return;
+  if (state_->more_work_is_plausible) return;
 
-  if (state_->delegate->DoIdleWork())
-    state_->more_work_is_plausible = true;
-  if (state_->should_quit)
-    return;
+  if (state_->delegate->DoIdleWork()) state_->more_work_is_plausible = true;
+  if (state_->should_quit) return;
 }
 
 void MessagePumpForUI::Quit() {

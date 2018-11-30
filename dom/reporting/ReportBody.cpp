@@ -20,19 +20,16 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReportBody)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-ReportBody::ReportBody(nsPIDOMWindowInner* aWindow)
-  : mWindow(aWindow)
-{
+ReportBody::ReportBody(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {
   MOZ_ASSERT(aWindow);
 }
 
 ReportBody::~ReportBody() = default;
 
-JSObject*
-ReportBody::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ReportBody::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return ReportBody_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

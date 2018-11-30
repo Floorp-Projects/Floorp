@@ -9,7 +9,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #include "nsString.h"
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #include "mozilla/Attributes.h"
 #include <guiddef.h>
@@ -50,7 +50,7 @@ uint32_t CopySerializedProxy(IStream* aInStream, IStream** aOutStream);
 
 #if defined(MOZILLA_INTERNAL_API)
 void GUIDToString(REFGUID aGuid, nsAString& aOutString);
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #if defined(ACCESSIBILITY)
 bool IsVtableIndexFromParentInterface(REFIID aInterface,
@@ -61,9 +61,9 @@ bool IsCallerExternalProcess();
 
 bool IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
                                        unsigned long aVtableIndexHint);
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
-#endif // defined(ACCESSIBILITY)
+#endif  // defined(ACCESSIBILITY)
 
 /**
  * Execute cleanup code when going out of scope if a condition is met.
@@ -73,17 +73,12 @@ bool IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
  * lambdas).
  */
 template <typename CondFnT, typename ExeFnT>
-class MOZ_RAII ExecuteWhen final
-{
-public:
+class MOZ_RAII ExecuteWhen final {
+ public:
   ExecuteWhen(CondFnT& aCondFn, ExeFnT& aExeFn)
-    : mCondFn(aCondFn)
-    , mExeFn(aExeFn)
-  {
-  }
+      : mCondFn(aCondFn), mExeFn(aExeFn) {}
 
-  ~ExecuteWhen()
-  {
+  ~ExecuteWhen() {
     if (mCondFn()) {
       mExeFn();
     }
@@ -94,13 +89,12 @@ public:
   ExecuteWhen& operator=(const ExecuteWhen&) = delete;
   ExecuteWhen& operator=(ExecuteWhen&&) = delete;
 
-private:
-  CondFnT&  mCondFn;
-  ExeFnT&   mExeFn;
+ private:
+  CondFnT& mCondFn;
+  ExeFnT& mExeFn;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_Utils_h
-
+#endif  // mozilla_mscom_Utils_h

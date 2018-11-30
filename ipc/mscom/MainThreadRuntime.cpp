@@ -16,7 +16,7 @@
 #include "mozilla/WindowsVersion.h"
 #if defined(ACCESSIBILITY)
 #include "nsExceptionHandler.h"
-#endif // defined(ACCESSIBILITY)
+#endif  // defined(ACCESSIBILITY)
 #include "nsWindowsHelpers.h"
 #include "nsXULAppAPI.h"
 
@@ -34,10 +34,11 @@ namespace mscom {
 MainThreadRuntime* MainThreadRuntime::sInstance = nullptr;
 
 MainThreadRuntime::MainThreadRuntime()
-  : mInitResult(E_UNEXPECTED)
+    : mInitResult(E_UNEXPECTED)
 #if defined(ACCESSIBILITY)
-  , mActCtxRgn(a11y::Compatibility::GetActCtxResourceId())
-#endif // defined(ACCESSIBILITY)
+      ,
+      mActCtxRgn(a11y::Compatibility::GetActCtxResourceId())
+#endif  // defined(ACCESSIBILITY)
 {
   // We must be the outermost COM initialization on this thread. The COM runtime
   // cannot be configured once we start manipulating objects
@@ -46,7 +47,8 @@ MainThreadRuntime::MainThreadRuntime()
     return;
   }
 
-  // We are required to initialize security in order to configure global options.
+  // We are required to initialize security in order to configure global
+  // options.
   mInitResult = InitializeSecurity();
   MOZ_ASSERT(SUCCEEDED(mInitResult));
   if (FAILED(mInitResult)) {
@@ -82,8 +84,7 @@ MainThreadRuntime::MainThreadRuntime()
   sInstance = this;
 }
 
-MainThreadRuntime::~MainThreadRuntime()
-{
+MainThreadRuntime::~MainThreadRuntime() {
   if (mClientInfo) {
     mClientInfo->Detach();
   }
@@ -96,8 +97,7 @@ MainThreadRuntime::~MainThreadRuntime()
 
 /* static */
 DWORD
-MainThreadRuntime::GetClientThreadId()
-{
+MainThreadRuntime::GetClientThreadId() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess(), "Unsupported outside of parent process");
   if (!XRE_IsParentProcess()) {
@@ -127,8 +127,7 @@ MainThreadRuntime::GetClientThreadId()
 }
 
 HRESULT
-MainThreadRuntime::InitializeSecurity()
-{
+MainThreadRuntime::InitializeSecurity() {
   HANDLE rawToken = nullptr;
   BOOL ok = ::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &rawToken);
   if (!ok) {
@@ -159,9 +158,9 @@ MainThreadRuntime::InitializeSecurity()
 
   auto tokenPrimaryGroupBuf = MakeUnique<BYTE[]>(len);
   TOKEN_PRIMARY_GROUP& tokenPrimaryGroup =
-    *reinterpret_cast<TOKEN_PRIMARY_GROUP*>(tokenPrimaryGroupBuf.get());
-  ok = ::GetTokenInformation(token, TokenPrimaryGroup, tokenPrimaryGroupBuf.get(),
-                             len, &len);
+      *reinterpret_cast<TOKEN_PRIMARY_GROUP*>(tokenPrimaryGroupBuf.get());
+  ok = ::GetTokenInformation(token, TokenPrimaryGroup,
+                             tokenPrimaryGroupBuf.get(), len, &len);
   if (!ok) {
     return HRESULT_FROM_WIN32(::GetLastError());
   }
@@ -197,20 +196,28 @@ MainThreadRuntime::InitializeSecurity()
   // Grant access to SYSTEM, Administrators, the user, and when running as the
   // browser process on Windows 8+, all app containers.
   EXPLICIT_ACCESS entries[] = {
-    {COM_RIGHTS_EXECUTE, GRANT_ACCESS, NO_INHERITANCE,
-      {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_USER,
-       reinterpret_cast<LPWSTR>(systemSid)}},
-    {COM_RIGHTS_EXECUTE, GRANT_ACCESS, NO_INHERITANCE,
-      {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_WELL_KNOWN_GROUP,
-       reinterpret_cast<LPWSTR>(adminSid)}},
-    {COM_RIGHTS_EXECUTE, GRANT_ACCESS, NO_INHERITANCE,
-      {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_USER,
-       reinterpret_cast<LPWSTR>(tokenUser.User.Sid)}},
-    // appContainersSid must be the last entry in this array!
-    {COM_RIGHTS_EXECUTE, GRANT_ACCESS, NO_INHERITANCE,
-      {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_WELL_KNOWN_GROUP,
-       reinterpret_cast<LPWSTR>(appContainersSid)}}
-  };
+      {COM_RIGHTS_EXECUTE,
+       GRANT_ACCESS,
+       NO_INHERITANCE,
+       {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_USER,
+        reinterpret_cast<LPWSTR>(systemSid)}},
+      {COM_RIGHTS_EXECUTE,
+       GRANT_ACCESS,
+       NO_INHERITANCE,
+       {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID,
+        TRUSTEE_IS_WELL_KNOWN_GROUP, reinterpret_cast<LPWSTR>(adminSid)}},
+      {COM_RIGHTS_EXECUTE,
+       GRANT_ACCESS,
+       NO_INHERITANCE,
+       {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_USER,
+        reinterpret_cast<LPWSTR>(tokenUser.User.Sid)}},
+      // appContainersSid must be the last entry in this array!
+      {COM_RIGHTS_EXECUTE,
+       GRANT_ACCESS,
+       NO_INHERITANCE,
+       {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID,
+        TRUSTEE_IS_WELL_KNOWN_GROUP,
+        reinterpret_cast<LPWSTR>(appContainersSid)}}};
 
   ULONG numEntries = ArrayLength(entries);
   if (!XRE_IsParentProcess() || !IsWin8OrLater()) {
@@ -234,15 +241,15 @@ MainThreadRuntime::InitializeSecurity()
     return HRESULT_FROM_WIN32(::GetLastError());
   }
 
-  if (!::SetSecurityDescriptorGroup(&sd, tokenPrimaryGroup.PrimaryGroup, FALSE)) {
+  if (!::SetSecurityDescriptorGroup(&sd, tokenPrimaryGroup.PrimaryGroup,
+                                    FALSE)) {
     return HRESULT_FROM_WIN32(::GetLastError());
   }
 
-  return ::CoInitializeSecurity(&sd, -1, nullptr, nullptr,
-                                RPC_C_AUTHN_LEVEL_DEFAULT,
-                                RPC_C_IMP_LEVEL_IDENTIFY, nullptr, EOAC_NONE,
-                                nullptr);
+  return ::CoInitializeSecurity(
+      &sd, -1, nullptr, nullptr, RPC_C_AUTHN_LEVEL_DEFAULT,
+      RPC_C_IMP_LEVEL_IDENTIFY, nullptr, EOAC_NONE, nullptr);
 }
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla

@@ -12,22 +12,21 @@
 #include "nsTHashtable.h"
 #include "nsDebug.h"
 
-template<class KeyClass, class DataType, class UserDataType>
-class nsBaseHashtable; // forward declaration
+template <class KeyClass, class DataType, class UserDataType>
+class nsBaseHashtable;  // forward declaration
 
 /**
  * the private nsTHashtable::EntryType class used by nsBaseHashtable
  * @see nsTHashtable for the specification of this class
  * @see nsBaseHashtable for template parameters
  */
-template<class KeyClass, class DataType>
-class nsBaseHashtableET : public KeyClass
-{
-public:
+template <class KeyClass, class DataType>
+class nsBaseHashtableET : public KeyClass {
+ public:
   DataType mData;
   friend class nsTHashtable<nsBaseHashtableET<KeyClass, DataType>>;
 
-private:
+ private:
   typedef typename KeyClass::KeyType KeyType;
   typedef typename KeyClass::KeyTypePointer KeyTypePointer;
 
@@ -48,13 +47,12 @@ private:
  *   DataType must implicitly cast to UserDataType
  * @param UserDataType the user sees, for example uint32_t or nsISupports*
  */
-template<class KeyClass, class DataType, class UserDataType>
+template <class KeyClass, class DataType, class UserDataType>
 class nsBaseHashtable
-  : protected nsTHashtable<nsBaseHashtableET<KeyClass, DataType>>
-{
+    : protected nsTHashtable<nsBaseHashtableET<KeyClass, DataType>> {
   typedef mozilla::fallible_t fallible_t;
 
-public:
+ public:
   typedef typename KeyClass::KeyType KeyType;
   typedef nsBaseHashtableET<KeyClass, DataType> EntryType;
 
@@ -65,9 +63,7 @@ public:
 
   nsBaseHashtable() {}
   explicit nsBaseHashtable(uint32_t aInitLength)
-    : nsTHashtable<EntryType>(aInitLength)
-  {
-  }
+      : nsTHashtable<EntryType>(aInitLength) {}
 
   /**
    * Return the number of entries in the table.
@@ -84,8 +80,7 @@ public:
    * @return true if the key exists. If key does not exist, aData is not
    *   modified.
    */
-  bool Get(KeyType aKey, UserDataType* aData) const
-  {
+  bool Get(KeyType aKey, UserDataType* aData) const {
     EntryType* ent = this->GetEntry(aKey);
     if (!ent) {
       return false;
@@ -108,8 +103,7 @@ public:
    * @note If zero/default-initialized values are stored in the table, it is
    *       not possible to distinguish between such a value and a missing entry.
    */
-  UserDataType Get(KeyType aKey) const
-  {
+  UserDataType Get(KeyType aKey) const {
     EntryType* ent = this->GetEntry(aKey);
     if (!ent) {
       return UserDataType{};
@@ -123,8 +117,7 @@ public:
    * value.  If key is not already in the table then the value is default
    * constructed.
    */
-  DataType& GetOrInsert(const KeyType& aKey)
-  {
+  DataType& GetOrInsert(const KeyType& aKey) {
     EntryType* ent = this->PutEntry(aKey);
     return ent->mData;
   }
@@ -134,16 +127,14 @@ public:
    * @param aKey the key to put
    * @param aData the new data
    */
-  void Put(KeyType aKey, const UserDataType& aData)
-  {
+  void Put(KeyType aKey, const UserDataType& aData) {
     if (!Put(aKey, aData, mozilla::fallible)) {
       NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
     }
   }
 
   MOZ_MUST_USE bool Put(KeyType aKey, const UserDataType& aData,
-                        const fallible_t&)
-  {
+                        const fallible_t&) {
     EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
     if (!ent) {
       return false;
@@ -159,15 +150,13 @@ public:
    * @param aKey the key to put
    * @param aData the new data
    */
-  void Put(KeyType aKey, UserDataType&& aData)
-  {
+  void Put(KeyType aKey, UserDataType&& aData) {
     if (!Put(aKey, std::move(aData), mozilla::fallible)) {
       NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
     }
   }
 
-  MOZ_MUST_USE bool Put(KeyType aKey, UserDataType&& aData, const fallible_t&)
-  {
+  MOZ_MUST_USE bool Put(KeyType aKey, UserDataType&& aData, const fallible_t&) {
     EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
     if (!ent) {
       return false;
@@ -187,8 +176,7 @@ public:
    *              (i.e. reset to zero or nullptr for primitive types).
    * @return true if an entry for aKey was found (and removed)
    */
-  bool Remove(KeyType aKey, DataType* aData = nullptr)
-  {
+  bool Remove(KeyType aKey, DataType* aData = nullptr) {
     if (auto* ent = this->GetEntry(aKey)) {
       if (aData) {
         *aData = std::move(ent->mData);
@@ -203,31 +191,31 @@ public:
   }
 
   struct LookupResult {
-  private:
+   private:
     EntryType* mEntry;
     nsBaseHashtable& mTable;
 #ifdef DEBUG
     uint32_t mTableGeneration;
 #endif
 
-  public:
+   public:
     LookupResult(EntryType* aEntry, nsBaseHashtable& aTable)
-      : mEntry(aEntry)
-      , mTable(aTable)
+        : mEntry(aEntry),
+          mTable(aTable)
 #ifdef DEBUG
-      , mTableGeneration(aTable.GetGeneration())
+          ,
+          mTableGeneration(aTable.GetGeneration())
 #endif
-    {}
+    {
+    }
 
     // Is there something stored in the table?
-    explicit operator bool() const
-    {
+    explicit operator bool() const {
       MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
       return mEntry;
     }
 
-    void Remove()
-    {
+    void Remove() {
       if (!*this) {
         return;
       }
@@ -235,8 +223,7 @@ public:
       mEntry = nullptr;
     }
 
-    MOZ_MUST_USE DataType& Data()
-    {
+    MOZ_MUST_USE DataType& Data() {
       MOZ_ASSERT(!!*this, "must have an entry to access its value");
       return mEntry->mData;
     }
@@ -260,13 +247,12 @@ public:
    * lookups.  If you want to insert a new entry if one does not exist, then use
    * LookupForAdd instead, see below.
    */
-  MOZ_MUST_USE LookupResult Lookup(KeyType aKey)
-  {
+  MOZ_MUST_USE LookupResult Lookup(KeyType aKey) {
     return LookupResult(this->GetEntry(aKey), *this);
   }
 
   struct EntryPtr {
-  private:
+   private:
     EntryType* mEntry;
     bool mExistingEntry;
     nsBaseHashtable& mTable;
@@ -276,32 +262,31 @@ public:
     bool mDidInitNewEntry;
 #endif
 
-  public:
+   public:
     EntryPtr(nsBaseHashtable& aTable, EntryType* aEntry, bool aExistingEntry)
-      : mEntry(aEntry)
-      , mExistingEntry(aExistingEntry)
-      , mTable(aTable)
+        : mEntry(aEntry),
+          mExistingEntry(aExistingEntry),
+          mTable(aTable)
 #ifdef DEBUG
-      , mTableGeneration(aTable.GetGeneration())
-      , mDidInitNewEntry(false)
+          ,
+          mTableGeneration(aTable.GetGeneration()),
+          mDidInitNewEntry(false)
 #endif
-    {}
-    ~EntryPtr()
     {
+    }
+    ~EntryPtr() {
       MOZ_ASSERT(mExistingEntry || mDidInitNewEntry || !mEntry,
                  "Forgot to call OrInsert() or OrRemove() on a new entry");
     }
 
     // Is there something stored in the table already?
-    explicit operator bool() const
-    {
+    explicit operator bool() const {
       MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
       return mExistingEntry;
     }
 
     template <class F>
-    UserDataType OrInsert(F func)
-    {
+    UserDataType OrInsert(F func) {
       MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
       MOZ_ASSERT(mEntry);
       if (!mExistingEntry) {
@@ -313,16 +298,14 @@ public:
       return mEntry->mData;
     }
 
-    void OrRemove()
-    {
+    void OrRemove() {
       MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
       MOZ_ASSERT(mEntry);
       mTable.RemoveEntry(mEntry);
       mEntry = nullptr;
     }
 
-    MOZ_MUST_USE DataType& Data()
-    {
+    MOZ_MUST_USE DataType& Data() {
       MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
       MOZ_ASSERT(mEntry);
       return mEntry->mData;
@@ -354,8 +337,7 @@ public:
    * hashtable if one doesn't exist before but would like to avoid two hashtable
    * lookups.
    */
-  MOZ_MUST_USE EntryPtr LookupForAdd(KeyType aKey)
-  {
+  MOZ_MUST_USE EntryPtr LookupForAdd(KeyType aKey) {
     auto count = Count();
     EntryType* ent = this->PutEntry(aKey);
     return EntryPtr(*this, ent, count == Count());
@@ -372,9 +354,8 @@ public:
   //     // ... possibly call iter.Remove() once ...
   //   }
   //
-  class Iterator : public PLDHashTable::Iterator
-  {
-  public:
+  class Iterator : public PLDHashTable::Iterator {
+   public:
     typedef PLDHashTable::Iterator Base;
 
     explicit Iterator(nsBaseHashtable* aTable) : Base(&aTable->mTable) {}
@@ -382,13 +363,12 @@ public:
     ~Iterator() {}
 
     KeyType Key() const { return static_cast<EntryType*>(Get())->GetKey(); }
-    UserDataType UserData() const
-    {
+    UserDataType UserData() const {
       return static_cast<EntryType*>(Get())->mData;
     }
     DataType& Data() const { return static_cast<EntryType*>(Get())->mData; }
 
-  private:
+   private:
     Iterator() = delete;
     Iterator(const Iterator&) = delete;
     Iterator& operator=(const Iterator&) = delete;
@@ -397,8 +377,7 @@ public:
 
   Iterator Iter() { return Iterator(this); }
 
-  Iterator ConstIter() const
-  {
+  Iterator ConstIter() const {
     return Iterator(const_cast<nsBaseHashtable*>(this));
   }
 
@@ -414,27 +393,23 @@ public:
    * @param   aMallocSizeOf the function used to measure heap-allocated blocks
    * @return  the summed size of the table's storage
    */
-  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
+  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return this->mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   /**
    * Like ShallowSizeOfExcludingThis, but includes sizeof(*this).
    */
-  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
+  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   /**
    * Swap the elements in this hashtable with the elements in aOther.
    */
-  void SwapElements(nsBaseHashtable& aOther)
-  {
+  void SwapElements(nsBaseHashtable& aOther) {
     nsTHashtable<EntryType>::SwapElements(aOther);
   }
-
 
 #ifdef DEBUG
   using nsTHashtable<EntryType>::MarkImmutable;
@@ -445,24 +420,16 @@ public:
 // nsBaseHashtableET definitions
 //
 
-template<class KeyClass, class DataType>
+template <class KeyClass, class DataType>
 nsBaseHashtableET<KeyClass, DataType>::nsBaseHashtableET(KeyTypePointer aKey)
-  : KeyClass(aKey)
-  , mData()
-{
-}
+    : KeyClass(aKey), mData() {}
 
-template<class KeyClass, class DataType>
+template <class KeyClass, class DataType>
 nsBaseHashtableET<KeyClass, DataType>::nsBaseHashtableET(
-      nsBaseHashtableET<KeyClass, DataType>&& aToMove)
-  : KeyClass(std::move(aToMove))
-  , mData(std::move(aToMove.mData))
-{
-}
+    nsBaseHashtableET<KeyClass, DataType>&& aToMove)
+    : KeyClass(std::move(aToMove)), mData(std::move(aToMove.mData)) {}
 
-template<class KeyClass, class DataType>
-nsBaseHashtableET<KeyClass, DataType>::~nsBaseHashtableET()
-{
-}
+template <class KeyClass, class DataType>
+nsBaseHashtableET<KeyClass, DataType>::~nsBaseHashtableET() {}
 
-#endif // nsBaseHashtable_h__
+#endif  // nsBaseHashtable_h__

@@ -22,17 +22,17 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsDOMTokenList::nsDOMTokenList(Element* aElement, nsAtom* aAttrAtom,
-                               const DOMTokenListSupportedTokenArray aSupportedTokens)
-  : mElement(aElement),
-    mAttrAtom(aAttrAtom),
-    mSupportedTokens(aSupportedTokens)
-{
+nsDOMTokenList::nsDOMTokenList(
+    Element* aElement, nsAtom* aAttrAtom,
+    const DOMTokenListSupportedTokenArray aSupportedTokens)
+    : mElement(aElement),
+      mAttrAtom(aAttrAtom),
+      mSupportedTokens(aSupportedTokens) {
   // We don't add a reference to our element. If it goes away,
   // we'll be told to drop our reference
 }
 
-nsDOMTokenList::~nsDOMTokenList() { }
+nsDOMTokenList::~nsDOMTokenList() {}
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMTokenList, mElement)
 
@@ -45,18 +45,14 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMTokenList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMTokenList)
 
-const nsAttrValue*
-nsDOMTokenList::GetParsedAttr()
-{
+const nsAttrValue* nsDOMTokenList::GetParsedAttr() {
   if (!mElement) {
     return nullptr;
   }
   return mElement->GetAttrInfo(kNameSpaceID_None, mAttrAtom).mValue;
 }
 
-void
-nsDOMTokenList::RemoveDuplicates(const nsAttrValue* aAttr)
-{
+void nsDOMTokenList::RemoveDuplicates(const nsAttrValue* aAttr) {
   if (!aAttr || aAttr->Type() != nsAttrValue::eAtomArray) {
     return;
   }
@@ -75,9 +71,8 @@ nsDOMTokenList::RemoveDuplicates(const nsAttrValue* aAttr)
   }
 }
 
-void
-nsDOMTokenList::RemoveDuplicatesInternal(AtomArray* aArray, uint32_t aStart)
-{
+void nsDOMTokenList::RemoveDuplicatesInternal(AtomArray* aArray,
+                                              uint32_t aStart) {
   nsDataHashtable<nsPtrHashKey<nsAtom>, bool> tokens;
 
   for (uint32_t i = 0; i < aArray->Length(); i++) {
@@ -92,9 +87,7 @@ nsDOMTokenList::RemoveDuplicatesInternal(AtomArray* aArray, uint32_t aStart)
   }
 }
 
-uint32_t
-nsDOMTokenList::Length()
-{
+uint32_t nsDOMTokenList::Length() {
   const nsAttrValue* attr = GetParsedAttr();
   if (!attr) {
     return 0;
@@ -104,9 +97,8 @@ nsDOMTokenList::Length()
   return attr->GetAtomCount();
 }
 
-void
-nsDOMTokenList::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aResult)
-{
+void nsDOMTokenList::IndexedGetter(uint32_t aIndex, bool& aFound,
+                                   nsAString& aResult) {
   const nsAttrValue* attr = GetParsedAttr();
 
   if (!attr || aIndex >= static_cast<uint32_t>(attr->GetAtomCount())) {
@@ -124,9 +116,7 @@ nsDOMTokenList::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aResult)
   }
 }
 
-void
-nsDOMTokenList::SetValue(const nsAString& aValue, ErrorResult& rv)
-{
+void nsDOMTokenList::SetValue(const nsAString& aValue, ErrorResult& rv) {
   if (!mElement) {
     return;
   }
@@ -134,9 +124,7 @@ nsDOMTokenList::SetValue(const nsAString& aValue, ErrorResult& rv)
   rv = mElement->SetAttr(kNameSpaceID_None, mAttrAtom, aValue, true);
 }
 
-nsresult
-nsDOMTokenList::CheckToken(const nsAString& aStr)
-{
+nsresult nsDOMTokenList::CheckToken(const nsAString& aStr) {
   if (aStr.IsEmpty()) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
@@ -154,9 +142,7 @@ nsDOMTokenList::CheckToken(const nsAString& aStr)
   return NS_OK;
 }
 
-nsresult
-nsDOMTokenList::CheckTokens(const nsTArray<nsString>& aTokens)
-{
+nsresult nsDOMTokenList::CheckTokens(const nsTArray<nsString>& aTokens) {
   for (uint32_t i = 0, l = aTokens.Length(); i < l; ++i) {
     nsresult rv = CheckToken(aTokens[i]);
     if (NS_FAILED(rv)) {
@@ -167,17 +153,13 @@ nsDOMTokenList::CheckTokens(const nsTArray<nsString>& aTokens)
   return NS_OK;
 }
 
-bool
-nsDOMTokenList::Contains(const nsAString& aToken)
-{
+bool nsDOMTokenList::Contains(const nsAString& aToken) {
   const nsAttrValue* attr = GetParsedAttr();
   return attr && attr->Contains(aToken);
 }
 
-void
-nsDOMTokenList::AddInternal(const nsAttrValue* aAttr,
-                            const nsTArray<nsString>& aTokens)
-{
+void nsDOMTokenList::AddInternal(const nsAttrValue* aAttr,
+                                 const nsTArray<nsString>& aTokens) {
   if (!mElement) {
     return;
   }
@@ -199,8 +181,7 @@ nsDOMTokenList::AddInternal(const nsAttrValue* aAttr,
   for (uint32_t i = 0, l = aTokens.Length(); i < l; ++i) {
     const nsString& aToken = aTokens[i];
 
-    if ((aAttr && aAttr->Contains(aToken)) ||
-        addedClasses.Contains(aToken)) {
+    if ((aAttr && aAttr->Contains(aToken)) || addedClasses.Contains(aToken)) {
       continue;
     }
 
@@ -215,9 +196,8 @@ nsDOMTokenList::AddInternal(const nsAttrValue* aAttr,
   mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, true);
 }
 
-void
-nsDOMTokenList::Add(const nsTArray<nsString>& aTokens, ErrorResult& aError)
-{
+void nsDOMTokenList::Add(const nsTArray<nsString>& aTokens,
+                         ErrorResult& aError) {
   aError = CheckTokens(aTokens);
   if (aError.Failed()) {
     return;
@@ -227,18 +207,14 @@ nsDOMTokenList::Add(const nsTArray<nsString>& aTokens, ErrorResult& aError)
   AddInternal(attr, aTokens);
 }
 
-void
-nsDOMTokenList::Add(const nsAString& aToken, ErrorResult& aError)
-{
+void nsDOMTokenList::Add(const nsAString& aToken, ErrorResult& aError) {
   AutoTArray<nsString, 1> tokens;
   tokens.AppendElement(aToken);
   Add(tokens, aError);
 }
 
-void
-nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
-                               const nsTArray<nsString>& aTokens)
-{
+void nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
+                                    const nsTArray<nsString>& aTokens) {
   MOZ_ASSERT(aAttr, "Need an attribute");
 
   RemoveDuplicates(aAttr);
@@ -257,9 +233,8 @@ nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
   mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, true);
 }
 
-void
-nsDOMTokenList::Remove(const nsTArray<nsString>& aTokens, ErrorResult& aError)
-{
+void nsDOMTokenList::Remove(const nsTArray<nsString>& aTokens,
+                            ErrorResult& aError) {
   aError = CheckTokens(aTokens);
   if (aError.Failed()) {
     return;
@@ -273,19 +248,14 @@ nsDOMTokenList::Remove(const nsTArray<nsString>& aTokens, ErrorResult& aError)
   RemoveInternal(attr, aTokens);
 }
 
-void
-nsDOMTokenList::Remove(const nsAString& aToken, ErrorResult& aError)
-{
+void nsDOMTokenList::Remove(const nsAString& aToken, ErrorResult& aError) {
   AutoTArray<nsString, 1> tokens;
   tokens.AppendElement(aToken);
   Remove(tokens, aError);
 }
 
-bool
-nsDOMTokenList::Toggle(const nsAString& aToken,
-                       const Optional<bool>& aForce,
-                       ErrorResult& aError)
-{
+bool nsDOMTokenList::Toggle(const nsAString& aToken,
+                            const Optional<bool>& aForce, ErrorResult& aError) {
   aError = CheckToken(aToken);
   if (aError.Failed()) {
     return false;
@@ -314,11 +284,8 @@ nsDOMTokenList::Toggle(const nsAString& aToken,
   return isPresent;
 }
 
-bool
-nsDOMTokenList::Replace(const nsAString& aToken,
-                        const nsAString& aNewToken,
-                        ErrorResult& aError)
-{
+bool nsDOMTokenList::Replace(const nsAString& aToken,
+                             const nsAString& aNewToken, ErrorResult& aError) {
   // Doing this here instead of using `CheckToken` because if aToken had invalid
   // characters, and aNewToken is empty, the returned error should be a
   // SyntaxError, not an InvalidCharacterError.
@@ -345,11 +312,9 @@ nsDOMTokenList::Replace(const nsAString& aToken,
   return ReplaceInternal(attr, aToken, aNewToken);
 }
 
-bool
-nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
-                                const nsAString& aToken,
-                                const nsAString& aNewToken)
-{
+bool nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
+                                     const nsAString& aToken,
+                                     const nsAString& aNewToken) {
   RemoveDuplicates(aAttr);
 
   // Trying to do a single pass here leads to really complicated code.  Just do
@@ -393,20 +358,15 @@ nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
   return true;
 }
 
-bool
-nsDOMTokenList::Supports(const nsAString& aToken,
-                         ErrorResult& aError)
-{
+bool nsDOMTokenList::Supports(const nsAString& aToken, ErrorResult& aError) {
   if (!mSupportedTokens) {
     aError.ThrowTypeError<MSG_TOKENLIST_NO_SUPPORTED_TOKENS>(
-      mElement->LocalName(),
-      nsDependentAtomString(mAttrAtom));
+        mElement->LocalName(), nsDependentAtomString(mAttrAtom));
     return false;
   }
 
   for (DOMTokenListSupportedToken* supportedToken = mSupportedTokens;
-       *supportedToken;
-       ++supportedToken) {
+       *supportedToken; ++supportedToken) {
     if (aToken.LowerCaseEqualsASCII(*supportedToken)) {
       return true;
     }
@@ -415,9 +375,7 @@ nsDOMTokenList::Supports(const nsAString& aToken,
   return false;
 }
 
-void
-nsDOMTokenList::Stringify(nsAString& aResult)
-{
+void nsDOMTokenList::Stringify(nsAString& aResult) {
   if (!mElement) {
     aResult.Truncate();
     return;
@@ -426,15 +384,11 @@ nsDOMTokenList::Stringify(nsAString& aResult)
   mElement->GetAttr(kNameSpaceID_None, mAttrAtom, aResult);
 }
 
-DocGroup*
-nsDOMTokenList::GetDocGroup() const
-{
+DocGroup* nsDOMTokenList::GetDocGroup() const {
   return mElement ? mElement->OwnerDoc()->GetDocGroup() : nullptr;
 }
 
-JSObject*
-nsDOMTokenList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* nsDOMTokenList::WrapObject(JSContext* cx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return DOMTokenList_Binding::Wrap(cx, this, aGivenProto);
 }
-

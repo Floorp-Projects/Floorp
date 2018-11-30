@@ -67,9 +67,7 @@ class CommandLine {
     return current_process_commandline_;
   }
 
-  static bool IsInitialized() {
-    return !!current_process_commandline_;
-  }
+  static bool IsInitialized() { return !!current_process_commandline_; }
 
   // Returns true if this command line contains the given switch.
   // (Switch names are case-insensitive.)
@@ -91,9 +89,7 @@ class CommandLine {
   }
 #elif defined(OS_POSIX)
   // Returns the original command line string as a vector of strings.
-  const std::vector<std::string>& argv() const {
-    return argv_;
-  }
+  const std::vector<std::string>& argv() const { return argv_; }
 #endif
 
   // Returns the program part of the command line string (the first item).
@@ -106,8 +102,7 @@ class CommandLine {
   // Return a copy of the string prefixed with a switch prefix,
   // and appended with the given value. Used internally.
   static std::wstring PrefixedSwitchStringWithValue(
-                        const std::wstring& switch_string,
-                        const std::wstring& value_string);
+      const std::wstring& switch_string, const std::wstring& value_string);
 
   // Appends the given switch string (preceded by a space and a switch
   // prefix) to the given string.
@@ -129,8 +124,7 @@ class CommandLine {
 
   // Append the arguments from another command line to this one.
   // If |include_program| is true, include |other|'s program as well.
-  void AppendArguments(const CommandLine& other,
-                       bool include_program);
+  void AppendArguments(const CommandLine& other, bool include_program);
 
   // On POSIX systems it's common to run processes via a wrapper (like
   // "valgrind" or "gdb --args").
@@ -178,8 +172,7 @@ class CommandLine {
   // Returns true and fills in |switch_string| and |switch_value|
   // if |parameter_string| represents a switch.
   static bool IsSwitch(const StringType& parameter_string,
-                       std::string* switch_string,
-                       StringType* switch_value);
+                       std::string* switch_string, StringType* switch_value);
 
   // Parsed-out values.
   std::map<std::string, StringType> switches_;

@@ -21,7 +21,7 @@ enum FromParser {
   FROM_PARSER_XSLT = 1 << 3
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FromParser_h
+#endif  // mozilla_dom_FromParser_h

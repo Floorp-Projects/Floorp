@@ -10,11 +10,9 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-void
-CoalescedWheelData::Coalesce(const WidgetWheelEvent& aEvent,
-                             const ScrollableLayerGuid& aGuid,
-                             const uint64_t& aInputBlockId)
-{
+void CoalescedWheelData::Coalesce(const WidgetWheelEvent& aEvent,
+                                  const ScrollableLayerGuid& aGuid,
+                                  const uint64_t& aInputBlockId) {
   if (IsEmpty()) {
     mCoalescedInputEvent = MakeUnique<WidgetWheelEvent>(aEvent);
     mGuid = aGuid;
@@ -35,17 +33,14 @@ CoalescedWheelData::Coalesce(const WidgetWheelEvent& aEvent,
   }
 }
 
-bool
-CoalescedWheelData::CanCoalesce(const WidgetWheelEvent& aEvent,
-                                const ScrollableLayerGuid& aGuid,
-                                const uint64_t& aInputBlockId)
-{
+bool CoalescedWheelData::CanCoalesce(const WidgetWheelEvent& aEvent,
+                                     const ScrollableLayerGuid& aGuid,
+                                     const uint64_t& aInputBlockId) {
   MOZ_ASSERT(!IsEmpty());
   return !mCoalescedInputEvent ||
          (mCoalescedInputEvent->mRefPoint == aEvent.mRefPoint &&
           mCoalescedInputEvent->mModifiers == aEvent.mModifiers &&
           mCoalescedInputEvent->mDeltaMode == aEvent.mDeltaMode &&
           mCoalescedInputEvent->mCanTriggerSwipe == aEvent.mCanTriggerSwipe &&
-          mGuid == aGuid &&
-          mInputBlockId == aInputBlockId);
+          mGuid == aGuid && mInputBlockId == aInputBlockId);
 }

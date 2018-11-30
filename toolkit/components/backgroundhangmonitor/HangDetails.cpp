@@ -4,7 +4,7 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Unused.h"
-#include "mozilla/GfxMessageUtils.h" // For ParamTraits<GeckoProcessType>
+#include "mozilla/GfxMessageUtils.h"  // For ParamTraits<GeckoProcessType>
 
 #ifdef MOZ_GECKO_PROFILER
 #include "shared-libraries.h"
@@ -13,43 +13,37 @@
 namespace mozilla {
 
 NS_IMETHODIMP
-nsHangDetails::GetDuration(double* aDuration)
-{
+nsHangDetails::GetDuration(double* aDuration) {
   *aDuration = mDetails.duration().ToMilliseconds();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHangDetails::GetThread(nsACString& aName)
-{
+nsHangDetails::GetThread(nsACString& aName) {
   aName.Assign(mDetails.threadName());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHangDetails::GetRunnableName(nsACString& aRunnableName)
-{
+nsHangDetails::GetRunnableName(nsACString& aRunnableName) {
   aRunnableName.Assign(mDetails.runnableName());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHangDetails::GetProcess(nsACString& aName)
-{
+nsHangDetails::GetProcess(nsACString& aName) {
   aName.Assign(mDetails.process());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHangDetails::GetRemoteType(nsAString& aName)
-{
+nsHangDetails::GetRemoteType(nsAString& aName) {
   aName.Assign(mDetails.remoteType());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHangDetails::GetAnnotations(JSContext* aCx, JS::MutableHandleValue aVal)
-{
+nsHangDetails::GetAnnotations(JSContext* aCx, JS::MutableHandleValue aVal) {
   // We create an object with { "key" : "value" } string pairs for each item in
   // our annotations object.
   JS::RootedObject jsAnnotation(aCx, JS_NewPlainObject(aCx));
@@ -58,14 +52,16 @@ nsHangDetails::GetAnnotations(JSContext* aCx, JS::MutableHandleValue aVal)
   }
 
   for (auto& annot : mDetails.annotations()) {
-    JSString* jsString = JS_NewUCStringCopyN(aCx, annot.value().get(), annot.value().Length());
+    JSString* jsString =
+        JS_NewUCStringCopyN(aCx, annot.value().get(), annot.value().Length());
     if (!jsString) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     JS::RootedValue jsValue(aCx);
     jsValue.setString(jsString);
-    if (!JS_DefineUCProperty(aCx, jsAnnotation, annot.name().get(), annot.name().Length(),
-                             jsValue, JSPROP_ENUMERATE)) {
+    if (!JS_DefineUCProperty(aCx, jsAnnotation, annot.name().get(),
+                             annot.name().Length(), jsValue,
+                             JSPROP_ENUMERATE)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -74,14 +70,10 @@ nsHangDetails::GetAnnotations(JSContext* aCx, JS::MutableHandleValue aVal)
   return NS_OK;
 }
 
-namespace  {
+namespace {
 
-nsresult
-StringFrame(JSContext* aCx,
-            JS::RootedObject& aTarget,
-            size_t aIndex,
-            const char* aString)
-{
+nsresult StringFrame(JSContext* aCx, JS::RootedObject& aTarget, size_t aIndex,
+                     const char* aString) {
   JSString* jsString = JS_NewStringCopyZ(aCx, aString);
   if (!jsString) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -96,11 +88,10 @@ StringFrame(JSContext* aCx,
   return NS_OK;
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 NS_IMETHODIMP
-nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandleValue aStack)
-{
+nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandleValue aStack) {
   auto& stack = mDetails.stack();
   uint32_t length = stack.stack().Length();
   JS::RootedObject ret(aCx, JS_NewArrayObject(aCx, length));
@@ -138,8 +129,8 @@ nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandleValue aStack)
 
         // We know this offset is safe because of the previous checks.
         const int8_t* start = stack.strbuffer().Elements() + offset;
-        nsresult rv = StringFrame(aCx, ret, i,
-                                  reinterpret_cast<const char*>(start));
+        nsresult rv =
+            StringFrame(aCx, ret, i, reinterpret_cast<const char*>(start));
         NS_ENSURE_SUCCESS(rv, rv);
         break;
       }
@@ -197,7 +188,8 @@ nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandleValue aStack)
         NS_ENSURE_SUCCESS(rv, rv);
         break;
       }
-      default: MOZ_CRASH("Unsupported HangEntry type?");
+      default:
+        MOZ_CRASH("Unsupported HangEntry type?");
     }
   }
 
@@ -206,8 +198,7 @@ nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandleValue aStack)
 }
 
 NS_IMETHODIMP
-nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal)
-{
+nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal) {
   auto& modules = mDetails.stack().modules();
   size_t length = modules.Length();
   JS::RootedObject retObj(aCx, JS_NewArrayObject(aCx, length));
@@ -222,16 +213,16 @@ nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JS::RootedString name(aCx, JS_NewUCStringCopyN(aCx,
-                                                   module.name().BeginReading(),
-                                                   module.name().Length()));
+    JS::RootedString name(aCx,
+                          JS_NewUCStringCopyN(aCx, module.name().BeginReading(),
+                                              module.name().Length()));
     if (!JS_DefineElement(aCx, jsModule, 0, name, JSPROP_ENUMERATE)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JS::RootedString breakpadId(aCx, JS_NewStringCopyN(aCx,
-                                                       module.breakpadId().BeginReading(),
-                                                       module.breakpadId().Length()));
+    JS::RootedString breakpadId(
+        aCx, JS_NewStringCopyN(aCx, module.breakpadId().BeginReading(),
+                               module.breakpadId().Length()));
     if (!JS_DefineElement(aCx, jsModule, 1, breakpadId, JSPROP_ENUMERATE)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -247,53 +238,53 @@ nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal)
 
 // Processing and submitting the stack as an observer notification.
 
-void
-nsHangDetails::Submit()
-{
+void nsHangDetails::Submit() {
   if (NS_WARN_IF(!SystemGroup::Initialized())) {
     return;
   }
 
   RefPtr<nsHangDetails> hangDetails = this;
-  nsCOMPtr<nsIRunnable> notifyObservers = NS_NewRunnableFunction("NotifyBHRHangObservers", [hangDetails] {
-    // The place we need to report the hang to varies depending on process.
-    //
-    // In child processes, we report the hang to our parent process, while if
-    // we're in the parent process, we report a bhr-thread-hang observer
-    // notification.
-    switch (XRE_GetProcessType()) {
-    case GeckoProcessType_Content: {
-      auto cc = dom::ContentChild::GetSingleton();
-      if (cc) {
-        hangDetails->mDetails.remoteType().Assign(cc->GetRemoteType());
-        Unused << cc->SendBHRThreadHang(hangDetails->mDetails);
-      }
-      break;
-    }
-    case GeckoProcessType_GPU: {
-      auto gp = gfx::GPUParent::GetSingleton();
-      if (gp) {
-        Unused << gp->SendBHRThreadHang(hangDetails->mDetails);
-      }
-      break;
-    }
-    case GeckoProcessType_Default: {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (os) {
-        os->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
-      }
-      break;
-    }
-    default:
-      // XXX: Consider handling GeckoProcessType_GMPlugin and
-      // GeckoProcessType_Plugin?
-      NS_WARNING("Unsupported BHR process type - discarding hang.");
-      break;
-    }
-  });
+  nsCOMPtr<nsIRunnable> notifyObservers =
+      NS_NewRunnableFunction("NotifyBHRHangObservers", [hangDetails] {
+        // The place we need to report the hang to varies depending on process.
+        //
+        // In child processes, we report the hang to our parent process, while
+        // if we're in the parent process, we report a bhr-thread-hang observer
+        // notification.
+        switch (XRE_GetProcessType()) {
+          case GeckoProcessType_Content: {
+            auto cc = dom::ContentChild::GetSingleton();
+            if (cc) {
+              hangDetails->mDetails.remoteType().Assign(cc->GetRemoteType());
+              Unused << cc->SendBHRThreadHang(hangDetails->mDetails);
+            }
+            break;
+          }
+          case GeckoProcessType_GPU: {
+            auto gp = gfx::GPUParent::GetSingleton();
+            if (gp) {
+              Unused << gp->SendBHRThreadHang(hangDetails->mDetails);
+            }
+            break;
+          }
+          case GeckoProcessType_Default: {
+            nsCOMPtr<nsIObserverService> os =
+                mozilla::services::GetObserverService();
+            if (os) {
+              os->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
+            }
+            break;
+          }
+          default:
+            // XXX: Consider handling GeckoProcessType_GMPlugin and
+            // GeckoProcessType_Plugin?
+            NS_WARNING("Unsupported BHR process type - discarding hang.");
+            break;
+        }
+      });
 
-  nsresult rv = SystemGroup::Dispatch(TaskCategory::Other,
-                                      notifyObservers.forget());
+  nsresult rv =
+      SystemGroup::Dispatch(TaskCategory::Other, notifyObservers.forget());
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 }
 
@@ -305,18 +296,18 @@ namespace {
 // PC.
 struct PCFrameComparator {
   bool LessThan(HangEntry* const& a, HangEntry* const& b) const {
-    return a->get_HangEntryProgCounter().pc() < b->get_HangEntryProgCounter().pc();
+    return a->get_HangEntryProgCounter().pc() <
+           b->get_HangEntryProgCounter().pc();
   }
   bool Equals(HangEntry* const& a, HangEntry* const& b) const {
-    return a->get_HangEntryProgCounter().pc() == b->get_HangEntryProgCounter().pc();
+    return a->get_HangEntryProgCounter().pc() ==
+           b->get_HangEntryProgCounter().pc();
   }
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
-void
-ReadModuleInformation(HangStack& stack)
-{
+void ReadModuleInformation(HangStack& stack) {
   // modules() should be empty when we start filling it.
   stack.modules().Clear();
 
@@ -352,7 +343,8 @@ ReadModuleInformation(HangStack& stack)
       if (pc >= moduleStart) {
         uint64_t offset = pc - moduleStart;
         if (NS_WARN_IF(offset > UINT32_MAX)) {
-          continue; // module/offset can only hold 32-bit offsets into shared libraries.
+          continue;  // module/offset can only hold 32-bit offsets into shared
+                     // libraries.
         }
 
         // If we found the module, rewrite the Frame entry to instead be a
@@ -375,16 +367,16 @@ ReadModuleInformation(HangStack& stack)
 }
 
 NS_IMETHODIMP
-ProcessHangStackRunnable::Run()
-{
+ProcessHangStackRunnable::Run() {
   // NOTE: Reading module information can take a long time, which is why we do
   // it off-main-thread.
   ReadModuleInformation(mHangDetails.stack());
 
-  RefPtr<nsHangDetails> hangDetails = new nsHangDetails(std::move(mHangDetails));
+  RefPtr<nsHangDetails> hangDetails =
+      new nsHangDetails(std::move(mHangDetails));
   hangDetails->Submit();
 
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -12,9 +12,8 @@
 #include <stdint.h>
 #include "nsCSSProps.h"
 
-class nsMediaFeatures
-{
-public:
+class nsMediaFeatures {
+ public:
   static void InitSystemMetrics();
   static void FreeSystemMetrics();
   static void Shutdown();

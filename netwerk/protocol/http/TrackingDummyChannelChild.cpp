@@ -13,17 +13,16 @@
 namespace mozilla {
 namespace net {
 
-/* static */ bool
-TrackingDummyChannelChild::Create(nsIHttpChannel* aChannel, nsIURI* aURI,
-                                  const std::function<void(bool)>& aCallback)
-{
+/* static */ bool TrackingDummyChannelChild::Create(
+    nsIHttpChannel* aChannel, nsIURI* aURI,
+    const std::function<void(bool)>& aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(aURI);
 
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
-    do_QueryInterface(aChannel);
+      do_QueryInterface(aChannel);
   if (!httpChannelInternal) {
     // Any non-http channel is allowed.
     return true;
@@ -31,7 +30,7 @@ TrackingDummyChannelChild::Create(nsIHttpChannel* aChannel, nsIURI* aURI,
 
   nsCOMPtr<nsIURI> topWindowURI;
   nsresult topWindowURIResult =
-    httpChannelInternal->GetTopWindowURI(getter_AddRefs(topWindowURI));
+      httpChannelInternal->GetTopWindowURI(getter_AddRefs(topWindowURI));
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   if (!loadInfo) {
@@ -42,34 +41,27 @@ TrackingDummyChannelChild::Create(nsIHttpChannel* aChannel, nsIURI* aURI,
   mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs);
 
   PTrackingDummyChannelChild* actor =
-    gNeckoChild->SendPTrackingDummyChannelConstructor(aURI, topWindowURI,
-                                                      topWindowURIResult,
-                                                      loadInfoArgs);
+      gNeckoChild->SendPTrackingDummyChannelConstructor(
+          aURI, topWindowURI, topWindowURIResult, loadInfoArgs);
   if (!actor) {
     return false;
   }
 
   bool isThirdParty =
-    nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, aURI);
+      nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, aURI);
 
-  static_cast<TrackingDummyChannelChild*>(actor)->Initialize(aChannel, aURI,
-                                                             isThirdParty,
-                                                             aCallback);
+  static_cast<TrackingDummyChannelChild*>(actor)->Initialize(
+      aChannel, aURI, isThirdParty, aCallback);
   return true;
 }
 
-TrackingDummyChannelChild::TrackingDummyChannelChild()
-  : mIsThirdParty(false)
-{}
+TrackingDummyChannelChild::TrackingDummyChannelChild() : mIsThirdParty(false) {}
 
 TrackingDummyChannelChild::~TrackingDummyChannelChild() = default;
 
-void
-TrackingDummyChannelChild::Initialize(nsIHttpChannel* aChannel,
-                                      nsIURI* aURI,
-                                      bool aIsThirdParty,
-                                      const std::function<void(bool)>& aCallback)
-{
+void TrackingDummyChannelChild::Initialize(
+    nsIHttpChannel* aChannel, nsIURI* aURI, bool aIsThirdParty,
+    const std::function<void(bool)>& aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
 
   mChannel = aChannel;
@@ -78,9 +70,8 @@ TrackingDummyChannelChild::Initialize(nsIHttpChannel* aChannel,
   mCallback = aCallback;
 }
 
-mozilla::ipc::IPCResult
-TrackingDummyChannelChild::Recv__delete__(const bool& aTrackingResource)
-{
+mozilla::ipc::IPCResult TrackingDummyChannelChild::Recv__delete__(
+    const bool& aTrackingResource) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mChannel) {
@@ -94,12 +85,11 @@ TrackingDummyChannelChild::Recv__delete__(const bool& aTrackingResource)
     httpChannel->SetIsTrackingResource(mIsThirdParty);
   }
 
-  bool storageGranted =
-    AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel, mURI,
-                                                            nullptr);
+  bool storageGranted = AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+      httpChannel, mURI, nullptr);
   mCallback(storageGranted);
   return IPC_OK();
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

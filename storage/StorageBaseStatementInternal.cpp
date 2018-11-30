@@ -21,9 +21,8 @@ namespace storage {
 /**
  * Used to finalize an asynchronous statement on the background thread.
  */
-class AsyncStatementFinalizer : public Runnable
-{
-public:
+class AsyncStatementFinalizer : public Runnable {
+ public:
   /**
    * Constructor for the event.
    *
@@ -35,27 +34,25 @@ public:
    *        on.  We release the statement on that thread since releasing the
    *        statement might end up releasing the connection too.
    */
-  AsyncStatementFinalizer(StorageBaseStatementInternal* aStatement,
-                          Connection* aConnection)
-    : Runnable("storage::AsyncStatementFinalizer")
-    , mStatement(aStatement)
-    , mConnection(aConnection)
-  {
-  }
+  AsyncStatementFinalizer(StorageBaseStatementInternal *aStatement,
+                          Connection *aConnection)
+      : Runnable("storage::AsyncStatementFinalizer"),
+        mStatement(aStatement),
+        mConnection(aConnection) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     if (mStatement->mAsyncStatement) {
       sqlite3_finalize(mStatement->mAsyncStatement);
       mStatement->mAsyncStatement = nullptr;
     }
 
     nsCOMPtr<nsIThread> targetThread(mConnection->threadOpenedOn);
-    NS_ProxyRelease(
-      "AsyncStatementFinalizer::mStatement", targetThread, mStatement.forget());
+    NS_ProxyRelease("AsyncStatementFinalizer::mStatement", targetThread,
+                    mStatement.forget());
     return NS_OK;
   }
-private:
+
+ private:
   RefPtr<StorageBaseStatementInternal> mStatement;
   RefPtr<Connection> mConnection;
 };
@@ -64,9 +61,8 @@ private:
  * Finalize a sqlite3_stmt on the background thread for a statement whose
  * destructor was invoked and the statement was non-null.
  */
-class LastDitchSqliteStatementFinalizer : public Runnable
-{
-public:
+class LastDitchSqliteStatementFinalizer : public Runnable {
+ public:
   /**
    * Event constructor.
    *
@@ -82,27 +78,25 @@ public:
    *        responsibility for the instance and all other references to it
    *        should be forgotten.
    */
-  LastDitchSqliteStatementFinalizer(RefPtr<Connection>& aConnection,
-                                    sqlite3_stmt* aStatement)
-    : Runnable("storage::LastDitchSqliteStatementFinalizer")
-    , mConnection(aConnection)
-    , mAsyncStatement(aStatement)
-  {
+  LastDitchSqliteStatementFinalizer(RefPtr<Connection> &aConnection,
+                                    sqlite3_stmt *aStatement)
+      : Runnable("storage::LastDitchSqliteStatementFinalizer"),
+        mConnection(aConnection),
+        mAsyncStatement(aStatement) {
     MOZ_ASSERT(aConnection, "You must provide a Connection");
   }
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     (void)::sqlite3_finalize(mAsyncStatement);
     mAsyncStatement = nullptr;
 
     nsCOMPtr<nsIThread> target(mConnection->threadOpenedOn);
-    (void)::NS_ProxyRelease(
-      "LastDitchSqliteStatementFinalizer::mConnection",
-      target, mConnection.forget());
+    (void)::NS_ProxyRelease("LastDitchSqliteStatementFinalizer::mConnection",
+                            target, mConnection.forget());
     return NS_OK;
   }
-private:
+
+ private:
   RefPtr<Connection> mConnection;
   sqlite3_stmt *mAsyncStatement;
 };
@@ -111,19 +105,14 @@ private:
 //// StorageBaseStatementInternal
 
 StorageBaseStatementInternal::StorageBaseStatementInternal()
-: mNativeConnection(nullptr)
-, mAsyncStatement(nullptr)
-{
-}
+    : mNativeConnection(nullptr), mAsyncStatement(nullptr) {}
 
-void
-StorageBaseStatementInternal::asyncFinalize()
-{
+void StorageBaseStatementInternal::asyncFinalize() {
   nsIEventTarget *target = mDBConnection->getAsyncExecutionTarget();
   if (target) {
     // Attempt to finalize asynchronously
     nsCOMPtr<nsIRunnable> event =
-      new AsyncStatementFinalizer(this, mDBConnection);
+        new AsyncStatementFinalizer(this, mDBConnection);
 
     // Dispatch. Note that dispatching can fail, typically if
     // we have a race condition with asyncClose(). It's ok,
@@ -136,11 +125,8 @@ StorageBaseStatementInternal::asyncFinalize()
   // internalClose().
 }
 
-void
-StorageBaseStatementInternal::destructorAsyncFinalize()
-{
-  if (!mAsyncStatement)
-    return;
+void StorageBaseStatementInternal::destructorAsyncFinalize() {
+  if (!mAsyncStatement) return;
 
   bool isOwningThread = false;
   (void)mDBConnection->threadOpenedOn->IsOnCurrentThread(&isOwningThread);
@@ -151,17 +137,16 @@ StorageBaseStatementInternal::destructorAsyncFinalize()
     nsIEventTarget *target = mDBConnection->getAsyncExecutionTarget();
     if (target) {
       nsCOMPtr<nsIRunnable> event =
-        new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
+          new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
       (void)target->Dispatch(event, NS_DISPATCH_NORMAL);
     }
   } else {
     // If we're not the owning thread, assume we're the async thread, and
     // just run the statement.
     nsCOMPtr<nsIRunnable> event =
-      new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
+        new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
     (void)event->Run();
   }
-
 
   // We might not be able to dispatch to the background thread,
   // presumably because it is being shutdown. Since said shutdown will
@@ -171,9 +156,7 @@ StorageBaseStatementInternal::destructorAsyncFinalize()
 
 NS_IMETHODIMP
 StorageBaseStatementInternal::NewBindingParamsArray(
-  mozIStorageBindingParamsArray **_array
-)
-{
+    mozIStorageBindingParamsArray **_array) {
   nsCOMPtr<mozIStorageBindingParamsArray> array = new BindingParamsArray(this);
   NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
 
@@ -183,10 +166,8 @@ StorageBaseStatementInternal::NewBindingParamsArray(
 
 NS_IMETHODIMP
 StorageBaseStatementInternal::ExecuteAsync(
-  mozIStorageStatementCallback *aCallback,
-  mozIStoragePendingStatement **_stmt
-)
-{
+    mozIStorageStatementCallback *aCallback,
+    mozIStoragePendingStatement **_stmt) {
   // We used to call Connection::ExecuteAsync but it takes a
   // mozIStorageBaseStatement signature because it is also a public API.  Since
   // our 'this' has no static concept of mozIStorageBaseStatement and Connection
@@ -204,12 +185,9 @@ StorageBaseStatementInternal::ExecuteAsync(
 }
 
 NS_IMETHODIMP
-StorageBaseStatementInternal::EscapeStringForLIKE(
-  const nsAString &aValue,
-  const char16_t aEscapeChar,
-  nsAString &_escapedString
-)
-{
+StorageBaseStatementInternal::EscapeStringForLIKE(const nsAString &aValue,
+                                                  const char16_t aEscapeChar,
+                                                  nsAString &_escapedString) {
   const char16_t MATCH_ALL('%');
   const char16_t MATCH_ONE('_');
 
@@ -225,5 +203,5 @@ StorageBaseStatementInternal::EscapeStringForLIKE(
   return NS_OK;
 }
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla

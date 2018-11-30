@@ -15,7 +15,7 @@ namespace recordreplay {
 // Initialize trigger state at the beginning of recording or replaying.
 void InitializeTriggers();
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_Trigger_h
+#endif  // mozilla_recordreplay_Trigger_h

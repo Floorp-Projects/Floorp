@@ -27,15 +27,12 @@ namespace js {
 namespace wasm {
 
 // Generates code with Cranelift.
-MOZ_MUST_USE bool
-CraneliftCompileFunctions(const ModuleEnvironment& env,
-                         LifoAlloc& lifo,
-                         const FuncCompileInputVector& inputs,
-                         CompiledCode* code,
-                         ExclusiveDeferredValidationState& dvs,
-                         UniqueChars* error);
+MOZ_MUST_USE bool CraneliftCompileFunctions(
+    const ModuleEnvironment& env, LifoAlloc& lifo,
+    const FuncCompileInputVector& inputs, CompiledCode* code,
+    ExclusiveDeferredValidationState& dvs, UniqueChars* error);
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
-#endif // wasm_cranelift_compile_h
+#endif  // wasm_cranelift_compile_h

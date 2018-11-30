@@ -25,14 +25,9 @@
 
 #include "nsCommandManager.h"
 
-nsCommandManager::nsCommandManager()
-  : mWindow(nullptr)
-{
-}
+nsCommandManager::nsCommandManager() : mWindow(nullptr) {}
 
-nsCommandManager::~nsCommandManager()
-{
-}
+nsCommandManager::~nsCommandManager() {}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCommandManager)
 
@@ -60,17 +55,15 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCommandManager)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsCommandManager::Init(mozIDOMWindowProxy* aWindow)
-{
+nsCommandManager::Init(mozIDOMWindowProxy* aWindow) {
   NS_ENSURE_ARG_POINTER(aWindow);
 
-  mWindow = aWindow; // weak ptr
+  mWindow = aWindow;  // weak ptr
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCommandManager::CommandStatusChanged(const char* aCommandName)
-{
+nsCommandManager::CommandStatusChanged(const char* aCommandName) {
   ObserverList* commandObservers;
   mObserversTable.Get(aCommandName, &commandObservers);
 
@@ -81,8 +74,7 @@ nsCommandManager::CommandStatusChanged(const char* aCommandName)
       nsCOMPtr<nsIObserver> observer = commandObservers->ElementAt(i);
       // should we get the command state to pass here? This might be expensive.
       observer->Observe(NS_ISUPPORTS_CAST(nsICommandManager*, this),
-                        aCommandName,
-                        u"command_status_changed");
+                        aCommandName, u"command_status_changed");
     }
   }
 
@@ -95,16 +87,16 @@ nsCommandManager::CommandStatusChanged(const char* aCommandName)
 
 NS_IMETHODIMP
 nsCommandManager::AddCommandObserver(nsIObserver* aCommandObserver,
-                                     const char* aCommandToObserve)
-{
+                                     const char* aCommandToObserve) {
   NS_ENSURE_ARG(aCommandObserver);
 
   // XXX todo: handle special cases of aCommandToObserve being null, or empty
 
   // for each command in the table, we make a list of observers for that command
   ObserverList* commandObservers =
-    mObserversTable.LookupForAdd(aCommandToObserve).OrInsert(
-      [] () { return new ObserverList; });
+      mObserversTable.LookupForAdd(aCommandToObserve).OrInsert([]() {
+        return new ObserverList;
+      });
 
   // need to check that this command observer hasn't already been registered
   int32_t existingIndex = commandObservers->IndexOf(aCommandObserver);
@@ -119,8 +111,7 @@ nsCommandManager::AddCommandObserver(nsIObserver* aCommandObserver,
 
 NS_IMETHODIMP
 nsCommandManager::RemoveCommandObserver(nsIObserver* aCommandObserver,
-                                        const char* aCommandObserved)
-{
+                                        const char* aCommandObserved) {
   NS_ENSURE_ARG(aCommandObserver);
 
   // XXX todo: handle special cases of aCommandToObserve being null, or empty
@@ -138,8 +129,7 @@ nsCommandManager::RemoveCommandObserver(nsIObserver* aCommandObserver,
 NS_IMETHODIMP
 nsCommandManager::IsCommandSupported(const char* aCommandName,
                                      mozIDOMWindowProxy* aTargetWindow,
-                                     bool* aResult)
-{
+                                     bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
   nsCOMPtr<nsIController> controller;
@@ -152,8 +142,7 @@ nsCommandManager::IsCommandSupported(const char* aCommandName,
 NS_IMETHODIMP
 nsCommandManager::IsCommandEnabled(const char* aCommandName,
                                    mozIDOMWindowProxy* aTargetWindow,
-                                   bool* aResult)
-{
+                                   bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
   bool commandEnabled = false;
@@ -171,8 +160,7 @@ nsCommandManager::IsCommandEnabled(const char* aCommandName,
 NS_IMETHODIMP
 nsCommandManager::GetCommandState(const char* aCommandName,
                                   mozIDOMWindowProxy* aTargetWindow,
-                                  nsICommandParams* aCommandParams)
-{
+                                  nsICommandParams* aCommandParams) {
   nsCOMPtr<nsIController> controller;
   nsAutoString tValue;
   nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow,
@@ -182,7 +170,7 @@ nsCommandManager::GetCommandState(const char* aCommandName,
   }
 
   nsCOMPtr<nsICommandController> commandController =
-    do_QueryInterface(controller);
+      do_QueryInterface(controller);
   if (commandController) {
     rv = commandController->GetCommandStateWithParams(aCommandName,
                                                       aCommandParams);
@@ -195,8 +183,7 @@ nsCommandManager::GetCommandState(const char* aCommandName,
 NS_IMETHODIMP
 nsCommandManager::DoCommand(const char* aCommandName,
                             nsICommandParams* aCommandParams,
-                            mozIDOMWindowProxy* aTargetWindow)
-{
+                            mozIDOMWindowProxy* aTargetWindow) {
   nsCOMPtr<nsIController> controller;
   nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow,
                                         getter_AddRefs(controller));
@@ -205,7 +192,7 @@ nsCommandManager::DoCommand(const char* aCommandName,
   }
 
   nsCOMPtr<nsICommandController> commandController =
-    do_QueryInterface(controller);
+      do_QueryInterface(controller);
   if (commandController && aCommandParams) {
     rv = commandController->DoCommandWithParams(aCommandName, aCommandParams);
   } else {
@@ -214,11 +201,9 @@ nsCommandManager::DoCommand(const char* aCommandName,
   return rv;
 }
 
-nsresult
-nsCommandManager::GetControllerForCommand(const char* aCommand,
-                                          mozIDOMWindowProxy* aTargetWindow,
-                                          nsIController** aResult)
-{
+nsresult nsCommandManager::GetControllerForCommand(
+    const char* aCommand, mozIDOMWindowProxy* aTargetWindow,
+    nsIController** aResult) {
   nsresult rv = NS_ERROR_FAILURE;
   *aResult = nullptr;
 

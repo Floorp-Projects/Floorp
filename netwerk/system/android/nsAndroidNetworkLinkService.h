@@ -9,15 +9,14 @@
 
 #include "nsINetworkLinkService.h"
 
-class nsAndroidNetworkLinkService: public nsINetworkLinkService
-{
-public:
+class nsAndroidNetworkLinkService : public nsINetworkLinkService {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINETWORKLINKSERVICE
 
   nsAndroidNetworkLinkService();
 
-private:
+ private:
   virtual ~nsAndroidNetworkLinkService();
 };
 

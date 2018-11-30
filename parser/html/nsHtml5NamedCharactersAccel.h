@@ -15,10 +15,9 @@
 #include "mozilla/Logging.h"
 #include "nsMemory.h"
 
-class nsHtml5NamedCharactersAccel
-{
-public:
+class nsHtml5NamedCharactersAccel {
+ public:
   static const int32_t* const HILO_ACCEL[];
 };
 
-#endif // nsHtml5NamedCharactersAccel_h
+#endif  // nsHtml5NamedCharactersAccel_h

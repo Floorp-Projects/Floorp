@@ -18,29 +18,29 @@ namespace dom {
 
 // This class is a BlobImpl because it needs to be sent via IPC using
 // IPCBlobUtils.
-class TemporaryFileBlobImpl final : public FileBlobImpl
-{
+class TemporaryFileBlobImpl final : public FileBlobImpl {
 #ifdef DEBUG
   bool mInputStreamCreated;
 #endif
 
-public:
+ public:
   explicit TemporaryFileBlobImpl(nsIFile* aFile, const nsAString& aContentType);
 
   // Overrides
   virtual void CreateInputStream(nsIInputStream** aInputStream,
                                  ErrorResult& aRv) override;
 
-protected:
+ protected:
   virtual ~TemporaryFileBlobImpl();
 
-private:
-  virtual already_AddRefed<BlobImpl>
-  CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType, ErrorResult& aRv) override;
+ private:
+  virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
+                                                 uint64_t aLength,
+                                                 const nsAString& aContentType,
+                                                 ErrorResult& aRv) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TemporaryFileBlobImpl_h
+#endif  // mozilla_dom_TemporaryFileBlobImpl_h

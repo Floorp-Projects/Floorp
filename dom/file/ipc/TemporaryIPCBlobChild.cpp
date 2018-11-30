@@ -12,18 +12,14 @@ namespace mozilla {
 namespace dom {
 
 TemporaryIPCBlobChild::TemporaryIPCBlobChild(MutableBlobStorage* aStorage)
-  : mMutableBlobStorage(aStorage)
-  , mActive(true)
-{
+    : mMutableBlobStorage(aStorage), mActive(true) {
   MOZ_ASSERT(aStorage);
 }
 
-TemporaryIPCBlobChild::~TemporaryIPCBlobChild()
-{}
+TemporaryIPCBlobChild::~TemporaryIPCBlobChild() {}
 
-mozilla::ipc::IPCResult
-TemporaryIPCBlobChild::RecvFileDesc(const FileDescriptor& aFD)
-{
+mozilla::ipc::IPCResult TemporaryIPCBlobChild::RecvFileDesc(
+    const FileDescriptor& aFD) {
   MOZ_ASSERT(mActive);
 
   auto rawFD = aFD.ClonePlatformHandle();
@@ -34,9 +30,8 @@ TemporaryIPCBlobChild::RecvFileDesc(const FileDescriptor& aFD)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TemporaryIPCBlobChild::Recv__delete__(const IPCBlobOrError& aData)
-{
+mozilla::ipc::IPCResult TemporaryIPCBlobChild::Recv__delete__(
+    const IPCBlobOrError& aData) {
   mActive = false;
   mMutableBlobStorage = nullptr;
 
@@ -48,7 +43,7 @@ TemporaryIPCBlobChild::Recv__delete__(const IPCBlobOrError& aData)
     if (mCallback) {
       mCallback->OperationSucceeded(blobImpl);
     }
-  } else if(mCallback) {
+  } else if (mCallback) {
     MOZ_ASSERT(aData.type() == IPCBlobOrError::Tnsresult);
     mCallback->OperationFailed(aData.get_nsresult());
   }
@@ -58,9 +53,7 @@ TemporaryIPCBlobChild::Recv__delete__(const IPCBlobOrError& aData)
   return IPC_OK();
 }
 
-void
-TemporaryIPCBlobChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void TemporaryIPCBlobChild::ActorDestroy(ActorDestroyReason aWhy) {
   mActive = false;
   mMutableBlobStorage = nullptr;
 
@@ -70,11 +63,9 @@ TemporaryIPCBlobChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-void
-TemporaryIPCBlobChild::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
-                                  const nsACString& aContentType,
-                                  PRFileDesc* aFD)
-{
+void TemporaryIPCBlobChild::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
+                                       const nsACString& aContentType,
+                                       PRFileDesc* aFD) {
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(!mCallback);
 
@@ -83,12 +74,12 @@ TemporaryIPCBlobChild::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
     return;
   }
 
-  FileDescriptor fdd =
-    FileDescriptor(FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(aFD)));
+  FileDescriptor fdd = FileDescriptor(
+      FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(aFD)));
 
   mCallback = aCallback;
   SendOperationDone(nsCString(aContentType), fdd);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

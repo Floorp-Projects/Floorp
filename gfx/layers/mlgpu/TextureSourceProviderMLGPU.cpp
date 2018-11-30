@@ -8,61 +8,45 @@
 #include "LayerManagerMLGPU.h"
 #include "MLGDevice.h"
 #ifdef XP_WIN
-# include "mozilla/layers/MLGDeviceD3D11.h"
+#include "mozilla/layers/MLGDeviceD3D11.h"
 #endif
 
 namespace mozilla {
 namespace layers {
 
-TextureSourceProviderMLGPU::TextureSourceProviderMLGPU(LayerManagerMLGPU* aLayerManager, MLGDevice* aDevice)
- : mLayerManager(aLayerManager),
-   mDevice(aDevice)
-{
-}
+TextureSourceProviderMLGPU::TextureSourceProviderMLGPU(
+    LayerManagerMLGPU* aLayerManager, MLGDevice* aDevice)
+    : mLayerManager(aLayerManager), mDevice(aDevice) {}
 
-TextureSourceProviderMLGPU::~TextureSourceProviderMLGPU()
-{
-}
+TextureSourceProviderMLGPU::~TextureSourceProviderMLGPU() {}
 
-int32_t
-TextureSourceProviderMLGPU::GetMaxTextureSize() const
-{
+int32_t TextureSourceProviderMLGPU::GetMaxTextureSize() const {
   if (!mDevice) {
     return 0;
   }
   return mDevice->GetMaxTextureSize();
 }
 
-bool
-TextureSourceProviderMLGPU::SupportsEffect(EffectTypes aEffect)
-{
+bool TextureSourceProviderMLGPU::SupportsEffect(EffectTypes aEffect) {
   switch (aEffect) {
-  case EffectTypes::YCBCR:
-    return true;
-  default:
-    MOZ_ASSERT_UNREACHABLE("NYI");
+    case EffectTypes::YCBCR:
+      return true;
+    default:
+      MOZ_ASSERT_UNREACHABLE("NYI");
   }
   return false;
 }
 
-bool
-TextureSourceProviderMLGPU::IsValid() const
-{
-  return !!mLayerManager;
-}
+bool TextureSourceProviderMLGPU::IsValid() const { return !!mLayerManager; }
 
-void
-TextureSourceProviderMLGPU::Destroy()
-{
+void TextureSourceProviderMLGPU::Destroy() {
   mLayerManager = nullptr;
   mDevice = nullptr;
   TextureSourceProvider::Destroy();
 }
 
 #ifdef XP_WIN
-ID3D11Device*
-TextureSourceProviderMLGPU::GetD3D11Device() const
-{
+ID3D11Device* TextureSourceProviderMLGPU::GetD3D11Device() const {
   if (!mDevice) {
     return nullptr;
   }
@@ -70,9 +54,7 @@ TextureSourceProviderMLGPU::GetD3D11Device() const
 }
 #endif
 
-TimeStamp
-TextureSourceProviderMLGPU::GetLastCompositionEndTime() const
-{
+TimeStamp TextureSourceProviderMLGPU::GetLastCompositionEndTime() const {
   if (!mLayerManager) {
     return TimeStamp();
   }
@@ -80,22 +62,19 @@ TextureSourceProviderMLGPU::GetLastCompositionEndTime() const
 }
 
 already_AddRefed<DataTextureSource>
-TextureSourceProviderMLGPU::CreateDataTextureSource(TextureFlags aFlags)
-{
+TextureSourceProviderMLGPU::CreateDataTextureSource(TextureFlags aFlags) {
   RefPtr<DataTextureSource> texture = mDevice->CreateDataTextureSource(aFlags);
   return texture.forget();
 }
 
 already_AddRefed<DataTextureSource>
-TextureSourceProviderMLGPU::CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface)
-{
+TextureSourceProviderMLGPU::CreateDataTextureSourceAround(
+    gfx::DataSourceSurface* aSurface) {
   MOZ_ASSERT_UNREACHABLE("NYI");
   return nullptr;
 }
 
-void
-TextureSourceProviderMLGPU::UnlockAfterComposition(TextureHost* aTexture)
-{
+void TextureSourceProviderMLGPU::UnlockAfterComposition(TextureHost* aTexture) {
   TextureSourceProvider::UnlockAfterComposition(aTexture);
 
   // If this is being called after we shutdown the compositor, we must finish
@@ -105,14 +84,13 @@ TextureSourceProviderMLGPU::UnlockAfterComposition(TextureHost* aTexture)
   }
 }
 
-bool
-TextureSourceProviderMLGPU::NotifyNotUsedAfterComposition(TextureHost* aTextureHost)
-{
+bool TextureSourceProviderMLGPU::NotifyNotUsedAfterComposition(
+    TextureHost* aTextureHost) {
   if (!IsValid()) {
     return false;
   }
   return TextureSourceProvider::NotifyNotUsedAfterComposition(aTextureHost);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

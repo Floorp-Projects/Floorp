@@ -9,6 +9,6 @@
 #include "nsError.h"
 
 // Where most necko status messages come from:
-#define NECKO_MSGS_URL  "chrome://necko/locale/necko.properties"
+#define NECKO_MSGS_URL "chrome://necko/locale/necko.properties"
 
-#endif // __netCore_h__
+#endif  // __netCore_h__

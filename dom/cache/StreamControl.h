@@ -17,7 +17,7 @@ struct nsID;
 namespace mozilla {
 namespace ipc {
 class AutoIPCStream;
-} // namespace ipc
+}  // namespace ipc
 namespace dom {
 namespace cache {
 
@@ -26,71 +26,59 @@ class CacheReadStream;
 // Abstract class to help implement the stream control Child and Parent actors.
 // This provides an interface to partly help with serialization of IPC types,
 // but also an implementation for tracking ReadStream objects.
-class StreamControl
-{
-public:
+class StreamControl {
+ public:
   // abstract interface that must be implemented by child class
-  virtual void
-  SerializeControl(CacheReadStream* aReadStreamOut) = 0;
+  virtual void SerializeControl(CacheReadStream* aReadStreamOut) = 0;
 
-  virtual void
-  SerializeStream(CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
-                  nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList) = 0;
+  virtual void SerializeStream(
+      CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
+      nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList) = 0;
 
-  virtual void
-  OpenStream(const nsID& aId, InputStreamResolver&& aResolver) = 0;
+  virtual void OpenStream(const nsID& aId, InputStreamResolver&& aResolver) = 0;
 
   // inherited implementation of the ReadStream::Controllable list
 
   // Begin controlling the given ReadStream.  This causes a strong ref to
   // be held by the control.  The ReadStream must call NoteClosed() or
   // ForgetReadStream() to release this ref.
-  void
-  AddReadStream(ReadStream::Controllable* aReadStream);
+  void AddReadStream(ReadStream::Controllable* aReadStream);
 
   // Forget the ReadStream without notifying the actor.
-  void
-  ForgetReadStream(ReadStream::Controllable* aReadStream);
+  void ForgetReadStream(ReadStream::Controllable* aReadStream);
 
   // Forget the ReadStream and then notify the actor the stream is closed.
-  void
-  NoteClosed(ReadStream::Controllable* aReadStream, const nsID& aId);
+  void NoteClosed(ReadStream::Controllable* aReadStream, const nsID& aId);
 
-protected:
+ protected:
   ~StreamControl();
 
-  void
-  CloseReadStreams(const nsID& aId);
+  void CloseReadStreams(const nsID& aId);
 
-  void
-  CloseAllReadStreams();
+  void CloseAllReadStreams();
 
-  void
-  CloseAllReadStreamsWithoutReporting();
+  void CloseAllReadStreamsWithoutReporting();
 
-  bool
-  HasEverBeenRead() const;
+  bool HasEverBeenRead() const;
 
   // protected parts of the abstract interface
-  virtual void
-  NoteClosedAfterForget(const nsID& aId) = 0;
+  virtual void NoteClosedAfterForget(const nsID& aId) = 0;
 
 #ifdef DEBUG
-  virtual void
-  AssertOwningThread() = 0;
+  virtual void AssertOwningThread() = 0;
 #else
-  void AssertOwningThread() { }
+  void AssertOwningThread() {}
 #endif
 
-private:
+ private:
   // Hold strong references to ReadStream object.  When the stream is closed
   // it should call NoteClosed() or ForgetReadStream() to release this ref.
   typedef nsTObserverArray<RefPtr<ReadStream::Controllable>> ReadStreamList;
   ReadStreamList mReadStreamList;
 };
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_StreamControl_h
+#endif  // mozilla_dom_cache_StreamControl_h

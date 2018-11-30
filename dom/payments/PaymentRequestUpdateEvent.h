@@ -18,48 +18,44 @@ namespace dom {
 
 class Promise;
 class PaymentRequest;
-class PaymentRequestUpdateEvent : public Event
-                                , public PromiseNativeHandler
-{
-public:
+class PaymentRequestUpdateEvent : public Event, public PromiseNativeHandler {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PaymentRequestUpdateEvent, Event)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
+      PaymentRequestUpdateEvent, Event)
 
   explicit PaymentRequestUpdateEvent(EventTarget* aOwner);
 
-  virtual JSObject*
-  WrapObjectInternal(JSContext* aCx,
-                     JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
-  virtual void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override;
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override;
 
-  static already_AddRefed<PaymentRequestUpdateEvent>
-  Constructor(EventTarget* aOwner,
-              const nsAString& aType,
-              const PaymentRequestUpdateEventInit& aEventInitDict);
+  static already_AddRefed<PaymentRequestUpdateEvent> Constructor(
+      EventTarget* aOwner, const nsAString& aType,
+      const PaymentRequestUpdateEventInit& aEventInitDict);
 
   // Called by WebIDL constructor
-  static already_AddRefed<PaymentRequestUpdateEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const PaymentRequestUpdateEventInit& aEventInitDict,
-              ErrorResult& aRv);
+  static already_AddRefed<PaymentRequestUpdateEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const PaymentRequestUpdateEventInit& aEventInitDict, ErrorResult& aRv);
 
   void UpdateWith(Promise& aPromise, ErrorResult& aRv);
 
   void SetRequest(PaymentRequest* aRequest);
 
-protected:
+ protected:
   ~PaymentRequestUpdateEvent();
-  // Indicating whether an updateWith()-initiated update is currently in progress.
+  // Indicating whether an updateWith()-initiated update is currently in
+  // progress.
   bool mWaitForUpdate;
   RefPtr<PaymentRequest> mRequest;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PaymentRequestUpdateEvent_h
+#endif  // mozilla_dom_PaymentRequestUpdateEvent_h

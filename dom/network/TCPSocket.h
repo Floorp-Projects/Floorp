@@ -36,51 +36,46 @@ class TCPServerSocket;
 class TCPSocketChild;
 class TCPSocketParent;
 
-// This interface is only used for legacy navigator.mozTCPSocket API compatibility.
-class LegacyMozTCPSocket : public nsISupports
-{
-public:
+// This interface is only used for legacy navigator.mozTCPSocket API
+// compatibility.
+class LegacyMozTCPSocket : public nsISupports {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(LegacyMozTCPSocket)
 
   explicit LegacyMozTCPSocket(nsPIDOMWindowInner* aWindow);
 
-  already_AddRefed<TCPServerSocket>
-  Listen(uint16_t aPort,
-         const ServerSocketOptions& aOptions,
-         uint16_t aBacklog,
-         ErrorResult& aRv);
+  already_AddRefed<TCPServerSocket> Listen(uint16_t aPort,
+                                           const ServerSocketOptions& aOptions,
+                                           uint16_t aBacklog, ErrorResult& aRv);
 
-  already_AddRefed<TCPSocket>
-  Open(const nsAString& aHost,
-       uint16_t aPort,
-       const SocketOptions& aOptions,
-       ErrorResult& aRv);
+  already_AddRefed<TCPSocket> Open(const nsAString& aHost, uint16_t aPort,
+                                   const SocketOptions& aOptions,
+                                   ErrorResult& aRv);
 
-  bool WrapObject(JSContext* aCx,
-                  JS::Handle<JSObject*> aGivenProto,
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);
 
-private:
+ private:
   virtual ~LegacyMozTCPSocket();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 };
 
-class TCPSocket final : public DOMEventTargetHelper
-                      , public nsIStreamListener
-                      , public nsITransportEventSink
-                      , public nsIInputStreamCallback
-                      , public nsIObserver
-                      , public nsSupportsWeakReference
-                      , public nsITCPSocketCallback
-{
-public:
+class TCPSocket final : public DOMEventTargetHelper,
+                        public nsIStreamListener,
+                        public nsITransportEventSink,
+                        public nsIInputStreamCallback,
+                        public nsIObserver,
+                        public nsSupportsWeakReference,
+                        public nsITCPSocketCallback {
+ public:
   TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t aPort,
             bool aSsl, bool aUseArrayBuffers);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(TCPSocket, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(TCPSocket,
+                                                         DOMEventTargetHelper)
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITRANSPORTEVENTSINK
@@ -88,7 +83,8 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITCPSOCKETCALLBACK
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   static bool ShouldTCPSocketExist(JSContext* aCx, JSObject* aGlobal);
 
@@ -101,41 +97,40 @@ public:
   void Close();
   void CloseImmediately();
   bool Send(JSContext* aCx, const nsACString& aData, ErrorResult& aRv);
-  bool Send(JSContext* aCx,
-            const ArrayBuffer& aData,
-            uint32_t aByteOffset,
-            const Optional<uint32_t>& aByteLength,
-            ErrorResult& aRv);
+  bool Send(JSContext* aCx, const ArrayBuffer& aData, uint32_t aByteOffset,
+            const Optional<uint32_t>& aByteLength, ErrorResult& aRv);
   TCPReadyState ReadyState();
   TCPSocketBinaryType BinaryType();
   void UpgradeToSecure(ErrorResult& aRv);
 
-  static already_AddRefed<TCPSocket>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aHost,
-              uint16_t aPort,
-              const SocketOptions& aOptions,
-              ErrorResult& aRv);
+  static already_AddRefed<TCPSocket> Constructor(const GlobalObject& aGlobal,
+                                                 const nsAString& aHost,
+                                                 uint16_t aPort,
+                                                 const SocketOptions& aOptions,
+                                                 ErrorResult& aRv);
 
   // Perform a send operation that's asssociated with a sequence number. Used in
   // IPC scenarios to track the number of bytes buffered at any given time.
   void SendWithTrackingNumber(const nsACString& aData,
                               const uint32_t& aTrackingNumber,
                               ErrorResult& aRv);
-  void SendWithTrackingNumber(JSContext* aCx,
-                              const ArrayBuffer& aData,
+  void SendWithTrackingNumber(JSContext* aCx, const ArrayBuffer& aData,
                               uint32_t aByteOffset,
                               const Optional<uint32_t>& aByteLength,
                               const uint32_t& aTrackingNumber,
                               ErrorResult& aRv);
   // Create a TCPSocket object from an existing low-level socket connection.
-  // Used by the TCPServerSocket implementation when a new connection is accepted.
-  static already_AddRefed<TCPSocket>
-  CreateAcceptedSocket(nsIGlobalObject* aGlobal, nsISocketTransport* aTransport, bool aUseArrayBuffers);
+  // Used by the TCPServerSocket implementation when a new connection is
+  // accepted.
+  static already_AddRefed<TCPSocket> CreateAcceptedSocket(
+      nsIGlobalObject* aGlobal, nsISocketTransport* aTransport,
+      bool aUseArrayBuffers);
   // Create a TCPSocket object from an existing child-side IPC actor.
-  // Used by the TCPServerSocketChild implementation when a new connection is accepted.
-  static already_AddRefed<TCPSocket>
-  CreateAcceptedSocket(nsIGlobalObject* aGlobal, TCPSocketChild* aSocketBridge, bool aUseArrayBuffers);
+  // Used by the TCPServerSocketChild implementation when a new connection is
+  // accepted.
+  static already_AddRefed<TCPSocket> CreateAcceptedSocket(
+      nsIGlobalObject* aGlobal, TCPSocketChild* aSocketBridge,
+      bool aUseArrayBuffers);
 
   // Initialize this socket's associated IPC actor in the parent process.
   void SetSocketBridgeParent(TCPSocketParent* aBridgeParent);
@@ -153,11 +148,11 @@ public:
   // Inform this socket that a buffered send() has completed sending.
   void NotifyCopyComplete(nsresult aStatus);
 
-  // Initialize this socket from a low-level connection that hasn't connected yet
-  // (called from RecvOpenBind() in TCPSocketParent).
+  // Initialize this socket from a low-level connection that hasn't connected
+  // yet (called from RecvOpenBind() in TCPSocketParent).
   nsresult InitWithUnconnectedTransport(nsISocketTransport* aTransport);
 
-private:
+ private:
   ~TCPSocket();
 
   // Initialize this socket with an existing IPC actor.
@@ -168,8 +163,8 @@ private:
   nsresult CreateStream();
   // Initialize the asynchronous read operation from this socket's input stream.
   nsresult CreateInputStreamPump();
-  // Send the contents of the provided input stream, which is assumed to be the given length
-  // for reporting and buffering purposes.
+  // Send the contents of the provided input stream, which is assumed to be the
+  // given length for reporting and buffering purposes.
   bool Send(nsIInputStream* aStream, uint32_t aByteLength);
   // Begin an asynchronous copy operation if one is not already in progress.
   nsresult EnsureCopying();
@@ -215,19 +210,23 @@ private:
   // The id of the window that created this socket.
   uint64_t mInnerWindowID;
 
-  // The current number of buffered bytes. Only used in content processes when IPC is enabled.
+  // The current number of buffered bytes. Only used in content processes when
+  // IPC is enabled.
   uint64_t mBufferedAmount;
 
-  // The number of times this socket has had `Suspend` called without a corresponding `Resume`.
+  // The number of times this socket has had `Suspend` called without a
+  // corresponding `Resume`.
   uint32_t mSuspendCount;
 
-  // The current sequence number (ie. number of send operations) that have been processed.
-  // This is used in the IPC scenario by the child process to filter out outdated notifications
-  // about the amount of buffered data present in the parent process.
+  // The current sequence number (ie. number of send operations) that have been
+  // processed. This is used in the IPC scenario by the child process to filter
+  // out outdated notifications about the amount of buffered data present in the
+  // parent process.
   uint32_t mTrackingNumber;
 
-  // True if this socket has been upgraded to secure after the initial connection,
-  // but the actual upgrade is waiting for an in-progress copy operation to complete.
+  // True if this socket has been upgraded to secure after the initial
+  // connection, but the actual upgrade is waiting for an in-progress copy
+  // operation to complete.
   bool mWaitingForStartTLS;
   // The buffered data awaiting the TLS upgrade to finish.
   nsTArray<nsCOMPtr<nsIInputStream>> mPendingDataAfterStartTLS;
@@ -238,7 +237,7 @@ private:
   bool mObserversActive;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TCPSocket_h
+#endif  // mozilla_dom_TCPSocket_h

@@ -15,17 +15,16 @@
 
 class nsWeakReference;
 
-class nsSupportsWeakReference : public nsISupportsWeakReference
-{
-public:
+class nsSupportsWeakReference : public nsISupportsWeakReference {
+ public:
   nsSupportsWeakReference() : mProxy(0) {}
 
   NS_DECL_NSISUPPORTSWEAKREFERENCE
 
-protected:
+ protected:
   inline ~nsSupportsWeakReference();
 
-private:
+ private:
   friend class nsWeakReference;
 
   // Called (only) by an |nsWeakReference| from _its_ dtor.
@@ -34,15 +33,12 @@ private:
 
   nsWeakReference* MOZ_NON_OWNING_REF mProxy;
 
-protected:
-
+ protected:
   void ClearWeakReferences();
   bool HasWeakReferences() const { return !!mProxy; }
 };
 
-inline
-nsSupportsWeakReference::~nsSupportsWeakReference()
-{
+inline nsSupportsWeakReference::~nsSupportsWeakReference() {
   ClearWeakReferences();
 }
 

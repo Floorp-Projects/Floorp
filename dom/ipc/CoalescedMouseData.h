@@ -14,18 +14,11 @@
 namespace mozilla {
 namespace dom {
 
-class CoalescedMouseData final : public CoalescedInputData<WidgetMouseEvent>
-{
-public:
-  CoalescedMouseData()
-  {
-    MOZ_COUNT_CTOR(mozilla::dom::CoalescedMouseData);
-  }
+class CoalescedMouseData final : public CoalescedInputData<WidgetMouseEvent> {
+ public:
+  CoalescedMouseData() { MOZ_COUNT_CTOR(mozilla::dom::CoalescedMouseData); }
 
-  ~CoalescedMouseData()
-  {
-    MOZ_COUNT_DTOR(mozilla::dom::CoalescedMouseData);
-  }
+  ~CoalescedMouseData() { MOZ_COUNT_DTOR(mozilla::dom::CoalescedMouseData); }
 
   void Coalesce(const WidgetMouseEvent& aEvent,
                 const ScrollableLayerGuid& aGuid,
@@ -37,10 +30,9 @@ public:
 };
 
 class CoalescedMouseMoveFlusher final : public nsARefreshObserver {
-public:
+ public:
   explicit CoalescedMouseMoveFlusher(TabChild* aTabChild)
-    : mTabChild(aTabChild)
-  {
+      : mTabChild(aTabChild) {
     MOZ_ASSERT(mTabChild);
   }
 
@@ -51,10 +43,8 @@ public:
   void StartObserver();
   void RemoveObserver();
 
-private:
-  ~CoalescedMouseMoveFlusher() {
-    RemoveObserver();
-  }
+ private:
+  ~CoalescedMouseMoveFlusher() { RemoveObserver(); }
 
   nsRefreshDriver* GetRefreshDriver();
 
@@ -62,7 +52,7 @@ private:
   RefPtr<nsRefreshDriver> mRefreshDriver;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CoalescedMouseData_h
+#endif  // mozilla_dom_CoalescedMouseData_h

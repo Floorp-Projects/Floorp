@@ -14,7 +14,7 @@ namespace recordreplay {
 // HandleDirtyMemoryFault in MemorySnapshot.h for handling.
 void SetupDirtyMemoryHandler();
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_DirtyMemoryHandler_h
+#endif  // mozilla_recordreplay_DirtyMemoryHandler_h

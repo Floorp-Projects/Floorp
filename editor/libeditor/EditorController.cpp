@@ -15,39 +15,33 @@ class nsIControllerCommand;
 
 namespace mozilla {
 
-#define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                           \
-  {                                                                            \
-    _cmdClass* theCmd = new _cmdClass();                                       \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                            \
-    aCommandTable->RegisterCommand(                                            \
-                     _cmdName,                                                 \
-                     static_cast<nsIControllerCommand *>(theCmd));             \
+#define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)           \
+  {                                                            \
+    _cmdClass* theCmd = new _cmdClass();                       \
+    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);            \
+    aCommandTable->RegisterCommand(                            \
+        _cmdName, static_cast<nsIControllerCommand*>(theCmd)); \
   }
 
-#define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                         \
-  {                                                                            \
-    _cmdClass* theCmd = new _cmdClass();                                       \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                            \
-    aCommandTable->RegisterCommand(                                            \
-                     _cmdName,                                                 \
-                     static_cast<nsIControllerCommand *>(theCmd));
+#define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName) \
+  {                                                    \
+    _cmdClass* theCmd = new _cmdClass();               \
+    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);    \
+    aCommandTable->RegisterCommand(                    \
+        _cmdName, static_cast<nsIControllerCommand*>(theCmd));
 
-#define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                          \
-    aCommandTable->RegisterCommand(                                            \
-                     _cmdName,                                                 \
-                     static_cast<nsIControllerCommand *>(theCmd));
+#define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName) \
+  aCommandTable->RegisterCommand(_cmdName,            \
+                                 static_cast<nsIControllerCommand*>(theCmd));
 
-#define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                          \
-    aCommandTable->RegisterCommand(                                            \
-                     _cmdName,                                                 \
-                     static_cast<nsIControllerCommand *>(theCmd));             \
+#define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                         \
+  aCommandTable->RegisterCommand(_cmdName,                                    \
+                                 static_cast<nsIControllerCommand*>(theCmd)); \
   }
 
 // static
-nsresult
-EditorController::RegisterEditingCommands(
-                    nsIControllerCommandTable* aCommandTable)
-{
+nsresult EditorController::RegisterEditingCommands(
+    nsIControllerCommandTable* aCommandTable) {
   // now register all our commands
   // These are commands that will be used in text widgets, and in composer
 
@@ -87,10 +81,8 @@ EditorController::RegisterEditingCommands(
 }
 
 // static
-nsresult
-EditorController::RegisterEditorCommands(
-                    nsIControllerCommandTable* aCommandTable)
-{
+nsresult EditorController::RegisterEditorCommands(
+    nsIControllerCommandTable* aCommandTable) {
   // These are commands that will be used in text widgets only.
 
   NS_REGISTER_FIRST_COMMAND(SelectionMoveCommands, "cmd_scrollTop");
@@ -143,4 +135,4 @@ EditorController::RegisterEditorCommands(
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

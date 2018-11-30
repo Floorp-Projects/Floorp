@@ -13,12 +13,12 @@
 // Malloc implementation functions are MOZ_MEMORY_API, and jemalloc
 // specific functions MOZ_JEMALLOC_API; see mozmemory_wrap.h
 
-#define MALLOC_DECL(name, return_type, ...)                                    \
+#define MALLOC_DECL(name, return_type, ...) \
   MOZ_MEMORY_API return_type name##_impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
 
-#define MALLOC_DECL(name, return_type, ...)                                    \
+#define MALLOC_DECL(name, return_type, ...) \
   MOZ_JEMALLOC_API return_type name##_impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
@@ -27,8 +27,7 @@
 // for the built binary to run on newer versions of OSX. So use the newest
 // possible version of those structs.
 
-typedef struct _malloc_zone_t
-{
+typedef struct _malloc_zone_t {
   void* reserved1;
   void* reserved2;
   size_t (*size)(struct _malloc_zone_t*, const void*);
@@ -48,34 +47,26 @@ typedef struct _malloc_zone_t
   size_t (*pressure_relief)(struct _malloc_zone_t*, size_t);
 } malloc_zone_t;
 
-typedef struct
-{
+typedef struct {
   vm_address_t address;
   vm_size_t size;
 } vm_range_t;
 
-typedef struct malloc_statistics_t
-{
+typedef struct malloc_statistics_t {
   unsigned blocks_in_use;
   size_t size_in_use;
   size_t max_size_in_use;
   size_t size_allocated;
 } malloc_statistics_t;
 
-typedef kern_return_t
-memory_reader_t(task_t, vm_address_t, vm_size_t, void**);
+typedef kern_return_t memory_reader_t(task_t, vm_address_t, vm_size_t, void**);
 
-typedef void
-vm_range_recorder_t(task_t, void*, unsigned type, vm_range_t*, unsigned);
+typedef void vm_range_recorder_t(task_t, void*, unsigned type, vm_range_t*,
+                                 unsigned);
 
-typedef struct malloc_introspection_t
-{
-  kern_return_t (*enumerator)(task_t,
-                              void*,
-                              unsigned,
-                              vm_address_t,
-                              memory_reader_t,
-                              vm_range_recorder_t);
+typedef struct malloc_introspection_t {
+  kern_return_t (*enumerator)(task_t, void*, unsigned, vm_address_t,
+                              memory_reader_t, vm_range_recorder_t);
   size_t (*good_size)(malloc_zone_t*, size_t);
   boolean_t (*check)(malloc_zone_t*);
   void (*print)(malloc_zone_t*, boolean_t);
@@ -95,29 +86,22 @@ typedef struct malloc_introspection_t
   void (*reinit_lock)(malloc_zone_t*);
 } malloc_introspection_t;
 
-extern kern_return_t
-malloc_get_all_zones(task_t, memory_reader_t, vm_address_t**, unsigned*);
+extern kern_return_t malloc_get_all_zones(task_t, memory_reader_t,
+                                          vm_address_t**, unsigned*);
 
-extern malloc_zone_t*
-malloc_default_zone(void);
+extern malloc_zone_t* malloc_default_zone(void);
 
-extern void
-malloc_zone_register(malloc_zone_t* zone);
+extern void malloc_zone_register(malloc_zone_t* zone);
 
-extern void
-malloc_zone_unregister(malloc_zone_t* zone);
+extern void malloc_zone_unregister(malloc_zone_t* zone);
 
-extern malloc_zone_t*
-malloc_default_purgeable_zone(void);
+extern malloc_zone_t* malloc_default_purgeable_zone(void);
 
-extern malloc_zone_t*
-malloc_zone_from_ptr(const void* ptr);
+extern malloc_zone_t* malloc_zone_from_ptr(const void* ptr);
 
-extern void
-malloc_zone_free(malloc_zone_t* zone, void* ptr);
+extern void malloc_zone_free(malloc_zone_t* zone, void* ptr);
 
-extern void*
-malloc_zone_realloc(malloc_zone_t* zone, void* ptr, size_t size);
+extern void* malloc_zone_realloc(malloc_zone_t* zone, void* ptr, size_t size);
 
 // The following is a OSX zone allocator implementation.
 // /!\ WARNING. It assumes the underlying malloc implementation's
@@ -125,29 +109,20 @@ malloc_zone_realloc(malloc_zone_t* zone, void* ptr, size_t size);
 // the allocator. Sadly, OSX does call zone_size with pointers not
 // owned by the allocator.
 
-static size_t
-zone_size(malloc_zone_t* zone, const void* ptr)
-{
+static size_t zone_size(malloc_zone_t* zone, const void* ptr) {
   return malloc_usable_size_impl(ptr);
 }
 
-static void*
-zone_malloc(malloc_zone_t* zone, size_t size)
-{
+static void* zone_malloc(malloc_zone_t* zone, size_t size) {
   return malloc_impl(size);
 }
 
-static void*
-zone_calloc(malloc_zone_t* zone, size_t num, size_t size)
-{
+static void* zone_calloc(malloc_zone_t* zone, size_t num, size_t size) {
   return calloc_impl(num, size);
 }
 
-static void*
-zone_realloc(malloc_zone_t* zone, void* ptr, size_t size)
-{
-  if (malloc_usable_size_impl(ptr))
-    return realloc_impl(ptr, size);
+static void* zone_realloc(malloc_zone_t* zone, void* ptr, size_t size) {
+  if (malloc_usable_size_impl(ptr)) return realloc_impl(ptr, size);
 
   // Sometimes, system libraries call malloc_zone_* functions with the wrong
   // zone (e.g. CoreFoundation does). In that case, we need to find the real
@@ -162,9 +137,7 @@ zone_realloc(malloc_zone_t* zone, void* ptr, size_t size)
   return malloc_zone_realloc(real_zone, ptr, size);
 }
 
-static void
-other_zone_free(malloc_zone_t* original_zone, void* ptr)
-{
+static void other_zone_free(malloc_zone_t* original_zone, void* ptr) {
   // Sometimes, system libraries call malloc_zone_* functions with the wrong
   // zone (e.g. CoreFoundation does). In that case, we need to find the real
   // one. We can't call libSystem's free directly because we're exporting
@@ -181,9 +154,7 @@ other_zone_free(malloc_zone_t* original_zone, void* ptr)
   return malloc_zone_free(zone, ptr);
 }
 
-static void
-zone_free(malloc_zone_t* zone, void* ptr)
-{
+static void zone_free(malloc_zone_t* zone, void* ptr) {
   if (malloc_usable_size_impl(ptr)) {
     free_impl(ptr);
     return;
@@ -191,9 +162,8 @@ zone_free(malloc_zone_t* zone, void* ptr)
   other_zone_free(zone, ptr);
 }
 
-static void
-zone_free_definite_size(malloc_zone_t* zone, void* ptr, size_t size)
-{
+static void zone_free_definite_size(malloc_zone_t* zone, void* ptr,
+                                    size_t size) {
   size_t current_size = malloc_usable_size_impl(ptr);
   if (current_size) {
     MOZ_ASSERT(current_size == size);
@@ -203,50 +173,35 @@ zone_free_definite_size(malloc_zone_t* zone, void* ptr, size_t size)
   other_zone_free(zone, ptr);
 }
 
-static void*
-zone_memalign(malloc_zone_t* zone, size_t alignment, size_t size)
-{
+static void* zone_memalign(malloc_zone_t* zone, size_t alignment, size_t size) {
   void* ptr;
-  if (posix_memalign_impl(&ptr, alignment, size) == 0)
-    return ptr;
+  if (posix_memalign_impl(&ptr, alignment, size) == 0) return ptr;
   return NULL;
 }
 
-static void*
-zone_valloc(malloc_zone_t* zone, size_t size)
-{
+static void* zone_valloc(malloc_zone_t* zone, size_t size) {
   return valloc_impl(size);
 }
 
-static void
-zone_destroy(malloc_zone_t* zone)
-{
+static void zone_destroy(malloc_zone_t* zone) {
   // This function should never be called.
   MOZ_CRASH();
 }
 
-static unsigned
-zone_batch_malloc(malloc_zone_t* zone,
-                  size_t size,
-                  void** results,
-                  unsigned num_requested)
-{
+static unsigned zone_batch_malloc(malloc_zone_t* zone, size_t size,
+                                  void** results, unsigned num_requested) {
   unsigned i;
 
   for (i = 0; i < num_requested; i++) {
     results[i] = malloc_impl(size);
-    if (!results[i])
-      break;
+    if (!results[i]) break;
   }
 
   return i;
 }
 
-static void
-zone_batch_free(malloc_zone_t* zone,
-                void** to_be_freed,
-                unsigned num_to_be_freed)
-{
+static void zone_batch_free(malloc_zone_t* zone, void** to_be_freed,
+                            unsigned num_to_be_freed) {
   unsigned i;
 
   for (i = 0; i < num_to_be_freed; i++) {
@@ -255,69 +210,44 @@ zone_batch_free(malloc_zone_t* zone,
   }
 }
 
-static size_t
-zone_pressure_relief(malloc_zone_t* zone, size_t goal)
-{
+static size_t zone_pressure_relief(malloc_zone_t* zone, size_t goal) {
   return 0;
 }
 
-static size_t
-zone_good_size(malloc_zone_t* zone, size_t size)
-{
+static size_t zone_good_size(malloc_zone_t* zone, size_t size) {
   return malloc_good_size_impl(size);
 }
 
-static kern_return_t
-zone_enumerator(task_t task,
-                void* data,
-                unsigned type_mask,
-                vm_address_t zone_address,
-                memory_reader_t reader,
-                vm_range_recorder_t recorder)
-{
+static kern_return_t zone_enumerator(task_t task, void* data,
+                                     unsigned type_mask,
+                                     vm_address_t zone_address,
+                                     memory_reader_t reader,
+                                     vm_range_recorder_t recorder) {
   return KERN_SUCCESS;
 }
 
-static boolean_t
-zone_check(malloc_zone_t* zone)
-{
-  return true;
-}
+static boolean_t zone_check(malloc_zone_t* zone) { return true; }
 
-static void
-zone_print(malloc_zone_t* zone, boolean_t verbose)
-{
-}
+static void zone_print(malloc_zone_t* zone, boolean_t verbose) {}
 
-static void
-zone_log(malloc_zone_t* zone, void* address)
-{
-}
+static void zone_log(malloc_zone_t* zone, void* address) {}
 
-extern void
-_malloc_prefork(void);
-extern void
-_malloc_postfork_child(void);
+extern void _malloc_prefork(void);
+extern void _malloc_postfork_child(void);
 
-static void
-zone_force_lock(malloc_zone_t* zone)
-{
+static void zone_force_lock(malloc_zone_t* zone) {
   // /!\ This calls into mozjemalloc. It works because we're linked in the
   // same library.
   _malloc_prefork();
 }
 
-static void
-zone_force_unlock(malloc_zone_t* zone)
-{
+static void zone_force_unlock(malloc_zone_t* zone) {
   // /!\ This calls into mozjemalloc. It works because we're linked in the
   // same library.
   _malloc_postfork_child();
 }
 
-static void
-zone_statistics(malloc_zone_t* zone, malloc_statistics_t* stats)
-{
+static void zone_statistics(malloc_zone_t* zone, malloc_statistics_t* stats) {
   // We make no effort to actually fill the values
   stats->blocks_in_use = 0;
   stats->size_in_use = 0;
@@ -325,16 +255,12 @@ zone_statistics(malloc_zone_t* zone, malloc_statistics_t* stats)
   stats->size_allocated = 0;
 }
 
-static boolean_t
-zone_locked(malloc_zone_t* zone)
-{
+static boolean_t zone_locked(malloc_zone_t* zone) {
   // Pretend no lock is being held
   return false;
 }
 
-static void
-zone_reinit_lock(malloc_zone_t* zone)
-{
+static void zone_reinit_lock(malloc_zone_t* zone) {
   // As of OSX 10.12, this function is only used when force_unlock would
   // be used if the zone version were < 9. So just use force_unlock.
   zone_force_unlock(zone);
@@ -343,9 +269,7 @@ zone_reinit_lock(malloc_zone_t* zone)
 static malloc_zone_t zone;
 static struct malloc_introspection_t zone_introspect;
 
-static malloc_zone_t*
-get_default_zone()
-{
+static malloc_zone_t* get_default_zone() {
   malloc_zone_t** zones = NULL;
   unsigned int num_zones = 0;
 
@@ -368,9 +292,7 @@ get_default_zone()
   return malloc_default_zone();
 }
 
-__attribute__((constructor)) static void
-register_zone(void)
-{
+__attribute__((constructor)) static void register_zone(void) {
   malloc_zone_t* default_zone = get_default_zone();
 
   zone.size = zone_size;

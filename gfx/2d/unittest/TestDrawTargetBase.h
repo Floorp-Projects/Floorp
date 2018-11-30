@@ -16,14 +16,13 @@
  * with optional additional drawtarget-specific tests. And is intended to run
  * on a 500x500 32 BPP drawtarget.
  */
-class TestDrawTargetBase : public TestBase
-{
-public:
+class TestDrawTargetBase : public TestBase {
+ public:
   void Initialized();
   void FillCompletely();
   void FillRect();
 
-protected:
+ protected:
   TestDrawTargetBase();
 
   void RefreshSnapshot();

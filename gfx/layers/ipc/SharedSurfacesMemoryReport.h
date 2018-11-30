@@ -7,19 +7,18 @@
 #ifndef MOZILLA_GFX_SHAREDSURFACESMEMORYREPORT_H
 #define MOZILLA_GFX_SHAREDSURFACESMEMORYREPORT_H
 
-#include <cstdint>                      // for uint32_t
+#include <cstdint>  // for uint32_t
 #include <unordered_map>
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/gfx/Point.h"  // for IntSize
 
 namespace mozilla {
 namespace layers {
 
-class SharedSurfacesMemoryReport final
-{
-public:
+class SharedSurfacesMemoryReport final {
+ public:
   class SurfaceEntry final {
-  public:
+   public:
     base::ProcessId mCreatorPid;
     gfx::IntSize mSize;
     int32_t mStride;
@@ -30,35 +29,32 @@ public:
   std::unordered_map<uint64_t, SurfaceEntry> mSurfaces;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 namespace IPC {
 
-template<>
-struct ParamTraits<mozilla::layers::SharedSurfacesMemoryReport>
-{
+template <>
+struct ParamTraits<mozilla::layers::SharedSurfacesMemoryReport> {
   typedef mozilla::layers::SharedSurfacesMemoryReport paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mSurfaces);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mSurfaces);
   }
 };
 
-template<>
+template <>
 struct ParamTraits<mozilla::layers::SharedSurfacesMemoryReport::SurfaceEntry>
-  : public PlainOldDataSerializer<mozilla::layers::SharedSurfacesMemoryReport::SurfaceEntry>
-{
-};
+    : public PlainOldDataSerializer<
+          mozilla::layers::SharedSurfacesMemoryReport::SurfaceEntry> {};
 
-template<class KeyType, class DataType>
-struct ParamTraits<std::unordered_map<KeyType, DataType>>
-{
+template <class KeyType, class DataType>
+struct ParamTraits<std::unordered_map<KeyType, DataType>> {
   typedef std::unordered_map<KeyType, DataType> paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
@@ -69,8 +65,8 @@ struct ParamTraits<std::unordered_map<KeyType, DataType>>
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     size_t count;
     if (!ReadParam(aMsg, aIter, &count)) {
       return false;
@@ -78,8 +74,7 @@ struct ParamTraits<std::unordered_map<KeyType, DataType>>
     for (; count > 0; --count) {
       KeyType k;
       DataType v;
-      if (!ReadParam(aMsg, aIter, &k) ||
-          !ReadParam(aMsg, aIter, &v)) {
+      if (!ReadParam(aMsg, aIter, &k) || !ReadParam(aMsg, aIter, &v)) {
         return false;
       }
       aResult->insert(std::make_pair(std::move(k), std::move(v)));
@@ -88,6 +83,6 @@ struct ParamTraits<std::unordered_map<KeyType, DataType>>
   }
 };
 
-} // namespace IPC
+}  // namespace IPC
 
 #endif

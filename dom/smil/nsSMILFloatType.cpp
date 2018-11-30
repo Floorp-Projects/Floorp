@@ -9,82 +9,68 @@
 #include "nsDebug.h"
 #include <math.h>
 
-void
-nsSMILFloatType::Init(nsSMILValue& aValue) const
-{
+void nsSMILFloatType::Init(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
   aValue.mU.mDouble = 0.0;
   aValue.mType = this;
 }
 
-void
-nsSMILFloatType::Destroy(nsSMILValue& aValue) const
-{
+void nsSMILFloatType::Destroy(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mDouble = 0.0;
-  aValue.mType      = nsSMILNullType::Singleton();
+  aValue.mType = nsSMILNullType::Singleton();
 }
 
-nsresult
-nsSMILFloatType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
-{
+nsresult nsSMILFloatType::Assign(nsSMILValue& aDest,
+                                 const nsSMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
   aDest.mU.mDouble = aSrc.mU.mDouble;
   return NS_OK;
 }
 
-bool
-nsSMILFloatType::IsEqual(const nsSMILValue& aLeft,
-                         const nsSMILValue& aRight) const
-{
+bool nsSMILFloatType::IsEqual(const nsSMILValue& aLeft,
+                              const nsSMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
   return aLeft.mU.mDouble == aRight.mU.mDouble;
 }
 
-nsresult
-nsSMILFloatType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                     uint32_t aCount) const
-{
-  MOZ_ASSERT(aValueToAdd.mType == aDest.mType,
-                  "Trying to add invalid types");
+nsresult nsSMILFloatType::Add(nsSMILValue& aDest,
+                              const nsSMILValue& aValueToAdd,
+                              uint32_t aCount) const {
+  MOZ_ASSERT(aValueToAdd.mType == aDest.mType, "Trying to add invalid types");
   MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
   aDest.mU.mDouble += aValueToAdd.mU.mDouble * aCount;
   return NS_OK;
 }
 
-nsresult
-nsSMILFloatType::ComputeDistance(const nsSMILValue& aFrom,
-                                 const nsSMILValue& aTo,
-                                 double& aDistance) const
-{
+nsresult nsSMILFloatType::ComputeDistance(const nsSMILValue& aFrom,
+                                          const nsSMILValue& aTo,
+                                          double& aDistance) const {
   MOZ_ASSERT(aFrom.mType == aTo.mType, "Trying to compare different types");
   MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
 
-  const double &from = aFrom.mU.mDouble;
-  const double &to   = aTo.mU.mDouble;
+  const double& from = aFrom.mU.mDouble;
+  const double& to = aTo.mU.mDouble;
 
   aDistance = fabs(to - from);
 
   return NS_OK;
 }
 
-nsresult
-nsSMILFloatType::Interpolate(const nsSMILValue& aStartVal,
-                             const nsSMILValue& aEndVal,
-                             double aUnitDistance,
-                             nsSMILValue& aResult) const
-{
+nsresult nsSMILFloatType::Interpolate(const nsSMILValue& aStartVal,
+                                      const nsSMILValue& aEndVal,
+                                      double aUnitDistance,
+                                      nsSMILValue& aResult) const {
   MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
              "Trying to interpolate different types");
-  MOZ_ASSERT(aStartVal.mType == this,
-      "Unexpected types for interpolation");
-  MOZ_ASSERT(aResult.mType   == this, "Unexpected result type");
+  MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");
+  MOZ_ASSERT(aResult.mType == this, "Unexpected result type");
 
-  const double &startVal = aStartVal.mU.mDouble;
-  const double &endVal   = aEndVal.mU.mDouble;
+  const double& startVal = aStartVal.mU.mDouble;
+  const double& endVal = aEndVal.mU.mDouble;
 
   aResult.mU.mDouble = (startVal + (endVal - startVal) * aUnitDistance);
 

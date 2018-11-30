@@ -10,56 +10,46 @@
 #include "nsMathMLContainerFrame.h"
 
 class nsMathMLSelectedFrame : public nsMathMLContainerFrame {
-public:
+ public:
   NS_IMETHOD
   TransmitAutomaticData() override;
 
-  virtual void
-  SetInitialChildList(ChildListID     aListID,
-                      nsFrameList&    aChildList) override;
+  virtual void SetInitialChildList(ChildListID aListID,
+                                   nsFrameList& aChildList) override;
 
-  virtual nsresult
-  ChildListChanged(int32_t aModType) override;
+  virtual nsresult ChildListChanged(int32_t aModType) override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual nsresult
-  Place(DrawTarget*          aDrawTarget,
-        bool                 aPlaceOrigin,
-        ReflowOutput& aDesiredSize) override;
+  virtual nsresult Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
+                         ReflowOutput& aDesiredSize) override;
 
-  virtual mozilla::LogicalSize
-  ComputeSize(gfxContext *aRenderingContext,
-              mozilla::WritingMode aWritingMode,
-              const mozilla::LogicalSize& aCBSize,
-              nscoord aAvailableISize,
-              const mozilla::LogicalSize& aMargin,
-              const mozilla::LogicalSize& aBorder,
-              const mozilla::LogicalSize& aPadding,
-              ComputeSizeFlags aFlags) override;
+  virtual mozilla::LogicalSize ComputeSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWritingMode,
+      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
+      const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
+      const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
 
-  virtual void
-  Reflow(nsPresContext*          aPresContext,
-         ReflowOutput&     aDesiredSize,
-         const ReflowInput& aReflowInput,
-         nsReflowStatus&          aStatus) override;
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+                      const ReflowInput& aReflowInput,
+                      nsReflowStatus& aStatus) override;
 
   virtual nsQueryFrame::FrameIID GetFrameId() override = 0;
 
-protected:
-  nsMathMLSelectedFrame(ComputedStyle* aStyle, ClassID aID) :
-    nsMathMLContainerFrame(aStyle, aID),
-    mSelectedFrame(nullptr),
-    mInvalidMarkup(false) {}
+ protected:
+  nsMathMLSelectedFrame(ComputedStyle* aStyle, ClassID aID)
+      : nsMathMLContainerFrame(aStyle, aID),
+        mSelectedFrame(nullptr),
+        mInvalidMarkup(false) {}
   virtual ~nsMathMLSelectedFrame();
 
   virtual nsIFrame* GetSelectedFrame() = 0;
-  nsIFrame*       mSelectedFrame;
+  nsIFrame* mSelectedFrame;
 
-  bool            mInvalidMarkup;
+  bool mInvalidMarkup;
 
-private:
+ private:
   void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE = delete;
 };
 

@@ -32,15 +32,11 @@ namespace mozilla {
 namespace dom {
 
 HTMLOptionsCollection::HTMLOptionsCollection(HTMLSelectElement* aSelect)
-  : mSelect(aSelect)
-{}
+    : mSelect(aSelect) {}
 
-nsresult
-HTMLOptionsCollection::GetOptionIndex(Element* aOption,
-                                      int32_t aStartIndex,
-                                      bool aForward,
-                                      int32_t* aIndex)
-{
+nsresult HTMLOptionsCollection::GetOptionIndex(Element* aOption,
+                                               int32_t aStartIndex,
+                                               bool aForward, int32_t* aIndex) {
   // NOTE: aIndex shouldn't be set if the returned value isn't NS_OK.
 
   int32_t index;
@@ -69,47 +65,34 @@ HTMLOptionsCollection::GetOptionIndex(Element* aOption,
   return NS_ERROR_FAILURE;
 }
 
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLOptionsCollection,
-                                      mElements,
-                                      mSelect)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLOptionsCollection, mElements, mSelect)
 
 // nsISupports
 
 // QueryInterface implementation for HTMLOptionsCollection
 NS_INTERFACE_TABLE_HEAD(HTMLOptionsCollection)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
-  NS_INTERFACE_TABLE(HTMLOptionsCollection,
-                     nsIHTMLCollection)
+  NS_INTERFACE_TABLE(HTMLOptionsCollection, nsIHTMLCollection)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(HTMLOptionsCollection)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(HTMLOptionsCollection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(HTMLOptionsCollection)
 
-JSObject*
-HTMLOptionsCollection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLOptionsCollection::WrapObject(JSContext* aCx,
+                                            JS::Handle<JSObject*> aGivenProto) {
   return HTMLOptionsCollection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-uint32_t
-HTMLOptionsCollection::Length()
-{
-  return mElements.Length();
-}
+uint32_t HTMLOptionsCollection::Length() { return mElements.Length(); }
 
-void
-HTMLOptionsCollection::SetLength(uint32_t aLength, ErrorResult& aError)
-{
+void HTMLOptionsCollection::SetLength(uint32_t aLength, ErrorResult& aError) {
   mSelect->SetLength(aLength, aError);
 }
 
-void
-HTMLOptionsCollection::IndexedSetter(uint32_t aIndex,
-                                     HTMLOptionElement* aOption,
-                                     ErrorResult& aError)
-{
+void HTMLOptionsCollection::IndexedSetter(uint32_t aIndex,
+                                          HTMLOptionElement* aOption,
+                                          ErrorResult& aError) {
   // if the new option is null, just remove this option.  Note that it's safe
   // to pass a too-large aIndex in here.
   if (!aOption) {
@@ -150,36 +133,28 @@ HTMLOptionsCollection::IndexedSetter(uint32_t aIndex,
   parent->ReplaceChild(*aOption, *refChild, aError);
 }
 
-int32_t
-HTMLOptionsCollection::GetSelectedIndex(ErrorResult& aError)
-{
+int32_t HTMLOptionsCollection::GetSelectedIndex(ErrorResult& aError) {
   return mSelect->SelectedIndex();
 }
 
-void
-HTMLOptionsCollection::SetSelectedIndex(int32_t aSelectedIndex,
-                                        ErrorResult& aError)
-{
+void HTMLOptionsCollection::SetSelectedIndex(int32_t aSelectedIndex,
+                                             ErrorResult& aError) {
   mSelect->SetSelectedIndex(aSelectedIndex, aError);
 }
 
-Element*
-HTMLOptionsCollection::GetElementAt(uint32_t aIndex)
-{
+Element* HTMLOptionsCollection::GetElementAt(uint32_t aIndex) {
   return ItemAsOption(aIndex);
 }
 
-HTMLOptionElement*
-HTMLOptionsCollection::NamedGetter(const nsAString& aName, bool& aFound)
-{
+HTMLOptionElement* HTMLOptionsCollection::NamedGetter(const nsAString& aName,
+                                                      bool& aFound) {
   uint32_t count = mElements.Length();
   for (uint32_t i = 0; i < count; i++) {
     HTMLOptionElement* content = mElements.ElementAt(i);
-    if (content &&
-        (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
-                              eCaseMatters) ||
-         content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aName,
-                              eCaseMatters))) {
+    if (content && (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                                         aName, eCaseMatters) ||
+                    content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
+                                         aName, eCaseMatters))) {
       aFound = true;
       return content;
     }
@@ -189,21 +164,13 @@ HTMLOptionsCollection::NamedGetter(const nsAString& aName, bool& aFound)
   return nullptr;
 }
 
-nsINode*
-HTMLOptionsCollection::GetParentObject()
-{
-  return mSelect;
-}
+nsINode* HTMLOptionsCollection::GetParentObject() { return mSelect; }
 
-DocGroup*
-HTMLOptionsCollection::GetDocGroup() const
-{
+DocGroup* HTMLOptionsCollection::GetDocGroup() const {
   return mSelect ? mSelect->GetDocGroup() : nullptr;
 }
 
-void
-HTMLOptionsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
-{
+void HTMLOptionsCollection::GetSupportedNames(nsTArray<nsString>& aNames) {
   AutoTArray<nsAtom*, 8> atoms;
   for (uint32_t i = 0; i < mElements.Length(); ++i) {
     HTMLOptionElement* content = mElements.ElementAt(i);
@@ -233,19 +200,15 @@ HTMLOptionsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
   }
 }
 
-void
-HTMLOptionsCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
-                           const Nullable<HTMLElementOrLong>& aBefore,
-                           ErrorResult& aError)
-{
+void HTMLOptionsCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
+                                const Nullable<HTMLElementOrLong>& aBefore,
+                                ErrorResult& aError) {
   mSelect->Add(aElement, aBefore, aError);
 }
 
-void
-HTMLOptionsCollection::Remove(int32_t aIndex, ErrorResult& aError)
-{
+void HTMLOptionsCollection::Remove(int32_t aIndex, ErrorResult& aError) {
   mSelect->Remove(aIndex);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

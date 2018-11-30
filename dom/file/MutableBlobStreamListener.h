@@ -16,10 +16,10 @@ class nsIEventTarget;
 namespace mozilla {
 namespace dom {
 
-class MutableBlobStreamListener final : public nsIStreamListener
-                                      , public nsIThreadRetargetableStreamListener
-{
-public:
+class MutableBlobStreamListener final
+    : public nsIStreamListener,
+      public nsIThreadRetargetableStreamListener {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
@@ -31,13 +31,12 @@ public:
                             MutableBlobStorageCallback* aCallback,
                             nsIEventTarget* aEventTarget = nullptr);
 
-private:
+ private:
   ~MutableBlobStreamListener();
 
-  static nsresult
-  WriteSegmentFun(nsIInputStream* aWriter, void* aClosure,
-                  const char* aFromSegment, uint32_t aOffset,
-                  uint32_t aCount, uint32_t* aWriteCount);
+  static nsresult WriteSegmentFun(nsIInputStream* aWriter, void* aClosure,
+                                  const char* aFromSegment, uint32_t aOffset,
+                                  uint32_t aCount, uint32_t* aWriteCount);
 
   RefPtr<MutableBlobStorage> mStorage;
   RefPtr<MutableBlobStorageCallback> mCallback;
@@ -48,7 +47,7 @@ private:
   nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MutableBlobStreamListener_h
+#endif  // mozilla_dom_MutableBlobStreamListener_h

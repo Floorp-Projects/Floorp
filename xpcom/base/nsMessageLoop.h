@@ -10,22 +10,20 @@
  * nsMessageLoop implements nsIMessageLoop, which wraps Chromium's MessageLoop
  * class and adds a bit of sugar.
  */
-class nsMessageLoop : public nsIMessageLoop
-{
+class nsMessageLoop : public nsIMessageLoop {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMESSAGELOOP
 
-private:
-  virtual ~nsMessageLoop()
-  {
-  }
+ private:
+  virtual ~nsMessageLoop() {}
 };
 
-#define NS_MESSAGE_LOOP_CID \
-{0x67b3ac0c, 0xd806, 0x4d48, \
-{0x93, 0x9e, 0x6a, 0x81, 0x9e, 0x6c, 0x24, 0x8f}}
+#define NS_MESSAGE_LOOP_CID                          \
+  {                                                  \
+    0x67b3ac0c, 0xd806, 0x4d48, {                    \
+      0x93, 0x9e, 0x6a, 0x81, 0x9e, 0x6c, 0x24, 0x8f \
+    }                                                \
+  }
 
-extern nsresult
-nsMessageLoopConstructor(nsISupports* aOuter,
-                         const nsIID& aIID,
-                         void** aInstancePtr);
+extern nsresult nsMessageLoopConstructor(nsISupports* aOuter, const nsIID& aIID,
+                                         void** aInstancePtr);

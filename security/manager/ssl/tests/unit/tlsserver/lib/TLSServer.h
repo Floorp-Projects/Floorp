@@ -25,16 +25,12 @@ namespace mozilla {
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePRDir, PRDir, PR_CloseDir);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-namespace mozilla { namespace test {
+namespace mozilla {
+namespace test {
 
-enum DebugLevel
-{
-  DEBUG_ERRORS = 1,
-  DEBUG_WARNINGS  = 2,
-  DEBUG_VERBOSE = 3
-};
+enum DebugLevel { DEBUG_ERRORS = 1, DEBUG_WARNINGS = 2, DEBUG_VERBOSE = 3 };
 
 extern DebugLevel gDebugLevel;
 
@@ -45,27 +41,24 @@ extern const char DEFAULT_CERT_NICKNAME[];
 
 // Pass DEFAULT_CERT_NICKNAME as certName unless you need a specific
 // certificate.
-SECStatus
-ConfigSecureServerWithNamedCert(PRFileDesc* fd, const char* certName,
-                                /*optional*/ UniqueCERTCertificate* cert,
-                                /*optional*/ SSLKEAType* kea);
+SECStatus ConfigSecureServerWithNamedCert(
+    PRFileDesc *fd, const char *certName,
+    /*optional*/ UniqueCERTCertificate *cert,
+    /*optional*/ SSLKEAType *kea);
 
-SECStatus
-InitializeNSS(const char* nssCertDBDir);
+SECStatus InitializeNSS(const char *nssCertDBDir);
 
-int
-StartServer(const char *nssCertDBDir, SSLSNISocketConfig sniSocketConfig,
-            void *sniSocketConfigArg);
+int StartServer(const char *nssCertDBDir, SSLSNISocketConfig sniSocketConfig,
+                void *sniSocketConfigArg);
 
 template <typename Host>
-inline const Host *
-GetHostForSNI(const SECItem *aSrvNameArr, uint32_t aSrvNameArrSize,
-              const Host *hosts)
-{
+inline const Host *GetHostForSNI(const SECItem *aSrvNameArr,
+                                 uint32_t aSrvNameArrSize, const Host *hosts) {
   for (uint32_t i = 0; i < aSrvNameArrSize; i++) {
     for (const Host *host = hosts; host->mHostName; ++host) {
       SECItem hostName;
-      hostName.data = BitwiseCast<unsigned char*, const char*>(host->mHostName);
+      hostName.data =
+          BitwiseCast<unsigned char *, const char *>(host->mHostName);
       hostName.len = strlen(host->mHostName);
       if (SECITEM_ItemsAreEqual(&hostName, &aSrvNameArr[i])) {
         if (gDebugLevel >= DEBUG_VERBOSE) {
@@ -84,6 +77,7 @@ GetHostForSNI(const SECItem *aSrvNameArr, uint32_t aSrvNameArrSize,
   return nullptr;
 }
 
-} } // namespace mozilla::test
+}  // namespace test
+}  // namespace mozilla
 
-#endif // TLSServer_h
+#endif  // TLSServer_h

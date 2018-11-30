@@ -14,28 +14,24 @@ namespace dom {
 
 class KeyboardEvent;
 
-class XULMenuElement final : public nsXULElement
-{
-public:
-
+class XULMenuElement final : public nsXULElement {
+ public:
   explicit XULMenuElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsXULElement(std::move(aNodeInfo))
-  {
-  }
+      : nsXULElement(std::move(aNodeInfo)) {}
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> GetActiveChild();
   MOZ_CAN_RUN_SCRIPT void SetActiveChild(Element* arg);
   MOZ_CAN_RUN_SCRIPT bool HandleKeyPress(KeyboardEvent& keyEvent);
   MOZ_CAN_RUN_SCRIPT bool OpenedWithKey();
 
-private:
+ private:
   virtual ~XULMenuElement() {}
-  JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
   nsIFrame* GetFrame();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // XULMenuElement_h
+#endif  // XULMenuElement_h

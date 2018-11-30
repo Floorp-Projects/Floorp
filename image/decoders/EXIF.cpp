@@ -16,20 +16,18 @@ namespace image {
 // See Section 4.6.4, Table 4.
 // Typesafe enums are intentionally not used here since we're comparing to raw
 // integers produced by parsing.
-enum EXIFTag
-{
+enum EXIFTag {
   OrientationTag = 0x112,
 };
 
 // See Section 4.6.2.
-enum EXIFType
-{
-  ByteType       = 1,
-  ASCIIType      = 2,
-  ShortType      = 3,
-  LongType       = 4,
-  RationalType   = 5,
-  UndefinedType  = 7,
+enum EXIFType {
+  ByteType = 1,
+  ASCIIType = 2,
+  ShortType = 3,
+  LongType = 4,
+  RationalType = 5,
+  UndefinedType = 7,
   SignedLongType = 9,
   SignedRational = 10,
 };
@@ -40,9 +38,7 @@ static const uint32_t EXIFHeaderLength = 6;
 /////////////////////////////////////////////////////////////
 // Parse EXIF data, typically found in a JPEG's APP1 segment.
 /////////////////////////////////////////////////////////////
-EXIFData
-EXIFParser::ParseEXIF(const uint8_t* aData, const uint32_t aLength)
-{
+EXIFData EXIFParser::ParseEXIF(const uint8_t* aData, const uint32_t aLength) {
   if (!Initialize(aData, aLength)) {
     return EXIFData();
   }
@@ -71,18 +67,14 @@ EXIFParser::ParseEXIF(const uint8_t* aData, const uint32_t aLength)
 /////////////////////////////////////////////////////////
 // Parse the EXIF header. (Section 4.7.2, Figure 30)
 /////////////////////////////////////////////////////////
-bool
-EXIFParser::ParseEXIFHeader()
-{
+bool EXIFParser::ParseEXIFHeader() {
   return MatchString(EXIFHeader, EXIFHeaderLength);
 }
 
 /////////////////////////////////////////////////////////
 // Parse the TIFF header. (Section 4.5.2, Table 1)
 /////////////////////////////////////////////////////////
-bool
-EXIFParser::ParseTIFFHeader(uint32_t& aIFD0OffsetOut)
-{
+bool EXIFParser::ParseTIFFHeader(uint32_t& aIFD0OffsetOut) {
   // Determine byte order.
   if (MatchString("MM\0*", 4)) {
     mByteOrder = ByteOrder::BigEndian;
@@ -109,15 +101,13 @@ EXIFParser::ParseTIFFHeader(uint32_t& aIFD0OffsetOut)
 /////////////////////////////////////////////////////////
 // Parse the entries in IFD0. (Section 4.6.2)
 /////////////////////////////////////////////////////////
-bool
-EXIFParser::ParseIFD0(Orientation& aOrientationOut)
-{
+bool EXIFParser::ParseIFD0(Orientation& aOrientationOut) {
   uint16_t entryCount;
   if (!ReadUInt16(entryCount)) {
     return false;
   }
 
-  for (uint16_t entry = 0 ; entry < entryCount ; ++entry) {
+  for (uint16_t entry = 0; entry < entryCount; ++entry) {
     // Read the fields of the entry.
     uint16_t tag;
     if (!ReadUInt16(tag)) {
@@ -156,9 +146,8 @@ EXIFParser::ParseIFD0(Orientation& aOrientationOut)
   return true;
 }
 
-bool
-EXIFParser::ParseOrientation(uint16_t aType, uint32_t aCount, Orientation& aOut)
-{
+bool EXIFParser::ParseOrientation(uint16_t aType, uint32_t aCount,
+                                  Orientation& aOut) {
   // Sanity check the type and count.
   if (aType != ShortType || aCount != 1) {
     return false;
@@ -170,15 +159,32 @@ EXIFParser::ParseOrientation(uint16_t aType, uint32_t aCount, Orientation& aOut)
   }
 
   switch (value) {
-    case 1: aOut = Orientation(Angle::D0,   Flip::Unflipped);  break;
-    case 2: aOut = Orientation(Angle::D0,   Flip::Horizontal); break;
-    case 3: aOut = Orientation(Angle::D180, Flip::Unflipped);  break;
-    case 4: aOut = Orientation(Angle::D180, Flip::Horizontal); break;
-    case 5: aOut = Orientation(Angle::D90,  Flip::Horizontal); break;
-    case 6: aOut = Orientation(Angle::D90,  Flip::Unflipped);  break;
-    case 7: aOut = Orientation(Angle::D270, Flip::Horizontal); break;
-    case 8: aOut = Orientation(Angle::D270, Flip::Unflipped);  break;
-    default: return false;
+    case 1:
+      aOut = Orientation(Angle::D0, Flip::Unflipped);
+      break;
+    case 2:
+      aOut = Orientation(Angle::D0, Flip::Horizontal);
+      break;
+    case 3:
+      aOut = Orientation(Angle::D180, Flip::Unflipped);
+      break;
+    case 4:
+      aOut = Orientation(Angle::D180, Flip::Horizontal);
+      break;
+    case 5:
+      aOut = Orientation(Angle::D90, Flip::Horizontal);
+      break;
+    case 6:
+      aOut = Orientation(Angle::D90, Flip::Unflipped);
+      break;
+    case 7:
+      aOut = Orientation(Angle::D270, Flip::Horizontal);
+      break;
+    case 8:
+      aOut = Orientation(Angle::D270, Flip::Unflipped);
+      break;
+    default:
+      return false;
   }
 
   // This is a 32-bit field, but the orientation value only occupies the first
@@ -187,9 +193,7 @@ EXIFParser::ParseOrientation(uint16_t aType, uint32_t aCount, Orientation& aOut)
   return true;
 }
 
-bool
-EXIFParser::Initialize(const uint8_t* aData, const uint32_t aLength)
-{
+bool EXIFParser::Initialize(const uint8_t* aData, const uint32_t aLength) {
   if (aData == nullptr) {
     return false;
   }
@@ -205,9 +209,7 @@ EXIFParser::Initialize(const uint8_t* aData, const uint32_t aLength)
   return true;
 }
 
-void
-EXIFParser::Advance(const uint32_t aDistance)
-{
+void EXIFParser::Advance(const uint32_t aDistance) {
   if (mRemainingLength >= aDistance) {
     mCurrent += aDistance;
     mRemainingLength -= aDistance;
@@ -217,9 +219,7 @@ EXIFParser::Advance(const uint32_t aDistance)
   }
 }
 
-void
-EXIFParser::JumpTo(const uint32_t aOffset)
-{
+void EXIFParser::JumpTo(const uint32_t aOffset) {
   if (mLength >= aOffset) {
     mCurrent = mStart + aOffset;
     mRemainingLength = mLength - aOffset;
@@ -229,14 +229,12 @@ EXIFParser::JumpTo(const uint32_t aOffset)
   }
 }
 
-bool
-EXIFParser::MatchString(const char* aString, const uint32_t aLength)
-{
+bool EXIFParser::MatchString(const char* aString, const uint32_t aLength) {
   if (mRemainingLength < aLength) {
     return false;
   }
 
-  for (uint32_t i = 0 ; i < aLength ; ++i) {
+  for (uint32_t i = 0; i < aLength; ++i) {
     if (mCurrent[i] != aString[i]) {
       return false;
     }
@@ -246,9 +244,7 @@ EXIFParser::MatchString(const char* aString, const uint32_t aLength)
   return true;
 }
 
-bool
-EXIFParser::MatchUInt16(const uint16_t aValue)
-{
+bool EXIFParser::MatchUInt16(const uint16_t aValue) {
   if (mRemainingLength < 2) {
     return false;
   }
@@ -273,9 +269,7 @@ EXIFParser::MatchUInt16(const uint16_t aValue)
   return matched;
 }
 
-bool
-EXIFParser::ReadUInt16(uint16_t& aValue)
-{
+bool EXIFParser::ReadUInt16(uint16_t& aValue) {
   if (mRemainingLength < 2) {
     return false;
   }
@@ -300,9 +294,7 @@ EXIFParser::ReadUInt16(uint16_t& aValue)
   return matched;
 }
 
-bool
-EXIFParser::ReadUInt32(uint32_t& aValue)
-{
+bool EXIFParser::ReadUInt32(uint32_t& aValue) {
   if (mRemainingLength < 4) {
     return false;
   }
@@ -327,5 +319,5 @@ EXIFParser::ReadUInt32(uint32_t& aValue)
   return matched;
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla

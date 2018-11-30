@@ -17,20 +17,14 @@ using namespace mozilla::a11y;
 
 RootAccessibleWrap::RootAccessibleWrap(nsIDocument* aDocument,
                                        nsIPresShell* aPresShell)
-  : RootAccessible(aDocument, aPresShell)
-  , mOuter(&mInternalUnknown)
-{
-}
+    : RootAccessible(aDocument, aPresShell), mOuter(&mInternalUnknown) {}
 
-RootAccessibleWrap::~RootAccessibleWrap()
-{
-}
+RootAccessibleWrap::~RootAccessibleWrap() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Aggregated IUnknown
 HRESULT
-RootAccessibleWrap::InternalQueryInterface(REFIID aIid, void** aOutInterface)
-{
+RootAccessibleWrap::InternalQueryInterface(REFIID aIid, void** aOutInterface) {
   if (!aOutInterface) {
     return E_INVALIDARG;
   }
@@ -49,21 +43,14 @@ RootAccessibleWrap::InternalQueryInterface(REFIID aIid, void** aOutInterface)
 }
 
 ULONG
-RootAccessibleWrap::InternalAddRef()
-{
-  return DocAccessible::AddRef();
-}
+RootAccessibleWrap::InternalAddRef() { return DocAccessible::AddRef(); }
 
 ULONG
-RootAccessibleWrap::InternalRelease()
-{
-  return DocAccessible::Release();
-}
+RootAccessibleWrap::InternalRelease() { return DocAccessible::Release(); }
 
-already_AddRefed<IUnknown>
-RootAccessibleWrap::Aggregate(IUnknown* aOuter)
-{
-  MOZ_ASSERT(mOuter && (mOuter == &mInternalUnknown || mOuter == aOuter || !aOuter));
+already_AddRefed<IUnknown> RootAccessibleWrap::Aggregate(IUnknown* aOuter) {
+  MOZ_ASSERT(mOuter &&
+             (mOuter == &mInternalUnknown || mOuter == aOuter || !aOuter));
   if (!aOuter) {
     // If there is no aOuter then we should always set mOuter to
     // mInternalUnknown. This is standard COM aggregation stuff.
@@ -75,9 +62,7 @@ RootAccessibleWrap::Aggregate(IUnknown* aOuter)
   return GetInternalUnknown();
 }
 
-already_AddRefed<IUnknown>
-RootAccessibleWrap::GetInternalUnknown()
-{
+already_AddRefed<IUnknown> RootAccessibleWrap::GetInternalUnknown() {
   RefPtr<IUnknown> result(&mInternalUnknown);
   return result.forget();
 }
@@ -85,9 +70,7 @@ RootAccessibleWrap::GetInternalUnknown()
 ////////////////////////////////////////////////////////////////////////////////
 // RootAccessible
 
-void
-RootAccessibleWrap::DocumentActivated(DocAccessible* aDocument)
-{
+void RootAccessibleWrap::DocumentActivated(DocAccessible* aDocument) {
   // This check will never work with e10s enabled, in other words, as of
   // Firefox 57.
   if (Compatibility::IsDolphin() &&
@@ -106,17 +89,16 @@ RootAccessibleWrap::DocumentActivated(DocAccessible* aDocument)
 
 STDMETHODIMP
 RootAccessibleWrap::accNavigate(
-      /* [in] */ long navDir,
-      /* [optional][in] */ VARIANT varStart,
-      /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt)
-{
+    /* [in] */ long navDir,
+    /* [optional][in] */ VARIANT varStart,
+    /* [retval][out] */ VARIANT __RPC_FAR* pvarEndUpAt) {
   // Special handling for NAVRELATION_EMBEDS.
   // When we only have a single process, this can be handled the same way as
   // any other relation.
   // However, for multi process, the normal relation mechanism doesn't work
   // because it can't handle remote objects.
-  if (navDir != NAVRELATION_EMBEDS ||
-      varStart.vt != VT_I4  || varStart.lVal != CHILDID_SELF) {
+  if (navDir != NAVRELATION_EMBEDS || varStart.vt != VT_I4 ||
+      varStart.lVal != CHILDID_SELF) {
     // We only handle EMBEDS on the root here.
     // Forward to the base implementation.
     return DocAccessibleWrap::accNavigate(navDir, varStart, pvarEndUpAt);
@@ -153,8 +135,7 @@ RootAccessibleWrap::accNavigate(
 
 STDMETHODIMP
 RootAccessibleWrap::get_accFocus(
-      /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
-{
+    /* [retval][out] */ VARIANT __RPC_FAR* pvarChild) {
   HRESULT hr = DocAccessibleWrap::get_accFocus(pvarChild);
   if (FAILED(hr) || pvarChild->vt != VT_EMPTY || !IsWin8OrLater()) {
     // 1. We got a definite result (either failure or an accessible); or

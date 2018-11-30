@@ -79,7 +79,8 @@ class ObserverList {
   };
 
   ObserverList() : notify_depth_(0), type_(NOTIFY_ALL) {}
-  explicit ObserverList(NotificationType type) : notify_depth_(0), type_(type) {}
+  explicit ObserverList(NotificationType type)
+      : notify_depth_(0), type_(type) {}
   ~ObserverList() {
     // When check_empty is true, assert that the list is empty on destruction.
     if (check_empty) {
@@ -98,7 +99,7 @@ class ObserverList {
   // Remove an observer from the list.
   void RemoveObserver(ObserverType* obs) {
     typename ListType::iterator it =
-      std::find(observers_.begin(), observers_.end(), obs);
+        std::find(observers_.begin(), observers_.end(), obs);
     if (it != observers_.end()) {
       if (notify_depth_) {
         *it = 0;
@@ -108,13 +109,9 @@ class ObserverList {
     }
   }
 
-  size_t size() const {
-    return observers_.size();
-  }
+  size_t size() const { return observers_.size(); }
 
-  ObserverType* GetElementAt(int index) const {
-    return observers_[index];
-  }
+  ObserverType* GetElementAt(int index) const { return observers_[index]; }
 
   // An iterator class that can be used to access the list of observers.  See
   // also the FOREACH_OBSERVER macro defined below.
@@ -123,23 +120,21 @@ class ObserverList {
     explicit Iterator(const ObserverList<ObserverType>& list)
         : list_(list),
           index_(0),
-          max_index_(list.type_ == NOTIFY_ALL ?
-                     std::numeric_limits<size_t>::max() :
-                     list.observers_.size()) {
+          max_index_(list.type_ == NOTIFY_ALL
+                         ? std::numeric_limits<size_t>::max()
+                         : list.observers_.size()) {
       ++list_.notify_depth_;
     }
 
     ~Iterator() {
-      if (--list_.notify_depth_ == 0)
-        list_.Compact();
+      if (--list_.notify_depth_ == 0) list_.Compact();
     }
 
     ObserverType* GetNext() {
       ListType& observers = list_.observers_;
       // Advance if the current element is null
       size_t max_index = std::min(max_index_, observers.size());
-      while (index_ < max_index && !observers[index_])
-        ++index_;
+      while (index_ < max_index && !observers[index_]) ++index_;
       return index_ < max_index ? observers[index_++] : NULL;
     }
 
@@ -173,14 +168,13 @@ class ObserverList {
   DISALLOW_EVIL_CONSTRUCTORS(ObserverList);
 };
 
-} // namespace base
+}  // namespace base
 
-#define FOR_EACH_OBSERVER(ObserverType, observer_list, func)		\
-  do {									\
-    base::ObserverList<ObserverType>::Iterator it(observer_list);	\
-    ObserverType* obs;							\
-    while ((obs = it.GetNext()) != NULL)				\
-      obs->func;							\
+#define FOR_EACH_OBSERVER(ObserverType, observer_list, func)      \
+  do {                                                            \
+    base::ObserverList<ObserverType>::Iterator it(observer_list); \
+    ObserverType* obs;                                            \
+    while ((obs = it.GetNext()) != NULL) obs->func;               \
   } while (0)
 
 #endif  // BASE_OBSERVER_LIST_H__

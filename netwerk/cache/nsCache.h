@@ -20,23 +20,20 @@
 
 // PR_LOG args = "format string", arg, arg, ...
 extern mozilla::LazyLogModule gCacheLog;
-void   CacheLogPrintPath(mozilla::LogLevel level,
-                         const char *     format,
-                         nsIFile *        item);
-#define CACHE_LOG_INFO(args)  MOZ_LOG(gCacheLog, mozilla::LogLevel::Info, args)
-#define CACHE_LOG_ERROR(args)   MOZ_LOG(gCacheLog, mozilla::LogLevel::Error, args)
-#define CACHE_LOG_WARNING(args) MOZ_LOG(gCacheLog, mozilla::LogLevel::Warning, args)
-#define CACHE_LOG_DEBUG(args)   MOZ_LOG(gCacheLog, mozilla::LogLevel::Debug, args)
+void CacheLogPrintPath(mozilla::LogLevel level, const char* format,
+                       nsIFile* item);
+#define CACHE_LOG_INFO(args) MOZ_LOG(gCacheLog, mozilla::LogLevel::Info, args)
+#define CACHE_LOG_ERROR(args) MOZ_LOG(gCacheLog, mozilla::LogLevel::Error, args)
+#define CACHE_LOG_WARNING(args) \
+  MOZ_LOG(gCacheLog, mozilla::LogLevel::Warning, args)
+#define CACHE_LOG_DEBUG(args) MOZ_LOG(gCacheLog, mozilla::LogLevel::Debug, args)
 #define CACHE_LOG_PATH(level, format, item) \
-                                CacheLogPrintPath(level, format, item)
+  CacheLogPrintPath(level, format, item)
 
+extern uint32_t SecondsFromPRTime(PRTime prTime);
+extern PRTime PRTimeFromSeconds(uint32_t seconds);
 
-extern uint32_t  SecondsFromPRTime(PRTime prTime);
-extern PRTime    PRTimeFromSeconds(uint32_t seconds);
+extern nsresult ClientIDFromCacheKey(const nsACString& key, nsACString& result);
+extern nsresult ClientKeyFromCacheKey(const nsCString& key, nsACString& result);
 
-
-extern nsresult  ClientIDFromCacheKey(const nsACString& key, nsACString& result);
-extern nsresult  ClientKeyFromCacheKey(const nsCString& key, nsACString& result);
-
-
-#endif // _nsCache_h
+#endif  // _nsCache_h

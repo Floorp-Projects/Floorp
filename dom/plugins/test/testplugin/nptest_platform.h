@@ -15,16 +15,17 @@
  *   contributors may be used to endorse or promote products derived from this
  *   software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
@@ -39,14 +40,14 @@
 /**
  * Returns true if the plugin supports windowed mode
  */
-bool    pluginSupportsWindowMode();
+bool pluginSupportsWindowMode();
 
 /**
  * Returns true if the plugin supports windowless mode. At least one of
  * "pluginSupportsWindowMode" and "pluginSupportsWindowlessMode" must
  * return true.
  */
-bool    pluginSupportsWindowlessMode();
+bool pluginSupportsWindowlessMode();
 
 /**
  * Initialize the plugin instance. Returning an error here will cause the
@@ -57,18 +58,18 @@ NPError pluginInstanceInit(InstanceData* instanceData);
 /**
  * Shutdown the plugin instance.
  */
-void    pluginInstanceShutdown(InstanceData* instanceData);
+void pluginInstanceShutdown(InstanceData* instanceData);
 
 /**
  * Set the instanceData's window to newWindow.
  */
-void    pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow);
+void pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow);
 
 /**
  * Initialize the window for a windowed plugin. oldWindow is the old
  * native window value. This will never be called for windowless plugins.
  */
-void    pluginWidgetInit(InstanceData* instanceData, void* oldWindow);
+void pluginWidgetInit(InstanceData* instanceData, void* oldWindow);
 
 /**
  * Handle an event for a windowless plugin. (Windowed plugins are
@@ -76,16 +77,9 @@ void    pluginWidgetInit(InstanceData* instanceData, void* oldWindow);
  */
 int16_t pluginHandleEvent(InstanceData* instanceData, void* event);
 
-enum RectEdge {
-  EDGE_LEFT = 0,
-  EDGE_TOP = 1,
-  EDGE_RIGHT = 2,
-  EDGE_BOTTOM = 3
-};
+enum RectEdge { EDGE_LEFT = 0, EDGE_TOP = 1, EDGE_RIGHT = 2, EDGE_BOTTOM = 3 };
 
-enum {
-  NPTEST_INT32_ERROR = 0x7FFFFFFF
-};
+enum { NPTEST_INT32_ERROR = 0x7FFFFFFF };
 
 /**
  * Return the coordinate of the given edge of the plugin's area, relative
@@ -111,14 +105,15 @@ int32_t pluginGetClipRegionRectCount(InstanceData* instanceData);
  * Returns NPTEST_ERROR on error.
  */
 int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
-    int32_t rectIndex, RectEdge edge);
+                                    int32_t rectIndex, RectEdge edge);
 
 /**
  * Check that the platform-specific plugin state is internally consistent.
  * Just return if everything is OK, otherwise append error messages
  * to 'error' separated by \n.
  */
-void pluginDoInternalConsistencyCheck(InstanceData* instanceData, std::string& error);
+void pluginDoInternalConsistencyCheck(InstanceData* instanceData,
+                                      std::string& error);
 
 /**
  * Get the current clipboard item as text.  If the clipboard item
@@ -157,4 +152,4 @@ bool pluginDestroySharedGfxStuff(InstanceData* instanceData);
  */
 bool pluginNativeWidgetIsVisible(InstanceData* instanceData);
 
-#endif // nptest_platform_h_
+#endif  // nptest_platform_h_

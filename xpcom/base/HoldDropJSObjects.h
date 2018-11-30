@@ -23,48 +23,34 @@ void HoldJSObjectsImpl(nsISupports* aHolder);
 void DropJSObjectsImpl(void* aHolder);
 void DropJSObjectsImpl(nsISupports* aHolder);
 
-} // namespace cyclecollector
+}  // namespace cyclecollector
 
-
-template<class T, bool isISupports = IsBaseOf<nsISupports, T>::value>
-struct HoldDropJSObjectsHelper
-{
-  static void Hold(T* aHolder)
-  {
+template <class T, bool isISupports = IsBaseOf<nsISupports, T>::value>
+struct HoldDropJSObjectsHelper {
+  static void Hold(T* aHolder) {
     cyclecollector::HoldJSObjectsImpl(aHolder,
                                       NS_CYCLE_COLLECTION_PARTICIPANT(T));
   }
-  static void Drop(T* aHolder)
-  {
-    cyclecollector::DropJSObjectsImpl(aHolder);
-  }
+  static void Drop(T* aHolder) { cyclecollector::DropJSObjectsImpl(aHolder); }
 };
 
-template<class T>
-struct HoldDropJSObjectsHelper<T, true>
-{
-  static void Hold(T* aHolder)
-  {
+template <class T>
+struct HoldDropJSObjectsHelper<T, true> {
+  static void Hold(T* aHolder) {
     cyclecollector::HoldJSObjectsImpl(ToSupports(aHolder));
   }
-  static void Drop(T* aHolder)
-  {
+  static void Drop(T* aHolder) {
     cyclecollector::DropJSObjectsImpl(ToSupports(aHolder));
   }
 };
 
-
-template<class T>
-void
-HoldJSObjects(T* aHolder)
-{
+template <class T>
+void HoldJSObjects(T* aHolder) {
   HoldDropJSObjectsHelper<T>::Hold(aHolder);
 }
 
-template<class T>
-void
-DropJSObjects(T* aHolder)
-{
+template <class T>
+void DropJSObjects(T* aHolder) {
   HoldDropJSObjectsHelper<T>::Drop(aHolder);
 }
 
@@ -72,6 +58,6 @@ DropJSObjects(T* aHolder)
 bool IsJSHolder(void* aHolder);
 #endif
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_HoldDropJSObjects_h
+#endif  // mozilla_HoldDropJSObjects_h

@@ -16,24 +16,20 @@ namespace dom {
 class GridDimension;
 class GridLine;
 
-class GridLines : public nsISupports
-                , public nsWrapperCache
-{
-public:
+class GridLines : public nsISupports, public nsWrapperCache {
+ public:
   explicit GridLines(GridDimension* aParent);
 
-protected:
+ protected:
   virtual ~GridLines();
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GridLines)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-  GridDimension* GetParentObject()
-  {
-    return mParent;
-  }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+  GridDimension* GetParentObject() { return mParent; }
 
   uint32_t Length() const;
   GridLine* Item(uint32_t aIndex);
@@ -41,14 +37,12 @@ public:
 
   void SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
                    const ComputedGridLineInfo* aLineInfo,
-                   const nsTArray<RefPtr<GridArea>>& aAreas,
-                   bool aIsRow);
+                   const nsTArray<RefPtr<GridArea>>& aAreas, bool aIsRow);
 
-protected:
+ protected:
   uint32_t AppendRemovedAutoFits(const ComputedGridTrackInfo* aTrackInfo,
                                  const ComputedGridLineInfo* aLineInfo,
-                                 nscoord aLastTrackEdge,
-                                 uint32_t& aRepeatIndex,
+                                 nscoord aLastTrackEdge, uint32_t& aRepeatIndex,
                                  uint32_t aNumRepeatTracks,
                                  uint32_t aNumLeadingTracks,
                                  nsTArray<nsString>& aLineNames);
@@ -57,7 +51,7 @@ protected:
   nsTArray<RefPtr<GridLine>> mLines;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_GridLines_h */

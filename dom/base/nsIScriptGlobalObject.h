@@ -18,24 +18,25 @@ class nsIScriptGlobalObject;
 namespace mozilla {
 namespace dom {
 struct ErrorEventInit;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 // A helper function for nsIScriptGlobalObject implementations to use
 // when handling a script error.  Generally called by the global when a context
 // notifies it of an error via nsIScriptGlobalObject::HandleScriptError.
 // Returns true if HandleDOMEvent was actually called, in which case
 // aStatus will be filled in with the status.
-bool
-NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
-                     const mozilla::dom::ErrorEventInit &aErrorEvent,
-                     nsEventStatus *aStatus);
-
+bool NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
+                          const mozilla::dom::ErrorEventInit &aErrorEvent,
+                          nsEventStatus *aStatus);
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
-#define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0x876f83bd, 0x6314, 0x460a, \
-  { 0xa0, 0x45, 0x1c, 0x8f, 0x46, 0x2f, 0xb8, 0xe1 } }
+#define NS_ISCRIPTGLOBALOBJECT_IID                   \
+  {                                                  \
+    0x876f83bd, 0x6314, 0x460a, {                    \
+      0xa0, 0x45, 0x1c, 0x8f, 0x46, 0x2f, 0xb8, 0xe1 \
+    }                                                \
+  }
 
 /**
  * The global object which keeps a script context for each supported script
@@ -44,9 +45,8 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
  * it might go away some time in the future.
  */
 
-class nsIScriptGlobalObject : public nsIGlobalObject
-{
-public:
+class nsIScriptGlobalObject : public nsIGlobalObject {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECT_IID)
 
   /**
@@ -64,9 +64,7 @@ public:
    */
   virtual nsIScriptContext *GetScriptContext() = 0;
 
-  nsIScriptContext* GetContext() {
-    return GetScriptContext();
-  }
+  nsIScriptContext *GetContext() { return GetScriptContext(); }
 
   /**
    * Handle a script error.  Generally called by a script context.
@@ -78,11 +76,10 @@ public:
 
   virtual bool IsBlackForCC(bool aTracingNeeded = true) { return false; }
 
-protected:
+ protected:
   virtual ~nsIScriptGlobalObject() {}
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptGlobalObject,
-                              NS_ISCRIPTGLOBALOBJECT_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptGlobalObject, NS_ISCRIPTGLOBALOBJECT_IID)
 
 #endif

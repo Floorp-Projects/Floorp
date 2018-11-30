@@ -12,26 +12,23 @@
 namespace mozilla {
 namespace dom {
 
-class ClientOpenWindowOpChild final : public PClientOpenWindowOpChild
-{
+class ClientOpenWindowOpChild final : public PClientOpenWindowOpChild {
   MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
 
-  already_AddRefed<ClientOpPromise>
-  DoOpenWindow(const ClientOpenWindowArgs& aArgs);
+  already_AddRefed<ClientOpPromise> DoOpenWindow(
+      const ClientOpenWindowArgs& aArgs);
 
   // PClientOpenWindowOpChild interface
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-public:
+ public:
   ClientOpenWindowOpChild() = default;
   ~ClientOpenWindowOpChild() = default;
 
-  void
-  Init(const ClientOpenWindowArgs& aArgs);
+  void Init(const ClientOpenWindowArgs& aArgs);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientOpenWindowOpChild_h
+#endif  // _mozilla_dom_ClientOpenWindowOpChild_h

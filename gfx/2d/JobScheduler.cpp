@@ -12,8 +12,7 @@ namespace gfx {
 
 JobScheduler* JobScheduler::sSingleton = nullptr;
 
-bool JobScheduler::Init(uint32_t aNumThreads, uint32_t aNumQueues)
-{
+bool JobScheduler::Init(uint32_t aNumThreads, uint32_t aNumQueues) {
   MOZ_ASSERT(!sSingleton);
   MOZ_ASSERT(aNumThreads >= aNumQueues);
 
@@ -25,13 +24,13 @@ bool JobScheduler::Init(uint32_t aNumThreads, uint32_t aNumQueues)
   }
 
   for (uint32_t i = 0; i < aNumThreads; ++i) {
-    sSingleton->mWorkerThreads.push_back(WorkerThread::Create(sSingleton->mDrawingQueues[i%aNumQueues]));
+    sSingleton->mWorkerThreads.push_back(
+        WorkerThread::Create(sSingleton->mDrawingQueues[i % aNumQueues]));
   }
   return true;
 }
 
-void JobScheduler::ShutDown()
-{
+void JobScheduler::ShutDown() {
   MOZ_ASSERT(IsEnabled());
   if (!IsEnabled()) {
     return;
@@ -52,9 +51,7 @@ void JobScheduler::ShutDown()
   sSingleton = nullptr;
 }
 
-JobStatus
-JobScheduler::ProcessJob(Job* aJob)
-{
+JobStatus JobScheduler::ProcessJob(Job* aJob) {
   MOZ_ASSERT(aJob);
   auto status = aJob->Run();
   if (status == JobStatus::Error || status == JobStatus::Complete) {
@@ -63,9 +60,7 @@ JobScheduler::ProcessJob(Job* aJob)
   return status;
 }
 
-void
-JobScheduler::SubmitJob(Job* aJob)
-{
+void JobScheduler::SubmitJob(Job* aJob) {
   MOZ_ASSERT(aJob);
   RefPtr<SyncObject> start = aJob->GetStartSync();
   if (start && start->Register(aJob)) {
@@ -78,27 +73,22 @@ JobScheduler::SubmitJob(Job* aJob)
   GetQueueForJob(aJob)->SubmitJob(aJob);
 }
 
-void
-JobScheduler::Join(SyncObject* aCompletion)
-{
+void JobScheduler::Join(SyncObject* aCompletion) {
   RefPtr<EventObject> waitForCompletion = new EventObject();
   JobScheduler::SubmitJob(new SetEventJob(waitForCompletion, aCompletion));
   waitForCompletion->Wait();
 }
 
-MultiThreadedJobQueue*
-JobScheduler::GetQueueForJob(Job* aJob)
-{
+MultiThreadedJobQueue* JobScheduler::GetQueueForJob(Job* aJob) {
   return aJob->IsPinnedToAThread() ? aJob->GetWorkerThread()->GetJobQueue()
-                                    : GetDrawingQueue();
+                                   : GetDrawingQueue();
 }
 
 Job::Job(SyncObject* aStart, SyncObject* aCompletion, WorkerThread* aThread)
-: mNextWaitingJob(nullptr)
-, mStartSync(aStart)
-, mCompletionSync(aCompletion)
-, mPinToThread(aThread)
-{
+    : mNextWaitingJob(nullptr),
+      mStartSync(aStart),
+      mCompletionSync(aCompletion),
+      mPinToThread(aThread) {
   if (mStartSync) {
     mStartSync->AddSubsequent(this);
   }
@@ -107,57 +97,47 @@ Job::Job(SyncObject* aStart, SyncObject* aCompletion, WorkerThread* aThread)
   }
 }
 
-Job::~Job()
-{
+Job::~Job() {
   if (mCompletionSync) {
-    //printf(" -- Job %p dtor completion %p\n", this, mCompletionSync);
+    // printf(" -- Job %p dtor completion %p\n", this, mCompletionSync);
     mCompletionSync->Signal();
     mCompletionSync = nullptr;
   }
 }
 
-JobStatus
-SetEventJob::Run()
-{
+JobStatus SetEventJob::Run() {
   mEvent->Set();
   return JobStatus::Complete;
 }
 
-SetEventJob::SetEventJob(EventObject* aEvent,
-                           SyncObject* aStart, SyncObject* aCompletion,
-                           WorkerThread* aWorker)
-: Job(aStart, aCompletion, aWorker)
-, mEvent(aEvent)
-{}
+SetEventJob::SetEventJob(EventObject* aEvent, SyncObject* aStart,
+                         SyncObject* aCompletion, WorkerThread* aWorker)
+    : Job(aStart, aCompletion, aWorker), mEvent(aEvent) {}
 
-SetEventJob::~SetEventJob()
-{}
+SetEventJob::~SetEventJob() {}
 
 SyncObject::SyncObject(uint32_t aNumPrerequisites)
-: mSignals(aNumPrerequisites)
-, mFirstWaitingJob(nullptr)
+    : mSignals(aNumPrerequisites),
+      mFirstWaitingJob(nullptr)
 #ifdef DEBUG
-, mNumPrerequisites(aNumPrerequisites)
-, mAddedPrerequisites(0)
+      ,
+      mNumPrerequisites(aNumPrerequisites),
+      mAddedPrerequisites(0)
 #endif
-{}
-
-SyncObject::~SyncObject()
 {
-  MOZ_ASSERT(mFirstWaitingJob == nullptr);
 }
 
-bool
-SyncObject::Register(Job* aJob)
-{
+SyncObject::~SyncObject() { MOZ_ASSERT(mFirstWaitingJob == nullptr); }
+
+bool SyncObject::Register(Job* aJob) {
   MOZ_ASSERT(aJob);
 
   // For now, ensure that when we schedule the first subsequent, we have already
   // created all of the prerequisites. This is an arbitrary restriction because
-  // we specify the number of prerequisites in the constructor, but in the typical
-  // scenario, if the assertion FreezePrerequisite blows up here it probably means
-  // we got the initial nmber of prerequisites wrong. We can decide to remove
-  // this restriction if needed.
+  // we specify the number of prerequisites in the constructor, but in the
+  // typical scenario, if the assertion FreezePrerequisite blows up here it
+  // probably means we got the initial nmber of prerequisites wrong. We can
+  // decide to remove this restriction if needed.
   FreezePrerequisites();
 
   int32_t signals = mSignals;
@@ -165,13 +145,12 @@ SyncObject::Register(Job* aJob)
   if (signals > 0) {
     AddWaitingJob(aJob);
     // Since Register and Signal can be called concurrently, it can happen that
-    // reading mSignals in Register happens before decrementing mSignals in Signal,
-    // but SubmitWaitingJobs happens before AddWaitingJob. This ordering means
-    // the SyncObject ends up in the signaled state with a task sitting in the
-    // waiting list. To prevent that we check mSignals a second time and submit
-    // again if signals reached zero in the mean time.
-    // We do this instead of holding a mutex around mSignals+mJobs to reduce
-    // lock contention.
+    // reading mSignals in Register happens before decrementing mSignals in
+    // Signal, but SubmitWaitingJobs happens before AddWaitingJob. This ordering
+    // means the SyncObject ends up in the signaled state with a task sitting in
+    // the waiting list. To prevent that we check mSignals a second time and
+    // submit again if signals reached zero in the mean time. We do this instead
+    // of holding a mutex around mSignals+mJobs to reduce lock contention.
     int32_t signals2 = mSignals;
     if (signals2 == 0) {
       SubmitWaitingJobs();
@@ -182,9 +161,7 @@ SyncObject::Register(Job* aJob)
   return false;
 }
 
-void
-SyncObject::Signal()
-{
+void SyncObject::Signal() {
   int32_t signals = --mSignals;
   MOZ_ASSERT(signals >= 0);
 
@@ -193,9 +170,7 @@ SyncObject::Signal()
   }
 }
 
-void
-SyncObject::AddWaitingJob(Job* aJob)
-{
+void SyncObject::AddWaitingJob(Job* aJob) {
   // Push (using atomics) the task into the list of waiting tasks.
   for (;;) {
     Job* first = mFirstWaitingJob;
@@ -206,8 +181,7 @@ SyncObject::AddWaitingJob(Job* aJob)
   }
 }
 
-void SyncObject::SubmitWaitingJobs()
-{
+void SyncObject::SubmitWaitingJobs() {
   // Scheduling the tasks can cause code that modifies <this>'s reference
   // count to run concurrently, and cause the caller of this function to
   // be owned by another thread. We need to make sure the reference count
@@ -234,38 +208,24 @@ void SyncObject::SubmitWaitingJobs()
   }
 }
 
-bool
-SyncObject::IsSignaled()
-{
-  return mSignals == 0;
-}
+bool SyncObject::IsSignaled() { return mSignals == 0; }
 
-void
-SyncObject::FreezePrerequisites()
-{
+void SyncObject::FreezePrerequisites() {
   MOZ_ASSERT(mAddedPrerequisites == mNumPrerequisites);
 }
 
-void
-SyncObject::AddPrerequisite(Job* aJob)
-{
+void SyncObject::AddPrerequisite(Job* aJob) {
   MOZ_ASSERT(++mAddedPrerequisites <= mNumPrerequisites);
 }
 
-void
-SyncObject::AddSubsequent(Job* aJob)
-{
-}
+void SyncObject::AddSubsequent(Job* aJob) {}
 
 WorkerThread::WorkerThread(MultiThreadedJobQueue* aJobQueue)
-: mQueue(aJobQueue)
-{
+    : mQueue(aJobQueue) {
   aJobQueue->RegisterThread();
 }
 
-void
-WorkerThread::Run()
-{
+void WorkerThread::Run() {
   SetName("gfx worker");
 
   for (;;) {
@@ -280,10 +240,11 @@ WorkerThread::Run()
     if (status == JobStatus::Error) {
       // Don't try to handle errors for now, but that's open to discussions.
       // I expect errors to be mostly OOM issues.
-      gfxDevCrash(LogReason::JobStatusError) << "Invalid job status " << (int)status;
+      gfxDevCrash(LogReason::JobStatusError)
+          << "Invalid job status " << (int)status;
     }
   }
 }
 
-} //namespace
-} //namespace
+}  // namespace gfx
+}  // namespace mozilla

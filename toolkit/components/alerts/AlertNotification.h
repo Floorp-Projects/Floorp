@@ -20,9 +20,8 @@ namespace mozilla {
 class AlertImageRequest final : public imgINotificationObserver,
                                 public nsICancelable,
                                 public nsITimerCallback,
-                                public nsINamed
-{
-public:
+                                public nsINamed {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(AlertImageRequest,
                                            imgINotificationObserver)
@@ -38,7 +37,7 @@ public:
 
   nsresult Start();
 
-private:
+ private:
   virtual ~AlertImageRequest();
 
   nsresult NotifyMissing();
@@ -54,17 +53,16 @@ private:
   nsCOMPtr<imgIRequest> mRequest;
 };
 
-class AlertNotification final : public nsIAlertNotification
-{
-public:
+class AlertNotification final : public nsIAlertNotification {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTNOTIFICATION
   AlertNotification();
 
-protected:
+ protected:
   virtual ~AlertNotification();
 
-private:
+ private:
   nsString mName;
   nsString mImageURL;
   nsString mTitle;
@@ -79,6 +77,6 @@ private:
   bool mInPrivateBrowsing;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_AlertNotification_h__ */

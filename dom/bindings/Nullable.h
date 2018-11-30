@@ -21,53 +21,33 @@ namespace dom {
 
 // Support for nullable types
 template <typename T>
-struct Nullable
-{
-private:
+struct Nullable {
+ private:
   Maybe<T> mValue;
 
-public:
-  Nullable()
-    : mValue()
-  {}
+ public:
+  Nullable() : mValue() {}
 
-  MOZ_IMPLICIT Nullable(const decltype(nullptr)&)
-    : mValue()
-  {}
+  MOZ_IMPLICIT Nullable(const decltype(nullptr)&) : mValue() {}
 
-  explicit Nullable(const T& aValue)
-    : mValue()
-  {
-    mValue.emplace(aValue);
-  }
+  explicit Nullable(const T& aValue) : mValue() { mValue.emplace(aValue); }
 
-  MOZ_IMPLICIT Nullable(T&& aValue)
-    : mValue()
-  {
+  MOZ_IMPLICIT Nullable(T&& aValue) : mValue() {
     mValue.emplace(std::move(aValue));
   }
 
-  Nullable(Nullable<T>&& aOther)
-    : mValue(std::move(aOther.mValue))
-  {}
+  Nullable(Nullable<T>&& aOther) : mValue(std::move(aOther.mValue)) {}
 
-  Nullable(const Nullable<T>& aOther)
-    : mValue(aOther.mValue)
-  {}
+  Nullable(const Nullable<T>& aOther) : mValue(aOther.mValue) {}
 
-  void operator=(const Nullable<T>& aOther)
-  {
-    mValue = aOther.mValue;
-  }
+  void operator=(const Nullable<T>& aOther) { mValue = aOther.mValue; }
 
-  void SetValue(const T& aArgs)
-  {
+  void SetValue(const T& aArgs) {
     mValue.reset();
     mValue.emplace(aArgs);
   }
 
-  void SetValue(T&& aArgs)
-  {
+  void SetValue(T&& aArgs) {
     mValue.reset();
     mValue.emplace(std::move(aArgs));
   }
@@ -82,34 +62,23 @@ public:
     return mValue.ref();
   }
 
-  void SetNull() {
-    mValue.reset();
-  }
+  void SetNull() { mValue.reset(); }
 
-  const T& Value() const {
-    return mValue.ref();
-  }
+  const T& Value() const { return mValue.ref(); }
 
-  T& Value() {
-    return mValue.ref();
-  }
+  T& Value() { return mValue.ref(); }
 
-  bool IsNull() const {
-    return mValue.isNothing();
-  }
+  bool IsNull() const { return mValue.isNothing(); }
 
-  bool Equals(const Nullable<T>& aOtherNullable) const
-  {
+  bool Equals(const Nullable<T>& aOtherNullable) const {
     return mValue == aOtherNullable.mValue;
   }
 
-  bool operator==(const Nullable<T>& aOtherNullable) const
-  {
+  bool operator==(const Nullable<T>& aOtherNullable) const {
     return Equals(aOtherNullable);
   }
 
-  bool operator!=(const Nullable<T>& aOtherNullable) const
-  {
+  bool operator!=(const Nullable<T>& aOtherNullable) const {
     return !Equals(aOtherNullable);
   }
 
@@ -119,29 +88,23 @@ public:
   }
 };
 
-
-template<typename T>
-void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            Nullable<T>& aNullable,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
+template <typename T>
+void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                                 Nullable<T>& aNullable, const char* aName,
+                                 uint32_t aFlags = 0) {
   if (!aNullable.IsNull()) {
     ImplCycleCollectionTraverse(aCallback, aNullable.Value(), aName, aFlags);
   }
 }
 
-template<typename T>
-void
-ImplCycleCollectionUnlink(Nullable<T>& aNullable)
-{
+template <typename T>
+void ImplCycleCollectionUnlink(Nullable<T>& aNullable) {
   if (!aNullable.IsNull()) {
     ImplCycleCollectionUnlink(aNullable.Value());
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_Nullable_h */

@@ -12,37 +12,31 @@
 #include <unistd.h>
 
 using namespace CrashReporter;
+using std::sort;
 using std::string;
 using std::vector;
-using std::sort;
 
-struct FileData
-{
+struct FileData {
   time_t timestamp;
   string path;
 };
 
-static bool CompareFDTime(const FileData& fd1, const FileData& fd2)
-{
+static bool CompareFDTime(const FileData& fd1, const FileData& fd2) {
   return fd1.timestamp > fd2.timestamp;
 }
 
-void UIPruneSavedDumps(const string& directory)
-{
-  DIR *dirfd = opendir(directory.c_str());
-  if (!dirfd)
-    return;
+void UIPruneSavedDumps(const string& directory) {
+  DIR* dirfd = opendir(directory.c_str());
+  if (!dirfd) return;
 
   vector<FileData> dumpfiles;
 
-  while (dirent *dir = readdir(dirfd)) {
+  while (dirent* dir = readdir(dirfd)) {
     FileData fd;
     fd.path = directory + '/' + dir->d_name;
-    if (fd.path.size() < 5)
-      continue;
+    if (fd.path.size() < 5) continue;
 
-    if (fd.path.compare(fd.path.size() - 4, 4, ".dmp") != 0)
-      continue;
+    if (fd.path.compare(fd.path.size() - 4, 4, ".dmp") != 0) continue;
 
     struct stat st;
     if (stat(fd.path.c_str(), &st)) {
@@ -72,8 +66,8 @@ void UIPruneSavedDumps(const string& directory)
   }
 }
 
-bool UIRunProgram(const string& exename, const vector<string>& args, bool wait)
-{
+bool UIRunProgram(const string& exename, const vector<string>& args,
+                  bool wait) {
   pid_t pid = fork();
 
   if (pid == -1) {
@@ -107,33 +101,25 @@ bool UIRunProgram(const string& exename, const vector<string>& args, bool wait)
   return true;
 }
 
-bool UIEnsurePathExists(const string& path)
-{
+bool UIEnsurePathExists(const string& path) {
   int ret = mkdir(path.c_str(), S_IRWXU);
   int e = errno;
-  if (ret == -1 && e != EEXIST)
-    return false;
+  if (ret == -1 && e != EEXIST) return false;
 
   return true;
 }
 
-bool UIFileExists(const string& path)
-{
+bool UIFileExists(const string& path) {
   struct stat sb;
   int ret = stat(path.c_str(), &sb);
-  if (ret == -1 || !(sb.st_mode & S_IFREG))
-    return false;
+  if (ret == -1 || !(sb.st_mode & S_IFREG)) return false;
 
   return true;
 }
 
-bool UIDeleteFile(const string& file)
-{
-  return (unlink(file.c_str()) != -1);
-}
+bool UIDeleteFile(const string& file) { return (unlink(file.c_str()) != -1); }
 
-std::ifstream* UIOpenRead(const string& filename, bool binary)
-{
+std::ifstream* UIOpenRead(const string& filename, bool binary) {
   std::ios_base::openmode mode = std::ios::in;
 
   if (binary) {
@@ -144,8 +130,8 @@ std::ifstream* UIOpenRead(const string& filename, bool binary)
 }
 
 std::ofstream* UIOpenWrite(const string& filename,
-                           bool append, // append=false
-                           bool binary) // binary=false
+                           bool append,  // append=false
+                           bool binary)  // binary=false
 {
   std::ios_base::openmode mode = std::ios::out;
 
@@ -160,9 +146,8 @@ std::ofstream* UIOpenWrite(const string& filename,
   return new std::ofstream(filename.c_str(), mode);
 }
 
-string UIGetEnv(const string& name)
-{
-  const char *var = getenv(name.c_str());
+string UIGetEnv(const string& name) {
+  const char* var = getenv(name.c_str());
   if (var && *var) {
     return var;
   }

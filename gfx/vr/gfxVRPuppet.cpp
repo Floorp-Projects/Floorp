@@ -14,7 +14,7 @@
 
 #include "mozilla/Base64.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
-#include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
+#include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "gfxVRPuppet.h"
@@ -27,11 +27,14 @@
 // See CompositorD3D11Shaders.h
 namespace mozilla {
 namespace layers {
-struct ShaderBytes { const void* mData; size_t mLength; };
+struct ShaderBytes {
+  const void* mData;
+  size_t mLength;
+};
 extern ShaderBytes sRGBShader;
 extern ShaderBytes sLayerQuadVS;
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -39,22 +42,16 @@ using namespace mozilla::gfx::impl;
 using namespace mozilla::layers;
 
 // Reminder: changing the order of these buttons may break web content
-static const uint64_t kPuppetButtonMask[] = {
-  1,
-  2,
-  4,
-  8
-};
-static const uint32_t kNumPuppetButtonMask = sizeof(kPuppetButtonMask) /
-                                             sizeof(uint64_t);
+static const uint64_t kPuppetButtonMask[] = {1, 2, 4, 8};
+static const uint32_t kNumPuppetButtonMask =
+    sizeof(kPuppetButtonMask) / sizeof(uint64_t);
 static const uint32_t kNumPuppetAxis = 3;
 static const uint32_t kNumPuppetHaptcs = 1;
 
 VRDisplayPuppet::VRDisplayPuppet()
- : VRDisplayLocal(VRDeviceType::Puppet)
- , mIsPresenting(false)
- , mSensorState{}
-{
+    : VRDisplayLocal(VRDeviceType::Puppet),
+      mIsPresenting(false),
+      mSensorState{} {
   MOZ_COUNT_CTOR_INHERITED(VRDisplayPuppet, VRDisplayLocal);
 
   VRDisplayState& state = mDisplayInfo.mDisplayState;
@@ -67,10 +64,11 @@ VRDisplayPuppet::VRDisplayPuppet()
                            VRDisplayCapabilityFlags::Cap_External |
                            VRDisplayCapabilityFlags::Cap_Present |
                            VRDisplayCapabilityFlags::Cap_StageParameters;
-  state.mEyeResolution.width = 1836; // 1080 * 1.7
-  state.mEyeResolution.height = 2040; // 1200 * 1.7
+  state.mEyeResolution.width = 1836;   // 1080 * 1.7
+  state.mEyeResolution.height = 2040;  // 1200 * 1.7
 
-  // SteamVR gives the application a single FOV to use; it's not configurable as with Oculus
+  // SteamVR gives the application a single FOV to use; it's not configurable as
+  // with Oculus
   for (uint32_t eye = 0; eye < 2; ++eye) {
     state.mEyeTranslation[eye].x = 0.0f;
     state.mEyeTranslation[eye].y = 0.0f;
@@ -122,14 +120,11 @@ VRDisplayPuppet::VRDisplayPuppet()
   mSensorState.pose.linearVelocity[2] = 0.0f;
 }
 
-VRDisplayPuppet::~VRDisplayPuppet()
-{
+VRDisplayPuppet::~VRDisplayPuppet() {
   MOZ_COUNT_DTOR_INHERITED(VRDisplayPuppet, VRDisplayLocal);
 }
 
-void
-VRDisplayPuppet::SetDisplayInfo(const VRDisplayInfo& aDisplayInfo)
-{
+void VRDisplayPuppet::SetDisplayInfo(const VRDisplayInfo& aDisplayInfo) {
   // We are only interested in the eye and mount info of the display info.
   VRDisplayState& state = mDisplayInfo.mDisplayState;
   state.mEyeResolution = aDisplayInfo.mDisplayState.mEyeResolution;
@@ -140,20 +135,11 @@ VRDisplayPuppet::SetDisplayInfo(const VRDisplayInfo& aDisplayInfo)
          sizeof(state.mEyeTranslation[0]) * VRDisplayState::NumEyes);
 }
 
-void
-VRDisplayPuppet::Destroy()
-{
-  StopPresentation();
-}
+void VRDisplayPuppet::Destroy() { StopPresentation(); }
 
-void
-VRDisplayPuppet::ZeroSensor()
-{
-}
+void VRDisplayPuppet::ZeroSensor() {}
 
-VRHMDSensorState
-VRDisplayPuppet::GetSensorState()
-{
+VRHMDSensorState VRDisplayPuppet::GetSensorState() {
   mSensorState.inputFrameID = mDisplayInfo.mFrameId;
 
   Matrix4x4 matHeadToEye[2];
@@ -165,15 +151,11 @@ VRDisplayPuppet::GetSensorState()
   return mSensorState;
 }
 
-void
-VRDisplayPuppet::SetSensorState(const VRHMDSensorState& aSensorState)
-{
+void VRDisplayPuppet::SetSensorState(const VRHMDSensorState& aSensorState) {
   memcpy(&mSensorState, &aSensorState, sizeof(mSensorState));
 }
 
-void
-VRDisplayPuppet::StartPresentation()
-{
+void VRDisplayPuppet::StartPresentation() {
   if (mIsPresenting) {
     return;
   }
@@ -184,72 +166,72 @@ VRDisplayPuppet::StartPresentation()
     return;
   }
 
-  if (FAILED(mDevice->CreateVertexShader(sLayerQuadVS.mData,
-                      sLayerQuadVS.mLength, nullptr, &mQuadVS))) {
+  if (FAILED(mDevice->CreateVertexShader(
+          sLayerQuadVS.mData, sLayerQuadVS.mLength, nullptr, &mQuadVS))) {
     NS_WARNING("Failed to create vertex shader for Puppet");
     return;
   }
 
-  if (FAILED(mDevice->CreatePixelShader(sRGBShader.mData,
-                      sRGBShader.mLength, nullptr, &mQuadPS))) {
+  if (FAILED(mDevice->CreatePixelShader(sRGBShader.mData, sRGBShader.mLength,
+                                        nullptr, &mQuadPS))) {
     NS_WARNING("Failed to create pixel shader for Puppet");
     return;
   }
 
   CD3D11_BUFFER_DESC cBufferDesc(sizeof(layers::VertexShaderConstants),
                                  D3D11_BIND_CONSTANT_BUFFER,
-                                 D3D11_USAGE_DYNAMIC,
-                                 D3D11_CPU_ACCESS_WRITE);
+                                 D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
-  if (FAILED(mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mVSConstantBuffer)))) {
+  if (FAILED(mDevice->CreateBuffer(&cBufferDesc, nullptr,
+                                   getter_AddRefs(mVSConstantBuffer)))) {
     NS_WARNING("Failed to vertex shader constant buffer for Puppet");
     return;
   }
 
   cBufferDesc.ByteWidth = sizeof(layers::PixelShaderConstants);
-  if (FAILED(mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mPSConstantBuffer)))) {
+  if (FAILED(mDevice->CreateBuffer(&cBufferDesc, nullptr,
+                                   getter_AddRefs(mPSConstantBuffer)))) {
     NS_WARNING("Failed to pixel shader constant buffer for Puppet");
     return;
   }
 
   CD3D11_SAMPLER_DESC samplerDesc(D3D11_DEFAULT);
-  if (FAILED(mDevice->CreateSamplerState(&samplerDesc, getter_AddRefs(mLinearSamplerState)))) {
+  if (FAILED(mDevice->CreateSamplerState(
+          &samplerDesc, getter_AddRefs(mLinearSamplerState)))) {
     NS_WARNING("Failed to create sampler state for Puppet");
     return;
   }
 
-  D3D11_INPUT_ELEMENT_DESC layout[] =
-  {
-    { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  D3D11_INPUT_ELEMENT_DESC layout[] = {
+      {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0,
+       D3D11_INPUT_PER_VERTEX_DATA, 0},
   };
 
-  if (FAILED(mDevice->CreateInputLayout(layout,
-                                        sizeof(layout) / sizeof(D3D11_INPUT_ELEMENT_DESC),
-                                        sLayerQuadVS.mData,
-                                        sLayerQuadVS.mLength,
-                                        getter_AddRefs(mInputLayout)))) {
+  if (FAILED(mDevice->CreateInputLayout(
+          layout, sizeof(layout) / sizeof(D3D11_INPUT_ELEMENT_DESC),
+          sLayerQuadVS.mData, sLayerQuadVS.mLength,
+          getter_AddRefs(mInputLayout)))) {
     NS_WARNING("Failed to create input layout for Puppet");
     return;
   }
 
-  Vertex vertices[] = { { { 0.0, 0.0 } },{ { 1.0, 0.0 } },{ { 0.0, 1.0 } },{ { 1.0, 1.0 } } };
+  Vertex vertices[] = {{{0.0, 0.0}}, {{1.0, 0.0}}, {{0.0, 1.0}}, {{1.0, 1.0}}};
   CD3D11_BUFFER_DESC bufferDesc(sizeof(vertices), D3D11_BIND_VERTEX_BUFFER);
   D3D11_SUBRESOURCE_DATA data;
   data.pSysMem = (void*)vertices;
 
-  if (FAILED(mDevice->CreateBuffer(&bufferDesc, &data, getter_AddRefs(mVertexBuffer)))) {
+  if (FAILED(mDevice->CreateBuffer(&bufferDesc, &data,
+                                   getter_AddRefs(mVertexBuffer)))) {
     NS_WARNING("Failed to create vertex buffer for Puppet");
     return;
   }
 
   memset(&mVSConstants, 0, sizeof(mVSConstants));
   memset(&mPSConstants, 0, sizeof(mPSConstants));
-#endif // XP_WIN
+#endif  // XP_WIN
 }
 
-void
-VRDisplayPuppet::StopPresentation()
-{
+void VRDisplayPuppet::StopPresentation() {
   if (!mIsPresenting) {
     return;
   }
@@ -258,14 +240,13 @@ VRDisplayPuppet::StopPresentation()
 }
 
 #if defined(XP_WIN)
-bool
-VRDisplayPuppet::UpdateConstantBuffers()
-{
+bool VRDisplayPuppet::UpdateConstantBuffers() {
   HRESULT hr;
   D3D11_MAPPED_SUBRESOURCE resource;
   resource.pData = nullptr;
 
-  hr = mContext->Map(mVSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+  hr = mContext->Map(mVSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0,
+                     &resource);
   if (FAILED(hr) || !resource.pData) {
     return false;
   }
@@ -273,26 +254,25 @@ VRDisplayPuppet::UpdateConstantBuffers()
   mContext->Unmap(mVSConstantBuffer, 0);
   resource.pData = nullptr;
 
-  hr = mContext->Map(mPSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+  hr = mContext->Map(mPSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0,
+                     &resource);
   if (FAILED(hr) || !resource.pData) {
     return false;
   }
   *(PixelShaderConstants*)resource.pData = mPSConstants;
   mContext->Unmap(mPSConstantBuffer, 0);
 
-  ID3D11Buffer *buffer = mVSConstantBuffer;
+  ID3D11Buffer* buffer = mVSConstantBuffer;
   mContext->VSSetConstantBuffers(0, 1, &buffer);
   buffer = mPSConstantBuffer;
   mContext->PSSetConstantBuffers(0, 1, &buffer);
   return true;
 }
 
-bool
-VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
-                             const IntSize& aSize,
-                             const gfx::Rect& aLeftEyeRect,
-                             const gfx::Rect& aRightEyeRect)
-{
+bool VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
+                                  const IntSize& aSize,
+                                  const gfx::Rect& aLeftEyeRect,
+                                  const gfx::Rect& aRightEyeRect) {
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   if (!mIsPresenting) {
     return false;
@@ -306,15 +286,14 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
     return false;
   }
 
-  VRManager *vm = VRManager::Get();
+  VRManager* vm = VRManager::Get();
   MOZ_ASSERT(vm);
 
   switch (gfxPrefs::VRPuppetSubmitFrame()) {
     case 0:
       // The VR frame is not displayed.
       break;
-    case 1:
-    {
+    case 1: {
       // The frames are submitted to VR compositor are decoded
       // into a base64Image and dispatched to the DOM side.
       D3D11_TEXTURE2D_DESC desc;
@@ -371,43 +350,42 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
         mappedTexture = aSource;
       }
       // Ideally, we should convert the srcData to a PNG image and decode it
-      // to a Base64 string here, but the GPU process does not have the privilege to
-      // access the image library. So, we have to convert the RAW image data
-      // to a base64 string and forward it to let the content process to
-      // do the image conversion.
+      // to a Base64 string here, but the GPU process does not have the
+      // privilege to access the image library. So, we have to convert the RAW
+      // image data to a base64 string and forward it to let the content process
+      // to do the image conversion.
       const char* srcData = static_cast<const char*>(mapInfo.pData);
       VRSubmitFrameResultInfo result;
       result.mFormat = SurfaceFormat::B8G8R8A8;
       result.mWidth = desc.Width;
       result.mHeight = desc.Height;
       result.mFrameNum = mDisplayInfo.mFrameId;
-      // If the original texture size is not pow of 2, the data will not be tightly strided.
-      // We have to copy the pixels by rows.
+      // If the original texture size is not pow of 2, the data will not be
+      // tightly strided. We have to copy the pixels by rows.
       nsCString rawString;
       for (uint32_t i = 0; i < desc.Height; i++) {
-        rawString += Substring(srcData + i * mapInfo.RowPitch,
-                               desc.Width * 4);
+        rawString += Substring(srcData + i * mapInfo.RowPitch, desc.Width * 4);
       }
       mContext->Unmap(mappedTexture, 0);
 
       if (Base64Encode(rawString, result.mBase64Image) != NS_OK) {
         MOZ_ASSERT(false, "Failed to encode base64 images.");
       }
-      // Dispatch the base64 encoded string to the DOM side. Then, it will be decoded
-      // and convert to a PNG image there.
+      // Dispatch the base64 encoded string to the DOM side. Then, it will be
+      // decoded and convert to a PNG image there.
       MessageLoop* loop = CompositorThreadHolder::Loop();
       loop->PostTask(NewRunnableMethod<const uint32_t, VRSubmitFrameResultInfo>(
-        "VRManager::DispatchSubmitFrameResult",
-        vm, &VRManager::DispatchSubmitFrameResult, mDisplayInfo.mDisplayID, result
-      ));
+          "VRManager::DispatchSubmitFrameResult", vm,
+          &VRManager::DispatchSubmitFrameResult, mDisplayInfo.mDisplayID,
+          result));
       break;
     }
-    case 2:
-    {
+    case 2: {
       // The VR compositor sumbmit frame to the screen window,
       // the current coordinate is at (0, 0, width, height).
       Matrix viewMatrix = Matrix::Translation(-1.0, 1.0);
-      viewMatrix.PreScale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
+      viewMatrix.PreScale(2.0f / float(aSize.width),
+                          2.0f / float(aSize.height));
       viewMatrix.PreScale(1.0f, -1.0f);
       Matrix4x4 projection = Matrix4x4::From2D(viewMatrix);
       projection._33 = 0.0f;
@@ -430,8 +408,10 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
       scissor.top = posY;
       scissor.bottom = aSize.height + posY;
 
-      memcpy(&mVSConstants.layerTransform, &transform._11, sizeof(mVSConstants.layerTransform));
-      memcpy(&mVSConstants.projection, &projection._11, sizeof(mVSConstants.projection));
+      memcpy(&mVSConstants.layerTransform, &transform._11,
+             sizeof(mVSConstants.layerTransform));
+      memcpy(&mVSConstants.projection, &projection._11,
+             sizeof(mVSConstants.projection));
       mVSConstants.renderTargetOffset[0] = 0.0f;
       mVSConstants.renderTargetOffset[1] = 0.0f;
       mVSConstants.layerQuad = Rect(0.0f, 0.0f, aSize.width, aSize.height);
@@ -452,16 +432,18 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
       mContext->PSSetShader(mQuadPS, nullptr, 0);
 
       RefPtr<ID3D11ShaderResourceView> srView;
-      HRESULT hr = mDevice->CreateShaderResourceView(aSource, nullptr, getter_AddRefs(srView));
+      HRESULT hr = mDevice->CreateShaderResourceView(aSource, nullptr,
+                                                     getter_AddRefs(srView));
       if (FAILED(hr) || !srView) {
-        gfxWarning() << "Could not create shader resource view for Puppet: " << hexa(hr);
+        gfxWarning() << "Could not create shader resource view for Puppet: "
+                     << hexa(hr);
         return false;
       }
       ID3D11ShaderResourceView* viewPtr = srView.get();
       mContext->PSSetShaderResources(0 /* 0 == TexSlot::RGB */, 1, &viewPtr);
       // XXX Use Constant from TexSlot in CompositorD3D11.cpp?
 
-      ID3D11SamplerState *sampler = mLinearSamplerState;
+      ID3D11SamplerState* sampler = mLinearSamplerState;
       mContext->PSSetSamplers(0, 1, &sampler);
 
       if (!UpdateConstantBuffers()) {
@@ -473,23 +455,22 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
     }
   }
 
-  // We will always return false for gfxVRPuppet to ensure that the fallback "watchdog"
-  // code in VRDisplayHost::NotifyVSync() throttles the render loop.  This "watchdog" will
-  // result in a refresh rate that is quite low compared to real hardware, but should be
-  // sufficient for non-performance oriented tests.  If we wish to simulate realistic frame
-  // rates with VRDisplayPuppet, we should block here for the appropriate amount of time and
-  // return true to indicate that we have blocked.
+  // We will always return false for gfxVRPuppet to ensure that the fallback
+  // "watchdog" code in VRDisplayHost::NotifyVSync() throttles the render loop.
+  // This "watchdog" will result in a refresh rate that is quite low compared to
+  // real hardware, but should be sufficient for non-performance oriented tests.
+  // If we wish to simulate realistic frame rates with VRDisplayPuppet, we
+  // should block here for the appropriate amount of time and return true to
+  // indicate that we have blocked.
   return false;
 }
 
 #elif defined(XP_MACOSX)
 
-bool
-VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
-                             const IntSize& aSize,
-                             const gfx::Rect& aLeftEyeRect,
-                             const gfx::Rect& aRightEyeRect)
-{
+bool VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
+                                  const IntSize& aSize,
+                                  const gfx::Rect& aLeftEyeRect,
+                                  const gfx::Rect& aRightEyeRect) {
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   if (!mIsPresenting || !aMacIOSurface) {
     return false;
@@ -502,19 +483,18 @@ VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
     case 0:
       // The VR frame is not displayed.
       break;
-    case 1:
-    {
+    case 1: {
       // The frames are submitted to VR compositor are decoded
       // into a base64Image and dispatched to the DOM side.
       RefPtr<SourceSurface> surf = aMacIOSurface->GetAsSurface();
-      RefPtr<DataSourceSurface> dataSurf = surf ? surf->GetDataSurface() :
-                                           nullptr;
+      RefPtr<DataSourceSurface> dataSurf =
+          surf ? surf->GetDataSurface() : nullptr;
       if (dataSurf) {
         // Ideally, we should convert the srcData to a PNG image and decode it
-        // to a Base64 string here, but the GPU process does not have the privilege to
-        // access the image library. So, we have to convert the RAW image data
-        // to a base64 string and forward it to let the content process to
-        // do the image conversion.
+        // to a Base64 string here, but the GPU process does not have the
+        // privilege to access the image library. So, we have to convert the RAW
+        // image data to a base64 string and forward it to let the content
+        // process to do the image conversion.
         DataSourceSurface::MappedSurface map;
         if (!dataSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
           MOZ_ASSERT(false, "Read DataSourceSurface fail.");
@@ -527,30 +507,30 @@ VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
         result.mWidth = surfSize.width;
         result.mHeight = surfSize.height;
         result.mFrameNum = mDisplayInfo.mFrameId;
-        // If the original texture size is not pow of 2, the data will not be tightly strided.
-        // We have to copy the pixels by rows.
+        // If the original texture size is not pow of 2, the data will not be
+        // tightly strided. We have to copy the pixels by rows.
         nsCString rawString;
         for (int32_t i = 0; i < surfSize.height; i++) {
           rawString += Substring((const char*)(srcData) + i * map.mStride,
-                                  surfSize.width * 4);
+                                 surfSize.width * 4);
         }
         dataSurf->Unmap();
 
         if (Base64Encode(rawString, result.mBase64Image) != NS_OK) {
           MOZ_ASSERT(false, "Failed to encode base64 images.");
         }
-        // Dispatch the base64 encoded string to the DOM side. Then, it will be decoded
-        // and convert to a PNG image there.
+        // Dispatch the base64 encoded string to the DOM side. Then, it will be
+        // decoded and convert to a PNG image there.
         MessageLoop* loop = CompositorThreadHolder::Loop();
-        loop->PostTask(NewRunnableMethod<const uint32_t, VRSubmitFrameResultInfo>(
-          "VRManager::DispatchSubmitFrameResult",
-          vm, &VRManager::DispatchSubmitFrameResult, mDisplayInfo.mDisplayID, result
-        ));
+        loop->PostTask(
+            NewRunnableMethod<const uint32_t, VRSubmitFrameResultInfo>(
+                "VRManager::DispatchSubmitFrameResult", vm,
+                &VRManager::DispatchSubmitFrameResult, mDisplayInfo.mDisplayID,
+                result));
       }
       break;
     }
-    case 2:
-    {
+    case 2: {
       MOZ_ASSERT(false, "No support for showing VR frames on MacOSX yet.");
       break;
     }
@@ -561,29 +541,25 @@ VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
 
 #elif defined(MOZ_WIDGET_ANDROID)
 
-bool
-VRDisplayPuppet::SubmitFrame(const mozilla::layers::SurfaceTextureDescriptor& aDescriptor,
-                             const gfx::Rect& aLeftEyeRect,
-                             const gfx::Rect& aRightEyeRect)
-{
+bool VRDisplayPuppet::SubmitFrame(
+    const mozilla::layers::SurfaceTextureDescriptor& aDescriptor,
+    const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect) {
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   return false;
 }
 
 #endif
 
-void
-VRDisplayPuppet::Refresh()
-{
+void VRDisplayPuppet::Refresh() {
   // We update mIsConneced once per refresh.
   mDisplayInfo.mDisplayState.mIsConnected = true;
 }
 
-VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand, uint32_t aDisplayID)
-  : VRControllerHost(VRDeviceType::Puppet, aHand, aDisplayID)
-  , mButtonPressState(0)
-  , mButtonTouchState(0)
-{
+VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand,
+                                       uint32_t aDisplayID)
+    : VRControllerHost(VRDeviceType::Puppet, aHand, aDisplayID),
+      mButtonPressState(0),
+      mButtonTouchState(0) {
   MOZ_COUNT_CTOR_INHERITED(VRControllerPuppet, VRControllerHost);
   VRControllerState& state = mControllerInfo.mControllerState;
   strncpy(state.controllerName, "Puppet Gamepad", kVRControllerNameMaxLen);
@@ -592,14 +568,11 @@ VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand, uint32_t aDisplay
   state.numHaptics = kNumPuppetHaptcs;
 }
 
-VRControllerPuppet::~VRControllerPuppet()
-{
+VRControllerPuppet::~VRControllerPuppet() {
   MOZ_COUNT_DTOR_INHERITED(VRControllerPuppet, VRControllerHost);
 }
 
-void
-VRControllerPuppet::SetButtonPressState(uint32_t aButton, bool aPressed)
-{
+void VRControllerPuppet::SetButtonPressState(uint32_t aButton, bool aPressed) {
   const uint64_t buttonMask = kPuppetButtonMask[aButton];
   uint64_t pressedBit = GetButtonPressed();
 
@@ -614,15 +587,9 @@ VRControllerPuppet::SetButtonPressState(uint32_t aButton, bool aPressed)
   mButtonPressState = pressedBit;
 }
 
-uint64_t
-VRControllerPuppet::GetButtonPressState()
-{
-  return mButtonPressState;
-}
+uint64_t VRControllerPuppet::GetButtonPressState() { return mButtonPressState; }
 
-void
-VRControllerPuppet::SetButtonTouchState(uint32_t aButton, bool aTouched)
-{
+void VRControllerPuppet::SetButtonTouchState(uint32_t aButton, bool aTouched) {
   const uint64_t buttonMask = kPuppetButtonMask[aButton];
   uint64_t touchedBit = GetButtonTouched();
 
@@ -637,61 +604,42 @@ VRControllerPuppet::SetButtonTouchState(uint32_t aButton, bool aTouched)
   mButtonTouchState = touchedBit;
 }
 
-uint64_t
-VRControllerPuppet::GetButtonTouchState()
-{
-  return mButtonTouchState;
-}
+uint64_t VRControllerPuppet::GetButtonTouchState() { return mButtonTouchState; }
 
-void
-VRControllerPuppet::SetAxisMoveState(uint32_t aAxis, double aValue)
-{
+void VRControllerPuppet::SetAxisMoveState(uint32_t aAxis, double aValue) {
   MOZ_ASSERT((sizeof(mAxisMoveState) / sizeof(float)) == kNumPuppetAxis);
   MOZ_ASSERT(aAxis <= kNumPuppetAxis);
 
   mAxisMoveState[aAxis] = aValue;
 }
 
-double
-VRControllerPuppet::GetAxisMoveState(uint32_t aAxis)
-{
+double VRControllerPuppet::GetAxisMoveState(uint32_t aAxis) {
   return mAxisMoveState[aAxis];
 }
 
-void
-VRControllerPuppet::SetPoseMoveState(const dom::GamepadPoseState& aPose)
-{
+void VRControllerPuppet::SetPoseMoveState(const dom::GamepadPoseState& aPose) {
   mPoseState = aPose;
 }
 
-const dom::GamepadPoseState&
-VRControllerPuppet::GetPoseMoveState()
-{
+const dom::GamepadPoseState& VRControllerPuppet::GetPoseMoveState() {
   return mPoseState;
 }
 
-float
-VRControllerPuppet::GetAxisMove(uint32_t aAxis)
-{
+float VRControllerPuppet::GetAxisMove(uint32_t aAxis) {
   return mControllerInfo.mControllerState.axisValue[aAxis];
 }
 
-void
-VRControllerPuppet::SetAxisMove(uint32_t aAxis, float aValue)
-{
+void VRControllerPuppet::SetAxisMove(uint32_t aAxis, float aValue) {
   mControllerInfo.mControllerState.axisValue[aAxis] = aValue;
 }
 
 VRSystemManagerPuppet::VRSystemManagerPuppet()
-  : mPuppetDisplayCount(0)
-  , mPuppetDisplayInfo{}
-  , mPuppetDisplaySensorState{}
-{
-}
+    : mPuppetDisplayCount(0),
+      mPuppetDisplayInfo{},
+      mPuppetDisplaySensorState{} {}
 
 /*static*/ already_AddRefed<VRSystemManagerPuppet>
-VRSystemManagerPuppet::Create()
-{
+VRSystemManagerPuppet::Create() {
   if (!gfxPrefs::VREnabled() || !gfxPrefs::VRPuppetEnabled()) {
     return nullptr;
   }
@@ -700,21 +648,11 @@ VRSystemManagerPuppet::Create()
   return manager.forget();
 }
 
-void
-VRSystemManagerPuppet::Destroy()
-{
-  Shutdown();
-}
+void VRSystemManagerPuppet::Destroy() { Shutdown(); }
 
-void
-VRSystemManagerPuppet::Shutdown()
-{
-  mPuppetHMDs.Clear();
-}
+void VRSystemManagerPuppet::Shutdown() { mPuppetHMDs.Clear(); }
 
-void
-VRSystemManagerPuppet::Run10msTasks()
-{
+void VRSystemManagerPuppet::Run10msTasks() {
   VRSystemManager::Run10msTasks();
 
   /**
@@ -722,24 +660,20 @@ VRSystemManagerPuppet::Run10msTasks()
    * infrastructure, 2d display vsyncs are not always generated.
    * To workaround, we produce a vsync manually.
    */
-  VRManager *vm = VRManager::Get();
+  VRManager* vm = VRManager::Get();
   MOZ_ASSERT(vm);
   vm->NotifyVsync(TimeStamp::Now());
 }
 
-void
-VRSystemManagerPuppet::NotifyVSync()
-{
+void VRSystemManagerPuppet::NotifyVSync() {
   VRSystemManager::NotifyVSync();
 
-  for (const auto& display: mPuppetHMDs) {
+  for (const auto& display : mPuppetHMDs) {
     display->Refresh();
   }
 }
 
-uint32_t
-VRSystemManagerPuppet::CreateTestDisplay()
-{
+uint32_t VRSystemManagerPuppet::CreateTestDisplay() {
   if (mPuppetDisplayCount >= kMaxPuppetDisplays) {
     MOZ_ASSERT(false);
     return mPuppetDisplayCount;
@@ -747,15 +681,9 @@ VRSystemManagerPuppet::CreateTestDisplay()
   return mPuppetDisplayCount++;
 }
 
-void
-VRSystemManagerPuppet::ClearTestDisplays()
-{
-  mPuppetDisplayCount = 0;
-}
+void VRSystemManagerPuppet::ClearTestDisplays() { mPuppetDisplayCount = 0; }
 
-void
-VRSystemManagerPuppet::Enumerate()
-{
+void VRSystemManagerPuppet::Enumerate() {
   while (mPuppetHMDs.Length() < mPuppetDisplayCount) {
     VRDisplayPuppet* puppetDisplay = new VRDisplayPuppet();
     uint32_t deviceID = mPuppetHMDs.Length();
@@ -768,10 +696,8 @@ VRSystemManagerPuppet::Enumerate()
   }
 }
 
-void
-VRSystemManagerPuppet::SetPuppetDisplayInfo(const uint32_t& aDeviceID,
-                                            const VRDisplayInfo& aDisplayInfo)
-{
+void VRSystemManagerPuppet::SetPuppetDisplayInfo(
+    const uint32_t& aDeviceID, const VRDisplayInfo& aDisplayInfo) {
   if (aDeviceID >= mPuppetDisplayCount) {
     MOZ_ASSERT(false);
     return;
@@ -794,10 +720,8 @@ VRSystemManagerPuppet::SetPuppetDisplayInfo(const uint32_t& aDeviceID,
   }
 }
 
-void
-VRSystemManagerPuppet::SetPuppetDisplaySensorState(const uint32_t& aDeviceID,
-                                                   const VRHMDSensorState& aSensorState)
-{
+void VRSystemManagerPuppet::SetPuppetDisplaySensorState(
+    const uint32_t& aDeviceID, const VRHMDSensorState& aSensorState) {
   if (aDeviceID >= mPuppetDisplayCount) {
     MOZ_ASSERT(false);
     return;
@@ -820,18 +744,15 @@ VRSystemManagerPuppet::SetPuppetDisplaySensorState(const uint32_t& aDeviceID,
   }
 }
 
-void
-VRSystemManagerPuppet::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
-{
-  for (auto display: mPuppetHMDs) {
+void VRSystemManagerPuppet::GetHMDs(
+    nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) {
+  for (auto display : mPuppetHMDs) {
     aHMDResult.AppendElement(display);
   }
 }
 
-bool
-VRSystemManagerPuppet::GetIsPresenting()
-{
-  for (const auto& display: mPuppetHMDs) {
+bool VRSystemManagerPuppet::GetIsPresenting() {
+  for (const auto& display : mPuppetHMDs) {
     const VRDisplayInfo& displayInfo(display->GetDisplayInfo());
     if (displayInfo.GetPresentingGroups() != kVRGroupNone) {
       return true;
@@ -840,14 +761,13 @@ VRSystemManagerPuppet::GetIsPresenting()
   return false;
 }
 
-void
-VRSystemManagerPuppet::HandleInput()
-{
+void VRSystemManagerPuppet::HandleInput() {
   RefPtr<impl::VRControllerPuppet> controller;
   for (uint32_t i = 0; i < mPuppetController.Length(); ++i) {
     controller = mPuppetController[i];
     for (uint32_t j = 0; j < kNumPuppetButtonMask; ++j) {
-      HandleButtonPress(i, j, kPuppetButtonMask[j], controller->GetButtonPressState(),
+      HandleButtonPress(i, j, kPuppetButtonMask[j],
+                        controller->GetButtonPressState(),
                         controller->GetButtonTouchState());
     }
     controller->SetButtonPressed(controller->GetButtonPressState());
@@ -860,38 +780,37 @@ VRSystemManagerPuppet::HandleInput()
   }
 }
 
-void
-VRSystemManagerPuppet::HandleButtonPress(uint32_t aControllerIdx,
-                                         uint32_t aButton,
-                                         uint64_t aButtonMask,
-                                         uint64_t aButtonPressed,
-                                         uint64_t aButtonTouched)
-{
-  RefPtr<impl::VRControllerPuppet> controller(mPuppetController[aControllerIdx]);
+void VRSystemManagerPuppet::HandleButtonPress(uint32_t aControllerIdx,
+                                              uint32_t aButton,
+                                              uint64_t aButtonMask,
+                                              uint64_t aButtonPressed,
+                                              uint64_t aButtonTouched) {
+  RefPtr<impl::VRControllerPuppet> controller(
+      mPuppetController[aControllerIdx]);
   MOZ_ASSERT(controller);
-  const uint64_t pressedDiff = (controller->GetButtonPressed() ^ aButtonPressed);
-  const uint64_t touchedDiff = (controller->GetButtonTouched() ^ aButtonTouched);
+  const uint64_t pressedDiff =
+      (controller->GetButtonPressed() ^ aButtonPressed);
+  const uint64_t touchedDiff =
+      (controller->GetButtonTouched() ^ aButtonTouched);
 
   if (!pressedDiff && !touchedDiff) {
     return;
   }
 
-   if (pressedDiff & aButtonMask
-      || touchedDiff & aButtonMask) {
-    // diff & (aButtonPressed, aButtonTouched) would be true while a new button pressed or
-    // touched event, otherwise it is an old event and needs to notify
-    // the button has been released.
+  if (pressedDiff & aButtonMask || touchedDiff & aButtonMask) {
+    // diff & (aButtonPressed, aButtonTouched) would be true while a new button
+    // pressed or touched event, otherwise it is an old event and needs to
+    // notify the button has been released.
     NewButtonEvent(aControllerIdx, aButton, aButtonMask & aButtonPressed,
                    aButtonMask & aButtonPressed,
                    (aButtonMask & aButtonPressed) ? 1.0L : 0.0L);
   }
 }
 
-void
-VRSystemManagerPuppet::HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
-                                      float aValue)
-{
-  RefPtr<impl::VRControllerPuppet> controller(mPuppetController[aControllerIdx]);
+void VRSystemManagerPuppet::HandleAxisMove(uint32_t aControllerIdx,
+                                           uint32_t aAxis, float aValue) {
+  RefPtr<impl::VRControllerPuppet> controller(
+      mPuppetController[aControllerIdx]);
   MOZ_ASSERT(controller);
 
   if (controller->GetAxisMove(aAxis) != aValue) {
@@ -900,11 +819,9 @@ VRSystemManagerPuppet::HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
   }
 }
 
-void
-VRSystemManagerPuppet::HandlePoseTracking(uint32_t aControllerIdx,
-                                          const dom::GamepadPoseState& aPose,
-                                          VRControllerHost* aController)
-{
+void VRSystemManagerPuppet::HandlePoseTracking(
+    uint32_t aControllerIdx, const dom::GamepadPoseState& aPose,
+    VRControllerHost* aController) {
   MOZ_ASSERT(aController);
   if (aPose != aController->GetPose()) {
     aController->SetPose(aPose);
@@ -912,32 +829,22 @@ VRSystemManagerPuppet::HandlePoseTracking(uint32_t aControllerIdx,
   }
 }
 
-void
-VRSystemManagerPuppet::VibrateHaptic(uint32_t aControllerIdx,
-                                     uint32_t aHapticIndex,
-                                     double aIntensity,
-                                     double aDuration,
-                                     const VRManagerPromise& aPromise)
-{
-}
+void VRSystemManagerPuppet::VibrateHaptic(uint32_t aControllerIdx,
+                                          uint32_t aHapticIndex,
+                                          double aIntensity, double aDuration,
+                                          const VRManagerPromise& aPromise) {}
 
-void
-VRSystemManagerPuppet::StopVibrateHaptic(uint32_t aControllerIdx)
-{
-}
+void VRSystemManagerPuppet::StopVibrateHaptic(uint32_t aControllerIdx) {}
 
-void
-VRSystemManagerPuppet::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult)
-{
+void VRSystemManagerPuppet::GetControllers(
+    nsTArray<RefPtr<VRControllerHost>>& aControllerResult) {
   aControllerResult.Clear();
   for (uint32_t i = 0; i < mPuppetController.Length(); ++i) {
     aControllerResult.AppendElement(mPuppetController[i]);
   }
 }
 
-void
-VRSystemManagerPuppet::ScanForControllers()
-{
+void VRSystemManagerPuppet::ScanForControllers() {
   // We make sure VRSystemManagerPuppet has two controllers
   // for each display
   const uint32_t newControllerCount = mPuppetHMDs.Length() * 2;
@@ -946,11 +853,11 @@ VRSystemManagerPuppet::ScanForControllers()
     RemoveControllers();
 
     // Re-adding controllers to VRControllerManager.
-    for (const auto& display: mPuppetHMDs) {
+    for (const auto& display : mPuppetHMDs) {
       uint32_t displayID = display->GetDisplayInfo().GetDisplayID();
       for (uint32_t i = 0; i < 2; i++) {
-        dom::GamepadHand hand = (i % 2) ? dom::GamepadHand::Right :
-                                          dom::GamepadHand::Left;
+        dom::GamepadHand hand =
+            (i % 2) ? dom::GamepadHand::Right : dom::GamepadHand::Left;
         RefPtr<VRControllerPuppet> puppetController;
         puppetController = new VRControllerPuppet(hand, displayID);
         mPuppetController.AppendElement(puppetController);
@@ -963,9 +870,7 @@ VRSystemManagerPuppet::ScanForControllers()
   }
 }
 
-void
-VRSystemManagerPuppet::RemoveControllers()
-{
+void VRSystemManagerPuppet::RemoveControllers() {
   // controller count is changed, removing the existing gamepads first.
   for (uint32_t i = 0; i < mPuppetController.Length(); ++i) {
     RemoveGamepad(i);

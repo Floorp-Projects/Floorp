@@ -14,10 +14,8 @@
 #include "mozIDOMWindow.h"
 #include "nsIObserver.h"
 
-struct PendingAlert
-{
-  void Init(nsIAlertNotification* aAlert, nsIObserver* aListener)
-  {
+struct PendingAlert {
+  void Init(nsIAlertNotification* aAlert, nsIObserver* aListener) {
     mAlert = aAlert;
     mListener = aListener;
   }
@@ -27,22 +25,20 @@ struct PendingAlert
 
 class nsXULAlerts : public nsIAlertsService,
                     public nsIAlertsDoNotDisturb,
-                    public nsIAlertsIconURI
-{
+                    public nsIAlertsIconURI {
   friend class nsXULAlertObserver;
-public:
+
+ public:
   NS_DECL_NSIALERTSICONURI
   NS_DECL_NSIALERTSDONOTDISTURB
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_ISUPPORTS
 
-  nsXULAlerts()
-  {
-  }
+  nsXULAlerts() {}
 
   static already_AddRefed<nsXULAlerts> GetInstance();
 
-protected:
+ protected:
   virtual ~nsXULAlerts() {}
   void PersistentAlertFinished();
 
@@ -58,19 +54,21 @@ protected:
  * the reference on the nsIDOMWindow of the XUL alert.
  */
 class nsXULAlertObserver : public nsIObserver {
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_CYCLE_COLLECTION_CLASS(nsXULAlertObserver)
 
   nsXULAlertObserver(nsXULAlerts* aXULAlerts, const nsAString& aAlertName,
                      nsIObserver* aObserver, bool aIsPersistent)
-    : mXULAlerts(aXULAlerts), mAlertName(aAlertName),
-      mObserver(aObserver), mIsPersistent(aIsPersistent) {}
+      : mXULAlerts(aXULAlerts),
+        mAlertName(aAlertName),
+        mObserver(aObserver),
+        mIsPersistent(aIsPersistent) {}
 
   void SetAlertWindow(mozIDOMWindowProxy* aWindow) { mAlertWindow = aWindow; }
 
-protected:
+ protected:
   virtual ~nsXULAlertObserver() {}
 
   RefPtr<nsXULAlerts> mXULAlerts;
@@ -81,4 +79,3 @@ protected:
 };
 
 #endif /* nsXULAlerts_h__ */
-

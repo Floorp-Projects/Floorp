@@ -13,32 +13,28 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ already_AddRefed<ChromeWorker>
-ChromeWorker::Constructor(const GlobalObject& aGlobal,
-                          const nsAString& aScriptURL,
-                          ErrorResult& aRv)
-{
+/* static */ already_AddRefed<ChromeWorker> ChromeWorker::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aScriptURL,
+    ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
 
-  RefPtr<WorkerPrivate> workerPrivate =
-    WorkerPrivate::Constructor(cx, aScriptURL, true /* aIsChromeWorker */,
-                               WorkerTypeDedicated, EmptyString(),
-                               VoidCString(), nullptr /*aLoadInfo */, aRv);
+  RefPtr<WorkerPrivate> workerPrivate = WorkerPrivate::Constructor(
+      cx, aScriptURL, true /* aIsChromeWorker */, WorkerTypeDedicated,
+      EmptyString(), VoidCString(), nullptr /*aLoadInfo */, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   nsCOMPtr<nsIGlobalObject> globalObject =
-    do_QueryInterface(aGlobal.GetAsSupports());
+      do_QueryInterface(aGlobal.GetAsSupports());
 
   RefPtr<ChromeWorker> worker =
-    new ChromeWorker(globalObject, workerPrivate.forget());
+      new ChromeWorker(globalObject, workerPrivate.forget());
   return worker.forget();
 }
 
-/* static */ bool
-ChromeWorker::WorkerAvailable(JSContext* aCx, JSObject* /* unused */)
-{
+/* static */ bool ChromeWorker::WorkerAvailable(JSContext* aCx,
+                                                JSObject* /* unused */) {
   // Chrome is always allowed to use workers, and content is never
   // allowed to use ChromeWorker, so all we have to check is the
   // caller.  However, chrome workers apparently might not have a
@@ -52,16 +48,14 @@ ChromeWorker::WorkerAvailable(JSContext* aCx, JSObject* /* unused */)
 
 ChromeWorker::ChromeWorker(nsIGlobalObject* aGlobalObject,
                            already_AddRefed<WorkerPrivate> aWorkerPrivate)
-  : Worker(aGlobalObject, std::move(aWorkerPrivate))
-{}
+    : Worker(aGlobalObject, std::move(aWorkerPrivate)) {}
 
 ChromeWorker::~ChromeWorker() = default;
 
-JSObject*
-ChromeWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  JS::Rooted<JSObject*> wrapper(aCx,
-    ChromeWorker_Binding::Wrap(aCx, this, aGivenProto));
+JSObject* ChromeWorker::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
+  JS::Rooted<JSObject*> wrapper(
+      aCx, ChromeWorker_Binding::Wrap(aCx, this, aGivenProto));
   if (wrapper) {
     // Most DOM objects don't assume they have a reflector. If they don't have
     // one and need one, they create it. But in workers code, we assume that the
@@ -74,5 +68,5 @@ ChromeWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return wrapper;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

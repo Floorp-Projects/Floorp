@@ -10,17 +10,16 @@
 #include "nsString.h"
 #include "nsIMIMEInfo.h"
 
-class nsDBusHandlerApp : public nsIDBusHandlerApp
-{
-public:
+class nsDBusHandlerApp : public nsIDBusHandlerApp {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHANDLERAPP
   NS_DECL_NSIDBUSHANDLERAPP
 
-  nsDBusHandlerApp() { }
+  nsDBusHandlerApp() {}
 
-protected:
-  virtual ~nsDBusHandlerApp() { }
+ protected:
+  virtual ~nsDBusHandlerApp() {}
 
   nsString mName;
   nsString mDetailedDescription;
@@ -28,6 +27,5 @@ protected:
   nsCString mMethod;
   nsCString mInterface;
   nsCString mObjpath;
-
 };
 #endif

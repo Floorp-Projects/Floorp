@@ -12,18 +12,13 @@ using namespace mozilla;
 
 gfxQuartzNativeDrawing::gfxQuartzNativeDrawing(DrawTarget& aDrawTarget,
                                                const Rect& nativeRect)
-  : mDrawTarget(&aDrawTarget)
-  , mNativeRect(nativeRect)
-  , mCGContext(nullptr)
-{
-}
+    : mDrawTarget(&aDrawTarget), mNativeRect(nativeRect), mCGContext(nullptr) {}
 
-CGContextRef
-gfxQuartzNativeDrawing::BeginNativeDrawing()
-{
-  NS_ASSERTION(!mCGContext, "BeginNativeDrawing called when drawing already in progress");
+CGContextRef gfxQuartzNativeDrawing::BeginNativeDrawing() {
+  NS_ASSERTION(!mCGContext,
+               "BeginNativeDrawing called when drawing already in progress");
 
-  DrawTarget *dt = mDrawTarget;
+  DrawTarget* dt = mDrawTarget;
   if (dt->IsDualDrawTarget() || dt->IsTiledDrawTarget() || dt->IsCaptureDT() ||
       dt->GetBackendType() != BackendType::SKIA || dt->IsRecording()) {
     // We need a DrawTarget that we can get a CGContextRef from:
@@ -35,10 +30,10 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
       return nullptr;
     }
 
-    mTempDrawTarget =
-      Factory::CreateDrawTarget(BackendType::SKIA,
-                                IntSize::Truncate(mNativeRect.width, mNativeRect.height),
-                                SurfaceFormat::B8G8R8A8);
+    mTempDrawTarget = Factory::CreateDrawTarget(
+        BackendType::SKIA,
+        IntSize::Truncate(mNativeRect.width, mNativeRect.height),
+        SurfaceFormat::B8G8R8A8);
     if (!mTempDrawTarget) {
       return nullptr;
     }
@@ -73,10 +68,9 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
   return mCGContext;
 }
 
-void
-gfxQuartzNativeDrawing::EndNativeDrawing()
-{
-  NS_ASSERTION(mCGContext, "EndNativeDrawing called without BeginNativeDrawing");
+void gfxQuartzNativeDrawing::EndNativeDrawing() {
+  NS_ASSERTION(mCGContext,
+               "EndNativeDrawing called without BeginNativeDrawing");
 
   mBorrowedContext.Finish();
   if (mTempDrawTarget) {

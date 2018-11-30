@@ -18,8 +18,9 @@
 #include "nsTHashtable.h"
 
 namespace IPC {
-template<typename T> struct ParamTraits;
-} // namespace IPC
+template <typename T>
+struct ParamTraits;
+}  // namespace IPC
 
 namespace mozilla {
 namespace gfx {
@@ -29,9 +30,8 @@ class CrossProcessPaint;
 /**
  * A fragment of a paint of a cross process document tree.
  */
-class PaintFragment
-{
-public:
+class PaintFragment {
+ public:
   /// Initializes an empty PaintFragment
   PaintFragment() = default;
 
@@ -49,10 +49,8 @@ public:
    * @return A paint fragment. The paint fragment may be `empty` if rendering
    *         was unable to be accomplished for some reason.
    */
-  static PaintFragment Record(nsIDocShell* aDocShell,
-                              const IntRect& aRect,
-                              float aScale,
-                              nscolor aBackgroundColor);
+  static PaintFragment Record(nsIDocShell* aDocShell, const IntRect& aRect,
+                              float aScale, nscolor aBackgroundColor);
 
   /// Returns whether this paint fragment contains a valid recording.
   bool IsEmpty() const;
@@ -60,7 +58,7 @@ public:
   PaintFragment(PaintFragment&&) = default;
   PaintFragment& operator=(PaintFragment&&) = default;
 
-protected:
+ protected:
   friend struct IPC::ParamTraits<PaintFragment>;
   friend CrossProcessPaint;
 
@@ -76,11 +74,10 @@ protected:
 /**
  * An object for painting a cross process document tree.
  */
-class CrossProcessPaint
-{
+class CrossProcessPaint {
   NS_INLINE_DECL_REFCOUNTING(CrossProcessPaint);
 
-public:
+ public:
   /**
    * Begin an asynchronous paint of a cross process document tree starting at
    * a local document shell. The local document will be painted, then async
@@ -97,11 +94,8 @@ public:
    * @param aBackgroundColor The background color to use.
    * @param aPromise The promise to resolve with a dom::ImageBitmap.
    */
-  static void StartLocal(nsIDocShell* aRoot,
-                         const IntRect& aRect,
-                         float aScale,
-                         nscolor aBackgroundColor,
-                         dom::Promise* aPromise);
+  static void StartLocal(nsIDocShell* aRoot, const IntRect& aRect, float aScale,
+                         nscolor aBackgroundColor, dom::Promise* aPromise);
 
   /**
    * Begin an asynchronous paint of a cross process document tree starting at
@@ -119,27 +113,21 @@ public:
    * @param aBackgroundColor The background color to use.
    * @param aPromise The promise to resolve with a dom::ImageBitmap.
    */
-  static void StartRemote(dom::TabId aRoot,
-                          const IntRect& aRect,
-                          float aScale,
-                          nscolor aBackgroundColor,
-                          dom::Promise* aPromise);
+  static void StartRemote(dom::TabId aRoot, const IntRect& aRect, float aScale,
+                          nscolor aBackgroundColor, dom::Promise* aPromise);
 
   void ReceiveFragment(dom::TabId aId, PaintFragment&& aFragment);
   void LostFragment(dom::TabId aId);
-private:
+
+ private:
   typedef nsRefPtrHashtable<nsUint64HashKey, SourceSurface> ResolvedSurfaceMap;
   typedef nsDataHashtable<nsUint64HashKey, PaintFragment> ReceivedFragmentMap;
 
-  CrossProcessPaint(dom::Promise* aPromise,
-                    float aScale,
-                    nscolor aBackgroundColor,
-                    dom::TabId aRootId);
+  CrossProcessPaint(dom::Promise* aPromise, float aScale,
+                    nscolor aBackgroundColor, dom::TabId aRootId);
   ~CrossProcessPaint();
 
-  void QueueRootPaint(dom::TabId aId,
-                      const IntRect& aRect,
-                      float aScale,
+  void QueueRootPaint(dom::TabId aId, const IntRect& aRect, float aScale,
                       nscolor aBackgroundColor);
   void QueueSubPaint(dom::TabId aId);
 
@@ -153,8 +141,7 @@ private:
   /// Resolves the paint fragments if we have none pending and resolves the
   /// promise.
   void MaybeResolve();
-  bool ResolveInternal(dom::TabId aId,
-                       ResolvedSurfaceMap* aResolved);
+  bool ResolveInternal(dom::TabId aId, ResolvedSurfaceMap* aResolved);
 
   RefPtr<dom::Promise> mPromise;
   dom::TabId mRootId;
@@ -164,7 +151,7 @@ private:
   ReceivedFragmentMap mReceivedFragments;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // _include_mozilla_gfx_ipc_CrossProcessPaint_h_
+#endif  // _include_mozilla_gfx_ipc_CrossProcessPaint_h_

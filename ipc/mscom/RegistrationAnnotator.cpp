@@ -18,24 +18,17 @@
 
 namespace {
 
-class CStringWriter final : public mozilla::JSONWriteFunc
-{
-public:
-  void Write(const char* aStr) override
-  {
-    mBuf += aStr;
-  }
+class CStringWriter final : public mozilla::JSONWriteFunc {
+ public:
+  void Write(const char* aStr) override { mBuf += aStr; }
 
-  const nsCString& Get() const
-  {
-    return mBuf;
-  }
+  const nsCString& Get() const { return mBuf; }
 
-private:
+ private:
   nsCString mBuf;
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
 namespace mozilla {
 namespace mscom {
@@ -55,18 +48,16 @@ static const char16_t kVersion[] = u"Version";
 static const char16_t kWin32[] = u"Win32";
 static const char16_t kWin64[] = u"Win64";
 
-static bool
-GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
-               const nsAString& aValueName, nsAString& aOutput)
-{
+static bool GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
+                           const nsAString& aValueName, nsAString& aOutput) {
   const nsString& flatSubKey = PromiseFlatString(aStrSubKey);
   const nsString& flatValueName = PromiseFlatString(aValueName);
   LPCWSTR valueName = aValueName.IsEmpty() ? nullptr : flatValueName.get();
 
   DWORD type = 0;
   DWORD numBytes = 0;
-  LONG result = RegGetValue(aBaseKey, flatSubKey.get(), valueName,
-                            RRF_RT_ANY, &type, nullptr, &numBytes);
+  LONG result = RegGetValue(aBaseKey, flatSubKey.get(), valueName, RRF_RT_ANY,
+                            &type, nullptr, &numBytes);
   if (result != ERROR_SUCCESS || (type != REG_SZ && type != REG_EXPAND_SZ)) {
     return false;
   }
@@ -87,12 +78,10 @@ GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
 }
 
 template <size_t N>
-inline static bool
-GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
-               const char16_t (&aValueName)[N], nsAString& aOutput)
-{
-  return GetStringValue(aBaseKey, aStrSubKey,
-                        nsLiteralString(aValueName),
+inline static bool GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
+                                  const char16_t (&aValueName)[N],
+                                  nsAString& aOutput) {
+  return GetStringValue(aBaseKey, aStrSubKey, nsLiteralString(aValueName),
                         aOutput);
 }
 
@@ -100,20 +89,16 @@ GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
  * This function fails unless the entire string has been converted.
  * (eg, the string "FLAGS" will convert to 0xF but we will return false)
  */
-static bool
-ConvertLCID(const wchar_t* aStr, NotNull<unsigned long*> aOutLcid)
-{
+static bool ConvertLCID(const wchar_t* aStr, NotNull<unsigned long*> aOutLcid) {
   wchar_t* endChar;
   *aOutLcid = wcstoul(aStr, &endChar, 16);
   return *endChar == 0;
 }
 
-static bool
-GetLoadedPath(nsAString& aPath)
-{
+static bool GetLoadedPath(nsAString& aPath) {
   // These paths may be REG_EXPAND_SZ, so we expand any environment strings
-  DWORD bufCharLen = ExpandEnvironmentStrings(PromiseFlatString(aPath).get(),
-                                              nullptr, 0);
+  DWORD bufCharLen =
+      ExpandEnvironmentStrings(PromiseFlatString(aPath).get(), nullptr, 0);
 
   auto buf = MakeUnique<WCHAR[]>(bufCharLen);
 
@@ -132,7 +117,7 @@ GetLoadedPath(nsAString& aPath)
   WCHAR finalPath[MAX_PATH + 1] = {};
   DWORD result = GetModuleFileNameW(mod, finalPath, ArrayLength(finalPath));
   if (!result || (result == ArrayLength(finalPath) &&
-        GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
+                  GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
     return false;
   }
 
@@ -140,11 +125,9 @@ GetLoadedPath(nsAString& aPath)
   return true;
 }
 
-static void
-AnnotateClsidRegistrationForHive(JSONWriter& aJson, HKEY aHive,
-                                 const nsAString& aClsid,
-                                 const JSONWriter::CollectionStyle aStyle)
-{
+static void AnnotateClsidRegistrationForHive(
+    JSONWriter& aJson, HKEY aHive, const nsAString& aClsid,
+    const JSONWriter::CollectionStyle aStyle) {
   nsAutoString clsidSubkey;
   clsidSubkey.AppendLiteral(kSoftwareClasses);
   clsidSubkey.AppendLiteral(kClsid);
@@ -152,15 +135,15 @@ AnnotateClsidRegistrationForHive(JSONWriter& aJson, HKEY aHive,
 
   nsAutoString className;
   if (GetStringValue(aHive, clsidSubkey, kDefaultValue, className)) {
-    aJson.StringProperty("ClassName",
-                         NS_ConvertUTF16toUTF8(className).get());
+    aJson.StringProperty("ClassName", NS_ConvertUTF16toUTF8(className).get());
   }
 
   nsAutoString inprocServerSubkey(clsidSubkey);
   inprocServerSubkey.AppendLiteral(kInprocServer32);
 
   nsAutoString pathToServerDll;
-  if (GetStringValue(aHive, inprocServerSubkey, kDefaultValue, pathToServerDll)) {
+  if (GetStringValue(aHive, inprocServerSubkey, kDefaultValue,
+                     pathToServerDll)) {
     aJson.StringProperty("Path", NS_ConvertUTF16toUTF8(pathToServerDll).get());
     if (GetLoadedPath(pathToServerDll)) {
       aJson.StringProperty("LoadedPath",
@@ -170,14 +153,17 @@ AnnotateClsidRegistrationForHive(JSONWriter& aJson, HKEY aHive,
 
   nsAutoString apartment;
   if (GetStringValue(aHive, inprocServerSubkey, kThreadingModel, apartment)) {
-    aJson.StringProperty("ThreadingModel", NS_ConvertUTF16toUTF8(apartment).get());
+    aJson.StringProperty("ThreadingModel",
+                         NS_ConvertUTF16toUTF8(apartment).get());
   }
 
   nsAutoString inprocHandlerSubkey(clsidSubkey);
   inprocHandlerSubkey.AppendLiteral(kInprocHandler32);
   nsAutoString pathToHandlerDll;
-  if (GetStringValue(aHive, inprocHandlerSubkey, kDefaultValue, pathToHandlerDll)) {
-    aJson.StringProperty("HandlerPath", NS_ConvertUTF16toUTF8(pathToHandlerDll).get());
+  if (GetStringValue(aHive, inprocHandlerSubkey, kDefaultValue,
+                     pathToHandlerDll)) {
+    aJson.StringProperty("HandlerPath",
+                         NS_ConvertUTF16toUTF8(pathToHandlerDll).get());
     if (GetLoadedPath(pathToHandlerDll)) {
       aJson.StringProperty("LoadedHandlerPath",
                            NS_ConvertUTF16toUTF8(pathToHandlerDll).get());
@@ -192,9 +178,7 @@ AnnotateClsidRegistrationForHive(JSONWriter& aJson, HKEY aHive,
   }
 }
 
-static void
-CheckTlbPath(JSONWriter& aJson, const nsAString& aTypelibPath)
-{
+static void CheckTlbPath(JSONWriter& aJson, const nsAString& aTypelibPath) {
   const nsString& flatPath = PromiseFlatString(aTypelibPath);
   DWORD bufCharLen = ExpandEnvironmentStrings(flatPath.get(), nullptr, 0);
 
@@ -213,12 +197,10 @@ CheckTlbPath(JSONWriter& aJson, const nsAString& aTypelibPath)
 }
 
 template <size_t N>
-static void
-AnnotateTypelibPlatform(JSONWriter& aJson, HKEY aBaseKey,
-                        const nsAString& aLcidSubkey,
-                        const char16_t (&aPlatform)[N],
-                        const JSONWriter::CollectionStyle aStyle)
-{
+static void AnnotateTypelibPlatform(JSONWriter& aJson, HKEY aBaseKey,
+                                    const nsAString& aLcidSubkey,
+                                    const char16_t (&aPlatform)[N],
+                                    const JSONWriter::CollectionStyle aStyle) {
   nsLiteralString platform(aPlatform);
 
   nsAutoString fullSubkey(aLcidSubkey);
@@ -234,12 +216,10 @@ AnnotateTypelibPlatform(JSONWriter& aJson, HKEY aBaseKey,
   }
 }
 
-static void
-AnnotateTypelibRegistrationForHive(JSONWriter& aJson, HKEY aHive,
-                                   const nsAString& aTypelibId,
-                                   const nsAString& aTypelibVersion,
-                                   const JSONWriter::CollectionStyle aStyle)
-{
+static void AnnotateTypelibRegistrationForHive(
+    JSONWriter& aJson, HKEY aHive, const nsAString& aTypelibId,
+    const nsAString& aTypelibVersion,
+    const JSONWriter::CollectionStyle aStyle) {
   nsAutoString typelibSubKey;
   typelibSubKey.AppendLiteral(kSoftwareClasses);
   typelibSubKey.AppendLiteral(kTypeLib);
@@ -264,8 +244,8 @@ AnnotateTypelibRegistrationForHive(JSONWriter& aJson, HKEY aHive,
   }
 
   HKEY rawTypelibKey;
-  LONG result = RegOpenKeyEx(aHive, typelibSubKey.get(), 0, KEY_READ,
-                             &rawTypelibKey);
+  LONG result =
+      RegOpenKeyEx(aHive, typelibSubKey.get(), 0, KEY_READ, &rawTypelibKey);
   if (result != ERROR_SUCCESS) {
     return;
   }
@@ -292,10 +272,9 @@ AnnotateTypelibRegistrationForHive(JSONWriter& aJson, HKEY aHive,
   }
 }
 
-static void
-AnnotateInterfaceRegistrationForHive(JSONWriter& aJson, HKEY aHive, REFIID aIid,
-                                     const JSONWriter::CollectionStyle aStyle)
-{
+static void AnnotateInterfaceRegistrationForHive(
+    JSONWriter& aJson, HKEY aHive, REFIID aIid,
+    const JSONWriter::CollectionStyle aStyle) {
   nsAutoString interfaceSubKey;
   interfaceSubKey.AppendLiteral(kSoftwareClasses);
   interfaceSubKey.AppendLiteral(kInterface);
@@ -324,12 +303,12 @@ AnnotateInterfaceRegistrationForHive(JSONWriter& aJson, HKEY aHive, REFIID aIid,
   typelibSubKey.AppendLiteral(kTypeLib);
 
   nsAutoString typelibId;
-  bool haveTypelibId = GetStringValue(aHive, typelibSubKey, kDefaultValue,
-                                      typelibId);
+  bool haveTypelibId =
+      GetStringValue(aHive, typelibSubKey, kDefaultValue, typelibId);
 
   nsAutoString typelibVersion;
-  bool haveTypelibVersion = GetStringValue(aHive, typelibSubKey, kVersion,
-                                           typelibVersion);
+  bool haveTypelibVersion =
+      GetStringValue(aHive, typelibSubKey, kVersion, typelibVersion);
 
   if (haveTypelibId || haveTypelibVersion) {
     aJson.StartObjectProperty("TypeLib", aStyle);
@@ -340,7 +319,8 @@ AnnotateInterfaceRegistrationForHive(JSONWriter& aJson, HKEY aHive, REFIID aIid,
   }
 
   if (haveTypelibVersion) {
-    aJson.StringProperty("Version", NS_ConvertUTF16toUTF8(typelibVersion).get());
+    aJson.StringProperty("Version",
+                         NS_ConvertUTF16toUTF8(typelibVersion).get());
   }
 
   if (haveTypelibId && haveTypelibVersion) {
@@ -353,9 +333,7 @@ AnnotateInterfaceRegistrationForHive(JSONWriter& aJson, HKEY aHive, REFIID aIid,
   }
 }
 
-void
-AnnotateInterfaceRegistration(REFIID aIid)
-{
+void AnnotateInterfaceRegistration(REFIID aIid) {
 #if defined(DEBUG)
   const JSONWriter::CollectionStyle style = JSONWriter::MultiLineStyle;
 #else
@@ -383,13 +361,10 @@ AnnotateInterfaceRegistration(REFIID aIid)
     annotationKey = CrashReporter::Annotation::InterfaceRegistrationInfoChild;
   }
   CrashReporter::AnnotateCrashReport(
-    annotationKey,
-    static_cast<CStringWriter*>(json.WriteFunc())->Get());
+      annotationKey, static_cast<CStringWriter*>(json.WriteFunc())->Get());
 }
 
-void
-AnnotateClassRegistration(REFCLSID aClsid)
-{
+void AnnotateClassRegistration(REFCLSID aClsid) {
 #if defined(DEBUG)
   const JSONWriter::CollectionStyle style = JSONWriter::MultiLineStyle;
 #else
@@ -420,9 +395,9 @@ AnnotateClassRegistration(REFCLSID aClsid)
     annotationKey = CrashReporter::Annotation::ClassRegistrationInfoChild;
   }
 
-  CrashReporter::AnnotateCrashReport(annotationKey,
-                                     static_cast<CStringWriter*>(json.WriteFunc())->Get());
+  CrashReporter::AnnotateCrashReport(
+      annotationKey, static_cast<CStringWriter*>(json.WriteFunc())->Get());
 }
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla

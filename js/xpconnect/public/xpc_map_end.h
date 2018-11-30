@@ -23,80 +23,100 @@
 
 /**************************************************************/
 
-NS_IMETHODIMP XPC_MAP_CLASSNAME::GetClassName(nsACString& aClassName)
-{
-    aClassName.AssignLiteral(XPC_MAP_QUOTED_CLASSNAME);
-    return NS_OK;
+NS_IMETHODIMP XPC_MAP_CLASSNAME::GetClassName(nsACString& aClassName) {
+  aClassName.AssignLiteral(XPC_MAP_QUOTED_CLASSNAME);
+  return NS_OK;
 }
 
 /**************************************************************/
 
 // virtual
-uint32_t
-XPC_MAP_CLASSNAME::GetScriptableFlags()
-{
-    return (XPC_MAP_FLAGS);
+uint32_t XPC_MAP_CLASSNAME::GetScriptableFlags() { return (XPC_MAP_FLAGS); }
+
+// virtual
+const js::Class* XPC_MAP_CLASSNAME::GetClass() {
+  static const js::ClassOps classOps = XPC_MAKE_CLASS_OPS(GetScriptableFlags());
+  static const js::Class klass =
+      XPC_MAKE_CLASS(XPC_MAP_QUOTED_CLASSNAME, GetScriptableFlags(), &classOps);
+  return &klass;
 }
 
 // virtual
-const js::Class*
-XPC_MAP_CLASSNAME::GetClass()
-{
-    static const js::ClassOps classOps =
-        XPC_MAKE_CLASS_OPS(GetScriptableFlags());
-    static const js::Class klass =
-        XPC_MAKE_CLASS(XPC_MAP_QUOTED_CLASSNAME, GetScriptableFlags(),
-                       &classOps);
-    return &klass;
-}
-
-// virtual
-const JSClass*
-XPC_MAP_CLASSNAME::GetJSClass()
-{
-    return Jsvalify(GetClass());
-}
+const JSClass* XPC_MAP_CLASSNAME::GetJSClass() { return Jsvalify(GetClass()); }
 
 /**************************************************************/
 
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_PRECREATE)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::PreCreate(nsISupports* nativeObj, JSContext * cx, JSObject * globalObj, JSObject * *parentObj)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_PRECREATE)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::PreCreate(nsISupports* nativeObj,
+                                           JSContext* cx, JSObject* globalObj,
+                                           JSObject** parentObj) {
+  NS_ERROR("never called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_NEWENUMERATE)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::NewEnumerate(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, JS::AutoIdVector& properties, bool enumerableOnly, bool* _retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_NEWENUMERATE)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::NewEnumerate(
+    nsIXPConnectWrappedNative* wrapper, JSContext* cx, JSObject* obj,
+    JS::AutoIdVector& properties, bool enumerableOnly, bool* _retval) {
+  NS_ERROR("never called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_ENUMERATE)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::Enumerate(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, bool* _retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_ENUMERATE)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::Enumerate(nsIXPConnectWrappedNative* wrapper,
+                                           JSContext* cx, JSObject* obj,
+                                           bool* _retval) {
+  NS_ERROR("never called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_RESOLVE)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::Resolve(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, jsid id, bool* resolvedp, bool* _retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_RESOLVE)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::Resolve(nsIXPConnectWrappedNative* wrapper,
+                                         JSContext* cx, JSObject* obj, jsid id,
+                                         bool* resolvedp, bool* _retval) {
+  NS_ERROR("never called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_FINALIZE)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::Finalize(nsIXPConnectWrappedNative* wrapper, JSFreeOp * fop, JSObject * obj)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_FINALIZE)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::Finalize(nsIXPConnectWrappedNative* wrapper,
+                                          JSFreeOp* fop, JSObject* obj) {
+  NS_ERROR("never called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_CALL)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::Call(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, const JS::CallArgs& args, bool* _retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_CALL)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::Call(nsIXPConnectWrappedNative* wrapper,
+                                      JSContext* cx, JSObject* obj,
+                                      const JS::CallArgs& args, bool* _retval) {
+  NS_ERROR("never called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_CONSTRUCT)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::Construct(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, const JS::CallArgs& args, bool* _retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_CONSTRUCT)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::Construct(nsIXPConnectWrappedNative* wrapper,
+                                           JSContext* cx, JSObject* obj,
+                                           const JS::CallArgs& args,
+                                           bool* _retval) {
+  NS_ERROR("never called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_HASINSTANCE)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::HasInstance(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, JS::HandleValue val, bool* bp, bool* _retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_HASINSTANCE)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::HasInstance(nsIXPConnectWrappedNative* wrapper,
+                                             JSContext* cx, JSObject* obj,
+                                             JS::HandleValue val, bool* bp,
+                                             bool* _retval) {
+  NS_ERROR("never called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
 /**************************************************************/

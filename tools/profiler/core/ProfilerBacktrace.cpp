@@ -11,31 +11,22 @@
 
 ProfilerBacktrace::ProfilerBacktrace(const char* aName, int aThreadId,
                                      UniquePtr<ProfileBuffer> aBuffer)
-  : mName(strdup(aName))
-  , mThreadId(aThreadId)
-  , mBuffer(std::move(aBuffer))
-{
+    : mName(strdup(aName)), mThreadId(aThreadId), mBuffer(std::move(aBuffer)) {
   MOZ_COUNT_CTOR(ProfilerBacktrace);
 }
 
-ProfilerBacktrace::~ProfilerBacktrace()
-{
-  MOZ_COUNT_DTOR(ProfilerBacktrace);
-}
+ProfilerBacktrace::~ProfilerBacktrace() { MOZ_COUNT_DTOR(ProfilerBacktrace); }
 
-void
-ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
-                              const TimeStamp& aProcessStartTime,
-                              UniqueStacks& aUniqueStacks)
-{
+void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
+                                   const TimeStamp& aProcessStartTime,
+                                   UniqueStacks& aUniqueStacks) {
   // Unlike ProfiledThreadData::StreamJSON, we don't need to call
   // ProfileBuffer::AddJITInfoForRange because mBuffer does not contain any
   // JitReturnAddr entries. For synchronous samples, JIT frames get expanded
   // at sample time.
-  StreamSamplesAndMarkers(mName.get(), mThreadId,
-                          *mBuffer.get(), aWriter, aProcessStartTime,
+  StreamSamplesAndMarkers(mName.get(), mThreadId, *mBuffer.get(), aWriter,
+                          aProcessStartTime,
                           /* aRegisterTime */ TimeStamp(),
                           /* aUnregisterTime */ TimeStamp(),
-                          /* aSinceTime */ 0,
-                          aUniqueStacks);
+                          /* aSinceTime */ 0, aUniqueStacks);
 }

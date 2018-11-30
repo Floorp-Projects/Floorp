@@ -18,29 +18,26 @@
 
 class nsINode;
 
-class nsTraversal
-{
-public:
-    nsTraversal(nsINode *aRoot,
-                uint32_t aWhatToShow,
-                mozilla::dom::NodeFilter* aFilter);
-    virtual ~nsTraversal();
+class nsTraversal {
+ public:
+  nsTraversal(nsINode* aRoot, uint32_t aWhatToShow,
+              mozilla::dom::NodeFilter* aFilter);
+  virtual ~nsTraversal();
 
-protected:
-    nsCOMPtr<nsINode> mRoot;
-    uint32_t mWhatToShow;
-    RefPtr<mozilla::dom::NodeFilter> mFilter;
-    bool mInAcceptNode;
+ protected:
+  nsCOMPtr<nsINode> mRoot;
+  uint32_t mWhatToShow;
+  RefPtr<mozilla::dom::NodeFilter> mFilter;
+  bool mInAcceptNode;
 
-    /*
-     * Tests if and how a node should be filtered. Uses mWhatToShow and
-     * mFilter to test the node.
-     * @param aNode     Node to test
-     * @param aResult   Whether we succeeded
-     * @returns         Filtervalue. See NodeFilter.webidl
-     */
-    int16_t TestNode(nsINode* aNode, mozilla::ErrorResult& aResult);
+  /*
+   * Tests if and how a node should be filtered. Uses mWhatToShow and
+   * mFilter to test the node.
+   * @param aNode     Node to test
+   * @param aResult   Whether we succeeded
+   * @returns         Filtervalue. See NodeFilter.webidl
+   */
+  int16_t TestNode(nsINode* aNode, mozilla::ErrorResult& aResult);
 };
 
 #endif
-

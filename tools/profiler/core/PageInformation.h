@@ -19,14 +19,11 @@
 // When the page gets unregistered, we keep the profiler buffer position
 // to determine if we are still using this page. If not, we unregister
 // it in the next page registration.
-class PageInformation final
-{
-public:
+class PageInformation final {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PageInformation)
-  PageInformation(const nsID& aDocShellId,
-                  uint32_t aDocShellHistoryId,
-                  const nsCString& aUrl,
-                  bool aIsSubFrame);
+  PageInformation(const nsID& aDocShellId, uint32_t aDocShellHistoryId,
+                  const nsCString& aUrl, bool aIsSubFrame);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   bool Equals(PageInformation* aOtherDocShellInfo);
@@ -37,17 +34,15 @@ public:
   const nsCString& Url() { return mUrl; }
   bool IsSubFrame() { return mIsSubFrame; }
 
-  mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered()
-  {
+  mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() {
     return mBufferPositionWhenUnregistered;
   }
 
-  void NotifyUnregistered(uint64_t aBufferPosition)
-  {
+  void NotifyUnregistered(uint64_t aBufferPosition) {
     mBufferPositionWhenUnregistered = mozilla::Some(aBufferPosition);
   }
 
-private:
+ private:
   const nsID mDocShellId;
   const uint32_t mDocShellHistoryId;
   const nsCString mUrl;
@@ -61,4 +56,4 @@ private:
   virtual ~PageInformation() = default;
 };
 
-#endif // PageInformation_h
+#endif  // PageInformation_h

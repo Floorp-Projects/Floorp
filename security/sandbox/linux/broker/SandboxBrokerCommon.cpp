@@ -25,30 +25,18 @@
 // In the future, if the broker becomes a dedicated executable, this
 // can change.
 #error "No MSG_CMSG_CLOEXEC?"
-#endif // XP_LINUX
-#endif // MSG_CMSG_CLOEXEC
+#endif  // XP_LINUX
+#endif  // MSG_CMSG_CLOEXEC
 
 namespace mozilla {
 
 const char* SandboxBrokerCommon::OperationDescription[] = {
-  "open",
-  "access",
-  "stat",
-  "chmod",
-  "link",
-  "symlink",
-  "mkdir",
-  "rename",
-  "rmdir",
-  "unlink",
-  "readlink",
-  "connect"
-};
+    "open",  "access", "stat",  "chmod",  "link",     "symlink",
+    "mkdir", "rename", "rmdir", "unlink", "readlink", "connect"};
 
-/* static */ ssize_t
-SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO, size_t aNumIO,
-                                    int* aPassedFdPtr)
-{
+/* static */ ssize_t SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO,
+                                                     size_t aNumIO,
+                                                     int* aPassedFdPtr) {
   struct msghdr msg = {};
   msg.msg_iov = const_cast<iovec*>(aIO);
   msg.msg_iovlen = aNumIO;
@@ -75,8 +63,7 @@ SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO, size_t aNumIO,
   if (msg.msg_controllen > 0) {
     MOZ_ASSERT(aPassedFdPtr);
     struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
-    if (cmsg->cmsg_level == SOL_SOCKET &&
-        cmsg->cmsg_type == SCM_RIGHTS) {
+    if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS) {
       int* fds = reinterpret_cast<int*>(CMSG_DATA(cmsg));
       if (cmsg->cmsg_len != CMSG_LEN(sizeof(int))) {
         // A client could, for example, send an extra 32-bit int if
@@ -106,10 +93,9 @@ SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO, size_t aNumIO,
   return rv;
 }
 
-/* static */ ssize_t
-SandboxBrokerCommon::SendWithFd(int aFd, const iovec* aIO, size_t aNumIO,
-                                    int aPassedFd)
-{
+/* static */ ssize_t SandboxBrokerCommon::SendWithFd(int aFd, const iovec* aIO,
+                                                     size_t aNumIO,
+                                                     int aPassedFd) {
   struct msghdr msg = {};
   msg.msg_iov = const_cast<iovec*>(aIO);
   msg.msg_iovlen = aNumIO;
@@ -134,4 +120,4 @@ SandboxBrokerCommon::SendWithFd(int aFd, const iovec* aIO, size_t aNumIO,
   return rv;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

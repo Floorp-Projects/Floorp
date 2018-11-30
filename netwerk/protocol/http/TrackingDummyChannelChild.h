@@ -18,26 +18,21 @@ class nsIURI;
 namespace mozilla {
 namespace net {
 
-class TrackingDummyChannelChild final : public PTrackingDummyChannelChild
-{
-public:
-  static bool
-  Create(nsIHttpChannel* aChannel, nsIURI* aURI,
-         const std::function<void(bool)>& aCallback);
+class TrackingDummyChannelChild final : public PTrackingDummyChannelChild {
+ public:
+  static bool Create(nsIHttpChannel* aChannel, nsIURI* aURI,
+                     const std::function<void(bool)>& aCallback);
 
   // Used by PNeckoChild only!
   TrackingDummyChannelChild();
   ~TrackingDummyChannelChild();
 
-private:
-  void
-  Initialize(nsIHttpChannel* aChannel,
-             nsIURI* aURI,
-             bool aIsThirdParty,
-             const std::function<void(bool)>& aCallback);
+ private:
+  void Initialize(nsIHttpChannel* aChannel, nsIURI* aURI, bool aIsThirdParty,
+                  const std::function<void(bool)>& aCallback);
 
-  mozilla::ipc::IPCResult
-  Recv__delete__(const bool& aTrackingResource) override;
+  mozilla::ipc::IPCResult Recv__delete__(
+      const bool& aTrackingResource) override;
 
   nsCOMPtr<nsIHttpChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;
@@ -45,7 +40,7 @@ private:
   bool mIsThirdParty;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_TrackingDummyChannelChild_h
+#endif  // mozilla_net_TrackingDummyChannelChild_h

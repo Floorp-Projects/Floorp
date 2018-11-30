@@ -18,105 +18,70 @@ namespace dom {
 class PerformanceResourceTiming;
 
 // http://www.w3.org/TR/performance-timeline/#performanceentry
-class PerformanceEntry : public nsISupports,
-                         public nsWrapperCache
-{
-protected:
+class PerformanceEntry : public nsISupports, public nsWrapperCache {
+ protected:
   virtual ~PerformanceEntry();
 
-public:
-  PerformanceEntry(nsISupports* aParent,
-                   const nsAString& aName,
+ public:
+  PerformanceEntry(nsISupports* aParent, const nsAString& aName,
                    const nsAString& aEntryType);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PerformanceEntry)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  nsISupports* GetParentObject() const
-  {
-    return mParent;
-  }
+  nsISupports* GetParentObject() const { return mParent; }
 
-  void GetName(nsAString& aName) const
-  {
-    aName = mName;
-  }
+  void GetName(nsAString& aName) const { aName = mName; }
 
-  const nsAString& GetName() const
-  {
-    return mName;
-  }
+  const nsAString& GetName() const { return mName; }
 
-  void SetName(const nsAString& aName)
-  {
-    mName = aName;
-  }
+  void SetName(const nsAString& aName) { mName = aName; }
 
-  void GetEntryType(nsAString& aEntryType) const
-  {
-    aEntryType = mEntryType;
-  }
+  void GetEntryType(nsAString& aEntryType) const { aEntryType = mEntryType; }
 
-  const nsAString& GetEntryType()
-  {
-    return mEntryType;
-  }
+  const nsAString& GetEntryType() { return mEntryType; }
 
-  void SetEntryType(const nsAString& aEntryType)
-  {
-    mEntryType = aEntryType;
-  }
+  void SetEntryType(const nsAString& aEntryType) { mEntryType = aEntryType; }
 
-  virtual DOMHighResTimeStamp StartTime() const
-  {
-    return 0;
-  }
+  virtual DOMHighResTimeStamp StartTime() const { return 0; }
 
-  virtual DOMHighResTimeStamp Duration() const
-  {
-    return 0;
-  }
+  virtual DOMHighResTimeStamp Duration() const { return 0; }
 
-  virtual const PerformanceResourceTiming* ToResourceTiming() const
-  {
+  virtual const PerformanceResourceTiming* ToResourceTiming() const {
     return nullptr;
   }
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-protected:
+ protected:
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
+ private:
   nsCOMPtr<nsISupports> mParent;
   nsString mName;
   nsString mEntryType;
 };
 
 // Helper classes
-class MOZ_STACK_CLASS PerformanceEntryComparator final
-{
-public:
+class MOZ_STACK_CLASS PerformanceEntryComparator final {
+ public:
   bool Equals(const PerformanceEntry* aElem1,
-              const PerformanceEntry* aElem2) const
-  {
-    MOZ_ASSERT(aElem1 && aElem2,
-               "Trying to compare null performance entries");
+              const PerformanceEntry* aElem2) const {
+    MOZ_ASSERT(aElem1 && aElem2, "Trying to compare null performance entries");
     return aElem1->StartTime() == aElem2->StartTime();
   }
 
   bool LessThan(const PerformanceEntry* aElem1,
-                const PerformanceEntry* aElem2) const
-  {
-    MOZ_ASSERT(aElem1 && aElem2,
-               "Trying to compare null performance entries");
+                const PerformanceEntry* aElem2) const {
+    MOZ_ASSERT(aElem1 && aElem2, "Trying to compare null performance entries");
     return aElem1->StartTime() < aElem2->StartTime();
   }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_PerformanceEntry_h___ */

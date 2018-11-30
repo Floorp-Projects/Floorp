@@ -11,29 +11,19 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ TimeoutBudgetManager&
-TimeoutBudgetManager::Get()
-{
+/* static */ TimeoutBudgetManager& TimeoutBudgetManager::Get() {
   static TimeoutBudgetManager gTimeoutBudgetManager;
   return gTimeoutBudgetManager;
 }
 
-void
-TimeoutBudgetManager::StartRecording(const TimeStamp& aNow)
-{
+void TimeoutBudgetManager::StartRecording(const TimeStamp& aNow) {
   mStart = aNow;
 }
 
-void
-TimeoutBudgetManager::StopRecording()
-{
-  mStart = TimeStamp();
-}
+void TimeoutBudgetManager::StopRecording() { mStart = TimeStamp(); }
 
-TimeDuration
-TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
-                                      const Timeout* aTimeout)
-{
+TimeDuration TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
+                                                   const Timeout* aTimeout) {
   if (!mStart) {
     // If we've started a sync operation mStart might be null, in
     // which case we should not record this piece of execution.
@@ -43,5 +33,5 @@ TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
   return aNow - mStart;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

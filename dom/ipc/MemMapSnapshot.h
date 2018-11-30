@@ -13,7 +13,7 @@
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Result.h"
 #ifdef XP_WIN
-#  include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #endif
 
 namespace mozilla {
@@ -30,20 +30,18 @@ namespace ipc {
  * The file descriptor for the resulting AutoMemMap can be shared among
  * processes, to safely access a shared, read-only copy of the data snapshot.
  */
-class MOZ_RAII MemMapSnapshot
-{
-public:
+class MOZ_RAII MemMapSnapshot {
+ public:
   Result<Ok, nsresult> Init(size_t aSize);
   Result<Ok, nsresult> Finalize(loader::AutoMemMap& aMap);
 
-  template<typename T = void>
-  RangedPtr<T> Get()
-  {
+  template <typename T = void>
+  RangedPtr<T> Get() {
     MOZ_ASSERT(mInitialized);
     return mMem.get<T>();
   }
 
-private:
+ private:
   Result<Ok, nsresult> Create(size_t aSize);
   Result<Ok, nsresult> Freeze(loader::AutoMemMap& aMem);
 
@@ -58,7 +56,7 @@ private:
 #endif
 };
 
-} // ipc
-} // mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // dom_ipc_MemMapSnapshot_h
+#endif  // dom_ipc_MemMapSnapshot_h

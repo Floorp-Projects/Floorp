@@ -12,18 +12,17 @@
 namespace mozilla {
 namespace widget {
 
-class CompositorWidgetParent final
- : public PCompositorWidgetParent,
-   public WinCompositorWidget
-{
-public:
+class CompositorWidgetParent final : public PCompositorWidgetParent,
+                                     public WinCompositorWidget {
+ public:
   explicit CompositorWidgetParent(const CompositorWidgetInitData& aInitData,
                                   const layers::CompositorOptions& aOptions);
   ~CompositorWidgetParent() override;
 
   mozilla::ipc::IPCResult RecvEnterPresentLock() override;
   mozilla::ipc::IPCResult RecvLeavePresentLock() override;
-  mozilla::ipc::IPCResult RecvUpdateTransparency(const nsTransparencyMode& aMode) override;
+  mozilla::ipc::IPCResult RecvUpdateTransparency(
+      const nsTransparencyMode& aMode) override;
   mozilla::ipc::IPCResult RecvClearTransparentWindow() override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -31,11 +30,11 @@ public:
   void ObserveVsync(VsyncObserver* aObserver) override;
   RefPtr<VsyncObserver> GetVsyncObserver() const override;
 
-private:
+ private:
   RefPtr<VsyncObserver> mVsyncObserver;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // widget_windows_CompositorWidgetParent_h
+#endif  // widget_windows_CompositorWidgetParent_h

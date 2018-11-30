@@ -37,18 +37,16 @@ using StackFrameId = uint64_t;
 // node with id equal to `DeserializedEdge::referent` that we deserialized from
 // a core dump.
 struct DeserializedEdge {
-  NodeId         referent;
+  NodeId referent;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
   const char16_t* name;
 
   explicit DeserializedEdge(NodeId referent, const char16_t* edgeName = nullptr)
-    : referent(referent)
-    , name(edgeName)
-  { }
+      : referent(referent), name(edgeName) {}
   DeserializedEdge(DeserializedEdge&& rhs);
   DeserializedEdge& operator=(DeserializedEdge&& rhs);
 
-private:
+ private:
   DeserializedEdge(const DeserializedEdge&) = delete;
   DeserializedEdge& operator=(const DeserializedEdge&) = delete;
 };
@@ -59,64 +57,56 @@ struct DeserializedNode {
   using EdgeVector = Vector<DeserializedEdge>;
   using UniqueStringPtr = UniquePtr<char16_t[]>;
 
-  NodeId              id;
+  NodeId id;
   JS::ubi::CoarseType coarseType;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
-  const char16_t*     typeName;
-  uint64_t            size;
-  EdgeVector          edges;
+  const char16_t* typeName;
+  uint64_t size;
+  EdgeVector edges;
   Maybe<StackFrameId> allocationStack;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
-  const char*         jsObjectClassName;
+  const char* jsObjectClassName;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
-  const char*         scriptFilename;
+  const char* scriptFilename;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
-  const char16_t*     descriptiveTypeName;
+  const char16_t* descriptiveTypeName;
   // A weak pointer to this node's owning `HeapSnapshot`. Safe without
   // AddRef'ing because this node's lifetime is equal to that of its owner.
-  HeapSnapshot*       owner;
+  HeapSnapshot* owner;
 
-  DeserializedNode(NodeId id,
-                   JS::ubi::CoarseType coarseType,
-                   const char16_t* typeName,
-                   uint64_t size,
-                   EdgeVector&& edges,
+  DeserializedNode(NodeId id, JS::ubi::CoarseType coarseType,
+                   const char16_t* typeName, uint64_t size, EdgeVector&& edges,
                    const Maybe<StackFrameId>& allocationStack,
-                   const char* className,
-                   const char* filename,
-                   const char16_t* descriptiveName,
-                   HeapSnapshot& owner)
-    : id(id)
-    , coarseType(coarseType)
-    , typeName(typeName)
-    , size(size)
-    , edges(std::move(edges))
-    , allocationStack(allocationStack)
-    , jsObjectClassName(className)
-    , scriptFilename(filename)
-    , descriptiveTypeName(descriptiveName)
-    , owner(&owner)
-  { }
-  virtual ~DeserializedNode() { }
+                   const char* className, const char* filename,
+                   const char16_t* descriptiveName, HeapSnapshot& owner)
+      : id(id),
+        coarseType(coarseType),
+        typeName(typeName),
+        size(size),
+        edges(std::move(edges)),
+        allocationStack(allocationStack),
+        jsObjectClassName(className),
+        scriptFilename(filename),
+        descriptiveTypeName(descriptiveName),
+        owner(&owner) {}
+  virtual ~DeserializedNode() {}
 
   DeserializedNode(DeserializedNode&& rhs)
-    : id(rhs.id)
-    , coarseType(rhs.coarseType)
-    , typeName(rhs.typeName)
-    , size(rhs.size)
-    , edges(std::move(rhs.edges))
-    , allocationStack(rhs.allocationStack)
-    , jsObjectClassName(rhs.jsObjectClassName)
-    , scriptFilename(rhs.scriptFilename)
-    , descriptiveTypeName(rhs.descriptiveTypeName)
-    , owner(rhs.owner)
-  { }
+      : id(rhs.id),
+        coarseType(rhs.coarseType),
+        typeName(rhs.typeName),
+        size(rhs.size),
+        edges(std::move(rhs.edges)),
+        allocationStack(rhs.allocationStack),
+        jsObjectClassName(rhs.jsObjectClassName),
+        scriptFilename(rhs.scriptFilename),
+        descriptiveTypeName(rhs.descriptiveTypeName),
+        owner(rhs.owner) {}
 
-  DeserializedNode& operator=(DeserializedNode&& rhs)
-  {
+  DeserializedNode& operator=(DeserializedNode&& rhs) {
     MOZ_ASSERT(&rhs != this);
     this->~DeserializedNode();
-    new(this) DeserializedNode(std::move(rhs));
+    new (this) DeserializedNode(std::move(rhs));
     return *this;
   }
 
@@ -126,34 +116,30 @@ struct DeserializedNode {
 
   struct HashPolicy;
 
-protected:
+ protected:
   // This is only for use with `MockDeserializedNode` in testing.
   DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size)
-    : id(id)
-    , coarseType(JS::ubi::CoarseType::Other)
-    , typeName(typeName)
-    , size(size)
-    , edges()
-    , allocationStack(Nothing())
-    , jsObjectClassName(nullptr)
-    , scriptFilename(nullptr)
-    , descriptiveTypeName(nullptr)
-    , owner(nullptr)
-  { }
+      : id(id),
+        coarseType(JS::ubi::CoarseType::Other),
+        typeName(typeName),
+        size(size),
+        edges(),
+        allocationStack(Nothing()),
+        jsObjectClassName(nullptr),
+        scriptFilename(nullptr),
+        descriptiveTypeName(nullptr),
+        owner(nullptr) {}
 
-private:
+ private:
   DeserializedNode(const DeserializedNode&) = delete;
   DeserializedNode& operator=(const DeserializedNode&) = delete;
 };
 
-static inline js::HashNumber
-hashIdDerivedFromPtr(uint64_t id)
-{
-    return mozilla::HashGeneric(id);
+static inline js::HashNumber hashIdDerivedFromPtr(uint64_t id) {
+  return mozilla::HashGeneric(id);
 }
 
-struct DeserializedNode::HashPolicy
-{
+struct DeserializedNode::HashPolicy {
   using Lookup = NodeId;
 
   static js::HashNumber hash(const Lookup& lookup) {
@@ -168,39 +154,36 @@ struct DeserializedNode::HashPolicy
 // A `DeserializedStackFrame` is a stack frame referred to by a thing in the
 // heap graph that we deserialized from a core dump.
 struct DeserializedStackFrame {
-  StackFrameId        id;
+  StackFrameId id;
   Maybe<StackFrameId> parent;
-  uint32_t            line;
-  uint32_t            column;
+  uint32_t line;
+  uint32_t column;
   // Borrowed references to strings owned by this DeserializedStackFrame's
   // owning HeapSnapshot.
-  const char16_t*     source;
-  const char16_t*     functionDisplayName;
-  bool                isSystem;
-  bool                isSelfHosted;
+  const char16_t* source;
+  const char16_t* functionDisplayName;
+  bool isSystem;
+  bool isSelfHosted;
   // A weak pointer to this frame's owning `HeapSnapshot`. Safe without
   // AddRef'ing because this frame's lifetime is equal to that of its owner.
-  HeapSnapshot*       owner;
+  HeapSnapshot* owner;
 
   explicit DeserializedStackFrame(StackFrameId id,
                                   const Maybe<StackFrameId>& parent,
-                                  uint32_t line,
-                                  uint32_t column,
+                                  uint32_t line, uint32_t column,
                                   const char16_t* source,
                                   const char16_t* functionDisplayName,
-                                  bool isSystem,
-                                  bool isSelfHosted,
+                                  bool isSystem, bool isSelfHosted,
                                   HeapSnapshot& owner)
-    : id(id)
-    , parent(parent)
-    , line(line)
-    , column(column)
-    , source(source)
-    , functionDisplayName(functionDisplayName)
-    , isSystem(isSystem)
-    , isSelfHosted(isSelfHosted)
-    , owner(&owner)
-  {
+      : id(id),
+        parent(parent),
+        line(line),
+        column(column),
+        source(source),
+        functionDisplayName(functionDisplayName),
+        isSystem(isSystem),
+        isSelfHosted(isSelfHosted),
+        owner(&owner) {
     MOZ_ASSERT(source);
   }
 
@@ -208,19 +191,18 @@ struct DeserializedStackFrame {
 
   struct HashPolicy;
 
-protected:
+ protected:
   // This is exposed only for MockDeserializedStackFrame in the gtests.
   explicit DeserializedStackFrame()
-    : id(0)
-    , parent(Nothing())
-    , line(0)
-    , column(0)
-    , source(nullptr)
-    , functionDisplayName(nullptr)
-    , isSystem(false)
-    , isSelfHosted(false)
-    , owner(nullptr)
-  { };
+      : id(0),
+        parent(Nothing()),
+        line(0),
+        column(0),
+        source(nullptr),
+        functionDisplayName(nullptr),
+        isSystem(false),
+        isSelfHosted(false),
+        owner(nullptr){};
 };
 
 struct DeserializedStackFrame::HashPolicy {
@@ -230,13 +212,14 @@ struct DeserializedStackFrame::HashPolicy {
     return hashIdDerivedFromPtr(lookup);
   }
 
-  static bool match(const DeserializedStackFrame& existing, const Lookup& lookup) {
+  static bool match(const DeserializedStackFrame& existing,
+                    const Lookup& lookup) {
     return existing.id == lookup;
   }
 };
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla
 
 namespace JS {
 namespace ubi {
@@ -244,16 +227,13 @@ namespace ubi {
 using mozilla::devtools::DeserializedNode;
 using mozilla::devtools::DeserializedStackFrame;
 
-template<>
-class Concrete<DeserializedNode> : public Base
-{
-protected:
-  explicit Concrete(DeserializedNode* ptr) : Base(ptr) { }
-  DeserializedNode& get() const {
-    return *static_cast<DeserializedNode*>(ptr);
-  }
+template <>
+class Concrete<DeserializedNode> : public Base {
+ protected:
+  explicit Concrete(DeserializedNode* ptr) : Base(ptr) {}
+  DeserializedNode& get() const { return *static_cast<DeserializedNode*>(ptr); }
 
-public:
+ public:
   static void construct(void* storage, DeserializedNode* ptr) {
     new (storage) Concrete(ptr);
   }
@@ -263,11 +243,17 @@ public:
   bool isLive() const override { return false; }
   const char16_t* typeName() const override;
   Node::Size size(mozilla::MallocSizeOf mallocSizeof) const override;
-  const char* jsObjectClassName() const override { return get().jsObjectClassName; }
+  const char* jsObjectClassName() const override {
+    return get().jsObjectClassName;
+  }
   const char* scriptFilename() const final { return get().scriptFilename; }
-  const char16_t* descriptiveTypeName() const override { return get().descriptiveTypeName; }
+  const char16_t* descriptiveTypeName() const override {
+    return get().descriptiveTypeName;
+  }
 
-  bool hasAllocationStack() const override { return get().allocationStack.isSome(); }
+  bool hasAllocationStack() const override {
+    return get().allocationStack.isSome();
+  }
   StackFrame allocationStack() const override;
 
   // We ignore the `bool wantNames` parameter because we can't control whether
@@ -277,19 +263,17 @@ public:
   static const char16_t concreteTypeName[];
 };
 
-template<>
-class ConcreteStackFrame<DeserializedStackFrame> : public BaseStackFrame
-{
-protected:
+template <>
+class ConcreteStackFrame<DeserializedStackFrame> : public BaseStackFrame {
+ protected:
   explicit ConcreteStackFrame(DeserializedStackFrame* ptr)
-    : BaseStackFrame(ptr)
-  { }
+      : BaseStackFrame(ptr) {}
 
   DeserializedStackFrame& get() const {
     return *static_cast<DeserializedStackFrame*>(ptr);
   }
 
-public:
+ public:
   static void construct(void* storage, DeserializedStackFrame* ptr) {
     new (storage) ConcreteStackFrame(ptr);
   }
@@ -299,7 +283,7 @@ public:
   uint32_t column() const override { return get().column; }
   bool isSystem() const override { return get().isSystem; }
   bool isSelfHosted(JSContext* cx) const override { return get().isSelfHosted; }
-  void trace(JSTracer* trc) override { }
+  void trace(JSTracer* trc) override {}
   AtomOrTwoByteChars source() const override {
     return AtomOrTwoByteChars(get().source);
   }
@@ -308,12 +292,11 @@ public:
   }
 
   StackFrame parent() const override;
-  bool constructSavedFrameStack(JSContext* cx,
-                                MutableHandleObject outSavedFrameStack)
-    const override;
+  bool constructSavedFrameStack(
+      JSContext* cx, MutableHandleObject outSavedFrameStack) const override;
 };
 
-} // namespace ubi
-} // namespace JS
+}  // namespace ubi
+}  // namespace JS
 
-#endif // mozilla_devtools_DeserializedNode__
+#endif  // mozilla_devtools_DeserializedNode__

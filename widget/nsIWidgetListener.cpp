@@ -15,127 +15,62 @@
 
 using namespace mozilla;
 
-nsIXULWindow*
-nsIWidgetListener::GetXULWindow()
-{
-  return nullptr;
-}
+nsIXULWindow* nsIWidgetListener::GetXULWindow() { return nullptr; }
 
-nsView*
-nsIWidgetListener::GetView()
-{
-  return nullptr;
-}
+nsView* nsIWidgetListener::GetView() { return nullptr; }
 
-nsIPresShell*
-nsIWidgetListener::GetPresShell()
-{
-  return nullptr;
-}
+nsIPresShell* nsIWidgetListener::GetPresShell() { return nullptr; }
 
-bool
-nsIWidgetListener::WindowMoved(nsIWidget* aWidget,
-                               int32_t aX,
-                               int32_t aY)
-{
+bool nsIWidgetListener::WindowMoved(nsIWidget* aWidget, int32_t aX,
+                                    int32_t aY) {
   return false;
 }
 
-bool
-nsIWidgetListener::WindowResized(nsIWidget* aWidget,
-                                 int32_t aWidth,
-                                 int32_t aHeight)
-{
+bool nsIWidgetListener::WindowResized(nsIWidget* aWidget, int32_t aWidth,
+                                      int32_t aHeight) {
   return false;
 }
 
-void
-nsIWidgetListener::SizeModeChanged(nsSizeMode aSizeMode)
-{
-}
+void nsIWidgetListener::SizeModeChanged(nsSizeMode aSizeMode) {}
 
-void
-nsIWidgetListener::UIResolutionChanged()
-{
-}
+void nsIWidgetListener::UIResolutionChanged() {}
 
-void
-nsIWidgetListener::FullscreenWillChange(bool aInFullscreen)
-{
-}
+void nsIWidgetListener::FullscreenWillChange(bool aInFullscreen) {}
 
-void
-nsIWidgetListener::FullscreenChanged(bool aInFullscreen)
-{
-}
+void nsIWidgetListener::FullscreenChanged(bool aInFullscreen) {}
 
-bool
-nsIWidgetListener::ZLevelChanged(bool aImmediate,
-                                 nsWindowZ* aPlacement,
-                                 nsIWidget* aRequestBelow,
-                                 nsIWidget** aActualBelow)
-{
+bool nsIWidgetListener::ZLevelChanged(bool aImmediate, nsWindowZ* aPlacement,
+                                      nsIWidget* aRequestBelow,
+                                      nsIWidget** aActualBelow) {
   return false;
 }
 
-void
-nsIWidgetListener::OcclusionStateChanged(bool aIsFullyOccluded)
-{
-}
+void nsIWidgetListener::OcclusionStateChanged(bool aIsFullyOccluded) {}
 
-void
-nsIWidgetListener::WindowActivated()
-{
-}
+void nsIWidgetListener::WindowActivated() {}
 
-void
-nsIWidgetListener::WindowDeactivated()
-{
-}
+void nsIWidgetListener::WindowDeactivated() {}
 
-void
-nsIWidgetListener::OSToolbarButtonPressed()
-{
-}
+void nsIWidgetListener::OSToolbarButtonPressed() {}
 
-bool
-nsIWidgetListener::RequestWindowClose(nsIWidget* aWidget)
-{
+bool nsIWidgetListener::RequestWindowClose(nsIWidget* aWidget) { return false; }
+
+void nsIWidgetListener::WillPaintWindow(nsIWidget* aWidget) {}
+
+bool nsIWidgetListener::PaintWindow(nsIWidget* aWidget,
+                                    LayoutDeviceIntRegion aRegion) {
   return false;
 }
 
-void
-nsIWidgetListener::WillPaintWindow(nsIWidget* aWidget)
-{
-}
+void nsIWidgetListener::DidPaintWindow() {}
 
-bool
-nsIWidgetListener::PaintWindow(nsIWidget* aWidget,
-                               LayoutDeviceIntRegion aRegion)
-{
-  return false;
-}
+void nsIWidgetListener::DidCompositeWindow(
+    mozilla::layers::TransactionId aTransactionId,
+    const TimeStamp& aCompositeStart, const TimeStamp& aCompositeEnd) {}
 
-void
-nsIWidgetListener::DidPaintWindow()
-{
-}
+void nsIWidgetListener::RequestRepaint() {}
 
-void
-nsIWidgetListener::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
-                                      const TimeStamp& aCompositeStart,
-                                      const TimeStamp& aCompositeEnd)
-{
-}
-
-void
-nsIWidgetListener::RequestRepaint()
-{
-}
-
-nsEventStatus
-nsIWidgetListener::HandleEvent(WidgetGUIEvent* aEvent,
-                               bool aUseAttachedEvents)
-{
+nsEventStatus nsIWidgetListener::HandleEvent(WidgetGUIEvent* aEvent,
+                                             bool aUseAttachedEvents) {
   return nsEventStatus_eIgnore;
 }

@@ -14,91 +14,90 @@
 namespace js {
 namespace jit {
 
-inline void
-EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t argSize)
-{
-    // We assume during this that R0 and R1 have been pushed.
+inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
+                                   uint32_t argSize) {
+  // We assume during this that R0 and R1 have been pushed.
 
-    // Compute frame size.
-    masm.movl(BaselineFrameReg, eax);
-    masm.addl(Imm32(BaselineFrame::FramePointerOffset), eax);
-    masm.subl(BaselineStackReg, eax);
+  // Compute frame size.
+  masm.movl(BaselineFrameReg, eax);
+  masm.addl(Imm32(BaselineFrame::FramePointerOffset), eax);
+  masm.subl(BaselineStackReg, eax);
 
-    // Store frame size without VMFunction arguments for GC marking.
-    masm.movl(eax, ebx);
-    masm.subl(Imm32(argSize), ebx);
-    masm.store32(ebx, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+  // Store frame size without VMFunction arguments for GC marking.
+  masm.movl(eax, ebx);
+  masm.subl(Imm32(argSize), ebx);
+  masm.store32(ebx, Address(BaselineFrameReg,
+                            BaselineFrame::reverseOffsetOfFrameSize()));
 
-    // Push frame descriptor and perform the tail call.
-    masm.makeFrameDescriptor(eax, FrameType::BaselineJS, ExitFrameLayout::Size());
-    masm.push(eax);
-    masm.push(ICTailCallReg);
-    masm.jump(target);
+  // Push frame descriptor and perform the tail call.
+  masm.makeFrameDescriptor(eax, FrameType::BaselineJS, ExitFrameLayout::Size());
+  masm.push(eax);
+  masm.push(ICTailCallReg);
+  masm.jump(target);
 }
 
-inline void
-EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32_t headerSize)
-{
-    // Compute stub frame size. We have to add two pointers: the stub reg and previous
-    // frame pointer pushed by EmitEnterStubFrame.
-    masm.movl(BaselineFrameReg, reg);
-    masm.addl(Imm32(sizeof(void*) * 2), reg);
-    masm.subl(BaselineStackReg, reg);
+inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm,
+                                                  Register reg,
+                                                  uint32_t headerSize) {
+  // Compute stub frame size. We have to add two pointers: the stub reg and
+  // previous frame pointer pushed by EmitEnterStubFrame.
+  masm.movl(BaselineFrameReg, reg);
+  masm.addl(Imm32(sizeof(void*) * 2), reg);
+  masm.subl(BaselineStackReg, reg);
 
-    masm.makeFrameDescriptor(reg, FrameType::BaselineStub, headerSize);
+  masm.makeFrameDescriptor(reg, FrameType::BaselineStub, headerSize);
 }
 
-inline void
-EmitBaselineCallVM(TrampolinePtr target, MacroAssembler& masm)
-{
-    EmitBaselineCreateStubFrameDescriptor(masm, eax, ExitFrameLayout::Size());
-    masm.push(eax);
-    masm.call(target);
+inline void EmitBaselineCallVM(TrampolinePtr target, MacroAssembler& masm) {
+  EmitBaselineCreateStubFrameDescriptor(masm, eax, ExitFrameLayout::Size());
+  masm.push(eax);
+  masm.call(target);
 }
 
 // Size of values pushed by EmitBaselineEnterStubFrame.
 static const uint32_t STUB_FRAME_SIZE = 4 * sizeof(void*);
 static const uint32_t STUB_FRAME_SAVED_STUB_OFFSET = sizeof(void*);
 
-inline void
-EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
-{
-    // Compute frame size. Because the return address is still on the stack,
-    // this is:
-    //
-    //   BaselineFrameReg
-    //   + BaselineFrame::FramePointerOffset
-    //   - BaselineStackReg
-    //   - sizeof(return address)
-    //
-    // The two constants cancel each other out, so we can just calculate
-    // BaselineFrameReg - BaselineStackReg.
+inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
+  // Compute frame size. Because the return address is still on the stack,
+  // this is:
+  //
+  //   BaselineFrameReg
+  //   + BaselineFrame::FramePointerOffset
+  //   - BaselineStackReg
+  //   - sizeof(return address)
+  //
+  // The two constants cancel each other out, so we can just calculate
+  // BaselineFrameReg - BaselineStackReg.
 
-    static_assert(BaselineFrame::FramePointerOffset == sizeof(void*),
-                  "FramePointerOffset must be the same as the return address size");
+  static_assert(
+      BaselineFrame::FramePointerOffset == sizeof(void*),
+      "FramePointerOffset must be the same as the return address size");
 
-    masm.movl(BaselineFrameReg, scratch);
-    masm.subl(BaselineStackReg, scratch);
+  masm.movl(BaselineFrameReg, scratch);
+  masm.subl(BaselineStackReg, scratch);
 
-    masm.store32(scratch, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+  masm.store32(scratch, Address(BaselineFrameReg,
+                                BaselineFrame::reverseOffsetOfFrameSize()));
 
-    // Note: when making changes here,  don't forget to update STUB_FRAME_SIZE
-    // if needed.
+  // Note: when making changes here,  don't forget to update STUB_FRAME_SIZE
+  // if needed.
 
-    // Push the return address that's currently on top of the stack.
-    masm.Push(Operand(BaselineStackReg, 0));
+  // Push the return address that's currently on top of the stack.
+  masm.Push(Operand(BaselineStackReg, 0));
 
-    // Replace the original return address with the frame descriptor.
-    masm.makeFrameDescriptor(scratch, FrameType::BaselineJS, BaselineStubFrameLayout::Size());
-    masm.storePtr(scratch, Address(BaselineStackReg, sizeof(uintptr_t)));
+  // Replace the original return address with the frame descriptor.
+  masm.makeFrameDescriptor(scratch, FrameType::BaselineJS,
+                           BaselineStubFrameLayout::Size());
+  masm.storePtr(scratch, Address(BaselineStackReg, sizeof(uintptr_t)));
 
-    // Save old frame pointer, stack pointer and stub reg.
-    masm.Push(ICStubReg);
-    masm.Push(BaselineFrameReg);
-    masm.mov(BaselineStackReg, BaselineFrameReg);
+  // Save old frame pointer, stack pointer and stub reg.
+  masm.Push(ICStubReg);
+  masm.Push(BaselineFrameReg);
+  masm.mov(BaselineStackReg, BaselineFrameReg);
 }
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_x86_SharedICHelpers_x86_inl_h */

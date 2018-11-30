@@ -16,17 +16,13 @@ namespace dom {
 
 class ReportBody;
 
-class ReportingUtils final
-{
-public:
-  static void
-  Report(nsPIDOMWindowInner* aWindow,
-         nsAtom* aType,
-         const nsAString& aURL,
-         ReportBody* aBody);
+class ReportingUtils final {
+ public:
+  static void Report(nsPIDOMWindowInner* aWindow, nsAtom* aType,
+                     const nsAString& aURL, ReportBody* aBody);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ReportingUtils_h
+#endif  // mozilla_dom_ReportingUtils_h

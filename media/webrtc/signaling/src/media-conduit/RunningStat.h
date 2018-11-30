@@ -9,30 +9,17 @@
 
 namespace mozilla {
 
-class RunningStat
-{
-public:
-  RunningStat()
-    : mN(0)
-    , mOldM(0.0)
-    , mNewM(0.0)
-    , mOldS(0.0)
-    , mNewS(0.0)
-  {
-  }
+class RunningStat {
+ public:
+  RunningStat() : mN(0), mOldM(0.0), mNewM(0.0), mOldS(0.0), mNewS(0.0) {}
 
-  void Clear()
-  {
-    mN = 0;
-  }
+  void Clear() { mN = 0; }
 
-  void Push(double x)
-  {
+  void Push(double x) {
     mN++;
 
     // See Knuth TAOCP vol 2, 3rd edition, page 232
-    if (mN == 1)
-    {
+    if (mN == 1) {
       mOldM = mNewM = x;
       mOldS = 0.0;
     } else {
@@ -45,29 +32,17 @@ public:
     }
   }
 
-  int NumDataValues() const
-  {
-    return mN;
-  }
+  int NumDataValues() const { return mN; }
 
-  double Mean() const
-  {
-    return (mN > 0) ? mNewM : 0.0;
-  }
+  double Mean() const { return (mN > 0) ? mNewM : 0.0; }
 
-  double Variance() const
-  {
-    return (mN > 1) ? mNewS / (mN - 1) : 0.0;
-  }
+  double Variance() const { return (mN > 1) ? mNewS / (mN - 1) : 0.0; }
 
-  double StandardDeviation() const
-  {
-    return sqrt(Variance());
-  }
+  double StandardDeviation() const { return sqrt(Variance()); }
 
-private:
+ private:
   int mN;
   double mOldM, mNewM, mOldS, mNewS;
 };
-}
-#endif //RUNNING_STAT_H_
+}  // namespace mozilla
+#endif  // RUNNING_STAT_H_

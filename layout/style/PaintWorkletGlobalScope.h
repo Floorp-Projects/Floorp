@@ -17,27 +17,24 @@ namespace dom {
 
 class VoidFunction;
 
-class PaintWorkletGlobalScope final : public WorkletGlobalScope
-{
-public:
+class PaintWorkletGlobalScope final : public WorkletGlobalScope {
+ public:
   explicit PaintWorkletGlobalScope(PaintWorkletImpl* aImpl);
 
-  bool
-  WrapGlobalObject(JSContext* aCx,
-                   JS::MutableHandle<JSObject*> aReflector) override;
+  bool WrapGlobalObject(JSContext* aCx,
+                        JS::MutableHandle<JSObject*> aReflector) override;
 
-  void
-  RegisterPaint(const nsAString& aType, VoidFunction& aProcessorCtor);
+  void RegisterPaint(const nsAString& aType, VoidFunction& aProcessorCtor);
 
   WorkletImpl* Impl() const override;
 
-private:
+ private:
   ~PaintWorkletGlobalScope() = default;
 
   const RefPtr<PaintWorkletImpl> mImpl;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PaintWorkletGlobalScope_h
+#endif  // mozilla_dom_PaintWorkletGlobalScope_h

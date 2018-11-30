@@ -28,7 +28,7 @@
  *     prediction)
  */
 class nsStubMutationObserver : public nsIMutationObserver {
-public:
+ public:
   NS_DECL_NSIMUTATIONOBSERVER
 };
 

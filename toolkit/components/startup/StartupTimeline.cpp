@@ -10,7 +10,8 @@
 namespace mozilla {
 
 TimeStamp StartupTimeline::sStartupTimeline[StartupTimeline::MAX_EVENT_ID];
-const char *StartupTimeline::sStartupTimelineDesc[StartupTimeline::MAX_EVENT_ID] = {
+const char
+    *StartupTimeline::sStartupTimelineDesc[StartupTimeline::MAX_EVENT_ID] = {
 #define mozilla_StartupTimeline_Event(ev, desc) desc,
 #include "StartupTimeline.h"
 #undef mozilla_StartupTimeline_Event
@@ -29,14 +30,11 @@ using mozilla::TimeStamp;
  *               mozilla::StartupTimeline::Event enumartion
  * @param aWhen  The time at which the event happened
  */
-void
-XRE_StartupTimelineRecord(int aEvent, TimeStamp aWhen)
-{
+void XRE_StartupTimelineRecord(int aEvent, TimeStamp aWhen) {
   StartupTimeline::Record((StartupTimeline::Event)aEvent, aWhen);
 }
 
 void StartupTimeline::RecordOnce(Event ev) {
-
   if (HasRecord(ev)) {
     return;
   }
@@ -46,9 +44,12 @@ void StartupTimeline::RecordOnce(Event ev) {
   // Record first paint timestamp as a scalar.
   if (ev == FIRST_PAINT) {
     bool error = false;
-    uint32_t firstPaintTime = (uint32_t) (Get(ev) - TimeStamp::ProcessCreation(&error)).ToMilliseconds();
+    uint32_t firstPaintTime =
+        (uint32_t)(Get(ev) - TimeStamp::ProcessCreation(&error))
+            .ToMilliseconds();
     if (!error) {
-      Telemetry::ScalarSet(Telemetry::ScalarID::TIMESTAMPS_FIRST_PAINT, firstPaintTime);
+      Telemetry::ScalarSet(Telemetry::ScalarID::TIMESTAMPS_FIRST_PAINT,
+                           firstPaintTime);
     }
   }
 }

@@ -13,24 +13,24 @@ using namespace mozilla::dom;
 
 // MOZ_LOG=LoginReputation:5
 extern LazyLogModule gLoginReputationLogModule;
-#define LR_LOG(args) MOZ_LOG(gLoginReputationLogModule, mozilla::LogLevel::Debug, args)
-#define LR_LOG_ENABLED() MOZ_LOG_TEST(gLoginReputationLogModule, mozilla::LogLevel::Debug)
+#define LR_LOG(args) \
+  MOZ_LOG(gLoginReputationLogModule, mozilla::LogLevel::Debug, args)
+#define LR_LOG_ENABLED() \
+  MOZ_LOG_TEST(gLoginReputationLogModule, mozilla::LogLevel::Debug)
 
 NS_IMPL_ISUPPORTS(LoginReputationParent, nsILoginReputationQueryCallback)
 
-mozilla::ipc::IPCResult
-LoginReputationParent::QueryReputation(nsIURI* aURI)
-{
+mozilla::ipc::IPCResult LoginReputationParent::QueryReputation(nsIURI* aURI) {
   nsresult rv;
   nsCOMPtr<nsILoginReputationService> service =
-    do_GetService(NS_LOGIN_REPUTATION_SERVICE_CONTRACTID, &rv);
+      do_GetService(NS_LOGIN_REPUTATION_SERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     Unused << Send__delete__(this);
     return IPC_OK();
   }
 
   nsCOMPtr<nsILoginReputationQuery> query =
-    LoginReputationService::ConstructQueryParam(aURI);
+      LoginReputationService::ConstructQueryParam(aURI);
   rv = service->QueryReputation(query, this);
   if (NS_FAILED(rv)) {
     Unused << Send__delete__(this);
@@ -40,11 +40,9 @@ LoginReputationParent::QueryReputation(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-LoginReputationParent::OnComplete(nsresult aResult,
-                                  VerdictType aVerdict)
-{
+LoginReputationParent::OnComplete(nsresult aResult, VerdictType aVerdict) {
   LR_LOG(("OnComplete() [verdict=%s]",
-    LoginReputationService::VerdictTypeToString(aVerdict).get()));
+          LoginReputationService::VerdictTypeToString(aVerdict).get()));
 
   if (mIPCOpen) {
     Unused << Send__delete__(this);
@@ -52,8 +50,6 @@ LoginReputationParent::OnComplete(nsresult aResult,
   return NS_OK;
 }
 
-void
-LoginReputationParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void LoginReputationParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }

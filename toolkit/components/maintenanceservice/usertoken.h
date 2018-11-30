@@ -7,6 +7,7 @@
 
 #include <windows.h>
 
-HANDLE GetUserProcessToken(LPCWSTR updaterPath, int updaterArgc, LPCWSTR updaterArgv[]);
+HANDLE GetUserProcessToken(LPCWSTR updaterPath, int updaterArgc,
+                           LPCWSTR updaterArgv[]);
 
-#endif // _USERTOKEN_H_
+#endif  // _USERTOKEN_H_

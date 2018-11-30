@@ -13,9 +13,8 @@ namespace a11y {
 /**
  * Calculate and store group information.
  */
-class AccGroupInfo
-{
-public:
+class AccGroupInfo {
+ public:
   ~AccGroupInfo() { MOZ_COUNT_DTOR(AccGroupInfo); }
 
   /**
@@ -42,8 +41,7 @@ public:
   /**
    * Create group info.
    */
-  static AccGroupInfo* CreateGroupInfo(const Accessible* aAccessible)
-  {
+  static AccGroupInfo* CreateGroupInfo(const Accessible* aAccessible) {
     mozilla::a11y::role role = aAccessible->Role();
     if (role != mozilla::a11y::roles::ROW &&
         role != mozilla::a11y::roles::OUTLINEITEM &&
@@ -70,7 +68,8 @@ public:
   static Accessible* FirstItemOf(const Accessible* aContainer);
 
   /**
-   * Return total number of items in container, and if it is has nested collections.
+   * Return total number of items in container, and if it is has nested
+   * collections.
    */
   static uint32_t TotalItemCount(Accessible* aContainer, bool* aIsHierarchical);
 
@@ -79,16 +78,15 @@ public:
    */
   static Accessible* NextItemTo(Accessible* aItem);
 
-protected:
+ protected:
   AccGroupInfo(const Accessible* aItem, a11y::role aRole);
 
-private:
+ private:
   AccGroupInfo() = delete;
   AccGroupInfo(const AccGroupInfo&) = delete;
-  AccGroupInfo& operator =(const AccGroupInfo&) = delete;
+  AccGroupInfo& operator=(const AccGroupInfo&) = delete;
 
-  static mozilla::a11y::role BaseRole(mozilla::a11y::role aRole)
-  {
+  static mozilla::a11y::role BaseRole(mozilla::a11y::role aRole) {
     if (aRole == mozilla::a11y::roles::CHECK_MENU_ITEM ||
         aRole == mozilla::a11y::roles::PARENT_MENUITEM ||
         aRole == mozilla::a11y::roles::RADIO_MENU_ITEM)
@@ -113,7 +111,7 @@ private:
   a11y::role mRole;
 };
 
-} // namespace mozilla
-} // namespace a11y
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

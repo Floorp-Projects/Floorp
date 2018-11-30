@@ -25,15 +25,13 @@ class WorkerPrivate;
 
 void TriggerFlushRejections();
 
-class PromiseDebugging
-{
-public:
+class PromiseDebugging {
+ public:
   static void Init();
   static void Shutdown();
 
   static void GetState(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                       PromiseDebuggingStateHolder& aState,
-                       ErrorResult& aRv);
+                       PromiseDebuggingStateHolder& aState, ErrorResult& aRv);
 
   static void GetPromiseID(GlobalObject&, JS::Handle<JSObject*>, nsString&,
                            ErrorResult&);
@@ -50,10 +48,10 @@ public:
                                    ErrorResult& aRv);
 
   // Mechanism for watching uncaught instances of Promise.
-  static void AddUncaughtRejectionObserver(GlobalObject&,
-                                           UncaughtRejectionObserver& aObserver);
-  static bool RemoveUncaughtRejectionObserver(GlobalObject&,
-                                              UncaughtRejectionObserver& aObserver);
+  static void AddUncaughtRejectionObserver(
+      GlobalObject&, UncaughtRejectionObserver& aObserver);
+  static bool RemoveUncaughtRejectionObserver(
+      GlobalObject&, UncaughtRejectionObserver& aObserver);
 
   // Mark a Promise as having been left uncaught at script completion.
   static void AddUncaughtRejection(JS::HandleObject);
@@ -64,11 +62,12 @@ public:
   // and AddConsumedRejection to observers.
   static void FlushUncaughtRejections();
 
-protected:
+ protected:
   static void FlushUncaughtRejectionsInternal();
   friend class FlushRejections;
   friend class mozilla::dom::WorkerPrivate;
-private:
+
+ private:
   // Identity of the process.
   // This property is:
   // - set during initialization of the layout module,
@@ -79,7 +78,7 @@ private:
   static nsString sIDPrefix;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PromiseDebugging_h
+#endif  // mozilla_dom_PromiseDebugging_h

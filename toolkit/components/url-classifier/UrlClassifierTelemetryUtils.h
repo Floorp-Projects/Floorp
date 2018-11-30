@@ -13,12 +13,10 @@ namespace safebrowsing {
 
 // We might need to expand the bucket here if telemetry shows lots of errors
 // are neither connection errors nor DNS errors.
-uint8_t
-NetworkErrorToBucket(nsresult rv);
+uint8_t NetworkErrorToBucket(nsresult rv);
 
 // Map the HTTP response code to a Telemetry bucket
-uint32_t
-HTTPStatusToBucket(uint32_t status);
+uint32_t HTTPStatusToBucket(uint32_t status);
 
 enum UpdateTimeout {
   eNoTimeout = 0,
@@ -26,7 +24,7 @@ enum UpdateTimeout {
   eDownloadTimeout = 2,
 };
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla
 
-#endif //UrlClassifierTelemetryUtils_h__
+#endif  // UrlClassifierTelemetryUtils_h__

@@ -17,50 +17,42 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMPointReadOnly, mParent)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMPointReadOnly, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMPointReadOnly, Release)
 
-already_AddRefed<DOMPointReadOnly>
-DOMPointReadOnly::FromPoint(const GlobalObject& aGlobal, const DOMPointInit& aParams)
-{
-  RefPtr<DOMPointReadOnly> obj =
-    new DOMPointReadOnly(aGlobal.GetAsSupports(), aParams.mX, aParams.mY,
-                         aParams.mZ, aParams.mW);
+already_AddRefed<DOMPointReadOnly> DOMPointReadOnly::FromPoint(
+    const GlobalObject& aGlobal, const DOMPointInit& aParams) {
+  RefPtr<DOMPointReadOnly> obj = new DOMPointReadOnly(
+      aGlobal.GetAsSupports(), aParams.mX, aParams.mY, aParams.mZ, aParams.mW);
   return obj.forget();
 }
 
-already_AddRefed<DOMPointReadOnly>
-DOMPointReadOnly::Constructor(const GlobalObject& aGlobal, double aX, double aY,
-                              double aZ, double aW, ErrorResult& aRV)
-{
+already_AddRefed<DOMPointReadOnly> DOMPointReadOnly::Constructor(
+    const GlobalObject& aGlobal, double aX, double aY, double aZ, double aW,
+    ErrorResult& aRV) {
   RefPtr<DOMPointReadOnly> obj =
-    new DOMPointReadOnly(aGlobal.GetAsSupports(), aX, aY, aZ, aW);
+      new DOMPointReadOnly(aGlobal.GetAsSupports(), aX, aY, aZ, aW);
   return obj.forget();
 }
 
-JSObject*
-DOMPointReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DOMPointReadOnly::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return DOMPointReadOnly_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<DOMPoint>
-DOMPoint::FromPoint(const GlobalObject& aGlobal, const DOMPointInit& aParams)
-{
-  RefPtr<DOMPoint> obj =
-    new DOMPoint(aGlobal.GetAsSupports(), aParams.mX, aParams.mY,
-                 aParams.mZ, aParams.mW);
+already_AddRefed<DOMPoint> DOMPoint::FromPoint(const GlobalObject& aGlobal,
+                                               const DOMPointInit& aParams) {
+  RefPtr<DOMPoint> obj = new DOMPoint(aGlobal.GetAsSupports(), aParams.mX,
+                                      aParams.mY, aParams.mZ, aParams.mW);
   return obj.forget();
 }
 
-already_AddRefed<DOMPoint>
-DOMPoint::Constructor(const GlobalObject& aGlobal, double aX, double aY,
-                      double aZ, double aW, ErrorResult& aRV)
-{
-  RefPtr<DOMPoint> obj =
-    new DOMPoint(aGlobal.GetAsSupports(), aX, aY, aZ, aW);
+already_AddRefed<DOMPoint> DOMPoint::Constructor(const GlobalObject& aGlobal,
+                                                 double aX, double aY,
+                                                 double aZ, double aW,
+                                                 ErrorResult& aRV) {
+  RefPtr<DOMPoint> obj = new DOMPoint(aGlobal.GetAsSupports(), aX, aY, aZ, aW);
   return obj.forget();
 }
 
-JSObject*
-DOMPoint::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DOMPoint::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) {
   return DOMPoint_Binding::Wrap(aCx, this, aGivenProto);
 }

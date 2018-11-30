@@ -33,9 +33,8 @@ namespace layers {
  * This class encodes each screenshot to a JPEG data URL, on a separate thread.
  * This class manages that thread and recycles memory buffers.
  */
-class ProfilerScreenshots final
-{
-public:
+class ProfilerScreenshots final {
+ public:
   ProfilerScreenshots();
   ~ProfilerScreenshots();
 
@@ -55,8 +54,8 @@ public:
    * This method will synchronously invoke the supplied aPopulateSurface
    * callback function with a DataSourceSurface in which the callback should
    * store the pixel data. This surface may be larger than aScaledSize, but
-   * only the data in the rectangle (0, 0, aScaledSize.width, aScaledSize.height)
-   * will be read.
+   * only the data in the rectangle (0, 0, aScaledSize.width,
+   * aScaledSize.height) will be read.
    * @param aWindowIdentifier A pointer-sized integer that can be used to match
    *   up multiple screenshots from the same window.
    * @param aOriginalSize The unscaled size of the snapshotted window.
@@ -70,11 +69,12 @@ public:
    *   which needs to copy the screenshot pixel data into the surface that's
    *   supplied to the callback. Called zero or one times, synchronously.
    */
-  void SubmitScreenshot(uintptr_t aWindowIdentifier, const gfx::IntSize& aOriginalSize,
-                        const gfx::IntSize& aScaledSize, const TimeStamp& aTimeStamp,
-                        const std::function<bool(gfx::DataSourceSurface*)>& aPopulateSurface);
+  void SubmitScreenshot(
+      uintptr_t aWindowIdentifier, const gfx::IntSize& aOriginalSize,
+      const gfx::IntSize& aScaledSize, const TimeStamp& aTimeStamp,
+      const std::function<bool(gfx::DataSourceSurface*)>& aPopulateSurface);
 
-private:
+ private:
   /**
    * Recycle a surface from mAvailableSurfaces or create a new one if all
    * surfaces are currently in use, up to some maximum limit.
@@ -102,7 +102,7 @@ private:
   uint32_t mLiveSurfaceCount;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_ProfilerScreenshots_h
+#endif  // mozilla_layers_ProfilerScreenshots_h

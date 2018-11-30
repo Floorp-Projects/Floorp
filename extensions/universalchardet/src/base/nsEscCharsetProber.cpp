@@ -3,38 +3,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "nsEscCharsetProber.h"
 #include "nsUniversalDetector.h"
 
-nsEscCharSetProber::nsEscCharSetProber()
-{
+nsEscCharSetProber::nsEscCharSetProber() {
   mCodingSM = new nsCodingStateMachine(&ISO2022JPSMModel);
   mState = eDetecting;
   mDetectedCharset = nullptr;
 }
 
-nsEscCharSetProber::~nsEscCharSetProber(void)
-{
-}
+nsEscCharSetProber::~nsEscCharSetProber(void) {}
 
-void nsEscCharSetProber::Reset(void)
-{
+void nsEscCharSetProber::Reset(void) {
   mState = eDetecting;
   mCodingSM->Reset();
   mDetectedCharset = nullptr;
 }
 
-nsProbingState nsEscCharSetProber::HandleData(const char* aBuf, uint32_t aLen)
-{
+nsProbingState nsEscCharSetProber::HandleData(const char* aBuf, uint32_t aLen) {
   uint32_t codingState;
   uint32_t i;
 
-  for ( i = 0; i < aLen && mState == eDetecting; i++)
-  {
+  for (i = 0; i < aLen && mState == eDetecting; i++) {
     codingState = mCodingSM->NextState(aBuf[i]);
-    if (codingState == eItsMe)
-    {
+    if (codingState == eItsMe) {
       mState = eFoundIt;
       mDetectedCharset = mCodingSM->GetCodingStateMachine();
       return mState;
@@ -43,4 +35,3 @@ nsProbingState nsEscCharSetProber::HandleData(const char* aBuf, uint32_t aLen)
 
   return mState;
 }
-

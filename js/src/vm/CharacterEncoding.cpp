@@ -15,7 +15,7 @@
 #include <type_traits>
 
 #include "util/StringBuffer.h"
-#include "util/Unicode.h" // unicode::REPLACEMENT_CHARACTER
+#include "util/Unicode.h"  // unicode::REPLACEMENT_CHARACTER
 #include "vm/JSContext.h"
 
 using mozilla::IsAscii;
@@ -23,188 +23,181 @@ using mozilla::Utf8Unit;
 
 using namespace js;
 
-Latin1CharsZ
-JS::LossyTwoByteCharsToNewLatin1CharsZ(JSContext* cx,
-                                       const mozilla::Range<const char16_t> tbchars)
-{
-    MOZ_ASSERT(cx);
-    size_t len = tbchars.length();
-    unsigned char* latin1 = cx->pod_malloc<unsigned char>(len + 1);
-    if (!latin1) {
-        return Latin1CharsZ();
-    }
-    for (size_t i = 0; i < len; ++i) {
-        latin1[i] = static_cast<unsigned char>(tbchars[i]);
-    }
-    latin1[len] = '\0';
-    return Latin1CharsZ(latin1, len);
+Latin1CharsZ JS::LossyTwoByteCharsToNewLatin1CharsZ(
+    JSContext* cx, const mozilla::Range<const char16_t> tbchars) {
+  MOZ_ASSERT(cx);
+  size_t len = tbchars.length();
+  unsigned char* latin1 = cx->pod_malloc<unsigned char>(len + 1);
+  if (!latin1) {
+    return Latin1CharsZ();
+  }
+  for (size_t i = 0; i < len; ++i) {
+    latin1[i] = static_cast<unsigned char>(tbchars[i]);
+  }
+  latin1[len] = '\0';
+  return Latin1CharsZ(latin1, len);
 }
 
 template <typename CharT>
-static size_t
-GetDeflatedUTF8StringLength(const CharT* chars, size_t nchars)
-{
-    size_t nbytes = nchars;
-    for (const CharT* end = chars + nchars; chars < end; chars++) {
-        char16_t c = *chars;
-        if (c < 0x80) {
-            continue;
-        }
-        uint32_t v;
-        if (0xD800 <= c && c <= 0xDFFF) {
-            /* nbytes sets 1 length since this is surrogate pair. */
-            if (c >= 0xDC00 || (chars + 1) == end) {
-                nbytes += 2; /* Bad Surrogate */
-                continue;
-            }
-            char16_t c2 = chars[1];
-            if (c2 < 0xDC00 || c2 > 0xDFFF) {
-                nbytes += 2; /* Bad Surrogate */
-                continue;
-            }
-            v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
-            nbytes--;
-            chars++;
+static size_t GetDeflatedUTF8StringLength(const CharT* chars, size_t nchars) {
+  size_t nbytes = nchars;
+  for (const CharT* end = chars + nchars; chars < end; chars++) {
+    char16_t c = *chars;
+    if (c < 0x80) {
+      continue;
+    }
+    uint32_t v;
+    if (0xD800 <= c && c <= 0xDFFF) {
+      /* nbytes sets 1 length since this is surrogate pair. */
+      if (c >= 0xDC00 || (chars + 1) == end) {
+        nbytes += 2; /* Bad Surrogate */
+        continue;
+      }
+      char16_t c2 = chars[1];
+      if (c2 < 0xDC00 || c2 > 0xDFFF) {
+        nbytes += 2; /* Bad Surrogate */
+        continue;
+      }
+      v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
+      nbytes--;
+      chars++;
+    } else {
+      v = c;
+    }
+    v >>= 11;
+    nbytes++;
+    while (v) {
+      v >>= 5;
+      nbytes++;
+    }
+  }
+  return nbytes;
+}
+
+JS_PUBLIC_API size_t JS::GetDeflatedUTF8StringLength(JSFlatString* s) {
+  JS::AutoCheckCannotGC nogc;
+  return s->hasLatin1Chars()
+             ? ::GetDeflatedUTF8StringLength(s->latin1Chars(nogc), s->length())
+             : ::GetDeflatedUTF8StringLength(s->twoByteChars(nogc),
+                                             s->length());
+}
+
+template <typename CharT>
+static void DeflateStringToUTF8Buffer(const CharT* src, size_t srclen,
+                                      mozilla::RangedPtr<char> dst,
+                                      size_t* dstlenp = nullptr,
+                                      size_t* numcharsp = nullptr) {
+  size_t capacity = 0;
+  if (dstlenp) {
+    capacity = *dstlenp;
+    *dstlenp = 0;
+  }
+  if (numcharsp) {
+    *numcharsp = 0;
+  }
+
+  while (srclen) {
+    uint32_t v;
+    char16_t c = *src++;
+    srclen--;
+    if (c >= 0xDC00 && c <= 0xDFFF) {
+      v = unicode::REPLACEMENT_CHARACTER;
+    } else if (c < 0xD800 || c > 0xDBFF) {
+      v = c;
+    } else {
+      if (srclen < 1) {
+        v = unicode::REPLACEMENT_CHARACTER;
+      } else {
+        char16_t c2 = *src;
+        if (c2 < 0xDC00 || c2 > 0xDFFF) {
+          v = unicode::REPLACEMENT_CHARACTER;
         } else {
-            v = c;
+          src++;
+          srclen--;
+          v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
         }
-        v >>= 11;
-        nbytes++;
-        while (v) {
-            v >>= 5;
-            nbytes++;
-        }
+      }
     }
-    return nbytes;
-}
 
-JS_PUBLIC_API size_t
-JS::GetDeflatedUTF8StringLength(JSFlatString* s)
-{
-    JS::AutoCheckCannotGC nogc;
-    return s->hasLatin1Chars()
-           ? ::GetDeflatedUTF8StringLength(s->latin1Chars(nogc), s->length())
-           : ::GetDeflatedUTF8StringLength(s->twoByteChars(nogc), s->length());
-}
+    size_t utf8Len;
+    if (v < 0x0080) {
+      /* no encoding necessary - performance hack */
+      if (dstlenp && *dstlenp + 1 > capacity) {
+        return;
+      }
+      *dst++ = char(v);
+      utf8Len = 1;
+    } else {
+      uint8_t utf8buf[4];
+      utf8Len = OneUcs4ToUtf8Char(utf8buf, v);
+      if (dstlenp && *dstlenp + utf8Len > capacity) {
+        return;
+      }
+      for (size_t i = 0; i < utf8Len; i++) {
+        *dst++ = char(utf8buf[i]);
+      }
+    }
 
-template <typename CharT>
-static void
-DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<char> dst,
-                          size_t* dstlenp = nullptr, size_t* numcharsp = nullptr)
-{
-    size_t capacity = 0;
     if (dstlenp) {
-        capacity = *dstlenp;
-        *dstlenp = 0;
+      *dstlenp += utf8Len;
     }
     if (numcharsp) {
-        *numcharsp = 0;
+      (*numcharsp)++;
     }
-
-    while (srclen) {
-        uint32_t v;
-        char16_t c = *src++;
-        srclen--;
-        if (c >= 0xDC00 && c <= 0xDFFF) {
-            v = unicode::REPLACEMENT_CHARACTER;
-        } else if (c < 0xD800 || c > 0xDBFF) {
-            v = c;
-        } else {
-            if (srclen < 1) {
-                v = unicode::REPLACEMENT_CHARACTER;
-            } else {
-                char16_t c2 = *src;
-                if (c2 < 0xDC00 || c2 > 0xDFFF) {
-                    v = unicode::REPLACEMENT_CHARACTER;
-                } else {
-                    src++;
-                    srclen--;
-                    v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
-                }
-            }
-        }
-
-        size_t utf8Len;
-        if (v < 0x0080) {
-            /* no encoding necessary - performance hack */
-            if (dstlenp && *dstlenp + 1 > capacity) {
-                return;
-            }
-            *dst++ = char(v);
-            utf8Len = 1;
-        } else {
-            uint8_t utf8buf[4];
-            utf8Len = OneUcs4ToUtf8Char(utf8buf, v);
-            if (dstlenp && *dstlenp + utf8Len > capacity) {
-                return;
-            }
-            for (size_t i = 0; i < utf8Len; i++) {
-                *dst++ = char(utf8buf[i]);
-            }
-        }
-
-        if (dstlenp) {
-            *dstlenp += utf8Len;
-        }
-        if (numcharsp) {
-            (*numcharsp)++;
-        }
-    }
+  }
 }
 
-JS_PUBLIC_API void
-JS::DeflateStringToUTF8Buffer(JSFlatString* src, mozilla::RangedPtr<char> dst,
-                              size_t* dstlenp, size_t* numcharsp)
-{
-    JS::AutoCheckCannotGC nogc;
-    return src->hasLatin1Chars()
-           ? ::DeflateStringToUTF8Buffer(src->latin1Chars(nogc), src->length(), dst,
-                                         dstlenp, numcharsp)
-           : ::DeflateStringToUTF8Buffer(src->twoByteChars(nogc), src->length(), dst,
-                                         dstlenp, numcharsp);
+JS_PUBLIC_API void JS::DeflateStringToUTF8Buffer(JSFlatString* src,
+                                                 mozilla::RangedPtr<char> dst,
+                                                 size_t* dstlenp,
+                                                 size_t* numcharsp) {
+  JS::AutoCheckCannotGC nogc;
+  return src->hasLatin1Chars()
+             ? ::DeflateStringToUTF8Buffer(src->latin1Chars(nogc),
+                                           src->length(), dst, dstlenp,
+                                           numcharsp)
+             : ::DeflateStringToUTF8Buffer(src->twoByteChars(nogc),
+                                           src->length(), dst, dstlenp,
+                                           numcharsp);
 }
 
 template <typename CharT>
-UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(JSContext* maybeCx, const mozilla::Range<CharT> chars)
-{
-    /* Get required buffer size. */
-    const CharT* str = chars.begin().get();
-    size_t len = ::GetDeflatedUTF8StringLength(str, chars.length());
+UTF8CharsZ JS::CharsToNewUTF8CharsZ(JSContext* maybeCx,
+                                    const mozilla::Range<CharT> chars) {
+  /* Get required buffer size. */
+  const CharT* str = chars.begin().get();
+  size_t len = ::GetDeflatedUTF8StringLength(str, chars.length());
 
-    /* Allocate buffer. */
-    char* utf8;
-    if (maybeCx) {
-        utf8 = maybeCx->pod_malloc<char>(len + 1);
-    } else {
-        utf8 = js_pod_malloc<char>(len + 1);
-    }
-    if (!utf8) {
-        return UTF8CharsZ();
-    }
+  /* Allocate buffer. */
+  char* utf8;
+  if (maybeCx) {
+    utf8 = maybeCx->pod_malloc<char>(len + 1);
+  } else {
+    utf8 = js_pod_malloc<char>(len + 1);
+  }
+  if (!utf8) {
+    return UTF8CharsZ();
+  }
 
-    /* Encode to UTF8. */
-    ::DeflateStringToUTF8Buffer(str, chars.length(), mozilla::RangedPtr<char>(utf8, len));
-    utf8[len] = '\0';
+  /* Encode to UTF8. */
+  ::DeflateStringToUTF8Buffer(str, chars.length(),
+                              mozilla::RangedPtr<char>(utf8, len));
+  utf8[len] = '\0';
 
-    return UTF8CharsZ(utf8, len);
+  return UTF8CharsZ(utf8, len);
 }
 
-template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(JSContext* maybeCx,
-                         const mozilla::Range<Latin1Char> chars);
+template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
+    JSContext* maybeCx, const mozilla::Range<Latin1Char> chars);
 
-template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(JSContext* maybeCx,
-                         const mozilla::Range<char16_t> chars);
+template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
+    JSContext* maybeCx, const mozilla::Range<char16_t> chars);
 
-template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(JSContext* maybeCx,
-                         const mozilla::Range<const Latin1Char> chars);
+template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
+    JSContext* maybeCx, const mozilla::Range<const Latin1Char> chars);
 
-template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(JSContext* maybeCx,
-                         const mozilla::Range<const char16_t> chars);
+template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
+    JSContext* maybeCx, const mozilla::Range<const char16_t> chars);
 
 static const uint32_t INVALID_UTF8 = UINT32_MAX;
 
@@ -215,83 +208,76 @@ static const uint32_t INVALID_UTF8 = UINT32_MAX;
  * sequence is valid.
  */
 template <class InputCharsT>
-static uint32_t
-Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer, int utf8Length)
-{
-    static_assert(std::is_same<InputCharsT, UTF8Chars>::value ||
-                  std::is_same<InputCharsT, WTF8Chars>::value,
-                  "must be either UTF-8 or WTF-8");
-    MOZ_ASSERT(1 <= utf8Length && utf8Length <= 4);
+static uint32_t Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer,
+                                      int utf8Length) {
+  static_assert(std::is_same<InputCharsT, UTF8Chars>::value ||
+                    std::is_same<InputCharsT, WTF8Chars>::value,
+                "must be either UTF-8 or WTF-8");
+  MOZ_ASSERT(1 <= utf8Length && utf8Length <= 4);
 
-    if (utf8Length == 1) {
-        MOZ_ASSERT(!(*utf8Buffer & 0x80));
-        return *utf8Buffer;
-    }
+  if (utf8Length == 1) {
+    MOZ_ASSERT(!(*utf8Buffer & 0x80));
+    return *utf8Buffer;
+  }
 
-    /* from Unicode 3.1, non-shortest form is illegal */
-    static const uint32_t minucs4Table[] = { 0x80, 0x800, 0x10000 };
+  /* from Unicode 3.1, non-shortest form is illegal */
+  static const uint32_t minucs4Table[] = {0x80, 0x800, 0x10000};
 
-    MOZ_ASSERT((*utf8Buffer & (0x100 - (1 << (7 - utf8Length)))) ==
-               (0x100 - (1 << (8 - utf8Length))));
-    uint32_t ucs4Char = *utf8Buffer++ & ((1 << (7 - utf8Length)) - 1);
-    uint32_t minucs4Char = minucs4Table[utf8Length - 2];
-    while (--utf8Length) {
-        MOZ_ASSERT((*utf8Buffer & 0xC0) == 0x80);
-        ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
-    }
+  MOZ_ASSERT((*utf8Buffer & (0x100 - (1 << (7 - utf8Length)))) ==
+             (0x100 - (1 << (8 - utf8Length))));
+  uint32_t ucs4Char = *utf8Buffer++ & ((1 << (7 - utf8Length)) - 1);
+  uint32_t minucs4Char = minucs4Table[utf8Length - 2];
+  while (--utf8Length) {
+    MOZ_ASSERT((*utf8Buffer & 0xC0) == 0x80);
+    ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
+  }
 
-    if (MOZ_UNLIKELY(ucs4Char < minucs4Char)) {
-        return INVALID_UTF8;
-    }
+  if (MOZ_UNLIKELY(ucs4Char < minucs4Char)) {
+    return INVALID_UTF8;
+  }
 
-    // WTF-8 allows lone surrogate.
-    if (std::is_same<InputCharsT, UTF8Chars>::value &&
-        MOZ_UNLIKELY(ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF))
-    {
-        return INVALID_UTF8;
-    }
+  // WTF-8 allows lone surrogate.
+  if (std::is_same<InputCharsT, UTF8Chars>::value &&
+      MOZ_UNLIKELY(ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF)) {
+    return INVALID_UTF8;
+  }
 
-    return ucs4Char;
+  return ucs4Char;
 }
 
-uint32_t
-JS::Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length)
-{
-    return Utf8ToOneUcs4CharImpl<UTF8Chars>(utf8Buffer, utf8Length);
+uint32_t JS::Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length) {
+  return Utf8ToOneUcs4CharImpl<UTF8Chars>(utf8Buffer, utf8Length);
 }
 
-static void
-ReportInvalidCharacter(JSContext* cx, uint32_t offset)
-{
-    char buffer[10];
-    SprintfLiteral(buffer, "%u", offset);
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MALFORMED_UTF8_CHAR, buffer);
+static void ReportInvalidCharacter(JSContext* cx, uint32_t offset) {
+  char buffer[10];
+  SprintfLiteral(buffer, "%u", offset);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_MALFORMED_UTF8_CHAR, buffer);
 }
 
-static void
-ReportBufferTooSmall(JSContext* cx, uint32_t dummy)
-{
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
+static void ReportBufferTooSmall(JSContext* cx, uint32_t dummy) {
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_BUFFER_TOO_SMALL);
 }
 
-static void
-ReportTooBigCharacter(JSContext* cx, uint32_t v)
-{
-    char buffer[10];
-    SprintfLiteral(buffer, "0x%x", v + 0x10000);
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
+static void ReportTooBigCharacter(JSContext* cx, uint32_t v) {
+  char buffer[10];
+  SprintfLiteral(buffer, "0x%x", v + 0x10000);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
 }
 
 enum class LoopDisposition {
-    Break,
-    Continue,
+  Break,
+  Continue,
 };
 
 enum class OnUTF8Error {
-    InsertReplacementCharacter,
-    InsertQuestionMark,
-    Throw,
-    Crash,
+  InsertReplacementCharacter,
+  InsertQuestionMark,
+  Throw,
+  Crash,
 };
 
 // Scan UTF-8 or WTF-8 input and (internally, at least) convert it to a series
@@ -299,249 +285,248 @@ enum class OnUTF8Error {
 // lambda for `dst`, in which case the output is discarded entirely--the only
 // effect of calling the template that way is error-checking.
 template <OnUTF8Error ErrorAction, typename OutputFn, class InputCharsT>
-static bool
-InflateUTF8ToUTF16(JSContext* cx, const InputCharsT src, OutputFn dst)
-{
-    size_t srclen = src.length();
-    for (uint32_t i = 0; i < srclen; i++) {
-        uint32_t v = uint32_t(src[i]);
-        if (!(v & 0x80)) {
-            // ASCII code unit.  Simple copy.
-            if (dst(uint16_t(v)) == LoopDisposition::Break) {
-                break;
-            }
+static bool InflateUTF8ToUTF16(JSContext* cx, const InputCharsT src,
+                               OutputFn dst) {
+  size_t srclen = src.length();
+  for (uint32_t i = 0; i < srclen; i++) {
+    uint32_t v = uint32_t(src[i]);
+    if (!(v & 0x80)) {
+      // ASCII code unit.  Simple copy.
+      if (dst(uint16_t(v)) == LoopDisposition::Break) {
+        break;
+      }
+    } else {
+      // Non-ASCII code unit.  Determine its length in bytes (n).
+      uint32_t n = 1;
+      while (v & (0x80 >> n)) {
+        n++;
+      }
+
+#define INVALID(report, arg, n2)                                    \
+  do {                                                              \
+    if (ErrorAction == OnUTF8Error::Throw) {                        \
+      report(cx, arg);                                              \
+      return false;                                                 \
+    } else if (ErrorAction == OnUTF8Error::Crash) {                 \
+      MOZ_CRASH("invalid UTF-8 string: " #report);                  \
+    } else {                                                        \
+      char16_t replacement;                                         \
+      if (ErrorAction == OnUTF8Error::InsertReplacementCharacter) { \
+        replacement = unicode::REPLACEMENT_CHARACTER;               \
+      } else {                                                      \
+        MOZ_ASSERT(ErrorAction == OnUTF8Error::InsertQuestionMark); \
+        replacement = '?';                                          \
+      }                                                             \
+      if (dst(replacement) == LoopDisposition::Break) {             \
+        break;                                                      \
+      }                                                             \
+      n = n2;                                                       \
+      goto invalidMultiByteCodeUnit;                                \
+    }                                                               \
+  } while (0)
+
+      // Check the leading byte.
+      if (n < 2 || n > 4) {
+        INVALID(ReportInvalidCharacter, i, 1);
+      }
+
+      // Check that |src| is large enough to hold an n-byte code unit.
+      if (i + n > srclen) {
+        INVALID(ReportBufferTooSmall, /* dummy = */ 0, 1);
+      }
+
+      // Check the second byte.  From Unicode Standard v6.2, Table 3-7
+      // Well-Formed UTF-8 Byte Sequences.
+      if ((v == 0xE0 && ((uint8_t)src[i + 1] & 0xE0) != 0xA0) ||  // E0 A0~BF
+          (v == 0xED && ((uint8_t)src[i + 1] & 0xE0) != 0x80) ||  // ED 80~9F
+          (v == 0xF0 && ((uint8_t)src[i + 1] & 0xF0) == 0x80) ||  // F0 90~BF
+          (v == 0xF4 && ((uint8_t)src[i + 1] & 0xF0) != 0x80))    // F4 80~8F
+      {
+        if (std::is_same<InputCharsT, UTF8Chars>::value) {
+          INVALID(ReportInvalidCharacter, i, 1);
         } else {
-            // Non-ASCII code unit.  Determine its length in bytes (n).
-            uint32_t n = 1;
-            while (v & (0x80 >> n)) {
-                n++;
-            }
-
-        #define INVALID(report, arg, n2)                                \
-            do {                                                        \
-                if (ErrorAction == OnUTF8Error::Throw) {                \
-                    report(cx, arg);                                    \
-                    return false;                                       \
-                } else if (ErrorAction == OnUTF8Error::Crash) {         \
-                    MOZ_CRASH("invalid UTF-8 string: " # report);       \
-                } else {                                                \
-                    char16_t replacement;                               \
-                    if (ErrorAction == OnUTF8Error::InsertReplacementCharacter) { \
-                        replacement = unicode::REPLACEMENT_CHARACTER;   \
-                    } else {                                            \
-                        MOZ_ASSERT(ErrorAction == OnUTF8Error::InsertQuestionMark); \
-                        replacement = '?';                              \
-                    }                                                   \
-                    if (dst(replacement) == LoopDisposition::Break) {   \
-                        break;                                          \
-                    }                                                   \
-                    n = n2;                                             \
-                    goto invalidMultiByteCodeUnit;                      \
-                }                                                       \
-            } while (0)
-
-            // Check the leading byte.
-            if (n < 2 || n > 4) {
-                INVALID(ReportInvalidCharacter, i, 1);
-            }
-
-            // Check that |src| is large enough to hold an n-byte code unit.
-            if (i + n > srclen) {
-                INVALID(ReportBufferTooSmall, /* dummy = */ 0, 1);
-            }
-
-            // Check the second byte.  From Unicode Standard v6.2, Table 3-7
-            // Well-Formed UTF-8 Byte Sequences.
-            if ((v == 0xE0 && ((uint8_t)src[i + 1] & 0xE0) != 0xA0) ||  // E0 A0~BF
-                (v == 0xED && ((uint8_t)src[i + 1] & 0xE0) != 0x80) ||  // ED 80~9F
-                (v == 0xF0 && ((uint8_t)src[i + 1] & 0xF0) == 0x80) ||  // F0 90~BF
-                (v == 0xF4 && ((uint8_t)src[i + 1] & 0xF0) != 0x80))    // F4 80~8F
-            {
-                if (std::is_same<InputCharsT, UTF8Chars>::value) {
-                    INVALID(ReportInvalidCharacter, i, 1);
-                } else {
-                    // WTF-8 allows lone surrogate as ED A0~BF 80~BF.
-                    MOZ_ASSERT((std::is_same<InputCharsT, WTF8Chars>::value));
-                    if (v == 0xED && ((uint8_t)src[i + 1] & 0xE0) != 0xA0) { // ED A0~BF
-                        INVALID(ReportInvalidCharacter, i, 1);
-                    }
-                }
-            }
-
-            // Check the continuation bytes.
-            for (uint32_t m = 1; m < n; m++) {
-                if ((src[i + m] & 0xC0) != 0x80) {
-                    INVALID(ReportInvalidCharacter, i, m);
-                }
-            }
-
-            // Determine the code unit's length in CharT and act accordingly.
-            v = Utf8ToOneUcs4CharImpl<InputCharsT>((uint8_t*)&src[i], n);
-            if (v < 0x10000) {
-                // The n-byte UTF8 code unit will fit in a single CharT.
-                if (dst(char16_t(v)) == LoopDisposition::Break) {
-                    break;
-                }
-            } else {
-                v -= 0x10000;
-                if (v <= 0xFFFFF) {
-                    // The n-byte UTF8 code unit will fit in two CharT units.
-                    if (dst(char16_t((v >> 10) + 0xD800)) == LoopDisposition::Break) {
-                        break;
-                    }
-                    if (dst(char16_t((v & 0x3FF) + 0xDC00)) == LoopDisposition::Break) {
-                        break;
-                    }
-                } else {
-                    // The n-byte UTF8 code unit won't fit in two CharT units.
-                    INVALID(ReportTooBigCharacter, v, 1);
-                }
-            }
-
-          invalidMultiByteCodeUnit:
-            // Move i to the last byte of the multi-byte code unit; the loop
-            // header will do the final i++ to move to the start of the next
-            // code unit.
-            i += n - 1;
+          // WTF-8 allows lone surrogate as ED A0~BF 80~BF.
+          MOZ_ASSERT((std::is_same<InputCharsT, WTF8Chars>::value));
+          if (v == 0xED && ((uint8_t)src[i + 1] & 0xE0) != 0xA0) {  // ED A0~BF
+            INVALID(ReportInvalidCharacter, i, 1);
+          }
         }
-    }
+      }
 
-    return true;
+      // Check the continuation bytes.
+      for (uint32_t m = 1; m < n; m++) {
+        if ((src[i + m] & 0xC0) != 0x80) {
+          INVALID(ReportInvalidCharacter, i, m);
+        }
+      }
+
+      // Determine the code unit's length in CharT and act accordingly.
+      v = Utf8ToOneUcs4CharImpl<InputCharsT>((uint8_t*)&src[i], n);
+      if (v < 0x10000) {
+        // The n-byte UTF8 code unit will fit in a single CharT.
+        if (dst(char16_t(v)) == LoopDisposition::Break) {
+          break;
+        }
+      } else {
+        v -= 0x10000;
+        if (v <= 0xFFFFF) {
+          // The n-byte UTF8 code unit will fit in two CharT units.
+          if (dst(char16_t((v >> 10) + 0xD800)) == LoopDisposition::Break) {
+            break;
+          }
+          if (dst(char16_t((v & 0x3FF) + 0xDC00)) == LoopDisposition::Break) {
+            break;
+          }
+        } else {
+          // The n-byte UTF8 code unit won't fit in two CharT units.
+          INVALID(ReportTooBigCharacter, v, 1);
+        }
+      }
+
+    invalidMultiByteCodeUnit:
+      // Move i to the last byte of the multi-byte code unit; the loop
+      // header will do the final i++ to move to the start of the next
+      // code unit.
+      i += n - 1;
+    }
+  }
+
+  return true;
 }
 
 template <OnUTF8Error ErrorAction, typename CharT, class InputCharsT>
-static void
-CopyAndInflateUTF8IntoBuffer(JSContext* cx, const InputCharsT src, CharT* dst, size_t outlen,
-                             bool allASCII)
-{
-    if (allASCII) {
-        size_t srclen = src.length();
-        MOZ_ASSERT(outlen == srclen);
-        for (uint32_t i = 0; i < srclen; i++) {
-            dst[i] = CharT(src[i]);
-        }
-    } else {
-        size_t j = 0;
-        auto push = [dst, &j](char16_t c) -> LoopDisposition {
-            dst[j++] = CharT(c);
-            return LoopDisposition::Continue;
-        };
-        MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<ErrorAction>(cx, src, push)));
-        MOZ_ASSERT(j == outlen);
+static void CopyAndInflateUTF8IntoBuffer(JSContext* cx, const InputCharsT src,
+                                         CharT* dst, size_t outlen,
+                                         bool allASCII) {
+  if (allASCII) {
+    size_t srclen = src.length();
+    MOZ_ASSERT(outlen == srclen);
+    for (uint32_t i = 0; i < srclen; i++) {
+      dst[i] = CharT(src[i]);
     }
-    dst[outlen] = CharT('\0');    // NUL char
+  } else {
+    size_t j = 0;
+    auto push = [dst, &j](char16_t c) -> LoopDisposition {
+      dst[j++] = CharT(c);
+      return LoopDisposition::Continue;
+    };
+    MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<ErrorAction>(cx, src, push)));
+    MOZ_ASSERT(j == outlen);
+  }
+  dst[outlen] = CharT('\0');  // NUL char
 }
 
 template <OnUTF8Error ErrorAction, typename CharsT, class InputCharsT>
-static CharsT
-InflateUTF8StringHelper(JSContext* cx, const InputCharsT src, size_t* outlen)
-{
-    using CharT = typename CharsT::CharT;
-    static_assert(std::is_same<CharT, char16_t>::value ||
-                  std::is_same<CharT, Latin1Char>::value,
-                  "bad CharT");
+static CharsT InflateUTF8StringHelper(JSContext* cx, const InputCharsT src,
+                                      size_t* outlen) {
+  using CharT = typename CharsT::CharT;
+  static_assert(std::is_same<CharT, char16_t>::value ||
+                    std::is_same<CharT, Latin1Char>::value,
+                "bad CharT");
 
-    *outlen = 0;
+  *outlen = 0;
 
-    size_t len = 0;
-    bool allASCII = true;
-    auto count = [&len, &allASCII](char16_t c) -> LoopDisposition {
-        len++;
-        allASCII &= (c < 0x80);
-        return LoopDisposition::Continue;
-    };
-    if (!InflateUTF8ToUTF16<ErrorAction>(cx, src, count)) {
-        return CharsT();
+  size_t len = 0;
+  bool allASCII = true;
+  auto count = [&len, &allASCII](char16_t c) -> LoopDisposition {
+    len++;
+    allASCII &= (c < 0x80);
+    return LoopDisposition::Continue;
+  };
+  if (!InflateUTF8ToUTF16<ErrorAction>(cx, src, count)) {
+    return CharsT();
+  }
+  *outlen = len;
+
+  CharT* dst = cx->template pod_malloc<CharT>(*outlen + 1);  // +1 for NUL
+  if (!dst) {
+    ReportOutOfMemory(cx);
+    return CharsT();
+  }
+
+  constexpr OnUTF8Error errorMode =
+      std::is_same<CharT, Latin1Char>::value
+          ? OnUTF8Error::InsertQuestionMark
+          : OnUTF8Error::InsertReplacementCharacter;
+  CopyAndInflateUTF8IntoBuffer<errorMode>(cx, src, dst, *outlen, allASCII);
+
+  return CharsT(dst, *outlen);
+}
+
+TwoByteCharsZ JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx,
+                                              const UTF8Chars utf8,
+                                              size_t* outlen) {
+  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, utf8,
+                                                                    outlen);
+}
+
+TwoByteCharsZ JS::WTF8CharsToNewTwoByteCharsZ(JSContext* cx,
+                                              const WTF8Chars wtf8,
+                                              size_t* outlen) {
+  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, wtf8,
+                                                                    outlen);
+}
+
+TwoByteCharsZ JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx,
+                                              const ConstUTF8CharsZ& utf8,
+                                              size_t* outlen) {
+  UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
+  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, chars,
+                                                                    outlen);
+}
+
+TwoByteCharsZ JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx,
+                                                   const JS::UTF8Chars utf8,
+                                                   size_t* outlen) {
+  return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter,
+                                 TwoByteCharsZ>(cx, utf8, outlen);
+}
+
+TwoByteCharsZ JS::LossyUTF8CharsToNewTwoByteCharsZ(
+    JSContext* cx, const JS::ConstUTF8CharsZ& utf8, size_t* outlen) {
+  UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
+  return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter,
+                                 TwoByteCharsZ>(cx, chars, outlen);
+}
+
+static void UpdateSmallestEncodingForChar(char16_t c,
+                                          JS::SmallestEncoding* encoding) {
+  JS::SmallestEncoding newEncoding = JS::SmallestEncoding::ASCII;
+  if (c >= 0x80) {
+    if (c < 0x100) {
+      newEncoding = JS::SmallestEncoding::Latin1;
+    } else {
+      newEncoding = JS::SmallestEncoding::UTF16;
     }
-    *outlen = len;
-
-    CharT* dst = cx->template pod_malloc<CharT>(*outlen + 1);  // +1 for NUL
-    if (!dst) {
-        ReportOutOfMemory(cx);
-        return CharsT();
-    }
-
-    constexpr OnUTF8Error errorMode = std::is_same<CharT, Latin1Char>::value
-        ? OnUTF8Error::InsertQuestionMark
-        : OnUTF8Error::InsertReplacementCharacter;
-    CopyAndInflateUTF8IntoBuffer<errorMode>(cx, src, dst, *outlen, allASCII);
-
-    return CharsT(dst, *outlen);
+  }
+  if (newEncoding > *encoding) {
+    *encoding = newEncoding;
+  }
 }
 
-TwoByteCharsZ
-JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
-{
-    return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, utf8, outlen);
+JS::SmallestEncoding JS::FindSmallestEncoding(UTF8Chars utf8) {
+  JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
+  auto onChar = [&encoding](char16_t c) -> LoopDisposition {
+    UpdateSmallestEncodingForChar(c, &encoding);
+    return encoding == JS::SmallestEncoding::UTF16 ? LoopDisposition::Break
+                                                   : LoopDisposition::Continue;
+  };
+  MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<OnUTF8Error::InsertReplacementCharacter>(
+      /* cx = */ nullptr, utf8, onChar)));
+  return encoding;
 }
 
-TwoByteCharsZ
-JS::WTF8CharsToNewTwoByteCharsZ(JSContext* cx, const WTF8Chars wtf8, size_t* outlen)
-{
-    return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, wtf8, outlen);
+Latin1CharsZ JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8,
+                                            size_t* outlen) {
+  return InflateUTF8StringHelper<OnUTF8Error::Throw, Latin1CharsZ>(cx, utf8,
+                                                                   outlen);
 }
 
-TwoByteCharsZ
-JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen)
-{
-    UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
-    return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, chars, outlen);
-}
-
-TwoByteCharsZ
-JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen)
-{
-    return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, utf8, outlen);
-}
-
-TwoByteCharsZ
-JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const JS::ConstUTF8CharsZ& utf8, size_t* outlen)
-{
-    UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
-    return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, chars, outlen);
-}
-
-static void
-UpdateSmallestEncodingForChar(char16_t c, JS::SmallestEncoding* encoding)
-{
-    JS::SmallestEncoding newEncoding = JS::SmallestEncoding::ASCII;
-    if (c >= 0x80) {
-        if (c < 0x100) {
-            newEncoding = JS::SmallestEncoding::Latin1;
-        } else {
-            newEncoding = JS::SmallestEncoding::UTF16;
-        }
-    }
-    if (newEncoding > *encoding) {
-        *encoding = newEncoding;
-    }
-}
-
-JS::SmallestEncoding
-JS::FindSmallestEncoding(UTF8Chars utf8)
-{
-    JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
-    auto onChar = [&encoding](char16_t c) -> LoopDisposition {
-        UpdateSmallestEncodingForChar(c, &encoding);
-        return encoding == JS::SmallestEncoding::UTF16
-               ? LoopDisposition::Break
-               : LoopDisposition::Continue;
-    };
-    MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<OnUTF8Error::InsertReplacementCharacter>(
-                         /* cx = */ nullptr, utf8, onChar)));
-    return encoding;
-}
-
-Latin1CharsZ
-JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
-{
-    return InflateUTF8StringHelper<OnUTF8Error::Throw, Latin1CharsZ>(cx, utf8, outlen);
-}
-
-Latin1CharsZ
-JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
-{
-    return InflateUTF8StringHelper<OnUTF8Error::InsertQuestionMark, Latin1CharsZ>(cx, utf8, outlen);
+Latin1CharsZ JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx,
+                                                 const UTF8Chars utf8,
+                                                 size_t* outlen) {
+  return InflateUTF8StringHelper<OnUTF8Error::InsertQuestionMark, Latin1CharsZ>(
+      cx, utf8, outlen);
 }
 
 /**
@@ -552,178 +537,174 @@ JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t*
  */
 
 template <class InputCharsT>
-bool
-GetUTF8AtomizationData(JSContext* cx, const InputCharsT utf8, size_t* outlen,
-                       JS::SmallestEncoding* encoding, HashNumber* hashNum)
-{
-    *outlen = 0;
-    *encoding = JS::SmallestEncoding::ASCII;
-    *hashNum = 0;
+bool GetUTF8AtomizationData(JSContext* cx, const InputCharsT utf8,
+                            size_t* outlen, JS::SmallestEncoding* encoding,
+                            HashNumber* hashNum) {
+  *outlen = 0;
+  *encoding = JS::SmallestEncoding::ASCII;
+  *hashNum = 0;
 
-    auto getMetadata = [outlen, encoding, hashNum](char16_t c) -> LoopDisposition {
-        (*outlen)++;
-        UpdateSmallestEncodingForChar(c, encoding);
-        *hashNum = mozilla::AddToHash(*hashNum, c);
-        return LoopDisposition::Continue;
-    };
-    if (!InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx, utf8, getMetadata)) {
-        return false;
-    }
+  auto getMetadata = [outlen, encoding,
+                      hashNum](char16_t c) -> LoopDisposition {
+    (*outlen)++;
+    UpdateSmallestEncodingForChar(c, encoding);
+    *hashNum = mozilla::AddToHash(*hashNum, c);
+    return LoopDisposition::Continue;
+  };
+  if (!InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx, utf8, getMetadata)) {
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
-template
-bool
-GetUTF8AtomizationData<JS::UTF8Chars>(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen,
-                                      JS::SmallestEncoding* encoding, HashNumber* hashNum);
-template
-bool
-GetUTF8AtomizationData<JS::WTF8Chars>(JSContext* cx, const JS::WTF8Chars utf8, size_t* outlen,
-                                      JS::SmallestEncoding* encoding, HashNumber* hashNum);
+template bool GetUTF8AtomizationData<JS::UTF8Chars>(
+    JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen,
+    JS::SmallestEncoding* encoding, HashNumber* hashNum);
+template bool GetUTF8AtomizationData<JS::WTF8Chars>(
+    JSContext* cx, const JS::WTF8Chars utf8, size_t* outlen,
+    JS::SmallestEncoding* encoding, HashNumber* hashNum);
 
 template <typename CharT>
-bool
-UTF8EqualsChars(const JS::UTF8Chars utfChars, const CharT* chars)
-{
-    size_t ind = 0;
-    bool isEqual = true;
+bool UTF8EqualsChars(const JS::UTF8Chars utfChars, const CharT* chars) {
+  size_t ind = 0;
+  bool isEqual = true;
 
-    auto checkEqual = [&isEqual, &ind, chars](char16_t c) -> LoopDisposition {
-    #ifdef DEBUG
-        JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
-        UpdateSmallestEncodingForChar(c, &encoding);
-        if (std::is_same<CharT, JS::Latin1Char>::value) {
-            MOZ_ASSERT(encoding <= JS::SmallestEncoding::Latin1);
-        } else if (!std::is_same<CharT, char16_t>::value) {
-            MOZ_CRASH("Invalid character type in UTF8EqualsChars");
-        }
-    #endif
+  auto checkEqual = [&isEqual, &ind, chars](char16_t c) -> LoopDisposition {
+#ifdef DEBUG
+    JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
+    UpdateSmallestEncodingForChar(c, &encoding);
+    if (std::is_same<CharT, JS::Latin1Char>::value) {
+      MOZ_ASSERT(encoding <= JS::SmallestEncoding::Latin1);
+    } else if (!std::is_same<CharT, char16_t>::value) {
+      MOZ_CRASH("Invalid character type in UTF8EqualsChars");
+    }
+#endif
 
-        if (CharT(c) != chars[ind]) {
-            isEqual = false;
-            return LoopDisposition::Break;
-        }
+    if (CharT(c) != chars[ind]) {
+      isEqual = false;
+      return LoopDisposition::Break;
+    }
 
-        ind++;
-        return LoopDisposition::Continue;
-    };
+    ind++;
+    return LoopDisposition::Continue;
+  };
 
-    // To get here, you must have checked your work.
-    InflateUTF8ToUTF16<OnUTF8Error::Crash>(/* cx = */ nullptr, utfChars, checkEqual);
+  // To get here, you must have checked your work.
+  InflateUTF8ToUTF16<OnUTF8Error::Crash>(/* cx = */ nullptr, utfChars,
+                                         checkEqual);
 
-    return isEqual;
+  return isEqual;
 }
 
 template bool UTF8EqualsChars<char16_t>(const JS::UTF8Chars, const char16_t*);
-template bool UTF8EqualsChars<JS::Latin1Char>(const JS::UTF8Chars, const JS::Latin1Char*);
+template bool UTF8EqualsChars<JS::Latin1Char>(const JS::UTF8Chars,
+                                              const JS::Latin1Char*);
 
 template <typename CharT, class InputCharsT>
-void
-InflateUTF8CharsToBufferAndTerminate(const InputCharsT src, CharT* dst, size_t dstLen,
-                                     JS::SmallestEncoding encoding)
-{
-    CopyAndInflateUTF8IntoBuffer<OnUTF8Error::Crash>(/* cx = */ nullptr, src, dst, dstLen,
-                                                     encoding == JS::SmallestEncoding::ASCII);
+void InflateUTF8CharsToBufferAndTerminate(const InputCharsT src, CharT* dst,
+                                          size_t dstLen,
+                                          JS::SmallestEncoding encoding) {
+  CopyAndInflateUTF8IntoBuffer<OnUTF8Error::Crash>(
+      /* cx = */ nullptr, src, dst, dstLen,
+      encoding == JS::SmallestEncoding::ASCII);
 }
 
-template void
-InflateUTF8CharsToBufferAndTerminate<char16_t>(const UTF8Chars src, char16_t* dst, size_t dstLen,
-                                               JS::SmallestEncoding encoding);
-template void
-InflateUTF8CharsToBufferAndTerminate<JS::Latin1Char>(const UTF8Chars src, JS::Latin1Char* dst,
-                                                     size_t dstLen, JS::SmallestEncoding encoding);
-template void
-InflateUTF8CharsToBufferAndTerminate<char16_t>(const WTF8Chars src, char16_t* dst, size_t dstLen,
-                                               JS::SmallestEncoding encoding);
-template void
-InflateUTF8CharsToBufferAndTerminate<JS::Latin1Char>(const WTF8Chars src, JS::Latin1Char* dst,
-                                                     size_t dstLen, JS::SmallestEncoding encoding);
+template void InflateUTF8CharsToBufferAndTerminate<char16_t>(
+    const UTF8Chars src, char16_t* dst, size_t dstLen,
+    JS::SmallestEncoding encoding);
+template void InflateUTF8CharsToBufferAndTerminate<JS::Latin1Char>(
+    const UTF8Chars src, JS::Latin1Char* dst, size_t dstLen,
+    JS::SmallestEncoding encoding);
+template void InflateUTF8CharsToBufferAndTerminate<char16_t>(
+    const WTF8Chars src, char16_t* dst, size_t dstLen,
+    JS::SmallestEncoding encoding);
+template void InflateUTF8CharsToBufferAndTerminate<JS::Latin1Char>(
+    const WTF8Chars src, JS::Latin1Char* dst, size_t dstLen,
+    JS::SmallestEncoding encoding);
 
 #ifdef DEBUG
-void
-JS::ConstUTF8CharsZ::validate(size_t aLength)
-{
-    MOZ_ASSERT(data_);
-    UTF8Chars chars(data_, aLength);
-    auto nop = [](char16_t) -> LoopDisposition { return LoopDisposition::Continue; };
-    InflateUTF8ToUTF16<OnUTF8Error::Crash>(/* cx = */ nullptr, chars, nop);
+void JS::ConstUTF8CharsZ::validate(size_t aLength) {
+  MOZ_ASSERT(data_);
+  UTF8Chars chars(data_, aLength);
+  auto nop = [](char16_t) -> LoopDisposition {
+    return LoopDisposition::Continue;
+  };
+  InflateUTF8ToUTF16<OnUTF8Error::Crash>(/* cx = */ nullptr, chars, nop);
 }
 #endif
 
-bool
-JS::StringIsASCII(const char* s)
-{
-    while (*s) {
-        if (*s & 0x80) {
-            return false;
-        }
-        s++;
+bool JS::StringIsASCII(const char* s) {
+  while (*s) {
+    if (*s & 0x80) {
+      return false;
     }
-    return true;
+    s++;
+  }
+  return true;
 }
 
-bool
-StringBuffer::append(const Utf8Unit* units, size_t len)
-{
-    if (isLatin1()) {
-        Latin1CharBuffer& latin1 = latin1Chars();
+bool StringBuffer::append(const Utf8Unit* units, size_t len) {
+  if (isLatin1()) {
+    Latin1CharBuffer& latin1 = latin1Chars();
 
-        while (len > 0) {
-            if (!IsAscii(*units)) {
-                break;
-            }
+    while (len > 0) {
+      if (!IsAscii(*units)) {
+        break;
+      }
 
-            if (!latin1.append(units->toUnsignedChar())) {
-                return false;
-            }
-
-            ++units;
-            --len;
-        }
-        if (len == 0) {
-            return true;
-        }
-
-        // Non-ASCII doesn't *necessarily* mean we couldn't keep appending to
-        // |latin1|, but it's only possible for [U+0080, U+0100) code points,
-        // and handling the full complexity of UTF-8 only for that very small
-        // additional range isn't worth it.  Inflate to two-byte storage before
-        // appending the remaining code points.
-        if (!inflateChars()) {
-            return false;
-        }
-    }
-
-    UTF8Chars remainingUtf8(units, len);
-
-    // Determine how many UTF-16 code units are required to represent the
-    // remaining units.
-    size_t utf16Len = 0;
-    auto countInflated = [&utf16Len](char16_t c) -> LoopDisposition {
-        utf16Len++;
-        return LoopDisposition::Continue;
-    };
-    if (!InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx, remainingUtf8, countInflated)) {
+      if (!latin1.append(units->toUnsignedChar())) {
         return false;
+      }
+
+      ++units;
+      --len;
+    }
+    if (len == 0) {
+      return true;
     }
 
-    TwoByteCharBuffer& buf = twoByteChars();
-
-    size_t i = buf.length();
-    if (!buf.growByUninitialized(utf16Len)) {
-        return false;
+    // Non-ASCII doesn't *necessarily* mean we couldn't keep appending to
+    // |latin1|, but it's only possible for [U+0080, U+0100) code points,
+    // and handling the full complexity of UTF-8 only for that very small
+    // additional range isn't worth it.  Inflate to two-byte storage before
+    // appending the remaining code points.
+    if (!inflateChars()) {
+      return false;
     }
-    MOZ_ASSERT(i + utf16Len == buf.length(),
-               "growByUninitialized assumed to increase length immediately");
+  }
 
-    char16_t* toFill = &buf[i];
-    auto appendUtf16 = [&toFill](char16_t unit) {
-        *toFill++ = unit;
-        return LoopDisposition::Continue;
-    };
+  UTF8Chars remainingUtf8(units, len);
 
-    MOZ_ALWAYS_TRUE(InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx, remainingUtf8, appendUtf16));
-    MOZ_ASSERT(toFill == buf.end());
-    return true;
+  // Determine how many UTF-16 code units are required to represent the
+  // remaining units.
+  size_t utf16Len = 0;
+  auto countInflated = [&utf16Len](char16_t c) -> LoopDisposition {
+    utf16Len++;
+    return LoopDisposition::Continue;
+  };
+  if (!InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx, remainingUtf8,
+                                              countInflated)) {
+    return false;
+  }
+
+  TwoByteCharBuffer& buf = twoByteChars();
+
+  size_t i = buf.length();
+  if (!buf.growByUninitialized(utf16Len)) {
+    return false;
+  }
+  MOZ_ASSERT(i + utf16Len == buf.length(),
+             "growByUninitialized assumed to increase length immediately");
+
+  char16_t* toFill = &buf[i];
+  auto appendUtf16 = [&toFill](char16_t unit) {
+    *toFill++ = unit;
+    return LoopDisposition::Continue;
+  };
+
+  MOZ_ALWAYS_TRUE(
+      InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx, remainingUtf8, appendUtf16));
+  MOZ_ASSERT(toFill == buf.end());
+  return true;
 }

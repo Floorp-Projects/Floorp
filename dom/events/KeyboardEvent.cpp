@@ -12,29 +12,24 @@
 namespace mozilla {
 namespace dom {
 
-KeyboardEvent::KeyboardEvent(EventTarget* aOwner,
-                             nsPresContext* aPresContext,
+KeyboardEvent::KeyboardEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                              WidgetKeyboardEvent* aEvent)
-  : UIEvent(aOwner, aPresContext,
-            aEvent ? aEvent :
-                     new WidgetKeyboardEvent(false, eVoidEvent, nullptr))
-  , mInitializedByJS(false)
-  , mInitializedByCtor(false)
-  , mInitializedWhichValue(0)
-{
+    : UIEvent(aOwner, aPresContext,
+              aEvent ? aEvent
+                     : new WidgetKeyboardEvent(false, eVoidEvent, nullptr)),
+      mInitializedByJS(false),
+      mInitializedByCtor(false),
+      mInitializedWhichValue(0) {
   if (aEvent) {
     mEventIsInternal = false;
-  }
-  else {
+  } else {
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->AsKeyboardEvent()->mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
   }
 }
 
-bool
-KeyboardEvent::AltKey(CallerType aCallerType)
-{
+bool KeyboardEvent::AltKey(CallerType aCallerType) {
   bool altState = mEvent->AsKeyboardEvent()->IsAlt();
 
   if (!ShouldResistFingerprinting(aCallerType)) {
@@ -47,18 +42,14 @@ KeyboardEvent::AltKey(CallerType aCallerType)
   return GetSpoofedModifierStates(Modifier::MODIFIER_ALT, altState);
 }
 
-bool
-KeyboardEvent::CtrlKey(CallerType aCallerType)
-{
+bool KeyboardEvent::CtrlKey(CallerType aCallerType) {
   // We don't spoof this key when privacy.resistFingerprinting
   // is enabled, because it is often used for command key
   // combinations in web apps.
   return mEvent->AsKeyboardEvent()->IsControl();
 }
 
-bool
-KeyboardEvent::ShiftKey(CallerType aCallerType)
-{
+bool KeyboardEvent::ShiftKey(CallerType aCallerType) {
   bool shiftState = mEvent->AsKeyboardEvent()->IsShift();
 
   if (!ShouldResistFingerprinting(aCallerType)) {
@@ -68,36 +59,24 @@ KeyboardEvent::ShiftKey(CallerType aCallerType)
   return GetSpoofedModifierStates(Modifier::MODIFIER_SHIFT, shiftState);
 }
 
-bool
-KeyboardEvent::MetaKey()
-{
+bool KeyboardEvent::MetaKey() {
   // We don't spoof this key when privacy.resistFingerprinting
   // is enabled, because it is often used for command key
   // combinations in web apps.
   return mEvent->AsKeyboardEvent()->IsMeta();
 }
 
-bool
-KeyboardEvent::Repeat()
-{
-  return mEvent->AsKeyboardEvent()->mIsRepeat;
-}
+bool KeyboardEvent::Repeat() { return mEvent->AsKeyboardEvent()->mIsRepeat; }
 
-bool
-KeyboardEvent::IsComposing()
-{
+bool KeyboardEvent::IsComposing() {
   return mEvent->AsKeyboardEvent()->mIsComposing;
 }
 
-void
-KeyboardEvent::GetKey(nsAString& aKeyName) const
-{
+void KeyboardEvent::GetKey(nsAString& aKeyName) const {
   mEvent->AsKeyboardEvent()->GetDOMKeyName(aKeyName);
 }
 
-void
-KeyboardEvent::GetCode(nsAString& aCodeName, CallerType aCallerType)
-{
+void KeyboardEvent::GetCode(nsAString& aCodeName, CallerType aCallerType) {
   if (!ShouldResistFingerprinting(aCallerType)) {
     mEvent->AsKeyboardEvent()->GetDOMCodeName(aCodeName);
     return;
@@ -107,12 +86,10 @@ KeyboardEvent::GetCode(nsAString& aCodeName, CallerType aCallerType)
   // according to the content-language of the document.
   nsCOMPtr<nsIDocument> doc = GetDocument();
 
-  nsRFPService::GetSpoofedCode(doc, mEvent->AsKeyboardEvent(),
-                               aCodeName);
+  nsRFPService::GetSpoofedCode(doc, mEvent->AsKeyboardEvent(), aCodeName);
 }
 
-void KeyboardEvent::GetInitDict(KeyboardEventInit& aParam)
-{
+void KeyboardEvent::GetInitDict(KeyboardEventInit& aParam) {
   GetKey(aParam.mKey);
   GetCode(aParam.mCode);
   aParam.mLocation = Location();
@@ -142,15 +119,13 @@ void KeyboardEvent::GetInitDict(KeyboardEventInit& aParam)
   aParam.mModifierSymbolLock = internalEvent->IsSymbolLocked();
 
   // EventInit
-  aParam.mBubbles =  internalEvent->mFlags.mBubbles;
+  aParam.mBubbles = internalEvent->mFlags.mBubbles;
   aParam.mCancelable = internalEvent->mFlags.mCancelable;
 }
 
-bool
-KeyboardEvent::ShouldUseSameValueForCharCodeAndKeyCode(
-                 const WidgetKeyboardEvent& aWidgetKeyboardEvent,
-                 CallerType aCallerType) const
-{
+bool KeyboardEvent::ShouldUseSameValueForCharCodeAndKeyCode(
+    const WidgetKeyboardEvent& aWidgetKeyboardEvent,
+    CallerType aCallerType) const {
   // - If this event is initialized by JS, we don't need to return same value
   //   for keyCode and charCode since they can be initialized separately.
   // - If this is not a keypress event, we shouldn't return same value for
@@ -160,8 +135,7 @@ KeyboardEvent::ShouldUseSameValueForCharCodeAndKeyCode(
   // - If this event is referred by default handler, i.e., the caller is
   //   system or this event is now in the system group, we don't need to use
   //   hack for web-compat.
-  if (mInitializedByJS ||
-      aWidgetKeyboardEvent.mMessage != eKeyPress ||
+  if (mInitializedByJS || aWidgetKeyboardEvent.mMessage != eKeyPress ||
       aWidgetKeyboardEvent.mUseLegacyKeyCodeAndCharCodeValues ||
       aCallerType == CallerType::System ||
       aWidgetKeyboardEvent.mFlags.mInSystemGroup) {
@@ -171,12 +145,10 @@ KeyboardEvent::ShouldUseSameValueForCharCodeAndKeyCode(
   MOZ_ASSERT(aCallerType == CallerType::NonSystem);
 
   return StaticPrefs::
-    dom_keyboardevent_keypress_set_keycode_and_charcode_to_same_value();
+      dom_keyboardevent_keypress_set_keycode_and_charcode_to_same_value();
 }
 
-uint32_t
-KeyboardEvent::CharCode(CallerType aCallerType)
-{
+uint32_t KeyboardEvent::CharCode(CallerType aCallerType) {
   WidgetKeyboardEvent* widgetKeyboardEvent = mEvent->AsKeyboardEvent();
   if (mInitializedByJS) {
     // If this is initialized by Ctor, we should return the initialized value.
@@ -187,8 +159,9 @@ KeyboardEvent::CharCode(CallerType aCallerType)
     // initialized value only when eKeyPress or eAccessKeyNotFound event.
     // Although this is odd, but our traditional behavior.
     return widgetKeyboardEvent->mMessage == eKeyPress ||
-           widgetKeyboardEvent->mMessage == eAccessKeyNotFound ?
-             widgetKeyboardEvent->mCharCode : 0;
+                   widgetKeyboardEvent->mMessage == eAccessKeyNotFound
+               ? widgetKeyboardEvent->mCharCode
+               : 0;
   }
 
   // If the key is a function key, we should return the result of KeyCode()
@@ -205,9 +178,7 @@ KeyboardEvent::CharCode(CallerType aCallerType)
   return widgetKeyboardEvent->mCharCode;
 }
 
-uint32_t
-KeyboardEvent::KeyCode(CallerType aCallerType)
-{
+uint32_t KeyboardEvent::KeyCode(CallerType aCallerType) {
   WidgetKeyboardEvent* widgetKeyboardEvent = mEvent->AsKeyboardEvent();
   if (mInitializedByJS) {
     // If this is initialized by Ctor, we should return the initialized value.
@@ -222,8 +193,9 @@ KeyboardEvent::KeyCode(CallerType aCallerType)
     //       since if the event is generated by JS, the behavior shouldn't
     //       be changed by whether spoofing is enabled or not.  Therefore,
     //       we take back the original behavior.
-    return widgetKeyboardEvent->HasKeyEventMessage() ?
-             widgetKeyboardEvent->mKeyCode : 0;
+    return widgetKeyboardEvent->HasKeyEventMessage()
+               ? widgetKeyboardEvent->mKeyCode
+               : 0;
   }
 
   // If the key is not a function key, i.e., the key may be a printable key
@@ -239,10 +211,8 @@ KeyboardEvent::KeyCode(CallerType aCallerType)
   return ComputeTraditionalKeyCode(*widgetKeyboardEvent, aCallerType);
 }
 
-uint32_t
-KeyboardEvent::ComputeTraditionalKeyCode(WidgetKeyboardEvent& aKeyboardEvent,
-                                         CallerType aCallerType)
-{
+uint32_t KeyboardEvent::ComputeTraditionalKeyCode(
+    WidgetKeyboardEvent& aKeyboardEvent, CallerType aCallerType) {
   if (!ShouldResistFingerprinting(aCallerType)) {
     return aKeyboardEvent.mKeyCode;
   }
@@ -267,9 +237,7 @@ KeyboardEvent::ComputeTraditionalKeyCode(WidgetKeyboardEvent& aKeyboardEvent,
   return 0;
 }
 
-uint32_t
-KeyboardEvent::Which(CallerType aCallerType)
-{
+uint32_t KeyboardEvent::Which(CallerType aCallerType) {
   // If this event is initialized with ctor, which can have independent value.
   if (mInitializedByCtor) {
     return mInitializedWhichValue;
@@ -282,8 +250,8 @@ KeyboardEvent::Which(CallerType aCallerType)
     case eKeyUpOnPlugin:
       return KeyCode(aCallerType);
     case eKeyPress:
-      //Special case for 4xp bug 62878.  Try to make value of which
-      //more closely mirror the values that 4.x gave for RETURN and BACKSPACE
+      // Special case for 4xp bug 62878.  Try to make value of which
+      // more closely mirror the values that 4.x gave for RETURN and BACKSPACE
       {
         uint32_t keyCode = mEvent->AsKeyboardEvent()->mKeyCode;
         if (keyCode == NS_VK_RETURN || keyCode == NS_VK_BACK) {
@@ -298,37 +266,28 @@ KeyboardEvent::Which(CallerType aCallerType)
   return 0;
 }
 
-uint32_t
-KeyboardEvent::Location()
-{
+uint32_t KeyboardEvent::Location() {
   return mEvent->AsKeyboardEvent()->mLocation;
 }
 
 // static
-already_AddRefed<KeyboardEvent>
-KeyboardEvent::ConstructorJS(const GlobalObject& aGlobal,
-                             const nsAString& aType,
-                             const KeyboardEventInit& aParam,
-                             ErrorResult& aRv)
-{
+already_AddRefed<KeyboardEvent> KeyboardEvent::ConstructorJS(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const KeyboardEventInit& aParam, ErrorResult& aRv) {
   nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<KeyboardEvent> newEvent =
-    new KeyboardEvent(target, nullptr, nullptr);
+  RefPtr<KeyboardEvent> newEvent = new KeyboardEvent(target, nullptr, nullptr);
   newEvent->InitWithKeyboardEventInit(target, aType, aParam, aRv);
 
   return newEvent.forget();
 }
 
-void
-KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
-                                         const nsAString& aType,
-                                         const KeyboardEventInit& aParam,
-                                         ErrorResult& aRv)
-{
+void KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
+                                              const nsAString& aType,
+                                              const KeyboardEventInit& aParam,
+                                              ErrorResult& aRv) {
   bool trusted = Init(aOwner);
-  InitKeyEventJS(aType, aParam.mBubbles, aParam.mCancelable,
-                 aParam.mView, false, false, false, false,
-                 aParam.mKeyCode, aParam.mCharCode);
+  InitKeyEventJS(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
+                 false, false, false, false, aParam.mKeyCode, aParam.mCharCode);
   InitModifiers(aParam);
   SetTrusted(trusted);
   mDetail = aParam.mDetail;
@@ -341,24 +300,22 @@ KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
   internalEvent->mIsRepeat = aParam.mRepeat;
   internalEvent->mIsComposing = aParam.mIsComposing;
   internalEvent->mKeyNameIndex =
-    WidgetKeyboardEvent::GetKeyNameIndex(aParam.mKey);
+      WidgetKeyboardEvent::GetKeyNameIndex(aParam.mKey);
   if (internalEvent->mKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
     internalEvent->mKeyValue = aParam.mKey;
   }
   internalEvent->mCodeNameIndex =
-    WidgetKeyboardEvent::GetCodeNameIndex(aParam.mCode);
+      WidgetKeyboardEvent::GetCodeNameIndex(aParam.mCode);
   if (internalEvent->mCodeNameIndex == CODE_NAME_INDEX_USE_STRING) {
     internalEvent->mCodeValue = aParam.mCode;
   }
 }
 
-void
-KeyboardEvent::InitKeyEventJS(const nsAString& aType, bool aCanBubble,
-                              bool aCancelable, nsGlobalWindowInner* aView,
-                              bool aCtrlKey, bool aAltKey,
-                              bool aShiftKey, bool aMetaKey,
-                              uint32_t aKeyCode, uint32_t aCharCode)
-{
+void KeyboardEvent::InitKeyEventJS(const nsAString& aType, bool aCanBubble,
+                                   bool aCancelable, nsGlobalWindowInner* aView,
+                                   bool aCtrlKey, bool aAltKey, bool aShiftKey,
+                                   bool aMetaKey, uint32_t aKeyCode,
+                                   uint32_t aCharCode) {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
   mInitializedByJS = true;
   mInitializedByCtor = false;
@@ -371,19 +328,13 @@ KeyboardEvent::InitKeyEventJS(const nsAString& aType, bool aCanBubble,
   keyEvent->mCharCode = aCharCode;
 }
 
-void
-KeyboardEvent::InitKeyboardEventJS(const nsAString& aType,
-                                   bool aCanBubble,
-                                   bool aCancelable,
-                                   nsGlobalWindowInner* aView,
-                                   const nsAString& aKey,
-                                   uint32_t aLocation,
-                                   bool aCtrlKey,
-                                   bool aAltKey,
-                                   bool aShiftKey,
-                                   bool aMetaKey,
-                                   ErrorResult& aRv)
-{
+void KeyboardEvent::InitKeyboardEventJS(const nsAString& aType, bool aCanBubble,
+                                        bool aCancelable,
+                                        nsGlobalWindowInner* aView,
+                                        const nsAString& aKey,
+                                        uint32_t aLocation, bool aCtrlKey,
+                                        bool aAltKey, bool aShiftKey,
+                                        bool aMetaKey, ErrorResult& aRv) {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
   mInitializedByJS = true;
   mInitializedByCtor = false;
@@ -397,9 +348,7 @@ KeyboardEvent::InitKeyboardEventJS(const nsAString& aType,
   keyEvent->mKeyValue = aKey;
 }
 
-bool
-KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType)
-{
+bool KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType) {
   // There are five situations we don't need to spoof this keyboard event.
   //   1. This event is initialized by scripts.
   //   2. This event is from Numpad.
@@ -407,12 +356,11 @@ KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType)
   //   4. The caller type is system.
   //   5. The pref privcy.resistFingerprinting' is false, we fast return here
   //      since we don't need to do any QI of following codes.
-  if (mInitializedByJS ||
-      aCallerType == CallerType::System ||
+  if (mInitializedByJS || aCallerType == CallerType::System ||
       mEvent->mFlags.mInSystemGroup ||
       !nsContentUtils::ShouldResistFingerprinting() ||
       mEvent->AsKeyboardEvent()->mLocation ==
-        KeyboardEvent_Binding::DOM_KEY_LOCATION_NUMPAD) {
+          KeyboardEvent_Binding::DOM_KEY_LOCATION_NUMPAD) {
     return false;
   }
 
@@ -421,34 +369,28 @@ KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType)
   return doc && !nsContentUtils::IsChromeDoc(doc);
 }
 
-bool
-KeyboardEvent::GetSpoofedModifierStates(const Modifiers aModifierKey,
-                                        const bool aRawModifierState)
-{
+bool KeyboardEvent::GetSpoofedModifierStates(const Modifiers aModifierKey,
+                                             const bool aRawModifierState) {
   bool spoofedState;
   nsCOMPtr<nsIDocument> doc = GetDocument();
 
-  if(nsRFPService::GetSpoofedModifierStates(doc,
-                                            mEvent->AsKeyboardEvent(),
-                                            aModifierKey,
-                                            spoofedState)) {
+  if (nsRFPService::GetSpoofedModifierStates(doc, mEvent->AsKeyboardEvent(),
+                                             aModifierKey, spoofedState)) {
     return spoofedState;
   }
 
   return aRawModifierState;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-already_AddRefed<KeyboardEvent>
-NS_NewDOMKeyboardEvent(EventTarget* aOwner,
-                       nsPresContext* aPresContext,
-                       WidgetKeyboardEvent* aEvent)
-{
+already_AddRefed<KeyboardEvent> NS_NewDOMKeyboardEvent(
+    EventTarget* aOwner, nsPresContext* aPresContext,
+    WidgetKeyboardEvent* aEvent) {
   RefPtr<KeyboardEvent> it = new KeyboardEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

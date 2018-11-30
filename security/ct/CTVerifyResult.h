@@ -12,20 +12,19 @@
 #include "CTLog.h"
 #include "SignedCertificateTimestamp.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // Holds a verified Signed Certificate Timestamp along with the verification
 // status (e.g. valid/invalid) and additional information related to the
 // verification.
-struct VerifiedSCT
-{
+struct VerifiedSCT {
   VerifiedSCT();
 
   // The original SCT.
   SignedCertificateTimestamp sct;
 
-  enum class Status
-  {
+  enum class Status {
     None,
     // The SCT is from a known log, and the signature is valid.
     Valid,
@@ -41,8 +40,7 @@ struct VerifiedSCT
     InvalidTimestamp,
   };
 
-  enum class Origin
-  {
+  enum class Origin {
     Unknown,
     Embedded,
     TLSExtension,
@@ -58,9 +56,8 @@ struct VerifiedSCT
 typedef std::vector<VerifiedSCT> VerifiedSCTList;
 
 // Holds Signed Certificate Timestamps verification results.
-class CTVerifyResult
-{
-public:
+class CTVerifyResult {
+ public:
   // SCTs that were processed during the verification along with their
   // verification results.
   VerifiedSCTList verifiedScts;
@@ -79,6 +76,7 @@ public:
   void Reset();
 };
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
 #endif  // CTVerifyResult_h

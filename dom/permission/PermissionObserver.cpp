@@ -18,19 +18,13 @@ namespace dom {
 
 namespace {
 PermissionObserver* gInstance = nullptr;
-} // namespace
+}  // namespace
 
-NS_IMPL_ISUPPORTS(PermissionObserver,
-                  nsIObserver,
-                  nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(PermissionObserver, nsIObserver, nsISupportsWeakReference)
 
-PermissionObserver::PermissionObserver()
-{
-  MOZ_ASSERT(!gInstance);
-}
+PermissionObserver::PermissionObserver() { MOZ_ASSERT(!gInstance); }
 
-PermissionObserver::~PermissionObserver()
-{
+PermissionObserver::~PermissionObserver() {
   MOZ_ASSERT(mSinks.IsEmpty());
   MOZ_ASSERT(gInstance == this);
 
@@ -38,8 +32,7 @@ PermissionObserver::~PermissionObserver()
 }
 
 /* static */ already_AddRefed<PermissionObserver>
-PermissionObserver::GetInstance()
-{
+PermissionObserver::GetInstance() {
   RefPtr<PermissionObserver> instance = gInstance;
   if (!instance) {
     instance = new PermissionObserver();
@@ -60,27 +53,22 @@ PermissionObserver::GetInstance()
   return instance.forget();
 }
 
-void
-PermissionObserver::AddSink(PermissionStatus* aSink)
-{
+void PermissionObserver::AddSink(PermissionStatus* aSink) {
   MOZ_ASSERT(aSink);
   MOZ_ASSERT(!mSinks.Contains(aSink));
 
   mSinks.AppendElement(aSink);
 }
 
-void
-PermissionObserver::RemoveSink(PermissionStatus* aSink)
-{
+void PermissionObserver::RemoveSink(PermissionStatus* aSink) {
   MOZ_ASSERT(aSink);
   MOZ_ASSERT(mSinks.Contains(aSink));
 
   mSinks.RemoveElement(aSink);
 }
 
-void
-PermissionObserver::Notify(PermissionName aName, nsIPrincipal& aPrincipal)
-{
+void PermissionObserver::Notify(PermissionName aName,
+                                nsIPrincipal& aPrincipal) {
   for (auto* sink : mSinks) {
     if (sink->mName != aName) {
       continue;
@@ -96,10 +84,8 @@ PermissionObserver::Notify(PermissionName aName, nsIPrincipal& aPrincipal)
 }
 
 NS_IMETHODIMP
-PermissionObserver::Observe(nsISupports* aSubject,
-                            const char* aTopic,
-                            const char16_t* aData)
-{
+PermissionObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                            const char16_t* aData) {
   MOZ_ASSERT(!strcmp(aTopic, "perm-changed"));
 
   if (mSinks.IsEmpty()) {
@@ -127,5 +113,5 @@ PermissionObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

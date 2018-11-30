@@ -18,10 +18,9 @@ namespace Telemetry {
  * untrusted module data. The promise is either resolved with the JS object
  * ping payload, or is rejected upon failure.
  */
-nsresult
-GetUntrustedModuleLoadEvents(JSContext *cx, dom::Promise** aPromise);
+nsresult GetUntrustedModuleLoadEvents(JSContext* cx, dom::Promise** aPromise);
 
-} // namespace Telemetry
-} // namespace mozilla
+}  // namespace Telemetry
+}  // namespace mozilla
 
-#endif // telemetry_UntrustedModules_h__
+#endif  // telemetry_UntrustedModules_h__

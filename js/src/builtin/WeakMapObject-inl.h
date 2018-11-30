@@ -15,58 +15,55 @@
 
 namespace js {
 
-static bool
-TryPreserveReflector(JSContext* cx, HandleObject obj)
-{
-    if (obj->getClass()->isWrappedNative() ||
-        obj->getClass()->isDOMClass() ||
-        (obj->is<ProxyObject>() &&
-         obj->as<ProxyObject>().handler()->family() == GetDOMProxyHandlerFamily()))
-    {
-        MOZ_ASSERT(cx->runtime()->preserveWrapperCallback);
-        if (!cx->runtime()->preserveWrapperCallback(cx, obj)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_WEAKMAP_KEY);
-            return false;
-        }
+static bool TryPreserveReflector(JSContext* cx, HandleObject obj) {
+  if (obj->getClass()->isWrappedNative() || obj->getClass()->isDOMClass() ||
+      (obj->is<ProxyObject>() && obj->as<ProxyObject>().handler()->family() ==
+                                     GetDOMProxyHandlerFamily())) {
+    MOZ_ASSERT(cx->runtime()->preserveWrapperCallback);
+    if (!cx->runtime()->preserveWrapperCallback(cx, obj)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_BAD_WEAKMAP_KEY);
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
-static MOZ_ALWAYS_INLINE bool
-WeakCollectionPutEntryInternal(JSContext* cx, Handle<WeakCollectionObject*> obj,
-                               HandleObject key, HandleValue value)
-{
-    ObjectValueMap* map = obj->getMap();
-    if (!map) {
-        auto newMap = cx->make_unique<ObjectValueMap>(cx, obj.get());
-        if (!newMap) {
-            return false;
-        }
-        map = newMap.release();
-        obj->setPrivate(map);
+static MOZ_ALWAYS_INLINE bool WeakCollectionPutEntryInternal(
+    JSContext* cx, Handle<WeakCollectionObject*> obj, HandleObject key,
+    HandleValue value) {
+  ObjectValueMap* map = obj->getMap();
+  if (!map) {
+    auto newMap = cx->make_unique<ObjectValueMap>(cx, obj.get());
+    if (!newMap) {
+      return false;
     }
+    map = newMap.release();
+    obj->setPrivate(map);
+  }
 
-    // Preserve wrapped native keys to prevent wrapper optimization.
-    if (!TryPreserveReflector(cx, key)) {
-        return false;
-    }
+  // Preserve wrapped native keys to prevent wrapper optimization.
+  if (!TryPreserveReflector(cx, key)) {
+    return false;
+  }
 
-    if (JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp()) {
-        RootedObject delegate(cx, op(key));
-        if (delegate && !TryPreserveReflector(cx, delegate)) {
-            return false;
-        }
+  if (JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp()) {
+    RootedObject delegate(cx, op(key));
+    if (delegate && !TryPreserveReflector(cx, delegate)) {
+      return false;
     }
+  }
 
-    MOZ_ASSERT(key->compartment() == obj->compartment());
-    MOZ_ASSERT_IF(value.isObject(), value.toObject().compartment() == obj->compartment());
-    if (!map->put(key, value)) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-    return true;
+  MOZ_ASSERT(key->compartment() == obj->compartment());
+  MOZ_ASSERT_IF(value.isObject(),
+                value.toObject().compartment() == obj->compartment());
+  if (!map->put(key, value)) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
-} // namespace js
+}  // namespace js
 
 #endif /* builtin_WeakMapObject_inl_h */

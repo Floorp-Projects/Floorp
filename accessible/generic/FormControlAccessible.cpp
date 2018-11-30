@@ -17,21 +17,11 @@ using namespace mozilla::a11y;
 // CheckboxAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-role
-CheckboxAccessible::NativeRole() const
-{
-  return roles::CHECKBUTTON;
-}
+role CheckboxAccessible::NativeRole() const { return roles::CHECKBUTTON; }
 
-uint8_t
-CheckboxAccessible::ActionCount() const
-{
-  return 1;
-}
+uint8_t CheckboxAccessible::ActionCount() const { return 1; }
 
-void
-CheckboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
-{
+void CheckboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Click) {
     uint64_t state = NativeState();
     if (state & states::CHECKED) {
@@ -44,9 +34,7 @@ CheckboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
   }
 }
 
-bool
-CheckboxAccessible::DoAction(uint8_t aIndex) const
-{
+bool CheckboxAccessible::DoAction(uint8_t aIndex) const {
   if (aIndex != eAction_Click) {
     return false;
   }
@@ -54,14 +42,12 @@ CheckboxAccessible::DoAction(uint8_t aIndex) const
   return true;
 }
 
-uint64_t
-CheckboxAccessible::NativeState() const
-{
+uint64_t CheckboxAccessible::NativeState() const {
   uint64_t state = LeafAccessible::NativeState();
 
   state |= states::CHECKABLE;
   dom::HTMLInputElement* input = dom::HTMLInputElement::FromNode(mContent);
-  if (input) { // HTML:input@type="checkbox"
+  if (input) {  // HTML:input@type="checkbox"
     if (input->Indeterminate()) {
       return state | states::MIXED;
     }
@@ -70,10 +56,9 @@ CheckboxAccessible::NativeState() const
       return state | states::CHECKED;
     }
 
-  } else if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                nsGkAtoms::checked,
-                                                nsGkAtoms::_true,
-                                                eCaseMatters)) { // XUL checkbox
+  } else if (mContent->AsElement()->AttrValueIs(
+                 kNameSpaceID_None, nsGkAtoms::checked, nsGkAtoms::_true,
+                 eCaseMatters)) {  // XUL checkbox
     return state | states::CHECKED;
   }
 
@@ -83,57 +68,32 @@ CheckboxAccessible::NativeState() const
 ////////////////////////////////////////////////////////////////////////////////
 // CheckboxAccessible: Widgets
 
-bool
-CheckboxAccessible::IsWidget() const
-{
-  return true;
-}
-
+bool CheckboxAccessible::IsWidget() const { return true; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // RadioButtonAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-RadioButtonAccessible::
-  RadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  LeafAccessible(aContent, aDoc)
-{
+RadioButtonAccessible::RadioButtonAccessible(nsIContent* aContent,
+                                             DocAccessible* aDoc)
+    : LeafAccessible(aContent, aDoc) {}
+
+uint8_t RadioButtonAccessible::ActionCount() const { return 1; }
+
+void RadioButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
+  if (aIndex == eAction_Click) aName.AssignLiteral("select");
 }
 
-uint8_t
-RadioButtonAccessible::ActionCount() const
-{
-  return 1;
-}
-
-void
-RadioButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
-{
-  if (aIndex == eAction_Click)
-    aName.AssignLiteral("select");
-}
-
-bool
-RadioButtonAccessible::DoAction(uint8_t aIndex) const
-{
-  if (aIndex != eAction_Click)
-    return false;
+bool RadioButtonAccessible::DoAction(uint8_t aIndex) const {
+  if (aIndex != eAction_Click) return false;
 
   DoCommand();
   return true;
 }
 
-role
-RadioButtonAccessible::NativeRole() const
-{
-  return roles::RADIOBUTTON;
-}
+role RadioButtonAccessible::NativeRole() const { return roles::RADIOBUTTON; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // RadioButtonAccessible: Widgets
 
-bool
-RadioButtonAccessible::IsWidget() const
-{
-  return true;
-}
+bool RadioButtonAccessible::IsWidget() const { return true; }

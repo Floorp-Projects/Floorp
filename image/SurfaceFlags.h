@@ -17,9 +17,8 @@ namespace image {
  * combinations of these flags result in logically different surfaces, these
  * flags must be taken into account in SurfaceCache lookups.
  */
-enum class SurfaceFlags : uint8_t
-{
-  NO_PREMULTIPLY_ALPHA     = 1 << 0,
+enum class SurfaceFlags : uint8_t {
+  NO_PREMULTIPLY_ALPHA = 1 << 0,
   NO_COLORSPACE_CONVERSION = 1 << 1
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SurfaceFlags)
@@ -27,19 +26,13 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SurfaceFlags)
 /**
  * @return the default set of surface flags.
  */
-inline SurfaceFlags
-DefaultSurfaceFlags()
-{
-  return SurfaceFlags();
-}
+inline SurfaceFlags DefaultSurfaceFlags() { return SurfaceFlags(); }
 
 /**
  * Given a set of imgIContainer FLAG_* flags, returns a set of SurfaceFlags with
  * the corresponding flags set.
  */
-inline SurfaceFlags
-ToSurfaceFlags(uint32_t aFlags)
-{
+inline SurfaceFlags ToSurfaceFlags(uint32_t aFlags) {
   SurfaceFlags flags = DefaultSurfaceFlags();
   if (aFlags & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA) {
     flags |= SurfaceFlags::NO_PREMULTIPLY_ALPHA;
@@ -54,9 +47,7 @@ ToSurfaceFlags(uint32_t aFlags)
  * Given a set of SurfaceFlags, returns a set of imgIContainer FLAG_* flags with
  * the corresponding flags set.
  */
-inline uint32_t
-FromSurfaceFlags(SurfaceFlags aFlags)
-{
+inline uint32_t FromSurfaceFlags(SurfaceFlags aFlags) {
   uint32_t flags = imgIContainer::DECODE_FLAGS_DEFAULT;
   if (aFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA) {
     flags |= imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
@@ -67,7 +58,7 @@ FromSurfaceFlags(SurfaceFlags aFlags)
   return flags;
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_SurfaceFlags_h
+#endif  // mozilla_image_SurfaceFlags_h

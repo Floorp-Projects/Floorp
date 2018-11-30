@@ -31,8 +31,8 @@ NS_IMPL_ISUPPORTS(nsPingListener, nsIStreamListener, nsIRequestObserver)
 // <a ping> support
 //*****************************************************************************
 
-#define PREF_PINGS_ENABLED           "browser.send_pings"
-#define PREF_PINGS_MAX_PER_LINK      "browser.send_pings.max_per_link"
+#define PREF_PINGS_ENABLED "browser.send_pings"
+#define PREF_PINGS_MAX_PER_LINK "browser.send_pings.max_per_link"
 #define PREF_PINGS_REQUIRE_SAME_HOST "browser.send_pings.require_same_host"
 
 // Check prefs to see if pings are enabled and if so what restrictions might
@@ -51,9 +51,7 @@ NS_IMPL_ISUPPORTS(nsPingListener, nsIStreamListener, nsIRequestObserver)
 // @returns
 //   true if pings are enabled and false otherwise.
 //
-static bool
-PingsEnabled(int32_t* aMaxPerLink, bool* aRequireSameHost)
-{
+static bool PingsEnabled(int32_t* aMaxPerLink, bool* aRequireSameHost) {
   bool allow = Preferences::GetBool(PREF_PINGS_ENABLED, false);
 
   *aMaxPerLink = 1;
@@ -70,17 +68,14 @@ PingsEnabled(int32_t* aMaxPerLink, bool* aRequireSameHost)
 // We wait this many milliseconds before killing the ping channel...
 #define PING_TIMEOUT 10000
 
-static void
-OnPingTimeout(nsITimer* aTimer, void* aClosure)
-{
+static void OnPingTimeout(nsITimer* aTimer, void* aClosure) {
   nsILoadGroup* loadGroup = static_cast<nsILoadGroup*>(aClosure);
   if (loadGroup) {
     loadGroup->Cancel(NS_ERROR_ABORT);
   }
 }
 
-struct MOZ_STACK_CLASS SendPingInfo
-{
+struct MOZ_STACK_CLASS SendPingInfo {
   int32_t numPings;
   int32_t maxPings;
   bool requireSameHost;
@@ -90,10 +85,8 @@ struct MOZ_STACK_CLASS SendPingInfo
   uint32_t referrerPolicy;
 };
 
-static void
-SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
-         nsIIOService* aIOService)
-{
+static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
+                     nsIIOService* aIOService) {
   SendPingInfo* info = static_cast<SendPingInfo*>(aClosure);
   if (info->maxPings > -1 && info->numPings >= info->maxPings) {
     return;
@@ -102,17 +95,15 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
   nsIDocument* doc = aContent->OwnerDoc();
 
   nsCOMPtr<nsIChannel> chan;
-  NS_NewChannel(getter_AddRefs(chan),
-                aURI,
-                doc,
+  NS_NewChannel(getter_AddRefs(chan), aURI, doc,
                 info->requireSameHost
-                  ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
-                  : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                    ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
+                    : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                 nsIContentPolicy::TYPE_PING,
-                nullptr,   // PerformanceStorage
-                nullptr, // aLoadGroup
-                nullptr, // aCallbacks
-                nsIRequest::LOAD_NORMAL, // aLoadFlags,
+                nullptr,                  // PerformanceStorage
+                nullptr,                  // aLoadGroup
+                nullptr,                  // aCallbacks
+                nsIRequest::LOAD_NORMAL,  // aLoadFlags,
                 aIOService);
 
   if (!chan) {
@@ -121,7 +112,8 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
 
   // Don't bother caching the result of this URI load, but do not exempt
   // it from Safe Browsing.
-  chan->SetLoadFlags(nsIRequest::INHIBIT_CACHING | nsIChannel::LOAD_CLASSIFY_URI);
+  chan->SetLoadFlags(nsIRequest::INHIBIT_CACHING |
+                     nsIChannel::LOAD_CLASSIFY_URI);
 
   nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(chan);
   if (!httpChan) {
@@ -140,8 +132,8 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Remove extraneous request headers (to reduce request size)
-  rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept"),
-                                  EmptyCString(), false);
+  rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept"), EmptyCString(),
+                                  false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-language"),
                                   EmptyCString(), false);
@@ -153,12 +145,13 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
   // Always send a Ping-To header.
   nsAutoCString pingTo;
   if (NS_SUCCEEDED(info->target->GetSpec(pingTo))) {
-    rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Ping-To"), pingTo, false);
+    rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Ping-To"), pingTo,
+                                    false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   nsCOMPtr<nsIScriptSecurityManager> sm =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
 
   if (sm && info->referrer) {
     bool referrerIsSecure;
@@ -171,11 +164,11 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     bool isPrivateWin = false;
     if (doc) {
       isPrivateWin =
-        doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
+          doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
     }
 
-    bool sameOrigin =
-      NS_SUCCEEDED(sm->CheckSameOriginURI(info->referrer, aURI, false, isPrivateWin));
+    bool sameOrigin = NS_SUCCEEDED(
+        sm->CheckSameOriginURI(info->referrer, aURI, false, isPrivateWin));
 
     // If both the address of the document containing the hyperlink being
     // audited and "ping URL" have the same origin or the document containing
@@ -194,7 +187,8 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     // over an encrypted connection and its address does not have the same
     // origin as "ping URL", send a referrer.
     if (!sameOrigin && !referrerIsSecure) {
-      rv = httpChan->SetReferrerWithPolicy(info->referrer, info->referrerPolicy);
+      rv =
+          httpChan->SetReferrerWithPolicy(info->referrer, info->referrerPolicy);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -212,10 +206,9 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     return;
   }
 
-  uploadChan->ExplicitSetUploadStream(uploadStream,
-                                      NS_LITERAL_CSTRING("text/ping"),
-                                      uploadData.Length(),
-                                      NS_LITERAL_CSTRING("POST"), false);
+  uploadChan->ExplicitSetUploadStream(
+      uploadStream, NS_LITERAL_CSTRING("text/ping"), uploadData.Length(),
+      NS_LITERAL_CSTRING("POST"), false);
 
   // The channel needs to have a loadgroup associated with it, so that we can
   // cancel the channel and any redirected channels it may create.
@@ -250,9 +243,8 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
 typedef void (*ForEachPingCallback)(void* closure, nsIContent* content,
                                     nsIURI* uri, nsIIOService* ios);
 
-static void
-ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback, void* aClosure)
-{
+static void ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback,
+                        void* aClosure) {
   // NOTE: Using nsIDOMHTMLAnchorElement::GetPing isn't really worth it here
   //       since we'd still need to parse the resulting string.  Instead, we
   //       just parse the raw attribute.  It might be nice if the content node
@@ -283,15 +275,15 @@ ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback, void* aClosure)
 
   while (tokenizer.hasMoreTokens()) {
     nsCOMPtr<nsIURI> uri, baseURI = aContent->GetBaseURI();
-    ios->NewURI(NS_ConvertUTF16toUTF8(tokenizer.nextToken()),
-                charset.get(), baseURI, getter_AddRefs(uri));
+    ios->NewURI(NS_ConvertUTF16toUTF8(tokenizer.nextToken()), charset.get(),
+                baseURI, getter_AddRefs(uri));
     // if we can't generate a valid URI, then there is nothing to do
     if (!uri) {
       continue;
     }
     // Explicitly not allow loading data: URIs
     bool isDataScheme =
-      (NS_SUCCEEDED(uri->SchemeIs("data", &isDataScheme)) && isDataScheme);
+        (NS_SUCCEEDED(uri->SchemeIs("data", &isDataScheme)) && isDataScheme);
 
     if (!isDataScheme) {
       aCallback(aClosure, aContent, uri, ios);
@@ -300,13 +292,11 @@ ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback, void* aClosure)
 }
 
 // Spec: http://whatwg.org/specs/web-apps/current-work/#ping
-/*static*/ void
-nsPingListener::DispatchPings(nsIDocShell* aDocShell,
-                              nsIContent* aContent,
-                              nsIURI* aTarget,
-                              nsIURI* aReferrer,
-                              uint32_t aReferrerPolicy)
-{
+/*static*/ void nsPingListener::DispatchPings(nsIDocShell* aDocShell,
+                                              nsIContent* aContent,
+                                              nsIURI* aTarget,
+                                              nsIURI* aReferrer,
+                                              uint32_t aReferrerPolicy) {
   SendPingInfo info;
 
   if (!PingsEnabled(&info.maxPings, &info.requireSameHost)) {
@@ -325,47 +315,38 @@ nsPingListener::DispatchPings(nsIDocShell* aDocShell,
   ForEachPing(aContent, SendPing, &info);
 }
 
-nsPingListener::~nsPingListener()
-{
+nsPingListener::~nsPingListener() {
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nullptr;
   }
 }
 
-nsresult
-nsPingListener::StartTimeout(DocGroup* aDocGroup)
-{
+nsresult nsPingListener::StartTimeout(DocGroup* aDocGroup) {
   NS_ENSURE_ARG(aDocGroup);
 
-  return NS_NewTimerWithFuncCallback(getter_AddRefs(mTimer),
-                                     OnPingTimeout,
-                                     mLoadGroup,
-                                     PING_TIMEOUT,
-                                     nsITimer::TYPE_ONE_SHOT,
-                                     "nsPingListener::StartTimeout",
-                                     aDocGroup->EventTargetFor(TaskCategory::Network));
+  return NS_NewTimerWithFuncCallback(
+      getter_AddRefs(mTimer), OnPingTimeout, mLoadGroup, PING_TIMEOUT,
+      nsITimer::TYPE_ONE_SHOT, "nsPingListener::StartTimeout",
+      aDocGroup->EventTargetFor(TaskCategory::Network));
 }
 
 NS_IMETHODIMP
-nsPingListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
-{
+nsPingListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPingListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                 nsIInputStream* aStream, uint64_t aOffset,
-                                uint32_t aCount)
-{
+                                uint32_t aCount) {
   uint32_t result;
   return aStream->ReadSegments(NS_DiscardSegment, nullptr, aCount, &result);
 }
 
 NS_IMETHODIMP
 nsPingListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                              nsresult aStatus)
-{
+                              nsresult aStatus) {
   mLoadGroup = nullptr;
 
   if (mTimer) {

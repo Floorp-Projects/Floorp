@@ -20,10 +20,8 @@
  * domain out of the username if necessary and sets domain, username and
  * password on the auth information object.
  */
-inline void
-NS_SetAuthInfo(nsIAuthInformation* aAuthInfo, const nsString& aUser,
-               const nsString& aPassword)
-{
+inline void NS_SetAuthInfo(nsIAuthInformation* aAuthInfo, const nsString& aUser,
+                           const nsString& aPassword) {
   uint32_t flags;
   aAuthInfo->GetFlags(&flags);
   if (flags & nsIAuthInformation::NEED_DOMAIN) {
@@ -54,10 +52,10 @@ NS_SetAuthInfo(nsIAuthInformation* aAuthInfo, const nsString& aUser,
  *        explicitly specified (when false, the port will be returned as -1 in
  *        this case)
  */
-inline void
-NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
-                   bool aMachineProcessing, nsCString& aHost, int32_t* aPort)
-{
+inline void NS_GetAuthHostPort(nsIChannel* aChannel,
+                               nsIAuthInformation* aAuthInfo,
+                               bool aMachineProcessing, nsCString& aHost,
+                               int32_t* aPort) {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) {
@@ -81,7 +79,7 @@ NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
 
     if (aMachineProcessing) {
       nsCOMPtr<nsIIDNService> idnService =
-        do_GetService(NS_IDNSERVICE_CONTRACTID);
+          do_GetService(NS_IDNSERVICE_CONTRACTID);
       if (idnService) {
         idnService->ConvertUTF8toACE(idnhost, aHost);
       } else {
@@ -107,10 +105,8 @@ NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
  * function uses the same format that Gecko functions have always used, thus
  * ensuring backwards compatibility.
  */
-inline void
-NS_GetAuthKey(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
-              nsCString& aKey)
-{
+inline void NS_GetAuthKey(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
+                          nsCString& aKey) {
   // HTTP does this differently from other protocols
   nsCOMPtr<nsIHttpChannel> http(do_QueryInterface(aChannel));
   if (!http) {

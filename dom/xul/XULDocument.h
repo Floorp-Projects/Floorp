@@ -28,7 +28,7 @@
 
 class nsPIWindowRoot;
 class nsXULPrototypeElement;
-#if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
+#if 0  // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 #else
@@ -52,299 +52,285 @@ namespace dom {
 class XULDocument final : public XMLDocument,
                           public nsIStreamLoaderObserver,
                           public nsICSSLoaderObserver,
-                          public nsIOffThreadScriptReceiver
-{
-public:
-    XULDocument();
+                          public nsIOffThreadScriptReceiver {
+ public:
+  XULDocument();
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSISTREAMLOADEROBSERVER
+  // nsISupports interface
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSISTREAMLOADEROBSERVER
 
-    // nsIDocument interface
-    virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;
-    virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup,
-                            nsIPrincipal* aPrincipal) override;
+  // nsIDocument interface
+  virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;
+  virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
+                          nsIPrincipal* aPrincipal) override;
 
-    virtual nsresult StartDocumentLoad(const char* aCommand,
-                                       nsIChannel *channel,
-                                       nsILoadGroup* aLoadGroup,
-                                       nsISupports* aContainer,
-                                       nsIStreamListener **aDocListener,
-                                       bool aReset = true,
-                                       nsIContentSink* aSink = nullptr) override;
+  virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* channel,
+                                     nsILoadGroup* aLoadGroup,
+                                     nsISupports* aContainer,
+                                     nsIStreamListener** aDocListener,
+                                     bool aReset = true,
+                                     nsIContentSink* aSink = nullptr) override;
 
-    virtual void SetContentType(const nsAString& aContentType) override;
+  virtual void SetContentType(const nsAString& aContentType) override;
 
-    virtual void EndLoad() override;
+  virtual void EndLoad() override;
 
-    // nsIMutationObserver interface
-    NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-    NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-    NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  // nsIMutationObserver interface
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-    /**
-     * Notify the XUL document that a subtree has been added
-     */
-    void AddSubtreeToDocument(nsIContent* aContent);
-    /**
-     * This is invoked whenever the prototype for this document is loaded
-     * and should be walked, regardless of whether the XUL cache is
-     * disabled, whether the protototype was loaded, whether the
-     * prototype was loaded from the cache or created by parsing the
-     * actual XUL source, etc.
-     *
-     * @param aResumeWalk whether this should also call ResumeWalk().
-     * Sometimes the caller of OnPrototypeLoadDone resumes the walk itself
-     */
-    nsresult OnPrototypeLoadDone(bool aResumeWalk);
+  /**
+   * Notify the XUL document that a subtree has been added
+   */
+  void AddSubtreeToDocument(nsIContent* aContent);
+  /**
+   * This is invoked whenever the prototype for this document is loaded
+   * and should be walked, regardless of whether the XUL cache is
+   * disabled, whether the protototype was loaded, whether the
+   * prototype was loaded from the cache or created by parsing the
+   * actual XUL source, etc.
+   *
+   * @param aResumeWalk whether this should also call ResumeWalk().
+   * Sometimes the caller of OnPrototypeLoadDone resumes the walk itself
+   */
+  nsresult OnPrototypeLoadDone(bool aResumeWalk);
 
-    // nsINode interface overrides
-    virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  // nsINode interface overrides
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-    // nsICSSLoaderObserver
-    NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,
-                                bool aWasAlternate,
-                                nsresult aStatus) override;
+  // nsICSSLoaderObserver
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasAlternate,
+                              nsresult aStatus) override;
 
-    virtual void EndUpdate() override;
+  virtual void EndUpdate() override;
 
-    virtual bool IsDocumentRightToLeft() override;
+  virtual bool IsDocumentRightToLeft() override;
 
-    /**
-     * Reset the document direction so that it is recomputed.
-     */
-    void ResetDocumentDirection();
+  /**
+   * Reset the document direction so that it is recomputed.
+   */
+  void ResetDocumentDirection();
 
-    NS_IMETHOD OnScriptCompileComplete(JSScript* aScript, nsresult aStatus) override;
+  NS_IMETHOD OnScriptCompileComplete(JSScript* aScript,
+                                     nsresult aStatus) override;
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULDocument, XMLDocument)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULDocument, XMLDocument)
 
-    void TraceProtos(JSTracer* aTrc);
+  void TraceProtos(JSTracer* aTrc);
 
-protected:
-    virtual ~XULDocument();
+ protected:
+  virtual ~XULDocument();
 
-    // Implementation methods
-    friend nsresult
-    (::NS_NewXULDocument(nsIDocument** aResult));
+  // Implementation methods
+  friend nsresult(::NS_NewXULDocument(nsIDocument** aResult));
 
-    nsresult Init(void) override;
-    nsresult StartLayout(void);
+  nsresult Init(void) override;
+  nsresult StartLayout(void);
 
-    nsresult PrepareToLoad(nsISupports* aContainer,
-                           const char* aCommand,
-                           nsIChannel* aChannel,
-                           nsILoadGroup* aLoadGroup,
-                           nsIParser** aResult);
+  nsresult PrepareToLoad(nsISupports* aContainer, const char* aCommand,
+                         nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
+                         nsIParser** aResult);
 
-    nsresult
-    PrepareToLoadPrototype(nsIURI* aURI,
-                           const char* aCommand,
-                           nsIPrincipal* aDocumentPrincipal,
-                           nsIParser** aResult);
+  nsresult PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
+                                  nsIPrincipal* aDocumentPrincipal,
+                                  nsIParser** aResult);
 
-    void AddElementToDocumentPost(Element* aElement);
+  void AddElementToDocumentPost(Element* aElement);
 
-    static void DirectionChanged(const char* aPrefName, XULDocument* aData);
+  static void DirectionChanged(const char* aPrefName, XULDocument* aData);
 
-    // pseudo constants
-    static int32_t gRefCnt;
+  // pseudo constants
+  static int32_t gRefCnt;
 
-    static LazyLogModule gXULLog;
+  static LazyLogModule gXULLog;
 
-    virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-    // IMPORTANT: The ownership implicit in the following member
-    // variables has been explicitly checked and set using nsCOMPtr
-    // for owning pointers and raw COM interface pointers for weak
-    // (ie, non owning) references. If you add any members to this
-    // class, please make the ownership explicit (pinkerton, scc).
-    // NOTE, THIS IS STILL IN PROGRESS, TALK TO PINK OR SCC BEFORE
-    // CHANGING
+  // IMPORTANT: The ownership implicit in the following member
+  // variables has been explicitly checked and set using nsCOMPtr
+  // for owning pointers and raw COM interface pointers for weak
+  // (ie, non owning) references. If you add any members to this
+  // class, please make the ownership explicit (pinkerton, scc).
+  // NOTE, THIS IS STILL IN PROGRESS, TALK TO PINK OR SCC BEFORE
+  // CHANGING
 
-    XULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
+  XULDocument* mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
 
-    bool                        mIsWritingFastLoad;
-    bool                        mDocumentLoaded;
-    /**
-     * Since ResumeWalk is interruptible, it's possible that last
-     * stylesheet finishes loading while the PD walk is still in
-     * progress (waiting for an overlay to finish loading).
-     * mStillWalking prevents DoneLoading (and StartLayout) from being
-     * called in this situation.
-     */
-    bool                       mStillWalking;
+  bool mIsWritingFastLoad;
+  bool mDocumentLoaded;
+  /**
+   * Since ResumeWalk is interruptible, it's possible that last
+   * stylesheet finishes loading while the PD walk is still in
+   * progress (waiting for an overlay to finish loading).
+   * mStillWalking prevents DoneLoading (and StartLayout) from being
+   * called in this situation.
+   */
+  bool mStillWalking;
 
-    uint32_t mPendingSheets;
+  uint32_t mPendingSheets;
 
-    /**
-     * Context stack, which maintains the state of the Builder and allows
-     * it to be interrupted.
-     */
-    class ContextStack {
-    protected:
-        struct Entry {
-            nsXULPrototypeElement* mPrototype;
-            nsIContent*            mElement;
-            int32_t                mIndex;
-            Entry*                 mNext;
-        };
-
-        Entry* mTop;
-        int32_t mDepth;
-
-    public:
-        ContextStack();
-        ~ContextStack();
-
-        int32_t Depth() { return mDepth; }
-
-        nsresult Push(nsXULPrototypeElement* aPrototype, nsIContent* aElement);
-        nsresult Pop();
-        nsresult Peek(nsXULPrototypeElement** aPrototype, nsIContent** aElement, int32_t* aIndex);
-
-        nsresult SetTopIndex(int32_t aIndex);
+  /**
+   * Context stack, which maintains the state of the Builder and allows
+   * it to be interrupted.
+   */
+  class ContextStack {
+   protected:
+    struct Entry {
+      nsXULPrototypeElement* mPrototype;
+      nsIContent* mElement;
+      int32_t mIndex;
+      Entry* mNext;
     };
 
-    friend class ContextStack;
-    ContextStack mContextStack;
+    Entry* mTop;
+    int32_t mDepth;
 
-    /**
-     * Load the transcluded script at the specified URI. If the
-     * prototype construction must 'block' until the load has
-     * completed, aBlock will be set to true.
-     */
-    nsresult LoadScript(nsXULPrototypeScript *aScriptProto, bool* aBlock);
+   public:
+    ContextStack();
+    ~ContextStack();
 
-    /**
-     * Execute the precompiled script object scoped by this XUL document's
-     * containing window object.
-     */
-    nsresult ExecuteScript(nsXULPrototypeScript *aScript);
+    int32_t Depth() { return mDepth; }
 
-    /**
-     * Create a delegate content model element from a prototype.
-     * Note that the resulting content node is not bound to any tree
-     */
-    nsresult CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
-                                        Element** aResult,
-                                        bool aIsRoot);
+    nsresult Push(nsXULPrototypeElement* aPrototype, nsIContent* aElement);
+    nsresult Pop();
+    nsresult Peek(nsXULPrototypeElement** aPrototype, nsIContent** aElement,
+                  int32_t* aIndex);
 
-    /**
-     * Add attributes from the prototype to the element.
-     */
-    nsresult AddAttributes(nsXULPrototypeElement* aPrototype, Element* aElement);
+    nsresult SetTopIndex(int32_t aIndex);
+  };
 
-    /**
-     * The prototype-script of the current transcluded script that is being
-     * loaded.  For document.write('<script src="nestedwrite.js"><\/script>')
-     * to work, these need to be in a stack element type, and we need to hold
-     * the top of stack here.
-     */
-    nsXULPrototypeScript* mCurrentScriptProto;
+  friend class ContextStack;
+  ContextStack mContextStack;
 
-    /**
-     * Whether the current transcluded script is being compiled off thread.
-     * The load event is blocked while this is in progress.
-     */
-    bool mOffThreadCompiling;
+  /**
+   * Load the transcluded script at the specified URI. If the
+   * prototype construction must 'block' until the load has
+   * completed, aBlock will be set to true.
+   */
+  nsresult LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock);
 
-    /**
-     * If the current transcluded script is being compiled off thread, the
-     * source for that script.
-     */
-    char16_t* mOffThreadCompileStringBuf;
-    size_t mOffThreadCompileStringLength;
+  /**
+   * Execute the precompiled script object scoped by this XUL document's
+   * containing window object.
+   */
+  nsresult ExecuteScript(nsXULPrototypeScript* aScript);
 
+  /**
+   * Create a delegate content model element from a prototype.
+   * Note that the resulting content node is not bound to any tree
+   */
+  nsresult CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
+                                      Element** aResult, bool aIsRoot);
 
-protected:
-    /**
-     * The current prototype that we are walking to construct the
-     * content model.
-     */
-    RefPtr<nsXULPrototypeDocument> mCurrentPrototype;
+  /**
+   * Add attributes from the prototype to the element.
+   */
+  nsresult AddAttributes(nsXULPrototypeElement* aPrototype, Element* aElement);
 
-    /**
-     * Owning references to all of the prototype documents that were
-     * used to construct this document.
-     */
-    nsTArray< RefPtr<nsXULPrototypeDocument> > mPrototypes;
+  /**
+   * The prototype-script of the current transcluded script that is being
+   * loaded.  For document.write('<script src="nestedwrite.js"><\/script>')
+   * to work, these need to be in a stack element type, and we need to hold
+   * the top of stack here.
+   */
+  nsXULPrototypeScript* mCurrentScriptProto;
 
-    /**
-     * Prepare to walk the current prototype.
-     */
-    nsresult PrepareToWalk();
+  /**
+   * Whether the current transcluded script is being compiled off thread.
+   * The load event is blocked while this is in progress.
+   */
+  bool mOffThreadCompiling;
 
-    /**
-     * Creates a processing instruction based on aProtoPI and inserts
-     * it to the DOM.
-     */
-    nsresult
-    CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
-                      nsINode* aParent, nsINode* aBeforeThis);
+  /**
+   * If the current transcluded script is being compiled off thread, the
+   * source for that script.
+   */
+  char16_t* mOffThreadCompileStringBuf;
+  size_t mOffThreadCompileStringLength;
 
-    /**
-     * Inserts the passed <?xml-stylesheet ?> PI at the specified
-     * index. Loads and applies the associated stylesheet
-     * asynchronously.
-     * The prototype document walk can happen before the stylesheets
-     * are loaded, but the final steps in the load process (see
-     * DoneWalking()) are not run before all the stylesheets are done
-     * loading.
-     */
-    nsresult
-    InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
-                          nsINode* aParent,
-                          nsINode* aBeforeThis,
-                          nsIContent* aPINode);
+ protected:
+  /**
+   * The current prototype that we are walking to construct the
+   * content model.
+   */
+  RefPtr<nsXULPrototypeDocument> mCurrentPrototype;
 
-    /**
-     * Resume (or initiate) an interrupted (or newly prepared)
-     * prototype walk.
-     */
-    nsresult ResumeWalk();
+  /**
+   * Owning references to all of the prototype documents that were
+   * used to construct this document.
+   */
+  nsTArray<RefPtr<nsXULPrototypeDocument> > mPrototypes;
 
-    /**
-     * Called at the end of ResumeWalk() and from StyleSheetLoaded().
-     * Expects that both the prototype document walk is complete and
-     * all referenced stylesheets finished loading.
-     */
-    nsresult DoneWalking();
+  /**
+   * Prepare to walk the current prototype.
+   */
+  nsresult PrepareToWalk();
 
-    class CachedChromeStreamListener : public nsIStreamListener {
-    protected:
-        RefPtr<XULDocument> mDocument;
-        bool mProtoLoaded;
+  /**
+   * Creates a processing instruction based on aProtoPI and inserts
+   * it to the DOM.
+   */
+  nsresult CreateAndInsertPI(const nsXULPrototypePI* aProtoPI, nsINode* aParent,
+                             nsINode* aBeforeThis);
 
-        virtual ~CachedChromeStreamListener();
+  /**
+   * Inserts the passed <?xml-stylesheet ?> PI at the specified
+   * index. Loads and applies the associated stylesheet
+   * asynchronously.
+   * The prototype document walk can happen before the stylesheets
+   * are loaded, but the final steps in the load process (see
+   * DoneWalking()) are not run before all the stylesheets are done
+   * loading.
+   */
+  nsresult InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
+                                 nsINode* aParent, nsINode* aBeforeThis,
+                                 nsIContent* aPINode);
 
-    public:
-        CachedChromeStreamListener(XULDocument* aDocument,
-                                   bool aProtoLoaded);
+  /**
+   * Resume (or initiate) an interrupted (or newly prepared)
+   * prototype walk.
+   */
+  nsresult ResumeWalk();
 
-        NS_DECL_ISUPPORTS
-        NS_DECL_NSIREQUESTOBSERVER
-        NS_DECL_NSISTREAMLISTENER
-    };
+  /**
+   * Called at the end of ResumeWalk() and from StyleSheetLoaded().
+   * Expects that both the prototype document walk is complete and
+   * all referenced stylesheets finished loading.
+   */
+  nsresult DoneWalking();
 
-    friend class CachedChromeStreamListener;
+  class CachedChromeStreamListener : public nsIStreamListener {
+   protected:
+    RefPtr<XULDocument> mDocument;
+    bool mProtoLoaded;
 
-    bool mInitialLayoutComplete;
+    virtual ~CachedChromeStreamListener();
 
-private:
-    // helpers
+   public:
+    CachedChromeStreamListener(XULDocument* aDocument, bool aProtoLoaded);
 
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+  };
+
+  friend class CachedChromeStreamListener;
+
+  bool mInitialLayoutComplete;
+
+ private:
+  // helpers
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-inline mozilla::dom::XULDocument*
-nsIDocument::AsXULDocument()
-{
+inline mozilla::dom::XULDocument* nsIDocument::AsXULDocument() {
   MOZ_ASSERT(IsXULDocument());
   return static_cast<mozilla::dom::XULDocument*>(this);
 }
 
-#endif // mozilla_dom_XULDocument_h
+#endif  // mozilla_dom_XULDocument_h

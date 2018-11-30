@@ -16,56 +16,50 @@ namespace mozilla {
 namespace interceptor {
 
 template <typename MMPolicy>
-class MOZ_STACK_CLASS Trampoline final
-{
-public:
+class MOZ_STACK_CLASS Trampoline final {
+ public:
   Trampoline(const MMPolicy* aMMPolicy, uint8_t* const aLocalBase,
              const uintptr_t aRemoteBase, const uint32_t aChunkSize)
-    : mMMPolicy(aMMPolicy)
-    , mPrevLocalProt(0)
-    , mLocalBase(aLocalBase)
-    , mRemoteBase(aRemoteBase)
-    , mOffset(0)
-    , mExeOffset(0)
-    , mMaxOffset(aChunkSize)
-    , mAccumulatedStatus(true)
-  {
+      : mMMPolicy(aMMPolicy),
+        mPrevLocalProt(0),
+        mLocalBase(aLocalBase),
+        mRemoteBase(aRemoteBase),
+        mOffset(0),
+        mExeOffset(0),
+        mMaxOffset(aChunkSize),
+        mAccumulatedStatus(true) {
     ::VirtualProtect(aLocalBase, aChunkSize, MMPolicy::GetTrampWriteProtFlags(),
                      &mPrevLocalProt);
   }
 
   Trampoline(Trampoline&& aOther)
-    : mMMPolicy(aOther.mMMPolicy)
-    , mPrevLocalProt(aOther.mPrevLocalProt)
-    , mLocalBase(aOther.mLocalBase)
-    , mRemoteBase(aOther.mRemoteBase)
-    , mOffset(aOther.mOffset)
-    , mExeOffset(aOther.mExeOffset)
-    , mMaxOffset(aOther.mMaxOffset)
-    , mAccumulatedStatus(aOther.mAccumulatedStatus)
-  {
+      : mMMPolicy(aOther.mMMPolicy),
+        mPrevLocalProt(aOther.mPrevLocalProt),
+        mLocalBase(aOther.mLocalBase),
+        mRemoteBase(aOther.mRemoteBase),
+        mOffset(aOther.mOffset),
+        mExeOffset(aOther.mExeOffset),
+        mMaxOffset(aOther.mMaxOffset),
+        mAccumulatedStatus(aOther.mAccumulatedStatus) {
     aOther.mPrevLocalProt = 0;
     aOther.mAccumulatedStatus = false;
   }
 
   MOZ_IMPLICIT Trampoline(decltype(nullptr))
-    : mMMPolicy(nullptr)
-    , mPrevLocalProt(0)
-    , mLocalBase(nullptr)
-    , mRemoteBase(0)
-    , mOffset(0)
-    , mExeOffset(0)
-    , mMaxOffset(0)
-    , mAccumulatedStatus(false)
-  {
-  }
+      : mMMPolicy(nullptr),
+        mPrevLocalProt(0),
+        mLocalBase(nullptr),
+        mRemoteBase(0),
+        mOffset(0),
+        mExeOffset(0),
+        mMaxOffset(0),
+        mAccumulatedStatus(false) {}
 
   Trampoline(const Trampoline&) = delete;
   Trampoline& operator=(const Trampoline&) = delete;
   Trampoline&& operator=(Trampoline&&) = delete;
 
-  ~Trampoline()
-  {
+  ~Trampoline() {
     if (!mLocalBase || !mPrevLocalProt) {
       return;
     }
@@ -73,13 +67,11 @@ public:
     ::VirtualProtect(mLocalBase, mMaxOffset, mPrevLocalProt, &mPrevLocalProt);
   }
 
-  explicit operator bool() const
-  {
+  explicit operator bool() const {
     return mLocalBase && mRemoteBase && mPrevLocalProt && mAccumulatedStatus;
   }
 
-  void WriteByte(uint8_t aValue)
-  {
+  void WriteByte(uint8_t aValue) {
     if (mOffset >= mMaxOffset) {
       mAccumulatedStatus = false;
       return;
@@ -89,8 +81,7 @@ public:
     ++mOffset;
   }
 
-  void WriteInteger(int32_t aValue)
-  {
+  void WriteInteger(int32_t aValue) {
     if (mOffset + sizeof(int32_t) > mMaxOffset) {
       mAccumulatedStatus = false;
       return;
@@ -100,8 +91,7 @@ public:
     mOffset += sizeof(int32_t);
   }
 
-  void WritePointer(uintptr_t aValue)
-  {
+  void WritePointer(uintptr_t aValue) {
     if (mOffset + sizeof(uintptr_t) > mMaxOffset) {
       mAccumulatedStatus = false;
       return;
@@ -111,14 +101,12 @@ public:
     mOffset += sizeof(uintptr_t);
   }
 
-  void WriteEncodedPointer(void* aValue)
-  {
+  void WriteEncodedPointer(void* aValue) {
     uintptr_t encoded = ReadOnlyTargetFunction<MMPolicy>::EncodePtr(aValue);
     WritePointer(encoded);
   }
 
-  Maybe<uintptr_t> ReadPointer()
-  {
+  Maybe<uintptr_t> ReadPointer() {
     if (mOffset + sizeof(uintptr_t) > mMaxOffset) {
       mAccumulatedStatus = false;
       return Nothing();
@@ -129,8 +117,7 @@ public:
     return std::move(result);
   }
 
-  Maybe<uintptr_t> ReadEncodedPointer()
-  {
+  Maybe<uintptr_t> ReadEncodedPointer() {
     Maybe<uintptr_t> encoded(ReadPointer());
     if (!encoded) {
       return encoded;
@@ -139,8 +126,7 @@ public:
     return Some(ReadOnlyTargetFunction<MMPolicy>::DecodePtr(encoded.value()));
   }
 
-  void WriteDisp32(uintptr_t aAbsTarget)
-  {
+  void WriteDisp32(uintptr_t aAbsTarget) {
     if (mOffset + sizeof(int32_t) > mMaxOffset) {
       mAccumulatedStatus = false;
       return;
@@ -150,7 +136,7 @@ public:
     intptr_t remoteTrampPosition = static_cast<intptr_t>(mRemoteBase + mOffset);
 
     intptr_t diff = static_cast<intptr_t>(aAbsTarget) -
-                      (remoteTrampPosition + sizeof(int32_t));
+                    (remoteTrampPosition + sizeof(int32_t));
 
     CheckedInt<int32_t> checkedDisp(diff);
     MOZ_ASSERT(checkedDisp.isValid());
@@ -166,8 +152,7 @@ public:
 
 #if defined(_M_IX86)
   // 32-bit only
-  void AdjustDisp32AtOffset(uint32_t aOffset, uintptr_t aAbsTarget)
-  {
+  void AdjustDisp32AtOffset(uint32_t aOffset, uintptr_t aAbsTarget) {
     uint32_t effectiveOffset = mExeOffset + aOffset;
 
     if (effectiveOffset + sizeof(int32_t) > mMaxOffset) {
@@ -179,10 +164,9 @@ public:
                     static_cast<intptr_t>(mRemoteBase + mExeOffset);
     *reinterpret_cast<int32_t*>(mLocalBase + effectiveOffset) += diff;
   }
-#endif // defined(_M_IX86)
+#endif  // defined(_M_IX86)
 
-  void CopyFrom(uintptr_t aOrigBytes, uint32_t aNumBytes)
-  {
+  void CopyFrom(uintptr_t aOrigBytes, uint32_t aNumBytes) {
     if (!mMMPolicy || mOffset + aNumBytes > mMaxOffset) {
       mAccumulatedStatus = false;
       return;
@@ -197,24 +181,16 @@ public:
     mOffset += aNumBytes;
   }
 
-  void Rewind()
-  {
-    mOffset = 0;
-  }
+  void Rewind() { mOffset = 0; }
 
-  uintptr_t GetCurrentRemoteAddress() const
-  {
-    return mRemoteBase + mOffset;
-  }
+  uintptr_t GetCurrentRemoteAddress() const { return mRemoteBase + mOffset; }
 
-  void StartExecutableCode()
-  {
+  void StartExecutableCode() {
     MOZ_ASSERT(!mExeOffset);
     mExeOffset = mOffset;
   }
 
-  void* EndExecutableCode() const
-  {
+  void* EndExecutableCode() const {
     if (!mAccumulatedStatus) {
       return nullptr;
     }
@@ -224,88 +200,75 @@ public:
     return reinterpret_cast<void*>(mRemoteBase + mExeOffset);
   }
 
-  Trampoline<MMPolicy>& operator--()
-  {
+  Trampoline<MMPolicy>& operator--() {
     MOZ_ASSERT(mOffset);
     --mOffset;
     return *this;
   }
 
-private:
+ private:
   const MMPolicy* mMMPolicy;
-  DWORD           mPrevLocalProt;
-  uint8_t* const  mLocalBase;
+  DWORD mPrevLocalProt;
+  uint8_t* const mLocalBase;
   const uintptr_t mRemoteBase;
-  uint32_t        mOffset;
-  uint32_t        mExeOffset;
-  const uint32_t  mMaxOffset;
-  bool            mAccumulatedStatus;
+  uint32_t mOffset;
+  uint32_t mExeOffset;
+  const uint32_t mMaxOffset;
+  bool mAccumulatedStatus;
 };
 
 template <typename MMPolicy>
-class MOZ_STACK_CLASS TrampolineCollection final
-{
-public:
-  class MOZ_STACK_CLASS TrampolineIterator final
-  {
-  public:
-    Trampoline<MMPolicy> operator*()
-    {
+class MOZ_STACK_CLASS TrampolineCollection final {
+ public:
+  class MOZ_STACK_CLASS TrampolineIterator final {
+   public:
+    Trampoline<MMPolicy> operator*() {
       uint32_t offset = mCurTramp * mCollection.mTrampSize;
-      return Trampoline<MMPolicy>(nullptr,
-                                  mCollection.mLocalBase + offset,
+      return Trampoline<MMPolicy>(nullptr, mCollection.mLocalBase + offset,
                                   mCollection.mRemoteBase + offset,
                                   mCollection.mTrampSize);
     }
 
-    TrampolineIterator& operator++()
-    {
+    TrampolineIterator& operator++() {
       ++mCurTramp;
       return *this;
     }
 
-    bool operator!=(const TrampolineIterator& aOther) const
-    {
+    bool operator!=(const TrampolineIterator& aOther) const {
       return mCurTramp != aOther.mCurTramp;
     }
 
-  private:
+   private:
     explicit TrampolineIterator(
         const TrampolineCollection<MMPolicy>& aCollection,
         const uint32_t aCurTramp = 0)
-      : mCollection(aCollection)
-      , mCurTramp(aCurTramp)
-    {
-    }
+        : mCollection(aCollection), mCurTramp(aCurTramp) {}
 
     const TrampolineCollection<MMPolicy>& mCollection;
-    uint32_t  mCurTramp;
+    uint32_t mCurTramp;
 
     friend class TrampolineCollection<MMPolicy>;
   };
 
   explicit TrampolineCollection(const MMPolicy& aMMPolicy)
-    : mMMPolicy(aMMPolicy)
-    , mLocalBase(0)
-    , mRemoteBase(0)
-    , mTrampSize(0)
-    , mNumTramps(0)
-    , mPrevProt(0)
-    , mCS(nullptr)
-  {
-  }
+      : mMMPolicy(aMMPolicy),
+        mLocalBase(0),
+        mRemoteBase(0),
+        mTrampSize(0),
+        mNumTramps(0),
+        mPrevProt(0),
+        mCS(nullptr) {}
 
   TrampolineCollection(const MMPolicy& aMMPolicy, uint8_t* const aLocalBase,
                        const uintptr_t aRemoteBase, const uint32_t aTrampSize,
                        const uint32_t aNumTramps)
-    : mMMPolicy(aMMPolicy)
-    , mLocalBase(aLocalBase)
-    , mRemoteBase(aRemoteBase)
-    , mTrampSize(aTrampSize)
-    , mNumTramps(aNumTramps)
-    , mPrevProt(0)
-    , mCS(nullptr)
-  {
+      : mMMPolicy(aMMPolicy),
+        mLocalBase(aLocalBase),
+        mRemoteBase(aRemoteBase),
+        mTrampSize(aTrampSize),
+        mNumTramps(aNumTramps),
+        mPrevProt(0),
+        mCS(nullptr) {
     if (!aNumTramps) {
       return;
     }
@@ -315,22 +278,20 @@ public:
     MOZ_ASSERT(ok);
   }
 
-  ~TrampolineCollection()
-  {
+  ~TrampolineCollection() {
     if (!mPrevProt) {
       return;
     }
 
-    mMMPolicy.Protect(mLocalBase, mNumTramps * mTrampSize,
-                      mPrevProt, &mPrevProt);
+    mMMPolicy.Protect(mLocalBase, mNumTramps * mTrampSize, mPrevProt,
+                      &mPrevProt);
 
     if (mCS) {
       ::LeaveCriticalSection(mCS);
     }
   }
 
-  void Lock(CRITICAL_SECTION& aCS)
-  {
+  void Lock(CRITICAL_SECTION& aCS) {
     if (!mPrevProt || mCS) {
       return;
     }
@@ -339,8 +300,7 @@ public:
     ::EnterCriticalSection(&aCS);
   }
 
-  TrampolineIterator begin() const
-  {
+  TrampolineIterator begin() const {
     if (!mPrevProt) {
       return end();
     }
@@ -348,8 +308,7 @@ public:
     return TrampolineIterator(*this);
   }
 
-  TrampolineIterator end() const
-  {
+  TrampolineIterator end() const {
     return TrampolineIterator(*this, mNumTramps);
   }
 
@@ -358,31 +317,30 @@ public:
   TrampolineCollection& operator=(TrampolineCollection&&) = delete;
 
   TrampolineCollection(TrampolineCollection&& aOther)
-    : mMMPolicy(aOther.mMMPolicy)
-    , mLocalBase(aOther.mLocalBase)
-    , mRemoteBase(aOther.mRemoteBase)
-    , mTrampSize(aOther.mTrampSize)
-    , mNumTramps(aOther.mNumTramps)
-    , mPrevProt(aOther.mPrevProt)
-    , mCS(aOther.mCS)
-  {
+      : mMMPolicy(aOther.mMMPolicy),
+        mLocalBase(aOther.mLocalBase),
+        mRemoteBase(aOther.mRemoteBase),
+        mTrampSize(aOther.mTrampSize),
+        mNumTramps(aOther.mNumTramps),
+        mPrevProt(aOther.mPrevProt),
+        mCS(aOther.mCS) {
     aOther.mPrevProt = 0;
     aOther.mCS = nullptr;
   }
 
-private:
-  const MMPolicy&   mMMPolicy;
-  uint8_t* const    mLocalBase;
-  const uintptr_t   mRemoteBase;
-  const uint32_t    mTrampSize;
-  const uint32_t    mNumTramps;
-  uint32_t          mPrevProt;
+ private:
+  const MMPolicy& mMMPolicy;
+  uint8_t* const mLocalBase;
+  const uintptr_t mRemoteBase;
+  const uint32_t mTrampSize;
+  const uint32_t mNumTramps;
+  uint32_t mPrevProt;
   CRITICAL_SECTION* mCS;
 
   friend class TrampolineIterator;
 };
 
-} // namespace interceptor
-} // namespace mozilla
+}  // namespace interceptor
+}  // namespace mozilla
 
-#endif // mozilla_interceptor_Trampoline_h
+#endif  // mozilla_interceptor_Trampoline_h

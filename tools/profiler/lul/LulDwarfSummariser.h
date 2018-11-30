@@ -11,10 +11,9 @@
 
 namespace lul {
 
-class Summariser
-{
-public:
-  Summariser(SecMap* aSecMap, uintptr_t aTextBias, void(*aLog)(const char*));
+class Summariser {
+ public:
+  Summariser(SecMap* aSecMap, uintptr_t aTextBias, void (*aLog)(const char*));
 
   virtual void Entry(uintptr_t aAddress, uintptr_t aLength);
   virtual void End();
@@ -25,15 +24,15 @@ public:
   // inspect the components and may reject them for various reasons,
   // but the hope is that it will find them acceptable and record this
   // rule permanently.
-  virtual void Rule(uintptr_t aAddress, int aNewReg,
-                    LExprHow how, int16_t oldReg, int64_t offset);
+  virtual void Rule(uintptr_t aAddress, int aNewReg, LExprHow how,
+                    int16_t oldReg, int64_t offset);
 
   virtual uint32_t AddPfxInstr(PfxInstr pfxi);
 
   // Send output to the logging sink, for debugging.
   virtual void Log(const char* str) { mLog(str); }
 
-private:
+ private:
   // The SecMap in which we park the finished summaries (RuleSets) and
   // also any PfxInstrs derived from Dwarf expressions.
   SecMap* mSecMap;
@@ -60,6 +59,6 @@ private:
   void (*mLog)(const char* aFmt);
 };
 
-} // namespace lul
+}  // namespace lul
 
-#endif // LulDwarfSummariser_h
+#endif  // LulDwarfSummariser_h

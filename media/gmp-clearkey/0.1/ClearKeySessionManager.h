@@ -1,18 +1,18 @@
 /*
-* Copyright 2015, Mozilla Foundation and contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015, Mozilla Foundation and contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef __ClearKeyDecryptor_h__
 #define __ClearKeyDecryptor_h__
@@ -33,40 +33,30 @@
 #include <set>
 #include <string>
 
-class ClearKeySessionManager final : public RefCounted
-{
-public:
+class ClearKeySessionManager final : public RefCounted {
+ public:
   explicit ClearKeySessionManager(cdm::Host_9* aHost);
 
-  void Init(bool aDistinctiveIdentifierAllowed,
-            bool aPersistentStateAllowed);
+  void Init(bool aDistinctiveIdentifierAllowed, bool aPersistentStateAllowed);
 
-  void CreateSession(uint32_t aPromiseId,
-                     cdm::InitDataType aInitDataType,
-                     const uint8_t* aInitData,
-                     uint32_t aInitDataSize,
+  void CreateSession(uint32_t aPromiseId, cdm::InitDataType aInitDataType,
+                     const uint8_t* aInitData, uint32_t aInitDataSize,
                      cdm::SessionType aSessionType);
 
-  void LoadSession(uint32_t aPromiseId,
-                   const char* aSessionId,
+  void LoadSession(uint32_t aPromiseId, const char* aSessionId,
                    uint32_t aSessionIdLength);
 
-  void UpdateSession(uint32_t aPromiseId,
-                     const char* aSessionId,
-                     uint32_t aSessionIdLength,
-                     const uint8_t* aResponse,
+  void UpdateSession(uint32_t aPromiseId, const char* aSessionId,
+                     uint32_t aSessionIdLength, const uint8_t* aResponse,
                      uint32_t aResponseSize);
 
-  void CloseSession(uint32_t aPromiseId,
-                    const char* aSessionId,
+  void CloseSession(uint32_t aPromiseId, const char* aSessionId,
                     uint32_t aSessionIdLength);
 
-  void RemoveSession(uint32_t aPromiseId,
-                     const char* aSessionId,
+  void RemoveSession(uint32_t aPromiseId, const char* aSessionId,
                      uint32_t aSessionIdLength);
 
-  void SetServerCertificate(uint32_t aPromiseId,
-                            const uint8_t* aServerCert,
+  void SetServerCertificate(uint32_t aPromiseId, const uint8_t* aServerCert,
                             uint32_t aServerCertSize);
 
   cdm::Status Decrypt(const cdm::InputBuffer_1& aBuffer,
@@ -79,7 +69,7 @@ public:
                                    const uint8_t* aKeyData,
                                    uint32_t aKeyDataSize);
 
-private:
+ private:
   ~ClearKeySessionManager();
 
   void ClearInMemorySessionData(ClearKeySession* aSession);
@@ -98,4 +88,4 @@ private:
   std::queue<std::function<void()>> mDeferredInitialize;
 };
 
-#endif // __ClearKeyDecryptor_h__
+#endif  // __ClearKeyDecryptor_h__

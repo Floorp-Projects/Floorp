@@ -12,8 +12,7 @@ namespace gfx {
 // Describes the status of a graphics feature, in terms of whether or not we've
 // attempted to initialize the feature, and if so, whether or not it succeeded
 // (and if not, why).
-enum class FeatureStatus
-{
+enum class FeatureStatus {
   // This feature has not been requested.
   Unused,
 
@@ -62,13 +61,9 @@ const char* FeatureStatusToString(FeatureStatus aStatus);
 bool IsFeatureStatusFailure(FeatureStatus aStatus);
 bool IsFeatureStatusSuccess(FeatureStatus aStatus);
 
-enum class TelemetryDeviceCode : uint32_t {
-  Content = 0,
-  Image = 1,
-  D2D1 = 2
-};
+enum class TelemetryDeviceCode : uint32_t { Content = 0, Image = 1, D2D1 = 2 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // gfx_src_gfxTelemetry_h__
+#endif  // gfx_src_gfxTelemetry_h__

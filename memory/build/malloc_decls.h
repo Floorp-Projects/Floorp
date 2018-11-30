@@ -17,16 +17,16 @@
 
 #define MALLOC_FUNCS_MALLOC_BASE 1
 #define MALLOC_FUNCS_MALLOC_EXTRA 2
-#define MALLOC_FUNCS_MALLOC                                                    \
+#define MALLOC_FUNCS_MALLOC \
   (MALLOC_FUNCS_MALLOC_BASE | MALLOC_FUNCS_MALLOC_EXTRA)
 #define MALLOC_FUNCS_JEMALLOC 4
 #define MALLOC_FUNCS_ARENA_BASE 8
 #define MALLOC_FUNCS_ARENA_ALLOC 16
 #define MALLOC_FUNCS_ARENA (MALLOC_FUNCS_ARENA_BASE | MALLOC_FUNCS_ARENA_ALLOC)
-#define MALLOC_FUNCS_ALL                                                       \
+#define MALLOC_FUNCS_ALL \
   (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC | MALLOC_FUNCS_ARENA)
 
-#endif // malloc_decls_h
+#endif  // malloc_decls_h
 
 #ifndef MALLOC_FUNCS
 #define MALLOC_FUNCS MALLOC_FUNCS_ALL
@@ -119,7 +119,7 @@ MALLOC_DECL(moz_arena_free, void, arena_id_t, void*)
 MALLOC_DECL(moz_arena_memalign, void*, arena_id_t, size_t, size_t)
 #endif
 
-#endif // MALLOC_DECL
+#endif  // MALLOC_DECL
 
 #undef MALLOC_DECL
 #undef MALLOC_FUNCS

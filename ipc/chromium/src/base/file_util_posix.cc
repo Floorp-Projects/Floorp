@@ -15,7 +15,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/mman.h>
-#define _DARWIN_USE_64_BIT_INODE // Use 64-bit inode data structures
+#define _DARWIN_USE_64_BIT_INODE  // Use 64-bit inode data structures
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
@@ -42,8 +42,7 @@ static const char* kTempFileName = "org.chromium.XXXXXX";
 
 bool AbsolutePath(FilePath* path) {
   char full_path[PATH_MAX];
-  if (realpath(path->value().c_str(), full_path) == NULL)
-    return false;
+  if (realpath(path->value().c_str(), full_path) == NULL) return false;
   *path = FilePath(full_path);
   return true;
 }
@@ -61,8 +60,7 @@ bool Delete(const FilePath& path) {
     bool ret = (errno == ENOENT || errno == ENOTDIR);
     return ret;
   }
-  if (!S_ISDIR(file_info.st_mode))
-    return (unlink(path_str) == 0);
+  if (!S_ISDIR(file_info.st_mode)) return (unlink(path_str) == 0);
 
   return (rmdir(path_str) == 0);
 }
@@ -80,11 +78,9 @@ bool PathIsWritable(const FilePath& path) {
     test_path = test_path.DirName();
     // If the parent dir doesn't exist, then return false (the path is not
     // directly writable).
-    if (stat(test_path.value().c_str(), &file_info) != 0)
-      return false;
+    if (stat(test_path.value().c_str(), &file_info) != 0) return false;
   }
-  if (S_IWOTH & file_info.st_mode)
-    return true;
+  if (S_IWOTH & file_info.st_mode) return true;
   if (getegid() == file_info.st_gid && (S_IWGRP & file_info.st_mode))
     return true;
   if (geteuid() == file_info.st_uid && (S_IWUSR & file_info.st_mode))
@@ -104,8 +100,7 @@ bool ReadFromFD(int fd, char* buffer, size_t bytes) {
   while (total_read < bytes) {
     ssize_t bytes_read =
         HANDLE_EINTR(read(fd, buffer + total_read, bytes - total_read));
-    if (bytes_read <= 0)
-      break;
+    if (bytes_read <= 0) break;
     total_read += bytes_read;
   }
   return total_read == bytes;
@@ -127,27 +122,23 @@ int CreateAndOpenFdForTemporaryFile(FilePath directory, FilePath* path) {
 
 bool CreateTemporaryFileName(FilePath* path) {
   FilePath directory;
-  if (!GetTempDir(&directory))
-    return false;
+  if (!GetTempDir(&directory)) return false;
   int fd = CreateAndOpenFdForTemporaryFile(directory, path);
-  if (fd < 0)
-    return false;
+  if (fd < 0) return false;
   close(fd);
   return true;
 }
 
 FILE* CreateAndOpenTemporaryShmemFile(FilePath* path) {
   FilePath directory;
-  if (!GetShmemTempDir(&directory))
-    return NULL;
+  if (!GetShmemTempDir(&directory)) return NULL;
 
   return CreateAndOpenTemporaryFileInDir(directory, path);
 }
 
 FILE* CreateAndOpenTemporaryFileInDir(const FilePath& dir, FilePath* path) {
   int fd = CreateAndOpenFdForTemporaryFile(dir, path);
-  if (fd < 0)
-    return NULL;
+  if (fd < 0) return NULL;
 
   return fdopen(fd, "a+");
 }
@@ -162,8 +153,7 @@ bool CreateTemporaryFileNameInDir(const std::wstring& dir,
 bool CreateNewTempDirectory(const FilePath::StringType& prefix,
                             FilePath* new_temp_path) {
   FilePath tmpdir;
-  if (!GetTempDir(&tmpdir))
-    return false;
+  if (!GetTempDir(&tmpdir)) return false;
   tmpdir = tmpdir.Append(kTempFileName);
   std::string tmpdir_string = tmpdir.value();
 #ifdef ANDROID
@@ -173,8 +163,7 @@ bool CreateNewTempDirectory(const FilePath::StringType& prefix,
   char* buffer = const_cast<char*>(tmpdir_string.c_str());
   char* dtemp = mkdtemp(buffer);
 #endif
-  if (!dtemp)
-    return false;
+  if (!dtemp) return false;
   *new_temp_path = FilePath(dtemp);
   return true;
 }
@@ -185,8 +174,8 @@ bool CreateDirectory(const FilePath& full_path) {
   // Collect a list of all parent directories.
   FilePath last_path = full_path;
   subpaths.push_back(full_path);
-  for (FilePath path = full_path.DirName();
-       path.value() != last_path.value(); path = path.DirName()) {
+  for (FilePath path = full_path.DirName(); path.value() != last_path.value();
+       path = path.DirName()) {
     subpaths.push_back(path);
     last_path = path;
   }
@@ -195,8 +184,7 @@ bool CreateDirectory(const FilePath& full_path) {
   for (std::vector<FilePath>::reverse_iterator i = subpaths.rbegin();
        i != subpaths.rend(); ++i) {
     if (!DirectoryExists(*i)) {
-      if (mkdir(i->value().c_str(), 0777) != 0)
-        return false;
+      if (mkdir(i->value().c_str(), 0777) != 0) return false;
     }
   }
   return true;
@@ -204,8 +192,7 @@ bool CreateDirectory(const FilePath& full_path) {
 
 bool GetFileInfo(const FilePath& file_path, FileInfo* results) {
   struct stat file_info;
-  if (stat(file_path.value().c_str(), &file_info) != 0)
-    return false;
+  if (stat(file_path.value().c_str(), &file_info) != 0) return false;
   results->is_directory = S_ISDIR(file_info.st_mode);
   results->size = file_info.st_size;
   return true;
@@ -221,8 +208,7 @@ FILE* OpenFile(const FilePath& filename, const char* mode) {
 
 int ReadFile(const FilePath& filename, char* data, int size) {
   int fd = open(filename.value().c_str(), O_RDONLY);
-  if (fd < 0)
-    return -1;
+  if (fd < 0) return -1;
 
   int ret_value = HANDLE_EINTR(read(fd, data, size));
   IGNORE_EINTR(close(fd));
@@ -231,15 +217,13 @@ int ReadFile(const FilePath& filename, char* data, int size) {
 
 int WriteFile(const FilePath& filename, const char* data, int size) {
   int fd = creat(filename.value().c_str(), 0666);
-  if (fd < 0)
-    return -1;
+  if (fd < 0) return -1;
 
   // Allow for partial writes
   ssize_t bytes_written_total = 0;
   do {
-    ssize_t bytes_written_partial =
-      HANDLE_EINTR(write(fd, data + bytes_written_total,
-                         size - bytes_written_total));
+    ssize_t bytes_written_partial = HANDLE_EINTR(
+        write(fd, data + bytes_written_total, size - bytes_written_total));
     if (bytes_written_partial < 0) {
       IGNORE_EINTR(close(fd));
       return -1;
@@ -289,8 +273,7 @@ bool GetShmemTempDir(FilePath* path) {
 
 bool CopyFile(const FilePath& from_path, const FilePath& to_path) {
   int infile = open(from_path.value().c_str(), O_RDONLY);
-  if (infile < 0)
-    return false;
+  if (infile < 0) return false;
 
   int outfile = creat(to_path.value().c_str(), 0666);
   if (outfile < 0) {
@@ -308,15 +291,13 @@ bool CopyFile(const FilePath& from_path, const FilePath& to_path) {
       result = false;
       break;
     }
-    if (bytes_read == 0)
-      break;
+    if (bytes_read == 0) break;
     // Allow for partial writes
     ssize_t bytes_written_per_read = 0;
     do {
-      ssize_t bytes_written_partial = HANDLE_EINTR(write(
-          outfile,
-          &buffer[bytes_written_per_read],
-          bytes_read - bytes_written_per_read));
+      ssize_t bytes_written_partial =
+          HANDLE_EINTR(write(outfile, &buffer[bytes_written_per_read],
+                             bytes_read - bytes_written_per_read));
       if (bytes_written_partial < 0) {
         result = false;
         break;
@@ -325,13 +306,11 @@ bool CopyFile(const FilePath& from_path, const FilePath& to_path) {
     } while (bytes_written_per_read < bytes_read);
   }
 
-  if (IGNORE_EINTR(close(infile)) < 0)
-    result = false;
-  if (IGNORE_EINTR(close(outfile)) < 0)
-    result = false;
+  if (IGNORE_EINTR(close(infile)) < 0) result = false;
+  if (IGNORE_EINTR(close(outfile)) < 0) result = false;
 
   return result;
 }
-#endif // !defined(OS_MACOSX)
+#endif  // !defined(OS_MACOSX)
 
-} // namespace file_util
+}  // namespace file_util

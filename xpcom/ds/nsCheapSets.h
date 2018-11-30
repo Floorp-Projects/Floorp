@@ -10,35 +10,28 @@
 #include "nsTHashtable.h"
 #include <stdint.h>
 
-enum nsCheapSetOperator
-{
-  OpNext = 0,   // enumerator says continue
-  OpRemove = 1, // enumerator says remove and continue
+enum nsCheapSetOperator {
+  OpNext = 0,    // enumerator says continue
+  OpRemove = 1,  // enumerator says remove and continue
 };
 
 /**
  * A set that takes up minimal size when there are 0 or 1 entries in the set.
  * Use for cases where sizes of 0 and 1 are even slightly common.
  */
-template<typename EntryType>
-class nsCheapSet
-{
-public:
+template <typename EntryType>
+class nsCheapSet {
+ public:
   typedef typename EntryType::KeyType KeyType;
   typedef nsCheapSetOperator (*Enumerator)(EntryType* aEntry, void* userArg);
 
-  nsCheapSet()
-    : mState(ZERO)
-  {
-    mUnion.table = nullptr;
-  }
+  nsCheapSet() : mState(ZERO) { mUnion.table = nullptr; }
   ~nsCheapSet() { Clear(); }
 
   /**
    * Remove all entries.
    */
-  void Clear()
-  {
+  void Clear() {
     switch (mState) {
       case ZERO:
         break;
@@ -59,8 +52,7 @@ public:
 
   void Remove(const KeyType aVal);
 
-  bool Contains(const KeyType aVal)
-  {
+  bool Contains(const KeyType aVal) {
     switch (mState) {
       case ZERO:
         return false;
@@ -74,8 +66,7 @@ public:
     }
   }
 
-  uint32_t EnumerateEntries(Enumerator aEnumFunc, void* aUserArg)
-  {
+  uint32_t EnumerateEntries(Enumerator aEnumFunc, void* aUserArg) {
     switch (mState) {
       case ZERO:
         return 0;
@@ -101,31 +92,22 @@ public:
     }
   }
 
-private:
-  EntryType* GetSingleEntry()
-  {
+ private:
+  EntryType* GetSingleEntry() {
     return reinterpret_cast<EntryType*>(&mUnion.singleEntry[0]);
   }
 
-  enum SetState
-  {
-    ZERO,
-    ONE,
-    MANY
-  };
+  enum SetState { ZERO, ONE, MANY };
 
-  union
-  {
+  union {
     nsTHashtable<EntryType>* table;
     char singleEntry[sizeof(EntryType)];
   } mUnion;
   enum SetState mState;
 };
 
-template<typename EntryType>
-void
-nsCheapSet<EntryType>::Put(const KeyType aVal)
-{
+template <typename EntryType>
+void nsCheapSet<EntryType>::Put(const KeyType aVal) {
   switch (mState) {
     case ZERO:
       new (GetSingleEntry()) EntryType(EntryType::KeyToPointer(aVal));
@@ -139,7 +121,7 @@ nsCheapSet<EntryType>::Put(const KeyType aVal)
       mUnion.table = table;
       mState = MANY;
     }
-    MOZ_FALLTHROUGH;
+      MOZ_FALLTHROUGH;
 
     case MANY:
       mUnion.table->PutEntry(aVal);
@@ -150,10 +132,8 @@ nsCheapSet<EntryType>::Put(const KeyType aVal)
   }
 }
 
-template<typename EntryType>
-void
-nsCheapSet<EntryType>::Remove(const KeyType aVal)
-{
+template <typename EntryType>
+void nsCheapSet<EntryType>::Remove(const KeyType aVal) {
   switch (mState) {
     case ZERO:
       break;

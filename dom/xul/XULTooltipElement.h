@@ -13,16 +13,14 @@
 namespace mozilla {
 namespace dom {
 
-nsXULElement*
-NS_NewXULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsXULElement* NS_NewXULPopupElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-class XULTooltipElement final : public XULPopupElement
-{
-public:
-  explicit XULTooltipElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : XULPopupElement(std::move(aNodeInfo))
-  {
-  }
+class XULTooltipElement final : public XULPopupElement {
+ public:
+  explicit XULTooltipElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : XULPopupElement(std::move(aNodeInfo)) {}
   nsresult Init();
 
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
@@ -32,13 +30,11 @@ public:
                                 bool aNotify) override;
   virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
-protected:
-  virtual ~XULTooltipElement()
-  {
-  }
+ protected:
+  virtual ~XULTooltipElement() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // XULPopupElement_h
+#endif  // XULPopupElement_h

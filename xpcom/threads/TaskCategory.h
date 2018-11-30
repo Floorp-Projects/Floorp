@@ -42,6 +42,6 @@ enum class TaskCategory {
   Count
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_TaskCategory_h
+#endif  // mozilla_TaskCategory_h

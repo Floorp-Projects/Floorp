@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef LogCommandLineHandler_h
 #define LogCommandLineHandler_h
@@ -40,10 +40,10 @@ namespace mozilla {
  * application startup.  Command line handlers are proccessed way later
  * after logging has already been set up.
  */
-void
-LoggingHandleCommandLineArgs(int argc, char const* const* argv,
-                             std::function<void(nsACString const&)> const& consumer);
+void LoggingHandleCommandLineArgs(
+    int argc, char const* const* argv,
+    std::function<void(nsACString const&)> const& consumer);
 
-} // mozilla
+}  // namespace mozilla
 
 #endif

@@ -14,12 +14,10 @@
 namespace mozilla {
 namespace dom {
 
-
 // A CSSFontFaceRuleDecl is always embeded in a CSSFontFaceRule.
 class CSSFontFaceRule;
-class CSSFontFaceRuleDecl final : public nsICSSDeclaration
-{
-public:
+class CSSFontFaceRuleDecl final : public nsICSSDeclaration {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
 
@@ -30,12 +28,12 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
-protected:
+ protected:
   // For accessing the constructor.
   friend class CSSFontFaceRule;
 
   explicit CSSFontFaceRuleDecl(already_AddRefed<RawServoFontFaceRule> aDecl)
-    : mRawRule(std::move(aDecl)) {}
+      : mRawRule(std::move(aDecl)) {}
 
   ~CSSFontFaceRuleDecl() = default;
 
@@ -44,27 +42,23 @@ protected:
 
   RefPtr<RawServoFontFaceRule> mRawRule;
 
-private:
+ private:
   void* operator new(size_t size) CPP_THROW_NEW = delete;
 };
 
-class CSSFontFaceRule final : public css::Rule
-{
-public:
+class CSSFontFaceRule final : public css::Rule {
+ public:
   CSSFontFaceRule(already_AddRefed<RawServoFontFaceRule> aRawRule,
-                  StyleSheet* aSheet,
-                  css::Rule* aParentRule,
-                  uint32_t aLine,
+                  StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
                   uint32_t aColumn)
-    : css::Rule(aSheet, aParentRule, aLine, aColumn)
-    , mDecl(std::move(aRawRule))
-  {}
+      : css::Rule(aSheet, aParentRule, aLine, aColumn),
+        mDecl(std::move(aRawRule)) {}
 
   CSSFontFaceRule(const CSSFontFaceRule&) = delete;
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
-      CSSFontFaceRule, css::Rule)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CSSFontFaceRule,
+                                                         css::Rule)
   bool IsCCLeaf() const final;
 
   RawServoFontFaceRule* Raw() const { return mDecl.mRawRule; }
@@ -75,8 +69,7 @@ public:
   nsICSSDeclaration* Style();
 
   // Methods of mozilla::css::Rule
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const final;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
@@ -84,7 +77,7 @@ public:
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-private:
+ private:
   virtual ~CSSFontFaceRule() = default;
 
   // For computing the offset of mDecl.
@@ -93,21 +86,17 @@ private:
   CSSFontFaceRuleDecl mDecl;
 };
 
-inline CSSFontFaceRule*
-CSSFontFaceRuleDecl::ContainingRule()
-{
-  return reinterpret_cast<CSSFontFaceRule*>
-    (reinterpret_cast<char*>(this) - offsetof(CSSFontFaceRule, mDecl));
+inline CSSFontFaceRule* CSSFontFaceRuleDecl::ContainingRule() {
+  return reinterpret_cast<CSSFontFaceRule*>(reinterpret_cast<char*>(this) -
+                                            offsetof(CSSFontFaceRule, mDecl));
 }
 
-inline const CSSFontFaceRule*
-CSSFontFaceRuleDecl::ContainingRule() const
-{
-  return reinterpret_cast<const CSSFontFaceRule*>
-    (reinterpret_cast<const char*>(this) - offsetof(CSSFontFaceRule, mDecl));
+inline const CSSFontFaceRule* CSSFontFaceRuleDecl::ContainingRule() const {
+  return reinterpret_cast<const CSSFontFaceRule*>(
+      reinterpret_cast<const char*>(this) - offsetof(CSSFontFaceRule, mDecl));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_CSSFontFaceRule_h
+#endif  // mozilla_CSSFontFaceRule_h

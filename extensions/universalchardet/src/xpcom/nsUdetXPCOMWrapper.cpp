@@ -7,7 +7,7 @@
 
 #include "nsUniversalDetector.h"
 #include "nsUdetXPCOMWrapper.h"
-#include "nsCharSetProber.h" // for DumpStatus
+#include "nsCharSetProber.h"  // for DumpStatus
 
 #include "nsUniversalCharDetDll.h"
 //---- for XPCOM
@@ -16,47 +16,35 @@
 #include "nsCOMPtr.h"
 
 //---------------------------------------------------------------------
-nsXPCOMDetector:: nsXPCOMDetector()
- : nsUniversalDetector()
-{
-}
+nsXPCOMDetector::nsXPCOMDetector() : nsUniversalDetector() {}
 //---------------------------------------------------------------------
-nsXPCOMDetector::~nsXPCOMDetector()
-{
-}
+nsXPCOMDetector::~nsXPCOMDetector() {}
 //---------------------------------------------------------------------
 
 NS_IMPL_ISUPPORTS(nsXPCOMDetector, nsICharsetDetector)
 
 //---------------------------------------------------------------------
-NS_IMETHODIMP nsXPCOMDetector::Init(
-              nsICharsetDetectionObserver* aObserver)
-{
-  NS_ASSERTION(mObserver == nullptr , "Init twice");
-  if(nullptr == aObserver)
-    return NS_ERROR_ILLEGAL_VALUE;
+NS_IMETHODIMP nsXPCOMDetector::Init(nsICharsetDetectionObserver* aObserver) {
+  NS_ASSERTION(mObserver == nullptr, "Init twice");
+  if (nullptr == aObserver) return NS_ERROR_ILLEGAL_VALUE;
 
   mObserver = aObserver;
   return NS_OK;
 }
 //----------------------------------------------------------
-NS_IMETHODIMP nsXPCOMDetector::DoIt(const char* aBuf,
-              uint32_t aLen, bool* oDontFeedMe)
-{
-  NS_ASSERTION(mObserver != nullptr , "have not init yet");
+NS_IMETHODIMP nsXPCOMDetector::DoIt(const char* aBuf, uint32_t aLen,
+                                    bool* oDontFeedMe) {
+  NS_ASSERTION(mObserver != nullptr, "have not init yet");
 
-  if((nullptr == aBuf) || (nullptr == oDontFeedMe))
+  if ((nullptr == aBuf) || (nullptr == oDontFeedMe))
     return NS_ERROR_ILLEGAL_VALUE;
 
   this->Reset();
   nsresult rv = this->HandleData(aBuf, aLen);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
-  if (mDone)
-  {
-    if (mDetectedCharset)
-      Report(mDetectedCharset);
+  if (mDone) {
+    if (mDetectedCharset) Report(mDetectedCharset);
 
     *oDontFeedMe = true;
   }
@@ -64,16 +52,13 @@ NS_IMETHODIMP nsXPCOMDetector::DoIt(const char* aBuf,
   return NS_OK;
 }
 //----------------------------------------------------------
-NS_IMETHODIMP nsXPCOMDetector::Done()
-{
-  NS_ASSERTION(mObserver != nullptr , "have not init yet");
+NS_IMETHODIMP nsXPCOMDetector::Done() {
+  NS_ASSERTION(mObserver != nullptr, "have not init yet");
 #ifdef DEBUG_chardet
-  for (int32_t i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
-  {
+  for (int32_t i = 0; i < NUM_OF_CHARSET_PROBERS; i++) {
     // If no data was received the array might stay filled with nulls
     // the way it was initialized in the constructor.
-    if (mCharSetProbers[i])
-      mCharSetProbers[i]->DumpStatus();
+    if (mCharSetProbers[i]) mCharSetProbers[i]->DumpStatus();
   }
 #endif
 
@@ -81,9 +66,8 @@ NS_IMETHODIMP nsXPCOMDetector::Done()
   return NS_OK;
 }
 //----------------------------------------------------------
-void nsXPCOMDetector::Report(const char* aCharset)
-{
-  NS_ASSERTION(mObserver != nullptr , "have not init yet");
+void nsXPCOMDetector::Report(const char* aCharset) {
+  NS_ASSERTION(mObserver != nullptr, "have not init yet");
 #ifdef DEBUG_chardet
   printf("Universal Charset Detector report charset %s . \r\n", aCharset);
 #endif

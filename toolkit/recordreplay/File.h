@@ -33,8 +33,7 @@ namespace recordreplay {
 // Stream is not threadsafe.
 
 // A location of a chunk of a stream within a file.
-struct StreamChunkLocation
-{
+struct StreamChunkLocation {
   // Offset into the file of the start of the chunk.
   uint64_t mOffset;
 
@@ -51,19 +50,12 @@ struct StreamChunkLocation
   uint64_t mStreamPos;
 };
 
-enum class StreamName
-{
-  Main,
-  Lock,
-  Event,
-  Count
-};
+enum class StreamName { Main, Lock, Event, Count };
 
 class File;
 class RecordingEventSection;
 
-class Stream
-{
+class Stream {
   friend class File;
   friend class RecordingEventSection;
 
@@ -123,25 +115,24 @@ class Stream
   bool mInRecordingEventSection;
 
   Stream(File* aFile, StreamName aName, size_t aNameIndex)
-    : mFile(aFile)
-    , mName(aName)
-    , mNameIndex(aNameIndex)
-    , mBuffer(nullptr)
-    , mBufferSize(0)
-    , mBufferLength(0)
-    , mBufferPos(0)
-    , mStreamPos(0)
-    , mBallast(nullptr)
-    , mBallastSize(0)
-    , mInputBallast(nullptr)
-    , mInputBallastSize(0)
-    , mLastEvent((ThreadEvent) 0)
-    , mChunkIndex(0)
-    , mFlushedChunks(0)
-    , mInRecordingEventSection(false)
-  {}
+      : mFile(aFile),
+        mName(aName),
+        mNameIndex(aNameIndex),
+        mBuffer(nullptr),
+        mBufferSize(0),
+        mBufferLength(0),
+        mBufferPos(0),
+        mStreamPos(0),
+        mBallast(nullptr),
+        mBallastSize(0),
+        mInputBallast(nullptr),
+        mInputBallastSize(0),
+        mLastEvent((ThreadEvent)0),
+        mChunkIndex(0),
+        mFlushedChunks(0),
+        mInRecordingEventSection(false) {}
 
-public:
+ public:
   StreamName Name() const { return mName; }
   size_t NameIndex() const { return mNameIndex; }
 
@@ -183,18 +174,13 @@ public:
   void CheckInput(const char* aValue);
   void CheckInput(const void* aData, size_t aSize);
 
-  inline size_t StreamPosition() {
-    return mStreamPos;
-  }
+  inline size_t StreamPosition() { return mStreamPos; }
 
-private:
-  enum ShouldCopy {
-    DontCopyExistingData,
-    CopyExistingData
-  };
+ private:
+  enum ShouldCopy { DontCopyExistingData, CopyExistingData };
 
-  void EnsureMemory(UniquePtr<char[]>* aBuf, size_t* aSize, size_t aNeededSize, size_t aMaxSize,
-                    ShouldCopy aCopy);
+  void EnsureMemory(UniquePtr<char[]>* aBuf, size_t* aSize, size_t aNeededSize,
+                    size_t aMaxSize, ShouldCopy aCopy);
   void EnsureInputBallast(size_t aSize);
   void Flush(bool aTakeLock);
   const char* ReadInputString();
@@ -202,18 +188,14 @@ private:
   static size_t BallastMaxSize();
 };
 
-class File
-{
-public:
-  enum Mode {
-    WRITE,
-    READ
-  };
+class File {
+ public:
+  enum Mode { WRITE, READ };
 
   friend class Stream;
   friend class RecordingEventSection;
 
-private:
+ private:
   // Open file handle, or 0 if closed.
   FileHandle mFd;
 
@@ -228,7 +210,7 @@ private:
 
   // All streams in this file, indexed by stream name and name index.
   typedef InfallibleVector<UniquePtr<Stream>> StreamVector;
-  StreamVector mStreams[(size_t) StreamName::Count];
+  StreamVector mStreams[(size_t)StreamName::Count];
 
   // Lock protecting access to this file.
   SpinLock mLock;
@@ -249,7 +231,7 @@ private:
     PodZero(&mStreamLock);
   }
 
-public:
+ public:
   File() { Clear(); }
   ~File() { Close(); }
 
@@ -269,25 +251,21 @@ public:
   // there were such changes.
   bool Flush();
 
-  enum class ReadIndexResult {
-    InvalidFile,
-    EndOfFile,
-    FoundIndex
-  };
+  enum class ReadIndexResult { InvalidFile, EndOfFile, FoundIndex };
 
   // Read any data added to the file by a Flush() call. aUpdatedStreams is
   // optional and filled in with streams whose contents have changed, and may
   // have duplicates.
   ReadIndexResult ReadNextIndex(InfallibleVector<Stream*>* aUpdatedStreams);
 
-private:
-  StreamChunkLocation WriteChunk(const char* aStart,
-                                 size_t aCompressedSize, size_t aDecompressedSize,
-                                 uint64_t aStreamPos, bool aTakeLock);
+ private:
+  StreamChunkLocation WriteChunk(const char* aStart, size_t aCompressedSize,
+                                 size_t aDecompressedSize, uint64_t aStreamPos,
+                                 bool aTakeLock);
   void ReadChunk(char* aDest, const StreamChunkLocation& aChunk);
 };
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_File_h
+#endif  // mozilla_recordreplay_File_h

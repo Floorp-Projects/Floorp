@@ -11,15 +11,13 @@
 
 namespace mozilla {
 
-WebGLExtensionStandardDerivatives::WebGLExtensionStandardDerivatives(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-}
+WebGLExtensionStandardDerivatives::WebGLExtensionStandardDerivatives(
+    WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {}
 
-WebGLExtensionStandardDerivatives::~WebGLExtensionStandardDerivatives()
-{
-}
+WebGLExtensionStandardDerivatives::~WebGLExtensionStandardDerivatives() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionStandardDerivatives, OES_standard_derivatives)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionStandardDerivatives,
+                          OES_standard_derivatives)
 
-} // namespace mozilla
+}  // namespace mozilla

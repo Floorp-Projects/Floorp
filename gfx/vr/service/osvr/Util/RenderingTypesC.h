@@ -47,7 +47,7 @@ OSVR_EXTERN_C_BEGIN
 */
 
 /** @brief A count or index for a display input in a display config.
-*/
+ */
 typedef uint8_t OSVR_DisplayInputCount;
 
 /** @brief The integer type used in specification of size or location of a

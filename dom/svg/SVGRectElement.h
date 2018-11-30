@@ -10,32 +10,35 @@
 #include "nsSVGLength2.h"
 #include "SVGGeometryElement.h"
 
-nsresult NS_NewSVGRectElement(nsIContent **aResult,
-                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGRectElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
 typedef SVGGeometryElement SVGRectElementBase;
 
-class SVGRectElement final : public SVGRectElementBase
-{
-protected:
+class SVGRectElement final : public SVGRectElementBase {
+ protected:
   explicit SVGRectElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
-  friend nsresult (::NS_NewSVGRectElement(nsIContent **aResult,
-                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  virtual JSObject* WrapNode(JSContext* cx,
+                             JS::Handle<JSObject*> aGivenProto) override;
+  friend nsresult(::NS_NewSVGRectElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-public:
+ public:
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
   // SVGGeometryElement methods:
-  virtual bool GetGeometryBounds(Rect* aBounds, const StrokeOptions& aStrokeOptions,
-                                 const Matrix& aToBoundsSpace,
-                                 const Matrix* aToNonScalingStrokeSpace = nullptr) override;
+  virtual bool GetGeometryBounds(
+      Rect* aBounds, const StrokeOptions& aStrokeOptions,
+      const Matrix& aToBoundsSpace,
+      const Matrix* aToNonScalingStrokeSpace = nullptr) override;
   virtual void GetAsSimplePath(SimplePath* aSimplePath) override;
-  virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder = nullptr) override;
+  virtual already_AddRefed<Path> BuildPath(
+      PathBuilder* aBuilder = nullptr) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
@@ -47,8 +50,7 @@ public:
   already_AddRefed<SVGAnimatedLength> Rx();
   already_AddRefed<SVGAnimatedLength> Ry();
 
-protected:
-
+ protected:
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT, ATTR_RX, ATTR_RY };
@@ -56,7 +58,7 @@ protected:
   static LengthInfo sLengthInfo[6];
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGRectElement_h
+#endif  // mozilla_dom_SVGRectElement_h

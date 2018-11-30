@@ -17,309 +17,290 @@
 
 namespace mozilla {
 
-class PrefsHelper
-    : public java::PrefsHelper::Natives<PrefsHelper>
-{
-    PrefsHelper() = delete;
+class PrefsHelper : public java::PrefsHelper::Natives<PrefsHelper> {
+  PrefsHelper() = delete;
 
-    static bool GetVariantPref(nsIObserverService* aObsServ,
-                               nsIWritableVariant* aVariant,
-                               jni::Object::Param aPrefHandler,
-                               const jni::String::LocalRef& aPrefName)
-    {
-        if (NS_FAILED(aObsServ->NotifyObservers(aVariant, "android-get-pref",
-                                                aPrefName->ToString().get()))) {
-            return false;
-        }
-
-        uint16_t varType = aVariant->GetDataType();
-
-        int32_t type = java::PrefsHelper::PREF_INVALID;
-        bool boolVal = false;
-        int32_t intVal = 0;
-        nsAutoString strVal;
-
-        switch (varType) {
-            case nsIDataType::VTYPE_BOOL:
-                type = java::PrefsHelper::PREF_BOOL;
-                if (NS_FAILED(aVariant->GetAsBool(&boolVal))) {
-                    return false;
-                }
-                break;
-            case nsIDataType::VTYPE_INT32:
-                type = java::PrefsHelper::PREF_INT;
-                if (NS_FAILED(aVariant->GetAsInt32(&intVal))) {
-                    return false;
-                }
-                break;
-            case nsIDataType::VTYPE_ASTRING:
-                type = java::PrefsHelper::PREF_STRING;
-                if (NS_FAILED(aVariant->GetAsAString(strVal))) {
-                    return false;
-                }
-                break;
-            default:
-                return false;
-        }
-
-        jni::StringParam jstrVal(type == java::PrefsHelper::PREF_STRING ?
-                jni::StringParam(strVal, aPrefName.Env()) :
-                jni::StringParam(nullptr));
-
-        if (aPrefHandler) {
-            java::PrefsHelper::CallPrefHandler(
-                    aPrefHandler, type, aPrefName,
-                    boolVal, intVal, jstrVal);
-        } else {
-            java::PrefsHelper::OnPrefChange(
-                    aPrefName, type, boolVal, intVal, jstrVal);
-        }
-        return true;
+  static bool GetVariantPref(nsIObserverService* aObsServ,
+                             nsIWritableVariant* aVariant,
+                             jni::Object::Param aPrefHandler,
+                             const jni::String::LocalRef& aPrefName) {
+    if (NS_FAILED(aObsServ->NotifyObservers(aVariant, "android-get-pref",
+                                            aPrefName->ToString().get()))) {
+      return false;
     }
 
-    static bool SetVariantPref(nsIObserverService* aObsServ,
-                               nsIWritableVariant* aVariant,
-                               jni::String::Param aPrefName,
-                               bool aFlush,
-                               int32_t aType,
-                               bool aBoolVal,
-                               int32_t aIntVal,
-                               jni::String::Param aStrVal)
-    {
-        nsresult rv = NS_ERROR_FAILURE;
+    uint16_t varType = aVariant->GetDataType();
 
-        switch (aType) {
-            case java::PrefsHelper::PREF_BOOL:
-                rv = aVariant->SetAsBool(aBoolVal);
-                break;
-            case java::PrefsHelper::PREF_INT:
-                rv = aVariant->SetAsInt32(aIntVal);
-                break;
-            case java::PrefsHelper::PREF_STRING:
-                rv = aVariant->SetAsAString(aStrVal->ToString());
-                break;
+    int32_t type = java::PrefsHelper::PREF_INVALID;
+    bool boolVal = false;
+    int32_t intVal = 0;
+    nsAutoString strVal;
+
+    switch (varType) {
+      case nsIDataType::VTYPE_BOOL:
+        type = java::PrefsHelper::PREF_BOOL;
+        if (NS_FAILED(aVariant->GetAsBool(&boolVal))) {
+          return false;
         }
-
-        if (NS_SUCCEEDED(rv)) {
-            rv = aObsServ->NotifyObservers(aVariant, "android-set-pref",
-                                           aPrefName->ToString().get());
+        break;
+      case nsIDataType::VTYPE_INT32:
+        type = java::PrefsHelper::PREF_INT;
+        if (NS_FAILED(aVariant->GetAsInt32(&intVal))) {
+          return false;
         }
-
-        uint16_t varType = nsIDataType::VTYPE_EMPTY;
-        if (NS_SUCCEEDED(rv)) {
-            varType = aVariant->GetDataType();
+        break;
+      case nsIDataType::VTYPE_ASTRING:
+        type = java::PrefsHelper::PREF_STRING;
+        if (NS_FAILED(aVariant->GetAsAString(strVal))) {
+          return false;
         }
-
-        // We use set-to-empty to signal the pref was handled.
-        const bool handled = varType == nsIDataType::VTYPE_EMPTY;
-
-        if (NS_SUCCEEDED(rv) && handled && aFlush) {
-            rv = Preferences::GetService()->SavePrefFile(nullptr);
-        }
-
-        if (NS_SUCCEEDED(rv)) {
-            return handled;
-        }
-
-        NS_WARNING(nsPrintfCString("Failed to set pref %s",
-                                   aPrefName->ToCString().get()).get());
-        // Pretend we handled the pref.
-        return true;
+        break;
+      default:
+        return false;
     }
 
-public:
-    static void GetPrefs(const jni::Class::LocalRef& aCls,
-                         jni::ObjectArray::Param aPrefNames,
-                         jni::Object::Param aPrefHandler)
-    {
-        nsTArray<jni::Object::LocalRef> nameRefArray(aPrefNames->GetElements());
-        nsCOMPtr<nsIObserverService> obsServ;
-        nsCOMPtr<nsIWritableVariant> value;
-        nsAutoString strVal;
+    jni::StringParam jstrVal(type == java::PrefsHelper::PREF_STRING
+                                 ? jni::StringParam(strVal, aPrefName.Env())
+                                 : jni::StringParam(nullptr));
 
-        for (jni::Object::LocalRef& nameRef : nameRefArray) {
-            jni::String::LocalRef nameStr(std::move(nameRef));
-            const nsCString& name = nameStr->ToCString();
+    if (aPrefHandler) {
+      java::PrefsHelper::CallPrefHandler(aPrefHandler, type, aPrefName, boolVal,
+                                         intVal, jstrVal);
+    } else {
+      java::PrefsHelper::OnPrefChange(aPrefName, type, boolVal, intVal,
+                                      jstrVal);
+    }
+    return true;
+  }
 
-            int32_t type = java::PrefsHelper::PREF_INVALID;
-            bool boolVal = false;
-            int32_t intVal = 0;
-            strVal.Truncate();
+  static bool SetVariantPref(nsIObserverService* aObsServ,
+                             nsIWritableVariant* aVariant,
+                             jni::String::Param aPrefName, bool aFlush,
+                             int32_t aType, bool aBoolVal, int32_t aIntVal,
+                             jni::String::Param aStrVal) {
+    nsresult rv = NS_ERROR_FAILURE;
 
-            switch (Preferences::GetType(name.get())) {
-                case nsIPrefBranch::PREF_BOOL:
-                    type = java::PrefsHelper::PREF_BOOL;
-                    boolVal = Preferences::GetBool(name.get());
-                    break;
+    switch (aType) {
+      case java::PrefsHelper::PREF_BOOL:
+        rv = aVariant->SetAsBool(aBoolVal);
+        break;
+      case java::PrefsHelper::PREF_INT:
+        rv = aVariant->SetAsInt32(aIntVal);
+        break;
+      case java::PrefsHelper::PREF_STRING:
+        rv = aVariant->SetAsAString(aStrVal->ToString());
+        break;
+    }
 
-                case nsIPrefBranch::PREF_INT:
-                    type = java::PrefsHelper::PREF_INT;
-                    intVal = Preferences::GetInt(name.get());
-                    break;
+    if (NS_SUCCEEDED(rv)) {
+      rv = aObsServ->NotifyObservers(aVariant, "android-set-pref",
+                                     aPrefName->ToString().get());
+    }
 
-                case nsIPrefBranch::PREF_STRING: {
-                    type = java::PrefsHelper::PREF_STRING;
-                    nsresult rv =
-                      Preferences::GetLocalizedString(name.get(), strVal);
-                    if (NS_FAILED(rv)) {
-                        Preferences::GetString(name.get(), strVal);
-                    }
-                    break;
-                }
-                default:
-                    // Pref not found; try to find it.
-                    if (!obsServ) {
-                        obsServ = services::GetObserverService();
-                        if (!obsServ) {
-                            continue;
-                        }
-                    }
-                    if (value) {
-                        value->SetAsEmpty();
-                    } else {
-                        value = new nsVariant();
-                    }
-                    if (!GetVariantPref(obsServ, value,
-                                        aPrefHandler, nameStr)) {
-                        NS_WARNING(nsPrintfCString("Failed to get pref %s",
-                                                   name.get()).get());
-                    }
-                    continue;
+    uint16_t varType = nsIDataType::VTYPE_EMPTY;
+    if (NS_SUCCEEDED(rv)) {
+      varType = aVariant->GetDataType();
+    }
+
+    // We use set-to-empty to signal the pref was handled.
+    const bool handled = varType == nsIDataType::VTYPE_EMPTY;
+
+    if (NS_SUCCEEDED(rv) && handled && aFlush) {
+      rv = Preferences::GetService()->SavePrefFile(nullptr);
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      return handled;
+    }
+
+    NS_WARNING(
+        nsPrintfCString("Failed to set pref %s", aPrefName->ToCString().get())
+            .get());
+    // Pretend we handled the pref.
+    return true;
+  }
+
+ public:
+  static void GetPrefs(const jni::Class::LocalRef& aCls,
+                       jni::ObjectArray::Param aPrefNames,
+                       jni::Object::Param aPrefHandler) {
+    nsTArray<jni::Object::LocalRef> nameRefArray(aPrefNames->GetElements());
+    nsCOMPtr<nsIObserverService> obsServ;
+    nsCOMPtr<nsIWritableVariant> value;
+    nsAutoString strVal;
+
+    for (jni::Object::LocalRef& nameRef : nameRefArray) {
+      jni::String::LocalRef nameStr(std::move(nameRef));
+      const nsCString& name = nameStr->ToCString();
+
+      int32_t type = java::PrefsHelper::PREF_INVALID;
+      bool boolVal = false;
+      int32_t intVal = 0;
+      strVal.Truncate();
+
+      switch (Preferences::GetType(name.get())) {
+        case nsIPrefBranch::PREF_BOOL:
+          type = java::PrefsHelper::PREF_BOOL;
+          boolVal = Preferences::GetBool(name.get());
+          break;
+
+        case nsIPrefBranch::PREF_INT:
+          type = java::PrefsHelper::PREF_INT;
+          intVal = Preferences::GetInt(name.get());
+          break;
+
+        case nsIPrefBranch::PREF_STRING: {
+          type = java::PrefsHelper::PREF_STRING;
+          nsresult rv = Preferences::GetLocalizedString(name.get(), strVal);
+          if (NS_FAILED(rv)) {
+            Preferences::GetString(name.get(), strVal);
+          }
+          break;
+        }
+        default:
+          // Pref not found; try to find it.
+          if (!obsServ) {
+            obsServ = services::GetObserverService();
+            if (!obsServ) {
+              continue;
             }
+          }
+          if (value) {
+            value->SetAsEmpty();
+          } else {
+            value = new nsVariant();
+          }
+          if (!GetVariantPref(obsServ, value, aPrefHandler, nameStr)) {
+            NS_WARNING(
+                nsPrintfCString("Failed to get pref %s", name.get()).get());
+          }
+          continue;
+      }
 
-            java::PrefsHelper::CallPrefHandler(
-                    aPrefHandler, type, nameStr, boolVal, intVal,
-                    jni::StringParam(type == java::PrefsHelper::PREF_STRING ?
-                        jni::StringParam(strVal, aCls.Env()) :
-                        jni::StringParam(nullptr)));
-        }
-
-        java::PrefsHelper::CallPrefHandler(
-                aPrefHandler, java::PrefsHelper::PREF_FINISH,
-                nullptr, false, 0, nullptr);
+      java::PrefsHelper::CallPrefHandler(
+          aPrefHandler, type, nameStr, boolVal, intVal,
+          jni::StringParam(type == java::PrefsHelper::PREF_STRING
+                               ? jni::StringParam(strVal, aCls.Env())
+                               : jni::StringParam(nullptr)));
     }
 
-    static void SetPref(jni::String::Param aPrefName,
-                        bool aFlush,
-                        int32_t aType,
-                        bool aBoolVal,
-                        int32_t aIntVal,
-                        jni::String::Param aStrVal)
-    {
-        const nsCString& name = aPrefName->ToCString();
+    java::PrefsHelper::CallPrefHandler(aPrefHandler,
+                                       java::PrefsHelper::PREF_FINISH, nullptr,
+                                       false, 0, nullptr);
+  }
 
-        if (Preferences::GetType(name.get()) == nsIPrefBranch::PREF_INVALID) {
-            // No pref; try asking first.
-            nsCOMPtr<nsIObserverService> obsServ =
-                    services::GetObserverService();
-            nsCOMPtr<nsIWritableVariant> value = new nsVariant();
-            if (obsServ && SetVariantPref(obsServ, value, aPrefName, aFlush,
-                                          aType, aBoolVal, aIntVal, aStrVal)) {
-                // The "pref" has changed; send a notification.
-                GetVariantPref(obsServ, value, nullptr,
-                               jni::String::LocalRef(aPrefName));
-                return;
-            }
-        }
+  static void SetPref(jni::String::Param aPrefName, bool aFlush, int32_t aType,
+                      bool aBoolVal, int32_t aIntVal,
+                      jni::String::Param aStrVal) {
+    const nsCString& name = aPrefName->ToCString();
 
-        switch (aType) {
-            case java::PrefsHelper::PREF_BOOL:
-                Preferences::SetBool(name.get(), aBoolVal);
-                break;
-            case java::PrefsHelper::PREF_INT:
-                Preferences::SetInt(name.get(), aIntVal);
-                break;
-            case java::PrefsHelper::PREF_STRING:
-                Preferences::SetString(name.get(), aStrVal->ToString());
-                break;
-            default:
-                MOZ_ASSERT(false, "Invalid pref type");
-        }
-
-        if (aFlush) {
-            Preferences::GetService()->SavePrefFile(nullptr);
-        }
+    if (Preferences::GetType(name.get()) == nsIPrefBranch::PREF_INVALID) {
+      // No pref; try asking first.
+      nsCOMPtr<nsIObserverService> obsServ = services::GetObserverService();
+      nsCOMPtr<nsIWritableVariant> value = new nsVariant();
+      if (obsServ && SetVariantPref(obsServ, value, aPrefName, aFlush, aType,
+                                    aBoolVal, aIntVal, aStrVal)) {
+        // The "pref" has changed; send a notification.
+        GetVariantPref(obsServ, value, nullptr,
+                       jni::String::LocalRef(aPrefName));
+        return;
+      }
     }
 
-    static void AddObserver(const jni::Class::LocalRef& aCls,
-                            jni::ObjectArray::Param aPrefNames,
-                            jni::Object::Param aPrefHandler,
-                            jni::ObjectArray::Param aPrefsToObserve)
-    {
-        // Call observer immediately with existing pref values.
-        GetPrefs(aCls, aPrefNames, aPrefHandler);
-
-        if (!aPrefsToObserve) {
-            return;
-        }
-
-        nsTArray<jni::Object::LocalRef> nameRefArray(
-                aPrefsToObserve->GetElements());
-        nsAppShell* const appShell = nsAppShell::Get();
-        MOZ_ASSERT(appShell);
-
-        for (jni::Object::LocalRef& nameRef : nameRefArray) {
-            jni::String::LocalRef nameStr(std::move(nameRef));
-            MOZ_ALWAYS_SUCCEEDS(Preferences::AddStrongObserver(
-                    appShell, nameStr->ToCString()));
-        }
+    switch (aType) {
+      case java::PrefsHelper::PREF_BOOL:
+        Preferences::SetBool(name.get(), aBoolVal);
+        break;
+      case java::PrefsHelper::PREF_INT:
+        Preferences::SetInt(name.get(), aIntVal);
+        break;
+      case java::PrefsHelper::PREF_STRING:
+        Preferences::SetString(name.get(), aStrVal->ToString());
+        break;
+      default:
+        MOZ_ASSERT(false, "Invalid pref type");
     }
 
-    static void RemoveObserver(const jni::Class::LocalRef& aCls,
-                               jni::ObjectArray::Param aPrefsToUnobserve)
-    {
-        nsTArray<jni::Object::LocalRef> nameRefArray(
-                aPrefsToUnobserve->GetElements());
-        nsAppShell* const appShell = nsAppShell::Get();
-        MOZ_ASSERT(appShell);
+    if (aFlush) {
+      Preferences::GetService()->SavePrefFile(nullptr);
+    }
+  }
 
-        for (jni::Object::LocalRef& nameRef : nameRefArray) {
-            jni::String::LocalRef nameStr(std::move(nameRef));
-            MOZ_ALWAYS_SUCCEEDS(Preferences::RemoveObserver(
-                    appShell, nameStr->ToCString()));
-        }
+  static void AddObserver(const jni::Class::LocalRef& aCls,
+                          jni::ObjectArray::Param aPrefNames,
+                          jni::Object::Param aPrefHandler,
+                          jni::ObjectArray::Param aPrefsToObserve) {
+    // Call observer immediately with existing pref values.
+    GetPrefs(aCls, aPrefNames, aPrefHandler);
+
+    if (!aPrefsToObserve) {
+      return;
     }
 
-    static void OnPrefChange(const char16_t* aData)
-    {
-        const nsCString& name = NS_LossyConvertUTF16toASCII(aData);
+    nsTArray<jni::Object::LocalRef> nameRefArray(
+        aPrefsToObserve->GetElements());
+    nsAppShell* const appShell = nsAppShell::Get();
+    MOZ_ASSERT(appShell);
 
-        int32_t type = -1;
-        bool boolVal = false;
-        int32_t intVal = false;
-        nsAutoString strVal;
-
-        switch (Preferences::GetType(name.get())) {
-            case nsIPrefBranch::PREF_BOOL:
-                type = java::PrefsHelper::PREF_BOOL;
-                boolVal = Preferences::GetBool(name.get());
-                break;
-            case nsIPrefBranch::PREF_INT:
-                type = java::PrefsHelper::PREF_INT;
-                intVal = Preferences::GetInt(name.get());
-                break;
-            case nsIPrefBranch::PREF_STRING: {
-                type = java::PrefsHelper::PREF_STRING;
-                nsresult rv =
-                  Preferences::GetLocalizedString(name.get(), strVal);
-                if (NS_FAILED(rv)) {
-                    Preferences::GetString(name.get(), strVal);
-                }
-                break;
-            }
-            default:
-                NS_WARNING(nsPrintfCString("Invalid pref %s",
-                                           name.get()).get());
-                return;
-        }
-
-        java::PrefsHelper::OnPrefChange(
-                name, type, boolVal, intVal,
-                jni::StringParam(type == java::PrefsHelper::PREF_STRING ?
-                    jni::StringParam(strVal) : jni::StringParam(nullptr)));
+    for (jni::Object::LocalRef& nameRef : nameRefArray) {
+      jni::String::LocalRef nameStr(std::move(nameRef));
+      MOZ_ALWAYS_SUCCEEDS(
+          Preferences::AddStrongObserver(appShell, nameStr->ToCString()));
     }
+  }
+
+  static void RemoveObserver(const jni::Class::LocalRef& aCls,
+                             jni::ObjectArray::Param aPrefsToUnobserve) {
+    nsTArray<jni::Object::LocalRef> nameRefArray(
+        aPrefsToUnobserve->GetElements());
+    nsAppShell* const appShell = nsAppShell::Get();
+    MOZ_ASSERT(appShell);
+
+    for (jni::Object::LocalRef& nameRef : nameRefArray) {
+      jni::String::LocalRef nameStr(std::move(nameRef));
+      MOZ_ALWAYS_SUCCEEDS(
+          Preferences::RemoveObserver(appShell, nameStr->ToCString()));
+    }
+  }
+
+  static void OnPrefChange(const char16_t* aData) {
+    const nsCString& name = NS_LossyConvertUTF16toASCII(aData);
+
+    int32_t type = -1;
+    bool boolVal = false;
+    int32_t intVal = false;
+    nsAutoString strVal;
+
+    switch (Preferences::GetType(name.get())) {
+      case nsIPrefBranch::PREF_BOOL:
+        type = java::PrefsHelper::PREF_BOOL;
+        boolVal = Preferences::GetBool(name.get());
+        break;
+      case nsIPrefBranch::PREF_INT:
+        type = java::PrefsHelper::PREF_INT;
+        intVal = Preferences::GetInt(name.get());
+        break;
+      case nsIPrefBranch::PREF_STRING: {
+        type = java::PrefsHelper::PREF_STRING;
+        nsresult rv = Preferences::GetLocalizedString(name.get(), strVal);
+        if (NS_FAILED(rv)) {
+          Preferences::GetString(name.get(), strVal);
+        }
+        break;
+      }
+      default:
+        NS_WARNING(nsPrintfCString("Invalid pref %s", name.get()).get());
+        return;
+    }
+
+    java::PrefsHelper::OnPrefChange(
+        name, type, boolVal, intVal,
+        jni::StringParam(type == java::PrefsHelper::PREF_STRING
+                             ? jni::StringParam(strVal)
+                             : jni::StringParam(nullptr)));
+  }
 };
 
-} // namespace
+}  // namespace mozilla
 
-#endif // PrefsHelper_h
+#endif  // PrefsHelper_h

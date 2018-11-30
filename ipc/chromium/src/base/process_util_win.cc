@@ -26,28 +26,19 @@ namespace {
 const int PAGESIZE_KB = 4;
 
 // HeapSetInformation function pointer.
-typedef BOOL (WINAPI* HeapSetFn)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T);
+typedef BOOL(WINAPI* HeapSetFn)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T);
 
-typedef BOOL (WINAPI * InitializeProcThreadAttributeListFn)(
-  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
-  DWORD dwAttributeCount,
-  DWORD dwFlags,
-  PSIZE_T lpSize
-);
+typedef BOOL(WINAPI* InitializeProcThreadAttributeListFn)(
+    LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList, DWORD dwAttributeCount,
+    DWORD dwFlags, PSIZE_T lpSize);
 
-typedef BOOL (WINAPI * DeleteProcThreadAttributeListFn)(
-  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList
-);
+typedef BOOL(WINAPI* DeleteProcThreadAttributeListFn)(
+    LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList);
 
-typedef BOOL (WINAPI * UpdateProcThreadAttributeFn)(
-  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
-  DWORD dwFlags,
-  DWORD_PTR Attribute,
-  PVOID lpValue,
-  SIZE_T cbSize,
-  PVOID lpPreviousValue,
-  PSIZE_T lpReturnSize
-);
+typedef BOOL(WINAPI* UpdateProcThreadAttributeFn)(
+    LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList, DWORD dwFlags,
+    DWORD_PTR Attribute, PVOID lpValue, SIZE_T cbSize, PVOID lpPreviousValue,
+    PSIZE_T lpReturnSize);
 
 static InitializeProcThreadAttributeListFn InitializeProcThreadAttributeListPtr;
 static DeleteProcThreadAttributeListFn DeleteProcThreadAttributeListPtr;
@@ -59,21 +50,16 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
 namespace base {
 
-ProcessId GetCurrentProcId() {
-  return ::GetCurrentProcessId();
-}
+ProcessId GetCurrentProcId() { return ::GetCurrentProcessId(); }
 
-ProcessHandle GetCurrentProcessHandle() {
-  return ::GetCurrentProcess();
-}
+ProcessHandle GetCurrentProcessHandle() { return ::GetCurrentProcess(); }
 
 bool OpenProcessHandle(ProcessId pid, ProcessHandle* handle) {
   // TODO(phajdan.jr): Take even more permissions out of this list.
-  ProcessHandle result = OpenProcess(PROCESS_DUP_HANDLE |
-                                         PROCESS_TERMINATE |
-                                         PROCESS_QUERY_INFORMATION |
-                                         SYNCHRONIZE,
-                                     FALSE, pid);
+  ProcessHandle result =
+      OpenProcess(PROCESS_DUP_HANDLE | PROCESS_TERMINATE |
+                      PROCESS_QUERY_INFORMATION | SYNCHRONIZE,
+                  FALSE, pid);
 
   if (result == NULL) {
     return false;
@@ -84,12 +70,10 @@ bool OpenProcessHandle(ProcessId pid, ProcessHandle* handle) {
 }
 
 bool OpenPrivilegedProcessHandle(ProcessId pid, ProcessHandle* handle) {
-  ProcessHandle result = OpenProcess(PROCESS_DUP_HANDLE |
-                                         PROCESS_TERMINATE |
-                                         PROCESS_QUERY_INFORMATION |
-                                         PROCESS_VM_READ |
-                                         SYNCHRONIZE,
-                                     FALSE, pid);
+  ProcessHandle result =
+      OpenProcess(PROCESS_DUP_HANDLE | PROCESS_TERMINATE |
+                      PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | SYNCHRONIZE,
+                  FALSE, pid);
 
   if (result == NULL) {
     return false;
@@ -110,7 +94,7 @@ void CloseProcessHandle(ProcessHandle process) {
 // Helper for GetProcId()
 bool GetProcIdViaGetProcessId(ProcessHandle process, DWORD* id) {
   // Dynamically get a pointer to GetProcessId().
-  typedef DWORD (WINAPI *GetProcessIdFunction)(HANDLE);
+  typedef DWORD(WINAPI * GetProcessIdFunction)(HANDLE);
   static GetProcessIdFunction GetProcessIdPtr = NULL;
   static bool initialize_get_process_id = true;
   if (initialize_get_process_id) {
@@ -120,11 +104,10 @@ bool GetProcIdViaGetProcessId(ProcessHandle process, DWORD* id) {
       NOTREACHED();
       return false;
     }
-    GetProcessIdPtr = reinterpret_cast<GetProcessIdFunction>(GetProcAddress(
-        kernel32_handle, "GetProcessId"));
+    GetProcessIdPtr = reinterpret_cast<GetProcessIdFunction>(
+        GetProcAddress(kernel32_handle, "GetProcessId"));
   }
-  if (!GetProcessIdPtr)
-    return false;
+  if (!GetProcessIdPtr) return false;
   // Ask for the process ID.
   *id = (*GetProcessIdPtr)(process);
   return true;
@@ -133,7 +116,7 @@ bool GetProcIdViaGetProcessId(ProcessHandle process, DWORD* id) {
 // Helper for GetProcId()
 bool GetProcIdViaNtQueryInformationProcess(ProcessHandle process, DWORD* id) {
   // Dynamically get a pointer to NtQueryInformationProcess().
-  typedef NTSTATUS (WINAPI *NtQueryInformationProcessFunction)(
+  typedef NTSTATUS(WINAPI * NtQueryInformationProcessFunction)(
       HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
   static NtQueryInformationProcessFunction NtQueryInformationProcessPtr = NULL;
   static bool initialize_query_information_process = true;
@@ -147,20 +130,16 @@ bool GetProcIdViaNtQueryInformationProcess(ProcessHandle process, DWORD* id) {
       return false;
     }
     NtQueryInformationProcessPtr =
-        reinterpret_cast<NtQueryInformationProcessFunction>(GetProcAddress(
-            ntdll_handle, "NtQueryInformationProcess"));
+        reinterpret_cast<NtQueryInformationProcessFunction>(
+            GetProcAddress(ntdll_handle, "NtQueryInformationProcess"));
   }
-  if (!NtQueryInformationProcessPtr)
-    return false;
+  if (!NtQueryInformationProcessPtr) return false;
   // Ask for the process ID.
   PROCESS_BASIC_INFORMATION info;
   ULONG bytes_returned;
-  NTSTATUS status = (*NtQueryInformationProcessPtr)(process,
-                                                    ProcessBasicInformation,
-                                                    &info, sizeof info,
-                                                    &bytes_returned);
-  if (!SUCCEEDED(status) || (bytes_returned != (sizeof info)))
-    return false;
+  NTSTATUS status = (*NtQueryInformationProcessPtr)(
+      process, ProcessBasicInformation, &info, sizeof info, &bytes_returned);
+  if (!SUCCEEDED(status) || (bytes_returned != (sizeof info))) return false;
 
   *id = static_cast<DWORD>(info.UniqueProcessId);
   return true;
@@ -180,8 +159,7 @@ ProcessId GetProcId(ProcessHandle process) {
         GetProcIdViaGetProcessId(process_with_query_rights, &id) ||
         GetProcIdViaNtQueryInformationProcess(process_with_query_rights, &id);
     CloseHandle(process_with_query_rights);
-    if (success)
-      return id;
+    if (success) return id;
   }
 
   // We're screwed.
@@ -191,10 +169,8 @@ ProcessId GetProcId(ProcessHandle process) {
 
 // from sandbox_policy_base.cc in a later version of the chromium ipc code...
 bool IsInheritableHandle(HANDLE handle) {
-  if (!handle)
-    return false;
-  if (handle == INVALID_HANDLE_VALUE)
-    return false;
+  if (!handle) return false;
+  if (handle == INVALID_HANDLE_VALUE) return false;
   // File handles (FILE_TYPE_DISK) and pipe handles are known to be
   // inheritable.  Console handles (FILE_TYPE_CHAR) are not
   // inheritable via PROC_THREAD_ATTRIBUTE_HANDLE_LIST.
@@ -205,14 +181,13 @@ bool IsInheritableHandle(HANDLE handle) {
 void LoadThreadAttributeFunctions() {
   HMODULE kernel32 = GetModuleHandle(L"kernel32.dll");
   InitializeProcThreadAttributeListPtr =
-    reinterpret_cast<InitializeProcThreadAttributeListFn>
-    (GetProcAddress(kernel32, "InitializeProcThreadAttributeList"));
+      reinterpret_cast<InitializeProcThreadAttributeListFn>(
+          GetProcAddress(kernel32, "InitializeProcThreadAttributeList"));
   DeleteProcThreadAttributeListPtr =
-    reinterpret_cast<DeleteProcThreadAttributeListFn>
-    (GetProcAddress(kernel32, "DeleteProcThreadAttributeList"));
-  UpdateProcThreadAttributePtr =
-    reinterpret_cast<UpdateProcThreadAttributeFn>
-    (GetProcAddress(kernel32, "UpdateProcThreadAttribute"));
+      reinterpret_cast<DeleteProcThreadAttributeListFn>(
+          GetProcAddress(kernel32, "DeleteProcThreadAttributeList"));
+  UpdateProcThreadAttributePtr = reinterpret_cast<UpdateProcThreadAttributeFn>(
+      GetProcAddress(kernel32, "UpdateProcThreadAttribute"));
 }
 
 // Creates and returns a "thread attribute list" to pass to the child process.
@@ -223,16 +198,15 @@ void LoadThreadAttributeFunctions() {
 // Note that the pointer to the HANDLE array ends up embedded in the result of
 // this function and must stay alive until FreeThreadAttributeList is called,
 // hence it is passed in so the owner is the caller of this function.
-LPPROC_THREAD_ATTRIBUTE_LIST CreateThreadAttributeList(HANDLE *handlesToInherit,
+LPPROC_THREAD_ATTRIBUTE_LIST CreateThreadAttributeList(HANDLE* handlesToInherit,
                                                        int handleCount) {
   if (!InitializeProcThreadAttributeListPtr ||
-      !DeleteProcThreadAttributeListPtr ||
-      !UpdateProcThreadAttributePtr)
+      !DeleteProcThreadAttributeListPtr || !UpdateProcThreadAttributePtr)
     LoadThreadAttributeFunctions();
-  // shouldn't happen as we are only called for Vista+, but better safe than sorry...
+  // shouldn't happen as we are only called for Vista+, but better safe than
+  // sorry...
   if (!InitializeProcThreadAttributeListPtr ||
-      !DeleteProcThreadAttributeListPtr ||
-      !UpdateProcThreadAttributePtr)
+      !DeleteProcThreadAttributeListPtr || !UpdateProcThreadAttributePtr)
     return NULL;
 
   SIZE_T threadAttrSize;
@@ -241,25 +215,23 @@ LPPROC_THREAD_ATTRIBUTE_LIST CreateThreadAttributeList(HANDLE *handlesToInherit,
   if (!(*InitializeProcThreadAttributeListPtr)(NULL, 1, 0, &threadAttrSize) &&
       GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     goto fail;
-  lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>
-                              (malloc(threadAttrSize));
-  if (!lpAttributeList ||
-      !(*InitializeProcThreadAttributeListPtr)(lpAttributeList, 1, 0, &threadAttrSize))
+  lpAttributeList =
+      reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(malloc(threadAttrSize));
+  if (!lpAttributeList || !(*InitializeProcThreadAttributeListPtr)(
+                              lpAttributeList, 1, 0, &threadAttrSize))
     goto fail;
 
-  if (!(*UpdateProcThreadAttributePtr)(lpAttributeList,
-                  0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-                  handlesToInherit,
-                  sizeof(handlesToInherit[0]) * handleCount,
-                  NULL, NULL)) {
+  if (!(*UpdateProcThreadAttributePtr)(
+          lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+          handlesToInherit, sizeof(handlesToInherit[0]) * handleCount, NULL,
+          NULL)) {
     (*DeleteProcThreadAttributeListPtr)(lpAttributeList);
     goto fail;
   }
   return lpAttributeList;
 
 fail:
-  if (lpAttributeList)
-    free(lpAttributeList);
+  if (lpAttributeList) free(lpAttributeList);
   return NULL;
 }
 
@@ -277,16 +249,14 @@ void FreeThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList) {
 // placed into the given string, and the total length of the line, including
 // the terminating null, is returned.
 static size_t ParseEnvLine(const NativeEnvironmentString::value_type* input,
-                    NativeEnvironmentString* key) {
+                           NativeEnvironmentString* key) {
   // Skip to the equals or end of the string, this is the key.
   size_t cur = 0;
-  while (input[cur] && input[cur] != '=')
-    cur++;
+  while (input[cur] && input[cur] != '=') cur++;
   *key = NativeEnvironmentString(&input[0], cur);
 
   // Now just skip to the end of the string.
-  while (input[cur])
-    cur++;
+  while (input[cur]) cur++;
   return cur + 1;
 }
 
@@ -303,15 +273,14 @@ std::wstring AlterEnvironment(const wchar_t* env,
 
     // Keep only values not specified in the change vector.
     EnvironmentMap::const_iterator found_change = changes.find(key);
-    if (found_change == changes.end())
-      result.append(line, line_length);
+    if (found_change == changes.end()) result.append(line, line_length);
 
     cur_env += line_length;
   }
 
   // Now append all modified and new values.
-  for (EnvironmentMap::const_iterator i = changes.begin();
-       i != changes.end(); ++i) {
+  for (EnvironmentMap::const_iterator i = changes.begin(); i != changes.end();
+       ++i) {
     if (!i->second.empty()) {
       result.append(i->first);
       result.push_back('=');
@@ -322,16 +291,13 @@ std::wstring AlterEnvironment(const wchar_t* env,
 
   // An additional null marks the end of the list. We always need a double-null
   // in case nothing was added above.
-  if (result.empty())
-    result.push_back(0);
+  if (result.empty()) result.push_back(0);
   result.push_back(0);
   return result;
 }
 
-bool LaunchApp(const std::wstring& cmdline,
-               const LaunchOptions& options,
+bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
                ProcessHandle* process_handle) {
-
   // We want to inherit the std handles so dump() statements and assertion
   // messages in the child process can be seen - but we *do not* want to
   // blindly have all handles inherited.  Vista and later has a technique
@@ -344,7 +310,7 @@ bool LaunchApp(const std::wstring& cmdline,
   // just pass the size of a STARTUPINFO.
   STARTUPINFOEX startup_info_ex;
   ZeroMemory(&startup_info_ex, sizeof(startup_info_ex));
-  STARTUPINFO &startup_info = startup_info_ex.StartupInfo;
+  STARTUPINFO& startup_info = startup_info_ex.StartupInfo;
   startup_info.cb = sizeof(startup_info);
   startup_info.dwFlags = STARTF_USESHOWWINDOW;
   startup_info.wShowWindow = options.start_hidden ? SW_HIDE : SW_SHOW;
@@ -354,7 +320,8 @@ bool LaunchApp(const std::wstring& cmdline,
   LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList = NULL;
   std::vector<HANDLE> handlesToInherit;
   for (HANDLE h : options.handles_to_inherit) {
-    if (SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT) == 0) {
+    if (SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT) ==
+        0) {
       MOZ_DIAGNOSTIC_ASSERT(false, "SetHandleInformation failed");
       return false;
     }
@@ -366,13 +333,13 @@ bool LaunchApp(const std::wstring& cmdline,
   HANDLE stdOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
   HANDLE stdErr = ::GetStdHandle(STD_ERROR_HANDLE);
 
-  if (IsInheritableHandle(stdOut))
-    handlesToInherit.push_back(stdOut);
+  if (IsInheritableHandle(stdOut)) handlesToInherit.push_back(stdOut);
   if (stdErr != stdOut && IsInheritableHandle(stdErr))
     handlesToInherit.push_back(stdErr);
 
   if (!handlesToInherit.empty()) {
-    lpAttributeList = CreateThreadAttributeList(handlesToInherit.data(), handlesToInherit.size());
+    lpAttributeList = CreateThreadAttributeList(handlesToInherit.data(),
+                                                handlesToInherit.size());
     if (lpAttributeList) {
       // it's safe to inherit handles, so arrange for that...
       startup_info.cb = sizeof(startup_info_ex);
@@ -389,31 +356,26 @@ bool LaunchApp(const std::wstring& cmdline,
   dwCreationFlags |= CREATE_UNICODE_ENVIRONMENT;
   LPTCH original_environment = GetEnvironmentStrings();
   base::NativeEnvironmentString new_environment =
-    AlterEnvironment(original_environment, options.env_map);
+      AlterEnvironment(original_environment, options.env_map);
   // Ignore return value? What can we do?
   FreeEnvironmentStrings(original_environment);
   LPVOID new_env_ptr = (void*)new_environment.data();
 
   PROCESS_INFORMATION process_info;
-  BOOL createdOK = CreateProcess(NULL,
-                     const_cast<wchar_t*>(cmdline.c_str()), NULL, NULL,
-                     bInheritHandles, dwCreationFlags, new_env_ptr, NULL,
-                     &startup_info, &process_info);
-  if (lpAttributeList)
-    FreeThreadAttributeList(lpAttributeList);
-  if (!createdOK)
-    return false;
+  BOOL createdOK = CreateProcess(
+      NULL, const_cast<wchar_t*>(cmdline.c_str()), NULL, NULL, bInheritHandles,
+      dwCreationFlags, new_env_ptr, NULL, &startup_info, &process_info);
+  if (lpAttributeList) FreeThreadAttributeList(lpAttributeList);
+  if (!createdOK) return false;
 
   gProcessLog.print("==> process %d launched child process %d (%S)\n",
-                    GetCurrentProcId(),
-                    process_info.dwProcessId,
+                    GetCurrentProcId(), process_info.dwProcessId,
                     cmdline.c_str());
 
   // Handles must be closed or they will leak
   CloseHandle(process_info.hThread);
 
-  if (options.wait)
-    WaitForSingleObject(process_info.hProcess, INFINITE);
+  if (options.wait) WaitForSingleObject(process_info.hProcess, INFINITE);
 
   // If the caller wants the process handle, we won't close it.
   if (process_handle) {
@@ -424,8 +386,7 @@ bool LaunchApp(const std::wstring& cmdline,
   return true;
 }
 
-bool LaunchApp(const CommandLine& cl,
-               const LaunchOptions& options,
+bool LaunchApp(const CommandLine& cl, const LaunchOptions& options,
                ProcessHandle* process_handle) {
   return LaunchApp(cl.command_line_string(), options, process_handle);
 }
@@ -464,9 +425,9 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   if (exitcode == PROCESS_END_NORMAL_TERMINATON ||
       exitcode == PROCESS_END_KILLED_BY_USER ||
       exitcode == PROCESS_END_PROCESS_WAS_HUNG ||
-      exitcode == 0xC0000354 ||     // STATUS_DEBUGGER_INACTIVE.
-      exitcode == 0xC000013A ||     // Control-C/end session.
-      exitcode == 0x40010004) {     // Debugger terminated process/end session.
+      exitcode == 0xC0000354 ||  // STATUS_DEBUGGER_INACTIVE.
+      exitcode == 0xC000013A ||  // Control-C/end session.
+      exitcode == 0x40010004) {  // Debugger terminated process/end session.
     return false;
   }
 

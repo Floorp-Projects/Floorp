@@ -10,23 +10,19 @@
 
 namespace mozilla {
 
-class WebGLVertexArrayFake final
-    : public WebGLVertexArray
-{
-    friend class WebGLVertexArray;
+class WebGLVertexArrayFake final : public WebGLVertexArray {
+  friend class WebGLVertexArray;
 
-protected:
-    virtual void BindVertexArray() override;
-    virtual void DeleteImpl() override {}
+ protected:
+  virtual void BindVertexArray() override;
+  virtual void DeleteImpl() override {}
 
-private:
-    explicit WebGLVertexArrayFake(WebGLContext* webgl);
+ private:
+  explicit WebGLVertexArrayFake(WebGLContext* webgl);
 
-    ~WebGLVertexArrayFake() {
-        DeleteOnce();
-    }
+  ~WebGLVertexArrayFake() { DeleteOnce(); }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WEBGL_VERTEX_ARRAY_FAKE_H_
+#endif  // WEBGL_VERTEX_ARRAY_FAKE_H_

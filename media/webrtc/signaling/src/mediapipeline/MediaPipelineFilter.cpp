@@ -18,8 +18,7 @@ extern mozilla::LazyLogModule gMediaPipelineLog;
 
 namespace mozilla {
 
-MediaPipelineFilter::MediaPipelineFilter() : correlator_(0) {
-}
+MediaPipelineFilter::MediaPipelineFilter() : correlator_(0) {}
 
 bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header,
                                  uint32_t correlator) {
@@ -36,8 +35,7 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header,
     return false;
   }
 
-  if (!header.extension.stream_id.empty() &&
-      !remote_rid_set_.empty() &&
+  if (!header.extension.stream_id.empty() && !remote_rid_set_.empty() &&
       remote_rid_set_.count(header.extension.stream_id.data())) {
     return true;
   }
@@ -91,5 +89,4 @@ void MediaPipelineFilter::Update(const MediaPipelineFilter& filter_update) {
   correlator_ = filter_update.correlator_;
 }
 
-} // end namespace mozilla
-
+}  // end namespace mozilla

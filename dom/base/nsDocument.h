@@ -57,11 +57,10 @@
 #include "mozilla/Maybe.h"
 #include "nsIURIClassifier.h"
 
-#define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
-#define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
-#define XML_DECLARATION_BITS_STANDALONE_EXISTS    (1 << 2)
-#define XML_DECLARATION_BITS_STANDALONE_YES       (1 << 3)
-
+#define XML_DECLARATION_BITS_DECLARATION_EXISTS (1 << 0)
+#define XML_DECLARATION_BITS_ENCODING_EXISTS (1 << 1)
+#define XML_DECLARATION_BITS_STANDALONE_EXISTS (1 << 2)
+#define XML_DECLARATION_BITS_STANDALONE_YES (1 << 3)
 
 class nsDOMStyleSheetSetList;
 class nsDocument;
@@ -81,18 +80,17 @@ struct LifecycleCallbacks;
 class CallbackFunction;
 class DOMIntersectionObserver;
 class Performance;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsOnloadBlocker final : public nsIRequest
-{
-public:
+class nsOnloadBlocker final : public nsIRequest {
+ public:
   nsOnloadBlocker() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
 
-private:
+ private:
   ~nsOnloadBlocker() {}
 };
 
@@ -102,11 +100,10 @@ class nsDocument : public nsIDocument,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer,
                    public nsIApplicationCacheContainer,
-                   public nsStubMutationObserver
-{
+                   public nsStubMutationObserver {
   friend class nsIDocument;
 
-public:
+ public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
@@ -117,13 +114,10 @@ public:
   // StartDocumentLoad is pure virtual so that subclasses must override it.
   // The nsDocument StartDocumentLoad does some setup, but does NOT set
   // *aDocListener; this is the job of subclasses.
-  virtual nsresult StartDocumentLoad(const char* aCommand,
-                                     nsIChannel* aChannel,
-                                     nsILoadGroup* aLoadGroup,
-                                     nsISupports* aContainer,
-                                     nsIStreamListener **aDocListener,
-                                     bool aReset = true,
-                                     nsIContentSink* aContentSink = nullptr) override = 0;
+  virtual nsresult StartDocumentLoad(
+      const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
+      nsISupports* aContainer, nsIStreamListener** aDocListener,
+      bool aReset = true, nsIContentSink* aContentSink = nullptr) override = 0;
 
   virtual void StopDocumentLoad() override;
 
@@ -142,76 +136,65 @@ public:
   virtual void EndLoad() override;
 
   // nsIRadioGroupContainer
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
-                            nsIRadioVisitor* aVisitor,
-                            bool aFlushContent) override
-  {
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
+                            bool aFlushContent) override {
     return DocumentOrShadowRoot::WalkRadioGroup(aName, aVisitor, aFlushContent);
   }
-  virtual void
-    SetCurrentRadioButton(const nsAString& aName,
-                          mozilla::dom::HTMLInputElement* aRadio) override
-  {
+  virtual void SetCurrentRadioButton(
+      const nsAString& aName, mozilla::dom::HTMLInputElement* aRadio) override {
     DocumentOrShadowRoot::SetCurrentRadioButton(aName, aRadio);
   }
-  virtual mozilla::dom::HTMLInputElement*
-    GetCurrentRadioButton(const nsAString& aName) override
-  {
+  virtual mozilla::dom::HTMLInputElement* GetCurrentRadioButton(
+      const nsAString& aName) override {
     return DocumentOrShadowRoot::GetCurrentRadioButton(aName);
   }
   NS_IMETHOD
-    GetNextRadioButton(const nsAString& aName,
-                       const bool aPrevious,
-                       mozilla::dom::HTMLInputElement* aFocusedRadio,
-                       mozilla::dom::HTMLInputElement** aRadioOut) override
-  {
+  GetNextRadioButton(const nsAString& aName, const bool aPrevious,
+                     mozilla::dom::HTMLInputElement* aFocusedRadio,
+                     mozilla::dom::HTMLInputElement** aRadioOut) override {
     return DocumentOrShadowRoot::GetNextRadioButton(aName, aPrevious,
                                                     aFocusedRadio, aRadioOut);
   }
-  virtual void AddToRadioGroup(const nsAString& aName,
-                               mozilla::dom::HTMLInputElement* aRadio) override
-  {
+  virtual void AddToRadioGroup(
+      const nsAString& aName, mozilla::dom::HTMLInputElement* aRadio) override {
     DocumentOrShadowRoot::AddToRadioGroup(aName, aRadio);
   }
-  virtual void RemoveFromRadioGroup(const nsAString& aName,
-                                    mozilla::dom::HTMLInputElement* aRadio) override
-  {
+  virtual void RemoveFromRadioGroup(
+      const nsAString& aName, mozilla::dom::HTMLInputElement* aRadio) override {
     DocumentOrShadowRoot::RemoveFromRadioGroup(aName, aRadio);
   }
-  virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const override
-  {
+  virtual uint32_t GetRequiredRadioCount(
+      const nsAString& aName) const override {
     return DocumentOrShadowRoot::GetRequiredRadioCount(aName);
   }
   virtual void RadioRequiredWillChange(const nsAString& aName,
-                                       bool aRequiredAdded) override
-  {
+                                       bool aRequiredAdded) override {
     DocumentOrShadowRoot::RadioRequiredWillChange(aName, aRequiredAdded);
   }
-  virtual bool GetValueMissingState(const nsAString& aName) const override
-  {
+  virtual bool GetValueMissingState(const nsAString& aName) const override {
     return DocumentOrShadowRoot::GetValueMissingState(aName);
   }
-  virtual void SetValueMissingState(const nsAString& aName, bool aValue) override
-  {
+  virtual void SetValueMissingState(const nsAString& aName,
+                                    bool aValue) override {
     return DocumentOrShadowRoot::SetValueMissingState(aName, aValue);
   }
 
   // Check whether shadow DOM is enabled for the document this node belongs to.
-  // Same as above, but also checks that the caller is either chrome or some addon.
+  // Same as above, but also checks that the caller is either chrome or some
+  // addon.
   static bool IsCallerChromeOrAddon(JSContext* aCx, JSObject* aObject);
 
-public:
+ public:
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementsByClassName;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagNameNS;
-  using mozilla::dom::DocumentOrShadowRoot::GetElementsByClassName;
 
   // EventTarget
   void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
-  virtual mozilla::EventListenerManager*
-    GetOrCreateListenerManager() override;
-  virtual mozilla::EventListenerManager*
-    GetExistingListenerManager() const override;
+  virtual mozilla::EventListenerManager* GetOrCreateListenerManager() override;
+  virtual mozilla::EventListenerManager* GetExistingListenerManager()
+      const override;
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal() override;
@@ -231,8 +214,7 @@ public:
                                                                    nsIDocument)
 
   void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
-  void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData)
-  {
+  void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData) {
     mLoadedAsInteractiveData = aLoadedAsInteractiveData;
   }
 
@@ -241,23 +223,24 @@ public:
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
-  virtual void DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const override;
+  virtual void DocAddSizeOfExcludingThis(
+      nsWindowSizes& aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
-protected:
+ protected:
   friend class nsNodeUtils;
 
-  void RetrieveRelevantHeaders(nsIChannel *aChannel);
+  void RetrieveRelevantHeaders(nsIChannel* aChannel);
 
-  void TryChannelCharset(nsIChannel *aChannel,
-                         int32_t& aCharsetSource,
+  void TryChannelCharset(nsIChannel* aChannel, int32_t& aCharsetSource,
                          NotNull<const Encoding*>& aEncoding,
                          nsHtml5TreeOpExecutor* aExecutor);
 
   nsIContent* GetFirstBaseNodeWithHref();
-  nsresult SetFirstBaseNodeWithHref(nsIContent *node);
+  nsresult SetFirstBaseNodeWithHref(nsIContent* node);
 
-#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_) do {                     \
+#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                          \
+  do {                                                                        \
     NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
                                              func_, params_);                 \
     /* FIXME(emilio): Apparently we can keep observing from the BFCache? That \
@@ -265,7 +248,7 @@ protected:
     if (nsIPresShell* shell = GetObservingShell()) {                          \
       shell->func_ params_;                                                   \
     }                                                                         \
-  } while(0)
+  } while (0)
 
 #ifdef DEBUG
   void VerifyRootContentState();
@@ -274,7 +257,7 @@ protected:
   explicit nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
-public:
+ public:
   // FIXME(emilio): This needs to be here instead of in nsIDocument because Rust
   // can't represent alignas(8) values on 32-bit architectures, which would
   // cause nsIDocument's layout to be wrong in the Rust side.
@@ -290,7 +273,8 @@ public:
   nsCOMPtr<nsIApplicationCache> mApplicationCache;
 
   nsCOMPtr<nsIContent> mFirstBaseNodeWithHref;
-private:
+
+ private:
   friend class nsUnblockOnloadEvent;
 
   // These are not implemented and not supported.
@@ -298,18 +282,14 @@ private:
   nsDocument& operator=(const nsDocument& aOther);
 };
 
-class nsDocumentOnStack
-{
-public:
-  explicit nsDocumentOnStack(nsIDocument* aDoc) : mDoc(aDoc)
-  {
+class nsDocumentOnStack {
+ public:
+  explicit nsDocumentOnStack(nsIDocument* aDoc) : mDoc(aDoc) {
     mDoc->IncreaseStackRefCnt();
   }
-  ~nsDocumentOnStack()
-  {
-    mDoc->DecreaseStackRefCnt();
-  }
-private:
+  ~nsDocumentOnStack() { mDoc->DecreaseStackRefCnt(); }
+
+ private:
   nsIDocument* mDoc;
 };
 

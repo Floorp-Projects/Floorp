@@ -21,55 +21,55 @@ class AccessibleWrap;
  * IRawElementProviderSimple implementation (maintains IAccessibleEx approach).
  */
 class uiaRawElmProvider final : public IAccessibleEx,
-                                public IRawElementProviderSimple
-{
-public:
-  explicit uiaRawElmProvider(AccessibleWrap* aAcc) : mAcc(aAcc) { }
+                                public IRawElementProviderSimple {
+ public:
+  explicit uiaRawElmProvider(AccessibleWrap* aAcc) : mAcc(aAcc) {}
 
   // IUnknown
   DECL_IUNKNOWN
 
   // IAccessibleEx
   virtual HRESULT STDMETHODCALLTYPE GetObjectForChild(
-    /* [in] */ long aIdChild,
-    /* [retval][out] */ __RPC__deref_out_opt IAccessibleEx** aAccEx);
+      /* [in] */ long aIdChild,
+      /* [retval][out] */ __RPC__deref_out_opt IAccessibleEx** aAccEx);
 
   virtual HRESULT STDMETHODCALLTYPE GetIAccessiblePair(
-    /* [out] */ __RPC__deref_out_opt IAccessible** aAcc,
-    /* [out] */ __RPC__out long* aIdChild);
+      /* [out] */ __RPC__deref_out_opt IAccessible** aAcc,
+      /* [out] */ __RPC__out long* aIdChild);
 
   virtual HRESULT STDMETHODCALLTYPE GetRuntimeId(
-    /* [retval][out] */ __RPC__deref_out_opt SAFEARRAY** aRuntimeIds);
+      /* [retval][out] */ __RPC__deref_out_opt SAFEARRAY** aRuntimeIds);
 
   virtual HRESULT STDMETHODCALLTYPE ConvertReturnedElement(
-    /* [in] */ __RPC__in_opt IRawElementProviderSimple* aRawElmProvider,
-    /* [out] */ __RPC__deref_out_opt IAccessibleEx** aAccEx);
+      /* [in] */ __RPC__in_opt IRawElementProviderSimple* aRawElmProvider,
+      /* [out] */ __RPC__deref_out_opt IAccessibleEx** aAccEx);
 
   // IRawElementProviderSimple
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_ProviderOptions(
-    /* [retval][out] */ __RPC__out enum ProviderOptions* aProviderOptions);
+      /* [retval][out] */ __RPC__out enum ProviderOptions* aProviderOptions);
 
   virtual HRESULT STDMETHODCALLTYPE GetPatternProvider(
-    /* [in] */ PATTERNID aPatternId,
-    /* [retval][out] */ __RPC__deref_out_opt IUnknown** aPatternProvider);
+      /* [in] */ PATTERNID aPatternId,
+      /* [retval][out] */ __RPC__deref_out_opt IUnknown** aPatternProvider);
 
   virtual HRESULT STDMETHODCALLTYPE GetPropertyValue(
-    /* [in] */ PROPERTYID aPropertyId,
-    /* [retval][out] */ __RPC__out VARIANT* aPropertyValue);
+      /* [in] */ PROPERTYID aPropertyId,
+      /* [retval][out] */ __RPC__out VARIANT* aPropertyValue);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(
-    /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderSimple** aRawElmProvider);
+      /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderSimple**
+          aRawElmProvider);
 
-private:
+ private:
   uiaRawElmProvider() = delete;
-  uiaRawElmProvider& operator =(const uiaRawElmProvider&) = delete;
+  uiaRawElmProvider& operator=(const uiaRawElmProvider&) = delete;
   uiaRawElmProvider(const uiaRawElmProvider&) = delete;
 
-protected:
+ protected:
   RefPtr<AccessibleWrap> mAcc;
 };
 
-} // a11y namespace
-} // mozilla namespace
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

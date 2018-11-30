@@ -16,51 +16,38 @@ namespace dom {
 
 // The union type has an enum to keep track of which of its UnionMembers has
 // been constructed.
-template<class T>
-class UnionMember
-{
+template <class T>
+class UnionMember {
   AlignedStorage2<T> mStorage;
 
   // Copy construction can't be supported because C++ requires that any enclosed
   // T be initialized in a way C++ knows about -- that is, by |new| or similar.
   UnionMember(const UnionMember&) = delete;
 
-public:
+ public:
   UnionMember() = default;
   ~UnionMember() = default;
 
-  T& SetValue()
-  {
+  T& SetValue() {
     new (mStorage.addr()) T();
     return *mStorage.addr();
   }
   template <typename T1>
-  T& SetValue(const T1& aValue)
-  {
+  T& SetValue(const T1& aValue) {
     new (mStorage.addr()) T(aValue);
     return *mStorage.addr();
   }
-  template<typename T1, typename T2>
-  T& SetValue(const T1& aValue1, const T2& aValue2)
-  {
+  template <typename T1, typename T2>
+  T& SetValue(const T1& aValue1, const T2& aValue2) {
     new (mStorage.addr()) T(aValue1, aValue2);
     return *mStorage.addr();
   }
-  T& Value()
-  {
-    return *mStorage.addr();
-  }
-  const T& Value() const
-  {
-    return *mStorage.addr();
-  }
-  void Destroy()
-  {
-    mStorage.addr()->~T();
-  }
+  T& Value() { return *mStorage.addr(); }
+  const T& Value() const { return *mStorage.addr(); }
+  void Destroy() { mStorage.addr()->~T(); }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_UnionMember_h
+#endif  // mozilla_dom_UnionMember_h

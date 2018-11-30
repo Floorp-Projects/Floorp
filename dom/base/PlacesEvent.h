@@ -14,37 +14,36 @@
 namespace mozilla {
 namespace dom {
 
-class PlacesEvent : public nsWrapperCache
-{
-public:
-  explicit PlacesEvent(PlacesEventType aType)
-    : mType(aType)
-  {}
+class PlacesEvent : public nsWrapperCache {
+ public:
+  explicit PlacesEvent(PlacesEventType aType) : mType(aType) {}
 
-  static already_AddRefed<PlacesEvent>
-  Constructor(const GlobalObject& aGlobal,
-              PlacesEventType aType,
-              ErrorResult& aRv);
+  static already_AddRefed<PlacesEvent> Constructor(const GlobalObject& aGlobal,
+                                                   PlacesEventType aType,
+                                                   ErrorResult& aRv);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PlacesEvent)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PlacesEvent)
 
   nsISupports* GetParentObject() const;
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   PlacesEventType Type() const { return mType; }
 
   virtual const PlacesVisit* AsPlacesVisit() const { return nullptr; }
   virtual const PlacesBookmark* AsPlacesBookmark() const { return nullptr; }
-  virtual const PlacesBookmarkAddition* AsPlacesBookmarkAddition() const { return nullptr; }
-protected:
+  virtual const PlacesBookmarkAddition* AsPlacesBookmarkAddition() const {
+    return nullptr;
+  }
+
+ protected:
   virtual ~PlacesEvent() = default;
   PlacesEventType mType;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PlacesEvent_h
+#endif  // mozilla_dom_PlacesEvent_h

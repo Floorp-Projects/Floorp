@@ -15,5 +15,5 @@ InputState::~InputState() = default;
 
 WEBGPU_IMPL_GOOP_0(InputState)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

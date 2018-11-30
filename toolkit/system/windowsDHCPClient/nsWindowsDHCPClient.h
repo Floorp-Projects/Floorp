@@ -14,25 +14,23 @@ namespace toolkit {
 namespace system {
 namespace windowsDHCPClient {
 
-class nsWindowsDHCPClient final : public nsIDHCPClient
-{
-public:
+class nsWindowsDHCPClient final : public nsIDHCPClient {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDHCPCLIENT
 
-  explicit nsWindowsDHCPClient(WindowsNetworkFunctionsWrapper *aNetworkFunctions = new WindowsNetworkFunctionsWrapper())
-    : mNetworkFunctions(aNetworkFunctions) {};
+  explicit nsWindowsDHCPClient(
+      WindowsNetworkFunctionsWrapper* aNetworkFunctions =
+          new WindowsNetworkFunctionsWrapper())
+      : mNetworkFunctions(aNetworkFunctions){};
   nsresult Init();
 
-private:
-
-   ~nsWindowsDHCPClient() {};
-   WindowsNetworkFunctionsWrapper* mNetworkFunctions;
-
+ private:
+  ~nsWindowsDHCPClient(){};
+  WindowsNetworkFunctionsWrapper* mNetworkFunctions;
 };
 
-
-} // namespace windowsDHCPClient
-} // namespace system
-} // namespace toolkit
-} // namespace mozilla
+}  // namespace windowsDHCPClient
+}  // namespace system
+}  // namespace toolkit
+}  // namespace mozilla

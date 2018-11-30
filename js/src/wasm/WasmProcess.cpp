@@ -55,157 +55,159 @@ Atomic<bool> wasm::CodeExists(false);
 
 static Atomic<size_t> sNumActiveLookups(0);
 
-class ProcessCodeSegmentMap
-{
-    // Since writes (insertions or removals) can happen on any background
-    // thread at the same time, we need a lock here.
+class ProcessCodeSegmentMap {
+  // Since writes (insertions or removals) can happen on any background
+  // thread at the same time, we need a lock here.
 
-    Mutex mutatorsMutex_;
+  Mutex mutatorsMutex_;
 
-    CodeSegmentVector segments1_;
-    CodeSegmentVector segments2_;
+  CodeSegmentVector segments1_;
+  CodeSegmentVector segments2_;
 
-    // Except during swapAndWait(), there are no lookup() observers of the
-    // vector pointed to by mutableCodeSegments_
+  // Except during swapAndWait(), there are no lookup() observers of the
+  // vector pointed to by mutableCodeSegments_
 
-    CodeSegmentVector* mutableCodeSegments_;
-    Atomic<const CodeSegmentVector*> readonlyCodeSegments_;
+  CodeSegmentVector* mutableCodeSegments_;
+  Atomic<const CodeSegmentVector*> readonlyCodeSegments_;
 
-    struct CodeSegmentPC
-    {
-        const void* pc;
-        explicit CodeSegmentPC(const void* pc) : pc(pc) {}
-        int operator()(const CodeSegment* cs) const {
-            if (cs->containsCodePC(pc)) {
-                return 0;
-            }
-            if (pc < cs->base()) {
-                return -1;
-            }
-            return 1;
-        }
-    };
-
-    void swapAndWait() {
-        // Both vectors are consistent for lookup at this point although their
-        // contents are different: there is no way for the looked up PC to be
-        // in the code segment that is getting registered, because the code
-        // segment is not even fully created yet.
-
-        // If a lookup happens before this instruction, then the
-        // soon-to-become-former read-only pointer is used during the lookup,
-        // which is valid.
-
-        mutableCodeSegments_ = const_cast<CodeSegmentVector*>(
-            readonlyCodeSegments_.exchange(mutableCodeSegments_)
-        );
-
-        // If a lookup happens after this instruction, then the updated vector
-        // is used, which is valid:
-        // - in case of insertion, it means the new vector contains more data,
-        // but it's fine since the code segment is getting registered and thus
-        // isn't even fully created yet, so the code can't be running.
-        // - in case of removal, it means the new vector contains one less
-        // entry, but it's fine since unregistering means the code segment
-        // isn't used by any live instance anymore, thus PC can't be in the
-        // to-be-removed code segment's range.
-
-        // A lookup could have happened on any of the two vectors. Wait for
-        // observers to be done using any vector before mutating.
-
-        while (sNumActiveLookups > 0) {}
+  struct CodeSegmentPC {
+    const void* pc;
+    explicit CodeSegmentPC(const void* pc) : pc(pc) {}
+    int operator()(const CodeSegment* cs) const {
+      if (cs->containsCodePC(pc)) {
+        return 0;
+      }
+      if (pc < cs->base()) {
+        return -1;
+      }
+      return 1;
     }
+  };
 
-  public:
-    ProcessCodeSegmentMap()
+  void swapAndWait() {
+    // Both vectors are consistent for lookup at this point although their
+    // contents are different: there is no way for the looked up PC to be
+    // in the code segment that is getting registered, because the code
+    // segment is not even fully created yet.
+
+    // If a lookup happens before this instruction, then the
+    // soon-to-become-former read-only pointer is used during the lookup,
+    // which is valid.
+
+    mutableCodeSegments_ = const_cast<CodeSegmentVector*>(
+        readonlyCodeSegments_.exchange(mutableCodeSegments_));
+
+    // If a lookup happens after this instruction, then the updated vector
+    // is used, which is valid:
+    // - in case of insertion, it means the new vector contains more data,
+    // but it's fine since the code segment is getting registered and thus
+    // isn't even fully created yet, so the code can't be running.
+    // - in case of removal, it means the new vector contains one less
+    // entry, but it's fine since unregistering means the code segment
+    // isn't used by any live instance anymore, thus PC can't be in the
+    // to-be-removed code segment's range.
+
+    // A lookup could have happened on any of the two vectors. Wait for
+    // observers to be done using any vector before mutating.
+
+    while (sNumActiveLookups > 0) {
+    }
+  }
+
+ public:
+  ProcessCodeSegmentMap()
       : mutatorsMutex_(mutexid::WasmCodeSegmentMap),
         mutableCodeSegments_(&segments1_),
-        readonlyCodeSegments_(&segments2_)
-    {
+        readonlyCodeSegments_(&segments2_) {}
+
+  ~ProcessCodeSegmentMap() {
+    MOZ_RELEASE_ASSERT(sNumActiveLookups == 0);
+    MOZ_ASSERT(segments1_.empty());
+    MOZ_ASSERT(segments2_.empty());
+    segments1_.clearAndFree();
+    segments2_.clearAndFree();
+  }
+
+  bool insert(const CodeSegment* cs) {
+    LockGuard<Mutex> lock(mutatorsMutex_);
+
+    size_t index;
+    MOZ_ALWAYS_FALSE(BinarySearchIf(*mutableCodeSegments_, 0,
+                                    mutableCodeSegments_->length(),
+                                    CodeSegmentPC(cs->base()), &index));
+
+    if (!mutableCodeSegments_->insert(mutableCodeSegments_->begin() + index,
+                                      cs)) {
+      return false;
     }
 
-    ~ProcessCodeSegmentMap()
-    {
-        MOZ_RELEASE_ASSERT(sNumActiveLookups == 0);
-        MOZ_ASSERT(segments1_.empty());
-        MOZ_ASSERT(segments2_.empty());
-        segments1_.clearAndFree();
-        segments2_.clearAndFree();
-    }
+    CodeExists = true;
 
-    bool insert(const CodeSegment* cs) {
-        LockGuard<Mutex> lock(mutatorsMutex_);
-
-        size_t index;
-        MOZ_ALWAYS_FALSE(BinarySearchIf(*mutableCodeSegments_, 0, mutableCodeSegments_->length(),
-                                        CodeSegmentPC(cs->base()), &index));
-
-        if (!mutableCodeSegments_->insert(mutableCodeSegments_->begin() + index, cs)) {
-            return false;
-        }
-
-        CodeExists = true;
-
-        swapAndWait();
+    swapAndWait();
 
 #ifdef DEBUG
-        size_t otherIndex;
-        MOZ_ALWAYS_FALSE(BinarySearchIf(*mutableCodeSegments_, 0, mutableCodeSegments_->length(),
-                                        CodeSegmentPC(cs->base()), &otherIndex));
-        MOZ_ASSERT(index == otherIndex);
+    size_t otherIndex;
+    MOZ_ALWAYS_FALSE(BinarySearchIf(*mutableCodeSegments_, 0,
+                                    mutableCodeSegments_->length(),
+                                    CodeSegmentPC(cs->base()), &otherIndex));
+    MOZ_ASSERT(index == otherIndex);
 #endif
 
-        // Although we could simply revert the insertion in the read-only
-        // vector, it is simpler to just crash and given that each CodeSegment
-        // consumes multiple pages, it is unlikely this insert() would OOM in
-        // practice
-        AutoEnterOOMUnsafeRegion oom;
-        if (!mutableCodeSegments_->insert(mutableCodeSegments_->begin() + index, cs)) {
-            oom.crash("when inserting a CodeSegment in the process-wide map");
-        }
-
-        return true;
+    // Although we could simply revert the insertion in the read-only
+    // vector, it is simpler to just crash and given that each CodeSegment
+    // consumes multiple pages, it is unlikely this insert() would OOM in
+    // practice
+    AutoEnterOOMUnsafeRegion oom;
+    if (!mutableCodeSegments_->insert(mutableCodeSegments_->begin() + index,
+                                      cs)) {
+      oom.crash("when inserting a CodeSegment in the process-wide map");
     }
 
-    void remove(const CodeSegment* cs) {
-        LockGuard<Mutex> lock(mutatorsMutex_);
+    return true;
+  }
 
-        size_t index;
-        MOZ_ALWAYS_TRUE(BinarySearchIf(*mutableCodeSegments_, 0, mutableCodeSegments_->length(),
-                                       CodeSegmentPC(cs->base()), &index));
+  void remove(const CodeSegment* cs) {
+    LockGuard<Mutex> lock(mutatorsMutex_);
 
-        mutableCodeSegments_->erase(mutableCodeSegments_->begin() + index);
+    size_t index;
+    MOZ_ALWAYS_TRUE(BinarySearchIf(*mutableCodeSegments_, 0,
+                                   mutableCodeSegments_->length(),
+                                   CodeSegmentPC(cs->base()), &index));
 
-        if (!mutableCodeSegments_->length()) {
-            CodeExists = false;
-        }
+    mutableCodeSegments_->erase(mutableCodeSegments_->begin() + index);
 
-        swapAndWait();
+    if (!mutableCodeSegments_->length()) {
+      CodeExists = false;
+    }
+
+    swapAndWait();
 
 #ifdef DEBUG
-        size_t otherIndex;
-        MOZ_ALWAYS_TRUE(BinarySearchIf(*mutableCodeSegments_, 0, mutableCodeSegments_->length(),
-                                       CodeSegmentPC(cs->base()), &otherIndex));
-        MOZ_ASSERT(index == otherIndex);
+    size_t otherIndex;
+    MOZ_ALWAYS_TRUE(BinarySearchIf(*mutableCodeSegments_, 0,
+                                   mutableCodeSegments_->length(),
+                                   CodeSegmentPC(cs->base()), &otherIndex));
+    MOZ_ASSERT(index == otherIndex);
 #endif
 
-        mutableCodeSegments_->erase(mutableCodeSegments_->begin() + index);
+    mutableCodeSegments_->erase(mutableCodeSegments_->begin() + index);
+  }
+
+  const CodeSegment* lookup(const void* pc) {
+    const CodeSegmentVector* readonly = readonlyCodeSegments_;
+
+    size_t index;
+    if (!BinarySearchIf(*readonly, 0, readonly->length(), CodeSegmentPC(pc),
+                        &index)) {
+      return nullptr;
     }
 
-    const CodeSegment* lookup(const void* pc) {
-        const CodeSegmentVector* readonly = readonlyCodeSegments_;
+    // It is fine returning a raw CodeSegment*, because we assume we are
+    // looking up a live PC in code which is on the stack, keeping the
+    // CodeSegment alive.
 
-        size_t index;
-        if (!BinarySearchIf(*readonly, 0, readonly->length(), CodeSegmentPC(pc), &index)) {
-            return nullptr;
-        }
-
-        // It is fine returning a raw CodeSegment*, because we assume we are
-        // looking up a live PC in code which is on the stack, keeping the
-        // CodeSegment alive.
-
-        return (*readonly)[index];
-    }
+    return (*readonly)[index];
+  }
 };
 
 // This field is only atomic to handle buggy scenarios where we crash during
@@ -214,116 +216,104 @@ class ProcessCodeSegmentMap
 
 static Atomic<ProcessCodeSegmentMap*> sProcessCodeSegmentMap(nullptr);
 
-bool
-wasm::RegisterCodeSegment(const CodeSegment* cs)
-{
-    MOZ_ASSERT(cs->codeTier().code().initialized());
+bool wasm::RegisterCodeSegment(const CodeSegment* cs) {
+  MOZ_ASSERT(cs->codeTier().code().initialized());
 
-    // This function cannot race with startup/shutdown.
-    ProcessCodeSegmentMap* map = sProcessCodeSegmentMap;
-    MOZ_RELEASE_ASSERT(map);
-    return map->insert(cs);
+  // This function cannot race with startup/shutdown.
+  ProcessCodeSegmentMap* map = sProcessCodeSegmentMap;
+  MOZ_RELEASE_ASSERT(map);
+  return map->insert(cs);
 }
 
-void
-wasm::UnregisterCodeSegment(const CodeSegment* cs)
-{
-    // This function cannot race with startup/shutdown.
-    ProcessCodeSegmentMap* map = sProcessCodeSegmentMap;
-    MOZ_RELEASE_ASSERT(map);
-    map->remove(cs);
+void wasm::UnregisterCodeSegment(const CodeSegment* cs) {
+  // This function cannot race with startup/shutdown.
+  ProcessCodeSegmentMap* map = sProcessCodeSegmentMap;
+  MOZ_RELEASE_ASSERT(map);
+  map->remove(cs);
 }
 
-const CodeSegment*
-wasm::LookupCodeSegment(const void* pc, const CodeRange** codeRange /*= nullptr */)
-{
-    // Since wasm::LookupCodeSegment() can race with wasm::ShutDown(), we must
-    // additionally keep sNumActiveLookups above zero for the duration we're
-    // using the ProcessCodeSegmentMap. wasm::ShutDown() spin-waits on
-    // sNumActiveLookups getting to zero.
+const CodeSegment* wasm::LookupCodeSegment(
+    const void* pc, const CodeRange** codeRange /*= nullptr */) {
+  // Since wasm::LookupCodeSegment() can race with wasm::ShutDown(), we must
+  // additionally keep sNumActiveLookups above zero for the duration we're
+  // using the ProcessCodeSegmentMap. wasm::ShutDown() spin-waits on
+  // sNumActiveLookups getting to zero.
 
-    auto decObserver = mozilla::MakeScopeExit([&] {
-        MOZ_ASSERT(sNumActiveLookups > 0);
-        sNumActiveLookups--;
-    });
-    sNumActiveLookups++;
+  auto decObserver = mozilla::MakeScopeExit([&] {
+    MOZ_ASSERT(sNumActiveLookups > 0);
+    sNumActiveLookups--;
+  });
+  sNumActiveLookups++;
 
-    ProcessCodeSegmentMap* map = sProcessCodeSegmentMap;
-    if (!map) {
-        return nullptr;
-    }
-
-    if (const CodeSegment* found = map->lookup(pc)) {
-        if (codeRange) {
-            *codeRange = found->isModule()
-                       ? found->asModule()->lookupRange(pc)
-                       : found->asLazyStub()->lookupRange(pc);
-        }
-        return found;
-    }
-
-    if (codeRange) {
-        *codeRange = nullptr;
-    }
-
+  ProcessCodeSegmentMap* map = sProcessCodeSegmentMap;
+  if (!map) {
     return nullptr;
-}
+  }
 
-const Code*
-wasm::LookupCode(const void* pc, const CodeRange** codeRange /* = nullptr */)
-{
-    const CodeSegment* found = LookupCodeSegment(pc, codeRange);
-    MOZ_ASSERT_IF(!found && codeRange, !*codeRange);
-    return found ? &found->code() : nullptr;
-}
-
-bool
-wasm::InCompiledCode(void* pc)
-{
-    if (LookupCodeSegment(pc)) {
-        return true;
+  if (const CodeSegment* found = map->lookup(pc)) {
+    if (codeRange) {
+      *codeRange = found->isModule() ? found->asModule()->lookupRange(pc)
+                                     : found->asLazyStub()->lookupRange(pc);
     }
+    return found;
+  }
 
-    const CodeRange* codeRange;
-    uint8_t* codeBase;
-    return LookupBuiltinThunk(pc, &codeRange, &codeBase);
+  if (codeRange) {
+    *codeRange = nullptr;
+  }
+
+  return nullptr;
 }
 
-bool
-wasm::Init()
-{
-    MOZ_RELEASE_ASSERT(!sProcessCodeSegmentMap);
+const Code* wasm::LookupCode(const void* pc,
+                             const CodeRange** codeRange /* = nullptr */) {
+  const CodeSegment* found = LookupCodeSegment(pc, codeRange);
+  MOZ_ASSERT_IF(!found && codeRange, !*codeRange);
+  return found ? &found->code() : nullptr;
+}
+
+bool wasm::InCompiledCode(void* pc) {
+  if (LookupCodeSegment(pc)) {
+    return true;
+  }
+
+  const CodeRange* codeRange;
+  uint8_t* codeBase;
+  return LookupBuiltinThunk(pc, &codeRange, &codeBase);
+}
+
+bool wasm::Init() {
+  MOZ_RELEASE_ASSERT(!sProcessCodeSegmentMap);
 
 #ifdef ENABLE_WASM_CRANELIFT
-    cranelift_initialize();
+  cranelift_initialize();
 #endif
 
-    ProcessCodeSegmentMap* map = js_new<ProcessCodeSegmentMap>();
-    if (!map) {
-        return false;
-    }
+  ProcessCodeSegmentMap* map = js_new<ProcessCodeSegmentMap>();
+  if (!map) {
+    return false;
+  }
 
-    sProcessCodeSegmentMap = map;
-    return true;
+  sProcessCodeSegmentMap = map;
+  return true;
 }
 
-void
-wasm::ShutDown()
-{
-    // If there are live runtimes then we are already pretty much leaking the
-    // world, so to avoid spurious assertions (which are valid and valuable when
-    // there are not live JSRuntimes), don't bother releasing anything here.
-    if (JSRuntime::hasLiveRuntimes()) {
-        return;
-    }
+void wasm::ShutDown() {
+  // If there are live runtimes then we are already pretty much leaking the
+  // world, so to avoid spurious assertions (which are valid and valuable when
+  // there are not live JSRuntimes), don't bother releasing anything here.
+  if (JSRuntime::hasLiveRuntimes()) {
+    return;
+  }
 
-    // After signalling shutdown by clearing sProcessCodeSegmentMap, wait for
-    // concurrent wasm::LookupCodeSegment()s to finish.
-    ProcessCodeSegmentMap* map = sProcessCodeSegmentMap;
-    MOZ_RELEASE_ASSERT(map);
-    sProcessCodeSegmentMap = nullptr;
-    while (sNumActiveLookups > 0) {}
+  // After signalling shutdown by clearing sProcessCodeSegmentMap, wait for
+  // concurrent wasm::LookupCodeSegment()s to finish.
+  ProcessCodeSegmentMap* map = sProcessCodeSegmentMap;
+  MOZ_RELEASE_ASSERT(map);
+  sProcessCodeSegmentMap = nullptr;
+  while (sNumActiveLookups > 0) {
+  }
 
-    ReleaseBuiltinThunks();
-    js_delete(map);
+  ReleaseBuiltinThunks();
+  js_delete(map);
 }

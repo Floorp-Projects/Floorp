@@ -21,29 +21,28 @@ NS_DEFINE_NAMED_CID(NS_STRINGBUNDLESERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_COLLATIONFACTORY_CID);
 
 static const mozilla::Module::CIDEntry kIntlCIDs[] = {
-    { &kMOZ_LOCALESERVICE_CID, false, nullptr, mozilla::intl::LocaleServiceConstructor },
-    { &kMOZ_OSPREFERENCES_CID, false, nullptr, mozilla::intl::OSPreferencesConstructor },
-    { &kNS_STRINGBUNDLESERVICE_CID, false, nullptr, nsStringBundleServiceConstructor },
-    { &kNS_COLLATIONFACTORY_CID, false, nullptr, nsCollationFactoryConstructor },
-    { nullptr }
-};
+    {&kMOZ_LOCALESERVICE_CID, false, nullptr,
+     mozilla::intl::LocaleServiceConstructor},
+    {&kMOZ_OSPREFERENCES_CID, false, nullptr,
+     mozilla::intl::OSPreferencesConstructor},
+    {&kNS_STRINGBUNDLESERVICE_CID, false, nullptr,
+     nsStringBundleServiceConstructor},
+    {&kNS_COLLATIONFACTORY_CID, false, nullptr, nsCollationFactoryConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
-    { MOZ_LOCALESERVICE_CONTRACTID, &kMOZ_LOCALESERVICE_CID },
-    { MOZ_OSPREFERENCES_CONTRACTID, &kMOZ_OSPREFERENCES_CID },
-    { NS_STRINGBUNDLE_CONTRACTID, &kNS_STRINGBUNDLESERVICE_CID },
-    { NS_COLLATIONFACTORY_CONTRACTID, &kNS_COLLATIONFACTORY_CID },
-    { nullptr }
-};
+    {MOZ_LOCALESERVICE_CONTRACTID, &kMOZ_LOCALESERVICE_CID},
+    {MOZ_OSPREFERENCES_CONTRACTID, &kMOZ_OSPREFERENCES_CID},
+    {NS_STRINGBUNDLE_CONTRACTID, &kNS_STRINGBUNDLESERVICE_CID},
+    {NS_COLLATIONFACTORY_CONTRACTID, &kNS_COLLATIONFACTORY_CID},
+    {nullptr}};
 
-static const mozilla::Module kIntlModule = {
-    mozilla::Module::kVersion,
-    kIntlCIDs,
-    kIntlContracts,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr
-};
+static const mozilla::Module kIntlModule = {mozilla::Module::kVersion,
+                                            kIntlCIDs,
+                                            kIntlContracts,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr};
 
 NSMODULE_DEFN(nsI18nModule) = &kIntlModule;

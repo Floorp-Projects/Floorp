@@ -18,41 +18,32 @@ class ErrorResult;
 
 namespace dom {
 
-class Crypto final : public nsISupports,
-                     public nsWrapperCache
-{
-protected:
+class Crypto final : public nsISupports, public nsWrapperCache {
+ protected:
   virtual ~Crypto();
 
-public:
+ public:
   explicit Crypto(nsIGlobalObject* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Crypto)
 
-  void
-  GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
-                  JS::MutableHandle<JSObject*> aRetval,
-                  ErrorResult& aRv);
+  void GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
+                       JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv);
 
-  SubtleCrypto*
-  Subtle();
+  SubtleCrypto* Subtle();
 
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mParent;
-  }
+  nsIGlobalObject* GetParentObject() const { return mParent; }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   nsCOMPtr<nsIGlobalObject> mParent;
   RefPtr<SubtleCrypto> mSubtle;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Crypto_h
+#endif  // mozilla_dom_Crypto_h

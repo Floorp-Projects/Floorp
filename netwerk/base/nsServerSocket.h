@@ -14,13 +14,12 @@
 //-----------------------------------------------------------------------------
 
 class nsIEventTarget;
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 union NetAddr;
 
-class nsServerSocket : public nsASocketHandler
-                     , public nsIServerSocket
-{
-public:
+class nsServerSocket : public nsASocketHandler, public nsIServerSocket {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERVERSOCKET
 
@@ -34,17 +33,17 @@ public:
   virtual uint64_t ByteCountReceived() override { return 0; }
   nsServerSocket();
 
-  virtual void CreateClientTransport(PRFileDesc* clientFD,
-                                     const mozilla::net::NetAddr& clientAddr);
+  virtual void CreateClientTransport(PRFileDesc *clientFD,
+                                     const mozilla::net::NetAddr &clientAddr);
   virtual nsresult SetSocketDefaults() { return NS_OK; }
   virtual nsresult OnSocketListen() { return NS_OK; }
 
-protected:
+ protected:
   virtual ~nsServerSocket();
-  PRFileDesc*                       mFD;
+  PRFileDesc *mFD;
   nsCOMPtr<nsIServerSocketListener> mListener;
 
-private:
+ private:
   void OnMsgClose();
   void OnMsgAttach();
 
@@ -52,16 +51,16 @@ private:
   nsresult TryAttach();
 
   // lock protects access to mListener; so it is not cleared while being used.
-  mozilla::Mutex                    mLock;
-  PRNetAddr                         mAddr;
-  nsCOMPtr<nsIEventTarget>          mListenerTarget;
-  bool                              mAttached;
-  bool                              mKeepWhenOffline;
+  mozilla::Mutex mLock;
+  PRNetAddr mAddr;
+  nsCOMPtr<nsIEventTarget> mListenerTarget;
+  bool mAttached;
+  bool mKeepWhenOffline;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 //-----------------------------------------------------------------------------
 
-#endif // nsServerSocket_h__
+#endif  // nsServerSocket_h__

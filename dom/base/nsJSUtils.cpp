@@ -39,10 +39,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-bool
-nsJSUtils::GetCallingLocation(JSContext* aContext, nsACString& aFilename,
-                              uint32_t* aLineno, uint32_t* aColumn)
-{
+bool nsJSUtils::GetCallingLocation(JSContext* aContext, nsACString& aFilename,
+                                   uint32_t* aLineno, uint32_t* aColumn) {
   JS::AutoFilename filename;
   if (!JS::DescribeScriptedCaller(aContext, &filename, aLineno, aColumn)) {
     return false;
@@ -52,10 +50,8 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, nsACString& aFilename,
   return true;
 }
 
-bool
-nsJSUtils::GetCallingLocation(JSContext* aContext, nsAString& aFilename,
-                              uint32_t* aLineno, uint32_t* aColumn)
-{
+bool nsJSUtils::GetCallingLocation(JSContext* aContext, nsAString& aFilename,
+                                   uint32_t* aLineno, uint32_t* aColumn) {
   JS::AutoFilename filename;
   if (!JS::DescribeScriptedCaller(aContext, &filename, aLineno, aColumn)) {
     return false;
@@ -65,26 +61,20 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, nsAString& aFilename,
   return true;
 }
 
-uint64_t
-nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext)
-{
-  if (!aContext)
-    return 0;
+uint64_t nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext* aContext) {
+  if (!aContext) return 0;
 
   nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(aContext);
   return win ? win->WindowID() : 0;
 }
 
-nsresult
-nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
-                           JS::AutoObjectVector& aScopeChain,
-                           JS::CompileOptions& aOptions,
-                           const nsACString& aName,
-                           uint32_t aArgCount,
-                           const char** aArgArray,
-                           const nsAString& aBody,
-                           JSObject** aFunctionObject)
-{
+nsresult nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
+                                    JS::AutoObjectVector& aScopeChain,
+                                    JS::CompileOptions& aOptions,
+                                    const nsACString& aName, uint32_t aArgCount,
+                                    const char** aArgArray,
+                                    const nsAString& aBody,
+                                    JSObject** aFunctionObject) {
   JSContext* cx = jsapi.cx();
   MOZ_ASSERT(js::GetContextRealm(cx));
   MOZ_ASSERT_IF(aScopeChain.length() != 0,
@@ -100,17 +90,14 @@ nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
 
   JS::SourceText<char16_t> source;
   if (!source.init(cx, flatBody.get(), flatBody.Length(),
-                   JS::SourceOwnership::Borrowed))
-  {
+                   JS::SourceOwnership::Borrowed)) {
     return NS_ERROR_FAILURE;
   }
 
   JS::Rooted<JSFunction*> fun(cx);
   if (!JS::CompileFunction(cx, aScopeChain, aOptions,
-                           PromiseFlatCString(aName).get(),
-                           aArgCount, aArgArray,
-                           source, &fun))
-  {
+                           PromiseFlatCString(aName).get(), aArgCount,
+                           aArgArray, source, &fun)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -118,9 +105,7 @@ nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
   return NS_OK;
 }
 
-static nsresult
-EvaluationExceptionToNSResult(JSContext* aCx)
-{
+static nsresult EvaluationExceptionToNSResult(JSContext* aCx) {
   if (JS_IsExceptionPending(aCx)) {
     return NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW;
   }
@@ -129,22 +114,24 @@ EvaluationExceptionToNSResult(JSContext* aCx)
 
 nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
                                               JS::Handle<JSObject*> aGlobal)
-  :
+    :
 #ifdef MOZ_GECKO_PROFILER
-    mAutoProfilerLabel("nsJSUtils::ExecutionContext", /* dynamicStr */ nullptr,
-                       js::ProfilingStackFrame::Category::JS),
+      mAutoProfilerLabel("nsJSUtils::ExecutionContext",
+                         /* dynamicStr */ nullptr,
+                         js::ProfilingStackFrame::Category::JS),
 #endif
-    mCx(aCx)
-  , mRealm(aCx, aGlobal)
-  , mRetValue(aCx)
-  , mScopeChain(aCx)
-  , mRv(NS_OK)
-  , mSkip(false)
-  , mCoerceToString(false)
-  , mEncodeBytecode(false)
+      mCx(aCx),
+      mRealm(aCx, aGlobal),
+      mRetValue(aCx),
+      mScopeChain(aCx),
+      mRv(NS_OK),
+      mSkip(false),
+      mCoerceToString(false),
+      mEncodeBytecode(false)
 #ifdef DEBUG
-  , mWantsReturnValue(false)
-  , mExpectScopeChain(false)
+      ,
+      mWantsReturnValue(false),
+      mExpectScopeChain(false)
 #endif
 {
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
@@ -160,10 +147,8 @@ nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
   }
 }
 
-void
-nsJSUtils::ExecutionContext::SetScopeChain(
-  const JS::AutoObjectVector& aScopeChain)
-{
+void nsJSUtils::ExecutionContext::SetScopeChain(
+    const JS::AutoObjectVector& aScopeChain) {
   if (mSkip) {
     return;
   }
@@ -189,10 +174,9 @@ nsJSUtils::ExecutionContext::SetScopeChain(
   }
 }
 
-nsresult
-nsJSUtils::ExecutionContext::JoinAndExec(JS::OffThreadToken** aOffThreadToken,
-                                         JS::MutableHandle<JSScript*> aScript)
-{
+nsresult nsJSUtils::ExecutionContext::JoinAndExec(
+    JS::OffThreadToken** aOffThreadToken,
+    JS::MutableHandle<JSScript*> aScript) {
   if (mSkip) {
     return mRv;
   }
@@ -200,7 +184,7 @@ nsJSUtils::ExecutionContext::JoinAndExec(JS::OffThreadToken** aOffThreadToken,
   MOZ_ASSERT(!mWantsReturnValue);
   MOZ_ASSERT(!mExpectScopeChain);
   aScript.set(JS::FinishOffThreadScript(mCx, *aOffThreadToken));
-  *aOffThreadToken = nullptr; // Mark the token as having been finished.
+  *aOffThreadToken = nullptr;  // Mark the token as having been finished.
   if (!aScript) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
@@ -222,11 +206,9 @@ nsJSUtils::ExecutionContext::JoinAndExec(JS::OffThreadToken** aOffThreadToken,
   return NS_OK;
 }
 
-nsresult
-nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
-                                            JS::SourceText<char16_t>& aSrcBuf,
-                                            JS::MutableHandle<JSScript*> aScript)
-{
+nsresult nsJSUtils::ExecutionContext::CompileAndExec(
+    JS::CompileOptions& aCompileOptions, JS::SourceText<char16_t>& aSrcBuf,
+    JS::MutableHandle<JSScript*> aScript) {
   if (mSkip) {
     return mRv;
   }
@@ -241,7 +223,8 @@ nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
   if (mScopeChain.length() == 0) {
     compiled = JS::Compile(mCx, aCompileOptions, aSrcBuf, aScript);
   } else {
-    compiled = JS::CompileForNonSyntacticScope(mCx, aCompileOptions, aSrcBuf, aScript);
+    compiled =
+        JS::CompileForNonSyntacticScope(mCx, aCompileOptions, aSrcBuf, aScript);
   }
 
   MOZ_ASSERT_IF(compiled, aScript);
@@ -267,11 +250,10 @@ nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
   return NS_OK;
 }
 
-nsresult
-nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
-                                            const nsAString& aScript)
-{
-  MOZ_ASSERT(!mEncodeBytecode, "A JSScript is needed for calling FinishIncrementalEncoding");
+nsresult nsJSUtils::ExecutionContext::CompileAndExec(
+    JS::CompileOptions& aCompileOptions, const nsAString& aScript) {
+  MOZ_ASSERT(!mEncodeBytecode,
+             "A JSScript is needed for calling FinishIncrementalEncoding");
   if (mSkip) {
     return mRv;
   }
@@ -279,8 +261,7 @@ nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
   const nsPromiseFlatString& flatScript = PromiseFlatString(aScript);
   JS::SourceText<char16_t> srcBuf;
   if (!srcBuf.init(mCx, flatScript.get(), flatScript.Length(),
-                   JS::SourceOwnership::Borrowed))
-  {
+                   JS::SourceOwnership::Borrowed)) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;
@@ -290,19 +271,19 @@ nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
   return CompileAndExec(aCompileOptions, srcBuf, &script);
 }
 
-nsresult
-nsJSUtils::ExecutionContext::DecodeAndExec(JS::CompileOptions& aCompileOptions,
-                                           mozilla::Vector<uint8_t>& aBytecodeBuf,
-                                           size_t aBytecodeIndex)
-{
-  MOZ_ASSERT(!mEncodeBytecode, "A JSScript is needed for calling FinishIncrementalEncoding");
+nsresult nsJSUtils::ExecutionContext::DecodeAndExec(
+    JS::CompileOptions& aCompileOptions, mozilla::Vector<uint8_t>& aBytecodeBuf,
+    size_t aBytecodeIndex) {
+  MOZ_ASSERT(!mEncodeBytecode,
+             "A JSScript is needed for calling FinishIncrementalEncoding");
   if (mSkip) {
     return mRv;
   }
 
   MOZ_ASSERT(!mWantsReturnValue);
   JS::Rooted<JSScript*> script(mCx);
-  JS::TranscodeResult tr = JS::DecodeScript(mCx, aBytecodeBuf, &script, aBytecodeIndex);
+  JS::TranscodeResult tr =
+      JS::DecodeScript(mCx, aBytecodeBuf, &script, aBytecodeIndex);
   // These errors are external parameters which should be handled before the
   // decoding phase, and which are the only reasons why you might want to
   // fallback on decoding failures.
@@ -323,9 +304,8 @@ nsJSUtils::ExecutionContext::DecodeAndExec(JS::CompileOptions& aCompileOptions,
   return mRv;
 }
 
-nsresult
-nsJSUtils::ExecutionContext::DecodeJoinAndExec(JS::OffThreadToken** aOffThreadToken)
-{
+nsresult nsJSUtils::ExecutionContext::DecodeJoinAndExec(
+    JS::OffThreadToken** aOffThreadToken) {
   if (mSkip) {
     return mRv;
   }
@@ -334,7 +314,7 @@ nsJSUtils::ExecutionContext::DecodeJoinAndExec(JS::OffThreadToken** aOffThreadTo
   MOZ_ASSERT(!mExpectScopeChain);
   JS::Rooted<JSScript*> script(mCx);
   script.set(JS::FinishOffThreadScriptDecoder(mCx, *aOffThreadToken));
-  *aOffThreadToken = nullptr; // Mark the token as having been finished.
+  *aOffThreadToken = nullptr;  // Mark the token as having been finished.
   if (!script || !JS_ExecuteScript(mCx, mScopeChain, script)) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
@@ -344,10 +324,9 @@ nsJSUtils::ExecutionContext::DecodeJoinAndExec(JS::OffThreadToken** aOffThreadTo
   return NS_OK;
 }
 
-nsresult
-nsJSUtils::ExecutionContext::DecodeBinASTJoinAndExec(JS::OffThreadToken** aOffThreadToken,
-                                                     JS::MutableHandle<JSScript*> aScript)
-{
+nsresult nsJSUtils::ExecutionContext::DecodeBinASTJoinAndExec(
+    JS::OffThreadToken** aOffThreadToken,
+    JS::MutableHandle<JSScript*> aScript) {
 #ifdef JS_BUILD_BINAST
   if (mSkip) {
     return mRv;
@@ -357,7 +336,7 @@ nsJSUtils::ExecutionContext::DecodeBinASTJoinAndExec(JS::OffThreadToken** aOffTh
   MOZ_ASSERT(!mExpectScopeChain);
 
   aScript.set(JS::FinishOffThreadBinASTDecode(mCx, *aOffThreadToken));
-  *aOffThreadToken = nullptr; // Mark the token as having been finished.
+  *aOffThreadToken = nullptr;  // Mark the token as having been finished.
 
   if (!aScript) {
     mSkip = true;
@@ -383,11 +362,9 @@ nsJSUtils::ExecutionContext::DecodeBinASTJoinAndExec(JS::OffThreadToken** aOffTh
 #endif
 }
 
-nsresult
-nsJSUtils::ExecutionContext::DecodeBinASTAndExec(JS::CompileOptions& aCompileOptions,
-                                                 const uint8_t* aBuf, size_t aLength,
-                                                 JS::MutableHandle<JSScript*> aScript)
-{
+nsresult nsJSUtils::ExecutionContext::DecodeBinASTAndExec(
+    JS::CompileOptions& aCompileOptions, const uint8_t* aBuf, size_t aLength,
+    JS::MutableHandle<JSScript*> aScript) {
 #ifdef JS_BUILD_BINAST
   MOZ_ASSERT(mScopeChain.length() == 0,
              "BinAST decoding is not supported in non-syntactic scopes");
@@ -429,9 +406,7 @@ nsJSUtils::ExecutionContext::DecodeBinASTAndExec(JS::CompileOptions& aCompileOpt
 #endif
 }
 
-static bool
-IsPromiseValue(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
+static bool IsPromiseValue(JSContext* aCx, JS::Handle<JS::Value> aValue) {
   if (!aValue.isObject()) {
     return false;
   }
@@ -444,9 +419,8 @@ IsPromiseValue(JSContext* aCx, JS::Handle<JS::Value> aValue)
   return JS::IsPromiseObject(obj);
 }
 
-nsresult
-nsJSUtils::ExecutionContext::ExtractReturnValue(JS::MutableHandle<JS::Value> aRetValue)
-{
+nsresult nsJSUtils::ExecutionContext::ExtractReturnValue(
+    JS::MutableHandle<JS::Value> aRetValue) {
   MOZ_ASSERT(aRetValue.isUndefined());
   if (mSkip) {
     // Repeat earlier result, as NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW are not
@@ -485,13 +459,11 @@ nsJSUtils::ExecutionContext::ExtractReturnValue(JS::MutableHandle<JS::Value> aRe
   return NS_OK;
 }
 
-nsresult
-nsJSUtils::CompileModule(JSContext* aCx,
-                       JS::SourceText<char16_t>& aSrcBuf,
-                       JS::Handle<JSObject*> aEvaluationGlobal,
-                       JS::CompileOptions &aCompileOptions,
-                       JS::MutableHandle<JSObject*> aModule)
-{
+nsresult nsJSUtils::CompileModule(JSContext* aCx,
+                                  JS::SourceText<char16_t>& aSrcBuf,
+                                  JS::Handle<JSObject*> aEvaluationGlobal,
+                                  JS::CompileOptions& aCompileOptions,
+                                  JS::MutableHandle<JSObject*> aModule) {
   AUTO_PROFILER_LABEL("nsJSUtils::CompileModule", JS);
 
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
@@ -511,11 +483,9 @@ nsJSUtils::CompileModule(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult
-nsJSUtils::InitModuleSourceElement(JSContext* aCx,
-                                   JS::Handle<JSObject*> aModule,
-                                   nsIScriptElement* aElement)
-{
+nsresult nsJSUtils::InitModuleSourceElement(JSContext* aCx,
+                                            JS::Handle<JSObject*> aModule,
+                                            nsIScriptElement* aElement) {
   JS::Rooted<JS::Value> value(aCx);
   nsresult rv = nsContentUtils::WrapNative(aCx, aElement, &value,
                                            /* aAllowWrapping = */ true);
@@ -534,9 +504,8 @@ nsJSUtils::InitModuleSourceElement(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult
-nsJSUtils::ModuleInstantiate(JSContext* aCx, JS::Handle<JSObject*> aModule)
-{
+nsresult nsJSUtils::ModuleInstantiate(JSContext* aCx,
+                                      JS::Handle<JSObject*> aModule) {
   AUTO_PROFILER_LABEL("nsJSUtils::ModuleInstantiate", JS);
 
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
@@ -553,9 +522,8 @@ nsJSUtils::ModuleInstantiate(JSContext* aCx, JS::Handle<JSObject*> aModule)
   return NS_OK;
 }
 
-nsresult
-nsJSUtils::ModuleEvaluate(JSContext* aCx, JS::Handle<JSObject*> aModule)
-{
+nsresult nsJSUtils::ModuleEvaluate(JSContext* aCx,
+                                   JS::Handle<JSObject*> aModule) {
   AUTO_PROFILER_LABEL("nsJSUtils::ModuleEvaluate", JS);
 
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
@@ -572,11 +540,8 @@ nsJSUtils::ModuleEvaluate(JSContext* aCx, JS::Handle<JSObject*> aModule)
   return NS_OK;
 }
 
-static bool
-AddScopeChainItem(JSContext* aCx,
-                  nsINode* aNode,
-                  JS::AutoObjectVector& aScopeChain)
-{
+static bool AddScopeChainItem(JSContext* aCx, nsINode* aNode,
+                              JS::AutoObjectVector& aScopeChain) {
   JS::RootedValue val(aCx);
   if (!GetOrCreateDOMReflector(aCx, aNode, &val)) {
     return false;
@@ -590,11 +555,8 @@ AddScopeChainItem(JSContext* aCx,
 }
 
 /* static */
-bool
-nsJSUtils::GetScopeChainForElement(JSContext* aCx,
-                                   Element* aElement,
-                                   JS::AutoObjectVector& aScopeChain)
-{
+bool nsJSUtils::GetScopeChainForElement(JSContext* aCx, Element* aElement,
+                                        JS::AutoObjectVector& aScopeChain) {
   for (nsINode* cur = aElement; cur; cur = cur->GetScopeChainParent()) {
     if (!AddScopeChainItem(aCx, cur, aScopeChain)) {
       return false;
@@ -605,12 +567,9 @@ nsJSUtils::GetScopeChainForElement(JSContext* aCx,
 }
 
 /* static */
-bool
-nsJSUtils::GetScopeChainForXBL(JSContext* aCx,
-                               Element* aElement,
-                               const nsXBLPrototypeBinding& aProtoBinding,
-                               JS::AutoObjectVector& aScopeChain)
-{
+bool nsJSUtils::GetScopeChainForXBL(JSContext* aCx, Element* aElement,
+                                    const nsXBLPrototypeBinding& aProtoBinding,
+                                    JS::AutoObjectVector& aScopeChain) {
   if (!aElement) {
     return true;
   }
@@ -630,18 +589,13 @@ nsJSUtils::GetScopeChainForXBL(JSContext* aCx,
 }
 
 /* static */
-void
-nsJSUtils::ResetTimeZone()
-{
-  JS::ResetTimeZone();
-}
+void nsJSUtils::ResetTimeZone() { JS::ResetTimeZone(); }
 
 //
 // nsDOMJSUtils.h
 //
 
-bool nsAutoJSString::init(const JS::Value &v)
-{
+bool nsAutoJSString::init(const JS::Value& v) {
   // Note: it's okay to use danger::GetJSContext here instead of AutoJSAPI,
   // because the init() call below is careful not to run script (for instance,
   // it only calls JS::ToString for non-object values).
@@ -653,4 +607,3 @@ bool nsAutoJSString::init(const JS::Value &v)
 
   return true;
 }
-

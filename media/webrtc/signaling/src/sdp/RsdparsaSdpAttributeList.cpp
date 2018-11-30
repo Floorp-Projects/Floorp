@@ -15,29 +15,23 @@
 
 #include <limits>
 
-namespace mozilla
-{
+namespace mozilla {
 
 const std::string RsdparsaSdpAttributeList::kEmptyString = "";
 
-RsdparsaSdpAttributeList::~RsdparsaSdpAttributeList()
-{
+RsdparsaSdpAttributeList::~RsdparsaSdpAttributeList() {
   for (size_t i = 0; i < kNumAttributeTypes; ++i) {
     delete mAttributes[i];
   }
 }
 
-bool
-RsdparsaSdpAttributeList::HasAttribute(AttributeType type,
-                                       bool sessionFallback) const
-{
+bool RsdparsaSdpAttributeList::HasAttribute(AttributeType type,
+                                            bool sessionFallback) const {
   return !!GetAttribute(type, sessionFallback);
 }
 
-const SdpAttribute*
-RsdparsaSdpAttributeList::GetAttribute(AttributeType type,
-                                       bool sessionFallback) const
-{
+const SdpAttribute* RsdparsaSdpAttributeList::GetAttribute(
+    AttributeType type, bool sessionFallback) const {
   const SdpAttribute* value = mAttributes[static_cast<size_t>(type)];
   // Only do fallback when the attribute can appear at both the media and
   // session level
@@ -49,24 +43,18 @@ RsdparsaSdpAttributeList::GetAttribute(AttributeType type,
   return value;
 }
 
-void
-RsdparsaSdpAttributeList::RemoveAttribute(AttributeType type)
-{
+void RsdparsaSdpAttributeList::RemoveAttribute(AttributeType type) {
   delete mAttributes[static_cast<size_t>(type)];
   mAttributes[static_cast<size_t>(type)] = nullptr;
 }
 
-void
-RsdparsaSdpAttributeList::Clear()
-{
+void RsdparsaSdpAttributeList::Clear() {
   for (size_t i = 0; i < kNumAttributeTypes; ++i) {
     RemoveAttribute(static_cast<AttributeType>(i));
   }
 }
 
-uint32_t
-RsdparsaSdpAttributeList::Count() const
-{
+uint32_t RsdparsaSdpAttributeList::Count() const {
   uint32_t count = 0;
   for (size_t i = 0; i < kNumAttributeTypes; ++i) {
     if (mAttributes[i]) {
@@ -76,9 +64,7 @@ RsdparsaSdpAttributeList::Count() const
   return count;
 }
 
-void
-RsdparsaSdpAttributeList::SetAttribute(SdpAttribute* attr)
-{
+void RsdparsaSdpAttributeList::SetAttribute(SdpAttribute* attr) {
   if (!IsAllowedHere(attr->GetType())) {
     MOZ_ASSERT(false, "This type of attribute is not allowed here");
     delete attr;
@@ -88,31 +74,27 @@ RsdparsaSdpAttributeList::SetAttribute(SdpAttribute* attr)
   mAttributes[attr->GetType()] = attr;
 }
 
-const std::vector<std::string>&
-RsdparsaSdpAttributeList::GetCandidate() const
-{
+const std::vector<std::string>& RsdparsaSdpAttributeList::GetCandidate() const {
   if (!HasAttribute(SdpAttribute::kCandidateAttribute)) {
     MOZ_CRASH();
   }
 
   return static_cast<const SdpMultiStringAttribute*>(
-             GetAttribute(SdpAttribute::kCandidateAttribute))->mValues;
+             GetAttribute(SdpAttribute::kCandidateAttribute))
+      ->mValues;
 }
 
-const SdpConnectionAttribute&
-RsdparsaSdpAttributeList::GetConnection() const
-{
+const SdpConnectionAttribute& RsdparsaSdpAttributeList::GetConnection() const {
   if (!HasAttribute(SdpAttribute::kConnectionAttribute)) {
     MOZ_CRASH();
   }
 
   return *static_cast<const SdpConnectionAttribute*>(
-             GetAttribute(SdpAttribute::kConnectionAttribute));
+      GetAttribute(SdpAttribute::kConnectionAttribute));
 }
 
-SdpDirectionAttribute::Direction
-RsdparsaSdpAttributeList::GetDirection() const
-{
+SdpDirectionAttribute::Direction RsdparsaSdpAttributeList::GetDirection()
+    const {
   if (!HasAttribute(SdpAttribute::kDirectionAttribute)) {
     MOZ_CRASH();
   }
@@ -121,9 +103,8 @@ RsdparsaSdpAttributeList::GetDirection() const
   return static_cast<const SdpDirectionAttribute*>(attr)->mValue;
 }
 
-const SdpDtlsMessageAttribute&
-RsdparsaSdpAttributeList::GetDtlsMessage() const
-{
+const SdpDtlsMessageAttribute& RsdparsaSdpAttributeList::GetDtlsMessage()
+    const {
   if (!HasAttribute(SdpAttribute::kDtlsMessageAttribute)) {
     MOZ_CRASH();
   }
@@ -131,20 +112,17 @@ RsdparsaSdpAttributeList::GetDtlsMessage() const
   return *static_cast<const SdpDtlsMessageAttribute*>(attr);
 }
 
-const SdpExtmapAttributeList&
-RsdparsaSdpAttributeList::GetExtmap() const
-{
+const SdpExtmapAttributeList& RsdparsaSdpAttributeList::GetExtmap() const {
   if (!HasAttribute(SdpAttribute::kExtmapAttribute)) {
     MOZ_CRASH();
   }
 
   return *static_cast<const SdpExtmapAttributeList*>(
-             GetAttribute(SdpAttribute::kExtmapAttribute));
+      GetAttribute(SdpAttribute::kExtmapAttribute));
 }
 
-const SdpFingerprintAttributeList&
-RsdparsaSdpAttributeList::GetFingerprint() const
-{
+const SdpFingerprintAttributeList& RsdparsaSdpAttributeList::GetFingerprint()
+    const {
   if (!HasAttribute(SdpAttribute::kFingerprintAttribute)) {
     MOZ_CRASH();
   }
@@ -152,31 +130,25 @@ RsdparsaSdpAttributeList::GetFingerprint() const
   return *static_cast<const SdpFingerprintAttributeList*>(attr);
 }
 
-const SdpFmtpAttributeList&
-RsdparsaSdpAttributeList::GetFmtp() const
-{
+const SdpFmtpAttributeList& RsdparsaSdpAttributeList::GetFmtp() const {
   if (!HasAttribute(SdpAttribute::kFmtpAttribute)) {
     MOZ_CRASH();
   }
 
   return *static_cast<const SdpFmtpAttributeList*>(
-             GetAttribute(SdpAttribute::kFmtpAttribute));
+      GetAttribute(SdpAttribute::kFmtpAttribute));
 }
 
-const SdpGroupAttributeList&
-RsdparsaSdpAttributeList::GetGroup() const
-{
+const SdpGroupAttributeList& RsdparsaSdpAttributeList::GetGroup() const {
   if (!HasAttribute(SdpAttribute::kGroupAttribute)) {
     MOZ_CRASH();
   }
 
   return *static_cast<const SdpGroupAttributeList*>(
-             GetAttribute(SdpAttribute::kGroupAttribute));
+      GetAttribute(SdpAttribute::kGroupAttribute));
 }
 
-const SdpOptionsAttribute&
-RsdparsaSdpAttributeList::GetIceOptions() const
-{
+const SdpOptionsAttribute& RsdparsaSdpAttributeList::GetIceOptions() const {
   if (!HasAttribute(SdpAttribute::kIceOptionsAttribute)) {
     MOZ_CRASH();
   }
@@ -185,9 +157,7 @@ RsdparsaSdpAttributeList::GetIceOptions() const
   return *static_cast<const SdpOptionsAttribute*>(attr);
 }
 
-const std::string&
-RsdparsaSdpAttributeList::GetIcePwd() const
-{
+const std::string& RsdparsaSdpAttributeList::GetIcePwd() const {
   if (!HasAttribute(SdpAttribute::kIcePwdAttribute)) {
     return kEmptyString;
   }
@@ -195,9 +165,7 @@ RsdparsaSdpAttributeList::GetIcePwd() const
   return static_cast<const SdpStringAttribute*>(attr)->mValue;
 }
 
-const std::string&
-RsdparsaSdpAttributeList::GetIceUfrag() const
-{
+const std::string& RsdparsaSdpAttributeList::GetIceUfrag() const {
   if (!HasAttribute(SdpAttribute::kIceUfragAttribute)) {
     return kEmptyString;
   }
@@ -205,9 +173,7 @@ RsdparsaSdpAttributeList::GetIceUfrag() const
   return static_cast<const SdpStringAttribute*>(attr)->mValue;
 }
 
-const std::string&
-RsdparsaSdpAttributeList::GetIdentity() const
-{
+const std::string& RsdparsaSdpAttributeList::GetIdentity() const {
   if (!HasAttribute(SdpAttribute::kIdentityAttribute)) {
     return kEmptyString;
   }
@@ -215,9 +181,8 @@ RsdparsaSdpAttributeList::GetIdentity() const
   return static_cast<const SdpStringAttribute*>(attr)->mValue;
 }
 
-const SdpImageattrAttributeList&
-RsdparsaSdpAttributeList::GetImageattr() const
-{
+const SdpImageattrAttributeList& RsdparsaSdpAttributeList::GetImageattr()
+    const {
   if (!HasAttribute(SdpAttribute::kImageattrAttribute)) {
     MOZ_CRASH();
   }
@@ -225,9 +190,7 @@ RsdparsaSdpAttributeList::GetImageattr() const
   return *static_cast<const SdpImageattrAttributeList*>(attr);
 }
 
-const SdpSimulcastAttribute&
-RsdparsaSdpAttributeList::GetSimulcast() const
-{
+const SdpSimulcastAttribute& RsdparsaSdpAttributeList::GetSimulcast() const {
   if (!HasAttribute(SdpAttribute::kSimulcastAttribute)) {
     MOZ_CRASH();
   }
@@ -235,9 +198,7 @@ RsdparsaSdpAttributeList::GetSimulcast() const
   return *static_cast<const SdpSimulcastAttribute*>(attr);
 }
 
-const std::string&
-RsdparsaSdpAttributeList::GetLabel() const
-{
+const std::string& RsdparsaSdpAttributeList::GetLabel() const {
   if (!HasAttribute(SdpAttribute::kLabelAttribute)) {
     return kEmptyString;
   }
@@ -245,9 +206,7 @@ RsdparsaSdpAttributeList::GetLabel() const
   return static_cast<const SdpStringAttribute*>(attr)->mValue;
 }
 
-uint32_t
-RsdparsaSdpAttributeList::GetMaxptime() const
-{
+uint32_t RsdparsaSdpAttributeList::GetMaxptime() const {
   if (!HasAttribute(SdpAttribute::kMaxptimeAttribute)) {
     MOZ_CRASH();
   }
@@ -255,9 +214,7 @@ RsdparsaSdpAttributeList::GetMaxptime() const
   return static_cast<const SdpNumberAttribute*>(attr)->mValue;
 }
 
-const std::string&
-RsdparsaSdpAttributeList::GetMid() const
-{
+const std::string& RsdparsaSdpAttributeList::GetMid() const {
   if (!HasAttribute(SdpAttribute::kMidAttribute)) {
     return kEmptyString;
   }
@@ -265,9 +222,7 @@ RsdparsaSdpAttributeList::GetMid() const
   return static_cast<const SdpStringAttribute*>(attr)->mValue;
 }
 
-const SdpMsidAttributeList&
-RsdparsaSdpAttributeList::GetMsid() const
-{
+const SdpMsidAttributeList& RsdparsaSdpAttributeList::GetMsid() const {
   if (!HasAttribute(SdpAttribute::kMsidAttribute)) {
     MOZ_CRASH();
   }
@@ -275,9 +230,8 @@ RsdparsaSdpAttributeList::GetMsid() const
   return *static_cast<const SdpMsidAttributeList*>(attr);
 }
 
-const SdpMsidSemanticAttributeList&
-RsdparsaSdpAttributeList::GetMsidSemantic() const
-{
+const SdpMsidSemanticAttributeList& RsdparsaSdpAttributeList::GetMsidSemantic()
+    const {
   if (!HasAttribute(SdpAttribute::kMsidSemanticAttribute)) {
     MOZ_CRASH();
   }
@@ -285,9 +239,7 @@ RsdparsaSdpAttributeList::GetMsidSemantic() const
   return *static_cast<const SdpMsidSemanticAttributeList*>(attr);
 }
 
-const SdpRidAttributeList&
-RsdparsaSdpAttributeList::GetRid() const
-{
+const SdpRidAttributeList& RsdparsaSdpAttributeList::GetRid() const {
   if (!HasAttribute(SdpAttribute::kRidAttribute)) {
     MOZ_CRASH();
   }
@@ -295,9 +247,7 @@ RsdparsaSdpAttributeList::GetRid() const
   return *static_cast<const SdpRidAttributeList*>(attr);
 }
 
-uint32_t
-RsdparsaSdpAttributeList::GetPtime() const
-{
+uint32_t RsdparsaSdpAttributeList::GetPtime() const {
   if (!HasAttribute(SdpAttribute::kPtimeAttribute)) {
     MOZ_CRASH();
   }
@@ -305,9 +255,7 @@ RsdparsaSdpAttributeList::GetPtime() const
   return static_cast<const SdpNumberAttribute*>(attr)->mValue;
 }
 
-const SdpRtcpAttribute&
-RsdparsaSdpAttributeList::GetRtcp() const
-{
+const SdpRtcpAttribute& RsdparsaSdpAttributeList::GetRtcp() const {
   if (!HasAttribute(SdpAttribute::kRtcpAttribute)) {
     MOZ_CRASH();
   }
@@ -315,9 +263,7 @@ RsdparsaSdpAttributeList::GetRtcp() const
   return *static_cast<const SdpRtcpAttribute*>(attr);
 }
 
-const SdpRtcpFbAttributeList&
-RsdparsaSdpAttributeList::GetRtcpFb() const
-{
+const SdpRtcpFbAttributeList& RsdparsaSdpAttributeList::GetRtcpFb() const {
   if (!HasAttribute(SdpAttribute::kRtcpFbAttribute)) {
     MOZ_CRASH();
   }
@@ -326,14 +272,11 @@ RsdparsaSdpAttributeList::GetRtcpFb() const
 }
 
 const SdpRemoteCandidatesAttribute&
-RsdparsaSdpAttributeList::GetRemoteCandidates() const
-{
+RsdparsaSdpAttributeList::GetRemoteCandidates() const {
   MOZ_CRASH("Not yet implemented");
 }
 
-const SdpRtpmapAttributeList&
-RsdparsaSdpAttributeList::GetRtpmap() const
-{
+const SdpRtpmapAttributeList& RsdparsaSdpAttributeList::GetRtpmap() const {
   if (!HasAttribute(SdpAttribute::kRtpmapAttribute)) {
     MOZ_CRASH();
   }
@@ -341,9 +284,7 @@ RsdparsaSdpAttributeList::GetRtpmap() const
   return *static_cast<const SdpRtpmapAttributeList*>(attr);
 }
 
-const SdpSctpmapAttributeList&
-RsdparsaSdpAttributeList::GetSctpmap() const
-{
+const SdpSctpmapAttributeList& RsdparsaSdpAttributeList::GetSctpmap() const {
   if (!HasAttribute(SdpAttribute::kSctpmapAttribute)) {
     MOZ_CRASH();
   }
@@ -351,9 +292,7 @@ RsdparsaSdpAttributeList::GetSctpmap() const
   return *static_cast<const SdpSctpmapAttributeList*>(attr);
 }
 
-uint32_t
-RsdparsaSdpAttributeList::GetSctpPort() const
-{
+uint32_t RsdparsaSdpAttributeList::GetSctpPort() const {
   if (!HasAttribute(SdpAttribute::kSctpPortAttribute)) {
     MOZ_CRASH();
   }
@@ -362,20 +301,17 @@ RsdparsaSdpAttributeList::GetSctpPort() const
   return static_cast<const SdpNumberAttribute*>(attr)->mValue;
 }
 
-uint32_t
-RsdparsaSdpAttributeList::GetMaxMessageSize() const
-{
+uint32_t RsdparsaSdpAttributeList::GetMaxMessageSize() const {
   if (!HasAttribute(SdpAttribute::kMaxMessageSizeAttribute)) {
     MOZ_CRASH();
   }
 
-  const SdpAttribute* attr = GetAttribute(SdpAttribute::kMaxMessageSizeAttribute);
+  const SdpAttribute* attr =
+      GetAttribute(SdpAttribute::kMaxMessageSizeAttribute);
   return static_cast<const SdpNumberAttribute*>(attr)->mValue;
 }
 
-const SdpSetupAttribute&
-RsdparsaSdpAttributeList::GetSetup() const
-{
+const SdpSetupAttribute& RsdparsaSdpAttributeList::GetSetup() const {
   if (!HasAttribute(SdpAttribute::kSetupAttribute)) {
     MOZ_CRASH();
   }
@@ -383,9 +319,7 @@ RsdparsaSdpAttributeList::GetSetup() const
   return *static_cast<const SdpSetupAttribute*>(attr);
 }
 
-const SdpSsrcAttributeList&
-RsdparsaSdpAttributeList::GetSsrc() const
-{
+const SdpSsrcAttributeList& RsdparsaSdpAttributeList::GetSsrc() const {
   if (!HasAttribute(SdpAttribute::kSsrcAttribute)) {
     MOZ_CRASH();
   }
@@ -393,12 +327,10 @@ RsdparsaSdpAttributeList::GetSsrc() const
   return *static_cast<const SdpSsrcAttributeList*>(attr);
 }
 
-void
-RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
-                                        AttributeType type)
-{
-  if(!mAttributes[type]) {
-    switch(type) {
+void RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList* attributeList,
+                                             AttributeType type) {
+  if (!mAttributes[type]) {
+    switch (type) {
       case SdpAttribute::kIceUfragAttribute:
         LoadIceUfrag(attributeList);
         return;
@@ -441,7 +373,7 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
         return;
       case SdpAttribute::kMaxMessageSizeAttribute:
         LoadMaxMessageSize(attributeList);
-        return ;
+        return;
       case SdpAttribute::kMidAttribute:
         LoadMid(attributeList);
         return;
@@ -477,7 +409,7 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
         return;
       case SdpAttribute::kSctpPortAttribute:
         LoadSctpPort(attributeList);
-        return ;
+        return;
       case SdpAttribute::kExtmapAttribute:
         LoadExtmap(attributeList);
         return;
@@ -500,59 +432,51 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadAll(RustAttributeList *attributeList)
-{
-  for (int i = SdpAttribute::kFirstAttribute; i <= SdpAttribute::kLastAttribute; i++) {
+void RsdparsaSdpAttributeList::LoadAll(RustAttributeList* attributeList) {
+  for (int i = SdpAttribute::kFirstAttribute; i <= SdpAttribute::kLastAttribute;
+       i++) {
     LoadAttribute(attributeList, static_cast<SdpAttribute::AttributeType>(i));
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadIceUfrag(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadIceUfrag(RustAttributeList* attributeList) {
   StringView ufragStr;
   nsresult nr = sdp_get_iceufrag(attributeList, &ufragStr);
   if (NS_SUCCEEDED(nr)) {
     std::string iceufrag = convertStringView(ufragStr);
-    SetAttribute(new SdpStringAttribute(SdpAttribute::kIceUfragAttribute,
-                                        iceufrag));
+    SetAttribute(
+        new SdpStringAttribute(SdpAttribute::kIceUfragAttribute, iceufrag));
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadIcePwd(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadIcePwd(RustAttributeList* attributeList) {
   StringView pwdStr;
   nsresult nr = sdp_get_icepwd(attributeList, &pwdStr);
   if (NS_SUCCEEDED(nr)) {
     std::string icePwd = convertStringView(pwdStr);
-    SetAttribute(new SdpStringAttribute(SdpAttribute::kIcePwdAttribute,
-                                        icePwd));
+    SetAttribute(
+        new SdpStringAttribute(SdpAttribute::kIcePwdAttribute, icePwd));
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadIdentity(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadIdentity(RustAttributeList* attributeList) {
   StringView identityStr;
   nsresult nr = sdp_get_identity(attributeList, &identityStr);
   if (NS_SUCCEEDED(nr)) {
     std::string identity = convertStringView(identityStr);
-    SetAttribute(new SdpStringAttribute(SdpAttribute::kIdentityAttribute,
-                                        identity));
+    SetAttribute(
+        new SdpStringAttribute(SdpAttribute::kIdentityAttribute, identity));
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadIceOptions(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadIceOptions(
+    RustAttributeList* attributeList) {
   StringVec* options;
   nsresult nr = sdp_get_iceoptions(attributeList, &options);
   if (NS_SUCCEEDED(nr)) {
     std::vector<std::string> optionsVec;
-    auto optionsAttr = MakeUnique<SdpOptionsAttribute>(
-                                  SdpAttribute::kIceOptionsAttribute);
+    auto optionsAttr =
+        MakeUnique<SdpOptionsAttribute>(SdpAttribute::kIceOptionsAttribute);
     for (size_t i = 0; i < string_vec_len(options); i++) {
       StringView optionStr;
       string_vec_get_view(options, i, &optionStr);
@@ -562,9 +486,8 @@ RsdparsaSdpAttributeList::LoadIceOptions(RustAttributeList* attributeList)
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadFingerprint(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadFingerprint(
+    RustAttributeList* attributeList) {
   size_t nFp = sdp_get_fingerprint_count(attributeList);
   if (nFp == 0) {
     return;
@@ -572,10 +495,10 @@ RsdparsaSdpAttributeList::LoadFingerprint(RustAttributeList* attributeList)
   auto rustFingerprints = MakeUnique<RustSdpAttributeFingerprint[]>(nFp);
   sdp_get_fingerprints(attributeList, nFp, rustFingerprints.get());
   auto fingerprints = MakeUnique<SdpFingerprintAttributeList>();
-  for(size_t i = 0; i < nFp; i++) {
+  for (size_t i = 0; i < nFp; i++) {
     const RustSdpAttributeFingerprint& fingerprint = rustFingerprints[i];
     std::string algorithm;
-    switch(fingerprint.hashAlgorithm) {
+    switch (fingerprint.hashAlgorithm) {
       case RustSdpAttributeFingerprintHashAlgorithm::kSha1:
         algorithm = "sha-1";
         break;
@@ -594,16 +517,15 @@ RsdparsaSdpAttributeList::LoadFingerprint(RustAttributeList* attributeList)
     }
 
     std::vector<uint8_t> fingerprintBytes =
-                                    convertU8Vec(fingerprint.fingerprint);
+        convertU8Vec(fingerprint.fingerprint);
 
     fingerprints->PushEntry(algorithm, fingerprintBytes);
   }
   SetAttribute(fingerprints.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadDtlsMessage(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadDtlsMessage(
+    RustAttributeList* attributeList) {
   RustSdpAttributeDtlsMessage rustDtlsMessage;
   nsresult nr = sdp_get_dtls_message(attributeList, &rustDtlsMessage);
   if (NS_SUCCEEDED(nr)) {
@@ -620,14 +542,12 @@ RsdparsaSdpAttributeList::LoadDtlsMessage(RustAttributeList* attributeList)
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadSetup(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadSetup(RustAttributeList* attributeList) {
   RustSdpSetup rustSetup;
   nsresult nr = sdp_get_setup(attributeList, &rustSetup);
   if (NS_SUCCEEDED(nr)) {
     SdpSetupAttribute::Role setupEnum;
-    switch(rustSetup) {
+    switch (rustSetup) {
       case RustSdpSetup::kRustActive:
         setupEnum = SdpSetupAttribute::kActive;
         break;
@@ -645,9 +565,7 @@ RsdparsaSdpAttributeList::LoadSetup(RustAttributeList* attributeList)
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadSsrc(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadSsrc(RustAttributeList* attributeList) {
   size_t numSsrc = sdp_get_ssrc_count(attributeList);
   if (numSsrc == 0) {
     return;
@@ -655,7 +573,7 @@ RsdparsaSdpAttributeList::LoadSsrc(RustAttributeList* attributeList)
   auto rustSsrcs = MakeUnique<RustSdpAttributeSsrc[]>(numSsrc);
   sdp_get_ssrcs(attributeList, numSsrc, rustSsrcs.get());
   auto ssrcs = MakeUnique<SdpSsrcAttributeList>();
-  for(size_t i = 0; i < numSsrc; i++) {
+  for (size_t i = 0; i < numSsrc; i++) {
     RustSdpAttributeSsrc& ssrc = rustSsrcs[i];
     std::string attribute = convertStringView(ssrc.attribute);
     std::string value = convertStringView(ssrc.value);
@@ -668,9 +586,7 @@ RsdparsaSdpAttributeList::LoadSsrc(RustAttributeList* attributeList)
   SetAttribute(ssrcs.release());
 }
 
-SdpRtpmapAttributeList::CodecType
-strToCodecType(const std::string &name)
-{
+SdpRtpmapAttributeList::CodecType strToCodecType(const std::string& name) {
   auto codec = SdpRtpmapAttributeList::kOtherCodec;
   if (!nsCRT::strcasecmp(name.c_str(), "opus")) {
     codec = SdpRtpmapAttributeList::kOpus;
@@ -686,7 +602,7 @@ strToCodecType(const std::string &name)
     codec = SdpRtpmapAttributeList::kVP9;
   } else if (!nsCRT::strcasecmp(name.c_str(), "iLBC")) {
     codec = SdpRtpmapAttributeList::kiLBC;
-  } else if(!nsCRT::strcasecmp(name.c_str(), "iSAC")) {
+  } else if (!nsCRT::strcasecmp(name.c_str(), "iSAC")) {
     codec = SdpRtpmapAttributeList::kiSAC;
   } else if (!nsCRT::strcasecmp(name.c_str(), "H264")) {
     codec = SdpRtpmapAttributeList::kH264;
@@ -700,9 +616,7 @@ strToCodecType(const std::string &name)
   return codec;
 }
 
-void
-RsdparsaSdpAttributeList::LoadRtpmap(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadRtpmap(RustAttributeList* attributeList) {
   size_t numRtpmap = sdp_get_rtpmap_count(attributeList);
   if (numRtpmap == 0) {
     return;
@@ -710,29 +624,26 @@ RsdparsaSdpAttributeList::LoadRtpmap(RustAttributeList* attributeList)
   auto rustRtpmaps = MakeUnique<RustSdpAttributeRtpmap[]>(numRtpmap);
   sdp_get_rtpmaps(attributeList, numRtpmap, rustRtpmaps.get());
   auto rtpmapList = MakeUnique<SdpRtpmapAttributeList>();
-  for(size_t i = 0; i < numRtpmap; i++) {
+  for (size_t i = 0; i < numRtpmap; i++) {
     RustSdpAttributeRtpmap& rtpmap = rustRtpmaps[i];
     std::string payloadType = std::to_string(rtpmap.payloadType);
     std::string name = convertStringView(rtpmap.codecName);
     auto codec = strToCodecType(name);
     uint32_t channels = rtpmap.channels;
-    rtpmapList->PushEntry(payloadType, codec, name,
-                          rtpmap.frequency, channels);
+    rtpmapList->PushEntry(payloadType, codec, name, rtpmap.frequency, channels);
   }
   SetAttribute(rtpmapList.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList) {
   size_t numFmtp = sdp_get_fmtp_count(attributeList);
-    if (numFmtp == 0) {
+  if (numFmtp == 0) {
     return;
   }
   auto rustFmtps = MakeUnique<RustSdpAttributeFmtp[]>(numFmtp);
-  size_t numValidFmtp = sdp_get_fmtp(attributeList, numFmtp,rustFmtps.get());
+  size_t numValidFmtp = sdp_get_fmtp(attributeList, numFmtp, rustFmtps.get());
   auto fmtpList = MakeUnique<SdpFmtpAttributeList>();
-  for(size_t i = 0; i < numValidFmtp; i++) {
+  for (size_t i = 0; i < numValidFmtp; i++) {
     const RustSdpAttributeFmtp& fmtp = rustFmtps[i];
     uint8_t payloadType = fmtp.payloadType;
     std::string codecName = convertStringView(fmtp.codecName);
@@ -741,15 +652,15 @@ RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList)
     UniquePtr<SdpFmtpAttributeList::Parameters> fmtpParameters;
 
     // use the upper case version of the codec name
-    std::transform(codecName.begin(), codecName.end(),
-                   codecName.begin(), ::toupper);
+    std::transform(codecName.begin(), codecName.end(), codecName.begin(),
+                   ::toupper);
 
-    if(codecName == "H264"){
+    if (codecName == "H264") {
       SdpFmtpAttributeList::H264Parameters h264Parameters;
 
       h264Parameters.packetization_mode = rustFmtpParameters.packetization_mode;
       h264Parameters.level_asymmetry_allowed =
-                                  rustFmtpParameters.level_asymmetry_allowed;
+          rustFmtpParameters.level_asymmetry_allowed;
       h264Parameters.profile_level_id = rustFmtpParameters.profile_level_id;
       h264Parameters.max_mbps = rustFmtpParameters.max_mbps;
       h264Parameters.max_fs = rustFmtpParameters.max_fs;
@@ -759,44 +670,43 @@ RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList)
 
       // TODO(bug 1466859): Support sprop-parameter-sets
 
-      fmtpParameters.reset(new SdpFmtpAttributeList::H264Parameters(
-                                                    std::move(h264Parameters)));
-    } else if(codecName == "OPUS"){
+      fmtpParameters.reset(
+          new SdpFmtpAttributeList::H264Parameters(std::move(h264Parameters)));
+    } else if (codecName == "OPUS") {
       SdpFmtpAttributeList::OpusParameters opusParameters;
 
       opusParameters.maxplaybackrate = rustFmtpParameters.maxplaybackrate;
       opusParameters.stereo = rustFmtpParameters.stereo;
       opusParameters.useInBandFec = rustFmtpParameters.useinbandfec;
 
-      fmtpParameters.reset(new SdpFmtpAttributeList::OpusParameters(
-                                                    std::move(opusParameters)));
-    } else if((codecName == "VP8") || (codecName == "VP9")){
-      SdpFmtpAttributeList::VP8Parameters
-                                    vp8Parameters(codecName == "VP8" ?
-                                                  SdpRtpmapAttributeList::kVP8 :
-                                                  SdpRtpmapAttributeList::kVP9);
+      fmtpParameters.reset(
+          new SdpFmtpAttributeList::OpusParameters(std::move(opusParameters)));
+    } else if ((codecName == "VP8") || (codecName == "VP9")) {
+      SdpFmtpAttributeList::VP8Parameters vp8Parameters(
+          codecName == "VP8" ? SdpRtpmapAttributeList::kVP8
+                             : SdpRtpmapAttributeList::kVP9);
 
       vp8Parameters.max_fs = rustFmtpParameters.max_fs;
       vp8Parameters.max_fr = rustFmtpParameters.max_fr;
 
-      fmtpParameters.reset(new SdpFmtpAttributeList::VP8Parameters(
-                                                     std::move(vp8Parameters)));
-    } else if(codecName == "TELEPHONE-EVENT"){
+      fmtpParameters.reset(
+          new SdpFmtpAttributeList::VP8Parameters(std::move(vp8Parameters)));
+    } else if (codecName == "TELEPHONE-EVENT") {
       SdpFmtpAttributeList::TelephoneEventParameters telephoneEventParameters;
 
       telephoneEventParameters.dtmfTones =
-                              convertStringView(rustFmtpParameters.dtmf_tones);
+          convertStringView(rustFmtpParameters.dtmf_tones);
 
       fmtpParameters.reset(new SdpFmtpAttributeList::TelephoneEventParameters(
-                                          std::move(telephoneEventParameters)));
-    } else if(codecName == "RED") {
+          std::move(telephoneEventParameters)));
+    } else if (codecName == "RED") {
       SdpFmtpAttributeList::RedParameters redParameters;
 
       redParameters.encodings = convertU8Vec(rustFmtpParameters.encodings);
 
-      fmtpParameters.reset(new SdpFmtpAttributeList::RedParameters(
-                                                     std::move(redParameters)));
-    } else{
+      fmtpParameters.reset(
+          new SdpFmtpAttributeList::RedParameters(std::move(redParameters)));
+    } else {
       // The parameter set is unknown so skip it
       continue;
     }
@@ -806,9 +716,7 @@ RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList)
   SetAttribute(fmtpList.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadPtime(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadPtime(RustAttributeList* attributeList) {
   int64_t ptime = sdp_get_ptime(attributeList);
   if (ptime >= 0) {
     SetAttribute(new SdpNumberAttribute(SdpAttribute::kPtimeAttribute,
@@ -816,9 +724,7 @@ RsdparsaSdpAttributeList::LoadPtime(RustAttributeList* attributeList)
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadFlags(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadFlags(RustAttributeList* attributeList) {
   RustSdpAttributeFlags flags = sdp_get_attribute_flags(attributeList);
   if (flags.iceLite) {
     SetAttribute(new SdpFlagAttribute(SdpAttribute::kIceLiteAttribute));
@@ -837,9 +743,8 @@ RsdparsaSdpAttributeList::LoadFlags(RustAttributeList* attributeList)
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadMaxMessageSize(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadMaxMessageSize(
+    RustAttributeList* attributeList) {
   int64_t max_msg_size = sdp_get_max_msg_size(attributeList);
   if (max_msg_size >= 0) {
     SetAttribute(new SdpNumberAttribute(SdpAttribute::kMaxMessageSizeAttribute,
@@ -847,9 +752,7 @@ RsdparsaSdpAttributeList::LoadMaxMessageSize(RustAttributeList* attributeList)
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadMid(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadMid(RustAttributeList* attributeList) {
   StringView rustMid;
   if (NS_SUCCEEDED(sdp_get_mid(attributeList, &rustMid))) {
     std::string mid = convertStringView(rustMid);
@@ -857,9 +760,7 @@ RsdparsaSdpAttributeList::LoadMid(RustAttributeList* attributeList)
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadMsid(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadMsid(RustAttributeList* attributeList) {
   size_t numMsid = sdp_get_msid_count(attributeList);
   if (numMsid == 0) {
     return;
@@ -867,7 +768,7 @@ RsdparsaSdpAttributeList::LoadMsid(RustAttributeList* attributeList)
   auto rustMsid = MakeUnique<RustSdpAttributeMsid[]>(numMsid);
   sdp_get_msids(attributeList, numMsid, rustMsid.get());
   auto msids = MakeUnique<SdpMsidAttributeList>();
-  for(size_t i = 0; i < numMsid; i++) {
+  for (size_t i = 0; i < numMsid; i++) {
     RustSdpAttributeMsid& msid = rustMsid[i];
     std::string id = convertStringView(msid.id);
     std::string appdata = convertStringView(msid.appdata);
@@ -876,18 +777,18 @@ RsdparsaSdpAttributeList::LoadMsid(RustAttributeList* attributeList)
   SetAttribute(msids.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadMsidSemantics(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadMsidSemantics(
+    RustAttributeList* attributeList) {
   size_t numMsidSemantic = sdp_get_msid_semantic_count(attributeList);
   if (numMsidSemantic == 0) {
     return;
   }
-  auto rustMsidSemantics = MakeUnique<RustSdpAttributeMsidSemantic[]>(numMsidSemantic);
+  auto rustMsidSemantics =
+      MakeUnique<RustSdpAttributeMsidSemantic[]>(numMsidSemantic);
   sdp_get_msid_semantics(attributeList, numMsidSemantic,
                          rustMsidSemantics.get());
   auto msidSemantics = MakeUnique<SdpMsidSemanticAttributeList>();
-  for(size_t i = 0; i < numMsidSemantic; i++) {
+  for (size_t i = 0; i < numMsidSemantic; i++) {
     RustSdpAttributeMsidSemantic& rustMsidSemantic = rustMsidSemantics[i];
     std::string semantic = convertStringView(rustMsidSemantic.semantic);
     std::vector<std::string> msids = convertStringVec(rustMsidSemantic.msids);
@@ -896,9 +797,7 @@ RsdparsaSdpAttributeList::LoadMsidSemantics(RustAttributeList* attributeList)
   SetAttribute(msidSemantics.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadGroup(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadGroup(RustAttributeList* attributeList) {
   size_t numGroup = sdp_get_group_count(attributeList);
   if (numGroup == 0) {
     return;
@@ -906,10 +805,10 @@ RsdparsaSdpAttributeList::LoadGroup(RustAttributeList* attributeList)
   auto rustGroups = MakeUnique<RustSdpAttributeGroup[]>(numGroup);
   sdp_get_groups(attributeList, numGroup, rustGroups.get());
   auto groups = MakeUnique<SdpGroupAttributeList>();
-  for(size_t i = 0; i < numGroup; i++) {
+  for (size_t i = 0; i < numGroup; i++) {
     RustSdpAttributeGroup& group = rustGroups[i];
     SdpGroupAttributeList::Semantics semantic;
-    switch(group.semantic) {
+    switch (group.semantic) {
       case RustSdpAttributeGroupSemantic ::kRustLipSynchronization:
         semantic = SdpGroupAttributeList::kLs;
         break;
@@ -938,9 +837,7 @@ RsdparsaSdpAttributeList::LoadGroup(RustAttributeList* attributeList)
   SetAttribute(groups.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadRtcp(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadRtcp(RustAttributeList* attributeList) {
   RustSdpAttributeRtcp rtcp;
   if (NS_SUCCEEDED(sdp_get_rtcp(attributeList, &rtcp))) {
     sdp::AddrType addrType = convertAddressType(rtcp.unicastAddr.addrType);
@@ -948,15 +845,13 @@ RsdparsaSdpAttributeList::LoadRtcp(RustAttributeList* attributeList)
       SetAttribute(new SdpRtcpAttribute(rtcp.port));
     } else {
       std::string addr(rtcp.unicastAddr.unicastAddr);
-      SetAttribute(new SdpRtcpAttribute(rtcp.port, sdp::kInternet,
-                                        addrType, addr));
+      SetAttribute(
+          new SdpRtcpAttribute(rtcp.port, sdp::kInternet, addrType, addr));
     }
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadRtcpFb(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadRtcpFb(RustAttributeList* attributeList) {
   auto rtcpfbsCount = sdp_get_rtcpfb_count(attributeList);
   if (!rtcpfbsCount) {
     return;
@@ -966,12 +861,12 @@ RsdparsaSdpAttributeList::LoadRtcpFb(RustAttributeList* attributeList)
   sdp_get_rtcpfbs(attributeList, rtcpfbsCount, rustRtcpfbs.get());
 
   auto rtcpfbList = MakeUnique<SdpRtcpFbAttributeList>();
-  for(size_t i = 0; i < rtcpfbsCount; i++) {
+  for (size_t i = 0; i < rtcpfbsCount; i++) {
     RustSdpAttributeRtcpFb& rtcpfb = rustRtcpfbs[i];
     uint32_t payloadTypeU32 = rtcpfb.payloadType;
 
     std::stringstream ss;
-    if(payloadTypeU32 == std::numeric_limits<uint32_t>::max()){
+    if (payloadTypeU32 == std::numeric_limits<uint32_t>::max()) {
       ss << "*";
     } else {
       ss << payloadTypeU32;
@@ -981,26 +876,26 @@ RsdparsaSdpAttributeList::LoadRtcpFb(RustAttributeList* attributeList)
     std::string parameter = convertStringView(rtcpfb.parameter);
     std::string extra = convertStringView(rtcpfb.extra);
 
-    rtcpfbList->PushEntry(ss.str(), static_cast<SdpRtcpFbAttributeList::Type>(feedbackType), parameter, extra);
+    rtcpfbList->PushEntry(
+        ss.str(), static_cast<SdpRtcpFbAttributeList::Type>(feedbackType),
+        parameter, extra);
   }
 
   SetAttribute(rtcpfbList.release());
 }
 
-SdpSimulcastAttribute::Versions
-LoadSimulcastVersions(const RustSdpAttributeSimulcastVersionVec*
-                      rustVersionList)
-{
+SdpSimulcastAttribute::Versions LoadSimulcastVersions(
+    const RustSdpAttributeSimulcastVersionVec* rustVersionList) {
   size_t rustVersionCount = sdp_simulcast_get_version_count(rustVersionList);
-  auto rustVersionArray = MakeUnique<RustSdpAttributeSimulcastVersion[]>
-                                   (rustVersionCount);
+  auto rustVersionArray =
+      MakeUnique<RustSdpAttributeSimulcastVersion[]>(rustVersionCount);
   sdp_simulcast_get_versions(rustVersionList, rustVersionCount,
                              rustVersionArray.get());
 
   SdpSimulcastAttribute::Versions versions;
   versions.type = SdpSimulcastAttribute::Versions::kRid;
 
-  for(size_t i = 0; i < rustVersionCount; i++) {
+  for (size_t i = 0; i < rustVersionCount; i++) {
     const RustSdpAttributeSimulcastVersion& rustVersion = rustVersionArray[i];
     size_t rustIdCount = sdp_simulcast_get_ids_count(rustVersion.ids);
     if (!rustIdCount) {
@@ -1011,7 +906,7 @@ LoadSimulcastVersions(const RustSdpAttributeSimulcastVersionVec*
     auto rustIdArray = MakeUnique<RustSdpAttributeSimulcastId[]>(rustIdCount);
     sdp_simulcast_get_ids(rustVersion.ids, rustIdCount, rustIdArray.get());
 
-    for(size_t j = 0; j < rustIdCount; j++){
+    for (size_t j = 0; j < rustIdCount; j++) {
       const RustSdpAttributeSimulcastId& rustId = rustIdArray[j];
       std::string id = convertStringView(rustId.id);
       // TODO: Bug 1225877. Added support for 'paused'-state
@@ -1024,9 +919,7 @@ LoadSimulcastVersions(const RustSdpAttributeSimulcastVersionVec*
   return versions;
 }
 
-void
-RsdparsaSdpAttributeList::LoadSimulcast(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadSimulcast(RustAttributeList* attributeList) {
   RustSdpAttributeSimulcast rustSimulcast;
   if (NS_SUCCEEDED(sdp_get_simulcast(attributeList, &rustSimulcast))) {
     auto simulcast = MakeUnique<SdpSimulcastAttribute>();
@@ -1038,9 +931,8 @@ RsdparsaSdpAttributeList::LoadSimulcast(RustAttributeList* attributeList)
   }
 }
 
-SdpImageattrAttributeList::XYRange
-LoadImageattrXYRange(const RustSdpAttributeImageAttrXYRange& rustXYRange)
-{
+SdpImageattrAttributeList::XYRange LoadImageattrXYRange(
+    const RustSdpAttributeImageAttrXYRange& rustXYRange) {
   SdpImageattrAttributeList::XYRange xyRange;
 
   if (!rustXYRange.discrete_values) {
@@ -1055,9 +947,8 @@ LoadImageattrXYRange(const RustSdpAttributeImageAttrXYRange& rustXYRange)
   return xyRange;
 }
 
-std::vector<SdpImageattrAttributeList::Set>
-LoadImageattrSets(const RustSdpAttributeImageAttrSetVec* rustSets)
-{
+std::vector<SdpImageattrAttributeList::Set> LoadImageattrSets(
+    const RustSdpAttributeImageAttrSetVec* rustSets) {
   std::vector<SdpImageattrAttributeList::Set> sets;
 
   size_t rustSetCount = sdp_imageattr_get_set_count(rustSets);
@@ -1068,7 +959,7 @@ LoadImageattrSets(const RustSdpAttributeImageAttrSetVec* rustSets)
   auto rustSetArray = MakeUnique<RustSdpAttributeImageAttrSet[]>(rustSetCount);
   sdp_imageattr_get_sets(rustSets, rustSetCount, rustSetArray.get());
 
-  for(size_t i = 0; i < rustSetCount; i++) {
+  for (size_t i = 0; i < rustSetCount; i++) {
     const RustSdpAttributeImageAttrSet& rustSet = rustSetArray[i];
     SdpImageattrAttributeList::Set set;
 
@@ -1097,9 +988,7 @@ LoadImageattrSets(const RustSdpAttributeImageAttrSetVec* rustSets)
   return sets;
 }
 
-void
-RsdparsaSdpAttributeList::LoadImageattr(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadImageattr(RustAttributeList* attributeList) {
   size_t numImageattrs = sdp_get_imageattr_count(attributeList);
   if (numImageattrs == 0) {
     return;
@@ -1107,7 +996,7 @@ RsdparsaSdpAttributeList::LoadImageattr(RustAttributeList* attributeList)
   auto rustImageattrs = MakeUnique<RustSdpAttributeImageAttr[]>(numImageattrs);
   sdp_get_imageattrs(attributeList, numImageattrs, rustImageattrs.get());
   auto imageattrList = MakeUnique<SdpImageattrAttributeList>();
-  for(size_t i = 0; i < numImageattrs; i++) {
+  for (size_t i = 0; i < numImageattrs; i++) {
     const RustSdpAttributeImageAttr& rustImageAttr = rustImageattrs[i];
 
     SdpImageattrAttributeList::Imageattr imageAttr;
@@ -1133,9 +1022,7 @@ RsdparsaSdpAttributeList::LoadImageattr(RustAttributeList* attributeList)
   SetAttribute(imageattrList.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadSctpmaps(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadSctpmaps(RustAttributeList* attributeList) {
   size_t numSctpmaps = sdp_get_sctpmap_count(attributeList);
   if (numSctpmaps == 0) {
     return;
@@ -1143,21 +1030,18 @@ RsdparsaSdpAttributeList::LoadSctpmaps(RustAttributeList* attributeList)
   auto rustSctpmaps = MakeUnique<RustSdpAttributeSctpmap[]>(numSctpmaps);
   sdp_get_sctpmaps(attributeList, numSctpmaps, rustSctpmaps.get());
   auto sctpmapList = MakeUnique<SdpSctpmapAttributeList>();
-  for(size_t i = 0; i < numSctpmaps; i++) {
+  for (size_t i = 0; i < numSctpmaps; i++) {
     RustSdpAttributeSctpmap& sctpmap = rustSctpmaps[i];
-    sctpmapList->PushEntry(std::to_string(sctpmap.port),
-                           "webrtc-datachannel",
+    sctpmapList->PushEntry(std::to_string(sctpmap.port), "webrtc-datachannel",
                            sctpmap.channels);
   }
   SetAttribute(sctpmapList.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadDirection(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadDirection(RustAttributeList* attributeList) {
   SdpDirectionAttribute::Direction dir;
   RustDirection rustDir = sdp_get_direction(attributeList);
-  switch(rustDir) {
+  switch (rustDir) {
     case RustDirection::kRustRecvonly:
       dir = SdpDirectionAttribute::kRecvonly;
       break;
@@ -1174,18 +1058,16 @@ RsdparsaSdpAttributeList::LoadDirection(RustAttributeList* attributeList)
   SetAttribute(new SdpDirectionAttribute(dir));
 }
 
-void
-RsdparsaSdpAttributeList::LoadRemoteCandidates(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadRemoteCandidates(
+    RustAttributeList* attributeList) {
   size_t nC = sdp_get_remote_candidate_count(attributeList);
   if (nC == 0) {
     return;
   }
   auto rustCandidates = MakeUnique<RustSdpAttributeRemoteCandidate[]>(nC);
-  sdp_get_remote_candidates(attributeList, nC,
-                            rustCandidates.get());
+  sdp_get_remote_candidates(attributeList, nC, rustCandidates.get());
   std::vector<SdpRemoteCandidatesAttribute::Candidate> candidates;
-  for(size_t i = 0; i < nC; i++) {
+  for (size_t i = 0; i < nC; i++) {
     RustSdpAttributeRemoteCandidate& rustCandidate = rustCandidates[i];
     SdpRemoteCandidatesAttribute::Candidate candidate;
     candidate.port = rustCandidate.port;
@@ -1198,9 +1080,7 @@ RsdparsaSdpAttributeList::LoadRemoteCandidates(RustAttributeList* attributeList)
   SetAttribute(candidatesList);
 }
 
-void
-RsdparsaSdpAttributeList::LoadRids(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadRids(RustAttributeList* attributeList) {
   size_t numRids = sdp_get_rid_count(attributeList);
   if (numRids == 0) {
     return;
@@ -1210,7 +1090,7 @@ RsdparsaSdpAttributeList::LoadRids(RustAttributeList* attributeList)
   sdp_get_rids(attributeList, numRids, rustRids.get());
 
   auto ridList = MakeUnique<SdpRidAttributeList>();
-  for(size_t i = 0; i < numRids; i++) {
+  for (size_t i = 0; i < numRids; i++) {
     const RustSdpAttributeRid& rid = rustRids[i];
 
     std::string id = convertStringView(rid.id);
@@ -1233,9 +1113,7 @@ RsdparsaSdpAttributeList::LoadRids(RustAttributeList* attributeList)
   SetAttribute(ridList.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadSctpPort(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadSctpPort(RustAttributeList* attributeList) {
   int64_t port = sdp_get_sctp_port(attributeList);
   if (port >= 0) {
     SetAttribute(new SdpNumberAttribute(SdpAttribute::kSctpPortAttribute,
@@ -1243,23 +1121,20 @@ RsdparsaSdpAttributeList::LoadSctpPort(RustAttributeList* attributeList)
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadExtmap(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadExtmap(RustAttributeList* attributeList) {
   size_t numExtmap = sdp_get_extmap_count(attributeList);
   if (numExtmap == 0) {
     return;
   }
   auto rustExtmaps = MakeUnique<RustSdpAttributeExtmap[]>(numExtmap);
-  sdp_get_extmaps(attributeList, numExtmap,
-                  rustExtmaps.get());
+  sdp_get_extmaps(attributeList, numExtmap, rustExtmaps.get());
   auto extmaps = MakeUnique<SdpExtmapAttributeList>();
-  for(size_t i = 0; i < numExtmap; i++) {
+  for (size_t i = 0; i < numExtmap; i++) {
     RustSdpAttributeExtmap& rustExtmap = rustExtmaps[i];
     std::string name = convertStringView(rustExtmap.url);
     SdpDirectionAttribute::Direction direction;
     bool directionSpecified = rustExtmap.direction_specified;
-    switch(rustExtmap.direction) {
+    switch (rustExtmap.direction) {
       case RustDirection::kRustRecvonly:
         direction = SdpDirectionAttribute::kRecvonly;
         break;
@@ -1275,26 +1150,22 @@ RsdparsaSdpAttributeList::LoadExtmap(RustAttributeList* attributeList)
     }
     std::string extensionAttributes;
     extensionAttributes = convertStringView(rustExtmap.extensionAttributes);
-    extmaps->PushEntry((uint16_t) rustExtmap.id, direction,
-                       directionSpecified, name, extensionAttributes);
+    extmaps->PushEntry((uint16_t)rustExtmap.id, direction, directionSpecified,
+                       name, extensionAttributes);
   }
   SetAttribute(extmaps.release());
 }
 
-void
-RsdparsaSdpAttributeList::LoadMaxPtime(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadMaxPtime(RustAttributeList* attributeList) {
   uint64_t maxPtime = 0;
   nsresult nr = sdp_get_maxptime(attributeList, &maxPtime);
   if (NS_SUCCEEDED(nr)) {
-    SetAttribute(new SdpNumberAttribute(SdpAttribute::kMaxptimeAttribute,
-                                        maxPtime));
+    SetAttribute(
+        new SdpNumberAttribute(SdpAttribute::kMaxptimeAttribute, maxPtime));
   }
 }
 
-void
-RsdparsaSdpAttributeList::LoadCandidate(RustAttributeList* attributeList)
-{
+void RsdparsaSdpAttributeList::LoadCandidate(RustAttributeList* attributeList) {
   size_t candidatesCount = sdp_get_candidate_count(attributeList);
   if (!candidatesCount) {
     return;
@@ -1304,19 +1175,17 @@ RsdparsaSdpAttributeList::LoadCandidate(RustAttributeList* attributeList)
   sdp_get_candidates(attributeList, candidatesCount, &rustCandidatesStrings);
 
   std::vector<std::string> candidatesStrings =
-                                  convertStringVec(rustCandidatesStrings);
+      convertStringVec(rustCandidatesStrings);
   free_boxed_string_vec(rustCandidatesStrings);
 
-  auto candidates = MakeUnique<SdpMultiStringAttribute>(
-                                  SdpAttribute::kCandidateAttribute);
+  auto candidates =
+      MakeUnique<SdpMultiStringAttribute>(SdpAttribute::kCandidateAttribute);
   candidates->mValues = candidatesStrings;
 
   SetAttribute(candidates.release());
 }
 
-bool
-RsdparsaSdpAttributeList::IsAllowedHere(SdpAttribute::AttributeType type)
-{
+bool RsdparsaSdpAttributeList::IsAllowedHere(SdpAttribute::AttributeType type) {
   if (AtSessionLevel() && !SdpAttribute::IsAllowedAtSessionLevel(type)) {
     return false;
   }
@@ -1328,9 +1197,7 @@ RsdparsaSdpAttributeList::IsAllowedHere(SdpAttribute::AttributeType type)
   return true;
 }
 
-void
-RsdparsaSdpAttributeList::Serialize(std::ostream& os) const
-{
+void RsdparsaSdpAttributeList::Serialize(std::ostream& os) const {
   for (size_t i = 0; i < kNumAttributeTypes; ++i) {
     if (mAttributes[i]) {
       os << *mAttributes[i];
@@ -1338,4 +1205,4 @@ RsdparsaSdpAttributeList::Serialize(std::ostream& os) const
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

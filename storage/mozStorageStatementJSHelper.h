@@ -18,13 +18,12 @@ namespace storage {
 class StatementParams;
 class StatementRow;
 
-class StatementJSHelper : public nsIXPCScriptable
-{
-public:
+class StatementJSHelper : public nsIXPCScriptable {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSCRIPTABLE
 
-private:
+ private:
   nsresult getRow(Statement *, JSContext *, JSObject *, JS::Value *);
   nsresult getParams(Statement *, JSContext *, JSObject *, JS::Value *);
 };
@@ -35,47 +34,41 @@ private:
  * so it is important we do this.
  */
 
-class StatementParamsHolder final: public nsISupports {
-public:
+class StatementParamsHolder final : public nsISupports {
+ public:
   NS_DECL_ISUPPORTS
 
-  explicit StatementParamsHolder(StatementParams* aParams)
-    : mParams(aParams)
-  {
-  }
+  explicit StatementParamsHolder(StatementParams *aParams) : mParams(aParams) {}
 
-  StatementParams* Get() const {
+  StatementParams *Get() const {
     MOZ_ASSERT(mParams);
     return mParams;
   }
 
-private:
+ private:
   virtual ~StatementParamsHolder();
 
   RefPtr<StatementParams> mParams;
 };
 
-class StatementRowHolder final: public nsISupports {
-public:
+class StatementRowHolder final : public nsISupports {
+ public:
   NS_DECL_ISUPPORTS
 
-  explicit StatementRowHolder(StatementRow* aRow)
-    : mRow(aRow)
-  {
-  }
+  explicit StatementRowHolder(StatementRow *aRow) : mRow(aRow) {}
 
-  StatementRow* Get() const {
+  StatementRow *Get() const {
     MOZ_ASSERT(mRow);
     return mRow;
   }
 
-private:
+ private:
   virtual ~StatementRowHolder();
 
   RefPtr<StatementRow> mRow;
 };
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla
 
-#endif // MOZSTORAGESTATEMENTJSHELPER_H
+#endif  // MOZSTORAGESTATEMENTJSHELPER_H

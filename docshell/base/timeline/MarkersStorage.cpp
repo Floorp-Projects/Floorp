@@ -9,21 +9,12 @@
 
 namespace mozilla {
 
-MarkersStorage::MarkersStorage(const char* aMutexName)
-  : mLock(aMutexName)
-{
+MarkersStorage::MarkersStorage(const char* aMutexName) : mLock(aMutexName) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-MarkersStorage::~MarkersStorage()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-}
+MarkersStorage::~MarkersStorage() { MOZ_ASSERT(NS_IsMainThread()); }
 
-Mutex&
-MarkersStorage::GetLock()
-{
-  return mLock;
-}
+Mutex& MarkersStorage::GetLock() { return mLock; }
 
-} // namespace mozilla
+}  // namespace mozilla

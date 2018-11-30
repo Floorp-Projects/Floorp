@@ -5,46 +5,37 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ClientCanvasLayer.h"
-#include "GeckoProfiler.h"              // for AUTO_PROFILER_LABEL
-#include "ClientLayerManager.h"         // for ClientLayerManager, etc
-#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "GeckoProfiler.h"       // for AUTO_PROFILER_LABEL
+#include "ClientLayerManager.h"  // for ClientLayerManager, etc
+#include "nsCOMPtr.h"            // for already_AddRefed
 
 namespace mozilla {
 namespace layers {
 
-ClientCanvasLayer::~ClientCanvasLayer()
-{
-  MOZ_COUNT_DTOR(ClientCanvasLayer);
-}
+ClientCanvasLayer::~ClientCanvasLayer() { MOZ_COUNT_DTOR(ClientCanvasLayer); }
 
-void
-ClientCanvasLayer::RenderLayer()
-{
+void ClientCanvasLayer::RenderLayer() {
   AUTO_PROFILER_LABEL("ClientCanvasLayer::RenderLayer", GRAPHICS);
 
   RenderMaskLayers(this);
 
-  ClientCanvasRenderer* canvasRenderer = mCanvasRenderer->AsClientCanvasRenderer();
+  ClientCanvasRenderer* canvasRenderer =
+      mCanvasRenderer->AsClientCanvasRenderer();
   MOZ_ASSERT(canvasRenderer);
   canvasRenderer->UpdateCompositableClient();
   ClientManager()->Hold(this);
 }
 
-CanvasRenderer*
-ClientCanvasLayer::CreateCanvasRendererInternal()
-{
+CanvasRenderer* ClientCanvasLayer::CreateCanvasRendererInternal() {
   return new ClientCanvasRenderer(this);
 }
 
-already_AddRefed<CanvasLayer>
-ClientLayerManager::CreateCanvasLayer()
-{
+already_AddRefed<CanvasLayer> ClientLayerManager::CreateCanvasLayer() {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  RefPtr<ClientCanvasLayer> layer =
-    new ClientCanvasLayer(this);
+  RefPtr<ClientCanvasLayer> layer = new ClientCanvasLayer(this);
   CREATE_SHADOW(Canvas);
   return layer.forget();
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

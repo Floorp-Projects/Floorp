@@ -10,7 +10,7 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
-#include "mozilla/HTMLEditor.h" // for nsIEditor::AsHTMLEditor()
+#include "mozilla/HTMLEditor.h"  // for nsIEditor::AsHTMLEditor()
 #include "mozilla/TextEditor.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -29,7 +29,7 @@ class HTMLEditor;
 class HTMLEditRules;
 namespace dom {
 class Selection;
-} // namespace dom
+}  // namespace dom
 
 /**
  * Object that encapsulates HTML text-specific editing rules.
@@ -55,21 +55,20 @@ class Selection;
  *    return nsresult directly or with simple class like EditActionResult.
  *    And such methods should be marked as MOZ_MUST_USE.
  */
-class TextEditRules : public nsITimerCallback
-                    , public nsINamed
-{
-protected:
-  typedef EditorBase::AutoSelectionRestorer
-            AutoSelectionRestorer;
+class TextEditRules : public nsITimerCallback, public nsINamed {
+ protected:
+  typedef EditorBase::AutoSelectionRestorer AutoSelectionRestorer;
   typedef EditorBase::AutoTopLevelEditSubActionNotifier
-            AutoTopLevelEditSubActionNotifier;
+      AutoTopLevelEditSubActionNotifier;
   typedef EditorBase::AutoTransactionsConserveSelection
-            AutoTransactionsConserveSelection;
-public:
+      AutoTransactionsConserveSelection;
+
+ public:
   typedef dom::Element Element;
   typedef dom::Selection Selection;
   typedef dom::Text Text;
-  template<typename T> using OwningNonNull = OwningNonNull<T>;
+  template <typename T>
+  using OwningNonNull = OwningNonNull<T>;
 
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
@@ -89,11 +88,9 @@ public:
   virtual nsresult AfterEdit(EditSubAction aEditSubAction,
                              nsIEditor::EDirection aDirection);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult WillDoAction(EditSubActionInfo& aInfo,
-                                bool* aCancel,
+  virtual nsresult WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
                                 bool* aHandled);
-  virtual nsresult DidDoAction(EditSubActionInfo& aInfo,
-                               nsresult aResult);
+  virtual nsresult DidDoAction(EditSubActionInfo& aInfo, nsresult aResult);
 
   /**
    * Return false if the editor has non-empty text nodes or non-text
@@ -102,10 +99,10 @@ public:
    */
   virtual bool DocumentIsEmpty();
 
-protected:
+ protected:
   virtual ~TextEditRules();
 
-public:
+ public:
   void ResetIMETextPWBuf();
 
   /**
@@ -142,10 +139,7 @@ public:
    */
   static void FillBufWithPWChars(nsAString* aOutString, int32_t aLength);
 
-  bool HasBogusNode()
-  {
-    return !!mBogusNode;
-  }
+  bool HasBogusNode() { return !!mBogusNode; }
 
   /**
    * HideLastPasswordInput() is called when Nodify() calls
@@ -154,8 +148,7 @@ public:
    */
   MOZ_CAN_RUN_SCRIPT nsresult HideLastPasswordInput();
 
-protected:
-
+ protected:
   void InitFields();
 
   // TextEditRules implementation methods
@@ -175,10 +168,11 @@ protected:
    *                            allows to set.
    */
   MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult
-  WillInsertText(EditSubAction aEditSubAction, bool* aCancel, bool* aHandled,
-                 const nsAString* inString, nsAString* outString,
-                 int32_t aMaxLength);
+  MOZ_MUST_USE nsresult WillInsertText(EditSubAction aEditSubAction,
+                                       bool* aCancel, bool* aHandled,
+                                       const nsAString* inString,
+                                       nsAString* outString,
+                                       int32_t aMaxLength);
 
   /**
    * Called before inserting a line break into the editor.
@@ -202,9 +196,9 @@ protected:
    * @param aMaxLength          The maximum string length which the text editor
    *                            allows to set.
    */
-  MOZ_MUST_USE nsresult
-  WillSetText(bool* aCancel, bool* aHandled,
-              const nsAString* inString, int32_t aMaxLength);
+  MOZ_MUST_USE nsresult WillSetText(bool* aCancel, bool* aHandled,
+                                    const nsAString* inString,
+                                    int32_t aMaxLength);
 
   /**
    * Called before inserting something into the editor.
@@ -227,9 +221,8 @@ protected:
    * @param aHandled            Returns true if the edit action is handled.
    */
   MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult
-  WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
-                      bool* aCancel, bool* aHandled);
+  MOZ_MUST_USE nsresult WillDeleteSelection(
+      nsIEditor::EDirection aCollapsedAction, bool* aCancel, bool* aHandled);
 
   /**
    * DeleteSelectionWithTransaction() is internal method of
@@ -243,9 +236,8 @@ protected:
    * @param aHandled            Returns true if the edit action is handled.
    */
   MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult
-  DeleteSelectionWithTransaction(nsIEditor::EDirection aCollapsedAction,
-                                 bool* aCancel, bool* aHandled);
+  MOZ_MUST_USE nsresult DeleteSelectionWithTransaction(
+      nsIEditor::EDirection aCollapsedAction, bool* aCancel, bool* aHandled);
 
   /**
    * Called after deleted selected content.
@@ -272,11 +264,8 @@ protected:
    * @param aOutCancel If set to true, the caller should cancel the operation
    *                   and use aOutText as the result.
    */
-  nsresult WillOutputText(const nsAString* aInFormat,
-                          nsAString* aOutText,
-                          uint32_t aFlags,
-                          bool* aOutCancel,
-                          bool* aHandled);
+  nsresult WillOutputText(const nsAString* aInFormat, nsAString* aOutText,
+                          uint32_t aFlags, bool* aOutCancel, bool* aHandled);
 
   /**
    * Check for and replace a redundant trailing break.
@@ -298,8 +287,7 @@ protected:
    * aMaxLength
    */
   nsresult TruncateInsertionIfNeeded(const nsAString* aInString,
-                                     nsAString* aOutString,
-                                     int32_t aMaxLength,
+                                     nsAString* aOutString, int32_t aMaxLength,
                                      bool* aTruncated);
 
   /**
@@ -315,17 +303,16 @@ protected:
    * @return                Returns created <br> element or an error code
    *                        if couldn't create new <br> element.
    */
-  template<typename PT, typename CT>
-  CreateElementResult
-  CreateBR(const EditorDOMPointBase<PT, CT>& aPointToInsert)
-  {
+  template <typename PT, typename CT>
+  CreateElementResult CreateBR(
+      const EditorDOMPointBase<PT, CT>& aPointToInsert) {
     CreateElementResult ret = CreateBRInternal(aPointToInsert, false);
 #ifdef DEBUG
     // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
     if (!CanHandleEditAction()) {
       MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
     }
-#endif // #ifdef DEBUG
+#endif  // #ifdef DEBUG
     return ret;
   }
 
@@ -337,17 +324,16 @@ protected:
    * @return                Returns created <br> element or an error code
    *                        if couldn't create new <br> element.
    */
-  template<typename PT, typename CT>
-  CreateElementResult
-  CreateMozBR(const EditorDOMPointBase<PT, CT>& aPointToInsert)
-  {
+  template <typename PT, typename CT>
+  CreateElementResult CreateMozBR(
+      const EditorDOMPointBase<PT, CT>& aPointToInsert) {
     CreateElementResult ret = CreateBRInternal(aPointToInsert, true);
 #ifdef DEBUG
     // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
     if (!CanHandleEditAction()) {
       MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
     }
-#endif // #ifdef DEBUG
+#endif  // #ifdef DEBUG
     return ret;
   }
 
@@ -382,7 +368,7 @@ protected:
   bool IsMailEditor() const;
   bool DontEchoPassword() const;
 
-private:
+ private:
   TextEditor* MOZ_NON_OWNING_REF mTextEditor;
 
   /**
@@ -396,26 +382,21 @@ private:
    * @return                    Returns created <br> element and error code.
    *                            If it succeeded, never returns nullptr.
    */
-  template<typename PT, typename CT>
-  CreateElementResult
-  CreateBRInternal(const EditorDOMPointBase<PT, CT>& aPointToInsert,
-                   bool aCreateMozBR);
+  template <typename PT, typename CT>
+  CreateElementResult CreateBRInternal(
+      const EditorDOMPointBase<PT, CT>& aPointToInsert, bool aCreateMozBR);
 
-protected:
+ protected:
   /**
    * AutoSafeEditorData grabs editor instance and related instances during
    * handling an edit action.  When this is created, its pointer is set to
    * the mSafeData, and this guarantees the lifetime of grabbing objects
    * until it's destroyed.
    */
-  class MOZ_STACK_CLASS AutoSafeEditorData
-  {
-  public:
-    AutoSafeEditorData(TextEditRules& aTextEditRules,
-                       TextEditor& aTextEditor)
-      : mTextEditRules(aTextEditRules)
-      , mHTMLEditor(nullptr)
-    {
+  class MOZ_STACK_CLASS AutoSafeEditorData {
+   public:
+    AutoSafeEditorData(TextEditRules& aTextEditRules, TextEditor& aTextEditor)
+        : mTextEditRules(aTextEditRules), mHTMLEditor(nullptr) {
       // mTextEditRules may have AutoSafeEditorData instance since in some
       // cases. E.g., while public methods of *EditRules are called, it
       // calls attaching editor's method, then, editor will call public
@@ -428,8 +409,7 @@ protected:
       mTextEditRules.mData = this;
     }
 
-    ~AutoSafeEditorData()
-    {
+    ~AutoSafeEditorData() {
       if (mTextEditRules.mData != this) {
         return;
       }
@@ -437,13 +417,12 @@ protected:
     }
 
     TextEditor& TextEditorRef() const { return *mTextEditor; }
-    HTMLEditor& HTMLEditorRef() const
-    {
+    HTMLEditor& HTMLEditorRef() const {
       MOZ_ASSERT(mHTMLEditor);
       return *mHTMLEditor;
     }
 
-  private:
+   private:
     // This class should be created by public methods TextEditRules and
     // HTMLEditRules and in the stack.  So, the lifetime of this should
     // be guaranteed the callers of the public methods.
@@ -454,21 +433,18 @@ protected:
   };
   AutoSafeEditorData* mData;
 
-  TextEditor& TextEditorRef() const
-  {
+  TextEditor& TextEditorRef() const {
     MOZ_ASSERT(mData);
     return mData->TextEditorRef();
   }
   // SelectionRefPtr() won't return nullptr unless editor instance accidentally
   // ignored result of AutoEditActionDataSetter::CanHandle() and keep handling
   // edit action.
-  const RefPtr<Selection>& SelectionRefPtr() const
-  {
+  const RefPtr<Selection>& SelectionRefPtr() const {
     MOZ_ASSERT(mData);
     return TextEditorRef().SelectionRefPtr();
   }
-  bool CanHandleEditAction() const
-  {
+  bool CanHandleEditAction() const {
     if (!mTextEditor) {
       return false;
     }
@@ -481,7 +457,7 @@ protected:
 
 #ifdef DEBUG
   bool IsEditorDataAvailable() const { return !!mData; }
-#endif // #ifdef DEBUG
+#endif  // #ifdef DEBUG
 
   /**
    * GetTextNodeAroundSelectionStartContainer() may return a Text node around
@@ -525,23 +501,21 @@ protected:
  * TODO: This class (almost struct, though) is ugly and its size isn't
  *       optimized.  Should be refined later.
  */
-class MOZ_STACK_CLASS EditSubActionInfo final
-{
-public:
+class MOZ_STACK_CLASS EditSubActionInfo final {
+ public:
   explicit EditSubActionInfo(EditSubAction aEditSubAction)
-    : mEditSubAction(aEditSubAction)
-    , inString(nullptr)
-    , outString(nullptr)
-    , outputFormat(nullptr)
-    , maxLength(-1)
-    , flags(0)
-    , collapsedAction(nsIEditor::eNext)
-    , stripWrappers(nsIEditor::eStrip)
-    , entireList(false)
-    , bulletType(nullptr)
-    , alignType(nullptr)
-    , blockType(nullptr)
-  {}
+      : mEditSubAction(aEditSubAction),
+        inString(nullptr),
+        outString(nullptr),
+        outputFormat(nullptr),
+        maxLength(-1),
+        flags(0),
+        collapsedAction(nsIEditor::eNext),
+        stripWrappers(nsIEditor::eStrip),
+        entireList(false),
+        bulletType(nullptr),
+        alignType(nullptr),
+        blockType(nullptr) {}
 
   EditSubAction mEditSubAction;
 
@@ -574,56 +548,48 @@ public:
  * This class sets a bool letting us know to ignore any rules sniffing
  * that tries to occur reentrantly.
  */
-class MOZ_STACK_CLASS AutoLockRulesSniffing final
-{
-public:
-  explicit AutoLockRulesSniffing(TextEditRules* aRules)
-    : mRules(aRules)
-  {
+class MOZ_STACK_CLASS AutoLockRulesSniffing final {
+ public:
+  explicit AutoLockRulesSniffing(TextEditRules* aRules) : mRules(aRules) {
     if (mRules) {
       mRules->mLockRulesSniffing = true;
     }
   }
 
-  ~AutoLockRulesSniffing()
-  {
+  ~AutoLockRulesSniffing() {
     if (mRules) {
       mRules->mLockRulesSniffing = false;
     }
   }
 
-protected:
+ protected:
   TextEditRules* mRules;
 };
 
 /**
  * Stack based helper class for turning on/off the edit listener.
  */
-class MOZ_STACK_CLASS AutoLockListener final
-{
-public:
+class MOZ_STACK_CLASS AutoLockListener final {
+ public:
   explicit AutoLockListener(bool* aEnabled)
-    : mEnabled(aEnabled)
-    , mOldState(false)
-  {
+      : mEnabled(aEnabled), mOldState(false) {
     if (mEnabled) {
       mOldState = *mEnabled;
       *mEnabled = false;
     }
   }
 
-  ~AutoLockListener()
-  {
+  ~AutoLockListener() {
     if (mEnabled) {
       *mEnabled = mOldState;
     }
   }
 
-protected:
+ protected:
   bool* mEnabled;
   bool mOldState;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef mozilla_TextEditRules_h
+#endif  // #ifndef mozilla_TextEditRules_h

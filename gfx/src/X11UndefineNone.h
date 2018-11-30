@@ -10,15 +10,15 @@
 // macro named "X11None".
 // Include this header after including X11 headers, where necessary.
 #ifdef None
-#  undef None
-#  define X11None 0L
+#undef None
+#define X11None 0L
 // <X11/X.h> also defines "RevertToNone" as a macro that expands to "(int)None".
 // Since we are undefining "None", that stops working. To keep it working,
 // we undefine "RevertToNone" and redefine it in terms of "X11None".
-#  ifdef RevertToNone
-#    undef RevertToNone
-#    define RevertToNone (int)X11None
-#  endif
+#ifdef RevertToNone
+#undef RevertToNone
+#define RevertToNone (int)X11None
+#endif
 #endif
 
 // X11 also defines Always, which conflicts with some style system enum variant

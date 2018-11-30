@@ -32,222 +32,193 @@ struct MotionPathData;
  * A helper to generate gfxMatrixes from css transform functions.
  */
 namespace nsStyleTransformMatrix {
-  // The operator passed to Servo backend.
-  enum class MatrixTransformOperator: uint8_t {
-    Interpolate,
-    Accumulate
-  };
+// The operator passed to Servo backend.
+enum class MatrixTransformOperator : uint8_t { Interpolate, Accumulate };
 
-  // Function for applying perspective() transform function. We treat
-  // any value smaller than epsilon as perspective(infinity), which
-  // follows CSSWG's resolution on perspective(0). See bug 1316236.
-  inline void ApplyPerspectiveToMatrix(mozilla::gfx::Matrix4x4& aMatrix,
-                                       float aDepth)
-  {
-    if (aDepth >= std::numeric_limits<float>::epsilon()) {
-      aMatrix.Perspective(aDepth);
+// Function for applying perspective() transform function. We treat
+// any value smaller than epsilon as perspective(infinity), which
+// follows CSSWG's resolution on perspective(0). See bug 1316236.
+inline void ApplyPerspectiveToMatrix(mozilla::gfx::Matrix4x4& aMatrix,
+                                     float aDepth) {
+  if (aDepth >= std::numeric_limits<float>::epsilon()) {
+    aMatrix.Perspective(aDepth);
+  }
+}
+
+/**
+ * This class provides on-demand access to the 'reference box' for CSS
+ * transforms (needed to resolve percentage values in 'transform',
+ * 'transform-origin', etc.):
+ *
+ *    http://dev.w3.org/csswg/css-transforms/#reference-box
+ *
+ * This class helps us to avoid calculating the reference box unless and
+ * until it is actually needed. This is important for performance when
+ * transforms are applied to SVG elements since the reference box for SVG is
+ * much more expensive to calculate (than for elements with a CSS layout box
+ * where we can use the nsIFrame's cached mRect), much more common (than on
+ * HTML), and yet very rarely have percentage values that require the
+ * reference box to be resolved. We also don't want to cause SVG frames to
+ * cache lots of ObjectBoundingBoxProperty objects that aren't needed.
+ *
+ * If UNIFIED_CONTINUATIONS (experimental, and currently broke) is defined,
+ * we consider the reference box for non-SVG frames to be the smallest
+ * rectangle containing a frame and all of its continuations.  For example,
+ * if there is a <span> element with several continuations split over
+ * several lines, this function will return the rectangle containing all of
+ * those continuations. (This behavior is not currently in a spec.)
+ */
+class MOZ_STACK_CLASS TransformReferenceBox final {
+ public:
+  typedef nscoord (TransformReferenceBox::*DimensionGetter)();
+
+  explicit TransformReferenceBox()
+      : mFrame(nullptr),
+        mX(0),
+        mY(0),
+        mWidth(0),
+        mHeight(0),
+        mIsCached(false) {}
+
+  explicit TransformReferenceBox(const nsIFrame* aFrame)
+      : mFrame(aFrame), mX(0), mY(0), mWidth(0), mHeight(0), mIsCached(false) {
+    MOZ_ASSERT(mFrame);
+  }
+
+  explicit TransformReferenceBox(const nsIFrame* aFrame,
+                                 const nsSize& aFallbackDimensions)
+      : mX(0), mY(0), mWidth(0), mHeight(0) {
+    mFrame = aFrame;
+    mIsCached = false;
+    if (!mFrame) {
+      Init(aFallbackDimensions);
     }
   }
 
-  /**
-   * This class provides on-demand access to the 'reference box' for CSS
-   * transforms (needed to resolve percentage values in 'transform',
-   * 'transform-origin', etc.):
-   *
-   *    http://dev.w3.org/csswg/css-transforms/#reference-box
-   *
-   * This class helps us to avoid calculating the reference box unless and
-   * until it is actually needed. This is important for performance when
-   * transforms are applied to SVG elements since the reference box for SVG is
-   * much more expensive to calculate (than for elements with a CSS layout box
-   * where we can use the nsIFrame's cached mRect), much more common (than on
-   * HTML), and yet very rarely have percentage values that require the
-   * reference box to be resolved. We also don't want to cause SVG frames to
-   * cache lots of ObjectBoundingBoxProperty objects that aren't needed.
-   *
-   * If UNIFIED_CONTINUATIONS (experimental, and currently broke) is defined,
-   * we consider the reference box for non-SVG frames to be the smallest
-   * rectangle containing a frame and all of its continuations.  For example,
-   * if there is a <span> element with several continuations split over
-   * several lines, this function will return the rectangle containing all of
-   * those continuations. (This behavior is not currently in a spec.)
-   */
-  class MOZ_STACK_CLASS TransformReferenceBox final {
-  public:
-    typedef nscoord (TransformReferenceBox::*DimensionGetter)();
+  void Init(const nsIFrame* aFrame) {
+    MOZ_ASSERT(!mFrame && !mIsCached);
+    mFrame = aFrame;
+  }
 
-    explicit TransformReferenceBox()
-      : mFrame(nullptr)
-      , mX(0)
-      , mY(0)
-      , mWidth(0)
-      , mHeight(0)
-      , mIsCached(false)
-    {}
-
-    explicit TransformReferenceBox(const nsIFrame* aFrame)
-      : mFrame(aFrame)
-      , mX(0)
-      , mY(0)
-      , mWidth(0)
-      , mHeight(0)
-      , mIsCached(false)
-    {
-      MOZ_ASSERT(mFrame);
-    }
-
-    explicit TransformReferenceBox(const nsIFrame* aFrame,
-                                   const nsSize& aFallbackDimensions)
-      : mX(0)
-      , mY(0)
-      , mWidth(0)
-      , mHeight(0)
-    {
-      mFrame = aFrame;
-      mIsCached = false;
-      if (!mFrame) {
-        Init(aFallbackDimensions);
-      }
-    }
-
-    void Init(const nsIFrame* aFrame) {
-      MOZ_ASSERT(!mFrame && !mIsCached);
-      mFrame = aFrame;
-    }
-
-    void Init(const nsSize& aDimensions);
-
-    /**
-     * The offset of the reference box from the nsIFrame's TopLeft(). This
-     * is non-zero only in the case of SVG content. If we can successfully
-     * implement UNIFIED_CONTINUATIONS at some point in the future then it
-     * may also be non-zero for non-SVG content.
-     */
-    nscoord X() {
-      EnsureDimensionsAreCached();
-      return mX;
-    }
-    nscoord Y() {
-      EnsureDimensionsAreCached();
-      return mY;
-    }
-
-    /**
-     * The size of the reference box.
-     */
-    nscoord Width() {
-      EnsureDimensionsAreCached();
-      return mWidth;
-    }
-    nscoord Height() {
-      EnsureDimensionsAreCached();
-      return mHeight;
-    }
-
-    bool IsEmpty() {
-      return !mFrame;
-    }
-
-  private:
-    // We don't really need to prevent copying, but since none of our consumers
-    // currently need to copy, preventing copying may allow us to catch some
-    // cases where we use pass-by-value instead of pass-by-reference.
-    TransformReferenceBox(const TransformReferenceBox&) = delete;
-
-    void EnsureDimensionsAreCached();
-
-    const nsIFrame* mFrame;
-    nscoord mX, mY, mWidth, mHeight;
-    bool mIsCached;
-  };
+  void Init(const nsSize& aDimensions);
 
   /**
-   * Return the transform function, as an nsCSSKeyword, for the given
-   * nsCSSValue::Array from a transform list.
+   * The offset of the reference box from the nsIFrame's TopLeft(). This
+   * is non-zero only in the case of SVG content. If we can successfully
+   * implement UNIFIED_CONTINUATIONS at some point in the future then it
+   * may also be non-zero for non-SVG content.
    */
-  nsCSSKeyword TransformFunctionOf(const nsCSSValue::Array* aData);
-
-  void SetIdentityMatrix(nsCSSValue::Array* aMatrix);
-
-  float ProcessTranslatePart(const nsCSSValue& aValue,
-                             TransformReferenceBox* aRefBox,
-                             TransformReferenceBox::DimensionGetter aDimensionGetter = nullptr);
-
-  void
-  ProcessInterpolateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
-                           const nsCSSValue::Array* aData,
-                           TransformReferenceBox& aBounds);
-
-  void
-  ProcessAccumulateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
-                          const nsCSSValue::Array* aData,
-                          TransformReferenceBox& aBounds);
-
+  nscoord X() {
+    EnsureDimensionsAreCached();
+    return mX;
+  }
+  nscoord Y() {
+    EnsureDimensionsAreCached();
+    return mY;
+  }
 
   /**
-   * Given an nsCSSValueList containing -moz-transform functions,
-   * returns a matrix containing the value of those functions.
-   *
-   * @param aData The nsCSSValueList containing the transform functions
-   * @param aBounds The frame's bounding rectangle.
-   * @param aAppUnitsPerMatrixUnit The number of app units per device pixel.
-   *
-   * eCSSUnit_Pixel (as they are in an StyleAnimationValue)
+   * The size of the reference box.
    */
-  mozilla::gfx::Matrix4x4 ReadTransforms(const nsCSSValueList* aList,
-                                         TransformReferenceBox& aBounds,
-                                         float aAppUnitsPerMatrixUnit);
+  nscoord Width() {
+    EnsureDimensionsAreCached();
+    return mWidth;
+  }
+  nscoord Height() {
+    EnsureDimensionsAreCached();
+    return mHeight;
+  }
 
-  // Generate the gfx::Matrix for CSS Transform Module Level 2.
-  // https://drafts.csswg.org/css-transforms-2/#ctm
-  mozilla::gfx::Matrix4x4
-  ReadTransforms(const nsCSSValueList* aIndividualTransforms,
-                 const mozilla::Maybe<mozilla::MotionPathData>& aMotion,
-                 const nsCSSValueList* aTransform,
-                 TransformReferenceBox& aRefBox,
-                 float aAppUnitsPerMatrixUnit);
+  bool IsEmpty() { return !mFrame; }
 
-  /**
-   * Given two nsStyleCoord values, compute the 2d position with respect to the
-   * given TransformReferenceBox that these values describe, in device pixels.
-   */
-  mozilla::gfx::Point Convert2DPosition(nsStyleCoord const (&aValue)[2],
-                                        TransformReferenceBox& aRefBox,
-                                        int32_t aAppUnitsPerDevPixel);
+ private:
+  // We don't really need to prevent copying, but since none of our consumers
+  // currently need to copy, preventing copying may allow us to catch some
+  // cases where we use pass-by-value instead of pass-by-reference.
+  TransformReferenceBox(const TransformReferenceBox&) = delete;
 
-  // Shear type for decomposition.
-  enum class ShearType {
-    XYSHEAR,
-    XZSHEAR,
-    YZSHEAR,
-    Count
-  };
-  using ShearArray =
-    mozilla::EnumeratedArray<ShearType, ShearType::Count, float>;
+  void EnsureDimensionsAreCached();
 
-  /*
-   * Implements the 2d transform matrix decomposition algorithm.
-   */
-  bool Decompose2DMatrix(const mozilla::gfx::Matrix& aMatrix,
-                         mozilla::gfx::Point3D& aScale,
-                         ShearArray& aShear,
-                         gfxQuaternion& aRotate,
-                         mozilla::gfx::Point3D& aTranslate);
-  /*
-   * Implements the 3d transform matrix decomposition algorithm.
-   */
-  bool Decompose3DMatrix(const mozilla::gfx::Matrix4x4& aMatrix,
-                         mozilla::gfx::Point3D& aScale,
-                         ShearArray& aShear,
-                         gfxQuaternion& aRotate,
-                         mozilla::gfx::Point3D& aTranslate,
-                         mozilla::gfx::Point4D& aPerspective);
+  const nsIFrame* mFrame;
+  nscoord mX, mY, mWidth, mHeight;
+  bool mIsCached;
+};
 
-  mozilla::gfx::Matrix CSSValueArrayTo2DMatrix(nsCSSValue::Array* aArray);
-  mozilla::gfx::Matrix4x4 CSSValueArrayTo3DMatrix(nsCSSValue::Array* aArray);
+/**
+ * Return the transform function, as an nsCSSKeyword, for the given
+ * nsCSSValue::Array from a transform list.
+ */
+nsCSSKeyword TransformFunctionOf(const nsCSSValue::Array* aData);
 
-  mozilla::gfx::Size GetScaleValue(const nsCSSValueSharedList* aList,
-                                   const nsIFrame* aForFrame);
-} // namespace nsStyleTransformMatrix
+void SetIdentityMatrix(nsCSSValue::Array* aMatrix);
+
+float ProcessTranslatePart(
+    const nsCSSValue& aValue, TransformReferenceBox* aRefBox,
+    TransformReferenceBox::DimensionGetter aDimensionGetter = nullptr);
+
+void ProcessInterpolateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
+                              const nsCSSValue::Array* aData,
+                              TransformReferenceBox& aBounds);
+
+void ProcessAccumulateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
+                             const nsCSSValue::Array* aData,
+                             TransformReferenceBox& aBounds);
+
+/**
+ * Given an nsCSSValueList containing -moz-transform functions,
+ * returns a matrix containing the value of those functions.
+ *
+ * @param aData The nsCSSValueList containing the transform functions
+ * @param aBounds The frame's bounding rectangle.
+ * @param aAppUnitsPerMatrixUnit The number of app units per device pixel.
+ *
+ * eCSSUnit_Pixel (as they are in an StyleAnimationValue)
+ */
+mozilla::gfx::Matrix4x4 ReadTransforms(const nsCSSValueList* aList,
+                                       TransformReferenceBox& aBounds,
+                                       float aAppUnitsPerMatrixUnit);
+
+// Generate the gfx::Matrix for CSS Transform Module Level 2.
+// https://drafts.csswg.org/css-transforms-2/#ctm
+mozilla::gfx::Matrix4x4 ReadTransforms(
+    const nsCSSValueList* aIndividualTransforms,
+    const mozilla::Maybe<mozilla::MotionPathData>& aMotion,
+    const nsCSSValueList* aTransform, TransformReferenceBox& aRefBox,
+    float aAppUnitsPerMatrixUnit);
+
+/**
+ * Given two nsStyleCoord values, compute the 2d position with respect to the
+ * given TransformReferenceBox that these values describe, in device pixels.
+ */
+mozilla::gfx::Point Convert2DPosition(nsStyleCoord const (&aValue)[2],
+                                      TransformReferenceBox& aRefBox,
+                                      int32_t aAppUnitsPerDevPixel);
+
+// Shear type for decomposition.
+enum class ShearType { XYSHEAR, XZSHEAR, YZSHEAR, Count };
+using ShearArray = mozilla::EnumeratedArray<ShearType, ShearType::Count, float>;
+
+/*
+ * Implements the 2d transform matrix decomposition algorithm.
+ */
+bool Decompose2DMatrix(const mozilla::gfx::Matrix& aMatrix,
+                       mozilla::gfx::Point3D& aScale, ShearArray& aShear,
+                       gfxQuaternion& aRotate,
+                       mozilla::gfx::Point3D& aTranslate);
+/*
+ * Implements the 3d transform matrix decomposition algorithm.
+ */
+bool Decompose3DMatrix(const mozilla::gfx::Matrix4x4& aMatrix,
+                       mozilla::gfx::Point3D& aScale, ShearArray& aShear,
+                       gfxQuaternion& aRotate,
+                       mozilla::gfx::Point3D& aTranslate,
+                       mozilla::gfx::Point4D& aPerspective);
+
+mozilla::gfx::Matrix CSSValueArrayTo2DMatrix(nsCSSValue::Array* aArray);
+mozilla::gfx::Matrix4x4 CSSValueArrayTo3DMatrix(nsCSSValue::Array* aArray);
+
+mozilla::gfx::Size GetScaleValue(const nsCSSValueSharedList* aList,
+                                 const nsIFrame* aForFrame);
+}  // namespace nsStyleTransformMatrix
 
 #endif

@@ -12,20 +12,18 @@
 namespace mozilla {
 namespace gfx {
 
-class SkMemoryReporter final : public nsIMemoryReporter
-{
-public:
+class SkMemoryReporter final : public nsIMemoryReporter {
+ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData,
-                            bool aAnonymize) override;
+                            nsISupports* aData, bool aAnonymize) override;
 
-private:
+ private:
   ~SkMemoryReporter() {}
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* GFX_SKMEMORYREPORTER_H */

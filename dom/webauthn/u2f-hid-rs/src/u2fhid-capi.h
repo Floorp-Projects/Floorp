@@ -44,7 +44,8 @@ struct rust_u2f_manager;
 // The `rust_u2f_app_ids` opaque type is equivalent to the rust type `U2FAppIds`
 struct rust_u2f_app_ids;
 
-// The `rust_u2f_key_handles` opaque type is equivalent to the rust type `U2FKeyHandles`
+// The `rust_u2f_key_handles` opaque type is equivalent to the rust type
+// `U2FKeyHandles`
 struct rust_u2f_key_handles;
 
 // The `rust_u2f_res` opaque type is equivalent to the rust type `U2FResult`
@@ -53,63 +54,52 @@ struct rust_u2f_result;
 // The callback passed to register() and sign().
 typedef void (*rust_u2f_callback)(uint64_t, rust_u2f_result*);
 
-
 /// U2FManager functions.
 
 rust_u2f_manager* rust_u2f_mgr_new();
 /* unsafe */ void rust_u2f_mgr_free(rust_u2f_manager* mgr);
 
-uint64_t rust_u2f_mgr_register(rust_u2f_manager* mgr,
-                               uint64_t flags,
-                               uint64_t timeout,
-                               rust_u2f_callback,
+uint64_t rust_u2f_mgr_register(rust_u2f_manager* mgr, uint64_t flags,
+                               uint64_t timeout, rust_u2f_callback,
                                const uint8_t* challenge_ptr,
                                size_t challenge_len,
                                const uint8_t* application_ptr,
                                size_t application_len,
                                const rust_u2f_key_handles* khs);
 
-uint64_t rust_u2f_mgr_sign(rust_u2f_manager* mgr,
-                           uint64_t flags,
-                           uint64_t timeout,
-                           rust_u2f_callback,
-                           const uint8_t* challenge_ptr,
-                           size_t challenge_len,
+uint64_t rust_u2f_mgr_sign(rust_u2f_manager* mgr, uint64_t flags,
+                           uint64_t timeout, rust_u2f_callback,
+                           const uint8_t* challenge_ptr, size_t challenge_len,
                            const rust_u2f_app_ids* app_ids,
                            const rust_u2f_key_handles* khs);
 
 void rust_u2f_mgr_cancel(rust_u2f_manager* mgr);
 
-
 /// U2FAppIds functions.
 
 rust_u2f_app_ids* rust_u2f_app_ids_new();
-void rust_u2f_app_ids_add(rust_u2f_app_ids* ids,
-                          const uint8_t* id,
+void rust_u2f_app_ids_add(rust_u2f_app_ids* ids, const uint8_t* id,
                           size_t id_len);
 /* unsafe */ void rust_u2f_app_ids_free(rust_u2f_app_ids* ids);
-
 
 /// U2FKeyHandles functions.
 
 rust_u2f_key_handles* rust_u2f_khs_new();
-void rust_u2f_khs_add(rust_u2f_key_handles* khs,
-                      const uint8_t* key_handle,
-                      size_t key_handle_len,
-                      uint8_t transports);
+void rust_u2f_khs_add(rust_u2f_key_handles* khs, const uint8_t* key_handle,
+                      size_t key_handle_len, uint8_t transports);
 /* unsafe */ void rust_u2f_khs_free(rust_u2f_key_handles* khs);
-
 
 /// U2FResult functions.
 
 // Returns 0 for success, or the U2F_ERROR error code >= 1.
-uint8_t rust_u2f_result_error(const rust_u2f_result *res);
+uint8_t rust_u2f_result_error(const rust_u2f_result* res);
 
 // Call this before `[..]_copy()` to allocate enough space.
-bool rust_u2f_resbuf_length(const rust_u2f_result *res, uint8_t bid, size_t* len);
-bool rust_u2f_resbuf_copy(const rust_u2f_result *res, uint8_t bid, uint8_t* dst);
+bool rust_u2f_resbuf_length(const rust_u2f_result* res, uint8_t bid,
+                            size_t* len);
+bool rust_u2f_resbuf_copy(const rust_u2f_result* res, uint8_t bid,
+                          uint8_t* dst);
 /* unsafe */ void rust_u2f_res_free(rust_u2f_result* res);
-
 }
 
-#endif // __U2FHID_CAPI
+#endif  // __U2FHID_CAPI

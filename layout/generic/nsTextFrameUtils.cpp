@@ -16,12 +16,10 @@
 
 using namespace mozilla;
 
-static bool
-IsDiscardable(char16_t ch, nsTextFrameUtils::Flags* aFlags)
-{
-  // Unlike IS_DISCARDABLE, we don't discard \r. \r will be ignored by gfxTextRun
-  // and discarding it would force us to copy text in many cases of preformatted
-  // text containing \r\n.
+static bool IsDiscardable(char16_t ch, nsTextFrameUtils::Flags* aFlags) {
+  // Unlike IS_DISCARDABLE, we don't discard \r. \r will be ignored by
+  // gfxTextRun and discarding it would force us to copy text in many cases of
+  // preformatted text containing \r\n.
   if (ch == CH_SHY) {
     *aFlags |= nsTextFrameUtils::Flags::TEXT_HAS_SHY;
     return true;
@@ -29,9 +27,7 @@ IsDiscardable(char16_t ch, nsTextFrameUtils::Flags* aFlags)
   return IsBidiControl(ch);
 }
 
-static bool
-IsDiscardable(uint8_t ch, nsTextFrameUtils::Flags* aFlags)
-{
+static bool IsDiscardable(uint8_t ch, nsTextFrameUtils::Flags* aFlags) {
   if (ch == CH_SHY) {
     *aFlags |= nsTextFrameUtils::Flags::TEXT_HAS_SHY;
     return true;
@@ -39,47 +35,32 @@ IsDiscardable(uint8_t ch, nsTextFrameUtils::Flags* aFlags)
   return false;
 }
 
-static bool
-IsSegmentBreak(char16_t aCh)
-{
-  return aCh == '\n' || aCh == '\r';
-}
+static bool IsSegmentBreak(char16_t aCh) { return aCh == '\n' || aCh == '\r'; }
 
-static bool
-IsSpaceOrTab(char16_t aCh)
-{
-  return aCh == ' ' || aCh == '\t';
-}
+static bool IsSpaceOrTab(char16_t aCh) { return aCh == ' ' || aCh == '\t'; }
 
-static bool
-IsSpaceOrTabOrSegmentBreak(char16_t aCh)
-{
+static bool IsSpaceOrTabOrSegmentBreak(char16_t aCh) {
   return IsSpaceOrTab(aCh) || IsSegmentBreak(aCh);
 }
 
-template<typename CharT>
-/* static */ bool
-nsTextFrameUtils::IsSkippableCharacterForTransformText(CharT aChar)
-{
-  return aChar == ' ' ||
-         aChar == '\t' ||
-         aChar == '\n' ||
-         aChar == CH_SHY ||
+template <typename CharT>
+/* static */ bool nsTextFrameUtils::IsSkippableCharacterForTransformText(
+    CharT aChar) {
+  return aChar == ' ' || aChar == '\t' || aChar == '\n' || aChar == CH_SHY ||
          (aChar > 0xFF && IsBidiControl(aChar));
 }
 
 #ifdef DEBUG
-template<typename CharT>
+template <typename CharT>
 static void AssertSkippedExpectedChars(const CharT* aText,
                                        const gfxSkipChars& aSkipChars,
-                                       int32_t aSkipCharsOffset)
-{
+                                       int32_t aSkipCharsOffset) {
   gfxSkipCharsIterator it(aSkipChars);
   it.AdvanceOriginal(aSkipCharsOffset);
   while (it.GetOriginalOffset() < it.GetOriginalEnd()) {
     CharT ch = aText[it.GetOriginalOffset() - aSkipCharsOffset];
     MOZ_ASSERT(!it.IsOriginalCharSkipped() ||
-               nsTextFrameUtils::IsSkippableCharacterForTransformText(ch),
+                   nsTextFrameUtils::IsSkippableCharacterForTransformText(ch),
                "skipped unexpected character; need to update "
                "IsSkippableCharacterForTransformText?");
     it.AdvanceOriginal(1);
@@ -87,40 +68,33 @@ static void AssertSkippedExpectedChars(const CharT* aText,
 }
 #endif
 
-template<class CharT>
-static CharT*
-TransformWhiteSpaces(const CharT* aText, uint32_t aLength,
-                     uint32_t aBegin, uint32_t aEnd,
-                     bool aHasSegmentBreak,
-                     bool& aInWhitespace,
-                     CharT* aOutput,
-                     nsTextFrameUtils::Flags& aFlags,
-                     nsTextFrameUtils::CompressionMode aCompression,
-                     gfxSkipChars* aSkipChars)
-{
+template <class CharT>
+static CharT* TransformWhiteSpaces(
+    const CharT* aText, uint32_t aLength, uint32_t aBegin, uint32_t aEnd,
+    bool aHasSegmentBreak, bool& aInWhitespace, CharT* aOutput,
+    nsTextFrameUtils::Flags& aFlags,
+    nsTextFrameUtils::CompressionMode aCompression, gfxSkipChars* aSkipChars) {
   MOZ_ASSERT(aCompression == nsTextFrameUtils::COMPRESS_WHITESPACE ||
-             aCompression == nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE,
+                 aCompression == nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE,
              "whitespaces should be skippable!!");
   // Get the context preceding/following this white space range.
   // For 8-bit text (sizeof CharT == 1), the checks here should get optimized
   // out, and isSegmentBreakSkippable should be initialized to be 'false'.
   bool isSegmentBreakSkippable =
-    sizeof(CharT) > 1 &&
-    ((aBegin > 0 && IS_ZERO_WIDTH_SPACE(aText[aBegin - 1])) ||
-     (aEnd < aLength && IS_ZERO_WIDTH_SPACE(aText[aEnd])));
-  if (sizeof(CharT) > 1 && !isSegmentBreakSkippable &&
-      aBegin > 0 && aEnd < aLength) {
+      sizeof(CharT) > 1 &&
+      ((aBegin > 0 && IS_ZERO_WIDTH_SPACE(aText[aBegin - 1])) ||
+       (aEnd < aLength && IS_ZERO_WIDTH_SPACE(aText[aEnd])));
+  if (sizeof(CharT) > 1 && !isSegmentBreakSkippable && aBegin > 0 &&
+      aEnd < aLength) {
     uint32_t ucs4before;
     uint32_t ucs4after;
-    if (aBegin > 1 &&
-        NS_IS_LOW_SURROGATE(aText[aBegin - 1]) &&
+    if (aBegin > 1 && NS_IS_LOW_SURROGATE(aText[aBegin - 1]) &&
         NS_IS_HIGH_SURROGATE(aText[aBegin - 2])) {
       ucs4before = SURROGATE_TO_UCS4(aText[aBegin - 2], aText[aBegin - 1]);
     } else {
       ucs4before = aText[aBegin - 1];
     }
-    if (aEnd + 1 < aLength &&
-        NS_IS_HIGH_SURROGATE(aText[aEnd]) &&
+    if (aEnd + 1 < aLength && NS_IS_HIGH_SURROGATE(aText[aEnd]) &&
         NS_IS_LOW_SURROGATE(aText[aEnd + 1])) {
       ucs4after = SURROGATE_TO_UCS4(aText[aEnd], aText[aEnd + 1]);
     } else {
@@ -128,8 +102,8 @@ TransformWhiteSpaces(const CharT* aText, uint32_t aLength,
     }
     // Discard newlines between characters that have F, W, or H
     // EastAsianWidth property and neither side is Hangul.
-    isSegmentBreakSkippable = IsSegmentBreakSkipChar(ucs4before) &&
-                              IsSegmentBreakSkipChar(ucs4after);
+    isSegmentBreakSkippable =
+        IsSegmentBreakSkipChar(ucs4before) && IsSegmentBreakSkipChar(ucs4after);
   }
 
   for (uint32_t i = aBegin; i < aEnd; ++i) {
@@ -200,15 +174,13 @@ TransformWhiteSpaces(const CharT* aText, uint32_t aLength,
   return aOutput;
 }
 
-template<class CharT>
-CharT*
-nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
-                                CharT* aOutput,
-                                CompressionMode aCompression,
-                                uint8_t* aIncomingFlags,
-                                gfxSkipChars* aSkipChars,
-                                Flags* aAnalysisFlags)
-{
+template <class CharT>
+CharT* nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
+                                       CharT* aOutput,
+                                       CompressionMode aCompression,
+                                       uint8_t* aIncomingFlags,
+                                       gfxSkipChars* aSkipChars,
+                                       Flags* aAnalysisFlags) {
   Flags flags = Flags();
 #ifdef DEBUG
   int32_t skipCharsOffset = aSkipChars->GetOriginalCharCount();
@@ -264,9 +236,8 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
         bool hasSegmentBreak = IsSegmentBreak(ch);
         uint32_t countTrailingDiscardables = 0;
         uint32_t j;
-        for (j = i + 1; j < aLength &&
-                        (IsSpaceOrTabOrSegmentBreak(aText[j]) ||
-                         IsDiscardable(aText[j], &flags));
+        for (j = i + 1; j < aLength && (IsSpaceOrTabOrSegmentBreak(aText[j]) ||
+                                        IsDiscardable(aText[j], &flags));
              j++) {
           if (IsSegmentBreak(aText[j])) {
             hasSegmentBreak = true;
@@ -345,30 +316,22 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
  * Explicit instantiating this function template with `uint8_t` and `char16_t`
  * could prevent us from the potential risk.
  */
-template uint8_t*
-nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
-                                uint8_t* aOutput,
-                                CompressionMode aCompression,
-                                uint8_t* aIncomingFlags,
-                                gfxSkipChars* aSkipChars,
-                                Flags* aAnalysisFlags);
-template char16_t*
-nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
-                                char16_t* aOutput,
-                                CompressionMode aCompression,
-                                uint8_t* aIncomingFlags,
-                                gfxSkipChars* aSkipChars,
-                                Flags* aAnalysisFlags);
-template bool
-nsTextFrameUtils::IsSkippableCharacterForTransformText(uint8_t aChar);
-template bool
-nsTextFrameUtils::IsSkippableCharacterForTransformText(char16_t aChar);
+template uint8_t* nsTextFrameUtils::TransformText(
+    const uint8_t* aText, uint32_t aLength, uint8_t* aOutput,
+    CompressionMode aCompression, uint8_t* aIncomingFlags,
+    gfxSkipChars* aSkipChars, Flags* aAnalysisFlags);
+template char16_t* nsTextFrameUtils::TransformText(
+    const char16_t* aText, uint32_t aLength, char16_t* aOutput,
+    CompressionMode aCompression, uint8_t* aIncomingFlags,
+    gfxSkipChars* aSkipChars, Flags* aAnalysisFlags);
+template bool nsTextFrameUtils::IsSkippableCharacterForTransformText(
+    uint8_t aChar);
+template bool nsTextFrameUtils::IsSkippableCharacterForTransformText(
+    char16_t aChar);
 
-uint32_t
-nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
-                    nsIContent *aContent, const nsStyleText *aStyleText)
-{
-  const nsTextFragment *frag = aContent->GetText();
+uint32_t nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
+    nsIContent* aContent, const nsStyleText* aStyleText) {
+  const nsTextFragment* frag = aContent->GetText();
   // This is an approximation so we don't really need anything
   // too fancy here.
   uint32_t len;
@@ -377,17 +340,17 @@ nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
   } else {
     bool is2b = frag->Is2b();
     union {
-      const char *s1b;
-      const char16_t *s2b;
+      const char* s1b;
+      const char16_t* s2b;
     } u;
     if (is2b) {
       u.s2b = frag->Get2b();
     } else {
       u.s1b = frag->Get1b();
     }
-    bool prevWS = true; // more important to ignore blocks with
-                        // only whitespace than get inline boundaries
-                        // exactly right
+    bool prevWS = true;  // more important to ignore blocks with
+                         // only whitespace than get inline boundaries
+                         // exactly right
     len = 0;
     for (uint32_t i = 0, i_end = frag->GetLength(); i < i_end; ++i) {
       char16_t c = is2b ? u.s2b[i] : u.s1b[i];
@@ -409,13 +372,13 @@ bool nsSkipCharsRunIterator::NextRun() {
   do {
     if (mRunLength) {
       mIterator.AdvanceOriginal(mRunLength);
-      NS_ASSERTION(mRunLength > 0, "No characters in run (initial length too large?)");
+      NS_ASSERTION(mRunLength > 0,
+                   "No characters in run (initial length too large?)");
       if (!mSkipped || mLengthIncludesSkipped) {
         mRemainingLength -= mRunLength;
       }
     }
-    if (!mRemainingLength)
-      return false;
+    if (!mRemainingLength) return false;
     int32_t length;
     mSkipped = mIterator.IsOriginalCharSkipped(&length);
     mRunLength = std::min(length, mRemainingLength);

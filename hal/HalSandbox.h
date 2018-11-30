@@ -14,4 +14,4 @@
 #include "HalInternal.h"
 #undef MOZ_HAL_NAMESPACE
 
-#endif // mozilla_hal_HalSandbox_h
+#endif  // mozilla_hal_HalSandbox_h

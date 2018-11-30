@@ -10,34 +10,23 @@
 #include "mozilla/EnumeratedArray.h"
 #include "nsCycleCollectionTraversalCallback.h"
 
-template<typename IndexType,
-         IndexType SizeAsEnumValue,
-         typename ValueType>
-inline void
-ImplCycleCollectionUnlink(mozilla::EnumeratedArray<IndexType,
-                                                   SizeAsEnumValue,
-                                                   ValueType>& aField)
-{
+template <typename IndexType, IndexType SizeAsEnumValue, typename ValueType>
+inline void ImplCycleCollectionUnlink(
+    mozilla::EnumeratedArray<IndexType, SizeAsEnumValue, ValueType>& aField) {
   for (size_t i = 0; i < size_t(SizeAsEnumValue); ++i) {
     aField[IndexType(i)] = nullptr;
   }
 }
 
-template<typename IndexType,
-         IndexType SizeAsEnumValue,
-         typename ValueType>
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            mozilla::EnumeratedArray<IndexType,
-                                                     SizeAsEnumValue,
-                                                     ValueType>& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
+template <typename IndexType, IndexType SizeAsEnumValue, typename ValueType>
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    mozilla::EnumeratedArray<IndexType, SizeAsEnumValue, ValueType>& aField,
+    const char* aName, uint32_t aFlags = 0) {
   aFlags |= CycleCollectionEdgeNameArrayFlag;
   for (size_t i = 0; i < size_t(SizeAsEnumValue); ++i) {
     ImplCycleCollectionTraverse(aCallback, aField[IndexType(i)], aName, aFlags);
   }
 }
 
-#endif // EnumeratedArrayCycleCollection_h_
+#endif  // EnumeratedArrayCycleCollection_h_

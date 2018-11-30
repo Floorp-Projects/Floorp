@@ -30,26 +30,22 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AsyncStatementParams)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AsyncStatementParams)
 
-AsyncStatementParams::AsyncStatementParams(nsPIDOMWindowInner* aWindow, AsyncStatement *aStatement)
-: mWindow(aWindow),
-  mStatement(aStatement)
-{
+AsyncStatementParams::AsyncStatementParams(nsPIDOMWindowInner* aWindow,
+                                           AsyncStatement* aStatement)
+    : mWindow(aWindow), mStatement(aStatement) {
   NS_ASSERTION(mStatement != nullptr, "mStatement is null");
 }
 
-JSObject*
-AsyncStatementParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return dom::MozStorageAsyncStatementParams_Binding::Wrap(aCx, this, aGivenProto);
+JSObject* AsyncStatementParams::WrapObject(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
+  return dom::MozStorageAsyncStatementParams_Binding::Wrap(aCx, this,
+                                                           aGivenProto);
 }
 
-void
-AsyncStatementParams::NamedGetter(JSContext* aCx,
-                                  const nsAString& aName,
-                                  bool& aFound,
-                                  JS::MutableHandle<JS::Value> aResult,
-                                  mozilla::ErrorResult& aRv)
-{
+void AsyncStatementParams::NamedGetter(JSContext* aCx, const nsAString& aName,
+                                       bool& aFound,
+                                       JS::MutableHandle<JS::Value> aResult,
+                                       mozilla::ErrorResult& aRv) {
   if (!mStatement) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -59,12 +55,9 @@ AsyncStatementParams::NamedGetter(JSContext* aCx,
   aFound = false;
 }
 
-void
-AsyncStatementParams::NamedSetter(JSContext* aCx,
-                                  const nsAString& aName,
-                                  JS::Handle<JS::Value> aValue,
-                                  mozilla::ErrorResult& aRv)
-{
+void AsyncStatementParams::NamedSetter(JSContext* aCx, const nsAString& aName,
+                                       JS::Handle<JS::Value> aValue,
+                                       mozilla::ErrorResult& aRv) {
   if (!mStatement) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -81,20 +74,15 @@ AsyncStatementParams::NamedSetter(JSContext* aCx,
   aRv = mStatement->BindByName(name, variant);
 }
 
-void
-AsyncStatementParams::GetSupportedNames(nsTArray<nsString>& aNames)
-{
+void AsyncStatementParams::GetSupportedNames(nsTArray<nsString>& aNames) {
   // We don't know how many params there are, so we can't implement this for
   // AsyncStatementParams.
 }
 
-void
-AsyncStatementParams::IndexedGetter(JSContext* aCx,
-                                    uint32_t aIndex,
-                                    bool& aFound,
-                                    JS::MutableHandle<JS::Value> aResult,
-                                    mozilla::ErrorResult& aRv)
-{
+void AsyncStatementParams::IndexedGetter(JSContext* aCx, uint32_t aIndex,
+                                         bool& aFound,
+                                         JS::MutableHandle<JS::Value> aResult,
+                                         mozilla::ErrorResult& aRv) {
   if (!mStatement) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -104,12 +92,9 @@ AsyncStatementParams::IndexedGetter(JSContext* aCx,
   aFound = false;
 }
 
-void
-AsyncStatementParams::IndexedSetter(JSContext* aCx,
-                                    uint32_t aIndex,
-                                    JS::Handle<JS::Value> aValue,
-                                    mozilla::ErrorResult& aRv)
-{
+void AsyncStatementParams::IndexedSetter(JSContext* aCx, uint32_t aIndex,
+                                         JS::Handle<JS::Value> aValue,
+                                         mozilla::ErrorResult& aRv) {
   if (!mStatement) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -124,5 +109,5 @@ AsyncStatementParams::IndexedSetter(JSContext* aCx,
   aRv = mStatement->BindByIndex(aIndex, variant);
 }
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla

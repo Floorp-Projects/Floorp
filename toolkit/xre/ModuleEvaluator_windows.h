@@ -36,17 +36,15 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ModuleTrustFlags);
 // This class is very similar to mozilla::glue::ModuleLoadEvent, except this is
 // more Gecko-friendly, and has a few more fields that enable us to evaluate
 // trustworthiness.
-class ModuleLoadEvent
-{
-public:
-  class ModuleInfo
-  {
-  public:
+class ModuleLoadEvent {
+ public:
+  class ModuleInfo {
+   public:
     ModuleInfo() = default;
     ModuleInfo(const ModuleInfo&) = default;
     ModuleInfo(ModuleInfo&&) = default;
-    ModuleInfo& operator =(const ModuleInfo&) = default;
-    ModuleInfo& operator =(ModuleInfo&&) = default;
+    ModuleInfo& operator=(const ModuleInfo&) = default;
+    ModuleInfo& operator=(ModuleInfo&&) = default;
 
     // Construct from the mozilla::glue version of this class.
     explicit ModuleInfo(const glue::ModuleLoadEvent::ModuleInfo&);
@@ -54,10 +52,10 @@ public:
     // The following members should be populated always.
     uintptr_t mBase;
     nsString mLdrName;
-    nsCOMPtr<nsIFile> mFile; // Path as reported by GetModuleFileName()
+    nsCOMPtr<nsIFile> mFile;  // Path as reported by GetModuleFileName()
 
     // The following members are populated as we evaluate the module.
-    nsString mFilePathClean; // Path sanitized for telemetry reporting.
+    nsString mFilePathClean;  // Path sanitized for telemetry reporting.
     ModuleTrustFlags mTrustFlags;
     nsCString mFileVersion;
   };
@@ -67,17 +65,16 @@ public:
 
   // The standard ModuleLoadEvent copy constructor "copy everything" behavior
   // can be tweaked to suit the context using this option.
-  enum class CopyOption : int
-  {
-    CopyEverything, // Default
+  enum class CopyOption : int {
+    CopyEverything,  // Default
     CopyWithoutModules,
   };
 
   ModuleLoadEvent(const ModuleLoadEvent& aOther,
                   CopyOption aOption = CopyOption::CopyEverything);
 
-  ModuleLoadEvent& operator =(ModuleLoadEvent&& aOther) = default;
-  ModuleLoadEvent& operator =(const ModuleLoadEvent& aOther) = delete;
+  ModuleLoadEvent& operator=(ModuleLoadEvent&& aOther) = default;
+  ModuleLoadEvent& operator=(const ModuleLoadEvent& aOther) = delete;
 
   // Copy-construct from the mozilla::glue version of this class.
   explicit ModuleLoadEvent(const glue::ModuleLoadEvent& aOther);
@@ -93,14 +90,13 @@ public:
 };
 
 // This class performs trustworthiness evaluation for incoming DLLs.
-class ModuleEvaluator
-{
-  Maybe<uint64_t> mExeVersion; // Version number of the running EXE image
-  nsString mExeDirectory; // Void flag set if unavailable
-  nsString mSysDirectory; // Void flag set if unavailable
+class ModuleEvaluator {
+  Maybe<uint64_t> mExeVersion;  // Version number of the running EXE image
+  nsString mExeDirectory;       // Void flag set if unavailable
+  nsString mSysDirectory;       // Void flag set if unavailable
   Vector<nsString, 0, InfallibleAllocPolicy> mKeyboardLayoutDlls;
 
-public:
+ public:
   ModuleEvaluator();
 
   /**
@@ -123,6 +119,6 @@ public:
                               Authenticode* aSvc) const;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ModuleEvaluator_windows_h
+#endif  // mozilla_ModuleEvaluator_windows_h

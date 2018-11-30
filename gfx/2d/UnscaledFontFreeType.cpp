@@ -23,9 +23,8 @@
 namespace mozilla {
 namespace gfx {
 
-bool
-UnscaledFontFreeType::GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton)
-{
+bool UnscaledFontFreeType::GetFontFileData(FontFileDataOutput aDataCallback,
+                                           void* aBaton) {
   if (!mFile.empty()) {
     int fd = open(mFile.c_str(), O_RDONLY);
     if (fd < 0) {
@@ -36,14 +35,12 @@ UnscaledFontFreeType::GetFontFileData(FontFileDataOutput aDataCallback, void* aB
         // Don't erroneously read directories as files.
         !S_ISREG(buf.st_mode) ||
         // Verify the file size fits in a uint32_t.
-        buf.st_size <= 0 ||
-        off_t(uint32_t(buf.st_size)) != buf.st_size) {
+        buf.st_size <= 0 || off_t(uint32_t(buf.st_size)) != buf.st_size) {
       close(fd);
       return false;
     }
     uint32_t length = buf.st_size;
-    uint8_t* fontData =
-      reinterpret_cast<uint8_t*>(
+    uint8_t* fontData = reinterpret_cast<uint8_t*>(
         mmap(nullptr, length, PROT_READ, MAP_PRIVATE, fd, 0));
     close(fd);
     if (fontData == MAP_FAILED) {
@@ -68,32 +65,30 @@ UnscaledFontFreeType::GetFontFileData(FontFileDataOutput aDataCallback, void* aB
   return success;
 }
 
-bool
-UnscaledFontFreeType::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
-{
+bool UnscaledFontFreeType::GetFontDescriptor(FontDescriptorOutput aCb,
+                                             void* aBaton) {
   if (mFile.empty()) {
     return false;
   }
 
-  aCb(reinterpret_cast<const uint8_t*>(mFile.data()), mFile.size(), mIndex, aBaton);
+  aCb(reinterpret_cast<const uint8_t*>(mFile.data()), mFile.size(), mIndex,
+      aBaton);
   return true;
 }
 
-bool
-UnscaledFontFreeType::GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton)
-{
+bool UnscaledFontFreeType::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
+                                               void* aBaton) {
   if (mFile.empty()) {
     return false;
   }
 
-  aCb(reinterpret_cast<const uint8_t*>(mFile.data()), mFile.size(), mIndex, aBaton);
+  aCb(reinterpret_cast<const uint8_t*>(mFile.data()), mFile.size(), mIndex,
+      aBaton);
   return true;
 }
 
-void
-UnscaledFontFreeType::GetVariationSettingsFromFace(std::vector<FontVariation>* aVariations,
-                                                   FT_Face aFace)
-{
+void UnscaledFontFreeType::GetVariationSettingsFromFace(
+    std::vector<FontVariation>* aVariations, FT_Face aFace) {
   if (!aFace || !(aFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
     return;
   }
@@ -114,7 +109,8 @@ UnscaledFontFreeType::GetVariationSettingsFromFace(std::vector<FontVariation>* a
     firstTime = false;
     getVar = (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
     doneVar = (DoneVarFunc)dlsym(RTLD_DEFAULT, "FT_Done_MM_Var");
-    getCoords = (GetVarDesignCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Get_Var_Design_Coordinates");
+    getCoords = (GetVarDesignCoordsFunc)dlsym(RTLD_DEFAULT,
+                                              "FT_Get_Var_Design_Coordinates");
   }
   if (!getVar || !getCoords) {
     return;
@@ -146,11 +142,8 @@ UnscaledFontFreeType::GetVariationSettingsFromFace(std::vector<FontVariation>* a
   }
 }
 
-void
-UnscaledFontFreeType::ApplyVariationsToFace(const FontVariation* aVariations,
-                                            uint32_t aNumVariations,
-                                            FT_Face aFace)
-{
+void UnscaledFontFreeType::ApplyVariationsToFace(
+    const FontVariation* aVariations, uint32_t aNumVariations, FT_Face aFace) {
   if (!aFace || !(aFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
     return;
   }
@@ -164,7 +157,8 @@ UnscaledFontFreeType::ApplyVariationsToFace(const FontVariation* aVariations,
   static bool firstTime = true;
   if (firstTime) {
     firstTime = false;
-    setCoords = (SetVarDesignCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Set_Var_Design_Coordinates");
+    setCoords = (SetVarDesignCoordsFunc)dlsym(RTLD_DEFAULT,
+                                              "FT_Set_Var_Design_Coordinates");
   }
   if (!setCoords) {
     return;
@@ -180,6 +174,5 @@ UnscaledFontFreeType::ApplyVariationsToFace(const FontVariation* aVariations,
   }
 }
 
-} // namespace gfx
-} // namespace mozilla
-
+}  // namespace gfx
+}  // namespace mozilla

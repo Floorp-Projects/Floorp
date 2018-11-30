@@ -16,14 +16,12 @@ namespace net {
 
 // A helper class that implements GetNeckoTarget(). Basically, all e10s child
 // channels should inherit this class in order to get a labeled event target.
-class NeckoTargetHolder
-{
-public:
-  explicit NeckoTargetHolder(nsIEventTarget *aNeckoTarget)
-    : mNeckoTarget(aNeckoTarget)
-  {}
+class NeckoTargetHolder {
+ public:
+  explicit NeckoTargetHolder(nsIEventTarget* aNeckoTarget)
+      : mNeckoTarget(aNeckoTarget) {}
 
-protected:
+ protected:
   virtual ~NeckoTargetHolder() = default;
   // Get event target for processing network events.
   virtual already_AddRefed<nsIEventTarget> GetNeckoTarget();
@@ -36,7 +34,7 @@ protected:
   nsCOMPtr<nsIEventTarget> mNeckoTarget;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

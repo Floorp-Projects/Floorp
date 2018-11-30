@@ -15,26 +15,21 @@ using namespace mozilla;
 NS_IMPL_FRAMEARENA_HELPERS(nsBackdropFrame)
 
 #ifdef DEBUG_FRAME_DUMP
-nsresult
-nsBackdropFrame::GetFrameName(nsAString& aResult) const
-{
+nsresult nsBackdropFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("Backdrop"), aResult);
 }
 #endif
 
-/* virtual */ ComputedStyle*
-nsBackdropFrame::GetParentComputedStyle(nsIFrame** aProviderFrame) const
-{
+/* virtual */ ComputedStyle* nsBackdropFrame::GetParentComputedStyle(
+    nsIFrame** aProviderFrame) const {
   // Style context of backdrop pseudo-element does not inherit from
   // any element, per the Fullscreen API spec.
   *aProviderFrame = nullptr;
   return nullptr;
 }
 
-/* virtual */ void
-nsBackdropFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                  const nsDisplayListSet& aLists)
-{
+/* virtual */ void nsBackdropFrame::BuildDisplayList(
+    nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
   DO_GLOBAL_REFLOW_COUNT_DSP("nsBackdropFrame");
   // We want this frame to always be there even if its display value is
   // none or contents so that we can respond to style change on it. To
@@ -48,16 +43,11 @@ nsBackdropFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 }
 
-/* virtual */ LogicalSize
-nsBackdropFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
-                                 WritingMode         aWM,
-                                 const LogicalSize&  aCBSize,
-                                 nscoord             aAvailableISize,
-                                 const LogicalSize&  aMargin,
-                                 const LogicalSize&  aBorder,
-                                 const LogicalSize&  aPadding,
-                                 ComputeSizeFlags    aFlags)
-{
+/* virtual */ LogicalSize nsBackdropFrame::ComputeAutoSize(
+    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
+    nscoord aAvailableISize, const LogicalSize& aMargin,
+    const LogicalSize& aBorder, const LogicalSize& aPadding,
+    ComputeSizeFlags aFlags) {
   // Note that this frame is a child of the viewport frame.
   LogicalSize result(aWM, 0xdeadbeef, NS_UNCONSTRAINEDSIZE);
   if (aFlags & ComputeSizeFlags::eShrinkWrap) {
@@ -69,12 +59,10 @@ nsBackdropFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
   return result;
 }
 
-/* virtual */ void
-nsBackdropFrame::Reflow(nsPresContext* aPresContext,
-                        ReflowOutput& aDesiredSize,
-                        const ReflowInput& aReflowInput,
-                        nsReflowStatus& aStatus)
-{
+/* virtual */ void nsBackdropFrame::Reflow(nsPresContext* aPresContext,
+                                           ReflowOutput& aDesiredSize,
+                                           const ReflowInput& aReflowInput,
+                                           nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsBackdropFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);

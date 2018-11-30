@@ -14,16 +14,10 @@ using std::find_if;
 
 namespace CrashReporter {
 
-bool
-AnnotationFromString(Annotation& aResult, const char* aValue)
-{
+bool AnnotationFromString(Annotation& aResult, const char* aValue) {
   auto elem = find_if(
-    begin(kAnnotationStrings),
-    end(kAnnotationStrings),
-    [&aValue](const char* aString) {
-      return strcmp(aString, aValue) == 0;
-    }
-  );
+      begin(kAnnotationStrings), end(kAnnotationStrings),
+      [&aValue](const char* aString) { return strcmp(aString, aValue) == 0; });
 
   if (elem == end(kAnnotationStrings)) {
     return false;
@@ -33,31 +27,20 @@ AnnotationFromString(Annotation& aResult, const char* aValue)
   return true;
 }
 
-bool
-IsAnnotationWhitelistedForPing(Annotation aAnnotation) {
+bool IsAnnotationWhitelistedForPing(Annotation aAnnotation) {
   auto elem = find_if(
-    begin(kCrashPingWhitelist),
-    end(kCrashPingWhitelist),
-    [&aAnnotation](Annotation aElement) {
-      return aElement == aAnnotation;
-    }
-  );
+      begin(kCrashPingWhitelist), end(kCrashPingWhitelist),
+      [&aAnnotation](Annotation aElement) { return aElement == aAnnotation; });
 
   return elem != end(kCrashPingWhitelist);
 }
 
-bool
-IsAnnotationBlacklistedForContent(Annotation aAnnotation)
-{
+bool IsAnnotationBlacklistedForContent(Annotation aAnnotation) {
   auto elem = find_if(
-    begin(kContentProcessBlacklist),
-    end(kContentProcessBlacklist),
-    [&aAnnotation](Annotation aElement) {
-      return aElement == aAnnotation;
-    }
-  );
+      begin(kContentProcessBlacklist), end(kContentProcessBlacklist),
+      [&aAnnotation](Annotation aElement) { return aElement == aAnnotation; });
 
   return elem != end(kContentProcessBlacklist);
 }
 
-} // namespace CrashReporter
+}  // namespace CrashReporter

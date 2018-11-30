@@ -25,7 +25,7 @@ const unsigned long SANDBOXED_NONE = 0x0;
  * within the code by checking that the overall flags are non-zero.
  * It is only uesd directly when the sandbox flags are initially set up.
  */
-const unsigned long SANDBOXED_NAVIGATION  = 0x1;
+const unsigned long SANDBOXED_NAVIGATION = 0x1;
 
 /**
  * This flag prevents content from creating new auxiliary browsing contexts,

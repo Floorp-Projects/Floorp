@@ -9,7 +9,7 @@
 #include "gfxVR.h"
 #include "ipc/VRLayerParent.h"
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/dom/GamepadBinding.h" // For GamepadMappingType
+#include "mozilla/dom/GamepadBinding.h"  // For GamepadMappingType
 #include "VRThread.h"
 
 #if defined(XP_WIN)
@@ -28,45 +28,40 @@
 
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/layers/CompositorThread.h"
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-VRDisplayLocal::VRDisplayLocal(VRDeviceType aType)
-  : VRDisplayHost(aType)
-{
+VRDisplayLocal::VRDisplayLocal(VRDeviceType aType) : VRDisplayHost(aType) {
   MOZ_COUNT_CTOR_INHERITED(VRDisplayLocal, VRDisplayHost);
 }
 
-VRDisplayLocal::~VRDisplayLocal()
-{
+VRDisplayLocal::~VRDisplayLocal() {
   MOZ_COUNT_DTOR_INHERITED(VRDisplayLocal, VRDisplayHost);
 }
 
-bool
-VRDisplayLocal::SubmitFrame(const layers::SurfaceDescriptor &aTexture,
-                            uint64_t aFrameId,
-                            const gfx::Rect& aLeftEyeRect,
-                            const gfx::Rect& aRightEyeRect)
-{
+bool VRDisplayLocal::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
+                                 uint64_t aFrameId,
+                                 const gfx::Rect& aLeftEyeRect,
+                                 const gfx::Rect& aRightEyeRect) {
 #if !defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
-#endif // !defined(MOZ_WIDGET_ANDROID)
+#endif  // !defined(MOZ_WIDGET_ANDROID)
 
   switch (aTexture.type()) {
-
 #if defined(XP_WIN)
     case SurfaceDescriptor::TSurfaceDescriptorD3D10: {
       if (!CreateD3DObjects()) {
         return false;
       }
-      const SurfaceDescriptorD3D10& surf = aTexture.get_SurfaceDescriptorD3D10();
+      const SurfaceDescriptorD3D10& surf =
+          aTexture.get_SurfaceDescriptorD3D10();
       RefPtr<ID3D11Texture2D> dxTexture;
-      HRESULT hr = mDevice->OpenSharedResource((HANDLE)surf.handle(),
-        __uuidof(ID3D11Texture2D),
-        (void**)(ID3D11Texture2D**)getter_AddRefs(dxTexture));
+      HRESULT hr = mDevice->OpenSharedResource(
+          (HANDLE)surf.handle(), __uuidof(ID3D11Texture2D),
+          (void**)(ID3D11Texture2D**)getter_AddRefs(dxTexture));
       if (FAILED(hr) || !dxTexture) {
         NS_WARNING("Failed to open shared texture");
         return false;
@@ -79,8 +74,7 @@ VRDisplayLocal::SubmitFrame(const layers::SurfaceDescriptor &aTexture,
         HRESULT hr = mutex->AcquireSync(0, 1000);
         if (hr == WAIT_TIMEOUT) {
           gfxDevCrash(LogReason::D3DLockTimeout) << "D3D lock mutex timeout";
-        }
-        else if (hr == WAIT_ABANDONED) {
+        } else if (hr == WAIT_ABANDONED) {
           gfxCriticalNote << "GFX: D3D11 lock mutex abandoned";
         }
         if (FAILED(hr)) {
@@ -88,8 +82,8 @@ VRDisplayLocal::SubmitFrame(const layers::SurfaceDescriptor &aTexture,
           return false;
         }
       }
-      bool success = SubmitFrame(dxTexture, surf.size(),
-                                 aLeftEyeRect, aRightEyeRect);
+      bool success =
+          SubmitFrame(dxTexture, surf.size(), aLeftEyeRect, aRightEyeRect);
       if (mutex) {
         HRESULT hr = mutex->ReleaseSync(0);
         if (FAILED(hr)) {
@@ -101,9 +95,8 @@ VRDisplayLocal::SubmitFrame(const layers::SurfaceDescriptor &aTexture,
 #elif defined(XP_MACOSX)
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
       const auto& desc = aTexture.get_SurfaceDescriptorMacIOSurface();
-      RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(desc.surfaceId(),
-                                                              desc.scaleFactor(),
-                                                              !desc.isOpaque());
+      RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(
+          desc.surfaceId(), desc.scaleFactor(), !desc.isOpaque());
       if (!surf) {
         NS_WARNING("VRDisplayHost::SubmitFrame failed to get a MacIOSurface");
         return false;
@@ -117,7 +110,8 @@ VRDisplayLocal::SubmitFrame(const layers::SurfaceDescriptor &aTexture,
     }
 #elif defined(MOZ_WIDGET_ANDROID)
     case SurfaceDescriptor::TSurfaceTextureDescriptor: {
-      const SurfaceTextureDescriptor& desc = aTexture.get_SurfaceTextureDescriptor();
+      const SurfaceTextureDescriptor& desc =
+          aTexture.get_SurfaceTextureDescriptor();
       if (!SubmitFrame(desc, aLeftEyeRect, aRightEyeRect)) {
         return false;
       }

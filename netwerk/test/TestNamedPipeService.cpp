@@ -22,11 +22,9 @@ using namespace mozilla;
  * Unlike a monitor, an event allows a thread to wait on another thread
  * completing an action without regard to ordering of the wait and the notify.
  */
-class Event
-{
-public:
-  explicit Event(const char* aName)
-    : mMonitor(aName) { }
+class Event {
+ public:
+  explicit Event(const char* aName) : mMonitor(aName) {}
 
   ~Event() = default;
 
@@ -44,14 +42,13 @@ public:
     mSignaled = false;
   }
 
-private:
+ private:
   Monitor mMonitor;
   bool mSignaled = false;
 };
 
-class nsNamedPipeDataObserver final : public nsINamedPipeDataObserver
-{
-public:
+class nsNamedPipeDataObserver final : public nsINamedPipeDataObserver {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSINAMEDPIPEDATAOBSERVER
 
@@ -62,7 +59,7 @@ public:
 
   uint32_t Transferred() const { return mBytesTransferred; }
 
-private:
+ private:
   ~nsNamedPipeDataObserver() = default;
 
   HANDLE mPipe;
@@ -74,24 +71,17 @@ private:
 NS_IMPL_ISUPPORTS(nsNamedPipeDataObserver, nsINamedPipeDataObserver)
 
 nsNamedPipeDataObserver::nsNamedPipeDataObserver(HANDLE aPipe)
-  : mPipe(aPipe)
-  , mOverlapped()
-  , mBytesTransferred(0)
-  , mEvent("named-pipe")
-{
+    : mPipe(aPipe), mOverlapped(), mBytesTransferred(0), mEvent("named-pipe") {
   mOverlapped.hEvent = CreateEventA(nullptr, TRUE, TRUE, "named-pipe");
 }
 
-int
-nsNamedPipeDataObserver::Read(void* aBuffer, uint32_t aSize)
-{
+int nsNamedPipeDataObserver::Read(void* aBuffer, uint32_t aSize) {
   DWORD bytesRead = 0;
   if (!ReadFile(mPipe, aBuffer, aSize, &bytesRead, &mOverlapped)) {
-    switch(GetLastError()) {
-      case ERROR_IO_PENDING:
-        {
-          mEvent.Wait();
-        }
+    switch (GetLastError()) {
+      case ERROR_IO_PENDING: {
+        mEvent.Wait();
+      }
         if (!GetOverlappedResult(mPipe, &mOverlapped, &bytesRead, FALSE)) {
           ADD_FAILURE() << "GetOverlappedResult failed";
           return -1;
@@ -119,16 +109,13 @@ nsNamedPipeDataObserver::Read(void* aBuffer, uint32_t aSize)
   return bytesRead;
 }
 
-int
-nsNamedPipeDataObserver::Write(const void* aBuffer, uint32_t aSize)
-{
+int nsNamedPipeDataObserver::Write(const void* aBuffer, uint32_t aSize) {
   DWORD bytesWritten = 0;
   if (!WriteFile(mPipe, aBuffer, aSize, &bytesWritten, &mOverlapped)) {
-    switch(GetLastError()) {
-      case ERROR_IO_PENDING:
-        {
-          mEvent.Wait();
-        }
+    switch (GetLastError()) {
+      case ERROR_IO_PENDING: {
+        mEvent.Wait();
+      }
         if (!GetOverlappedResult(mPipe, &mOverlapped, &bytesWritten, FALSE)) {
           ADD_FAILURE() << "GetOverlappedResult failed";
           return -1;
@@ -158,18 +145,16 @@ nsNamedPipeDataObserver::Write(const void* aBuffer, uint32_t aSize)
 
 NS_IMETHODIMP
 nsNamedPipeDataObserver::OnDataAvailable(uint32_t aBytesTransferred,
-                                         void *aOverlapped)
-{
+                                         void* aOverlapped) {
   if (aOverlapped != &mOverlapped) {
     ADD_FAILURE() << "invalid overlapped object";
     return NS_ERROR_FAILURE;
   }
 
   DWORD bytesTransferred = 0;
-  BOOL ret = GetOverlappedResult(mPipe,
-                                 reinterpret_cast<LPOVERLAPPED>(aOverlapped),
-                                 &bytesTransferred,
-                                 FALSE);
+  BOOL ret =
+      GetOverlappedResult(mPipe, reinterpret_cast<LPOVERLAPPED>(aOverlapped),
+                          &bytesTransferred, FALSE);
 
   if (!ret) {
     ADD_FAILURE() << "GetOverlappedResult failed";
@@ -188,29 +173,19 @@ nsNamedPipeDataObserver::OnDataAvailable(uint32_t aBytesTransferred,
 }
 
 NS_IMETHODIMP
-nsNamedPipeDataObserver::OnError(uint32_t aError, void *aOverlapped)
-{
+nsNamedPipeDataObserver::OnError(uint32_t aError, void* aOverlapped) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 BOOL CreateAndConnectInstance(LPOVERLAPPED aOverlapped, LPHANDLE aPipe);
 BOOL ConnectToNewClient(HANDLE aPipe, LPOVERLAPPED aOverlapped);
 
-BOOL CreateAndConnectInstance(LPOVERLAPPED aOverlapped, LPHANDLE aPipe)
-{
+BOOL CreateAndConnectInstance(LPOVERLAPPED aOverlapped, LPHANDLE aPipe) {
   // FIXME: adjust parameters
-  *aPipe = CreateNamedPipeA(
-    PIPE_NAME,
-    PIPE_ACCESS_DUPLEX |
-    FILE_FLAG_OVERLAPPED,
-    PIPE_TYPE_MESSAGE |
-    PIPE_READMODE_MESSAGE |
-    PIPE_WAIT,
-    1,
-    65536,
-    65536,
-    3000,
-    NULL);
+  *aPipe =
+      CreateNamedPipeA(PIPE_NAME, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+                       PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, 1,
+                       65536, 65536, 3000, NULL);
 
   if (*aPipe == INVALID_HANDLE_VALUE) {
     ADD_FAILURE() << "CreateNamedPipe failed " << GetLastError();
@@ -220,33 +195,29 @@ BOOL CreateAndConnectInstance(LPOVERLAPPED aOverlapped, LPHANDLE aPipe)
   return ConnectToNewClient(*aPipe, aOverlapped);
 }
 
-BOOL ConnectToNewClient(HANDLE aPipe, LPOVERLAPPED aOverlapped)
-{
+BOOL ConnectToNewClient(HANDLE aPipe, LPOVERLAPPED aOverlapped) {
   if (ConnectNamedPipe(aPipe, aOverlapped)) {
-    ADD_FAILURE() << "Unexpected, overlapped ConnectNamedPipe() always returns 0.";
+    ADD_FAILURE()
+        << "Unexpected, overlapped ConnectNamedPipe() always returns 0.";
     return FALSE;
   }
 
-  switch (GetLastError())
-  {
-  case ERROR_IO_PENDING:
-    return TRUE;
+  switch (GetLastError()) {
+    case ERROR_IO_PENDING:
+      return TRUE;
 
-  case ERROR_PIPE_CONNECTED:
-    if (SetEvent(aOverlapped->hEvent))
+    case ERROR_PIPE_CONNECTED:
+      if (SetEvent(aOverlapped->hEvent)) break;
+
+    default:  // error
+      ADD_FAILURE() << "ConnectNamedPipe failed " << GetLastError();
       break;
-
-  default: // error
-    ADD_FAILURE() << "ConnectNamedPipe failed " << GetLastError();
-    break;
   }
 
   return FALSE;
 }
 
-static nsresult
-CreateNamedPipe(LPHANDLE aServer, LPHANDLE aClient)
-{
+static nsresult CreateNamedPipe(LPHANDLE aServer, LPHANDLE aClient) {
   OVERLAPPED overlapped;
   overlapped.hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
   BOOL ret;
@@ -257,13 +228,9 @@ CreateNamedPipe(LPHANDLE aServer, LPHANDLE aClient)
     return NS_ERROR_FAILURE;
   }
 
-  *aClient = CreateFileA(PIPE_NAME,
-                         GENERIC_READ | GENERIC_WRITE,
-                         FILE_SHARE_READ | FILE_SHARE_WRITE,
-                         nullptr,
-                         OPEN_EXISTING,
-                         FILE_FLAG_OVERLAPPED,
-                         nullptr);
+  *aClient = CreateFileA(PIPE_NAME, GENERIC_READ | GENERIC_WRITE,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                         OPEN_EXISTING, FILE_FLAG_OVERLAPPED, nullptr);
 
   if (*aClient == INVALID_HANDLE_VALUE) {
     ADD_FAILURE() << "Unable to create pipe client";
@@ -284,26 +251,26 @@ CreateNamedPipe(LPHANDLE aServer, LPHANDLE aClient)
   return NS_OK;
 }
 
-TEST(TestNamedPipeService,Test)
-{
-  nsCOMPtr<nsINamedPipeService> svc =
-    net::NamedPipeService::GetOrCreate();
+TEST(TestNamedPipeService, Test) {
+  nsCOMPtr<nsINamedPipeService> svc = net::NamedPipeService::GetOrCreate();
 
   HANDLE readPipe, writePipe;
   nsresult rv = CreateNamedPipe(&readPipe, &writePipe);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   RefPtr<nsNamedPipeDataObserver> readObserver =
-    new nsNamedPipeDataObserver(readPipe);
+      new nsNamedPipeDataObserver(readPipe);
   RefPtr<nsNamedPipeDataObserver> writeObserver =
-    new nsNamedPipeDataObserver(writePipe);
+      new nsNamedPipeDataObserver(writePipe);
 
   ASSERT_TRUE(NS_SUCCEEDED(svc->AddDataObserver(readPipe, readObserver)));
   ASSERT_TRUE(NS_SUCCEEDED(svc->AddDataObserver(writePipe, writeObserver)));
-  ASSERT_EQ(std::size_t(writeObserver->Write(TEST_STR, sizeof(TEST_STR))), sizeof(TEST_STR));
+  ASSERT_EQ(std::size_t(writeObserver->Write(TEST_STR, sizeof(TEST_STR))),
+            sizeof(TEST_STR));
 
   char buffer[sizeof(TEST_STR)];
-  ASSERT_EQ(std::size_t(readObserver->Read(buffer, sizeof(buffer))), sizeof(TEST_STR));
+  ASSERT_EQ(std::size_t(readObserver->Read(buffer, sizeof(buffer))),
+            sizeof(TEST_STR));
   ASSERT_STREQ(buffer, TEST_STR) << "I/O mismatch";
 
   ASSERT_TRUE(NS_SUCCEEDED(svc->RemoveDataObserver(readPipe, readObserver)));

@@ -22,26 +22,25 @@ namespace bmp {
 /// we use during decoding. (Excluding bitfields fields, which are kept in
 /// BitFields.)
 struct Header {
-  uint32_t mDataOffset;     // Offset to raster data.
-  uint32_t mBIHSize;        // Header size.
-  int32_t  mWidth;          // Image width.
-  int32_t  mHeight;         // Image height.
-  uint16_t mBpp;            // Bits per pixel.
-  uint32_t mCompression;    // See struct Compression for valid values.
-  uint32_t mImageSize;      // (compressed) image size. Can be 0 if
-                            // mCompression==0.
-  uint32_t mNumColors;      // Used colors.
+  uint32_t mDataOffset;   // Offset to raster data.
+  uint32_t mBIHSize;      // Header size.
+  int32_t mWidth;         // Image width.
+  int32_t mHeight;        // Image height.
+  uint16_t mBpp;          // Bits per pixel.
+  uint32_t mCompression;  // See struct Compression for valid values.
+  uint32_t mImageSize;    // (compressed) image size. Can be 0 if
+                          // mCompression==0.
+  uint32_t mNumColors;    // Used colors.
 
   Header()
-   : mDataOffset(0)
-   , mBIHSize(0)
-   , mWidth(0)
-   , mHeight(0)
-   , mBpp(0)
-   , mCompression(0)
-   , mImageSize(0)
-   , mNumColors(0)
-  {}
+      : mDataOffset(0),
+        mBIHSize(0),
+        mWidth(0),
+        mHeight(0),
+        mBpp(0),
+        mCompression(0),
+        mImageSize(0),
+        mNumColors(0) {}
 };
 
 /// An entry in the color table.
@@ -64,9 +63,8 @@ class BitFields {
     /// Sets the mask (and thus the right-shift and bit-width as well).
     void Set(uint32_t aMask);
 
-  public:
-    Value()
-    {
+   public:
+    Value() {
       mMask = 0;
       mRightShift = 0;
       mBitWidth = 0;
@@ -87,7 +85,7 @@ class BitFields {
     uint8_t Get8(uint32_t aVal) const;
   };
 
-public:
+ public:
   /// The individual color channels.
   Value mRed;
   Value mGreen;
@@ -114,15 +112,14 @@ public:
   static const size_t LENGTH = 12;
 };
 
-} // namespace bmp
+}  // namespace bmp
 
 class RasterImage;
 
 /// Decoder for BMP-Files, as used by Windows and OS/2.
 
-class nsBMPDecoder : public Decoder
-{
-public:
+class nsBMPDecoder : public Decoder {
+ public:
   ~nsBMPDecoder();
 
   DecoderType GetType() const override { return DecoderType::BMP; }
@@ -152,7 +149,7 @@ public:
   nsresult BeforeFinishInternal() override;
   nsresult FinishInternal() override;
 
-private:
+ private:
   friend class DecoderFactory;
 
   enum class State {
@@ -215,28 +212,29 @@ private:
   // use this after that has been completed.
   bool mDoesHaveTransparency;
 
-  uint32_t mNumColors;      // The number of used colors, i.e. the number of
-                            // entries in mColors, if it's present.
-  UniquePtr<bmp::ColorTableEntry[]> mColors; // The color table, if it's present.
+  uint32_t mNumColors;  // The number of used colors, i.e. the number of
+                        // entries in mColors, if it's present.
+  UniquePtr<bmp::ColorTableEntry[]>
+      mColors;              // The color table, if it's present.
   uint32_t mBytesPerColor;  // 3 or 4, depending on the format
 
   // The number of bytes prior to the optional gap that have been read. This
   // is used to find the start of the pixel data.
   uint32_t mPreGapLength;
 
-  uint32_t mPixelRowSize;   // The number of bytes per pixel row.
+  uint32_t mPixelRowSize;  // The number of bytes per pixel row.
 
-  int32_t mCurrentRow;      // Index of the row of the image that's currently
-                            // being decoded: [height,1].
-  int32_t mCurrentPos;      // Index into the current line. Used when
-                            // doing RLE decoding and when filling in pixels
-                            // for truncated files.
+  int32_t mCurrentRow;  // Index of the row of the image that's currently
+                        // being decoded: [height,1].
+  int32_t mCurrentPos;  // Index into the current line. Used when
+                        // doing RLE decoding and when filling in pixels
+                        // for truncated files.
 
   // Only used in RLE_ABSOLUTE state: the number of pixels to read.
   uint32_t mAbsoluteModeNumPixels;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_decoders_nsBMPDecoder_h
+#endif  // mozilla_image_decoders_nsBMPDecoder_h

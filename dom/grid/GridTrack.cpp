@@ -21,60 +21,36 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GridTrack)
 NS_INTERFACE_MAP_END
 
 GridTrack::GridTrack(GridTracks* aParent)
-  : mParent(aParent)
-  , mStart(0.0)
-  , mBreadth(0.0)
-  , mType(GridDeclaration::Implicit)
-  , mState(GridTrackState::Static)
-{
+    : mParent(aParent),
+      mStart(0.0),
+      mBreadth(0.0),
+      mType(GridDeclaration::Implicit),
+      mState(GridTrackState::Static) {
   MOZ_ASSERT(aParent, "Should never be instantiated with a null GridTracks");
 }
 
-GridTrack::~GridTrack()
-{
-}
+GridTrack::~GridTrack() {}
 
-JSObject*
-GridTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* GridTrack::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto) {
   return GridTrack_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-double
-GridTrack::Start() const
-{
-  return mStart;
-}
+double GridTrack::Start() const { return mStart; }
 
-double
-GridTrack::Breadth() const
-{
-  return mBreadth;
-}
+double GridTrack::Breadth() const { return mBreadth; }
 
-GridDeclaration
-GridTrack::Type() const
-{
-  return mType;
-}
+GridDeclaration GridTrack::Type() const { return mType; }
 
-GridTrackState
-GridTrack::State() const
-{
-  return mState;
-}
+GridTrackState GridTrack::State() const { return mState; }
 
-void
-GridTrack::SetTrackValues(double aStart,
-                          double aBreadth,
-                          GridDeclaration aType,
-                          GridTrackState aState)
-{
+void GridTrack::SetTrackValues(double aStart, double aBreadth,
+                               GridDeclaration aType, GridTrackState aState) {
   mStart = aStart;
   mBreadth = aBreadth;
   mType = aType;
   mState = aState;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -17,9 +17,8 @@ namespace dom {
 class MessagePortParent;
 class SharedMessagePortMessage;
 
-class MessagePortService final
-{
-public:
+class MessagePortService final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(MessagePortService)
 
   static MessagePortService* Get();
@@ -30,22 +29,21 @@ public:
                          const uint32_t& aSequenceID);
 
   bool DisentanglePort(
-                 MessagePortParent* aParent,
-                 FallibleTArray<RefPtr<SharedMessagePortMessage>>& aMessages);
+      MessagePortParent* aParent,
+      FallibleTArray<RefPtr<SharedMessagePortMessage>>& aMessages);
 
   bool ClosePort(MessagePortParent* aParent);
 
   bool PostMessages(
-                 MessagePortParent* aParent,
-                 FallibleTArray<RefPtr<SharedMessagePortMessage>>& aMessages);
+      MessagePortParent* aParent,
+      FallibleTArray<RefPtr<SharedMessagePortMessage>>& aMessages);
 
   void ParentDestroy(MessagePortParent* aParent);
 
-  bool ForceClose(const nsID& aUUID,
-                  const nsID& aDestinationUUID,
+  bool ForceClose(const nsID& aUUID, const nsID& aDestinationUUID,
                   const uint32_t& aSequenceID);
 
-private:
+ private:
   ~MessagePortService() {}
 
   void CloseAll(const nsID& aUUID, bool aForced = false);
@@ -56,7 +54,7 @@ private:
   nsClassHashtable<nsIDHashKey, MessagePortServiceData> mPorts;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MessagePortService_h
+#endif  // mozilla_dom_MessagePortService_h

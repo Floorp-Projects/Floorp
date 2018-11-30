@@ -22,62 +22,53 @@ class WorkerPrivate;
 //
 // This is purely a convenience class to avoid requiring code to
 // extend WorkerHolder all the time.
-class WorkerHolderToken final : public WorkerHolder
-{
-public:
+class WorkerHolderToken final : public WorkerHolder {
+ public:
   // Pure virtual class defining the interface for objects that
   // wish to be notified of worker shutdown.
-  class Listener
-  {
-  public:
-    virtual void
-    WorkerShuttingDown() = 0;
+  class Listener {
+   public:
+    virtual void WorkerShuttingDown() = 0;
   };
 
   // Attempt to create a WorkerHolderToken().  If the shutdown has already
   // passed the given shutdown phase or fails for another reason then
   // nullptr is returned.
-  static already_AddRefed<WorkerHolderToken>
-  Create(WorkerPrivate* aWorkerPrivate,
-         WorkerStatus aShutdownStatus,
-         Behavior aBehavior = PreventIdleShutdownStart);
+  static already_AddRefed<WorkerHolderToken> Create(
+      WorkerPrivate* aWorkerPrivate, WorkerStatus aShutdownStatus,
+      Behavior aBehavior = PreventIdleShutdownStart);
 
   // Add a listener to the token.  Note, this does not hold a strong
   // reference to the listener.  You must call RemoveListener() before
   // the listener is destroyed.  This can only be called on the owning
   // worker thread.
-  void
-  AddListener(Listener* aListener);
+  void AddListener(Listener* aListener);
 
   // Remove a previously added listener.  This can only be called on the
   // owning worker thread.
-  void
-  RemoveListener(Listener* aListener);
+  void RemoveListener(Listener* aListener);
 
-  bool
-  IsShuttingDown() const;
+  bool IsShuttingDown() const;
 
-  WorkerPrivate*
-  GetWorkerPrivate() const;
+  WorkerPrivate* GetWorkerPrivate() const;
 
-private:
+ private:
   WorkerHolderToken(WorkerStatus aShutdownStatus, Behavior aBehavior);
 
   ~WorkerHolderToken();
 
   // WorkerHolder methods
-  virtual bool
-  Notify(WorkerStatus aStatus) override;
+  virtual bool Notify(WorkerStatus aStatus) override;
 
   nsTObserverArray<Listener*> mListenerList;
   const WorkerStatus mShutdownStatus;
   bool mShuttingDown;
 
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING(WorkerHolderToken)
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_workers_WorkerHolderToken_h
+#endif  // mozilla_dom_workers_WorkerHolderToken_h

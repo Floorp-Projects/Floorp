@@ -56,19 +56,18 @@
 namespace mozilla {
 namespace layers {
 class ShadowLayerForwarder;
-} // namespace layers
+}  // namespace layers
 
 namespace ipc {
 
-class Shmem final
-{
+class Shmem final {
   friend struct IPDLParamTraits<mozilla::ipc::Shmem>;
 #ifdef DEBUG
   // For ShadowLayerForwarder::CheckSurfaceDescriptor
   friend class mozilla::layers::ShadowLayerForwarder;
 #endif
 
-public:
+ public:
   typedef int32_t id_t;
   // Low-level wrapper around platform shmem primitives.
   typedef mozilla::ipc::SharedMemory SharedMemory;
@@ -79,46 +78,30 @@ public:
   // this token.
   struct PrivateIPDLCaller {};
 
-  Shmem() :
-    mSegment(nullptr),
-    mData(nullptr),
-    mSize(0),
-    mId(0)
-  {
-  }
+  Shmem() : mSegment(nullptr), mData(nullptr), mSize(0), mId(0) {}
 
-  Shmem(const Shmem& aOther) :
-    mSegment(aOther.mSegment),
-    mData(aOther.mData),
-    mSize(aOther.mSize),
-    mId(aOther.mId)
-  {
-  }
+  Shmem(const Shmem& aOther)
+      : mSegment(aOther.mSegment),
+        mData(aOther.mData),
+        mSize(aOther.mSize),
+        mId(aOther.mId) {}
 
 #if !defined(DEBUG)
-  Shmem(PrivateIPDLCaller,
-        SharedMemory* aSegment, id_t aId) :
-    mSegment(aSegment),
-    mData(aSegment->memory()),
-    mSize(0),
-    mId(aId)
-  {
+  Shmem(PrivateIPDLCaller, SharedMemory* aSegment, id_t aId)
+      : mSegment(aSegment), mData(aSegment->memory()), mSize(0), mId(aId) {
     mSize = static_cast<size_t>(*PtrToSize(mSegment));
   }
 #else
-  Shmem(PrivateIPDLCaller,
-        SharedMemory* aSegment, id_t aId);
+  Shmem(PrivateIPDLCaller, SharedMemory* aSegment, id_t aId);
 #endif
 
-  ~Shmem()
-  {
+  ~Shmem() {
     // Shmem only holds a "weak ref" to the actual segment, which is
     // owned by IPDL. So there's nothing interesting to be done here
     forget(PrivateIPDLCaller());
   }
 
-  Shmem& operator=(const Shmem& aRhs)
-  {
+  Shmem& operator=(const Shmem& aRhs) {
     mSegment = aRhs.mSegment;
     mData = aRhs.mData;
     mSize = aRhs.mSize;
@@ -126,32 +109,19 @@ public:
     return *this;
   }
 
-  bool operator==(const Shmem& aRhs) const
-  {
-    return mSegment == aRhs.mSegment;
-  }
+  bool operator==(const Shmem& aRhs) const { return mSegment == aRhs.mSegment; }
 
   // Returns whether this Shmem is writable by you, and thus whether you can
   // transfer writability to another actor.
-  bool
-  IsWritable() const
-  {
-    return mSegment != nullptr;
-  }
+  bool IsWritable() const { return mSegment != nullptr; }
 
   // Returns whether this Shmem is readable by you, and thus whether you can
   // transfer readability to another actor.
-  bool
-  IsReadable() const
-  {
-    return mSegment != nullptr;
-  }
+  bool IsReadable() const { return mSegment != nullptr; }
 
   // Return a pointer to the user-visible data segment.
-  template<typename T>
-  T*
-  get() const
-  {
+  template <typename T>
+  T* get() const {
     AssertInvariants();
     AssertAligned<T>();
 
@@ -162,10 +132,8 @@ public:
   // segment was allocated, in units of T.  The underlying mapping may
   // actually be larger because of page alignment and private data,
   // but this isn't exposed to clients.
-  template<typename T>
-  size_t
-  Size() const
-  {
+  template <typename T>
+  size_t Size() const {
     AssertInvariants();
     AssertAligned<T>();
 
@@ -173,85 +141,64 @@ public:
   }
 
   // These shouldn't be used directly, use the IPDL interface instead.
-  id_t Id(PrivateIPDLCaller) const {
-    return mId;
-  }
+  id_t Id(PrivateIPDLCaller) const { return mId; }
 
-  SharedMemory* Segment(PrivateIPDLCaller) const {
-    return mSegment;
-  }
+  SharedMemory* Segment(PrivateIPDLCaller) const { return mSegment; }
 
 #ifndef DEBUG
-  void RevokeRights(PrivateIPDLCaller)
-  {
-  }
+  void RevokeRights(PrivateIPDLCaller) {}
 #else
   void RevokeRights(PrivateIPDLCaller);
 #endif
 
-  void forget(PrivateIPDLCaller)
-  {
+  void forget(PrivateIPDLCaller) {
     mSegment = nullptr;
     mData = nullptr;
     mSize = 0;
     mId = 0;
   }
 
-  static already_AddRefed<Shmem::SharedMemory>
-  Alloc(PrivateIPDLCaller,
-        size_t aNBytes,
-        SharedMemoryType aType,
-        bool aUnsafe,
-        bool aProtect=false);
+  static already_AddRefed<Shmem::SharedMemory> Alloc(PrivateIPDLCaller,
+                                                     size_t aNBytes,
+                                                     SharedMemoryType aType,
+                                                     bool aUnsafe,
+                                                     bool aProtect = false);
 
   // Prepare this to be shared with |aProcess|.  Return an IPC message
   // that contains enough information for the other process to map
   // this segment in OpenExisting() below.  Return a new message if
   // successful (owned by the caller), nullptr if not.
-  IPC::Message*
-  ShareTo(PrivateIPDLCaller,
-          base::ProcessId aTargetPid,
-          int32_t routingId);
+  IPC::Message* ShareTo(PrivateIPDLCaller, base::ProcessId aTargetPid,
+                        int32_t routingId);
 
   // Stop sharing this with |aTargetPid|.  Return an IPC message that
   // contains enough information for the other process to unmap this
   // segment.  Return a new message if successful (owned by the
   // caller), nullptr if not.
-  IPC::Message*
-  UnshareFrom(PrivateIPDLCaller,
-              int32_t routingId);
+  IPC::Message* UnshareFrom(PrivateIPDLCaller, int32_t routingId);
 
   // Return a SharedMemory instance in this process using the
   // descriptor shared to us by the process that created the
   // underlying OS shmem resource.  The contents of the descriptor
   // depend on the type of SharedMemory that was passed to us.
-  static already_AddRefed<SharedMemory>
-  OpenExisting(PrivateIPDLCaller,
-               const IPC::Message& aDescriptor,
-               id_t* aId,
-               bool aProtect=false);
+  static already_AddRefed<SharedMemory> OpenExisting(
+      PrivateIPDLCaller, const IPC::Message& aDescriptor, id_t* aId,
+      bool aProtect = false);
 
-  static void
-  Dealloc(PrivateIPDLCaller,
-          SharedMemory* aSegment);
+  static void Dealloc(PrivateIPDLCaller, SharedMemory* aSegment);
 
-private:
-  template<typename T>
-  void AssertAligned() const
-  {
-    if (0 != (mSize % sizeof(T)))
-      MOZ_CRASH("shmem is not T-aligned");
+ private:
+  template <typename T>
+  void AssertAligned() const {
+    if (0 != (mSize % sizeof(T))) MOZ_CRASH("shmem is not T-aligned");
   }
 
 #if !defined(DEBUG)
-  void AssertInvariants() const
-  { }
+  void AssertInvariants() const {}
 
-  static uint32_t*
-  PtrToSize(SharedMemory* aSegment)
-  {
+  static uint32_t* PtrToSize(SharedMemory* aSegment) {
     char* endOfSegment =
-      reinterpret_cast<char*>(aSegment->memory()) + aSegment->Size();
+        reinterpret_cast<char*>(aSegment->memory()) + aSegment->Size();
     return reinterpret_cast<uint32_t*>(endOfSegment - sizeof(uint32_t));
   }
 
@@ -265,21 +212,20 @@ private:
   id_t mId;
 };
 
-template<>
-struct IPDLParamTraits<Shmem>
-{
+template <>
+struct IPDLParamTraits<Shmem> {
   typedef Shmem paramType;
 
   static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType& aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor, paramType* aResult);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, paramType* aResult);
 
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
+  static void Log(const paramType& aParam, std::wstring* aLog) {
     aLog->append(L"(shmem segment)");
   }
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // ifndef mozilla_ipc_Shmem_h
+#endif  // ifndef mozilla_ipc_Shmem_h

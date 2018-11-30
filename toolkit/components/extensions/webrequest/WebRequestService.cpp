@@ -16,14 +16,9 @@ using namespace mozilla::extensions;
 
 static WebRequestService* sWeakWebRequestService;
 
-WebRequestService::~WebRequestService()
-{
-  sWeakWebRequestService = nullptr;
-}
+WebRequestService::~WebRequestService() { sWeakWebRequestService = nullptr; }
 
-/* static */ WebRequestService&
-WebRequestService::GetSingleton()
-{
+/* static */ WebRequestService& WebRequestService::GetSingleton() {
   static RefPtr<WebRequestService> instance;
   if (!sWeakWebRequestService) {
     instance = new WebRequestService();
@@ -37,10 +32,8 @@ WebRequestService::GetSingleton()
   return *sWeakWebRequestService;
 }
 
-
-UniquePtr<WebRequestChannelEntry>
-WebRequestService::RegisterChannel(ChannelWrapper* aChannel)
-{
+UniquePtr<WebRequestChannelEntry> WebRequestService::RegisterChannel(
+    ChannelWrapper* aChannel) {
   UniquePtr<ChannelEntry> entry(new ChannelEntry(aChannel));
 
   auto key = mChannelEntries.LookupForAdd(entry->mChannelId);
@@ -48,30 +41,22 @@ WebRequestService::RegisterChannel(ChannelWrapper* aChannel)
   key.OrInsert([&entry]() { return entry.get(); });
 
   return entry;
-
 }
 
-already_AddRefed<nsITraceableChannel>
-WebRequestService::GetTraceableChannel(uint64_t aChannelId,
-                                       nsAtom* aAddonId,
-                                       nsIContentParent* aContentParent)
-{
+already_AddRefed<nsITraceableChannel> WebRequestService::GetTraceableChannel(
+    uint64_t aChannelId, nsAtom* aAddonId, nsIContentParent* aContentParent) {
   if (auto entry = mChannelEntries.Get(aChannelId)) {
     if (entry->mChannel) {
       return entry->mChannel->GetTraceableChannel(aAddonId, aContentParent);
-
     }
   }
   return nullptr;
 }
 
 WebRequestChannelEntry::WebRequestChannelEntry(ChannelWrapper* aChannel)
-  : mChannelId(aChannel->Id())
-  , mChannel(aChannel)
-{}
+    : mChannelId(aChannel->Id()), mChannel(aChannel) {}
 
-WebRequestChannelEntry::~WebRequestChannelEntry()
-{
+WebRequestChannelEntry::~WebRequestChannelEntry() {
   if (sWeakWebRequestService) {
     sWeakWebRequestService->mChannelEntries.Remove(mChannelId);
   }

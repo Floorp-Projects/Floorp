@@ -14,50 +14,46 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 class Pattern;
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 /**
  * This class should not be instantiated. It's just a container
  * for some helper functions.
  */
-class gfxFontMissingGlyphs final
-{
-    typedef mozilla::gfx::DrawTarget DrawTarget;
-    typedef mozilla::gfx::Float Float;
-    typedef mozilla::gfx::Matrix Matrix;
-    typedef mozilla::gfx::Pattern Pattern;
-    typedef mozilla::gfx::Rect Rect;
+class gfxFontMissingGlyphs final {
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::Matrix Matrix;
+  typedef mozilla::gfx::Pattern Pattern;
+  typedef mozilla::gfx::Rect Rect;
 
-    gfxFontMissingGlyphs() = delete; // prevent instantiation
+  gfxFontMissingGlyphs() = delete;  // prevent instantiation
 
-public:
-    /**
-     * Draw hexboxes for a missing glyph.
-     * @param aChar the UTF16 codepoint for the character
-     * @param aRect the glyph-box for the glyph that is missing
-     * @param aDrawTarget the DrawTarget to draw to
-     * @param aPattern the pattern currently being used to paint
-     * @param aAppUnitsPerDevPixel the appUnits to devPixel ratio we're using,
-     *                             (so we can scale glyphs to a sensible size)
-     * @param aMat optional local-space orientation matrix
-     */
-    static void DrawMissingGlyph(uint32_t aChar,
-                                 const Rect& aRect,
-                                 DrawTarget& aDrawTarget,
-                                 const Pattern& aPattern,
-                                 uint32_t aAppUnitsPerDevPixel,
-                                 const Matrix* aMat = nullptr);
-    /**
-     * @return the desired minimum width for a glyph-box that will allow
-     * the hexboxes to be drawn reasonably.
-     */
-    static Float GetDesiredMinWidth(uint32_t aChar,
-                                    uint32_t aAppUnitsPerDevUnit);
+ public:
+  /**
+   * Draw hexboxes for a missing glyph.
+   * @param aChar the UTF16 codepoint for the character
+   * @param aRect the glyph-box for the glyph that is missing
+   * @param aDrawTarget the DrawTarget to draw to
+   * @param aPattern the pattern currently being used to paint
+   * @param aAppUnitsPerDevPixel the appUnits to devPixel ratio we're using,
+   *                             (so we can scale glyphs to a sensible size)
+   * @param aMat optional local-space orientation matrix
+   */
+  static void DrawMissingGlyph(uint32_t aChar, const Rect& aRect,
+                               DrawTarget& aDrawTarget, const Pattern& aPattern,
+                               uint32_t aAppUnitsPerDevPixel,
+                               const Matrix* aMat = nullptr);
+  /**
+   * @return the desired minimum width for a glyph-box that will allow
+   * the hexboxes to be drawn reasonably.
+   */
+  static Float GetDesiredMinWidth(uint32_t aChar, uint32_t aAppUnitsPerDevUnit);
 
-    static void Purge();
+  static void Purge();
 
-    static void Shutdown();
+  static void Shutdown();
 };
 
 #endif

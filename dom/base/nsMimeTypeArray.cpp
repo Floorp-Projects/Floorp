@@ -27,58 +27,42 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsMimeTypeArray)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeTypeArray,
-                                      mWindow,
-                                      mMimeTypes,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeTypeArray, mWindow, mMimeTypes,
                                       mCTPMimeTypes)
 
 nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindowInner* aWindow)
-  : mWindow(aWindow)
-{
-}
+    : mWindow(aWindow) {}
 
-nsMimeTypeArray::~nsMimeTypeArray()
-{
-}
+nsMimeTypeArray::~nsMimeTypeArray() {}
 
-JSObject*
-nsMimeTypeArray::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* nsMimeTypeArray::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return MimeTypeArray_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-nsMimeTypeArray::Refresh()
-{
+void nsMimeTypeArray::Refresh() {
   mMimeTypes.Clear();
   mCTPMimeTypes.Clear();
 }
 
-nsPIDOMWindowInner*
-nsMimeTypeArray::GetParentObject() const
-{
+nsPIDOMWindowInner* nsMimeTypeArray::GetParentObject() const {
   MOZ_ASSERT(mWindow);
   return mWindow;
 }
 
-nsMimeType*
-nsMimeTypeArray::Item(uint32_t aIndex, CallerType aCallerType)
-{
+nsMimeType* nsMimeTypeArray::Item(uint32_t aIndex, CallerType aCallerType) {
   bool unused;
   return IndexedGetter(aIndex, unused, aCallerType);
 }
 
-nsMimeType*
-nsMimeTypeArray::NamedItem(const nsAString& aName, CallerType aCallerType)
-{
+nsMimeType* nsMimeTypeArray::NamedItem(const nsAString& aName,
+                                       CallerType aCallerType) {
   bool unused;
   return NamedGetter(aName, unused, aCallerType);
 }
 
-nsMimeType*
-nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool &aFound,
-                               CallerType aCallerType)
-{
+nsMimeType* nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool& aFound,
+                                           CallerType aCallerType) {
   aFound = false;
 
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
@@ -96,10 +80,8 @@ nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool &aFound,
   return mMimeTypes[aIndex];
 }
 
-static nsMimeType*
-FindMimeType(const nsTArray<RefPtr<nsMimeType>>& aMimeTypes,
-             const nsAString& aType)
-{
+static nsMimeType* FindMimeType(const nsTArray<RefPtr<nsMimeType>>& aMimeTypes,
+                                const nsAString& aType) {
   for (uint32_t i = 0; i < aMimeTypes.Length(); ++i) {
     nsMimeType* mimeType = aMimeTypes[i];
     if (aType.Equals(mimeType->Type())) {
@@ -110,10 +92,8 @@ FindMimeType(const nsTArray<RefPtr<nsMimeType>>& aMimeTypes,
   return nullptr;
 }
 
-nsMimeType*
-nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound,
-                             CallerType aCallerType)
-{
+nsMimeType* nsMimeTypeArray::NamedGetter(const nsAString& aName, bool& aFound,
+                                         CallerType aCallerType) {
   aFound = false;
 
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
@@ -138,9 +118,7 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound,
   return nullptr;
 }
 
-uint32_t
-nsMimeTypeArray::Length(CallerType aCallerType)
-{
+uint32_t nsMimeTypeArray::Length(CallerType aCallerType) {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0;
   }
@@ -150,10 +128,8 @@ nsMimeTypeArray::Length(CallerType aCallerType)
   return mMimeTypes.Length();
 }
 
-void
-nsMimeTypeArray::GetSupportedNames(nsTArray<nsString>& aRetval,
-                                   CallerType aCallerType)
-{
+void nsMimeTypeArray::GetSupportedNames(nsTArray<nsString>& aRetval,
+                                        CallerType aCallerType) {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return;
   }
@@ -165,16 +141,14 @@ nsMimeTypeArray::GetSupportedNames(nsTArray<nsString>& aRetval,
   }
 }
 
-void
-nsMimeTypeArray::EnsurePluginMimeTypes()
-{
+void nsMimeTypeArray::EnsurePluginMimeTypes() {
   if (!mMimeTypes.IsEmpty() || !mWindow) {
     return;
   }
 
   RefPtr<Navigator> navigator = mWindow->Navigator();
 
-  nsPluginArray *pluginArray = navigator->GetPlugins(IgnoreErrors());
+  nsPluginArray* pluginArray = navigator->GetPlugins(IgnoreErrors());
   if (!pluginArray) {
     return;
   }
@@ -189,45 +163,34 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsMimeType, Release)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeType, mWindow, mPluginElement)
 
 nsMimeType::nsMimeType(nsPIDOMWindowInner* aWindow,
-                       nsPluginElement* aPluginElement,
-                       const nsAString& aType,
+                       nsPluginElement* aPluginElement, const nsAString& aType,
                        const nsAString& aDescription,
                        const nsAString& aExtension)
-  : mWindow(aWindow),
-    mPluginElement(aPluginElement),
-    mType(aType),
-    mDescription(aDescription),
-    mExtension(aExtension)
-{
+    : mWindow(aWindow),
+      mPluginElement(aPluginElement),
+      mType(aType),
+      mDescription(aDescription),
+      mExtension(aExtension) {
   MOZ_ASSERT(aPluginElement);
 }
 
-nsMimeType::~nsMimeType()
-{
-}
+nsMimeType::~nsMimeType() {}
 
-nsPIDOMWindowInner*
-nsMimeType::GetParentObject() const
-{
+nsPIDOMWindowInner* nsMimeType::GetParentObject() const {
   MOZ_ASSERT(mWindow);
   return mWindow;
 }
 
-JSObject*
-nsMimeType::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* nsMimeType::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return MimeType_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-nsMimeType::GetDescription(nsString& aRetval) const
-{
+void nsMimeType::GetDescription(nsString& aRetval) const {
   aRetval = mDescription;
 }
 
-nsPluginElement*
-nsMimeType::GetEnabledPlugin() const
-{
+nsPluginElement* nsMimeType::GetEnabledPlugin() const {
   // mPluginElement might be null if we got unlinked but are still somehow being
   // called into.
   if (!mPluginElement || !mPluginElement->PluginTag()->IsEnabled()) {
@@ -236,14 +199,6 @@ nsMimeType::GetEnabledPlugin() const
   return mPluginElement;
 }
 
-void
-nsMimeType::GetSuffixes(nsString& aRetval) const
-{
-  aRetval = mExtension;
-}
+void nsMimeType::GetSuffixes(nsString& aRetval) const { aRetval = mExtension; }
 
-void
-nsMimeType::GetType(nsString& aRetval) const
-{
-  aRetval = mType;
-}
+void nsMimeType::GetType(nsString& aRetval) const { aRetval = mType; }

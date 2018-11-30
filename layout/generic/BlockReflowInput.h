@@ -29,19 +29,18 @@ class BlockReflowInput {
   // Block reflow input flags.
   struct Flags {
     Flags()
-      : mHasUnconstrainedBSize(false)
-      , mIsBStartMarginRoot(false)
-      , mIsBEndMarginRoot(false)
-      , mShouldApplyBStartMargin(false)
-      , mIsFirstInflow(false)
-      , mHasLineAdjacentToTop(false)
-      , mBlockNeedsFloatManager(false)
-      , mIsLineLayoutEmpty(false)
-      , mIsOverflowContainer(false)
-      , mIsFloatListInBlockPropertyTable(false)
-      , mFloatFragmentsInsideColumnEnabled(false)
-      , mCanHaveTextOverflow(false)
-    {}
+        : mHasUnconstrainedBSize(false),
+          mIsBStartMarginRoot(false),
+          mIsBEndMarginRoot(false),
+          mShouldApplyBStartMargin(false),
+          mIsFirstInflow(false),
+          mHasLineAdjacentToTop(false),
+          mBlockNeedsFloatManager(false),
+          mIsLineLayoutEmpty(false),
+          mIsOverflowContainer(false),
+          mIsFloatListInBlockPropertyTable(false),
+          mFloatFragmentsInsideColumnEnabled(false),
+          mCanHaveTextOverflow(false) {}
 
     // Set in the BlockReflowInput constructor when the frame being reflowed has
     // been given NS_UNCONSTRAINEDSIZE as its available BSize in the
@@ -72,13 +71,13 @@ class BlockReflowInput {
     // the BStart margin should apply.
     //
     // If the flag hasn't been set in the block reflow input, then
-    // ShouldApplyBStartMargin() will crawl the line list to see if a block frame
-    // precedes the specified frame. If so, the BStart margin should be applied, and
-    // the flag is set to cache the result. (If not, the BStart margin will be
-    // applied as a result of the generational margin collapsing logic in
-    // nsBlockReflowContext::ComputeCollapsedBStartMargin(). In this case, the flag
-    // won't be set, so subsequent calls to ShouldApplyBStartMargin() will continue
-    // crawl the line list.)
+    // ShouldApplyBStartMargin() will crawl the line list to see if a block
+    // frame precedes the specified frame. If so, the BStart margin should be
+    // applied, and the flag is set to cache the result. (If not, the BStart
+    // margin will be applied as a result of the generational margin collapsing
+    // logic in nsBlockReflowContext::ComputeCollapsedBStartMargin(). In this
+    // case, the flag won't be set, so subsequent calls to
+    // ShouldApplyBStartMargin() will continue crawl the line list.)
     //
     // This flag is also set in the BlockReflowInput constructor if
     // mIsBStartMarginRoot is set; that is, the frame being reflowed is a margin
@@ -109,13 +108,11 @@ class BlockReflowInput {
     bool mCanHaveTextOverflow : 1;
   };
 
-public:
-  BlockReflowInput(const ReflowInput& aReflowInput,
-                     nsPresContext* aPresContext,
-                     nsBlockFrame* aFrame,
-                     bool aBStartMarginRoot, bool aBEndMarginRoot,
-                     bool aBlockNeedsFloatManager,
-                     nscoord aConsumedBSize = NS_INTRINSICSIZE);
+ public:
+  BlockReflowInput(const ReflowInput& aReflowInput, nsPresContext* aPresContext,
+                   nsBlockFrame* aFrame, bool aBStartMarginRoot,
+                   bool aBEndMarginRoot, bool aBlockNeedsFloatManager,
+                   nscoord aConsumedBSize = NS_INTRINSICSIZE);
 
   /**
    * Get the available reflow space (the area not occupied by floats)
@@ -126,20 +123,22 @@ public:
    * Returns whether there are floats present at the given block-direction
    * coordinate and within the inline size of the content rect.
    */
-  nsFlowAreaRect GetFloatAvailableSpace() const
-    { return GetFloatAvailableSpace(mBCoord); }
-  nsFlowAreaRect GetFloatAvailableSpaceForPlacingFloat(nscoord aBCoord) const
-    { return GetFloatAvailableSpaceWithState(
-        aBCoord, ShapeType::Margin, nullptr); }
-  nsFlowAreaRect GetFloatAvailableSpace(nscoord aBCoord) const
-    { return GetFloatAvailableSpaceWithState(
-        aBCoord, ShapeType::ShapeOutside, nullptr); }
-  nsFlowAreaRect
-    GetFloatAvailableSpaceWithState(nscoord aBCoord, ShapeType aShapeType,
-                                    nsFloatManager::SavedState *aState) const;
-  nsFlowAreaRect
-    GetFloatAvailableSpaceForBSize(nscoord aBCoord, nscoord aBSize,
-                                   nsFloatManager::SavedState *aState) const;
+  nsFlowAreaRect GetFloatAvailableSpace() const {
+    return GetFloatAvailableSpace(mBCoord);
+  }
+  nsFlowAreaRect GetFloatAvailableSpaceForPlacingFloat(nscoord aBCoord) const {
+    return GetFloatAvailableSpaceWithState(aBCoord, ShapeType::Margin, nullptr);
+  }
+  nsFlowAreaRect GetFloatAvailableSpace(nscoord aBCoord) const {
+    return GetFloatAvailableSpaceWithState(aBCoord, ShapeType::ShapeOutside,
+                                           nullptr);
+  }
+  nsFlowAreaRect GetFloatAvailableSpaceWithState(
+      nscoord aBCoord, ShapeType aShapeType,
+      nsFloatManager::SavedState* aState) const;
+  nsFlowAreaRect GetFloatAvailableSpaceForBSize(
+      nscoord aBCoord, nscoord aBSize,
+      nsFloatManager::SavedState* aState) const;
 
   /*
    * The following functions all return true if they were able to
@@ -148,9 +147,8 @@ public:
    * aLineLayout is null when we are reflowing pushed floats (because
    * they are not associated with a line box).
    */
-  bool AddFloat(nsLineLayout*       aLineLayout,
-                nsIFrame*           aFloat,
-                nscoord             aAvailableISize);
+  bool AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
+                nscoord aAvailableISize);
 
   bool FlowAndPlaceFloat(nsIFrame* aFloat);
 
@@ -160,8 +158,7 @@ public:
   // floats indicated by aBreakType and has enough inline size between floats
   // (or no floats remaining) to accomodate aReplacedBlock.
   nscoord ClearFloats(nscoord aBCoord, mozilla::StyleClear aBreakType,
-                      nsIFrame *aReplacedBlock = nullptr,
-                      uint32_t aFlags = 0);
+                      nsIFrame* aReplacedBlock = nullptr, uint32_t aFlags = 0);
 
   nsFloatManager* FloatManager() const {
     MOZ_ASSERT(mReflowInput.mFloatManager,
@@ -176,7 +173,7 @@ public:
   // constrained heights (and means that we should get pushed to the
   // next column/page).
   bool AdvanceToNextBand(const mozilla::LogicalRect& aFloatAvailableSpace,
-                         nscoord *aBCoord) const {
+                         nscoord* aBCoord) const {
     mozilla::WritingMode wm = mReflowInput.GetWritingMode();
     if (aFloatAvailableSpace.BSize(wm) > 0) {
       // See if there's room in the next band.
@@ -193,8 +190,9 @@ public:
     return true;
   }
 
-  bool ReplacedBlockFitsInAvailSpace(nsIFrame* aReplacedBlock,
-                            const nsFlowAreaRect& aFloatAvailableSpace) const;
+  bool ReplacedBlockFitsInAvailSpace(
+      nsIFrame* aReplacedBlock,
+      const nsFlowAreaRect& aFloatAvailableSpace) const;
 
   bool IsAdjacentWithTop() const {
     return mBCoord == mBorderPadding.BStart(mReflowInput.GetWritingMode());
@@ -203,9 +201,7 @@ public:
   /**
    * Return mBlock's computed physical border+padding with GetSkipSides applied.
    */
-  const mozilla::LogicalMargin& BorderPadding() const {
-    return mBorderPadding;
-  }
+  const mozilla::LogicalMargin& BorderPadding() const { return mBorderPadding; }
 
   /**
    * Retrieve the block-axis content size "consumed" by any prev-in-flows.
@@ -218,10 +214,9 @@ public:
 
   // Caller must have called GetAvailableSpace for the correct position
   // (which need not be the current mBCoord).
-  void ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
-                          const mozilla::LogicalRect& aFloatAvailableSpace,
-                                            nscoord&  aIStartResult,
-                                            nscoord&  aIEndResult) const;
+  void ComputeReplacedBlockOffsetsForFloats(
+      nsIFrame* aFrame, const mozilla::LogicalRect& aFloatAvailableSpace,
+      nscoord& aIStartResult, nscoord& aIEndResult) const;
 
   // Caller must have called GetAvailableSpace for the current mBCoord
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
@@ -309,7 +304,7 @@ public:
   // Continuation out-of-flow float frames that need to move to our
   // next in flow are placed here during reflow.  It's a pointer to
   // a frame list stored in the block's property table.
-  nsFrameList *mPushedFloats;
+  nsFrameList* mPushedFloats;
   // This method makes sure pushed floats are accessible to
   // StealFrame. Call it before adding any frames to mPushedFloats.
   void SetupPushedFloatList();
@@ -393,7 +388,8 @@ public:
 
   StyleClear mFloatBreakType;
 
-  // The amount of computed block-direction size "consumed" by previous-in-flows.
+  // The amount of computed block-direction size "consumed" by
+  // previous-in-flows.
   nscoord mConsumedBSize;
 
   // Cache the current line's BSize if nsBlockFrame::PlaceLine() fails to
@@ -402,7 +398,7 @@ public:
   // nsBlockFrame::PlaceLine().
   mozilla::Maybe<nscoord> mLineBSize;
 
-private:
+ private:
   bool CanPlaceFloat(nscoord aFloatISize,
                      const nsFlowAreaRect& aFloatAvailableSpace);
 
@@ -411,6 +407,6 @@ private:
   void RecoverFloats(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 };
 
-}; // namespace mozilla
+};  // namespace mozilla
 
-#endif // BlockReflowInput_h
+#endif  // BlockReflowInput_h

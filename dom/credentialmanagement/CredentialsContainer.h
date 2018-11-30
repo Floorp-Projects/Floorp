@@ -14,37 +14,30 @@ namespace dom {
 
 class WebAuthnManager;
 
-class CredentialsContainer final : public nsISupports
-                                 , public nsWrapperCache
-{
-public:
+class CredentialsContainer final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CredentialsContainer)
 
   explicit CredentialsContainer(nsPIDOMWindowInner* aParent);
 
-  nsPIDOMWindowInner*
-  GetParentObject() const
-  {
-    return mParent;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mParent; }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  already_AddRefed<Promise>
-  Get(const CredentialRequestOptions& aOptions, ErrorResult& aRv);
+  already_AddRefed<Promise> Get(const CredentialRequestOptions& aOptions,
+                                ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  Create(const CredentialCreationOptions& aOptions, ErrorResult& aRv);
+  already_AddRefed<Promise> Create(const CredentialCreationOptions& aOptions,
+                                   ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  Store(const Credential& aCredential, ErrorResult& aRv);
+  already_AddRefed<Promise> Store(const Credential& aCredential,
+                                  ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  PreventSilentAccess(ErrorResult& aRv);
+  already_AddRefed<Promise> PreventSilentAccess(ErrorResult& aRv);
 
-private:
+ private:
   ~CredentialsContainer();
 
   void EnsureWebAuthnManager();
@@ -53,7 +46,7 @@ private:
   RefPtr<WebAuthnManager> mManager;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CredentialsContainer_h
+#endif  // mozilla_dom_CredentialsContainer_h

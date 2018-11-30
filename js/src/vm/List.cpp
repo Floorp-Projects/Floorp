@@ -2,6 +2,4 @@
 
 using namespace js;
 
-const Class ListObject::class_ = {
-    "List"
-};
+const Class ListObject::class_ = {"List"};

@@ -16,17 +16,17 @@ typedef mozilla::gfx::FontVariation gfxFontVariation;
 // Structure that describes a single axis of variation in an
 // OpenType Variation or Multiple-Master font.
 struct gfxFontVariationAxis {
-    uint32_t mTag;
-    nsCString mName; // may be empty
-    float    mMinValue;
-    float    mMaxValue;
-    float    mDefaultValue;
+  uint32_t mTag;
+  nsCString mName;  // may be empty
+  float mMinValue;
+  float mMaxValue;
+  float mDefaultValue;
 };
 
 // A single <axis, value> pair that may be applied to a variation font.
 struct gfxFontVariationValue {
-    uint32_t mAxis;
-    float    mValue;
+  uint32_t mAxis;
+  float mValue;
 };
 
 // Structure that describes a named instance of a variation font:
@@ -34,8 +34,8 @@ struct gfxFontVariationValue {
 // and a list of the corresponding <variation-axis, value> pairs
 // to be used.
 struct gfxFontVariationInstance {
-    nsCString mName;
-    nsTArray<gfxFontVariationValue> mValues;
+  nsCString mName;
+  nsTArray<gfxFontVariationValue> mValues;
 };
 
 #endif

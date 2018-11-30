@@ -12,17 +12,11 @@
 
 using namespace mozilla::intl;
 
-OSPreferences::OSPreferences()
-{
-}
+OSPreferences::OSPreferences() {}
 
-OSPreferences::~OSPreferences()
-{
-}
+OSPreferences::~OSPreferences() {}
 
-bool
-OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
-{
+bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
   MOZ_ASSERT(aLocaleList.IsEmpty());
 
   ULONG numLanguages = 0;
@@ -49,9 +43,7 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
   return false;
 }
 
-bool
-OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList)
-{
+bool OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList) {
   MOZ_ASSERT(aLocaleList.IsEmpty());
 
   WCHAR locale[LOCALE_NAME_MAX_LENGTH];
@@ -69,9 +61,7 @@ OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList)
   return false;
 }
 
-static LCTYPE
-ToDateLCType(OSPreferences::DateTimeFormatStyle aFormatStyle)
-{
+static LCTYPE ToDateLCType(OSPreferences::DateTimeFormatStyle aFormatStyle) {
   switch (aFormatStyle) {
     case OSPreferences::DateTimeFormatStyle::None:
       return LOCALE_SLONGDATE;
@@ -90,9 +80,7 @@ ToDateLCType(OSPreferences::DateTimeFormatStyle aFormatStyle)
   }
 }
 
-static LCTYPE
-ToTimeLCType(OSPreferences::DateTimeFormatStyle aFormatStyle)
-{
+static LCTYPE ToTimeLCType(OSPreferences::DateTimeFormatStyle aFormatStyle) {
   switch (aFormatStyle) {
     case OSPreferences::DateTimeFormatStyle::None:
       return LOCALE_STIMEFORMAT;
@@ -128,11 +116,10 @@ ToTimeLCType(OSPreferences::DateTimeFormatStyle aFormatStyle)
  * for combined date/time string, since Windows API does not provide an
  * option for this.
  */
-bool
-OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
-                                   DateTimeFormatStyle aTimeStyle,
-                                   const nsACString& aLocale, nsAString& aRetVal)
-{
+bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
+                                        DateTimeFormatStyle aTimeStyle,
+                                        const nsACString& aLocale,
+                                        nsAString& aRetVal) {
   nsAutoString localeName;
   CopyASCIItoUTF16(aLocale, localeName);
 
@@ -163,18 +150,22 @@ OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
 
   if (isDate) {
     LCTYPE lcType = ToDateLCType(aDateStyle);
-    size_t len = GetLocaleInfoEx(reinterpret_cast<const wchar_t*>(localeName.BeginReading()), lcType, nullptr, 0);
+    size_t len = GetLocaleInfoEx(
+        reinterpret_cast<const wchar_t*>(localeName.BeginReading()), lcType,
+        nullptr, 0);
     if (len == 0) {
       return false;
     }
 
-    // We're doing it to ensure the terminator will fit when Windows writes the data
-    // to its output buffer. See bug 1358159 for details.
+    // We're doing it to ensure the terminator will fit when Windows writes the
+    // data to its output buffer. See bug 1358159 for details.
     str->SetLength(len);
-    GetLocaleInfoEx(reinterpret_cast<const wchar_t*>(localeName.BeginReading()), lcType, (WCHAR*)str->BeginWriting(), len);
-    str->SetLength(len - 1); // -1 because len counts the null terminator
+    GetLocaleInfoEx(reinterpret_cast<const wchar_t*>(localeName.BeginReading()),
+                    lcType, (WCHAR*)str->BeginWriting(), len);
+    str->SetLength(len - 1);  // -1 because len counts the null terminator
 
-    // Windows uses "ddd" and "dddd" for abbreviated and full day names respectively,
+    // Windows uses "ddd" and "dddd" for abbreviated and full day names
+    // respectively,
     //   https://msdn.microsoft.com/en-us/library/windows/desktop/dd317787(v=vs.85).aspx
     // but in a CLDR/ICU-style pattern these should be "EEE" and "EEEE".
     //   http://userguide.icu-project.org/formatparse/datetime
@@ -191,8 +182,8 @@ OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
       }
     }
 
-    // Also, Windows uses lowercase "g" or "gg" for era, but ICU wants uppercase "G"
-    // (it would interpret "g" as "modified Julian day"!). So fix that.
+    // Also, Windows uses lowercase "g" or "gg" for era, but ICU wants uppercase
+    // "G" (it would interpret "g" as "modified Julian day"!). So fix that.
     int32_t index = str->FindChar('g');
     if (index >= 0) {
       str->Replace(index, 1, 'G');
@@ -203,8 +194,8 @@ OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
       }
     }
 
-    // If time was also requested, we need to substitute the date pattern from Windows
-    // into the date+time format that we have in aRetVal.
+    // If time was also requested, we need to substitute the date pattern from
+    // Windows into the date+time format that we have in aRetVal.
     if (isTime) {
       nsAString::const_iterator start, pos, end;
       start = aRetVal.BeginReading(pos);
@@ -217,15 +208,18 @@ OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
 
   if (isTime) {
     LCTYPE lcType = ToTimeLCType(aTimeStyle);
-    size_t len = GetLocaleInfoEx(reinterpret_cast<const wchar_t*>(localeName.BeginReading()), lcType, nullptr, 0);
+    size_t len = GetLocaleInfoEx(
+        reinterpret_cast<const wchar_t*>(localeName.BeginReading()), lcType,
+        nullptr, 0);
     if (len == 0) {
       return false;
     }
 
-    // We're doing it to ensure the terminator will fit when Windows writes the data
-    // to its output buffer. See bug 1358159 for details.
+    // We're doing it to ensure the terminator will fit when Windows writes the
+    // data to its output buffer. See bug 1358159 for details.
     str->SetLength(len);
-    GetLocaleInfoEx(reinterpret_cast<const wchar_t*>(localeName.BeginReading()), lcType, (WCHAR*)str->BeginWriting(), len);
+    GetLocaleInfoEx(reinterpret_cast<const wchar_t*>(localeName.BeginReading()),
+                    lcType, (WCHAR*)str->BeginWriting(), len);
     str->SetLength(len - 1);
 
     // Windows uses "t" or "tt" for a "time marker" (am/pm indicator),
