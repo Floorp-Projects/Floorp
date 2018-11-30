@@ -6,6 +6,9 @@
         <meta name="viewport" content="width=device-width">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script src="pointerevent_support.js"></script>
     </head>
     <body onload="run()">
@@ -33,7 +36,12 @@
                 on_event(target0, "pointerover", function (event) {
                     detected_pointertypes[event.pointerType] = true;
                     target0.setPointerCapture(event.pointerId);
+                    // After we receive a pointerover event, dispatch a pointer move to move out of target0.
+                    new test_driver.Actions().pointerMove(0, 0).send();
                 });
+
+                // First dispatch a pointer move to target0.
+                new test_driver.Actions().pointerMove(0, 0, {origin: target0}).send();
 
                  // When the setPointerCapture method is invoked, if the specified pointer is not in active button state, then the method must have no effect on subsequent pointer events.
                  // TA: 13.2
