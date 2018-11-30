@@ -259,6 +259,10 @@ nsresult nsIOService::Init() {
 
   SetOffline(false);
 
+  RefPtr<NetworkConnectivityService> ncs =
+      NetworkConnectivityService::GetSingleton();
+  ncs->Init();
+
   return NS_OK;
 }
 
@@ -280,10 +284,6 @@ nsresult nsIOService::InitializeCaptivePortalService() {
     return static_cast<CaptivePortalService *>(mCaptivePortalService.get())
         ->Initialize();
   }
-
-  RefPtr<NetworkConnectivityService> ncs =
-      NetworkConnectivityService::GetSingleton();
-  ncs->Init();
 
   return NS_OK;
 }
