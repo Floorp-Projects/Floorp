@@ -4,9 +4,38 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.34.0-SNAPSHOT (In Development)
+# 0.35.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.33.0...master),
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.34.0...master),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/37?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.35.0/index)
+
+* Compiled against:
+  * Android (SDK: 28, Support Libraries: 28.0.0)
+  * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
+  * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
+  * GeckoView (Nightly: 65.0.20181129095546, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
+  * Mozilla App Services (FxA: 0.11.2, Sync Logins: 0.11.2, Places: 0.11.2)
+  * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
+
+# 0.34.1
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.34.0...v0.34.1)
+
+* Compiled against:
+  * Android (SDK: 28, Support Libraries: 28.0.0)
+  * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
+  * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
+  * GeckoView (Nightly: **65.0.20181129095546** 🔺, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
+  * Mozilla App Services (FxA: 0.11.2, Sync Logins: 0.11.2, Places: 0.11.2)
+  * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
+
+* **browser-engine-gecko-nightly**
+  * Updated GeckoView dependency.
+
+# 0.34.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.33.0...v0.34.0),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/36?closed=1),
 [API reference](https://mozilla-mobile.github.io/android-components/api/0.34.0/index)
 
