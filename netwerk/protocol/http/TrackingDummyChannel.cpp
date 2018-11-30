@@ -626,5 +626,9 @@ TrackingDummyChannel::CancelForTrackingProtection() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void TrackingDummyChannel::SetIPv4Disabled() {}
+
+void TrackingDummyChannel::SetIPv6Disabled() {}
+
 }  // namespace net
 }  // namespace mozilla

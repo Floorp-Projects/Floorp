@@ -4508,5 +4508,9 @@ HttpBaseChannel::CancelForTrackingProtection() {
   return Cancel(NS_ERROR_TRACKING_URI);
 }
 
+void HttpBaseChannel::SetIPv4Disabled() { mCaps |= NS_HTTP_DISABLE_IPV4; }
+
+void HttpBaseChannel::SetIPv6Disabled() { mCaps |= NS_HTTP_DISABLE_IPV6; }
+
 }  // namespace net
 }  // namespace mozilla
