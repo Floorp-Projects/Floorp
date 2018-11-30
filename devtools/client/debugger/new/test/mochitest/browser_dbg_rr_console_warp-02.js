@@ -3,6 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+
 // This functionality was copied from devtools/client/webconsole/test/mochitest/head.js,
 // since this test straddles both the web console and the debugger. I couldn't
 // figure out how to load that script directly here.
@@ -24,7 +25,7 @@ async function test() {
   waitForExplicitFinish();
 
   const dbg = await attatchRecordingDebugger(
-    "doc_rr_error.html", 
+    "doc_rr_logs.html", 
     { waitForRecording: true }
   );
 
@@ -32,20 +33,14 @@ async function test() {
   const console = await getSplitConsole(dbg);
   const hud = console.hud;
 
-  await warpToMessage(hud, threadClient, "Number 5");
-  await threadClient.interrupt();
+  let message = await warpToMessage(hud, threadClient, "number: 1");
+  ok(!message.classList.contains("paused-before"), "paused before message is not shown");
 
-  await checkEvaluateInTopFrame(threadClient, "number", 5);
+  await stepOverToLine(threadClient, 18);
+  await reverseStepOverToLine(threadClient, 17);
 
-  // Initially we are paused inside the 'new Error()' call on line 19. The
-  // first reverse step takes us to the start of that line.
-  await reverseStepOverToLine(threadClient, 19);
-  await reverseStepOverToLine(threadClient, 18);
-  await setBreakpoint(threadClient, "doc_rr_error.html", 12);
-  await rewindToLine(threadClient, 12);
-  await checkEvaluateInTopFrame(threadClient, "number", 4);
-  await resumeToLine(threadClient, 12);
-  await checkEvaluateInTopFrame(threadClient, "number", 5);
+  message = findMessage(hud, "number: 1")
+  ok(message.classList.contains("paused-before"), "paused before message is shown");
 
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
