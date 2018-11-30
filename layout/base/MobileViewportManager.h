@@ -93,11 +93,23 @@ public:
                             const mozilla::CSSSize& aNewViewport,
                             const mozilla::CSSSize& aOldViewport);
 
+  /* Helper enum for UpdateResolution().
+   * UpdateResolution() is called twice during RefreshViewportSize():
+   * First, to choose an initial resolution based on the viewport size.
+   * Second, after reflow when we know the content size, to make any
+   * necessary adjustments to the resolution.
+   * This enumeration discriminates between the two situations.
+   */
+  enum class UpdateType {
+    ViewportSize, ContentSize
+  };
+
   /* Updates the presShell resolution and the visual viewport size. */
   void UpdateResolution(const nsViewportInfo& aViewportInfo,
                         const mozilla::ScreenIntSize& aDisplaySize,
-                        const mozilla::CSSSize& aViewport,
-                        const mozilla::Maybe<float>& aDisplayWidthChangeRatio);
+                        const mozilla::CSSSize& aViewportOrContentSize,
+                        const mozilla::Maybe<float>& aDisplayWidthChangeRatio,
+                        UpdateType aType);
 
   void UpdateVisualViewportSize(const mozilla::ScreenIntSize& aDisplaySize,
                                 const mozilla::CSSToScreenScale& aZoom);
