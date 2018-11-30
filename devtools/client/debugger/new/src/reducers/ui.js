@@ -12,7 +12,7 @@
 import makeRecord from "../utils/makeRecord";
 import { prefs } from "../utils/prefs";
 
-import type { Source, Range } from "../types";
+import type { Source, PartialRange } from "../types";
 
 import type { Action, panelPositionType } from "../actions/types";
 import type { Record } from "../utils/makeRecord";
@@ -23,7 +23,7 @@ export type OrientationType = "horizontal" | "vertical";
 
 export type SelectedPrimaryPaneTabType = "sources" | "outline";
 
-type Viewport = Range;
+type Viewport = PartialRange;
 
 export type UIState = {
   selectedPrimaryPaneTab: SelectedPrimaryPaneTabType,

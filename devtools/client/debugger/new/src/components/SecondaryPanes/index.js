@@ -29,7 +29,6 @@ import Breakpoints from "./Breakpoints";
 import Expressions from "./Expressions";
 import SplitBox from "devtools-splitter";
 import Frames from "./Frames";
-import EventListeners from "./EventListeners";
 import Workers from "./Workers";
 import Accordion from "../shared/Accordion";
 import CommandBar from "./CommandBar";
@@ -346,14 +345,6 @@ class SecondaryPanes extends Component<Props, State> {
 
     if (features.xhrBreakpoints) {
       items.push(this.getXHRItem());
-    }
-
-    if (features.eventListeners) {
-      items.push({
-        header: L10N.getStr("eventListenersHeader"),
-        className: "event-listeners-pane",
-        component: <EventListeners />
-      });
     }
 
     return items.filter(item => item);

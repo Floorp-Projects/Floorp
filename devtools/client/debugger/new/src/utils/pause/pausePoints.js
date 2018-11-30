@@ -6,10 +6,10 @@
 import { reverse } from "lodash";
 
 import type { PausePoints } from "../../workers/parser";
-import type { ColumnPosition } from "../../types";
+import type { Position } from "../../types";
 
 type PausePoint = {
-  location: ColumnPosition,
+  location: Position,
   types: { break: boolean, step: boolean }
 };
 
@@ -23,11 +23,7 @@ export function convertToList(pausePoints: PausePoints): PausePoint[] {
   const list = [];
   for (const line in pausePoints) {
     for (const column in pausePoints[line]) {
-      const point = pausePoints[line][column];
-      list.push({
-        location: { line: parseInt(line, 10), column: parseInt(column, 10) },
-        types: point
-      });
+      list.push(pausePoints[line][column]);
     }
   }
   return list;
@@ -44,4 +40,17 @@ export function formatPausePoints(text: string, pausePoints: PausePoints) {
   });
 
   return lines.join("\n");
+}
+
+export async function mapPausePoints(pausePoints, iteratee) {
+  const results = await Promise.all(convertToList(pausePoints).map(iteratee));
+
+  for (const line in pausePoints) {
+    const linePoints = pausePoints[line];
+    for (const column in linePoints) {
+      linePoints[column] = results.shift();
+    }
+  }
+
+  return pausePoints;
 }

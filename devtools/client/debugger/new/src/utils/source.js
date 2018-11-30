@@ -21,7 +21,7 @@ export { isMinified } from "./isMinified";
 import { getURL, getFileExtension } from "./sources-tree";
 import { prefs } from "./prefs";
 
-import type { Source, Location, JsSource } from "../types";
+import type { Source, SourceLocation, JsSource } from "../types";
 import type { SourceMetaDataType } from "../reducers/ast";
 import type { SymbolDeclarations } from "../workers/parser";
 
@@ -386,7 +386,7 @@ export function isLoading(source: Source) {
   return source.loadedState === "loading";
 }
 
-export function getTextAtPosition(source: ?Source, location: Location) {
+export function getTextAtPosition(source: ?Source, location: SourceLocation) {
   if (!source || !source.text) {
     return "";
   }

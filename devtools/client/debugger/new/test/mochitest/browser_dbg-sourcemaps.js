@@ -39,13 +39,12 @@ function clickGutter(dbg, line) {
 
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  const dbg = await initDebugger("doc-sourcemaps.html");
+  const dbg = await initDebugger("doc-sourcemaps.html", "entry.js", "output.js", "times2.js", "opts.js");
   const {
     selectors: { getBreakpoint, getBreakpointCount },
     getState
   } = dbg;
 
-  await waitForSources(dbg, "entry.js", "output.js", "times2.js", "opts.js");
   ok(true, "Original sources exist");
   const bundleSrc = findSource(dbg, "bundle.js");
 

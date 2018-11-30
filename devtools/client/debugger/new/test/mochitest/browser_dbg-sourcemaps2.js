@@ -18,13 +18,11 @@ function assertBpInGutter(dbg, lineNumber) {
 // This source map does not have source contents, so it's fetched separately
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  const dbg = await initDebugger("doc-sourcemaps2.html");
+  const dbg = await initDebugger("doc-sourcemaps2.html", "main.js", "main.min.js");
   const {
     selectors: { getBreakpoint, getBreakpointCount },
     getState
   } = dbg;
-
-  await waitForSources(dbg, "main.js", "main.min.js");
 
   ok(true, "Original sources exist");
   const mainSrc = findSource(dbg, "main.js");
