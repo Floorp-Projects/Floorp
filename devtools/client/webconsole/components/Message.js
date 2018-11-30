@@ -44,9 +44,7 @@ class Message extends Component {
       attachment: PropTypes.any,
       stacktrace: PropTypes.any,
       messageId: PropTypes.string,
-      executionPoint: PropTypes.shape({
-        progress: PropTypes.number,
-      }),
+      executionPoint: PropTypes.string,
       scrollToMessage: PropTypes.bool,
       exceptionDocURL: PropTypes.string,
       request: PropTypes.object,
@@ -81,7 +79,6 @@ class Message extends Component {
     this.onLearnMoreClick = this.onLearnMoreClick.bind(this);
     this.toggleMessage = this.toggleMessage.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
-    this.onMouseEvent = this.onMouseEvent.bind(this);
     this.renderIcon = this.renderIcon.bind(this);
   }
 
@@ -125,13 +122,6 @@ class Message extends Component {
     e.preventDefault();
   }
 
-  onMouseEvent(ev) {
-    const {messageId, serviceContainer, executionPoint} = this.props;
-    if (serviceContainer.canRewind() && executionPoint) {
-      serviceContainer.onMessageHover(ev.type, messageId);
-    }
-  }
-
   renderIcon() {
     const { level, messageId, executionPoint, serviceContainer } = this.props;
 
@@ -161,17 +151,12 @@ class Message extends Component {
       exceptionDocURL,
       timeStamp = Date.now(),
       timestampsVisible,
-      executionPoint,
       notes,
     } = this.props;
 
-    topLevelClasses.push("message", source, type, level);
+    topLevelClasses.push("message", source, type, level, isPaused ? "paused" : "");
     if (open) {
       topLevelClasses.push("open");
-    }
-
-    if (isPaused) {
-      topLevelClasses.push("paused");
     }
 
     let timestampEl;
@@ -277,14 +262,9 @@ class Message extends Component {
 
     const bodyElements = Array.isArray(messageBody) ? messageBody : [messageBody];
 
-    const mouseEvents = serviceContainer.canRewind() && executionPoint
-      ? { onMouseEnter: this.onMouseEvent, onMouseLeave: this.onMouseEvent }
-      : {};
-
     return dom.div({
       className: topLevelClasses.join(" "),
       onContextMenu: this.onContextMenu,
-      ...mouseEvents,
       ref: node => {
         this.messageNode = node;
       },
