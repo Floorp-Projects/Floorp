@@ -255,6 +255,25 @@ nsServerSocket::Init(int32_t aPort, bool aLoopbackOnly, int32_t aBackLog) {
 }
 
 NS_IMETHODIMP
+nsServerSocket::InitIPv6(int32_t aPort, bool aLoopbackOnly, int32_t aBackLog) {
+  PRNetAddrValue val;
+  PRNetAddr addr;
+
+  if (aPort < 0) {
+    aPort = 0;
+  }
+  if (aLoopbackOnly) {
+    val = PR_IpAddrLoopback;
+  } else {
+    val = PR_IpAddrAny;
+  }
+  PR_SetNetAddr(val, PR_AF_INET6, aPort, &addr);
+
+  mKeepWhenOffline = false;
+  return InitWithAddress(&addr, aBackLog);
+}
+
+NS_IMETHODIMP
 nsServerSocket::InitWithFilename(nsIFile *aPath, uint32_t aPermissions,
                                  int32_t aBacklog) {
 #if defined(XP_UNIX)
