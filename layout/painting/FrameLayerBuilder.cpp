@@ -5145,8 +5145,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       ContainerLayerParameters params = mParameters;
       params.mBackgroundColor = uniformColor;
       params.mLayerCreationHint = GetLayerCreationHint(itemAGR);
-      params.mScrollMetadataASR = ActiveScrolledRoot::PickDescendant(
-        mContainerScrollMetadataASR, scrollMetadataASR);
+      params.mScrollMetadataASR =
+        ActiveScrolledRoot::IsAncestor(scrollMetadataASR, mContainerScrollMetadataASR)
+          ? mContainerScrollMetadataASR
+          : scrollMetadataASR;
       params.mCompositorASR =
         params.mScrollMetadataASR != mContainerScrollMetadataASR
           ? params.mScrollMetadataASR
