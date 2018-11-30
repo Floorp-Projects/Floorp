@@ -77,6 +77,7 @@ extensions.registerModules({
     scopes: ["content_child"],
     paths: [
       ["userScripts", "setScriptAPIs"],
+      ["userScripts", "onBeforeScript"],
     ],
   },
   webRequest: {
