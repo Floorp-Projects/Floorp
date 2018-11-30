@@ -246,6 +246,8 @@ class LMulI : public LBinaryMath<0> {
  public:
   LIR_HEADER(MulI);
 
+  LMulI() : LBinaryMath(classOpcode) {}
+
   MMul* mir() { return mir_->toMul(); }
 };
 

@@ -296,6 +296,9 @@ void CodeGenerator::visitMulI(LMulI* ins) {
                 !mul->canBeNegativeZero() && !mul->canOverflow());
 
   Register lhsreg = ToRegister(lhs);
+  const ARMRegister lhsreg32 = ARMRegister(lhsreg, 32);
+  Register destreg = ToRegister(dest);
+  const ARMRegister destreg32 = ARMRegister(destreg, 32);
 
   if (rhs->isConstant()) {
     // Bailout on -0.0.
@@ -309,23 +312,23 @@ void CodeGenerator::visitMulI(LMulI* ins) {
 
     switch (constant) {
       case -1:
-        masm.neg32(lhsreg);
-        break;
+        masm.Negs(destreg32, Operand(lhsreg32));
+        break;  // Go to overflow check.
       case 0:
-        masm.Mov(ARMRegister(lhsreg, 32), wzr);
-        return;  // escape overflow check;
+        masm.Mov(destreg32, wzr);
+        return;  // Avoid overflow check.
       case 1:
         // nop
-        return;  // escape overflow check;
+        return;  // Avoid overflow check.
       case 2:
-        masm.add32(lhsreg, lhsreg);
-        break;
+        masm.Adds(destreg32, lhsreg32, Operand(lhsreg32));
+        break;  // Go to overflow check.
       default:
         // Use shift if cannot overflow and constant is a power of 2
         if (!mul->canOverflow() && constant > 0) {
           int32_t shift = FloorLog2(constant);
           if ((1 << shift) == constant) {
-            masm.lshift32(Imm32(shift), lhsreg);
+            masm.Lsl(destreg32, lhsreg32, shift);
             return;
           }
         }
@@ -339,7 +342,7 @@ void CodeGenerator::visitMulI(LMulI* ins) {
         const Register scratch = temps.AcquireW().asUnsized();
 
         masm.move32(Imm32(constant), scratch);
-        masm.mul32(lhsreg, scratch, ToRegister(dest), onOverflow, onZero);
+        masm.mul32(lhsreg, scratch, destreg, onOverflow, onZero);
         if (onZero || onOverflow) {
           bailoutFrom(&bailout, ins->snapshot());
         }
@@ -358,7 +361,7 @@ void CodeGenerator::visitMulI(LMulI* ins) {
     Label* onZero = mul->canBeNegativeZero() ? &bailout : nullptr;
     Label* onOverflow = mul->canOverflow() ? &bailout : nullptr;
 
-    masm.mul32(lhsreg, rhsreg, ToRegister(dest), onOverflow, onZero);
+    masm.mul32(lhsreg, rhsreg, destreg, onOverflow, onZero);
     if (onZero || onOverflow) {
       bailoutFrom(&bailout, ins->snapshot());
     }
