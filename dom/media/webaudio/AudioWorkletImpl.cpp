@@ -7,6 +7,7 @@
 #include "AudioWorkletImpl.h"
 
 #include "AudioContext.h"
+#include "AudioNodeStream.h"
 #include "mozilla/dom/AudioWorkletBinding.h"
 #include "mozilla/dom/AudioWorkletGlobalScope.h"
 #include "mozilla/dom/Worklet.h"
@@ -31,13 +32,16 @@ namespace mozilla {
     return nullptr;
   }
 
-  RefPtr<AudioWorkletImpl> impl = new AudioWorkletImpl(window, principal);
+  RefPtr<AudioWorkletImpl> impl =
+      new AudioWorkletImpl(window, principal, aContext->DestinationStream());
   return MakeAndAddRef<dom::Worklet>(window, std::move(impl));
 }
 
 AudioWorkletImpl::AudioWorkletImpl(nsPIDOMWindowInner* aWindow,
-                                   nsIPrincipal* aPrincipal)
-    : WorkletImpl(aWindow, aPrincipal) {}
+                                   nsIPrincipal* aPrincipal,
+                                   AudioNodeStream* aDestinationStream)
+    : WorkletImpl(aWindow, aPrincipal),
+      mDestinationStream(aDestinationStream) {}
 
 AudioWorkletImpl::~AudioWorkletImpl() = default;
 
