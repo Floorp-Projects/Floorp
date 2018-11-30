@@ -212,9 +212,16 @@ class MediaManager final : public nsIMediaManagerService,
   static void CallOnSuccess(const GetUserMediaSuccessCallback* aCallback,
                             DOMMediaStream& aStream);
 
+  typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
+  typedef media::Refcountable<UniquePtr<MediaDeviceSet>> MediaDeviceSetRefCnt;
+
   typedef MozPromise<RefPtr<DOMMediaStream>, RefPtr<dom::MediaStreamError>,
                      true>
       StreamPromise;
+  typedef MozPromise<RefPtr<MediaDeviceSetRefCnt>,
+                     RefPtr<dom::MediaStreamError>, true>
+      MediaDeviceSetPromise;
+  typedef MozPromise<const char*, nsresult, false> BadConstraintsPromise;
 
   RefPtr<StreamPromise> GetUserMedia(
       nsPIDOMWindowInner* aWindow,
@@ -226,11 +233,8 @@ class MediaManager final : public nsIMediaManagerService,
       const dom::MediaStreamConstraints& aConstraints,
       dom::MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
       uint64_t aInnerWindowID = 0, const nsAString& aCallID = nsString());
-
-  nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow,
-                            nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
-                            nsIDOMGetUserMediaErrorCallback* aOnFailure,
-                            dom::CallerType aCallerType);
+  RefPtr<MediaDeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
+                                                 dom::CallerType aCallerType);
 
   nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow,
                             dom::Promise& aPromise);
@@ -259,9 +263,6 @@ class MediaManager final : public nsIMediaManagerService,
 
   MediaEnginePrefs mPrefs;
 
-  typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
-  typedef media::Refcountable<UniquePtr<MediaDeviceSet>> MediaDeviceSetRefCnt;
-
   virtual int AddDeviceChangeCallback(DeviceChangeCallback* aCallback) override;
   virtual void OnDeviceChange() override;
 
@@ -282,11 +283,6 @@ class MediaManager final : public nsIMediaManagerService,
     Loopback /* Enumeration should return loopback device(s) (possibly in
              addition to normal devices) */
   };
-
-  typedef MozPromise<RefPtr<MediaDeviceSetRefCnt>,
-                     RefPtr<dom::MediaStreamError>, true>
-      MediaDeviceSetPromise;
-  typedef MozPromise<const char*, nsresult, false> BadConstraintsPromise;
 
   RefPtr<MediaDeviceSetPromise> EnumerateRawDevices(
       uint64_t aWindowId, dom::MediaSourceEnum aVideoInputType,
