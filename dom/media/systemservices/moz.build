@@ -29,6 +29,7 @@ if CONFIG['MOZ_WEBRTC']:
     if CONFIG['OS_TARGET'] != 'Android':
         UNIFIED_SOURCES += [
             'video_engine/desktop_capture_impl.cc',
+            'video_engine/platform_uithread.cc',
         ]
 
 if CONFIG['OS_TARGET'] == 'Android':
