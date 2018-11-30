@@ -26,13 +26,6 @@ add_task(async function setup() {
   });
 });
 
-function openIdentityPopup() {
-  let mainView = document.getElementById("identity-popup-mainView");
-  let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  gIdentityHandler._identityBox.click();
-  return viewShown;
-}
-
 add_task(async function testReportBreakageVisibility() {
   let scenarios = [
     {
