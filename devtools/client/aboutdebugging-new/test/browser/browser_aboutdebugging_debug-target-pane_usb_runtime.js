@@ -13,10 +13,6 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
 // Test that the expected supported categories are displayed for USB runtimes.
 add_task(async function() {
   const mocks = new Mocks();
-  mocks.enableMocks();
-  registerCleanupFunction(() => {
-    mocks.disableMocks();
-  });
 
   const { document, tab } = await openAboutDebugging();
 
