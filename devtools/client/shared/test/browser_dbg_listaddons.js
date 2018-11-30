@@ -16,10 +16,10 @@ var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 /**
  * Make sure the listAddons request works as specified.
  */
-const ADDON1_ID = "jid1-oBAwBoE5rSecNg@jetpack";
-const ADDON1_PATH = "addon1.xpi";
-const ADDON2_ID = "jid1-qjtzNGV8xw5h2A@jetpack";
-const ADDON2_PATH = "addon2.xpi";
+const ADDON1_ID = "test-addon-1@mozilla.org";
+const ADDON1_PATH = "addons/test-addon-1/";
+const ADDON2_ID = "test-addon-2@mozilla.org";
+const ADDON2_PATH = "addons/test-addon-2/";
 
 var gAddon1, gAddon1Front, gAddon2, gClient;
 
