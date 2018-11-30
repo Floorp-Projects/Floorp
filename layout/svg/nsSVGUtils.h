@@ -550,8 +550,8 @@ public:
              FillRule::FILL_EVEN_ODD : FillRule::FILL_WINDING;
   }
 
-  static AntialiasMode ToAntialiasMode(uint8_t aTextRendering) {
-    return aTextRendering == NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED ?
+  static AntialiasMode ToAntialiasMode(mozilla::StyleTextRendering aTextRendering) {
+    return aTextRendering == mozilla::StyleTextRendering::Optimizespeed ?
              AntialiasMode::NONE : AntialiasMode::SUBPIXEL;
   }
 

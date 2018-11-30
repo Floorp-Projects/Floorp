@@ -139,6 +139,7 @@ rusty-enums = [
     "mozilla::StyleOverscrollBehavior",
     "mozilla::StyleScrollbarWidth",
     "mozilla::StyleWhiteSpace",
+    "mozilla::StyleTextRendering",
     "nsStyleImageType",
     "nsStyleSVGPaintType",
     "nsStyleSVGFallbackType",
