@@ -449,7 +449,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of title changes`() = runBlocking {
+    fun `notifies configured history delegate of title changes`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
 
@@ -469,7 +469,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of title changes for private sessions`() = runBlocking {
+    fun `notifies configured history delegate of title changes for private sessions`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java), privateMode = true)
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
 

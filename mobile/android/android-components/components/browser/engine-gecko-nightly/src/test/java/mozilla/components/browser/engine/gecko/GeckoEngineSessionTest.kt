@@ -446,7 +446,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `GeckoEngineSession keeps track of current url via onPageStart events`() {
+    fun `keeps track of current url via onPageStart events`() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider)
 
@@ -461,7 +461,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of title changes`() = runBlocking {
+    fun `notifies configured history delegate of title changes`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext)
@@ -485,7 +485,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client does not notify configured history delegate of title changes for private sessions`() = runBlocking {
+    fun `does not notify configured history delegate of title changes for private sessions`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext,
@@ -515,7 +515,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client does not notify configured history delegate for redirects`() {
+    fun `does not notify configured history delegate for redirects`() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext)
@@ -539,7 +539,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client does not notify configured history delegate for top-level visits to error pages`() {
+    fun `does not notify configured history delegate for top-level visits to error pages`() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext)
@@ -557,7 +557,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of visits`() {
+    fun `notifies configured history delegate of visits`() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext)
@@ -575,7 +575,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of reloads`() = runBlocking {
+    fun `notifies configured history delegate of reloads`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext)
@@ -593,7 +593,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client does not notify configured history delegate of visits for private sessions`() {
+    fun `does not notify configured history delegate of visits for private sessions`() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext,
@@ -612,7 +612,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client requests visited URLs from configured history delegate`() {
+    fun `requests visited URLs from configured history delegate`() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext)
@@ -636,7 +636,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client does not request visited URLs from configured history delegate in private sessions`() {
+    fun `does not request visited URLs from configured history delegate in private sessions`() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext,
