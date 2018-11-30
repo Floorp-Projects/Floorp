@@ -363,7 +363,7 @@ impl From<Box<Error>> for WebDriverError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::check_serialize;
+    use crate::test::check_serialize;
 
     #[test]
     fn test_json_webdriver_error() {

@@ -3,9 +3,10 @@ use regex::{Captures, Regex};
 use hyper::Method;
 use serde_json::Value;
 
-use command::{VoidWebDriverExtensionCommand, WebDriverCommand, WebDriverExtensionCommand,
-              WebDriverMessage};
-use error::{ErrorStatus, WebDriverError, WebDriverResult};
+use crate::command::{
+    VoidWebDriverExtensionCommand, WebDriverCommand, WebDriverExtensionCommand, WebDriverMessage,
+};
+use crate::error::{ErrorStatus, WebDriverError, WebDriverResult};
 
 fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Route<U>)> {
     return vec![
@@ -282,7 +283,7 @@ pub enum Route<U: WebDriverExtensionRoute> {
 pub trait WebDriverExtensionRoute: Clone + Send + PartialEq {
     type Command: WebDriverExtensionCommand + 'static;
 
-    fn command(&self, &Captures, &Value) -> WebDriverResult<WebDriverCommand<Self::Command>>;
+    fn command(&self, _: &Captures, _: &Value) -> WebDriverResult<WebDriverCommand<Self::Command>>;
 }
 
 #[derive(Clone, Debug, PartialEq)]

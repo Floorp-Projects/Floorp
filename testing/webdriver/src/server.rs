@@ -6,18 +6,18 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use futures::{future, Future, Stream};
-use hyper::{self, Body, Method, Request, Response, StatusCode};
-use hyper::service::Service;
-use hyper::server::conn::Http;
 use http;
-use tokio::runtime::current_thread::Runtime;
-use tokio::reactor::Handle;
+use hyper::server::conn::Http;
+use hyper::service::Service;
+use hyper::{self, Body, Method, Request, Response, StatusCode};
 use tokio::net::TcpListener;
+use tokio::reactor::Handle;
+use tokio::runtime::current_thread::Runtime;
 
-use command::{WebDriverCommand, WebDriverMessage};
-use error::{ErrorStatus, WebDriverError, WebDriverResult};
-use httpapi::{VoidWebDriverExtensionRoute, WebDriverExtensionRoute, WebDriverHttpApi};
-use response::{CloseWindowResponse, WebDriverResponse};
+use crate::command::{WebDriverCommand, WebDriverMessage};
+use crate::error::{ErrorStatus, WebDriverError, WebDriverResult};
+use crate::httpapi::{VoidWebDriverExtensionRoute, WebDriverExtensionRoute, WebDriverHttpApi};
+use crate::response::{CloseWindowResponse, WebDriverResponse};
 
 // Silence warning about Quit being unused for now.
 #[allow(dead_code)]

@@ -1,4 +1,4 @@
-use common::{WebElement, ELEMENT_KEY};
+use crate::common::{WebElement, ELEMENT_KEY};
 use serde::de::{self, Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use serde_json::Value;
@@ -239,9 +239,9 @@ where
 
 #[cfg(test)]
 mod test {
+    use crate::test::{check_deserialize, check_serialize_deserialize};
     use super::*;
     use serde_json;
-    use test::{check_deserialize, check_serialize_deserialize};
 
     #[test]
     fn test_json_action_sequence_null() {

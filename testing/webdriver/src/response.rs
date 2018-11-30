@@ -1,4 +1,4 @@
-use common::Cookie;
+use crate::common::Cookie;
 use serde::ser::{Serialize, Serializer};
 use serde_json::Value;
 
@@ -129,9 +129,9 @@ pub struct WindowRectResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common::Date;
+    use crate::common::Date;
+    use crate::test::check_serialize;
     use serde_json;
-    use test::check_serialize;
 
     #[test]
     fn test_json_close_window_response() {
