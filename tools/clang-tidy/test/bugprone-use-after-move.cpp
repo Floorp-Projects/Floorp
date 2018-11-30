@@ -9,7 +9,7 @@ struct unique_ptr {
   void reset(T *ptr);
   T &operator*() const;
   T *operator->() const;
-  T &operator[](size_t i) const;
+  T& operator[](size_t i) const;
 };
 
 template <typename>
@@ -34,10 +34,10 @@ template <typename _Tp>
 constexpr typename std::remove_reference<_Tp>::type &&move(_Tp &&__t) noexcept {
   return static_cast<typename remove_reference<_Tp>::type &&>(__t);
 }
-}  // namespace std
+}
 
 class A {
- public:
+public:
   A();
   A(const A &);
   A(A &&);

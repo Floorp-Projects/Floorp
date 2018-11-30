@@ -62,6 +62,10 @@ widget/gtk/wayland/gtk-primary-selection-protocol.c
 # and reformatting them can break generating that wrapper.
 config/windows-h-.*.h
 
+# Exclude tools/clang-tidy/test from automatic reformatting, since it can
+# break some of the tests in that directory.
+tools/clang-tidy/test/.*
+
 # The XPTCall stubs files have some inline assembly macros
 # that get reformatted badly. See bug 1510781.
 xpcom/reflect/xptcall/md/win32/.*

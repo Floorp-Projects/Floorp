@@ -1,6 +1,6 @@
 
 class IL {
- public:
+public:
   IL() {}
   ~IL() {}
 };
