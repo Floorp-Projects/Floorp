@@ -41,7 +41,7 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
   @result      "<", ">" and "&" are escaped and HTML tags are inserted where
                appropriate.
  */
-  wstring   scanTXT(in wstring text, in unsigned long whattodo);
+  AString   scanTXT(in AString text, in unsigned long whattodo);
 
 /**
   Adds additional formatting to user edited text, that the user was too lazy
@@ -60,7 +60,7 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
   @param whattodo: Bitfield describing the modes of operation
   @result      Additional HTML tags are inserted where appropriate.
  */
-  wstring   scanHTML(in wstring text, in unsigned long whattodo);
+  AString   scanHTML(in AString text, in unsigned long whattodo);
 
 /**
   @param line: line in original msg, possibly starting starting with
