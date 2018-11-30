@@ -121,6 +121,12 @@ enum class SpdyVersion {
 // set. An ALPN header is set using the upgrade protocol.
 #define NS_HTTP_CONNECT_ONLY (1 << 16)
 
+// The connection should not use IPv4.
+#define NS_HTTP_DISABLE_IPV4 (1 << 17)
+
+// The connection should not use IPv6
+#define NS_HTTP_DISABLE_IPV6 (1 << 18)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------
