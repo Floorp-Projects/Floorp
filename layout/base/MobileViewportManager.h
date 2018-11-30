@@ -93,11 +93,11 @@ public:
                             const mozilla::CSSSize& aNewViewport,
                             const mozilla::CSSSize& aOldViewport);
 
-  /* Updates the presShell resolution and returns the new zoom. */
-  mozilla::CSSToScreenScale UpdateResolution(const nsViewportInfo& aViewportInfo,
-                                             const mozilla::ScreenIntSize& aDisplaySize,
-                                             const mozilla::CSSSize& aViewport,
-                                             const mozilla::Maybe<float>& aDisplayWidthChangeRatio);
+  /* Updates the presShell resolution and the visual viewport size. */
+  void UpdateResolution(const nsViewportInfo& aViewportInfo,
+                        const mozilla::ScreenIntSize& aDisplaySize,
+                        const mozilla::CSSSize& aViewport,
+                        const mozilla::Maybe<float>& aDisplayWidthChangeRatio);
 
   void UpdateVisualViewportSize(const mozilla::ScreenIntSize& aDisplaySize,
                                 const mozilla::CSSToScreenScale& aZoom);
