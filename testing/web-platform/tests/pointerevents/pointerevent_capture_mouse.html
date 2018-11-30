@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
     </head>
@@ -84,6 +87,8 @@
                         test_pointermove0.done();
                         event_log.push('pointermove@target0');
                         pointermoveNoCaptureGot0 = true;
+                        // Second dispatch a pointer move to target1.
+                        new test_driver.Actions().pointerMove(0, 0, {origin: target1}).send();
                     }
                     if(isPointerCapture) {
                         if(!pointermoveCaptureGot0) {
@@ -99,6 +104,8 @@
                             }, "pointermove received for captured element while out of it");
                             event_log.push('pointermove@target0');
                             pointermoveCaptureGot0 = true;
+                            // Fourth dispatch a pointer move to target0.
+                            new test_driver.Actions().pointerMove(0, 0, {origin: target0}).send();
                         }
                         if((event.clientX > target0.getBoundingClientRect().left)&&
                             (event.clientX < target0.getBoundingClientRect().right)&&
@@ -114,6 +121,9 @@
                     }
                 });
 
+                // First dispatch a pointer move to target0.
+                new test_driver.Actions().pointerMove(0, 0, {origin: target0}).send();
+
                 on_event(target1, "pointermove", function (event) {
                         if(isPointerCapture == true) {
                             test(function() {
@@ -124,6 +134,14 @@
                         test_pointermove1.done();
                         event_log.push('pointermove@target1');
                         pointermoveNoCaptureGot1 = true;
+                        // Third, drag the mouse from btnCapture, target1 to target0.
+                        new test_driver.Actions()
+                            .pointerMove(0, 0, {origin: btnCapture})
+                            .pointerDown()
+                            .pointerMove(0, 0, {origin: target1})
+                            .pointerMove(0, 0, {origin: target0})
+                            .pointerUp()
+                            .send();
                     }
                 });
             }

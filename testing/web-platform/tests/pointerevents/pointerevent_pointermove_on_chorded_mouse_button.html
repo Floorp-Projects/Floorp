@@ -7,6 +7,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
     </head>
@@ -64,6 +67,15 @@
                     test_pointermove.done();
                     eventTested = true;
                 });
+
+                // Click on both left and middle buttons.
+                var actions = new test_driver.Actions();
+                actions.pointerMove(0, 0, {origin: target0, button: actions.ButtonType.LEFT})
+                    .pointerDown({button: actions.ButtonType.LEFT})
+                    .pointerDown({button: actions.ButtonType.MIDDLE})
+                    .pointerUp({button: actions.ButtonType.MIDDLE})
+                    .pointerUp({button: actions.ButtonType.LEFT})
+                    .send();
             }
         </script>
         <h1>Pointer Events pointermove on button state changes Tests</h1>

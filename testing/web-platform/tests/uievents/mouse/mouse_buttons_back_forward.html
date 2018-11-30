@@ -6,6 +6,9 @@
         <link rel="author" title="Google" href="http://www.google.com/" />
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script>
             var testMouseUp = async_test('Tests that the mouseup is preventable.');
             var received_back = false;
@@ -24,10 +27,21 @@
                 testMouseUp.done();
               }
             });
+
+            function inject_input() {
+                // First click on back button and then forward button.
+                var actions = new test_driver.Actions();
+                actions.pointerMove(0, 0, {origin: target})
+                    .pointerDown({button: actions.ButtonType.BACK})
+                    .pointerUp({button: actions.ButtonType.BACK})
+                    .pointerDown({button: actions.ButtonType.FORWARD})
+                    .pointerUp({button: actions.ButtonType.FORWARD})
+                    .send();
+            }
         </script>
 
     </head>
-    <body id="target">
+    <body id="target" onload="inject_input()">
         <h4>Test Description: Tests that the mouseup event is prevented.
             <ol>
                 <li>Click the back mouse button</li>
