@@ -36,7 +36,7 @@ addLoadEvent(function() {
   var e = document.createElement("div");
   e.className = "x";
   var cs = getComputedStyle(e);
-  is(cs.color, "rgb(255, 0, 0)");
+  is(cs.color, "");
   document.body.appendChild(e);
   is(cs.color, "rgb(0, 128, 0)");
 
@@ -46,7 +46,7 @@ addLoadEvent(function() {
   cs = getComputedStyle(e);
   is(cs.color, "rgb(255, 0, 0)");
   e.remove();
-  is(cs.color, "rgb(0, 128, 0)");
+  is(cs.color, "");
 
   // Element that is removed from an out-of-document tree.
   e = document.createElement("div");
@@ -54,15 +54,15 @@ addLoadEvent(function() {
   f.className = "z";
   e.appendChild(f);
   cs = getComputedStyle(f);
-  is(cs.color, "rgb(255, 0, 0)");
+  is(cs.color, "");
   f.remove();
-  is(cs.color, "rgb(0, 128, 0)");
+  is(cs.color, "");
 
   // Element going from not in document to in document and display:none.
   e = document.createElement("div");
   e.className = "a";
   cs = getComputedStyle(e);
-  is(cs.color, "rgb(255, 0, 0)");
+  is(cs.color, "");
   document.body.appendChild(e);
   is(cs.color, "rgb(0, 128, 0)");
 
@@ -71,7 +71,7 @@ addLoadEvent(function() {
   e = document.createElement("div");
   e.className = "c";
   cs = getComputedStyle(e);
-  is(cs.color, "rgb(255, 0, 0)");
+  is(cs.color, "");
   document.querySelector(".b").appendChild(e);
   is(cs.color, "rgb(0, 128, 0)");
 
@@ -81,18 +81,18 @@ addLoadEvent(function() {
   f = document.createElement("span");
   f.className = "e";
   cs = getComputedStyle(f);
-  is(cs.color, "rgb(255, 0, 0)");
+  is(cs.color, "");
   e.appendChild(f);
-  is(cs.color, "rgb(0, 128, 0)");
+  is(cs.color, "");
 
   // Element that is outside the document when an attribute is modified to
   // cause a different rule to match.
   e = document.createElement("div");
   e.className = "f";
   cs = getComputedStyle(e);
-  is(cs.color, "rgb(255, 0, 0)");
+  is(cs.color, "");
   e.className = "g";
-  is(cs.color, "rgb(0, 128, 0)");
+  is(cs.color, "");
 
   // Element that is outside the document when an ancestor is modified to
   // cause a different rule to match.
@@ -102,9 +102,9 @@ addLoadEvent(function() {
   f.className = "i";
   e.appendChild(f);
   cs = getComputedStyle(f);
-  is(cs.color, "rgb(255, 0, 0)");
+  is(cs.color, "");
   e.className = "j";
-  is(cs.color, "rgb(0, 128, 0)");
+  is(cs.color, "");
 
   SimpleTest.finish();
 });
