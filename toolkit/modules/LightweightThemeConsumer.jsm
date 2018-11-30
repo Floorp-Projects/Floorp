@@ -325,10 +325,19 @@ function _sanitizeCSSColor(doc, cssColor) {
   // simple round trip gets us a sanitized color value.
   let div = doc.createElementNS(HTML_NS, "div");
   div.style.color = "black";
+  div.style.display = "none";
   let span = doc.createElementNS(HTML_NS, "span");
   span.style.color = cssColor;
+
+  // CSS variables are not allowed and should compute to black.
+  if (span.style.color.indexOf("var(") !== -1) {
+    span.style.color = "";
+  }
+
   div.appendChild(span);
+  doc.documentElement.appendChild(div);
   cssColor = doc.defaultView.getComputedStyle(span).color;
+  div.remove();
   return cssColor;
 }
 
