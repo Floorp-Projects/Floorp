@@ -37,7 +37,7 @@ async function test() {
   await resumeToLine(client, 21);
   await checkEvaluateInTopFrame(client, "number", 10);
 
-  await toolbox.destroy();
+  await toolbox.closeToolbox();
   await gBrowser.removeTab(tab);
   finish();
 }

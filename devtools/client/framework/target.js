@@ -5,6 +5,7 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
+const Services = require("Services");
 
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient",
@@ -470,6 +471,12 @@ Target.prototype = {
 
   get canRewind() {
     return this.activeTab && this.activeTab.traits.canRewind;
+  },
+
+  isReplayEnabled() {
+    return Services.prefs.getBoolPref("devtools.recordreplay.mvp.enabled")
+      && this.canRewind
+      && this.isLocalTab;
   },
 
   getExtensionPathName(url) {

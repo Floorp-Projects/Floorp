@@ -405,9 +405,7 @@ class ToolboxToolbar extends Component {
         onFocus: () => focusButton(closeButtonId),
         className: "devtools-button",
         title: L10N.getStr("toolbox.closebutton.tooltip"),
-        onClick: () => {
-          closeToolbox();
-        },
+        onClick: () => closeToolbox(),
         tabIndex: focusedButton === "toolbox-close" ? "0" : "-1",
       })
       : null;
