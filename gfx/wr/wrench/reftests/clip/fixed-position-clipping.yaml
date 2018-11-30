@@ -22,7 +22,7 @@ root:
             clip-rect: [0, 0, 100, 100]
             clip-and-scroll: root-reference-frame
             type: rect
-            color: 0 256 0 1.0
+            color: 0 255 0 1.0
     # The same test as above, except this time the stacking context also starts its
     # own reference frame.
     -
@@ -44,6 +44,6 @@ root:
             clip-rect: [0, 0, 100, 100]
             clip-and-scroll: 4
             type: rect
-            color: 0 256 0 1.0
+            color: 0 255 0 1.0
   id: [0, 1]
 pipelines: []
