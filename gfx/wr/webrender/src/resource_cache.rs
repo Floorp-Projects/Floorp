@@ -1063,6 +1063,10 @@ impl ResourceCache {
 
                 assert!(!descriptor.rect.is_empty());
 
+                if !self.blob_image_templates.contains_key(&request.key) {
+                    panic!("already missing blob image key {:?} deleted: {:?}", request, self.deleted_blob_keys);
+                }
+
                 self.missing_blob_images.push(
                     BlobImageParams {
                         request,
