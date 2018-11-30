@@ -185,10 +185,11 @@ public:
         }
 
         MaybeIntSize scaleToSize;
+        LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), bounds.Size());
         wr::ImageRendering filter = wr::ToImageRendering(nsLayoutUtils::GetSamplingFilterForFrame(mFrame));
         wr::MixBlendMode mixBlendMode = wr::MixBlendMode::Normal;
         aManager->WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(data->GetPipelineId().value(),
-                                                                                   bounds.Size(),
+                                                                                   scBounds,
                                                                                    scTransform,
                                                                                    scaleToSize,
                                                                                    filter,

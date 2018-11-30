@@ -247,5 +247,22 @@ IPCBlobInputStreamThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+bool
+IsOnDOMFileThread()
+{
+  mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
+
+  MOZ_ASSERT(!gShutdownHasStarted);
+  MOZ_ASSERT(gIPCBlobThread);
+
+  return gIPCBlobThread->IsOnCurrentThreadInfallible();
+}
+
+void
+AssertIsOnDOMFileThread()
+{
+  MOZ_ASSERT(IsOnDOMFileThread());
+}
+
 } // dom namespace
 } // mozilla namespace

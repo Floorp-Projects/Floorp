@@ -78,6 +78,37 @@ protected:
   DeallocPBackgroundSDBConnectionChild(PBackgroundSDBConnectionChild* aActor)
                                        override;
 
+  virtual PBackgroundLSDatabaseChild*
+  AllocPBackgroundLSDatabaseChild(const PrincipalInfo& aPrincipalInfo,
+                                  const uint32_t& aPrivateBrowsingId,
+                                  const uint64_t& aDatastoreId) override;
+
+  virtual bool
+  DeallocPBackgroundLSDatabaseChild(PBackgroundLSDatabaseChild* aActor)
+                                    override;
+
+  virtual PBackgroundLSObserverChild*
+  AllocPBackgroundLSObserverChild(const uint64_t& aObserverId) override;
+
+  virtual bool
+  DeallocPBackgroundLSObserverChild(PBackgroundLSObserverChild* aActor)
+                                    override;
+
+  virtual PBackgroundLSRequestChild*
+  AllocPBackgroundLSRequestChild(const LSRequestParams& aParams) override;
+
+  virtual bool
+  DeallocPBackgroundLSRequestChild(PBackgroundLSRequestChild* aActor) override;
+
+  virtual PBackgroundLSSimpleRequestChild*
+  AllocPBackgroundLSSimpleRequestChild(const LSSimpleRequestParams& aParams)
+                                       override;
+
+  virtual bool
+  DeallocPBackgroundLSSimpleRequestChild(
+                                        PBackgroundLSSimpleRequestChild* aActor)
+                                        override;
+
   virtual PBackgroundLocalStorageCacheChild*
   AllocPBackgroundLocalStorageCacheChild(const PrincipalInfo& aPrincipalInfo,
                                          const nsCString& aOriginKey,

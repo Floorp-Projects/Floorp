@@ -9,6 +9,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 
+#include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/OriginAttributes.h"
 
@@ -20,6 +21,14 @@ struct ParamTraits<mozilla::dom::quota::PersistenceType> :
                                mozilla::dom::quota::PersistenceType,
                                mozilla::dom::quota::PERSISTENCE_TYPE_PERSISTENT,
                                mozilla::dom::quota::PERSISTENCE_TYPE_INVALID>
+{ };
+
+template <>
+struct ParamTraits<mozilla::dom::quota::Client::Type> :
+  public ContiguousEnumSerializer<
+                          mozilla::dom::quota::Client::Type,
+                          mozilla::dom::quota::Client::IDB,
+                          mozilla::dom::quota::Client::TYPE_MAX>
 { };
 
 template <>

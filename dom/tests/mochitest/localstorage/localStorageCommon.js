@@ -1,5 +1,12 @@
 function localStorageFlush(cb)
 {
+  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+    SimpleTest.executeSoon(function () {
+      cb();
+    });
+    return;
+  }
+
   var ob = {
     observe : function(sub, top, dat)
     {
@@ -11,27 +18,94 @@ function localStorageFlush(cb)
   notify("domstorage-test-flush-force");
 }
 
-function localStorageReload()
+function localStorageReload(callback)
 {
-  notify("domstorage-test-reload");
-}
+  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+    localStorage.close();
+    let qms = SpecialPowers.Services.qms;
+    let principal = SpecialPowers.wrap(document).nodePrincipal;
+    let request = qms.resetStoragesForPrincipal(principal, "default", "ls");
+    request.callback = SpecialPowers.wrapCallback(function() {
+      localStorage.open();
+      callback();
+    });
+    return;
+  }
 
-function localStorageFlushAndReload(cb)
-{
-  localStorageFlush(function() {
-    localStorageReload();
-    cb();
+  notify("domstorage-test-reload");
+  SimpleTest.executeSoon(function () {
+    callback();
   });
 }
 
-function localStorageClearAll()
+function localStorageFlushAndReload(callback)
 {
-  os().notifyObservers(null, "cookie-changed", "cleared");
+  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+    localStorage.close();
+    let qms = SpecialPowers.Services.qms;
+    let principal = SpecialPowers.wrap(document).nodePrincipal;
+    let request = qms.resetStoragesForPrincipal(principal, "default", "ls");
+    request.callback = SpecialPowers.wrapCallback(function() {
+      localStorage.open();
+      callback();
+    });
+    return;
+  }
+
+  localStorageFlush(function() {
+    localStorageReload(callback);
+  });
 }
 
-function localStorageClearDomain(domain)
+function localStorageClearAll(callback)
 {
+  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+    let qms = SpecialPowers.Services.qms;
+    let ssm = SpecialPowers.Services.scriptSecurityManager;
+
+    qms.getUsage(SpecialPowers.wrapCallback(function(request) {
+      if (request.resultCode != SpecialPowers.Cr.NS_OK) {
+        callback();
+        return;
+      }
+
+      let clearRequestCount = 0;
+      for (let item of request.result) {
+        let principal = ssm.createCodebasePrincipalFromOrigin(item.origin);
+        let clearRequest =
+          qms.clearStoragesForPrincipal(principal, "default", "ls");
+        clearRequestCount++;
+        clearRequest.callback = SpecialPowers.wrapCallback(function() {
+          if (--clearRequestCount == 0) {
+            callback();
+          }
+        });
+      }
+    }));
+    return;
+  }
+
+  os().notifyObservers(null, "cookie-changed", "cleared");
+  SimpleTest.executeSoon(function () {
+    callback();
+  });
+}
+
+function localStorageClearDomain(domain, callback)
+{
+  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+    let qms = SpecialPowers.Services.qms;
+    let principal = SpecialPowers.wrap(document).nodePrincipal;
+    let request = qms.clearStoragesForPrincipal(principal, "default", "ls");
+    let cb = SpecialPowers.wrapCallback(callback);
+    request.callback = cb;
+    return;
+  }
+
   os().notifyObservers(null, "browser:purge-domain-data", domain);
+  SimpleTest.executeSoon(function () {
+    callback();
+  });
 }
 
 function os()
@@ -49,5 +123,7 @@ function notify(top)
  */
 function localStorageEnableTestingMode(cb)
 {
-  SpecialPowers.pushPrefEnv({ "set": [["dom.storage.testing", true]] }, cb);
+  SpecialPowers.pushPrefEnv({ set: [["dom.storage.testing", true],
+                                    ["dom.quotaManager.testing", true]] },
+                            cb);
 }

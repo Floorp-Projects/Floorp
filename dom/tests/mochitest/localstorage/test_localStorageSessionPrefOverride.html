@@ -8,6 +8,11 @@
       const ACCEPT_SESSION = 2;
 
       add_task(async function() {
+        if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+          ok(true, "Test ignored when the next gen local storage is enabled.");
+          return;
+        }
+
         await SpecialPowers.pushPrefEnv({"set": [["network.cookie.lifetimePolicy",
                                                   ACCEPT_SESSION]]});
 

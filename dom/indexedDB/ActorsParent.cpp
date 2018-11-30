@@ -18419,11 +18419,13 @@ Maintenance::DirectoryWork()
         // Idle maintenance may occur before origin is initailized.
         // Ensure origin is initialized first. It will initialize all origins
         // for temporary storage including IDB origins.
-        rv = quotaManager->EnsureOriginIsInitialized(persistenceType,
-                                                     suffix,
-                                                     group,
-                                                     origin,
-                                                     getter_AddRefs(directory));
+        rv = quotaManager->EnsureOriginIsInitialized(
+                                                  persistenceType,
+                                                  suffix,
+                                                  group,
+                                                  origin,
+                                                  /* aCreateIfNotExists */ true,
+                                                  getter_AddRefs(directory));
 
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -21319,6 +21321,7 @@ OpenDatabaseOp::DoDatabaseWork()
                                             mSuffix,
                                             mGroup,
                                             mOrigin,
+                                            /* aCreateIfNotExists */ true,
                                             getter_AddRefs(dbDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

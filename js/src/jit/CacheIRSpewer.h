@@ -27,6 +27,16 @@ class CacheIRSpewer
     mozilla::Maybe<JSONPrinter> json;
     static CacheIRSpewer cacheIRspewer;
 
+    // Counter to record how many times Guard class is called. This is used to
+    // determine when to flush outputs based on the given interval value.
+    // For example, if |spewInterval_ = 2|, outputs will be flushed on
+    // guardCount_ values 0,2,4,6,...
+    uint32_t guardCount_;
+
+    // Interval at which to flush output files. This value can be set with the
+    // environment variable |CACHEIR_LOG_FLUSH|.
+    uint32_t spewInterval_;
+
     CacheIRSpewer();
     ~CacheIRSpewer();
 
@@ -68,6 +78,9 @@ class CacheIRSpewer
               sp_.attached(name_);
             }
             sp_.endCache();
+            if (sp_.guardCount_++ % sp_.spewInterval_ == 0) {
+              sp_.output.flush();
+            }
             sp_.lock().unlock();
           }
         }

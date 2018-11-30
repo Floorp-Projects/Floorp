@@ -84,10 +84,11 @@ function startTest()
   localStorage.setItem("item", "value");
   localStorage.setItem("item2", "value2");
   localStorage.clear();
-  localStorageReload();
+  localStorageReload(function() {
   is(localStorage.length, 0, "localStorage clean in case 4");
 
-  if (SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(
+  if (!SpecialPowers.Services.lsm.nextGenLocalStorageEnabled &&
+      SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(
       SpecialPowers.Ci.nsIXULRuntime).processType != SpecialPowers.Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
     // Following tests cannot be run in a child/plugin process type
     SimpleTest.finish();
@@ -97,7 +98,7 @@ function startTest()
   // Cookies clean 1
   localStorageFlush(function() {
   localStorage.setItem("item", "value");
-  localStorageClearAll();
+  localStorageClearAll(function() {
   is(localStorage.length, 0, "localStorage clean after cookies deletion");
   localStorage.setItem("item2", "value2");
   is(localStorage.getItem("item"), null, "Unexpected key 1, cookies delete");
@@ -110,7 +111,7 @@ function startTest()
   localStorage.clear();
   localStorageFlush(function() {
   localStorage.setItem("item", "value");
-  localStorageClearAll();
+  localStorageClearAll(function() {
   is(localStorage.length, 0, "localStorage clean after cookies deletion 2");
   localStorageFlushAndReload(function() {
   is(localStorage.length, 0, "localStorage clean after cookies deletion 2");
@@ -119,7 +120,7 @@ function startTest()
   // Domain clean 1
   localStorageFlush(function() {
   localStorage.setItem("item", "value");
-  localStorageClearDomain("test");
+  localStorageClearDomain("test", function() {
   is(localStorage.length, 0, "localStorage clean after domain deletion");
   localStorage.setItem("item2", "value2");
   is(localStorage.getItem("item"), null, "Unexpected key 1, domain delete");
@@ -132,13 +133,18 @@ function startTest()
   localStorage.clear();
   localStorageFlush(function() {
   localStorage.setItem("item", "value");
-  localStorageClearDomain("test");
+  localStorageClearDomain("test", function() {
   is(localStorage.length, 0, "localStorage clean after domain deletion 2");
   localStorageFlushAndReload(function() {
   is(localStorage.length, 0, "localStorage clean after domain deletion 2");
 
   SimpleTest.finish();
 
+  });
+  });
+  });
+  });
+  });
   });
   });
   });

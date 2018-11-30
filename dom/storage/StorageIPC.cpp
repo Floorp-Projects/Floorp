@@ -147,6 +147,7 @@ StorageDBChild::StorageDBChild(LocalStorageManager* aManager)
   , mStatus(NS_OK)
   , mIPCOpen(false)
 {
+  MOZ_ASSERT(!NextGenLocalStorageEnabled());
 }
 
 StorageDBChild::~StorageDBChild()
@@ -158,6 +159,7 @@ StorageDBChild*
 StorageDBChild::Get()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!NextGenLocalStorageEnabled());
 
   return sStorageChild;
 }
@@ -167,6 +169,7 @@ StorageDBChild*
 StorageDBChild::GetOrCreate()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!NextGenLocalStorageEnabled());
 
   if (sStorageChild || sStorageChildDown) {
     // When sStorageChildDown is at true, sStorageChild is null.

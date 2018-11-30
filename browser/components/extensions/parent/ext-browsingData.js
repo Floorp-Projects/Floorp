@@ -77,22 +77,26 @@ const clearHistory = options => {
 const clearIndexedDB = async function(options) {
   let promises = [];
 
-  await new Promise(resolve => {
+  await new Promise((resolve, reject) => {
     quotaManagerService.getUsage(request => {
       if (request.resultCode != Cr.NS_OK) {
-        // We are probably shutting down. We don't want to propagate the error,
-        // rejecting the promise.
-        resolve();
+        reject({message: "Clear indexedDB failed"});
         return;
       }
 
       for (let item of request.result) {
         let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
-        let uri = principal.URI;
-        if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file") {
-          promises.push(new Promise(r => {
-            let req = quotaManagerService.clearStoragesForPrincipal(principal, null, false);
-            req.callback = () => { r(); };
+        let scheme = principal.URI.scheme;
+        if (scheme == "http" || scheme == "https" || scheme == "file") {
+          promises.push(new Promise((resolve, reject) => {
+            let clearRequest = quotaManagerService.clearStoragesForPrincipal(principal, null, "idb");
+            clearRequest.callback = () => {
+              if (clearRequest.resultCode == Cr.NS_OK) {
+                resolve();
+              } else {
+                reject({message: "Clear indexedDB failed"});
+              }
+            };
           }));
         }
       }
@@ -109,6 +113,46 @@ const clearLocalStorage = async function(options) {
     return Promise.reject(
       {message: "Firefox does not support clearing localStorage with 'since'."});
   }
+
+  if (Services.lsm.nextGenLocalStorageEnabled) {
+    // Ideally we could reuse the logic in Sanitizer.jsm or nsIClearDataService,
+    // but this API exposes an ability to wipe data at a much finger granularity
+    // than those APIs.  So custom logic is used here to wipe only the QM
+    // localStorage client (when in use).
+
+    let promises = [];
+
+    await new Promise((resolve, reject) => {
+      quotaManagerService.getUsage(request => {
+        if (request.resultCode != Cr.NS_OK) {
+          reject({message: "Clear localStorage failed"});
+          return;
+        }
+
+        for (let item of request.result) {
+          let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+          let host = principal.URI.hostPort;
+          if (!options.hostnames || options.hostnames.includes(host)) {
+            promises.push(new Promise((resolve, reject) => {
+              let clearRequest = quotaManagerService.clearStoragesForPrincipal(principal, "default", "ls");
+              clearRequest.callback = () => {
+                if (clearRequest.resultCode == Cr.NS_OK) {
+                  resolve();
+                } else {
+                  reject({message: "Clear localStorage failed"});
+                }
+              };
+            }));
+          }
+        }
+
+        resolve();
+      });
+    });
+
+    return Promise.all(promises);
+  }
+
   if (options.hostnames) {
     for (let hostname of options.hostnames) {
       Services.obs.notifyObservers(null, "extension:purge-localStorage", hostname);

@@ -189,7 +189,7 @@ TransactionBuilder::RemovePipeline(PipelineId aPipelineId)
 void
 TransactionBuilder::SetDisplayList(gfx::Color aBgColor,
                                    Epoch aEpoch,
-                                   LayoutDeviceSize aViewportSize,
+                                   mozilla::LayerSize aViewportSize,
                                    wr::WrPipelineId pipeline_id,
                                    const wr::LayoutSize& content_size,
                                    wr::BuiltDisplayListDescriptor dl_descriptor,
@@ -870,29 +870,9 @@ DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
                           &aOutDisplayList.dl.inner);
 }
 
-wr::WrClipId
-DisplayListBuilder::PushOrigin(const wr::LayoutPoint& aOrigin)
-{
-  WRDL_LOG("PushOrigin t=%s\n", mWrState,
-      Stringify(aOrigin).c_str());
-
-  //Note: there could be a simpler way to convert LayoutPoint -> LayoutTransform
-  wr::LayoutTransform transform = ToLayoutTransform(
-    gfx::Matrix4x4::Translation(aOrigin.x, aOrigin.y, 0.0));
-
-  auto id = wr_dp_push_reference_frame(mWrState, &transform);
-  return wr::WrClipId { id };
-}
-
-void
-DisplayListBuilder::PopOrigin()
-{
-  WRDL_LOG("PopOrigin\n", mWrState);
-  wr_dp_pop_reference_frame(mWrState);
-}
-
 Maybe<wr::WrClipId>
-DisplayListBuilder::PushStackingContext(const wr::WrClipId* aClipNodeId,
+DisplayListBuilder::PushStackingContext(const wr::LayoutRect& aBounds,
+                                        const wr::WrClipId* aClipNodeId,
                                         const WrAnimationProperty* aAnimation,
                                         const float* aOpacity,
                                         const gfx::Matrix4x4* aTransform,
@@ -915,13 +895,14 @@ DisplayListBuilder::PushStackingContext(const wr::WrClipId* aClipNodeId,
   if (aPerspective) {
     perspective = ToLayoutTransform(*aPerspective);
   }
+
   const wr::LayoutTransform* maybePerspective = aPerspective ? &perspective : nullptr;
-  WRDL_LOG("PushStackingContext t=%s\n", mWrState,
+  WRDL_LOG("PushStackingContext b=%s t=%s\n", mWrState, Stringify(aBounds).c_str(),
       aTransform ? Stringify(*aTransform).c_str() : "none");
 
   bool outIsReferenceFrame = false;
   uintptr_t outReferenceFrameId = 0;
-  wr_dp_push_stacking_context(mWrState, aClipNodeId, aAnimation,
+  wr_dp_push_stacking_context(mWrState, aBounds, aClipNodeId, aAnimation,
                               aOpacity, maybeTransform, aTransformStyle,
                               maybePerspective, aMixBlendMode,
                               aFilters.Elements(), aFilters.Length(),
