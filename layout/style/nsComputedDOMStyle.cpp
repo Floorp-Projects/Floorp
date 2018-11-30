@@ -2003,30 +2003,6 @@ nsComputedDOMStyle::DoGetBorderSpacing()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetBorderTopStyle()
-{
-  return GetBorderStyleFor(eSideTop);
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetBorderBottomStyle()
-{
-  return GetBorderStyleFor(eSideBottom);
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetBorderLeftStyle()
-{
-  return GetBorderStyleFor(eSideLeft);
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetBorderRightStyle()
-{
-  return GetBorderStyleFor(eSideRight);
-}
-
-already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBorderBottomLeftRadius()
 {
   return GetEllipseRadii(StyleBorder()->mBorderRadius,
@@ -2201,28 +2177,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetOutlineWidth()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  const nsStyleOutline* outline = StyleOutline();
-
-  nscoord width;
-  if (outline->mOutlineStyle == StyleBorderStyle::None) {
-    NS_ASSERTION(outline->GetOutlineWidth() == 0, "unexpected width");
-    width = 0;
-  } else {
-    width = outline->GetOutlineWidth();
-  }
-  val->SetAppUnits(width);
-
-  return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetOutlineStyle()
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StyleOutline()->mOutlineStyle,
-                                   nsCSSProps::kOutlineStyleKTable));
+  val->SetAppUnits(StyleOutline()->GetOutlineWidth());
   return val.forget();
 }
 
@@ -3404,16 +3359,6 @@ nsComputedDOMStyle::GetMarginWidthFor(mozilla::Side aSide)
                  "Inner tables must have zero margins");
   }
 
-  return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::GetBorderStyleFor(mozilla::Side aSide)
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StyleBorder()->GetBorderStyle(aSide),
-                                   nsCSSProps::kBorderStyleKTable));
   return val.forget();
 }
 

@@ -188,20 +188,6 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
 
 /***************************************************************************/
 
-const KTableEntry nsCSSProps::kBorderStyleKTable[] = {
-  { eCSSKeyword_none,   StyleBorderStyle::None },
-  { eCSSKeyword_hidden, StyleBorderStyle::Hidden },
-  { eCSSKeyword_dotted, StyleBorderStyle::Dotted },
-  { eCSSKeyword_dashed, StyleBorderStyle::Dashed },
-  { eCSSKeyword_solid,  StyleBorderStyle::Solid },
-  { eCSSKeyword_double, StyleBorderStyle::Double },
-  { eCSSKeyword_groove, StyleBorderStyle::Groove },
-  { eCSSKeyword_ridge,  StyleBorderStyle::Ridge },
-  { eCSSKeyword_inset,  StyleBorderStyle::Inset },
-  { eCSSKeyword_outset, StyleBorderStyle::Outset },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kBoxShadowTypeKTable[] = {
   { eCSSKeyword_inset, uint8_t(StyleBoxShadowType::Inset) },
   { eCSSKeyword_UNKNOWN, -1 }
@@ -493,34 +479,6 @@ const KTableEntry nsCSSProps::kContainKTable[] = {
   { eCSSKeyword_style,   NS_STYLE_CONTAIN_STYLE },
   { eCSSKeyword_paint,   NS_STYLE_CONTAIN_PAINT },
   { eCSSKeyword_size,    NS_STYLE_CONTAIN_SIZE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-// Same as kBorderStyleKTable except 'hidden'.
-const KTableEntry nsCSSProps::kOutlineStyleKTable[] = {
-  { eCSSKeyword_none,   StyleBorderStyle::None },
-  { eCSSKeyword_auto,   StyleBorderStyle::Auto },
-  { eCSSKeyword_dotted, StyleBorderStyle::Dotted },
-  { eCSSKeyword_dashed, StyleBorderStyle::Dashed },
-  { eCSSKeyword_solid,  StyleBorderStyle::Solid },
-  { eCSSKeyword_double, StyleBorderStyle::Double },
-  { eCSSKeyword_groove, StyleBorderStyle::Groove },
-  { eCSSKeyword_ridge,  StyleBorderStyle::Ridge },
-  { eCSSKeyword_inset,  StyleBorderStyle::Inset },
-  { eCSSKeyword_outset, StyleBorderStyle::Outset },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kOverflowKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_OVERFLOW_AUTO },
-  { eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE },
-  { eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN },
-  { eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL },
-  // Deprecated:
-  { eCSSKeyword__moz_scrollbars_none, NS_STYLE_OVERFLOW_HIDDEN },
-  { eCSSKeyword__moz_scrollbars_horizontal, NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL },
-  { eCSSKeyword__moz_scrollbars_vertical, NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL },
-  { eCSSKeyword__moz_hidden_unscrollable, NS_STYLE_OVERFLOW_CLIP },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
