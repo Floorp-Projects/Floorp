@@ -857,8 +857,8 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   margin-inline-end: 0;
 }
 
-#requestedLocales {
-  min-height: 200px;
+#selectedLocales {
+  height: 150px;
 }
 
 #availableLanguages,
@@ -869,6 +869,10 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 
 #warning-message > .message-bar-description {
   width: 32em;
+}
+
+#warning-message {
+  margin-top: 8px;
 }
 
 .add-web-language,
