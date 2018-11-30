@@ -1164,9 +1164,7 @@ void MessageChannel::OnMessageReceivedFromLink(Message&& aMsg) {
 
   if (MaybeInterceptSpecialIOMessage(aMsg)) return;
 
-#ifdef EARLY_BETA_OR_EARLIER
   mListener->OnChannelReceivedMessage(aMsg);
-#endif
 
   // Regardless of the Interrupt stack, if we're awaiting a sync reply,
   // we know that it needs to be immediately handled to unblock us.
