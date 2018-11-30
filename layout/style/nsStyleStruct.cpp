@@ -3385,8 +3385,8 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
   , mOriginalFloat(StyleFloat::None)
   , mBreakType(StyleClear::None)
   , mBreakInside(StyleBreakWithin::Auto)
-  , mPageBreakBefore(StyleBreakBetween::Auto)
-  , mPageBreakAfter(StyleBreakBetween::Auto)
+  , mBreakBefore(StyleBreakBetween::Auto)
+  , mBreakAfter(StyleBreakBetween::Auto)
   , mOverflowX(NS_STYLE_OVERFLOW_VISIBLE)
   , mOverflowY(NS_STYLE_OVERFLOW_VISIBLE)
   , mOverflowClipBoxBlock(NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX)
@@ -3450,8 +3450,8 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mOriginalFloat(aSource.mOriginalFloat)
   , mBreakType(aSource.mBreakType)
   , mBreakInside(aSource.mBreakInside)
-  , mPageBreakBefore(aSource.mPageBreakBefore)
-  , mPageBreakAfter(aSource.mPageBreakAfter)
+  , mBreakBefore(aSource.mBreakBefore)
+  , mBreakAfter(aSource.mBreakAfter)
   , mOverflowX(aSource.mOverflowX)
   , mOverflowY(aSource.mOverflowY)
   , mOverflowClipBoxBlock(aSource.mOverflowClipBoxBlock)
@@ -3690,8 +3690,8 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
   // based on break-before / break-after... Shouldn't that reframe?
   if (mBreakType != aNewData.mBreakType
       || mBreakInside != aNewData.mBreakInside
-      || mPageBreakBefore != aNewData.mPageBreakBefore
-      || mPageBreakAfter != aNewData.mPageBreakAfter
+      || mBreakBefore != aNewData.mBreakBefore
+      || mBreakAfter != aNewData.mBreakAfter
       || mAppearance != aNewData.mAppearance
       || mOrient != aNewData.mOrient
       || mOverflowClipBoxBlock != aNewData.mOverflowClipBoxBlock

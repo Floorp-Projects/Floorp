@@ -2015,8 +2015,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   mozilla::StyleClear mBreakType;
   mozilla::StyleBreakWithin mBreakInside;
-  mozilla::StyleBreakBetween mPageBreakBefore;
-  mozilla::StyleBreakBetween mPageBreakAfter;
+  mozilla::StyleBreakBetween mBreakBefore;
+  mozilla::StyleBreakBetween mBreakAfter;
   uint8_t mOverflowX;           // NS_STYLE_OVERFLOW_*
   uint8_t mOverflowY;           // NS_STYLE_OVERFLOW_*
   uint8_t mOverflowClipBoxBlock;     // NS_STYLE_OVERFLOW_CLIP_BOX_*
@@ -2324,15 +2324,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
     return mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;
   }
 
-  // FIXME(emilio): This looks slightly fishy, this had a comment from karnaze
-  // with "Temp fix for bug 24000" on it... Oh well.
+  // FIXME(emilio): This should be more fine-grained on each caller to
+  // BreakBefore() / BreakAfter().
   static bool ShouldBreak(mozilla::StyleBreakBetween aBreak)
   {
     switch (aBreak) {
-      // "A conforming user agent may interpret the values 'left' and 'right' as
-      // 'always'." - CSS2.1, section 13.3.1
       case mozilla::StyleBreakBetween::Left:
       case mozilla::StyleBreakBetween::Right:
+      case mozilla::StyleBreakBetween::Page:
       case mozilla::StyleBreakBetween::Always:
         return true;
       case mozilla::StyleBreakBetween::Auto:
@@ -2346,12 +2345,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   bool BreakBefore() const
   {
-    return ShouldBreak(mPageBreakBefore);
+    return ShouldBreak(mBreakBefore);
   }
 
   bool BreakAfter() const
   {
-    return ShouldBreak(mPageBreakAfter);
+    return ShouldBreak(mBreakAfter);
   }
 
   // These are defined in nsStyleStructInlines.h.
