@@ -94,6 +94,7 @@ UNIFIED_SOURCES += [
     'testSavedStacks.cpp',
     'testScriptInfo.cpp',
     'testScriptObject.cpp',
+    'testScriptSourceCompression.cpp',
     'testSetProperty.cpp',
     'testSetPropertyIgnoringNamedGetter.cpp',
     'testSharedImmutableStringsCache.cpp',
