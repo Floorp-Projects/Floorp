@@ -179,6 +179,7 @@ toolkit/components/jsoncpp/.*
 toolkit/components/protobuf/.*
 toolkit/components/url-classifier/chromium/.*
 toolkit/components/url-classifier/protobuf/.*
+toolkit/crashreporter/breakpad-client/.*
 toolkit/crashreporter/google-breakpad/.*
 toolkit/recordreplay/udis86/.*
 tools/fuzzing/libfuzzer/.*
