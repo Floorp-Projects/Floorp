@@ -66,6 +66,42 @@ add_task(async function() {
   is(relations[1].targets[0], docAccessibleFront,
      "Label's containing document is a root document");
 
+  info("Snapshot");
+  const snapshot = await controlAccessibleFront.snapshot();
+  Assert.deepEqual(snapshot, {
+    "name": "Label",
+    "role": "entry",
+    "actions": [ "Activate" ],
+    "value": "",
+    "nodeCssSelector": "#control",
+    "nodeType": 1,
+    "description": "",
+    "keyboardShortcut": "",
+    "childCount": 0,
+    "indexInParent": 1,
+    "states": [
+      "focusable",
+      "autocompletion",
+      "editable",
+      "opaque",
+      "single line",
+      "enabled",
+      "sensitive",
+    ],
+    "children": [],
+    "attributes": {
+      "margin-left": "0px",
+      "text-align": "start",
+      "text-indent": "0px",
+      "id": "control",
+      "tag": "input",
+      "margin-top": "0px",
+      "margin-bottom": "0px",
+      "margin-right": "0px",
+      "display": "inline",
+      "explicit-name": "true",
+    }});
+
   await accessibility.disable();
   await waitForA11yShutdown();
   await target.destroy();
