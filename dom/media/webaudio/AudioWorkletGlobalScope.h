@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_AudioWorkletGlobalScope_h
 #define mozilla_dom_AudioWorkletGlobalScope_h
 
+#include "mozilla/dom/AudioParamDescriptorMap.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
 #include "nsRefPtrHashtable.h"
@@ -41,6 +42,13 @@ class AudioWorkletGlobalScope final : public WorkletGlobalScope {
 
  private:
   ~AudioWorkletGlobalScope() = default;
+
+  // Returns an AudioParamDescriptorMap filled with AudioParamDescriptor
+  // objects, extracted from JS. Returns an empty map in case of error and set
+  // aRv accordingly.
+  AudioParamDescriptorMap DescriptorsFromJS(
+      JSContext* aCx, const JS::Rooted<JS::Value>& aDescriptors,
+      ErrorResult& aRv);
 
   const RefPtr<AudioWorkletImpl> mImpl;
 
