@@ -7567,10 +7567,10 @@ nsLayoutUtils::GetTextRunFlagsForStyle(ComputedStyle* aComputedStyle,
     result |= gfx::ShapedTextFlags::TEXT_HIDE_CONTROL_CHARACTERS;
   }
   switch (aComputedStyle->StyleText()->mTextRendering) {
-  case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
+  case StyleTextRendering::Optimizespeed:
     result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
     break;
-  case NS_STYLE_TEXT_RENDERING_AUTO:
+  case StyleTextRendering::Auto:
     if (aStyleFont->mFont.size < aPresContext->GetAutoQualityMinFontSize()) {
       result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
     }

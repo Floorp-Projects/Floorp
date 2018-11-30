@@ -1587,7 +1587,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
   uint8_t mControlCharacterVisibility;  // NS_STYLE_CONTROL_CHARACTER_VISIBILITY_*
   uint8_t mTextEmphasisPosition;        // NS_STYLE_TEXT_EMPHASIS_POSITION_*
   uint8_t mTextEmphasisStyle;           // NS_STYLE_TEXT_EMPHASIS_STYLE_*
-  uint8_t mTextRendering;               // NS_STYLE_TEXT_RENDERING_*
+  mozilla::StyleTextRendering mTextRendering;
   mozilla::StyleComplexColor mTextEmphasisColor;
   mozilla::StyleComplexColor mWebkitTextFillColor;
   mozilla::StyleComplexColor mWebkitTextStrokeColor;
