@@ -376,6 +376,17 @@ public:
   /**
    * RemoveInlinePropertyAsAction() removes a property which changes inline
    * style of text.  E.g., bold, italic, super and sub.
+   *
+   * @param aProperty   Tag name whcih represents the inline style you want to
+   *                    remove.  E.g., nsGkAtoms::strong, nsGkAtoms::b, etc.
+   *                    If nsGkAtoms::href, <a> element which has href
+   *                    attribute will be removed.
+   *                    If nsGkAtoms::name, <a> element which has non-empty
+   *                    name attribute will be removed.
+   * @param aAttribute  If aProperty is nsGkAtoms::font, aAttribute should be
+   *                    nsGkAtoms::fase, nsGkAtoms::size, nsGkAtoms::color or
+   *                    nsGkAtoms::bgcolor.  Otherwise, set nullptr.
+   *                    Must not use nsGkAtoms::_empty here.
    */
   nsresult RemoveInlinePropertyAsAction(nsAtom& aProperty,
                                         nsAtom* aAttribute);

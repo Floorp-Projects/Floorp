@@ -45,6 +45,15 @@ namespace mozilla {
 
 using namespace dom;
 
+static already_AddRefed<nsAtom>
+AtomizeAttribute(const nsAString& aAttribute)
+{
+  if (aAttribute.IsEmpty()) {
+    return nullptr; // Don't use nsGkAtoms::_empty for attribute.
+   }
+   return NS_Atomize(aAttribute);
+}
+
 bool
 HTMLEditor::IsEmptyTextNode(nsINode& aNode)
 {
@@ -97,7 +106,7 @@ HTMLEditor::SetInlineProperty(const nsAString& aProperty,
   if (NS_WARN_IF(!property)) {
     return NS_ERROR_INVALID_ARG;
   }
-  RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
+  RefPtr<nsAtom> attribute = AtomizeAttribute(aAttribute);
   AutoEditActionDataSetter editActionData(
     *this,
     HTMLEditUtils::GetEditActionForFormatText(*property, attribute, true));
@@ -1210,7 +1219,7 @@ HTMLEditor::GetInlineProperty(const nsAString& aProperty,
                               bool* aAll)
 {
   RefPtr<nsAtom> property = NS_Atomize(aProperty);
-  RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
+  RefPtr<nsAtom> attribute = AtomizeAttribute(aAttribute);
   return GetInlineProperty(property, attribute, aValue, aFirst, aAny, aAll);
 }
 
@@ -1251,7 +1260,7 @@ HTMLEditor::GetInlinePropertyWithAttrValue(const nsAString& aProperty,
                                            nsAString& outValue)
 {
   RefPtr<nsAtom> property = NS_Atomize(aProperty);
-  RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
+  RefPtr<nsAtom> attribute = AtomizeAttribute(aAttribute);
   return GetInlinePropertyWithAttrValue(property, attribute, aValue, aFirst,
                                         aAny, aAll, outValue);
 }
@@ -1326,7 +1335,7 @@ HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
                                  const nsAString& aAttribute)
 {
   RefPtr<nsAtom> property = NS_Atomize(aProperty);
-  RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
+  RefPtr<nsAtom> attribute = AtomizeAttribute(aAttribute);
 
   AutoEditActionDataSetter editActionData(
     *this,
@@ -1343,6 +1352,7 @@ HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
                                          nsAtom* aAttribute)
 {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aAttribute != nsGkAtoms::_empty);
 
   if (NS_WARN_IF(!mRules)) {
     return NS_ERROR_NOT_INITIALIZED;
