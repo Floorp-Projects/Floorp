@@ -351,11 +351,19 @@ void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
 }
 
 void LIRGeneratorARM64::lowerTruncateDToInt32(MTruncateToInt32* ins) {
-  MOZ_CRASH("lowerTruncateDToInt32");
+  MDefinition* opd = ins->input();
+  MOZ_ASSERT(opd->type() == MIRType::Double);
+  define(new (alloc())
+             LTruncateDToInt32(useRegister(opd), LDefinition::BogusTemp()),
+         ins);
 }
 
 void LIRGeneratorARM64::lowerTruncateFToInt32(MTruncateToInt32* ins) {
-  MOZ_CRASH("lowerTruncateFToInt32");
+  MDefinition* opd = ins->input();
+  MOZ_ASSERT(opd->type() == MIRType::Float32);
+  define(new (alloc())
+             LTruncateFToInt32(useRegister(opd), LDefinition::BogusTemp()),
+         ins);
 }
 
 void LIRGenerator::visitAtomicTypedArrayElementBinop(

@@ -385,12 +385,17 @@ void CodeGenerator::visitDivI(LDivI* ins) {
   // Handle division by zero.
   if (mir->canBeDivideByZero()) {
     masm.test32(rhs, rhs);
-    // TODO: x64 has an additional mir->canTruncateInfinities() handler
-    // TODO: to avoid taking a bailout.
     if (mir->trapOnError()) {
       Label nonZero;
       masm.j(Assembler::NonZero, &nonZero);
       masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+      masm.bind(&nonZero);
+    } else if (mir->canTruncateInfinities()) {
+      // Truncated division by zero is zero: (Infinity|0 = 0).
+      Label nonZero;
+      masm.j(Assembler::NonZero, &nonZero);
+      masm.Mov(output32, wzr);
+      masm.jump(&done);
       masm.bind(&nonZero);
     } else {
       MOZ_ASSERT(mir->fallible());
